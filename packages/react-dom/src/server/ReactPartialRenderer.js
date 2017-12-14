@@ -125,33 +125,30 @@ if (__DEV__) {
 }
 
 // Context (new API)
-let providerStack: Array<ReactProvider<mixed>> = []; // Stack of provider objects
+let providerStack: Array<ReactProvider<any>> = []; // Stack of provider objects
 let index = -1;
 
 export function pushProvider<T>(provider: ReactProvider<T>): void {
   index += 1;
   providerStack[index] = provider;
+  const context: ReactContext<any> = provider.type.context;
+  context.currentProvider = provider;
 }
 
 export function popProvider<T>(provider: ReactProvider<T>): void {
   if (__DEV__) {
     warning(index > -1 && provider === providerStack[index], 'Unexpected pop.');
   }
+  // $FlowFixMe - Intentionally unsound
   providerStack[index] = null;
   index -= 1;
-}
-
-// Find the nearest matching provider
-export function getProvider<T>(
-  context: ReactContext<T>,
-): ReactProvider<T> | null {
-  for (let i = index; i > -1; i--) {
-    const provider = providerStack[i];
-    if (provider.type.context === context) {
-      return provider;
-    }
+  const context: ReactContext<any> = provider.type.context;
+  if (index < 0) {
+    context.currentProvider = null;
+  } else {
+    const previousProvider = providerStack[index];
+    context.currentProvider = previousProvider;
   }
-  return null;
 }
 
 let didWarnDefaultInputValue = false;
@@ -823,7 +820,7 @@ class ReactDOMServerRenderer {
       if (typeof elementType === 'object' && elementType !== null) {
         switch (elementType.$$typeof) {
           case REACT_PROVIDER_TYPE: {
-            const provider: ReactProvider<any> = nextChild;
+            const provider: ReactProvider<any> = (nextChild: any);
             const nextProps = provider.props;
             const nextChildren = toArray(nextProps.children);
             const frame: Frame = {
@@ -844,10 +841,10 @@ class ReactDOMServerRenderer {
             return '';
           }
           case REACT_CONSUMER_TYPE: {
-            const consumer: ReactConsumer<any> = nextChild;
+            const consumer: ReactConsumer<any> = (nextChild: any);
             const nextProps = consumer.props;
 
-            const provider = getProvider(consumer.type.context);
+            const provider = consumer.type.context.currentProvider;
             let nextValue;
             if (provider === null) {
               // Detached consumer

@@ -1,5 +1,3 @@
-import {Symbol} from './node_modules/typescript/lib/typescript';
-
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
  *
@@ -88,6 +86,7 @@ export type ReactContext<T> = {
   provide(value: T, children: ReactNodeList, key?: string): ReactProvider<T>,
   consume(render: (value: T) => ReactNodeList, key?: string): ReactConsumer<T>,
   defaultValue: T,
+  currentProvider: any, // Fiber | null
 };
 
 export type ReactPortal = {

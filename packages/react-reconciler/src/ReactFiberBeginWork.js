@@ -67,7 +67,7 @@ import {
   pushTopLevelContextObject,
   invalidateContextProvider,
 } from './ReactFiberContext';
-import {pushProvider, getProvider} from './ReactFiberNewContext';
+import {pushProvider} from './ReactFiberNewContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncUpdates} from './ReactTypeOfInternalContext';
 
@@ -807,7 +807,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const oldProps = workInProgress.memoizedProps;
 
       // Get the nearest ancestor provider.
-      const providerFiber: Fiber | null = getProvider(context);
+      const providerFiber: Fiber | null = context.currentProvider;
 
       let newValue;
       let valueDidChange;

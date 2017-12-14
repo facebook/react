@@ -18,6 +18,8 @@ let index = -1;
 export function pushProvider(providerFiber: Fiber): void {
   index += 1;
   stack[index] = providerFiber;
+  const context: ReactContext<any> = providerFiber.type.context;
+  context.currentProvider = providerFiber;
 }
 
 export function popProvider(providerFiber: Fiber): void {
@@ -26,21 +28,20 @@ export function popProvider(providerFiber: Fiber): void {
   }
   stack[index] = null;
   index -= 1;
-}
-
-// Find the nearest matching provider
-export function getProvider<T>(context: ReactContext<T>): Fiber | null {
-  for (let i = index; i > -1; i--) {
-    const provider = stack[i];
-    if (provider.type.context === context) {
-      return provider;
-    }
+  const context: ReactContext<any> = providerFiber.type.context;
+  if (index < 0) {
+    context.currentProvider = null;
+  } else {
+    const previousProviderFiber = stack[index];
+    context.currentProvider = previousProviderFiber;
   }
-  return null;
 }
 
 export function resetProviderStack(): void {
   for (let i = index; i > -1; i--) {
+    const providerFiber = stack[i];
+    const context: ReactContext<any> = providerFiber.type.context;
+    context.currentProvider = null;
     stack[i] = null;
   }
 }
