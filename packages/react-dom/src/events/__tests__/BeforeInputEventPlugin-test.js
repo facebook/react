@@ -100,7 +100,10 @@ describe('BeforeInputEventPlugin', () => {
     },
     {
       eventSimulator: simulateEvent,
-      eventSimulatorArgs: ['compositionupdate', {detail: {data: 'test string'}}],
+      eventSimulatorArgs: [
+        'compositionupdate',
+        {detail: {data: 'test string'}},
+      ],
     },
     {
       eventSimulator: simulateEvent,
@@ -132,11 +135,17 @@ describe('BeforeInputEventPlugin', () => {
     },
     {
       eventSimulator: simulateKeyboardEvent,
-      eventSimulatorArgs: ['keypress',  {which: keyCode('c'), altKey: true, ctrlKey: true}],
+      eventSimulatorArgs: [
+        'keypress',
+        {which: keyCode('c'), altKey: true, ctrlKey: true},
+      ],
     },
     {
       eventSimulator: simulateKeyboardEvent,
-      eventSimulatorArgs: ['keypress', {which: keyCode('X'), char: '\uD83D\uDE0A'}],
+      eventSimulatorArgs: [
+        'keypress',
+        {which: keyCode('X'), char: '\uD83D\uDE0A'},
+      ],
     },
     {
       eventSimulator: simulateEvent,
@@ -169,382 +178,383 @@ describe('BeforeInputEventPlugin', () => {
     {
       eventSimulator: simulatePaste,
       eventSimulatorArgs: [],
-    }
+    },
   ];
 
-  const environments = [{
-    emulator: simulateWebkit,
-    assertions: [
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+  const environments = [
+    {
+      emulator: simulateWebkit,
+      assertions: [
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('compositionend');
-          expect(event.data).toBe('test string 3');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('compositionend');
+            expect(event.data).toBe('test string 3');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('textInput');
-          expect(event.data).toBe('abcß');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('textInput');
+            expect(event.data).toBe('abcß');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe(' ');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe(' ');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('textInput');
-          expect(event.data).toBe('\uD83D\uDE0A');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('textInput');
+            expect(event.data).toBe('\uD83D\uDE0A');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-    ]
-  },
-  {
-    emulator: simulateIE11,
-    assertions: [
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+      ],
+    },
+    {
+      emulator: simulateIE11,
+      assertions: [
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe('a');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('a');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe(' ');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe(' ');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe('c');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('c');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe('\uD83D\uDE0A');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('\uD83D\uDE0A');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-    ]
-  },
-  {
-    emulator: simulatePresto,
-    assertions: [
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+      ],
+    },
+    {
+      emulator: simulatePresto,
+      assertions: [
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe('a');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('a');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe(' ');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe(' ');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe('c');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('c');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe('\uD83D\uDE0A');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('\uD83D\uDE0A');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keydown');
-          expect(event.data).toBe('bar');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keydown');
+            expect(event.data).toBe('bar');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keyup');
-          expect(event.data).toBe('BAR');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keyup');
+            expect(event.data).toBe('BAR');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(1);
-          expect(event.type).toBe('keypress');
-          expect(event.data).toBe('Bar');
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('Bar');
+          },
         },
-      },
-      {
-        run: (event, spy) => {
-          expect(spy.mock.calls.length).toBe(0);
-          expect(event).toBeNull();
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
         },
-      },
-    ]
-  }
-];
+      ],
+    },
+  ];
 
   const testInputComponent = (env, scenarios) => {
     let event;
@@ -613,6 +623,6 @@ describe('BeforeInputEventPlugin', () => {
   it('should extract onBeforeInput when simulating in Presto on content editable', () => {
     // my test case for fallback composition end is not triggering onBeforeInput
     // still looking into understanding why
-    testContentEditableComponent(environments[2], scenarios.splice(0,5));
+    testContentEditableComponent(environments[2], scenarios.splice(0, 5));
   });
 });
