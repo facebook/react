@@ -39,7 +39,6 @@ import {
   Err,
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
-import is from 'shared/is';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
@@ -783,7 +782,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       } else {
         const oldValue = oldProps.value;
         // Use Object.is to compare the new context value to the old value.
-        if (!is(newValue, oldValue)) {
+        // Inlined Object.is polyfill.
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+        if (
+          (oldValue === newValue &&
+            (oldValue !== 0 || 1 / oldValue === 1 / newValue)) ||
+          (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
+        ) {
+          // No change.
+          changedBits = 0;
+        } else {
           changedBits =
             context.calculateChangedBits !== null
               ? context.calculateChangedBits(oldValue, newValue)
@@ -806,9 +814,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               renderExpirationTime,
             );
           }
-        } else {
-          // No change.
-          changedBits = 0;
         }
       }
 
