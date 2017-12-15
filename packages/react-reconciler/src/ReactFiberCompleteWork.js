@@ -30,8 +30,8 @@ import {
   CallComponent,
   CallHandlerPhase,
   ReturnComponent,
-  ProviderComponent,
-  ConsumerComponent,
+  ContextProvider,
+  ContextConsumer,
   Fragment,
   Mode,
 } from 'shared/ReactTypeOfWork';
@@ -586,11 +586,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         popHostContainer(workInProgress);
         updateHostContainer(workInProgress);
         return null;
-      case ProviderComponent:
+      case ContextProvider:
         // Pop provider fiber
         popProvider(workInProgress);
         return null;
-      case ConsumerComponent:
+      case ContextConsumer:
         return null;
       // Error cases
       case IndeterminateComponent:

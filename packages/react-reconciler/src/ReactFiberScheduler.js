@@ -33,7 +33,7 @@ import {
   HostComponent,
   HostPortal,
   ClassComponent,
-  ProviderComponent,
+  ContextProvider,
 } from 'shared/ReactTypeOfWork';
 import {enableUserTimingAPI} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
@@ -1138,7 +1138,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         case HostPortal:
           popHostContainer(node);
           break;
-        case ProviderComponent:
+        case ContextProvider:
           popProvider(node);
           break;
       }

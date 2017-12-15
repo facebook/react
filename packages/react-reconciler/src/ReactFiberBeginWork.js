@@ -29,8 +29,8 @@ import {
   ReturnComponent,
   Fragment,
   Mode,
-  ProviderComponent,
-  ConsumerComponent,
+  ContextProvider,
+  ContextConsumer,
 } from 'shared/ReactTypeOfWork';
 import {
   PerformedWork,
@@ -674,7 +674,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         let nextFiber;
         // Visit this fiber.
         switch (fiber.tag) {
-          case ConsumerComponent:
+          case ContextConsumer:
             // Check if the context matches.
             const observedBits: number = fiber.stateNode | 0;
             if (fiber.type === context && (observedBits & changedBits) !== 0) {
@@ -717,7 +717,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               nextFiber = fiber.child;
             }
             break;
-          case ProviderComponent:
+          case ContextProvider:
             // Don't scan deeper if this is a matching provider
             nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
             break;
@@ -752,7 +752,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function updateProviderComponent(
+  function updateContextProvider(
     current,
     workInProgress,
     renderExpirationTime,
@@ -826,7 +826,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function updateConsumerComponent(
+  function updateContextConsumer(
     current,
     workInProgress,
     renderExpirationTime,
@@ -926,7 +926,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           workInProgress.stateNode.containerInfo,
         );
         break;
-      case ProviderComponent:
+      case ContextProvider:
         pushProvider(workInProgress);
         break;
     }
@@ -1007,14 +1007,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return updateFragment(current, workInProgress);
       case Mode:
         return updateMode(current, workInProgress);
-      case ProviderComponent:
-        return updateProviderComponent(
+      case ContextProvider:
+        return updateContextProvider(
           current,
           workInProgress,
           renderExpirationTime,
         );
-      case ConsumerComponent:
-        return updateConsumerComponent(
+      case ContextConsumer:
+        return updateContextConsumer(
           current,
           workInProgress,
           renderExpirationTime,

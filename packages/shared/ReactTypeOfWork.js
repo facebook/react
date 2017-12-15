@@ -35,5 +35,5 @@ export const CallHandlerPhase = 8;
 export const ReturnComponent = 9;
 export const Fragment = 10;
 export const Mode = 11;
-export const ProviderComponent = 12;
-export const ConsumerComponent = 13;
+export const ContextConsumer = 12;
+export const ContextProvider = 13;

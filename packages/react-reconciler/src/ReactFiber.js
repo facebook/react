@@ -27,8 +27,8 @@ import {
   ReturnComponent,
   Fragment,
   Mode,
-  ProviderComponent,
-  ConsumerComponent,
+  ContextProvider,
+  ContextConsumer,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
@@ -350,11 +350,11 @@ export function createFiberFromElement(
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              fiberTag = ProviderComponent;
+              fiberTag = ContextProvider;
               break;
             case REACT_CONTEXT_TYPE:
               // This is a consumer
-              fiberTag = ConsumerComponent;
+              fiberTag = ContextConsumer;
               break;
             default:
               if (typeof type.tag === 'number') {
