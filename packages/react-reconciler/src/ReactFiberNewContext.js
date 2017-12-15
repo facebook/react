@@ -15,12 +15,28 @@ import warning from 'fbjs/lib/warning';
 let stack: Array<Fiber> = [];
 let index = -1;
 
+let rendererSigil;
+if (__DEV__) {
+  // Use this to detect multiple renderers using the same context
+  rendererSigil = {};
+}
+
 export function pushProvider(providerFiber: Fiber): void {
   index += 1;
   stack[index] = providerFiber;
   const context: ReactContext<any> = providerFiber.type.context;
   context.currentValue = providerFiber.pendingProps.value;
   context.changedBits = providerFiber.stateNode;
+
+  if (__DEV__) {
+    warning(
+      context._currentRenderer === null ||
+        context._currentRenderer === rendererSigil,
+      'Detected multiple renderers concurrently rendering the ' +
+        'same context provider. This is currently unsupported.',
+    );
+    context._currentRenderer = rendererSigil;
+  }
 }
 
 export function popProvider(providerFiber: Fiber): void {
@@ -47,5 +63,8 @@ export function resetProviderStack(): void {
     context.currentValue = context.defaultValue;
     context.changedBits = 0;
     stack[i] = null;
+    if (__DEV__) {
+      context._currentRenderer = null;
+    }
   }
 }

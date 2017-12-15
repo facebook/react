@@ -42,7 +42,7 @@ export function createContext<T>(
     }
   }
 
-  const context = {
+  const context: ReactContext<T> = {
     $$typeof: REACT_CONTEXT_TYPE,
     provide(value: T, children: ReactNodeList, key?: string): ReactProvider<T> {
       return {
@@ -82,6 +82,10 @@ export function createContext<T>(
     $$typeof: REACT_PROVIDER_TYPE,
     context,
   };
+
+  if (__DEV__) {
+    context._currentRenderer = null;
+  }
 
   return context;
 }

@@ -88,6 +88,9 @@ export type ReactContext<T> = {
   defaultValue: T,
   currentValue: T,
   changedBits: number,
+
+  // DEV only
+  _currentRenderer?: Object | null,
 };
 
 export type ReactPortal = {

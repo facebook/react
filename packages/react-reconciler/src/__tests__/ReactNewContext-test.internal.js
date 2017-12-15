@@ -527,16 +527,53 @@ describe('ReactNewContext', () => {
     }
   });
 
+  it('warns if multiple renderers concurrently render the same context', () => {
+    spyOnDev(console, 'error');
+    const Context = React.unstable_createContext(0);
+
+    function Foo(props) {
+      ReactNoop.yield('Foo');
+      return null;
+    }
+    function Provider(props) {
+      return Context.provide(props.value, props.children);
+    }
+
+    function App(props) {
+      return (
+        <Provider value={props.value}>
+          <Foo />
+          <Foo />
+        </Provider>
+      );
+    }
+
+    ReactNoop.render(<App value={1} />);
+    // Render past the Provider, but don't commit yet
+    ReactNoop.flushThrough(['Foo']);
+
+    // Get a new copy of ReactNoop
+    jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableNewContextAPI = true;
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+
+    // Render the provider again using a different renderer
+    ReactNoop.render(<App value={1} />);
+    ReactNoop.flush();
+
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Detected multiple renderers concurrently rendering the same ' +
+          'context provider. This is currently unsupported',
+      );
+    }
+  });
+
   describe('fuzz test', () => {
-    const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
-    const contexts = new Map(
-      contextKeys.map(key => {
-        const Context = React.unstable_createContext(0);
-        Context.displayName = 'Context' + key;
-        return [key, Context];
-      }),
-    );
     const Fragment = React.Fragment;
+    const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
     const FLUSH_ALL = 'FLUSH_ALL';
     function flushAll() {
@@ -600,72 +637,82 @@ describe('ReactNewContext', () => {
       return actions;
     }
 
-    class ConsumerTree extends React.Component {
-      shouldComponentUpdate() {
-        return false;
-      }
-      render() {
-        if (this.props.depth >= this.props.maxDepth) {
-          return null;
-        }
-        const consumers = [0, 1, 2].map(i => {
-          const randomKey =
-            contextKeys[this.props.rand.intBetween(0, contextKeys.length - 1)];
-          const Context = contexts.get(randomKey);
-          return Context.consume(
-            value => (
-              <Fragment>
-                <span prop={`${randomKey}:${value}`} />
-                <ConsumerTree
-                  rand={this.props.rand}
-                  depth={this.props.depth + 1}
-                  maxDepth={this.props.maxDepth}
-                />
-              </Fragment>
-            ),
-            null,
-            i,
-          );
-        });
-        return consumers;
-      }
-    }
-
-    function Root(props) {
-      return contextKeys.reduceRight((children, key) => {
-        const Context = contexts.get(key);
-        const value = props.values[key];
-        return Context.provide(value, children);
-      }, <ConsumerTree rand={props.rand} depth={0} maxDepth={props.maxDepth} />);
-    }
-
-    const initialValues = contextKeys.reduce(
-      (result, key, i) => ({...result, [key]: i + 1}),
-      {},
-    );
-
-    function assertConsistentTree(expectedValues = {}) {
-      const children = ReactNoop.getChildren();
-      children.forEach(child => {
-        const text = child.prop;
-        const key = text[0];
-        const value = parseInt(text[2], 10);
-        const expectedValue = expectedValues[key];
-        if (expectedValue === undefined) {
-          // If an expected value was not explicitly passed to this function,
-          // use the first occurrence.
-          expectedValues[key] = value;
-        } else if (value !== expectedValue) {
-          throw new Error(
-            `Inconsistent value! Expected: ${key}:${expectedValue}. Actual: ${
-              text
-            }`,
-          );
-        }
-      });
-    }
-
     function ContextSimulator(maxDepth) {
+      const contexts = new Map(
+        contextKeys.map(key => {
+          const Context = React.unstable_createContext(0);
+          Context.displayName = 'Context' + key;
+          return [key, Context];
+        }),
+      );
+
+      class ConsumerTree extends React.Component {
+        shouldComponentUpdate() {
+          return false;
+        }
+        render() {
+          if (this.props.depth >= this.props.maxDepth) {
+            return null;
+          }
+          const consumers = [0, 1, 2].map(i => {
+            const randomKey =
+              contextKeys[
+                this.props.rand.intBetween(0, contextKeys.length - 1)
+              ];
+            const Context = contexts.get(randomKey);
+            return Context.consume(
+              value => (
+                <Fragment>
+                  <span prop={`${randomKey}:${value}`} />
+                  <ConsumerTree
+                    rand={this.props.rand}
+                    depth={this.props.depth + 1}
+                    maxDepth={this.props.maxDepth}
+                  />
+                </Fragment>
+              ),
+              null,
+              i,
+            );
+          });
+          return consumers;
+        }
+      }
+
+      function Root(props) {
+        return contextKeys.reduceRight((children, key) => {
+          const Context = contexts.get(key);
+          const value = props.values[key];
+          return Context.provide(value, children);
+        }, <ConsumerTree rand={props.rand} depth={0} maxDepth={props.maxDepth} />);
+      }
+
+      const initialValues = contextKeys.reduce(
+        (result, key, i) => ({...result, [key]: i + 1}),
+        {},
+      );
+
+      function assertConsistentTree(expectedValues = {}) {
+        const children = ReactNoop.getChildren();
+        children.forEach(child => {
+          const text = child.prop;
+          const key = text[0];
+          const value = parseInt(text[2], 10);
+          const expectedValue = expectedValues[key];
+          if (expectedValue === undefined) {
+            // If an expected value was not explicitly passed to this function,
+            // use the first occurrence.
+            expectedValues[key] = value;
+          } else if (value !== expectedValue) {
+            throw new Error(
+              `Inconsistent value! Expected: ${key}:${expectedValue}. Actual: ${
+                text
+              }`,
+            );
+          }
+        });
+      }
+
       function simulate(seed, actions) {
         const rand = gen.create(seed);
         let finalExpectedValues = initialValues;
