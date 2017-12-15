@@ -58,7 +58,7 @@ export function createContext<T>(
     },
     consume(
       render: (value: T) => ReactNodeList,
-      bits?: number,
+      observedBits?: number,
       key?: string,
     ): ReactConsumer<T> {
       return {
@@ -67,7 +67,7 @@ export function createContext<T>(
         key: key === null || key === undefined ? null : '' + key,
         ref: null,
         props: {
-          bits,
+          observedBits,
           render,
         },
       };

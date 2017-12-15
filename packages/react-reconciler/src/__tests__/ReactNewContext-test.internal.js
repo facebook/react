@@ -499,6 +499,34 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Foo: 3'), span('Bar: 3')]);
   });
 
+  it('warns if calculateChangedBits returns larger than a 31-bit integer', () => {
+    spyOnDev(console, 'error');
+
+    const Context = React.unstable_createContext(
+      0,
+      (a, b) => Math.pow(2, 32) - 1, // Return 32 bit int
+    );
+
+    function Provider(props) {
+      return Context.provide(props.value, props.children);
+    }
+
+    ReactNoop.render(<Provider value={1} />);
+    ReactNoop.flush();
+
+    // Update
+    ReactNoop.render(<Provider value={2} />);
+    ReactNoop.flush();
+
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'calculateChangedBits: Expected the return value to be a 31-bit ' +
+          'integer. Instead received: 4294967295',
+      );
+    }
+  });
+
   describe('fuzz test', () => {
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
     const contexts = new Map(

@@ -81,7 +81,7 @@ export type ReactContext<T> = {
   provide(value: T, children: ReactNodeList, key?: string): ReactProvider<T>,
   consume(
     render: (value: T) => ReactNodeList,
-    bits?: number,
+    observedBits?: number,
     key?: string,
   ): ReactConsumer<T>,
   calculateChangedBits: ((a: T, b: T) => number) | null,

@@ -66,7 +66,7 @@ import {
 import {pushProvider} from './ReactFiberNewContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncUpdates} from './ReactTypeOfInternalContext';
-import MAX_SIGNED_32_BIT_INT from './maxSigned32BitInt';
+import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
@@ -676,8 +676,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         switch (fiber.tag) {
           case ConsumerComponent:
             // Check if the context matches.
-            const bits = fiber.stateNode;
-            if (fiber.type === context && (bits & changedBits) !== 0) {
+            const observedBits: number = fiber.stateNode | 0;
+            if (fiber.type === context && (observedBits & changedBits) !== 0) {
               // Update the expiration time of all the ancestors, including
               // the alternates.
               let node = fiber;
@@ -779,7 +779,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       let changedBits: number;
       if (oldProps === null) {
         // Initial render
-        changedBits = MAX_SIGNED_32_BIT_INT;
+        changedBits = MAX_SIGNED_31_BIT_INT;
       } else {
         const oldValue = oldProps.value;
         // Use Object.is to compare the new context value to the old value.
@@ -787,7 +787,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           changedBits =
             context.calculateChangedBits !== null
               ? context.calculateChangedBits(oldValue, newValue)
-              : MAX_SIGNED_32_BIT_INT;
+              : MAX_SIGNED_31_BIT_INT;
+          if (__DEV__) {
+            warning(
+              (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
+              'calculateChangedBits: Expected the return value to be a ' +
+                '31-bit integer. Instead received: %s',
+              changedBits,
+            );
+          }
+          changedBits |= 0;
+
           if (changedBits !== 0) {
             propagateContextChange(
               workInProgress,
@@ -839,13 +849,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         );
       }
 
-      // Store the bits on the fiber's stateNode for quick access.
-      let bits = newProps.bits;
-      if (bits === undefined || bits === null) {
+      // Store the observedBits on the fiber's stateNode for quick access.
+      let observedBits = newProps.observedBits;
+      if (observedBits === undefined || observedBits === null) {
         // Subscribe to all changes by default
-        bits = MAX_SIGNED_32_BIT_INT;
+        observedBits = MAX_SIGNED_31_BIT_INT;
       }
-      workInProgress.stateNode = bits;
+      workInProgress.stateNode = observedBits;
 
       const newChildren = newProps.render(newValue);
       reconcileChildren(current, workInProgress, newChildren);
