@@ -30,8 +30,8 @@ export const REACT_STRICT_MODE_TYPE = hasSymbol
 export const REACT_PROVIDER_TYPE = hasSymbol
   ? Symbol.for('react.provider')
   : 0xeacd;
-export const REACT_CONSUMER_TYPE = hasSymbol
-  ? Symbol.for('react.consumer')
+export const REACT_CONTEXT_TYPE = hasSymbol
+  ? Symbol.for('react.context')
   : 0xeace;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;

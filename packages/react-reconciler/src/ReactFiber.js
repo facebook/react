@@ -44,7 +44,7 @@ import {
   REACT_CALL_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROVIDER_TYPE,
-  REACT_CONSUMER_TYPE,
+  REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -352,7 +352,8 @@ export function createFiberFromElement(
             case REACT_PROVIDER_TYPE:
               fiberTag = ProviderComponent;
               break;
-            case REACT_CONSUMER_TYPE:
+            case REACT_CONTEXT_TYPE:
+              // This is a consumer
               fiberTag = ConsumerComponent;
               break;
             default:

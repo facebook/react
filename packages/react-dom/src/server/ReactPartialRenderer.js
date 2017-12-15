@@ -31,7 +31,7 @@ import {
   REACT_RETURN_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROVIDER_TYPE,
-  REACT_CONSUMER_TYPE,
+  REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -847,15 +847,15 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
-          case REACT_CONSUMER_TYPE: {
+          case REACT_CONTEXT_TYPE: {
             const consumer: ReactConsumer<any> = (nextChild: any);
             const nextProps = consumer.props;
 
-            const provider = consumer.type.context.currentProvider;
+            const provider = consumer.type.currentProvider;
             let nextValue;
             if (provider === null) {
               // Detached consumer
-              nextValue = consumer.type.context.defaultValue;
+              nextValue = consumer.type.defaultValue;
             } else {
               nextValue = provider.props.value;
             }

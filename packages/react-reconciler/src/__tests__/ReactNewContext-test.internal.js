@@ -425,6 +425,80 @@ describe('ReactNewContext', () => {
     ]);
   });
 
+  it('can skip consumers with bitmask', () => {
+    const Context = React.unstable_createContext({foo: 0, bar: 0}, (a, b) => {
+      let result = 0;
+      if (a.foo !== b.foo) {
+        result |= 0b01;
+      }
+      if (a.bar !== b.bar) {
+        result |= 0b10;
+      }
+      return result;
+    });
+
+    function Provider(props) {
+      return Context.provide({foo: props.foo, bar: props.bar}, props.children);
+    }
+
+    function Foo() {
+      return Context.consume(value => {
+        ReactNoop.yield('Foo');
+        return <span prop={'Foo: ' + value.foo} />;
+      }, 0b01);
+    }
+
+    function Bar() {
+      return Context.consume(value => {
+        ReactNoop.yield('Bar');
+        return <span prop={'Bar: ' + value.bar} />;
+      }, 0b10);
+    }
+
+    class Indirection extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    function App(props) {
+      return (
+        <Provider foo={props.foo} bar={props.bar}>
+          <Indirection>
+            <Indirection>
+              <Foo />
+            </Indirection>
+            <Indirection>
+              <Bar />
+            </Indirection>
+          </Indirection>
+        </Provider>
+      );
+    }
+
+    ReactNoop.render(<App foo={1} bar={1} />);
+    expect(ReactNoop.flush()).toEqual(['Foo', 'Bar']);
+    expect(ReactNoop.getChildren()).toEqual([span('Foo: 1'), span('Bar: 1')]);
+
+    // Update only foo
+    ReactNoop.render(<App foo={2} bar={1} />);
+    expect(ReactNoop.flush()).toEqual(['Foo']);
+    expect(ReactNoop.getChildren()).toEqual([span('Foo: 2'), span('Bar: 1')]);
+
+    // Update only bar
+    ReactNoop.render(<App foo={2} bar={2} />);
+    expect(ReactNoop.flush()).toEqual(['Bar']);
+    expect(ReactNoop.getChildren()).toEqual([span('Foo: 2'), span('Bar: 2')]);
+
+    // Update both
+    ReactNoop.render(<App foo={3} bar={3} />);
+    expect(ReactNoop.flush()).toEqual(['Foo', 'Bar']);
+    expect(ReactNoop.getChildren()).toEqual([span('Foo: 3'), span('Bar: 3')]);
+  });
+
   describe('fuzz test', () => {
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
     const contexts = new Map(
@@ -521,6 +595,7 @@ describe('ReactNewContext', () => {
                 />
               </Fragment>
             ),
+            null,
             i,
           );
         });

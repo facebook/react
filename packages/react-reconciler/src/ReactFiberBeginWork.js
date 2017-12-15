@@ -8,11 +8,7 @@
  */
 
 import type {HostConfig} from 'react-reconciler';
-import type {
-  ReactProviderType,
-  ReactConsumerType,
-  ReactContext,
-} from 'shared/ReactTypes';
+import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {HostContext} from './ReactFiberHostContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
@@ -70,6 +66,7 @@ import {
 import {pushProvider} from './ReactFiberNewContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import MAX_SIGNED_32_BIT_INT from './maxSigned32BitInt';
 
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
@@ -668,6 +665,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function propagateContextChange<V>(
     workInProgress: Fiber,
     context: ReactContext<V>,
+    changedBits: number,
     renderExpirationTime: ExpirationTime,
   ): void {
     if (enableNewContextAPI) {
@@ -678,7 +676,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         switch (fiber.tag) {
           case ConsumerComponent:
             // Check if the context matches.
-            if (fiber.type.context === context) {
+            const bits = fiber.stateNode;
+            if (fiber.type === context && (bits & changedBits) !== 0) {
               // Update the expiration time of all the ancestors, including
               // the alternates.
               let node = fiber;
@@ -720,7 +719,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             break;
           case ProviderComponent:
             // Don't scan deeper if this is a matching provider
-            nextFiber = fiber.type === context ? null : fiber.child;
+            nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
             break;
           default:
             // Traverse down.
@@ -776,12 +775,33 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       workInProgress.memoizedProps = newProps;
 
       const newValue = newProps.value;
-      const oldValue = oldProps !== null ? oldProps.value : null;
 
-      // Use Object.is to compare the new context value to the old value.
-      if (!is(newValue, oldValue)) {
-        propagateContextChange(workInProgress, context, renderExpirationTime);
+      let changedBits: number;
+      if (oldProps === null) {
+        // Initial render
+        changedBits = MAX_SIGNED_32_BIT_INT;
+      } else {
+        const oldValue = oldProps.value;
+        // Use Object.is to compare the new context value to the old value.
+        if (!is(newValue, oldValue)) {
+          changedBits =
+            context.calculateChangedBits !== null
+              ? context.calculateChangedBits(oldValue, newValue)
+              : MAX_SIGNED_32_BIT_INT;
+          if (changedBits !== 0) {
+            propagateContextChange(
+              workInProgress,
+              context,
+              changedBits,
+              renderExpirationTime,
+            );
+          }
+        } else {
+          // No change.
+          changedBits = 0;
+        }
       }
+      workInProgress.stateNode = changedBits;
 
       if (oldProps !== null && oldProps.children === newProps.children) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -800,8 +820,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     renderExpirationTime,
   ) {
     if (enableNewContextAPI) {
-      const consumerType: ReactConsumerType<any> = workInProgress.type;
-      const context: ReactContext<any> = consumerType.context;
+      const context: ReactContext<any> = workInProgress.type;
 
       const newProps = workInProgress.pendingProps;
       const oldProps = workInProgress.memoizedProps;
@@ -810,12 +829,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const providerFiber: Fiber | null = context.currentProvider;
 
       let newValue;
-      let valueDidChange;
+      let changedBits;
       if (providerFiber === null) {
         // This is a detached consumer (has no provider). Use the default
         // context value.
         newValue = context.defaultValue;
-        valueDidChange = false;
+        changedBits = 0;
       } else {
         const provider = providerFiber.pendingProps;
         invariant(
@@ -824,35 +843,31 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             'a bug in React. Please file an issue.',
         );
         newValue = provider.value;
-
-        // Context change propagation stops at matching consumers, for time-
-        // slicing. Continue the propagation here.
-        if (oldProps === null) {
-          valueDidChange = true;
-          propagateContextChange(workInProgress, context, renderExpirationTime);
-        } else {
-          const oldValue = oldProps !== null ? oldProps.__memoizedValue : null;
-          // Use Object.is to compare the new context value to the old value.
-          if (!is(newValue, oldValue)) {
-            valueDidChange = true;
-            propagateContextChange(
-              workInProgress,
-              context,
-              renderExpirationTime,
-            );
-          }
+        changedBits = providerFiber.stateNode;
+        if (changedBits !== 0) {
+          // Context change propagation stops at matching consumers, for time-
+          // slicing. Continue the propagation here.
+          propagateContextChange(
+            workInProgress,
+            context,
+            changedBits,
+            renderExpirationTime,
+          );
         }
       }
 
-      // The old context value is stored on the consumer object. We can't use the
-      // provider's memoizedProps because those have already been updated by the
-      // time we get here, in the provider's begin phase.
-      newProps.__memoizedValue = newValue;
+      // Store the bits on the fiber's stateNode for quick access.
+      let bits = newProps.bits;
+      if (bits === undefined || bits === null) {
+        // Subscribe to all changes by default
+        bits = MAX_SIGNED_32_BIT_INT;
+      }
+      workInProgress.stateNode = bits;
 
       if (hasLegacyContextChanged()) {
         // Normally we can bail out on props equality but if context has changed
         // we don't do the bailout and we have to reuse existing props instead.
-      } else if (newProps === oldProps && !valueDidChange) {
+      } else if (newProps === oldProps && changedBits === 0) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       const newChildren = newProps.render(newValue);

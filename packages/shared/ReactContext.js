@@ -9,7 +9,7 @@
 
 import {
   REACT_PROVIDER_TYPE,
-  REACT_CONSUMER_TYPE,
+  REACT_CONTEXT_TYPE,
   REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -20,11 +20,30 @@ import type {
   ReactNodeList,
 } from 'shared/ReactTypes';
 
-export function createContext<T>(defaultValue: T): ReactContext<T> {
+import warning from 'fbjs/lib/warning';
+
+export function createContext<T>(
+  defaultValue: T,
+  calculateChangedBits: ?(a: T, b: T) => number,
+): ReactContext<T> {
   let providerType;
-  let consumerType;
+
+  if (calculateChangedBits === undefined) {
+    calculateChangedBits = null;
+  } else {
+    if (__DEV__) {
+      warning(
+        calculateChangedBits === null ||
+          typeof calculateChangedBits === 'function',
+        'createContext: Expected the optional second argument to be a ' +
+          'function. Instead received: %s',
+        calculateChangedBits,
+      );
+    }
+  }
 
   const context = {
+    $$typeof: REACT_CONTEXT_TYPE,
     provide(value: T, children: ReactNodeList, key?: string): ReactProvider<T> {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
@@ -39,29 +58,27 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
     },
     consume(
       render: (value: T) => ReactNodeList,
+      bits?: number,
       key?: string,
     ): ReactConsumer<T> {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
-        type: consumerType,
+        type: context,
         key: key === null || key === undefined ? null : '' + key,
         ref: null,
         props: {
+          bits,
           render,
-          __memoizedValue: null,
         },
       };
     },
     defaultValue,
+    calculateChangedBits,
     currentProvider: null,
   };
 
   providerType = {
     $$typeof: REACT_PROVIDER_TYPE,
-    context,
-  };
-  consumerType = {
-    $$typeof: REACT_CONSUMER_TYPE,
     context,
   };
 

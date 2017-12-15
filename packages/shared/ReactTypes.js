@@ -67,25 +67,25 @@ export type ReactProviderType<T> = {
 
 export type ReactConsumer<T> = {
   $$typeof: Symbol | number,
-  type: ReactConsumerType<T>,
+  type: ReactContext<T>,
   key: null | string,
   ref: null,
   props: {
     render: (value: T) => ReactNodeList,
-    // TODO: Remove this hack
-    __memoizedValue: T | null,
+    bits?: number,
   },
 };
 
-export type ReactConsumerType<T> = {
-  $$typeof: Symbol | number,
-  context: ReactContext<T>,
-};
-
 export type ReactContext<T> = {
+  $$typeof: Symbol | number,
   provide(value: T, children: ReactNodeList, key?: string): ReactProvider<T>,
-  consume(render: (value: T) => ReactNodeList, key?: string): ReactConsumer<T>,
+  consume(
+    render: (value: T) => ReactNodeList,
+    bits?: number,
+    key?: string,
+  ): ReactConsumer<T>,
   defaultValue: T,
+  calculateChangedBits: ((a: T, b: T) => number) | null,
   currentProvider: any, // Fiber | null
 };
 
