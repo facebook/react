@@ -258,6 +258,7 @@ export type Reconciler<C, I, TI> = {
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
   deferredUpdates<A>(fn: () => A): A,
+  interactiveUpdates<A>(fn: () => A): A,
   injectIntoDevTools(devToolsConfig: DevToolsConfig<I, TI>): boolean,
   computeUniqueAsyncExpiration(): ExpirationTime,
 
@@ -302,6 +303,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     unbatchedUpdates,
     flushSync,
     deferredUpdates,
+    interactiveUpdates,
   } = ReactFiberScheduler(config);
 
   function scheduleRootUpdate(
@@ -431,6 +433,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     unbatchedUpdates,
 
     deferredUpdates,
+
+    interactiveUpdates,
 
     flushSync,
 

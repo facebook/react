@@ -1147,6 +1147,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return computeExpirationBucket(currentTime, expirationMs, bucketSizeMs);
   }
 
+  function computeInteractiveExpiration() {
+    // Should complete within ~500ms. 600ms max.
+    const currentTime = recalculateCurrentTime();
+    const expirationMs = 1000;
+    const bucketSizeMs = 100;
+    return computeExpirationBucket(currentTime, expirationMs, bucketSizeMs);
+  }
+
   // Creates a unique async expiration time.
   function computeUniqueAsyncExpiration(): ExpirationTime {
     let result = computeAsyncExpiration();
@@ -1309,6 +1317,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   let isRendering: boolean = false;
   let nextFlushedRoot: FiberRoot | null = null;
   let nextFlushedExpirationTime: ExpirationTime = NoWork;
+  let interactiveExpirationTime: ExpirationTime = NoWork;
   let deadlineDidExpire: boolean = false;
   let hasUnhandledError: boolean = false;
   let unhandledError: mixed | null = null;
@@ -1316,6 +1325,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   let isBatchingUpdates: boolean = false;
   let isUnbatchingUpdates: boolean = false;
+  let isBatchingInteractiveUpdates: boolean = false;
 
   let completedBatches: Array<Batch> | null = null;
 
@@ -1408,7 +1418,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     // TODO: Get rid of Sync and use current time?
     if (expirationTime === Sync) {
-      performWork(Sync, null);
+      performSyncWork();
     } else {
       scheduleCallbackWithExpiration(expirationTime);
     }
@@ -1474,6 +1484,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
 
+    if (
+      nextFlushedExpirationTime === NoWork ||
+      nextFlushedExpirationTime < interactiveExpirationTime
+    ) {
+      // There are no more pending interactive updates.
+      interactiveExpirationTime = NoWork;
+    }
+
     // If the next root is the same as the previous root, this is a nested
     // update. To prevent an infinite loop, increment the nested update count.
     const previousFlushedRoot = nextFlushedRoot;
@@ -1491,10 +1509,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function performAsyncWork(dl) {
-    performWork(NoWork, dl);
+    performWork(NoWork, recalculateCurrentTime(), dl);
   }
 
-  function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
+  function performSyncWork() {
+    performWork(Sync, mostRecentCurrentTime, null);
+  }
+
+  function performWork(
+    minExpirationTime: ExpirationTime,
+    currentTime: ExpirationTime,
+    dl: Deadline | null,
+  ) {
     deadline = dl;
 
     // Keep working on roots until there's no more work, or until the we reach
@@ -1516,7 +1542,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       performWorkOnRoot(
         nextFlushedRoot,
         nextFlushedExpirationTime,
-        recalculateCurrentTime(),
+        currentTime,
       );
       // Find the next highest priority work.
       findHighestPriorityRoot();
@@ -1705,7 +1731,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
       if (!isBatchingUpdates && !isRendering) {
-        performWork(Sync, null);
+        performSyncWork();
       }
     }
   }
@@ -1738,7 +1764,35 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         'flushSync was called from inside a lifecycle method. It cannot be ' +
           'called when React is already rendering.',
       );
-      performWork(Sync, null);
+      performSyncWork();
+    }
+  }
+
+  function interactiveUpdates<A>(fn: () => A): A {
+    invariant(
+      !isRendering,
+      'interactiveUpdates: Cannot schedule an interactive update while React ' +
+        'is already rendering.',
+    );
+
+    if (isBatchingInteractiveUpdates) {
+      return fn();
+    }
+
+    if (interactiveExpirationTime !== NoWork) {
+      // Synchronously flush pending interactive updates.
+      performWork(NoWork, interactiveExpirationTime, null);
+    }
+
+    const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
+    const previousExpirationContext = expirationContext;
+    isBatchingInteractiveUpdates = true;
+    interactiveExpirationTime = expirationContext = computeInteractiveExpiration();
+    try {
+      return fn();
+    } finally {
+      isBatchingInteractiveUpdates = previousIsBatchingInteractiveUpdates;
+      expirationContext = previousExpirationContext;
     }
   }
 
@@ -1751,6 +1805,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     unbatchedUpdates,
     flushSync,
     deferredUpdates,
+    interactiveUpdates,
     computeUniqueAsyncExpiration,
   };
 }
