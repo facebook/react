@@ -10,10 +10,10 @@
 /* eslint-disable */
 
 declare module 'deepDiffer' {
-  declare function exports(one: any, two: any): boolean;
+  declare module.exports: (one: any, two: any) => boolean;
 }
 declare module 'deepFreezeAndThrowOnMutationInDev' {
-  declare function exports<T>(obj: T): T;
+  declare module.exports: <T>(obj: T) => T;
 }
 declare module 'flattenStyle' {
 }
@@ -83,7 +83,7 @@ declare module 'UIManager' {
   ): Promise<any>;
 }
 declare module 'View' {
-  declare var exports: typeof React$Component;
+  declare module.exports: typeof React$Component;
 }
 
 declare module 'RTManager' {
