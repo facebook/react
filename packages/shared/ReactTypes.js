@@ -84,9 +84,10 @@ export type ReactContext<T> = {
     bits?: number,
     key?: string,
   ): ReactConsumer<T>,
-  defaultValue: T,
   calculateChangedBits: ((a: T, b: T) => number) | null,
-  currentProvider: any, // Fiber | null
+  defaultValue: T,
+  currentValue: T,
+  changedBits: number,
 };
 
 export type ReactPortal = {

@@ -72,9 +72,10 @@ export function createContext<T>(
         },
       };
     },
-    defaultValue,
     calculateChangedBits,
-    currentProvider: null,
+    defaultValue,
+    currentValue: defaultValue,
+    changedBits: 0,
   };
 
   providerType = {

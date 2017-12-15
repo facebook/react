@@ -764,12 +764,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const newProps = workInProgress.pendingProps;
       const oldProps = workInProgress.memoizedProps;
 
-      pushProvider(workInProgress);
-
       if (hasLegacyContextChanged()) {
         // Normally we can bail out on props equality but if context has changed
         // we don't do the bailout and we have to reuse existing props instead.
       } else if (oldProps === newProps) {
+        pushProvider(workInProgress);
+        workInProgress.stateNode = 0;
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       workInProgress.memoizedProps = newProps;
@@ -801,7 +801,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           changedBits = 0;
         }
       }
+
       workInProgress.stateNode = changedBits;
+      pushProvider(workInProgress);
 
       if (oldProps !== null && oldProps.children === newProps.children) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -821,39 +823,20 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ) {
     if (enableNewContextAPI) {
       const context: ReactContext<any> = workInProgress.type;
-
       const newProps = workInProgress.pendingProps;
-      const oldProps = workInProgress.memoizedProps;
 
-      // Get the nearest ancestor provider.
-      const providerFiber: Fiber | null = context.currentProvider;
+      const newValue = context.currentValue;
+      const changedBits = context.changedBits;
 
-      let newValue;
-      let changedBits;
-      if (providerFiber === null) {
-        // This is a detached consumer (has no provider). Use the default
-        // context value.
-        newValue = context.defaultValue;
-        changedBits = 0;
-      } else {
-        const provider = providerFiber.pendingProps;
-        invariant(
-          provider,
-          'Provider should have pending props. This error is likely caused by ' +
-            'a bug in React. Please file an issue.',
+      if (changedBits !== 0) {
+        // Context change propagation stops at matching consumers, for time-
+        // slicing. Continue the propagation here.
+        propagateContextChange(
+          workInProgress,
+          context,
+          changedBits,
+          renderExpirationTime,
         );
-        newValue = provider.value;
-        changedBits = providerFiber.stateNode;
-        if (changedBits !== 0) {
-          // Context change propagation stops at matching consumers, for time-
-          // slicing. Continue the propagation here.
-          propagateContextChange(
-            workInProgress,
-            context,
-            changedBits,
-            renderExpirationTime,
-          );
-        }
       }
 
       // Store the bits on the fiber's stateNode for quick access.
@@ -864,12 +847,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       workInProgress.stateNode = bits;
 
-      if (hasLegacyContextChanged()) {
-        // Normally we can bail out on props equality but if context has changed
-        // we don't do the bailout and we have to reuse existing props instead.
-      } else if (newProps === oldProps && changedBits === 0) {
-        return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      }
       const newChildren = newProps.render(newValue);
       reconcileChildren(current, workInProgress, newChildren);
       return workInProgress.child;
