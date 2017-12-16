@@ -62,6 +62,16 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div width={null} />);
         expect(e.hasAttribute('width')).toBe(false);
       });
+
+      itRenders('no string prop with function value', async render => {
+        const e = await render(<div width={function() {}} />, 1);
+        expect(e.hasAttribute('width')).toBe(false);
+      });
+
+      itRenders('no string prop with symbol value', async render => {
+        const e = await render(<div width={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('width')).toBe(false);
+      });
     });
 
     describe('boolean properties', function() {
@@ -122,6 +132,16 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div hidden={null} />);
         expect(e.hasAttribute('hidden')).toBe(false);
       });
+
+      itRenders('no boolean prop with function value', async render => {
+        const e = await render(<div hidden={function() {}} />, 1);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
+
+      itRenders('no boolean prop with symbol value', async render => {
+        const e = await render(<div hidden={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
     });
 
     describe('download property (combined boolean/string attribute)', function() {
@@ -162,6 +182,16 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('no download prop with undefined value', async render => {
         const e = await render(<div download={undefined} />);
+        expect(e.hasAttribute('download')).toBe(false);
+      });
+
+      itRenders('no download prop with function value', async render => {
+        const e = await render(<div download={function() {}} />, 1);
+        expect(e.hasAttribute('download')).toBe(false);
+      });
+
+      itRenders('no download prop with symbol value', async render => {
+        const e = await render(<div download={Symbol('foo')} />, 1);
         expect(e.hasAttribute('download')).toBe(false);
       });
     });
@@ -257,6 +287,11 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
+      itRenders('numeric property with zero value', async render => {
+        const e = await render(<ol start={0} />);
+        expect(e.getAttribute('start')).toBe('0');
+      });
+
       itRenders(
         'no positive numeric property with zero value',
         async render => {
@@ -265,9 +300,27 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
-      itRenders('numeric property with zero value', async render => {
-        const e = await render(<ol start={0} />);
-        expect(e.getAttribute('start')).toBe('0');
+      itRenders('no numeric prop with function value', async render => {
+        const e = await render(<ol start={function() {}} />, 1);
+        expect(e.hasAttribute('start')).toBe(false);
+      });
+
+      itRenders('no numeric prop with symbol value', async render => {
+        const e = await render(<ol start={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('start')).toBe(false);
+      });
+
+      itRenders(
+        'no positive numeric prop with function value',
+        async render => {
+          const e = await render(<input size={function() {}} />, 1);
+          expect(e.hasAttribute('size')).toBe(false);
+        },
+      );
+
+      itRenders('no positive numeric prop with symbol value', async render => {
+        const e = await render(<input size={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('size')).toBe(false);
       });
     });
 

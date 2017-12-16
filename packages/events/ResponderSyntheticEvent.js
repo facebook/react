@@ -12,33 +12,10 @@ import SyntheticEvent from './SyntheticEvent';
  * interface will ensure that it is cleaned up when pooled/destroyed. The
  * `ResponderEventPlugin` will populate it appropriately.
  */
-const ResponderEventInterface = {
+const ResponderSyntheticEvent = SyntheticEvent.extend({
   touchHistory: function(nativeEvent) {
     return null; // Actually doesn't even look at the native event.
   },
-};
-
-/**
- * @param {object} dispatchConfig Configuration used to dispatch this event.
- * @param {string} dispatchMarker Marker identifying the event target.
- * @param {object} nativeEvent Native event.
- * @extends {SyntheticEvent}
- */
-function ResponderSyntheticEvent(
-  dispatchConfig,
-  dispatchMarker,
-  nativeEvent,
-  nativeEventTarget,
-) {
-  return SyntheticEvent.call(
-    this,
-    dispatchConfig,
-    dispatchMarker,
-    nativeEvent,
-    nativeEventTarget,
-  );
-}
-
-SyntheticEvent.augmentClass(ResponderSyntheticEvent, ResponderEventInterface);
+});
 
 export default ResponderSyntheticEvent;

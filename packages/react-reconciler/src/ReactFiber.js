@@ -7,12 +7,7 @@
  */
 
 import type {ReactElement, Source} from 'shared/ReactElementType';
-import type {
-  ReactCall,
-  ReactFragment,
-  ReactPortal,
-  ReactReturn,
-} from 'shared/ReactTypes';
+import type {ReactFragment, ReactPortal} from 'shared/ReactTypes';
 import type {TypeOfWork} from 'shared/ReactTypeOfWork';
 import type {TypeOfInternalContext} from './ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
@@ -36,6 +31,11 @@ import getComponentName from 'shared/getComponentName';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {NoContext, AsyncUpdates} from './ReactTypeOfInternalContext';
+import {
+  REACT_FRAGMENT_TYPE,
+  REACT_RETURN_TYPE,
+  REACT_CALL_TYPE,
+} from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
 
@@ -324,44 +324,79 @@ export function createFiberFromElement(
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, pendingProps, key, internalContextTag);
     fiber.type = type;
-  } else if (
-    typeof type === 'object' &&
-    type !== null &&
-    typeof type.tag === 'number'
-  ) {
-    // Currently assumed to be a continuation and therefore is a fiber already.
-    // TODO: The yield system is currently broken for updates in some cases.
-    // The reified yield stores a fiber, but we don't know which fiber that is;
-    // the current or a workInProgress? When the continuation gets rendered here
-    // we don't know if we can reuse that fiber or if we need to clone it.
-    // There is probably a clever way to restructure this.
-    fiber = ((type: any): Fiber);
-    fiber.pendingProps = pendingProps;
   } else {
-    let info = '';
-    if (__DEV__) {
-      if (
-        type === undefined ||
-        (typeof type === 'object' &&
+    switch (type) {
+      case REACT_FRAGMENT_TYPE:
+        return createFiberFromFragment(
+          pendingProps.children,
+          internalContextTag,
+          expirationTime,
+          key,
+        );
+      case REACT_CALL_TYPE:
+        fiber = createFiber(
+          CallComponent,
+          pendingProps,
+          key,
+          internalContextTag,
+        );
+        fiber.type = REACT_CALL_TYPE;
+        break;
+      case REACT_RETURN_TYPE:
+        fiber = createFiber(
+          ReturnComponent,
+          pendingProps,
+          key,
+          internalContextTag,
+        );
+        fiber.type = REACT_RETURN_TYPE;
+        break;
+      default: {
+        if (
+          typeof type === 'object' &&
           type !== null &&
-          Object.keys(type).length === 0)
-      ) {
-        info +=
-          ' You likely forgot to export your component from the file ' +
-          "it's defined in, or you might have mixed up default and named imports.";
-      }
-      const ownerName = owner ? getComponentName(owner) : null;
-      if (ownerName) {
-        info += '\n\nCheck the render method of `' + ownerName + '`.';
+          typeof type.tag === 'number'
+        ) {
+          // Currently assumed to be a continuation and therefore is a
+          // fiber already.
+          // TODO: The yield system is currently broken for updates in some
+          // cases. The reified yield stores a fiber, but we don't know which
+          // fiber that is; the current or a workInProgress? When the
+          // continuation gets rendered here we don't know if we can reuse that
+          // fiber or if we need to clone it. There is probably a clever way to
+          // restructure this.
+          fiber = ((type: any): Fiber);
+          fiber.pendingProps = pendingProps;
+        } else {
+          let info = '';
+          if (__DEV__) {
+            if (
+              type === undefined ||
+              (typeof type === 'object' &&
+                type !== null &&
+                Object.keys(type).length === 0)
+            ) {
+              info +=
+                ' You likely forgot to export your component from the file ' +
+                "it's defined in, or you might have mixed up default and " +
+                'named imports.';
+            }
+            const ownerName = owner ? getComponentName(owner) : null;
+            if (ownerName) {
+              info += '\n\nCheck the render method of `' + ownerName + '`.';
+            }
+          }
+          invariant(
+            false,
+            'Element type is invalid: expected a string (for built-in ' +
+              'components) or a class/function (for composite components) ' +
+              'but got: %s.%s',
+            type == null ? type : typeof type,
+            info,
+          );
+        }
       }
     }
-    invariant(
-      false,
-      'Element type is invalid: expected a string (for built-in components) ' +
-        'or a class/function (for composite components) but got: %s.%s',
-      type == null ? type : typeof type,
-      info,
-    );
   }
 
   if (__DEV__) {
@@ -398,27 +433,6 @@ export function createFiberFromText(
 export function createFiberFromHostInstanceForDeletion(): Fiber {
   const fiber = createFiber(HostComponent, null, null, NoContext);
   fiber.type = 'DELETED';
-  return fiber;
-}
-
-export function createFiberFromCall(
-  call: ReactCall,
-  internalContextTag: TypeOfInternalContext,
-  expirationTime: ExpirationTime,
-): Fiber {
-  const fiber = createFiber(CallComponent, call, call.key, internalContextTag);
-  fiber.type = call.handler;
-  fiber.expirationTime = expirationTime;
-  return fiber;
-}
-
-export function createFiberFromReturn(
-  returnNode: ReactReturn,
-  internalContextTag: TypeOfInternalContext,
-  expirationTime: ExpirationTime,
-): Fiber {
-  const fiber = createFiber(ReturnComponent, null, null, internalContextTag);
-  fiber.expirationTime = expirationTime;
   return fiber;
 }
 

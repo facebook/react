@@ -281,8 +281,9 @@ export function createElementWithValidation(type, props, children) {
   const validType =
     typeof type === 'string' ||
     typeof type === 'function' ||
-    typeof type === 'symbol' ||
-    typeof type === 'number';
+    // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
+    type === REACT_FRAGMENT_TYPE;
+
   // We warn in this case but don't throw. We expect the element creation to
   // succeed and there will likely be errors in render.
   if (!validType) {
@@ -336,7 +337,7 @@ export function createElementWithValidation(type, props, children) {
     }
   }
 
-  if (typeof type === 'symbol' && type === REACT_FRAGMENT_TYPE) {
+  if (type === REACT_FRAGMENT_TYPE) {
     validateFragmentProps(element);
   } else {
     validatePropTypes(element);

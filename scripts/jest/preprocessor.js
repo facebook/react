@@ -1,29 +1,29 @@
 'use strict';
 
-var path = require('path');
+const path = require('path');
 
-var babel = require('babel-core');
-var coffee = require('coffee-script');
+const babel = require('babel-core');
+const coffee = require('coffee-script');
 
-var tsPreprocessor = require('./typescript/preprocessor');
-var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
+const tsPreprocessor = require('./typescript/preprocessor');
+const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
 // Use require.resolve to be resilient to file moves, npm updates, etc
-var pathToBabel = path.join(
+const pathToBabel = path.join(
   require.resolve('babel-core'),
   '..',
   'package.json'
 );
-var pathToBabelPluginDevWithCode = require.resolve(
+const pathToBabelPluginDevWithCode = require.resolve(
   '../error-codes/replace-invariant-error-codes'
 );
-var pathToBabelPluginAsyncToGenerator = require.resolve(
+const pathToBabelPluginAsyncToGenerator = require.resolve(
   'babel-plugin-transform-async-to-generator'
 );
-var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
-var pathToErrorCodes = require.resolve('../error-codes/codes.json');
+const pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
+const pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
-var babelOptions = {
+const babelOptions = {
   plugins: [
     // For Node environment only. For builds, Rollup takes care of ESM.
     require.resolve('babel-plugin-transform-es2015-modules-commonjs'),
@@ -51,7 +51,7 @@ module.exports = {
     if (!filePath.match(/\/third_party\//)) {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
-      var isTestFile = !!filePath.match(/\/__tests__\//);
+      const isTestFile = !!filePath.match(/\/__tests__\//);
       return babel.transform(
         src,
         Object.assign(

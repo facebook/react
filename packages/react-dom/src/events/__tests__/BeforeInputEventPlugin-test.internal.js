@@ -76,7 +76,12 @@ describe('BeforeInputEventPlugin', function() {
     return function() {
       const newArgs = [node].concat(Array.prototype.slice.call(arguments));
       const newEvents = extract.apply(this, newArgs);
-      Array.prototype.push.apply(events, newEvents);
+
+      if (Array.isArray(newEvents)) {
+        Array.prototype.push.apply(events, newEvents);
+      } else if (newEvents) {
+        events.push(newEvents);
+      }
     };
   }
 
@@ -156,32 +161,17 @@ describe('BeforeInputEventPlugin', function() {
   // keyUp.
   const Expected_Webkit = () => [
     {type: ModuleCache.SyntheticCompositionEvent, data: {}},
-    {type: null},
-    {type: null},
     {type: ModuleCache.SyntheticInputEvent, data: {data: 'A'}},
-    {type: null},
-    {type: null}, // textinput of A
-    {type: null},
-    {type: null}, // keyUp of 65
-    {type: null},
+    // textinput of A
+    // keyUp of 65
     {type: ModuleCache.SyntheticInputEvent, data: {data: 'abc'}},
-    {type: null},
-    {type: null}, // textinput of abc
-    {type: null},
-    {type: null}, // keyUp of 32
-    {type: null},
+    // textinput of abc
+    // keyUp of 32
     {type: ModuleCache.SyntheticInputEvent, data: {data: 'xyz'}},
-    {type: null},
-    {type: null}, // textinput of xyz
-    {type: null},
-    {type: null}, // keyUp of 32
+    // textinput of xyz
+    // keyUp of 32
     {type: ModuleCache.SyntheticCompositionEvent, data: {data: 'Hello'}},
-    {type: null},
-
     // Emoji test
-    {type: null},
-    {type: null},
-    {type: null},
     {type: ModuleCache.SyntheticInputEvent, data: {data: '\uD83D\uDE0A'}},
   ];
 
@@ -191,39 +181,22 @@ describe('BeforeInputEventPlugin', function() {
   // element, not event data.
   const Expected_IE11 = () => [
     {type: ModuleCache.SyntheticCompositionEvent, data: {}},
-    {type: null},
-    {type: null},
-    {type: null}, // textInput of A
-    {type: null},
-    {type: null}, // textinput of A
-    {type: null},
-    {type: null}, // keyUp of 65
-    {type: null},
-    {type: null}, // textInput of abc
-    {type: null},
-    {type: null}, // textinput of abc
-
+    // textInput of A
+    // textinput of A
+    // keyUp of 65
+    // textInput of abc
+    // textinput of abc
     // fallbackData should NOT be set at keyUp with any of END_KEYCODES
-    {type: null},
-    {type: null}, // keyUp of 32
-
-    {type: null},
-    {type: null}, // textInput of xyz
-    {type: null},
-    {type: null}, // textinput of xyz
-    {type: null},
-    {type: null}, // keyUp of 32
-
+    // keyUp of 32
+    // textInput of xyz
+    // textinput of xyz
+    // keyUp of 32
     // fallbackData is retrieved from the element, which is XYZ,
     // at a time of compositionend
     {type: ModuleCache.SyntheticCompositionEvent, data: {}},
     {type: ModuleCache.SyntheticInputEvent, data: {data: 'XYZ'}},
-
     // Emoji test
-    {type: null},
     {type: ModuleCache.SyntheticInputEvent, data: {data: '\uD83D\uDE0A'}},
-    {type: null},
-    {type: null},
   ];
 
   function TestEditableReactComponent(Emulator, Scenario, ExpectedResult) {

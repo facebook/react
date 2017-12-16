@@ -3,95 +3,79 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import {
-  ID_ATTRIBUTE_NAME,
-  ROOT_ATTRIBUTE_NAME,
   getPropertyInfo,
-  shouldSetAttribute,
+  shouldIgnoreAttribute,
+  shouldRemoveAttribute,
   isAttributeNameSafe,
+  BOOLEAN,
+  OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
 
-// shouldIgnoreValue() is currently duplicated in DOMMarkupOperations.
-// TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
-  return (
-    value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
-  );
-}
-
-/**
- * Operations for dealing with DOM properties.
- */
-
-export function setAttributeForID(node, id) {
-  node.setAttribute(ID_ATTRIBUTE_NAME, id);
-}
-
-export function setAttributeForRoot(node) {
-  node.setAttribute(ROOT_ATTRIBUTE_NAME, '');
-}
+import type {PropertyInfo} from '../shared/DOMProperty';
 
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
  * The "expected" argument is used as a hint of what the expected value is.
  * Some properties have multiple equivalent values.
  */
-export function getValueForProperty(node, name, expected) {
+export function getValueForProperty(
+  node: Element,
+  name: string,
+  expected: mixed,
+  propertyInfo: PropertyInfo,
+): mixed {
   if (__DEV__) {
-    const propertyInfo = getPropertyInfo(name);
-    if (propertyInfo) {
-      if (propertyInfo.mustUseProperty) {
-        return node[propertyInfo.propertyName];
-      } else {
-        const attributeName = propertyInfo.attributeName;
+    if (propertyInfo.mustUseProperty) {
+      const {propertyName} = propertyInfo;
+      return (node: any)[propertyName];
+    } else {
+      const attributeName = propertyInfo.attributeName;
 
-        let stringValue = null;
+      let stringValue = null;
 
-        if (propertyInfo.hasOverloadedBooleanValue) {
-          if (node.hasAttribute(attributeName)) {
-            const value = node.getAttribute(attributeName);
-            if (value === '') {
-              return true;
-            }
-            if (shouldIgnoreValue(propertyInfo, expected)) {
-              return value;
-            }
-            if (value === '' + expected) {
-              return expected;
-            }
+      if (propertyInfo.type === OVERLOADED_BOOLEAN) {
+        if (node.hasAttribute(attributeName)) {
+          const value = node.getAttribute(attributeName);
+          if (value === '') {
+            return true;
+          }
+          if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
             return value;
           }
-        } else if (node.hasAttribute(attributeName)) {
-          if (shouldIgnoreValue(propertyInfo, expected)) {
-            // We had an attribute but shouldn't have had one, so read it
-            // for the error message.
-            return node.getAttribute(attributeName);
-          }
-          if (propertyInfo.hasBooleanValue) {
-            // If this was a boolean, it doesn't matter what the value is
-            // the fact that we have it is the same as the expected.
+          if (value === '' + (expected: any)) {
             return expected;
           }
-          // Even if this property uses a namespace we use getAttribute
-          // because we assume its namespaced name is the same as our config.
-          // To use getAttributeNS we need the local name which we don't have
-          // in our config atm.
-          stringValue = node.getAttribute(attributeName);
+          return value;
         }
-
-        if (shouldIgnoreValue(propertyInfo, expected)) {
-          return stringValue === null ? expected : stringValue;
-        } else if (stringValue === '' + expected) {
+      } else if (node.hasAttribute(attributeName)) {
+        if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return node.getAttribute(attributeName);
+        }
+        if (propertyInfo.type === BOOLEAN) {
+          // If this was a boolean, it doesn't matter what the value is
+          // the fact that we have it is the same as the expected.
           return expected;
-        } else {
-          return stringValue;
         }
+        // Even if this property uses a namespace we use getAttribute
+        // because we assume its namespaced name is the same as our config.
+        // To use getAttributeNS we need the local name which we don't have
+        // in our config atm.
+        stringValue = node.getAttribute(attributeName);
+      }
+
+      if (shouldRemoveAttribute(name, expected, propertyInfo, false)) {
+        return stringValue === null ? expected : stringValue;
+      } else if (stringValue === '' + (expected: any)) {
+        return expected;
+      } else {
+        return stringValue;
       }
     }
   }
@@ -102,7 +86,11 @@ export function getValueForProperty(node, name, expected) {
  * The third argument is used as a hint of what the expected value is. Some
  * attributes have multiple equivalent values.
  */
-export function getValueForAttribute(node, name, expected) {
+export function getValueForAttribute(
+  node: Element,
+  name: string,
+  expected: mixed,
+): mixed {
   if (__DEV__) {
     if (!isAttributeNameSafe(name)) {
       return;
@@ -111,7 +99,7 @@ export function getValueForAttribute(node, name, expected) {
       return expected === undefined ? undefined : null;
     }
     const value = node.getAttribute(name);
-    if (value === '' + expected) {
+    if (value === '' + (expected: any)) {
       return expected;
     }
     return value;
@@ -125,84 +113,62 @@ export function getValueForAttribute(node, name, expected) {
  * @param {string} name
  * @param {*} value
  */
-export function setValueForProperty(node, name, value) {
+export function setValueForProperty(
+  node: Element,
+  name: string,
+  value: mixed,
+  isCustomComponentTag: boolean,
+) {
   const propertyInfo = getPropertyInfo(name);
-
-  if (propertyInfo && shouldSetAttribute(name, value)) {
-    if (shouldIgnoreValue(propertyInfo, value)) {
-      deleteValueForProperty(node, name);
-      return;
-    } else if (propertyInfo.mustUseProperty) {
+  if (shouldIgnoreAttribute(name, propertyInfo, isCustomComponentTag)) {
+    return;
+  }
+  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
+    value = null;
+  }
+  // If the prop isn't in the special list, treat it as a simple attribute.
+  if (isCustomComponentTag || propertyInfo === null) {
+    if (isAttributeNameSafe(name)) {
+      const attributeName = name;
+      if (value === null) {
+        node.removeAttribute(attributeName);
+      } else {
+        node.setAttribute(attributeName, '' + (value: any));
+      }
+    }
+    return;
+  }
+  const {mustUseProperty} = propertyInfo;
+  if (mustUseProperty) {
+    const {propertyName} = propertyInfo;
+    if (value === null) {
+      const {type} = propertyInfo;
+      (node: any)[propertyName] = type === BOOLEAN ? false : '';
+    } else {
       // Contrary to `setAttribute`, object properties are properly
       // `toString`ed by IE8/9.
-      node[propertyInfo.propertyName] = value;
+      (node: any)[propertyName] = value;
+    }
+    return;
+  }
+  // The rest are treated as attributes with special cases.
+  const {attributeName, attributeNamespace} = propertyInfo;
+  if (value === null) {
+    node.removeAttribute(attributeName);
+  } else {
+    const {type} = propertyInfo;
+    let attributeValue;
+    if (type === BOOLEAN || (type === OVERLOADED_BOOLEAN && value === true)) {
+      attributeValue = '';
     } else {
-      const attributeName = propertyInfo.attributeName;
-      const namespace = propertyInfo.attributeNamespace;
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      if (namespace) {
-        node.setAttributeNS(namespace, attributeName, '' + value);
-      } else if (
-        propertyInfo.hasBooleanValue ||
-        (propertyInfo.hasOverloadedBooleanValue && value === true)
-      ) {
-        node.setAttribute(attributeName, '');
-      } else {
-        node.setAttribute(attributeName, '' + value);
-      }
+      attributeValue = '' + (value: any);
     }
-  } else {
-    setValueForAttribute(
-      node,
-      name,
-      shouldSetAttribute(name, value) ? value : null,
-    );
-    return;
-  }
-}
-
-export function setValueForAttribute(node, name, value) {
-  if (!isAttributeNameSafe(name)) {
-    return;
-  }
-  if (value == null) {
-    node.removeAttribute(name);
-  } else {
-    node.setAttribute(name, '' + value);
-  }
-}
-
-/**
- * Deletes an attributes from a node.
- *
- * @param {DOMElement} node
- * @param {string} name
- */
-export function deleteValueForAttribute(node, name) {
-  node.removeAttribute(name);
-}
-
-/**
- * Deletes the value for a property on a node.
- *
- * @param {DOMElement} node
- * @param {string} name
- */
-export function deleteValueForProperty(node, name) {
-  const propertyInfo = getPropertyInfo(name);
-  if (propertyInfo) {
-    if (propertyInfo.mustUseProperty) {
-      const propName = propertyInfo.propertyName;
-      if (propertyInfo.hasBooleanValue) {
-        node[propName] = false;
-      } else {
-        node[propName] = '';
-      }
+    if (attributeNamespace) {
+      node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
     } else {
-      node.removeAttribute(propertyInfo.attributeName);
+      node.setAttribute(attributeName, attributeValue);
     }
-  } else {
-    node.removeAttribute(name);
   }
 }

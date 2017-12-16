@@ -453,20 +453,29 @@ const BeforeInputEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    return [
-      extractCompositionEvent(
-        topLevelType,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-      ),
-      extractBeforeInputEvent(
-        topLevelType,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-      ),
-    ];
+    const composition = extractCompositionEvent(
+      topLevelType,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+    );
+
+    const beforeInput = extractBeforeInputEvent(
+      topLevelType,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+    );
+
+    if (composition === null) {
+      return beforeInput;
+    }
+
+    if (beforeInput === null) {
+      return composition;
+    }
+
+    return [composition, beforeInput];
   },
 };
 

@@ -1,10 +1,10 @@
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var ts = require('typescript');
+const fs = require('fs');
+const path = require('path');
+const ts = require('typescript');
 
-var tsOptions = {
+const tsOptions = {
   module: ts.ModuleKind.CommonJS,
   jsx: ts.JsxEmit.React,
 };
@@ -20,12 +20,12 @@ function formatErrorMessage(error) {
 }
 
 function compile(content, contentFilename) {
-  var output = null;
-  var compilerHost = {
+  let output = null;
+  const compilerHost = {
     getSourceFile(filename, languageVersion) {
-      var source;
-      var jestRegex = /jest\.d\.ts/;
-      var reactRegex = /(?:React|ReactDOM|PropTypes)(?:\.d)?\.ts$/;
+      let source;
+      const jestRegex = /jest\.d\.ts/;
+      const reactRegex = /(?:React|ReactDOM|PropTypes)(?:\.d)?\.ts$/;
 
       // `path.normalize` is used to turn forward slashes in
       // the file path into backslashes on Windows.
@@ -78,13 +78,15 @@ function compile(content, contentFilename) {
       return ts.sys.useCaseSensitiveFileNames;
     },
   };
-  var program = ts.createProgram(
+  const program = ts.createProgram(
     ['lib.d.ts', 'jest.d.ts', contentFilename],
     tsOptions,
     compilerHost
   );
-  var emitResult = program.emit();
-  var errors = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
+  const emitResult = program.emit();
+  const errors = ts
+    .getPreEmitDiagnostics(program)
+    .concat(emitResult.diagnostics);
   if (errors.length) {
     throw new Error(errors.map(formatErrorMessage).join('\n'));
   }
