@@ -121,5 +121,5 @@ async function runBenchmark(benchmark, headless) {
 
 module.exports = {
   runBenchmark,
-  calculateAverages
+  calculateAverages,
 };
