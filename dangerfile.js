@@ -9,15 +9,38 @@
 
 'use strict';
 
-const { danger, markdown, warn } = require('danger');
+const { danger, markdown, schedule } = require('danger');
 
-// Tags big PRs
-var bigPRThreshold = 600;
-if (danger.git.modified_files + danger.git.added_files + danger.git.deleted_files > bigPRThreshold) {
-  const title = ':exclamation: Big PR';
-  const files = danger.git.modified_files + danger.git.added_files + danger.git.deleted_files;
-  const idea = `This PR is extremely unlikely to get reviewed because it touches ${files} files.`;
-  warn(`${title} - <i>${idea}</i>`);
+const { resultsHeaders, generateResultsArray, currentBuildResults } = require('./scripts/rollup/stats');
 
-  markdown('@facebook-github-bot large-pr');  
+/**
+ * Generates a Markdown table
+ * @param {string[]} headers 
+ * @param {string[][]} body 
+ */
+function generateMDTable(headers, body) {
+  const tableHeaders = [
+    headers.join(' | '), 
+    headers.map(() => ' --- ').join(' | '),
+  ];
+
+  const tablebody = body.map(r => r.join(' | '));
+  return tableHeaders.join('\n') + '\n' + tablebody.join('\n');
 }
+
+// Grab the results.json before we ran CI via the GH API
+const getJSON = danger.github.utils
+  .fileContents('scripts/rollup/results.json');
+
+// @bug See https://github.com/danger/danger-js/issues/443
+schedule(getJSON);
+getJSON.then(APIPreviousBuildResults => {
+  const previousBuildResults = JSON.parse(APIPreviousBuildResults);
+  const results = generateResultsArray(currentBuildResults, previousBuildResults);
+
+  markdown('### Bundle Changes:\n');
+  // const percentToWarrentShowing = 0.1
+  // const onlyResultsToShow = results.filter(f => Math.abs(f[3]) > percentToWarrentShowing);
+
+  markdown(generateMDTable(resultsHeaders, results));
+});
