@@ -70,7 +70,6 @@ function trackValueOnNode(node: any): ?ValueTracker {
   }
 
   Object.defineProperty(node, valueField, {
-    enumerable: descriptor.enumerable,
     configurable: true,
     get: function() {
       return descriptor.get.call(this);
@@ -79,6 +78,10 @@ function trackValueOnNode(node: any): ?ValueTracker {
       currentValue = '' + value;
       descriptor.set.call(this, value);
     },
+  });
+
+  Object.defineProperty(node, valueField, {
+    enumerable: descriptor.enumerable,
   });
 
   const tracker = {
