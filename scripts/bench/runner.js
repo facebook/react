@@ -3,10 +3,7 @@
 const {readdirSync, statSync} = require('fs');
 const {join} = require('path');
 const uniqueRandomArray = require('unique-random-array');
-const {
-  runBenchmark,
-  calculateAverages,
- } = require('./benchmark');
+const {runBenchmark, calculateAverages} = require('./benchmark');
 const {
   buildReactBundles,
   buildBenchmark,
@@ -38,17 +35,18 @@ const skipBuild = argv['skip-build'];
 
 function terminationReached(benchmarkProgressObj) {
   let populatedNames = Object.keys(benchmarkProgressObj);
-	let terminated = populatedNames.reduce((base, benchmarkName) => {
-    base = base && (benchmarkProgressObj[benchmarkName] === BENCHMARK_TRIAL_RUN_LIMIT);
+  let terminated = populatedNames.reduce((base, benchmarkName) => {
+    base =
+      base && benchmarkProgressObj[benchmarkName] === BENCHMARK_TRIAL_RUN_LIMIT;
     return base;
-	}, true);
-	return terminated;
+  }, true);
+  return terminated;
 }
 
 function initializeBenchmarkProgressObj(benchmarkNames) {
-	let progressObj = {};
-	benchmarkNames.forEach((key) => {
-		progressObj[key] = 0;
+  let progressObj = {};
+  benchmarkNames.forEach(key => {
+    progressObj[key] = 0;
   });
   return progressObj;
 }
@@ -58,9 +56,13 @@ async function runBenchmarks(reactPath) {
   const results = {};
   let filteredBenchmarkNames = benchmarkNames;
   if (benchmarkFilter) {
-    filteredBenchmarkNames = benchmarkNames.filter((name) => name.indexOf(benchmarkFilter) !== -1 );
+    filteredBenchmarkNames = benchmarkNames.filter(
+      name => name.indexOf(benchmarkFilter) !== -1
+    );
   }
-  let benchmarkProgressObj = initializeBenchmarkProgressObj(filteredBenchmarkNames);
+  let benchmarkProgressObj = initializeBenchmarkProgressObj(
+    filteredBenchmarkNames
+  );
   let getRandomBenchmarkName = uniqueRandomArray(filteredBenchmarkNames);
   const server = serveBenchmark();
   await wait(1000);
