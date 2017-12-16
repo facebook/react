@@ -7,9 +7,6 @@ const stats = require('stats-analysis');
 const config = require('lighthouse/lighthouse-core/config/perf.json');
 const spawn = require('child_process').spawn;
 const os = require('os');
-
-const timesToRun = 10;
-
 function wait(val) {
   return new Promise(resolve => setTimeout(resolve, val));
 }
@@ -110,26 +107,19 @@ async function launchChrome(headless) {
 }
 
 async function runBenchmark(benchmark, headless) {
-  const results = {
-    runs: [],
-    averages: [],
-  };
-
   await initChrome();
+  let launcher = await launchChrome(headless);
 
-  for (let i = 0; i < timesToRun; i++) {
-    let launcher = await launchChrome(headless);
-
-    results.runs.push(await runScenario(benchmark, launcher));
-    // add a delay or sometimes it confuses lighthouse and it hangs
-    await wait(500);
-    try {
-      await launcher.kill();
-    } catch (e) {}
-  }
-
-  results.averages = calculateAverages(results.runs);
-  return results;
+  let result = await runScenario(benchmark, launcher);
+  // add a delay or sometimes it confuses lighthouse and it hangs
+  await wait(500);
+  try {
+    await launcher.kill();
+  } catch (e) {}
+  return result;
 }
 
-module.exports = runBenchmark;
+module.exports = {
+  runBenchmark,
+  calculateAverages
+};

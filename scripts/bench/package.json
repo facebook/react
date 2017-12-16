@@ -16,6 +16,7 @@
     "ncp": "^2.0.0",
     "nodegit": "^0.18.3",
     "rimraf": "^2.6.1",
-    "stats-analysis": "^2.0.0"
+    "stats-analysis": "^2.0.0",
+    "unique-random-array": "1.0.0"
   }
 }

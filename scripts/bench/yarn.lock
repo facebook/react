@@ -1557,6 +1557,16 @@ union@~0.4.3:
   dependencies:
     qs "~2.3.3"
 
+unique-random-array@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/unique-random-array/-/unique-random-array-1.0.0.tgz#42b3721c579388d8b667c93c2dbde3d5d81a9136"
+  dependencies:
+    unique-random "^1.0.0"
+
+unique-random@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/unique-random/-/unique-random-1.0.0.tgz#ce3e224c8242cd33a0e77b0d7180d77e6b62d0c4"
+
 unique-string@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/unique-string/-/unique-string-1.0.0.tgz#9e1057cca851abb93398f8b33ae187b99caec11a"
