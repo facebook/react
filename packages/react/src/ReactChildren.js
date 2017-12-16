@@ -396,11 +396,24 @@ function toArray(children) {
  * @return {ReactElement} The first and only `ReactElement` contained in the
  * structure.
  */
-function onlyChild(children) {
-  invariant(
-    isValidElement(children),
-    'React.Children.only expected to receive a single React element child.',
-  );
+function onlyChild(children, count = 1) {
+  if (count === 1) {
+    invariant(
+      isValidElement(children),
+      'React.Children.only expected to receive a single React element child.',
+    );
+  } else {
+    invariant(
+      countChildren(children) === count,
+      'React.Children.only expected children of a different length',
+    );
+    forEachChildren(children, child => {
+      invariant(
+        isValidElement(child),
+        'React.Children.only must be passed all valid React elements.',
+      );
+    });
+  }
   return children;
 }
 
