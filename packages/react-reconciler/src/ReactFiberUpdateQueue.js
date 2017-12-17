@@ -9,6 +9,8 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {Update, UpdateQueue} from './ReactFiberReconcilerSharedTypes';
+export type {Update, UpdateQueue};
 
 import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
 import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
@@ -23,51 +25,6 @@ let didWarnUpdateInsideUpdate;
 if (__DEV__) {
   didWarnUpdateInsideUpdate = false;
 }
-
-type PartialState<State, Props> =
-  | $Subtype<State>
-  | ((prevState: State, props: Props) => $Subtype<State>);
-
-// Callbacks are not validated until invocation
-type Callback = mixed;
-
-export type Update<State> = {
-  expirationTime: ExpirationTime,
-  partialState: PartialState<any, any>,
-  callback: Callback | null,
-  isReplace: boolean,
-  isForced: boolean,
-  next: Update<State> | null,
-};
-
-// Singly linked-list of updates. When an update is scheduled, it is added to
-// the queue of the current fiber and the work-in-progress fiber. The two queues
-// are separate but they share a persistent structure.
-//
-// During reconciliation, updates are removed from the work-in-progress fiber,
-// but they remain on the current fiber. That ensures that if a work-in-progress
-// is aborted, the aborted updates are recovered by cloning from current.
-//
-// The work-in-progress queue is always a subset of the current queue.
-//
-// When the tree is committed, the work-in-progress becomes the current.
-export type UpdateQueue<State> = {
-  // A processed update is not removed from the queue if there are any
-  // unprocessed updates that came before it. In that case, we need to keep
-  // track of the base state, which represents the base state of the first
-  // unprocessed update, which is the same as the first update in the list.
-  baseState: State,
-  // For the same reason, we keep track of the remaining expiration time.
-  expirationTime: ExpirationTime,
-  first: Update<State> | null,
-  last: Update<State> | null,
-  callbackList: Array<Update<State>> | null,
-  hasForceUpdate: boolean,
-  isInitialized: boolean,
-
-  // Dev only
-  isProcessing?: boolean,
-};
 
 function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
   const queue: UpdateQueue<State> = {

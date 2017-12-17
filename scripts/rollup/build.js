@@ -473,6 +473,7 @@ async function buildEverything() {
   }
 
   await Packaging.copyAllShims();
+  await Packaging.copyReactReconcilerTypes();
   await Packaging.prepareNpmPackages();
 
   if (syncFBSourcePath) {

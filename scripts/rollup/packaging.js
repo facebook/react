@@ -94,6 +94,15 @@ async function copyAllShims() {
   await Promise.all([copyWWWShims(), copyRNShims()]);
 }
 
+async function copyReactReconcilerTypes() {
+  console.log('Copying reconciler types....');
+  await asyncCopyTo(
+    require.resolve('react-reconciler/src/ReactFiberReconcilerTypes.js'),
+    'build/packages/react-reconciler/index.js.flow'
+  );
+  console.log('Done');
+}
+
 function getTarOptions(tgzName, packageName) {
   // Files inside the `npm pack`ed archive start
   // with "package/" in their paths. We'll undo
@@ -147,6 +156,7 @@ async function prepareNpmPackages() {
 
 module.exports = {
   copyAllShims,
+  copyReactReconcilerTypes,
   getPackageName,
   getBundleOutputPaths,
   prepareNpmPackages,
