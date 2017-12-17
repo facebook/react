@@ -80,6 +80,7 @@ function trackValueOnNode(node: any): ?ValueTracker {
     },
   });
 
+  // This is a work around for IE11 and Edge 15,14 for #Issue11768
   Object.defineProperty(node, valueField, {
     enumerable: descriptor.enumerable,
   });
