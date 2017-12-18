@@ -259,28 +259,24 @@ describe('ReactElementValidator', () => {
   });
 
   it('includes the owner name when passing null, undefined, boolean, or number', () => {
-    spyOnDev(console, 'error');
     function ParentComp() {
       return React.createElement(null);
     }
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
-    }).toThrowError(
-      'Element type is invalid: expected a string (for built-in components) ' +
-        'or a class/function (for composite components) but got: null.' +
-        (__DEV__ ? '\n\nCheck the render method of `ParentComp`.' : ''),
-    );
 
-    // We can't use .toWarnDev() here because we can't chain it with .toThrowError()
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: React.createElement: type is invalid -- expected a string ' +
-          '(for built-in components) or a class/function (for composite ' +
-          'components) but got: null.' +
-          '\n\nCheck the render method of `ParentComp`.\n    in ParentComp',
+    expect(() => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
+      }).toThrowError(
+        'Element type is invalid: expected a string (for built-in components) ' +
+          'or a class/function (for composite components) but got: null.' +
+          (__DEV__ ? '\n\nCheck the render method of `ParentComp`.' : ''),
       );
-    }
+    }).toWarnDev(
+      'Warning: React.createElement: type is invalid -- expected a string ' +
+        '(for built-in components) or a class/function (for composite ' +
+        'components) but got: null.' +
+        '\n\nCheck the render method of `ParentComp`.\n    in ParentComp',
+    );
   });
 
   it('should check default prop values', () => {
