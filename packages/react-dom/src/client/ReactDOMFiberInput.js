@@ -312,7 +312,9 @@ export function setDefaultValue(
     if (value == null) {
       node.defaultValue = '' + node._wrapperState.initialValue;
     } else if (node.defaultValue !== '' + value) {
-      node.defaultValue = '' + value;
+      if (!(type === 'email' && node.value === '' + value)) {
+        node.defaultValue = '' + value;
+      }
     }
   }
 }
