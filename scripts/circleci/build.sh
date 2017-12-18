@@ -9,6 +9,7 @@ merge_base_hash=`git merge-base HEAD master`
 timestamp=`git log --format='%ct' -1 $merge_base_hash`
 json_url=http://react.zpao.com/builds/master/$timestamp-$merge_base_hash/results.json
 echo Downloading original build sizes from: $json_url
+echo $CIRCLE_COMPARE_URL
 curl -o scripts/rollup/results.json $json_url
 
 yarn build --extract-errors
