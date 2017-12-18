@@ -18,7 +18,7 @@ import BrowserEventConstants from './BrowserEventConstants';
 
 export * from 'events/ReactEventEmitterMixin';
 
-var {topLevelTypes} = BrowserEventConstants;
+const {topLevelTypes} = BrowserEventConstants;
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -76,13 +76,13 @@ var {topLevelTypes} = BrowserEventConstants;
  *    React Core     .  General Purpose Event Plugin System
  */
 
-var alreadyListeningTo = {};
-var reactTopListenersCounter = 0;
+const alreadyListeningTo = {};
+let reactTopListenersCounter = 0;
 
 /**
  * To ensure no conflicts with other potential React instances on the page
  */
-var topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
+const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
 
 function getListeningForDocument(mountAt) {
   // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
@@ -116,12 +116,12 @@ function getListeningForDocument(mountAt) {
  * @param {object} contentDocumentHandle Document which owns the container
  */
 export function listenTo(registrationName, contentDocumentHandle) {
-  var mountAt = contentDocumentHandle;
-  var isListening = getListeningForDocument(mountAt);
-  var dependencies = registrationNameDependencies[registrationName];
+  const mountAt = contentDocumentHandle;
+  const isListening = getListeningForDocument(mountAt);
+  const dependencies = registrationNameDependencies[registrationName];
 
-  for (var i = 0; i < dependencies.length; i++) {
-    var dependency = dependencies[i];
+  for (let i = 0; i < dependencies.length; i++) {
+    const dependency = dependencies[i];
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
       if (dependency === 'topScroll') {
         trapCapturedEvent('topScroll', 'scroll', mountAt);
@@ -152,10 +152,10 @@ export function listenTo(registrationName, contentDocumentHandle) {
 }
 
 export function isListeningToAllDependencies(registrationName, mountAt) {
-  var isListening = getListeningForDocument(mountAt);
-  var dependencies = registrationNameDependencies[registrationName];
-  for (var i = 0; i < dependencies.length; i++) {
-    var dependency = dependencies[i];
+  const isListening = getListeningForDocument(mountAt);
+  const dependencies = registrationNameDependencies[registrationName];
+  for (let i = 0; i < dependencies.length; i++) {
+    const dependency = dependencies[i];
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
       return false;
     }

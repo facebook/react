@@ -26,6 +26,11 @@ const ReactART = require('react-art');
 const ARTSVGMode = require('art/modes/svg');
 const ARTCurrentMode = require('art/modes/current');
 
+const renderer = require('react-test-renderer');
+const Circle = require('react-art/Circle');
+const Rectangle = require('react-art/Rectangle');
+const Wedge = require('react-art/Wedge');
+
 function testDOMNodeStructure(domNode, expectedStructure) {
   expect(domNode).toBeDefined();
   expect(domNode.nodeName).toBe(expectedStructure.nodeName);
@@ -327,5 +332,93 @@ describe('ReactART', () => {
     instance = render(onClick2);
     doClick(instance);
     expect(onClick2).toBeCalled();
+  });
+});
+
+describe('ReactARTComponents', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
+  it('should generate a <Shape> with props for drawing the Circle', () => {
+    const circle = renderer.create(
+      <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
+    );
+    expect(circle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should warn if radius is missing on a Circle component', () => {
+    spyOnDev(console, 'error');
+    renderer.create(<Circle stroke="green" strokeWidth={3} fill="blue" />);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
+        'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Circle (at **)',
+      );
+    }
+  });
+
+  it('should generate a <Shape> with props for drawing the Rectangle', () => {
+    const rectangle = renderer.create(
+      <Rectangle width={50} height={50} stroke="green" fill="blue" />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should warn if width/height is missing on a Rectangle component', () => {
+    spyOnDev(console, 'error');
+    renderer.create(<Rectangle stroke="green" fill="blue" />);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(2);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
+        'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Rectangle (at **)',
+      );
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
+        'Warning: Failed prop type: The prop `height` is marked as required in `Rectangle`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Rectangle (at **)',
+      );
+    }
+  });
+
+  it('should generate a <Shape> with props for drawing the Wedge', () => {
+    const wedge = renderer.create(
+      <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
+    );
+    expect(wedge.toJSON()).toMatchSnapshot();
+  });
+
+  it('should return null if startAngle equals to endAngle on Wedge', () => {
+    const wedge = renderer.create(
+      <Wedge outerRadius={50} startAngle={0} endAngle={0} fill="blue" />,
+    );
+    expect(wedge.toJSON()).toBeNull();
+  });
+
+  it('should warn if outerRadius/startAngle/endAngle is missing on a Wedge component', () => {
+    spyOnDev(console, 'error');
+    renderer.create(<Wedge fill="blue" />);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(3);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
+        'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Wedge (at **)',
+      );
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
+        'Warning: Failed prop type: The prop `startAngle` is marked as required in `Wedge`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Wedge (at **)',
+      );
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toEqual(
+        'Warning: Failed prop type: The prop `endAngle` is marked as required in `Wedge`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Wedge (at **)',
+      );
+    }
   });
 });

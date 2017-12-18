@@ -72,8 +72,13 @@ const {
 const {updatedAncestorInfo} = validateDOMNesting;
 const {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
+let SUPPRESS_HYDRATION_WARNING;
+let topLevelUpdateWarnings;
+let warnOnInvalidCallback;
+let didWarnAboutUnstableCreatePortal = false;
+
 if (__DEV__) {
-  var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
+  SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
   if (
     typeof Map !== 'function' ||
     Map.prototype == null ||
@@ -90,7 +95,7 @@ if (__DEV__) {
     );
   }
 
-  var topLevelUpdateWarnings = (container: DOMContainer) => {
+  topLevelUpdateWarnings = (container: DOMContainer) => {
     if (__DEV__) {
       if (
         container._reactRootContainer &&
@@ -137,7 +142,7 @@ if (__DEV__) {
     }
   };
 
-  var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
+  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
       '%s(...): Expected the last optional `callback` argument to be a ' +
@@ -700,11 +705,19 @@ const DOMRenderer = ReactFiberReconciler({
       newProps: Props,
       internalInstanceHandle: Object,
     ): void {
-      ((domElement: any):
-        | HTMLButtonElement
-        | HTMLInputElement
-        | HTMLSelectElement
-        | HTMLTextAreaElement).focus();
+      // Despite the naming that might imply otherwise, this method only
+      // fires if there is an `Update` effect scheduled during mounting.
+      // This happens if `finalizeInitialChildren` returns `true` (which it
+      // does to implement the `autoFocus` attribute on the client). But
+      // there are also other cases when this might happen (such as patching
+      // up text content during hydration mismatch). So we'll check this again.
+      if (shouldAutoFocusHostComponent(type, newProps)) {
+        ((domElement: any):
+          | HTMLButtonElement
+          | HTMLInputElement
+          | HTMLSelectElement
+          | HTMLTextAreaElement).focus();
+      }
     },
 
     commitUpdate(
@@ -1264,7 +1277,19 @@ const ReactDOM: Object = {
 
   // Temporary alias since we already shipped React 16 RC with it.
   // TODO: remove in React 17.
-  unstable_createPortal: createPortal,
+  unstable_createPortal(...args) {
+    if (!didWarnAboutUnstableCreatePortal) {
+      didWarnAboutUnstableCreatePortal = true;
+      lowPriorityWarning(
+        false,
+        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
+          'and will be removed in React 17+. Update your code to use ' +
+          'ReactDOM.createPortal() instead. It has the exact same API, ' +
+          'but without the "unstable_" prefix.',
+      );
+    }
+    return createPortal(...args);
+  },
 
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 

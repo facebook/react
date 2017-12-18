@@ -101,6 +101,18 @@ const forks = Object.freeze({
         return null;
     }
   },
+
+  // We wrap top-level listeners into guards on www.
+  'react-dom/src/events/EventListener': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_DEV:
+      case FB_PROD:
+        // Use the www fork which is integrated with TimeSlice profiling.
+        return 'react-dom/src/events/forks/EventListener-www.js';
+      default:
+        return null;
+    }
+  },
 });
 
 module.exports = forks;

@@ -621,11 +621,6 @@ class ReactDOMServerRenderer {
             'Portals are not currently supported by the server renderer. ' +
               'Render them conditionally so that they only appear on the client render.',
           );
-          invariant(
-            $$typeof !== REACT_CALL_TYPE && $$typeof !== REACT_RETURN_TYPE,
-            'The experimental Call and Return types are not currently ' +
-              'supported by the server renderer.',
-          );
           // Catch-all to prevent an infinite loop if React.Children.toArray() supports some new type.
           invariant(
             false,
@@ -647,28 +642,37 @@ class ReactDOMServerRenderer {
         }
         this.stack.push(frame);
         return '';
-      } else if (
-        ((nextChild: any): ReactElement).type === REACT_FRAGMENT_TYPE
-      ) {
-        const nextChildren = toArray(
-          ((nextChild: any): ReactElement).props.children,
-        );
-        const frame: Frame = {
-          domNamespace: parentNamespace,
-          children: nextChildren,
-          childIndex: 0,
-          context: context,
-          footer: '',
-        };
-        if (__DEV__) {
-          ((frame: any): FrameDev).debugElementStack = [];
-        }
-        this.stack.push(frame);
-        return '';
-      } else {
-        // Safe because we just checked it's an element.
-        const nextElement = ((nextChild: any): ReactElement);
-        return this.renderDOM(nextElement, context, parentNamespace);
+      }
+      // Safe because we just checked it's an element.
+      const nextElement = ((nextChild: any): ReactElement);
+      const elementType = nextElement.type;
+      switch (elementType) {
+        case REACT_FRAGMENT_TYPE:
+          const nextChildren = toArray(
+            ((nextChild: any): ReactElement).props.children,
+          );
+          const frame: Frame = {
+            domNamespace: parentNamespace,
+            children: nextChildren,
+            childIndex: 0,
+            context: context,
+            footer: '',
+          };
+          if (__DEV__) {
+            ((frame: any): FrameDev).debugElementStack = [];
+          }
+          this.stack.push(frame);
+          return '';
+        case REACT_CALL_TYPE:
+        case REACT_RETURN_TYPE:
+          invariant(
+            false,
+            'The experimental Call and Return types are not currently ' +
+              'supported by the server renderer.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          return this.renderDOM(nextElement, context, parentNamespace);
       }
     }
   }

@@ -8,7 +8,6 @@
  */
 
 import type {HostConfig} from 'react-reconciler';
-import type {ReactCall} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {HostContext} from './ReactFiberHostContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
@@ -535,18 +534,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateCallComponent(current, workInProgress, renderExpirationTime) {
-    let nextCall = (workInProgress.pendingProps: ReactCall);
+    let nextProps = workInProgress.pendingProps;
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-    } else if (workInProgress.memoizedProps === nextCall) {
-      nextCall = workInProgress.memoizedProps;
+    } else if (workInProgress.memoizedProps === nextProps) {
+      nextProps = workInProgress.memoizedProps;
       // TODO: When bailing out, we might need to return the stateNode instead
       // of the child. To check it for work.
       // return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    const nextChildren = nextCall.children;
+    const nextChildren = nextProps.children;
 
     // The following is a fork of reconcileChildrenAtExpirationTime but using
     // stateNode to store the child.
@@ -566,7 +565,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
 
-    memoizeProps(workInProgress, nextCall);
+    memoizeProps(workInProgress, nextProps);
     // This doesn't take arbitrary time so we could synchronously just begin
     // eagerly do the work of workInProgress.child as an optimization.
     return workInProgress.stateNode;

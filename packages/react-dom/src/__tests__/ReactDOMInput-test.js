@@ -258,8 +258,8 @@ describe('ReactDOMInput', () => {
       }
     }
 
-    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
-    var node = ReactDOM.findDOMNode(stub);
+    const stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    const node = ReactDOM.findDOMNode(stub);
     stub.setState({value: 0});
 
     expect(node.value).toEqual('0');
@@ -628,36 +628,36 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly transition a text input from 0 to an empty 0.0', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
     ReactDOM.render(<input type="text" value={0} />, container);
     ReactDOM.render(<input type="text" value="0.0" />, container);
 
-    var node = container.firstChild;
+    const node = container.firstChild;
 
     expect(node.value).toBe('0.0');
     expect(node.defaultValue).toBe('0.0');
   });
 
   it('should properly transition a number input from "" to 0', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
     ReactDOM.render(<input type="number" value="" />, container);
     ReactDOM.render(<input type="number" value={0} />, container);
 
-    var node = container.firstChild;
+    const node = container.firstChild;
 
     expect(node.value).toBe('0');
     expect(node.defaultValue).toBe('0');
   });
 
   it('should properly transition a number input from "" to "0"', function() {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
     ReactDOM.render(<input type="number" value="" />, container);
     ReactDOM.render(<input type="number" value="0" />, container);
 
-    var node = container.firstChild;
+    const node = container.firstChild;
 
     expect(node.value).toBe('0');
     expect(node.defaultValue).toBe('0');
@@ -1644,12 +1644,12 @@ describe('ReactDOMInput', () => {
   describe('When given a Symbol value', function() {
     it('treats initial Symbol value as an empty string', function() {
       spyOnDev(console, 'error');
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(
         <input value={Symbol('foobar')} onChange={() => {}} />,
         container,
       );
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
@@ -1664,13 +1664,13 @@ describe('ReactDOMInput', () => {
 
     it('treats updated Symbol value as an empty string', function() {
       spyOnDev(console, 'error');
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
       ReactDOM.render(
         <input value={Symbol('foobar')} onChange={() => {}} />,
         container,
       );
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
@@ -1684,9 +1684,9 @@ describe('ReactDOMInput', () => {
     });
 
     it('treats initial Symbol defaultValue as an empty string', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
@@ -1694,10 +1694,10 @@ describe('ReactDOMInput', () => {
     });
 
     it('treats updated Symbol defaultValue as an empty string', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<input defaultValue="foo" />, container);
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       expect(node.value).toBe('foo');
       expect(node.getAttribute('value')).toBe('');
@@ -1708,12 +1708,12 @@ describe('ReactDOMInput', () => {
   describe('When given a function value', function() {
     it('treats initial function value as an empty string', function() {
       spyOnDev(console, 'error');
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(
         <input value={() => {}} onChange={() => {}} />,
         container,
       );
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
@@ -1728,13 +1728,13 @@ describe('ReactDOMInput', () => {
 
     it('treats updated function value as an empty string', function() {
       spyOnDev(console, 'error');
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
       ReactDOM.render(
         <input value={() => {}} onChange={() => {}} />,
         container,
       );
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
@@ -1748,9 +1748,9 @@ describe('ReactDOMInput', () => {
     });
 
     it('treats initial function defaultValue as an empty string', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<input defaultValue={() => {}} />, container);
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
@@ -1758,10 +1758,10 @@ describe('ReactDOMInput', () => {
     });
 
     it('treats updated function defaultValue as an empty string', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<input defaultValue="foo" />, container);
       ReactDOM.render(<input defaultValue={() => {}} />, container);
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       expect(node.value).toBe('foo');
       expect(node.getAttribute('value')).toBe('');

@@ -6,9 +6,9 @@
  */
 'use strict';
 
-var fs = require('fs');
-var evalToString = require('../shared/evalToString');
-var invertObject = require('./invertObject');
+const fs = require('fs');
+const evalToString = require('../shared/evalToString');
+const invertObject = require('./invertObject');
 
 module.exports = function(babel) {
   const t = babel.types;
