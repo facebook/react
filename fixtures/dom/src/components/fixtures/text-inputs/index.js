@@ -102,8 +102,8 @@ class TextInputFixtures extends React.Component {
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The space after "foo" should be preserved and the cursor should
-            not jump to the beginning of the input.
+            The space after "foo" should be preserved and the cursor should not
+            jump to the beginning of the input.
           </TestCase.ExpectedResult>
 
           <InputTestCase type="email" defaultValue="foo bar" />
