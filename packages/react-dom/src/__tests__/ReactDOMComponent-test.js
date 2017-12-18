@@ -2691,4 +2691,92 @@ describe('ReactDOMComponent', () => {
       expect(node.getAttribute('onx')).toBe('bar');
     });
   });
+
+  describe('Trapping local event listeners', () => {
+    it('triggers load if onload is not present on an image', () => {
+      return new Promise(function(resolve, reject) {
+        const el = ReactTestUtils.renderIntoDocument(
+          <div onLoad={resolve} onError={reject}>
+            <img />
+          </div>,
+        );
+
+        el.querySelector('img').src =
+          'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+      });
+    });
+
+    it('triggers events local captured events from children without listeners', () => {
+      const callback = jest.fn();
+      const container = document.createElement('div');
+
+      ReactDOM.render(
+        <div id="top" onTouchEnd={callback}>
+          <div id="middle">
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
+
+      const event = document.createEvent('Event');
+
+      event.initEvent('touchend', true, true);
+      container.querySelector('#bottom').dispatchEvent(event);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not double dispatch captured events at the deepest leaf', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+      const container = document.createElement('div');
+
+      ReactDOM.render(
+        <div id="top" onTouchEnd={top}>
+          <div id="middle" onTouchEnd={middle}>
+            <div id="bottom" onTouchEnd={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#bottom');
+      const event = document.createEvent('Event');
+
+      event.initEvent('touchend', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not double dispatch captured events at the middle leaf', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+      const container = document.createElement('div');
+
+      ReactDOM.render(
+        <div id="top" onTouchEnd={top}>
+          <div id="middle" onTouchEnd={middle}>
+            <div id="bottom" onTouchEnd={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#middle');
+      const event = document.createEvent('Event');
+
+      event.initEvent('touchend', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(0);
+    });
+  });
 });
