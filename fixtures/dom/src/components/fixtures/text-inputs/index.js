@@ -96,6 +96,19 @@ class TextInputFixtures extends React.Component {
           <InputTestCase type="email" defaultValue="" />
         </TestCase>
 
+        <TestCase title="Whitespace when editing email inputs">
+          <TestCase.Steps>
+            <li>Delete the last word, "bar"</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            The space after "foo" should be preserved and the cursor should
+            not jump to the beginning of the input.
+          </TestCase.ExpectedResult>
+
+          <InputTestCase type="email" defaultValue="foo bar" />
+        </TestCase>
+
         <TestCase title="Cursor when editing url inputs">
           <TestCase.Steps>
             <li>Type "http://www.example.com"</li>
