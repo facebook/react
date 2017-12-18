@@ -62,30 +62,22 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   ['error', 'warn'].forEach(methodName => {
     const oldMethod = console[methodName];
     const newMethod = function() {
-      newMethod.__callCount++;
-      oldMethod.apply(this, arguments);
+      throw new Error(
+        `Expected test not to call console.${methodName}(). ` +
+          'If the warning is expected, mock it out using ' +
+          `spyOnDev(console, '${methodName}') or spyOnProd(console, '${
+            methodName
+          }'), ` +
+          'and test that the warning occurs.'
+      );
     };
-    newMethod.__callCount = 0;
-    console[methodName] = newMethod;
 
-    env.beforeEach(() => {
-      newMethod.__callCount = 0;
-    });
+    console[methodName] = newMethod;
 
     env.afterEach(() => {
       if (console[methodName] !== newMethod && !isSpy(console[methodName])) {
         throw new Error(
           `Test did not tear down console.${methodName} mock properly.`
-        );
-      }
-      if (console[methodName].__callCount !== 0) {
-        throw new Error(
-          `Expected test not to call console.${methodName}(). ` +
-            'If the warning is expected, mock it out using ' +
-            `spyOnDev(console, '${methodName}') or spyOnProd(console, '${
-              methodName
-            }'), ` +
-            'and test that the warning occurs.'
         );
       }
     });
