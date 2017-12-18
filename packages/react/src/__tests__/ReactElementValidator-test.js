@@ -255,7 +255,7 @@ describe('ReactElementValidator', () => {
     ]);
 
     // Should not log any additional warnings
-    expect(() => React.createElement('div')).toWarnDev([]);
+    React.createElement('div');
   });
 
   it('includes the owner name when passing null, undefined, boolean, or number', () => {
@@ -344,11 +344,9 @@ describe('ReactElementValidator', () => {
     ]);
 
     // Should not error for strings
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(
-        React.createElement(Component, {prop: 'string'}),
-      );
-    }).toWarnDev([]);
+    ReactTestUtils.renderIntoDocument(
+      React.createElement(Component, {prop: 'string'}),
+    );
   });
 
   it('should warn if a PropType creator is used as a PropType', () => {
@@ -402,17 +400,13 @@ describe('ReactElementValidator', () => {
     }
 
     let TestFactory = React.createFactory(TestComponent);
-    expect(() =>
-      expect(TestFactory.type).toBe(TestComponent),
-    ).toLowPriorityWarnDev(
+    expect(() => TestFactory.type).toLowPriorityWarnDev(
       'Warning: Factory.type is deprecated. Access the class directly before ' +
         'passing it to createFactory.',
     );
 
     // Warn once, not again
-    expect(() =>
-      expect(TestFactory.type).toBe(TestComponent),
-    ).toLowPriorityWarnDev([]);
+    expect(TestFactory.type).toBe(TestComponent);
   });
 
   it('does not warn when using DOM node as children', () => {

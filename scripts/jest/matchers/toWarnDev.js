@@ -1,5 +1,17 @@
 'use strict';
 
+function createSpy() {
+  let calls = [];
+
+  function spy(...args) {
+    calls.push(args);
+  }
+
+  spy.calls = calls;
+
+  return spy;
+}
+
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
 }
@@ -15,14 +27,14 @@ function validator(consoleSpy, expectedWarnings) {
       );
     }
 
-    if (consoleSpy.calls.count() !== expectedWarnings.length) {
+    if (consoleSpy.calls.length !== expectedWarnings.length) {
       return {
         message: () =>
           `Expected number of DEV warnings:\n  ${this.utils.printExpected(
             expectedWarnings.length
           )}\n` +
           `Actual number of DEV warnings:\n  ${this.utils.printReceived(
-            consoleSpy.calls.count()
+            consoleSpy.calls.length
           )}`,
         pass: false,
       };
@@ -30,8 +42,8 @@ function validator(consoleSpy, expectedWarnings) {
 
     // Normalize warnings for easier comparison
     const actualWarnings = [];
-    for (let i = 0; i < consoleSpy.calls.count(); i++) {
-      actualWarnings.push(normalizeCodeLocInfo(consoleSpy.calls.argsFor(i)[0]));
+    for (let i = 0; i < consoleSpy.calls.length; i++) {
+      actualWarnings.push(normalizeCodeLocInfo(consoleSpy.calls[i][0]));
     }
 
     let failedExpectation;
@@ -78,22 +90,24 @@ function validator(consoleSpy, expectedWarnings) {
 const createMatcherFor = consoleMethod =>
   function(callback, expectedWarnings) {
     if (__DEV__) {
-      if (!console[consoleMethod].hasOwnProperty('calls')) {
-        spyOnDev(console, consoleMethod);
-      } else {
-        console[consoleMethod].calls.reset();
+      let originalMethod = console[consoleMethod];
+
+      // Avoid using Jest's built-in spy since it can't be removed.
+      console[consoleMethod] = createSpy();
+
+      try {
+        callback();
+
+        return validator.call(this, console[consoleMethod], expectedWarnings);
+      } finally {
+        // Restore the unspied method so that unexpected errors fail tests.
+        console[consoleMethod] = originalMethod;
       }
+    } else {
+      callback();
+
+      return {pass: true};
     }
-
-    callback();
-
-    const response = validator.call(
-      this,
-      console[consoleMethod],
-      expectedWarnings
-    );
-
-    return response;
   };
 
 module.exports = {
