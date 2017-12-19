@@ -4,10 +4,6 @@ function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
 }
 
-// TODO Consider the use-case of nested toWarn statements
-// Throw immediately if detected? Best if possible.
-// Unless we use this pattern and need it, in which case, maybe it would "just work" as is.
-
 const createMatcherFor = consoleMethod =>
   function matcher(callback, expectedMessages) {
     if (__DEV__) {
@@ -39,8 +35,12 @@ const createMatcherFor = consoleMethod =>
         throw Error(`Unexpected warning recorded: "${message}"`);
       };
 
-      // Avoid using Jest's built-in spy since it can't be removed.
+      // TODO Decide whether we need to support nested toWarn* expectations.
+      // If we don't need id, add a check here to see if this is already our spy,
+      // And throw an error.
       const originalMethod = console[consoleMethod];
+
+      // Avoid using Jest's built-in spy since it can't be removed.
       console[consoleMethod] = consoleSpy;
 
       try {
