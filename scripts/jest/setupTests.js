@@ -60,7 +60,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   });
 
   ['error', 'warn'].forEach(methodName => {
-    const newMethod = function() {
+    const oldMethod = console[methodName];
+    const newMethod = function(...args) {
+      oldMethod(...args);
+
       throw new Error(
         `Expected test not to call console.${methodName}(). ` +
           'If the warning is expected, mock it out using ' +
