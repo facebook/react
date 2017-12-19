@@ -257,16 +257,11 @@ describe('ReactElementClone', () => {
   });
 
   it('warns for keys for arrays of elements in rest args', () => {
-    spyOnDev(console, 'error');
-
-    React.cloneElement(<div />, null, [<div />, <div />]);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Each child in an array or iterator should have a unique "key" prop.',
-      );
-    }
+    expect(() =>
+      React.cloneElement(<div />, null, [<div />, <div />]),
+    ).toWarnDev(
+      'Each child in an array or iterator should have a unique "key" prop.',
+    );
   });
 
   it('does not warns for arrays of elements with keys', () => {
@@ -282,7 +277,6 @@ describe('ReactElementClone', () => {
   });
 
   it('should check declared prop types after clone', () => {
-    spyOnDev(console, 'error');
     class Component extends React.Component {
       static propTypes = {
         color: PropTypes.string.isRequired,
@@ -303,18 +297,16 @@ describe('ReactElementClone', () => {
         });
       }
     }
-    ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Failed prop type: ' +
-          'Invalid prop `color` of type `number` supplied to `Component`, ' +
-          'expected `string`.\n' +
-          '    in Component (created by GrandParent)\n' +
-          '    in Parent (created by GrandParent)\n' +
-          '    in GrandParent',
-      );
-    }
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(React.createElement(GrandParent)),
+    ).toWarnDev(
+      'Warning: Failed prop type: ' +
+        'Invalid prop `color` of type `number` supplied to `Component`, ' +
+        'expected `string`.\n' +
+        '    in Component (created by GrandParent)\n' +
+        '    in Parent (created by GrandParent)\n' +
+        '    in GrandParent',
+    );
   });
 
   it('should ignore key and ref warning getters', () => {
