@@ -1,109 +1,69 @@
 'use strict';
 
-function createSpy() {
-  let calls = [];
-
-  function spy(...args) {
-    calls.push(args);
-  }
-
-  spy.calls = calls;
-
-  return spy;
-}
-
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
 }
 
-function validator(consoleSpy, expectedWarnings) {
-  if (__DEV__) {
-    if (typeof expectedWarnings === 'string') {
-      expectedWarnings = [expectedWarnings];
-    } else if (!Array.isArray(expectedWarnings)) {
-      throw Error(
-        `toWarnDev() requires a parameter of type string or an array of strings ` +
-          `but was given ${typeof expectedWarnings}.`
-      );
-    }
-
-    if (consoleSpy.calls.length !== expectedWarnings.length) {
-      return {
-        message: () =>
-          `Expected number of DEV warnings:\n  ${this.utils.printExpected(
-            expectedWarnings.length
-          )}\n` +
-          `Actual number of DEV warnings:\n  ${this.utils.printReceived(
-            consoleSpy.calls.length
-          )}`,
-        pass: false,
-      };
-    }
-
-    // Normalize warnings for easier comparison
-    const actualWarnings = [];
-    for (let i = 0; i < consoleSpy.calls.length; i++) {
-      actualWarnings.push(normalizeCodeLocInfo(consoleSpy.calls[i][0]));
-    }
-
-    let failedExpectation;
-    for (let i = 0; i < expectedWarnings.length; i++) {
-      const expectedWarning = expectedWarnings[i];
-      let found = false;
-
-      for (let x = 0; x < expectedWarnings.length; x++) {
-        const actualWarning = actualWarnings[x];
-
-        // Allow partial matching.
-        if (
-          actualWarning === expectedWarning ||
-          actualWarning.includes(expectedWarning)
-        ) {
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        failedExpectation = expectedWarning;
-        break;
-      }
-    }
-
-    if (failedExpectation) {
-      return {
-        message: () =>
-          `Expected DEV warning:\n${this.utils.printExpected(
-            failedExpectation
-          )}\n` +
-          `Actual DEV warnings:\n${this.utils.printReceived(
-            actualWarnings.join('\n')
-          )}`,
-        pass: false,
-      };
-    }
-  }
-
-  return {pass: true};
-}
+// TODO Consider the use-case of nested toWarn statements
+// Throw immediately if detected? Best if possible.
+// Unless we use this pattern and need it, in which case, maybe it would "just work" as is.
 
 const createMatcherFor = consoleMethod =>
-  function(callback, expectedWarnings) {
+  function matcher(callback, expectedMessages) {
     if (__DEV__) {
-      let originalMethod = console[consoleMethod];
+      // Warn about incorrect usage of matcher.
+      if (typeof expectedMessages === 'string') {
+        expectedMessages = [expectedMessages];
+      } else if (!Array.isArray(expectedMessages)) {
+        throw Error(
+          `toWarnDev() requires a parameter of type string or an array of strings ` +
+            `but was given ${typeof expectedMessages}.`
+        );
+      }
+
+      function consoleSpy(message) {
+        const normalizedMessage = normalizeCodeLocInfo(message);
+
+        for (let index = 0; index < expectedMessages.length; index++) {
+          const expectedMessage = expectedMessages[index];
+          if (
+            normalizedMessage === expectedMessage ||
+            normalizedMessage.includes(expectedMessage)
+          ) {
+            expectedMessages.splice(index, 1);
+            return;
+          }
+        }
+
+        // Fail early for unexpected warnings to preserve the call stack.
+        throw Error(`Unexpected warning recorded: "${message}"`);
+      }
 
       // Avoid using Jest's built-in spy since it can't be removed.
-      console[consoleMethod] = createSpy();
+      const originalMethod = console[consoleMethod];
+      console[consoleMethod] = consoleSpy;
 
       try {
         callback();
 
-        return validator.call(this, console[consoleMethod], expectedWarnings);
+        // Any remaining messages indicate a failed expectations.
+        if (expectedMessages.length > 0) {
+          return {
+            message: () =>
+              `Expected warning was not recorded:\n  ${this.utils.printReceived(
+                expectedMessages.join('\n')
+              )}`,
+            pass: false,
+          };
+        }
+
+        return {pass: true};
       } finally {
         // Restore the unspied method so that unexpected errors fail tests.
         console[consoleMethod] = originalMethod;
       }
     } else {
+      // Any uncaught errors or warnings should fail tests in production mode.
       callback();
 
       return {pass: true};
