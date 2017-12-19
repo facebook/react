@@ -1395,7 +1395,7 @@ describe('ReactDOMComponent', () => {
       }
     });
 
-    it('should work load event on <link> component', () => {
+    it('should receive an load event on <link> elements', () => {
       const container = document.createElement('div');
       const onLoad = jest.fn();
 
@@ -1413,7 +1413,7 @@ describe('ReactDOMComponent', () => {
       expect(onLoad).toHaveBeenCalledTimes(1);
     });
 
-    it('should work error event on <link> component', () => {
+    it('should receive an error event on <link> elements', () => {
       const container = document.createElement('div');
       const onError = jest.fn();
 
