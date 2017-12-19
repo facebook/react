@@ -37,7 +37,6 @@ export function getClosestInstanceFromNode(node) {
     }
   }
 
-
   let inst = node[internalInstanceKey];
   if (inst.tag === HostComponent || inst.tag === HostText) {
     // In Fiber, this will always be the deepest root.
