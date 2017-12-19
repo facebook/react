@@ -21,7 +21,7 @@ const createMatcherFor = consoleMethod =>
         );
       }
 
-      function consoleSpy(message) {
+      const consoleSpy = message => {
         const normalizedMessage = normalizeCodeLocInfo(message);
 
         for (let index = 0; index < expectedMessages.length; index++) {
@@ -37,7 +37,7 @@ const createMatcherFor = consoleMethod =>
 
         // Fail early for unexpected warnings to preserve the call stack.
         throw Error(`Unexpected warning recorded: "${message}"`);
-      }
+      };
 
       // Avoid using Jest's built-in spy since it can't be removed.
       const originalMethod = console[consoleMethod];
@@ -58,6 +58,10 @@ const createMatcherFor = consoleMethod =>
         }
 
         return {pass: true};
+      } catch (error) {
+        // TODO Flag this error so Jest doesn't override its stack
+        // See https://tinyurl.com/y9unakwb
+        throw error;
       } finally {
         // Restore the unspied method so that unexpected errors fail tests.
         console[consoleMethod] = originalMethod;
