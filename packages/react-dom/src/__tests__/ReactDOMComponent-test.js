@@ -1395,7 +1395,7 @@ describe('ReactDOMComponent', () => {
       }
     });
 
-    it('should receive an load event on <link> elements', () => {
+    it('should receive a load event on <link> elements', () => {
       const container = document.createElement('div');
       const onLoad = jest.fn();
 
