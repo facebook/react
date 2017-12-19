@@ -49,6 +49,7 @@ const useFallbackCompositionData =
 function isPresto() {
   const opera = window.opera;
   return (
+    opera !== null &&
     typeof opera === 'object' &&
     typeof opera.version === 'function' &&
     parseInt(opera.version(), 10) <= 12
