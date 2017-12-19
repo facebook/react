@@ -69,10 +69,48 @@ describe('getNodeForCharacterOffset', () => {
     ReactDOM.render(<InputComponent />, container);
 
     node.focus();
-    node.setSelectionRange(0, 1);
+    node.setSelectionRange(1, 1);
 
-    component.setState({oneFirst: false}, () => {
-      done();
+    const inputDescriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'selectionStart');
+
+    delete HTMLInputElement.prototype.selectionStart;
+
+    let startMarkerNode, startMarkerOffset;
+    let endMarkerNode, endMarkerOffset;
+
+    // These aren't implemented by jsdom yet, so let's re-implement them
+    // to test the markers created by getNodeForCharacterOffset
+
+    window.getSelection = () => ({
+      removeAllRanges: function() {
+        return true;
+      },
+      addRange: function(range) {},
+      extend: function(endNode, endOffset) {
+        endMarkerNode = endNode;
+        endMarkerOffset = endOffset;
+      },
     });
+
+    document.createRange = () => ({
+      setStart: function(startNode, startOffset) {
+        startMarkerNode = startNode;
+        startMarkerOffset = startOffset;
+      },
+      setEnd: function(endNode, endOffset) {
+        endMarkerNode = endNode;
+        endMarkerOffset = endOffset;
+      },
+    });
+
+    try {
+      component.setState({oneFirst: false}, () => {
+        console.log(startMarkerNode, startMarkerOffset);
+        console.log(endMarkerNode, endMarkerOffset);
+        done();
+      });
+    } finally {
+      Object.defineProperty(HTMLInputElement.prototype, 'selectionStart', inputDescriptor);
+    }
   });
 });
