@@ -22,21 +22,17 @@ describe('EventPluginHub', () => {
   });
 
   it('should prevent non-function listeners, at dispatch', () => {
-    spyOnDev(console, 'error');
-    const node = ReactTestUtils.renderIntoDocument(
-      <div onClick="not a function" />,
-    );
-    expect(function() {
-      ReactTestUtils.SimulateNative.click(node);
-    }).toThrowError(
+    let node;
+    expect(() => {
+      node = ReactTestUtils.renderIntoDocument(
+        <div onClick="not a function" />,
+      );
+    }).toWarnDev(
       'Expected `onClick` listener to be a function, instead got a value of `string` type.',
     );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Expected `onClick` listener to be a function, instead got a value of `string` type.',
-      );
-    }
+    expect(() => ReactTestUtils.SimulateNative.click(node)).toThrowError(
+      'Expected `onClick` listener to be a function, instead got a value of `string` type.',
+    );
   });
 
   it('should not prevent null listeners, at dispatch', () => {
