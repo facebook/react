@@ -43,6 +43,7 @@ import warning from 'fbjs/lib/warning';
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
 import * as ReactInputSelection from './ReactInputSelection';
+import setTextContent from './setTextContent';
 import validateDOMNesting from './validateDOMNesting';
 import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
 import * as ReactDOMEventListener from '../events/ReactDOMEventListener';
@@ -736,7 +737,7 @@ const DOMRenderer = ReactFiberReconciler({
     },
 
     resetTextContent(domElement: Instance): void {
-      domElement.textContent = '';
+      setTextContent(domElement, '');
     },
 
     commitTextUpdate(
