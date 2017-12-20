@@ -32,456 +32,80 @@ import SyntheticUIEvent from './SyntheticUIEvent';
 import SyntheticWheelEvent from './SyntheticWheelEvent';
 import getEventCharCode from './getEventCharCode';
 
-const eventTypes: EventTypes = [
-  {
-    dependencies: [TopLevelEventTypes.TOP_ABORT],
-    phasedRegistrationNames: {
-      bubbled: 'onAbort',
-      captured: 'onAbortCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_ANIMATION_END],
-    phasedRegistrationNames: {
-      bubbled: 'onAnimationEnd',
-      captured: 'onAnimationEndCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_ANIMATION_ITERATION],
-    phasedRegistrationNames: {
-      bubbled: 'onAnimationIteration',
-      captured: 'onAnimationIterationCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_ANIMATION_START],
-    phasedRegistrationNames: {
-      bubbled: 'onAnimationStart',
-      captured: 'onAnimationStartCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_BLUR],
-    phasedRegistrationNames: {
-      bubbled: 'onBlur',
-      captured: 'onBlurCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_CANCEL],
-    phasedRegistrationNames: {
-      bubbled: 'onCancel',
-      captured: 'onCancelCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_CAN_PLAY],
-    phasedRegistrationNames: {
-      bubbled: 'onCanPlay',
-      captured: 'onCanPlayCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_CAN_PLAY_THROUGH],
-    phasedRegistrationNames: {
-      bubbled: 'onCanPlayThrough',
-      captured: 'onCanPlayThroughCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_CLICK],
-    phasedRegistrationNames: {
-      bubbled: 'onClick',
-      captured: 'onClickCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_CLOSE],
-    phasedRegistrationNames: {
-      bubbled: 'onClose',
-      captured: 'onCloseCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_CONTEXT_MENU],
-    phasedRegistrationNames: {
-      bubbled: 'onContextMenu',
-      captured: 'onContextMenuCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_COPY],
-    phasedRegistrationNames: {
-      bubbled: 'onCopy',
-      captured: 'onCopyCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_CUT],
-    phasedRegistrationNames: {
-      bubbled: 'onCut',
-      captured: 'onCutCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DOUBLE_CLICK],
-    phasedRegistrationNames: {
-      bubbled: 'onDoubleClick',
-      captured: 'onDoubleClickCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DRAG],
-    phasedRegistrationNames: {
-      bubbled: 'onDrag',
-      captured: 'onDragCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DRAG_END],
-    phasedRegistrationNames: {
-      bubbled: 'onDragEnd',
-      captured: 'onDragEndCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DRAG_ENTER],
-    phasedRegistrationNames: {
-      bubbled: 'onDragEnter',
-      captured: 'onDragEnterCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DRAG_EXIT],
-    phasedRegistrationNames: {
-      bubbled: 'onDragExit',
-      captured: 'onDragExitCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DRAG_LEAVE],
-    phasedRegistrationNames: {
-      bubbled: 'onDragLeave',
-      captured: 'onDragLeaveCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DRAG_OVER],
-    phasedRegistrationNames: {
-      bubbled: 'onDragOver',
-      captured: 'onDragOverCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DRAG_START],
-    phasedRegistrationNames: {
-      bubbled: 'onDragStart',
-      captured: 'onDragStartCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DROP],
-    phasedRegistrationNames: {
-      bubbled: 'onDrop',
-      captured: 'onDropCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_DURATION_CHANGE],
-    phasedRegistrationNames: {
-      bubbled: 'onDurationChange',
-      captured: 'onDurationChangeCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_EMPTIED],
-    phasedRegistrationNames: {
-      bubbled: 'onEmptied',
-      captured: 'onEmptiedCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_ENCRYPTED],
-    phasedRegistrationNames: {
-      bubbled: 'onEncrypted',
-      captured: 'onEncryptedCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_ENDED],
-    phasedRegistrationNames: {
-      bubbled: 'onEnded',
-      captured: 'onEndedCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_ERROR],
-    phasedRegistrationNames: {
-      bubbled: 'onError',
-      captured: 'onErrorCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_FOCUS],
-    phasedRegistrationNames: {
-      bubbled: 'onFocus',
-      captured: 'onFocusCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_INPUT],
-    phasedRegistrationNames: {
-      bubbled: 'onInput',
-      captured: 'onInputCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_INVALID],
-    phasedRegistrationNames: {
-      bubbled: 'onInvalid',
-      captured: 'onInvalidCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_KEY_DOWN],
-    phasedRegistrationNames: {
-      bubbled: 'onKeyDown',
-      captured: 'onKeyDownCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_KEY_PRESS],
-    phasedRegistrationNames: {
-      bubbled: 'onKeyPress',
-      captured: 'onKeyPressCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_KEY_UP],
-    phasedRegistrationNames: {
-      bubbled: 'onKeyUp',
-      captured: 'onKeyUpCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_LOAD],
-    phasedRegistrationNames: {
-      bubbled: 'onLoad',
-      captured: 'onLoadCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_LOADED_DATA],
-    phasedRegistrationNames: {
-      bubbled: 'onLoadedData',
-      captured: 'onLoadedDataCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_LOADED_METADATA],
-    phasedRegistrationNames: {
-      bubbled: 'onLoadedMetadata',
-      captured: 'onLoadedMetadataCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_LOAD_START],
-    phasedRegistrationNames: {
-      bubbled: 'onLoadStart',
-      captured: 'onLoadStartCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_MOUSE_DOWN],
-    phasedRegistrationNames: {
-      bubbled: 'onMouseDown',
-      captured: 'onMouseDownCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_MOUSE_MOVE],
-    phasedRegistrationNames: {
-      bubbled: 'onMouseMove',
-      captured: 'onMouseMoveCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_MOUSE_OUT],
-    phasedRegistrationNames: {
-      bubbled: 'onMouseOut',
-      captured: 'onMouseOutCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_MOUSE_OVER],
-    phasedRegistrationNames: {
-      bubbled: 'onMouseOver',
-      captured: 'onMouseOverCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_MOUSE_UP],
-    phasedRegistrationNames: {
-      bubbled: 'onMouseUp',
-      captured: 'onMouseUpCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_PASTE],
-    phasedRegistrationNames: {
-      bubbled: 'onPaste',
-      captured: 'onPasteCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_PAUSE],
-    phasedRegistrationNames: {
-      bubbled: 'onPause',
-      captured: 'onPauseCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_PLAY],
-    phasedRegistrationNames: {
-      bubbled: 'onPlay',
-      captured: 'onPlayCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_PLAYING],
-    phasedRegistrationNames: {
-      bubbled: 'onPlaying',
-      captured: 'onPlayingCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_PROGRESS],
-    phasedRegistrationNames: {
-      bubbled: 'onProgress',
-      captured: 'onProgressCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_RATE_CHANGE],
-    phasedRegistrationNames: {
-      bubbled: 'onRateChange',
-      captured: 'onRateChangeCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_RESET],
-    phasedRegistrationNames: {
-      bubbled: 'onReset',
-      captured: 'onResetCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_SCROLL],
-    phasedRegistrationNames: {
-      bubbled: 'onScroll',
-      captured: 'onScrollCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_SEEKED],
-    phasedRegistrationNames: {
-      bubbled: 'onSeeked',
-      captured: 'onSeekedCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_SEEKING],
-    phasedRegistrationNames: {
-      bubbled: 'onSeeking',
-      captured: 'onSeekingCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_STALLED],
-    phasedRegistrationNames: {
-      bubbled: 'onStalled',
-      captured: 'onStalledCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_SUBMIT],
-    phasedRegistrationNames: {
-      bubbled: 'onSubmit',
-      captured: 'onSubmitCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_SUSPEND],
-    phasedRegistrationNames: {
-      bubbled: 'onSuspend',
-      captured: 'onSuspendCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_TIME_UPDATE],
-    phasedRegistrationNames: {
-      bubbled: 'onTimeUpdate',
-      captured: 'onTimeUpdateCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_TOUCH_CANCEL],
-    phasedRegistrationNames: {
-      bubbled: 'onTouchCancel',
-      captured: 'onTouchCancelCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_TOUCH_END],
-    phasedRegistrationNames: {
-      bubbled: 'onTouchEnd',
-      captured: 'onTouchEndCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_TOUCH_MOVE],
-    phasedRegistrationNames: {
-      bubbled: 'onTouchMove',
-      captured: 'onTouchMoveCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_TOUCH_START],
-    phasedRegistrationNames: {
-      bubbled: 'onTouchStart',
-      captured: 'onTouchStartCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_TRANSITION_END],
-    phasedRegistrationNames: {
-      bubbled: 'onTransitionEnd',
-      captured: 'onTransitionEndCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_VOLUME_CHANGE],
-    phasedRegistrationNames: {
-      bubbled: 'onVolumeChange',
-      captured: 'onVolumeChangeCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_WAITING],
-    phasedRegistrationNames: {
-      bubbled: 'onWaiting',
-      captured: 'onWaitingCapture',
-    },
-  },
-  {
-    dependencies: [TopLevelEventTypes.TOP_WHEEL],
-    phasedRegistrationNames: {
-      bubbled: 'onWheel',
-      captured: 'onWheelCapture',
-    },
-  },
+const shortTypes = [
+  [TopLevelEventTypes.TOP_ABORT, 'onAbort'],
+  [TopLevelEventTypes.TOP_ANIMATION_END, 'onAnimationEnd'],
+  [TopLevelEventTypes.TOP_ANIMATION_ITERATION, 'onAnimationIteration'],
+  [TopLevelEventTypes.TOP_ANIMATION_START, 'onAnimationStart'],
+  [TopLevelEventTypes.TOP_BLUR, 'onBlur'],
+  [TopLevelEventTypes.TOP_CANCEL, 'onCancel'],
+  [TopLevelEventTypes.TOP_CAN_PLAY, 'onCanPlay'],
+  [TopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'onCanPlayThrough'],
+  [TopLevelEventTypes.TOP_CLICK, 'onClick'],
+  [TopLevelEventTypes.TOP_CLOSE, 'onClose'],
+  [TopLevelEventTypes.TOP_CONTEXT_MENU, 'onContextMenu'],
+  [TopLevelEventTypes.TOP_COPY, 'onCopy'],
+  [TopLevelEventTypes.TOP_CUT, 'onCut'],
+  [TopLevelEventTypes.TOP_DOUBLE_CLICK, 'onDoubleClick'],
+  [TopLevelEventTypes.TOP_DRAG, 'onDrag'],
+  [TopLevelEventTypes.TOP_DRAG_END, 'onDragEnd'],
+  [TopLevelEventTypes.TOP_DRAG_ENTER, 'onDragEnter'],
+  [TopLevelEventTypes.TOP_DRAG_EXIT, 'onDragExit'],
+  [TopLevelEventTypes.TOP_DRAG_LEAVE, 'onDragLeave'],
+  [TopLevelEventTypes.TOP_DRAG_OVER, 'onDragOver'],
+  [TopLevelEventTypes.TOP_DRAG_START, 'onDragStart'],
+  [TopLevelEventTypes.TOP_DROP, 'onDrop'],
+  [TopLevelEventTypes.TOP_DURATION_CHANGE, 'onDurationChange'],
+  [TopLevelEventTypes.TOP_EMPTIED, 'onEmptied'],
+  [TopLevelEventTypes.TOP_ENCRYPTED, 'onEncrypted'],
+  [TopLevelEventTypes.TOP_ENDED, 'onEnded'],
+  [TopLevelEventTypes.TOP_ERROR, 'onError'],
+  [TopLevelEventTypes.TOP_FOCUS, 'onFocus'],
+  [TopLevelEventTypes.TOP_INPUT, 'onInput'],
+  [TopLevelEventTypes.TOP_INVALID, 'onInvalid'],
+  [TopLevelEventTypes.TOP_KEY_DOWN, 'onKeyDown'],
+  [TopLevelEventTypes.TOP_KEY_PRESS, 'onKeyPress'],
+  [TopLevelEventTypes.TOP_KEY_UP, 'onKeyUp'],
+  [TopLevelEventTypes.TOP_LOAD, 'onLoad'],
+  [TopLevelEventTypes.TOP_LOADED_DATA, 'onLoadedData'],
+  [TopLevelEventTypes.TOP_LOADED_METADATA, 'onLoadedMetadata'],
+  [TopLevelEventTypes.TOP_LOAD_START, 'onLoadStart'],
+  [TopLevelEventTypes.TOP_MOUSE_DOWN, 'onMouseDown'],
+  [TopLevelEventTypes.TOP_MOUSE_MOVE, 'onMouseMove'],
+  [TopLevelEventTypes.TOP_MOUSE_OUT, 'onMouseOut'],
+  [TopLevelEventTypes.TOP_MOUSE_OVER, 'onMouseOver'],
+  [TopLevelEventTypes.TOP_MOUSE_UP, 'onMouseUp'],
+  [TopLevelEventTypes.TOP_PASTE, 'onPaste'],
+  [TopLevelEventTypes.TOP_PAUSE, 'onPause'],
+  [TopLevelEventTypes.TOP_PLAY, 'onPlay'],
+  [TopLevelEventTypes.TOP_PLAYING, 'onPlaying'],
+  [TopLevelEventTypes.TOP_PROGRESS, 'onProgress'],
+  [TopLevelEventTypes.TOP_RATE_CHANGE, 'onRateChange'],
+  [TopLevelEventTypes.TOP_RESET, 'onReset'],
+  [TopLevelEventTypes.TOP_SCROLL, 'onScroll'],
+  [TopLevelEventTypes.TOP_SEEKED, 'onSeeked'],
+  [TopLevelEventTypes.TOP_SEEKING, 'onSeeking'],
+  [TopLevelEventTypes.TOP_STALLED, 'onStalled'],
+  [TopLevelEventTypes.TOP_SUBMIT, 'onSubmit'],
+  [TopLevelEventTypes.TOP_SUSPEND, 'onSuspend'],
+  [TopLevelEventTypes.TOP_TIME_UPDATE, 'onTimeUpdate'],
+  [TopLevelEventTypes.TOP_TOUCH_CANCEL, 'onTouchCancel'],
+  [TopLevelEventTypes.TOP_TOUCH_END, 'onTouchEnd'],
+  [TopLevelEventTypes.TOP_TOUCH_MOVE, 'onTouchMove'],
+  [TopLevelEventTypes.TOP_TOUCH_START, 'onTouchStart'],
+  [TopLevelEventTypes.TOP_TRANSITION_END, 'onTransitionEnd'],
+  [TopLevelEventTypes.TOP_VOLUME_CHANGE, 'onVolumeChange'],
+  [TopLevelEventTypes.TOP_WAITING, 'onWaiting'],
+  [TopLevelEventTypes.TOP_WHEEL, 'onWheel'],
 ];
+
+const eventTypes = shortTypes.map(t => ({
+  dependencies: [t[0]],
+  phasedRegistrationNames: {
+    bubbled: t[1],
+    captured: t[1] + 'Capture',
+  },
+}));
 
 const topLevelEventsToDispatchConfig = new Map();
 
