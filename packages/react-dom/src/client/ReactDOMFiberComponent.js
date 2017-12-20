@@ -52,7 +52,7 @@ import * as inputValueTracking from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
-import BrowserEventConstants from '../events/BrowserEventConstants';
+import {getRawEventName} from '../events/BrowserEventConstants';
 import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
@@ -503,11 +503,7 @@ export function setInitialProperties(
     case 'audio':
       // Create listener for each media event
       for (let i = 0; i < mediaEvents.length; i++) {
-        trapBubbledEvent(
-          event,
-          BrowserEventConstants.topLevelTypes[mediaEvents[i]],
-          domElement,
-        );
+        trapBubbledEvent(event, getRawEventName(mediaEvents[i]), domElement);
       }
       props = rawProps;
       break;
@@ -881,11 +877,7 @@ export function diffHydratedProperties(
     case 'audio':
       // Create listener for each media event
       for (let i = 0; i < mediaEvents.length; i++) {
-        trapBubbledEvent(
-          event,
-          BrowserEventConstants.topLevelTypes[mediaEvents[i]],
-          domElement,
-        );
+        trapBubbledEvent(event, getRawEventName(mediaEvents[i]), domElement);
       }
       break;
     case 'source':

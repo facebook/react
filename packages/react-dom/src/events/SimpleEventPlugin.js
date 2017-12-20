@@ -107,7 +107,7 @@ const eventTypes = shortTypes.map(t => ({
   },
 }));
 
-const topLevelEventsToDispatchConfig = new Map();
+export const topLevelEventsToDispatchConfig = new Map();
 
 for (let i = 0; i < eventTypes.length; i++) {
   topLevelEventsToDispatchConfig.set(

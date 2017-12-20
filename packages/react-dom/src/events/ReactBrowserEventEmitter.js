@@ -21,11 +21,9 @@ import {
   trapCapturedEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
-import BrowserEventConstants from './BrowserEventConstants';
+import {getRawEventName} from './BrowserEventConstants';
 
 export * from 'events/ReactEventEmitterMixin';
-
-const {topLevelTypes} = BrowserEventConstants;
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -129,6 +127,7 @@ export function listenTo(registrationName, contentDocumentHandle) {
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
+    let rawName = null;
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
       if (dependency === TOP_SCROLL) {
         trapCapturedEvent(TOP_SCROLL, 'scroll', mountAt);
@@ -149,8 +148,8 @@ export function listenTo(registrationName, contentDocumentHandle) {
           trapCapturedEvent(TOP_CLOSE, 'close', mountAt);
         }
         isListening.topClose = true;
-      } else if (topLevelTypes.has(dependency)) {
-        trapBubbledEvent(dependency, topLevelTypes.get(dependency), mountAt);
+      } else if ((rawName = getRawEventName(dependency))) {
+        trapBubbledEvent(dependency, rawName, mountAt);
       }
 
       isListening[dependency] = true;
