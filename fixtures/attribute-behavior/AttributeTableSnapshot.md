@@ -7173,6 +7173,31 @@
 | `nonce=(null)`| (initial)| `<null>` |
 | `nonce=(undefined)`| (initial)| `<null>` |
 
+## `noModule` (on `<script>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `noModule=(string)`| (changed)| `<boolean: true>` |
+| `noModule=(empty string)`| (initial)| `<boolean: false>` |
+| `noModule=(array with string)`| (changed)| `<boolean: true>` |
+| `noModule=(empty array)`| (changed)| `<boolean: true>` |
+| `noModule=(object)`| (changed)| `<boolean: true>` |
+| `noModule=(numeric string)`| (changed)| `<boolean: true>` |
+| `noModule=(-1)`| (changed)| `<boolean: true>` |
+| `noModule=(0)`| (initial)| `<boolean: false>` |
+| `noModule=(integer)`| (changed)| `<boolean: true>` |
+| `noModule=(NaN)`| (initial, warning)| `<boolean: false>` |
+| `noModule=(float)`| (changed)| `<boolean: true>` |
+| `noModule=(true)`| (changed)| `<boolean: true>` |
+| `noModule=(false)`| (initial)| `<boolean: false>` |
+| `noModule=(string 'true')`| (changed)| `<boolean: true>` |
+| `noModule=(string 'false')`| (changed)| `<boolean: true>` |
+| `noModule=(string 'on')`| (changed)| `<boolean: true>` |
+| `noModule=(string 'off')`| (changed)| `<boolean: true>` |
+| `noModule=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `noModule=(function)`| (initial, warning)| `<boolean: false>` |
+| `noModule=(null)`| (initial)| `<boolean: false>` |
+| `noModule=(undefined)`| (initial)| `<boolean: false>` |
+
 ## `noValidate` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
