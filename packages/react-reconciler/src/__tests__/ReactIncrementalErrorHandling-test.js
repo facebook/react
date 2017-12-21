@@ -61,27 +61,26 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches render error in a boundary during partial deferred mounting', () => {
-    const ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
-        ops.push('ErrorBoundary componentDidCatch');
+        ReactNoop.yield('ErrorBoundary componentDidCatch');
         this.setState({error});
       }
       render() {
         if (this.state.error) {
-          ops.push('ErrorBoundary render error');
+          ReactNoop.yield('ErrorBoundary render error');
           return (
             <span prop={`Caught an error: ${this.state.error.message}.`} />
           );
         }
-        ops.push('ErrorBoundary render success');
+        ReactNoop.yield('ErrorBoundary render success');
         return this.props.children;
       }
     }
 
     function BrokenRender(props) {
-      ops.push('BrokenRender');
+      ReactNoop.yield('BrokenRender');
       throw new Error('Hello');
     }
 
@@ -91,13 +90,10 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
 
-    ReactNoop.flushDeferredPri(15);
-    expect(ops).toEqual(['ErrorBoundary render success']);
+    ReactNoop.flushThrough(['ErrorBoundary render success']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    ops.length = 0;
-    ReactNoop.flushDeferredPri(30);
-    expect(ops).toEqual([
+    expect(ReactNoop.flush()).toEqual([
       'BrokenRender',
       'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
@@ -398,7 +394,6 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.flush();
     }).toThrow('Hello');
     expect(ops).toEqual(['BrokenRender']);
-
     ops = [];
     ReactNoop.render(<Foo />);
     ReactNoop.flush();

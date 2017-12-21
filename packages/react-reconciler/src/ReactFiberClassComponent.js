@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {CapturedError} from './ReactFiberScheduler';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
@@ -36,6 +37,7 @@ import {
   processUpdateQueue,
 } from './ReactFiberUpdateQueue';
 import {hasContextChanged} from './ReactFiberContext';
+import {logError} from './ReactFiberScheduler';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -100,7 +102,8 @@ export default function(
         callback,
         isReplace: false,
         isForced: false,
-        nextCallback: null,
+        isCapture: false,
+        capturedValue: null,
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
@@ -119,7 +122,8 @@ export default function(
         callback,
         isReplace: true,
         isForced: false,
-        nextCallback: null,
+        isCapture: false,
+        capturedValue: null,
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
@@ -138,7 +142,8 @@ export default function(
         callback,
         isReplace: false,
         isForced: true,
-        nextCallback: null,
+        isCapture: false,
+        capturedValue: null,
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
@@ -635,6 +640,30 @@ export default function(
         newProps,
         renderExpirationTime,
       );
+
+      let updateQueue = workInProgress.updateQueue;
+      if (updateQueue !== null && updateQueue.capturedValues !== null) {
+        const capturedValues = updateQueue.capturedValues;
+
+        // Don't remove these from the update queue yet. We need them in
+        // finishClassComponent. Do the reset there.
+        // TODO: This is awkward. Refactor class components.
+        // updateQueue.capturedValues = null;
+
+        // TODO: Pattern matching. Check that this is an error.
+        const capturedError: CapturedError = (capturedValues[0]: any);
+        logError(workInProgress, capturedError);
+        const error = capturedError.error;
+        instance.componentDidCatch(error);
+        newState = processUpdateQueue(
+          current,
+          workInProgress,
+          updateQueue,
+          instance,
+          newProps,
+          renderExpirationTime,
+        );
+      }
     } else {
       newState = oldState;
     }

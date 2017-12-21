@@ -270,11 +270,6 @@ export function createWorkInProgress(
     // We already have an alternate.
     // Reset the effect tag.
     workInProgress.effectTag = NoEffect;
-
-    // The effect list is no longer valid.
-    workInProgress.nextEffect = null;
-    workInProgress.firstEffect = null;
-    workInProgress.lastEffect = null;
   }
 
   workInProgress.expirationTime = expirationTime;

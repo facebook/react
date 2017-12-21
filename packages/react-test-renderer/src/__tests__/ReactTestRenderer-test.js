@@ -460,8 +460,8 @@ describe('ReactTestRenderer', () => {
     expect(log).toEqual([
       'Boundary render',
       'Angry render',
-      'Boundary componentDidMount',
       'Boundary render',
+      'Boundary componentDidMount',
     ]);
   });
 

@@ -76,7 +76,10 @@ import {
   computeExpirationBucket,
 } from './ReactFiberExpirationTime';
 import {AsyncUpdates} from './ReactTypeOfInternalContext';
-import {getUpdateExpirationTime} from './ReactFiberUpdateQueue';
+import {
+  getUpdateExpirationTime,
+  insertUpdateIntoFiber,
+} from './ReactFiberUpdateQueue';
 import {resetContext} from './ReactFiberContext';
 
 const {
@@ -154,6 +157,27 @@ if (__DEV__) {
   };
 }
 
+export function logError(boundaryFiber: Fiber, capturedError: CapturedError) {
+  const errorBoundaryFound = boundaryFiber.tag === ClassComponent;
+  capturedError.errorBoundary = boundaryFiber;
+  capturedError.errorBoundaryFound = errorBoundaryFound;
+  capturedError.errorBoundaryName = errorBoundaryFound
+    ? getComponentName(boundaryFiber)
+    : null;
+  // TODO: These are always the same. Why is it needed?
+  capturedError.willRetry = errorBoundaryFound;
+  try {
+    logCapturedError(capturedError);
+  } catch (e) {
+    // Prevent cycle if logCapturedError() throws.
+    // A cycle may still occur if logCapturedError renders a component that throws.
+    const suppressLogging = e && e.suppressReactErrorLogging;
+    if (!suppressLogging) {
+      console.error(e);
+    }
+  }
+}
+
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
@@ -162,17 +186,19 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     config,
   );
   const {popHostContainer, popHostContext, resetHostContainer} = hostContext;
-  const {beginWork, beginFailedWork} = ReactFiberBeginWork(
+  const {beginWork} = ReactFiberBeginWork(
     config,
     hostContext,
     hydrationContext,
     scheduleWork,
     computeExpirationForFiber,
+    markUncaughtError,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
     hostContext,
     hydrationContext,
+    captureThrownValues,
   );
   const {
     commitResetTextContent,
@@ -182,7 +208,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     commitLifeCycles,
     commitAttachRef,
     commitDetachRef,
-  } = ReactFiberCommitWork(config, captureError);
+  } = ReactFiberCommitWork(config, onCommitPhaseError);
   const {
     now,
     scheduleDeferredCallback,
@@ -215,21 +241,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   // The next fiber with an effect that we're currently committing.
   let nextEffect: Fiber | null = null;
 
-  // Keep track of which fibers have captured an error that need to be handled.
-  // Work is removed from this collection after componentDidCatch is called.
-  let capturedErrors: Map<Fiber, CapturedError> | null = null;
-  // Keep track of which fibers have failed during the current batch of work.
-  // This is a different set than capturedErrors, because it is not reset until
-  // the end of the batch. This is needed to propagate errors correctly if a
-  // subtree fails more than once.
-  let failedBoundaries: Set<Fiber> | null = null;
-  // Error boundaries that captured an error during the current commit.
-  let commitPhaseBoundaries: Set<Fiber> | null = null;
+  let hasUncaughtError: boolean = false;
   let firstUncaughtError: mixed | null = null;
-  let didFatal: boolean = false;
 
   let isCommitting: boolean = false;
-  let isUnmounting: boolean = false;
+
+  let thrownValues: Array<mixed> | null = null;
+  let capturedValues: Array<mixed> | null = null;
 
   // Used for performance tracking.
   let interruptedBy: Fiber | null = null;
@@ -240,6 +258,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Reset the cursors
     resetContext();
     resetHostContainer();
+
+    thrownValues = null;
+    capturedValues = null;
   }
 
   function commitAllHostEffects() {
@@ -296,9 +317,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           break;
         }
         case Deletion: {
-          isUnmounting = true;
           commitDeletion(nextEffect);
-          isUnmounting = false;
           break;
         }
       }
@@ -325,11 +344,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         commitAttachRef(nextEffect);
       }
 
-      if (effectTag & Err) {
-        recordEffect();
-        commitErrorHandling(nextEffect);
-      }
-
       const next = nextEffect.nextEffect;
       // Ensure that we clean these up so that we don't accidentally keep them.
       // I'm not actually sure this matters because we can't reset firstEffect
@@ -343,10 +357,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function commitRoot(finishedWork: Fiber): ExpirationTime {
-    // We keep track of this so that captureError can collect any boundaries
-    // that capture an error during the commit phase. The reason these aren't
-    // local to this function is because errors that occur during cWU are
-    // captured elsewhere, to prevent the unmount from being interrupted.
     isWorking = true;
     isCommitting = true;
     startCommitTimer();
@@ -410,7 +420,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           'Should have next effect. This error is likely caused by a bug ' +
             'in React. Please file an issue.',
         );
-        captureError(nextEffect, error);
+        onCommitPhaseError(nextEffect, error);
         // Clean-up
         if (nextEffect !== null) {
           nextEffect = nextEffect.nextEffect;
@@ -456,7 +466,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           'Should have next effect. This error is likely caused by a bug ' +
             'in React. Please file an issue.',
         );
-        captureError(nextEffect, error);
+        onCommitPhaseError(nextEffect, error);
         if (nextEffect !== null) {
           nextEffect = nextEffect.nextEffect;
         }
@@ -474,26 +484,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
     }
 
-    // If we caught any errors during this commit, schedule their boundaries
-    // to update.
-    if (commitPhaseBoundaries) {
-      commitPhaseBoundaries.forEach(scheduleErrorRecovery);
-      commitPhaseBoundaries = null;
-    }
-
-    if (firstUncaughtError !== null) {
-      const error = firstUncaughtError;
-      firstUncaughtError = null;
-      onUncaughtError(error);
-    }
-
     const remainingTime = root.current.expirationTime;
-
-    if (remainingTime === NoWork) {
-      capturedErrors = null;
-      failedBoundaries = null;
-    }
-
     return remainingTime;
   }
 
@@ -549,7 +540,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;
 
-      resetExpirationTime(workInProgress, nextRenderExpirationTime);
+      if (next !== workInProgress) {
+        if (workInProgress.effectTag & Err) {
+          // Restarting an error boundary
+          stopFailedWorkTimer(workInProgress);
+        } else {
+          stopWorkTimer(workInProgress);
+        }
+        resetExpirationTime(workInProgress, nextRenderExpirationTime);
+      } else {
+        // This fiber did not complete.
+        stopWorkTimer(workInProgress);
+      }
 
       if (next !== null) {
         stopWorkTimer(workInProgress);
@@ -594,7 +596,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
       }
 
-      stopWorkTimer(workInProgress);
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
       }
@@ -633,41 +634,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
     }
 
-    let next = beginWork(current, workInProgress, nextRenderExpirationTime);
-    if (__DEV__) {
-      ReactDebugCurrentFiber.resetCurrentFiber();
-    }
-    if (__DEV__ && ReactFiberInstrumentation.debugTool) {
-      ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
-    }
-
-    if (next === null) {
-      // If this doesn't spawn new work, complete the current work.
-      next = completeUnitOfWork(workInProgress);
-    }
-
-    ReactCurrentOwner.current = null;
-
-    return next;
-  }
-
-  function performFailedUnitOfWork(workInProgress: Fiber): Fiber | null {
-    // The current, flushed, state of this fiber is the alternate.
-    // Ideally nothing should rely on this, but relying on it here
-    // means that we don't need an additional field on the work in
-    // progress.
-    const current = workInProgress.alternate;
-
-    // See if beginning this work spawns more work.
-    startWorkTimer(workInProgress);
-    if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
-    }
-    let next = beginFailedWork(
+    let next = beginWork(
       current,
       workInProgress,
+      capturedValues,
       nextRenderExpirationTime,
     );
+    capturedValues = null;
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();
     }
@@ -686,14 +659,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function workLoop(expirationTime: ExpirationTime) {
-    if (capturedErrors !== null) {
-      // If there are unhandled errors, switch to the slow work loop.
-      // TODO: How to avoid this check in the fast path? Maybe the renderer
-      // could keep track of which roots have unhandled errors and call a
-      // forked version of renderRoot.
-      slowWorkLoopThatChecksForFailedWork(expirationTime);
-      return;
-    }
     if (
       nextRenderExpirationTime === NoWork ||
       nextRenderExpirationTime > expirationTime
@@ -714,57 +679,53 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function slowWorkLoopThatChecksForFailedWork(expirationTime: ExpirationTime) {
-    if (
-      nextRenderExpirationTime === NoWork ||
-      nextRenderExpirationTime > expirationTime
-    ) {
-      return;
-    }
+  function unwindToNearestBoundary(sourceFiber: Fiber, thrownValue: mixed) {
+    // Push the thrown value onto the global list.
 
-    if (nextRenderExpirationTime <= mostRecentCurrentTime) {
-      // Flush all expired work.
-      while (nextUnitOfWork !== null) {
-        if (hasCapturedError(nextUnitOfWork)) {
-          // Use a forked version of performUnitOfWork
-          nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
-        } else {
-          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-        }
-      }
+    // TODO: Pattern matching. Check that this is an error.
+    const capturedError: CapturedError = {
+      componentName: getComponentName(sourceFiber),
+      componentStack: getStackAddendumByWorkInProgressFiber(sourceFiber),
+      error: thrownValue,
+      errorBoundary: null,
+      errorBoundaryFound: false,
+      errorBoundaryName: null,
+      willRetry: false,
+    };
+    if (thrownValues === null) {
+      thrownValues = [capturedError];
     } else {
-      // Flush asynchronous work until the deadline runs out of time.
-      while (nextUnitOfWork !== null && !shouldYield()) {
-        if (hasCapturedError(nextUnitOfWork)) {
-          // Use a forked version of performUnitOfWork
-          nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
-        } else {
-          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-        }
-      }
+      thrownValues.push(capturedError);
     }
-  }
 
-  function renderRootCatchBlock(
-    root: FiberRoot,
-    failedWork: Fiber,
-    boundary: Fiber,
-    expirationTime: ExpirationTime,
-  ) {
-    // We're going to restart the error boundary that captured the error.
-    // Conceptually, we're unwinding the stack. We need to unwind the
-    // context stack, too.
-    unwindContexts(failedWork, boundary);
+    popContexts(sourceFiber);
 
-    // Restart the error boundary using a forked version of
-    // performUnitOfWork that deletes the boundary's children. The entire
-    // failed subree will be unmounted. During the commit phase, a special
-    // lifecycle method is called on the error boundary, which triggers
-    // a re-render.
-    nextUnitOfWork = performFailedUnitOfWork(boundary);
+    // TODO: If the value is something other than an error (like a
+    // promise), continue working on the siblings, and unwind using
+    // the normal complete phase algorithm. This should be safe, because
+    // we assume the value was thrown from inside the render method. For
+    // errors, we have to skip the siblings and immediately unwind to
+    // the nearest boundary, because the tree may be in a corrupt state.
+    let boundaryFiber = null;
+    let fiber = sourceFiber.return;
+    traversal: while (fiber !== null) {
+      switch (fiber.tag) {
+        case ClassComponent:
+          const instance = fiber.stateNode;
+          if (typeof instance.componentDidCatch === 'function') {
+            boundaryFiber = fiber;
+            break traversal;
+          }
+          break;
+        case HostRoot:
+          boundaryFiber = fiber;
+          break;
+      }
+      popContexts(fiber);
+      fiber = fiber.return;
+    }
 
-    // Continue working.
-    workLoop(expirationTime);
+    return boundaryFiber;
   }
 
   function renderRoot(
@@ -802,339 +763,168 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     startWorkLoopTimer(nextUnitOfWork);
 
-    let didError = false;
-    let error = null;
-    if (__DEV__) {
-      invokeGuardedCallback(null, workLoop, null, expirationTime);
-      if (hasCaughtError()) {
-        didError = true;
-        error = clearCaughtError();
-      }
-    } else {
-      try {
-        workLoop(expirationTime);
-      } catch (e) {
-        didError = true;
-        error = e;
-      }
-    }
+    let didThrow;
+    let thrownValue;
+    do {
+      didThrow = false;
+      thrownValue = null;
 
-    // An error was thrown during the render phase.
-    while (didError) {
-      if (didFatal) {
-        // This was a fatal error. Don't attempt to recover from it.
-        firstUncaughtError = error;
-        break;
-      }
-
-      const failedWork = nextUnitOfWork;
-      if (failedWork === null) {
-        // An error was thrown but there's no current unit of work. This can
-        // happen during the commit phase if there's a bug in the renderer.
-        didFatal = true;
-        continue;
-      }
-
-      // "Capture" the error by finding the nearest boundary. If there is no
-      // error boundary, we use the root.
-      const boundary = captureError(failedWork, error);
-      invariant(
-        boundary !== null,
-        'Should have found an error boundary. This error is likely ' +
-          'caused by a bug in React. Please file an issue.',
-      );
-
-      if (didFatal) {
-        // The error we just captured was a fatal error. This happens
-        // when the error propagates to the root more than once.
-        continue;
-      }
-
-      didError = false;
-      error = null;
       if (__DEV__) {
-        invokeGuardedCallback(
-          null,
-          renderRootCatchBlock,
-          null,
-          root,
-          failedWork,
-          boundary,
-          expirationTime,
-        );
+        invokeGuardedCallback(null, workLoop, null, expirationTime);
         if (hasCaughtError()) {
-          didError = true;
-          error = clearCaughtError();
-          continue;
+          didThrow = true;
+          thrownValue = clearCaughtError();
         }
       } else {
         try {
-          renderRootCatchBlock(root, failedWork, boundary, expirationTime);
-          error = null;
+          workLoop(expirationTime);
         } catch (e) {
-          didError = true;
-          error = e;
-          continue;
+          didThrow = true;
+          thrownValue = e;
         }
       }
-      // We're finished working. Exit the error loop.
-      break;
-    }
 
-    const uncaughtError = firstUncaughtError;
+      if (!didThrow) {
+        break;
+      }
+
+      if (nextUnitOfWork === null) {
+        // Should have a nextUnitOfWork here.
+        hasUncaughtError = true;
+        firstUncaughtError = thrownValue;
+        break;
+      }
+
+      const boundary = unwindToNearestBoundary(nextUnitOfWork, thrownValue);
+      if (boundary !== null) {
+        nextUnitOfWork = completeUnitOfWork(boundary);
+      } else {
+        // The root failed to render. This is a fatal error.
+        hasUncaughtError = true;
+        firstUncaughtError = thrownValue;
+        break;
+      }
+    } while (true);
+
+    if (hasUncaughtError) {
+      onUncaughtError(firstUncaughtError);
+      hasUncaughtError = false;
+      firstUncaughtError = null;
+      // Set this to null to indicate there's no more work left.
+      // That way the stack is reset next time we work on this root.
+      nextUnitOfWork = null;
+    }
 
     // We're done performing work. Time to clean up.
     stopWorkLoopTimer(interruptedBy);
     interruptedBy = null;
     isWorking = false;
-    didFatal = false;
-    firstUncaughtError = null;
-
-    if (uncaughtError !== null) {
-      onUncaughtError(uncaughtError);
-    }
 
     return root.isReadyForCommit ? root.current.alternate : null;
   }
 
-  // Returns the boundary that captured the error, or null if the error is ignored
-  function captureError(failedWork: Fiber, error: mixed): Fiber | null {
-    // It is no longer valid because we exited the user code.
-    ReactCurrentOwner.current = null;
-    if (__DEV__) {
-      ReactDebugCurrentFiber.resetCurrentFiber();
-    }
-
-    // Search for the nearest error boundary.
-    let boundary: Fiber | null = null;
-
-    // Passed to logCapturedError()
-    let errorBoundaryFound: boolean = false;
-    let willRetry: boolean = false;
-    let errorBoundaryName: string | null = null;
-
-    // Host containers are a special case. If the failed work itself is a host
-    // container, then it acts as its own boundary. In all other cases, we
-    // ignore the work itself and only search through the parents.
-    if (failedWork.tag === HostRoot) {
-      boundary = failedWork;
-
-      if (isFailedBoundary(failedWork)) {
-        // If this root already failed, there must have been an error when
-        // attempting to unmount it. This is a worst-case scenario and
-        // should only be possible if there's a bug in the renderer.
-        didFatal = true;
-      }
-    } else {
-      let node = failedWork.return;
-      while (node !== null && boundary === null) {
-        if (node.tag === ClassComponent) {
-          const instance = node.stateNode;
-          if (typeof instance.componentDidCatch === 'function') {
-            errorBoundaryFound = true;
-            errorBoundaryName = getComponentName(node);
-
-            // Found an error boundary!
-            boundary = node;
-            willRetry = true;
-          }
-        } else if (node.tag === HostRoot) {
-          // Treat the root like a no-op error boundary
-          boundary = node;
-        }
-
-        if (isFailedBoundary(node)) {
-          // This boundary is already in a failed state.
-
-          // If we're currently unmounting, that means this error was
-          // thrown while unmounting a failed subtree. We should ignore
-          // the error.
-          if (isUnmounting) {
-            return null;
-          }
-
-          // If we're in the commit phase, we should check to see if
-          // this boundary already captured an error during this commit.
-          // This case exists because multiple errors can be thrown during
-          // a single commit without interruption.
-          if (
-            commitPhaseBoundaries !== null &&
-            (commitPhaseBoundaries.has(node) ||
-              (node.alternate !== null &&
-                commitPhaseBoundaries.has(node.alternate)))
-          ) {
-            // If so, we should ignore this error.
-            return null;
-          }
-
-          // The error should propagate to the next boundary -— we keep looking.
-          boundary = null;
-          willRetry = false;
-        }
-
-        node = node.return;
-      }
-    }
-
-    if (boundary !== null) {
-      // Add to the collection of failed boundaries. This lets us know that
-      // subsequent errors in this subtree should propagate to the next boundary.
-      if (failedBoundaries === null) {
-        failedBoundaries = new Set();
-      }
-      failedBoundaries.add(boundary);
-
-      // This method is unsafe outside of the begin and complete phases.
-      // We might be in the commit phase when an error is captured.
-      // The risk is that the return path from this Fiber may not be accurate.
-      // That risk is acceptable given the benefit of providing users more context.
-      const componentStack = getStackAddendumByWorkInProgressFiber(failedWork);
-      const componentName = getComponentName(failedWork);
-
-      // Add to the collection of captured errors. This is stored as a global
-      // map of errors and their component stack location keyed by the boundaries
-      // that capture them. We mostly use this Map as a Set; it's a Map only to
-      // avoid adding a field to Fiber to store the error.
-      if (capturedErrors === null) {
-        capturedErrors = new Map();
-      }
-
-      const capturedError = {
-        componentName,
-        componentStack,
-        error,
-        errorBoundary: errorBoundaryFound ? boundary.stateNode : null,
-        errorBoundaryFound,
-        errorBoundaryName,
-        willRetry,
-      };
-
-      capturedErrors.set(boundary, capturedError);
-
-      try {
-        logCapturedError(capturedError);
-      } catch (e) {
-        // Prevent cycle if logCapturedError() throws.
-        // A cycle may still occur if logCapturedError renders a component that throws.
-        const suppressLogging = e && e.suppressReactErrorLogging;
-        if (!suppressLogging) {
-          console.error(e);
-        }
-      }
-
-      // If we're in the commit phase, defer scheduling an update on the
-      // boundary until after the commit is complete
-      if (isCommitting) {
-        if (commitPhaseBoundaries === null) {
-          commitPhaseBoundaries = new Set();
-        }
-        commitPhaseBoundaries.add(boundary);
-      } else {
-        // Otherwise, schedule an update now.
-        // TODO: Is this actually necessary during the render phase? Is it
-        // possible to unwind and continue rendering at the same priority,
-        // without corrupting internal state?
-        scheduleErrorRecovery(boundary);
-      }
-      return boundary;
-    } else if (firstUncaughtError === null) {
-      // If no boundary is found, we'll need to throw the error
-      firstUncaughtError = error;
-    }
-    return null;
-  }
-
-  function hasCapturedError(fiber: Fiber): boolean {
-    // TODO: capturedErrors should store the boundary instance, to avoid needing
-    // to check the alternate.
-    return (
-      capturedErrors !== null &&
-      (capturedErrors.has(fiber) ||
-        (fiber.alternate !== null && capturedErrors.has(fiber.alternate)))
-    );
-  }
-
-  function isFailedBoundary(fiber: Fiber): boolean {
-    // TODO: failedBoundaries should store the boundary instance, to avoid
-    // needing to check the alternate.
-    return (
-      failedBoundaries !== null &&
-      (failedBoundaries.has(fiber) ||
-        (fiber.alternate !== null && failedBoundaries.has(fiber.alternate)))
-    );
-  }
-
-  function commitErrorHandling(effectfulFiber: Fiber) {
-    let capturedError;
-    if (capturedErrors !== null) {
-      capturedError = capturedErrors.get(effectfulFiber);
-      capturedErrors.delete(effectfulFiber);
-      if (capturedError == null) {
-        if (effectfulFiber.alternate !== null) {
-          effectfulFiber = effectfulFiber.alternate;
-          capturedError = capturedErrors.get(effectfulFiber);
-          capturedErrors.delete(effectfulFiber);
-        }
-      }
-    }
-
-    invariant(
-      capturedError != null,
-      'No error for given unit of work. This error is likely caused by a ' +
-        'bug in React. Please file an issue.',
-    );
-
-    switch (effectfulFiber.tag) {
+  function popContexts(workInProgress: Fiber) {
+    switch (workInProgress.tag) {
       case ClassComponent:
-        const instance = effectfulFiber.stateNode;
-
-        const info: HandleErrorInfo = {
-          componentStack: capturedError.componentStack,
-        };
-
-        // Allow the boundary to handle the error, usually by scheduling
-        // an update to itself
-        instance.componentDidCatch(capturedError.error, info);
-        return;
+        popContextProvider(workInProgress);
+        break;
+      case HostComponent:
+        popHostContext(workInProgress);
+        break;
       case HostRoot:
-        if (firstUncaughtError === null) {
-          firstUncaughtError = capturedError.error;
-        }
-        return;
-      default:
-        invariant(
-          false,
-          'Invalid type of work. This error is likely caused by a bug in ' +
-            'React. Please file an issue.',
-        );
+        popHostContainer(workInProgress);
+        break;
+      case HostPortal:
+        popHostContainer(workInProgress);
+        break;
     }
+    stopWorkTimer(workInProgress);
   }
 
-  function unwindContexts(from: Fiber, to: Fiber) {
-    let node = from;
-    while (node !== null) {
-      switch (node.tag) {
+  // Called during complete phase
+  function captureThrownValues(): boolean {
+    if (thrownValues === null) {
+      return false;
+    }
+
+    capturedValues = thrownValues;
+    // Clear the values from the scheduler.
+    thrownValues = null;
+    return true;
+  }
+
+  function markUncaughtError(error: mixed): void {
+    hasUncaughtError = true;
+    firstUncaughtError = error;
+  }
+
+  function scheduleCapture(
+    sourceFiber,
+    boundaryFiber,
+    capturedValue,
+    expirationTime,
+  ) {
+    // TODO: Pattern matching. Check that this is an error.
+    const capturedError: CapturedError = {
+      componentName: getComponentName(sourceFiber),
+      componentStack: getStackAddendumByWorkInProgressFiber(sourceFiber),
+      error: capturedValue,
+      // Set these once the boundary captures, during the render phase.
+      errorBoundary: null,
+      errorBoundaryFound: false,
+      errorBoundaryName: null,
+      willRetry: false,
+    };
+
+    const update = {
+      expirationTime,
+      partialState: null,
+      callback: null,
+      isReplace: false,
+      isForced: false,
+      isCapture: true,
+      capturedValue: capturedError,
+      next: null,
+    };
+    insertUpdateIntoFiber(boundaryFiber, update);
+    scheduleWork(boundaryFiber, expirationTime);
+  }
+
+  function dispatch(
+    sourceFiber: Fiber,
+    value: mixed,
+    expirationTime: ExpirationTime,
+  ) {
+    invariant(
+      !isWorking || isCommitting,
+      'dispatch: Cannot dispatch during the render phase.',
+    );
+    let fiber = sourceFiber.return;
+    while (fiber !== null) {
+      switch (fiber.tag) {
         case ClassComponent:
-          popContextProvider(node);
-          break;
-        case HostComponent:
-          popHostContext(node);
+          const instance = fiber.stateNode;
+          if (typeof instance.componentDidCatch === 'function') {
+            scheduleCapture(sourceFiber, fiber, value, expirationTime);
+            return;
+          }
           break;
         case HostRoot:
-          popHostContainer(node);
-          break;
-        case HostPortal:
-          popHostContainer(node);
-          break;
+          scheduleCapture(sourceFiber, fiber, value, expirationTime);
+          return;
       }
-      if (node === to || node.alternate === to) {
-        stopFailedWorkTimer(node);
-        break;
-      } else {
-        stopWorkTimer(node);
-      }
-      node = node.return;
+      fiber = fiber.return;
     }
+
+    if (sourceFiber.tag === HostRoot) {
+      // Error was thrown at the root. There is no parent, so the root
+      // itself should capture it.
+      scheduleCapture(sourceFiber, sourceFiber, value, expirationTime);
+    }
+  }
+
+  function onCommitPhaseError(fiber: Fiber, error: mixed) {
+    return dispatch(fiber, error, Sync);
   }
 
   function computeAsyncExpiration() {
@@ -1264,10 +1054,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       node = node.return;
     }
-  }
-
-  function scheduleErrorRecovery(fiber: Fiber) {
-    scheduleWorkImpl(fiber, Sync, true);
   }
 
   function recalculateCurrentTime(): ExpirationTime {

@@ -1163,6 +1163,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChild: any,
+    deleteExistingChildren: boolean,
     expirationTime: ExpirationTime,
   ): Fiber | null {
     // This function is not recursive.
@@ -1180,6 +1181,11 @@ function ChildReconciler(shouldTrackSideEffects) {
       newChild.key === null
     ) {
       newChild = newChild.props.children;
+    }
+
+    if (deleteExistingChildren) {
+      deleteRemainingChildren(returnFiber, currentFirstChild);
+      currentFirstChild = null;
     }
 
     // Handle object types

@@ -221,22 +221,15 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 // Stop on Baddie and restart from Boundary
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
-    ⛔ Boundary [mount] Warning: An error was thrown inside this error boundary
+    ⚛ Boundary [mount]
       ⚛ Parent [mount]
         ⚛ Baddie [mount]
-    ⚛ Boundary [mount]
-
-⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
-  ⚛ (Committing Host Effects: 2 Total)
-  ⚛ (Calling Lifecycle Methods: 1 Total)
-
-⚛ (React Tree Reconciliation)
-  ⚛ Boundary [update]
-    ⚛ ErrorReport [mount]
+    ⛔ Boundary [mount] Warning: An error was thrown inside this error boundary
+      ⚛ ErrorReport [mount]
 
 ⚛ (Committing Changes)
   ⚛ (Committing Host Effects: 2 Total)
-  ⚛ (Calling Lifecycle Methods: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;
 
@@ -249,8 +242,8 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
     ⚛ Baddie [mount]
 
 ⚛ (Committing Changes)
-  ⚛ (Committing Host Effects: 1 Total)
-  ⚛ (Calling Lifecycle Methods: 1 Total)
+  ⚛ (Committing Host Effects: 0 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
 
 ⚛ (Waiting for async callback...)
 

@@ -179,11 +179,20 @@ describe('ReactIncrementalErrorLogging', () => {
     let renderAttempts = 0;
 
     class ErrorBoundaryComponent extends React.Component {
+      state = {error: null};
       componentDidCatch(error) {
         handleErrorCalls.push(error);
-        this.setState({}); // Render again
+        if (renderAttempts < 10) {
+          // Render again
+        } else {
+          // Stop after 10 tries
+          this.setState({error});
+        }
       }
       render() {
+        if (this.state.error !== null) {
+          return null;
+        }
         return <ErrorThrowingComponent />;
       }
     }
@@ -208,9 +217,9 @@ describe('ReactIncrementalErrorLogging', () => {
       ReactNoop.flush();
     } catch (error) {}
 
-    expect(renderAttempts).toBe(2);
-    expect(handleErrorCalls.length).toBe(1);
-    expect(console.error.calls.count()).toBe(2);
+    expect(renderAttempts).toBe(10);
+    expect(handleErrorCalls.length).toBe(10);
+    expect(console.error.calls.count()).toBe(10);
     if (__DEV__) {
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'The above error occurred in the <ErrorThrowingComponent> component:',
@@ -223,8 +232,8 @@ describe('ReactIncrementalErrorLogging', () => {
         'The above error occurred in the <ErrorThrowingComponent> component:',
       );
       expect(console.error.calls.argsFor(1)[0]).toContain(
-        'This error was initially handled by the error boundary ErrorBoundaryComponent.\n' +
-          'Recreating the tree from scratch failed so React will unmount the tree.',
+        'React will try to recreate this component tree from scratch using ' +
+          'the error boundary you provided, ErrorBoundaryComponent',
       );
     }
   });
