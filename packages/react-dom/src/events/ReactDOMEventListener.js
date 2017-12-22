@@ -10,6 +10,7 @@ import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
 
 import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
+import {handleTopLevel} from './ReactBrowserEventEmitter';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
@@ -85,7 +86,7 @@ function handleTopLevelImpl(bookKeeping) {
 
   for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
-    _handleTopLevel(
+    handleTopLevel(
       bookKeeping.topLevelType,
       targetInst,
       bookKeeping.nativeEvent,
@@ -96,11 +97,6 @@ function handleTopLevelImpl(bookKeeping) {
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
-export let _handleTopLevel: null;
-
-export function setHandleTopLevel(handleTopLevel) {
-  _handleTopLevel = handleTopLevel;
-}
 
 export function setEnabled(enabled) {
   _enabled = !!enabled;
