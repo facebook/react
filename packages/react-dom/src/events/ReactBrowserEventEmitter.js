@@ -6,7 +6,6 @@
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
-import {handleTopLevel} from 'events/EventPluginHub';
 import {
   setEnabled,
   isEnabled,
@@ -161,10 +160,4 @@ export function isListeningToAllDependencies(registrationName, mountAt) {
   return true;
 }
 
-export {
-  handleTopLevel,
-  setEnabled,
-  isEnabled,
-  trapBubbledEvent,
-  trapCapturedEvent,
-};
+export {setEnabled, isEnabled, trapBubbledEvent, trapCapturedEvent};

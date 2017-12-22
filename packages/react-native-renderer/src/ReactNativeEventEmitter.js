@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {getListener, handleTopLevel} from 'events/EventPluginHub';
+import {getListener, runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import warning from 'fbjs/lib/warning';
@@ -17,11 +17,7 @@ import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 
-export {
-  handleTopLevel,
-  getListener,
-  registrationNameModules as registrationNames,
-};
+export {getListener, registrationNameModules as registrationNames};
 
 /**
  * Version of `ReactBrowserEventEmitter` that works on the receiving side of a
@@ -99,7 +95,12 @@ export function _receiveRootNodeIDEvent(
   const nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
   const inst = getInstanceFromNode(rootNodeID);
   batchedUpdates(function() {
-    handleTopLevel(topLevelType, inst, nativeEvent, nativeEvent.target);
+    runExtractedEventsInBatch(
+      topLevelType,
+      inst,
+      nativeEvent,
+      nativeEvent.target,
+    );
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's
   // where it would do it.

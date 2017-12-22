@@ -6,11 +6,11 @@
  */
 
 import {batchedUpdates} from 'events/ReactGenericBatching';
+import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
 
 import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
-import {handleTopLevel} from './ReactBrowserEventEmitter';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
@@ -63,7 +63,7 @@ function releaseTopLevelCallbackBookKeeping(instance) {
   }
 }
 
-function handleTopLevelImpl(bookKeeping) {
+function handleTopLevel(bookKeeping) {
   let targetInst = bookKeeping.targetInst;
 
   // Loop through the hierarchy, in case there's any nested components.
@@ -86,7 +86,7 @@ function handleTopLevelImpl(bookKeeping) {
 
   for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
-    handleTopLevel(
+    runExtractedEventsInBatch(
       bookKeeping.topLevelType,
       targetInst,
       bookKeeping.nativeEvent,
@@ -176,7 +176,7 @@ export function dispatchEvent(topLevelType, nativeEvent) {
   try {
     // Event queue being processed in the same cycle allows
     // `preventDefault`.
-    batchedUpdates(handleTopLevelImpl, bookKeeping);
+    batchedUpdates(handleTopLevel, bookKeeping);
   } finally {
     releaseTopLevelCallbackBookKeeping(bookKeeping);
   }

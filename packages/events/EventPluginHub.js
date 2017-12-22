@@ -226,7 +226,7 @@ export function runEventsInBatch(
   ReactErrorUtils.rethrowCaughtError();
 }
 
-export function handleTopLevel(
+export function runExtractedEventsInBatch(
   topLevelType: string,
   targetInst: Fiber,
   nativeEvent: AnyNativeEvent,
