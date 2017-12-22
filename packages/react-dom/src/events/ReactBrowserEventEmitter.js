@@ -6,7 +6,7 @@
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
-
+import {handleTopLevel} from 'events/EventPluginHub';
 import {
   setEnabled,
   isEnabled,
@@ -15,8 +15,6 @@ import {
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
 import BrowserEventConstants from './BrowserEventConstants';
-
-export * from 'events/ReactEventEmitterMixin';
 
 const {topLevelTypes} = BrowserEventConstants;
 
@@ -163,4 +161,10 @@ export function isListeningToAllDependencies(registrationName, mountAt) {
   return true;
 }
 
-export {setEnabled, isEnabled, trapBubbledEvent, trapCapturedEvent};
+export {
+  handleTopLevel,
+  setEnabled,
+  isEnabled,
+  trapBubbledEvent,
+  trapCapturedEvent,
+};
