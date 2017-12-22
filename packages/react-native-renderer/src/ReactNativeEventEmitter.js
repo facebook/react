@@ -11,6 +11,7 @@ import {getListener} from 'events/EventPluginHub';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import {handleTopLevel} from 'events/ReactEventEmitterMixin';
+import {TOP_TOUCH_CANCEL, TOP_TOUCH_END} from 'events/TopLevelEventTypes';
 import warning from 'fbjs/lib/warning';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
@@ -146,8 +147,8 @@ export function receiveTouches(
   changedIndices: Array<number>,
 ) {
   const changedTouches =
-    eventTopLevelType === 'topTouchEnd' ||
-    eventTopLevelType === 'topTouchCancel'
+    eventTopLevelType === TOP_TOUCH_END ||
+    eventTopLevelType === TOP_TOUCH_CANCEL
       ? removeTouchesAtIndices(touches, changedIndices)
       : touchSubsequence(touches, changedIndices);
 

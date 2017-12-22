@@ -6,6 +6,13 @@
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
+import {
+  TOP_BLUR,
+  TOP_CANCEL,
+  TOP_CLOSE,
+  TOP_FOCUS,
+  TOP_SCROLL,
+} from 'events/TopLevelEventTypes';
 
 import {
   setEnabled,
@@ -14,11 +21,9 @@ import {
   trapCapturedEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
-import BrowserEventConstants from './BrowserEventConstants';
+import {getRawEventName} from './BrowserEventConstants';
 
 export * from 'events/ReactEventEmitterMixin';
-
-const {topLevelTypes} = BrowserEventConstants;
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -122,28 +127,29 @@ export function listenTo(registrationName, contentDocumentHandle) {
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
+    let rawName = null;
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
-      if (dependency === 'topScroll') {
-        trapCapturedEvent('topScroll', 'scroll', mountAt);
-      } else if (dependency === 'topFocus' || dependency === 'topBlur') {
-        trapCapturedEvent('topFocus', 'focus', mountAt);
-        trapCapturedEvent('topBlur', 'blur', mountAt);
+      if (dependency === TOP_SCROLL) {
+        trapCapturedEvent(TOP_SCROLL, 'scroll', mountAt);
+      } else if (dependency === TOP_FOCUS || dependency === TOP_BLUR) {
+        trapCapturedEvent(TOP_FOCUS, 'focus', mountAt);
+        trapCapturedEvent(TOP_BLUR, 'blur', mountAt);
 
         // to make sure blur and focus event listeners are only attached once
         isListening.topBlur = true;
         isListening.topFocus = true;
-      } else if (dependency === 'topCancel') {
+      } else if (dependency === TOP_CANCEL) {
         if (isEventSupported('cancel', true)) {
-          trapCapturedEvent('topCancel', 'cancel', mountAt);
+          trapCapturedEvent(TOP_CANCEL, 'cancel', mountAt);
         }
         isListening.topCancel = true;
-      } else if (dependency === 'topClose') {
+      } else if (dependency === TOP_CLOSE) {
         if (isEventSupported('close', true)) {
-          trapCapturedEvent('topClose', 'close', mountAt);
+          trapCapturedEvent(TOP_CLOSE, 'close', mountAt);
         }
         isListening.topClose = true;
-      } else if (topLevelTypes.hasOwnProperty(dependency)) {
-        trapBubbledEvent(dependency, topLevelTypes[dependency], mountAt);
+      } else if ((rawName = getRawEventName(dependency))) {
+        trapBubbledEvent(dependency, rawName, mountAt);
       }
 
       isListening[dependency] = true;

@@ -9,6 +9,15 @@
 
 import {isStartish, isEndish} from 'events/EventPluginUtils';
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import {
+  TOP_MOUSE_DOWN,
+  TOP_MOUSE_MOVE,
+  TOP_MOUSE_UP,
+  TOP_TOUCH_CANCEL,
+  TOP_TOUCH_END,
+  TOP_TOUCH_MOVE,
+  TOP_TOUCH_START,
+} from 'events/TopLevelEventTypes';
 import TouchEventUtils from 'fbjs/lib/TouchEventUtils';
 
 import SyntheticUIEvent from './SyntheticUIEvent';
@@ -75,13 +84,13 @@ function getDistance(coords: CoordinatesType, nativeEvent: _Touch): number {
 }
 
 const touchEvents = [
-  'topTouchStart',
-  'topTouchCancel',
-  'topTouchEnd',
-  'topTouchMove',
+  TOP_TOUCH_START,
+  TOP_TOUCH_CANCEL,
+  TOP_TOUCH_END,
+  TOP_TOUCH_MOVE,
 ];
 
-const dependencies = ['topMouseDown', 'topMouseMove', 'topMouseUp'].concat(
+const dependencies = [TOP_MOUSE_DOWN, TOP_MOUSE_MOVE, TOP_MOUSE_UP].concat(
   touchEvents,
 );
 

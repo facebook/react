@@ -9,6 +9,16 @@ import ReactErrorUtils from 'shared/ReactErrorUtils';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
+import {
+  TOP_MOUSE_DOWN,
+  TOP_MOUSE_MOVE,
+  TOP_MOUSE_UP,
+  TOP_TOUCH_CANCEL,
+  TOP_TOUCH_END,
+  TOP_TOUCH_MOVE,
+  TOP_TOUCH_START,
+} from './TopLevelEventTypes';
+
 export let getFiberCurrentPropsFromNode = null;
 export let getInstanceFromNode = null;
 export let getNodeFromInstance = null;
@@ -32,17 +42,17 @@ export const injection = {
 
 export function isEndish(topLevelType) {
   return (
-    topLevelType === 'topMouseUp' ||
-    topLevelType === 'topTouchEnd' ||
-    topLevelType === 'topTouchCancel'
+    topLevelType === TOP_MOUSE_UP ||
+    topLevelType === TOP_TOUCH_END ||
+    topLevelType === TOP_TOUCH_CANCEL
   );
 }
 
 export function isMoveish(topLevelType) {
-  return topLevelType === 'topMouseMove' || topLevelType === 'topTouchMove';
+  return topLevelType === TOP_MOUSE_MOVE || topLevelType === TOP_TOUCH_MOVE;
 }
 export function isStartish(topLevelType) {
-  return topLevelType === 'topMouseDown' || topLevelType === 'topTouchStart';
+  return topLevelType === TOP_MOUSE_DOWN || topLevelType === TOP_TOUCH_START;
 }
 
 let validateEventDispatches;

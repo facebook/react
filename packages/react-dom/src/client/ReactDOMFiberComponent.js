@@ -10,6 +10,36 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
+import {
+  TOP_ABORT,
+  TOP_CAN_PLAY,
+  TOP_CAN_PLAY_THROUGH,
+  TOP_DURATION_CHANGE,
+  TOP_EMPTIED,
+  TOP_ENCRYPTED,
+  TOP_ENDED,
+  TOP_ERROR,
+  TOP_INVALID,
+  TOP_LOAD,
+  TOP_LOADED_DATA,
+  TOP_LOADED_METADATA,
+  TOP_LOAD_START,
+  TOP_PAUSE,
+  TOP_PLAY,
+  TOP_PLAYING,
+  TOP_PROGRESS,
+  TOP_RATE_CHANGE,
+  TOP_RESET,
+  TOP_SEEKED,
+  TOP_SEEKING,
+  TOP_STALLED,
+  TOP_SUBMIT,
+  TOP_SUSPEND,
+  TOP_TIME_UPDATE,
+  TOP_TOGGLE,
+  TOP_VOLUME_CHANGE,
+  TOP_WAITING,
+} from 'events/TopLevelEventTypes';
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
 
@@ -22,6 +52,7 @@ import * as inputValueTracking from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
+import {getRawEventName} from '../events/BrowserEventConstants';
 import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
@@ -224,31 +255,31 @@ function getOwnerDocumentFromRootContainer(
 
 // There are so many media events, it makes sense to just
 // maintain a list rather than create a `trapBubbledEvent` for each
-const mediaEvents = {
-  topAbort: 'abort',
-  topCanPlay: 'canplay',
-  topCanPlayThrough: 'canplaythrough',
-  topDurationChange: 'durationchange',
-  topEmptied: 'emptied',
-  topEncrypted: 'encrypted',
-  topEnded: 'ended',
-  topError: 'error',
-  topLoadedData: 'loadeddata',
-  topLoadedMetadata: 'loadedmetadata',
-  topLoadStart: 'loadstart',
-  topPause: 'pause',
-  topPlay: 'play',
-  topPlaying: 'playing',
-  topProgress: 'progress',
-  topRateChange: 'ratechange',
-  topSeeked: 'seeked',
-  topSeeking: 'seeking',
-  topStalled: 'stalled',
-  topSuspend: 'suspend',
-  topTimeUpdate: 'timeupdate',
-  topVolumeChange: 'volumechange',
-  topWaiting: 'waiting',
-};
+const mediaEvents = [
+  TOP_ABORT,
+  TOP_CAN_PLAY,
+  TOP_CAN_PLAY_THROUGH,
+  TOP_DURATION_CHANGE,
+  TOP_EMPTIED,
+  TOP_ENCRYPTED,
+  TOP_ENDED,
+  TOP_ERROR,
+  TOP_LOADED_DATA,
+  TOP_LOADED_METADATA,
+  TOP_LOAD_START,
+  TOP_PAUSE,
+  TOP_PLAY,
+  TOP_PLAYING,
+  TOP_PROGRESS,
+  TOP_RATE_CHANGE,
+  TOP_SEEKED,
+  TOP_SEEKING,
+  TOP_STALLED,
+  TOP_SUSPEND,
+  TOP_TIME_UPDATE,
+  TOP_VOLUME_CHANGE,
+  TOP_WAITING,
+];
 
 function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
@@ -465,42 +496,40 @@ export function setInitialProperties(
   switch (tag) {
     case 'iframe':
     case 'object':
-      trapBubbledEvent('topLoad', 'load', domElement);
+      trapBubbledEvent(TOP_LOAD, 'load', domElement);
       props = rawProps;
       break;
     case 'video':
     case 'audio':
       // Create listener for each media event
-      for (const event in mediaEvents) {
-        if (mediaEvents.hasOwnProperty(event)) {
-          trapBubbledEvent(event, mediaEvents[event], domElement);
-        }
+      for (let i = 0; i < mediaEvents.length; i++) {
+        trapBubbledEvent(event, getRawEventName(mediaEvents[i]), domElement);
       }
       props = rawProps;
       break;
     case 'source':
-      trapBubbledEvent('topError', 'error', domElement);
+      trapBubbledEvent(TOP_ERROR, 'error', domElement);
       props = rawProps;
       break;
     case 'img':
     case 'image':
-      trapBubbledEvent('topError', 'error', domElement);
-      trapBubbledEvent('topLoad', 'load', domElement);
+      trapBubbledEvent(TOP_ERROR, 'error', domElement);
+      trapBubbledEvent(TOP_LOAD, 'load', domElement);
       props = rawProps;
       break;
     case 'form':
-      trapBubbledEvent('topReset', 'reset', domElement);
-      trapBubbledEvent('topSubmit', 'submit', domElement);
+      trapBubbledEvent(TOP_RESET, 'reset', domElement);
+      trapBubbledEvent(TOP_SUBMIT, 'submit', domElement);
       props = rawProps;
       break;
     case 'details':
-      trapBubbledEvent('topToggle', 'toggle', domElement);
+      trapBubbledEvent(TOP_TOGGLE, 'toggle', domElement);
       props = rawProps;
       break;
     case 'input':
       ReactDOMFiberInput.initWrapperState(domElement, rawProps);
       props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, 'invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -512,7 +541,7 @@ export function setInitialProperties(
     case 'select':
       ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
       props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, 'invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -520,7 +549,7 @@ export function setInitialProperties(
     case 'textarea':
       ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
       props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, 'invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -842,35 +871,33 @@ export function diffHydratedProperties(
   switch (tag) {
     case 'iframe':
     case 'object':
-      trapBubbledEvent('topLoad', 'load', domElement);
+      trapBubbledEvent(TOP_LOAD, 'load', domElement);
       break;
     case 'video':
     case 'audio':
       // Create listener for each media event
-      for (const event in mediaEvents) {
-        if (mediaEvents.hasOwnProperty(event)) {
-          trapBubbledEvent(event, mediaEvents[event], domElement);
-        }
+      for (let i = 0; i < mediaEvents.length; i++) {
+        trapBubbledEvent(event, getRawEventName(mediaEvents[i]), domElement);
       }
       break;
     case 'source':
-      trapBubbledEvent('topError', 'error', domElement);
+      trapBubbledEvent(TOP_ERROR, 'error', domElement);
       break;
     case 'img':
     case 'image':
-      trapBubbledEvent('topError', 'error', domElement);
-      trapBubbledEvent('topLoad', 'load', domElement);
+      trapBubbledEvent(TOP_ERROR, 'error', domElement);
+      trapBubbledEvent(TOP_LOAD, 'load', domElement);
       break;
     case 'form':
-      trapBubbledEvent('topReset', 'reset', domElement);
-      trapBubbledEvent('topSubmit', 'submit', domElement);
+      trapBubbledEvent(TOP_RESET, 'reset', domElement);
+      trapBubbledEvent(TOP_SUBMIT, 'submit', domElement);
       break;
     case 'details':
-      trapBubbledEvent('topToggle', 'toggle', domElement);
+      trapBubbledEvent(TOP_TOGGLE, 'toggle', domElement);
       break;
     case 'input':
       ReactDOMFiberInput.initWrapperState(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, 'invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -880,14 +907,14 @@ export function diffHydratedProperties(
       break;
     case 'select':
       ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, 'invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'textarea':
       ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, 'invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');

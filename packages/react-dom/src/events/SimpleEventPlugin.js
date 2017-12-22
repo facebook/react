@@ -17,6 +17,7 @@ import type {EventTypes, PluginModule} from 'events/PluginModuleType';
 
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import SyntheticEvent from 'events/SyntheticEvent';
+import * as TopLevelEventTypes from 'events/TopLevelEventTypes';
 import warning from 'fbjs/lib/warning';
 
 import SyntheticAnimationEvent from './SyntheticAnimationEvent';
@@ -31,143 +32,123 @@ import SyntheticUIEvent from './SyntheticUIEvent';
 import SyntheticWheelEvent from './SyntheticWheelEvent';
 import getEventCharCode from './getEventCharCode';
 
-/**
- * Turns
- * ['abort', ...]
- * into
- * eventTypes = {
- *   'abort': {
- *     phasedRegistrationNames: {
- *       bubbled: 'onAbort',
- *       captured: 'onAbortCapture',
- *     },
- *     dependencies: ['topAbort'],
- *   },
- *   ...
- * };
- * topLevelEventsToDispatchConfig = {
- *   'topAbort': { sameConfig }
- * };
- */
-const eventTypes: EventTypes = {};
-const topLevelEventsToDispatchConfig: {
-  [key: TopLevelTypes]: DispatchConfig,
-} = {};
-[
-  'abort',
-  'animationEnd',
-  'animationIteration',
-  'animationStart',
-  'blur',
-  'cancel',
-  'canPlay',
-  'canPlayThrough',
-  'click',
-  'close',
-  'contextMenu',
-  'copy',
-  'cut',
-  'doubleClick',
-  'drag',
-  'dragEnd',
-  'dragEnter',
-  'dragExit',
-  'dragLeave',
-  'dragOver',
-  'dragStart',
-  'drop',
-  'durationChange',
-  'emptied',
-  'encrypted',
-  'ended',
-  'error',
-  'focus',
-  'input',
-  'invalid',
-  'keyDown',
-  'keyPress',
-  'keyUp',
-  'load',
-  'loadedData',
-  'loadedMetadata',
-  'loadStart',
-  'mouseDown',
-  'mouseMove',
-  'mouseOut',
-  'mouseOver',
-  'mouseUp',
-  'paste',
-  'pause',
-  'play',
-  'playing',
-  'progress',
-  'rateChange',
-  'reset',
-  'scroll',
-  'seeked',
-  'seeking',
-  'stalled',
-  'submit',
-  'suspend',
-  'timeUpdate',
-  'toggle',
-  'touchCancel',
-  'touchEnd',
-  'touchMove',
-  'touchStart',
-  'transitionEnd',
-  'volumeChange',
-  'waiting',
-  'wheel',
-].forEach(event => {
-  const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
-  const onEvent = 'on' + capitalizedEvent;
-  const topEvent = 'top' + capitalizedEvent;
+const shortTypes = [
+  [TopLevelEventTypes.TOP_ABORT, 'onAbort'],
+  [TopLevelEventTypes.TOP_ANIMATION_END, 'onAnimationEnd'],
+  [TopLevelEventTypes.TOP_ANIMATION_ITERATION, 'onAnimationIteration'],
+  [TopLevelEventTypes.TOP_ANIMATION_START, 'onAnimationStart'],
+  [TopLevelEventTypes.TOP_BLUR, 'onBlur'],
+  [TopLevelEventTypes.TOP_CANCEL, 'onCancel'],
+  [TopLevelEventTypes.TOP_CAN_PLAY, 'onCanPlay'],
+  [TopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'onCanPlayThrough'],
+  [TopLevelEventTypes.TOP_CLICK, 'onClick'],
+  [TopLevelEventTypes.TOP_CLOSE, 'onClose'],
+  [TopLevelEventTypes.TOP_CONTEXT_MENU, 'onContextMenu'],
+  [TopLevelEventTypes.TOP_COPY, 'onCopy'],
+  [TopLevelEventTypes.TOP_CUT, 'onCut'],
+  [TopLevelEventTypes.TOP_DOUBLE_CLICK, 'onDoubleClick'],
+  [TopLevelEventTypes.TOP_DRAG, 'onDrag'],
+  [TopLevelEventTypes.TOP_DRAG_END, 'onDragEnd'],
+  [TopLevelEventTypes.TOP_DRAG_ENTER, 'onDragEnter'],
+  [TopLevelEventTypes.TOP_DRAG_EXIT, 'onDragExit'],
+  [TopLevelEventTypes.TOP_DRAG_LEAVE, 'onDragLeave'],
+  [TopLevelEventTypes.TOP_DRAG_OVER, 'onDragOver'],
+  [TopLevelEventTypes.TOP_DRAG_START, 'onDragStart'],
+  [TopLevelEventTypes.TOP_DROP, 'onDrop'],
+  [TopLevelEventTypes.TOP_DURATION_CHANGE, 'onDurationChange'],
+  [TopLevelEventTypes.TOP_EMPTIED, 'onEmptied'],
+  [TopLevelEventTypes.TOP_ENCRYPTED, 'onEncrypted'],
+  [TopLevelEventTypes.TOP_ENDED, 'onEnded'],
+  [TopLevelEventTypes.TOP_ERROR, 'onError'],
+  [TopLevelEventTypes.TOP_FOCUS, 'onFocus'],
+  [TopLevelEventTypes.TOP_INPUT, 'onInput'],
+  [TopLevelEventTypes.TOP_INVALID, 'onInvalid'],
+  [TopLevelEventTypes.TOP_KEY_DOWN, 'onKeyDown'],
+  [TopLevelEventTypes.TOP_KEY_PRESS, 'onKeyPress'],
+  [TopLevelEventTypes.TOP_KEY_UP, 'onKeyUp'],
+  [TopLevelEventTypes.TOP_LOAD, 'onLoad'],
+  [TopLevelEventTypes.TOP_LOADED_DATA, 'onLoadedData'],
+  [TopLevelEventTypes.TOP_LOADED_METADATA, 'onLoadedMetadata'],
+  [TopLevelEventTypes.TOP_LOAD_START, 'onLoadStart'],
+  [TopLevelEventTypes.TOP_MOUSE_DOWN, 'onMouseDown'],
+  [TopLevelEventTypes.TOP_MOUSE_MOVE, 'onMouseMove'],
+  [TopLevelEventTypes.TOP_MOUSE_OUT, 'onMouseOut'],
+  [TopLevelEventTypes.TOP_MOUSE_OVER, 'onMouseOver'],
+  [TopLevelEventTypes.TOP_MOUSE_UP, 'onMouseUp'],
+  [TopLevelEventTypes.TOP_PASTE, 'onPaste'],
+  [TopLevelEventTypes.TOP_PAUSE, 'onPause'],
+  [TopLevelEventTypes.TOP_PLAY, 'onPlay'],
+  [TopLevelEventTypes.TOP_PLAYING, 'onPlaying'],
+  [TopLevelEventTypes.TOP_PROGRESS, 'onProgress'],
+  [TopLevelEventTypes.TOP_RATE_CHANGE, 'onRateChange'],
+  [TopLevelEventTypes.TOP_RESET, 'onReset'],
+  [TopLevelEventTypes.TOP_SCROLL, 'onScroll'],
+  [TopLevelEventTypes.TOP_SEEKED, 'onSeeked'],
+  [TopLevelEventTypes.TOP_SEEKING, 'onSeeking'],
+  [TopLevelEventTypes.TOP_STALLED, 'onStalled'],
+  [TopLevelEventTypes.TOP_SUBMIT, 'onSubmit'],
+  [TopLevelEventTypes.TOP_SUSPEND, 'onSuspend'],
+  [TopLevelEventTypes.TOP_TIME_UPDATE, 'onTimeUpdate'],
+  [TopLevelEventTypes.TOP_TOUCH_CANCEL, 'onTouchCancel'],
+  [TopLevelEventTypes.TOP_TOUCH_END, 'onTouchEnd'],
+  [TopLevelEventTypes.TOP_TOUCH_MOVE, 'onTouchMove'],
+  [TopLevelEventTypes.TOP_TOUCH_START, 'onTouchStart'],
+  [TopLevelEventTypes.TOP_TRANSITION_END, 'onTransitionEnd'],
+  [TopLevelEventTypes.TOP_VOLUME_CHANGE, 'onVolumeChange'],
+  [TopLevelEventTypes.TOP_WAITING, 'onWaiting'],
+  [TopLevelEventTypes.TOP_WHEEL, 'onWheel'],
+];
 
-  const type = {
-    phasedRegistrationNames: {
-      bubbled: onEvent,
-      captured: onEvent + 'Capture',
-    },
-    dependencies: [topEvent],
-  };
-  eventTypes[event] = type;
-  topLevelEventsToDispatchConfig[topEvent] = type;
-});
+const eventTypes = shortTypes.map(t => ({
+  dependencies: [t[0]],
+  phasedRegistrationNames: {
+    bubbled: t[1],
+    captured: t[1] + 'Capture',
+  },
+}));
+
+export const topLevelEventsToDispatchConfig = new Map();
+
+for (let i = 0; i < eventTypes.length; i++) {
+  topLevelEventsToDispatchConfig.set(
+    eventTypes[i].dependencies[0],
+    eventTypes[i],
+  );
+}
 
 // Only used in DEV for exhaustiveness validation.
 const knownHTMLTopLevelTypes = [
-  'topAbort',
-  'topCancel',
-  'topCanPlay',
-  'topCanPlayThrough',
-  'topClose',
-  'topDurationChange',
-  'topEmptied',
-  'topEncrypted',
-  'topEnded',
-  'topError',
-  'topInput',
-  'topInvalid',
-  'topLoad',
-  'topLoadedData',
-  'topLoadedMetadata',
-  'topLoadStart',
-  'topPause',
-  'topPlay',
-  'topPlaying',
-  'topProgress',
-  'topRateChange',
-  'topReset',
-  'topSeeked',
-  'topSeeking',
-  'topStalled',
-  'topSubmit',
-  'topSuspend',
-  'topTimeUpdate',
-  'topToggle',
-  'topVolumeChange',
-  'topWaiting',
+  TopLevelEventTypes.TOP_ABORT,
+  TopLevelEventTypes.TOP_CANCEL,
+  TopLevelEventTypes.TOP_CAN_PLAY,
+  TopLevelEventTypes.TOP_CAN_PLAY_THROUGH,
+  TopLevelEventTypes.TOP_CLOSE,
+  TopLevelEventTypes.TOP_DURATION_CHANGE,
+  TopLevelEventTypes.TOP_EMPTIED,
+  TopLevelEventTypes.TOP_ENCRYPTED,
+  TopLevelEventTypes.TOP_ENDED,
+  TopLevelEventTypes.TOP_ERROR,
+  TopLevelEventTypes.TOP_INPUT,
+  TopLevelEventTypes.TOP_INVALID,
+  TopLevelEventTypes.TOP_LOAD,
+  TopLevelEventTypes.TOP_LOADED_DATA,
+  TopLevelEventTypes.TOP_LOADED_METADATA,
+  TopLevelEventTypes.TOP_LOAD_START,
+  TopLevelEventTypes.TOP_PAUSE,
+  TopLevelEventTypes.TOP_PLAY,
+  TopLevelEventTypes.TOP_PLAYING,
+  TopLevelEventTypes.TOP_PROGRESS,
+  TopLevelEventTypes.TOP_RATE_CHANGE,
+  TopLevelEventTypes.TOP_RESET,
+  TopLevelEventTypes.TOP_SEEKED,
+  TopLevelEventTypes.TOP_SEEKING,
+  TopLevelEventTypes.TOP_STALLED,
+  TopLevelEventTypes.TOP_SUBMIT,
+  TopLevelEventTypes.TOP_SUSPEND,
+  TopLevelEventTypes.TOP_TIME_UPDATE,
+  TopLevelEventTypes.TOP_TOGGLE,
+  TopLevelEventTypes.TOP_VOLUME_CHANGE,
+  TopLevelEventTypes.TOP_WAITING,
 ];
 
 const SimpleEventPlugin: PluginModule<MouseEvent> = {
@@ -179,13 +160,13 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
   ): null | ReactSyntheticEvent {
-    const dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
+    const dispatchConfig = topLevelEventsToDispatchConfig.get(topLevelType);
     if (!dispatchConfig) {
       return null;
     }
     let EventConstructor;
     switch (topLevelType) {
-      case 'topKeyPress':
+      case TopLevelEventTypes.TOP_KEY_PRESS:
         // Firefox creates a keypress event for function keys too. This removes
         // the unwanted keypress events. Enter is however both printable and
         // non-printable. One would expect Tab to be as well (but it isn't).
@@ -193,65 +174,65 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
           return null;
         }
       /* falls through */
-      case 'topKeyDown':
-      case 'topKeyUp':
+      case TopLevelEventTypes.TOP_KEY_DOWN:
+      case TopLevelEventTypes.TOP_KEY_UP:
         EventConstructor = SyntheticKeyboardEvent;
         break;
-      case 'topBlur':
-      case 'topFocus':
+      case TopLevelEventTypes.TOP_BLUR:
+      case TopLevelEventTypes.TOP_FOCUS:
         EventConstructor = SyntheticFocusEvent;
         break;
-      case 'topClick':
+      case TopLevelEventTypes.TOP_CLICK:
         // Firefox creates a click event on right mouse clicks. This removes the
         // unwanted click events.
         if (nativeEvent.button === 2) {
           return null;
         }
       /* falls through */
-      case 'topDoubleClick':
-      case 'topMouseDown':
-      case 'topMouseMove':
-      case 'topMouseUp':
+      case TopLevelEventTypes.TOP_DOUBLE_CLICK:
+      case TopLevelEventTypes.TOP_MOUSE_DOWN:
+      case TopLevelEventTypes.TOP_MOUSE_MOVE:
+      case TopLevelEventTypes.TOP_MOUSE_UP:
       // TODO: Disabled elements should not respond to mouse events
       /* falls through */
-      case 'topMouseOut':
-      case 'topMouseOver':
-      case 'topContextMenu':
+      case TopLevelEventTypes.TOP_MOUSE_OUT:
+      case TopLevelEventTypes.TOP_MOUSE_OVER:
+      case TopLevelEventTypes.TOP_CONTEXT_MENU:
         EventConstructor = SyntheticMouseEvent;
         break;
-      case 'topDrag':
-      case 'topDragEnd':
-      case 'topDragEnter':
-      case 'topDragExit':
-      case 'topDragLeave':
-      case 'topDragOver':
-      case 'topDragStart':
-      case 'topDrop':
+      case TopLevelEventTypes.TOP_DRAG:
+      case TopLevelEventTypes.TOP_DRAG_END:
+      case TopLevelEventTypes.TOP_DRAG_ENTER:
+      case TopLevelEventTypes.TOP_DRAG_EXIT:
+      case TopLevelEventTypes.TOP_DRAG_LEAVE:
+      case TopLevelEventTypes.TOP_DRAG_OVER:
+      case TopLevelEventTypes.TOP_DRAG_START:
+      case TopLevelEventTypes.TOP_DROP:
         EventConstructor = SyntheticDragEvent;
         break;
-      case 'topTouchCancel':
-      case 'topTouchEnd':
-      case 'topTouchMove':
-      case 'topTouchStart':
+      case TopLevelEventTypes.TOP_TOUCH_CANCEL:
+      case TopLevelEventTypes.TOP_TOUCH_END:
+      case TopLevelEventTypes.TOP_TOUCH_MOVE:
+      case TopLevelEventTypes.TOP_TOUCH_START:
         EventConstructor = SyntheticTouchEvent;
         break;
-      case 'topAnimationEnd':
-      case 'topAnimationIteration':
-      case 'topAnimationStart':
+      case TopLevelEventTypes.TOP_ANIMATION_END:
+      case TopLevelEventTypes.TOP_ANIMATION_ITERATION:
+      case TopLevelEventTypes.TOP_ANIMATION_START:
         EventConstructor = SyntheticAnimationEvent;
         break;
-      case 'topTransitionEnd':
+      case TopLevelEventTypes.TOP_TRANSITION_END:
         EventConstructor = SyntheticTransitionEvent;
         break;
-      case 'topScroll':
+      case TopLevelEventTypes.TOP_SCROLL:
         EventConstructor = SyntheticUIEvent;
         break;
-      case 'topWheel':
+      case TopLevelEventTypes.TOP_WHEEL:
         EventConstructor = SyntheticWheelEvent;
         break;
-      case 'topCopy':
-      case 'topCut':
-      case 'topPaste':
+      case TopLevelEventTypes.TOP_COPY:
+      case TopLevelEventTypes.TOP_CUT:
+      case TopLevelEventTypes.TOP_PASTE:
         EventConstructor = SyntheticClipboardEvent;
         break;
       default:

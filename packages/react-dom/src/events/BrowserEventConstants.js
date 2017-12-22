@@ -6,6 +6,8 @@
  */
 
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
+import {topLevelEventsToDispatchConfig} from './SimpleEventPlugin';
+import * as TopLevelEventTypes from 'events/TopLevelEventTypes';
 
 /**
  * Types of raw signals from the browser caught at the top level.
@@ -14,84 +16,46 @@ import getVendorPrefixedEventName from './getVendorPrefixedEventName';
  * trap at a lower node than `document`), binding at `document` would
  * cause duplicate events so we don't include them here.
  */
-const topLevelTypes = {
-  topAbort: 'abort',
-  topAnimationEnd: getVendorPrefixedEventName('animationend') || 'animationend',
-  topAnimationIteration:
+const cache = new Map([
+  [TopLevelEventTypes.TOP_ABORT, 'abort'],
+  [
+    TopLevelEventTypes.TOP_ANIMATION_END,
+    getVendorPrefixedEventName('animationend') || 'animationend',
+  ],
+  [
+    TopLevelEventTypes.TOP_ANIMATION_ITERATION,
     getVendorPrefixedEventName('animationiteration') || 'animationiteration',
-  topAnimationStart:
+  ],
+  [
+    TopLevelEventTypes.TOP_ANIMATION_START,
     getVendorPrefixedEventName('animationstart') || 'animationstart',
-  topBlur: 'blur',
-  topCancel: 'cancel',
-  topCanPlay: 'canplay',
-  topCanPlayThrough: 'canplaythrough',
-  topChange: 'change',
-  topClick: 'click',
-  topClose: 'close',
-  topCompositionEnd: 'compositionend',
-  topCompositionStart: 'compositionstart',
-  topCompositionUpdate: 'compositionupdate',
-  topContextMenu: 'contextmenu',
-  topCopy: 'copy',
-  topCut: 'cut',
-  topDoubleClick: 'dblclick',
-  topDrag: 'drag',
-  topDragEnd: 'dragend',
-  topDragEnter: 'dragenter',
-  topDragExit: 'dragexit',
-  topDragLeave: 'dragleave',
-  topDragOver: 'dragover',
-  topDragStart: 'dragstart',
-  topDrop: 'drop',
-  topDurationChange: 'durationchange',
-  topEmptied: 'emptied',
-  topEncrypted: 'encrypted',
-  topEnded: 'ended',
-  topError: 'error',
-  topFocus: 'focus',
-  topInput: 'input',
-  topKeyDown: 'keydown',
-  topKeyPress: 'keypress',
-  topKeyUp: 'keyup',
-  topLoadedData: 'loadeddata',
-  topLoad: 'load',
-  topLoadedMetadata: 'loadedmetadata',
-  topLoadStart: 'loadstart',
-  topMouseDown: 'mousedown',
-  topMouseMove: 'mousemove',
-  topMouseOut: 'mouseout',
-  topMouseOver: 'mouseover',
-  topMouseUp: 'mouseup',
-  topPaste: 'paste',
-  topPause: 'pause',
-  topPlay: 'play',
-  topPlaying: 'playing',
-  topProgress: 'progress',
-  topRateChange: 'ratechange',
-  topScroll: 'scroll',
-  topSeeked: 'seeked',
-  topSeeking: 'seeking',
-  topSelectionChange: 'selectionchange',
-  topStalled: 'stalled',
-  topSuspend: 'suspend',
-  topTextInput: 'textInput',
-  topTimeUpdate: 'timeupdate',
-  topToggle: 'toggle',
-  topTouchCancel: 'touchcancel',
-  topTouchEnd: 'touchend',
-  topTouchMove: 'touchmove',
-  topTouchStart: 'touchstart',
-  topTransitionEnd:
+  ],
+  [TopLevelEventTypes.TOP_CHANGE, 'change'],
+  [TopLevelEventTypes.TOP_COMPOSITION_END, 'compositionend'],
+  [TopLevelEventTypes.TOP_COMPOSITION_START, 'compositionstart'],
+  [TopLevelEventTypes.TOP_COMPOSITION_UPDATE, 'compositionupdate'],
+  [TopLevelEventTypes.TOP_DOUBLE_CLICK, 'dblclick'],
+  [TopLevelEventTypes.TOP_SELECTION_CHANGE, 'selectionchange'],
+  [TopLevelEventTypes.TOP_TEXT_INPUT, 'textInput'],
+  [TopLevelEventTypes.TOP_TOGGLE, 'toggle'],
+  [
+    TopLevelEventTypes.TOP_TRANSITION_END,
     getVendorPrefixedEventName('transitionend') || 'transitionend',
-  topVolumeChange: 'volumechange',
-  topWaiting: 'waiting',
-  topWheel: 'wheel',
-};
+  ],
+]);
+
+export function getRawEventName(topLevelType) {
+  const maybeName = cache.get(topLevelType);
+  if (typeof maybeName === 'string') {
+    return maybeName;
+  }
+  // Fallback
+  const config = topLevelEventsToDispatchConfig.get(topLevelTypes);
+  const name = phasedRegistrationNames.bubbled.slice(2);
+  cache.set(topLevelType, name);
+  // TODO: this is not exactly the same because we used to
+  // intentionally skip over some events?
+  return name;
+}
 
 export type TopLevelTypes = $Enum<typeof topLevelTypes>;
-
-const BrowserEventConstants = {
-  topLevelTypes,
-};
-
-export default BrowserEventConstants;
