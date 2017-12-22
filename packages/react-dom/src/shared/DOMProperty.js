@@ -281,6 +281,7 @@ new Map([
   'formNoValidate',
   'hidden',
   'loop',
+  'noModule',
   'noValidate',
   'open',
   'playsInline',
