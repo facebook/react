@@ -14,7 +14,7 @@ import getVendorPrefixedEventName from './getVendorPrefixedEventName';
  * bubble (which we trap at a lower node than `document`), binding
  * at `document` would cause duplicate events so we don't include them here.
  */
-const topLevelTypes = {
+export const topLevelTypes = {
   topAnimationEnd: getVendorPrefixedEventName('animationend'),
   topAnimationIteration: getVendorPrefixedEventName('animationiteration'),
   topAnimationStart: getVendorPrefixedEventName('animationstart'),
@@ -63,10 +63,35 @@ const topLevelTypes = {
   topWheel: 'wheel',
 };
 
-export type TopLevelTypes = $Enum<typeof topLevelTypes>;
-
-const BrowserEventConstants = {
-  topLevelTypes,
+// There are so many media events, it makes sense to just
+// maintain a list of them. Note these aren't technically
+// "top-level" since they don't bubble. We should come up
+// with a better naming convention if we come to refactoring
+// the event system.
+export const mediaEventTypes = {
+  topAbort: 'abort',
+  topCanPlay: 'canplay',
+  topCanPlayThrough: 'canplaythrough',
+  topDurationChange: 'durationchange',
+  topEmptied: 'emptied',
+  topEncrypted: 'encrypted',
+  topEnded: 'ended',
+  topError: 'error',
+  topLoadedData: 'loadeddata',
+  topLoadedMetadata: 'loadedmetadata',
+  topLoadStart: 'loadstart',
+  topPause: 'pause',
+  topPlay: 'play',
+  topPlaying: 'playing',
+  topProgress: 'progress',
+  topRateChange: 'ratechange',
+  topSeeked: 'seeked',
+  topSeeking: 'seeking',
+  topStalled: 'stalled',
+  topSuspend: 'suspend',
+  topTimeUpdate: 'timeupdate',
+  topVolumeChange: 'volumechange',
+  topWaiting: 'waiting',
 };
 
-export default BrowserEventConstants;
+export type TopLevelTypes = $Enum<typeof topLevelTypes>;
