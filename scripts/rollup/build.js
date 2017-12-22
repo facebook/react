@@ -181,6 +181,7 @@ function getPlugins(
   externals,
   updateBabelOptions,
   filename,
+  packageName,
   bundleType,
   globalName,
   moduleType,
@@ -263,11 +264,13 @@ function getPlugins(
     // Record bundle size.
     sizes({
       getSize: (size, gzip) => {
-        const key = `${filename} (${bundleType})`;
-        Stats.currentBuildResults.bundleSizes[key] = {
+        Stats.currentBuildResults.bundleSizes.push({
+          filename,
+          bundleType,
+          packageName,
           size,
           gzip,
-        };
+        });
       },
     }),
   ].filter(Boolean);
@@ -352,6 +355,7 @@ async function createBundle(bundle, bundleType) {
       externals,
       bundle.babel,
       filename,
+      packageName,
       bundleType,
       bundle.global,
       bundle.moduleType,

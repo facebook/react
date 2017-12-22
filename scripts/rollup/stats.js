@@ -8,8 +8,8 @@ const fs = require('fs');
 const prevBuildResults = require('./results.json');
 
 const currentBuildResults = {
-  // Mutated during the build.
-  bundleSizes: Object.assign({}, prevBuildResults.bundleSizes),
+  // Mutated inside build.js during a build run.
+  bundleSizes: [],
 };
 
 function saveResults() {
@@ -41,9 +41,11 @@ function printResults() {
       chalk.gray.yellow('Diff'),
     ],
   });
-  Object.keys(currentBuildResults.bundleSizes).forEach(key => {
-    const result = currentBuildResults.bundleSizes[key];
-    const prev = prevBuildResults.bundleSizes[key];
+  currentBuildResults.bundleSizes.forEach(index => {
+    const result = currentBuildResults.bundleSizes[index];
+    const prev = prevBuildResults.bundleSizes.filter(
+      res => res.filename === result.filename
+    )[0];
     if (result === prev) {
       // We didn't rebuild this bundle.
       return;
@@ -54,7 +56,7 @@ function printResults() {
     let prevSize = prev ? prev.size : 0;
     let prevGzip = prev ? prev.gzip : 0;
     table.push([
-      chalk.white.bold(key),
+      chalk.white.bold(`${result.filename} (${result.bundleType}`),
       chalk.gray.bold(filesize(prevSize)),
       chalk.white.bold(filesize(size)),
       percentChange(prevSize, size),
