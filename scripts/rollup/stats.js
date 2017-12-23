@@ -41,30 +41,6 @@ function printResults() {
       chalk.gray.yellow('Diff'),
     ],
   });
-  currentBuildResults.bundleSizes.forEach(index => {
-    const result = currentBuildResults.bundleSizes[index];
-    const prev = prevBuildResults.bundleSizes.filter(
-      res => res.filename === result.filename
-    )[0];
-    if (result === prev) {
-      // We didn't rebuild this bundle.
-      return;
-    }
-
-    const size = result.size;
-    const gzip = result.gzip;
-    let prevSize = prev ? prev.size : 0;
-    let prevGzip = prev ? prev.gzip : 0;
-    table.push([
-      chalk.white.bold(`${result.filename} (${result.bundleType}`),
-      chalk.gray.bold(filesize(prevSize)),
-      chalk.white.bold(filesize(size)),
-      percentChange(prevSize, size),
-      chalk.gray.bold(filesize(prevGzip)),
-      chalk.white.bold(filesize(gzip)),
-      percentChange(prevGzip, gzip),
-    ]);
-  });
   return table.toString();
 }
 
