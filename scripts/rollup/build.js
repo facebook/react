@@ -264,13 +264,19 @@ function getPlugins(
     // Record bundle size.
     sizes({
       getSize: (size, gzip) => {
-        Stats.currentBuildResults.bundleSizes.push({
+        const currentSizes = Stats.currentBuildResults.bundleSizes;
+        const recordIndex = currentSizes.findIndex(
+          record =>
+            record.filename === filename && record.bundleType === bundleType
+        );
+        const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
+        currentSizes[index] = {
           filename,
           bundleType,
           packageName,
           size,
           gzip,
-        });
+        };
       },
     }),
   ].filter(Boolean);
