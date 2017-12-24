@@ -9,7 +9,8 @@ const prevBuildResults = require('./results.json');
 
 const currentBuildResults = {
   // Mutated inside build.js during a build run.
-  bundleSizes: [],
+  // We make a copy so that partial rebuilds don't erase other stats.
+  bundleSizes: [...prevBuildResults.bundleSizes],
 };
 
 function saveResults() {
@@ -41,11 +42,15 @@ function printResults() {
       chalk.gray.yellow('Diff'),
     ],
   });
-  currentBuildResults.bundleSizes.forEach(index => {
-    const result = currentBuildResults.bundleSizes[index];
-    const prev = prevBuildResults.bundleSizes.filter(
-      res => res.filename === result.filename
-    )[0];
+  currentBuildResults.bundleSizes.forEach(result => {
+    const matches = prevBuildResults.bundleSizes.filter(
+      ({filename, bundleType}) =>
+        filename === result.filename && bundleType === result.bundleType
+    );
+    if (matches.length > 1) {
+      throw new Error(`Ambiguous bundle size record for: ${result.filename}`);
+    }
+    const prev = matches[0];
     if (result === prev) {
       // We didn't rebuild this bundle.
       return;
@@ -56,7 +61,7 @@ function printResults() {
     let prevSize = prev ? prev.size : 0;
     let prevGzip = prev ? prev.gzip : 0;
     table.push([
-      chalk.white.bold(`${result.filename} (${result.bundleType}`),
+      chalk.white.bold(`${result.filename} (${result.bundleType})`),
       chalk.gray.bold(filesize(prevSize)),
       chalk.white.bold(filesize(size)),
       percentChange(prevSize, size),
