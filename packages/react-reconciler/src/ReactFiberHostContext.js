@@ -82,8 +82,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function pushHostContext(fiber: Fiber): void {
-    const rootInstance = requiredContext(rootInstanceStackCursor.current);
-    const context = requiredContext(contextStackCursor.current);
+    const rootInstance: C = requiredContext(rootInstanceStackCursor.current);
+    const context: CX = requiredContext(contextStackCursor.current);
     const nextContext = getChildHostContext(context, fiber.type, rootInstance);
 
     // Don't push this Fiber's context unless it's unique.
