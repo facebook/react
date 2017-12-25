@@ -577,6 +577,7 @@ function createPortal(
     isValidContainer(container),
     'Target container is not a DOM element.',
   );
+  ReactDOMFiberComponent.trapClickOnNonInteractiveElement(((container: any): HTMLElement));
   // TODO: pass ReactDOM portal implementation as third argument
   return ReactPortal.createPortal(children, container, null, key);
 }
