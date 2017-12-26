@@ -129,7 +129,6 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
     ],
-    featureFlags: 'react-native-renderer/src/ReactNativeFeatureFlags',
   },
 
   /******* React Native RT *******/
@@ -156,7 +155,6 @@ const bundles = [
     entry: 'react-cs-renderer',
     global: 'ReactCSRenderer',
     externals: ['CSStatefulComponent'],
-    featureFlags: 'react-cs-renderer/src/ReactNativeCSFeatureFlags',
   },
 
   /******* React Test Renderer *******/
@@ -209,6 +207,16 @@ const bundles = [
     entry: 'react-reconciler',
     global: 'ReactReconciler',
     externals: ['react'],
+  },
+
+  /******* Reflection *******/
+  {
+    label: 'reconciler-reflection',
+    moduleType: RENDERER_UTILS,
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    entry: 'react-reconciler/reflection',
+    global: 'ReactFiberTreeReflection',
+    externals: [],
   },
 
   /******* React Call Return (experimental) *******/

@@ -18,7 +18,7 @@ import getTextContentAccessor from '../client/getTextContentAccessor';
  *
  *
  */
-var compositionState = {
+const compositionState = {
   _root: null,
   _startText: null,
   _fallbackText: null,
@@ -41,12 +41,12 @@ export function getData() {
     return compositionState._fallbackText;
   }
 
-  var start;
-  var startValue = compositionState._startText;
-  var startLength = startValue.length;
-  var end;
-  var endValue = getText();
-  var endLength = endValue.length;
+  let start;
+  const startValue = compositionState._startText;
+  const startLength = startValue.length;
+  let end;
+  const endValue = getText();
+  const endLength = endValue.length;
 
   for (start = 0; start < startLength; start++) {
     if (startValue[start] !== endValue[start]) {
@@ -54,14 +54,14 @@ export function getData() {
     }
   }
 
-  var minEnd = startLength - start;
+  const minEnd = startLength - start;
   for (end = 1; end <= minEnd; end++) {
     if (startValue[startLength - end] !== endValue[endLength - end]) {
       break;
     }
   }
 
-  var sliceTail = end > 1 ? 1 - end : undefined;
+  const sliceTail = end > 1 ? 1 - end : undefined;
   compositionState._fallbackText = endValue.slice(start, sliceTail);
   return compositionState._fallbackText;
 }

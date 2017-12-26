@@ -9,9 +9,9 @@
 
 'use strict';
 
-var rule = require('../warning-and-invariant-args');
-var RuleTester = require('eslint').RuleTester;
-var ruleTester = new RuleTester();
+const rule = require('../warning-and-invariant-args');
+const RuleTester = require('eslint').RuleTester;
+const ruleTester = new RuleTester();
 
 ruleTester.run('eslint-rules/warning-and-invariant-args', rule, {
   valid: [

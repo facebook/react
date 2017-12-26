@@ -14,7 +14,7 @@
  * `ResponderEventPlugin` must occur before `SimpleEventPlugin` so that
  * preventing default on events is convenient in `SimpleEventPlugin` handlers.
  */
-var DOMEventPluginOrder = [
+const DOMEventPluginOrder = [
   'ResponderEventPlugin',
   'SimpleEventPlugin',
   'TapEventPlugin',

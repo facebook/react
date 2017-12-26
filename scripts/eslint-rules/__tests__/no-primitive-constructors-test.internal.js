@@ -9,9 +9,9 @@
 
 'use strict';
 
-var rule = require('../no-primitive-constructors');
-var RuleTester = require('eslint').RuleTester;
-var ruleTester = new RuleTester();
+const rule = require('../no-primitive-constructors');
+const RuleTester = require('eslint').RuleTester;
+const ruleTester = new RuleTester();
 
 ruleTester.run('eslint-rules/no-primitive-constructors', rule, {
   valid: ['!!obj', "'' + obj", '+string'],

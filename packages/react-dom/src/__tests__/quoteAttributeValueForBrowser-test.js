@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React;
-var ReactDOMServer;
+let React;
+let ReactDOMServer;
 
 describe('quoteAttributeValueForBrowser', () => {
   beforeEach(() => {
@@ -20,50 +20,50 @@ describe('quoteAttributeValueForBrowser', () => {
   });
 
   it('ampersand is escaped inside attributes', () => {
-    var response = ReactDOMServer.renderToString(<img data-attr="&" />);
+    const response = ReactDOMServer.renderToString(<img data-attr="&" />);
     expect(response).toMatch('<img data-attr="&amp;" data-reactroot=""/>');
   });
 
   it('double quote is escaped inside attributes', () => {
-    var response = ReactDOMServer.renderToString(<img data-attr={'"'} />);
+    const response = ReactDOMServer.renderToString(<img data-attr={'"'} />);
     expect(response).toMatch('<img data-attr="&quot;" data-reactroot=""/>');
   });
 
   it('single quote is escaped inside attributes', () => {
-    var response = ReactDOMServer.renderToString(<img data-attr="'" />);
+    const response = ReactDOMServer.renderToString(<img data-attr="'" />);
     expect(response).toMatch('<img data-attr="&#x27;" data-reactroot=""/>');
   });
 
   it('greater than entity is escaped inside attributes', () => {
-    var response = ReactDOMServer.renderToString(<img data-attr=">" />);
+    const response = ReactDOMServer.renderToString(<img data-attr=">" />);
     expect(response).toMatch('<img data-attr="&gt;" data-reactroot=""/>');
   });
 
   it('lower than entity is escaped inside attributes', () => {
-    var response = ReactDOMServer.renderToString(<img data-attr="<" />);
+    const response = ReactDOMServer.renderToString(<img data-attr="<" />);
     expect(response).toMatch('<img data-attr="&lt;" data-reactroot=""/>');
   });
 
   it('number is escaped to string inside attributes', () => {
-    var response = ReactDOMServer.renderToString(<img data-attr={42} />);
+    const response = ReactDOMServer.renderToString(<img data-attr={42} />);
     expect(response).toMatch('<img data-attr="42" data-reactroot=""/>');
   });
 
   it('object is passed to a string inside attributes', () => {
-    var sampleObject = {
+    const sampleObject = {
       toString: function() {
         return 'ponys';
       },
     };
 
-    var response = ReactDOMServer.renderToString(
+    const response = ReactDOMServer.renderToString(
       <img data-attr={sampleObject} />,
     );
     expect(response).toMatch('<img data-attr="ponys" data-reactroot=""/>');
   });
 
   it('script tag is escaped inside attributes', () => {
-    var response = ReactDOMServer.renderToString(
+    const response = ReactDOMServer.renderToString(
       <img data-attr={'<script type=\'\' src=""></script>'} />,
     );
     expect(response).toMatch(

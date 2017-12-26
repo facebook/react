@@ -9,8 +9,8 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-var instanceCache: {[key: number]: Fiber} = {};
-var instanceProps: {[key: number]: Object} = {};
+const instanceCache: {[key: number]: Fiber} = {};
+const instanceProps: {[key: number]: Object} = {};
 
 export function precacheFiberNode(fiber: Fiber, tag: number): void {
   instanceCache[tag] = fiber;

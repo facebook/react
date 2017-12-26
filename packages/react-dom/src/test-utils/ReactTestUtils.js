@@ -7,7 +7,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {findCurrentFiberUsingSlowPath} from 'shared/ReactFiberTreeReflection';
+import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {
   ClassComponent,
@@ -20,8 +20,8 @@ import invariant from 'fbjs/lib/invariant';
 
 import BrowserEventConstants from '../events/BrowserEventConstants';
 
-var {findDOMNode} = ReactDOM;
-var {
+const {findDOMNode} = ReactDOM;
+const {
   EventPluginHub,
   EventPluginRegistry,
   EventPropagators,
@@ -30,7 +30,7 @@ var {
   ReactDOMEventListener,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-var topLevelTypes = BrowserEventConstants.topLevelTypes;
+const topLevelTypes = BrowserEventConstants.topLevelTypes;
 
 function Event(suffix) {}
 
@@ -42,7 +42,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
     return [];
   }
-  var currentParent = findCurrentFiberUsingSlowPath(fiber);
+  const currentParent = findCurrentFiberUsingSlowPath(fiber);
   if (!currentParent) {
     return [];
   }
@@ -55,7 +55,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === ClassComponent ||
       node.tag === FunctionalComponent
     ) {
-      var publicInst = node.stateNode;
+      const publicInst = node.stateNode;
       if (test(publicInst)) {
         ret.push(publicInst);
       }
@@ -88,9 +88,9 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
  * utilities will suffice for testing purposes.
  * @lends ReactTestUtils
  */
-var ReactTestUtils = {
+const ReactTestUtils = {
   renderIntoDocument: function(element) {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     // None of our tests actually require attaching the container to the
     // DOM, and doing so creates a mess that we rely on test isolation to
     // clean up, so we're going to stop honoring the name of this method
@@ -132,8 +132,8 @@ var ReactTestUtils = {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return false;
     }
-    var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = internalInstance.type;
+    const internalInstance = ReactInstanceMap.get(inst);
+    const constructor = internalInstance.type;
     return constructor === type;
   },
 
@@ -145,7 +145,7 @@ var ReactTestUtils = {
       ReactTestUtils.isCompositeComponent(inst),
       'findAllInRenderedTree(...): instance must be a composite component',
     );
-    var internalInstance = ReactInstanceMap.get(inst);
+    const internalInstance = ReactInstanceMap.get(inst);
     return findAllInRenderedFiberTreeInternal(internalInstance, test);
   },
 
@@ -157,12 +157,12 @@ var ReactTestUtils = {
   scryRenderedDOMComponentsWithClass: function(root, classNames) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
-        var className = inst.className;
+        let className = inst.className;
         if (typeof className !== 'string') {
           // SVG, probably.
           className = inst.getAttribute('class') || '';
         }
-        var classList = className.split(/\s+/);
+        const classList = className.split(/\s+/);
 
         if (!Array.isArray(classNames)) {
           invariant(
@@ -187,7 +187,7 @@ var ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithClass: function(root, className) {
-    var all = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    const all = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       root,
       className,
     );
@@ -224,7 +224,7 @@ var ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithTag: function(root, tagName) {
-    var all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
+    const all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
       throw new Error(
         'Did not find exactly one match (found: ' +
@@ -254,7 +254,7 @@ var ReactTestUtils = {
    * @return {!ReactComponent} The one match.
    */
   findRenderedComponentWithType: function(root, componentType) {
-    var all = ReactTestUtils.scryRenderedComponentsWithType(
+    const all = ReactTestUtils.scryRenderedComponentsWithType(
       root,
       componentType,
     );
@@ -356,17 +356,17 @@ function makeSimulator(eventType) {
         'a component instance. Pass the DOM node you wish to simulate the event on instead.',
     );
 
-    var dispatchConfig =
+    const dispatchConfig =
       EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
-    var fakeNativeEvent = new Event();
+    const fakeNativeEvent = new Event();
     fakeNativeEvent.target = domNode;
     fakeNativeEvent.type = eventType.toLowerCase();
 
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
-    var targetInst = ReactDOMComponentTree.getInstanceFromNode(domNode);
-    var event = new SyntheticEvent(
+    const targetInst = ReactDOMComponentTree.getInstanceFromNode(domNode);
+    const event = new SyntheticEvent(
       dispatchConfig,
       targetInst,
       fakeNativeEvent,
@@ -398,7 +398,7 @@ function makeSimulator(eventType) {
 function buildSimulators() {
   ReactTestUtils.Simulate = {};
 
-  var eventType;
+  let eventType;
   for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
@@ -409,12 +409,13 @@ function buildSimulators() {
 }
 
 // Rebuild ReactTestUtils.Simulate whenever event plugins are injected
-var oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
+const oldInjectEventPluginOrder =
+  EventPluginHub.injection.injectEventPluginOrder;
 EventPluginHub.injection.injectEventPluginOrder = function() {
   oldInjectEventPluginOrder.apply(this, arguments);
   buildSimulators();
 };
-var oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
+const oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
 EventPluginHub.injection.injectEventPluginsByName = function() {
   oldInjectEventPlugins.apply(this, arguments);
   buildSimulators();
@@ -440,7 +441,7 @@ buildSimulators();
 
 function makeNativeSimulator(eventType) {
   return function(domComponentOrNode, nativeEventData) {
-    var fakeNativeEvent = new Event(eventType);
+    const fakeNativeEvent = new Event(eventType);
     Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
@@ -461,7 +462,7 @@ function makeNativeSimulator(eventType) {
 
 Object.keys(topLevelTypes).forEach(function(eventType) {
   // Event type is stored as 'topClick' - we transform that to 'click'
-  var convenienceName =
+  const convenienceName =
     eventType.indexOf('top') === 0
       ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
       : eventType;

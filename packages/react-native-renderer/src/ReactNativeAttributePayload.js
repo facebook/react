@@ -13,7 +13,7 @@ import flattenStyle from 'flattenStyle';
 
 import ReactNativePropRegistry from './ReactNativePropRegistry';
 
-var emptyObject = {};
+const emptyObject = {};
 
 /**
  * Create a payload that contains all the updates between two sets of props.
@@ -41,8 +41,8 @@ type AttributeConfiguration = {
 type NestedNode = Array<NestedNode> | Object | number;
 
 // Tracks removed keys
-var removedKeys = null;
-var removedKeyCount = 0;
+let removedKeys = null;
+let removedKeyCount = 0;
 
 function defaultDiffer(prevProp: mixed, nextProp: mixed): boolean {
   if (typeof nextProp !== 'object' || nextProp === null) {
@@ -67,7 +67,7 @@ function restoreDeletedValuesInNestedArray(
   validAttributes: AttributeConfiguration,
 ) {
   if (Array.isArray(node)) {
-    var i = node.length;
+    let i = node.length;
     while (i-- && removedKeyCount > 0) {
       restoreDeletedValuesInNestedArray(
         updatePayload,
@@ -76,17 +76,17 @@ function restoreDeletedValuesInNestedArray(
       );
     }
   } else if (node && removedKeyCount > 0) {
-    var obj = resolveObject(node);
-    for (var propKey in removedKeys) {
+    const obj = resolveObject(node);
+    for (const propKey in removedKeys) {
       if (!removedKeys[propKey]) {
         continue;
       }
-      var nextProp = obj[propKey];
+      let nextProp = obj[propKey];
       if (nextProp === undefined) {
         continue;
       }
 
-      var attributeConfig = validAttributes[propKey];
+      const attributeConfig = validAttributes[propKey];
       if (!attributeConfig) {
         continue; // not a valid native prop
       }
@@ -106,7 +106,7 @@ function restoreDeletedValuesInNestedArray(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue =
+        const nextValue =
           typeof attributeConfig.process === 'function'
             ? attributeConfig.process(nextProp)
             : nextProp;
@@ -124,9 +124,9 @@ function diffNestedArrayProperty(
   nextArray: Array<NestedNode>,
   validAttributes: AttributeConfiguration,
 ): ?Object {
-  var minLength =
+  const minLength =
     prevArray.length < nextArray.length ? prevArray.length : nextArray.length;
-  var i;
+  let i;
   for (i = 0; i < minLength; i++) {
     // Diff any items in the array in the forward direction. Repeated keys
     // will be overwritten by later values.
@@ -241,7 +241,7 @@ function addNestedProperty(
     );
   }
 
-  for (var i = 0; i < nextProp.length; i++) {
+  for (let i = 0; i < nextProp.length; i++) {
     // Add all the properties of the array.
     updatePayload = addNestedProperty(
       updatePayload,
@@ -275,7 +275,7 @@ function clearNestedProperty(
     );
   }
 
-  for (var i = 0; i < prevProp.length; i++) {
+  for (let i = 0; i < prevProp.length; i++) {
     // Add all the properties of the array.
     updatePayload = clearNestedProperty(
       updatePayload,
@@ -298,11 +298,11 @@ function diffProperties(
   nextProps: Object,
   validAttributes: AttributeConfiguration,
 ): ?Object {
-  var attributeConfig: ?(CustomAttributeConfiguration | AttributeConfiguration);
-  var nextProp;
-  var prevProp;
+  let attributeConfig: ?(CustomAttributeConfiguration | AttributeConfiguration);
+  let nextProp;
+  let prevProp;
 
-  for (var propKey in nextProps) {
+  for (const propKey in nextProps) {
     attributeConfig = validAttributes[propKey];
     if (!attributeConfig) {
       continue; // not a valid native prop
@@ -350,7 +350,7 @@ function diffProperties(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue =
+        const nextValue =
           typeof attributeConfig.process === 'function'
             ? attributeConfig.process(nextProp)
             : nextProp;
@@ -375,13 +375,13 @@ function diffProperties(
       typeof attributeConfig.process === 'function'
     ) {
       // case: CustomAttributeConfiguration
-      var shouldUpdate =
+      const shouldUpdate =
         prevProp === undefined ||
         (typeof attributeConfig.diff === 'function'
           ? attributeConfig.diff(prevProp, nextProp)
           : defaultDiffer(prevProp, nextProp));
       if (shouldUpdate) {
-        nextValue =
+        const nextValue =
           typeof attributeConfig.process === 'function'
             ? attributeConfig.process(nextProp)
             : nextProp;
@@ -413,7 +413,7 @@ function diffProperties(
   // Also iterate through all the previous props to catch any that have been
   // removed and make sure native gets the signal so it can reset them to the
   // default.
-  for (propKey in prevProps) {
+  for (const propKey in prevProps) {
     if (nextProps[propKey] !== undefined) {
       continue; // we've already covered this key in the previous pass
     }

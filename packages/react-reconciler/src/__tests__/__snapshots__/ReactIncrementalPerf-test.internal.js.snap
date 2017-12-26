@@ -298,10 +298,9 @@ exports[`ReactDebugFiberPerf supports returns 1`] = `
 ⚛ (React Tree Reconciliation)
   ⚛ App [mount]
     ⚛ CoParent [mount]
-      ⚛ HandleReturns [mount]
-        ⚛ Indirection [mount]
-          ⚛ CoChild [mount]
-          ⚛ CoChild [mount]
+      ⚛ Indirection [mount]
+        ⚛ CoChild [mount]
+        ⚛ CoChild [mount]
       ⚛ Continuation [mount]
       ⚛ Continuation [mount]
 

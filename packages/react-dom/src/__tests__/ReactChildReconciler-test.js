@@ -12,8 +12,8 @@
 
 'use strict';
 
-var React;
-var ReactTestUtils;
+let React;
+let ReactTestUtils;
 
 describe('ReactChildReconciler', () => {
   function normalizeCodeLocInfo(str) {
@@ -30,7 +30,7 @@ describe('ReactChildReconciler', () => {
   function createIterable(array) {
     return {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next() {
             const next = {

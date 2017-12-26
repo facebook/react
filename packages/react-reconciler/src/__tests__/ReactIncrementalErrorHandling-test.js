@@ -9,9 +9,9 @@
 
 'use strict';
 
-var PropTypes;
-var React;
-var ReactNoop;
+let PropTypes;
+let React;
+let ReactNoop;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
@@ -60,7 +60,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches render error in a boundary during partial deferred mounting', () => {
-    var ops = [];
+    const ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -105,7 +105,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches render error in a boundary during synchronous mounting', () => {
-    var ops = [];
+    const ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -147,7 +147,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches render error in a boundary during batched mounting', () => {
-    var ops = [];
+    const ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -190,7 +190,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during full deferred mounting', () => {
-    var ops = [];
+    const ops = [];
     class RethrowErrorBoundary extends React.Component {
       componentDidCatch(error) {
         ops.push('RethrowErrorBoundary componentDidCatch');
@@ -225,7 +225,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during partial deferred mounting', () => {
-    var ops = [];
+    const ops = [];
     class RethrowErrorBoundary extends React.Component {
       componentDidCatch(error) {
         ops.push('RethrowErrorBoundary componentDidCatch');
@@ -263,7 +263,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during synchronous mounting', () => {
-    var ops = [];
+    const ops = [];
     class RethrowErrorBoundary extends React.Component {
       componentDidCatch(error) {
         ops.push('RethrowErrorBoundary componentDidCatch');
@@ -298,7 +298,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('propagates an error from a noop error boundary during batched mounting', () => {
-    var ops = [];
+    const ops = [];
     class RethrowErrorBoundary extends React.Component {
       componentDidCatch(error) {
         ops.push('RethrowErrorBoundary componentDidCatch');
@@ -380,7 +380,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('can schedule updates after uncaught error in render on mount', () => {
-    var ops = [];
+    let ops = [];
 
     function BrokenRender() {
       ops.push('BrokenRender');
@@ -405,7 +405,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('can schedule updates after uncaught error in render on update', () => {
-    var ops = [];
+    let ops = [];
 
     function BrokenRender(props) {
       ops.push('BrokenRender');
@@ -437,7 +437,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('can schedule updates after uncaught error during umounting', () => {
-    var ops = [];
+    let ops = [];
 
     class BrokenComponentWillUnmount extends React.Component {
       render() {
@@ -895,7 +895,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('does not interrupt unmounting if detaching a ref throws', () => {
-    var ops = [];
+    let ops = [];
 
     class Bar extends React.Component {
       componentWillUnmount() {

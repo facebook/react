@@ -15,7 +15,7 @@ import {
   debugRenderPhaseSideEffects,
   enableAsyncSubtreeAPI,
 } from 'shared/ReactFeatureFlags';
-import {isMounted} from 'shared/ReactFiberTreeReflection';
+import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
@@ -40,10 +40,13 @@ import {hasContextChanged} from './ReactFiberContext';
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
-if (__DEV__) {
-  var didWarnAboutStateAssignmentForComponent = {};
+let didWarnAboutStateAssignmentForComponent;
+let warnOnInvalidCallback;
 
-  var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
+if (__DEV__) {
+  didWarnAboutStateAssignmentForComponent = {};
+
+  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
       '%s(...): Expected the last optional `callback` argument to be a ' +
@@ -384,11 +387,6 @@ export default function(
     instance.componentWillMount();
     stopPhaseTimer();
 
-    // Simulate an async bailout/interruption by invoking lifecycle twice.
-    if (debugRenderPhaseSideEffects) {
-      instance.componentWillMount();
-    }
-
     if (oldState !== instance.state) {
       if (__DEV__) {
         warning(
@@ -450,14 +448,7 @@ export default function(
 
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
-
-    let props = workInProgress.pendingProps;
-    invariant(
-      props,
-      'There must be pending props for an initial mount. This error is ' +
-        'likely caused by a bug in React. Please file an issue.',
-    );
-
+    const props = workInProgress.pendingProps;
     const unmaskedContext = getUnmaskedContext(workInProgress);
 
     instance.props = props;
@@ -610,17 +601,7 @@ export default function(
     resetInputPointers(workInProgress, instance);
 
     const oldProps = workInProgress.memoizedProps;
-    let newProps = workInProgress.pendingProps;
-    if (!newProps) {
-      // If there aren't any new props, then we'll reuse the memoized props.
-      // This could be from already completed work.
-      newProps = oldProps;
-      invariant(
-        newProps != null,
-        'There should always be pending or memoized props. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
-    }
+    const newProps = workInProgress.pendingProps;
     const oldContext = instance.context;
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);

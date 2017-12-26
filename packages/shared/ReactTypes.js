@@ -10,8 +10,8 @@
 
 export type ReactNode =
   | React$Element<any>
-  | ReactCall
-  | ReactReturn
+  | ReactCall<any>
+  | ReactReturn<any>
   | ReactPortal
   | ReactText
   | ReactFragment;
@@ -24,18 +24,27 @@ export type ReactText = string | number;
 
 export type ReactEmpty = null | void | boolean;
 
-export type ReactCall = {
+export type ReactCall<V> = {
   $$typeof: Symbol | number,
+  type: Symbol | number,
   key: null | string,
-  children: any,
-  // This should be a more specific CallHandler
-  handler: (props: any, returns: Array<mixed>) => ReactNodeList,
-  props: any,
+  ref: null,
+  props: {
+    props: any,
+    // This should be a more specific CallHandler
+    handler: (props: any, returns: Array<V>) => ReactNodeList,
+    children?: ReactNodeList,
+  },
 };
 
-export type ReactReturn = {
+export type ReactReturn<V> = {
   $$typeof: Symbol | number,
-  value: mixed,
+  type: Symbol | number,
+  key: null,
+  ref: null,
+  props: {
+    value: V,
+  },
 };
 
 export type ReactPortal = {

@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React;
-var ReactNoop;
-var PropTypes;
+let React;
+let ReactNoop;
+let PropTypes;
 
 describe('ReactIncremental', () => {
   beforeEach(() => {
@@ -35,8 +35,8 @@ describe('ReactIncremental', () => {
   });
 
   it('should render a simple component, in steps if needed', () => {
-    var renderCallbackCalled = false;
-    var barCalled = false;
+    let renderCallbackCalled = false;
+    let barCalled = false;
     function Bar() {
       barCalled = true;
       return (
@@ -46,7 +46,7 @@ describe('ReactIncremental', () => {
       );
     }
 
-    var fooCalled = false;
+    let fooCalled = false;
     function Foo() {
       fooCalled = true;
       return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
@@ -69,7 +69,7 @@ describe('ReactIncremental', () => {
   });
 
   it('updates a previous render', () => {
-    var ops = [];
+    let ops = [];
 
     function Header() {
       ops.push('Header');
@@ -86,8 +86,8 @@ describe('ReactIncremental', () => {
       return <footer>Bye</footer>;
     }
 
-    var header = <Header />;
-    var footer = <Footer />;
+    const header = <Header />;
+    const footer = <Footer />;
 
     function Foo(props) {
       ops.push('Foo');
@@ -136,7 +136,7 @@ describe('ReactIncremental', () => {
   });
 
   it('can cancel partially rendered work and restart', () => {
-    var ops = [];
+    let ops = [];
 
     function Bar(props) {
       ops.push('Bar');
@@ -245,7 +245,7 @@ describe('ReactIncremental', () => {
   });
 
   it('can deprioritize unfinished work and resume it later', () => {
-    var ops = [];
+    let ops = [];
 
     function Bar(props) {
       ops.push('Bar');
@@ -297,7 +297,7 @@ describe('ReactIncremental', () => {
   });
 
   it('can deprioritize a tree from without dropping work', () => {
-    var ops = [];
+    let ops = [];
 
     function Bar(props) {
       ops.push('Bar');
@@ -349,7 +349,7 @@ describe('ReactIncremental', () => {
   });
 
   xit('can resume work in a subtree even when a parent bails out', () => {
-    var ops = [];
+    let ops = [];
 
     function Bar(props) {
       ops.push('Bar');
@@ -368,7 +368,7 @@ describe('ReactIncremental', () => {
       return <span>{props.children}</span>;
     }
 
-    var middleContent = (
+    const middleContent = (
       <aaa>
         <Tester />
         <bbb hidden={true}>
@@ -412,7 +412,7 @@ describe('ReactIncremental', () => {
   });
 
   xit('can resume work in a bailed subtree within one pass', () => {
-    var ops = [];
+    let ops = [];
 
     function Bar(props) {
       ops.push('Bar');
@@ -620,7 +620,7 @@ describe('ReactIncremental', () => {
   });
 
   xit('can reuse work done after being preempted', () => {
-    var ops = [];
+    let ops = [];
 
     function Bar(props) {
       ops.push('Bar');
@@ -632,7 +632,7 @@ describe('ReactIncremental', () => {
       return <span>{props.children}</span>;
     }
 
-    var middleContent = (
+    const middleContent = (
       <div>
         <Middle>Hello</Middle>
         <Bar>-</Bar>
@@ -640,7 +640,7 @@ describe('ReactIncremental', () => {
       </div>
     );
 
-    var step0 = (
+    const step0 = (
       <div>
         <Middle>Hi</Middle>
         <Bar>{'Foo'}</Bar>
@@ -788,7 +788,7 @@ describe('ReactIncremental', () => {
   });
 
   xit('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
-    var ops = [];
+    let ops = [];
 
     function Bar(props) {
       ops.push('Bar');
@@ -1110,9 +1110,9 @@ describe('ReactIncremental', () => {
   });
 
   xit('can call sCU while resuming a partly mounted component', () => {
-    var ops = [];
+    let ops = [];
 
-    var instances = new Set();
+    const instances = new Set();
 
     class Bar extends React.Component {
       state = {y: 'A'};
@@ -1159,8 +1159,8 @@ describe('ReactIncremental', () => {
   });
 
   xit('gets new props when setting state on a partly updated component', () => {
-    var ops = [];
-    var instances = [];
+    let ops = [];
+    const instances = [];
 
     class Bar extends React.Component {
       state = {y: 'A'};
@@ -1227,7 +1227,7 @@ describe('ReactIncremental', () => {
   });
 
   xit('calls componentWillMount twice if the initial render is aborted', () => {
-    var ops = [];
+    let ops = [];
 
     class LifeCycle extends React.Component {
       state = {x: this.props.x};
@@ -1283,7 +1283,7 @@ describe('ReactIncremental', () => {
   });
 
   xit('uses state set in componentWillMount even if initial render was aborted', () => {
-    var ops = [];
+    let ops = [];
 
     class LifeCycle extends React.Component {
       constructor(props) {
@@ -1330,7 +1330,7 @@ describe('ReactIncremental', () => {
   });
 
   xit('calls componentWill* twice if an update render is aborted', () => {
-    var ops = [];
+    let ops = [];
 
     class LifeCycle extends React.Component {
       componentWillMount() {
@@ -1417,9 +1417,9 @@ describe('ReactIncremental', () => {
   });
 
   xit('does not call componentWillReceiveProps for state-only updates', () => {
-    var ops = [];
+    let ops = [];
 
-    var instances = [];
+    const instances = [];
 
     class LifeCycle extends React.Component {
       state = {x: 0};
@@ -1566,7 +1566,7 @@ describe('ReactIncremental', () => {
   });
 
   xit('skips will/DidUpdate when bailing unless an update was already in progress', () => {
-    var ops = [];
+    let ops = [];
 
     class LifeCycle extends React.Component {
       componentWillMount() {
@@ -1662,8 +1662,8 @@ describe('ReactIncremental', () => {
   });
 
   it('can nest batchedUpdates', () => {
-    var ops = [];
-    var instance;
+    let ops = [];
+    let instance;
 
     class Foo extends React.Component {
       state = {n: 0};
@@ -1704,8 +1704,8 @@ describe('ReactIncremental', () => {
   });
 
   it('can handle if setState callback throws', () => {
-    var ops = [];
-    var instance;
+    let ops = [];
+    let instance;
 
     class Foo extends React.Component {
       state = {n: 0};
@@ -1740,7 +1740,7 @@ describe('ReactIncremental', () => {
   });
 
   it('merges and masks context', () => {
-    var ops = [];
+    const ops = [];
 
     class Intl extends React.Component {
       static childContextTypes = {
@@ -1896,7 +1896,7 @@ describe('ReactIncremental', () => {
   });
 
   it('does not leak own context into context provider', () => {
-    var ops = [];
+    const ops = [];
     class Recurse extends React.Component {
       static contextTypes = {
         n: PropTypes.number,
@@ -1927,7 +1927,7 @@ describe('ReactIncremental', () => {
   });
 
   it('provides context when reusing work', () => {
-    var ops = [];
+    const ops = [];
 
     class Intl extends React.Component {
       static childContextTypes = {
@@ -1984,8 +1984,8 @@ describe('ReactIncremental', () => {
   });
 
   it('reads context when setState is below the provider', () => {
-    var ops = [];
-    var statefulInst;
+    const ops = [];
+    let statefulInst;
 
     class Intl extends React.Component {
       static childContextTypes = {
@@ -2074,8 +2074,8 @@ describe('ReactIncremental', () => {
   });
 
   it('reads context when setState is above the provider', () => {
-    var ops = [];
-    var statefulInst;
+    const ops = [];
+    let statefulInst;
 
     class Intl extends React.Component {
       static childContextTypes = {
@@ -2714,5 +2714,78 @@ describe('ReactIncremental', () => {
     ).toEqual(['Parent: 2', 'Child: 2']);
 
     expect(ReactNoop.flush()).toEqual([]);
+  });
+
+  it('does not break with a bad Map polyfill', () => {
+    const realMapSet = Map.prototype.set;
+
+    function triggerCodePathThatUsesFibersAsMapKeys() {
+      function Thing() {
+        throw new Error('No.');
+      }
+      class Boundary extends React.Component {
+        state = {didError: false};
+        componentDidCatch() {
+          this.setState({didError: true});
+        }
+        render() {
+          return this.state.didError ? null : <Thing />;
+        }
+      }
+      ReactNoop.render(<Boundary />);
+      ReactNoop.flush();
+    }
+
+    // First, verify that this code path normally receives Fibers as keys,
+    // and that they're not extensible.
+    jest.resetModules();
+    let receivedNonExtensibleObjects;
+    // eslint-disable-next-line no-extend-native
+    Map.prototype.set = function(key) {
+      if (typeof key === 'object' && key !== null) {
+        if (!Object.isExtensible(key)) {
+          receivedNonExtensibleObjects = true;
+        }
+      }
+      return realMapSet.apply(this, arguments);
+    };
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+    try {
+      receivedNonExtensibleObjects = false;
+      triggerCodePathThatUsesFibersAsMapKeys();
+    } finally {
+      // eslint-disable-next-line no-extend-native
+      Map.prototype.set = realMapSet;
+    }
+    // If this fails, find another code path in Fiber
+    // that passes Fibers as keys to Maps.
+    // Note that we only expect them to be non-extensible
+    // in development.
+    expect(receivedNonExtensibleObjects).toBe(__DEV__);
+
+    // Next, verify that a Map polyfill that "writes" to keys
+    // doesn't cause a failure.
+    jest.resetModules();
+    // eslint-disable-next-line no-extend-native
+    Map.prototype.set = function(key, value) {
+      if (typeof key === 'object' && key !== null) {
+        // A polyfill could do something like this.
+        // It would throw if an object is not extensible.
+        key.__internalValueSlot = value;
+      }
+      return realMapSet.apply(this, arguments);
+    };
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+    try {
+      triggerCodePathThatUsesFibersAsMapKeys();
+    } finally {
+      // eslint-disable-next-line no-extend-native
+      Map.prototype.set = realMapSet;
+    }
+    // If we got this far, our feature detection worked.
+    // We knew that Map#set() throws for non-extensible objects,
+    // so we didn't set them as non-extensible for that reason.
   });
 });

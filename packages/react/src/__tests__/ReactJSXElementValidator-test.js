@@ -11,18 +11,18 @@
 
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
-var React;
-var ReactDOM;
-var ReactTestUtils;
-var PropTypes;
+let React;
+let ReactDOM;
+let ReactTestUtils;
+let PropTypes;
 
 describe('ReactJSXElementValidator', () => {
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/at .+?:\d+/g, 'at **');
   }
 
-  var Component;
-  var RequiredPropComponent;
+  let Component;
+  let RequiredPropComponent;
 
   beforeEach(() => {
     jest.resetModules();
@@ -92,12 +92,12 @@ describe('ReactJSXElementValidator', () => {
   it('warns for keys for iterables of elements in rest args', () => {
     spyOnDev(console, 'error');
 
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {value: done ? undefined : <Component />, done: done};
           },
         };
@@ -121,12 +121,12 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('does not warn for iterable elements with keys', () => {
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {
               value: done ? undefined : <Component key={'#' + i} />,
               done: done,
@@ -140,12 +140,12 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('does not warn for numeric keys in entry iterable as a child', () => {
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {value: done ? undefined : [i, <Component />], done: done};
           },
         };
@@ -219,7 +219,7 @@ describe('ReactJSXElementValidator', () => {
       return React.createElement(MiddleComp, {color: 'blue'});
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<ParentComp warn={false} />, container);
     ReactDOM.render(<ParentComp warn={true} />, container);
 
@@ -239,10 +239,10 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('gives a helpful error when passing null, undefined, or boolean', () => {
-    var Undefined = undefined;
-    var Null = null;
-    var True = true;
-    var Div = 'div';
+    const Undefined = undefined;
+    const Null = null;
+    const True = true;
+    const Div = 'div';
     spyOnDev(console, 'error');
     void <Undefined />;
     void <Null />;
@@ -404,7 +404,7 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('should warn if component declares PropTypes instead of propTypes', () => {
-    spyOn(console, 'error');
+    spyOnDevAndProd(console, 'error');
     class MisspelledPropTypesComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
@@ -421,6 +421,85 @@ describe('ReactJSXElementValidator', () => {
       expect(console.error.calls.argsFor(0)[0]).toBe(
         'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
           'instead of `propTypes`. Did you misspell the property assignment?',
+      );
+    }
+  });
+
+  it('warns for fragments with illegal attributes', () => {
+    spyOnDev(console, 'error');
+
+    class Foo extends React.Component {
+      render() {
+        return (
+          <React.Fragment a={1} b={2}>
+            hello
+          </React.Fragment>
+        );
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Foo />);
+
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain('Invalid prop `');
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        '` supplied to `React.Fragment`. React.Fragment ' +
+          'can only have `key` and `children` props.',
+      );
+    }
+  });
+
+  it('warns for fragments with refs', () => {
+    spyOnDev(console, 'error');
+
+    class Foo extends React.Component {
+      render() {
+        return (
+          <React.Fragment
+            ref={bar => {
+              this.foo = bar;
+            }}>
+            hello
+          </React.Fragment>
+        );
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Foo />);
+
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Invalid attribute `ref` supplied to `React.Fragment`.',
+      );
+    }
+  });
+
+  it('does not warn for fragments of multiple elements without keys', () => {
+    ReactTestUtils.renderIntoDocument(
+      <React.Fragment>
+        <span>1</span>
+        <span>2</span>
+      </React.Fragment>,
+    );
+  });
+
+  it('warns for fragments of multiple elements with same key', () => {
+    spyOnDev(console, 'error');
+
+    ReactTestUtils.renderIntoDocument(
+      <React.Fragment>
+        <span key="a">1</span>
+        <span key="a">2</span>
+        <span key="b">3</span>
+      </React.Fragment>,
+    );
+
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Encountered two children with the same key, `a`.',
       );
     }
   });

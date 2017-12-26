@@ -52,7 +52,7 @@ import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
 // accidentally deep-requiring this version.
 function findNodeHandle(componentOrHandle: any): any {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
+    const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
       warning(
         owner.stateNode._warnedAboutRefsInRender,
@@ -75,11 +75,11 @@ function findNodeHandle(componentOrHandle: any): any {
     return componentOrHandle;
   }
 
-  var component = componentOrHandle;
+  const component = componentOrHandle;
 
   // TODO (balpert): Wrap iOS native components in a composite wrapper, then
   // ReactInstanceMap.get here will always succeed for mounted components
-  var internalInstance: Fiber = ReactInstanceMap.get(component);
+  const internalInstance: Fiber = ReactInstanceMap.get(component);
   if (internalInstance) {
     return ReactNativeFiberRenderer.findHostInstance(internalInstance);
   } else {

@@ -7,7 +7,7 @@
 
 'use strict';
 
-var RCTEventEmitter = {
+const RCTEventEmitter = {
   register: jest.fn(),
 };
 

@@ -944,25 +944,25 @@ describe('ReactShallowRenderer', () => {
     spyOnDev(console, 'error');
     const shallowRenderer = createRenderer();
 
-    var Undef = undefined;
+    const Undef = undefined;
     expect(() => shallowRenderer.render(<Undef />)).toThrowError(
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `undefined`.',
     );
 
-    var Null = null;
+    const Null = null;
     expect(() => shallowRenderer.render(<Null />)).toThrowError(
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `null`.',
     );
 
-    var Arr = [];
+    const Arr = [];
     expect(() => shallowRenderer.render(<Arr />)).toThrowError(
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `array`.',
     );
 
-    var Obj = {};
+    const Obj = {};
     expect(() => shallowRenderer.render(<Obj />)).toThrowError(
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `object`.',

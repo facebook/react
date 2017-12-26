@@ -19,4 +19,4 @@ console.log(renderer.toJSON());
 //   children: [ 'Facebook' ] }
 ```
 
-You can also use Jest's snapshot testing feature to automatically save a copy of the JSON tree to a file and check in your tests that it hasn't changed: http://facebook.github.io/jest/blog/2016/07/27/jest-14.html.
+You can also use Jest's snapshot testing feature to automatically save a copy of the JSON tree to a file and check in your tests that it hasn't changed: https://facebook.github.io/jest/blog/2016/07/27/jest-14.html.

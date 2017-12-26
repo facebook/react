@@ -8,7 +8,7 @@
  */
 'use strict';
 
-var reactProdInvariant;
+let reactProdInvariant;
 
 describe('reactProdInvariant', () => {
   let globalErrorMock;

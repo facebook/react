@@ -10,7 +10,7 @@
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#keys-Modifiers
  */
 
-var modifierKeyToProp = {
+const modifierKeyToProp = {
   Alt: 'altKey',
   Control: 'ctrlKey',
   Meta: 'metaKey',
@@ -21,12 +21,12 @@ var modifierKeyToProp = {
 // modifier keys exposed by the event itself, does not support Lock-keys.
 // Currently, all major browsers except Chrome seems to support Lock-keys.
 function modifierStateGetter(keyArg) {
-  var syntheticEvent = this;
-  var nativeEvent = syntheticEvent.nativeEvent;
+  const syntheticEvent = this;
+  const nativeEvent = syntheticEvent.nativeEvent;
   if (nativeEvent.getModifierState) {
     return nativeEvent.getModifierState(keyArg);
   }
-  var keyProp = modifierKeyToProp[keyArg];
+  const keyProp = modifierKeyToProp[keyArg];
   return keyProp ? !!nativeEvent[keyProp] : false;
 }
 

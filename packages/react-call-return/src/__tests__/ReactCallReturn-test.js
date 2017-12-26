@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React;
-var ReactNoop;
-var ReactCallReturn;
+let React;
+let ReactNoop;
+let ReactCallReturn;
 
 describe('ReactCallReturn', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('ReactCallReturn', () => {
   }
 
   it('should render a call', () => {
-    var ops = [];
+    const ops = [];
 
     function Continuation({isSame}) {
       ops.push(['Continuation', isSame]);
@@ -159,7 +159,7 @@ describe('ReactCallReturn', () => {
   });
 
   it('should unmount a composite in a call', () => {
-    var ops = [];
+    let ops = [];
 
     class Continuation extends React.Component {
       render() {

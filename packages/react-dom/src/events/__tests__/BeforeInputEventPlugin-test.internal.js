@@ -9,10 +9,10 @@
 
 'use strict';
 
-var React = require('react');
-var ReactTestUtils = require('react-dom/test-utils');
+const React = require('react');
+const ReactTestUtils = require('react-dom/test-utils');
 
-var EventMapping = {
+const EventMapping = {
   compositionstart: 'topCompositionStart',
   compositionend: 'topCompositionEnd',
   keyup: 'topKeyUp',
@@ -23,7 +23,7 @@ var EventMapping = {
 };
 
 describe('BeforeInputEventPlugin', function() {
-  var ModuleCache;
+  let ModuleCache;
 
   function simulateIE11() {
     document.documentMode = 11;
@@ -56,7 +56,7 @@ describe('BeforeInputEventPlugin', function() {
   }
 
   function extract(node, eventType, optionalData) {
-    var evt = document.createEvent('HTMLEvents');
+    let evt = document.createEvent('HTMLEvents');
     evt.initEvent(eventType, true, true);
     evt = Object.assign(evt, optionalData);
     return ModuleCache.BeforeInputEventPlugin.extractEvents(
@@ -74,9 +74,14 @@ describe('BeforeInputEventPlugin', function() {
   function accumulateEvents(node, events) {
     // We don't use accumulateInto module to apply partial application.
     return function() {
-      var newArgs = [node].concat(Array.prototype.slice.call(arguments));
-      var newEvents = extract.apply(this, newArgs);
-      Array.prototype.push.apply(events, newEvents);
+      const newArgs = [node].concat(Array.prototype.slice.call(arguments));
+      const newEvents = extract.apply(this, newArgs);
+
+      if (Array.isArray(newEvents)) {
+        Array.prototype.push.apply(events, newEvents);
+      } else if (newEvents) {
+        events.push(newEvents);
+      }
     };
   }
 
@@ -89,7 +94,7 @@ describe('BeforeInputEventPlugin', function() {
   function verifyEvents(actualEvents, expectedEvents) {
     expect(actualEvents.length).toBe(expectedEvents.length);
     expectedEvents.forEach(function(expected, idx) {
-      var actual = actualEvents[idx];
+      const actual = actualEvents[idx];
       expect(function() {
         if (actual === null && expected.type === null) {
           // Both are null.  Expected.
@@ -121,7 +126,7 @@ describe('BeforeInputEventPlugin', function() {
   // instead of a standard name `textInput`.  As of now, React does not have
   // a corresponding topEvent to IE's textinput, but both events are added to
   // this scenario data for future use.
-  var Test_Scenario = [
+  const Test_Scenario = [
     // Composition test
     {run: accumulateEvents, arg: ['compositionstart', {data: ''}]},
     {run: accumulateEvents, arg: ['textInput', {data: 'A'}]},
@@ -154,34 +159,19 @@ describe('BeforeInputEventPlugin', function() {
   // Webkit behavior is simple.  We expect SyntheticInputEvent at each
   // textInput, SyntheticCompositionEvent at composition, and nothing from
   // keyUp.
-  var Expected_Webkit = () => [
+  const Expected_Webkit = () => [
     {type: ModuleCache.SyntheticCompositionEvent, data: {}},
-    {type: null},
-    {type: null},
     {type: ModuleCache.SyntheticInputEvent, data: {data: 'A'}},
-    {type: null},
-    {type: null}, // textinput of A
-    {type: null},
-    {type: null}, // keyUp of 65
-    {type: null},
+    // textinput of A
+    // keyUp of 65
     {type: ModuleCache.SyntheticInputEvent, data: {data: 'abc'}},
-    {type: null},
-    {type: null}, // textinput of abc
-    {type: null},
-    {type: null}, // keyUp of 32
-    {type: null},
+    // textinput of abc
+    // keyUp of 32
     {type: ModuleCache.SyntheticInputEvent, data: {data: 'xyz'}},
-    {type: null},
-    {type: null}, // textinput of xyz
-    {type: null},
-    {type: null}, // keyUp of 32
+    // textinput of xyz
+    // keyUp of 32
     {type: ModuleCache.SyntheticCompositionEvent, data: {data: 'Hello'}},
-    {type: null},
-
     // Emoji test
-    {type: null},
-    {type: null},
-    {type: null},
     {type: ModuleCache.SyntheticInputEvent, data: {data: '\uD83D\uDE0A'}},
   ];
 
@@ -189,41 +179,24 @@ describe('BeforeInputEventPlugin', function() {
   // We expect no SyntheticInputEvent from textinput. Fallback beforeInput is
   // expected to be triggered at compositionend with a text of the target
   // element, not event data.
-  var Expected_IE11 = () => [
+  const Expected_IE11 = () => [
     {type: ModuleCache.SyntheticCompositionEvent, data: {}},
-    {type: null},
-    {type: null},
-    {type: null}, // textInput of A
-    {type: null},
-    {type: null}, // textinput of A
-    {type: null},
-    {type: null}, // keyUp of 65
-    {type: null},
-    {type: null}, // textInput of abc
-    {type: null},
-    {type: null}, // textinput of abc
-
+    // textInput of A
+    // textinput of A
+    // keyUp of 65
+    // textInput of abc
+    // textinput of abc
     // fallbackData should NOT be set at keyUp with any of END_KEYCODES
-    {type: null},
-    {type: null}, // keyUp of 32
-
-    {type: null},
-    {type: null}, // textInput of xyz
-    {type: null},
-    {type: null}, // textinput of xyz
-    {type: null},
-    {type: null}, // keyUp of 32
-
+    // keyUp of 32
+    // textInput of xyz
+    // textinput of xyz
+    // keyUp of 32
     // fallbackData is retrieved from the element, which is XYZ,
     // at a time of compositionend
     {type: ModuleCache.SyntheticCompositionEvent, data: {}},
     {type: ModuleCache.SyntheticInputEvent, data: {data: 'XYZ'}},
-
     // Emoji test
-    {type: null},
     {type: ModuleCache.SyntheticInputEvent, data: {data: '\uD83D\uDE0A'}},
-    {type: null},
-    {type: null},
   ];
 
   function TestEditableReactComponent(Emulator, Scenario, ExpectedResult) {
@@ -234,10 +207,10 @@ describe('BeforeInputEventPlugin', function() {
         return <div contentEditable="true" />;
       }
     }
-    var rendered = ReactTestUtils.renderIntoDocument(<EditableDiv />);
+    const rendered = ReactTestUtils.renderIntoDocument(<EditableDiv />);
 
-    var node = ModuleCache.ReactDOM.findDOMNode(rendered);
-    var events = [];
+    const node = ModuleCache.ReactDOM.findDOMNode(rendered);
+    const events = [];
 
     Scenario.forEach(el => el.run.call(this, node, events).apply(this, el.arg));
     verifyEvents(events, ExpectedResult());
