@@ -70,15 +70,15 @@ class ReactShallowRenderer {
 
     this._rendering = true;
     this._element = element;
-    this._context = context;
+    this._context = getMaskedContext(element.type.contextTypes, context);
 
     if (this._instance) {
-      this._updateClassComponent(element.type, element.props, context);
+      this._updateClassComponent(element.type, element.props, this._context);
     } else {
       if (shouldConstruct(element.type)) {
         this._instance = new element.type(
           element.props,
-          context,
+          this._context,
           this._updater,
         );
 
@@ -87,7 +87,7 @@ class ReactShallowRenderer {
 
           checkPropTypes(
             element.type.contextTypes,
-            context,
+            this._context,
             'context',
             getName(element.type, this._instance),
             getStackAddendum,
@@ -96,9 +96,9 @@ class ReactShallowRenderer {
           currentlyValidatingElement = null;
         }
 
-        this._mountClassComponent(element.props, context);
+        this._mountClassComponent(element.props, this._context);
       } else {
-        this._rendered = element.type(element.props, context);
+        this._rendered = element.type(element.props, this._context);
       }
     }
 
@@ -288,6 +288,17 @@ function getName(type, instance) {
 
 function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
+}
+
+function getMaskedContext(contextTypes, unmaskedContext) {
+  if (!contextTypes) {
+    return emptyObject;
+  }
+  const context = {};
+  for (let key in contextTypes) {
+    context[key] = unmaskedContext[key];
+  }
+  return context;
 }
 
 export default ReactShallowRenderer;
