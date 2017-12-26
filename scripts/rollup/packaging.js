@@ -95,12 +95,10 @@ async function copyAllShims() {
 }
 
 async function copyReactReconcilerTypes() {
-  console.log('Copying reconciler types....');
   await asyncCopyTo(
     require.resolve('react-reconciler/src/ReactFiberReconcilerTypes.js'),
     'build/packages/react-reconciler/index.js.flow'
   );
-  console.log('Done');
 }
 
 function getTarOptions(tgzName, packageName) {
