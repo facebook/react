@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule getVendorPrefixedEventName
  */
 
-'use strict';
-
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
 /**
  * Generate a mapping of standard vendor prefixes using the defined style property and event name.
@@ -19,7 +15,7 @@ var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
  * @returns {object}
  */
 function makePrefixMap(styleProp, eventName) {
-  var prefixes = {};
+  const prefixes = {};
 
   prefixes[styleProp.toLowerCase()] = eventName.toLowerCase();
   prefixes['Webkit' + styleProp] = 'webkit' + eventName;
@@ -33,7 +29,7 @@ function makePrefixMap(styleProp, eventName) {
 /**
  * A list of event names to a configurable list of vendor prefixes.
  */
-var vendorPrefixes = {
+const vendorPrefixes = {
   animationend: makePrefixMap('Animation', 'AnimationEnd'),
   animationiteration: makePrefixMap('Animation', 'AnimationIteration'),
   animationstart: makePrefixMap('Animation', 'AnimationStart'),
@@ -43,12 +39,12 @@ var vendorPrefixes = {
 /**
  * Event names that have already been detected and prefixed (if applicable).
  */
-var prefixedEventNames = {};
+const prefixedEventNames = {};
 
 /**
  * Element to check for prefixes on.
  */
-var style = {};
+let style = {};
 
 /**
  * Bootstrap if a DOM exists.
@@ -85,9 +81,9 @@ function getVendorPrefixedEventName(eventName) {
     return eventName;
   }
 
-  var prefixMap = vendorPrefixes[eventName];
+  const prefixMap = vendorPrefixes[eventName];
 
-  for (var styleProp in prefixMap) {
+  for (const styleProp in prefixMap) {
     if (prefixMap.hasOwnProperty(styleProp) && styleProp in style) {
       return (prefixedEventNames[eventName] = prefixMap[styleProp]);
     }
@@ -96,4 +92,4 @@ function getVendorPrefixedEventName(eventName) {
   return '';
 }
 
-module.exports = getVendorPrefixedEventName;
+export default getVendorPrefixedEventName;

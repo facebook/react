@@ -5,12 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- * @providesModule describeComponentFrame
  */
 
-'use strict';
-
-module.exports = function(
+export default function(
   name: null | string,
   source: any,
   ownerName: null | string,
@@ -20,10 +17,10 @@ module.exports = function(
     (name || 'Unknown') +
     (source
       ? ' (at ' +
-          source.fileName.replace(/^.*[\\\/]/, '') +
-          ':' +
-          source.lineNumber +
-          ')'
+        source.fileName.replace(/^.*[\\\/]/, '') +
+        ':' +
+        source.lineNumber +
+        ')'
       : ownerName ? ' (created by ' + ownerName + ')' : '')
   );
-};
+}

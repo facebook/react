@@ -3,17 +3,17 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule EnterLeaveEventPlugin
  */
 
-'use strict';
+import {accumulateEnterLeaveDispatches} from 'events/EventPropagators';
 
-var EventPropagators = require('EventPropagators');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
+import SyntheticMouseEvent from './SyntheticMouseEvent';
+import {
+  getClosestInstanceFromNode,
+  getNodeFromInstance,
+} from '../client/ReactDOMComponentTree';
 
-var eventTypes = {
+const eventTypes = {
   mouseEnter: {
     registrationName: 'onMouseEnter',
     dependencies: ['topMouseOut', 'topMouseOver'],
@@ -24,7 +24,7 @@ var eventTypes = {
   },
 };
 
-var EnterLeaveEventPlugin = {
+const EnterLeaveEventPlugin = {
   eventTypes: eventTypes,
 
   /**
@@ -51,13 +51,13 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
-    var win;
+    let win;
     if (nativeEventTarget.window === nativeEventTarget) {
       // `nativeEventTarget` is probably a window object.
       win = nativeEventTarget;
     } else {
       // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
-      var doc = nativeEventTarget.ownerDocument;
+      const doc = nativeEventTarget.ownerDocument;
       if (doc) {
         win = doc.defaultView || doc.parentWindow;
       } else {
@@ -65,14 +65,12 @@ var EnterLeaveEventPlugin = {
       }
     }
 
-    var from;
-    var to;
+    let from;
+    let to;
     if (topLevelType === 'topMouseOut') {
       from = targetInst;
-      var related = nativeEvent.relatedTarget || nativeEvent.toElement;
-      to = related
-        ? ReactDOMComponentTree.getClosestInstanceFromNode(related)
-        : null;
+      const related = nativeEvent.relatedTarget || nativeEvent.toElement;
+      to = related ? getClosestInstanceFromNode(related) : null;
     } else {
       // Moving to a node from outside the window.
       from = null;
@@ -84,14 +82,10 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
-    var fromNode = from == null
-      ? win
-      : ReactDOMComponentTree.getNodeFromInstance(from);
-    var toNode = to == null
-      ? win
-      : ReactDOMComponentTree.getNodeFromInstance(to);
+    const fromNode = from == null ? win : getNodeFromInstance(from);
+    const toNode = to == null ? win : getNodeFromInstance(to);
 
-    var leave = SyntheticMouseEvent.getPooled(
+    const leave = SyntheticMouseEvent.getPooled(
       eventTypes.mouseLeave,
       from,
       nativeEvent,
@@ -101,7 +95,7 @@ var EnterLeaveEventPlugin = {
     leave.target = fromNode;
     leave.relatedTarget = toNode;
 
-    var enter = SyntheticMouseEvent.getPooled(
+    const enter = SyntheticMouseEvent.getPooled(
       eventTypes.mouseEnter,
       to,
       nativeEvent,
@@ -111,10 +105,10 @@ var EnterLeaveEventPlugin = {
     enter.target = toNode;
     enter.relatedTarget = fromNode;
 
-    EventPropagators.accumulateEnterLeaveDispatches(leave, enter, from, to);
+    accumulateEnterLeaveDispatches(leave, enter, from, to);
 
     return [leave, enter];
   },
 };
 
-module.exports = EnterLeaveEventPlugin;
+export default EnterLeaveEventPlugin;

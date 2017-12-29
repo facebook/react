@@ -14,9 +14,9 @@ describe('ReactDOMOption', () => {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  var React;
-  var ReactDOM;
-  var ReactTestUtils;
+  let React;
+  let ReactDOM;
+  let ReactTestUtils;
 
   beforeEach(() => {
     React = require('react');
@@ -25,52 +25,69 @@ describe('ReactDOMOption', () => {
   });
 
   it('should flatten children to a string', () => {
-    var stub = <option>{1} {'foo'}</option>;
+    let stub = (
+      <option>
+        {1} {'foo'}
+      </option>
+    );
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = ReactDOM.findDOMNode(stub);
+    const node = ReactDOM.findDOMNode(stub);
 
     expect(node.innerHTML).toBe('1 foo');
   });
 
   it('should ignore and warn invalid children types', () => {
-    spyOn(console, 'error');
-    var el = <option>{1} <div /> {2}</option>;
-    var node = ReactTestUtils.renderIntoDocument(el);
+    spyOnDev(console, 'error');
+    const el = (
+      <option>
+        {1} <div /> {2}
+      </option>
+    );
+    const node = ReactTestUtils.renderIntoDocument(el);
     expect(node.innerHTML).toBe('1  2');
     ReactTestUtils.renderIntoDocument(el);
-    // only warn once
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(
-      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-    ).toContain(
-      '<div> cannot appear as a child of <option>.\n' +
-        '    in div (at **)\n' +
-        '    in option (at **)',
-    );
+    if (__DEV__) {
+      // only warn once
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+        '<div> cannot appear as a child of <option>.\n' +
+          '    in div (at **)\n' +
+          '    in option (at **)',
+      );
+    }
   });
 
   it('should ignore null/undefined/false children without warning', () => {
-    var stub = <option>{1} {false}{true}{null}{undefined} {2}</option>;
-    spyOn(console, 'error');
+    let stub = (
+      <option>
+        {1} {false}
+        {true}
+        {null}
+        {undefined} {2}
+      </option>
+    );
+    spyOnDev(console, 'error');
     stub = ReactTestUtils.renderIntoDocument(stub);
 
-    var node = ReactDOM.findDOMNode(stub);
+    const node = ReactDOM.findDOMNode(stub);
 
-    expectDev(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
     expect(node.innerHTML).toBe('1  2');
   });
 
   it('should be able to use dangerouslySetInnerHTML on option', () => {
-    var stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
+    let stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
 
-    var node = ReactDOM.findDOMNode(stub);
+    const node = ReactDOM.findDOMNode(stub);
     expect(node.innerHTML).toBe('foobar');
   });
 
   it('should set attribute for empty value', () => {
-    var container = document.createElement('div');
-    var option = ReactDOM.render(<option value="" />, container);
+    const container = document.createElement('div');
+    const option = ReactDOM.render(<option value="" />, container);
     expect(option.hasAttribute('value')).toBe(true);
     expect(option.getAttribute('value')).toBe('');
 
@@ -80,18 +97,18 @@ describe('ReactDOMOption', () => {
   });
 
   it('should allow ignoring `value` on option', () => {
-    var a = 'a';
-    var stub = (
+    const a = 'a';
+    let stub = (
       <select value="giraffe" onChange={() => {}}>
         <option>monkey</option>
         <option>gir{a}ffe</option>
         <option>gorill{a}</option>
       </select>
     );
-    var options = stub.props.children;
-    var container = document.createElement('div');
+    const options = stub.props.children;
+    const container = document.createElement('div');
     stub = ReactDOM.render(stub, container);
-    var node = ReactDOM.findDOMNode(stub);
+    const node = ReactDOM.findDOMNode(stub);
 
     expect(node.selectedIndex).toBe(1);
 

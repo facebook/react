@@ -3,27 +3,24 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule BeforeInputEventPlugin
  */
 
-'use strict';
+import type {TopLevelTypes} from './BrowserEventConstants';
 
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var FallbackCompositionState = require('FallbackCompositionState');
-var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
-var SyntheticInputEvent = require('SyntheticInputEvent');
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-import type {TopLevelTypes} from 'BrowserEventConstants';
+import * as FallbackCompositionState from './FallbackCompositionState';
+import SyntheticCompositionEvent from './SyntheticCompositionEvent';
+import SyntheticInputEvent from './SyntheticInputEvent';
 
-var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
-var START_KEYCODE = 229;
+const END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
+const START_KEYCODE = 229;
 
-var canUseCompositionEvent =
+const canUseCompositionEvent =
   ExecutionEnvironment.canUseDOM && 'CompositionEvent' in window;
 
-var documentMode = null;
+let documentMode = null;
 if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
   documentMode = document.documentMode;
 }
@@ -31,7 +28,7 @@ if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
 // Webkit offers a very useful `textInput` event that can be used to
 // directly represent `beforeInput`. The IE `textinput` event is not as
 // useful, so we don't use it.
-var canUseTextInputEvent =
+const canUseTextInputEvent =
   ExecutionEnvironment.canUseDOM &&
   'TextEvent' in window &&
   !documentMode &&
@@ -40,7 +37,7 @@ var canUseTextInputEvent =
 // In IE9+, we have access to composition events, but the data supplied
 // by the native compositionend event may be incorrect. Japanese ideographic
 // spaces, for instance (\u3000) are not recorded correctly.
-var useFallbackCompositionData =
+const useFallbackCompositionData =
   ExecutionEnvironment.canUseDOM &&
   (!canUseCompositionEvent ||
     (documentMode && documentMode > 8 && documentMode <= 11));
@@ -50,19 +47,20 @@ var useFallbackCompositionData =
  * text input events. Rely on keypress instead.
  */
 function isPresto() {
-  var opera = window.opera;
+  const opera = window.opera;
   return (
+    opera !== null &&
     typeof opera === 'object' &&
     typeof opera.version === 'function' &&
     parseInt(opera.version(), 10) <= 12
   );
 }
 
-var SPACEBAR_CODE = 32;
-var SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);
+const SPACEBAR_CODE = 32;
+const SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);
 
 // Events and their corresponding property names.
-var eventTypes = {
+const eventTypes = {
   beforeInput: {
     phasedRegistrationNames: {
       bubbled: 'onBeforeInput',
@@ -120,7 +118,7 @@ var eventTypes = {
 };
 
 // Track whether we've ever handled a keypress on the space key.
-var hasSpaceKeypress = false;
+let hasSpaceKeypress = false;
 
 /**
  * Return whether a native keypress event is assumed to be a command.
@@ -200,7 +198,7 @@ function isFallbackCompositionEnd(topLevelType, nativeEvent) {
  * @return {?string}
  */
 function getDataFromCustomEvent(nativeEvent) {
-  var detail = nativeEvent.detail;
+  const detail = nativeEvent.detail;
   if (typeof detail === 'object' && 'data' in detail) {
     return detail.data;
   }
@@ -208,7 +206,7 @@ function getDataFromCustomEvent(nativeEvent) {
 }
 
 // Track the current IME composition status, if any.
-var isComposing = false;
+let isComposing = false;
 
 /**
  * @return {?object} A SyntheticCompositionEvent.
@@ -219,8 +217,8 @@ function extractCompositionEvent(
   nativeEvent,
   nativeEventTarget,
 ) {
-  var eventType;
-  var fallbackData;
+  let eventType;
+  let fallbackData;
 
   if (canUseCompositionEvent) {
     eventType = getCompositionEventType(topLevelType);
@@ -248,7 +246,7 @@ function extractCompositionEvent(
     }
   }
 
-  var event = SyntheticCompositionEvent.getPooled(
+  const event = SyntheticCompositionEvent.getPooled(
     eventType,
     targetInst,
     nativeEvent,
@@ -260,13 +258,13 @@ function extractCompositionEvent(
     // This matches the property of native CompositionEventInterface.
     event.data = fallbackData;
   } else {
-    var customData = getDataFromCustomEvent(nativeEvent);
+    const customData = getDataFromCustomEvent(nativeEvent);
     if (customData !== null) {
       event.data = customData;
     }
   }
 
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 
@@ -294,7 +292,7 @@ function getNativeBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
        * To avoid this issue, use the keypress event as if no `textInput`
        * event is available.
        */
-      var which = nativeEvent.which;
+      const which = nativeEvent.which;
       if (which !== SPACEBAR_CODE) {
         return null;
       }
@@ -304,7 +302,7 @@ function getNativeBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
 
     case 'topTextInput':
       // Record the characters to be added to the DOM.
-      var chars = nativeEvent.data;
+      const chars = nativeEvent.data;
 
       // If it's a spacebar character, assume that we have already handled
       // it at the keypress level and bail immediately. Android Chrome
@@ -340,7 +338,7 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
       (!canUseCompositionEvent &&
         isFallbackCompositionEnd(topLevelType, nativeEvent))
     ) {
-      var chars = FallbackCompositionState.getData();
+      const chars = FallbackCompositionState.getData();
       FallbackCompositionState.reset();
       isComposing = false;
       return chars;
@@ -403,7 +401,7 @@ function extractBeforeInputEvent(
   nativeEvent,
   nativeEventTarget,
 ) {
-  var chars;
+  let chars;
 
   if (canUseTextInputEvent) {
     chars = getNativeBeforeInputChars(topLevelType, nativeEvent);
@@ -417,7 +415,7 @@ function extractBeforeInputEvent(
     return null;
   }
 
-  var event = SyntheticInputEvent.getPooled(
+  const event = SyntheticInputEvent.getPooled(
     eventTypes.beforeInput,
     targetInst,
     nativeEvent,
@@ -425,7 +423,7 @@ function extractBeforeInputEvent(
   );
 
   event.data = chars;
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 
@@ -447,7 +445,7 @@ function extractBeforeInputEvent(
  * allowing us to share composition fallback code for both `beforeInput` and
  * `composition` event types.
  */
-var BeforeInputEventPlugin = {
+const BeforeInputEventPlugin = {
   eventTypes: eventTypes,
 
   extractEvents: function(
@@ -456,21 +454,30 @@ var BeforeInputEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    return [
-      extractCompositionEvent(
-        topLevelType,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-      ),
-      extractBeforeInputEvent(
-        topLevelType,
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-      ),
-    ];
+    const composition = extractCompositionEvent(
+      topLevelType,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+    );
+
+    const beforeInput = extractBeforeInputEvent(
+      topLevelType,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+    );
+
+    if (composition === null) {
+      return beforeInput;
+    }
+
+    if (beforeInput === null) {
+      return composition;
+    }
+
+    return [composition, beforeInput];
   },
 };
 
-module.exports = BeforeInputEventPlugin;
+export default BeforeInputEventPlugin;

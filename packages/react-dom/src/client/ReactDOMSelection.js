@@ -3,32 +3,24 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMSelection
  */
 
-'use strict';
-
-var {TEXT_NODE} = require('HTMLNodeType');
-
-var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
-var getTextContentAccessor = require('getTextContentAccessor');
+import getNodeForCharacterOffset from './getNodeForCharacterOffset';
+import getTextContentAccessor from './getTextContentAccessor';
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * @param {DOMElement} outerNode
  * @return {?object}
  */
-function getModernOffsets(outerNode) {
-  var selection = window.getSelection && window.getSelection();
+export function getOffsets(outerNode) {
+  const selection = window.getSelection && window.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
     return null;
   }
 
-  var anchorNode = selection.anchorNode;
-  var anchorOffset = selection.anchorOffset;
-  var focusNode = selection.focusNode;
-  var focusOffset = selection.focusOffset;
+  const {anchorNode, anchorOffset, focusNode, focusOffset} = selection;
 
   // In Firefox, anchorNode and focusNode can be "anonymous divs", e.g. the
   // up/down buttons on an <input type="number">. Anonymous divs do not seem to
@@ -61,8 +53,10 @@ function getModernOffsets(outerNode) {
  * `end` is the index of (focusNode, focusOffset).
  *
  * Returns null if you pass in garbage input but we should probably just crash.
+ *
+ * Exported only for testing.
  */
-function getModernOffsetsFromPoints(
+export function getModernOffsetsFromPoints(
   outerNode,
   anchorNode,
   anchorOffset,
@@ -155,26 +149,26 @@ function getModernOffsetsFromPoints(
  * @param {DOMElement|DOMTextNode} node
  * @param {object} offsets
  */
-function setModernOffsets(node, offsets) {
+export function setOffsets(node, offsets) {
   if (!window.getSelection) {
     return;
   }
 
-  var selection = window.getSelection();
-  var length = node[getTextContentAccessor()].length;
-  var start = Math.min(offsets.start, length);
-  var end = offsets.end === undefined ? start : Math.min(offsets.end, length);
+  const selection = window.getSelection();
+  const length = node[getTextContentAccessor()].length;
+  let start = Math.min(offsets.start, length);
+  let end = offsets.end === undefined ? start : Math.min(offsets.end, length);
 
   // IE 11 uses modern selection, but doesn't support the extend method.
   // Flip backward selections, so we can set with a single range.
   if (!selection.extend && start > end) {
-    var temp = end;
+    let temp = end;
     end = start;
     start = temp;
   }
 
-  var startMarker = getNodeForCharacterOffset(node, start);
-  var endMarker = getNodeForCharacterOffset(node, end);
+  const startMarker = getNodeForCharacterOffset(node, start);
+  const endMarker = getNodeForCharacterOffset(node, end);
 
   if (startMarker && endMarker) {
     if (
@@ -186,7 +180,7 @@ function setModernOffsets(node, offsets) {
     ) {
       return;
     }
-    var range = document.createRange();
+    const range = document.createRange();
     range.setStart(startMarker.node, startMarker.offset);
     selection.removeAllRanges();
 
@@ -199,21 +193,3 @@ function setModernOffsets(node, offsets) {
     }
   }
 }
-
-var ReactDOMSelection = {
-  /**
-   * @param {DOMElement} node
-   */
-  getOffsets: getModernOffsets,
-
-  // For tests.
-  getModernOffsetsFromPoints: getModernOffsetsFromPoints,
-
-  /**
-   * @param {DOMElement|DOMTextNode} node
-   * @param {object} offsets
-   */
-  setOffsets: setModernOffsets,
-};
-
-module.exports = ReactDOMSelection;

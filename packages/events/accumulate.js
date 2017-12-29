@@ -4,13 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule accumulate
  * @flow
  */
 
-'use strict';
-
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Accumulates items that must not be null or undefined.
@@ -45,4 +42,4 @@ function accumulate<T>(
   return [current, next];
 }
 
-module.exports = accumulate;
+export default accumulate;

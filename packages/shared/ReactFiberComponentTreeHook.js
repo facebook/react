@@ -5,22 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- * @providesModule ReactFiberComponentTreeHook
  */
 
-'use strict';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var {
+import {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
-} = ReactTypeOfWork;
-var describeComponentFrame = require('describeComponentFrame');
-var getComponentName = require('getComponentName');
-
-import type {Fiber} from 'ReactFiber';
+} from './ReactTypeOfWork';
+import describeComponentFrame from './describeComponentFrame';
+import getComponentName from './getComponentName';
 
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
@@ -28,10 +24,10 @@ function describeFiber(fiber: Fiber): string {
     case FunctionalComponent:
     case ClassComponent:
     case HostComponent:
-      var owner = fiber._debugOwner;
-      var source = fiber._debugSource;
-      var name = getComponentName(fiber);
-      var ownerName = null;
+      const owner = fiber._debugOwner;
+      const source = fiber._debugSource;
+      const name = getComponentName(fiber);
+      let ownerName = null;
       if (owner) {
         ownerName = getComponentName(owner);
       }
@@ -44,9 +40,11 @@ function describeFiber(fiber: Fiber): string {
 // This function can only be called with a work-in-progress fiber and
 // only during begin or complete phase. Do not call it under any other
 // circumstances.
-function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
-  var info = '';
-  var node = workInProgress;
+export function getStackAddendumByWorkInProgressFiber(
+  workInProgress: Fiber,
+): string {
+  let info = '';
+  let node = workInProgress;
   do {
     info += describeFiber(node);
     // Otherwise this return pointer might point to the wrong tree:
@@ -54,7 +52,3 @@ function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
   } while (node);
   return info;
 }
-
-module.exports = {
-  getStackAddendumByWorkInProgressFiber,
-};

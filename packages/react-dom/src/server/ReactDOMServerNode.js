@@ -5,18 +5,19 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import ReactVersion from 'shared/ReactVersion';
 
-var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
-var ReactDOMNodeStreamRenderer = require('ReactDOMNodeStreamRenderer');
-var ReactVersion = require('ReactVersion');
+import {renderToString, renderToStaticMarkup} from './ReactDOMStringRenderer';
+import {
+  renderToNodeStream,
+  renderToStaticNodeStream,
+} from './ReactDOMNodeStreamRenderer';
 
-require('ReactDOMInjection');
-
-module.exports = {
-  renderToString: ReactDOMStringRenderer.renderToString,
-  renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
-  renderToNodeStream: ReactDOMNodeStreamRenderer.renderToNodeStream,
-  renderToStaticNodeStream: ReactDOMNodeStreamRenderer.renderToStaticNodeStream,
+// Note: when changing this, also consider https://github.com/facebook/react/issues/11526
+export default {
+  renderToString,
+  renderToStaticMarkup,
+  renderToNodeStream,
+  renderToStaticNodeStream,
   version: ReactVersion,
 };

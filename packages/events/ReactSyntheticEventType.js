@@ -5,14 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *
  * Flow type for SyntheticEvent class that includes private properties
- *
- * @providesModule ReactSyntheticEventType
  * @flow
  */
 
-'use strict';
-
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 export type DispatchConfig = {
   dependencies: Array<string>,
@@ -31,4 +27,5 @@ export type ReactSyntheticEvent = {
     nativeTarget: Event,
     nativeEventTarget: EventTarget,
   ) => ReactSyntheticEvent,
+  isPersistent: () => boolean,
 } & SyntheticEvent<>;

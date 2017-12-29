@@ -15,9 +15,9 @@ import PropTypes = require('prop-types');
 
 // Before Each
 
-var container;
-var attachedListener = null;
-var renderedName = null;
+let container;
+let attachedListener = null;
+let renderedName = null;
 
 class Inner extends React.Component {
   getName() {
@@ -31,7 +31,7 @@ class Inner extends React.Component {
 }
 
 function test(element, expectedTag, expectedClassName) {
-  var instance = ReactDOM.render(element, container);
+  const instance = ReactDOM.render(element, container);
   expect(container.firstChild).not.toBeNull();
   expect(container.firstChild.tagName).toBe(expectedTag);
   expect(container.firstChild.className).toBe(expectedClassName);
@@ -93,7 +93,7 @@ class StateBasedOnContext extends React.Component {
     className: this.context.className
   };
   render() {
-    var Tag = this.state.tag;
+    const Tag = this.state.tag;
     return React.createElement(Tag, {className: this.state.className});
   }
 }
@@ -112,7 +112,7 @@ class ProvideChildContextTypes extends React.Component {
 }
 
 // it renders only once when setting state in componentWillMount
-var renderCount = 0;
+let renderCount = 0;
 class RenderOnce extends React.Component {
   state = {
     bar: this.props.initialValue
@@ -205,7 +205,7 @@ class ForceUpdateWithNoState extends React.Component {
 }
 
 // it will call all the normal life cycle methods
-var lifeCycles = [];
+let lifeCycles = [];
 class NormalLifeCycles extends React.Component {
   props : any;
   state = {};
@@ -238,8 +238,8 @@ class NormalLifeCycles extends React.Component {
 
 // warns when classic properties are defined on the instance,
 // but does not invoke them.
-var getInitialStateWasCalled = false;
-var getDefaultPropsWasCalled = false;
+let getInitialStateWasCalled = false;
+let getDefaultPropsWasCalled = false;
 class ClassicProperties extends React.Component {
   contextTypes = {};
   propTypes = {};
@@ -315,15 +315,17 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('throws if no render function is defined', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     expect(() => ReactDOM.render(React.createElement(Empty), container)).toThrow();
 
-    expect((<any>console.error).calls.count()).toBe(1);
-    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
-      'Warning: Empty(...): No `render` method found on the returned ' +
-      'component instance: you may have forgotten to define `render`.'
-    );
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(1);
+      expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+        'Warning: Empty(...): No `render` method found on the returned ' +
+        'component instance: you may have forgotten to define `render`.'
+      );
+    }
   });
 
   it('renders a simple stateless component with prop', function() {
@@ -340,7 +342,7 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('renders based on state using props in the constructor', function() {
-    var instance = test(
+    const instance = test(
       React.createElement(StateBasedOnProps, {initialValue: 'foo'}),
       'DIV',
       'foo'
@@ -359,19 +361,32 @@ describe('ReactTypeScriptClass', function() {
     expect(renderCount).toBe(1);
   });
 
-  it('should throw with non-object in the initial state property', function() {
-    expect(() => test(React.createElement(ArrayState), 'span', ''))
-    .toThrowError(
-      'ArrayState.state: must be set to an object or null'
-    );
-    expect(() => test(React.createElement(StringState), 'span', ''))
-    .toThrowError(
-      'StringState.state: must be set to an object or null'
-    );
-    expect(() => test(React.createElement(NumberState), 'span', ''))
-    .toThrowError(
-      'NumberState.state: must be set to an object or null'
-    );
+  it('should warn with non-object in the initial state property', function() {
+    spyOnDev(console, 'error');
+    test(React.createElement(ArrayState), 'SPAN', '');
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(1);
+      expect((<any>console.error).calls.argsFor(0)[0]).toContain(
+        'ArrayState.state: must be set to an object or null'
+      );
+      (<any>console.error).calls.reset()
+    }
+    test(React.createElement(StringState), 'SPAN', '');
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(1);
+      expect((<any>console.error).calls.argsFor(0)[0]).toContain(
+        'StringState.state: must be set to an object or null'
+      );
+      (<any>console.error).calls.reset()
+    }
+    test(React.createElement(NumberState), 'SPAN', '');
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(1);
+      expect((<any>console.error).calls.argsFor(0)[0]).toContain(
+        'NumberState.state: must be set to an object or null'
+      );
+      (<any>console.error).calls.reset()
+    }
   });
 
   it('should render with null in the initial state property', function() {
@@ -431,32 +446,35 @@ describe('ReactTypeScriptClass', function() {
 
   it('warns when classic properties are defined on the instance, ' +
      'but does not invoke them.', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     getInitialStateWasCalled = false;
     getDefaultPropsWasCalled = false;
     test(React.createElement(ClassicProperties), 'SPAN', 'foo');
     expect(getInitialStateWasCalled).toBe(false);
     expect(getDefaultPropsWasCalled).toBe(false);
-    expect((<any>console.error).calls.count()).toBe(4);
-    expect((<any>console.error).calls.argsFor(0)[0]).toContain(
-      'getInitialState was defined on ClassicProperties, ' +
-      'a plain JavaScript class.'
-    );
-    expect((<any>console.error).calls.argsFor(1)[0]).toContain(
-      'getDefaultProps was defined on ClassicProperties, ' +
-      'a plain JavaScript class.'
-    );
-    expect((<any>console.error).calls.argsFor(2)[0]).toContain(
-      'propTypes was defined as an instance property on ClassicProperties.'
-    );
-    expect((<any>console.error).calls.argsFor(3)[0]).toContain(
-      'contextTypes was defined as an instance property on ClassicProperties.'
-    );
+
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(4);
+      expect((<any>console.error).calls.argsFor(0)[0]).toContain(
+        'getInitialState was defined on ClassicProperties, ' +
+        'a plain JavaScript class.'
+      );
+      expect((<any>console.error).calls.argsFor(1)[0]).toContain(
+        'getDefaultProps was defined on ClassicProperties, ' +
+        'a plain JavaScript class.'
+      );
+      expect((<any>console.error).calls.argsFor(2)[0]).toContain(
+        'propTypes was defined as an instance property on ClassicProperties.'
+      );
+      expect((<any>console.error).calls.argsFor(3)[0]).toContain(
+        'contextTypes was defined as an instance property on ClassicProperties.'
+      );
+    }
   });
 
   it('does not warn about getInitialState() on class components ' +
      'if state is also defined.', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Example extends React.Component {
       state = {};
@@ -469,51 +487,59 @@ describe('ReactTypeScriptClass', function() {
     }
 
     test(React.createElement(Example), 'SPAN', 'foo');
-    expect((<any>console.error).calls.count()).toBe(0);
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(0);
+    }
   });
 
   it('should warn when misspelling shouldComponentUpdate', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     test(React.createElement(MisspelledComponent1), 'SPAN', 'foo');
 
-    expect((<any>console.error).calls.count()).toBe(1);
-    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
-      'Warning: ' +
-      'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
-      'you mean shouldComponentUpdate()? The name is phrased as a question ' +
-      'because the function is expected to return a value.'
-    );
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(1);
+      expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+        'Warning: ' +
+        'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
+        'you mean shouldComponentUpdate()? The name is phrased as a question ' +
+        'because the function is expected to return a value.'
+      );
+    }
   });
 
   it('should warn when misspelling componentWillReceiveProps', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     test(React.createElement(MisspelledComponent2), 'SPAN', 'foo');
 
-    expect((<any>console.error).calls.count()).toBe(1);
-    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
-      'Warning: ' +
-      'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
-      'Did you mean componentWillReceiveProps()?'
-    );
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(1);
+      expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+        'Warning: ' +
+        'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
+        'Did you mean componentWillReceiveProps()?'
+      );
+    }
   });
 
   it('should throw AND warn when trying to access classic APIs', function() {
-    spyOn(console, 'warn');
-    var instance = test(
+    spyOnDev(console, 'warn');
+    const instance = test(
       React.createElement(Inner, {name: 'foo'}),
       'DIV','foo'
     );
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
-    expect((<any>console.warn).calls.count()).toBe(2);
-    expect((<any>console.warn).calls.argsFor(0)[0]).toContain(
-      'replaceState(...) is deprecated in plain JavaScript React classes'
-    );
-    expect((<any>console.warn).calls.argsFor(1)[0]).toContain(
-      'isMounted(...) is deprecated in plain JavaScript React classes'
-    );
+    if (__DEV__) {
+      expect((<any>console.warn).calls.count()).toBe(2);
+      expect((<any>console.warn).calls.argsFor(0)[0]).toContain(
+        'replaceState(...) is deprecated in plain JavaScript React classes'
+      );
+      expect((<any>console.warn).calls.argsFor(1)[0]).toContain(
+        'isMounted(...) is deprecated in plain JavaScript React classes'
+      );
+    }
   });
 
   it('supports this.context passed via getChildContext', function() {
@@ -521,17 +547,17 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('supports classic refs', function() {
-    var instance = test(React.createElement(ClassicRefs), 'DIV', 'foo');
+    const instance = test(React.createElement(ClassicRefs), 'DIV', 'foo');
     expect(instance.refs.inner.getName()).toBe('foo');
   });
 
   it('supports drilling through to the DOM using findDOMNode', function() {
-    var instance = test(
+    const instance = test(
       React.createElement(Inner, {name: 'foo'}),
       'DIV',
       'foo'
     );
-    var node = ReactDOM.findDOMNode(instance);
+    const node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
   });
 

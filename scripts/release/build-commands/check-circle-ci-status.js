@@ -34,7 +34,8 @@ const check = async ({cwd}) => {
       chalk`
       CircleCI failed
       
-      {white The most recent CircleCI build has a status of {red.bold ${outcome || status}}}
+      {white The most recent CircleCI build has a status of {red.bold ${outcome ||
+        status}}}
       {white Please retry this build in CircleCI if you believe this is an error.}
     `
     );

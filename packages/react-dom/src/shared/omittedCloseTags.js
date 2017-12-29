@@ -3,16 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule omittedCloseTags
  */
-
-'use strict';
 
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
 // those special-case tags.
 
-var omittedCloseTags = {
+const omittedCloseTags = {
   area: true,
   base: true,
   br: true,
@@ -31,4 +27,4 @@ var omittedCloseTags = {
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
-module.exports = omittedCloseTags;
+export default omittedCloseTags;

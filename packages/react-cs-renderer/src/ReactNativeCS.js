@@ -7,46 +7,43 @@
  * @flow
  */
 
-'use strict';
+import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNativeCSType} from './ReactNativeCSTypes';
 
-const ReactGenericBatching = require('ReactGenericBatching');
-const ReactVersion = require('ReactVersion');
+// Provided by CS:
+import {CSStatefulComponent} from 'CSStatefulComponent';
 
-const {injectInternals} = require('ReactFiberDevToolsHook');
+import ReactFiberReconciler from 'react-reconciler';
+import ReactVersion from 'shared/ReactVersion';
 
-import type {ReactNativeCSType} from 'ReactNativeCSTypes';
+const emptyObject = {};
 
-const ReactFiberReconciler = require('react-reconciler');
+type Container = {
+  pendingChild: null | Instance | TextInstance,
+};
+type InstanceProps = Props & {children: Array<Instance>};
+type Instance = {
+  props: InstanceProps,
+  options: {key: string, ref: null},
+  data: {type: 'NATIVE', name: string},
+};
+type Props = Object;
+type TextInstance = Instance;
 
-const emptyObject = require('fbjs/lib/emptyObject');
+// We currently don't actually return a new state. We only use state updaters to trigger a
+// rerender. Therefore our state updater is the identity functions. When we later deal
+// with sync scheduling and aborted renders, we will need to update the state in render.
+const identityUpdater = state => state;
+// We currently don't have a hook for aborting render. Will add one once it is in place
+// in React Native proper.
+const infiniteDeadline = {
+  timeRemaining: function() {
+    return Infinity;
+  },
+};
 
-export type Container = number;
-export type Instance = number;
-export type Props = Object;
-export type TextInstance = number;
-
-function processProps(instance: number, props: Props): Object {
-  const propsPayload = {};
-  for (var key in props) {
-    if (key === 'children') {
-      // Skip special case.
-      continue;
-    }
-    var value = props[key];
-    if (typeof value === 'function') {
-      value = {
-        style: 'rt-event',
-        event: key,
-        tag: instance,
-      };
-    }
-    propsPayload[key] = value;
-  }
-  return propsPayload;
-}
-
-function arePropsEqual(oldProps: Props, newProps: Props): boolean {
-  var key;
+const arePropsEqual = (oldProps: Props, newProps: Props): boolean => {
+  let key;
   for (key in newProps) {
     if (key === 'children') {
       // Skip special case.
@@ -66,13 +63,28 @@ function arePropsEqual(oldProps: Props, newProps: Props): boolean {
     }
   }
   return true;
-}
+};
+
+// React doesn't expose its full keypath. To manage lifetime of instances, we instead use IDs.
+let nextComponentKey = 0;
+
+// Callback. Currently this is global. TODO: This should be per root.
+let scheduledCallback = null;
+// Updater. This is the CS updater we use to trigger the update. TODO: This should be per root.
+let scheduleUpdate = null;
 
 const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
-  ): void {},
+  ): void {
+    if (parentInstance.props) {
+      parentInstance.props.children.push(child);
+    } else {
+      // CSCustom
+      (parentInstance: any).children.push(child);
+    }
+  },
 
   createInstance(
     type: string,
@@ -81,7 +93,21 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): Instance {
-    return 0;
+    let key = '' + nextComponentKey++;
+    let ref = null; // TODO: Always create Ref object so that getPublicInstance can use it.
+    // We need a new props object so that we can represent flattened children.
+    let newProps = Object.assign({}, props);
+    newProps.children = [];
+    if (type === 'CSCustom') {
+      // Special cased type that treats the props as the object.
+      // Useful for custom children types like FlexItem.
+      return newProps;
+    }
+    return {
+      props: newProps,
+      options: {key, ref},
+      data: {type: 'NATIVE', name: type},
+    };
   },
 
   createTextInstance(
@@ -90,7 +116,8 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): TextInstance {
-    return 0;
+    // Could auto-translate to CSText with some host context defined attributes.
+    throw new Error('Not yet implemented.');
   },
 
   finalizeInitialChildren(
@@ -110,8 +137,8 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     return emptyObject;
   },
 
-  getPublicInstance(instance) {
-    return instance;
+  getPublicInstance(instance: Instance) {
+    return instance.options.ref;
   },
 
   prepareForCommit(): void {},
@@ -123,11 +150,11 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     newProps: Props,
     rootContainerInstance: Container,
     hostContext: {},
-  ): null | Object {
+  ): null | InstanceProps {
     if (arePropsEqual(oldProps, newProps)) {
       return null;
     }
-    return processProps(instance, newProps);
+    return Object.assign({}, newProps);
   },
 
   resetAfterCommit(): void {},
@@ -136,14 +163,26 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     return false;
   },
 
-  scheduleDeferredCallback: global.requestIdleCallback,
+  scheduleDeferredCallback(callback) {
+    scheduledCallback = callback;
+    if (scheduleUpdate !== null) {
+      scheduleUpdate(identityUpdater);
+    }
+    return 0;
+  },
+
+  cancelDeferredCallback() {
+    // Noop. This is always called right before scheduling a new update, so
+    // should be fine. This renderer won't use requestIdleCallback, anyway.
+    // Will switch to use shouldYield() API instead.
+  },
 
   shouldSetTextContent(type: string, props: Props): boolean {
     // TODO: Figure out when we should allow text content.
     return false;
   },
 
-  useSyncScheduling: true,
+  useSyncScheduling: false,
 
   now(): number {
     // TODO: Enable expiration by implementing this method.
@@ -153,7 +192,7 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   persistence: {
     cloneInstance(
       instance: Instance,
-      updatePayload: null | Object,
+      updatePayload: null | InstanceProps,
       type: string,
       oldProps: Props,
       newProps: Props,
@@ -161,70 +200,109 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
       keepChildren: boolean,
       recyclableInstance: null | Instance,
     ): Instance {
-      return 0;
+      let newInstanceProps = updatePayload;
+      if (newInstanceProps === null) {
+        newInstanceProps = Object.assign({}, newProps);
+      }
+      // We need a new props object so that we can represent flattened children.
+      newInstanceProps.children = keepChildren ? instance.props.children : [];
+      if (type === 'CSCustom') {
+        return newInstanceProps;
+      }
+      return {
+        props: newInstanceProps,
+        options: instance.options,
+        data: instance.data,
+      };
     },
 
-    createContainerChildSet(
-      container: Container,
-    ): Array<Instance | TextInstance> {
-      return [];
+    createContainerChildSet(container: Container): Container {
+      // We'll only ever have one instance in the container.
+      container.pendingChild = null;
+      return container;
     },
 
     appendChildToContainerChildSet(
-      childSet: Array<Instance | TextInstance>,
+      childSet: Container,
       child: Instance | TextInstance,
-    ): void {},
+    ): void {
+      if (childSet.pendingChild !== null) {
+        throw new Error(
+          'CSReact does not support top level fragments. Wrap it in a primitve.',
+        );
+      }
+      childSet.pendingChild = child;
+    },
 
     finalizeContainerChildren(
       container: Container,
-      newChildren: Array<Instance | TextInstance>,
+      newChildren: Container,
     ): void {},
 
     replaceContainerChildren(
       container: Container,
-      newChildren: Array<Instance | TextInstance>,
+      newChildren: Container,
     ): void {},
   },
 });
 
-const roots = new Map();
-
-const ReactNativeCSFiber: ReactNativeCSType = {
-  render(element: React$Element<any>, containerTag: any, callback: ?Function) {
-    let root = roots.get(containerTag);
-
-    if (!root) {
-      // TODO (bvaughn): If we decide to keep the wrapper component,
-      // We could create a wrapper for containerTag as well to reduce special casing.
-      root = ReactNativeCSFiberRenderer.createContainer(containerTag, false);
-      roots.set(containerTag, root);
-    }
-    ReactNativeCSFiberRenderer.updateContainer(element, root, null, callback);
-
-    return ReactNativeCSFiberRenderer.getPublicRootInstance(root);
-  },
-
-  unmountComponentAtNode(containerTag: number) {
-    const root = roots.get(containerTag);
-    if (root) {
-      // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
-      ReactNativeCSFiberRenderer.updateContainer(null, root, null, () => {
-        roots.delete(containerTag);
-      });
-    }
-  },
-
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
-
-  flushSync: ReactNativeCSFiberRenderer.flushSync,
-};
-
-injectInternals({
-  findHostInstanceByFiber: ReactNativeCSFiberRenderer.findHostInstance,
-  // This is an enum because we may add more (e.g. profiler build)
+ReactNativeCSFiberRenderer.injectIntoDevTools({
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-cs-renderer',
 });
 
-module.exports = ReactNativeCSFiber;
+type ReactCSProps = {children: ReactNodeList};
+type ReactCSState = {
+  root: Object,
+  container: {
+    pendingChild: null | Instance | TextInstance,
+  },
+};
+
+const ReactCS = CSStatefulComponent({
+  getInitialState({props}: {props: ReactCSProps}): ReactCSState {
+    let container = {
+      pendingChild: null,
+    };
+    let root = ReactNativeCSFiberRenderer.createContainer(
+      container,
+      false,
+      false,
+    );
+    return {root, container};
+  },
+  render({
+    props,
+    state,
+    stateUpdater,
+  }: {
+    props: ReactCSProps,
+    state: ReactCSState,
+    stateUpdater: (update: (oldState: ReactCSState) => ReactCSState) => void,
+  }) {
+    scheduleUpdate = stateUpdater;
+    // TODO: For a props rerender updateContainer will schedule an additional state
+    // update even though it is not necessary since we're already rendering.
+    // We should only call scheduleUpdate for a React setState, not a top level
+    // props update.
+    ReactNativeCSFiberRenderer.updateContainer(
+      props.children,
+      state.root,
+      null,
+      null,
+    );
+    if (scheduledCallback) {
+      const callback = scheduledCallback;
+      scheduledCallback = null;
+      callback(infiniteDeadline);
+    }
+    return state.container.pendingChild;
+  },
+  getInstance({state}: {state: ReactCSState}) {
+    return ReactNativeCSFiberRenderer.getPublicRootInstance(state.root);
+  },
+  // TODO: Unmount hook. E.g. finalizer.
+});
+
+export default (ReactCS: ReactNativeCSType);

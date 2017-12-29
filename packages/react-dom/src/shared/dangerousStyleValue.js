@@ -3,15 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule dangerousStyleValue
  */
 
-'use strict';
-
-var CSSProperty = require('CSSProperty');
-
-var isUnitlessNumber = CSSProperty.isUnitlessNumber;
+import {isUnitlessNumber} from './CSSProperty';
 
 /**
  * Convert a value into the proper css writable value. The style name `name`
@@ -33,7 +27,7 @@ function dangerousStyleValue(name, value, isCustomProperty) {
   // which has lead to a greater discussion about how we're going to
   // trust URLs moving forward. See #2115901
 
-  var isEmpty = value == null || typeof value === 'boolean' || value === '';
+  const isEmpty = value == null || typeof value === 'boolean' || value === '';
   if (isEmpty) {
     return '';
   }
@@ -50,4 +44,4 @@ function dangerousStyleValue(name, value, isCustomProperty) {
   return ('' + value).trim();
 }
 
-module.exports = dangerousStyleValue;
+export default dangerousStyleValue;

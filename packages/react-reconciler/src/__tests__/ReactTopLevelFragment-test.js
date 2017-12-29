@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React;
-var ReactNoop;
+let React;
+let ReactNoop;
 
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
@@ -30,7 +30,7 @@ describe('ReactTopLevelFragment', function() {
   });
 
   it('should preserve state when switching from a single child', function() {
-    var instance = null;
+    let instance = null;
 
     class Stateful extends React.Component {
       render() {
@@ -40,27 +40,29 @@ describe('ReactTopLevelFragment', function() {
     }
 
     function Fragment({condition}) {
-      return condition
-        ? <Stateful key="a" />
-        : [<Stateful key="a" />, <div key="b">World</div>];
+      return condition ? (
+        <Stateful key="a" />
+      ) : (
+        [<Stateful key="a" />, <div key="b">World</div>]
+      );
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
 
-    var instanceA = instance;
+    const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    var instanceB = instance;
+    const instanceB = instance;
 
     expect(instanceB).toBe(instanceA);
   });
 
   it('should not preserve state when switching to a nested array', function() {
-    var instance = null;
+    let instance = null;
 
     class Stateful extends React.Component {
       render() {
@@ -70,27 +72,29 @@ describe('ReactTopLevelFragment', function() {
     }
 
     function Fragment({condition}) {
-      return condition
-        ? <Stateful key="a" />
-        : [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />];
+      return condition ? (
+        <Stateful key="a" />
+      ) : (
+        [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />]
+      );
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
 
-    var instanceA = instance;
+    const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    var instanceB = instance;
+    const instanceB = instance;
 
     expect(instanceB).not.toBe(instanceA);
   });
 
   it('preserves state if an implicit key slot switches from/to null', function() {
-    var instance = null;
+    let instance = null;
 
     class Stateful extends React.Component {
       render() {
@@ -107,27 +111,27 @@ describe('ReactTopLevelFragment', function() {
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
 
-    var instanceA = instance;
+    const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    var instanceB = instance;
+    const instanceB = instance;
 
     expect(instanceB).toBe(instanceA);
 
     ReactNoop.render(<Fragment condition={false} />);
     ReactNoop.flush();
 
-    var instanceC = instance;
+    const instanceC = instance;
 
     expect(instanceC === instanceA).toBe(true);
   });
 
   it('should preserve state in a reorder', function() {
-    var instance = null;
+    let instance = null;
 
     class Stateful extends React.Component {
       render() {
@@ -144,14 +148,14 @@ describe('ReactTopLevelFragment', function() {
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
 
-    var instanceA = instance;
+    const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    var instanceB = instance;
+    const instanceB = instance;
 
     expect(instanceB).toBe(instanceA);
   });

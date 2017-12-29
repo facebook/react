@@ -9,7 +9,7 @@
 
 // Mock of the Native Hooks
 
-var RCTRTManager = {
+const RCTRTManager = {
   createNode: jest.fn(function createView(tag, classType, props) {}),
   beginUpdates: jest.fn(function beginUpdates() {}),
   appendChildToContext: jest.fn(function appendChildToContext(

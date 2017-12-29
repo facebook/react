@@ -3,35 +3,40 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule EventPropagators
  */
 
-'use strict';
+import {
+  getParentInstance,
+  traverseTwoPhase,
+  traverseEnterLeave,
+} from 'shared/ReactTreeTraversal';
+import warning from 'fbjs/lib/warning';
 
-var EventPluginHub = require('EventPluginHub');
-var ReactTreeTraversal = require('ReactTreeTraversal');
-
-var accumulateInto = require('accumulateInto');
-var forEachAccumulated = require('forEachAccumulated');
+import {getListener} from './EventPluginHub';
+import accumulateInto from './accumulateInto';
+import forEachAccumulated from './forEachAccumulated';
 
 type PropagationPhases = 'bubbled' | 'captured';
-
-var getListener = EventPluginHub.getListener;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 /**
  * Some event types have a notion of different registration names for different
  * "phases" of propagation. This finds listeners by a given phase.
  */
 function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
-  var registrationName =
+  const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListener(inst, registrationName);
 }
+
+/**
+ * A small set of propagation patterns, each of which will accept a small amount
+ * of information, and generate a set of "dispatch ready event objects" - which
+ * are sets of events that have already been annotated with a set of dispatched
+ * listener functions/ids. The API is designed this way to discourage these
+ * propagation strategies from actually executing the dispatches, since we
+ * always want to collect the entire set of dispatches before executing even a
+ * single one.
+ */
 
 /**
  * Tags a `SyntheticEvent` with dispatched listeners. Creating this function
@@ -43,7 +48,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
   if (__DEV__) {
     warning(inst, 'Dispatching inst must not be null');
   }
-  var listener = listenerAtPhase(inst, event, phase);
+  const listener = listenerAtPhase(inst, event, phase);
   if (listener) {
     event._dispatchListeners = accumulateInto(
       event._dispatchListeners,
@@ -62,11 +67,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
  */
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    ReactTreeTraversal.traverseTwoPhase(
-      event._targetInst,
-      accumulateDirectionalDispatches,
-      event,
-    );
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
   }
 }
 
@@ -75,15 +76,9 @@ function accumulateTwoPhaseDispatchesSingle(event) {
  */
 function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    var targetInst = event._targetInst;
-    var parentInst = targetInst
-      ? ReactTreeTraversal.getParentInstance(targetInst)
-      : null;
-    ReactTreeTraversal.traverseTwoPhase(
-      parentInst,
-      accumulateDirectionalDispatches,
-      event,
-    );
+    const targetInst = event._targetInst;
+    const parentInst = targetInst ? getParentInstance(targetInst) : null;
+    traverseTwoPhase(parentInst, accumulateDirectionalDispatches, event);
   }
 }
 
@@ -94,8 +89,8 @@ function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
  */
 function accumulateDispatches(inst, ignoredDirection, event) {
   if (inst && event && event.dispatchConfig.registrationName) {
-    var registrationName = event.dispatchConfig.registrationName;
-    var listener = getListener(inst, registrationName);
+    const registrationName = event.dispatchConfig.registrationName;
+    const listener = getListener(inst, registrationName);
     if (listener) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,
@@ -117,44 +112,18 @@ function accumulateDirectDispatchesSingle(event) {
   }
 }
 
-function accumulateTwoPhaseDispatches(events) {
+export function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
 
-function accumulateTwoPhaseDispatchesSkipTarget(events) {
+export function accumulateTwoPhaseDispatchesSkipTarget(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
 }
 
-function accumulateEnterLeaveDispatches(leave, enter, from, to) {
-  ReactTreeTraversal.traverseEnterLeave(
-    from,
-    to,
-    accumulateDispatches,
-    leave,
-    enter,
-  );
+export function accumulateEnterLeaveDispatches(leave, enter, from, to) {
+  traverseEnterLeave(from, to, accumulateDispatches, leave, enter);
 }
 
-function accumulateDirectDispatches(events) {
+export function accumulateDirectDispatches(events) {
   forEachAccumulated(events, accumulateDirectDispatchesSingle);
 }
-
-/**
- * A small set of propagation patterns, each of which will accept a small amount
- * of information, and generate a set of "dispatch ready event objects" - which
- * are sets of events that have already been annotated with a set of dispatched
- * listener functions/ids. The API is designed this way to discourage these
- * propagation strategies from actually executing the dispatches, since we
- * always want to collect the entire set of dispatches before executing even a
- * single one.
- *
- * @constructor EventPropagators
- */
-var EventPropagators = {
-  accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
-  accumulateTwoPhaseDispatchesSkipTarget: accumulateTwoPhaseDispatchesSkipTarget,
-  accumulateDirectDispatches: accumulateDirectDispatches,
-  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
-};
-
-module.exports = EventPropagators;

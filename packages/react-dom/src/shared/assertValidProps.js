@@ -3,20 +3,14 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule assertValidProps
  */
 
-'use strict';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-var invariant = require('fbjs/lib/invariant');
-var voidElementTags = require('voidElementTags');
+import voidElementTags from './voidElementTags';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
-
-var HTML = '__html';
+const HTML = '__html';
 
 function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
   if (!props) {
@@ -66,4 +60,4 @@ function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
   );
 }
 
-module.exports = assertValidProps;
+export default assertValidProps;

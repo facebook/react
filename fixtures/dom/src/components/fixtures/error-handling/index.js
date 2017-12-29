@@ -134,9 +134,9 @@ export default class ErrorHandlingTestCases extends React.Component {
           </TestCase.Steps>
           <TestCase.ExpectedResult>
             The "Trigger error" button should be replaced with "Captured an
-            error: A cross-origin error was thrown [...]". The actual error message should
-            be logged to the console: "Uncaught Error: Expected true to
-            be false".
+            error: A cross-origin error was thrown [...]". The actual error
+            message should be logged to the console: "Uncaught Error: Expected
+            true to be false".
           </TestCase.ExpectedResult>
           <Example
             buttonText="Trigger cross-origin error"
@@ -154,7 +154,8 @@ export default class ErrorHandlingTestCases extends React.Component {
             <li>Click the "Trigger render error and catch" button</li>
           </TestCase.Steps>
           <TestCase.ExpectedResult>
-            Open the console. "Uncaught Error: Caught error" should have been logged by the browser.
+            Open the console. "Uncaught Error: Caught error" should have been
+            logged by the browser.
           </TestCase.ExpectedResult>
           <TriggerErrorAndCatch />
         </TestCase>

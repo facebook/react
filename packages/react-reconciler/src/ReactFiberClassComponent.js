@@ -4,45 +4,49 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberClassComponent
  * @flow
  */
 
-'use strict';
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import {Update} from 'shared/ReactTypeOfSideEffect';
+import {
+  debugRenderPhaseSideEffects,
+  enableAsyncSubtreeAPI,
+} from 'shared/ReactFeatureFlags';
+import {isMounted} from 'react-reconciler/reflection';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import emptyObject from 'fbjs/lib/emptyObject';
+import getComponentName from 'shared/getComponentName';
+import shallowEqual from 'fbjs/lib/shallowEqual';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-var {Update} = require('ReactTypeOfSideEffect');
-
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var {AsyncUpdates} = require('ReactTypeOfInternalContext');
-
-var {
+import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
+import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
   isContextConsumer,
-} = require('ReactFiberContext');
-var {
+} from './ReactFiberContext';
+import {
   insertUpdateIntoFiber,
   processUpdateQueue,
-} = require('ReactFiberUpdateQueue');
-var {hasContextChanged} = require('ReactFiberContext');
-var {isMounted} = require('ReactFiberTreeReflection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('getComponentName');
-var shallowEqual = require('fbjs/lib/shallowEqual');
-var invariant = require('fbjs/lib/invariant');
+} from './ReactFiberUpdateQueue';
+import {hasContextChanged} from './ReactFiberContext';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
+let didWarnAboutStateAssignmentForComponent;
+let warnOnInvalidCallback;
+
 if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
-  var warning = require('fbjs/lib/warning');
-  var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
+  didWarnAboutStateAssignmentForComponent = {};
+
+  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
       '%s(...): Expected the last optional `callback` argument to be a ' +
@@ -74,7 +78,7 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-module.exports = function(
+export default function(
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
@@ -162,16 +166,17 @@ module.exports = function(
     const instance = workInProgress.stateNode;
     const type = workInProgress.type;
     if (typeof instance.shouldComponentUpdate === 'function') {
-      if (__DEV__) {
-        startPhaseTimer(workInProgress, 'shouldComponentUpdate');
-      }
+      startPhaseTimer(workInProgress, 'shouldComponentUpdate');
       const shouldUpdate = instance.shouldComponentUpdate(
         newProps,
         newState,
         newContext,
       );
-      if (__DEV__) {
-        stopPhaseTimer();
+      stopPhaseTimer();
+
+      // Simulate an async bailout/interruption by invoking lifecycle twice.
+      if (debugRenderPhaseSideEffects) {
+        instance.shouldComponentUpdate(newProps, newState, newContext);
       }
 
       if (__DEV__) {
@@ -201,12 +206,25 @@ module.exports = function(
     if (__DEV__) {
       const name = getComponentName(workInProgress);
       const renderPresent = instance.render;
-      warning(
-        renderPresent,
-        '%s(...): No `render` method found on the returned component ' +
-          'instance: you may have forgotten to define `render`.',
-        name,
-      );
+
+      if (!renderPresent) {
+        if (type.prototype && typeof type.prototype.render === 'function') {
+          warning(
+            false,
+            '%s(...): No `render` method found on the returned component ' +
+              'instance: did you accidentally return an object from the constructor?',
+            name,
+          );
+        } else {
+          warning(
+            false,
+            '%s(...): No `render` method found on the returned component ' +
+              'instance: you may have forgotten to define `render`.',
+            name,
+          );
+        }
+      }
+
       const noGetInitialStateOnES6 =
         !instance.getInitialState ||
         instance.getInitialState.isReactClassApproved ||
@@ -274,6 +292,17 @@ module.exports = function(
           'Did you mean componentWillUnmount()?',
         name,
       );
+      const noComponentDidReceiveProps =
+        typeof instance.componentDidReceiveProps !== 'function';
+      warning(
+        noComponentDidReceiveProps,
+        '%s has a method called ' +
+          'componentDidReceiveProps(). But there is no such lifecycle method. ' +
+          'If you meant to update the state in response to changing props, ' +
+          'use componentWillReceiveProps(). If you meant to fetch data or ' +
+          'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
+        name,
+      );
       const noComponentWillRecieveProps =
         typeof instance.componentWillRecieveProps !== 'function';
       warning(
@@ -302,14 +331,14 @@ module.exports = function(
 
     const state = instance.state;
     if (state && (typeof state !== 'object' || isArray(state))) {
-      invariant(
+      warning(
         false,
         '%s.state: must be set to an object or null',
         getComponentName(workInProgress),
       );
     }
     if (typeof instance.getChildContext === 'function') {
-      invariant(
+      warning(
         typeof workInProgress.type.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
           'use getChildContext().',
@@ -353,14 +382,10 @@ module.exports = function(
   }
 
   function callComponentWillMount(workInProgress, instance) {
-    if (__DEV__) {
-      startPhaseTimer(workInProgress, 'componentWillMount');
-    }
+    startPhaseTimer(workInProgress, 'componentWillMount');
     const oldState = instance.state;
     instance.componentWillMount();
-    if (__DEV__) {
-      stopPhaseTimer();
-    }
+    stopPhaseTimer();
 
     if (oldState !== instance.state) {
       if (__DEV__) {
@@ -382,24 +407,29 @@ module.exports = function(
     newProps,
     newContext,
   ) {
-    if (__DEV__) {
-      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
-    }
+    startPhaseTimer(workInProgress, 'componentWillReceiveProps');
     const oldState = instance.state;
     instance.componentWillReceiveProps(newProps, newContext);
-    if (__DEV__) {
-      stopPhaseTimer();
+    stopPhaseTimer();
+
+    // Simulate an async bailout/interruption by invoking lifecycle twice.
+    if (debugRenderPhaseSideEffects) {
+      instance.componentWillReceiveProps(newProps, newContext);
     }
 
     if (instance.state !== oldState) {
       if (__DEV__) {
-        warning(
-          false,
-          '%s.componentWillReceiveProps(): Assigning directly to ' +
-            "this.state is deprecated (except inside a component's " +
-            'constructor). Use setState instead.',
-          getComponentName(workInProgress),
-        );
+        const componentName = getComponentName(workInProgress) || 'Component';
+        if (!didWarnAboutStateAssignmentForComponent[componentName]) {
+          warning(
+            false,
+            '%s.componentWillReceiveProps(): Assigning directly to ' +
+              "this.state is deprecated (except inside a component's " +
+              'constructor). Use setState instead.',
+            componentName,
+          );
+          didWarnAboutStateAssignmentForComponent[componentName] = true;
+        }
       }
       updater.enqueueReplaceState(instance, instance.state, null);
     }
@@ -418,14 +448,7 @@ module.exports = function(
 
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
-
-    let props = workInProgress.pendingProps;
-    invariant(
-      props,
-      'There must be pending props for an initial mount. This error is ' +
-        'likely caused by a bug in React. Please file an issue.',
-    );
-
+    const props = workInProgress.pendingProps;
     const unmaskedContext = getUnmaskedContext(workInProgress);
 
     instance.props = props;
@@ -434,7 +457,7 @@ module.exports = function(
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (
-      ReactFeatureFlags.enableAsyncSubtreeAPI &&
+      enableAsyncSubtreeAPI &&
       workInProgress.type != null &&
       workInProgress.type.prototype != null &&
       workInProgress.type.prototype.unstable_isAsyncReactComponent === true
@@ -578,17 +601,7 @@ module.exports = function(
     resetInputPointers(workInProgress, instance);
 
     const oldProps = workInProgress.memoizedProps;
-    let newProps = workInProgress.pendingProps;
-    if (!newProps) {
-      // If there aren't any new props, then we'll reuse the memoized props.
-      // This could be from already completed work.
-      newProps = oldProps;
-      invariant(
-        newProps != null,
-        'There should always be pending or memoized props. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
-    }
+    const newProps = workInProgress.pendingProps;
     const oldContext = instance.context;
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
@@ -630,8 +643,10 @@ module.exports = function(
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !(workInProgress.updateQueue !== null &&
-        workInProgress.updateQueue.hasForceUpdate)
+      !(
+        workInProgress.updateQueue !== null &&
+        workInProgress.updateQueue.hasForceUpdate
+      )
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -657,12 +672,13 @@ module.exports = function(
 
     if (shouldUpdate) {
       if (typeof instance.componentWillUpdate === 'function') {
-        if (__DEV__) {
-          startPhaseTimer(workInProgress, 'componentWillUpdate');
-        }
+        startPhaseTimer(workInProgress, 'componentWillUpdate');
         instance.componentWillUpdate(newProps, newState, newContext);
-        if (__DEV__) {
-          stopPhaseTimer();
+        stopPhaseTimer();
+
+        // Simulate an async bailout/interruption by invoking lifecycle twice.
+        if (debugRenderPhaseSideEffects) {
+          instance.componentWillUpdate(newProps, newState, newContext);
         }
       }
       if (typeof instance.componentDidUpdate === 'function') {
@@ -702,4 +718,4 @@ module.exports = function(
     // resumeMountClassInstance,
     updateClassInstance,
   };
-};
+}

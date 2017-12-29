@@ -4,25 +4,28 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberRenderer
  * @flow
  */
 
-'use strict';
+import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
-const ReactFiberReconciler = require('react-reconciler');
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactNativeFiberHostComponent = require('ReactNativeFiberHostComponent');
-const ReactNativeTagHandles = require('ReactNativeTagHandles');
-const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
-const UIManager = require('UIManager');
+import ReactFiberReconciler from 'react-reconciler';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+// Modules provided by RN:
+import UIManager from 'UIManager';
+import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 
-const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
-
-import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeTypes';
+import * as ReactNativeViewConfigRegistry from './ReactNativeViewConfigRegistry';
+import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
+import {
+  precacheFiberNode,
+  uncacheFiberNode,
+  updateFiberProps,
+} from './ReactNativeComponentTree';
+import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
+import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
+import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 export type Container = number;
 export type Instance = {
@@ -32,12 +35,6 @@ export type Instance = {
 };
 export type Props = Object;
 export type TextInstance = number;
-
-const {
-  precacheFiberNode,
-  uncacheFiberNode,
-  updateFiberProps,
-} = ReactNativeComponentTree;
 
 function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
   if (typeof node === 'number') {
@@ -133,9 +130,9 @@ const NativeRenderer = ReactFiberReconciler({
     // Either way we need to pass a copy of the Array to prevent it from being frozen.
     const nativeTags = parentInstance._children.map(
       child =>
-        (typeof child === 'number'
+        typeof child === 'number'
           ? child // Leaf node (eg text)
-          : child._nativeTag),
+          : child._nativeTag,
     );
 
     UIManager.setChildren(
@@ -158,6 +155,8 @@ const NativeRenderer = ReactFiberReconciler({
     return instance;
   },
 
+  now: ReactNativeFrameScheduling.now,
+
   prepareForCommit(): void {
     // Noop
   },
@@ -177,11 +176,12 @@ const NativeRenderer = ReactFiberReconciler({
     // Noop
   },
 
+  scheduleDeferredCallback: ReactNativeFrameScheduling.scheduleDeferredCallback,
+  cancelDeferredCallback: ReactNativeFrameScheduling.cancelDeferredCallback,
+
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {
     return false;
   },
-
-  scheduleDeferredCallback: global.requestIdleCallback,
 
   shouldSetTextContent(type: string, props: Props): boolean {
     // TODO (bvaughn) Revisit this decision.
@@ -194,11 +194,6 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   useSyncScheduling: true,
-
-  now(): number {
-    // TODO: Enable expiration by implementing this method.
-    return 0;
-  },
 
   mutation: {
     appendChild(
@@ -392,4 +387,4 @@ const NativeRenderer = ReactFiberReconciler({
   },
 });
 
-module.exports = NativeRenderer;
+export default NativeRenderer;

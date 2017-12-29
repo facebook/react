@@ -3,23 +3,18 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SyntheticKeyboardEvent
  */
 
-'use strict';
-
-var SyntheticUIEvent = require('SyntheticUIEvent');
-
-var getEventCharCode = require('getEventCharCode');
-var getEventKey = require('getEventKey');
-var getEventModifierState = require('getEventModifierState');
+import SyntheticUIEvent from './SyntheticUIEvent';
+import getEventCharCode from './getEventCharCode';
+import getEventKey from './getEventKey';
+import getEventModifierState from './getEventModifierState';
 
 /**
  * @interface KeyboardEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var KeyboardEventInterface = {
+const SyntheticKeyboardEvent = SyntheticUIEvent.extend({
   key: getEventKey,
   location: null,
   ctrlKey: null,
@@ -65,29 +60,6 @@ var KeyboardEventInterface = {
     }
     return 0;
   },
-};
+});
 
-/**
- * @param {object} dispatchConfig Configuration used to dispatch this event.
- * @param {string} dispatchMarker Marker identifying the event target.
- * @param {object} nativeEvent Native browser event.
- * @extends {SyntheticUIEvent}
- */
-function SyntheticKeyboardEvent(
-  dispatchConfig,
-  dispatchMarker,
-  nativeEvent,
-  nativeEventTarget,
-) {
-  return SyntheticUIEvent.call(
-    this,
-    dispatchConfig,
-    dispatchMarker,
-    nativeEvent,
-    nativeEventTarget,
-  );
-}
-
-SyntheticUIEvent.augmentClass(SyntheticKeyboardEvent, KeyboardEventInterface);
-
-module.exports = SyntheticKeyboardEvent;
+export default SyntheticKeyboardEvent;

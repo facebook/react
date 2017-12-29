@@ -2,15 +2,6 @@
 
 const dependencies = ['fbjs', 'object-assign', 'prop-types'];
 
-// TODO: enumerate all non-private package folders in packages/*?
-const projects = [
-  'react',
-  'react-art',
-  'react-dom',
-  'react-reconciler',
-  'react-test-renderer',
-];
-
 const paramDefinitions = [
   {
     name: 'dry',
@@ -22,7 +13,8 @@ const paramDefinitions = [
     name: 'path',
     type: String,
     alias: 'p',
-    description: 'Location of React repository to release; defaults to [bold]{cwd}',
+    description:
+      'Location of React repository to release; defaults to [bold]{cwd}',
     defaultValue: '.',
   },
   {
@@ -36,5 +28,4 @@ const paramDefinitions = [
 module.exports = {
   dependencies,
   paramDefinitions,
-  projects,
 };

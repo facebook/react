@@ -4,17 +4,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule PluginModuleType
  * @flow
  */
 
-'use strict';
-
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
-} from 'ReactSyntheticEventType';
+} from './ReactSyntheticEventType';
 
 export type EventTypes = {[key: string]: DispatchConfig};
 
@@ -29,6 +26,6 @@ export type PluginModule<NativeEvent> = {
     targetInst: Fiber,
     nativeTarget: NativeEvent,
     nativeEventTarget: EventTarget,
-  ) => null | ReactSyntheticEvent,
+  ) => ?ReactSyntheticEvent,
   tapMoveThreshold?: number,
 };

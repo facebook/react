@@ -7,6 +7,8 @@
  * @flow
  */
 
-'use strict';
+const ReactNativeRT = require('./src/ReactNativeRT');
 
-module.exports = require('./src/ReactNativeRT');
+// TODO: decide on the top-level export form.
+// This is hacky but makes it work with both Rollup and Jest.
+module.exports = ReactNativeRT.default ? ReactNativeRT.default : ReactNativeRT;

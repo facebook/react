@@ -3,30 +3,26 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SelectEventPlugin
  */
 
-'use strict';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import SyntheticEvent from 'events/SyntheticEvent';
+import isTextInputElement from 'shared/isTextInputElement';
+import getActiveElement from 'fbjs/lib/getActiveElement';
+import shallowEqual from 'fbjs/lib/shallowEqual';
 
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInputSelection = require('ReactInputSelection');
-var SyntheticEvent = require('SyntheticEvent');
-var {DOCUMENT_NODE} = require('HTMLNodeType');
+import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
+import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
+import * as ReactInputSelection from '../client/ReactInputSelection';
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
-var getActiveElement = require('fbjs/lib/getActiveElement');
-var isTextInputElement = require('isTextInputElement');
-var shallowEqual = require('fbjs/lib/shallowEqual');
-
-var skipSelectionChangeEvent =
+const skipSelectionChangeEvent =
   ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
   document.documentMode <= 11;
 
-var eventTypes = {
+const eventTypes = {
   select: {
     phasedRegistrationNames: {
       bubbled: 'onSelect',
@@ -45,15 +41,10 @@ var eventTypes = {
   },
 };
 
-var activeElement = null;
-var activeElementInst = null;
-var lastSelection = null;
-var mouseDown = false;
-
-// Track whether all listeners exists for this plugin. If none exist, we do
-// not extract events. See #3639.
-var isListeningToAllDependencies =
-  ReactBrowserEventEmitter.isListeningToAllDependencies;
+let activeElement = null;
+let activeElementInst = null;
+let lastSelection = null;
+let mouseDown = false;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -74,7 +65,7 @@ function getSelection(node) {
       end: node.selectionEnd,
     };
   } else if (window.getSelection) {
-    var selection = window.getSelection();
+    const selection = window.getSelection();
     return {
       anchorNode: selection.anchorNode,
       anchorOffset: selection.anchorOffset,
@@ -104,11 +95,11 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   }
 
   // Only fire when selection has actually changed.
-  var currentSelection = getSelection(activeElement);
+  const currentSelection = getSelection(activeElement);
   if (!lastSelection || !shallowEqual(lastSelection, currentSelection)) {
     lastSelection = currentSelection;
 
-    var syntheticEvent = SyntheticEvent.getPooled(
+    const syntheticEvent = SyntheticEvent.getPooled(
       eventTypes.select,
       activeElementInst,
       nativeEvent,
@@ -118,7 +109,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
     syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
 
-    EventPropagators.accumulateTwoPhaseDispatches(syntheticEvent);
+    accumulateTwoPhaseDispatches(syntheticEvent);
 
     return syntheticEvent;
   }
@@ -140,7 +131,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
  * - Fires for collapsed selection.
  * - Fires after user input.
  */
-var SelectEventPlugin = {
+const SelectEventPlugin = {
   eventTypes: eventTypes,
 
   extractEvents: function(
@@ -149,18 +140,19 @@ var SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var doc = nativeEventTarget.window === nativeEventTarget
-      ? nativeEventTarget.document
-      : nativeEventTarget.nodeType === DOCUMENT_NODE
+    const doc =
+      nativeEventTarget.window === nativeEventTarget
+        ? nativeEventTarget.document
+        : nativeEventTarget.nodeType === DOCUMENT_NODE
           ? nativeEventTarget
           : nativeEventTarget.ownerDocument;
+    // Track whether all listeners exists for this plugin. If none exist, we do
+    // not extract events. See #3639.
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }
 
-    var targetNode = targetInst
-      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
-      : window;
+    const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     switch (topLevelType) {
       // Track the input node that has focus.
@@ -211,4 +203,4 @@ var SelectEventPlugin = {
   },
 };
 
-module.exports = SelectEventPlugin;
+export default SelectEventPlugin;

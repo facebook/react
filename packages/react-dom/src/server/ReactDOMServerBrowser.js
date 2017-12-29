@@ -5,30 +5,32 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import ReactVersion from 'shared/ReactVersion';
+import invariant from 'fbjs/lib/invariant';
 
-var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
-var ReactVersion = require('ReactVersion');
-var invariant = require('fbjs/lib/invariant');
+import {renderToString, renderToStaticMarkup} from './ReactDOMStringRenderer';
 
-require('ReactDOMInjection');
+function renderToNodeStream() {
+  invariant(
+    false,
+    'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
+      'in the browser. Use ReactDOMServer.renderToString() instead.',
+  );
+}
 
-module.exports = {
-  renderToString: ReactDOMStringRenderer.renderToString,
-  renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
-  renderToNodeStream() {
-    invariant(
-      false,
-      'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToString() instead.',
-    );
-  },
-  renderToStaticNodeStream() {
-    invariant(
-      false,
-      'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
-    );
-  },
+function renderToStaticNodeStream() {
+  invariant(
+    false,
+    'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
+      'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
+  );
+}
+
+// Note: when changing this, also consider https://github.com/facebook/react/issues/11526
+export default {
+  renderToString,
+  renderToStaticMarkup,
+  renderToNodeStream,
+  renderToStaticNodeStream,
   version: ReactVersion,
 };

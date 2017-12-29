@@ -4,11 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule forEachAccumulated
  * @flow
  */
-
-'use strict';
 
 /**
  * @param {array} arr an "accumulation" of items which is either an Array or
@@ -20,7 +17,7 @@
  * @param {?} [scope] Scope used as `this` in a callback.
  */
 function forEachAccumulated<T>(
-  arr: ?(T | Array<T>),
+  arr: ?(Array<T> | T),
   cb: (elem: T) => void,
   scope: ?any,
 ) {
@@ -31,4 +28,4 @@ function forEachAccumulated<T>(
   }
 }
 
-module.exports = forEachAccumulated;
+export default forEachAccumulated;

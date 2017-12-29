@@ -4,42 +4,41 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberInspector
  * @flow
  */
-'use strict';
 
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-const getComponentName = require('getComponentName');
-const emptyObject = require('fbjs/lib/emptyObject');
-const ReactTypeOfWork = require('ReactTypeOfWork');
-const UIManager = require('UIManager');
-const invariant = require('fbjs/lib/invariant');
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-const {getClosestInstanceFromNode} = ReactNativeComponentTree;
-const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
-const {HostComponent} = ReactTypeOfWork;
+import {
+  findCurrentHostFiber,
+  findCurrentFiberUsingSlowPath,
+} from 'react-reconciler/reflection';
+import getComponentName from 'shared/getComponentName';
+import {HostComponent} from 'shared/ReactTypeOfWork';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+// Module provided by RN:
+import UIManager from 'UIManager';
 
-import type {Fiber} from 'ReactFiber';
+import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 
 let getInspectorDataForViewTag;
 
 if (__DEV__) {
-  var traverseOwnerTreeUp = function(hierarchy, instance: any) {
+  const traverseOwnerTreeUp = function(hierarchy, instance: any) {
     if (instance) {
       hierarchy.unshift(instance);
       traverseOwnerTreeUp(hierarchy, instance._debugOwner);
     }
   };
 
-  var getOwnerHierarchy = function(instance: any) {
-    var hierarchy = [];
+  const getOwnerHierarchy = function(instance: any) {
+    const hierarchy = [];
     traverseOwnerTreeUp(hierarchy, instance);
     return hierarchy;
   };
 
-  var lastNonHostInstance = function(hierarchy) {
+  const lastNonHostInstance = function(hierarchy) {
     for (let i = hierarchy.length - 1; i > 1; i--) {
       const instance = hierarchy[i];
 
@@ -50,15 +49,15 @@ if (__DEV__) {
     return hierarchy[0];
   };
 
-  var getHostProps = function(fiber) {
-    const host = ReactFiberTreeReflection.findCurrentHostFiber(fiber);
+  const getHostProps = function(fiber) {
+    const host = findCurrentHostFiber(fiber);
     if (host) {
       return host.memoizedProps || emptyObject;
     }
     return emptyObject;
   };
 
-  var getHostNode = function(fiber: Fiber | null, findNodeHandle) {
+  const getHostNode = function(fiber: Fiber | null, findNodeHandle) {
     let hostNode;
     // look for children first for the hostNode
     // as composite fibers do not have a hostNode
@@ -74,7 +73,7 @@ if (__DEV__) {
     return null;
   };
 
-  var createHierarchy = function(fiberHierarchy) {
+  const createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
       name: getComponentName(fiber),
       getInspectorData: findNodeHandle => ({
@@ -123,6 +122,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = {
-  getInspectorDataForViewTag,
-};
+export {getInspectorDataForViewTag};

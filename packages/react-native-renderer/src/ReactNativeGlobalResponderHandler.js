@@ -3,17 +3,15 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactNativeGlobalResponderHandler
  */
-'use strict';
 
-var UIManager = require('UIManager');
+// Module provided by RN:
+import UIManager from 'UIManager';
 
-var ReactNativeGlobalResponderHandler = {
+const ReactNativeGlobalResponderHandler = {
   onChange: function(from, to, blockNativeResponder) {
     if (to !== null) {
-      var tag = to.stateNode._nativeTag;
+      const tag = to.stateNode._nativeTag;
       UIManager.setJSResponder(tag, blockNativeResponder);
     } else {
       UIManager.clearJSResponder();
@@ -21,4 +19,4 @@ var ReactNativeGlobalResponderHandler = {
   },
 };
 
-module.exports = ReactNativeGlobalResponderHandler;
+export default ReactNativeGlobalResponderHandler;

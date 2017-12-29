@@ -1,4 +1,4 @@
-# [React](https://reactjs.org/) &middot; [![CircleCI Status](https://circleci.com/gh/facebook/react.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/facebook/react) [![Coverage Status](https://img.shields.io/coveralls/facebook/react/master.svg?style=flat)](https://coveralls.io/github/facebook/react?branch=master) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md#pull-requests)
+# [React](https://reactjs.org/) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/master/LICENSE) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react) [![Coverage Status](https://img.shields.io/coveralls/facebook/react/master.svg?style=flat)](https://coveralls.io/github/facebook/react?branch=master) [![CircleCI Status](https://circleci.com/gh/facebook/react.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/facebook/react) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://reactjs.org/docs/how-to-contribute.html#your-first-pull-request)
 
 React is a JavaScript library for building user interfaces.
 
@@ -7,6 +7,20 @@ React is a JavaScript library for building user interfaces.
 * **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code. React can also render on the server using Node and power mobile apps using [React Native](https://facebook.github.io/react-native/).
 
 [Learn how to use React in your own project](https://reactjs.org/docs/getting-started.html).
+
+## Documentation
+
+You can find the React documentation [on the website](https://reactjs.org/docs).  
+It is divided into several sections:
+
+* [Quick Start](https://reactjs.org/docs/hello-world.html)
+* [Advanced Guides](https://reactjs.org/docs/jsx-in-depth.html)
+* [API Reference](https://reactjs.org/docs/react-api.html)
+* [Tutorial](https://reactjs.org/tutorial/tutorial.html)
+* [Where to Get Support](https://reactjs.org/community/support.html)
+* [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
+
+You can improve it by sending pull requests to [this repository](https://github.com/reactjs/reactjs.org).
 
 ## Examples
 
@@ -49,13 +63,13 @@ The main purpose of this repository is to continue to evolve React core, making 
 
 Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.facebook.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
 
-### Contributing Guide
+### [Contributing Guide](https://reactjs.org/contributing/how-to-contribute.html)
 
 Read our [contributing guide](https://reactjs.org/contributing/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
 
-### Beginner Friendly Bugs
+### Good First Issues
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [beginner friendly bugs](https://github.com/facebook/react/labels/Difficulty%3A%20beginner) that contain bugs which are fairly easy to fix. This is a great place to get started.
+To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first issues](https://github.com/facebook/react/labels/good%20first%20issue) that contain bugs which have a relatively limited scope. This is a great place to get started.
 
 ### License
 

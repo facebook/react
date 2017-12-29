@@ -4,20 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberDevToolsHook
  * @flow
  */
 
-'use strict';
+import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
 
-import type {Fiber} from 'ReactFiber';
-import type {FiberRoot} from 'ReactFiberRoot';
+import warning from 'fbjs/lib/warning';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 let onCommitFiberRoot = null;
 let onCommitFiberUnmount = null;
@@ -36,12 +31,18 @@ function catchErrors(fn) {
   };
 }
 
-function injectInternals(internals: Object): boolean {
+export function injectInternals(internals: Object): boolean {
   if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
     // No DevTools
     return false;
   }
   const hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  if (hook.isDisabled) {
+    // This isn't a real property on the hook, but it can be set to opt out
+    // of DevTools integration and associated warnings and logs.
+    // https://github.com/facebook/react/issues/3877
+    return true;
+  }
   if (!hook.supportsFiber) {
     if (__DEV__) {
       warning(
@@ -73,18 +74,14 @@ function injectInternals(internals: Object): boolean {
   return true;
 }
 
-function onCommitRoot(root: FiberRoot) {
+export function onCommitRoot(root: FiberRoot) {
   if (typeof onCommitFiberRoot === 'function') {
     onCommitFiberRoot(root);
   }
 }
 
-function onCommitUnmount(fiber: Fiber) {
+export function onCommitUnmount(fiber: Fiber) {
   if (typeof onCommitFiberUnmount === 'function') {
     onCommitFiberUnmount(fiber);
   }
 }
-
-exports.injectInternals = injectInternals;
-exports.onCommitRoot = onCommitRoot;
-exports.onCommitUnmount = onCommitUnmount;

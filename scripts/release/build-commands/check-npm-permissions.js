@@ -4,9 +4,8 @@
 
 const chalk = require('chalk');
 const {execRead, logPromise} = require('../utils');
-const {projects} = require('../config');
 
-module.exports = async () => {
+module.exports = async ({packages}) => {
   const currentUser = await execRead('npm whoami');
   const failedProjects = [];
 
@@ -22,7 +21,7 @@ module.exports = async () => {
   };
 
   await logPromise(
-    Promise.all(projects.map(checkProject)),
+    Promise.all(packages.map(checkProject)),
     `Checking ${chalk.yellow.bold(currentUser)}'s NPM permissions`
   );
 

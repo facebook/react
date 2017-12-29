@@ -4,13 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactCurrentOwner
  * @flow
  */
 
-'use strict';
-
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 /**
  * Keeps track of the current owner.
@@ -18,7 +15,7 @@ import type {Fiber} from 'ReactFiber';
  * The current owner is the component who should own any components that are
  * currently being constructed.
  */
-var ReactCurrentOwner = {
+const ReactCurrentOwner = {
   /**
    * @internal
    * @type {ReactComponent}
@@ -26,4 +23,4 @@ var ReactCurrentOwner = {
   current: (null: null | Fiber),
 };
 
-module.exports = ReactCurrentOwner;
+export default ReactCurrentOwner;

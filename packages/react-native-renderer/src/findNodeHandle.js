@@ -4,23 +4,18 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule findNodeHandle
  * @flow
  */
 
-'use strict';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var getComponentName = require('getComponentName');
-var invariant = require('fbjs/lib/invariant');
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import getComponentName from 'shared/getComponentName';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
-
-import type {Fiber} from 'ReactFiber';
+import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
 
 /**
  * ReactNative vs ReactWeb
@@ -57,7 +52,7 @@ import type {Fiber} from 'ReactFiber';
 // accidentally deep-requiring this version.
 function findNodeHandle(componentOrHandle: any): any {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
+    const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
       warning(
         owner.stateNode._warnedAboutRefsInRender,
@@ -80,11 +75,11 @@ function findNodeHandle(componentOrHandle: any): any {
     return componentOrHandle;
   }
 
-  var component = componentOrHandle;
+  const component = componentOrHandle;
 
   // TODO (balpert): Wrap iOS native components in a composite wrapper, then
   // ReactInstanceMap.get here will always succeed for mounted components
-  var internalInstance: Fiber = ReactInstanceMap.get(component);
+  const internalInstance: Fiber = ReactInstanceMap.get(component);
   if (internalInstance) {
     return ReactNativeFiberRenderer.findHostInstance(internalInstance);
   } else {
@@ -110,4 +105,4 @@ function findNodeHandle(componentOrHandle: any): any {
   }
 }
 
-module.exports = findNodeHandle;
+export default findNodeHandle;

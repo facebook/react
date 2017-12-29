@@ -3,11 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule lowPriorityWarning
  */
-
-'use strict';
 
 /**
  * Forked from fbjs/warning:
@@ -23,12 +19,12 @@
  * same logic and follow the same code paths.
  */
 
-var lowPriorityWarning = function() {};
+let lowPriorityWarning = function() {};
 
 if (__DEV__) {
   const printWarning = function(format, ...args) {
-    var argIndex = 0;
-    var message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
+    let argIndex = 0;
+    const message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
     if (typeof console !== 'undefined') {
       console.warn(message);
     }
@@ -53,4 +49,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = lowPriorityWarning;
+export default lowPriorityWarning;

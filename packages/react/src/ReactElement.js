@@ -3,38 +3,28 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactElement
  */
 
-'use strict';
+import warning from 'fbjs/lib/warning';
+import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var hasOwnProperty = Object.prototype.hasOwnProperty;
+import ReactCurrentOwner from './ReactCurrentOwner';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
-// The Symbol used to tag the ReactElement type. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
-  0xeac7;
-
-var RESERVED_PROPS = {
+const RESERVED_PROPS = {
   key: true,
   ref: true,
   __self: true,
   __source: true,
 };
 
-var specialPropKeyWarningShown, specialPropRefWarningShown;
+let specialPropKeyWarningShown, specialPropRefWarningShown;
 
 function hasValidRef(config) {
   if (__DEV__) {
     if (hasOwnProperty.call(config, 'ref')) {
-      var getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
+      const getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
       if (getter && getter.isReactWarning) {
         return false;
       }
@@ -46,7 +36,7 @@ function hasValidRef(config) {
 function hasValidKey(config) {
   if (__DEV__) {
     if (hasOwnProperty.call(config, 'key')) {
-      var getter = Object.getOwnPropertyDescriptor(config, 'key').get;
+      const getter = Object.getOwnPropertyDescriptor(config, 'key').get;
       if (getter && getter.isReactWarning) {
         return false;
       }
@@ -56,7 +46,7 @@ function hasValidKey(config) {
 }
 
 function defineKeyPropWarningGetter(props, displayName) {
-  var warnAboutAccessingKey = function() {
+  const warnAboutAccessingKey = function() {
     if (!specialPropKeyWarningShown) {
       specialPropKeyWarningShown = true;
       warning(
@@ -77,7 +67,7 @@ function defineKeyPropWarningGetter(props, displayName) {
 }
 
 function defineRefPropWarningGetter(props, displayName) {
-  var warnAboutAccessingRef = function() {
+  const warnAboutAccessingRef = function() {
     if (!specialPropRefWarningShown) {
       specialPropRefWarningShown = true;
       warning(
@@ -117,8 +107,8 @@ function defineRefPropWarningGetter(props, displayName) {
  * @param {*} props
  * @internal
  */
-var ReactElement = function(type, key, ref, self, source, owner, props) {
-  var element = {
+const ReactElement = function(type, key, ref, self, source, owner, props) {
+  const element = {
     // This tag allow us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
 
@@ -177,16 +167,16 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
  * Create and return a new ReactElement of the given type.
  * See https://reactjs.org/docs/react-api.html#createelement
  */
-ReactElement.createElement = function(type, config, children) {
-  var propName;
+export function createElement(type, config, children) {
+  let propName;
 
   // Reserved names are extracted
-  var props = {};
+  const props = {};
 
-  var key = null;
-  var ref = null;
-  var self = null;
-  var source = null;
+  let key = null;
+  let ref = null;
+  let self = null;
+  let source = null;
 
   if (config != null) {
     if (hasValidRef(config)) {
@@ -211,12 +201,12 @@ ReactElement.createElement = function(type, config, children) {
 
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
-  var childrenLength = arguments.length - 2;
+  const childrenLength = arguments.length - 2;
   if (childrenLength === 1) {
     props.children = children;
   } else if (childrenLength > 1) {
-    var childArray = Array(childrenLength);
-    for (var i = 0; i < childrenLength; i++) {
+    const childArray = Array(childrenLength);
+    for (let i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
     if (__DEV__) {
@@ -229,7 +219,7 @@ ReactElement.createElement = function(type, config, children) {
 
   // Resolve default props
   if (type && type.defaultProps) {
-    var defaultProps = type.defaultProps;
+    const defaultProps = type.defaultProps;
     for (propName in defaultProps) {
       if (props[propName] === undefined) {
         props[propName] = defaultProps[propName];
@@ -242,9 +232,10 @@ ReactElement.createElement = function(type, config, children) {
         typeof props.$$typeof === 'undefined' ||
         props.$$typeof !== REACT_ELEMENT_TYPE
       ) {
-        var displayName = typeof type === 'function'
-          ? type.displayName || type.name || 'Unknown'
-          : type;
+        const displayName =
+          typeof type === 'function'
+            ? type.displayName || type.name || 'Unknown'
+            : type;
         if (key) {
           defineKeyPropWarningGetter(props, displayName);
         }
@@ -263,14 +254,14 @@ ReactElement.createElement = function(type, config, children) {
     ReactCurrentOwner.current,
     props,
   );
-};
+}
 
 /**
  * Return a function that produces ReactElements of a given type.
  * See https://reactjs.org/docs/react-api.html#createfactory
  */
-ReactElement.createFactory = function(type) {
-  var factory = ReactElement.createElement.bind(null, type);
+export function createFactory(type) {
+  const factory = createElement.bind(null, type);
   // Expose the type on the factory and the prototype so that it can be
   // easily accessed on elements. E.g. `<Foo />.type === Foo`.
   // This should not be named `constructor` since this may not be the function
@@ -278,10 +269,10 @@ ReactElement.createFactory = function(type) {
   // Legacy hook TODO: Warn if this is accessed
   factory.type = type;
   return factory;
-};
+}
 
-ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
-  var newElement = ReactElement(
+export function cloneAndReplaceKey(oldElement, newKey) {
+  const newElement = ReactElement(
     oldElement.type,
     newKey,
     oldElement.ref,
@@ -292,30 +283,30 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
   );
 
   return newElement;
-};
+}
 
 /**
  * Clone and return a new ReactElement using element as the starting point.
  * See https://reactjs.org/docs/react-api.html#cloneelement
  */
-ReactElement.cloneElement = function(element, config, children) {
-  var propName;
+export function cloneElement(element, config, children) {
+  let propName;
 
   // Original props are copied
-  var props = Object.assign({}, element.props);
+  const props = Object.assign({}, element.props);
 
   // Reserved names are extracted
-  var key = element.key;
-  var ref = element.ref;
+  let key = element.key;
+  let ref = element.ref;
   // Self is preserved since the owner is preserved.
-  var self = element._self;
+  const self = element._self;
   // Source is preserved since cloneElement is unlikely to be targeted by a
   // transpiler, and the original source is probably a better indicator of the
   // true owner.
-  var source = element._source;
+  const source = element._source;
 
   // Owner will be preserved, unless ref is overridden
-  var owner = element._owner;
+  let owner = element._owner;
 
   if (config != null) {
     if (hasValidRef(config)) {
@@ -328,7 +319,7 @@ ReactElement.cloneElement = function(element, config, children) {
     }
 
     // Remaining properties override existing props
-    var defaultProps;
+    let defaultProps;
     if (element.type && element.type.defaultProps) {
       defaultProps = element.type.defaultProps;
     }
@@ -349,19 +340,19 @@ ReactElement.cloneElement = function(element, config, children) {
 
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
-  var childrenLength = arguments.length - 2;
+  const childrenLength = arguments.length - 2;
   if (childrenLength === 1) {
     props.children = children;
   } else if (childrenLength > 1) {
-    var childArray = Array(childrenLength);
-    for (var i = 0; i < childrenLength; i++) {
+    const childArray = Array(childrenLength);
+    for (let i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
     props.children = childArray;
   }
 
   return ReactElement(element.type, key, ref, self, source, owner, props);
-};
+}
 
 /**
  * Verifies the object is a ReactElement.
@@ -370,12 +361,10 @@ ReactElement.cloneElement = function(element, config, children) {
  * @return {boolean} True if `object` is a valid component.
  * @final
  */
-ReactElement.isValidElement = function(object) {
+export function isValidElement(object) {
   return (
     typeof object === 'object' &&
     object !== null &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
-};
-
-module.exports = ReactElement;
+}

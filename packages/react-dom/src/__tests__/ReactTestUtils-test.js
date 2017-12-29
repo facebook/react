@@ -16,7 +16,7 @@ let ReactDOMServer;
 let ReactTestUtils;
 
 function getTestDocument(markup) {
-  var doc = document.implementation.createHTMLDocument('');
+  const doc = document.implementation.createHTMLDocument('');
   doc.open();
   doc.write(
     markup ||
@@ -47,7 +47,7 @@ describe('ReactTestUtils', () => {
     // Patch it up so it returns its children.
     ReactTestUtils.mockComponent(MockedComponent);
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<MockedComponent>Hello</MockedComponent>, container);
     expect(container.textContent).toBe('Hello');
   });
@@ -78,7 +78,11 @@ describe('ReactTestUtils', () => {
   it('can scryRenderedDOMComponentsWithClass with TextComponent', () => {
     class Wrapper extends React.Component {
       render() {
-        return <div>Hello <span>Jim</span></div>;
+        return (
+          <div>
+            Hello <span>Jim</span>
+          </div>
+        );
       }
     }
 
@@ -93,7 +97,11 @@ describe('ReactTestUtils', () => {
   it('can scryRenderedDOMComponentsWithClass with className contains \\n', () => {
     class Wrapper extends React.Component {
       render() {
-        return <div>Hello <span className={'x\ny'}>Jim</span></div>;
+        return (
+          <div>
+            Hello <span className={'x\ny'}>Jim</span>
+          </div>
+        );
       }
     }
 
@@ -108,7 +116,11 @@ describe('ReactTestUtils', () => {
   it('can scryRenderedDOMComponentsWithClass with multiple classes', () => {
     class Wrapper extends React.Component {
       render() {
-        return <div>Hello <span className={'x y z'}>Jim</span></div>;
+        return (
+          <div>
+            Hello <span className={'x y z'}>Jim</span>
+          </div>
+        );
       }
     }
 
@@ -210,9 +222,7 @@ describe('ReactTestUtils', () => {
             <head ref="head">
               <title>hello</title>
             </head>
-            <body ref="body">
-              hello, world
-            </body>
+            <body ref="body">hello, world</body>
           </html>
         );
       }
@@ -231,7 +241,11 @@ describe('ReactTestUtils', () => {
   });
 
   it('can scry with stateless components involved', () => {
-    const Stateless = () => <div><hr /></div>;
+    const Stateless = () => (
+      <div>
+        <hr />
+      </div>
+    );
 
     class SomeComponent extends React.Component {
       render() {
@@ -256,7 +270,7 @@ describe('ReactTestUtils', () => {
           e.persist();
         },
       };
-      spyOn(obj, 'handler').and.callThrough();
+      spyOnDevAndProd(obj, 'handler').and.callThrough();
       const container = document.createElement('div');
       const instance = ReactDOM.render(
         <input type="text" onChange={obj.handler} />,
@@ -292,7 +306,7 @@ describe('ReactTestUtils', () => {
           e.persist();
         },
       };
-      spyOn(obj, 'handler').and.callThrough();
+      spyOnDevAndProd(obj, 'handler').and.callThrough();
       const container = document.createElement('div');
       const instance = ReactDOM.render(
         <SomeComponent handleChange={obj.handler} />,
@@ -311,11 +325,7 @@ describe('ReactTestUtils', () => {
     it('should throw when attempting to use a React element', () => {
       class SomeComponent extends React.Component {
         render() {
-          return (
-            <div onClick={this.props.handleClick}>
-              hello, world.
-            </div>
-          );
+          return <div onClick={this.props.handleClick}>hello, world.</div>;
         }
       }
 
@@ -336,11 +346,7 @@ describe('ReactTestUtils', () => {
     it('should throw when attempting to use a component instance', () => {
       class SomeComponent extends React.Component {
         render() {
-          return (
-            <div onClick={this.props.handleClick}>
-              hello, world.
-            </div>
-          );
+          return <div onClick={this.props.handleClick}>hello, world.</div>;
         }
       }
 
@@ -359,8 +365,6 @@ describe('ReactTestUtils', () => {
     });
 
     it('should not warn when used with extra properties', () => {
-      spyOn(console, 'error');
-
       const CLIENT_X = 100;
 
       class Component extends React.Component {
@@ -378,7 +382,6 @@ describe('ReactTestUtils', () => {
       ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance), {
         clientX: CLIENT_X,
       });
-      expectDev(console.error.calls.count()).toBe(0);
     });
 
     it('should set the type of the event', () => {
@@ -403,7 +406,11 @@ describe('ReactTestUtils', () => {
 
       class MyComponent extends React.Component {
         render() {
-          return <div><input type="text" onChange={onChange} /></div>;
+          return (
+            <div>
+              <input type="text" onChange={onChange} />
+            </div>
+          );
         }
       }
 

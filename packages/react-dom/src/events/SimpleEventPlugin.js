@@ -4,38 +4,32 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule SimpleEventPlugin
  * @flow
  */
 
-'use strict';
-
-var EventPropagators = require('EventPropagators');
-var SyntheticAnimationEvent = require('SyntheticAnimationEvent');
-var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
-var SyntheticEvent = require('SyntheticEvent');
-var SyntheticFocusEvent = require('SyntheticFocusEvent');
-var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
-var SyntheticDragEvent = require('SyntheticDragEvent');
-var SyntheticTouchEvent = require('SyntheticTouchEvent');
-var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var SyntheticWheelEvent = require('SyntheticWheelEvent');
-
-var getEventCharCode = require('getEventCharCode');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
-
-import type {TopLevelTypes} from 'BrowserEventConstants';
+import type {TopLevelTypes} from './BrowserEventConstants';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
-} from 'ReactSyntheticEventType';
-import type {Fiber} from 'ReactFiber';
-import type {EventTypes, PluginModule} from 'PluginModuleType';
+} from 'events/ReactSyntheticEventType';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {EventTypes, PluginModule} from 'events/PluginModuleType';
+
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import SyntheticEvent from 'events/SyntheticEvent';
+import warning from 'fbjs/lib/warning';
+
+import SyntheticAnimationEvent from './SyntheticAnimationEvent';
+import SyntheticClipboardEvent from './SyntheticClipboardEvent';
+import SyntheticFocusEvent from './SyntheticFocusEvent';
+import SyntheticKeyboardEvent from './SyntheticKeyboardEvent';
+import SyntheticMouseEvent from './SyntheticMouseEvent';
+import SyntheticDragEvent from './SyntheticDragEvent';
+import SyntheticTouchEvent from './SyntheticTouchEvent';
+import SyntheticTransitionEvent from './SyntheticTransitionEvent';
+import SyntheticUIEvent from './SyntheticUIEvent';
+import SyntheticWheelEvent from './SyntheticWheelEvent';
+import getEventCharCode from './getEventCharCode';
 
 /**
  * Turns
@@ -55,8 +49,10 @@ import type {EventTypes, PluginModule} from 'PluginModuleType';
  *   'topAbort': { sameConfig }
  * };
  */
-var eventTypes: EventTypes = {};
-var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
+const eventTypes: EventTypes = {};
+const topLevelEventsToDispatchConfig: {
+  [key: TopLevelTypes]: DispatchConfig,
+} = {};
 [
   'abort',
   'animationEnd',
@@ -124,11 +120,11 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'waiting',
   'wheel',
 ].forEach(event => {
-  var capitalizedEvent = event[0].toUpperCase() + event.slice(1);
-  var onEvent = 'on' + capitalizedEvent;
-  var topEvent = 'top' + capitalizedEvent;
+  const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
+  const onEvent = 'on' + capitalizedEvent;
+  const topEvent = 'top' + capitalizedEvent;
 
-  var type = {
+  const type = {
     phasedRegistrationNames: {
       bubbled: onEvent,
       captured: onEvent + 'Capture',
@@ -140,7 +136,7 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
 });
 
 // Only used in DEV for exhaustiveness validation.
-var knownHTMLTopLevelTypes = [
+const knownHTMLTopLevelTypes = [
   'topAbort',
   'topCancel',
   'topCanPlay',
@@ -174,7 +170,7 @@ var knownHTMLTopLevelTypes = [
   'topWaiting',
 ];
 
-var SimpleEventPlugin: PluginModule<MouseEvent> = {
+const SimpleEventPlugin: PluginModule<MouseEvent> = {
   eventTypes: eventTypes,
 
   extractEvents: function(
@@ -183,11 +179,11 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
   ): null | ReactSyntheticEvent {
-    var dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
+    const dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {
       return null;
     }
-    var EventConstructor;
+    let EventConstructor;
     switch (topLevelType) {
       case 'topKeyPress':
         // Firefox creates a keypress event for function keys too. This removes
@@ -274,15 +270,15 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
         EventConstructor = SyntheticEvent;
         break;
     }
-    var event = EventConstructor.getPooled(
+    const event = EventConstructor.getPooled(
       dispatchConfig,
       targetInst,
       nativeEvent,
       nativeEventTarget,
     );
-    EventPropagators.accumulateTwoPhaseDispatches(event);
+    accumulateTwoPhaseDispatches(event);
     return event;
   },
 };
 
-module.exports = SimpleEventPlugin;
+export default SimpleEventPlugin;

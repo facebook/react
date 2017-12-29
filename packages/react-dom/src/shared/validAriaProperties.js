@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule validAriaProperties
  */
 
-'use strict';
-
-var ariaProperties = {
+const ariaProperties = {
   'aria-current': 0, // state
   'aria-details': 0,
   'aria-disabled': 0, // state
@@ -64,4 +60,4 @@ var ariaProperties = {
   'aria-setsize': 0,
 };
 
-module.exports = ariaProperties;
+export default ariaProperties;

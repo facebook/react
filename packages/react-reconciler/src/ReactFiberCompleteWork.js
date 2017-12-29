@@ -4,30 +4,22 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberCompleteWork
  * @flow
  */
 
-'use strict';
-
 import type {HostConfig} from 'react-reconciler';
-import type {ReactCoroutine} from 'ReactTypes';
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
-import type {HostContext} from 'ReactFiberHostContext';
-import type {HydrationContext} from 'ReactFiberHydrationContext';
-import type {FiberRoot} from 'ReactFiberRoot';
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {HostContext} from './ReactFiberHostContext';
+import type {HydrationContext} from './ReactFiberHydrationContext';
+import type {FiberRoot} from './ReactFiberRoot';
 
-var {reconcileChildFibers} = require('ReactChildFiber');
-var {
-  popContextProvider,
-  popTopLevelContextObject,
-} = require('ReactFiberContext');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
-var ReactFiberExpirationTime = require('ReactFiberExpirationTime');
-var {
+import {
+  enableMutatingReconciler,
+  enablePersistentReconciler,
+  enableNoopReconciler,
+} from 'shared/ReactFeatureFlags';
+import {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
@@ -35,18 +27,22 @@ var {
   HostComponent,
   HostText,
   HostPortal,
-  CoroutineComponent,
-  CoroutineHandlerPhase,
-  YieldComponent,
+  CallComponent,
+  CallHandlerPhase,
+  ReturnComponent,
   Fragment,
-} = ReactTypeOfWork;
-var {Placement, Ref, Update} = ReactTypeOfSideEffect;
-var {Never} = ReactFiberExpirationTime;
+} from 'shared/ReactTypeOfWork';
+import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
 
-var invariant = require('fbjs/lib/invariant');
+import {reconcileChildFibers} from './ReactChildFiber';
+import {
+  popContextProvider,
+  popTopLevelContextObject,
+} from './ReactFiberContext';
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
 ) {
@@ -83,7 +79,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     workInProgress.effectTag |= Ref;
   }
 
-  function appendAllYields(yields: Array<mixed>, workInProgress: Fiber) {
+  function appendAllReturns(returns: Array<mixed>, workInProgress: Fiber) {
     let node = workInProgress.stateNode;
     if (node) {
       node.return = workInProgress;
@@ -94,9 +90,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         node.tag === HostText ||
         node.tag === HostPortal
       ) {
-        invariant(false, 'A coroutine cannot have host component children.');
-      } else if (node.tag === YieldComponent) {
-        yields.push(node.type);
+        invariant(false, 'A call cannot have host component children.');
+      } else if (node.tag === ReturnComponent) {
+        returns.push(node.pendingProps.value);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -113,36 +109,36 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
   }
 
-  function moveCoroutineToHandlerPhase(
+  function moveCallToHandlerPhase(
     current: Fiber | null,
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ) {
-    var coroutine = (workInProgress.memoizedProps: ?ReactCoroutine);
+    const props = workInProgress.memoizedProps;
     invariant(
-      coroutine,
+      props,
       'Should be resolved by now. This error is likely caused by a bug in ' +
         'React. Please file an issue.',
     );
 
-    // First step of the coroutine has completed. Now we need to do the second.
-    // TODO: It would be nice to have a multi stage coroutine represented by a
+    // First step of the call has completed. Now we need to do the second.
+    // TODO: It would be nice to have a multi stage call represented by a
     // single component, or at least tail call optimize nested ones. Currently
     // that requires additional fields that we don't want to add to the fiber.
     // So this requires nested handlers.
     // Note: This doesn't mutate the alternate node. I don't think it needs to
     // since this stage is reset for every pass.
-    workInProgress.tag = CoroutineHandlerPhase;
+    workInProgress.tag = CallHandlerPhase;
 
-    // Build up the yields.
+    // Build up the returns.
     // TODO: Compare this to a generator or opaque helpers like Children.
-    var yields: Array<mixed> = [];
-    appendAllYields(yields, workInProgress);
-    var fn = coroutine.handler;
-    var props = coroutine.props;
-    var nextChildren = fn(props, yields);
+    const returns: Array<mixed> = [];
+    appendAllReturns(returns, workInProgress);
+    const fn = props.handler;
+    const childProps = props.props;
+    const nextChildren = fn(childProps, returns);
 
-    var currentFirstChild = current !== null ? current.child : null;
+    const currentFirstChild = current !== null ? current.child : null;
     workInProgress.child = reconcileChildFibers(
       workInProgress,
       currentFirstChild,
@@ -186,7 +182,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   let updateHostComponent;
   let updateHostText;
   if (mutation) {
-    if (ReactFeatureFlags.enableMutatingReconciler) {
+    if (enableMutatingReconciler) {
       // Mutation mode
       updateHostContainer = function(workInProgress: Fiber) {
         // Noop
@@ -223,7 +219,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       invariant(false, 'Mutating reconciler is disabled.');
     }
   } else if (persistence) {
-    if (ReactFeatureFlags.enablePersistentReconciler) {
+    if (enablePersistentReconciler) {
       // Persistent host tree mode
       const {
         cloneInstance,
@@ -360,7 +356,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       invariant(false, 'Persistent reconciler is disabled.');
     }
   } else {
-    if (ReactFeatureFlags.enableNoopReconciler) {
+    if (enableNoopReconciler) {
       // No host operations
       updateHostContainer = function(workInProgress: Fiber) {
         // Noop
@@ -394,18 +390,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ): Fiber | null {
-    // Get the latest props.
-    let newProps = workInProgress.pendingProps;
-    if (newProps === null) {
-      newProps = workInProgress.memoizedProps;
-    } else if (
-      workInProgress.expirationTime !== Never ||
-      renderExpirationTime === Never
-    ) {
-      // Reset the pending props, unless this was a down-prioritization.
-      workInProgress.pendingProps = null;
-    }
-
+    const newProps = workInProgress.pendingProps;
     switch (workInProgress.tag) {
       case FunctionalComponent:
         return null;
@@ -570,17 +555,17 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         }
         return null;
       }
-      case CoroutineComponent:
-        return moveCoroutineToHandlerPhase(
+      case CallComponent:
+        return moveCallToHandlerPhase(
           current,
           workInProgress,
           renderExpirationTime,
         );
-      case CoroutineHandlerPhase:
-        // Reset the tag to now be a first phase coroutine.
-        workInProgress.tag = CoroutineComponent;
+      case CallHandlerPhase:
+        // Reset the tag to now be a first phase call.
+        workInProgress.tag = CallComponent;
         return null;
-      case YieldComponent:
+      case ReturnComponent:
         // Does nothing.
         return null;
       case Fragment:
@@ -610,4 +595,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   return {
     completeWork,
   };
-};
+}

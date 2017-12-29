@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "16.0.0",
+  "version": "16.2.0",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -27,6 +27,7 @@
     "index.js",
     "server.js",
     "server.browser.js",
+    "server.node.js",
     "test-utils.js",
     "unstable-native-dependencies.js",
     "cjs/",

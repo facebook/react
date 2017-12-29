@@ -4,11 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDOMFrameScheduling
  * @flow
  */
-
-'use strict';
 
 // This is a built-in polyfill for requestIdleCallback. It works by scheduling
 // a requestAnimationFrame, storing the time for the start of the frame, then
@@ -20,11 +17,10 @@
 
 import type {Deadline} from 'react-reconciler';
 
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import warning from 'fbjs/lib/warning';
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-
   if (
     ExecutionEnvironment.canUseDOM &&
     typeof requestAnimationFrame !== 'function'
@@ -32,7 +28,7 @@ if (__DEV__) {
     warning(
       false,
       'React depends on requestAnimationFrame. Make sure that you load a ' +
-        'polyfill in older browsers. http://fb.me/react-polyfills',
+        'polyfill in older browsers. https://fb.me/react-polyfills',
     );
   }
 }
@@ -52,60 +48,105 @@ if (hasNativePerformanceNow) {
 }
 
 // TODO: There's no way to cancel, because Fiber doesn't atm.
-let rIC: (callback: (deadline: Deadline) => void) => number;
+let rIC: (
+  callback: (deadline: Deadline, options?: {timeout: number}) => void,
+) => number;
+let cIC: (callbackID: number) => void;
 
 if (!ExecutionEnvironment.canUseDOM) {
-  rIC = function(frameCallback: (deadline: Deadline) => void): number {
-    setTimeout(() => {
+  rIC = function(
+    frameCallback: (deadline: Deadline, options?: {timeout: number}) => void,
+  ): number {
+    return setTimeout(() => {
       frameCallback({
         timeRemaining() {
           return Infinity;
         },
       });
     });
-    return 0;
   };
-} else if (typeof requestIdleCallback !== 'function') {
-  // Polyfill requestIdleCallback.
+  cIC = function(timeoutID: number) {
+    clearTimeout(timeoutID);
+  };
+} else if (
+  typeof requestIdleCallback !== 'function' ||
+  typeof cancelIdleCallback !== 'function'
+) {
+  // Polyfill requestIdleCallback and cancelIdleCallback
 
-  var scheduledRICCallback = null;
+  let scheduledRICCallback = null;
+  let isIdleScheduled = false;
+  let timeoutTime = -1;
 
-  var isIdleScheduled = false;
-  var isAnimationFrameScheduled = false;
+  let isAnimationFrameScheduled = false;
 
-  var frameDeadline = 0;
+  let frameDeadline = 0;
   // We start out assuming that we run at 30fps but then the heuristic tracking
   // will adjust this value to a faster fps if we get more frequent animation
   // frames.
-  var previousFrameTime = 33;
-  var activeFrameTime = 33;
+  let previousFrameTime = 33;
+  let activeFrameTime = 33;
 
-  var frameDeadlineObject;
+  let frameDeadlineObject;
   if (hasNativePerformanceNow) {
     frameDeadlineObject = {
+      didTimeout: false,
       timeRemaining() {
         // We assume that if we have a performance timer that the rAF callback
         // gets a performance timer value. Not sure if this is always true.
-        return frameDeadline - performance.now();
+        const remaining = frameDeadline - performance.now();
+        return remaining > 0 ? remaining : 0;
       },
     };
   } else {
     frameDeadlineObject = {
+      didTimeout: false,
       timeRemaining() {
         // Fallback to Date.now()
-        return frameDeadline - Date.now();
+        const remaining = frameDeadline - Date.now();
+        return remaining > 0 ? remaining : 0;
       },
     };
   }
 
   // We use the postMessage trick to defer idle work until after the repaint.
-  var messageKey = '__reactIdleCallback$' + Math.random().toString(36).slice(2);
-  var idleTick = function(event) {
+  const messageKey =
+    '__reactIdleCallback$' +
+    Math.random()
+      .toString(36)
+      .slice(2);
+  const idleTick = function(event) {
     if (event.source !== window || event.data !== messageKey) {
       return;
     }
+
     isIdleScheduled = false;
-    var callback = scheduledRICCallback;
+
+    const currentTime = now();
+    if (frameDeadline - currentTime <= 0) {
+      // There's no time left in this idle period. Check if the callback has
+      // a timeout and whether it's been exceeded.
+      if (timeoutTime !== -1 && timeoutTime <= currentTime) {
+        // Exceeded the timeout. Invoke the callback even though there's no
+        // time left.
+        frameDeadlineObject.didTimeout = true;
+      } else {
+        // No timeout.
+        if (!isAnimationFrameScheduled) {
+          // Schedule another animation callback so we retry later.
+          isAnimationFrameScheduled = true;
+          requestAnimationFrame(animationTick);
+        }
+        // Exit without invoking the callback.
+        return;
+      }
+    } else {
+      // There's still time left in this idle period.
+      frameDeadlineObject.didTimeout = false;
+    }
+
+    timeoutTime = -1;
+    const callback = scheduledRICCallback;
     scheduledRICCallback = null;
     if (callback !== null) {
       callback(frameDeadlineObject);
@@ -115,9 +156,9 @@ if (!ExecutionEnvironment.canUseDOM) {
   // something better for old IE.
   window.addEventListener('message', idleTick, false);
 
-  var animationTick = function(rafTime) {
+  const animationTick = function(rafTime) {
     isAnimationFrameScheduled = false;
-    var nextFrameTime = rafTime - frameDeadline + activeFrameTime;
+    let nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
       nextFrameTime < activeFrameTime &&
       previousFrameTime < activeFrameTime
@@ -134,9 +175,8 @@ if (!ExecutionEnvironment.canUseDOM) {
       // running on 120hz display or 90hz VR display.
       // Take the max of the two in case one of them was an anomaly due to
       // missed frame deadlines.
-      activeFrameTime = nextFrameTime < previousFrameTime
-        ? previousFrameTime
-        : nextFrameTime;
+      activeFrameTime =
+        nextFrameTime < previousFrameTime ? previousFrameTime : nextFrameTime;
     } else {
       previousFrameTime = nextFrameTime;
     }
@@ -147,10 +187,16 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
   };
 
-  rIC = function(callback: (deadline: Deadline) => void): number {
+  rIC = function(
+    callback: (deadline: Deadline) => void,
+    options?: {timeout: number},
+  ): number {
     // This assumes that we only schedule one callback at a time because that's
     // how Fiber uses it.
     scheduledRICCallback = callback;
+    if (options != null && typeof options.timeout === 'number') {
+      timeoutTime = now() + options.timeout;
+    }
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
@@ -161,9 +207,15 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
     return 0;
   };
+
+  cIC = function() {
+    scheduledRICCallback = null;
+    isIdleScheduled = false;
+    timeoutTime = -1;
+  };
 } else {
-  rIC = requestIdleCallback;
+  rIC = window.requestIdleCallback;
+  cIC = window.cancelIdleCallback;
 }
 
-exports.now = now;
-exports.rIC = rIC;
+export {now, rIC, cIC};

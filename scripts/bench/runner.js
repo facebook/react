@@ -4,7 +4,7 @@ const {readdirSync, statSync} = require('fs');
 const {join} = require('path');
 const runBenchmark = require('./benchmark');
 const {
-  buildAllBundles,
+  buildReactBundles,
   buildBenchmark,
   buildBenchmarkBundlesFromGitRepo,
   getMergeBaseFromLocalGitRepo,
@@ -72,10 +72,8 @@ async function benchmarkRemoteMaster() {
       chalk.gray(`- Merge base commit ${chalk.white(commit.tostrS())}`)
     );
   }
+  await buildBenchmarkBundlesFromGitRepo(commit, skipBuild);
   return {
-    // we build the bundles from the React repo
-    bundles: await buildBenchmarkBundlesFromGitRepo(commit, skipBuild),
-    // we use these bundles to run the benchmarks
     benchmarks: await runBenchmarks(),
   };
 }
@@ -84,10 +82,8 @@ async function benchmarkRemoteMaster() {
 // of the local react repo
 async function benchmarkLocal(reactPath) {
   console.log(chalk.gray(`- Building React bundles...`));
+  await buildReactBundles(reactPath, skipBuild);
   return {
-    // we build the bundles from the React repo
-    bundles: await buildAllBundles(reactPath, skipBuild),
-    // we use these bundles to run the benchmarks
     benchmarks: await runBenchmarks(reactPath),
   };
 }

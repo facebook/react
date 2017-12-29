@@ -4,17 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberHostComponent
  * @flow
  */
-
-'use strict';
-
-var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-var TextInputState = require('TextInputState');
-var UIManager = require('UIManager');
-
-var {mountSafeCallback, warnForStyleProps} = require('NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,
@@ -22,8 +13,15 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeTypes';
-import type {Instance} from 'ReactNativeFiberRenderer';
+} from './ReactNativeTypes';
+import type {Instance} from './ReactNativeFiberRenderer';
+
+// Modules provided by RN:
+import TextInputState from 'TextInputState';
+import UIManager from 'UIManager';
+
+import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
+import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the
@@ -80,7 +78,7 @@ class ReactNativeFiberHostComponent {
       warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
     }
 
-    var updatePayload = ReactNativeAttributePayload.create(
+    const updatePayload = ReactNativeAttributePayload.create(
       nativeProps,
       this.viewConfig.validAttributes,
     );
@@ -101,4 +99,4 @@ class ReactNativeFiberHostComponent {
 // eslint-disable-next-line no-unused-expressions
 (ReactNativeFiberHostComponent.prototype: NativeMethodsMixinType);
 
-module.exports = ReactNativeFiberHostComponent;
+export default ReactNativeFiberHostComponent;

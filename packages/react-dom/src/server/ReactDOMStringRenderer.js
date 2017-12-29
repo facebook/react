@@ -3,22 +3,18 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMStringRenderer
  */
 
-'use strict';
-
-var ReactPartialRenderer = require('ReactPartialRenderer');
+import ReactPartialRenderer from './ReactPartialRenderer';
 
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
  * server.
  * See https://reactjs.org/docs/react-dom-server.html#rendertostring
  */
-function renderToString(element) {
-  var renderer = new ReactPartialRenderer(element, false);
-  var markup = renderer.read(Infinity);
+export function renderToString(element) {
+  const renderer = new ReactPartialRenderer(element, false);
+  const markup = renderer.read(Infinity);
   return markup;
 }
 
@@ -27,13 +23,8 @@ function renderToString(element) {
  * such as data-react-id that React uses internally.
  * See https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup
  */
-function renderToStaticMarkup(element) {
-  var renderer = new ReactPartialRenderer(element, true);
-  var markup = renderer.read(Infinity);
+export function renderToStaticMarkup(element) {
+  const renderer = new ReactPartialRenderer(element, true);
+  const markup = renderer.read(Infinity);
   return markup;
 }
-
-module.exports = {
-  renderToString: renderToString,
-  renderToStaticMarkup: renderToStaticMarkup,
-};

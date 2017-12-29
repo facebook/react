@@ -9,21 +9,21 @@
 
 'use strict';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var ReactTestUtils = require('react-dom/test-utils');
+const React = require('react');
+const ReactDOM = require('react-dom');
+const ReactTestUtils = require('react-dom/test-utils');
 
 // Helpers
-var testAllPermutations = function(testCases) {
-  for (var i = 0; i < testCases.length; i += 2) {
-    var renderWithChildren = testCases[i];
-    var expectedResultAfterRender = testCases[i + 1];
+const testAllPermutations = function(testCases) {
+  for (let i = 0; i < testCases.length; i += 2) {
+    const renderWithChildren = testCases[i];
+    const expectedResultAfterRender = testCases[i + 1];
 
-    for (var j = 0; j < testCases.length; j += 2) {
-      var updateWithChildren = testCases[j];
-      var expectedResultAfterUpdate = testCases[j + 1];
+    for (let j = 0; j < testCases.length; j += 2) {
+      const updateWithChildren = testCases[j];
+      const expectedResultAfterUpdate = testCases[j + 1];
 
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div>{renderWithChildren}</div>, container);
       expectChildren(container, expectedResultAfterRender);
 
@@ -33,9 +33,9 @@ var testAllPermutations = function(testCases) {
   }
 };
 
-var expectChildren = function(container, children) {
-  var outerNode = container.firstChild;
-  var textNode;
+const expectChildren = function(container, children) {
+  const outerNode = container.firstChild;
+  let textNode;
   if (typeof children === 'string') {
     textNode = outerNode.firstChild;
 
@@ -47,10 +47,10 @@ var expectChildren = function(container, children) {
       expect(textNode.data).toBe('' + children);
     }
   } else {
-    var mountIndex = 0;
+    let mountIndex = 0;
 
-    for (var i = 0; i < children.length; i++) {
-      var child = children[i];
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
 
       if (typeof child === 'string') {
         textNode = outerNode.childNodes[mountIndex];
@@ -58,7 +58,7 @@ var expectChildren = function(container, children) {
         expect(textNode.data).toBe('' + child);
         mountIndex++;
       } else {
-        var elementDOMNode = outerNode.childNodes[mountIndex];
+        const elementDOMNode = outerNode.childNodes[mountIndex];
         expect(elementDOMNode.tagName).toBe('DIV');
         mountIndex++;
       }
@@ -73,7 +73,7 @@ var expectChildren = function(container, children) {
  */
 describe('ReactMultiChildText', () => {
   it('should correctly handle all possible children for render and update', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     // prettier-ignore
     testAllPermutations([
       // basic values
@@ -162,13 +162,15 @@ describe('ReactMultiChildText', () => {
       ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
 
-    expectDev(console.error.calls.count()).toBe(2);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.',
-    );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(2);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+    }
   });
 
   it('should throw if rendering both HTML and children', () => {
@@ -180,18 +182,37 @@ describe('ReactMultiChildText', () => {
   });
 
   it('should render between nested components and inline children', () => {
-    ReactTestUtils.renderIntoDocument(<div><h1><span /><span /></h1></div>);
+    ReactTestUtils.renderIntoDocument(
+      <div>
+        <h1>
+          <span />
+          <span />
+        </h1>
+      </div>,
+    );
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><h1>A</h1></div>);
+      ReactTestUtils.renderIntoDocument(
+        <div>
+          <h1>A</h1>
+        </div>,
+      );
     }).not.toThrow();
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><h1>{['A']}</h1></div>);
+      ReactTestUtils.renderIntoDocument(
+        <div>
+          <h1>{['A']}</h1>
+        </div>,
+      );
     }).not.toThrow();
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><h1>{['A', 'B']}</h1></div>);
+      ReactTestUtils.renderIntoDocument(
+        <div>
+          <h1>{['A', 'B']}</h1>
+        </div>,
+      );
     }).not.toThrow();
   });
 });

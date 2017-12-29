@@ -4,17 +4,16 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeAttributePayload
  * @flow
  */
-'use strict';
 
-var ReactNativePropRegistry = require('ReactNativePropRegistry');
+// Modules provided by RN:
+import deepDiffer from 'deepDiffer';
+import flattenStyle from 'flattenStyle';
 
-var deepDiffer = require('deepDiffer');
-var flattenStyle = require('flattenStyle');
+import ReactNativePropRegistry from './ReactNativePropRegistry';
 
-var emptyObject = {};
+const emptyObject = {};
 
 /**
  * Create a payload that contains all the updates between two sets of props.
@@ -42,8 +41,8 @@ type AttributeConfiguration = {
 type NestedNode = Array<NestedNode> | Object | number;
 
 // Tracks removed keys
-var removedKeys = null;
-var removedKeyCount = 0;
+let removedKeys = null;
+let removedKeyCount = 0;
 
 function defaultDiffer(prevProp: mixed, nextProp: mixed): boolean {
   if (typeof nextProp !== 'object' || nextProp === null) {
@@ -68,7 +67,7 @@ function restoreDeletedValuesInNestedArray(
   validAttributes: AttributeConfiguration,
 ) {
   if (Array.isArray(node)) {
-    var i = node.length;
+    let i = node.length;
     while (i-- && removedKeyCount > 0) {
       restoreDeletedValuesInNestedArray(
         updatePayload,
@@ -77,17 +76,17 @@ function restoreDeletedValuesInNestedArray(
       );
     }
   } else if (node && removedKeyCount > 0) {
-    var obj = resolveObject(node);
-    for (var propKey in removedKeys) {
+    const obj = resolveObject(node);
+    for (const propKey in removedKeys) {
       if (!removedKeys[propKey]) {
         continue;
       }
-      var nextProp = obj[propKey];
+      let nextProp = obj[propKey];
       if (nextProp === undefined) {
         continue;
       }
 
-      var attributeConfig = validAttributes[propKey];
+      const attributeConfig = validAttributes[propKey];
       if (!attributeConfig) {
         continue; // not a valid native prop
       }
@@ -107,9 +106,10 @@ function restoreDeletedValuesInNestedArray(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue = typeof attributeConfig.process === 'function'
-          ? attributeConfig.process(nextProp)
-          : nextProp;
+        const nextValue =
+          typeof attributeConfig.process === 'function'
+            ? attributeConfig.process(nextProp)
+            : nextProp;
         updatePayload[propKey] = nextValue;
       }
       removedKeys[propKey] = false;
@@ -124,10 +124,9 @@ function diffNestedArrayProperty(
   nextArray: Array<NestedNode>,
   validAttributes: AttributeConfiguration,
 ): ?Object {
-  var minLength = prevArray.length < nextArray.length
-    ? prevArray.length
-    : nextArray.length;
-  var i;
+  const minLength =
+    prevArray.length < nextArray.length ? prevArray.length : nextArray.length;
+  let i;
   for (i = 0; i < minLength; i++) {
     // Diff any items in the array in the forward direction. Repeated keys
     // will be overwritten by later values.
@@ -242,7 +241,7 @@ function addNestedProperty(
     );
   }
 
-  for (var i = 0; i < nextProp.length; i++) {
+  for (let i = 0; i < nextProp.length; i++) {
     // Add all the properties of the array.
     updatePayload = addNestedProperty(
       updatePayload,
@@ -276,7 +275,7 @@ function clearNestedProperty(
     );
   }
 
-  for (var i = 0; i < prevProp.length; i++) {
+  for (let i = 0; i < prevProp.length; i++) {
     // Add all the properties of the array.
     updatePayload = clearNestedProperty(
       updatePayload,
@@ -299,11 +298,11 @@ function diffProperties(
   nextProps: Object,
   validAttributes: AttributeConfiguration,
 ): ?Object {
-  var attributeConfig: ?(CustomAttributeConfiguration | AttributeConfiguration);
-  var nextProp;
-  var prevProp;
+  let attributeConfig: ?(CustomAttributeConfiguration | AttributeConfiguration);
+  let nextProp;
+  let prevProp;
 
-  for (var propKey in nextProps) {
+  for (const propKey in nextProps) {
     attributeConfig = validAttributes[propKey];
     if (!attributeConfig) {
       continue; // not a valid native prop
@@ -351,9 +350,10 @@ function diffProperties(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue = typeof attributeConfig.process === 'function'
-          ? attributeConfig.process(nextProp)
-          : nextProp;
+        const nextValue =
+          typeof attributeConfig.process === 'function'
+            ? attributeConfig.process(nextProp)
+            : nextProp;
         updatePayload[propKey] = nextValue;
       }
       continue;
@@ -375,15 +375,16 @@ function diffProperties(
       typeof attributeConfig.process === 'function'
     ) {
       // case: CustomAttributeConfiguration
-      var shouldUpdate =
+      const shouldUpdate =
         prevProp === undefined ||
         (typeof attributeConfig.diff === 'function'
           ? attributeConfig.diff(prevProp, nextProp)
           : defaultDiffer(prevProp, nextProp));
       if (shouldUpdate) {
-        nextValue = typeof attributeConfig.process === 'function'
-          ? attributeConfig.process(nextProp)
-          : nextProp;
+        const nextValue =
+          typeof attributeConfig.process === 'function'
+            ? attributeConfig.process(nextProp)
+            : nextProp;
         (updatePayload || (updatePayload = {}))[propKey] = nextValue;
       }
     } else {
@@ -412,7 +413,7 @@ function diffProperties(
   // Also iterate through all the previous props to catch any that have been
   // removed and make sure native gets the signal so it can reset them to the
   // default.
-  for (propKey in prevProps) {
+  for (const propKey in prevProps) {
     if (nextProps[propKey] !== undefined) {
       continue; // we've already covered this key in the previous pass
     }
@@ -485,30 +486,26 @@ function clearProperties(
   return diffProperties(updatePayload, prevProps, emptyObject, validAttributes);
 }
 
-var ReactNativeAttributePayload = {
-  create: function(
-    props: Object,
-    validAttributes: AttributeConfiguration,
-  ): ?Object {
-    return addProperties(
-      null, // updatePayload
-      props,
-      validAttributes,
-    );
-  },
+export function create(
+  props: Object,
+  validAttributes: AttributeConfiguration,
+): ?Object {
+  return addProperties(
+    null, // updatePayload
+    props,
+    validAttributes,
+  );
+}
 
-  diff: function(
-    prevProps: Object,
-    nextProps: Object,
-    validAttributes: AttributeConfiguration,
-  ): ?Object {
-    return diffProperties(
-      null, // updatePayload
-      prevProps,
-      nextProps,
-      validAttributes,
-    );
-  },
-};
-
-module.exports = ReactNativeAttributePayload;
+export function diff(
+  prevProps: Object,
+  nextProps: Object,
+  validAttributes: AttributeConfiguration,
+): ?Object {
+  return diffProperties(
+    null, // updatePayload
+    prevProps,
+    nextProps,
+    validAttributes,
+  );
+}

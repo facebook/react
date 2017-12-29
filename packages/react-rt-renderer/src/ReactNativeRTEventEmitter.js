@@ -4,16 +4,16 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeRTEventEmitter
  * @flow
  */
-'use strict';
 
-var ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-var ReactGenericBatching = require('ReactGenericBatching');
-var BatchedBridge = require('BatchedBridge');
+import {batchedUpdates} from 'events/ReactGenericBatching';
+// Module provided by RN:
+import BatchedBridge from 'BatchedBridge';
 
-var ReactNativeRTEventEmitter = {
+import {getFiberCurrentPropsFromTag} from './ReactNativeRTComponentTree';
+
+const ReactNativeRTEventEmitter = {
   /**
    * Publicly exposed method on module for native objc to invoke when a top
    * level event is extracted.
@@ -26,16 +26,16 @@ var ReactNativeRTEventEmitter = {
     topLevelType: string,
     nativeEventParam: Object,
   ) {
-    var nativeEvent = nativeEventParam;
-    var props = ReactNativeRTComponentTree.getFiberCurrentPropsFromTag(tag);
+    const nativeEvent = nativeEventParam;
+    const props = getFiberCurrentPropsFromTag(tag);
     if (props == null) {
       return;
     }
-    var eventHandler = props[topLevelType];
+    const eventHandler = props[topLevelType];
     if (typeof eventHandler !== 'function') {
       return;
     }
-    ReactGenericBatching.batchedUpdates(function() {
+    batchedUpdates(function() {
       eventHandler(nativeEvent);
     });
   },

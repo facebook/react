@@ -4,14 +4,13 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule takeSnapshot
  * @flow
  */
-'use strict';
 
-const UIManager = require('UIManager');
+// Module provided by RN:
+import UIManager from 'UIManager';
 
-const findNumericNodeHandle = require('findNumericNodeHandle');
+import findNumericNodeHandle from './findNumericNodeHandle';
 
 /**
  * Capture an image of the screen, window or an individual view. The image
@@ -30,7 +29,7 @@ const findNumericNodeHandle = require('findNumericNodeHandle');
  * Returns a Promise.
  * @platform ios
  */
-function takeSnapshot(
+export default function takeSnapshot(
   view?: 'window' | React$Element<any> | number,
   options?: {
     width?: number,
@@ -47,5 +46,3 @@ function takeSnapshot(
   // prevent accidental backwards-incompatible usage.
   return UIManager.__takeSnapshot(view, options);
 }
-
-module.exports = takeSnapshot;

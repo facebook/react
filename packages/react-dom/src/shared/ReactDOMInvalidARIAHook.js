@@ -3,32 +3,23 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMInvalidARIAHook
  */
 
-'use strict';
+import warning from 'fbjs/lib/warning';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 
-var DOMProperty = require('DOMProperty');
-var isCustomComponent = require('isCustomComponent');
+import {ATTRIBUTE_NAME_CHAR} from './DOMProperty';
+import isCustomComponent from './isCustomComponent';
+import validAriaProperties from './validAriaProperties';
 
-var warnedProperties = {};
-var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
-var rARIACamel = new RegExp(
-  '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
-);
+const warnedProperties = {};
+const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
+const rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
-
-  var validAriaProperties = require('./validAriaProperties');
-}
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function getStackAddendum() {
-  var stack = ReactDebugCurrentFrame.getStackAddendum();
+  const stack = ReactDebugCurrentFrame.getStackAddendum();
   return stack != null ? stack : '';
 }
 
@@ -38,8 +29,8 @@ function validateProperty(tagName, name) {
   }
 
   if (rARIACamel.test(name)) {
-    var ariaName = 'aria-' + name.slice(4).toLowerCase();
-    var correctName = validAriaProperties.hasOwnProperty(ariaName)
+    const ariaName = 'aria-' + name.slice(4).toLowerCase();
+    const correctName = validAriaProperties.hasOwnProperty(ariaName)
       ? ariaName
       : null;
 
@@ -70,8 +61,8 @@ function validateProperty(tagName, name) {
   }
 
   if (rARIA.test(name)) {
-    var lowerCasedName = name.toLowerCase();
-    var standardName = validAriaProperties.hasOwnProperty(lowerCasedName)
+    const lowerCasedName = name.toLowerCase();
+    const standardName = validAriaProperties.hasOwnProperty(lowerCasedName)
       ? lowerCasedName
       : null;
 
@@ -101,8 +92,8 @@ function validateProperty(tagName, name) {
 function warnInvalidARIAProps(type, props) {
   const invalidProps = [];
 
-  for (var key in props) {
-    var isValid = validateProperty(type, key);
+  for (const key in props) {
+    const isValid = validateProperty(type, key);
     if (!isValid) {
       invalidProps.push(key);
     }
@@ -133,15 +124,9 @@ function warnInvalidARIAProps(type, props) {
   }
 }
 
-function validateProperties(type, props) {
+export function validateProperties(type, props) {
   if (isCustomComponent(type, props)) {
     return;
   }
   warnInvalidARIAProps(type, props);
 }
-
-var ReactDOMInvalidARIAHook = {
-  validateProperties,
-};
-
-module.exports = ReactDOMInvalidARIAHook;

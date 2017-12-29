@@ -4,19 +4,16 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberHostContext
  * @flow
  */
 
-'use strict';
-
 import type {HostConfig} from 'react-reconciler';
-import type {Fiber} from 'ReactFiber';
-import type {StackCursor} from 'ReactFiberStack';
+import type {Fiber} from './ReactFiber';
+import type {StackCursor} from './ReactFiberStack';
 
-const {createCursor, pop, push} = require('ReactFiberStack');
+import invariant from 'fbjs/lib/invariant';
 
-const invariant = require('fbjs/lib/invariant');
+import {createCursor, pop, push} from './ReactFiberStack';
 
 declare class NoContextT {}
 const NO_CONTEXT: NoContextT = ({}: any);
@@ -31,8 +28,8 @@ export type HostContext<C, CX> = {
   resetHostContainer(): void,
 };
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): HostContext<C, CX> {
   const {getChildHostContext, getRootHostContext} = config;
 
@@ -85,8 +82,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   }
 
   function pushHostContext(fiber: Fiber): void {
-    const rootInstance = requiredContext(rootInstanceStackCursor.current);
-    const context = requiredContext(contextStackCursor.current);
+    const rootInstance: C = requiredContext(rootInstanceStackCursor.current);
+    const context: CX = requiredContext(contextStackCursor.current);
     const nextContext = getChildHostContext(context, fiber.type, rootInstance);
 
     // Don't push this Fiber's context unless it's unique.
@@ -125,4 +122,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     pushHostContext,
     resetHostContainer,
   };
-};
+}

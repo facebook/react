@@ -4,13 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule accumulateInto
  * @flow
  */
 
-'use strict';
-
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Accumulates items that must not be null or undefined into the first one. This
@@ -26,7 +23,7 @@ var invariant = require('fbjs/lib/invariant');
  */
 
 function accumulateInto<T>(
-  current: ?(T | Array<T>),
+  current: ?(Array<T> | T),
   next: T | Array<T>,
 ): T | Array<T> {
   invariant(
@@ -57,4 +54,4 @@ function accumulateInto<T>(
   return [current, next];
 }
 
-module.exports = accumulateInto;
+export default accumulateInto;

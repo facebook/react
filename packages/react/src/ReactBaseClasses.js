@@ -3,22 +3,18 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactBaseClasses
  */
 
-'use strict';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 
-var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
-
-var emptyObject = require('fbjs/lib/emptyObject');
-var invariant = require('fbjs/lib/invariant');
-var lowPriorityWarning = require('lowPriorityWarning');
+import ReactNoopUpdateQueue from './ReactNoopUpdateQueue';
 
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactComponent(props, context, updater) {
+function Component(props, context, updater) {
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
@@ -27,7 +23,7 @@ function ReactComponent(props, context, updater) {
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-ReactComponent.prototype.isReactComponent = {};
+Component.prototype.isReactComponent = {};
 
 /**
  * Sets a subset of the state. Always use this to mutate
@@ -54,7 +50,7 @@ ReactComponent.prototype.isReactComponent = {};
  * @final
  * @protected
  */
-ReactComponent.prototype.setState = function(partialState, callback) {
+Component.prototype.setState = function(partialState, callback) {
   invariant(
     typeof partialState === 'object' ||
       typeof partialState === 'function' ||
@@ -79,7 +75,7 @@ ReactComponent.prototype.setState = function(partialState, callback) {
  * @final
  * @protected
  */
-ReactComponent.prototype.forceUpdate = function(callback) {
+Component.prototype.forceUpdate = function(callback) {
   this.updater.enqueueForceUpdate(this, callback, 'forceUpdate');
 };
 
@@ -89,7 +85,7 @@ ReactComponent.prototype.forceUpdate = function(callback) {
  * modern base class. Instead, we define a getter that warns if it's accessed.
  */
 if (__DEV__) {
-  var deprecatedAPIs = {
+  const deprecatedAPIs = {
     isMounted: [
       'isMounted',
       'Instead, make sure to clean up subscriptions and pending requests in ' +
@@ -101,8 +97,8 @@ if (__DEV__) {
         'https://github.com/facebook/react/issues/3236).',
     ],
   };
-  var defineDeprecationWarning = function(methodName, info) {
-    Object.defineProperty(ReactComponent.prototype, methodName, {
+  const defineDeprecationWarning = function(methodName, info) {
+    Object.defineProperty(Component.prototype, methodName, {
       get: function() {
         lowPriorityWarning(
           false,
@@ -114,7 +110,7 @@ if (__DEV__) {
       },
     });
   };
-  for (var fnName in deprecatedAPIs) {
+  for (const fnName in deprecatedAPIs) {
     if (deprecatedAPIs.hasOwnProperty(fnName)) {
       defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
     }
@@ -124,8 +120,8 @@ if (__DEV__) {
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactPureComponent(props, context, updater) {
-  // Duplicated from ReactComponent.
+function PureComponent(props, context, updater) {
+  // Duplicated from Component.
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
@@ -135,15 +131,15 @@ function ReactPureComponent(props, context, updater) {
 }
 
 function ComponentDummy() {}
-ComponentDummy.prototype = ReactComponent.prototype;
-var pureComponentPrototype = (ReactPureComponent.prototype = new ComponentDummy());
-pureComponentPrototype.constructor = ReactPureComponent;
+ComponentDummy.prototype = Component.prototype;
+const pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
+pureComponentPrototype.constructor = PureComponent;
 // Avoid an extra prototype jump for these methods.
-Object.assign(pureComponentPrototype, ReactComponent.prototype);
+Object.assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = true;
 
-function ReactAsyncComponent(props, context, updater) {
-  // Duplicated from ReactComponent.
+function AsyncComponent(props, context, updater) {
+  // Duplicated from Component.
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
@@ -152,17 +148,13 @@ function ReactAsyncComponent(props, context, updater) {
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-var asyncComponentPrototype = (ReactAsyncComponent.prototype = new ComponentDummy());
-asyncComponentPrototype.constructor = ReactAsyncComponent;
+const asyncComponentPrototype = (AsyncComponent.prototype = new ComponentDummy());
+asyncComponentPrototype.constructor = AsyncComponent;
 // Avoid an extra prototype jump for these methods.
-Object.assign(asyncComponentPrototype, ReactComponent.prototype);
+Object.assign(asyncComponentPrototype, Component.prototype);
 asyncComponentPrototype.unstable_isAsyncReactComponent = true;
 asyncComponentPrototype.render = function() {
   return this.props.children;
 };
 
-module.exports = {
-  Component: ReactComponent,
-  PureComponent: ReactPureComponent,
-  AsyncComponent: ReactAsyncComponent,
-};
+export {Component, PureComponent, AsyncComponent};

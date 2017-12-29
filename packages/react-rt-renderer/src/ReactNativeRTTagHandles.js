@@ -4,12 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeRTTagHandles
  * @flow
  */
-'use strict';
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Keeps track of allocating and associating native "tags" which are numeric,
@@ -24,14 +22,14 @@ var invariant = require('fbjs/lib/invariant');
  * Why: Because `dangerouslyReplaceNodeWithMarkupByID` relies on being able to
  * unmount a component with a `rootNodeID`, then mount a new one in its place,
  */
-var INITIAL_TAG_COUNT = 1;
-var ReactNativeRTTagHandles = {
+const INITIAL_TAG_COUNT = 1;
+const ReactNativeRTTagHandles = {
   tagsStartAt: INITIAL_TAG_COUNT,
   tagCount: INITIAL_TAG_COUNT,
 
   allocateTag: function(): number {
     // Skip over root IDs as those are reserved for native
-    var tag = ReactNativeRTTagHandles.tagCount;
+    const tag = ReactNativeRTTagHandles.tagCount;
     ReactNativeRTTagHandles.tagCount++;
     return tag;
   },
@@ -50,4 +48,4 @@ var ReactNativeRTTagHandles = {
   },
 };
 
-module.exports = ReactNativeRTTagHandles;
+export default ReactNativeRTTagHandles;

@@ -4,23 +4,20 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule inputValueTracking
  * @flow
  */
-
-'use strict';
 
 type ValueTracker = {
   getValue(): string,
   setValue(value: string): void,
   stopTracking(): void,
 };
-type WrapperState = {_valueTracker: ?ValueTracker};
+type WrapperState = {_valueTracker?: ?ValueTracker};
 type ElementWithValueTracker = HTMLInputElement & WrapperState;
 
 function isCheckable(elem: HTMLInputElement) {
-  var type = elem.type;
-  var nodeName = elem.nodeName;
+  const type = elem.type;
+  const nodeName = elem.nodeName;
   return (
     nodeName &&
     nodeName.toLowerCase() === 'input' &&
@@ -37,7 +34,7 @@ function detachTracker(node: ElementWithValueTracker) {
 }
 
 function getValueFromNode(node: HTMLInputElement): string {
-  var value = '';
+  let value = '';
   if (!node) {
     return value;
   }
@@ -52,13 +49,13 @@ function getValueFromNode(node: HTMLInputElement): string {
 }
 
 function trackValueOnNode(node: any): ?ValueTracker {
-  var valueField = isCheckable(node) ? 'checked' : 'value';
-  var descriptor = Object.getOwnPropertyDescriptor(
+  const valueField = isCheckable(node) ? 'checked' : 'value';
+  const descriptor = Object.getOwnPropertyDescriptor(
     node.constructor.prototype,
     valueField,
   );
 
-  var currentValue = '' + node[valueField];
+  let currentValue = '' + node[valueField];
 
   // if someone has already defined a value or Safari, then bail
   // and don't track value will cause over reporting of changes,
@@ -84,7 +81,7 @@ function trackValueOnNode(node: any): ?ValueTracker {
     },
   });
 
-  var tracker = {
+  const tracker = {
     getValue() {
       return currentValue;
     },
@@ -99,46 +96,39 @@ function trackValueOnNode(node: any): ?ValueTracker {
   return tracker;
 }
 
-var inputValueTracking = {
-  // exposed for testing
-  _getTrackerFromNode: getTracker,
+export function track(node: ElementWithValueTracker) {
+  if (getTracker(node)) {
+    return;
+  }
 
-  track(node: ElementWithValueTracker) {
-    if (getTracker(node)) {
-      return;
-    }
+  // TODO: Once it's just Fiber we can move this to node._wrapperState
+  node._valueTracker = trackValueOnNode(node);
+}
 
-    // TODO: Once it's just Fiber we can move this to node._wrapperState
-    node._valueTracker = trackValueOnNode(node);
-  },
-
-  updateValueIfChanged(node: ElementWithValueTracker) {
-    if (!node) {
-      return false;
-    }
-
-    var tracker = getTracker(node);
-    // if there is no tracker at this point it's unlikely
-    // that trying again will succeed
-    if (!tracker) {
-      return true;
-    }
-
-    var lastValue = tracker.getValue();
-    var nextValue = getValueFromNode(node);
-    if (nextValue !== lastValue) {
-      tracker.setValue(nextValue);
-      return true;
-    }
+export function updateValueIfChanged(node: ElementWithValueTracker) {
+  if (!node) {
     return false;
-  },
+  }
 
-  stopTracking(node: ElementWithValueTracker) {
-    var tracker = getTracker(node);
-    if (tracker) {
-      tracker.stopTracking();
-    }
-  },
-};
+  const tracker = getTracker(node);
+  // if there is no tracker at this point it's unlikely
+  // that trying again will succeed
+  if (!tracker) {
+    return true;
+  }
 
-module.exports = inputValueTracking;
+  const lastValue = tracker.getValue();
+  const nextValue = getValueFromNode(node);
+  if (nextValue !== lastValue) {
+    tracker.setValue(nextValue);
+    return true;
+  }
+  return false;
+}
+
+export function stopTracking(node: ElementWithValueTracker) {
+  const tracker = getTracker(node);
+  if (tracker) {
+    tracker.stopTracking();
+  }
+}

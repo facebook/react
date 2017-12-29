@@ -38,7 +38,7 @@ try {
  * Attempts to load tags from sessionStorage. In cases where
  * sessionStorage is not available (Safari private browsing) or the
  * tags are cached a fetch request is made to the GitHub API.
- * 
+ *
  * Returns a promise so that the consuming module can always assume
  * the request is async, even if its loaded from sessionStorage.
  */

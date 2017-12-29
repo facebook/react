@@ -3,16 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule CSSProperty
  */
-
-'use strict';
 
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
-var isUnitlessNumber = {
+export const isUnitlessNumber = {
   animationIterationCount: true,
   borderImageOutset: true,
   borderImageSlice: true,
@@ -72,7 +68,7 @@ function prefixKey(prefix, key) {
  * Support style names that may come passed in prefixed by adding permutations
  * of vendor prefixes.
  */
-var prefixes = ['Webkit', 'ms', 'Moz', 'O'];
+const prefixes = ['Webkit', 'ms', 'Moz', 'O'];
 
 // Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
 // infinite loop, because it iterates over the newly added props too.
@@ -81,9 +77,3 @@ Object.keys(isUnitlessNumber).forEach(function(prop) {
     isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
   });
 });
-
-var CSSProperty = {
-  isUnitlessNumber: isUnitlessNumber,
-};
-
-module.exports = CSSProperty;

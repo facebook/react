@@ -4,10 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule reactProdInvariant
  * @flow
  */
-'use strict';
 
 /**
  * WARNING: DO NOT manually require this module.
@@ -16,16 +14,16 @@
  * It always throws.
  */
 function reactProdInvariant(code: string): void {
-  var argCount = arguments.length - 1;
+  const argCount = arguments.length - 1;
 
-  var message =
+  let message =
     'Minified React error #' +
     code +
     '; visit ' +
     'http://facebook.github.io/react/docs/error-decoder.html?invariant=' +
     code;
 
-  for (var argIdx = 0; argIdx < argCount; argIdx++) {
+  for (let argIdx = 0; argIdx < argCount; argIdx++) {
     message += '&args[]=' + encodeURIComponent(arguments[argIdx + 1]);
   }
 
@@ -33,11 +31,11 @@ function reactProdInvariant(code: string): void {
     ' for the full message or use the non-minified dev environment' +
     ' for full errors and additional helpful warnings.';
 
-  var error: Error & {framesToPop?: number} = new Error(message);
+  const error: Error & {framesToPop?: number} = new Error(message);
   error.name = 'Invariant Violation';
   error.framesToPop = 1; // we don't care about reactProdInvariant's own frame
 
   throw error;
 }
 
-module.exports = reactProdInvariant;
+export default reactProdInvariant;

@@ -1,10 +1,11 @@
 /**
- * @providesModule TouchHistoryMath
+ * Copyright (c) 2016-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var TouchHistoryMath = {
+const TouchHistoryMath = {
   /**
    * This code is optimized and not intended to look beautiful. This allows
    * computing of touch centroids that have moved after `touchesChangedAfter`
@@ -27,38 +28,40 @@ var TouchHistoryMath = {
     isXAxis,
     ofCurrent,
   ) {
-    var touchBank = touchHistory.touchBank;
-    var total = 0;
-    var count = 0;
+    const touchBank = touchHistory.touchBank;
+    let total = 0;
+    let count = 0;
 
-    var oneTouchData = touchHistory.numberActiveTouches === 1
-      ? touchHistory.touchBank[touchHistory.indexOfSingleActiveTouch]
-      : null;
+    const oneTouchData =
+      touchHistory.numberActiveTouches === 1
+        ? touchHistory.touchBank[touchHistory.indexOfSingleActiveTouch]
+        : null;
 
     if (oneTouchData !== null) {
       if (
         oneTouchData.touchActive &&
         oneTouchData.currentTimeStamp > touchesChangedAfter
       ) {
-        total += ofCurrent && isXAxis
-          ? oneTouchData.currentPageX
-          : ofCurrent && !isXAxis
+        total +=
+          ofCurrent && isXAxis
+            ? oneTouchData.currentPageX
+            : ofCurrent && !isXAxis
               ? oneTouchData.currentPageY
               : !ofCurrent && isXAxis
-                  ? oneTouchData.previousPageX
-                  : oneTouchData.previousPageY;
+                ? oneTouchData.previousPageX
+                : oneTouchData.previousPageY;
         count = 1;
       }
     } else {
-      for (var i = 0; i < touchBank.length; i++) {
-        var touchTrack = touchBank[i];
+      for (let i = 0; i < touchBank.length; i++) {
+        const touchTrack = touchBank[i];
         if (
           touchTrack !== null &&
           touchTrack !== undefined &&
           touchTrack.touchActive &&
           touchTrack.currentTimeStamp >= touchesChangedAfter
         ) {
-          var toAdd; // Yuck, program temporarily in invalid state.
+          let toAdd; // Yuck, program temporarily in invalid state.
           if (ofCurrent && isXAxis) {
             toAdd = touchTrack.currentPageX;
           } else if (ofCurrent && !isXAxis) {
@@ -145,4 +148,4 @@ var TouchHistoryMath = {
   noCentroid: -1,
 };
 
-module.exports = TouchHistoryMath;
+export default TouchHistoryMath;

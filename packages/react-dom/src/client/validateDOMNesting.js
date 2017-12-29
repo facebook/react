@@ -3,20 +3,17 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule validateDOMNesting
  */
 
-'use strict';
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import warning from 'fbjs/lib/warning';
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
-
-var validateDOMNesting = emptyFunction;
+const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
+let validateDOMNesting = emptyFunction;
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
-
   // This validation code was written based on the HTML5 parsing spec:
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
   //
@@ -29,7 +26,7 @@ if (__DEV__) {
   // first, causing a confusing mess.
 
   // https://html.spec.whatwg.org/multipage/syntax.html#special
-  var specialTags = [
+  const specialTags = [
     'address',
     'applet',
     'area',
@@ -116,7 +113,7 @@ if (__DEV__) {
   ];
 
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
-  var inScopeTags = [
+  const inScopeTags = [
     'applet',
     'caption',
     'html',
@@ -136,10 +133,10 @@ if (__DEV__) {
   ];
 
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-button-scope
-  var buttonScopeTags = inScopeTags.concat(['button']);
+  const buttonScopeTags = inScopeTags.concat(['button']);
 
   // https://html.spec.whatwg.org/multipage/syntax.html#generate-implied-end-tags
-  var impliedEndTags = [
+  const impliedEndTags = [
     'dd',
     'dt',
     'li',
@@ -150,7 +147,7 @@ if (__DEV__) {
     'rt',
   ];
 
-  var emptyAncestorInfo = {
+  const emptyAncestorInfo = {
     current: null,
 
     formTag: null,
@@ -163,9 +160,9 @@ if (__DEV__) {
     dlItemTagAutoclosing: null,
   };
 
-  var updatedAncestorInfo = function(oldInfo, tag, instance) {
-    var ancestorInfo = Object.assign({}, oldInfo || emptyAncestorInfo);
-    var info = {tag: tag, instance: instance};
+  const updatedAncestorInfo = function(oldInfo, tag, instance) {
+    let ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
+    let info = {tag: tag, instance: instance};
 
     if (inScopeTags.indexOf(tag) !== -1) {
       ancestorInfo.aTagInScope = null;
@@ -218,7 +215,7 @@ if (__DEV__) {
   /**
    * Returns whether
    */
-  var isTagValidWithParent = function(tag, parentTag) {
+  const isTagValidWithParent = function(tag, parentTag) {
     // First, let's check if we're in an unusual parsing mode...
     switch (parentTag) {
       // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
@@ -340,7 +337,7 @@ if (__DEV__) {
   /**
    * Returns whether
    */
-  var findInvalidAncestorForTag = function(tag, ancestorInfo) {
+  const findInvalidAncestorForTag = function(tag, ancestorInfo) {
     switch (tag) {
       case 'address':
       case 'article':
@@ -404,12 +401,12 @@ if (__DEV__) {
     return null;
   };
 
-  var didWarn = {};
+  const didWarn = {};
 
   validateDOMNesting = function(childTag, childText, ancestorInfo) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
-    var parentInfo = ancestorInfo.current;
-    var parentTag = parentInfo && parentInfo.tag;
+    const parentInfo = ancestorInfo.current;
+    const parentTag = parentInfo && parentInfo.tag;
 
     if (childText != null) {
       warning(
@@ -419,29 +416,29 @@ if (__DEV__) {
       childTag = '#text';
     }
 
-    var invalidParent = isTagValidWithParent(childTag, parentTag)
+    const invalidParent = isTagValidWithParent(childTag, parentTag)
       ? null
       : parentInfo;
-    var invalidAncestor = invalidParent
+    const invalidAncestor = invalidParent
       ? null
       : findInvalidAncestorForTag(childTag, ancestorInfo);
-    var invalidParentOrAncestor = invalidParent || invalidAncestor;
+    const invalidParentOrAncestor = invalidParent || invalidAncestor;
     if (!invalidParentOrAncestor) {
       return;
     }
 
-    var ancestorTag = invalidParentOrAncestor.tag;
-    var addendum = getCurrentFiberStackAddendum();
+    const ancestorTag = invalidParentOrAncestor.tag;
+    const addendum = getCurrentFiberStackAddendum();
 
-    var warnKey =
+    const warnKey =
       !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + addendum;
     if (didWarn[warnKey]) {
       return;
     }
     didWarn[warnKey] = true;
 
-    var tagDisplayName = childTag;
-    var whitespaceInfo = '';
+    let tagDisplayName = childTag;
+    let whitespaceInfo = '';
     if (childTag === '#text') {
       if (/\S/.test(childText)) {
         tagDisplayName = 'Text nodes';
@@ -456,7 +453,7 @@ if (__DEV__) {
     }
 
     if (invalidParent) {
-      var info = '';
+      let info = '';
       if (ancestorTag === 'table' && childTag === 'tr') {
         info +=
           ' Add a <tbody> to your code to match the DOM tree generated by ' +
@@ -483,18 +480,8 @@ if (__DEV__) {
     }
   };
 
+  // TODO: turn this into a named export
   validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
-
-  // For testing
-  validateDOMNesting.isTagValidInContext = function(tag, ancestorInfo) {
-    ancestorInfo = ancestorInfo || emptyAncestorInfo;
-    var parentInfo = ancestorInfo.current;
-    var parentTag = parentInfo && parentInfo.tag;
-    return (
-      isTagValidWithParent(tag, parentTag) &&
-      !findInvalidAncestorForTag(tag, ancestorInfo)
-    );
-  };
 }
 
-module.exports = validateDOMNesting;
+export default validateDOMNesting;

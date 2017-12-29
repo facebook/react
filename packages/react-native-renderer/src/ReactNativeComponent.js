@@ -4,22 +4,9 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeComponent
  * @flow
  * @format
  */
-
-'use strict';
-
-const React = require('react');
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-const TextInputState = require('TextInputState');
-const UIManager = require('UIManager');
-
-const findNodeHandle = require('findNodeHandle');
-const findNumericNodeHandle = require('findNumericNodeHandle');
-
-const {mountSafeCallback} = require('NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,
@@ -27,7 +14,17 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeTypes';
+} from './ReactNativeTypes';
+
+import React from 'react';
+// Modules provided by RN:
+import TextInputState from 'TextInputState';
+import UIManager from 'UIManager';
+
+import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
+import {mountSafeCallback} from './NativeMethodsMixinUtils';
+import findNodeHandle from './findNodeHandle';
+import findNumericNodeHandle from './findNumericNodeHandle';
 
 /**
  * Superclass that provides methods to access the underlying native component.
@@ -40,9 +37,11 @@ import type {
  *
  * @abstract
  */
-class ReactNativeComponent<DefaultProps, Props, State>
-  extends React.Component<Props, State> {
-  static defaultProps: $Abstract<DefaultProps>;
+class ReactNativeComponent<DefaultProps, Props, State> extends React.Component<
+  Props,
+  State,
+> {
+  static defaultProps: DefaultProps;
   props: Props;
   state: State;
 
@@ -152,7 +151,7 @@ class ReactNativeComponent<DefaultProps, Props, State>
     const viewConfig: ReactNativeBaseComponentViewConfig =
       maybeInstance.viewConfig;
 
-    var updatePayload = ReactNativeAttributePayload.create(
+    const updatePayload = ReactNativeAttributePayload.create(
       nativeProps,
       viewConfig.validAttributes,
     );
@@ -173,4 +172,4 @@ class ReactNativeComponent<DefaultProps, Props, State>
 // eslint-disable-next-line no-unused-expressions
 (ReactNativeComponent.prototype: NativeMethodsMixinType);
 
-module.exports = ReactNativeComponent;
+export default ReactNativeComponent;

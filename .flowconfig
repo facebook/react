@@ -2,7 +2,12 @@
 
 <PROJECT_ROOT>/fixtures/.*
 <PROJECT_ROOT>/build/.*
-<PROJECT_ROOT>/scripts/.*
+<PROJECT_ROOT>/scripts/bench/.*
+
+# These shims are copied into external projects:
+<PROJECT_ROOT>/scripts/rollup/shims/facebook-www/.*
+<PROJECT_ROOT>/scripts/rollup/shims/react-native/.*
+
 <PROJECT_ROOT>/.*/node_modules/y18n/.*
 <PROJECT_ROOT>/node_modules/chrome-devtools-frontend/.*
 <PROJECT_ROOT>/node_modules/devtools-timeline-model/.*
@@ -17,8 +22,6 @@
 ./scripts/flow
 
 [options]
-module.system=haste
-
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 unsafe.enable_getters_and_setters=true
@@ -30,10 +33,10 @@ suppress_type=$FlowFixMe
 suppress_type=$FixMe
 suppress_type=$FlowExpectedError
 
-suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe\\($\\|[^(]\\|(\\(>=0\\.\\(3[0-3]\\|[1-2][0-9]\\|[0-9]\\).[0-9]\\)? *\\(site=[a-z,_]*www[a-z,_]*\\)?)\\)
-suppress_comment=\\(.\\|\n\\)*\\$FlowIssue\\((\\(>=0\\.\\(3[0-3]\\|[1-2][0-9]\\|[0-9]\\).[0-9]\\)? *\\(site=[a-z,_]*www[a-z,_]*\\)?)\\)?:? #[0-9]+
+suppress_comment=\\(.\\|\n\\)*\\$FlowFixMe
+suppress_comment=\\(.\\|\n\\)*\\$FlowIssue
 suppress_comment=\\(.\\|\n\\)*\\$FlowFixedInNextDeploy
 suppress_comment=\\(.\\|\n\\)*\\$FlowExpectedError
 
 [version]
-^0.53.1
+^0.61.0

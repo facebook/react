@@ -7,24 +7,16 @@
 
 'use strict';
 
-var path = require('path');
-var spawn = require('child_process').spawn;
+const runESLint = require('../eslint');
 
-var extension = process.platform === 'win32' ? '.cmd' : '';
+console.log('Linting all files...');
+if (!process.CI) {
+  console.log('Hint: run `yarn linc` to only lint changed files.');
+}
 
-spawn(
-  path.join('node_modules', '.bin', 'eslint' + extension),
-  ['.', '--max-warnings=0'],
-  {
-    // Allow colors to pass through
-    stdio: 'inherit',
-  }
-).on('close', function(code) {
-  if (code !== 0) {
-    console.error('Lint failed');
-  } else {
-    console.log('Lint passed');
-  }
-
-  process.exit(code);
-});
+if (runESLint({onlyChanged: false})) {
+  console.log('Lint passed.');
+} else {
+  console.log('Lint failed.');
+  process.exit(1);
+}

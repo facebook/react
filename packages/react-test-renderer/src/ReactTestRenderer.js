@@ -7,25 +7,22 @@
  * @flow
  */
 
-'use strict';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
-var ReactFiberReconciler = require('react-reconciler');
-var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-var ReactGenericBatching = require('ReactGenericBatching');
-var emptyObject = require('fbjs/lib/emptyObject');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var invariant = require('fbjs/lib/invariant');
-var {
+import ReactFiberReconciler from 'react-reconciler';
+import {batchedUpdates} from 'events/ReactGenericBatching';
+import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
+import emptyObject from 'fbjs/lib/emptyObject';
+import {
   Fragment,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
   HostText,
   HostRoot,
-} = ReactTypeOfWork;
-
-import type {Fiber} from 'ReactFiber';
-import type {FiberRoot} from 'ReactFiberRoot';
+} from 'shared/ReactTypeOfWork';
+import invariant from 'fbjs/lib/invariant';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -114,7 +111,7 @@ function removeChild(
   parentInstance.children.splice(index, 1);
 }
 
-var TestRenderer = ReactFiberReconciler({
+const TestRenderer = ReactFiberReconciler({
   getRootHostContext() {
     return emptyObject;
   },
@@ -198,8 +195,12 @@ var TestRenderer = ReactFiberReconciler({
     };
   },
 
-  scheduleDeferredCallback(fn: Function): void {
-    setTimeout(fn, 0, {timeRemaining: Infinity});
+  scheduleDeferredCallback(fn: Function): number {
+    return setTimeout(fn, 0, {timeRemaining: Infinity});
+  },
+
+  cancelDeferredCallback(timeoutID: number): void {
+    clearTimeout(timeoutID);
   },
 
   useSyncScheduling: true,
@@ -253,7 +254,7 @@ var TestRenderer = ReactFiberReconciler({
   },
 });
 
-var defaultTestOptions = {
+const defaultTestOptions = {
   createNodeMock: function() {
     return null;
   },
@@ -288,8 +289,8 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
 }
 
 function nodeAndSiblingsTrees(nodeWithSibling: ?Fiber) {
-  var array = [];
-  var node = nodeWithSibling;
+  const array = [];
+  let node = nodeWithSibling;
   while (node != null) {
     array.push(node);
     node = node.sibling;
@@ -372,9 +373,7 @@ class ReactTestInstance {
 
   _currentFiber(): Fiber {
     // Throws if this component has been unmounted.
-    const fiber = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
-      this._fiber,
-    );
+    const fiber = findCurrentFiberUsingSlowPath(this._fiber);
     invariant(
       fiber !== null,
       "Can't read from currently-mounting component. This error is likely " +
@@ -545,9 +544,10 @@ function expectOne(
     return all[0];
   }
 
-  const prefix = all.length === 0
-    ? 'No instances found '
-    : `Expected 1 but found ${all.length} instances `;
+  const prefix =
+    all.length === 0
+      ? 'No instances found '
+      : `Expected 1 but found ${all.length} instances `;
 
   throw new Error(prefix + message);
 }
@@ -561,22 +561,26 @@ function propsMatch(props: Object, filter: Object): boolean {
   return true;
 }
 
-var ReactTestRendererFiber = {
+const ReactTestRendererFiber = {
   create(element: React$Element<any>, options: TestRendererOptions) {
-    var createNodeMock = defaultTestOptions.createNodeMock;
+    let createNodeMock = defaultTestOptions.createNodeMock;
     if (options && typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
     }
-    var container = {
+    let container = {
       children: [],
       createNodeMock,
       tag: 'CONTAINER',
     };
-    var root: FiberRoot | null = TestRenderer.createContainer(container, false);
+    let root: FiberRoot | null = TestRenderer.createContainer(
+      container,
+      false,
+      false,
+    );
     invariant(root != null, 'something went wrong');
     TestRenderer.updateContainer(element, root, null, null);
 
-    var entry = {
+    const entry = {
       root: undefined, // makes flow happy
       // we define a 'getter' for 'root' below using 'Object.defineProperty'
       toJSON() {
@@ -607,7 +611,7 @@ var ReactTestRendererFiber = {
         if (root == null || root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(null, root, null);
+        TestRenderer.updateContainer(null, root, null, null);
         container = null;
         root = null;
       },
@@ -638,8 +642,8 @@ var ReactTestRendererFiber = {
   },
 
   /* eslint-disable camelcase */
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
 };
 
-module.exports = ReactTestRendererFiber;
+export default ReactTestRendererFiber;

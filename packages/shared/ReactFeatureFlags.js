@@ -4,35 +4,28 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFeatureFlags
  * @flow
  */
 
-'use strict';
+import invariant from 'fbjs/lib/invariant';
 
-export type FeatureFlags = {|
-  enableAsyncSubtreeAPI: boolean,
-  enableAsyncSchedulingByDefaultInReactDOM: boolean,
-  enableMutatingReconciler: boolean,
-  enableNoopReconciler: boolean,
-  enablePersistentReconciler: boolean,
-|};
+export const enableAsyncSubtreeAPI = true;
+export const enableAsyncSchedulingByDefaultInReactDOM = false;
+// Exports ReactDOM.createRoot
+export const enableCreateRoot = false;
+export const enableUserTimingAPI = __DEV__;
 
-var ReactFeatureFlags: FeatureFlags = {
-  enableAsyncSubtreeAPI: true,
-  enableAsyncSchedulingByDefaultInReactDOM: false,
-  // Mutating mode (React DOM, React ART, React Native):
-  enableMutatingReconciler: true,
-  // Experimental noop mode (currently unused):
-  enableNoopReconciler: false,
-  // Experimental persistent mode (CS):
-  enablePersistentReconciler: false,
-};
+// Mutating mode (React DOM, React ART, React Native):
+export const enableMutatingReconciler = true;
+// Experimental noop mode (currently unused):
+export const enableNoopReconciler = false;
+// Experimental persistent mode (CS):
+export const enablePersistentReconciler = false;
 
-if (__DEV__) {
-  if (Object.freeze) {
-    Object.freeze(ReactFeatureFlags);
-  }
+// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
+export const debugRenderPhaseSideEffects = false;
+
+// Only used in www builds.
+export function addUserTimingListener() {
+  invariant(false, 'Not implemented.');
 }
-
-module.exports = ReactFeatureFlags;

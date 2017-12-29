@@ -4,35 +4,34 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeRTFiberRenderer
  * @flow
  */
 
-'use strict';
+import ReactFiberReconciler from 'react-reconciler';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+// Module provided by RN:
+import RTManager from 'RTManager';
 
-const ReactFiberReconciler = require('react-reconciler');
-const ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-const ReactNativeRTTagHandles = require('ReactNativeRTTagHandles');
-const RTManager = require('RTManager');
-
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
+import {
+  precacheFiberNode,
+  updateFiberProps,
+} from './ReactNativeRTComponentTree';
+import ReactNativeRTTagHandles from './ReactNativeRTTagHandles';
 
 export type Container = number;
 export type Instance = number;
 export type Props = Object;
 export type TextInstance = number;
 
-const {precacheFiberNode, updateFiberProps} = ReactNativeRTComponentTree;
-
 function processProps(instance: number, props: Props): Object {
   const propsPayload = {};
-  for (var key in props) {
+  for (const key in props) {
     if (key === 'children') {
       // Skip special case.
       continue;
     }
-    var value = props[key];
+    let value = props[key];
     if (typeof value === 'function') {
       value = {
         style: 'rt-event',
@@ -46,7 +45,7 @@ function processProps(instance: number, props: Props): Object {
 }
 
 function arePropsEqual(oldProps: Props, newProps: Props): boolean {
-  var key;
+  let key;
   for (key in newProps) {
     if (key === 'children') {
       // Skip special case.
@@ -147,6 +146,7 @@ const NativeRTRenderer = ReactFiberReconciler({
   },
 
   scheduleDeferredCallback: global.requestIdleCallback,
+  cancelDeferredCallback: global.cancelIdleCallback,
 
   shouldSetTextContent(type: string, props: Props): boolean {
     // TODO: Figure out when we should allow text content.
@@ -242,4 +242,4 @@ const NativeRTRenderer = ReactFiberReconciler({
   },
 });
 
-module.exports = NativeRTRenderer;
+export default NativeRTRenderer;

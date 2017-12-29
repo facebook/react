@@ -3,26 +3,23 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ChangeEventPlugin
  */
 
-'use strict';
+import {enqueueEvents, processEventQueue} from 'events/EventPluginHub';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import {enqueueStateRestore} from 'events/ReactControlledComponent';
+import {batchedUpdates} from 'events/ReactGenericBatching';
+import SyntheticEvent from 'events/SyntheticEvent';
+import isTextInputElement from 'shared/isTextInputElement';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-var EventPluginHub = require('EventPluginHub');
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactGenericBatching = require('ReactGenericBatching');
-var SyntheticEvent = require('SyntheticEvent');
+import getEventTarget from './getEventTarget';
+import isEventSupported from './isEventSupported';
+import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
+import * as inputValueTracking from '../client/inputValueTracking';
+import {setDefaultValue} from '../client/ReactDOMFiberInput';
 
-var inputValueTracking = require('inputValueTracking');
-var getEventTarget = require('getEventTarget');
-var isEventSupported = require('isEventSupported');
-var isTextInputElement = require('isTextInputElement');
-
-var eventTypes = {
+const eventTypes = {
   change: {
     phasedRegistrationNames: {
       bubbled: 'onChange',
@@ -42,7 +39,7 @@ var eventTypes = {
 };
 
 function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
-  var event = SyntheticEvent.getPooled(
+  const event = SyntheticEvent.getPooled(
     eventTypes.change,
     inst,
     nativeEvent,
@@ -50,28 +47,28 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
-  ReactControlledComponent.enqueueStateRestore(target);
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  enqueueStateRestore(target);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 /**
  * For IE shims
  */
-var activeElement = null;
-var activeElementInst = null;
+let activeElement = null;
+let activeElementInst = null;
 
 /**
  * SECTION: handle `change` event
  */
 function shouldUseChangeEvent(elem) {
-  var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
+  const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
   );
 }
 
 function manualDispatchChangeEvent(nativeEvent) {
-  var event = createAndAccumulateChangeEvent(
+  const event = createAndAccumulateChangeEvent(
     activeElementInst,
     nativeEvent,
     getEventTarget(nativeEvent),
@@ -88,16 +85,16 @@ function manualDispatchChangeEvent(nativeEvent) {
   // components don't work properly in conjunction with event bubbling because
   // the component is rerendered and the value reverted before all the event
   // handlers can run. See https://github.com/facebook/react/issues/708.
-  ReactGenericBatching.batchedUpdates(runEventInBatch, event);
+  batchedUpdates(runEventInBatch, event);
 }
 
 function runEventInBatch(event) {
-  EventPluginHub.enqueueEvents(event);
-  EventPluginHub.processEventQueue(false);
+  enqueueEvents(event);
+  processEventQueue(false);
 }
 
 function getInstIfValueChanged(targetInst) {
-  const targetNode = ReactDOMComponentTree.getNodeFromInstance(targetInst);
+  const targetNode = getNodeFromInstance(targetInst);
   if (inputValueTracking.updateValueIfChanged(targetNode)) {
     return targetInst;
   }
@@ -112,7 +109,7 @@ function getTargetInstForChangeEvent(topLevelType, targetInst) {
 /**
  * SECTION: handle `input` event
  */
-var isInputEventSupported = false;
+let isInputEventSupported = false;
 if (ExecutionEnvironment.canUseDOM) {
   // IE9 claims to support the input event but fails to trigger it when
   // deleting text, so we ignore its input events.
@@ -205,7 +202,7 @@ function shouldUseClickEvent(elem) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
-  var nodeName = elem.nodeName;
+  const nodeName = elem.nodeName;
   return (
     nodeName &&
     nodeName.toLowerCase() === 'input' &&
@@ -239,10 +236,7 @@ function handleControlledInputBlur(inst, node) {
   }
 
   // If controlled, assign the value attribute to the current value on blur
-  let value = '' + node.value;
-  if (node.getAttribute('value') !== value) {
-    node.setAttribute('value', value);
-  }
+  setDefaultValue(node, 'number', node.value);
 }
 
 /**
@@ -255,7 +249,7 @@ function handleControlledInputBlur(inst, node) {
  * - textarea
  * - select
  */
-var ChangeEventPlugin = {
+const ChangeEventPlugin = {
   eventTypes: eventTypes,
 
   _isInputEventSupported: isInputEventSupported,
@@ -266,11 +260,9 @@ var ChangeEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var targetNode = targetInst
-      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
-      : window;
+    const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
-    var getTargetInstFunc, handleEventFunc;
+    let getTargetInstFunc, handleEventFunc;
     if (shouldUseChangeEvent(targetNode)) {
       getTargetInstFunc = getTargetInstForChangeEvent;
     } else if (isTextInputElement(targetNode)) {
@@ -285,9 +277,9 @@ var ChangeEventPlugin = {
     }
 
     if (getTargetInstFunc) {
-      var inst = getTargetInstFunc(topLevelType, targetInst);
+      const inst = getTargetInstFunc(topLevelType, targetInst);
       if (inst) {
-        var event = createAndAccumulateChangeEvent(
+        const event = createAndAccumulateChangeEvent(
           inst,
           nativeEvent,
           nativeEventTarget,
@@ -307,4 +299,4 @@ var ChangeEventPlugin = {
   },
 };
 
-module.exports = ChangeEventPlugin;
+export default ChangeEventPlugin;

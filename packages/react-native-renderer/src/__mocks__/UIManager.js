@@ -9,7 +9,7 @@
 
 // Mock of the Native Hooks
 
-const ReactNativeTagHandles = require('ReactNativeTagHandles');
+const ReactNativeTagHandles = require('../ReactNativeTagHandles').default;
 const invariant = require('fbjs/lib/invariant');
 
 // Map of viewTag -> {children: [childTag], parent: ?parentTag}
@@ -57,7 +57,7 @@ function removeChild(parent, child) {
   childInfo.parent = null;
 }
 
-var RCTUIManager = {
+const RCTUIManager = {
   __dumpHierarchyForJestTestsOnly: function() {
     return roots.map(tag => dumpSubtree(tag, 0)).join('\n');
 

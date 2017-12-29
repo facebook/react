@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React;
-var ReactNoop;
+let React;
+let ReactNoop;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
@@ -128,7 +128,13 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       render() {
         instance = this;
-        return <span prop={Object.keys(this.state).sort().join('')} />;
+        return (
+          <span
+            prop={Object.keys(this.state)
+              .sort()
+              .join('')}
+          />
+        );
       }
     }
 
@@ -177,7 +183,13 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       render() {
         instance = this;
-        return <span prop={Object.keys(this.state).sort().join('')} />;
+        return (
+          <span
+            prop={Object.keys(this.state)
+              .sort()
+              .join('')}
+          />
+        );
       }
     }
 
@@ -308,7 +320,7 @@ describe('ReactIncrementalUpdates', () => {
   });
 
   it('enqueues setState inside an updater function as if the in-progress update is progressed (and warns)', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     let instance;
     let ops = [];
     class Foo extends React.Component {
@@ -340,7 +352,24 @@ describe('ReactIncrementalUpdates', () => {
     ]);
     expect(instance.state).toEqual({a: 'a', b: 'b'});
 
-    expectDev(console.error.calls.count()).toBe(1);
-    console.error.calls.reset();
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'An update (setState, replaceState, or forceUpdate) was scheduled ' +
+          'from inside an update function. Update functions should be pure, ' +
+          'with zero side-effects. Consider using componentDidUpdate or a ' +
+          'callback.',
+      );
+    }
+
+    // Test deduplication
+    instance.setState(function a() {
+      this.setState({a: 'a'});
+      return {b: 'b'};
+    });
+    ReactNoop.flush();
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
   });
 });

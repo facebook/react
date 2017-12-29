@@ -9,18 +9,18 @@
 
 'use strict';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var ReactTestUtils = require('react-dom/test-utils');
+let React = require('react');
+let ReactDOM = require('react-dom');
+const ReactTestUtils = require('react-dom/test-utils');
 
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which
   // supports real submit events.
   /*
   it('should bubble onSubmit', function() {
-    var count = 0;
-    var form;
-    var Parent = React.createClass({
+    const count = 0;
+    const form;
+    const Parent = React.createClass({
       handleSubmit: function() {
         count++;
         return false;
@@ -29,7 +29,7 @@ describe('ReactDOM', () => {
         return <Child />;
       }
     });
-    var Child = React.createClass({
+    const Child = React.createClass({
       render: function() {
         return <form><input type="submit" value="Submit" /></form>;
       },
@@ -37,31 +37,31 @@ describe('ReactDOM', () => {
         form = ReactDOM.findDOMNode(this);
       }
     });
-    var instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    const instance = ReactTestUtils.renderIntoDocument(<Parent />);
     form.submit();
     expect(count).toEqual(1);
   });
   */
 
   it('allows a DOM element to be used with a string', () => {
-    var element = React.createElement('div', {className: 'foo'});
-    var instance = ReactTestUtils.renderIntoDocument(element);
+    const element = React.createElement('div', {className: 'foo'});
+    const instance = ReactTestUtils.renderIntoDocument(element);
     expect(ReactDOM.findDOMNode(instance).tagName).toBe('DIV');
   });
 
   it('should allow children to be passed as an argument', () => {
-    var argDiv = ReactTestUtils.renderIntoDocument(
+    const argDiv = ReactTestUtils.renderIntoDocument(
       React.createElement('div', null, 'child'),
     );
-    var argNode = ReactDOM.findDOMNode(argDiv);
+    const argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
   });
 
   it('should overwrite props.children with children argument', () => {
-    var conflictDiv = ReactTestUtils.renderIntoDocument(
+    const conflictDiv = ReactTestUtils.renderIntoDocument(
       React.createElement('div', {children: 'fakechild'}, 'child'),
     );
-    var conflictNode = ReactDOM.findDOMNode(conflictDiv);
+    const conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -70,7 +70,7 @@ describe('ReactDOM', () => {
    * DOM, instead of a stale cache.
    */
   it('should purge the DOM cache when removing nodes', () => {
-    var myDiv = ReactTestUtils.renderIntoDocument(
+    let myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />
@@ -103,13 +103,13 @@ describe('ReactDOM', () => {
         <div key="theBird" className="bird" />,
       </div>,
     );
-    var root = ReactDOM.findDOMNode(myDiv);
-    var dog = root.childNodes[0];
+    const root = ReactDOM.findDOMNode(myDiv);
+    const dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });
 
   it('throws in render() if the mount callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;
@@ -124,36 +124,42 @@ describe('ReactDOM', () => {
       }
     }
 
-    var myDiv = document.createElement('div');
+    const myDiv = document.createElement('div');
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      );
+    }
     expect(() => ReactDOM.render(<A />, myDiv, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+    }
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(2)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+      expect(console.error.calls.count()).toBe(3);
+    }
   });
 
   it('throws in render() if the update callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;
@@ -168,35 +174,41 @@ describe('ReactDOM', () => {
       }
     }
 
-    var myDiv = document.createElement('div');
+    const myDiv = document.createElement('div');
     ReactDOM.render(<A />, myDiv);
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      );
+    }
     ReactDOM.render(<A />, myDiv); // Re-mount
     expect(() => ReactDOM.render(<A />, myDiv, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+    }
     ReactDOM.render(<A />, myDiv); // Re-mount
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(2)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+      expect(console.error.calls.count()).toBe(3);
+    }
   });
 
   it('preserves focus', () => {
@@ -207,8 +219,9 @@ describe('ReactDOM', () => {
         return (
           <div>
             <input id="one" ref={r => (input = input || r)} />
-            {this.props.showTwo &&
-              <input id="two" ref={r => (input2 = input2 || r)} />}
+            {this.props.showTwo && (
+              <input id="two" ref={r => (input2 = input2 || r)} />
+            )}
           </div>
         );
       }
@@ -222,8 +235,8 @@ describe('ReactDOM', () => {
       }
     }
 
-    var log = [];
-    var container = document.createElement('div');
+    const log = [];
+    const container = document.createElement('div');
     document.body.appendChild(container);
     ReactDOM.render(<A showTwo={false} />, container);
     input.focus();
@@ -232,9 +245,9 @@ describe('ReactDOM', () => {
     // something that could happen when manipulating DOM nodes (but is hard to
     // deterministically force without relying intensely on React DOM
     // implementation details)
-    var div = container.firstChild;
+    const div = container.firstChild;
     ['appendChild', 'insertBefore'].forEach(name => {
-      var mutator = div[name];
+      const mutator = div[name];
       div[name] = function() {
         if (input) {
           input.blur();
@@ -292,7 +305,7 @@ describe('ReactDOM', () => {
     const actual = [];
 
     function click(node) {
-      var fakeNativeEvent = function() {};
+      const fakeNativeEvent = function() {};
       fakeNativeEvent.target = node;
       fakeNativeEvent.path = [node, container];
       ReactTestUtils.simulateNativeEventOnNode(
@@ -328,7 +341,7 @@ describe('ReactDOM', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Wrapper />, container);
 
     const expected = [
@@ -336,5 +349,88 @@ describe('ReactDOM', () => {
       "2nd node clicked imperatively from 1st's handler",
     ];
     expect(actual).toEqual(expected);
+  });
+
+  it('should not crash with devtools installed', () => {
+    try {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+        inject: function() {},
+        onCommitFiberRoot: function() {},
+        onCommitFiberUnmount: function() {},
+        supportsFiber: true,
+      };
+      jest.resetModules();
+      React = require('react');
+      ReactDOM = require('react-dom');
+      class Component extends React.Component {
+        render() {
+          return <div />;
+        }
+      }
+      ReactDOM.render(<Component />, document.createElement('container'));
+    } finally {
+      delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    }
+  });
+
+  // https://github.com/facebook/react/issues/11689
+  it('should warn when attempting to inject an event plugin', () => {
+    spyOnDev(console, 'warn');
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.EventPluginHub.injection.injectEventPluginsByName(
+      {
+        TapEventPlugin: {
+          extractEvents() {},
+        },
+      },
+    );
+    if (__DEV__) {
+      expect(console.warn.calls.count()).toBe(1);
+      expect(console.warn.calls.argsFor(0)[0]).toContain(
+        'Injecting custom event plugins (TapEventPlugin) is deprecated ' +
+          'and will not work in React 17+. Please update your code ' +
+          'to not depend on React internals. The stack trace for this ' +
+          'warning should reveal the library that is using them. ' +
+          'See https://github.com/facebook/react/issues/11689 for a discussion.',
+      );
+    }
+  });
+
+  it('throws in DEV if jsdom is destroyed by the time setState() is called', () => {
+    spyOnDev(console, 'error');
+    class App extends React.Component {
+      state = {x: 1};
+      render() {
+        return <div />;
+      }
+    }
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<App />, container);
+    const documentDescriptor = Object.getOwnPropertyDescriptor(
+      global,
+      'document',
+    );
+    try {
+      // Emulate jsdom environment cleanup.
+      // This is roughly what happens if the test finished and then
+      // an asynchronous callback tried to setState() after this.
+      delete global.document;
+      const fn = () => instance.setState({x: 2});
+      if (__DEV__) {
+        expect(fn).toThrow(
+          'The `document` global was defined when React was initialized, but is not ' +
+            'defined anymore. This can happen in a test environment if a component ' +
+            'schedules an update from an asynchronous callback, but the test has already ' +
+            'finished running. To solve this, you can either unmount the component at ' +
+            'the end of your test (and ensure that any asynchronous operations get ' +
+            'canceled in `componentWillUnmount`), or you can change the test itself ' +
+            'to be asynchronous.',
+        );
+      } else {
+        expect(fn).not.toThrow();
+      }
+    } finally {
+      // Don't break other tests.
+      Object.defineProperty(global, 'document', documentDescriptor);
+    }
   });
 });

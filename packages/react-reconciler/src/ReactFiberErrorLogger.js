@@ -4,30 +4,28 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberErrorLogger
  * @flow
  */
 
-'use strict';
+import type {CapturedError} from './ReactFiberScheduler';
 
-const invariant = require('fbjs/lib/invariant');
+import {showErrorDialog} from './ReactFiberErrorDialog';
 
-import type {CapturedError} from 'ReactFiberScheduler';
+export function logCapturedError(capturedError: CapturedError): void {
+  const logError = showErrorDialog(capturedError);
 
-const defaultShowDialog = (capturedError: CapturedError) => true;
-
-let showDialog = defaultShowDialog;
-
-function logCapturedError(capturedError: CapturedError): void {
-  const logError = showDialog(capturedError);
-
-  // Allow injected showDialog() to prevent default console.error logging.
+  // Allow injected showErrorDialog() to prevent default console.error logging.
   // This enables renderers like ReactNative to better manage redbox behavior.
   if (logError === false) {
     return;
   }
 
   const error = (capturedError.error: any);
+  const suppressLogging = error && error.suppressReactErrorLogging;
+  if (suppressLogging) {
+    return;
+  }
+
   if (__DEV__) {
     const {
       componentName,
@@ -50,13 +48,15 @@ function logCapturedError(capturedError: CapturedError): void {
           `using the error boundary you provided, ${errorBoundaryName}.`;
       } else {
         errorBoundaryMessage =
-          `This error was initially handled by the error boundary ${errorBoundaryName}.\n` +
+          `This error was initially handled by the error boundary ${
+            errorBoundaryName
+          }.\n` +
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {
       errorBoundaryMessage =
         'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-        'You can learn more about error boundaries at https://fb.me/react-error-boundaries.';
+        'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.';
     }
     const combinedMessage =
       `${componentNameMessage}${componentStack}\n\n` +
@@ -74,23 +74,3 @@ function logCapturedError(capturedError: CapturedError): void {
     console.error(error);
   }
 }
-
-exports.injection = {
-  /**
-   * Display custom dialog for lifecycle errors.
-   * Return false to prevent default behavior of logging to console.error.
-   */
-  injectDialog(fn: (e: CapturedError) => boolean) {
-    invariant(
-      showDialog === defaultShowDialog,
-      'The custom dialog was already injected.',
-    );
-    invariant(
-      typeof fn === 'function',
-      'Injected showDialog() must be a function.',
-    );
-    showDialog = fn;
-  },
-};
-
-exports.logCapturedError = logCapturedError;

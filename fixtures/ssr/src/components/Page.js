@@ -20,19 +20,10 @@ export default class Page extends Component {
     );
     return (
       <div>
-        <p suppressHydrationWarning={true}>
-          A random number: {Math.random()}
-        </p>
-        <p>
-          Autofocus on page load: {autofocusedInputs}
-        </p>
-        <p>
-          {!this.state.active ? link : 'Thanks!'}
-        </p>
-        {this.state.active &&
-          <p>
-            Autofocus on update: {autofocusedInputs}
-          </p>}
+        <p suppressHydrationWarning={true}>A random number: {Math.random()}</p>
+        <p>Autofocus on page load: {autofocusedInputs}</p>
+        <p>{!this.state.active ? link : 'Thanks!'}</p>
+        {this.state.active && <p>Autofocus on update: {autofocusedInputs}</p>}
       </div>
     );
   }
