@@ -17,7 +17,7 @@ export function createPortal(
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
   key: ?string = null,
-  sandbox: ?bool = false
+  sandbox: ?boolean = false,
 ): ReactPortal {
   return {
     // This tag allow us to uniquely identify this as a React Portal
