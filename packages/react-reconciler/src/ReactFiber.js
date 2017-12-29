@@ -453,6 +453,7 @@ export function createFiberFromPortal(
     containerInfo: portal.containerInfo,
     pendingChildren: null, // Used by persistent updates
     implementation: portal.implementation,
+    sandbox: portal.sandbox,
   };
   return fiber;
 }

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HostComponent} from './ReactTypeOfWork';
+import {HostComponent, HostPortal} from './ReactTypeOfWork';
 
 function getParent(inst) {
   do {
@@ -15,6 +15,9 @@ function getParent(inst) {
     // events to their parent. We could also go through parentNode on the
     // host node but that wouldn't work for React Native and doesn't let us
     // do the portal feature.
+    if (inst && inst.tag === HostPortal && inst.stateNode.sandbox) {
+      return null;
+    }
   } while (inst && inst.tag !== HostComponent);
   if (inst) {
     return inst;

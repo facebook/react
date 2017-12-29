@@ -1126,7 +1126,20 @@ function createPortal(
     'Target container is not a DOM element.',
   );
   // TODO: pass ReactDOM portal implementation as third argument
-  return ReactPortal.createPortal(children, container, null, key);
+  return ReactPortal.createPortal(children, container, null, key, false);
+}
+
+function createSandboxedPortal(
+  children: ReactNodeList,
+  container: DOMContainer,
+  key: ?string = null,
+) {
+  invariant(
+    isValidContainer(container),
+    'Target container is not a DOM element.',
+  );
+  // TODO: pass ReactDOM portal implementation as third argument
+  return ReactPortal.createPortal(children, container, null, key, true);
 }
 
 const ReactDOM: Object = {
@@ -1290,6 +1303,8 @@ const ReactDOM: Object = {
     }
     return createPortal(...args);
   },
+
+  unstable_createSandboxedPortal: createSandboxedPortal,
 
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
