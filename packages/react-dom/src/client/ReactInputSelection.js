@@ -13,7 +13,9 @@ import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 
 function isInDocument(node) {
   return (
-    node.ownerDocument && containsNode(node.ownerDocument.documentElement, node)
+    node &&
+    node.ownerDocument &&
+    containsNode(node.ownerDocument.documentElement, node)
   );
 }
 
