@@ -6,7 +6,6 @@
  */
 
 import containsNode from 'fbjs/lib/containsNode';
-import focusNode from 'fbjs/lib/focusNode';
 import getActiveElement from 'fbjs/lib/getActiveElement';
 
 import * as ReactDOMSelection from './ReactDOMSelection';
@@ -98,7 +97,7 @@ function focusNodePreservingScroll(element) {
     }
   }
 
-  focusNode(element);
+  element.focus();
 
   for (let i = 0; i < ancestors.length; i++) {
     const info = ancestors[i];

@@ -14,8 +14,8 @@ describe('ReactMultiChild', () => {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  var React;
-  var ReactDOM;
+  let React;
+  let ReactDOM;
 
   beforeEach(() => {
     jest.resetModules();
@@ -25,11 +25,11 @@ describe('ReactMultiChild', () => {
 
   describe('reconciliation', () => {
     it('should update children when possible', () => {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var mockMount = jest.fn();
-      var mockUpdate = jest.fn();
-      var mockUnmount = jest.fn();
+      const mockMount = jest.fn();
+      const mockUpdate = jest.fn();
+      const mockUnmount = jest.fn();
 
       class MockComponent extends React.Component {
         componentDidMount = mockMount;
@@ -68,10 +68,10 @@ describe('ReactMultiChild', () => {
     });
 
     it('should replace children with different constructors', () => {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var mockMount = jest.fn();
-      var mockUnmount = jest.fn();
+      const mockMount = jest.fn();
+      const mockUnmount = jest.fn();
 
       class MockComponent extends React.Component {
         componentDidMount = mockMount;
@@ -106,10 +106,10 @@ describe('ReactMultiChild', () => {
     });
 
     it('should NOT replace children with different owners', () => {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var mockMount = jest.fn();
-      var mockUnmount = jest.fn();
+      const mockMount = jest.fn();
+      const mockUnmount = jest.fn();
 
       class MockComponent extends React.Component {
         componentDidMount = mockMount;
@@ -145,10 +145,10 @@ describe('ReactMultiChild', () => {
     });
 
     it('should replace children with different keys', () => {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
-      var mockMount = jest.fn();
-      var mockUnmount = jest.fn();
+      const mockMount = jest.fn();
+      const mockUnmount = jest.fn();
 
       class MockComponent extends React.Component {
         componentDidMount = mockMount;
@@ -185,7 +185,7 @@ describe('ReactMultiChild', () => {
     it('should warn for duplicated array keys with component stack info', () => {
       spyOnDev(console, 'error');
 
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
       class WrapperComponent extends React.Component {
         render() {
@@ -231,7 +231,7 @@ describe('ReactMultiChild', () => {
     it('should warn for duplicated iterable keys with component stack info', () => {
       spyOnDev(console, 'error');
 
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
       class WrapperComponent extends React.Component {
         render() {
@@ -252,7 +252,7 @@ describe('ReactMultiChild', () => {
       function createIterable(array) {
         return {
           '@@iterator': function() {
-            var i = 0;
+            let i = 0;
             return {
               next() {
                 const next = {
@@ -303,7 +303,7 @@ describe('ReactMultiChild', () => {
         return <div>{new Map([['foo', 0], ['bar', 1]])}</div>;
       }
     }
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Parent />, container);
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(1);
@@ -342,7 +342,7 @@ describe('ReactMultiChild', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
     // Two random strings -- some additions, some removals, some moves
     ReactDOM.render(<Letters letters="XKwHomsNjIkBcQWFbiZU" />, container);
@@ -352,7 +352,7 @@ describe('ReactMultiChild', () => {
   });
 
   it('prepares new children before unmounting old', () => {
-    var log = [];
+    const log = [];
 
     class Spy extends React.Component {
       componentWillMount() {
@@ -372,10 +372,10 @@ describe('ReactMultiChild', () => {
 
     // These are reference-unequal so they will be swapped even if they have
     // matching keys
-    var SpyA = props => <Spy {...props} />;
-    var SpyB = props => <Spy {...props} />;
+    const SpyA = props => <Spy {...props} />;
+    const SpyB = props => <Spy {...props} />;
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(
       <div>
         <SpyA key="one" name="oneA" />

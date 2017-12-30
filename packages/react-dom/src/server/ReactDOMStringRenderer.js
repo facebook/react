@@ -13,8 +13,8 @@ import ReactPartialRenderer from './ReactPartialRenderer';
  * See https://reactjs.org/docs/react-dom-server.html#rendertostring
  */
 export function renderToString(element) {
-  var renderer = new ReactPartialRenderer(element, false);
-  var markup = renderer.read(Infinity);
+  const renderer = new ReactPartialRenderer(element, false);
+  const markup = renderer.read(Infinity);
   return markup;
 }
 
@@ -24,7 +24,7 @@ export function renderToString(element) {
  * See https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup
  */
 export function renderToStaticMarkup(element) {
-  var renderer = new ReactPartialRenderer(element, true);
-  var markup = renderer.read(Infinity);
+  const renderer = new ReactPartialRenderer(element, true);
+  const markup = renderer.read(Infinity);
   return markup;
 }

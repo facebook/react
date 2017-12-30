@@ -22,14 +22,14 @@ import invariant from 'fbjs/lib/invariant';
  * Why: Because `dangerouslyReplaceNodeWithMarkupByID` relies on being able to
  * unmount a component with a `rootNodeID`, then mount a new one in its place,
  */
-var INITIAL_TAG_COUNT = 1;
-var ReactNativeRTTagHandles = {
+const INITIAL_TAG_COUNT = 1;
+const ReactNativeRTTagHandles = {
   tagsStartAt: INITIAL_TAG_COUNT,
   tagCount: INITIAL_TAG_COUNT,
 
   allocateTag: function(): number {
     // Skip over root IDs as those are reserved for native
-    var tag = ReactNativeRTTagHandles.tagCount;
+    const tag = ReactNativeRTTagHandles.tagCount;
     ReactNativeRTTagHandles.tagCount++;
     return tag;
   },

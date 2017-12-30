@@ -62,6 +62,16 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div width={null} />);
         expect(e.hasAttribute('width')).toBe(false);
       });
+
+      itRenders('no string prop with function value', async render => {
+        const e = await render(<div width={function() {}} />, 1);
+        expect(e.hasAttribute('width')).toBe(false);
+      });
+
+      itRenders('no string prop with symbol value', async render => {
+        const e = await render(<div width={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('width')).toBe(false);
+      });
     });
 
     describe('boolean properties', function() {
@@ -122,6 +132,16 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div hidden={null} />);
         expect(e.hasAttribute('hidden')).toBe(false);
       });
+
+      itRenders('no boolean prop with function value', async render => {
+        const e = await render(<div hidden={function() {}} />, 1);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
+
+      itRenders('no boolean prop with symbol value', async render => {
+        const e = await render(<div hidden={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
     });
 
     describe('download property (combined boolean/string attribute)', function() {
@@ -162,6 +182,16 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('no download prop with undefined value', async render => {
         const e = await render(<div download={undefined} />);
+        expect(e.hasAttribute('download')).toBe(false);
+      });
+
+      itRenders('no download prop with function value', async render => {
+        const e = await render(<div download={function() {}} />, 1);
+        expect(e.hasAttribute('download')).toBe(false);
+      });
+
+      itRenders('no download prop with symbol value', async render => {
+        const e = await render(<div download={Symbol('foo')} />, 1);
         expect(e.hasAttribute('download')).toBe(false);
       });
     });
@@ -213,16 +243,6 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.className).toBe('test');
         },
       );
-
-      itRenders('class for custom elements', async render => {
-        const e = await render(<div is="custom-element" class="test" />, 0);
-        expect(e.getAttribute('class')).toBe('test');
-      });
-
-      itRenders('className for custom elements', async render => {
-        const e = await render(<div is="custom-element" className="test" />, 0);
-        expect(e.getAttribute('className')).toBe('test');
-      });
     });
 
     describe('htmlFor property', function() {
@@ -256,16 +276,6 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div htmlFor={null} />);
         expect(e.hasAttribute('htmlFor')).toBe(false);
       });
-
-      itRenders('htmlFor attribute on custom elements', async render => {
-        const e = await render(<div is="custom-element" htmlFor="test" />);
-        expect(e.getAttribute('htmlFor')).toBe('test');
-      });
-
-      itRenders('for attribute on custom elements', async render => {
-        const e = await render(<div is="custom-element" for="test" />);
-        expect(e.getAttribute('for')).toBe('test');
-      });
     });
 
     describe('numeric properties', function() {
@@ -277,6 +287,11 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
+      itRenders('numeric property with zero value', async render => {
+        const e = await render(<ol start={0} />);
+        expect(e.getAttribute('start')).toBe('0');
+      });
+
       itRenders(
         'no positive numeric property with zero value',
         async render => {
@@ -285,9 +300,27 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
-      itRenders('numeric property with zero value', async render => {
-        const e = await render(<ol start={0} />);
-        expect(e.getAttribute('start')).toBe('0');
+      itRenders('no numeric prop with function value', async render => {
+        const e = await render(<ol start={function() {}} />, 1);
+        expect(e.hasAttribute('start')).toBe(false);
+      });
+
+      itRenders('no numeric prop with symbol value', async render => {
+        const e = await render(<ol start={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('start')).toBe(false);
+      });
+
+      itRenders(
+        'no positive numeric prop with function value',
+        async render => {
+          const e = await render(<input size={function() {}} />, 1);
+          expect(e.hasAttribute('size')).toBe(false);
+        },
+      );
+
+      itRenders('no positive numeric prop with symbol value', async render => {
+        const e = await render(<input size={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('size')).toBe(false);
       });
     });
 
@@ -529,35 +562,6 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('foo')).toBe('bar');
       });
 
-      itRenders('unknown attributes for custom elements', async render => {
-        const e = await render(<custom-element foo="bar" />);
-        expect(e.getAttribute('foo')).toBe('bar');
-      });
-
-      itRenders(
-        'no unknown attributes for custom elements with null value',
-        async render => {
-          const e = await render(<custom-element foo={null} />);
-          expect(e.hasAttribute('foo')).toBe(false);
-        },
-      );
-
-      itRenders(
-        'unknown attributes for custom elements using is',
-        async render => {
-          const e = await render(<div is="custom-element" foo="bar" />);
-          expect(e.getAttribute('foo')).toBe('bar');
-        },
-      );
-
-      itRenders(
-        'no unknown attributes for custom elements using is with null value',
-        async render => {
-          const e = await render(<div is="custom-element" foo={null} />);
-          expect(e.hasAttribute('foo')).toBe(false);
-        },
-      );
-
       itRenders('SVG tags with dashes in them', async render => {
         const e = await render(
           <svg>
@@ -593,5 +597,73 @@ describe('ReactDOMServerIntegration', () => {
       const e = await render(<div on="tap:do-something" />);
       expect(e.getAttribute('on')).toEqual('tap:do-something');
     });
+  });
+
+  // These tests mostly verify the existing behavior.
+  // It may not always make sense but we can't change it in minors.
+  describe('custom elements', () => {
+    itRenders('class for custom elements', async render => {
+      const e = await render(<div is="custom-element" class="test" />, 0);
+      expect(e.getAttribute('class')).toBe('test');
+    });
+
+    itRenders('className for custom elements', async render => {
+      const e = await render(<div is="custom-element" className="test" />, 0);
+      expect(e.getAttribute('className')).toBe('test');
+    });
+
+    itRenders('htmlFor attribute on custom elements', async render => {
+      const e = await render(<div is="custom-element" htmlFor="test" />);
+      expect(e.getAttribute('htmlFor')).toBe('test');
+    });
+
+    itRenders('for attribute on custom elements', async render => {
+      const e = await render(<div is="custom-element" for="test" />);
+      expect(e.getAttribute('for')).toBe('test');
+    });
+
+    itRenders('unknown attributes for custom elements', async render => {
+      const e = await render(<custom-element foo="bar" />);
+      expect(e.getAttribute('foo')).toBe('bar');
+    });
+
+    itRenders('unknown `on*` attributes for custom elements', async render => {
+      const e = await render(<custom-element onunknown="bar" />);
+      expect(e.getAttribute('onunknown')).toBe('bar');
+    });
+
+    itRenders('unknown boolean `true` attributes as strings', async render => {
+      const e = await render(<custom-element foo={true} />);
+      expect(e.getAttribute('foo')).toBe('true');
+    });
+
+    itRenders('unknown boolean `false` attributes as strings', async render => {
+      const e = await render(<custom-element foo={false} />);
+      expect(e.getAttribute('foo')).toBe('false');
+    });
+
+    itRenders(
+      'no unknown attributes for custom elements with null value',
+      async render => {
+        const e = await render(<custom-element foo={null} />);
+        expect(e.hasAttribute('foo')).toBe(false);
+      },
+    );
+
+    itRenders(
+      'unknown attributes for custom elements using is',
+      async render => {
+        const e = await render(<div is="custom-element" foo="bar" />);
+        expect(e.getAttribute('foo')).toBe('bar');
+      },
+    );
+
+    itRenders(
+      'no unknown attributes for custom elements using is with null value',
+      async render => {
+        const e = await render(<div is="custom-element" foo={null} />);
+        expect(e.hasAttribute('foo')).toBe(false);
+      },
+    );
   });
 });

@@ -17,12 +17,11 @@
  *   { 0: 'MUCH ERROR', 1: 'SUCH WRONG' }
  */
 function invertObject(targetObj /* : ErrorMap */) /* : ErrorMap */ {
-  var result = {};
-  var mapKeys = Object.keys(targetObj);
+  const result = {};
+  const mapKeys = Object.keys(targetObj);
 
-  for (let i = 0; i < mapKeys.length; i++) {
-    var originalKey = mapKeys[i];
-    var originalVal = targetObj[originalKey];
+  for (const originalKey of mapKeys) {
+    const originalVal = targetObj[originalKey];
 
     result[originalVal] = originalKey;
   }

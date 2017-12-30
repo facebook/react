@@ -9,14 +9,14 @@
 
 'use strict';
 
-var PropTypes;
-var RCTEventEmitter;
-var React;
-var ReactNative;
-var ReactNativeBridgeEventPlugin;
-var ResponderEventPlugin;
-var UIManager;
-var createReactNativeComponentClass;
+let PropTypes;
+let RCTEventEmitter;
+let React;
+let ReactNative;
+let ReactNativeBridgeEventPlugin;
+let ResponderEventPlugin;
+let UIManager;
+let createReactNativeComponentClass;
 
 // Parallels requireNativeComponent() in that it lazily constructs a view config,
 // And registers view manager event types with ReactNativeBridgeEventPlugin.
@@ -79,8 +79,8 @@ beforeEach(() => {
 
 it('fails if unknown/unsupported event types are dispatched', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
-  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = fakeRequireNativeComponent('View', {});
+  const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+  const View = fakeRequireNativeComponent('View', {});
 
   ReactNative.render(<View onUnspecifiedEvent={() => {}} />, 1);
 
@@ -100,10 +100,10 @@ it('fails if unknown/unsupported event types are dispatched', () => {
 
 it('handles events', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
-  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = fakeRequireNativeComponent('View', {foo: true});
+  const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+  const View = fakeRequireNativeComponent('View', {foo: true});
 
-  var log = [];
+  const log = [];
   ReactNative.render(
     <View
       foo="outer"
@@ -127,7 +127,7 @@ it('handles events', () => {
 
   // Don't depend on the order of createView() calls.
   // Stack creates views outside-in; fiber creates them inside-out.
-  var innerTag = UIManager.createView.mock.calls.find(
+  const innerTag = UIManager.createView.mock.calls.find(
     args => args[3].foo === 'inner',
   )[0];
 
@@ -156,8 +156,8 @@ it('handles events', () => {
 
 it('handles events on text nodes', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
-  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var Text = fakeRequireNativeComponent('Text', {});
+  const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+  const Text = fakeRequireNativeComponent('Text', {});
 
   class ContextHack extends React.Component {
     static childContextTypes = {isInAParentText: PropTypes.bool};
@@ -169,7 +169,7 @@ it('handles events on text nodes', () => {
     }
   }
 
-  var log = [];
+  const log = [];
   ReactNative.render(
     <ContextHack>
       <Text>
@@ -196,10 +196,10 @@ it('handles events on text nodes', () => {
 
   // Don't depend on the order of createView() calls.
   // Stack creates views outside-in; fiber creates them inside-out.
-  var innerTagString = UIManager.createView.mock.calls.find(
+  const innerTagString = UIManager.createView.mock.calls.find(
     args => args[3] && args[3].text === 'Text Content',
   )[0];
-  var innerTagNumber = UIManager.createView.mock.calls.find(
+  const innerTagNumber = UIManager.createView.mock.calls.find(
     args => args[3] && args[3].text === '123',
   )[0];
 
@@ -238,8 +238,8 @@ it('handles events on text nodes', () => {
 });
 
 it('handles when a responder is unmounted while a touch sequence is in progress', () => {
-  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = fakeRequireNativeComponent('View', {id: true});
+  const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+  const View = fakeRequireNativeComponent('View', {id: true});
 
   function getViewById(id) {
     return UIManager.createView.mock.calls.find(
@@ -256,7 +256,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
     return props ? props.id : null;
   }
 
-  var log = [];
+  const log = [];
   ReactNative.render(
     <View id="parent">
       <View key={1}>
@@ -327,9 +327,9 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
 });
 
 it('handles events without target', () => {
-  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+  const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
 
-  var View = fakeRequireNativeComponent('View', {id: true});
+  const View = fakeRequireNativeComponent('View', {id: true});
 
   function getViewById(id) {
     return UIManager.createView.mock.calls.find(
@@ -346,7 +346,7 @@ it('handles events without target', () => {
     return props ? props.id : null;
   }
 
-  var log = [];
+  const log = [];
 
   function render(renderFirstComponent) {
     ReactNative.render(

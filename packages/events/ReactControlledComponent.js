@@ -14,9 +14,9 @@ import {
 
 // Use to restore controlled state after a change event has fired.
 
-var fiberHostComponent = null;
+let fiberHostComponent = null;
 
-var ReactControlledComponentInjection = {
+const ReactControlledComponentInjection = {
   injectFiberControlledHostComponent: function(hostComponentImpl) {
     // The fiber implementation doesn't use dynamic dispatch so we need to
     // inject the implementation.
@@ -24,13 +24,13 @@ var ReactControlledComponentInjection = {
   },
 };
 
-var restoreTarget = null;
-var restoreQueue = null;
+let restoreTarget = null;
+let restoreQueue = null;
 
 function restoreStateOfTarget(target) {
   // We perform this translation at the end of the event loop so that we
   // always receive the correct fiber here
-  var internalInstance = getInstanceFromNode(target);
+  const internalInstance = getInstanceFromNode(target);
   if (!internalInstance) {
     // Unmounted
     return;
@@ -67,14 +67,14 @@ export function restoreStateIfNeeded() {
   if (!restoreTarget) {
     return;
   }
-  var target = restoreTarget;
-  var queuedTargets = restoreQueue;
+  const target = restoreTarget;
+  const queuedTargets = restoreQueue;
   restoreTarget = null;
   restoreQueue = null;
 
   restoreStateOfTarget(target);
   if (queuedTargets) {
-    for (var i = 0; i < queuedTargets.length; i++) {
+    for (let i = 0; i < queuedTargets.length; i++) {
       restoreStateOfTarget(queuedTargets[i]);
     }
   }

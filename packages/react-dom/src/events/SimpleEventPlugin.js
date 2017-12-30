@@ -49,8 +49,10 @@ import getEventCharCode from './getEventCharCode';
  *   'topAbort': { sameConfig }
  * };
  */
-var eventTypes: EventTypes = {};
-var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
+const eventTypes: EventTypes = {};
+const topLevelEventsToDispatchConfig: {
+  [key: TopLevelTypes]: DispatchConfig,
+} = {};
 [
   'abort',
   'animationEnd',
@@ -118,11 +120,11 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'waiting',
   'wheel',
 ].forEach(event => {
-  var capitalizedEvent = event[0].toUpperCase() + event.slice(1);
-  var onEvent = 'on' + capitalizedEvent;
-  var topEvent = 'top' + capitalizedEvent;
+  const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
+  const onEvent = 'on' + capitalizedEvent;
+  const topEvent = 'top' + capitalizedEvent;
 
-  var type = {
+  const type = {
     phasedRegistrationNames: {
       bubbled: onEvent,
       captured: onEvent + 'Capture',
@@ -134,7 +136,7 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
 });
 
 // Only used in DEV for exhaustiveness validation.
-var knownHTMLTopLevelTypes = [
+const knownHTMLTopLevelTypes = [
   'topAbort',
   'topCancel',
   'topCanPlay',
@@ -168,7 +170,7 @@ var knownHTMLTopLevelTypes = [
   'topWaiting',
 ];
 
-var SimpleEventPlugin: PluginModule<MouseEvent> = {
+const SimpleEventPlugin: PluginModule<MouseEvent> = {
   eventTypes: eventTypes,
 
   extractEvents: function(
@@ -177,11 +179,11 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
   ): null | ReactSyntheticEvent {
-    var dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
+    const dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {
       return null;
     }
-    var EventConstructor;
+    let EventConstructor;
     switch (topLevelType) {
       case 'topKeyPress':
         // Firefox creates a keypress event for function keys too. This removes
@@ -268,7 +270,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
         EventConstructor = SyntheticEvent;
         break;
     }
-    var event = EventConstructor.getPooled(
+    const event = EventConstructor.getPooled(
       dispatchConfig,
       targetInst,
       nativeEvent,

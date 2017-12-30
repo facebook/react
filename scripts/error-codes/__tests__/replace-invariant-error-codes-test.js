@@ -17,11 +17,11 @@ function transform(input) {
 }
 
 function compare(input, output) {
-  var compiled = transform(input);
+  const compiled = transform(input);
   expect(compiled).toEqual(output);
 }
 
-var oldEnv;
+let oldEnv;
 
 describe('error codes transform', () => {
   beforeEach(() => {
@@ -47,7 +47,7 @@ describe('error codes transform', () => {
   });
 
   it('should only add `reactProdInvariant` once', () => {
-    var expectedInvariantTransformResult =
+    const expectedInvariantTransformResult =
       '!condition ? ' +
       '__DEV__ ? ' +
       "invariant(false, 'Do not override existing functions.') : " +

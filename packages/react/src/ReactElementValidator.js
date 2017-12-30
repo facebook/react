@@ -23,12 +23,20 @@ import ReactCurrentOwner from './ReactCurrentOwner';
 import {isValidElement, createElement, cloneElement} from './ReactElement';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
+let currentlyValidatingElement;
+let propTypesMisspellWarningShown;
+
+let getDisplayName = () => {};
+let getStackAddendum = () => {};
+
+let VALID_FRAGMENT_PROPS;
+
 if (__DEV__) {
-  var currentlyValidatingElement = null;
+  currentlyValidatingElement = null;
 
-  var propTypesMisspellWarningShown = false;
+  propTypesMisspellWarningShown = false;
 
-  var getDisplayName = function(element): string {
+  getDisplayName = function(element): string {
     if (element == null) {
       return '#empty';
     } else if (typeof element === 'string' || typeof element === 'number') {
@@ -42,11 +50,11 @@ if (__DEV__) {
     }
   };
 
-  var getStackAddendum = function(): string {
-    var stack = '';
+  getStackAddendum = function(): string {
+    let stack = '';
     if (currentlyValidatingElement) {
-      var name = getDisplayName(currentlyValidatingElement);
-      var owner = currentlyValidatingElement._owner;
+      const name = getDisplayName(currentlyValidatingElement);
+      const owner = currentlyValidatingElement._owner;
       stack += describeComponentFrame(
         name,
         currentlyValidatingElement._source,
@@ -57,12 +65,12 @@ if (__DEV__) {
     return stack;
   };
 
-  var VALID_FRAGMENT_PROPS = new Map([['children', true], ['key', true]]);
+  VALID_FRAGMENT_PROPS = new Map([['children', true], ['key', true]]);
 }
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    var name = getComponentName(ReactCurrentOwner.current);
+    const name = getComponentName(ReactCurrentOwner.current);
     if (name) {
       return '\n\nCheck the render method of `' + name + '`.';
     }
@@ -76,9 +84,9 @@ function getSourceInfoErrorAddendum(elementProps) {
     elementProps !== undefined &&
     elementProps.__source !== undefined
   ) {
-    var source = elementProps.__source;
-    var fileName = source.fileName.replace(/^.*[\\\/]/, '');
-    var lineNumber = source.lineNumber;
+    const source = elementProps.__source;
+    const fileName = source.fileName.replace(/^.*[\\\/]/, '');
+    const lineNumber = source.lineNumber;
     return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
   }
   return '';
@@ -89,13 +97,13 @@ function getSourceInfoErrorAddendum(elementProps) {
  * object keys are not valid. This allows us to keep track of children between
  * updates.
  */
-var ownerHasKeyUseWarning = {};
+const ownerHasKeyUseWarning = {};
 
 function getCurrentComponentErrorInfo(parentType) {
-  var info = getDeclarationErrorAddendum();
+  let info = getDeclarationErrorAddendum();
 
   if (!info) {
-    var parentName =
+    const parentName =
       typeof parentType === 'string'
         ? parentType
         : parentType.displayName || parentType.name;
@@ -123,7 +131,7 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
+  const currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
   if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
     return;
   }
@@ -132,7 +140,7 @@ function validateExplicitKey(element, parentType) {
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
-  var childOwner = '';
+  let childOwner = '';
   if (
     element &&
     element._owner &&
@@ -172,8 +180,8 @@ function validateChildKeys(node, parentType) {
     return;
   }
   if (Array.isArray(node)) {
-    for (var i = 0; i < node.length; i++) {
-      var child = node[i];
+    for (let i = 0; i < node.length; i++) {
+      const child = node[i];
       if (isValidElement(child)) {
         validateExplicitKey(child, parentType);
       }
@@ -184,13 +192,13 @@ function validateChildKeys(node, parentType) {
       node._store.validated = true;
     }
   } else if (node) {
-    var iteratorFn = getIteratorFn(node);
+    const iteratorFn = getIteratorFn(node);
     if (typeof iteratorFn === 'function') {
       // Entry iterators used to provide implicit keys,
       // but now we print a separate warning for them later.
       if (iteratorFn !== node.entries) {
-        var iterator = iteratorFn.call(node);
-        var step;
+        const iterator = iteratorFn.call(node);
+        let step;
         while (!(step = iterator.next()).done) {
           if (isValidElement(step.value)) {
             validateExplicitKey(step.value, parentType);
@@ -208,12 +216,12 @@ function validateChildKeys(node, parentType) {
  * @param {ReactElement} element
  */
 function validatePropTypes(element) {
-  var componentClass = element.type;
+  const componentClass = element.type;
   if (typeof componentClass !== 'function') {
     return;
   }
-  var name = componentClass.displayName || componentClass.name;
-  var propTypes = componentClass.propTypes;
+  const name = componentClass.displayName || componentClass.name;
+  const propTypes = componentClass.propTypes;
   if (propTypes) {
     currentlyValidatingElement = element;
     checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
@@ -270,15 +278,16 @@ function validateFragmentProps(fragment) {
 }
 
 export function createElementWithValidation(type, props, children) {
-  var validType =
+  const validType =
     typeof type === 'string' ||
     typeof type === 'function' ||
-    typeof type === 'symbol' ||
-    typeof type === 'number';
+    // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
+    type === REACT_FRAGMENT_TYPE;
+
   // We warn in this case but don't throw. We expect the element creation to
   // succeed and there will likely be errors in render.
   if (!validType) {
-    var info = '';
+    let info = '';
     if (
       type === undefined ||
       (typeof type === 'object' &&
@@ -290,7 +299,7 @@ export function createElementWithValidation(type, props, children) {
         "it's defined in, or you might have mixed up default and named imports.";
     }
 
-    var sourceInfo = getSourceInfoErrorAddendum(props);
+    const sourceInfo = getSourceInfoErrorAddendum(props);
     if (sourceInfo) {
       info += sourceInfo;
     } else {
@@ -309,7 +318,7 @@ export function createElementWithValidation(type, props, children) {
     );
   }
 
-  var element = createElement.apply(this, arguments);
+  const element = createElement.apply(this, arguments);
 
   // The result can be nullish if a mock or a custom function is used.
   // TODO: Drop this when these are no longer allowed as the type argument.
@@ -323,12 +332,12 @@ export function createElementWithValidation(type, props, children) {
   // (Rendering will throw with a helpful message and as soon as the type is
   // fixed, the key warnings will appear.)
   if (validType) {
-    for (var i = 2; i < arguments.length; i++) {
+    for (let i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], type);
     }
   }
 
-  if (typeof type === 'symbol' && type === REACT_FRAGMENT_TYPE) {
+  if (type === REACT_FRAGMENT_TYPE) {
     validateFragmentProps(element);
   } else {
     validatePropTypes(element);
@@ -338,7 +347,7 @@ export function createElementWithValidation(type, props, children) {
 }
 
 export function createFactoryWithValidation(type) {
-  var validatedFactory = createElementWithValidation.bind(null, type);
+  const validatedFactory = createElementWithValidation.bind(null, type);
   // Legacy hook TODO: Warn if this is accessed
   validatedFactory.type = type;
 
@@ -363,8 +372,8 @@ export function createFactoryWithValidation(type) {
 }
 
 export function cloneElementWithValidation(element, props, children) {
-  var newElement = cloneElement.apply(this, arguments);
-  for (var i = 2; i < arguments.length; i++) {
+  const newElement = cloneElement.apply(this, arguments);
+  for (let i = 2; i < arguments.length; i++) {
     validateChildKeys(arguments[i], newElement.type);
   }
   validatePropTypes(newElement);

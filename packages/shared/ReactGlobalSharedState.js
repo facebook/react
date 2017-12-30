@@ -7,7 +7,7 @@
 
 import React from 'react';
 
-var ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+const ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 export const ReactCurrentOwner = ReactInternals.ReactCurrentOwner;
 export const ReactDebugCurrentFrame = __DEV__

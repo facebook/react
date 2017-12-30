@@ -15,9 +15,9 @@ import PropTypes = require('prop-types');
 
 // Before Each
 
-var container;
-var attachedListener = null;
-var renderedName = null;
+let container;
+let attachedListener = null;
+let renderedName = null;
 
 class Inner extends React.Component {
   getName() {
@@ -31,7 +31,7 @@ class Inner extends React.Component {
 }
 
 function test(element, expectedTag, expectedClassName) {
-  var instance = ReactDOM.render(element, container);
+  const instance = ReactDOM.render(element, container);
   expect(container.firstChild).not.toBeNull();
   expect(container.firstChild.tagName).toBe(expectedTag);
   expect(container.firstChild.className).toBe(expectedClassName);
@@ -93,7 +93,7 @@ class StateBasedOnContext extends React.Component {
     className: this.context.className
   };
   render() {
-    var Tag = this.state.tag;
+    const Tag = this.state.tag;
     return React.createElement(Tag, {className: this.state.className});
   }
 }
@@ -112,7 +112,7 @@ class ProvideChildContextTypes extends React.Component {
 }
 
 // it renders only once when setting state in componentWillMount
-var renderCount = 0;
+let renderCount = 0;
 class RenderOnce extends React.Component {
   state = {
     bar: this.props.initialValue
@@ -205,7 +205,7 @@ class ForceUpdateWithNoState extends React.Component {
 }
 
 // it will call all the normal life cycle methods
-var lifeCycles = [];
+let lifeCycles = [];
 class NormalLifeCycles extends React.Component {
   props : any;
   state = {};
@@ -238,8 +238,8 @@ class NormalLifeCycles extends React.Component {
 
 // warns when classic properties are defined on the instance,
 // but does not invoke them.
-var getInitialStateWasCalled = false;
-var getDefaultPropsWasCalled = false;
+let getInitialStateWasCalled = false;
+let getDefaultPropsWasCalled = false;
 class ClassicProperties extends React.Component {
   contextTypes = {};
   propTypes = {};
@@ -342,7 +342,7 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('renders based on state using props in the constructor', function() {
-    var instance = test(
+    const instance = test(
       React.createElement(StateBasedOnProps, {initialValue: 'foo'}),
       'DIV',
       'foo'
@@ -525,7 +525,7 @@ describe('ReactTypeScriptClass', function() {
 
   it('should throw AND warn when trying to access classic APIs', function() {
     spyOnDev(console, 'warn');
-    var instance = test(
+    const instance = test(
       React.createElement(Inner, {name: 'foo'}),
       'DIV','foo'
     );
@@ -547,17 +547,17 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('supports classic refs', function() {
-    var instance = test(React.createElement(ClassicRefs), 'DIV', 'foo');
+    const instance = test(React.createElement(ClassicRefs), 'DIV', 'foo');
     expect(instance.refs.inner.getName()).toBe('foo');
   });
 
   it('supports drilling through to the DOM using findDOMNode', function() {
-    var instance = test(
+    const instance = test(
       React.createElement(Inner, {name: 'foo'}),
       'DIV',
       'foo'
     );
-    var node = ReactDOM.findDOMNode(instance);
+    const node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
   });
 

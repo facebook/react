@@ -9,7 +9,7 @@
 
 'use strict';
 
-var accumulateInto;
+let accumulateInto;
 
 describe('accumulateInto', () => {
   beforeEach(() => {
@@ -25,23 +25,23 @@ describe('accumulateInto', () => {
   });
 
   it('returns the second item if first is null', () => {
-    var a = [];
+    const a = [];
     expect(accumulateInto(null, a)).toBe(a);
   });
 
   it('merges the second into the first if first item is an array', () => {
-    var a = [1, 2];
-    var b = [3, 4];
+    const a = [1, 2];
+    const b = [3, 4];
     accumulateInto(a, b);
     expect(a).toEqual([1, 2, 3, 4]);
     expect(b).toEqual([3, 4]);
-    var c = [1];
+    const c = [1];
     accumulateInto(c, 2);
     expect(c).toEqual([1, 2]);
   });
 
   it('returns a new array if first or both items are scalar', () => {
-    var a = [2];
+    const a = [2];
     expect(accumulateInto(1, a)).toEqual([1, 2]);
     expect(a).toEqual([2]);
     expect(accumulateInto(1, 2)).toEqual([1, 2]);

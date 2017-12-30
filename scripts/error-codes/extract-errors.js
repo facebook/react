@@ -35,8 +35,8 @@ module.exports = function(opts) {
     );
   }
 
-  var errorMapFilePath = opts.errorMapFilePath;
-  var existingErrorMap;
+  const errorMapFilePath = opts.errorMapFilePath;
+  let existingErrorMap;
   try {
     // Using `fs.readFileSync` instead of `require` here, because `require()`
     // calls are cached, and the cache map is not properly invalidated after
@@ -51,8 +51,8 @@ module.exports = function(opts) {
     existingErrorMap = {};
   }
 
-  var allErrorIDs = Object.keys(existingErrorMap);
-  var currentID;
+  const allErrorIDs = Object.keys(existingErrorMap);
+  let currentID;
 
   if (allErrorIDs.length === 0) {
     // Map is empty
@@ -65,17 +65,17 @@ module.exports = function(opts) {
   existingErrorMap = invertObject(existingErrorMap);
 
   function transform(source) {
-    var ast = babylon.parse(source, babylonOptions);
+    const ast = babylon.parse(source, babylonOptions);
 
     traverse(ast, {
       CallExpression: {
-        exit: function(astPath) {
+        exit(astPath) {
           if (astPath.get('callee').isIdentifier({name: 'invariant'})) {
-            var node = astPath.node;
+            const node = astPath.node;
 
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
-            var errorMsgLiteral = evalToString(node.arguments[1]);
+            const errorMsgLiteral = evalToString(node.arguments[1]);
             if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
               return;
             }

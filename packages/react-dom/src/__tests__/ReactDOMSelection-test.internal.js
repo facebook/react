@@ -9,12 +9,12 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactDOMSelection;
-var invariant;
+let React;
+let ReactDOM;
+let ReactDOMSelection;
+let invariant;
 
-var getModernOffsetsFromPoints;
+let getModernOffsetsFromPoints;
 
 describe('ReactDOMSelection', () => {
   beforeEach(() => {

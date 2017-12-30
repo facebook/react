@@ -20,8 +20,8 @@ module.exports = function(context) {
     if (node.type === 'Literal' && typeof node.value === 'string') {
       return node.value;
     } else if (node.type === 'BinaryExpression' && node.operator === '+') {
-      var l = getLiteralString(node.left);
-      var r = getLiteralString(node.right);
+      const l = getLiteralString(node.left);
+      const r = getLiteralString(node.right);
       if (l !== null && r !== null) {
         return l + r;
       }
@@ -33,7 +33,7 @@ module.exports = function(context) {
     CallExpression: function(node) {
       // This could be a little smarter by checking context.getScope() to see
       // how warning/invariant was defined.
-      var isWarningOrInvariant =
+      const isWarningOrInvariant =
         node.callee.type === 'Identifier' &&
         (node.callee.name === 'warning' || node.callee.name === 'invariant');
       if (!isWarningOrInvariant) {
@@ -45,7 +45,7 @@ module.exports = function(context) {
         });
         return;
       }
-      var format = getLiteralString(node.arguments[1]);
+      const format = getLiteralString(node.arguments[1]);
       if (format === null) {
         context.report(
           node,
@@ -64,7 +64,7 @@ module.exports = function(context) {
         return;
       }
       // count the number of formatting substitutions, plus the first two args
-      var expectedNArgs = (format.match(/%s/g) || []).length + 2;
+      const expectedNArgs = (format.match(/%s/g) || []).length + 2;
       if (node.arguments.length !== expectedNArgs) {
         context.report(
           node,

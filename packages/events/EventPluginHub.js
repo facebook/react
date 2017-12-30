@@ -30,7 +30,7 @@ import type {AnyNativeEvent} from './PluginModuleType';
  * Internal queue of events that have accumulated their dispatches and are
  * waiting to have their dispatches executed.
  */
-var eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
+let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
 
 /**
  * Dispatches an event and releases it back into the pool, unless persistent.
@@ -39,7 +39,7 @@ var eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
  * @param {boolean} simulated If the event is simulated (changes exn behavior)
  * @private
  */
-var executeDispatchesAndRelease = function(
+const executeDispatchesAndRelease = function(
   event: ReactSyntheticEvent,
   simulated: boolean,
 ) {
@@ -51,10 +51,10 @@ var executeDispatchesAndRelease = function(
     }
   }
 };
-var executeDispatchesAndReleaseSimulated = function(e) {
+const executeDispatchesAndReleaseSimulated = function(e) {
   return executeDispatchesAndRelease(e, true);
 };
-var executeDispatchesAndReleaseTopLevel = function(e) {
+const executeDispatchesAndReleaseTopLevel = function(e) {
   return executeDispatchesAndRelease(e, false);
 };
 
@@ -130,7 +130,7 @@ export const injection = {
  * @return {?function} The stored callback.
  */
 export function getListener(inst: Fiber, registrationName: string) {
-  var listener;
+  let listener;
 
   // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
   // live here; needs to be moved to a better place soon
@@ -170,12 +170,12 @@ export function extractEvents(
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
 ) {
-  var events;
-  for (var i = 0; i < plugins.length; i++) {
+  let events;
+  for (let i = 0; i < plugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
-    var possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
+    const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
     if (possiblePlugin) {
-      var extractedEvents = possiblePlugin.extractEvents(
+      const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,
         targetInst,
         nativeEvent,
@@ -212,7 +212,7 @@ export function enqueueEvents(
 export function processEventQueue(simulated: boolean) {
   // Set `eventQueue` to null before processing it so that we can tell if more
   // events get enqueued while processing.
-  var processingEventQueue = eventQueue;
+  const processingEventQueue = eventQueue;
   eventQueue = null;
 
   if (!processingEventQueue) {

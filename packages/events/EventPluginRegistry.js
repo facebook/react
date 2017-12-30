@@ -15,19 +15,26 @@ import type {
 } from './PluginModuleType';
 
 import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 
 type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 type EventPluginOrder = null | Array<PluginName>;
 
+let shouldWarnOnInjection = false;
+
 /**
  * Injectable ordering of event plugins.
  */
-var eventPluginOrder: EventPluginOrder = null;
+let eventPluginOrder: EventPluginOrder = null;
 
 /**
  * Injectable mapping from names to event plugin modules.
  */
-var namesToPlugins: NamesToPlugins = {};
+const namesToPlugins: NamesToPlugins = {};
+
+export function enableWarningOnInjection() {
+  shouldWarnOnInjection = true;
+}
 
 /**
  * Recomputes the plugin list using the injected plugins and plugin ordering.
@@ -39,9 +46,9 @@ function recomputePluginOrdering(): void {
     // Wait until an `eventPluginOrder` is injected.
     return;
   }
-  for (var pluginName in namesToPlugins) {
-    var pluginModule = namesToPlugins[pluginName];
-    var pluginIndex = eventPluginOrder.indexOf(pluginName);
+  for (const pluginName in namesToPlugins) {
+    const pluginModule = namesToPlugins[pluginName];
+    const pluginIndex = eventPluginOrder.indexOf(pluginName);
     invariant(
       pluginIndex > -1,
       'EventPluginRegistry: Cannot inject event plugins that do not exist in ' +
@@ -58,8 +65,8 @@ function recomputePluginOrdering(): void {
       pluginName,
     );
     plugins[pluginIndex] = pluginModule;
-    var publishedEvents = pluginModule.eventTypes;
-    for (var eventName in publishedEvents) {
+    const publishedEvents = pluginModule.eventTypes;
+    for (const eventName in publishedEvents) {
       invariant(
         publishEventForPlugin(
           publishedEvents[eventName],
@@ -95,11 +102,11 @@ function publishEventForPlugin(
   );
   eventNameDispatchConfigs[eventName] = dispatchConfig;
 
-  var phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
+  const phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
   if (phasedRegistrationNames) {
-    for (var phaseName in phasedRegistrationNames) {
+    for (const phaseName in phasedRegistrationNames) {
       if (phasedRegistrationNames.hasOwnProperty(phaseName)) {
-        var phasedRegistrationName = phasedRegistrationNames[phaseName];
+        const phasedRegistrationName = phasedRegistrationNames[phaseName];
         publishRegistrationName(
           phasedRegistrationName,
           pluginModule,
@@ -142,7 +149,7 @@ function publishRegistrationName(
     pluginModule.eventTypes[eventName].dependencies;
 
   if (__DEV__) {
-    var lowerCasedName = registrationName.toLowerCase();
+    const lowerCasedName = registrationName.toLowerCase();
     possibleRegistrationNames[lowerCasedName] = registrationName;
 
     if (registrationName === 'onDoubleClick') {
@@ -221,12 +228,27 @@ export function injectEventPluginOrder(
 export function injectEventPluginsByName(
   injectedNamesToPlugins: NamesToPlugins,
 ): void {
-  var isOrderingDirty = false;
-  for (var pluginName in injectedNamesToPlugins) {
+  if (__DEV__) {
+    if (shouldWarnOnInjection) {
+      const names = Object.keys(injectedNamesToPlugins).join(', ');
+      lowPriorityWarning(
+        false,
+        'Injecting custom event plugins (%s) is deprecated ' +
+          'and will not work in React 17+. Please update your code ' +
+          'to not depend on React internals. The stack trace for this ' +
+          'warning should reveal the library that is using them. ' +
+          'See https://github.com/facebook/react/issues/11689 for a discussion.',
+        names,
+      );
+    }
+  }
+
+  let isOrderingDirty = false;
+  for (const pluginName in injectedNamesToPlugins) {
     if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
       continue;
     }
-    var pluginModule = injectedNamesToPlugins[pluginName];
+    const pluginModule = injectedNamesToPlugins[pluginName];
     if (
       !namesToPlugins.hasOwnProperty(pluginName) ||
       namesToPlugins[pluginName] !== pluginModule

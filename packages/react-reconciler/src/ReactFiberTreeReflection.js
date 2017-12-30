@@ -24,9 +24,9 @@ import {
 } from 'shared/ReactTypeOfWork';
 import {NoEffect, Placement} from 'shared/ReactTypeOfSideEffect';
 
-var MOUNTING = 1;
-var MOUNTED = 2;
-var UNMOUNTED = 3;
+const MOUNTING = 1;
+const MOUNTED = 2;
+const UNMOUNTED = 3;
 
 function isFiberMountedImpl(fiber: Fiber): number {
   let node = fiber;
@@ -80,7 +80,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
     }
   }
 
-  var fiber: ?Fiber = ReactInstanceMap.get(component);
+  const fiber: ?Fiber = ReactInstanceMap.get(component);
   if (!fiber) {
     return false;
   }

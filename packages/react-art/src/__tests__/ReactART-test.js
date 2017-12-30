@@ -11,25 +11,30 @@
 
 'use strict';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var ReactTestUtils = require('react-dom/test-utils');
+const React = require('react');
+const ReactDOM = require('react-dom');
+const ReactTestUtils = require('react-dom/test-utils');
 
-var Group;
-var Shape;
-var Surface;
-var TestComponent;
+let Group;
+let Shape;
+let Surface;
+let TestComponent;
 
-var Missing = {};
+const Missing = {};
 
-var ReactART = require('react-art');
-var ARTSVGMode = require('art/modes/svg');
-var ARTCurrentMode = require('art/modes/current');
+const ReactART = require('react-art');
+const ARTSVGMode = require('art/modes/svg');
+const ARTCurrentMode = require('art/modes/current');
+
+const renderer = require('react-test-renderer');
+const Circle = require('react-art/Circle');
+const Rectangle = require('react-art/Rectangle');
+const Wedge = require('react-art/Wedge');
 
 function testDOMNodeStructure(domNode, expectedStructure) {
   expect(domNode).toBeDefined();
   expect(domNode.nodeName).toBe(expectedStructure.nodeName);
-  for (var prop in expectedStructure) {
+  for (const prop in expectedStructure) {
     if (!expectedStructure.hasOwnProperty(prop)) {
       continue;
     }
@@ -58,7 +63,7 @@ describe('ReactART', () => {
 
     TestComponent = class extends React.Component {
       render() {
-        var a = (
+        const a = (
           <Shape
             d="M0,0l50,0l0,50l-50,0z"
             fill={new ReactART.LinearGradient(['black', 'white'])}
@@ -71,7 +76,7 @@ describe('ReactART', () => {
           />
         );
 
-        var b = (
+        const b = (
           <Shape
             fill="#3C5A99"
             key="b"
@@ -86,7 +91,7 @@ describe('ReactART', () => {
           </Shape>
         );
 
-        var c = <Group key="c" />;
+        const c = <Group key="c" />;
 
         return (
           <Surface width={150} height={200}>
@@ -100,18 +105,18 @@ describe('ReactART', () => {
   });
 
   it('should have the correct lifecycle state', () => {
-    var instance = <TestComponent />;
+    let instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
-    var group = instance.refs.group;
+    const group = instance.refs.group;
     // Duck type test for an ART group
     expect(typeof group.indicate).toBe('function');
   });
 
   it('should render a reasonable SVG structure in SVG mode', () => {
-    var instance = <TestComponent />;
+    let instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    var expectedStructure = {
+    const expectedStructure = {
       nodeName: 'svg',
       width: '150',
       height: '200',
@@ -132,18 +137,18 @@ describe('ReactART', () => {
       ],
     };
 
-    var realNode = ReactDOM.findDOMNode(instance);
+    const realNode = ReactDOM.findDOMNode(instance);
     testDOMNodeStructure(realNode, expectedStructure);
   });
 
   it('should be able to reorder components', () => {
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(
       <TestComponent flipped={false} />,
       container,
     );
 
-    var expectedStructure = {
+    const expectedStructure = {
       nodeName: 'svg',
       children: [
         {nodeName: 'defs'},
@@ -159,12 +164,12 @@ describe('ReactART', () => {
       ],
     };
 
-    var realNode = ReactDOM.findDOMNode(instance);
+    const realNode = ReactDOM.findDOMNode(instance);
     testDOMNodeStructure(realNode, expectedStructure);
 
     ReactDOM.render(<TestComponent flipped={true} />, container);
 
-    var expectedNewStructure = {
+    const expectedNewStructure = {
       nodeName: 'svg',
       children: [
         {nodeName: 'defs'},
@@ -184,11 +189,11 @@ describe('ReactART', () => {
   });
 
   it('should be able to reorder many components', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
     class Component extends React.Component {
       render() {
-        var chars = this.props.chars.split('');
+        const chars = this.props.chars.split('');
         return (
           <Surface>
             {chars.map(text => <Shape key={text} title={text} />)}
@@ -198,11 +203,11 @@ describe('ReactART', () => {
     }
 
     // Mini multi-child stress test: lots of reorders, some adds, some removes.
-    var before = 'abcdefghijklmnopqrst';
-    var after = 'mxhpgwfralkeoivcstzy';
+    const before = 'abcdefghijklmnopqrst';
+    const after = 'mxhpgwfralkeoivcstzy';
 
-    var instance = ReactDOM.render(<Component chars={before} />, container);
-    var realNode = ReactDOM.findDOMNode(instance);
+    let instance = ReactDOM.render(<Component chars={before} />, container);
+    const realNode = ReactDOM.findDOMNode(instance);
     expect(realNode.textContent).toBe(before);
 
     instance = ReactDOM.render(<Component chars={after} />, container);
@@ -212,7 +217,7 @@ describe('ReactART', () => {
   });
 
   it('renders composite with lifecycle inside group', () => {
-    var mounted = false;
+    let mounted = false;
 
     class CustomShape extends React.Component {
       render() {
@@ -241,7 +246,7 @@ describe('ReactART', () => {
       }
     }
 
-    var ref = null;
+    let ref = null;
 
     class Outer extends React.Component {
       componentDidMount() {
@@ -270,7 +275,7 @@ describe('ReactART', () => {
       }
     }
 
-    var ref = {};
+    let ref = {};
 
     class Outer extends React.Component {
       componentDidMount() {
@@ -292,7 +297,7 @@ describe('ReactART', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Outer />, container);
     expect(ref).not.toBeDefined();
     ReactDOM.render(<Outer mountCustomShape={true} />, container);
@@ -327,5 +332,93 @@ describe('ReactART', () => {
     instance = render(onClick2);
     doClick(instance);
     expect(onClick2).toBeCalled();
+  });
+});
+
+describe('ReactARTComponents', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
+  it('should generate a <Shape> with props for drawing the Circle', () => {
+    const circle = renderer.create(
+      <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
+    );
+    expect(circle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should warn if radius is missing on a Circle component', () => {
+    spyOnDev(console, 'error');
+    renderer.create(<Circle stroke="green" strokeWidth={3} fill="blue" />);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
+        'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Circle (at **)',
+      );
+    }
+  });
+
+  it('should generate a <Shape> with props for drawing the Rectangle', () => {
+    const rectangle = renderer.create(
+      <Rectangle width={50} height={50} stroke="green" fill="blue" />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should warn if width/height is missing on a Rectangle component', () => {
+    spyOnDev(console, 'error');
+    renderer.create(<Rectangle stroke="green" fill="blue" />);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(2);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
+        'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Rectangle (at **)',
+      );
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
+        'Warning: Failed prop type: The prop `height` is marked as required in `Rectangle`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Rectangle (at **)',
+      );
+    }
+  });
+
+  it('should generate a <Shape> with props for drawing the Wedge', () => {
+    const wedge = renderer.create(
+      <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
+    );
+    expect(wedge.toJSON()).toMatchSnapshot();
+  });
+
+  it('should return null if startAngle equals to endAngle on Wedge', () => {
+    const wedge = renderer.create(
+      <Wedge outerRadius={50} startAngle={0} endAngle={0} fill="blue" />,
+    );
+    expect(wedge.toJSON()).toBeNull();
+  });
+
+  it('should warn if outerRadius/startAngle/endAngle is missing on a Wedge component', () => {
+    spyOnDev(console, 'error');
+    renderer.create(<Wedge fill="blue" />);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(3);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
+        'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Wedge (at **)',
+      );
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
+        'Warning: Failed prop type: The prop `startAngle` is marked as required in `Wedge`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Wedge (at **)',
+      );
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toEqual(
+        'Warning: Failed prop type: The prop `endAngle` is marked as required in `Wedge`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Wedge (at **)',
+      );
+    }
   });
 });

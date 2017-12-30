@@ -5,8 +5,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // require that instead.
   require('./spec-equivalence-reporter/setupTests.js');
 } else {
-  var env = jasmine.getEnv();
-  var errorMap = require('../error-codes/codes.json');
+  const env = jasmine.getEnv();
+  const errorMap = require('../error-codes/codes.json');
 
   // TODO: Stop using spyOn in all the test since that seem deprecated.
   // This is a legacy upgrade path strategy from:
@@ -39,9 +39,25 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.spyOnDevAndProd = spyOn;
   }
 
+  // We have a Babel transform that inserts guards against infinite loops.
+  // If a loop runs for too many iterations, we throw an error and set this
+  // global variable. The global lets us detect an infinite loop even if
+  // the actual error object ends up being caught and ignored. An infinite
+  // loop must always fail the test!
+  env.beforeEach(() => {
+    global.infiniteLoopError = null;
+  });
+  env.afterEach(() => {
+    const error = global.infiniteLoopError;
+    global.infiniteLoopError = null;
+    if (error) {
+      throw error;
+    }
+  });
+
   ['error', 'warn'].forEach(methodName => {
-    var oldMethod = console[methodName];
-    var newMethod = function() {
+    const oldMethod = console[methodName];
+    const newMethod = function() {
       newMethod.__callCount++;
       oldMethod.apply(this, arguments);
     };
@@ -74,7 +90,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   if (process.env.NODE_ENV === 'production') {
     // In production, we strip error messages and turn them into codes.
     // This decodes them back so that the test assertions on them work.
-    var decodeErrorMessage = function(message) {
+    const decodeErrorMessage = function(message) {
       if (!message) {
         return message;
       }

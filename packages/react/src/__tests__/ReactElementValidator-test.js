@@ -12,17 +12,17 @@
 // NOTE: We're explicitly not using JSX in this file. This is intended to test
 // classic JS without JSX.
 
-var PropTypes;
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let PropTypes;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('ReactElementValidator', () => {
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/at .+?:\d+/g, 'at **');
   }
 
-  var ComponentClass;
+  let ComponentClass;
 
   beforeEach(() => {
     jest.resetModules();
@@ -40,7 +40,7 @@ describe('ReactElementValidator', () => {
 
   it('warns for keys for arrays of elements in rest args', () => {
     spyOnDev(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    const Component = React.createFactory(ComponentClass);
 
     Component(null, [Component(), Component()]);
 
@@ -54,7 +54,7 @@ describe('ReactElementValidator', () => {
 
   it('warns for keys for arrays of elements with owner info', () => {
     spyOnDev(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    const Component = React.createFactory(ComponentClass);
 
     class InnerClass extends React.Component {
       render() {
@@ -62,7 +62,7 @@ describe('ReactElementValidator', () => {
       }
     }
 
-    var InnerComponent = React.createFactory(InnerClass);
+    const InnerComponent = React.createFactory(InnerClass);
 
     class ComponentWrapper extends React.Component {
       render() {
@@ -90,7 +90,7 @@ describe('ReactElementValidator', () => {
     }
     Object.defineProperty(Anonymous, 'name', {value: undefined});
 
-    var divs = [<div />, <div />];
+    const divs = [<div />, <div />];
     ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
 
     if (__DEV__) {
@@ -106,7 +106,7 @@ describe('ReactElementValidator', () => {
   it('warns for keys for arrays of elements with no owner info', () => {
     spyOnDev(console, 'error');
 
-    var divs = [<div />, <div />];
+    const divs = [<div />, <div />];
     ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
 
     if (__DEV__) {
@@ -171,14 +171,14 @@ describe('ReactElementValidator', () => {
 
   it('warns for keys for iterables of elements in rest args', () => {
     spyOnDev(console, 'error');
-    var Component = React.createFactory(ComponentClass);
+    const Component = React.createFactory(ComponentClass);
 
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {value: done ? undefined : Component(), done: done};
           },
         };
@@ -196,20 +196,20 @@ describe('ReactElementValidator', () => {
   });
 
   it('does not warns for arrays of elements with keys', () => {
-    var Component = React.createFactory(ComponentClass);
+    const Component = React.createFactory(ComponentClass);
 
     Component(null, [Component({key: '#1'}), Component({key: '#2'})]);
   });
 
   it('does not warns for iterable elements with keys', () => {
-    var Component = React.createFactory(ComponentClass);
+    const Component = React.createFactory(ComponentClass);
 
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {
               value: done ? undefined : Component({key: '#' + i}),
               done: done,
@@ -223,13 +223,13 @@ describe('ReactElementValidator', () => {
   });
 
   it('does not warn when the element is directly in rest args', () => {
-    var Component = React.createFactory(ComponentClass);
+    const Component = React.createFactory(ComponentClass);
 
     Component(null, Component(), Component());
   });
 
   it('does not warn when the array contains a non-element', () => {
-    var Component = React.createFactory(ComponentClass);
+    const Component = React.createFactory(ComponentClass);
 
     Component(null, [{}, {}]);
   });
@@ -476,7 +476,7 @@ describe('ReactElementValidator', () => {
     function TestComponent() {
       return <div />;
     }
-    var TestFactory = React.createFactory(TestComponent);
+    const TestFactory = React.createFactory(TestComponent);
     expect(TestFactory.type).toBe(TestComponent);
     if (__DEV__) {
       expect(console.warn.calls.count()).toBe(1);
@@ -502,7 +502,7 @@ describe('ReactElementValidator', () => {
       }
     }
 
-    var node = document.createElement('div');
+    const node = document.createElement('div');
     // This shouldn't cause a stack overflow or any other problems (#3883)
     ReactTestUtils.renderIntoDocument(<DOMContainer>{node}</DOMContainer>);
   });
@@ -531,7 +531,7 @@ describe('ReactElementValidator', () => {
     // We don't suggest this since it silences all sorts of warnings, but we
     // shouldn't blow up either.
 
-    var child = {
+    const child = {
       $$typeof: <div />.$$typeof,
       type: 'span',
       key: null,
@@ -545,7 +545,7 @@ describe('ReactElementValidator', () => {
 
   it('does not blow up on key warning with undefined type', () => {
     spyOnDev(console, 'error');
-    var Foo = undefined;
+    const Foo = undefined;
     void <Foo>{[<div />]}</Foo>;
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(1);

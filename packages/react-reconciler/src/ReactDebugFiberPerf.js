@@ -16,6 +16,7 @@ import {
   HostComponent,
   HostText,
   HostPortal,
+  CallComponent,
   ReturnComponent,
   Fragment,
 } from 'shared/ReactTypeOfWork';
@@ -166,6 +167,7 @@ const shouldIgnoreFiber = (fiber: Fiber): boolean => {
     case HostComponent:
     case HostText:
     case HostPortal:
+    case CallComponent:
     case ReturnComponent:
     case Fragment:
       return true;

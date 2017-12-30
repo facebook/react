@@ -14,32 +14,34 @@ import warning from 'fbjs/lib/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
-  isReservedProp,
-  shouldAttributeAcceptBooleanValue,
-  shouldSetAttribute,
+  RESERVED,
+  shouldRemoveAttributeWithWarning,
+  getPropertyInfo,
 } from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
 
 function getStackAddendum() {
-  var stack = ReactDebugCurrentFrame.getStackAddendum();
+  const stack = ReactDebugCurrentFrame.getStackAddendum();
   return stack != null ? stack : '';
 }
 
-if (__DEV__) {
-  var warnedProperties = {};
-  var hasOwnProperty = Object.prototype.hasOwnProperty;
-  var EVENT_NAME_REGEX = /^on./;
-  var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
-  var rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
-  var rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
+let validateProperty = () => {};
 
-  var validateProperty = function(tagName, name, value, canUseEventSystem) {
+if (__DEV__) {
+  const warnedProperties = {};
+  const hasOwnProperty = Object.prototype.hasOwnProperty;
+  const EVENT_NAME_REGEX = /^on./;
+  const INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
+  const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
+  const rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
+
+  validateProperty = function(tagName, name, value, canUseEventSystem) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
 
-    var lowerCasedName = name.toLowerCase();
+    const lowerCasedName = name.toLowerCase();
     if (lowerCasedName === 'onfocusin' || lowerCasedName === 'onfocusout') {
       warning(
         false,
@@ -56,7 +58,7 @@ if (__DEV__) {
       if (registrationNameModules.hasOwnProperty(name)) {
         return true;
       }
-      var registrationName = possibleRegistrationNames.hasOwnProperty(
+      const registrationName = possibleRegistrationNames.hasOwnProperty(
         lowerCasedName,
       )
         ? possibleRegistrationNames[lowerCasedName]
@@ -153,11 +155,12 @@ if (__DEV__) {
       return true;
     }
 
-    const isReserved = isReservedProp(name);
+    const propertyInfo = getPropertyInfo(name);
+    const isReserved = propertyInfo !== null && propertyInfo.type === RESERVED;
 
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
-      var standardName = possibleStandardNames[lowerCasedName];
+      const standardName = possibleStandardNames[lowerCasedName];
       if (standardName !== name) {
         warning(
           false,
@@ -189,7 +192,7 @@ if (__DEV__) {
 
     if (
       typeof value === 'boolean' &&
-      !shouldAttributeAcceptBooleanValue(name)
+      shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)
     ) {
       if (value) {
         warning(
@@ -233,7 +236,7 @@ if (__DEV__) {
     }
 
     // Warn when a known attribute is a bad type
-    if (!shouldSetAttribute(name, value)) {
+    if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
       warnedProperties[name] = true;
       return false;
     }
@@ -242,16 +245,18 @@ if (__DEV__) {
   };
 }
 
-var warnUnknownProperties = function(type, props, canUseEventSystem) {
-  var unknownProps = [];
-  for (var key in props) {
-    var isValid = validateProperty(type, key, props[key], canUseEventSystem);
+const warnUnknownProperties = function(type, props, canUseEventSystem) {
+  const unknownProps = [];
+  for (const key in props) {
+    const isValid = validateProperty(type, key, props[key], canUseEventSystem);
     if (!isValid) {
       unknownProps.push(key);
     }
   }
 
-  var unknownPropString = unknownProps.map(prop => '`' + prop + '`').join(', ');
+  const unknownPropString = unknownProps
+    .map(prop => '`' + prop + '`')
+    .join(', ');
   if (unknownProps.length === 1) {
     warning(
       false,
