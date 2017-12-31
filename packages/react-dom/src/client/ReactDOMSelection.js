@@ -154,7 +154,7 @@ export function getModernOffsetsFromPoints(
  * @param {object} offsets
  */
 export function setOffsets(node, offsets) {
-  var doc = node.ownerDocument || document;
+  const doc = node.ownerDocument || document;
 
   if (!doc.defaultView.getSelection) {
     return;
