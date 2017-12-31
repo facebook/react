@@ -1,0 +1,20 @@
+{
+  "name": "weex-vue-framework",
+  "version": "2.4.2-weex.1",
+  "description": "Vue 2.0 Framework for Weex",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vuejs/vue.git"
+  },
+  "keywords": [
+    "vue",
+    "compiler"
+  ],
+  "author": "Evan You",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vuejs/vue/issues"
+  },
+  "homepage": "https://github.com/vuejs/vue/tree/dev/packages/weex-vue-framework#readme"
+}

@@ -1,0 +1,8 @@
+{
+  "env": {
+    "jasmine": true
+  },
+  "globals": {
+    "waitForUpdate": true
+  }
+}

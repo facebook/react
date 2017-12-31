@@ -1,0 +1,14 @@
+{
+  "env": {
+    "jasmine": true
+  },
+  "globals": {
+    "waitForUpdate": true,
+    "triggerEvent": true,
+    "createTextVNode": true
+  },
+  "plugins": ["jasmine"],
+  "rules": {
+    "jasmine/no-focused-tests": 2
+  }
+}

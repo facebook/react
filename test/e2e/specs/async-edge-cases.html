@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="../../../dist/vue.min.js"></script>
+  </head>
+  <body>
+
+    <!-- #4510 click and change event on checkbox -->
+    <div id="case-1">
+      <div @click="num++">
+        {{ num }}
+        <input type="checkbox" v-model="checked">
+      </div>
+    </div>
+    <script>
+    var vm1 = new Vue({
+      el: '#case-1',
+      data: {
+        num: 1,
+        checked: false
+      }
+    })
+    </script>
+
+    <!-- #6566 click event bubbling -->
+    <div id="case-2">
+      <div class="panel" v-if="expand">
+        <button @click="expand = false, countA++">Expand is True</button>
+      </div>
+      <div class="header" v-if="!expand" @click="expand = true, countB++">
+        <button>Expand is False</button>
+      </div>
+      <div class="count-a">
+        countA: {{countA}}
+      </div>
+      <div class="count-b">
+        countB: {{countB}}
+      </div>
+    </div>
+    <script>
+    var vm2 = new Vue({
+      el: '#case-2',
+      data: {
+        expand: true,
+        countA: 0,
+        countB: 0,
+      }
+    })
+    </script>
+
+  </body>
+</html>
