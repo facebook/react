@@ -1,14 +1,35 @@
-**Before submitting a pull request,** please make sure the following is done:
+<!--
+Please make sure to read the Pull Request Guidelines:
+https://github.com/vuejs/vue/blob/dev/.github/CONTRIBUTING.md#pull-request-guidelines
+-->
 
-1. Fork [the repository](https://github.com/facebook/react) and create your branch from `master`.
-2. Run `yarn` in the repository root.
-3. If you've fixed a bug or added code that should be tested, add tests!
-4. Ensure the test suite passes (`yarn test`). Tip: `yarn test --watch TestName` is helpful in development.
-5. Run `yarn test-prod` to test in the production environment. It supports the same options as `yarn test`.
-6. If you need a debugger, run `yarn debug-test --watch TestName`, open `chrome://inspect`, and press "Inspect".
-7. Format your code with [prettier](https://github.com/prettier/prettier) (`yarn prettier`).
-8. Make sure your code lints (`yarn lint`). Tip: `yarn linc` to only check changed files.
-9. Run the [Flow](https://flowtype.org/) typechecks (`yarn flow`).
-10. If you haven't already, complete the CLA.
+<!-- PULL REQUEST TEMPLATE -->
+<!-- (Update "[ ]" to "[x]" to check a box) -->
 
-**Learn more about contributing:** https://reactjs.org/docs/how-to-contribute.html
+**What kind of change does this PR introduce?** (check at least one)
+
+- [ ] Bugfix
+- [ ] Feature
+- [ ] Code style update
+- [ ] Refactor
+- [ ] Build-related changes
+- [ ] Other, please describe:
+
+**Does this PR introduce a breaking change?** (check one)
+
+- [ ] Yes
+- [ ] No
+
+If yes, please describe the impact and migration path for existing applications:
+
+**The PR fulfills these requirements:**
+
+- [ ] It's submitted to the `dev` branch for v2.x (or to a previous version branch), _not_ the `master` branch
+- [ ] When resolving a specific issue, it's referenced in the PR's title (e.g. `fix #xxx[,#xxx]`, where "xxx" is the issue number)
+- [ ] All tests are passing: https://github.com/vuejs/vue/blob/dev/.github/CONTRIBUTING.md#development-setup
+- [ ] New/updated tests are included
+
+If adding a **new feature**, the PR's description includes:
+- [ ] A convincing reason for adding this feature (to avoid wasting your time, it's best to open a suggestion issue first and wait for approval before working on it)
+
+**Other information:**

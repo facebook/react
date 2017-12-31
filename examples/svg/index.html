@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Vue.js SVG graph example</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.min.js"></script>
+    <script src="https://unpkg.com/marky/dist/marky.min.js"></script>
+  </head>
+  <body>
+
+    <!-- template for the polygraph component. -->
+    <script type="text/x-template" id="polygraph-template">
+      <g>
+        <polygon :points="points"></polygon>
+        <circle cx="100" cy="100" r="80"></circle>
+        <axis-label
+          v-for="(stat, index) in stats"
+          :stat="stat"
+          :index="index"
+          :total="stats.length">
+        </axis-label>
+      </g>
+    </script>
+
+    <!-- template for the axis label component. -->
+    <script type="text/x-template" id="axis-label-template">
+      <text :x="point.x" :y="point.y">{{stat.label}}</text>
+    </script>
+
+    <!-- demo root element -->
+    <div id="demo">
+      <!-- Use the component -->
+      <svg width="200" height="200">
+        <polygraph :stats="stats"></polygraph>
+      </svg>
+      <!-- controls -->
+      <div v-for="stat in stats">
+        <label>{{stat.label}}</label>
+        <input type="range" v-model="stat.value" min="0" max="100">
+        <span>{{stat.value}}</span>
+        <button @click="remove(stat)" class="remove">X</button>
+      </div>
+      <form id="add">
+        <input name="newlabel" v-model="newLabel">
+        <button @click="add">Add a Stat</button>
+      </form>
+      <pre id="raw">{{ stats }}</pre>
+    </div>
+
+    <p style="font-size:12px">* input[type="range"] requires IE10 or above.</p>
+
+    <script src="svg.js"></script>
+
+  </body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "strict": true,
+    "noEmit": true
+  },
+  "compileOnSave": false,
+  "include": [
+    "**/*.ts"
+  ]
+}

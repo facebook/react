@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Vue benchmark</title>
+    <style type="text/css">
+      html, body {
+        margin: 0;
+        padding: 0 10px;
+        font-family: sans-serif;
+      }
+
+      #fps {
+        position: fixed;
+        top: 0px;
+        right: 0px;
+        padding: 32px;
+        font-size: 32px;
+        text-align: right;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      .server-uptime {
+        display: block;
+        overflow: hidden;
+        margin: 0 auto;
+        width: 50%;
+      }
+
+      .server-uptime + .server-uptime {
+        margin: 20px auto 0 auto;
+        border-top: 1px solid #999;
+      }
+
+      .days {
+        display: flex;
+        flex-direction: row;
+        flex-flow: wrap;
+      }
+
+      .uptime-day {
+        display: flex;
+      }
+
+      span.uptime-day-status {
+        width: 10px;
+        height: 10px;
+        margin: 1px;
+      }
+
+      .hover {
+        display: none;
+      }
+
+      .uptime-day-status:hover + .hover {
+        display: flex;
+        position: absolute;
+        margin-top: -35px;
+        margin-left: -30px;
+        border-radius: 4px;
+        color: #eee;
+        background-color: #333;
+        padding: 10px;
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Reference: <a href="https://github.com/tildeio/glimmer/blob/master/packages/glimmer-demos/lib/uptime.ts">Ember Glimmer 2 demo</a></p>
+    <div id="app">
+      <p>FPS: {{ fps }}</p>
+      <button @click="toggle">{{ playing ? 'pause' : 'play' }}</button>
+      <server-uptime
+        v-for="server in servers"
+        :key="server.name"
+        :name="server.name"
+        :days="server.days">
+      </server-uptime>
+    </div>
+    <script src="../../dist/vue.min.js"></script>
+    <script>
+      // functional components are prefect for small, presentational components
+      // and they are much more efficient than stateful ones.
+      Vue.component('uptime-day', {
+        props: ['day'],
+        functional: true,
+        render (h, ctx) {
+          var day = ctx.props.day
+          return h('div', { staticClass: 'uptime-day'}, [
+            h('span', { staticClass: 'uptime-day-status', style: { backgroundColor: day.up ? '#8cc665' : '#ccc' } }),
+            h('span', { staticClass: 'hover' }, [day.number + ': ' + day.up ? 'Servers operational!' : 'Red alert!'])
+          ])
+        }
+      })
+
+      Vue.component('server-uptime', {
+        props: ['name', 'days'],
+        computed: {
+          upDays () {
+            return this.days.reduce(function (upDays, day) {
+              return upDays += (day.up ? 1 : 0)
+            }, 0)
+          },
+          maxStreak () {
+            var streak = this.days.reduce(([max, streak], day) => {
+              if (day.up && streak + 1 > max) {
+                return [streak + 1, streak + 1]
+              } else if (day.up) {
+                return [max, streak + 1]
+              } else {
+                return [max, 0]
+              }
+            }, [0, 0])
+
+            return streak.max
+          }
+        },
+        template: `
+          <div class="server-uptime">
+            <h1>{{name}}</h1>
+            <h2>{{upDays}} Days Up</h2>
+            <h2>Biggest Streak: {{maxStreak}}</h2>
+            <div class="days">
+              <uptime-day
+                v-for="day in days"
+                :key="day.number"
+                :day="day">
+              </uptime-day>
+            </div>
+          </div>
+        `
+      })
+
+      function generateServer (name) {
+        var days = []
+        for (var i=0; i<=364; i++) {
+          var up = Math.random() > 0.2
+          days.push({ number: i, up })
+        }
+        return { name, days }
+      }
+
+      function generateServers () {
+        return [
+          generateServer("Stefan's Server"),
+          generateServer("Godfrey's Server"),
+          generateServer("Yehuda's Server")
+        ]
+      }
+
+      var s = window.performance.now()
+      var app = new Vue({
+        el: '#app',
+        data: {
+          fps: 0,
+          playing: false,
+          servers: Object.freeze(generateServers())
+        },
+        methods: {
+          toggle () {
+            this.playing = !this.playing
+            if (this.playing) {
+              update()
+            } else {
+              clearTimeout(timeoutId)
+            }
+          }
+        }
+      })
+      console.log('initial render: ' + (window.performance.now() - s) + 'ms')
+
+      var fpsMeter = {
+        alpha: 2/121,
+        lastValue: null,
+        push (dataPoint) {
+          if (this.lastValue) {
+            return this.lastValue = this.lastValue + this.alpha * (dataPoint - this.lastValue)
+          } else {
+            return this.lastValue = dataPoint
+          }
+        }
+      }
+
+      var timeoutId
+      var lastFrame = null
+      function update () {
+        var thisFrame = window.performance.now()
+        if (lastFrame) {
+          app.fps = Math.round(fpsMeter.push(1000 / (thisFrame - lastFrame)))
+        }
+        app.servers = Object.freeze(generateServers())
+        timeoutId = setTimeout(update, 0) // not using rAF because that limits us to 60fps!
+        lastFrame = thisFrame
+      }
+    </script>
+  </body>
+</html>

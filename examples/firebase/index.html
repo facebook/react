@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Vue.js firebase + validation example</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <!-- Vue -->
+    <!-- Delete ".min" for console warnings in development -->
+    <script src="../../dist/vue.min.js"></script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/3.4.0/firebase.js"></script>
+    <!-- VueFire -->
+    <script src="https://unpkg.com/vuefire@1.3.0"></script>
+  </head>
+  <body>
+    <div id="app">
+      <ul is="transition-group">
+        <li v-for="user in users" class="user" :key="user['.key']">
+          <span>{{user.name}} - {{user.email}}</span>
+          <button v-on:click="removeUser(user)">X</button>
+        </li>
+      </ul>
+      <form id="form" v-on:submit.prevent="addUser">
+        <input v-model="newUser.name">
+        <input v-model="newUser.email">
+        <input type="submit" value="Add User">
+      </form>
+      <ul class="errors">
+        <li v-show="!validation.name">Name cannot be empty.</li>
+        <li v-show="!validation.email">Please provide a valid email address.</li>
+      </ul>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>

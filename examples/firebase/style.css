@@ -1,0 +1,32 @@
+body {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+ul {
+  padding: 0;
+}
+
+.user {
+  height: 30px;
+  line-height: 30px;
+  padding: 10px;
+  border-top: 1px solid #eee;
+  overflow: hidden;
+  transition: all .25s ease;
+}
+
+.user:last-child {
+  border-bottom: 1px solid #eee;
+}
+
+.v-enter, .v-leave-to {
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-top-width: 0;
+  border-bottom-width: 0;
+}
+
+.errors {
+  color: #f00;
+}
