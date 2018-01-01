@@ -9,18 +9,23 @@
 
 'use strict';
 
-const { danger, markdown, schedule } = require('danger');
+const {markdown} = require('danger');
+const fetch = require('node-fetch');
 
-const { resultsHeaders, generateResultsArray, currentBuildResults } = require('./scripts/rollup/stats');
+const {
+  resultsHeaders,
+  generateResultsArray,
+} = require('./scripts/rollup/stats');
+const currentBuildResults = require('./scripts/rollup/results.json');
 
 /**
  * Generates a Markdown table
- * @param {string[]} headers 
- * @param {string[][]} body 
+ * @param {string[]} headers
+ * @param {string[][]} body
  */
 function generateMDTable(headers, body) {
   const tableHeaders = [
-    headers.join(' | '), 
+    headers.join(' | '),
     headers.map(() => ' --- ').join(' | '),
   ];
 
@@ -29,18 +34,19 @@ function generateMDTable(headers, body) {
 }
 
 // Grab the results.json before we ran CI via the GH API
-const getJSON = danger.github.utils
-  .fileContents('scripts/rollup/results.json');
+fetch('http://react.zpao.com/builds/master/latest/results.json').then(
+  async response => {
+    const previousBuildResults = await response.json();
+    const results = generateResultsArray(
+      currentBuildResults,
+      previousBuildResults
+    );
 
-// @bug See https://github.com/danger/danger-js/issues/443
-schedule(getJSON);
-getJSON.then(APIPreviousBuildResults => {
-  const previousBuildResults = JSON.parse(APIPreviousBuildResults);
-  const results = generateResultsArray(currentBuildResults, previousBuildResults);
+    markdown('### Bundle Changes:\n');
+    const percentToWarrentShowing = 1
+    const onlyResultsToShow = results.filter(f => Math.abs(f[3]) > percentToWarrentShowing || Math.abs(f[7]));
+    const groupBy
 
-  markdown('### Bundle Changes:\n');
-  // const percentToWarrentShowing = 0.1
-  // const onlyResultsToShow = results.filter(f => Math.abs(f[3]) > percentToWarrentShowing);
-
-  markdown(generateMDTable(resultsHeaders, results));
-});
+    markdown(generateMDTable(resultsHeaders, results));
+  }
+);

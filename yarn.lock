@@ -66,6 +66,10 @@
   version "8.5.1"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.5.1.tgz#4ec3020bcdfe2abffeef9ba3fbf26fca097514b5"
 
+"@types/node@^7.0.39":
+  version "7.0.51"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-7.0.51.tgz#1fb9bd2c7d28b1e8b1fe438f01494d0da8e451af"
+
 JSONStream@^1.0.3:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/JSONStream/-/JSONStream-1.3.2.tgz#c102371b6ec3a7cf3b847ca00c20bb0fce4c6dea"
@@ -1304,9 +1308,15 @@ combined-stream@^1.0.5, combined-stream@~1.0.5:
   dependencies:
     delayed-stream "~1.0.0"
 
-commander@^2.11.0, commander@^2.12.2, commander@^2.5.0, commander@^2.6.0, commander@^2.9.0:
+commander@^2.11.0, commander@^2.5.0, commander@^2.6.0, commander@^2.9.0:
   version "2.12.2"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.12.2.tgz#0f5946c427ed9ec0d91a46bb9def53e54650e555"
+
+"commander@github:sennav/commander.js#master":
+  version "2.11.0"
+  resolved "https://codeload.github.com/sennav/commander.js/tar.gz/7bec2adb7dcd175237362e01cdd3b12989d4dbf8"
+  dependencies:
+    "@types/node" "^7.0.39"
 
 commoner@~0.10.3:
   version "0.10.8"
@@ -1441,18 +1451,19 @@ d@1:
   dependencies:
     es5-ext "^0.10.9"
 
-danger@^2.1.5:
-  version "2.1.6"
-  resolved "https://registry.yarnpkg.com/danger/-/danger-2.1.6.tgz#ea4b3024cbef422286dc6bdb4d23da132d8ebbe5"
+danger@^3.0.0-beta.1:
+  version "3.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/danger/-/danger-3.0.0-beta.1.tgz#106be0d205bfb2d0921c0475db2e6ff83544352f"
   dependencies:
     babel-polyfill "7.0.0-alpha.19"
     chalk "^2.3.0"
-    commander "^2.12.2"
+    commander sennav/commander.js#master
     debug "^3.1.0"
     get-stdin "^5.0.1"
     github "^13.0.1"
     hyperlinker "^1.0.0"
     jsome "^2.3.25"
+    json5 "^0.5.1"
     jsonpointer "^4.0.1"
     lodash.find "^4.6.0"
     lodash.includes "^4.3.0"
