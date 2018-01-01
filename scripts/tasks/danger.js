@@ -14,7 +14,7 @@ const extension = process.platform === 'win32' ? '.cmd' : '';
 
 // This came from React Native's circle.yml
 const token = 'e622517d9f1136ea8900' + '07c6373666312cdfaa69';
-spawn(path.join('node_modules', '.bin', 'danger' + extension), [], {
+spawn(path.join('node_modules', '.bin', 'danger-ci' + extension), [], {
   // Allow colors to pass through
   stdio: 'inherit',
   env: {

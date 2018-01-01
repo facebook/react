@@ -20,7 +20,6 @@ function saveResults() {
   );
 }
 
-
 function percentChange(prev, current) {
   return Math.floor((current - prev) / prev * 100);
 }
@@ -44,32 +43,35 @@ const resultsHeaders = [
 ];
 
 function generateResultsArray(current, prevResults) {
-  currentBuildResults.bundleSizes.forEach(index => {
-    const result = currentBuildResults.bundleSizes[index];
-    const prev = prevBuildResults.bundleSizes.filter(
-      res => res.filename === result.filename
-    )[0];
-    if (result === prev) {
-      // We didn't rebuild this bundle.
-      return;
-    }
+  return current.bundleSizes
+    .map(result => {
+      const prev = prevResults.bundleSizes.filter(
+        res => res.filename === result.filename
+      )[0];
+      if (result === prev) {
+        // We didn't rebuild this bundle.
+        return;
+      }
 
-    const size = result.size;
-    const gzip = result.gzip;
-    let prevSize = prev ? prev.size : 0;
-    let prevGzip = prev ? prev.gzip : 0;
+      const size = result.size;
+      const gzip = result.gzip;
+      let prevSize = prev ? prev.size : 0;
+      let prevGzip = prev ? prev.gzip : 0;
 
-    return [
-      `${result.filename} (${result.bundleType}`, 
-      filesize(prevSize),
-      filesize(size),
-      percentChange(prevSize, size),
-      filesize(prevGzip),
-      filesize(gzip),
-      percentChange(prevGzip, gzip),
-    ];
-  // Strip any nulls
-  }).filter(f => f);
+      return {
+        filename: result.filename,
+        bundleType: result.bundleType,
+        packageName: result.packageName,
+        prevSize: filesize(prevSize),
+        prevFileSize: filesize(size),
+        prevFileSizeChange: percentChange(prevSize, size),
+        prevGzip: filesize(prevGzip),
+        prevGzipSize: filesize(gzip),
+        prevGzipSizeChange: percentChange(prevGzip, gzip),
+      };
+      // Strip any nulls
+    })
+    .filter(f => f);
 }
 
 function printResults() {
@@ -77,16 +79,16 @@ function printResults() {
     head: resultsHeaders.map(chalk.gray.yellow),
   });
 
-  const results = generateResultsArray(currentBuildResults, prevBuildResults)
-  results.forEach(row => {
+  const results = generateResultsArray(currentBuildResults, prevBuildResults);
+  results.forEach(result => {
     table.push([
-      chalk.white.bold(row[0]),
-      chalk.gray.bold(row[1]),
-      chalk.white.bold(row[2]),
-      percentChangeString(row[3]),
-      chalk.gray.bold(row[4]),
-      chalk.white.bold(row[5]),
-      percentChangeString(row[6]),
+      chalk.white.bold(`${result.filename}  (${result.bundleType})`),
+      chalk.gray.bold(result.prevSize),
+      chalk.white.bold(result.prevFileSize),
+      percentChangeString(result.prevFileSizeChange),
+      chalk.gray.bold(result.prevGzip),
+      chalk.white.bold(result.prevGzipSize),
+      percentChangeString(result.prevGzipSizeChange),
     ]);
   });
 
