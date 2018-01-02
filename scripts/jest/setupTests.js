@@ -77,7 +77,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     console[methodName] = newMethod;
 
     env.beforeEach(() => {
-      unexpectedConsoleCallStacks.splice(0);
+      unexpectedConsoleCallStacks.length = 0;
     });
 
     env.afterEach(() => {
