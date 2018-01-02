@@ -89,7 +89,7 @@ function getVendorPrefixedEventName(eventName) {
     }
   }
 
-  return '';
+  return eventName;
 }
 
 export default getVendorPrefixedEventName;
