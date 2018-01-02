@@ -13,10 +13,6 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const ReactDOMServer = require('react-dom/server');
 
-function normalizeCodeLocInfo(str) {
-  return str && str.replace(/at .+?:\d+/g, 'at **');
-}
-
 describe('CSSPropertyOperations', () => {
   it('should automatically append `px` to relevant styles', () => {
     const styles = {
@@ -91,17 +87,13 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOnDev(console, 'error');
     const root = document.createElement('div');
-    ReactDOM.render(<Comp />, root);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: Unsupported style property background-color. Did you mean backgroundColor?' +
-          '\n    in div (at **)' +
-          '\n    in Comp (at **)',
-      );
-    }
+
+    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev(
+      'Warning: Unsupported style property background-color. Did you mean backgroundColor?' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+    );
   });
 
   it('should warn when updating hyphenated style names', () => {
@@ -113,28 +105,21 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOnDev(console, 'error');
     const styles = {
       '-ms-transform': 'translate3d(0, 0, 0)',
       '-webkit-transform': 'translate3d(0, 0, 0)',
     };
     const root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
-    ReactDOM.render(<Comp style={styles} />, root);
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: Unsupported style property -ms-transform. Did you mean msTransform?' +
-          '\n    in div (at **)' +
-          '\n    in Comp (at **)',
-      );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
-        'Warning: Unsupported style property -webkit-transform. Did you mean WebkitTransform?' +
-          '\n    in div (at **)' +
-          '\n    in Comp (at **)',
-      );
-    }
+    expect(() => ReactDOM.render(<Comp style={styles} />, root)).toWarnDev([
+      'Warning: Unsupported style property -ms-transform. Did you mean msTransform?' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+      'Warning: Unsupported style property -webkit-transform. Did you mean WebkitTransform?' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+    ]);
   });
 
   it('warns when miscapitalizing vendored style names', () => {
@@ -154,25 +139,19 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOnDev(console, 'error');
     const root = document.createElement('div');
-    ReactDOM.render(<Comp />, root);
-    if (__DEV__) {
+
+    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev([
       // msTransform is correct already and shouldn't warn
-      expect(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: Unsupported vendor-prefixed style property oTransform. ' +
-          'Did you mean OTransform?' +
-          '\n    in div (at **)' +
-          '\n    in Comp (at **)',
-      );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
-        'Warning: Unsupported vendor-prefixed style property webkitTransform. ' +
-          'Did you mean WebkitTransform?' +
-          '\n    in div (at **)' +
-          '\n    in Comp (at **)',
-      );
-    }
+      'Warning: Unsupported vendor-prefixed style property oTransform. ' +
+        'Did you mean OTransform?' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+      'Warning: Unsupported vendor-prefixed style property webkitTransform. ' +
+        'Did you mean WebkitTransform?' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+    ]);
   });
 
   it('should warn about style having a trailing semicolon', () => {
@@ -193,24 +172,18 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOnDev(console, 'error');
     const root = document.createElement('div');
-    ReactDOM.render(<Comp />, root);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        "Warning: Style property values shouldn't contain a semicolon. " +
-          'Try "backgroundColor: blue" instead.' +
-          '\n    in div (at **)' +
-          '\n    in Comp (at **)',
-      );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
-        "Warning: Style property values shouldn't contain a semicolon. " +
-          'Try "color: red" instead.' +
-          '\n    in div (at **)' +
-          '\n    in Comp (at **)',
-      );
-    }
+
+    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev([
+      "Warning: Style property values shouldn't contain a semicolon. " +
+        'Try "backgroundColor: blue" instead.' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+      "Warning: Style property values shouldn't contain a semicolon. " +
+        'Try "color: red" instead.' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+    ]);
   });
 
   it('should warn about style containing a NaN value', () => {
@@ -222,18 +195,13 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOnDev(console, 'error');
     const root = document.createElement('div');
-    ReactDOM.render(<Comp />, root);
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
-          '\n    in div (at **)' +
-          '\n    in Comp (at **)',
-      );
-    }
+    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev(
+      'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+    );
   });
 
   it('should not warn when setting CSS custom properties', () => {
@@ -256,18 +224,13 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOnDev(console, 'error');
     const root = document.createElement('div');
-    ReactDOM.render(<Comp />, root);
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: `Infinity` is an invalid value for the `fontSize` css style property.' +
-          '\n    in div (at **)' +
-          '\n    in Comp (at **)',
-      );
-    }
+    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev(
+      'Warning: `Infinity` is an invalid value for the `fontSize` css style property.' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+    );
   });
 
   it('should not add units to CSS custom properties', () => {

@@ -62,7 +62,6 @@ describe('ReactPureComponent', () => {
   });
 
   it('can override shouldComponentUpdate', () => {
-    spyOnDev(console, 'error');
     let renders = 0;
     class Component extends React.PureComponent {
       render() {
@@ -73,18 +72,15 @@ describe('ReactPureComponent', () => {
         return true;
       }
     }
+
     const container = document.createElement('div');
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+      'Warning: ' +
+        'Component has a method called shouldComponentUpdate(). ' +
+        'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
+        'Please extend React.Component if shouldComponentUpdate is used.',
+    );
     ReactDOM.render(<Component />, container);
-    ReactDOM.render(<Component />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: ' +
-          'Component has a method called shouldComponentUpdate(). ' +
-          'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
-          'Please extend React.Component if shouldComponentUpdate is used.',
-      );
-    }
     expect(renders).toBe(2);
   });
 
@@ -103,8 +99,6 @@ describe('ReactPureComponent', () => {
   });
 
   it('should warn when shouldComponentUpdate is defined on React.PureComponent', () => {
-    spyOnDev(console, 'error');
-
     class PureComponent extends React.PureComponent {
       shouldComponentUpdate() {
         return true;
@@ -114,16 +108,11 @@ describe('ReactPureComponent', () => {
       }
     }
     const container = document.createElement('div');
-    ReactDOM.render(<PureComponent />, container);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: ' +
-          'PureComponent has a method called shouldComponentUpdate(). ' +
-          'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
-          'Please extend React.Component if shouldComponentUpdate is used.',
-      );
-    }
+    expect(() => ReactDOM.render(<PureComponent />, container)).toWarnDev(
+      'Warning: ' +
+        'PureComponent has a method called shouldComponentUpdate(). ' +
+        'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
+        'Please extend React.Component if shouldComponentUpdate is used.',
+    );
   });
 });

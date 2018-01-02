@@ -45,6 +45,10 @@ global.spyOnProd = function(...args) {
   }
 };
 
+expect.extend({
+  ...require('../matchers/toWarnDev'),
+});
+
 beforeEach(() => (numExpectations = 0));
 
 jasmine.currentEnv_.addReporter({

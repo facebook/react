@@ -46,14 +46,12 @@ describe 'ReactCoffeeScriptClass', ->
     expect(Foo.name).toBe 'Foo'
 
   it 'throws if no render function is defined', ->
-    spyOnDev console, 'error'
     class Foo extends React.Component
     expect(->
-      ReactDOM.render React.createElement(Foo), container
-    ).toThrow()
-    if __DEV__
-      expect(console.error.calls.count()).toBe(1)
-      expect(console.error.calls.argsFor(0)[0]).toContain('No `render` method found on the returned component instance')
+      expect(->
+        ReactDOM.render React.createElement(Foo), container
+      ).toThrow()
+    ).toWarnDev('No `render` method found on the returned component instance')
     undefined
 
   it 'renders a simple stateless component with prop', ->
@@ -150,8 +148,6 @@ describe 'ReactCoffeeScriptClass', ->
     undefined
 
   it 'should warn with non-object in the initial state property', ->
-    spyOnDev console, 'error'
-
     [['an array'], 'a string', 1234].forEach (state) ->
       class Foo extends React.Component
         constructor: ->
@@ -160,14 +156,9 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           span()
 
-      test React.createElement(Foo), 'SPAN', ''
-      if __DEV__
-        expect(console.error.calls.count()).toBe 1
-        expect(console.error.calls.argsFor(0)[0]).toContain(
-          'Foo.state: must be set to an object or null'
-        )
-        console.error.calls.reset()
-
+      expect(->
+        test React.createElement(Foo), 'SPAN', ''
+      ).toWarnDev('Foo.state: must be set to an object or null')
     undefined
 
   it 'should render with null in the initial state property', ->
@@ -287,7 +278,6 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'warns when classic properties are defined on the instance,
       but does not invoke them.', ->
-    spyOnDev console, 'error'
     getInitialStateWasCalled = false
     getDefaultPropsWasCalled = false
     class Foo extends React.Component
@@ -307,28 +297,20 @@ describe 'ReactCoffeeScriptClass', ->
         span
           className: 'foo'
 
-    test React.createElement(Foo), 'SPAN', 'foo'
+    expect(->
+      test React.createElement(Foo), 'SPAN', 'foo'
+    ).toWarnDev([
+      'getInitialState was defined on Foo, a plain JavaScript class.',
+      'getDefaultProps was defined on Foo, a plain JavaScript class.',
+      'propTypes was defined as an instance property on Foo.',
+      'contextTypes was defined as an instance property on Foo.',
+    ])
     expect(getInitialStateWasCalled).toBe false
     expect(getDefaultPropsWasCalled).toBe false
-    if __DEV__
-      expect(console.error.calls.count()).toBe 4
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'getInitialState was defined on Foo, a plain JavaScript class.'
-      )
-      expect(console.error.calls.argsFor(1)[0]).toContain(
-        'getDefaultProps was defined on Foo, a plain JavaScript class.'
-      )
-      expect(console.error.calls.argsFor(2)[0]).toContain(
-        'propTypes was defined as an instance property on Foo.'
-      )
-      expect(console.error.calls.argsFor(3)[0]).toContain(
-        'contextTypes was defined as an instance property on Foo.'
-      )
     undefined
 
   it 'does not warn about getInitialState() on class components
       if state is also defined.', ->
-    spyOnDev console, 'error'
     class Foo extends React.Component
       constructor: (props) ->
         super props
@@ -342,12 +324,9 @@ describe 'ReactCoffeeScriptClass', ->
           className: 'foo'
 
     test React.createElement(Foo), 'SPAN', 'foo'
-    if __DEV__
-      expect(console.error.calls.count()).toBe 0
     undefined
 
   it 'should warn when misspelling shouldComponentUpdate', ->
-    spyOnDev console, 'error'
     class NamedComponent extends React.Component
       componentShouldUpdate: ->
         false
@@ -356,18 +335,16 @@ describe 'ReactCoffeeScriptClass', ->
         span
           className: 'foo'
 
-    test React.createElement(NamedComponent), 'SPAN', 'foo'
-    if __DEV__
-      expect(console.error.calls.count()).toBe 1
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: NamedComponent has a method called componentShouldUpdate().
-         Did you mean shouldComponentUpdate()? The name is phrased as a
-         question because the function is expected to return a value.'
-      )
+    expect(->
+      test React.createElement(NamedComponent), 'SPAN', 'foo'
+    ).toWarnDev(
+      'Warning: NamedComponent has a method called componentShouldUpdate().
+       Did you mean shouldComponentUpdate()? The name is phrased as a
+       question because the function is expected to return a value.'
+    )
     undefined
 
   it 'should warn when misspelling componentWillReceiveProps', ->
-    spyOnDev console, 'error'
     class NamedComponent extends React.Component
       componentWillRecieveProps: ->
         false
@@ -376,29 +353,27 @@ describe 'ReactCoffeeScriptClass', ->
         span
           className: 'foo'
 
-    test React.createElement(NamedComponent), 'SPAN', 'foo'
-    if __DEV__
-      expect(console.error.calls.count()).toBe 1
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: NamedComponent has a method called componentWillRecieveProps().
-         Did you mean componentWillReceiveProps()?'
-      )
+    expect(->
+      test React.createElement(NamedComponent), 'SPAN', 'foo'
+    ).toWarnDev(
+      'Warning: NamedComponent has a method called componentWillRecieveProps().
+       Did you mean componentWillReceiveProps()?'
+    )
     undefined
 
   it 'should throw AND warn when trying to access classic APIs', ->
-    spyOnDev console, 'warn'
     instance =
       test Inner(name: 'foo'), 'DIV', 'foo'
-    expect(-> instance.replaceState {}).toThrow()
-    expect(-> instance.isMounted()).toThrow()
-    if __DEV__
-      expect(console.warn.calls.count()).toBe 2
-      expect(console.warn.calls.argsFor(0)[0]).toContain(
-        'replaceState(...) is deprecated in plain JavaScript React classes'
-      )
-      expect(console.warn.calls.argsFor(1)[0]).toContain(
-        'isMounted(...) is deprecated in plain JavaScript React classes'
-      )
+    expect(->
+      expect(-> instance.replaceState {}).toThrow()
+    ).toLowPriorityWarnDev(
+      'replaceState(...) is deprecated in plain JavaScript React classes'
+    )
+    expect(->
+      expect(-> instance.isMounted()).toThrow()
+    ).toLowPriorityWarnDev(
+      'isMounted(...) is deprecated in plain JavaScript React classes'
+    )
     undefined
 
   it 'supports this.context passed via getChildContext', ->

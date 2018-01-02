@@ -151,25 +151,22 @@ describe('DOMPropertyOperations', () => {
 
     it('should not remove attributes for special properties', () => {
       const container = document.createElement('div');
-      spyOnDev(console, 'error');
       ReactDOM.render(
         <input type="text" value="foo" onChange={function() {}} />,
         container,
       );
       expect(container.firstChild.getAttribute('value')).toBe('foo');
       expect(container.firstChild.value).toBe('foo');
-      ReactDOM.render(
-        <input type="text" onChange={function() {}} />,
-        container,
+      expect(() =>
+        ReactDOM.render(
+          <input type="text" onChange={function() {}} />,
+          container,
+        ),
+      ).toWarnDev(
+        'A component is changing a controlled input of type text to be uncontrolled',
       );
       expect(container.firstChild.getAttribute('value')).toBe('foo');
       expect(container.firstChild.value).toBe('foo');
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(console.error.calls.argsFor(0)[0]).toContain(
-          'A component is changing a controlled input of type text to be uncontrolled',
-        );
-      }
     });
   });
 });

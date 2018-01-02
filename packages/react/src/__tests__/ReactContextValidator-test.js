@@ -21,10 +21,6 @@ let ReactDOM;
 let ReactTestUtils;
 
 describe('ReactContextValidator', () => {
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   beforeEach(() => {
     jest.resetModules();
 
@@ -161,8 +157,6 @@ describe('ReactContextValidator', () => {
   });
 
   it('should check context types', () => {
-    spyOnDev(console, 'error');
-
     class Component extends React.Component {
       render() {
         return <div />;
@@ -172,17 +166,12 @@ describe('ReactContextValidator', () => {
       foo: PropTypes.string.isRequired,
     };
 
-    ReactTestUtils.renderIntoDocument(<Component />);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Failed context type: ' +
-          'The context `foo` is marked as required in `Component`, but its value ' +
-          'is `undefined`.\n' +
-          '    in Component (at **)',
-      );
-    }
+    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
+      'Warning: Failed context type: ' +
+        'The context `foo` is marked as required in `Component`, but its value ' +
+        'is `undefined`.\n' +
+        '    in Component (at **)',
+    );
 
     class ComponentInFooStringContext extends React.Component {
       getChildContext() {
@@ -199,14 +188,10 @@ describe('ReactContextValidator', () => {
       foo: PropTypes.string,
     };
 
+    // No additional errors expected
     ReactTestUtils.renderIntoDocument(
       <ComponentInFooStringContext fooValue={'bar'} />,
     );
-
-    // Previous call should not error
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
 
     class ComponentInFooNumberContext extends React.Component {
       getChildContext() {
@@ -223,25 +208,20 @@ describe('ReactContextValidator', () => {
       foo: PropTypes.number,
     };
 
-    ReactTestUtils.renderIntoDocument(
-      <ComponentInFooNumberContext fooValue={123} />,
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(
+        <ComponentInFooNumberContext fooValue={123} />,
+      ),
+    ).toWarnDev(
+      'Warning: Failed context type: ' +
+        'Invalid context `foo` of type `number` supplied ' +
+        'to `Component`, expected `string`.\n' +
+        '    in Component (at **)\n' +
+        '    in ComponentInFooNumberContext (at **)',
     );
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Failed context type: ' +
-          'Invalid context `foo` of type `number` supplied ' +
-          'to `Component`, expected `string`.\n' +
-          '    in Component (at **)\n' +
-          '    in ComponentInFooNumberContext (at **)',
-      );
-    }
   });
 
   it('should check child context types', () => {
-    spyOnDev(console, 'error');
-
     class Component extends React.Component {
       getChildContext() {
         return this.props.testContext;
@@ -256,46 +236,35 @@ describe('ReactContextValidator', () => {
       bar: PropTypes.number,
     };
 
-    ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Failed child context type: ' +
-          'The child context `foo` is marked as required in `Component`, but its ' +
-          'value is `undefined`.\n' +
-          '    in Component (at **)',
-      );
-    }
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />),
+    ).toWarnDev(
+      'Warning: Failed child context type: ' +
+        'The child context `foo` is marked as required in `Component`, but its ' +
+        'value is `undefined`.\n' +
+        '    in Component (at **)',
+    );
 
-    ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />),
+    ).toWarnDev(
+      'Warning: Failed child context type: ' +
+        'Invalid child context `foo` of type `number` ' +
+        'supplied to `Component`, expected `string`.\n' +
+        '    in Component (at **)',
+    );
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Failed child context type: ' +
-          'Invalid child context `foo` of type `number` ' +
-          'supplied to `Component`, expected `string`.\n' +
-          '    in Component (at **)',
-      );
-    }
-
+    // No additional errors expected
     ReactTestUtils.renderIntoDocument(
       <Component testContext={{foo: 'foo', bar: 123}} />,
     );
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 'foo'}} />);
-
-    if (__DEV__) {
-      // Previous calls should not log errors
-      expect(console.error.calls.count()).toBe(2);
-    }
   });
 
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   it('should warn (but not error) if getChildContext method is missing', () => {
-    spyOnDev(console, 'error');
-
     class ComponentA extends React.Component {
       static childContextTypes = {
         foo: PropTypes.string.isRequired,
@@ -313,40 +282,28 @@ describe('ReactContextValidator', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<ComponentA />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: ComponentA.childContextTypes is specified but there is no ' +
-          'getChildContext() method on the instance. You can either define ' +
-          'getChildContext() on ComponentA or remove childContextTypes from it.',
-      );
-    }
+    expect(() => ReactTestUtils.renderIntoDocument(<ComponentA />)).toWarnDev(
+      'Warning: ComponentA.childContextTypes is specified but there is no ' +
+        'getChildContext() method on the instance. You can either define ' +
+        'getChildContext() on ComponentA or remove childContextTypes from it.',
+    );
 
     // Warnings should be deduped by component type
     ReactTestUtils.renderIntoDocument(<ComponentA />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
-    ReactTestUtils.renderIntoDocument(<ComponentB />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: ComponentB.childContextTypes is specified but there is no ' +
-          'getChildContext() method on the instance. You can either define ' +
-          'getChildContext() on ComponentB or remove childContextTypes from it.',
-      );
-    }
+
+    expect(() => ReactTestUtils.renderIntoDocument(<ComponentB />)).toWarnDev(
+      'Warning: ComponentB.childContextTypes is specified but there is no ' +
+        'getChildContext() method on the instance. You can either define ' +
+        'getChildContext() on ComponentB or remove childContextTypes from it.',
+    );
   });
 
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   it('should pass parent context if getChildContext method is missing', () => {
-    spyOnDev(console, 'error');
-
     class ParentContextProvider extends React.Component {
       static childContextTypes = {
-        foo: PropTypes.number,
+        foo: PropTypes.string,
       };
       getChildContext() {
         return {
@@ -379,7 +336,15 @@ describe('ReactContextValidator', () => {
       foo: PropTypes.string.isRequired,
     };
 
-    ReactTestUtils.renderIntoDocument(<ParentContextProvider />);
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<ParentContextProvider />),
+    ).toWarnDev([
+      'Warning: MiddleMissingContext.childContextTypes is specified but there is no getChildContext() method on the ' +
+        'instance. You can either define getChildContext() on MiddleMissingContext or remove childContextTypes from ' +
+        'it.',
+      'Warning: Failed context type: The context `bar` is marked as required in `ChildContextConsumer`, but its ' +
+        'value is `undefined`.',
+    ]);
     expect(childContext.bar).toBeUndefined();
     expect(childContext.foo).toBe('FOO');
   });
