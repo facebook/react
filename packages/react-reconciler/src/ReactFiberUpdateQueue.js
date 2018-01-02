@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
 import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
@@ -37,8 +38,7 @@ export type Update<State> = {
   callback: Callback | null,
   isReplace: boolean,
   isForced: boolean,
-  isCapture: boolean,
-  capturedValue: mixed | null,
+  capturedValue: CapturedValue<mixed> | null,
   next: Update<State> | null,
 };
 
@@ -66,7 +66,7 @@ export type UpdateQueue<State> = {
   callbackList: Array<Update<State>> | null,
   hasForceUpdate: boolean,
   isInitialized: boolean,
-  capturedValues: Array<mixed> | null,
+  capturedValues: Array<CapturedValue<mixed>> | null,
 
   // Dev only
   isProcessing?: boolean,
@@ -309,7 +309,7 @@ export function processUpdateQueue<State>(
       }
       callbackList.push(update);
     }
-    if (update.isCapture) {
+    if (update.capturedValue !== null) {
       let capturedValues = queue.capturedValues;
       if (capturedValues === null) {
         queue.capturedValues = [update.capturedValue];

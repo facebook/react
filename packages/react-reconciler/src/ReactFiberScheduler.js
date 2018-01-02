@@ -12,8 +12,8 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {CapturedValue} from './ReactCapturedValue';
 
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
@@ -64,7 +64,6 @@ import {
 } from './ReactDebugFiberPerf';
 import {popContextProvider} from './ReactFiberContext';
 import {reset} from './ReactFiberStack';
-import {logCapturedError} from './ReactFiberErrorLogger';
 import {createWorkInProgress} from './ReactFiber';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
 import {
@@ -81,26 +80,13 @@ import {
   insertUpdateIntoFiber,
 } from './ReactFiberUpdateQueue';
 import {resetContext} from './ReactFiberContext';
+import {createCapturedValue} from './ReactCapturedValue';
 
 const {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
 } = ReactErrorUtils;
-
-export type CapturedError = {
-  componentName: ?string,
-  componentStack: string,
-  error: mixed,
-  errorBoundary: ?Object,
-  errorBoundaryFound: boolean,
-  errorBoundaryName: string | null,
-  willRetry: boolean,
-};
-
-export type HandleErrorInfo = {
-  componentStack: string,
-};
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;
@@ -157,27 +143,6 @@ if (__DEV__) {
   };
 }
 
-export function logError(boundaryFiber: Fiber, capturedError: CapturedError) {
-  const errorBoundaryFound = boundaryFiber.tag === ClassComponent;
-  capturedError.errorBoundary = boundaryFiber;
-  capturedError.errorBoundaryFound = errorBoundaryFound;
-  capturedError.errorBoundaryName = errorBoundaryFound
-    ? getComponentName(boundaryFiber)
-    : null;
-  // TODO: These are always the same. Why is it needed?
-  capturedError.willRetry = errorBoundaryFound;
-  try {
-    logCapturedError(capturedError);
-  } catch (e) {
-    // Prevent cycle if logCapturedError() throws.
-    // A cycle may still occur if logCapturedError renders a component that throws.
-    const suppressLogging = e && e.suppressReactErrorLogging;
-    if (!suppressLogging) {
-      console.error(e);
-    }
-  }
-}
-
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
@@ -199,6 +164,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hostContext,
     hydrationContext,
     captureThrownValues,
+    captureErrors,
   );
   const {
     commitResetTextContent,
@@ -246,8 +212,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   let isCommitting: boolean = false;
 
-  let thrownValues: Array<mixed> | null = null;
-  let capturedValues: Array<mixed> | null = null;
+  let thrownValues: Array<CapturedValue<mixed>> | null = null;
+  let capturedValues: Array<CapturedValue<mixed>> | null = null;
 
   // Used for performance tracking.
   let interruptedBy: Fiber | null = null;
@@ -679,40 +645,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function unwindToNearestBoundary(sourceFiber: Fiber, thrownValue: mixed) {
-    // Push the thrown value onto the global list.
-
-    // TODO: Pattern matching. Check that this is an error.
-    const capturedError: CapturedError = {
-      componentName: getComponentName(sourceFiber),
-      componentStack: getStackAddendumByWorkInProgressFiber(sourceFiber),
-      error: thrownValue,
-      errorBoundary: null,
-      errorBoundaryFound: false,
-      errorBoundaryName: null,
-      willRetry: false,
-    };
-    if (thrownValues === null) {
-      thrownValues = [capturedError];
-    } else {
-      thrownValues.push(capturedError);
-    }
-
+  function unwindToNearestErrorBoundary(sourceFiber) {
     popContexts(sourceFiber);
-
-    // TODO: If the value is something other than an error (like a
-    // promise), continue working on the siblings, and unwind using
-    // the normal complete phase algorithm. This should be safe, because
-    // we assume the value was thrown from inside the render method. For
-    // errors, we have to skip the siblings and immediately unwind to
-    // the nearest boundary, because the tree may be in a corrupt state.
     let boundaryFiber = null;
     let fiber = sourceFiber.return;
     traversal: while (fiber !== null) {
       switch (fiber.tag) {
         case ClassComponent:
           const instance = fiber.stateNode;
-          if (typeof instance.componentDidCatch === 'function') {
+          if (
+            typeof instance.componentDidCatch === 'function' &&
+            !(fiber.effectTag & Err)
+          ) {
             boundaryFiber = fiber;
             break traversal;
           }
@@ -724,7 +668,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       popContexts(fiber);
       fiber = fiber.return;
     }
-
     return boundaryFiber;
   }
 
@@ -795,14 +738,36 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
       }
 
-      const boundary = unwindToNearestBoundary(nextUnitOfWork, thrownValue);
-      if (boundary !== null) {
-        nextUnitOfWork = completeUnitOfWork(boundary);
+      const sourceFiber: Fiber = nextUnitOfWork;
+      const capturedValue = createCapturedValue(thrownValue, sourceFiber);
+      if (thrownValues === null) {
+        thrownValues = [capturedValue];
       } else {
-        // The root failed to render. This is a fatal error.
-        hasUncaughtError = true;
-        firstUncaughtError = thrownValue;
-        break;
+        thrownValues.push(capturedValue);
+      }
+      if (capturedValue.isError) {
+        const boundaryFiber = unwindToNearestErrorBoundary(sourceFiber);
+        capturedValue.boundary = boundaryFiber;
+        if (boundaryFiber !== null) {
+          nextUnitOfWork = completeUnitOfWork(boundaryFiber);
+        } else {
+          // The root failed to render. This is a fatal error.
+          hasUncaughtError = true;
+          firstUncaughtError = thrownValue;
+          break;
+        }
+      } else {
+        // Move to next sibling, or return to parent
+        if (sourceFiber.sibling !== null) {
+          nextUnitOfWork = sourceFiber.sibling;
+        } else if (sourceFiber.return !== null) {
+          nextUnitOfWork = completeUnitOfWork(sourceFiber.return);
+        } else {
+          // The root failed to render. This is a fatal error.
+          hasUncaughtError = true;
+          firstUncaughtError = thrownValue;
+          break;
+        }
       }
     } while (true);
 
@@ -846,10 +811,32 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (thrownValues === null) {
       return false;
     }
-
     capturedValues = thrownValues;
-    // Clear the values from the scheduler.
+    // Reset the list of thrown values, now that they've been captured.
     thrownValues = null;
+    return true;
+  }
+
+  function captureErrors(): boolean {
+    if (thrownValues === null) {
+      return false;
+    }
+    let errors = null;
+    for (let i = 0; i < thrownValues.length; i++) {
+      const value = thrownValues[i];
+      if (value.isError) {
+        thrownValues.splice(i, 1);
+        if (errors === null) {
+          errors = [value];
+        } else {
+          errors.push(value);
+        }
+      }
+    }
+    if (thrownValues.length === 0) {
+      thrownValues = null;
+    }
+    capturedValues = errors;
     return true;
   }
 
@@ -858,24 +845,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     firstUncaughtError = error;
   }
 
-  function scheduleCapture(
-    sourceFiber,
-    boundaryFiber,
-    capturedValue,
-    expirationTime,
-  ) {
-    // TODO: Pattern matching. Check that this is an error.
-    const capturedError: CapturedError = {
-      componentName: getComponentName(sourceFiber),
-      componentStack: getStackAddendumByWorkInProgressFiber(sourceFiber),
-      error: capturedValue,
-      // Set these once the boundary captures, during the render phase.
-      errorBoundary: null,
-      errorBoundaryFound: false,
-      errorBoundaryName: null,
-      willRetry: false,
-    };
-
+  function scheduleCapture(sourceFiber, boundaryFiber, value, expirationTime) {
+    const capturedValue = createCapturedValue(value, sourceFiber);
+    capturedValue.boundary = boundaryFiber;
     const update = {
       expirationTime,
       partialState: null,
@@ -883,7 +855,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       isReplace: false,
       isForced: false,
       isCapture: true,
-      capturedValue: capturedError,
+      capturedValue,
       next: null,
     };
     insertUpdateIntoFiber(boundaryFiber, update);

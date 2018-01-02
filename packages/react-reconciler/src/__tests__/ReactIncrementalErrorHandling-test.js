@@ -1008,4 +1008,54 @@ describe('ReactIncrementalErrorHandling', () => {
     });
     expect(() => ReactNoop.flush()).toThrow('Error!');
   });
+
+  it('error boundaries do not capture non-errors', () => {
+    let ops = [];
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        // Should not be called
+        ops.push('componentDidCatch');
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          ops.push('ErrorBoundary (catch)');
+          return <span prop={`Caught an error: ${this.state.error.message}`} />;
+        }
+        ops.push('ErrorBoundary (try)');
+        return this.props.children;
+      }
+    }
+
+    function Indirection(props) {
+      ops.push('Indirection');
+      return props.children;
+    }
+
+    const notAnError = {};
+    function BadRender() {
+      ops.push('BadRender');
+      throw notAnError;
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <Indirection>
+          <BadRender />
+        </Indirection>
+      </ErrorBoundary>,
+    );
+
+    let caught;
+    try {
+      ReactNoop.flush();
+    } catch (e) {
+      caught = e;
+    }
+    // Rethrow object at the root
+    expect(caught).toBe(notAnError);
+    expect(ops).toEqual(['ErrorBoundary (try)', 'Indirection', 'BadRender']);
+  });
 });

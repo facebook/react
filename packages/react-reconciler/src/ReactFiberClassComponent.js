@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {CapturedError} from './ReactFiberScheduler';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
@@ -37,7 +37,7 @@ import {
   processUpdateQueue,
 } from './ReactFiberUpdateQueue';
 import {hasContextChanged} from './ReactFiberContext';
-import {logError} from './ReactFiberScheduler';
+import {logError} from './ReactCapturedValue';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -650,11 +650,13 @@ export default function(
         // TODO: This is awkward. Refactor class components.
         // updateQueue.capturedValues = null;
 
-        // TODO: Pattern matching. Check that this is an error.
-        const capturedError: CapturedError = (capturedValues[0]: any);
-        logError(workInProgress, capturedError);
-        const error = capturedError.error;
+        const capturedValue: CapturedValue<mixed> = (capturedValues[0]: any);
+        if (capturedValue.isError) {
+          logError(capturedValue);
+        }
+        const error = capturedValue.value;
         instance.componentDidCatch(error);
+
         newState = processUpdateQueue(
           current,
           workInProgress,
