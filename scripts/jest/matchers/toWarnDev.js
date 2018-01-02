@@ -33,9 +33,9 @@ const createMatcherFor = consoleMethod =>
 
         // Fail early for unexpected warnings to preserve the call stack.
         throw Error(
-          `Unexpected warning recorded:\n  "${this.utils.printReceived(
+          `Unexpected warning recorded:\n  ${this.utils.printReceived(
             message
-          )}"\n\nThe following expected warnings were not yet seen:\n  ${this.utils.printExpected(
+          )}\n\nThe following expected warnings were not yet seen:\n  ${this.utils.printExpected(
             expectedMessages.join('\n')
           )}`
         );
