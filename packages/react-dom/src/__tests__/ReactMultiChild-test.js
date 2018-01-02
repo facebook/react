@@ -10,10 +10,6 @@
 'use strict';
 
 describe('ReactMultiChild', () => {
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   let React;
   let ReactDOM;
 
@@ -183,8 +179,6 @@ describe('ReactMultiChild', () => {
     });
 
     it('should warn for duplicated array keys with component stack info', () => {
-      spyOnDev(console, 'error');
-
       const container = document.createElement('div');
 
       class WrapperComponent extends React.Component {
@@ -205,32 +199,25 @@ describe('ReactMultiChild', () => {
 
       ReactDOM.render(<Parent>{[<div key="1" />]}</Parent>, container);
 
-      ReactDOM.render(
-        <Parent>{[<div key="1" />, <div key="1" />]}</Parent>,
-        container,
-      );
-
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(
-          normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-        ).toContain(
-          'Encountered two children with the same key, `1`. ' +
-            'Keys should be unique so that components maintain their identity ' +
-            'across updates. Non-unique keys may cause children to be ' +
-            'duplicated and/or omitted — the behavior is unsupported and ' +
-            'could change in a future version.',
+      expect(() =>
+        ReactDOM.render(
+          <Parent>{[<div key="1" />, <div key="1" />]}</Parent>,
+          container,
+        ),
+      ).toWarnDev(
+        'Encountered two children with the same key, `1`. ' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.',
+        '    in div (at **)\n' +
+          '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
-            '    in WrapperComponent (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Parent (at **)',
-        );
-      }
+          '    in Parent (at **)',
+      );
     });
 
     it('should warn for duplicated iterable keys with component stack info', () => {
-      spyOnDev(console, 'error');
-
       const container = document.createElement('div');
 
       class WrapperComponent extends React.Component {
@@ -272,54 +259,42 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      ReactDOM.render(
-        <Parent>{createIterable([<div key="1" />, <div key="1" />])}</Parent>,
-        container,
-      );
-
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(
-          normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-        ).toContain(
-          'Encountered two children with the same key, `1`. ' +
-            'Keys should be unique so that components maintain their identity ' +
-            'across updates. Non-unique keys may cause children to be ' +
-            'duplicated and/or omitted — the behavior is unsupported and ' +
-            'could change in a future version.',
+      expect(() =>
+        ReactDOM.render(
+          <Parent>{createIterable([<div key="1" />, <div key="1" />])}</Parent>,
+          container,
+        ),
+      ).toWarnDev(
+        'Encountered two children with the same key, `1`. ' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.',
+        '    in div (at **)\n' +
+          '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
-            '    in WrapperComponent (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Parent (at **)',
-        );
-      }
+          '    in Parent (at **)',
+      );
     });
   });
 
   it('should warn for using maps as children with owner info', () => {
-    spyOnDev(console, 'error');
     class Parent extends React.Component {
       render() {
         return <div>{new Map([['foo', 0], ['bar', 1]])}</div>;
       }
     }
     const container = document.createElement('div');
-    ReactDOM.render(<Parent />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Using Maps as children is unsupported and will likely yield ' +
-          'unexpected results. Convert it to a sequence/iterable of keyed ' +
-          'ReactElements instead.\n' +
-          '    in div (at **)\n' +
-          '    in Parent (at **)',
-      );
-    }
+    expect(() => ReactDOM.render(<Parent />, container)).toWarnDev(
+      'Warning: Using Maps as children is unsupported and will likely yield ' +
+        'unexpected results. Convert it to a sequence/iterable of keyed ' +
+        'ReactElements instead.\n' +
+        '    in div (at **)\n' +
+        '    in Parent (at **)',
+    );
   });
 
   it('should reorder bailed-out children', () => {
-    spyOnDev(console, 'error');
-
     class LetterInner extends React.Component {
       render() {
         return <div>{this.props.char}</div>;

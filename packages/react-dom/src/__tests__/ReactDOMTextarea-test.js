@@ -207,8 +207,6 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('0');
 
-    spyOnDev(console, 'error'); // deprecation warning for `children` content
-
     ReactDOM.render(<textarea>1</textarea>, container);
 
     expect(node.value).toBe('0');
@@ -247,15 +245,16 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should treat children like `defaultValue`', () => {
-    spyOnDev(console, 'error');
-
     const container = document.createElement('div');
     let stub = <textarea>giraffe</textarea>;
-    const node = renderTextarea(stub, container);
+    let node;
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
+    expect(() => {
+      node = renderTextarea(stub, container);
+    }).toWarnDev(
+      'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+    );
+
     expect(node.value).toBe('giraffe');
 
     // Changing children should do nothing, it functions like `defaultValue`.
@@ -301,67 +300,69 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should allow numbers as children', () => {
-    spyOnDev(console, 'error');
-    const node = renderTextarea(<textarea>{17}</textarea>);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
+    let node;
+    expect(() => {
+      node = renderTextarea(<textarea>{17}</textarea>);
+    }).toWarnDev(
+      'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+    );
     expect(node.value).toBe('17');
   });
 
   it('should allow booleans as children', () => {
-    spyOnDev(console, 'error');
-    const node = renderTextarea(<textarea>{false}</textarea>);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
+    let node;
+    expect(() => {
+      node = renderTextarea(<textarea>{false}</textarea>);
+    }).toWarnDev(
+      'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+    );
     expect(node.value).toBe('false');
   });
 
   it('should allow objects as children', () => {
-    spyOnDev(console, 'error');
     const obj = {
       toString: function() {
         return 'sharkswithlasers';
       },
     };
-    const node = renderTextarea(<textarea>{obj}</textarea>);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
+    let node;
+    expect(() => {
+      node = renderTextarea(<textarea>{obj}</textarea>);
+    }).toWarnDev(
+      'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+    );
     expect(node.value).toBe('sharkswithlasers');
   });
 
   it('should throw with multiple or invalid children', () => {
-    spyOnDev(console, 'error');
-
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(
-        <textarea>
-          {'hello'}
-          {'there'}
-        </textarea>,
+    expect(() => {
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(
+          <textarea>
+            {'hello'}
+            {'there'}
+          </textarea>,
+        ),
+      ).toWarnDev(
+        'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
       );
     }).toThrow();
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
-
     let node;
-    expect(function() {
-      node = renderTextarea(
-        <textarea>
-          <strong />
-        </textarea>,
+    expect(() => {
+      expect(
+        () =>
+          (node = renderTextarea(
+            <textarea>
+              <strong />
+            </textarea>,
+          )),
+      ).toWarnDev(
+        'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
       );
     }).not.toThrow();
 
     expect(node.value).toBe('[object Object]');
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-    }
   });
 
   it('should unmount', () => {
@@ -371,43 +372,34 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should warn if value is null', () => {
-    spyOnDev(console, 'error');
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<textarea value={null} />),
+    ).toWarnDev(
+      '`value` prop on `textarea` should not be null. ' +
+        'Consider using an empty string to clear the component or `undefined` ' +
+        'for uncontrolled components.',
+    );
 
+    // No additional warnings are expected
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
-    if (__DEV__) {
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        '`value` prop on `textarea` should not be null. ' +
-          'Consider using an empty string to clear the component or `undefined` ' +
-          'for uncontrolled components.',
-      );
-    }
-
-    ReactTestUtils.renderIntoDocument(<textarea value={null} />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 
   it('should warn if value and defaultValue are specified', () => {
-    spyOnDev(console, 'error');
-    ReactTestUtils.renderIntoDocument(
-      <textarea value="foo" defaultValue="bar" readOnly={true} />,
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(
+        <textarea value="foo" defaultValue="bar" readOnly={true} />,
+      ),
+    ).toWarnDev(
+      'Textarea elements must be either controlled or uncontrolled ' +
+        '(specify either the value prop, or the defaultValue prop, but not ' +
+        'both). Decide between using a controlled or uncontrolled textarea ' +
+        'and remove one of these props. More info: ' +
+        'https://fb.me/react-controlled-components',
     );
-    if (__DEV__) {
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Textarea elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled textarea ' +
-          'and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
-      );
-    }
 
+    // No additional warnings are expected
     ReactTestUtils.renderIntoDocument(
       <textarea value="foo" defaultValue="bar" readOnly={true} />,
     );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 });

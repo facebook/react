@@ -532,34 +532,37 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should warn if value is null', () => {
-    spyOnDev(console, 'error');
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(
+        <select value={null}>
+          <option value="test" />
+        </select>,
+      ),
+    ).toWarnDev(
+      '`value` prop on `select` should not be null. ' +
+        'Consider using an empty string to clear the component or `undefined` ' +
+        'for uncontrolled components.',
+    );
 
     ReactTestUtils.renderIntoDocument(
       <select value={null}>
         <option value="test" />
       </select>,
     );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        '`value` prop on `select` should not be null. ' +
-          'Consider using an empty string to clear the component or `undefined` ' +
-          'for uncontrolled components.',
-      );
-    }
-
-    ReactTestUtils.renderIntoDocument(
-      <select value={null}>
-        <option value="test" />
-      </select>,
-    );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 
   it('should warn if selected is set on <option>', () => {
-    spyOnDev(console, 'error');
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(
+        <select>
+          <option selected={true} />
+          <option selected={true} />
+        </select>,
+      ),
+    ).toWarnDev(
+      'Use the `defaultValue` or `value` props on <select> instead of ' +
+        'setting `selected` on <option>.',
+    );
 
     ReactTestUtils.renderIntoDocument(
       <select>
@@ -567,51 +570,27 @@ describe('ReactDOMSelect', () => {
         <option selected={true} />
       </select>,
     );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
-
-    ReactTestUtils.renderIntoDocument(
-      <select>
-        <option selected={true} />
-        <option selected={true} />
-      </select>,
-    );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Use the `defaultValue` or `value` props on <select> instead of ' +
-          'setting `selected` on <option>.',
-      );
-    }
   });
 
   it('should warn if value is null and multiple is true', () => {
-    spyOnDev(console, 'error');
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(
+        <select value={null} multiple={true}>
+          <option value="test" />
+        </select>,
+      ),
+    ).toWarnDev(
+      '`value` prop on `select` should not be null. ' +
+        'Consider using an empty array when `multiple` is ' +
+        'set to `true` to clear the component or `undefined` ' +
+        'for uncontrolled components.',
+    );
+
     ReactTestUtils.renderIntoDocument(
       <select value={null} multiple={true}>
         <option value="test" />
       </select>,
     );
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        '`value` prop on `select` should not be null. ' +
-          'Consider using an empty array when `multiple` is ' +
-          'set to `true` to clear the component or `undefined` ' +
-          'for uncontrolled components.',
-      );
-    }
-
-    ReactTestUtils.renderIntoDocument(
-      <select value={null} multiple={true}>
-        <option value="test" />
-      </select>,
-    );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 
   it('should refresh state on change', () => {
@@ -631,23 +610,21 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should warn if value and defaultValue props are specified', () => {
-    spyOnDev(console, 'error');
-    ReactTestUtils.renderIntoDocument(
-      <select value="giraffe" defaultValue="giraffe" readOnly={true}>
-        <option value="monkey">A monkey!</option>
-        <option value="giraffe">A giraffe!</option>
-        <option value="gorilla">A gorilla!</option>
-      </select>,
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(
+        <select value="giraffe" defaultValue="giraffe" readOnly={true}>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+          <option value="gorilla">A gorilla!</option>
+        </select>,
+      ),
+    ).toWarnDev(
+      'Select elements must be either controlled or uncontrolled ' +
+        '(specify either the value prop, or the defaultValue prop, but not ' +
+        'both). Decide between using a controlled or uncontrolled select ' +
+        'element and remove one of these props. More info: ' +
+        'https://fb.me/react-controlled-components',
     );
-    if (__DEV__) {
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Select elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled select ' +
-          'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
-      );
-    }
 
     ReactTestUtils.renderIntoDocument(
       <select value="giraffe" defaultValue="giraffe" readOnly={true}>
@@ -656,9 +633,6 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>,
     );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 
   it('should be able to safely remove select onChange', () => {
