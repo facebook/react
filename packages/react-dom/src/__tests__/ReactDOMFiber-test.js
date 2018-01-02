@@ -15,10 +15,6 @@ const ReactTestUtils = require('react-dom/test-utils');
 const PropTypes = require('prop-types');
 
 describe('ReactDOMFiber', () => {
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   let container;
 
   beforeEach(() => {
@@ -222,27 +218,23 @@ describe('ReactDOMFiber', () => {
 
   // TODO: remove in React 17
   it('should support unstable_createPortal alias', () => {
-    spyOnDev(console, 'warn');
     const portalContainer = document.createElement('div');
 
-    ReactDOM.render(
-      <div>
-        {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
-      </div>,
-      container,
+    expect(() =>
+      ReactDOM.render(
+        <div>
+          {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
+        </div>,
+        container,
+      ),
+    ).toLowPriorityWarnDev(
+      'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
+        'and will be removed in React 17+. Update your code to use ' +
+        'ReactDOM.createPortal() instead. It has the exact same API, ' +
+        'but without the "unstable_" prefix.',
     );
     expect(portalContainer.innerHTML).toBe('<div>portal</div>');
     expect(container.innerHTML).toBe('<div></div>');
-
-    if (__DEV__) {
-      expect(console.warn.calls.count()).toBe(1);
-      expect(console.warn.calls.argsFor(0)[0]).toContain(
-        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-          'and will be removed in React 17+. Update your code to use ' +
-          'ReactDOM.createPortal() instead. It has the exact same API, ' +
-          'but without the "unstable_" prefix.',
-      );
-    }
 
     ReactDOM.unmountComponentAtNode(container);
     expect(portalContainer.innerHTML).toBe('');
@@ -930,40 +922,30 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should warn for non-functional event listeners', () => {
-    spyOnDev(console, 'error');
     class Example extends React.Component {
       render() {
         return <div onClick="woops" />;
       }
     }
-    ReactDOM.render(<Example />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
-        'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
-          '    in div (at **)\n' +
-          '    in Example (at **)',
-      );
-    }
+    expect(() => ReactDOM.render(<Example />, container)).toWarnDev(
+      'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
+        '    in div (at **)\n' +
+        '    in Example (at **)',
+    );
   });
 
   it('should warn with a special message for `false` event listeners', () => {
-    spyOnDev(console, 'error');
     class Example extends React.Component {
       render() {
         return <div onClick={false} />;
       }
     }
-    ReactDOM.render(<Example />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
-        'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
-          'If you used to conditionally omit it with onClick={condition && value}, ' +
-          'pass onClick={condition ? value : undefined} instead.\n',
-        '    in div (at **)\n' + '    in Example (at **)',
-      );
-    }
+    expect(() => ReactDOM.render(<Example />, container)).toWarnDev(
+      'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
+        'If you used to conditionally omit it with onClick={condition && value}, ' +
+        'pass onClick={condition ? value : undefined} instead.\n',
+      '    in div (at **)\n' + '    in Example (at **)',
+    );
   });
 
   it('should not update event handlers until commit', () => {
@@ -1059,23 +1041,15 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should not warn when rendering into an empty container', () => {
-    spyOnDev(console, 'error');
     ReactDOM.render(<div>foo</div>, container);
     expect(container.innerHTML).toBe('<div>foo</div>');
     ReactDOM.render(null, container);
     expect(container.innerHTML).toBe('');
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
     ReactDOM.render(<div>bar</div>, container);
     expect(container.innerHTML).toBe('<div>bar</div>');
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
   });
 
   it('should warn when replacing a container which was manually updated outside of React', () => {
-    spyOnDev(console, 'error');
     // when not messing with the DOM outside of React
     ReactDOM.render(<div key="1">foo</div>, container);
     ReactDOM.render(<div key="1">bar</div>, container);
@@ -1083,64 +1057,51 @@ describe('ReactDOMFiber', () => {
     // then we mess with the DOM before an update
     // we know this will error - that is expected right now
     // It's an error of type 'NotFoundError' with no message
+    container.innerHTML = '<div>MEOW.</div>';
+
     expect(() => {
-      container.innerHTML = '<div>MEOW.</div>';
-      ReactDOM.render(<div key="2">baz</div>, container);
-    }).toThrowError();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(() =>
+        ReactDOM.render(<div key="2">baz</div>, container),
+      ).toWarnDev(
         'render(...): ' +
           'It looks like the React-rendered content of this container was ' +
           'removed without using React. This is not supported and will ' +
           'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
           'to empty a container.',
       );
-    }
+    }).toThrowError();
   });
 
   it('should warn when doing an update to a container manually updated outside of React', () => {
-    spyOnDev(console, 'error');
     // when not messing with the DOM outside of React
     ReactDOM.render(<div>foo</div>, container);
     ReactDOM.render(<div>bar</div>, container);
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '<div>MEOW.</div>';
-    ReactDOM.render(<div>baz</div>, container);
-    // silently fails to update
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'render(...): ' +
-          'It looks like the React-rendered content of this container was ' +
-          'removed without using React. This is not supported and will ' +
-          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-          'to empty a container.',
-      );
-    }
+    expect(() => ReactDOM.render(<div>baz</div>, container)).toWarnDev(
+      'render(...): ' +
+        'It looks like the React-rendered content of this container was ' +
+        'removed without using React. This is not supported and will ' +
+        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+        'to empty a container.',
+    );
   });
 
   it('should warn when doing an update to a container manually cleared outside of React', () => {
-    spyOnDev(console, 'error');
     // when not messing with the DOM outside of React
     ReactDOM.render(<div>foo</div>, container);
     ReactDOM.render(<div>bar</div>, container);
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '';
-    ReactDOM.render(<div>baz</div>, container);
-    // silently fails to update
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'render(...): ' +
-          'It looks like the React-rendered content of this container was ' +
-          'removed without using React. This is not supported and will ' +
-          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-          'to empty a container.',
-      );
-    }
+    expect(() => ReactDOM.render(<div>baz</div>, container)).toWarnDev(
+      'render(...): ' +
+        'It looks like the React-rendered content of this container was ' +
+        'removed without using React. This is not supported and will ' +
+        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+        'to empty a container.',
+    );
   });
 
   it('should render a text component with a text DOM node on the same document as the container', () => {
