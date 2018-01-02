@@ -31,4 +31,6 @@ global.cancelIdleCallback = function(callbackID) {
 // for the few that specifically test the logging by shadowing this
 // property. In real apps, it would usually not be defined at all.
 Error.prototype.suppressReactErrorLogging = true;
-DOMException.prototype.suppressReactErrorLogging = true;
+if (typeof DOMException === 'function') {
+  DOMException.prototype.suppressReactErrorLogging = true;
+}
