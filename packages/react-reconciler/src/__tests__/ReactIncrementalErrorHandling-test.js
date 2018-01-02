@@ -93,6 +93,53 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
   });
 
+  it('calls componentDidCatch multiple times for multiple errors', () => {
+    let id = 0;
+    class BadMount extends React.Component {
+      componentDidMount() {
+        throw new Error(`Error ${++id}`);
+      }
+      render() {
+        ReactNoop.yield('BadMount');
+        return null;
+      }
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {errorCount: 0};
+      componentDidCatch(error) {
+        ReactNoop.yield(`componentDidCatch: ${error.message}`);
+        this.setState(state => ({errorCount: state.errorCount + 1}));
+      }
+      render() {
+        if (this.state.errorCount > 0) {
+          return <span prop={`Number of errors: ${this.state.errorCount}`} />;
+        }
+        ReactNoop.yield('ErrorBoundary');
+        return this.props.children;
+      }
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BadMount />
+        <BadMount />
+        <BadMount />
+      </ErrorBoundary>,
+    );
+
+    expect(ReactNoop.flush()).toEqual([
+      'ErrorBoundary',
+      'BadMount',
+      'BadMount',
+      'BadMount',
+      'componentDidCatch: Error 1',
+      'componentDidCatch: Error 2',
+      'componentDidCatch: Error 3',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Number of errors: 3')]);
+  });
+
   it('catches render error in a boundary during full deferred mounting', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};

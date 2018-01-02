@@ -1798,7 +1798,7 @@ describe('ReactErrorBoundaries', () => {
     expect(log).toEqual(['ErrorBoundary componentWillUnmount']);
   });
 
-  it('lets different boundaries catch their own first errors', () => {
+  it('lets different boundaries catch their own errors', () => {
     function renderUnmountError(error) {
       return <div>Caught an unmounting error: {error.message}.</div>;
     }
@@ -1843,7 +1843,7 @@ describe('ReactErrorBoundaries', () => {
     );
 
     expect(container.firstChild.textContent).toBe(
-      'Caught an unmounting error: E1.' + 'Caught an updating error: E3.',
+      'Caught an unmounting error: E2.' + 'Caught an updating error: E4.',
     );
     expect(log).toEqual([
       // Begin update phase
@@ -1877,8 +1877,10 @@ describe('ReactErrorBoundaries', () => {
       // After the commit phase, attempt to recover from any errors that
       // were captured
       'InnerUnmountBoundary componentDidCatch',
+      'InnerUnmountBoundary componentDidCatch',
       'InnerUnmountBoundary componentWillUpdate',
       'InnerUnmountBoundary render error',
+      'InnerUpdateBoundary componentDidCatch',
       'InnerUpdateBoundary componentDidCatch',
       'InnerUpdateBoundary componentWillUpdate',
       'InnerUpdateBoundary render error',

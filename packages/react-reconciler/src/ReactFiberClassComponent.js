@@ -440,6 +440,15 @@ export default function(
     }
   }
 
+  function callComponentDidCatch(instance: any, capturedValues: Array<mixed>) {
+    for (let i = 0; i < capturedValues.length; i++) {
+      const capturedValue: CapturedValue<mixed> = (capturedValues[i]: any);
+      logError(capturedValue);
+      const error = capturedValue.value;
+      instance.componentDidCatch(error);
+    }
+  }
+
   // Invokes the mount life-cycles on a previously never rendered instance.
   function mountClassInstance(
     workInProgress: Fiber,
@@ -537,19 +546,11 @@ export default function(
       let updateQueue = workInProgress.updateQueue;
       if (updateQueue !== null && updateQueue.capturedValues !== null) {
         const capturedValues = updateQueue.capturedValues;
-
         // Don't remove these from the update queue yet. We need them in
         // finishClassComponent. Do the reset there.
         // TODO: This is awkward. Refactor class components.
         // updateQueue.capturedValues = null;
-
-        const capturedValue: CapturedValue<mixed> = (capturedValues[0]: any);
-        if (capturedValue.isError) {
-          logError(capturedValue);
-        }
-        const error = capturedValue.value;
-        instance.componentDidCatch(error);
-
+        callComponentDidCatch(instance, capturedValues);
         newState = processUpdateQueue(
           null,
           workInProgress,
@@ -673,21 +674,13 @@ export default function(
       let updateQueue = workInProgress.updateQueue;
       if (updateQueue !== null && updateQueue.capturedValues !== null) {
         const capturedValues = updateQueue.capturedValues;
-
         // Don't remove these from the update queue yet. We need them in
         // finishClassComponent. Do the reset there.
         // TODO: This is awkward. Refactor class components.
         // updateQueue.capturedValues = null;
-
-        const capturedValue: CapturedValue<mixed> = (capturedValues[0]: any);
-        if (capturedValue.isError) {
-          logError(capturedValue);
-        }
-        const error = capturedValue.value;
-        instance.componentDidCatch(error);
-
+        callComponentDidCatch(instance, capturedValues);
         newState = processUpdateQueue(
-          current,
+          null,
           workInProgress,
           updateQueue,
           instance,
