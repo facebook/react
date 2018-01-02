@@ -94,7 +94,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     adoptClassInstance,
     constructClassInstance,
     mountClassInstance,
-    // resumeMountClassInstance,
+    resumeMountClassInstance,
     updateClassInstance,
   } = ReactFiberClassComponent(
     scheduleWork,
@@ -251,20 +251,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
         shouldUpdate = true;
       } else {
-        if (capturedValues !== null) {
-          // A capture is more like an update than another mount,
-          // because we haven't received new props from the parent.
-          shouldUpdate = true;
-          updateClassInstance(current, workInProgress, renderExpirationTime);
-        } else {
-          // In a resume, we'll already have an instance we can reuse.
-          // shouldUpdate = resumeMountClassInstance(workInProgress, renderExpirationTime);
-          invariant(
-            capturedValues !== null,
-            'Resuming work not yet implemented.',
-          );
-          shouldUpdate = true;
-        }
+        // In a resume, we'll already have an instance we can reuse.
+        shouldUpdate = resumeMountClassInstance(
+          workInProgress,
+          renderExpirationTime,
+        );
       }
     } else {
       shouldUpdate = updateClassInstance(

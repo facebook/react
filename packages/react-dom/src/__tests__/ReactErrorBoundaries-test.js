@@ -627,7 +627,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender render [!]',
       // Catch and render an error message
       'ErrorBoundary componentDidCatch',
-      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -653,7 +653,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenConstructor constructor [!]',
       // Catch and render an error message
       'ErrorBoundary componentDidCatch',
-      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -679,7 +679,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenComponentWillMount constructor',
       'BrokenComponentWillMount componentWillMount [!]',
       'ErrorBoundary componentDidCatch',
-      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -761,7 +761,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
       'ErrorBoundary componentDidCatch',
-      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorMessage constructor',
       'ErrorMessage componentWillMount',
@@ -800,6 +800,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
       'RetryErrorBoundary componentDidCatch [!]',
+      'RetryErrorBoundary componentWillMount',
       // Retry
       'RetryErrorBoundary render',
       'BrokenRender constructor',
@@ -808,7 +809,7 @@ describe('ReactErrorBoundaries', () => {
       // This time, the error propagates to the higher boundary
       'ErrorBoundary componentDidCatch',
       // Render the error
-      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -835,7 +836,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenComponentWillMountErrorBoundary componentWillMount [!]',
       // The error propagates to the higher boundary
       'ErrorBoundary componentDidCatch',
-      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -870,11 +871,12 @@ describe('ReactErrorBoundaries', () => {
       // It adjusts state but throws displaying the message
       // Attempt to handle the error
       'BrokenRenderErrorBoundary componentDidCatch',
+      'BrokenRenderErrorBoundary componentWillMount',
       'BrokenRenderErrorBoundary render error [!]',
       // Boundary fails with new error, propagate to next boundary
       // Attempt to handle the error again
       'ErrorBoundary componentDidCatch',
-      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -910,7 +912,7 @@ describe('ReactErrorBoundaries', () => {
       // Capture the error
       'ErrorBoundary componentDidCatch',
       // Render the error message
-      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'ErrorBoundary componentDidMount',
     ]);
@@ -947,7 +949,7 @@ describe('ReactErrorBoundaries', () => {
       // Capture the error
       'ErrorBoundary componentDidCatch',
       // Render the error message
-      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
       'Error message ref is set to [object HTMLDivElement]',
       'ErrorBoundary componentDidMount',
