@@ -1222,6 +1222,7 @@ const attributes = [
     tagName: 'color-profile',
     read: getSVGAttribute('color-profile'),
   },
+  {name: 'noModule', tagName: 'script'},
   {name: 'nonce', read: getAttribute('nonce')},
   {name: 'noValidate', tagName: 'form'},
   {
