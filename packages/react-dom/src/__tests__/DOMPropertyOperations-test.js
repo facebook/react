@@ -34,7 +34,10 @@ describe('DOMPropertyOperations', () => {
     });
 
     it('should set values as namespace attributes if necessary', () => {
-      const container = document.createElement('svg');
+      const container = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'svg',
+      );
       ReactDOM.render(<image xlinkHref="about:blank" />, container);
       expect(
         container.firstChild.getAttributeNS(
