@@ -423,8 +423,6 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {
-    spyOnDev(console, 'error');
-
     let ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
