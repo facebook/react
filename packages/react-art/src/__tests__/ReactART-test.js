@@ -54,7 +54,12 @@ function testDOMNodeStructure(domNode, expectedStructure) {
 }
 
 describe('ReactART', () => {
+  let container;
+
   beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
     ARTCurrentMode.setCurrent(ARTSVGMode);
 
     Group = ReactART.Group;
@@ -104,6 +109,11 @@ describe('ReactART', () => {
     };
   });
 
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
+  });
+
   it('should have the correct lifecycle state', () => {
     let instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -142,7 +152,6 @@ describe('ReactART', () => {
   });
 
   it('should be able to reorder components', () => {
-    const container = document.createElement('div');
     const instance = ReactDOM.render(
       <TestComponent flipped={false} />,
       container,
@@ -189,8 +198,6 @@ describe('ReactART', () => {
   });
 
   it('should be able to reorder many components', () => {
-    const container = document.createElement('div');
-
     class Component extends React.Component {
       render() {
         const chars = this.props.chars.split('');
@@ -296,8 +303,6 @@ describe('ReactART', () => {
         );
       }
     }
-
-    const container = document.createElement('div');
     ReactDOM.render(<Outer />, container);
     expect(ref).not.toBeDefined();
     ReactDOM.render(<Outer mountCustomShape={true} />, container);
@@ -305,8 +310,6 @@ describe('ReactART', () => {
   });
 
   it('adds and updates event handlers', () => {
-    const container = document.createElement('div');
-
     function render(onClick) {
       return ReactDOM.render(
         <Surface>
@@ -319,8 +322,11 @@ describe('ReactART', () => {
     function doClick(instance) {
       const path = ReactDOM.findDOMNode(instance).querySelector('path');
 
-      // ReactTestUtils.Simulate.click doesn't work with SVG elements
-      path.click();
+      path.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
+      );
     }
 
     const onClick1 = jest.fn();
