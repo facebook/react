@@ -488,21 +488,36 @@ describe('ReactDOMServerIntegration', () => {
       );
 
       itRenders('badly cased SVG attribute with a warning', async render => {
-        const e = await render(<text textlength="10" />, 1);
-        expect(e.getAttribute('textLength')).toBe('10');
+        const e = await render(
+          <svg>
+            <text textlength="10" />
+          </svg>,
+          1,
+        );
+        expect(e.firstChild.getAttribute('textLength')).toBe('10');
       });
 
       itRenders('no badly cased aliased SVG attribute alias', async render => {
-        const e = await render(<text strokedasharray="10 10" />, 1);
-        expect(e.hasAttribute('stroke-dasharray')).toBe(false);
-        expect(e.getAttribute('strokedasharray')).toBe('10 10');
+        const e = await render(
+          <svg>
+            <text strokedasharray="10 10" />
+          </svg>,
+          1,
+        );
+        expect(e.firstChild.hasAttribute('stroke-dasharray')).toBe(false);
+        expect(e.firstChild.getAttribute('strokedasharray')).toBe('10 10');
       });
 
       itRenders(
         'no badly cased original SVG attribute that is aliased',
         async render => {
-          const e = await render(<text stroke-dasharray="10 10" />, 1);
-          expect(e.getAttribute('stroke-dasharray')).toBe('10 10');
+          const e = await render(
+            <svg>
+              <text stroke-dasharray="10 10" />
+            </svg>,
+            1,
+          );
+          expect(e.firstChild.getAttribute('stroke-dasharray')).toBe('10 10');
         },
       );
     });
