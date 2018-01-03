@@ -17,6 +17,8 @@ const createMatcherFor = consoleMethod =>
         );
       }
 
+      const unexpectedWarnings = [];
+
       const consoleSpy = message => {
         const normalizedMessage = normalizeCodeLocInfo(message);
 
@@ -31,14 +33,19 @@ const createMatcherFor = consoleMethod =>
           }
         }
 
-        // Fail early for unexpected warnings to preserve the call stack.
-        throw Error(
-          `Unexpected warning recorded:\n  ${this.utils.printReceived(
-            message
-          )}\n\nThe following expected warnings were not yet seen:\n  ${this.utils.printExpected(
-            expectedMessages.join('\n')
-          )}`
-        );
+        let errorMessage = `Unexpected warning recorded:\n${this.utils.printReceived(
+          message
+        )}`;
+        if (expectedMessages.length > 0) {
+          errorMessage += `\n\nThe following expected warnings were not yet seen:\n${expectedMessages
+            .map(unformatted => this.utils.printExpected(unformatted))
+            .join('\n')}`;
+        }
+
+        // Record the call stack for unexpected warnings.
+        // We don't throw an Error here though,
+        // Because it might be suppressed by ReactFiberScheduler.
+        unexpectedWarnings.push(new Error(errorMessage));
       };
 
       // TODO Decide whether we need to support nested toWarn* expectations.
@@ -51,6 +58,14 @@ const createMatcherFor = consoleMethod =>
 
       try {
         callback();
+
+        // Any unexpected warnings should be treated as a failure.
+        if (unexpectedWarnings.length > 0) {
+          return {
+            message: () => unexpectedWarnings[0].stack,
+            pass: false,
+          };
+        }
 
         // Any remaining messages indicate a failed expectations.
         if (expectedMessages.length > 0) {
