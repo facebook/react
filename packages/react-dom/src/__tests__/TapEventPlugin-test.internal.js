@@ -86,19 +86,13 @@ describe('TapEventPlugin', () => {
 
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    spyOnDev(console, 'warn');
-    EventPluginHub.injection.injectEventPluginsByName({
-      TapEventPlugin: TapEventPlugin,
-    });
-  });
-
-  afterEach(() => {
-    if (__DEV__) {
-      expect(console.warn.calls.count()).toBe(1);
-      expect(console.warn.calls.argsFor(0)[0]).toContain(
-        'Injecting custom event plugins (TapEventPlugin) is deprecated',
-      );
-    }
+    expect(() =>
+      EventPluginHub.injection.injectEventPluginsByName({
+        TapEventPlugin: TapEventPlugin,
+      }),
+    ).toLowPriorityWarnDev(
+      'Injecting custom event plugins (TapEventPlugin) is deprecated',
+    );
   });
 
   /**

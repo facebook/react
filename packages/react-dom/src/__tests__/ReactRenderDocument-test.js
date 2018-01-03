@@ -34,19 +34,15 @@ describe('rendering React components at document', () => {
   });
 
   describe('with old implicit hydration API', () => {
-    function expectDeprecationWarningWithFiber() {
-      if (__DEV__) {
-        expect(console.warn.calls.count()).toBe(1);
-        expect(console.warn.calls.argsFor(0)[0]).toContain(
-          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-            'will stop working in React v17. Replace the ReactDOM.render() call ' +
-            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-        );
-      }
+    function expectDeprecationWarningWithFiber(callback) {
+      expect(callback).toLowPriorityWarnDev(
+        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+          'will stop working in React v17. Replace the ReactDOM.render() call ' +
+          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+      );
     }
 
     it('should be able to adopt server markup', () => {
-      spyOnDev(console, 'warn');
       class Root extends React.Component {
         render() {
           return (
@@ -64,18 +60,18 @@ describe('rendering React components at document', () => {
       const testDocument = getTestDocument(markup);
       const body = testDocument.body;
 
-      ReactDOM.render(<Root hello="world" />, testDocument);
+      expectDeprecationWarningWithFiber(() =>
+        ReactDOM.render(<Root hello="world" />, testDocument),
+      );
       expect(testDocument.body.innerHTML).toBe('Hello world');
 
       ReactDOM.render(<Root hello="moon" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello moon');
 
       expect(body === testDocument.body).toBe(true);
-      expectDeprecationWarningWithFiber();
     });
 
     it('should not be able to unmount component from document node', () => {
-      spyOnDev(console, 'warn');
       class Root extends React.Component {
         render() {
           return (
@@ -91,18 +87,17 @@ describe('rendering React components at document', () => {
 
       const markup = ReactDOMServer.renderToString(<Root />);
       const testDocument = getTestDocument(markup);
-      ReactDOM.render(<Root />, testDocument);
+      expectDeprecationWarningWithFiber(() =>
+        ReactDOM.render(<Root />, testDocument),
+      );
       expect(testDocument.body.innerHTML).toBe('Hello world');
 
       // In Fiber this actually works. It might not be a good idea though.
       ReactDOM.unmountComponentAtNode(testDocument);
       expect(testDocument.firstChild).toBe(null);
-
-      expectDeprecationWarningWithFiber();
     });
 
     it('should not be able to switch root constructors', () => {
-      spyOnDev(console, 'warn');
       class Component extends React.Component {
         render() {
           return (
@@ -132,18 +127,18 @@ describe('rendering React components at document', () => {
       const markup = ReactDOMServer.renderToString(<Component />);
       const testDocument = getTestDocument(markup);
 
-      ReactDOM.render(<Component />, testDocument);
+      expectDeprecationWarningWithFiber(() =>
+        ReactDOM.render(<Component />, testDocument),
+      );
       expect(testDocument.body.innerHTML).toBe('Hello world');
 
       // This works but is probably a bad idea.
       ReactDOM.render(<Component2 />, testDocument);
 
       expect(testDocument.body.innerHTML).toBe('Goodbye world');
-      expectDeprecationWarningWithFiber();
     });
 
     it('should be able to mount into document', () => {
-      spyOnDev(console, 'warn');
       class Component extends React.Component {
         render() {
           return (
@@ -162,10 +157,11 @@ describe('rendering React components at document', () => {
       );
       const testDocument = getTestDocument(markup);
 
-      ReactDOM.render(<Component text="Hello world" />, testDocument);
+      expectDeprecationWarningWithFiber(() =>
+        ReactDOM.render(<Component text="Hello world" />, testDocument),
+      );
 
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      expectDeprecationWarningWithFiber();
     });
 
     it('renders over an existing text child without throwing', () => {
@@ -197,22 +193,15 @@ describe('rendering React components at document', () => {
       );
       const testDocument = getTestDocument(markup);
 
-      spyOnDev(console, 'warn');
-      spyOnDev(console, 'error');
-      ReactDOM.render(<Component text="Hello world" />, testDocument);
-      expect(testDocument.body.innerHTML).toBe('Hello world');
-      if (__DEV__) {
-        expect(console.warn.calls.count()).toBe(1);
-        expect(console.warn.calls.argsFor(0)[0]).toContain(
+      expect(() => {
+        expect(() =>
+          ReactDOM.render(<Component text="Hello world" />, testDocument),
+        ).toLowPriorityWarnDev(
           'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
             'will stop working in React v17. Replace the ReactDOM.render() call ' +
             'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
         );
-        expect(console.error.calls.count()).toBe(1);
-        expect(console.error.calls.argsFor(0)[0]).toContain(
-          'Warning: Text content did not match.',
-        );
-      }
+      }).toWarnDev('Warning: Text content did not match.');
     });
 
     it('should throw on full document render w/ no markup', () => {
@@ -239,7 +228,6 @@ describe('rendering React components at document', () => {
     });
 
     it('supports findDOMNode on full-page components', () => {
-      spyOnDev(console, 'warn');
       const tree = (
         <html>
           <head>
@@ -251,10 +239,12 @@ describe('rendering React components at document', () => {
 
       const markup = ReactDOMServer.renderToString(tree);
       const testDocument = getTestDocument(markup);
-      const component = ReactDOM.render(tree, testDocument);
+      let component;
+      expectDeprecationWarningWithFiber(() => {
+        component = ReactDOM.render(tree, testDocument);
+      });
       expect(testDocument.body.innerHTML).toBe('Hello world');
       expect(ReactDOM.findDOMNode(component).tagName).toBe('HTML');
-      expectDeprecationWarningWithFiber();
     });
   });
 
@@ -375,17 +365,12 @@ describe('rendering React components at document', () => {
     });
 
     it('renders over an existing text child without throwing', () => {
-      spyOnDev(console, 'error');
       const container = document.createElement('div');
       container.textContent = 'potato';
-      ReactDOM.hydrate(<div>parsnip</div>, container);
+      expect(() => ReactDOM.hydrate(<div>parsnip</div>, container)).toWarnDev(
+        'Expected server HTML to contain a matching <div> in <div>.',
+      );
       expect(container.textContent).toBe('parsnip');
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(console.error.calls.argsFor(0)[0]).toContain(
-          'Expected server HTML to contain a matching <div> in <div>.',
-        );
-      }
     });
 
     it('should give helpful errors on state desync', () => {
@@ -407,19 +392,13 @@ describe('rendering React components at document', () => {
       );
       const testDocument = getTestDocument(markup);
 
-      spyOnDev(console, 'error');
-      ReactDOM.hydrate(<Component text="Hello world" />, testDocument);
+      expect(() =>
+        ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
+      ).toWarnDev('Warning: Text content did not match.');
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(console.error.calls.argsFor(0)[0]).toContain(
-          'Warning: Text content did not match.',
-        );
-      }
     });
 
     it('should render w/ no markup to full document', () => {
-      spyOnDev(console, 'error');
       const testDocument = getTestDocument();
 
       class Component extends React.Component {
@@ -435,15 +414,11 @@ describe('rendering React components at document', () => {
         }
       }
 
-      ReactDOM.hydrate(<Component text="Hello world" />, testDocument);
+      // getTestDocument() has an extra <meta> that we didn't render.
+      expect(() =>
+        ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
+      ).toWarnDev('Did not expect server HTML to contain a <meta> in <head>.');
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(console.error.calls.argsFor(0)[0]).toContain(
-          // getTestDocument() has an extra <meta> that we didn't render.
-          'Did not expect server HTML to contain a <meta> in <head>.',
-        );
-      }
     });
 
     it('supports findDOMNode on full-page components', () => {

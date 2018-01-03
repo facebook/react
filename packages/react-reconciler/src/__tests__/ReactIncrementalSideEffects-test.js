@@ -20,10 +20,6 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   function div(...children) {
     children = children.map(c => (typeof c === 'string' ? {text: c} : c));
     return {type: 'div', children, prop: undefined};
@@ -987,7 +983,6 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   it('invokes ref callbacks after insertion/update/unmount', () => {
-    spyOnDev(console, 'error');
     let classInstance = null;
 
     let ops = [];
@@ -1014,7 +1009,14 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo show={true} />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Warning: Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.\n\nCheck the render method ' +
+        'of `Foo`.\n' +
+        '    in FunctionalComponent (at **)\n' +
+        '    in div (at **)\n' +
+        '    in Foo (at **)',
+    );
     expect(ops).toEqual([
       classInstance,
       // no call for functional components
@@ -1044,17 +1046,6 @@ describe('ReactIncrementalSideEffects', () => {
       null,
       null,
     ]);
-
-    if (__DEV__) {
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Stateless function components cannot be given refs. ' +
-          'Attempts to access this ref will fail.\n\nCheck the render method ' +
-          'of `Foo`.\n' +
-          '    in FunctionalComponent (at **)\n' +
-          '    in div (at **)\n' +
-          '    in Foo (at **)',
-      );
-    }
   });
 
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
