@@ -19,10 +19,6 @@ describe('ReactDOM unknown attribute', () => {
     ReactDOM = require('react-dom');
   });
 
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   function testUnknownAttributeRemoval(givenValue) {
     const el = document.createElement('div');
     ReactDOM.render(<div unknown="something" />, el);
@@ -46,20 +42,13 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('changes values true, false to null, and also warns once', () => {
-      spyOnDev(console, 'error');
-
-      testUnknownAttributeAssignment(true, null);
+      expect(() => testUnknownAttributeAssignment(true, null)).toWarnDev(
+        'Received `true` for a non-boolean attribute `unknown`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'unknown="true" or unknown={value.toString()}.\n' +
+          '    in div (at **)',
+      );
       testUnknownAttributeAssignment(false, null);
-
-      if (__DEV__) {
-        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toMatch(
-          'Received `true` for a non-boolean attribute `unknown`.\n\n' +
-            'If you want to write it to the DOM, pass a string instead: ' +
-            'unknown="true" or unknown={value.toString()}.\n' +
-            '    in div (at **)',
-        );
-        expect(console.error.calls.count()).toBe(1);
-      }
     });
 
     it('removes unknown attributes that were rendered but are now missing', () => {
@@ -82,17 +71,11 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('coerces NaN to strings and warns', () => {
-      spyOnDev(console, 'error');
-
-      testUnknownAttributeAssignment(NaN, 'NaN');
-      if (__DEV__) {
-        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toMatch(
-          'Warning: Received NaN for the `unknown` attribute. ' +
-            'If this is expected, cast the value to a string.\n' +
-            '    in div (at **)',
-        );
-        expect(console.error.calls.count()).toBe(1);
-      }
+      expect(() => testUnknownAttributeAssignment(NaN, 'NaN')).toWarnDev(
+        'Warning: Received NaN for the `unknown` attribute. ' +
+          'If this is expected, cast the value to a string.\n' +
+          '    in div (at **)',
+      );
     });
 
     it('coerces objects to strings and warns', () => {
@@ -107,54 +90,41 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('removes symbols and warns', () => {
-      spyOnDev(console, 'error');
-
-      testUnknownAttributeRemoval(Symbol('foo'));
-      if (__DEV__) {
-        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: Invalid value for prop `unknown` on <div> tag. Either remove it ' +
-            'from the element, or pass a string or number value to keep it ' +
-            'in the DOM. For details, see https://fb.me/react-attribute-behavior\n' +
-            '    in div (at **)',
-        );
-        expect(console.error.calls.count()).toBe(1);
-      }
+      expect(() => testUnknownAttributeRemoval(Symbol('foo'))).toWarnDev(
+        'Warning: Invalid value for prop `unknown` on <div> tag. Either remove it ' +
+          'from the element, or pass a string or number value to keep it ' +
+          'in the DOM. For details, see https://fb.me/react-attribute-behavior\n' +
+          '    in div (at **)',
+      );
     });
 
     it('removes functions and warns', () => {
-      spyOnDev(console, 'error');
-
-      testUnknownAttributeRemoval(function someFunction() {});
-      if (__DEV__) {
-        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: Invalid value for prop `unknown` on <div> tag. Either remove ' +
-            'it from the element, or pass a string or number value to ' +
-            'keep it in the DOM. For details, see ' +
-            'https://fb.me/react-attribute-behavior\n' +
-            '    in div (at **)',
-        );
-        expect(console.error.calls.count()).toBe(1);
-      }
+      expect(() =>
+        testUnknownAttributeRemoval(function someFunction() {}),
+      ).toWarnDev(
+        'Warning: Invalid value for prop `unknown` on <div> tag. Either remove ' +
+          'it from the element, or pass a string or number value to ' +
+          'keep it in the DOM. For details, see ' +
+          'https://fb.me/react-attribute-behavior\n' +
+          '    in div (at **)',
+      );
     });
 
     it('allows camelCase unknown attributes and warns', () => {
-      spyOnDev(console, 'error');
-
       const el = document.createElement('div');
-      ReactDOM.render(<div helloWorld="something" />, el);
-      expect(el.firstChild.getAttribute('helloworld')).toBe('something');
 
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toMatch(
-          'React does not recognize the `helloWorld` prop on a DOM element. ' +
-            'If you intentionally want it to appear in the DOM as a custom ' +
-            'attribute, spell it as lowercase `helloworld` instead. ' +
-            'If you accidentally passed it from a parent component, remove ' +
-            'it from the DOM element.\n' +
-            '    in div (at **)',
-        );
-      }
+      expect(() =>
+        ReactDOM.render(<div helloWorld="something" />, el),
+      ).toWarnDev(
+        'React does not recognize the `helloWorld` prop on a DOM element. ' +
+          'If you intentionally want it to appear in the DOM as a custom ' +
+          'attribute, spell it as lowercase `helloworld` instead. ' +
+          'If you accidentally passed it from a parent component, remove ' +
+          'it from the DOM element.\n' +
+          '    in div (at **)',
+      );
+
+      expect(el.firstChild.getAttribute('helloworld')).toBe('something');
     });
   });
 });

@@ -122,29 +122,21 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    spyOnDev(console, 'warn');
     const markup = ReactDOMServer.renderToString(<Parent />);
 
     // Old API based on heuristic
     let container = document.createElement('div');
     container.innerHTML = markup;
-    ReactDOM.render(<Parent />, container);
-    if (__DEV__) {
-      expect(console.warn.calls.count()).toBe(1);
-      expect(console.warn.calls.argsFor(0)[0]).toContain(
-        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v17. Replace the ReactDOM.render() call ' +
-          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      );
-      console.warn.calls.reset();
-    }
+    expect(() => ReactDOM.render(<Parent />, container)).toLowPriorityWarnDev(
+      'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+        'will stop working in React v17. Replace the ReactDOM.render() call ' +
+        'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+    );
+
     // New explicit API
     container = document.createElement('div');
     container.innerHTML = markup;
     ReactDOM.hydrate(<Parent />, container);
-    if (__DEV__) {
-      expect(console.warn.calls.count()).toBe(0);
-    }
   });
 
   it('should react to state changes from callbacks', () => {
@@ -234,8 +226,6 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn about `forceUpdate` on unmounted components', () => {
-    spyOnDev(console, 'error');
-
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -251,32 +241,20 @@ describe('ReactCompositeComponent', () => {
     instance = ReactDOM.render(instance, container);
     instance.forceUpdate();
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
-
     ReactDOM.unmountComponentAtNode(container);
 
-    instance.forceUpdate();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Can only update a mounted or mounting component. This usually means ' +
-          'you called setState, replaceState, or forceUpdate on an unmounted ' +
-          'component. This is a no-op.\n\nPlease check the code for the ' +
-          'Component component.',
-      );
-    }
+    expect(() => instance.forceUpdate()).toWarnDev(
+      'Can only update a mounted or mounting component. This usually means ' +
+        'you called setState, replaceState, or forceUpdate on an unmounted ' +
+        'component. This is a no-op.\n\nPlease check the code for the ' +
+        'Component component.',
+    );
 
+    // No additional warning should be recorded
     instance.forceUpdate();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 
   it('should warn about `setState` on unmounted components', () => {
-    spyOnDev(console, 'error');
-
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -300,26 +278,20 @@ describe('ReactCompositeComponent', () => {
 
     instance.setState({value: 1});
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
-
     expect(renders).toBe(2);
 
     ReactDOM.unmountComponentAtNode(container);
-    instance.setState({value: 2});
+
+    expect(() => {
+      instance.setState({value: 2});
+    }).toWarnDev(
+      'Can only update a mounted or mounting component. This usually means ' +
+        'you called setState, replaceState, or forceUpdate on an unmounted ' +
+        'component. This is a no-op.\n\nPlease check the code for the ' +
+        'Component component.',
+    );
 
     expect(renders).toBe(2);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Can only update a mounted or mounting component. This usually means ' +
-          'you called setState, replaceState, or forceUpdate on an unmounted ' +
-          'component. This is a no-op.\n\nPlease check the code for the ' +
-          'Component component.',
-      );
-    }
   });
 
   it('should silently allow `setState`, not call cb on unmounting components', () => {
@@ -351,32 +323,24 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when rendering a class with a render method that does not extend React.Component', () => {
-    spyOnDev(console, 'error');
     const container = document.createElement('div');
     class ClassWithRenderNotExtended {
       render() {
         return <div />;
       }
     }
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
     expect(() => {
-      ReactDOM.render(<ClassWithRenderNotExtended />, container);
-    }).toThrow(TypeError);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(() => {
+        ReactDOM.render(<ClassWithRenderNotExtended />, container);
+      }).toWarnDev(
         'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
           "but doesn't extend React.Component. This is likely to cause errors. " +
           'Change ClassWithRenderNotExtended to extend React.Component instead.',
       );
-    }
+    }).toThrow(TypeError);
   });
 
   it('should warn about `setState` in render', () => {
-    spyOnDev(console, 'error');
-
     const container = document.createElement('div');
 
     let renderedState = -1;
@@ -395,21 +359,16 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
+    let instance;
 
-    const instance = ReactDOM.render(<Component />, container);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Cannot update during an existing state transition (such as within ' +
-          "`render` or another component's constructor). Render methods should " +
-          'be a pure function of props and state; constructor side-effects are ' +
-          'an anti-pattern, but can be moved to `componentWillMount`.',
-      );
-    }
+    expect(() => {
+      instance = ReactDOM.render(<Component />, container);
+    }).toWarnDev(
+      'Cannot update during an existing state transition (such as within ' +
+        "`render` or another component's constructor). Render methods should " +
+        'be a pure function of props and state; constructor side-effects are ' +
+        'an anti-pattern, but can be moved to `componentWillMount`.',
+    );
 
     // The setState call is queued and then executed as a second pass. This
     // behavior is undefined though so we're free to change it to suit the
@@ -424,17 +383,12 @@ describe('ReactCompositeComponent', () => {
     expect(renderedState).toBe(1);
     expect(instance2.state.value).toBe(1);
 
-    // Test deduplication
+    // Test deduplication; (no additional warnings are expected).
     ReactDOM.unmountComponentAtNode(container);
     ReactDOM.render(<Component prop={123} />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 
   it('should warn about `setState` in getChildContext', () => {
-    spyOnDev(console, 'error');
-
     const container = document.createElement('div');
 
     let renderPasses = 0;
@@ -455,25 +409,20 @@ describe('ReactCompositeComponent', () => {
     }
     Component.childContextTypes = {};
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
-    const instance = ReactDOM.render(<Component />, container);
+    let instance;
+
+    expect(() => {
+      instance = ReactDOM.render(<Component />, container);
+    }).toWarnDev(
+      'Warning: setState(...): Cannot call setState() inside getChildContext()',
+    );
+
     expect(renderPasses).toBe(2);
     expect(instance.state.value).toBe(1);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: setState(...): Cannot call setState() inside getChildContext()',
-      );
-    }
 
-    // Test deduplication
+    // Test deduplication; (no additional warnings are expected).
     ReactDOM.unmountComponentAtNode(container);
     ReactDOM.render(<Component />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 
   it('should cleanup even if render() fatals', () => {
@@ -487,7 +436,7 @@ describe('ReactCompositeComponent', () => {
 
     expect(ReactCurrentOwner.current).toBe(null);
 
-    expect(function() {
+    expect(() => {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
 
@@ -525,8 +474,6 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', () => {
-    spyOnDev(console, 'error');
-
     class Component extends React.Component {
       state = {bogus: false};
 
@@ -540,20 +487,14 @@ describe('ReactCompositeComponent', () => {
     }
 
     const instance = ReactTestUtils.renderIntoDocument(<Component />);
-    instance.setState({bogus: true});
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Component.shouldComponentUpdate(): Returned undefined instead of a ' +
-          'boolean value. Make sure to return true or false.',
-      );
-    }
+    expect(() => instance.setState({bogus: true})).toWarnDev(
+      'Warning: Component.shouldComponentUpdate(): Returned undefined instead of a ' +
+        'boolean value. Make sure to return true or false.',
+    );
   });
 
   it('should warn when componentDidUnmount method is defined', () => {
-    spyOnDev(console, 'error');
-
     class Component extends React.Component {
       componentDidUnmount = () => {};
 
@@ -562,21 +503,14 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Component />);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Component has a method called ' +
-          'componentDidUnmount(). But there is no such lifecycle method. ' +
-          'Did you mean componentWillUnmount()?',
-      );
-    }
+    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
+      'Warning: Component has a method called ' +
+        'componentDidUnmount(). But there is no such lifecycle method. ' +
+        'Did you mean componentWillUnmount()?',
+    );
   });
 
   it('should warn when componentDidReceiveProps method is defined', () => {
-    spyOnDev(console, 'error');
-
     class Component extends React.Component {
       componentDidReceiveProps = () => {};
 
@@ -585,23 +519,16 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Component />);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Component has a method called ' +
-          'componentDidReceiveProps(). But there is no such lifecycle method. ' +
-          'If you meant to update the state in response to changing props, ' +
-          'use componentWillReceiveProps(). If you meant to fetch data or ' +
-          'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
-      );
-    }
+    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
+      'Warning: Component has a method called ' +
+        'componentDidReceiveProps(). But there is no such lifecycle method. ' +
+        'If you meant to update the state in response to changing props, ' +
+        'use componentWillReceiveProps(). If you meant to fetch data or ' +
+        'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
+    );
   });
 
   it('should warn when defaultProps was defined as an instance property', () => {
-    spyOnDev(console, 'error');
-
     class Component extends React.Component {
       constructor(props) {
         super(props);
@@ -613,15 +540,10 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Component />);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Setting defaultProps as an instance property on Component is not supported ' +
-          'and will be ignored. Instead, define defaultProps as a static property on Component.',
-      );
-    }
+    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
+      'Warning: Setting defaultProps as an instance property on Component is not supported ' +
+        'and will be ignored. Instead, define defaultProps as a static property on Component.',
+    );
   });
 
   it('should pass context to children when not owner', () => {
@@ -1093,8 +1015,6 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should disallow nested render calls', () => {
-    spyOnDev(console, 'error');
-
     class Inner extends React.Component {
       render() {
         return <div />;
@@ -1108,16 +1028,12 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Outer />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toMatch(
-        'Render methods should be a pure function of props and state; ' +
-          'triggering nested component updates from render is not allowed. If ' +
-          'necessary, trigger nested updates in componentDidUpdate.\n\nCheck the ' +
-          'render method of Outer.',
-      );
-    }
+    expect(() => ReactTestUtils.renderIntoDocument(<Outer />)).toWarnDev(
+      'Render methods should be a pure function of props and state; ' +
+        'triggering nested component updates from render is not allowed. If ' +
+        'necessary, trigger nested updates in componentDidUpdate.\n\nCheck the ' +
+        'render method of Outer.',
+    );
   });
 
   it('only renders once if updated in componentWillReceiveProps', () => {
@@ -1392,8 +1308,6 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when mutated props are passed', () => {
-    spyOnDev(console, 'error');
-
     const container = document.createElement('div');
 
     class Foo extends React.Component {
@@ -1407,19 +1321,10 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
-
-    ReactDOM.render(<Foo idx="qwe" />, container);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Foo(...): When calling super() in `Foo`, make sure to pass ' +
-          "up the same props that your component's constructor was passed.",
-      );
-    }
+    expect(() => ReactDOM.render(<Foo idx="qwe" />, container)).toWarnDev(
+      'Foo(...): When calling super() in `Foo`, make sure to pass ' +
+        "up the same props that your component's constructor was passed.",
+    );
   });
 
   it('should only call componentWillUnmount once', () => {
@@ -1456,7 +1361,7 @@ describe('ReactCompositeComponent', () => {
       }
     };
 
-    expect(function() {
+    expect(() => {
       ReactDOM.render(<App ref={setRef} stage={1} />, container);
       ReactDOM.render(<App ref={setRef} stage={2} />, container);
     }).toThrow();
@@ -1702,7 +1607,6 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should return a meaningful warning when constructor is returned', () => {
-    spyOnDev(console, 'error');
     class RenderTextInvalidConstructor extends React.Component {
       constructor(props) {
         super(props);
@@ -1714,33 +1618,26 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<RenderTextInvalidConstructor />);
-    }).toThrow();
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.mostRecent().args[0]).toBe(
+    expect(() => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(<RenderTextInvalidConstructor />);
+      }).toWarnDev(
         'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
           'did you accidentally return an object from the constructor?',
       );
-    }
+    }).toThrow();
   });
 
   it('should return error if render is not defined', () => {
-    spyOnDev(console, 'error');
     class RenderTestUndefinedRender extends React.Component {}
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<RenderTestUndefinedRender />);
-    }).toThrow();
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.mostRecent().args[0]).toBe(
+    expect(() => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(<RenderTestUndefinedRender />);
+      }).toWarnDev(
         'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
           'component instance: you may have forgotten to define `render`.',
       );
-    }
+    }).toThrow();
   });
 });

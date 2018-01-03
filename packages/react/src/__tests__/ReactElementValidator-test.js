@@ -350,8 +350,6 @@ describe('ReactElementValidator', () => {
   });
 
   it('should warn if a PropType creator is used as a PropType', () => {
-    spyOnDev(console, 'error');
-
     class Component extends React.Component {
       static propTypes = {
         myProp: PropTypes.shape,

@@ -720,8 +720,6 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches reconciler errors in a boundary during mounting', () => {
-    spyOnDev(console, 'error');
-
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -744,7 +742,9 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Warning: React.createElement: type is invalid -- expected a string',
+    );
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
@@ -756,17 +756,9 @@ describe('ReactIncrementalErrorHandling', () => {
             : ''),
       ),
     ]);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: React.createElement: type is invalid -- expected a string',
-      );
-    }
   });
 
   it('catches reconciler errors in a boundary during update', () => {
-    spyOnDev(console, 'error');
-
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -797,7 +789,9 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender fail={true} />
       </ErrorBoundary>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Warning: React.createElement: type is invalid -- expected a string',
+    );
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
@@ -809,21 +803,14 @@ describe('ReactIncrementalErrorHandling', () => {
             : ''),
       ),
     ]);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: React.createElement: type is invalid -- expected a string',
-      );
-    }
   });
 
   it('recovers from uncaught reconciler errors', () => {
-    spyOnDev(console, 'error');
     const InvalidType = undefined;
-    ReactNoop.render(<InvalidType />);
-    expect(() => {
-      ReactNoop.flush();
-    }).toThrowError(
+    expect(() => ReactNoop.render(<InvalidType />)).toWarnDev(
+      'Warning: React.createElement: type is invalid -- expected a string',
+    );
+    expect(ReactNoop.flush).toThrowError(
       'Element type is invalid: expected a string (for built-in components) or ' +
         'a class/function (for composite components) but got: undefined.' +
         (__DEV__
@@ -835,12 +822,6 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.render(<span prop="hi" />);
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('hi')]);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: React.createElement: type is invalid -- expected a string',
-      );
-    }
   });
 
   it('unmounts components with uncaught errors', () => {

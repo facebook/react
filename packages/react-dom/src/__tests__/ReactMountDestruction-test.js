@@ -50,17 +50,12 @@ describe('ReactMount', () => {
 
     // Test that unmounting at a root node gives a helpful warning
     const rootDiv = mainContainerDiv.firstChild;
-    spyOnDev(console, 'error');
-    ReactDOM.unmountComponentAtNode(rootDiv);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        "Warning: unmountComponentAtNode(): The node you're attempting to " +
-          'unmount was rendered by React and is not a top-level container. You ' +
-          'may have accidentally passed in a React root node instead of its ' +
-          'container.',
-      );
-    }
+    expect(() => ReactDOM.unmountComponentAtNode(rootDiv)).toWarnDev(
+      "Warning: unmountComponentAtNode(): The node you're attempting to " +
+        'unmount was rendered by React and is not a top-level container. You ' +
+        'may have accidentally passed in a React root node instead of its ' +
+        'container.',
+    );
   });
 
   it('should warn when unmounting a non-container, non-root node', () => {
@@ -77,16 +72,11 @@ describe('ReactMount', () => {
 
     // Test that unmounting at a non-root node gives a different warning
     const nonRootDiv = mainContainerDiv.firstChild.firstChild;
-    spyOnDev(console, 'error');
-    ReactDOM.unmountComponentAtNode(nonRootDiv);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        "Warning: unmountComponentAtNode(): The node you're attempting to " +
-          'unmount was rendered by React and is not a top-level container. ' +
-          'Instead, have the parent component update its state and rerender in ' +
-          'order to remove this component.',
-      );
-    }
+    expect(() => ReactDOM.unmountComponentAtNode(nonRootDiv)).toWarnDev(
+      "Warning: unmountComponentAtNode(): The node you're attempting to " +
+        'unmount was rendered by React and is not a top-level container. ' +
+        'Instead, have the parent component update its state and rerender in ' +
+        'order to remove this component.',
+    );
   });
 });

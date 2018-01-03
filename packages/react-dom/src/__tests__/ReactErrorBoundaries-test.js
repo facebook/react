@@ -1909,8 +1909,6 @@ describe('ReactErrorBoundaries', () => {
   });
 
   it('discards a bad root if the root component fails', () => {
-    spyOnDev(console, 'error');
-
     const X = null;
     const Y = undefined;
     let err1;
@@ -1918,13 +1916,21 @@ describe('ReactErrorBoundaries', () => {
 
     try {
       let container = document.createElement('div');
-      ReactDOM.render(<X />, container);
+      expect(() => ReactDOM.render(<X />, container)).toWarnDev(
+        'React.createElement: type is invalid -- expected a string ' +
+          '(for built-in components) or a class/function ' +
+          '(for composite components) but got: null.',
+      );
     } catch (err) {
       err1 = err;
     }
     try {
       let container = document.createElement('div');
-      ReactDOM.render(<Y />, container);
+      expect(() => ReactDOM.render(<Y />, container)).toWarnDev(
+        'React.createElement: type is invalid -- expected a string ' +
+          '(for built-in components) or a class/function ' +
+          '(for composite components) but got: undefined.',
+      );
     } catch (err) {
       err2 = err;
     }
