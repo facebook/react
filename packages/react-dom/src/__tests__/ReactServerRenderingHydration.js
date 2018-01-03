@@ -26,9 +26,6 @@ describe('ReactDOMServerHydration', () => {
   });
 
   it('should have the correct mounting behavior (old hydrate API)', () => {
-    spyOnDev(console, 'warn');
-    spyOnDev(console, 'error');
-
     let mountCount = 0;
     let numClicks = 0;
 
@@ -78,17 +75,16 @@ describe('ReactDOMServerHydration', () => {
     lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
     element.innerHTML = lastMarkup;
 
-    let instance = ReactDOM.render(<TestComponent name="x" />, element);
+    let instance;
+
+    expect(() => {
+      instance = ReactDOM.render(<TestComponent name="x" />, element);
+    }).toLowPriorityWarnDev(
+      'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+        'will stop working in React v17. Replace the ReactDOM.render() call ' +
+        'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+    );
     expect(mountCount).toEqual(3);
-    if (__DEV__) {
-      expect(console.warn.calls.count()).toBe(1);
-      expect(console.warn.calls.argsFor(0)[0]).toContain(
-        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v17. Replace the ReactDOM.render() call ' +
-          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      );
-      console.warn.calls.reset();
-    }
     expect(element.innerHTML).toBe(lastMarkup);
 
     // Ensure the events system works after mount into server markup
@@ -102,15 +98,10 @@ describe('ReactDOMServerHydration', () => {
     // Now simulate a situation where the app is not idempotent. React should
     // warn but do the right thing.
     element.innerHTML = lastMarkup;
-    instance = ReactDOM.render(<TestComponent name="y" />, element);
+    expect(() => {
+      instance = ReactDOM.render(<TestComponent name="y" />, element);
+    }).toWarnDev('Text content did not match. Server: "x" Client: "y"');
     expect(mountCount).toEqual(4);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Text content did not match. Server: "x" Client: "y"',
-      );
-      console.error.calls.reset();
-    }
     expect(element.innerHTML.length > 0).toBe(true);
     expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -118,15 +109,9 @@ describe('ReactDOMServerHydration', () => {
     expect(numClicks).toEqual(1);
     ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
     expect(numClicks).toEqual(2);
-    if (__DEV__) {
-      expect(console.warn.calls.count()).toBe(0);
-      expect(console.error.calls.count()).toBe(0);
-    }
   });
 
   it('should have the correct mounting behavior (new hydrate API)', () => {
-    spyOnDev(console, 'error');
-
     let mountCount = 0;
     let numClicks = 0;
 
@@ -191,11 +176,10 @@ describe('ReactDOMServerHydration', () => {
     // Now simulate a situation where the app is not idempotent. React should
     // warn but do the right thing.
     element.innerHTML = lastMarkup;
-    instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
+    expect(() => {
+      instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
+    }).toWarnDev('Text content did not match. Server: "x" Client: "y"');
     expect(mountCount).toEqual(4);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
     expect(element.innerHTML.length > 0).toBe(true);
     expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -242,8 +226,6 @@ describe('ReactDOMServerHydration', () => {
 
   // Regression test for https://github.com/facebook/react/issues/11726
   it('should not focus on either server or client with autofocus={false} even if there is a markup mismatch', () => {
-    spyOnDev(console, 'error');
-
     const element = document.createElement('div');
     element.innerHTML = ReactDOMServer.renderToString(
       <button autoFocus={false}>server</button>,
@@ -251,15 +233,14 @@ describe('ReactDOMServerHydration', () => {
     expect(element.firstChild.autofocus).toBe(false);
 
     element.firstChild.focus = jest.fn();
-    ReactDOM.hydrate(<button autoFocus={false}>client</button>, element);
+
+    expect(() =>
+      ReactDOM.hydrate(<button autoFocus={false}>client</button>, element),
+    ).toWarnDev(
+      'Warning: Text content did not match. Server: "server" Client: "client"',
+    );
 
     expect(element.firstChild.focus).not.toHaveBeenCalled();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Text content did not match. Server: "server" Client: "client"',
-      );
-    }
   });
 
   it('should throw rendering portals on the server', () => {

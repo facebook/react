@@ -672,7 +672,6 @@ describe('ReactFragment', () => {
   });
 
   it('should not preserve state when switching to a keyed fragment to an array', function() {
-    spyOnDev(console, 'error');
     const ops = [];
 
     class Stateful extends React.Component {
@@ -707,7 +706,9 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Each child in an array or iterator should have a unique "key" prop.',
+    );
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
@@ -717,16 +718,9 @@ describe('ReactFragment', () => {
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Each child in an array or iterator should have a unique "key" prop.',
-      );
-    }
   });
 
   it('should preserve state when it does not change positions', function() {
-    spyOnDev(console, 'error');
     const ops = [];
 
     class Stateful extends React.Component {
@@ -756,26 +750,24 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Each child in an array or iterator should have a unique "key" prop.',
+    );
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Each child in an array or iterator should have a unique "key" prop.',
+    );
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([span(), div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Each child in an array or iterator should have a unique "key" prop.',
+    );
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([span(), div()]);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(3);
-      for (let errorIndex = 0; errorIndex < 3; ++errorIndex) {
-        expect(console.error.calls.argsFor(errorIndex)[0]).toContain(
-          'Each child in an array or iterator should have a unique "key" prop.',
-        );
-      }
-    }
   });
 });

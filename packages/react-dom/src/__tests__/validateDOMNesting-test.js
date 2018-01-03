@@ -12,40 +12,22 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 
-function normalizeCodeLocInfo(str) {
-  return str && str.replace(/at .+?:\d+/g, 'at **');
-}
-
 function expectWarnings(tags, warnings = []) {
   tags = [...tags];
   warnings = [...warnings];
 
   let element = null;
-  if (__DEV__) {
-    console.error.calls.reset();
-  }
   const container = document.createElement(tags.splice(0, 1));
   while (tags.length) {
     const Tag = tags.pop();
     element = <Tag>{element}</Tag>;
   }
-  ReactDOM.render(element, container);
 
-  if (__DEV__) {
-    expect(console.error.calls.count()).toEqual(warnings.length);
-    while (warnings.length) {
-      expect(
-        normalizeCodeLocInfo(
-          console.error.calls.argsFor(warnings.length - 1)[0],
-        ),
-      ).toContain(warnings.pop());
-    }
-  }
+  expect(() => ReactDOM.render(element, container)).toWarnDev(warnings);
 }
 
 describe('validateDOMNesting', () => {
   it('allows valid nestings', () => {
-    spyOnDev(console, 'error');
     expectWarnings(['table', 'tbody', 'tr', 'td', 'b']);
     expectWarnings(
       ['body', 'datalist', 'option'],
@@ -66,7 +48,6 @@ describe('validateDOMNesting', () => {
   });
 
   it('prevents problematic nestings', () => {
-    spyOnDev(console, 'error');
     expectWarnings(
       ['a', 'a'],
       [

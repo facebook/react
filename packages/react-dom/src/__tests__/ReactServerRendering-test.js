@@ -431,24 +431,17 @@ describe('ReactDOMServer', () => {
       }
     }
 
-    spyOnDev(console, 'error');
     ReactDOMServer.renderToString(<Foo />);
-    jest.runOnlyPendingTimers();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.mostRecent().args[0]).toBe(
-        'Warning: setState(...): Can only update a mounting component.' +
-          ' This usually means you called setState() outside componentWillMount() on the server.' +
-          ' This is a no-op.\n\nPlease check the code for the Foo component.',
-      );
-    }
+    expect(() => jest.runOnlyPendingTimers()).toWarnDev(
+      'Warning: setState(...): Can only update a mounting component.' +
+        ' This usually means you called setState() outside componentWillMount() on the server.' +
+        ' This is a no-op.\n\nPlease check the code for the Foo component.',
+    );
 
     const markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
     expect(markup).toBe('<div>hello</div>');
+    // No additional warnings are expected
     jest.runOnlyPendingTimers();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-    }
   });
 
   it('warns with a no-op when an async forceUpdate is triggered', () => {
@@ -465,23 +458,17 @@ describe('ReactDOMServer', () => {
       }
     }
 
-    spyOnDev(console, 'error');
     ReactDOMServer.renderToString(<Baz />);
-    jest.runOnlyPendingTimers();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.mostRecent().args[0]).toBe(
-        'Warning: forceUpdate(...): Can only update a mounting component. ' +
-          'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
-          'This is a no-op.\n\nPlease check the code for the Baz component.',
-      );
-    }
+    expect(() => jest.runOnlyPendingTimers()).toWarnDev(
+      'Warning: forceUpdate(...): Can only update a mounting component. ' +
+        'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
+        'This is a no-op.\n\nPlease check the code for the Baz component.',
+    );
     const markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
   });
 
   it('should throw (in dev) when children are mutated during render', () => {
-    spyOnDev(console, 'error');
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
@@ -510,51 +497,43 @@ describe('ReactDOMServer', () => {
   });
 
   it('warns about lowercase html but not in svg tags', () => {
-    spyOnDev(console, 'error');
     function CompositeG(props) {
       // Make sure namespace passes through composites
       return <g>{props.children}</g>;
     }
-    ReactDOMServer.renderToStaticMarkup(
-      <div>
-        <inPUT />
-        <svg>
-          <CompositeG>
-            <linearGradient />
-            <foreignObject>
-              {/* back to HTML */}
-              <iFrame />
-            </foreignObject>
-          </CompositeG>
-        </svg>
-      </div>,
-    );
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
-          'HTML tags in React.',
-      );
+    expect(() =>
+      ReactDOMServer.renderToStaticMarkup(
+        <div>
+          <inPUT />
+          <svg>
+            <CompositeG>
+              <linearGradient />
+              <foreignObject>
+                {/* back to HTML */}
+                <iFrame />
+              </foreignObject>
+            </CompositeG>
+          </svg>
+        </div>,
+      ),
+    ).toWarnDev([
+      'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
+        'HTML tags in React.',
       // linearGradient doesn't warn
-      expect(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
-          'HTML tags in React.',
-      );
-    }
+      'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
+        'HTML tags in React.',
+    ]);
   });
 
   it('should warn about contentEditable and children', () => {
-    spyOnDev(console, 'error');
-    ReactDOMServer.renderToString(<div contentEditable={true} children="" />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: A component is `contentEditable` and contains `children` ' +
-          'managed by React. It is now your responsibility to guarantee that ' +
-          'none of those nodes are unexpectedly modified or duplicated. This ' +
-          'is probably not intentional.\n    in div (at **)',
-      );
-    }
+    expect(() =>
+      ReactDOMServer.renderToString(<div contentEditable={true} children="" />),
+    ).toWarnDev(
+      'Warning: A component is `contentEditable` and contains `children` ' +
+        'managed by React. It is now your responsibility to guarantee that ' +
+        'none of those nodes are unexpectedly modified or duplicated. This ' +
+        'is probably not intentional.\n    in div (at **)',
+    );
   });
 
   it('should throw rendering call/return on the server', () => {
