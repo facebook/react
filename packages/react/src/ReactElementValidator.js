@@ -308,12 +308,21 @@ export function createElementWithValidation(type, props, children) {
 
     info += getStackAddendum() || '';
 
+    let typeString;
+    if (type === null) {
+      typeString = 'null';
+    } else if (Array.isArray(type)) {
+      typeString = 'array';
+    } else {
+      typeString = typeof type;
+    }
+
     warning(
       false,
       'React.createElement: type is invalid -- expected a string (for ' +
         'built-in components) or a class/function (for composite ' +
         'components) but got: %s.%s',
-      type == null ? type : typeof type,
+      typeString,
       info,
     );
   }
