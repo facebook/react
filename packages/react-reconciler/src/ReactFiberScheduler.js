@@ -17,6 +17,7 @@ import type {CapturedValue} from './ReactCapturedValue';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
+  NoEffect,
   PerformedWork,
   Placement,
   Update,
@@ -163,8 +164,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     config,
     hostContext,
     hydrationContext,
-    captureThrownValues,
-    captureErrors,
   );
   const {
     commitResetTextContent,
@@ -484,7 +483,43 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress.expirationTime = newExpirationTime;
   }
 
-  function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
+  function captureThrownValues(): boolean {
+    if (thrownValues === null) {
+      return false;
+    }
+    capturedValues = thrownValues;
+    // Reset the list of thrown values, now that they've been captured.
+    thrownValues = null;
+    return true;
+  }
+
+  function captureErrors(): boolean {
+    if (thrownValues === null) {
+      return false;
+    }
+    let errors = null;
+    for (let i = 0; i < thrownValues.length; i++) {
+      const value = thrownValues[i];
+      if (value.isError) {
+        thrownValues.splice(i, 1);
+        if (errors === null) {
+          errors = [value];
+        } else {
+          errors.push(value);
+        }
+      }
+    }
+    if (thrownValues.length === 0) {
+      thrownValues = null;
+    }
+    capturedValues = errors;
+    return true;
+  }
+
+  function unwindUnitOfWork(workInProgress: Fiber): Fiber | null {
+    // Attempt to complete the current unit of work, then move to the
+    // next sibling. If there are no more siblings, return to the
+    // parent fiber.
     while (true) {
       // The current, flushed, state of this fiber is the alternate.
       // Ideally nothing should rely on this, but relying on it here
@@ -494,19 +529,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (__DEV__) {
         ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
       }
-      const next = completeWork(
-        current,
-        workInProgress,
-        nextRenderExpirationTime,
-      );
-      if (__DEV__) {
-        ReactDebugCurrentFiber.resetCurrentFiber();
-      }
 
-      const returnFiber = workInProgress.return;
-      const siblingFiber = workInProgress.sibling;
-
-      if (next !== workInProgress) {
+      let next;
+      if (thrownValues === null) {
+        // This fiber completed.
+        next = completeWork(current, workInProgress, nextRenderExpirationTime);
         if (workInProgress.effectTag & Err) {
           // Restarting an error boundary
           stopFailedWorkTimer(workInProgress);
@@ -515,9 +542,53 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
         resetExpirationTime(workInProgress, nextRenderExpirationTime);
       } else {
-        // This fiber did not complete.
+        // This fiber did not complete because something threw. Pop values off
+        // the stack without entering the complete phase. If this is a boundary,
+        // capture values if possible.
+        popContexts(workInProgress);
+        switch (workInProgress.tag) {
+          case ClassComponent: {
+            const instance = workInProgress.stateNode;
+            if (
+              (workInProgress.effectTag & Err) === NoEffect &&
+              instance !== null &&
+              typeof instance.componentDidCatch === 'function'
+            ) {
+              const didCapture = captureErrors();
+              if (didCapture) {
+                workInProgress.effectTag |= Err;
+                // Render the boundary again
+                next = workInProgress;
+              } else {
+                next = null;
+              }
+            } else {
+              next = null;
+            }
+            break;
+          }
+          case HostRoot:
+            const didCapture = captureThrownValues();
+            if (didCapture) {
+              // Render the boundary again
+              next = workInProgress;
+            } else {
+              next = null;
+            }
+            break;
+          default:
+            next = null;
+        }
+        // Because this fiber did not complete, don't reset its expiration time.
         stopWorkTimer(workInProgress);
       }
+
+      if (__DEV__) {
+        ReactDebugCurrentFiber.resetCurrentFiber();
+      }
+
+      const returnFiber = workInProgress.return;
+      const siblingFiber = workInProgress.sibling;
 
       if (next !== null) {
         stopWorkTimer(workInProgress);
@@ -616,7 +687,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (next === null) {
       // If this doesn't spawn new work, complete the current work.
-      next = completeUnitOfWork(workInProgress);
+      next = unwindUnitOfWork(workInProgress);
     }
 
     ReactCurrentOwner.current = null;
@@ -643,32 +714,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
       }
     }
-  }
-
-  function unwindToNearestErrorBoundary(sourceFiber) {
-    popContexts(sourceFiber);
-    let boundaryFiber = null;
-    let fiber = sourceFiber.return;
-    traversal: while (fiber !== null) {
-      switch (fiber.tag) {
-        case ClassComponent:
-          const instance = fiber.stateNode;
-          if (
-            typeof instance.componentDidCatch === 'function' &&
-            !(fiber.effectTag & Err)
-          ) {
-            boundaryFiber = fiber;
-            break traversal;
-          }
-          break;
-        case HostRoot:
-          boundaryFiber = fiber;
-          break;
-      }
-      popContexts(fiber);
-      fiber = fiber.return;
-    }
-    return boundaryFiber;
   }
 
   function renderRoot(
@@ -745,29 +790,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       } else {
         thrownValues.push(capturedValue);
       }
-      if (capturedValue.isError) {
-        const boundaryFiber = unwindToNearestErrorBoundary(sourceFiber);
-        capturedValue.boundary = boundaryFiber;
-        if (boundaryFiber !== null) {
-          nextUnitOfWork = completeUnitOfWork(boundaryFiber);
-        } else {
-          // The root failed to render. This is a fatal error.
-          hasUncaughtError = true;
-          firstUncaughtError = thrownValue;
-          break;
-        }
+
+      // Move to next sibling, or return to parent
+      popContexts(sourceFiber);
+      if (sourceFiber.sibling !== null) {
+        nextUnitOfWork = sourceFiber.sibling;
+      } else if (sourceFiber.return !== null) {
+        nextUnitOfWork = unwindUnitOfWork(sourceFiber.return);
       } else {
-        // Move to next sibling, or return to parent
-        if (sourceFiber.sibling !== null) {
-          nextUnitOfWork = sourceFiber.sibling;
-        } else if (sourceFiber.return !== null) {
-          nextUnitOfWork = completeUnitOfWork(sourceFiber.return);
-        } else {
-          // The root failed to render. This is a fatal error.
-          hasUncaughtError = true;
-          firstUncaughtError = thrownValue;
-          break;
-        }
+        // The root failed to render. This is a fatal error.
+        hasUncaughtError = true;
+        firstUncaughtError = thrownValue;
+        break;
       }
     } while (true);
 
@@ -804,40 +838,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
     }
     stopWorkTimer(workInProgress);
-  }
-
-  // Called during complete phase
-  function captureThrownValues(): boolean {
-    if (thrownValues === null) {
-      return false;
-    }
-    capturedValues = thrownValues;
-    // Reset the list of thrown values, now that they've been captured.
-    thrownValues = null;
-    return true;
-  }
-
-  function captureErrors(): boolean {
-    if (thrownValues === null) {
-      return false;
-    }
-    let errors = null;
-    for (let i = 0; i < thrownValues.length; i++) {
-      const value = thrownValues[i];
-      if (value.isError) {
-        thrownValues.splice(i, 1);
-        if (errors === null) {
-          errors = [value];
-        } else {
-          errors.push(value);
-        }
-      }
-    }
-    if (thrownValues.length === 0) {
-      thrownValues = null;
-    }
-    capturedValues = errors;
-    return true;
   }
 
   function markUncaughtError(error: mixed): void {

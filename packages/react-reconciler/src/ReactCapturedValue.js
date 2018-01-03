@@ -28,8 +28,8 @@ export type CapturedValue<T> = {
 };
 
 // Object that is passed to the error logger module.
-// TODO: This is different for legacy reasons, but I don't think it's
-// exposed to anyone outside FB, so we can probably change it
+// TODO: CapturedError is different from CapturedValue for legacy reasons, but I
+// don't think it's exposed to anyone outside FB, so we can probably change it.
 export type CapturedError = {
   componentName: string | null,
   componentStack: string,
@@ -40,6 +40,7 @@ export type CapturedError = {
   willRetry: boolean,
 };
 
+// Call this immediately after the value is thrown.
 export function createCapturedValue<T>(
   value: T,
   source: Fiber | null,
@@ -72,6 +73,10 @@ export function logError(capturedValue: CapturedValue<mixed>): void {
   }
 }
 
+// Create a CapturedError object from a CapturedValue before it is passed to
+// the error logger.
+// TODO: CapturedError is different from CapturedValue for legacy reasons, but I
+// don't think it's exposed to anyone outside FB, so we can probably change it.
 function createCapturedError(
   capturedValue: CapturedValue<mixed>,
 ): CapturedError {

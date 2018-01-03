@@ -443,6 +443,7 @@ export default function(
   function callComponentDidCatch(instance: any, capturedValues: Array<mixed>) {
     for (let i = 0; i < capturedValues.length; i++) {
       const capturedValue: CapturedValue<mixed> = (capturedValues[i]: any);
+      // For now, we can assume these are all errors.
       logError(capturedValue);
       const error = capturedValue.value;
       instance.componentDidCatch(error);

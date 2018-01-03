@@ -819,7 +819,7 @@ describe('ReactErrorBoundaries', () => {
     expect(log).toEqual(['ErrorBoundary componentWillUnmount']);
   });
 
-  it('propagates errors inside boundary during componentWillMount', () => {
+  fit('propagates errors inside boundary during componentWillMount', () => {
     const container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
@@ -909,6 +909,10 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
+      // Continue rendering siblings
+      'Normal constructor',
+      'Normal componentWillMount',
+      'Normal render',
       // Capture the error
       'ErrorBoundary componentDidCatch',
       // Render the error message
