@@ -17,7 +17,6 @@ let TestComponent;
 describe('ReactCompositeComponent-state', () => {
   beforeEach(() => {
     React = require('react');
-
     ReactDOM = require('react-dom');
 
     TestComponent = class extends React.Component {
@@ -381,8 +380,6 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should treat assigning to this.state inside cWRP as a replaceState, with a warning', () => {
-    spyOnDev(console, 'error');
-
     let ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
@@ -409,27 +406,20 @@ describe('ReactCompositeComponent-state', () => {
     const container = document.createElement('div');
     ReactDOM.render(<Test />, container);
     // Update
-    ReactDOM.render(<Test />, container);
+    expect(() => ReactDOM.render(<Test />, container)).toWarnDev(
+      'Warning: Test.componentWillReceiveProps(): Assigning directly to ' +
+        "this.state is deprecated (except inside a component's constructor). " +
+        'Use setState instead.',
+    );
 
     expect(ops).toEqual([
       'render -- step: 1, extra: true',
       'render -- step: 3, extra: false',
       'callback -- step: 3, extra: false',
     ]);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toEqual(1);
-      expect(console.error.calls.argsFor(0)[0]).toEqual(
-        'Warning: Test.componentWillReceiveProps(): Assigning directly to ' +
-          "this.state is deprecated (except inside a component's constructor). " +
-          'Use setState instead.',
-      );
-    }
 
-    // Check deduplication
+    // Check deduplication; (no additional warnings are expected)
     ReactDOM.render(<Test />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toEqual(1);
-    }
   });
 
   it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {
@@ -459,19 +449,15 @@ describe('ReactCompositeComponent-state', () => {
 
     // Mount
     const container = document.createElement('div');
-    ReactDOM.render(<Test />, container);
+    expect(() => ReactDOM.render(<Test />, container)).toWarnDev(
+      'Warning: Test.componentWillMount(): Assigning directly to ' +
+        "this.state is deprecated (except inside a component's constructor). " +
+        'Use setState instead.',
+    );
 
     expect(ops).toEqual([
       'render -- step: 3, extra: false',
       'callback -- step: 3, extra: false',
     ]);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toEqual(1);
-      expect(console.error.calls.argsFor(0)[0]).toEqual(
-        'Warning: Test.componentWillMount(): Assigning directly to ' +
-          "this.state is deprecated (except inside a component's constructor). " +
-          'Use setState instead.',
-      );
-    }
   });
 });

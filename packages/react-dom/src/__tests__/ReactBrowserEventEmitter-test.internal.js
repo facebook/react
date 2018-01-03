@@ -277,15 +277,11 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(CHILD, ON_CLICK_KEY, recordIDAndReturnFalse.bind(null, CHILD));
     putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    spyOnDev(console, 'error');
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
     expect(idCallOrder[0]).toBe(CHILD);
     expect(idCallOrder[1]).toBe(PARENT);
     expect(idCallOrder[2]).toBe(GRANDPARENT);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toEqual(0);
-    }
   });
 
   /**

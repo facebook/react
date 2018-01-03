@@ -10,10 +10,6 @@
 'use strict';
 
 describe('ReactDOMOption', () => {
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   let React;
   let ReactDOM;
   let ReactTestUtils;
@@ -37,24 +33,21 @@ describe('ReactDOMOption', () => {
   });
 
   it('should ignore and warn invalid children types', () => {
-    spyOnDev(console, 'error');
     const el = (
       <option>
         {1} <div /> {2}
       </option>
     );
-    const node = ReactTestUtils.renderIntoDocument(el);
+    let node;
+    expect(() => {
+      node = ReactTestUtils.renderIntoDocument(el);
+    }).toWarnDev(
+      '<div> cannot appear as a child of <option>.\n' +
+        '    in div (at **)\n' +
+        '    in option (at **)',
+    );
     expect(node.innerHTML).toBe('1  2');
     ReactTestUtils.renderIntoDocument(el);
-    if (__DEV__) {
-      // only warn once
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
-        '<div> cannot appear as a child of <option>.\n' +
-          '    in div (at **)\n' +
-          '    in option (at **)',
-      );
-    }
   });
 
   it('should ignore null/undefined/false children without warning', () => {
@@ -66,14 +59,9 @@ describe('ReactDOMOption', () => {
         {undefined} {2}
       </option>
     );
-    spyOnDev(console, 'error');
     stub = ReactTestUtils.renderIntoDocument(stub);
 
     const node = ReactDOM.findDOMNode(stub);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
     expect(node.innerHTML).toBe('1  2');
   });
 
