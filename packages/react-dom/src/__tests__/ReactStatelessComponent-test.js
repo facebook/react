@@ -19,10 +19,6 @@ function StatelessComponent(props) {
 }
 
 describe('ReactStatelessComponent', () => {
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   beforeEach(() => {
     jest.resetModuleRegistry();
     PropTypes = require('prop-types');

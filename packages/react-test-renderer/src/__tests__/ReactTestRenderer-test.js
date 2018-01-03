@@ -42,10 +42,6 @@ function cleanNodeOrArray(node) {
 }
 
 describe('ReactTestRenderer', () => {
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   it('renders a simple component', () => {
     function Link() {
       return <a role="link" />;
