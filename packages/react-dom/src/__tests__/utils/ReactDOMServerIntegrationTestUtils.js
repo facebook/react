@@ -321,6 +321,7 @@ module.exports = function(initModules) {
     itThrowsWhenRendering,
     asyncReactDOMRender,
     serverRender,
+    clientCleanRender,
     clientRenderOnServerString,
     renderIntoDom,
     streamRender,

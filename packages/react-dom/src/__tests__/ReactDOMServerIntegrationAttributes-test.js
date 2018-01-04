@@ -29,7 +29,11 @@ function initModules() {
   };
 }
 
-const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
+const {
+  resetModules,
+  itRenders,
+  clientCleanRender,
+} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
@@ -494,7 +498,20 @@ describe('ReactDOMServerIntegration', () => {
           </svg>,
           1,
         );
-        expect(e.firstChild.getAttribute('textLength')).toBe('10');
+        // The discrepancy is expected as long as we emit a warning
+        // both on the client and the server.
+        if (render === clientCleanRender) {
+          // On the client, "textlength" is treated as a case-sensitive
+          // SVG attribute so the wrong attribute ("textlength") gets set.
+          expect(e.firstChild.getAttribute('textlength')).toBe('10');
+          expect(e.firstChild.hasAttribute('textLength')).toBe(false);
+        } else {
+          // When parsing HTML (including the hydration case), the browser
+          // correctly maps "textlength" to "textLength" SVG attribute.
+          // So it happens to work on the initial render.
+          expect(e.firstChild.getAttribute('textLength')).toBe('10');
+          expect(e.firstChild.hasAttribute('textlength')).toBe(false);
+        }
       });
 
       itRenders('no badly cased aliased SVG attribute alias', async render => {
