@@ -19,8 +19,10 @@ const createMatcherFor = consoleMethod =>
 
       const unexpectedWarnings = [];
 
-      // In order to avoid possible false positives from failed validations,
-      // Hang onto any thrown Errors and re-throw them only if all validations pass.
+      // Catch errors thrown by the callback,
+      // But only rethrow them if all test expectations have been satisfied.
+      // Otherwise an Error in the callback can mask a failed expectation,
+      // and result in a test that passes when it shouldn't.
       let caughtError;
 
       const consoleSpy = message => {
@@ -87,6 +89,7 @@ const createMatcherFor = consoleMethod =>
           };
         }
 
+        // Any unexpected Errors thrown by the callback should fail the test.
         if (caughtError) {
           throw caughtError;
         }
