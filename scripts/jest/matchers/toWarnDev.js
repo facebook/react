@@ -19,6 +19,10 @@ const createMatcherFor = consoleMethod =>
 
       const unexpectedWarnings = [];
 
+      // In order to avoid possible false positives from failed validations,
+      // Hang onto any thrown Errors and re-throw them only if all validations pass.
+      let caughtError;
+
       const consoleSpy = message => {
         const normalizedMessage = normalizeCodeLocInfo(message);
 
@@ -58,6 +62,11 @@ const createMatcherFor = consoleMethod =>
 
       try {
         callback();
+      } catch (error) {
+        caughtError = error;
+      } finally {
+        // Restore the unspied method so that unexpected errors fail tests.
+        console[consoleMethod] = originalMethod;
 
         // Any unexpected warnings should be treated as a failure.
         if (unexpectedWarnings.length > 0) {
@@ -72,20 +81,17 @@ const createMatcherFor = consoleMethod =>
           return {
             message: () =>
               `Expected warning was not recorded:\n  ${this.utils.printReceived(
-                expectedMessages.join('\n')
+                expectedMessages[0]
               )}`,
             pass: false,
           };
         }
 
+        if (caughtError) {
+          throw caughtError;
+        }
+
         return {pass: true};
-      } catch (error) {
-        // TODO Flag this error so Jest doesn't override its stack
-        // See https://tinyurl.com/y9unakwb
-        throw error;
-      } finally {
-        // Restore the unspied method so that unexpected errors fail tests.
-        console[consoleMethod] = originalMethod;
       }
     } else {
       // Any uncaught errors or warnings should fail tests in production mode.
