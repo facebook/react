@@ -15,13 +15,13 @@ const push = async ({cwd, dry, packages, version}) => {
 
   const publishProject = async project => {
     try {
-      const path = join(cwd, 'build', 'packages', project);
+      const path = join(cwd, 'build', 'node_modules', project);
       await execUnlessDry(`npm publish --tag ${tag}`, {cwd: path, dry});
 
       const packagePath = join(
         cwd,
         'build',
-        'packages',
+        'node_modules',
         project,
         'package.json'
       );

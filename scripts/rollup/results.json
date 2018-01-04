@@ -4,8 +4,8 @@
       "filename": "react.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react",
-      "size": 55220,
-      "gzip": 14986
+      "size": 55396,
+      "gzip": 15025
     },
     {
       "filename": "react.production.min.js",
@@ -18,8 +18,8 @@
       "filename": "react.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react",
-      "size": 45636,
-      "gzip": 12675
+      "size": 45812,
+      "gzip": 12711
     },
     {
       "filename": "react.production.min.js",
@@ -32,8 +32,8 @@
       "filename": "React-dev.js",
       "bundleType": "FB_DEV",
       "packageName": "react",
-      "size": 44974,
-      "gzip": 12197
+      "size": 45150,
+      "gzip": 12229
     },
     {
       "filename": "React-prod.js",
@@ -46,43 +46,43 @@
       "filename": "react-dom.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 560424,
-      "gzip": 132739
+      "size": 560105,
+      "gzip": 132646
     },
     {
       "filename": "react-dom.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 93669,
-      "gzip": 30753
+      "size": 93530,
+      "gzip": 30695
     },
     {
       "filename": "react-dom.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 544457,
-      "gzip": 128965
+      "size": 544138,
+      "gzip": 128866
     },
     {
       "filename": "react-dom.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 92090,
-      "gzip": 29815
+      "size": 91951,
+      "gzip": 29748
     },
     {
       "filename": "ReactDOM-dev.js",
       "bundleType": "FB_DEV",
       "packageName": "react-dom",
-      "size": 561931,
-      "gzip": 131204
+      "size": 561584,
+      "gzip": 131098
     },
     {
       "filename": "ReactDOM-prod.js",
       "bundleType": "FB_PROD",
       "packageName": "react-dom",
-      "size": 265369,
-      "gzip": 51278
+      "size": 264984,
+      "gzip": 51187
     },
     {
       "filename": "react-dom-test-utils.development.js",
