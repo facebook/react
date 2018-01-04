@@ -15,25 +15,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // https://github.com/facebook/jest/blob/v20.0.4/packages/jest-matchers/src/spyMatchers.js#L160
   const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
 
-  // This is the Jasmine spyOn() method.
-  // Unlike jest.spyOn(), it does not pass through to the method it spies on by default.
-  const jasmineSpyOn = global.spyOn;
-
+  const spyOn = global.spyOn;
   const noop = function() {};
-  const spyOn = function(object, methodName, ignoreConsoleWarning) {
-    if (
-      object === console &&
-      (methodName === 'warn' || methodName === 'error') &&
-      ignoreConsoleWarning !== true
-    ) {
-      throw new Error(
-        'Do not spy on the console directly. ' +
-          'Use toWarnDev() or toLowPriorityWarnDev() instead.'
-      );
-    }
-
-    return jasmineSpyOn(object, methodName);
-  };
 
   // Spying on console methods in production builds can mask errors.
   // This is why we added an explicit spyOnDev() helper.
