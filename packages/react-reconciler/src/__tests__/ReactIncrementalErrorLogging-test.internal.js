@@ -13,7 +13,7 @@
 let React;
 let ReactNoop;
 
-// NOTE: This test requires traditional spies for console.error verification.
+// This test requires traditional spies for console.error verification.
 // The .toWarnDev() matcher treates unexpected warnings as errors.
 // Unfortunately, if an error boundary is active, ReactFiberScheduler swallows
 // any Errors that are thrown synchronously by .toWarnDev().

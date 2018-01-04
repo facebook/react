@@ -24,7 +24,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     if (
       object === console &&
       (methodName === 'warn' || methodName === 'error') &&
-      !ignoreConsoleWarning
+      ignoreConsoleWarning !== true
     ) {
       throw new Error(
         'Do not spy on the console directly. ' +
