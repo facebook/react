@@ -43,7 +43,7 @@ module.exports = function(initModules) {
     } else {
       // TODO: Rewrite tests that use this helper to enumerate expeceted errors.
       // This will enable the helper to use the .toWarnDev() matcher instead of spying.
-      spyOnDev(console, 'error', true);
+      spyOnDev(console, 'error');
     }
 
     const result = await fn();
