@@ -1162,12 +1162,14 @@ describe('ReactDOMComponent', () => {
       expect(returnedValue).toContain('</menuitem>');
 
       expect(function() {
-        ReactDOM.render(
-          <menu>
-            <menuitem>children</menuitem>
-          </menu>,
-          container,
-        );
+        expect(() => {
+          ReactDOM.render(
+            <menu>
+              <menuitem>children</menuitem>
+            </menu>,
+            container,
+          );
+        }).toWarnDev('The tag <menuitem> is unrecognized in this browser.');
       }).toThrowError(
         'menuitem is a void element tag and must neither have `children` nor use ' +
           '`dangerouslySetInnerHTML`.',
