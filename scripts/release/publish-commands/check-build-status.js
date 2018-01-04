@@ -8,7 +8,13 @@ const {readJson} = require('fs-extra');
 const {join} = require('path');
 
 module.exports = async ({cwd, version}) => {
-  const packagePath = join(cwd, 'build', 'packages', 'react', 'package.json');
+  const packagePath = join(
+    cwd,
+    'build',
+    'node_modules',
+    'react',
+    'package.json'
+  );
 
   if (!existsSync(packagePath)) {
     throw Error('No build found');
