@@ -349,7 +349,7 @@ export function createElementWithValidation(type, props, children) {
 export function createFactoryWithValidation(type) {
   const validatedFactory = createElementWithValidation.bind(null, type);
   validatedFactory.type = type;
-
+  // Legacy hook: remove it
   if (__DEV__) {
     Object.defineProperty(validatedFactory, 'type', {
       enumerable: false,
