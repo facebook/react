@@ -266,7 +266,7 @@ export function createFactory(type) {
   // easily accessed on elements. E.g. `<Foo />.type === Foo`.
   // This should not be named `constructor` since this may not be the function
   // that created the element, and it may not even be a constructor.
-  // Legacy hook TODO: Warn if this is accessed
+  // Legacy hook: remove it
   factory.type = type;
   return factory;
 }
