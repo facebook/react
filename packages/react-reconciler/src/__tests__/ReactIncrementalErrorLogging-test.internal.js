@@ -13,6 +13,13 @@
 let React;
 let ReactNoop;
 
+// NOTE: This test requires traditional spies for console.error verification.
+// The .toWarnDev() matcher treates unexpected warnings as errors.
+// Unfortunately, if an error boundary is active, ReactFiberScheduler swallows
+// any Errors that are thrown synchronously by .toWarnDev().
+// And Errors that are queued to be returned later by the matcher are preempted
+// by the errors intentionally thrown by the Components in this test.
+// This means the matcher could only produce false positives.
 describe('ReactIncrementalErrorLogging', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -25,7 +32,7 @@ describe('ReactIncrementalErrorLogging', () => {
   }
 
   it('should log errors that occur during the begin phase', () => {
-    spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'error', true);
 
     class ErrorThrowingComponent extends React.Component {
       componentWillMount() {
@@ -70,7 +77,7 @@ describe('ReactIncrementalErrorLogging', () => {
   });
 
   it('should log errors that occur during the commit phase', () => {
-    spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'error', true);
 
     class ErrorThrowingComponent extends React.Component {
       componentDidMount() {
@@ -120,7 +127,7 @@ describe('ReactIncrementalErrorLogging', () => {
     try {
       React = require('react');
       ReactNoop = require('react-noop-renderer');
-      spyOnDevAndProd(console, 'error');
+      spyOnDevAndProd(console, 'error', true);
 
       class ErrorThrowingComponent extends React.Component {
         render() {
@@ -167,7 +174,7 @@ describe('ReactIncrementalErrorLogging', () => {
   });
 
   it('should relay info about error boundary and retry attempts if applicable', () => {
-    spyOnDevAndProd(console, 'error');
+    spyOnDevAndProd(console, 'error', true);
 
     class ParentComponent extends React.Component {
       render() {

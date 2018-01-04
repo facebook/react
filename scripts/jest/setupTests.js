@@ -20,15 +20,19 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   const jasmineSpyOn = global.spyOn;
 
   const noop = function() {};
-  const spyOn = function(object, methodName) {
-    if (object === console) {
+  const spyOn = function(object, methodName, ignoreConsoleWarning) {
+    if (
+      object === console &&
+      (methodName === 'warn' || methodName === 'error') &&
+      !ignoreConsoleWarning
+    ) {
       throw new Error(
         'Do not spy on the console directly. ' +
           'Use toWarnDev() or toLowPriorityWarnDev() instead.'
       );
     }
 
-    jasmineSpyOn(object, methodName);
+    return jasmineSpyOn(object, methodName);
   };
 
   // Spying on console methods in production builds can mask errors.
