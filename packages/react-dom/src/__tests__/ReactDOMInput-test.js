@@ -261,6 +261,34 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('0');
   });
 
+  it('updates the value on radio buttons from "" to 0', function() {
+    const container = document.createElement('div');
+    ReactDOM.render(
+      <input type="radio" value="" onChange={function() {}} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="radio" value={0} onChange={function() {}} />,
+      container,
+    );
+    expect(container.firstChild.value).toBe('0');
+    expect(container.firstChild.getAttribute('value')).toBe('0');
+  });
+
+  it('updates the value on checkboxes from "" to 0', function() {
+    const container = document.createElement('div');
+    ReactDOM.render(
+      <input type="checkbox" value="" onChange={function() {}} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="checkbox" value={0} onChange={function() {}} />,
+      container,
+    );
+    expect(container.firstChild.value).toBe('0');
+    expect(container.firstChild.getAttribute('value')).toBe('0');
+  });
+
   it('distinguishes precision for extra zeroes in string number values', () => {
     class Stub extends React.Component {
       state = {

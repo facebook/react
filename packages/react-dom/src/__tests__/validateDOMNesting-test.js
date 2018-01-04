@@ -17,7 +17,12 @@ function expectWarnings(tags, warnings = []) {
   warnings = [...warnings];
 
   let element = null;
-  const container = document.createElement(tags.splice(0, 1));
+  const containerTag = tags.shift();
+  const container =
+    containerTag === 'svg'
+      ? document.createElementNS('http://www.w3.org/2000/svg', containerTag)
+      : document.createElement(containerTag);
+
   while (tags.length) {
     const Tag = tags.pop();
     element = <Tag>{element}</Tag>;
@@ -108,7 +113,6 @@ describe('validateDOMNesting', () => {
         'validateDOMNesting(...): <body> cannot appear as a child of <foreignObject>.\n' +
           '    in body (at **)\n' +
           '    in foreignObject (at **)',
-        '<foreignObject /> is using uppercase HTML',
       ],
     );
   });

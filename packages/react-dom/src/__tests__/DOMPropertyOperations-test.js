@@ -34,7 +34,10 @@ describe('DOMPropertyOperations', () => {
     });
 
     it('should set values as namespace attributes if necessary', () => {
-      const container = document.createElement('svg');
+      const container = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'svg',
+      );
       ReactDOM.render(<image xlinkHref="about:blank" />, container);
       expect(
         container.firstChild.getAttributeNS(
@@ -112,22 +115,6 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.hasAttribute('hidden')).toBe(true);
       ReactDOM.render(<div hidden={false} />, container);
       expect(container.firstChild.hasAttribute('hidden')).toBe(false);
-    });
-  });
-
-  describe('value mutation method', function() {
-    it('should update an empty attribute to zero', function() {
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <input type="radio" value="" onChange={function() {}} />,
-        container,
-      );
-      spyOnDevAndProd(container.firstChild, 'setAttribute');
-      ReactDOM.render(
-        <input type="radio" value={0} onChange={function() {}} />,
-        container,
-      );
-      expect(container.firstChild.setAttribute.calls.count()).toBe(1);
     });
 
     it('should always assign the value attribute for non-inputs', function() {

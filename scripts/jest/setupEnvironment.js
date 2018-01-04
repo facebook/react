@@ -31,6 +31,20 @@ global.cancelIdleCallback = function(callbackID) {
 // for the few that specifically test the logging by shadowing this
 // property. In real apps, it would usually not be defined at all.
 Error.prototype.suppressReactErrorLogging = true;
-if (typeof DOMException === 'function') {
+
+if (typeof window !== 'undefined') {
+  // Same as above.
   DOMException.prototype.suppressReactErrorLogging = true;
+
+  // Also prevent JSDOM from logging intentionally thrown errors.
+  // TODO: it might make sense to do it the other way around.
+  // https://github.com/facebook/react/issues/11098#issuecomment-355032539
+  window.addEventListener('error', event => {
+    if (event.error != null && event.error.suppressReactErrorLogging) {
+      event.preventDefault();
+    }
+  });
+
+  // Mock for ReactART.
+  HTMLCanvasElement.prototype.getContext = () => ({});
 }

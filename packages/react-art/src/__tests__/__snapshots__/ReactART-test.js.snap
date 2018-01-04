@@ -3,7 +3,7 @@
 exports[`ReactARTComponents should generate a <Shape> with props for drawing the Circle 1`] = `
 <Shape
   d={
-     {
+    Object {
       "_pivotX": 0,
       "_pivotY": -10,
       "path": Array [
@@ -28,7 +28,7 @@ exports[`ReactARTComponents should generate a <Shape> with props for drawing the
 exports[`ReactARTComponents should generate a <Shape> with props for drawing the Rectangle 1`] = `
 <Shape
   d={
-     {
+    Object {
       "_pivotX": 0,
       "_pivotY": 0,
       "path": Array [
@@ -54,7 +54,7 @@ exports[`ReactARTComponents should generate a <Shape> with props for drawing the
 exports[`ReactARTComponents should generate a <Shape> with props for drawing the Wedge 1`] = `
 <Shape
   d={
-     {
+    Object {
       "_pivotX": 0,
       "_pivotY": 50,
       "path": Array [

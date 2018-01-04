@@ -29,7 +29,11 @@ function initModules() {
   };
 }
 
-const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
+const {
+  resetModules,
+  itRenders,
+  clientCleanRender,
+} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
@@ -488,21 +492,49 @@ describe('ReactDOMServerIntegration', () => {
       );
 
       itRenders('badly cased SVG attribute with a warning', async render => {
-        const e = await render(<text textlength="10" />, 1);
-        expect(e.getAttribute('textLength')).toBe('10');
+        const e = await render(
+          <svg>
+            <text textlength="10" />
+          </svg>,
+          1,
+        );
+        // The discrepancy is expected as long as we emit a warning
+        // both on the client and the server.
+        if (render === clientCleanRender) {
+          // On the client, "textlength" is treated as a case-sensitive
+          // SVG attribute so the wrong attribute ("textlength") gets set.
+          expect(e.firstChild.getAttribute('textlength')).toBe('10');
+          expect(e.firstChild.hasAttribute('textLength')).toBe(false);
+        } else {
+          // When parsing HTML (including the hydration case), the browser
+          // correctly maps "textlength" to "textLength" SVG attribute.
+          // So it happens to work on the initial render.
+          expect(e.firstChild.getAttribute('textLength')).toBe('10');
+          expect(e.firstChild.hasAttribute('textlength')).toBe(false);
+        }
       });
 
       itRenders('no badly cased aliased SVG attribute alias', async render => {
-        const e = await render(<text strokedasharray="10 10" />, 1);
-        expect(e.hasAttribute('stroke-dasharray')).toBe(false);
-        expect(e.getAttribute('strokedasharray')).toBe('10 10');
+        const e = await render(
+          <svg>
+            <text strokedasharray="10 10" />
+          </svg>,
+          1,
+        );
+        expect(e.firstChild.hasAttribute('stroke-dasharray')).toBe(false);
+        expect(e.firstChild.getAttribute('strokedasharray')).toBe('10 10');
       });
 
       itRenders(
         'no badly cased original SVG attribute that is aliased',
         async render => {
-          const e = await render(<text stroke-dasharray="10 10" />, 1);
-          expect(e.getAttribute('stroke-dasharray')).toBe('10 10');
+          const e = await render(
+            <svg>
+              <text stroke-dasharray="10 10" />
+            </svg>,
+            1,
+          );
+          expect(e.firstChild.getAttribute('stroke-dasharray')).toBe('10 10');
         },
       );
     });
@@ -558,6 +590,16 @@ describe('ReactDOMServerIntegration', () => {
       );
 
       itRenders('custom attributes for non-standard elements', async render => {
+        // This test suite generally assumes that we get exactly
+        // the same warnings (or none) for all scenarios including
+        // SSR + innerHTML, hydration, and client-side rendering.
+        // However this particular warning fires only when creating
+        // DOM nodes on the client side. We force it to fire early
+        // so that it gets deduplicated later, and doesn't fail the test.
+        expect(() => {
+          ReactDOM.render(<nonstandard />, document.createElement('div'));
+        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.');
+
         const e = await render(<nonstandard foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
       });

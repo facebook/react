@@ -134,6 +134,16 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('a non-standard element with text', async render => {
+        // This test suite generally assumes that we get exactly
+        // the same warnings (or none) for all scenarios including
+        // SSR + innerHTML, hydration, and client-side rendering.
+        // However this particular warning fires only when creating
+        // DOM nodes on the client side. We force it to fire early
+        // so that it gets deduplicated later, and doesn't fail the test.
+        expect(() => {
+          ReactDOM.render(<nonstandard />, document.createElement('div'));
+        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.');
+
         const e = await render(<nonstandard>Text</nonstandard>);
         expect(e.tagName).toBe('NONSTANDARD');
         expect(e.childNodes.length).toBe(1);

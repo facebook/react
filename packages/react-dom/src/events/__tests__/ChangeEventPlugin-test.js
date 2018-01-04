@@ -379,10 +379,10 @@ describe('ChangeEventPlugin', () => {
       container,
     );
 
-    setUntrackedValue.call(input, 'foo');
+    setUntrackedValue.call(input, 10);
     input.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
 
-    setUntrackedValue.call(input, 'bar');
+    setUntrackedValue.call(input, 20);
     input.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
 
     expect(called).toBe(2);
