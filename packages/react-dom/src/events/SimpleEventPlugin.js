@@ -245,6 +245,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
           return null;
         }
       /* falls through */
+      case DOMTopLevelEventTypes.TOP_AUX_CLICK:
       case DOMTopLevelEventTypes.TOP_DOUBLE_CLICK:
       case DOMTopLevelEventTypes.TOP_MOUSE_DOWN:
       case DOMTopLevelEventTypes.TOP_MOUSE_MOVE:

@@ -17,7 +17,6 @@
 const DOMEventPluginOrder = [
   'ResponderEventPlugin',
   'SimpleEventPlugin',
-  'AuxClickEventPlugin',
   'TapEventPlugin',
   'EnterLeaveEventPlugin',
   'ChangeEventPlugin',

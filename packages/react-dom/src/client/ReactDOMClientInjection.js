@@ -9,7 +9,6 @@ import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginUtils from 'events/EventPluginUtils';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
-import AuxClickEventPlugin from '../events/AuxClickEventPlugin';
 import BeforeInputEventPlugin from '../events/BeforeInputEventPlugin';
 import ChangeEventPlugin from '../events/ChangeEventPlugin';
 import DOMEventPluginOrder from '../events/DOMEventPluginOrder';
@@ -29,7 +28,6 @@ EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
  */
 EventPluginHub.injection.injectEventPluginsByName({
   SimpleEventPlugin: SimpleEventPlugin,
-  AuxClickEventPlugin: AuxClickEventPlugin,
   EnterLeaveEventPlugin: EnterLeaveEventPlugin,
   ChangeEventPlugin: ChangeEventPlugin,
   SelectEventPlugin: SelectEventPlugin,
