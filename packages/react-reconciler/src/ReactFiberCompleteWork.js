@@ -195,6 +195,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         oldProps: P,
         newProps: P,
         rootContainerInstance: C,
+        currentHostContext: CX,
       ) {
         // TODO: Type this specific to this type of component.
         workInProgress.updateQueue = (updatePayload: any);
@@ -288,6 +289,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         oldProps: P,
         newProps: P,
         rootContainerInstance: C,
+        currentHostContext: CX,
       ) {
         // If there are no effects associated with this node, then none of our children had any updates.
         // This guarantees that we can reuse all of them.
@@ -309,7 +311,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             childrenUnchanged,
             recyclableInstance,
           );
-          const currentHostContext = getHostContext();
           if (
             finalizeInitialChildren(
               newInstance,
@@ -371,6 +372,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         oldProps: P,
         newProps: P,
         rootContainerInstance: C,
+        currentHostContext: CX,
       ) {
         // Noop
       };
@@ -452,6 +454,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             oldProps,
             newProps,
             rootContainerInstance,
+            currentHostContext,
           );
 
           if (current.ref !== workInProgress.ref) {
