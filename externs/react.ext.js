@@ -76,6 +76,11 @@ React.Component = function() {};
 /**
  * @type {Object}
  */
+React.Component.prototype.isReactComponent;
+
+/**
+ * @type {Object}
+ */
 React.Component.prototype.props;
 
 /**
@@ -1751,6 +1756,12 @@ React.Fragment = function() {};
 /* Non-public API needed to compile react and react-dom independently */
 
 React.ReactElement.prototype.$$typeof;
+React.ReactElement.prototype.type;
+React.ReactElement.prototype.key;
+React.ReactElement.prototype.ref;
+React.ReactElement.prototype.props;
+React.ReactElement.prototype._owner;
+
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {};
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.assign;
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
