@@ -1,0 +1,17 @@
+{
+  "excludeGlob": [
+    "node_modules/**",
+    "packages/**/__mocks__/*.js",
+    "packages/**/__tests__/*.js"
+  ],
+  "includeGlob": [
+    "packages/**/src/**/*.js"
+  ],
+  "outputDir": "flow-coverage",
+  "threshold": 90,
+  "type": [
+    "html",
+    "json",
+    "text"
+  ]
+}
