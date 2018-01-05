@@ -25,8 +25,8 @@
       "filename": "react.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react",
-      "size": 5341,
-      "gzip": 2343
+      "size": 4545,
+      "gzip": 2122
     },
     {
       "filename": "React-dev.js",
@@ -67,8 +67,8 @@
       "filename": "react-dom.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 91951,
-      "gzip": 29748
+      "size": 69369,
+      "gzip": 26032
     },
     {
       "filename": "ReactDOM-dev.js",

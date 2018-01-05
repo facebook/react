@@ -172,8 +172,16 @@ function getClosureExterns(packageName, externals, bundleType) {
 
   externs.push(`externs/${packageName}-${bundleType}.ext.js`);
 
+  const used = {};
   // TODO: directly pass in correct paths to gcc
   const src = externs
+    .filter(fileName => {
+      if (used[fileName]) {
+        return false;
+      }
+      used[fileName] = true;
+      return true;
+    })
     .filter(fs.existsSync)
     .map(fileName => {
       console.log(`Using externs from ${fileName}`);
