@@ -388,9 +388,7 @@ function makeSimulator(eventType) {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we we're by-passing it here.
       ReactControlledComponent.enqueueStateRestore(domNode);
-
-      EventPluginHub.enqueueEvents(event);
-      EventPluginHub.processEventQueue(true);
+      EventPluginHub.runEventsInBatch(event, true);
     });
   };
 }
