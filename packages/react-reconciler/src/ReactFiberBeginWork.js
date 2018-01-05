@@ -13,6 +13,7 @@ import type {HostContext} from './ReactFiberHostContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {
   IndeterminateComponent,
@@ -31,11 +32,11 @@ import {
   PerformedWork,
   Placement,
   ContentReset,
-  Err,
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
+import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
@@ -57,7 +58,9 @@ import {
   pushTopLevelContextObject,
   invalidateContextProvider,
 } from './ReactFiberContext';
+
 import {NoWork, Never} from './ReactFiberExpirationTime';
+import {logError} from './ReactCapturedValue';
 
 let warnedAboutStatelessRefs;
 
@@ -71,6 +74,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   hydrationContext: HydrationContext<C, CX>,
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  markUncaughtError: (error: mixed) => void,
 ) {
   const {
     shouldSetTextContent,
@@ -90,7 +94,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     adoptClassInstance,
     constructClassInstance,
     mountClassInstance,
-    // resumeMountClassInstance,
+    resumeMountClassInstance,
     updateClassInstance,
   } = ReactFiberClassComponent(
     scheduleWork,
@@ -105,6 +109,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       current,
       workInProgress,
       nextChildren,
+      false,
       workInProgress.expirationTime,
     );
   }
@@ -113,6 +118,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     current,
     workInProgress,
     nextChildren,
+    deleteExistingChildren,
     renderExpirationTime,
   ) {
     if (current === null) {
@@ -124,6 +130,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         null,
         nextChildren,
+        deleteExistingChildren,
         renderExpirationTime,
       );
     } else {
@@ -137,6 +144,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         current.child,
         nextChildren,
+        deleteExistingChildren,
         renderExpirationTime,
       );
     }
@@ -204,16 +212,30 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function updateClassComponent(
     current: Fiber | null,
     workInProgress: Fiber,
+    capturedValues: Array<CapturedValue<mixed>> | null,
     renderExpirationTime: ExpirationTime,
   ) {
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
     const hasContext = pushContextProvider(workInProgress);
+    const instance = workInProgress.stateNode;
+
+    let didCaptureError = false;
+    if (capturedValues !== null) {
+      didCaptureError = true;
+      invariant(instance !== null, 'Expected class to have an instance.');
+      // TODO: Pattern matching. Check that this is an error.
+      const capturedValue: CapturedValue<mixed> = (capturedValues[0]: any);
+      if (capturedValue.isError) {
+        logError(capturedValue);
+        instance.componentDidCatch(capturedValue.value);
+      }
+    }
 
     let shouldUpdate;
     if (current === null) {
-      if (!workInProgress.stateNode) {
+      if (instance === null) {
         // In the initial pass we might need to construct the instance.
         constructClassInstance(workInProgress, workInProgress.pendingProps);
         mountClassInstance(workInProgress, renderExpirationTime);
@@ -229,9 +251,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
         shouldUpdate = true;
       } else {
-        invariant(false, 'Resuming work not yet implemented.');
         // In a resume, we'll already have an instance we can reuse.
-        // shouldUpdate = resumeMountClassInstance(workInProgress, renderExpirationTime);
+        shouldUpdate = resumeMountClassInstance(
+          workInProgress,
+          renderExpirationTime,
+        );
       }
     } else {
       shouldUpdate = updateClassInstance(
@@ -240,11 +264,25 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         renderExpirationTime,
       );
     }
+
+    const updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null && updateQueue.capturedValues !== null) {
+      // We already called componentDidCatch inside updateClassInstance.
+      // We're checking here again so we can grab the values off the
+      // update queue.
+      // TODO: Refactor class components.
+      capturedValues = updateQueue.capturedValues;
+      updateQueue.capturedValues = null;
+      shouldUpdate = true;
+      didCaptureError = true;
+    }
     return finishClassComponent(
       current,
       workInProgress,
       shouldUpdate,
       hasContext,
+      didCaptureError,
+      renderExpirationTime,
     );
   }
 
@@ -253,11 +291,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     shouldUpdate: boolean,
     hasContext: boolean,
+    didCaptureError: boolean,
+    renderExpirationTime: ExpirationTime,
   ) {
     // Refs should update even if shouldComponentUpdate returns false
     markRef(current, workInProgress);
 
-    if (!shouldUpdate) {
+    if (!shouldUpdate && !didCaptureError) {
       // Context providers should defer to sCU for rendering
       if (hasContext) {
         invalidateContextProvider(workInProgress, false);
@@ -286,7 +326,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
-    reconcileChildren(current, workInProgress, nextChildren);
+    reconcileChildrenAtExpirationTime(
+      current,
+      workInProgress,
+      nextChildren,
+      didCaptureError,
+      renderExpirationTime,
+    );
     // Memoize props and state using the values we just used to render.
     // TODO: Restructure so we never read values from the instance.
     memoizeState(workInProgress, instance.state);
@@ -315,9 +361,53 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     pushHostContainer(workInProgress, root.containerInfo);
   }
 
-  function updateHostRoot(current, workInProgress, renderExpirationTime) {
+  function unmountFailedRoot(
+    current,
+    workInProgress,
+    capturedValues,
+    renderExpirationTime,
+  ) {
+    const capturedValue: CapturedValue<mixed> = (capturedValues[0]: any);
+    if (capturedValue.isError) {
+      logError(capturedValue);
+    } else {
+      capturedValue.isError = true;
+      const source = capturedValue.source;
+      if (source !== null) {
+        capturedValue.stack = getStackAddendumByWorkInProgressFiber(source);
+      }
+    }
+    const error = capturedValue.value;
+    markUncaughtError(error);
+
+    const didError = true;
+    reconcileChildrenAtExpirationTime(
+      current,
+      workInProgress,
+      null,
+      didError,
+      renderExpirationTime,
+    );
+    return null;
+  }
+
+  function updateHostRoot(
+    current,
+    workInProgress,
+    capturedValues,
+    renderExpirationTime,
+  ) {
     pushHostRootContext(workInProgress);
-    const updateQueue = workInProgress.updateQueue;
+    if (capturedValues !== null) {
+      return unmountFailedRoot(
+        current,
+        workInProgress,
+        capturedValues,
+        renderExpirationTime,
+      );
+    }
+
+    let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
       const state = processUpdateQueue(
@@ -328,6 +418,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         null,
         renderExpirationTime,
       );
+      updateQueue = workInProgress.updateQueue;
+      if (updateQueue !== null && updateQueue.capturedValues !== null) {
+        capturedValues = updateQueue.capturedValues;
+        updateQueue.capturedValues = null;
+        memoizeState(workInProgress, state);
+        return unmountFailedRoot(
+          current,
+          workInProgress,
+          capturedValues,
+          renderExpirationTime,
+        );
+      }
       if (prevState === state) {
         // If the state is the same as before, that's a bailout because we had
         // no work that expires at this time.
@@ -359,6 +461,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           workInProgress,
           null,
           element,
+          false,
           renderExpirationTime,
         );
       } else {
@@ -489,7 +592,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const hasContext = pushContextProvider(workInProgress);
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, renderExpirationTime);
-      return finishClassComponent(current, workInProgress, true, hasContext);
+      return finishClassComponent(
+        current,
+        workInProgress,
+        true,
+        hasContext,
+        false,
+        renderExpirationTime,
+      );
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
@@ -554,6 +664,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         workInProgress.stateNode,
         nextChildren,
+        false,
         renderExpirationTime,
       );
     } else {
@@ -561,6 +672,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         workInProgress.stateNode,
         nextChildren,
+        false,
         renderExpirationTime,
       );
     }
@@ -595,6 +707,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         null,
         nextChildren,
+        false,
         renderExpirationTime,
       );
       memoizeProps(workInProgress, nextChildren);
@@ -686,8 +799,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function beginWork(
     current: Fiber | null,
     workInProgress: Fiber,
+    capturedValues: Array<CapturedValue<mixed>> | null,
     renderExpirationTime: ExpirationTime,
   ): Fiber | null {
+    // The effect list is no longer valid.
+    workInProgress.nextEffect = null;
+    workInProgress.firstEffect = null;
+    workInProgress.lastEffect = null;
+
     if (
       workInProgress.expirationTime === NoWork ||
       workInProgress.expirationTime > renderExpirationTime
@@ -708,10 +827,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return updateClassComponent(
           current,
           workInProgress,
+          capturedValues,
           renderExpirationTime,
         );
       case HostRoot:
-        return updateHostRoot(current, workInProgress, renderExpirationTime);
+        return updateHostRoot(
+          current,
+          workInProgress,
+          capturedValues,
+          renderExpirationTime,
+        );
       case HostComponent:
         return updateHostComponent(
           current,
@@ -751,73 +876,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function beginFailedWork(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    renderExpirationTime: ExpirationTime,
-  ) {
-    // Push context providers here to avoid a push/pop context mismatch.
-    switch (workInProgress.tag) {
-      case ClassComponent:
-        pushContextProvider(workInProgress);
-        break;
-      case HostRoot:
-        pushHostRootContext(workInProgress);
-        break;
-      default:
-        invariant(
-          false,
-          'Invalid type of work. This error is likely caused by a bug in React. ' +
-            'Please file an issue.',
-        );
-    }
-
-    // Add an error effect so we can handle the error during the commit phase
-    workInProgress.effectTag |= Err;
-
-    // This is a weird case where we do "resume" work — work that failed on
-    // our first attempt. Because we no longer have a notion of "progressed
-    // deletions," reset the child to the current child to make sure we delete
-    // it again. TODO: Find a better way to handle this, perhaps during a more
-    // general overhaul of error handling.
-    if (current === null) {
-      workInProgress.child = null;
-    } else if (workInProgress.child !== current.child) {
-      workInProgress.child = current.child;
-    }
-
-    if (
-      workInProgress.expirationTime === NoWork ||
-      workInProgress.expirationTime > renderExpirationTime
-    ) {
-      return bailoutOnLowPriority(current, workInProgress);
-    }
-
-    // If we don't bail out, we're going be recomputing our children so we need
-    // to drop our effect list.
-    workInProgress.firstEffect = null;
-    workInProgress.lastEffect = null;
-
-    // Unmount the current children as if the component rendered null
-    const nextChildren = null;
-    reconcileChildrenAtExpirationTime(
-      current,
-      workInProgress,
-      nextChildren,
-      renderExpirationTime,
-    );
-
-    if (workInProgress.tag === ClassComponent) {
-      const instance = workInProgress.stateNode;
-      workInProgress.memoizedProps = instance.props;
-      workInProgress.memoizedState = instance.state;
-    }
-
-    return workInProgress.child;
-  }
-
   return {
     beginWork,
-    beginFailedWork,
   };
 }

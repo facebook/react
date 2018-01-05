@@ -143,6 +143,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       workInProgress,
       currentFirstChild,
       nextChildren,
+      false,
       renderExpirationTime,
     );
     return workInProgress.child;
@@ -411,7 +412,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
-
         if (current === null || current.child === null) {
           // If we hydrated, pop so that we can delete any remaining children
           // that weren't hydrated.

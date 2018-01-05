@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
@@ -36,6 +37,7 @@ import {
   processUpdateQueue,
 } from './ReactFiberUpdateQueue';
 import {hasContextChanged} from './ReactFiberContext';
+import {logError} from './ReactCapturedValue';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -100,7 +102,8 @@ export default function(
         callback,
         isReplace: false,
         isForced: false,
-        nextCallback: null,
+        isCapture: false,
+        capturedValue: null,
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
@@ -119,7 +122,8 @@ export default function(
         callback,
         isReplace: true,
         isForced: false,
-        nextCallback: null,
+        isCapture: false,
+        capturedValue: null,
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
@@ -138,7 +142,8 @@ export default function(
         callback,
         isReplace: false,
         isForced: true,
-        nextCallback: null,
+        isCapture: false,
+        capturedValue: null,
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
@@ -435,6 +440,16 @@ export default function(
     }
   }
 
+  function callComponentDidCatch(instance: any, capturedValues: Array<mixed>) {
+    for (let i = 0; i < capturedValues.length; i++) {
+      const capturedValue: CapturedValue<mixed> = (capturedValues[i]: any);
+      // For now, we can assume these are all errors.
+      logError(capturedValue);
+      const error = capturedValue.value;
+      instance.componentDidCatch(error);
+    }
+  }
+
   // Invokes the mount life-cycles on a previously never rendered instance.
   function mountClassInstance(
     workInProgress: Fiber,
@@ -486,110 +501,131 @@ export default function(
     }
   }
 
-  // Called on a preexisting class instance. Returns false if a resumed render
-  // could be reused.
-  // function resumeMountClassInstance(
-  //   workInProgress: Fiber,
-  //   priorityLevel: PriorityLevel,
-  // ): boolean {
-  //   const instance = workInProgress.stateNode;
-  //   resetInputPointers(workInProgress, instance);
+  function resumeMountClassInstance(
+    workInProgress: Fiber,
+    renderExpirationTime: ExpirationTime,
+  ): boolean {
+    const instance = workInProgress.stateNode;
+    resetInputPointers(workInProgress, instance);
 
-  //   let newState = workInProgress.memoizedState;
-  //   let newProps = workInProgress.pendingProps;
-  //   if (!newProps) {
-  //     // If there isn't any new props, then we'll reuse the memoized props.
-  //     // This could be from already completed work.
-  //     newProps = workInProgress.memoizedProps;
-  //     invariant(
-  //       newProps != null,
-  //       'There should always be pending or memoized props. This error is ' +
-  //         'likely caused by a bug in React. Please file an issue.',
-  //     );
-  //   }
-  //   const newUnmaskedContext = getUnmaskedContext(workInProgress);
-  //   const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
+    const oldProps = workInProgress.memoizedProps;
+    const newProps = workInProgress.pendingProps;
+    const oldContext = instance.context;
+    const newUnmaskedContext = getUnmaskedContext(workInProgress);
+    const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
-  //   const oldContext = instance.context;
-  //   const oldProps = workInProgress.memoizedProps;
+    // Note: During these life-cycles, instance.props/instance.state are what
+    // ever the previously attempted to render - not the "current". However,
+    // during componentDidUpdate we pass the "current" props.
 
-  //   if (
-  //     typeof instance.componentWillReceiveProps === 'function' &&
-  //     (oldProps !== newProps || oldContext !== newContext)
-  //   ) {
-  //     callComponentWillReceiveProps(
-  //       workInProgress,
-  //       instance,
-  //       newProps,
-  //       newContext,
-  //     );
-  //   }
+    if (
+      typeof instance.componentWillReceiveProps === 'function' &&
+      (oldProps !== newProps || oldContext !== newContext)
+    ) {
+      callComponentWillReceiveProps(
+        workInProgress,
+        instance,
+        newProps,
+        newContext,
+      );
+    }
 
-  //   // Process the update queue before calling shouldComponentUpdate
-  //   const updateQueue = workInProgress.updateQueue;
-  //   if (updateQueue !== null) {
-  //     newState = processUpdateQueue(
-  //       workInProgress,
-  //       updateQueue,
-  //       instance,
-  //       newState,
-  //       newProps,
-  //       priorityLevel,
-  //     );
-  //   }
+    // Compute the next state using the memoized state and the update queue.
+    const oldState = workInProgress.memoizedState;
+    // TODO: Previous state can be null.
+    let newState;
+    if (workInProgress.updateQueue !== null) {
+      newState = processUpdateQueue(
+        null,
+        workInProgress,
+        workInProgress.updateQueue,
+        instance,
+        newProps,
+        renderExpirationTime,
+      );
 
-  //   // TODO: Should we deal with a setState that happened after the last
-  //   // componentWillMount and before this componentWillMount? Probably
-  //   // unsupported anyway.
+      let updateQueue = workInProgress.updateQueue;
+      if (updateQueue !== null && updateQueue.capturedValues !== null) {
+        const capturedValues = updateQueue.capturedValues;
+        // Don't remove these from the update queue yet. We need them in
+        // finishClassComponent. Do the reset there.
+        // TODO: This is awkward. Refactor class components.
+        // updateQueue.capturedValues = null;
+        callComponentDidCatch(instance, capturedValues);
+        newState = processUpdateQueue(
+          null,
+          workInProgress,
+          updateQueue,
+          instance,
+          newProps,
+          renderExpirationTime,
+        );
+      }
+    } else {
+      newState = oldState;
+    }
 
-  //   if (
-  //     !checkShouldComponentUpdate(
-  //       workInProgress,
-  //       workInProgress.memoizedProps,
-  //       newProps,
-  //       workInProgress.memoizedState,
-  //       newState,
-  //       newContext,
-  //     )
-  //   ) {
-  //     // Update the existing instance's state, props, and context pointers even
-  //     // though we're bailing out.
-  //     instance.props = newProps;
-  //     instance.state = newState;
-  //     instance.context = newContext;
-  //     return false;
-  //   }
+    if (
+      oldProps === newProps &&
+      oldState === newState &&
+      !hasContextChanged() &&
+      !(
+        workInProgress.updateQueue !== null &&
+        workInProgress.updateQueue.hasForceUpdate
+      )
+    ) {
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (typeof instance.componentDidUpdate === 'function') {
+        workInProgress.effectTag |= Update;
+      }
+      return false;
+    }
 
-  //   // Update the input pointers now so that they are correct when we call
-  //   // componentWillMount
-  //   instance.props = newProps;
-  //   instance.state = newState;
-  //   instance.context = newContext;
+    const shouldUpdate = checkShouldComponentUpdate(
+      workInProgress,
+      oldProps,
+      newProps,
+      oldState,
+      newState,
+      newContext,
+    );
 
-  //   if (typeof instance.componentWillMount === 'function') {
-  //     callComponentWillMount(workInProgress, instance);
-  //     // componentWillMount may have called setState. Process the update queue.
-  //     const newUpdateQueue = workInProgress.updateQueue;
-  //     if (newUpdateQueue !== null) {
-  //       newState = processUpdateQueue(
-  //         workInProgress,
-  //         newUpdateQueue,
-  //         instance,
-  //         newState,
-  //         newProps,
-  //         priorityLevel,
-  //       );
-  //     }
-  //   }
+    if (shouldUpdate) {
+      if (typeof instance.componentWillMount === 'function') {
+        startPhaseTimer(workInProgress, 'componentWillMount');
+        instance.componentWillMount(newProps, newState, newContext);
+        stopPhaseTimer();
 
-  //   if (typeof instance.componentDidMount === 'function') {
-  //     workInProgress.effectTag |= Update;
-  //   }
+        // Simulate an async bailout/interruption by invoking lifecycle twice.
+        if (debugRenderPhaseSideEffects) {
+          instance.componentWillMount(newProps, newState, newContext);
+        }
+      }
+      if (typeof instance.componentDidMount === 'function') {
+        workInProgress.effectTag |= Update;
+      }
+    } else {
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (typeof instance.componentDidMount === 'function') {
+        workInProgress.effectTag |= Update;
+      }
 
-  //   instance.state = newState;
+      // If shouldComponentUpdate returned false, we should still update the
+      // memoized props/state to indicate that this work can be reused.
+      memoizeProps(workInProgress, newProps);
+      memoizeState(workInProgress, newState);
+    }
 
-  //   return true;
-  // }
+    // Update the existing instance's state, props, and context pointers even
+    // if shouldComponentUpdate returns false.
+    instance.props = newProps;
+    instance.state = newState;
+    instance.context = newContext;
+
+    return shouldUpdate;
+  }
 
   // Invokes the update life-cycles and returns false if it shouldn't rerender.
   function updateClassInstance(
@@ -635,6 +671,24 @@ export default function(
         newProps,
         renderExpirationTime,
       );
+
+      let updateQueue = workInProgress.updateQueue;
+      if (updateQueue !== null && updateQueue.capturedValues !== null) {
+        const capturedValues = updateQueue.capturedValues;
+        // Don't remove these from the update queue yet. We need them in
+        // finishClassComponent. Do the reset there.
+        // TODO: This is awkward. Refactor class components.
+        // updateQueue.capturedValues = null;
+        callComponentDidCatch(instance, capturedValues);
+        newState = processUpdateQueue(
+          null,
+          workInProgress,
+          updateQueue,
+          instance,
+          newProps,
+          renderExpirationTime,
+        );
+      }
     } else {
       newState = oldState;
     }
@@ -715,7 +769,7 @@ export default function(
     adoptClassInstance,
     constructClassInstance,
     mountClassInstance,
-    // resumeMountClassInstance,
+    resumeMountClassInstance,
     updateClassInstance,
   };
 }

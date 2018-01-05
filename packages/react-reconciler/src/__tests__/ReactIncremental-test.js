@@ -2717,7 +2717,9 @@ describe('ReactIncremental', () => {
     expect(ReactNoop.flush()).toEqual([]);
   });
 
-  it('does not break with a bad Map polyfill', () => {
+  // We don't currently use fibers as keys. Re-enable this test if we
+  // ever do again.
+  it.skip('does not break with a bad Map polyfill', () => {
     const realMapSet = Map.prototype.set;
 
     function triggerCodePathThatUsesFibersAsMapKeys() {

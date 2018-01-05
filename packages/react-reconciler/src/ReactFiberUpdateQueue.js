@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
 import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
@@ -37,6 +38,7 @@ export type Update<State> = {
   callback: Callback | null,
   isReplace: boolean,
   isForced: boolean,
+  capturedValue: CapturedValue<mixed> | null,
   next: Update<State> | null,
 };
 
@@ -64,6 +66,7 @@ export type UpdateQueue<State> = {
   callbackList: Array<Update<State>> | null,
   hasForceUpdate: boolean,
   isInitialized: boolean,
+  capturedValues: Array<CapturedValue<mixed>> | null,
 
   // Dev only
   isProcessing?: boolean,
@@ -78,6 +81,7 @@ function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     callbackList: null,
     hasForceUpdate: false,
     isInitialized: false,
+    capturedValues: null,
   };
   if (__DEV__) {
     queue.isProcessing = false;
@@ -213,6 +217,7 @@ export function processUpdateQueue<State>(
       first: currentQueue.first,
       last: currentQueue.last,
       isInitialized: currentQueue.isInitialized,
+      capturedValues: currentQueue.capturedValues,
       // These fields are no longer valid because they were already committed.
       // Reset them.
       callbackList: null,
@@ -304,12 +309,24 @@ export function processUpdateQueue<State>(
       }
       callbackList.push(update);
     }
+    if (update.capturedValue !== null) {
+      let capturedValues = queue.capturedValues;
+      if (capturedValues === null) {
+        queue.capturedValues = [update.capturedValue];
+      } else {
+        capturedValues.push(update.capturedValue);
+      }
+    }
     update = update.next;
   }
 
   if (queue.callbackList !== null) {
     workInProgress.effectTag |= CallbackEffect;
-  } else if (queue.first === null && !queue.hasForceUpdate) {
+  } else if (
+    queue.first === null &&
+    !queue.hasForceUpdate &&
+    queue.capturedValues === null
+  ) {
     // The queue is empty. We can reset it.
     workInProgress.updateQueue = null;
   }
