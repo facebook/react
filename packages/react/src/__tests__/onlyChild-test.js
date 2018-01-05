@@ -72,4 +72,58 @@ describe('onlyChild', () => {
     );
     expect(React.Children.only(instance.props.children)).toEqual(<span />);
   });
+
+  it('should check for number of children if passed second parameter', () => {
+    const instance = (
+      <WrapComponent>
+        <span />
+        <span />
+        <span />
+      </WrapComponent>
+    );
+
+    expect(React.Children.only(instance.props.children, 3)).toEqual([
+      <span />,
+      <span />,
+      <span />,
+    ]);
+  });
+
+  it('should throw if incorrect number of children are passed', () => {
+    const instance = (
+      <WrapComponent>
+        <span />
+        <span />
+      </WrapComponent>
+    );
+
+    expect(function() {
+      React.Children.only(instance.props.children, 3);
+    }).toThrow();
+  });
+
+  it('should fail when passed some null/undefined values', () => {
+    let instance = (
+      <WrapComponent>
+        <span />
+        {null}
+        <span />
+      </WrapComponent>
+    );
+
+    expect(function() {
+      React.Children.only(instance.props.children, 3);
+    }).toThrow();
+
+    instance = (
+      <WrapComponent>
+        <span />
+        {undefined}
+      </WrapComponent>
+    );
+
+    expect(function() {
+      React.Children.only(instance.props.children, 2);
+    }).toThrow();
+  });
 });
