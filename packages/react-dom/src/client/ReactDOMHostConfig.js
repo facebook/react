@@ -16,6 +16,7 @@ import {
   updateProperties,
   diffHydratedProperties,
   diffHydratedText,
+  trapClickOnNonInteractiveElement,
   warnForUnmatchedText,
   warnForDeletedHydratableElement,
   warnForDeletedHydratableText,
@@ -345,7 +346,11 @@ export function appendChildToContainer(
 ): void {
   if (container.nodeType === COMMENT_NODE) {
     (container.parentNode: any).insertBefore(child, container);
+    trapClickOnNonInteractiveElement(
+      ((container.parentNode: any): HTMLElement),
+    );
   } else {
+    trapClickOnNonInteractiveElement(((container: any): HTMLElement));
     container.appendChild(child);
   }
 }
