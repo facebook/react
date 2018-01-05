@@ -216,6 +216,9 @@ describe('ReactShallowRenderer', () => {
         </div>
       );
     }
+    SomeComponent.contextTypes = {
+      bar: PropTypes.string,
+    };
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SomeComponent foo={'FOO'} />, {
@@ -428,6 +431,9 @@ describe('ReactShallowRenderer', () => {
         super(props, context);
         this.state = initialState;
       }
+      static contextTypes = {
+        context: PropTypes.string,
+      };
       componentDidUpdate(...args) {
         componentDidUpdateParams.push(...args);
       }
@@ -768,6 +774,24 @@ describe('ReactShallowRenderer', () => {
 
     result = shallowRenderer.getRenderOutput();
     expect(result).toEqual(<div>foo:baz</div>);
+  });
+
+  it('should filter context by contextTypes', () => {
+    class SimpleComponent extends React.Component {
+      static contextTypes = {
+        foo: PropTypes.string,
+      };
+      render() {
+        return <div>{`${this.context.foo}:${this.context.bar}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(<SimpleComponent />, {
+      foo: 'foo',
+      bar: 'bar',
+    });
+    expect(result).toEqual(<div>foo:undefined</div>);
   });
 
   it('can fail context when shallowly rendering', () => {
