@@ -137,7 +137,7 @@ const topLevelEventsToDispatchConfig: {
 });
 
 // Only used in DEV for exhaustiveness validation.
-const knownHTMLTopLevelTypes = [
+let knownHTMLTopLevelTypes = __DEV__ && [
   'topAbort',
   'topCancel',
   'topCanPlay',
@@ -219,6 +219,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topMouseOut':
       case 'topMouseOver':
       case 'topContextMenu':
+
         EventConstructor = SyntheticMouseEvent;
         break;
       case 'topDrag':
@@ -258,7 +259,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
         break;
       default:
         if (__DEV__) {
-          if (knownHTMLTopLevelTypes.indexOf(topLevelType) === -1) {
+          if ((knownHTMLTopLevelTypes: any).indexOf(topLevelType) === -1) {
             warning(
               false,
               'SimpleEventPlugin: Unhandled event type, `%s`. This warning ' +
