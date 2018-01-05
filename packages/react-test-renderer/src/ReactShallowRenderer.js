@@ -125,7 +125,7 @@ class ReactShallowRenderer {
   _mountClassComponent(props, context) {
     this._instance.context = context;
     this._instance.props = props;
-    this._instance.state = this._instance.state || emptyObject;
+    this._instance.state = this._instance.state || null;
     this._instance.updater = this._updater;
 
     if (typeof this._instance.componentWillMount === 'function') {
