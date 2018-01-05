@@ -309,12 +309,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             childrenUnchanged,
             recyclableInstance,
           );
+          const currentHostContext = getHostContext();
           if (
             finalizeInitialChildren(
               newInstance,
               type,
               newProps,
               rootContainerInstance,
+              currentHostContext,
             )
           ) {
             markUpdate(workInProgress);
@@ -506,6 +508,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
                 type,
                 newProps,
                 rootContainerInstance,
+                currentHostContext,
               )
             ) {
               markUpdate(workInProgress);

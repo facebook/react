@@ -65,6 +65,7 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
     type: T,
     props: P,
     rootContainerInstance: C,
+    hostContext: CX,
   ): boolean,
 
   prepareUpdate(
