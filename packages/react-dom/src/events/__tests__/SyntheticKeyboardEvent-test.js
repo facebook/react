@@ -356,6 +356,22 @@ describe('SyntheticKeyboardEvent', () => {
       });
     });
 
+    describe('code', () => {
+      describe('when event is `keydown` or `keyup`', () => {
+        it('returns a passed code', () => {
+          var keyboardEvent = createEvent({type: 'keyup', code: 'ArrowDown'});
+          expect(keyboardEvent.code).toBe('ArrowDown');
+        });
+      });
+
+      describe('when event is `keypress`', () => {
+        it('returns 0', () => {
+          var keyboardEvent = createEvent({type: 'keypress', charCode: 40});
+          expect(keyboardEvent.code).toBe(0);
+        });
+      });
+    });
+
     describe('which', () => {
       describe('when event is `keypress`', () => {
         it('is consistent with `charCode`', () => {
