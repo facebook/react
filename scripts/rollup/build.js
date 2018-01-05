@@ -194,6 +194,7 @@ function getClosureExterns(packageName, externals, bundleType) {
 
 function getClosureOptions(packageName, externals, bundleType, advancedMode) {
   const closureOptions = {
+    env: 'BROWSER',
     languageIn: 'ECMASCRIPT5_STRICT',
     languageOut: 'ECMASCRIPT5_STRICT',
     warningLevel: 'QUIET',
@@ -205,8 +206,6 @@ function getClosureOptions(packageName, externals, bundleType, advancedMode) {
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
 
   return Object.assign({}, closureOptions, {
-    env: isInGlobalScope ? 'BROWSER' : 'CUSTOM',
-    processCommonJsModules: true,
     compilationLevel: advancedMode ? 'ADVANCED' : 'SIMPLE',
     // Don't let it create global variables in the browser.
     // https://github.com/facebook/react/issues/10909
