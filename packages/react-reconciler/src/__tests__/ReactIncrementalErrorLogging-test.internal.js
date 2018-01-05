@@ -20,10 +20,6 @@ describe('ReactIncrementalErrorLogging', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   it('should log errors that occur during the begin phase', () => {
     // Errors are redundantly logged in production mode by ReactFiberErrorLogger.
     // It's okay to ignore them for the purpose of this test.
