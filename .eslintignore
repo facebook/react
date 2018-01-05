@@ -12,3 +12,6 @@ scripts/bench/benchmarks/**/*.js
 
 # React repository clone
 scripts/bench/remote-repo/
+
+# Externs
+externs/

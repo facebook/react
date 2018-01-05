@@ -59,17 +59,6 @@ const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
 };
 
-const closureOptions = {
-  compilationLevel: 'SIMPLE',
-  languageIn: 'ECMASCRIPT5_STRICT',
-  languageOut: 'ECMASCRIPT5_STRICT',
-  env: 'CUSTOM',
-  warningLevel: 'QUIET',
-  applyInputSourceMaps: false,
-  useTypesForOptimization: false,
-  processCommonJsModules: false,
-};
-
 function getBabelConfig(updateBabelOptions, bundleType, filename) {
   let options = {
     exclude: 'node_modules/**',
@@ -176,6 +165,55 @@ function isProductionBundleType(bundleType) {
   }
 }
 
+function getClosureExterns(packageName, externals, bundleType) {
+  const externs = [packageName]
+    .concat(externals)
+    .map(name => `externs/${name}.ext.js`);
+
+  externs.push(`externs/${packageName}-${bundleType}.ext.js`);
+
+  // TODO: directly pass in correct paths to gcc
+  const src = externs
+    .filter(fs.existsSync)
+    .map(fileName => {
+      console.log(`Using externs from ${fileName}`);
+      return fs.readFileSync(fileName, 'utf-8');
+    })
+    .join('\n');
+
+  return [{src: src}];
+}
+
+function getClosureOptions(packageName, externals, bundleType, advancedMode) {
+  const closureOptions = {
+    languageIn: 'ECMASCRIPT5_STRICT',
+    languageOut: 'ECMASCRIPT5_STRICT',
+    warningLevel: 'QUIET',
+    applyInputSourceMaps: false,
+    useTypesForOptimization: false,
+    processCommonJsModules: false,
+  };
+
+  const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
+
+  return Object.assign({}, closureOptions, {
+    env: isInGlobalScope ? 'BROWSER' : 'CUSTOM',
+    processCommonJsModules: true,
+    compilationLevel: advancedMode ? 'ADVANCED' : 'SIMPLE',
+    // Don't let it create global variables in the browser.
+    // https://github.com/facebook/react/issues/10909
+    assumeFunctionWrapper: !isInGlobalScope,
+    // Works because `google-closure-compiler-js` is forked in Yarn lockfile.
+    // We can remove this if GCC merges my PR:
+    // https://github.com/google/closure-compiler/pull/2707
+    // and then the compiled version is released via `google-closure-compiler-js`.
+    renaming: advancedMode,
+    externs: advancedMode
+      ? getClosureExterns(packageName, externals, bundleType)
+      : [],
+  });
+}
+
 function getPlugins(
   entry,
   externals,
@@ -190,7 +228,6 @@ function getPlugins(
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const forks = Modules.getForks(bundleType, entry);
   const isProduction = isProductionBundleType(bundleType);
-  const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_DEV || bundleType === FB_PROD;
   const isRNBundle = bundleType === RN_DEV || bundleType === RN_PROD;
   const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
@@ -236,16 +273,12 @@ function getPlugins(
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(
-        Object.assign({}, closureOptions, {
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assumeFunctionWrapper: !isInGlobalScope,
-          // Works because `google-closure-compiler-js` is forked in Yarn lockfile.
-          // We can remove this if GCC merges my PR:
-          // https://github.com/google/closure-compiler/pull/2707
-          // and then the compiled version is released via `google-closure-compiler-js`.
-          renaming: !shouldStayReadable,
-        })
+        getClosureOptions(
+          packageName,
+          externals,
+          bundleType,
+          !shouldStayReadable
+        )
       ),
     // Add the whitespace back if necessary.
     shouldStayReadable && prettier(),
@@ -436,6 +469,9 @@ function handleRollupError(error) {
     `\x1b[31m-- ${error.code}${error.plugin ? ` (${error.plugin})` : ''} --`
   );
   console.error(error.message);
+  if (!error.loc) {
+    return;
+  }
   const {file, line, column} = error.loc;
   if (file) {
     // This looks like an error from Rollup, e.g. missing export.
