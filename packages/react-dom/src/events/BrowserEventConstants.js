@@ -19,6 +19,7 @@ const topLevelTypes = {
   topAnimationEnd: getVendorPrefixedEventName('animationend'),
   topAnimationIteration: getVendorPrefixedEventName('animationiteration'),
   topAnimationStart: getVendorPrefixedEventName('animationstart'),
+  topAuxClick: 'auxclick',
   topBlur: 'blur',
   topCancel: 'cancel',
   topCanPlay: 'canplay',

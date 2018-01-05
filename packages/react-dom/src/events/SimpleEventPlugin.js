@@ -58,6 +58,7 @@ const topLevelEventsToDispatchConfig: {
   'animationEnd',
   'animationIteration',
   'animationStart',
+  'auxClick',
   'blur',
   'cancel',
   'canPlay',
@@ -208,6 +209,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
           return null;
         }
       /* falls through */
+      case 'topAuxClick':
       case 'topDoubleClick':
       case 'topMouseDown':
       case 'topMouseMove':
