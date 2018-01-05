@@ -115,6 +115,47 @@ describe('SyntheticKeyboardEvent', () => {
             );
             expect(called).toBe(false);
           });
+
+          it('when charCode is 10, returns 13', () => {
+            let charCode = null;
+            const node = ReactDOM.render(
+              <input
+                onKeyPress={e => {
+                  charCode = e.charCode;
+                }}
+              />,
+              container,
+            );
+            node.dispatchEvent(
+              new KeyboardEvent('keypress', {
+                charCode: 10,
+                bubbles: true,
+                cancelable: true,
+              }),
+            );
+            expect(charCode).toBe(13);
+          });
+
+          it('when charCode is 10 and ctrl is pressed, returns 13', () => {
+            let charCode = null;
+            const node = ReactDOM.render(
+              <input
+                onKeyPress={e => {
+                  charCode = e.charCode;
+                }}
+              />,
+              container,
+            );
+            node.dispatchEvent(
+              new KeyboardEvent('keypress', {
+                charCode: 10,
+                ctrlKey: true,
+                bubbles: true,
+                cancelable: true,
+              }),
+            );
+            expect(charCode).toBe(13);
+          });
         });
 
         // TODO: this seems IE8 specific.
