@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
@@ -13,7 +14,6 @@ describe('ReactDebugFiberPerf', () => {
   let React;
   let ReactCallReturn;
   let ReactNoop;
-  let ReactPortal;
   let PropTypes;
 
   let root;
@@ -121,8 +121,6 @@ describe('ReactDebugFiberPerf', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     ReactCallReturn = require('react-call-return');
-    // TODO: can we express this test with only public API?
-    ReactPortal = require('../ReactPortal');
     PropTypes = require('prop-types');
   });
 
@@ -514,9 +512,7 @@ describe('ReactDebugFiberPerf', () => {
   it('supports portals', () => {
     const noopContainer = {children: []};
     ReactNoop.render(
-      <Parent>
-        {ReactPortal.createPortal(<Child />, noopContainer, null)}
-      </Parent>,
+      <Parent>{ReactNoop.createPortal(<Child />, noopContainer, null)}</Parent>,
     );
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();

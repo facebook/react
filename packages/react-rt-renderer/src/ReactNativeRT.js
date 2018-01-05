@@ -19,10 +19,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import 'InitializeCore';
 import './ReactNativeRTEventEmitter';
 
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import * as ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
-import {showDialog} from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
-import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
@@ -36,10 +33,6 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
 
 const roots = new Map();
 
-// Intercept lifecycle errors and ensure they are shown with the correct stack
-// trace within the native redbox component.
-ReactFiberErrorLogger.injection.injectDialog(showDialog);
-
 const ReactNativeRTFiber: ReactNativeRTType = {
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
@@ -47,7 +40,11 @@ const ReactNativeRTFiber: ReactNativeRTType = {
     if (!root) {
       // TODO (bvaughn): If we decide to keep the wrapper component,
       // We could create a wrapper for containerTag as well to reduce special casing.
-      root = ReactNativeRTFiberRenderer.createContainer(containerTag, false);
+      root = ReactNativeRTFiberRenderer.createContainer(
+        containerTag,
+        false,
+        false,
+      );
       roots.set(containerTag, root);
     }
     ReactNativeRTFiberRenderer.updateContainer(element, root, null, callback);

@@ -11,7 +11,7 @@
 // See https://github.com/facebook/react/pull/8033.
 // This is not part of the public API, not even for React DevTools.
 // You may only inject a debugTool if you work on React Fiber itself.
-var ReactFiberInstrumentation = {
+const ReactFiberInstrumentation = {
   debugTool: null,
 };
 

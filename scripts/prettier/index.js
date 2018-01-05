@@ -11,9 +11,10 @@
 
 const chalk = require('chalk');
 const glob = require('glob');
-const execFileSync = require('child_process').execFileSync;
 const prettier = require('prettier');
 const fs = require('fs');
+const listChangedFiles = require('../shared/listChangedFiles');
+const {esNextPaths} = require('../shared/pathsByLanguageVersion');
 
 const mode = process.argv[2] || 'check';
 const shouldWrite = mode === 'write' || mode === 'write-changed';
@@ -28,56 +29,24 @@ const defaultOptions = {
 };
 const config = {
   default: {
-    patterns: [
-      // Internal forwarding modules
-      'packages/*/*.js',
-      // Source files
-      'packages/*/src/**/*.js',
-      'packages/shared/**/*.js',
-    ],
-    ignore: ['**/node_modules/**'],
-  },
-  scripts: {
-    patterns: [
-      // Forwarding modules that get published to npm (must be ES5)
-      'packages/*/npm/**/*.js',
-      // Need to work on Node
-      'scripts/**/*.js',
-      'fixtures/**/*.js',
-    ],
+    patterns: ['**/*.js'],
     ignore: [
       '**/node_modules/**',
-      // Built files and React repo clone
-      'scripts/bench/benchmarks/**',
+      // ESNext paths can have trailing commas.
+      // We'll handle them separately below.
+      ...esNextPaths,
     ],
     options: {
       trailingComma: 'es5',
     },
   },
+  esNext: {
+    patterns: [...esNextPaths],
+    ignore: ['**/node_modules/**'],
+  },
 };
 
-function exec(command, args) {
-  console.log('> ' + [command].concat(args).join(' '));
-  var options = {
-    cwd: process.cwd(),
-    env: process.env,
-    stdio: 'pipe',
-    encoding: 'utf-8',
-  };
-  return execFileSync(command, args, options);
-}
-
-var mergeBase = exec('git', ['merge-base', 'HEAD', 'master']).trim();
-var changedFiles = new Set(
-  exec('git', [
-    'diff',
-    '-z',
-    '--name-only',
-    '--diff-filter=ACMRTUB',
-    mergeBase,
-  ]).match(/[^\0]+/g)
-);
-
+const changedFiles = onlyChanged ? listChangedFiles() : null;
 let didWarn = false;
 let didError = false;
 Object.keys(config).forEach(key => {

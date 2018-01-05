@@ -6,6 +6,9 @@ const ERROR = 2;
 module.exports = {
   extends: 'fbjs',
 
+  // Stop ESLint from looking for a configuration file in parent folders
+  'root': true,
+
   plugins: [
     'react',
     'react-internal',
@@ -60,5 +63,7 @@ module.exports = {
 
   globals: {
     spyOnDev: true,
+    spyOnDevAndProd: true,
+    spyOnProd: true,
   },
 };

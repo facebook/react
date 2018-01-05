@@ -10,17 +10,18 @@
 'use strict';
 
 // TODO: can we express this test with only public API?
-var getNodeForCharacterOffset = require('../getNodeForCharacterOffset').default;
+const getNodeForCharacterOffset = require('../getNodeForCharacterOffset')
+  .default;
 
 // Create node from HTML string
 function createNode(html) {
-  var node = (getTestDocument() || document).createElement('div');
+  const node = (getTestDocument() || document).createElement('div');
   node.innerHTML = html;
   return node;
 }
 
 function getTestDocument(markup) {
-  var doc = document.implementation.createHTMLDocument('');
+  const doc = document.implementation.createHTMLDocument('');
   doc.open();
   doc.write(
     markup ||
@@ -38,21 +39,21 @@ function expectNodeOffset(result, textContent, nodeOffset) {
 
 describe('getNodeForCharacterOffset', () => {
   it('should handle siblings', () => {
-    var node = createNode('<i>123</i><i>456</i><i>789</i>');
+    const node = createNode('<i>123</i><i>456</i><i>789</i>');
 
     expectNodeOffset(getNodeForCharacterOffset(node, 0), '123', 0);
     expectNodeOffset(getNodeForCharacterOffset(node, 4), '456', 1);
   });
 
   it('should handle trailing chars', () => {
-    var node = createNode('<i>123</i><i>456</i><i>789</i>');
+    const node = createNode('<i>123</i><i>456</i><i>789</i>');
 
     expectNodeOffset(getNodeForCharacterOffset(node, 3), '123', 3);
     expectNodeOffset(getNodeForCharacterOffset(node, 9), '789', 3);
   });
 
   it('should handle trees', () => {
-    var node = createNode(
+    const node = createNode(
       '<i>' +
         '<i>1</i>' +
         '<i>' +
@@ -74,7 +75,7 @@ describe('getNodeForCharacterOffset', () => {
   });
 
   it('should handle non-existent offset', () => {
-    var node = createNode('<i>123</i>');
+    const node = createNode('<i>123</i>');
 
     expect(getNodeForCharacterOffset(node, -1)).toBeUndefined();
     expect(getNodeForCharacterOffset(node, 4)).toBeUndefined();

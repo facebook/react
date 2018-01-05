@@ -43,7 +43,7 @@ const infiniteDeadline = {
 };
 
 const arePropsEqual = (oldProps: Props, newProps: Props): boolean => {
-  var key;
+  let key;
   for (key in newProps) {
     if (key === 'children') {
       // Skip special case.
@@ -265,7 +265,11 @@ const ReactCS = CSStatefulComponent({
     let container = {
       pendingChild: null,
     };
-    let root = ReactNativeCSFiberRenderer.createContainer(container, false);
+    let root = ReactNativeCSFiberRenderer.createContainer(
+      container,
+      false,
+      false,
+    );
     return {root, container};
   },
   render({

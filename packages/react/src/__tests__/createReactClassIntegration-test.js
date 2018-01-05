@@ -9,11 +9,11 @@
 
 'use strict';
 
-var PropTypes;
-var React;
-var ReactDOM;
-var ReactTestUtils;
-var createReactClass;
+let PropTypes;
+let React;
+let ReactDOM;
+let ReactTestUtils;
+let createReactClass;
 
 describe('create-react-class-integration', () => {
   beforeEach(() => {
@@ -37,8 +37,8 @@ describe('create-react-class-integration', () => {
   });
 
   it('should copy prop types onto the Constructor', () => {
-    var propValidator = jest.fn();
-    var TestComponent = createReactClass({
+    const propValidator = jest.fn();
+    const TestComponent = createReactClass({
       propTypes: {
         value: propValidator,
       },
@@ -52,121 +52,103 @@ describe('create-react-class-integration', () => {
   });
 
   it('should warn on invalid prop types', () => {
-    spyOnDev(console, 'error');
-    createReactClass({
-      displayName: 'Component',
-      propTypes: {
-        prop: null,
-      },
-      render: function() {
-        return <span>{this.props.prop}</span>;
-      },
-    });
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Component: prop type `prop` is invalid; ' +
-          'it must be a function, usually from React.PropTypes.',
-      );
-    }
+    expect(() =>
+      createReactClass({
+        displayName: 'Component',
+        propTypes: {
+          prop: null,
+        },
+        render: function() {
+          return <span>{this.props.prop}</span>;
+        },
+      }),
+    ).toWarnDev(
+      'Warning: Component: prop type `prop` is invalid; ' +
+        'it must be a function, usually from React.PropTypes.',
+    );
   });
 
   it('should warn on invalid context types', () => {
-    spyOnDev(console, 'error');
-    createReactClass({
-      displayName: 'Component',
-      contextTypes: {
-        prop: null,
-      },
-      render: function() {
-        return <span>{this.props.prop}</span>;
-      },
-    });
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Component: context type `prop` is invalid; ' +
-          'it must be a function, usually from React.PropTypes.',
-      );
-    }
+    expect(() =>
+      createReactClass({
+        displayName: 'Component',
+        contextTypes: {
+          prop: null,
+        },
+        render: function() {
+          return <span>{this.props.prop}</span>;
+        },
+      }),
+    ).toWarnDev(
+      'Warning: Component: context type `prop` is invalid; ' +
+        'it must be a function, usually from React.PropTypes.',
+    );
   });
 
   it('should throw on invalid child context types', () => {
-    spyOnDev(console, 'error');
-    createReactClass({
-      displayName: 'Component',
-      childContextTypes: {
-        prop: null,
-      },
-      render: function() {
-        return <span>{this.props.prop}</span>;
-      },
-    });
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Component: child context type `prop` is invalid; ' +
-          'it must be a function, usually from React.PropTypes.',
-      );
-    }
+    expect(() =>
+      createReactClass({
+        displayName: 'Component',
+        childContextTypes: {
+          prop: null,
+        },
+        render: function() {
+          return <span>{this.props.prop}</span>;
+        },
+      }),
+    ).toWarnDev(
+      'Warning: Component: child context type `prop` is invalid; ' +
+        'it must be a function, usually from React.PropTypes.',
+    );
   });
 
   it('should warn when misspelling shouldComponentUpdate', () => {
-    spyOnDev(console, 'error');
+    expect(() =>
+      createReactClass({
+        componentShouldUpdate: function() {
+          return false;
+        },
+        render: function() {
+          return <div />;
+        },
+      }),
+    ).toWarnDev(
+      'Warning: A component has a method called componentShouldUpdate(). Did you ' +
+        'mean shouldComponentUpdate()? The name is phrased as a question ' +
+        'because the function is expected to return a value.',
+    );
 
-    createReactClass({
-      componentShouldUpdate: function() {
-        return false;
-      },
-      render: function() {
-        return <div />;
-      },
-    });
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: A component has a method called componentShouldUpdate(). Did you ' +
-          'mean shouldComponentUpdate()? The name is phrased as a question ' +
-          'because the function is expected to return a value.',
-      );
-    }
-
-    createReactClass({
-      displayName: 'NamedComponent',
-      componentShouldUpdate: function() {
-        return false;
-      },
-      render: function() {
-        return <div />;
-      },
-    });
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: NamedComponent has a method called componentShouldUpdate(). Did you ' +
-          'mean shouldComponentUpdate()? The name is phrased as a question ' +
-          'because the function is expected to return a value.',
-      );
-    }
+    expect(() =>
+      createReactClass({
+        displayName: 'NamedComponent',
+        componentShouldUpdate: function() {
+          return false;
+        },
+        render: function() {
+          return <div />;
+        },
+      }),
+    ).toWarnDev(
+      'Warning: NamedComponent has a method called componentShouldUpdate(). Did you ' +
+        'mean shouldComponentUpdate()? The name is phrased as a question ' +
+        'because the function is expected to return a value.',
+    );
   });
 
   it('should warn when misspelling componentWillReceiveProps', () => {
-    spyOnDev(console, 'error');
-    createReactClass({
-      componentWillRecieveProps: function() {
-        return false;
-      },
-      render: function() {
-        return <div />;
-      },
-    });
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: A component has a method called componentWillRecieveProps(). Did you ' +
-          'mean componentWillReceiveProps()?',
-      );
-    }
+    expect(() =>
+      createReactClass({
+        componentWillRecieveProps: function() {
+          return false;
+        },
+        render: function() {
+          return <div />;
+        },
+      }),
+    ).toWarnDev(
+      'Warning: A component has a method called componentWillRecieveProps(). Did you ' +
+        'mean componentWillReceiveProps()?',
+    );
   });
 
   it('should throw if a reserved property is in statics', () => {
@@ -195,45 +177,36 @@ describe('create-react-class-integration', () => {
   // TODO: Consider actually moving these to statics or drop this unit test.
 
   xit('should warn when using deprecated non-static spec keys', () => {
-    spyOnDev(console, 'error');
-    createReactClass({
-      mixins: [{}],
-      propTypes: {
-        foo: PropTypes.string,
-      },
-      contextTypes: {
-        foo: PropTypes.string,
-      },
-      childContextTypes: {
-        foo: PropTypes.string,
-      },
-      render: function() {
-        return <div />;
-      },
-    });
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(4);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'createClass(...): `mixins` is now a static property and should ' +
-          'be defined inside "statics".',
-      );
-      expect(console.error.calls.argsFor(1)[0]).toBe(
-        'createClass(...): `propTypes` is now a static property and should ' +
-          'be defined inside "statics".',
-      );
-      expect(console.error.calls.argsFor(2)[0]).toBe(
-        'createClass(...): `contextTypes` is now a static property and ' +
-          'should be defined inside "statics".',
-      );
-      expect(console.error.calls.argsFor(3)[0]).toBe(
-        'createClass(...): `childContextTypes` is now a static property and ' +
-          'should be defined inside "statics".',
-      );
-    }
+    expect(() =>
+      createReactClass({
+        mixins: [{}],
+        propTypes: {
+          foo: PropTypes.string,
+        },
+        contextTypes: {
+          foo: PropTypes.string,
+        },
+        childContextTypes: {
+          foo: PropTypes.string,
+        },
+        render: function() {
+          return <div />;
+        },
+      }),
+    ).toWarnDev([
+      'createClass(...): `mixins` is now a static property and should ' +
+        'be defined inside "statics".',
+      'createClass(...): `propTypes` is now a static property and should ' +
+        'be defined inside "statics".',
+      'createClass(...): `contextTypes` is now a static property and ' +
+        'should be defined inside "statics".',
+      'createClass(...): `childContextTypes` is now a static property and ' +
+        'should be defined inside "statics".',
+    ]);
   });
 
   it('should support statics', () => {
-    var Component = createReactClass({
+    const Component = createReactClass({
       statics: {
         abc: 'def',
         def: 0,
@@ -248,7 +221,7 @@ describe('create-react-class-integration', () => {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.constructor.abc).toBe('def');
     expect(Component.abc).toBe('def');
@@ -263,7 +236,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should work with object getInitialState() return values', () => {
-    var Component = createReactClass({
+    const Component = createReactClass({
       getInitialState: function() {
         return {
           occupation: 'clown',
@@ -273,13 +246,13 @@ describe('create-react-class-integration', () => {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.occupation).toEqual('clown');
   });
 
   it('renders based on context getInitialState', () => {
-    var Foo = createReactClass({
+    const Foo = createReactClass({
       contextTypes: {
         className: PropTypes.string,
       },
@@ -291,7 +264,7 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    var Outer = createReactClass({
+    const Outer = createReactClass({
       childContextTypes: {
         className: PropTypes.string,
       },
@@ -303,14 +276,14 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Outer />, container);
     expect(container.firstChild.className).toBe('foo');
   });
 
   it('should throw with non-object getInitialState() return values', () => {
     [['an array'], 'a string', 1234].forEach(function(state) {
-      var Component = createReactClass({
+      const Component = createReactClass({
         getInitialState: function() {
           return state;
         },
@@ -318,7 +291,7 @@ describe('create-react-class-integration', () => {
           return <span />;
         },
       });
-      var instance = <Component />;
+      let instance = <Component />;
       expect(function() {
         instance = ReactTestUtils.renderIntoDocument(instance);
       }).toThrowError(
@@ -328,7 +301,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should work with a null getInitialState() return value', () => {
-    var Component = createReactClass({
+    const Component = createReactClass({
       getInitialState: function() {
         return null;
       },
@@ -342,26 +315,21 @@ describe('create-react-class-integration', () => {
   });
 
   it('should throw when using legacy factories', () => {
-    spyOnDev(console, 'error');
-    var Component = createReactClass({
+    const Component = createReactClass({
       render() {
         return <div />;
       },
     });
 
-    expect(() => Component()).toThrow();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Something is calling a React component directly. Use a ' +
-          'factory or JSX instead. See: https://fb.me/react-legacyfactory',
-      );
-    }
+    expect(() => expect(() => Component()).toThrow()).toWarnDev(
+      'Warning: Something is calling a React component directly. Use a ' +
+        'factory or JSX instead. See: https://fb.me/react-legacyfactory',
+    );
   });
 
   it('replaceState and callback works', () => {
-    var ops = [];
-    var Component = createReactClass({
+    const ops = [];
+    const Component = createReactClass({
       getInitialState() {
         return {step: 0};
       },
@@ -371,7 +339,7 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
     instance.replaceState({step: 1}, () => {
       ops.push('Callback: ' + instance.state.step);
     });
@@ -379,11 +347,9 @@ describe('create-react-class-integration', () => {
   });
 
   it('isMounted works', () => {
-    spyOnDev(console, 'error');
-
-    var ops = [];
-    var instance;
-    var Component = createReactClass({
+    const ops = [];
+    let instance;
+    const Component = createReactClass({
       displayName: 'MyComponent',
       mixins: [
         {
@@ -433,8 +399,14 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    var container = document.createElement('div');
-    ReactDOM.render(<Component />, container);
+    const container = document.createElement('div');
+
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+      'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
+        'clean up subscriptions and pending requests in componentWillUnmount ' +
+        'to prevent memory leaks.',
+    );
+
     ReactDOM.render(<Component />, container);
     ReactDOM.unmountComponentAtNode(container);
     instance.log('after unmount');
@@ -454,14 +426,5 @@ describe('create-react-class-integration', () => {
       'componentWillUnmount: true',
       'after unmount: false',
     ]);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toEqual(
-        'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
-          'clean up subscriptions and pending requests in componentWillUnmount ' +
-          'to prevent memory leaks.',
-      );
-    }
   });
 });

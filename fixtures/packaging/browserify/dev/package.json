@@ -3,8 +3,8 @@
   "name": "browserify-dev-fixture",
   "dependencies": {
     "browserify": "^13.3.0",
-    "react": "file:../../../../build/packages/react",
-    "react-dom": "file:../../../../build/packages/react-dom"
+    "react": "link:../../../../build/node_modules/react",
+    "react-dom": "link:../../../../build/node_modules/react-dom"
   },
   "scripts": {
     "build": "rm -f output.js && browserify ./input.js -o output.js"

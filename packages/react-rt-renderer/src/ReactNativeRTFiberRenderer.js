@@ -26,12 +26,12 @@ export type TextInstance = number;
 
 function processProps(instance: number, props: Props): Object {
   const propsPayload = {};
-  for (var key in props) {
+  for (const key in props) {
     if (key === 'children') {
       // Skip special case.
       continue;
     }
-    var value = props[key];
+    let value = props[key];
     if (typeof value === 'function') {
       value = {
         style: 'rt-event',
@@ -45,7 +45,7 @@ function processProps(instance: number, props: Props): Object {
 }
 
 function arePropsEqual(oldProps: Props, newProps: Props): boolean {
-  var key;
+  let key;
   for (key in newProps) {
     if (key === 'children') {
       // Skip special case.

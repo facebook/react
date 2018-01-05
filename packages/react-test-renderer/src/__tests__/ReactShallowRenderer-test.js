@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
@@ -770,8 +771,6 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('can fail context when shallowly rendering', () => {
-    spyOnDev(console, 'error');
-
     class SimpleComponent extends React.Component {
       static contextTypes = {
         name: PropTypes.string.isRequired,
@@ -783,22 +782,14 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(<SimpleComponent />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(
-        console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)'),
-      ).toBe(
-        'Warning: Failed context type: The context `name` is marked as ' +
-          'required in `SimpleComponent`, but its value is `undefined`.\n' +
-          '    in SimpleComponent (at **)',
-      );
-    }
+    expect(() => shallowRenderer.render(<SimpleComponent />)).toWarnDev(
+      'Warning: Failed context type: The context `name` is marked as ' +
+        'required in `SimpleComponent`, but its value is `undefined`.\n' +
+        '    in SimpleComponent (at **)',
+    );
   });
 
   it('should warn about propTypes (but only once)', () => {
-    spyOnDev(console, 'error');
-
     class SimpleComponent extends React.Component {
       render() {
         return React.createElement('div', null, this.props.name);
@@ -810,18 +801,13 @@ describe('ReactShallowRenderer', () => {
     };
 
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(React.createElement(SimpleComponent, {name: 123}));
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(
-        console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)'),
-      ).toBe(
-        'Warning: Failed prop type: Invalid prop `name` of type `number` ' +
-          'supplied to `SimpleComponent`, expected `string`.\n' +
-          '    in SimpleComponent',
-      );
-    }
+    expect(() =>
+      shallowRenderer.render(React.createElement(SimpleComponent, {name: 123})),
+    ).toWarnDev(
+      'Warning: Failed prop type: Invalid prop `name` of type `number` ' +
+        'supplied to `SimpleComponent`, expected `string`.\n' +
+        '    in SimpleComponent',
+    );
   });
 
   it('should enable rendering of cloned element', () => {
@@ -941,36 +927,24 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('throws usefully when rendering badly-typed elements', () => {
-    spyOnDev(console, 'error');
     const shallowRenderer = createRenderer();
 
-    var Undef = undefined;
-    expect(() => shallowRenderer.render(<Undef />)).toThrowError(
-      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
-        'components, but the provided element type was `undefined`.',
-    );
+    const renderAndVerifyWarningAndError = (Component, typeString) => {
+      expect(() => {
+        expect(() => shallowRenderer.render(<Component />)).toWarnDev(
+          'React.createElement: type is invalid -- expected a string ' +
+            '(for built-in components) or a class/function (for composite components) ' +
+            `but got: ${typeString}.`,
+        );
+      }).toThrowError(
+        'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+          `components, but the provided element type was \`${typeString}\`.`,
+      );
+    };
 
-    var Null = null;
-    expect(() => shallowRenderer.render(<Null />)).toThrowError(
-      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
-        'components, but the provided element type was `null`.',
-    );
-
-    var Arr = [];
-    expect(() => shallowRenderer.render(<Arr />)).toThrowError(
-      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
-        'components, but the provided element type was `array`.',
-    );
-
-    var Obj = {};
-    expect(() => shallowRenderer.render(<Obj />)).toThrowError(
-      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
-        'components, but the provided element type was `object`.',
-    );
-
-    if (__DEV__) {
-      // One warning for each element creation
-      expect(console.error.calls.count()).toBe(4);
-    }
+    renderAndVerifyWarningAndError(undefined, 'undefined');
+    renderAndVerifyWarningAndError(null, 'null');
+    renderAndVerifyWarningAndError([], 'array');
+    renderAndVerifyWarningAndError({}, 'object');
   });
 });

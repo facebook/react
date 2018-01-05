@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
 
-var React;
-var ReactFiberReconciler;
+let React;
+let ReactFiberReconciler;
 
 describe('ReactFiberHostContext', () => {
   beforeEach(() => {
@@ -20,8 +21,8 @@ describe('ReactFiberHostContext', () => {
   });
 
   it('works with null host context', () => {
-    var creates = 0;
-    var Renderer = ReactFiberReconciler({
+    let creates = 0;
+    const Renderer = ReactFiberReconciler({
       prepareForCommit: function() {},
       resetAfterCommit: function() {},
       getRootHostContext: function() {

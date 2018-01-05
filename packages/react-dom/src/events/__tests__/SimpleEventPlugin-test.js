@@ -10,11 +10,11 @@
 'use strict';
 
 describe('SimpleEventPlugin', function() {
-  var React;
-  var ReactDOM;
-  var ReactTestUtils;
+  let React;
+  let ReactDOM;
+  let ReactTestUtils;
 
-  var onClick;
+  let onClick;
 
   function expectClickThru(element) {
     ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(element));
@@ -40,67 +40,67 @@ describe('SimpleEventPlugin', function() {
   });
 
   it('A non-interactive tags click when disabled', function() {
-    var element = <div onClick={onClick} />;
+    const element = <div onClick={onClick} />;
     expectClickThru(mounted(element));
   });
 
   it('A non-interactive tags clicks bubble when disabled', function() {
-    var element = ReactTestUtils.renderIntoDocument(
+    const element = ReactTestUtils.renderIntoDocument(
       <div onClick={onClick}>
         <div />
       </div>,
     );
-    var child = ReactDOM.findDOMNode(element).firstChild;
+    const child = ReactDOM.findDOMNode(element).firstChild;
 
     ReactTestUtils.SimulateNative.click(child);
     expect(onClick.mock.calls.length).toBe(1);
   });
 
   it('does not register a click when clicking a child of a disabled element', function() {
-    var element = ReactTestUtils.renderIntoDocument(
+    const element = ReactTestUtils.renderIntoDocument(
       <button onClick={onClick} disabled={true}>
         <span />
       </button>,
     );
-    var child = ReactDOM.findDOMNode(element).querySelector('span');
+    const child = ReactDOM.findDOMNode(element).querySelector('span');
 
     ReactTestUtils.SimulateNative.click(child);
     expect(onClick.mock.calls.length).toBe(0);
   });
 
   it('triggers click events for children of disabled elements', function() {
-    var element = ReactTestUtils.renderIntoDocument(
+    const element = ReactTestUtils.renderIntoDocument(
       <button disabled={true}>
         <span onClick={onClick} />
       </button>,
     );
-    var child = ReactDOM.findDOMNode(element).querySelector('span');
+    const child = ReactDOM.findDOMNode(element).querySelector('span');
 
     ReactTestUtils.SimulateNative.click(child);
     expect(onClick.mock.calls.length).toBe(1);
   });
 
   it('triggers parent captured click events when target is a child of a disabled elements', function() {
-    var element = ReactTestUtils.renderIntoDocument(
+    const element = ReactTestUtils.renderIntoDocument(
       <div onClickCapture={onClick}>
         <button disabled={true}>
           <span />
         </button>
       </div>,
     );
-    var child = ReactDOM.findDOMNode(element).querySelector('span');
+    const child = ReactDOM.findDOMNode(element).querySelector('span');
 
     ReactTestUtils.SimulateNative.click(child);
     expect(onClick.mock.calls.length).toBe(1);
   });
 
   it('triggers captured click events for children of disabled elements', function() {
-    var element = ReactTestUtils.renderIntoDocument(
+    const element = ReactTestUtils.renderIntoDocument(
       <button disabled={true}>
         <span onClickCapture={onClick} />
       </button>,
     );
-    var child = ReactDOM.findDOMNode(element).querySelector('span');
+    const child = ReactDOM.findDOMNode(element).querySelector('span');
 
     ReactTestUtils.SimulateNative.click(child);
     expect(onClick.mock.calls.length).toBe(1);
@@ -109,7 +109,7 @@ describe('SimpleEventPlugin', function() {
   ['button', 'input', 'select', 'textarea'].forEach(function(tagName) {
     describe(tagName, function() {
       it('should forward clicks when it starts out not disabled', () => {
-        var element = React.createElement(tagName, {
+        const element = React.createElement(tagName, {
           onClick: onClick,
         });
 
@@ -117,7 +117,7 @@ describe('SimpleEventPlugin', function() {
       });
 
       it('should not forward clicks when it starts out disabled', () => {
-        var element = React.createElement(tagName, {
+        const element = React.createElement(tagName, {
           onClick: onClick,
           disabled: true,
         });
@@ -126,8 +126,8 @@ describe('SimpleEventPlugin', function() {
       });
 
       it('should forward clicks when it becomes not disabled', () => {
-        var container = document.createElement('div');
-        var element = ReactDOM.render(
+        const container = document.createElement('div');
+        let element = ReactDOM.render(
           React.createElement(tagName, {onClick: onClick, disabled: true}),
           container,
         );
@@ -139,8 +139,8 @@ describe('SimpleEventPlugin', function() {
       });
 
       it('should not forward clicks when it becomes disabled', () => {
-        var container = document.createElement('div');
-        var element = ReactDOM.render(
+        const container = document.createElement('div');
+        let element = ReactDOM.render(
           React.createElement(tagName, {onClick: onClick}),
           container,
         );
@@ -152,8 +152,8 @@ describe('SimpleEventPlugin', function() {
       });
 
       it('should work correctly if the listener is changed', () => {
-        var container = document.createElement('div');
-        var element = ReactDOM.render(
+        const container = document.createElement('div');
+        let element = ReactDOM.render(
           React.createElement(tagName, {onClick: onClick, disabled: true}),
           container,
         );
@@ -170,11 +170,11 @@ describe('SimpleEventPlugin', function() {
     // See http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
 
     it('does not add a local click to interactive elements', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
       ReactDOM.render(<button onClick={onClick} />, container);
 
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       node.dispatchEvent(new MouseEvent('click'));
 
@@ -182,11 +182,11 @@ describe('SimpleEventPlugin', function() {
     });
 
     it('adds a local click listener to non-interactive elements', function() {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
 
       ReactDOM.render(<div onClick={onClick} />, container);
 
-      var node = container.firstChild;
+      const node = container.firstChild;
 
       node.dispatchEvent(new MouseEvent('click'));
 

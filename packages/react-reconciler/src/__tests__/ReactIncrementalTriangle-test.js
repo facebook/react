@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
 
-var React;
-var ReactNoop;
+let React;
+let ReactNoop;
 
 describe('ReactIncrementalTriangle', () => {
   beforeEach(() => {
@@ -266,8 +267,9 @@ describe('ReactIncrementalTriangle', () => {
       let expectedCounterAtEnd = app.state.counter;
 
       let activeTriangle = null;
+      let action;
       while (true) {
-        var action = yield;
+        action = yield;
         if (action === STOP) {
           break;
         }
@@ -359,7 +361,7 @@ describe('ReactIncrementalTriangle', () => {
           simulate(...actions);
         } catch (e) {
           console.error(
-            `Triangle fuzz tester error! Copy and paste the following line into the test suite:         
+            `Triangle fuzz tester error! Copy and paste the following line into the test suite:
 ${formatActions(actions)}
           `,
           );

@@ -21,6 +21,7 @@ const run = async () => {
   const parseBuildParameters = require('./build-commands/parse-build-parameters');
   const printPostBuildSummary = require('./build-commands/print-post-build-summary');
   const runAutomatedTests = require('./build-commands/run-automated-tests');
+  const runAutomatedBundleTests = require('./build-commands/run-automated-bundle-tests');
   const updateGit = require('./build-commands/update-git');
   const updatePackageVersions = require('./build-commands/update-package-versions');
   const updateYarnDependencies = require('./build-commands/update-yarn-dependencies');
@@ -42,6 +43,7 @@ const run = async () => {
     await runAutomatedTests(params);
     await updatePackageVersions(params);
     await buildArtifacts(params);
+    await runAutomatedBundleTests(params);
     await addGitTag(params);
     await printPostBuildSummary(params);
   } catch (error) {

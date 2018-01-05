@@ -113,7 +113,7 @@ describe('ReactDOMServerIntegration', () => {
     itRenders('an iterable', async render => {
       const threeDivIterable = {
         '@@iterator': function() {
-          var i = 0;
+          let i = 0;
           return {
             next: function() {
               if (i++ < 3) {

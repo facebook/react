@@ -5,13 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
 
-var React;
-var ReactNativeRT;
-var RTManager;
+let React;
+let ReactNativeRT;
+let RTManager;
 
 describe('ReactNativeRT', () => {
   beforeEach(() => {

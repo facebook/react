@@ -134,6 +134,16 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('a non-standard element with text', async render => {
+        // This test suite generally assumes that we get exactly
+        // the same warnings (or none) for all scenarios including
+        // SSR + innerHTML, hydration, and client-side rendering.
+        // However this particular warning fires only when creating
+        // DOM nodes on the client side. We force it to fire early
+        // so that it gets deduplicated later, and doesn't fail the test.
+        expect(() => {
+          ReactDOM.render(<nonstandard />, document.createElement('div'));
+        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.');
+
         const e = await render(<nonstandard>Text</nonstandard>);
         expect(e.tagName).toBe('NONSTANDARD');
         expect(e.childNodes.length).toBe(1);
@@ -550,7 +560,7 @@ describe('ReactDOMServerIntegration', () => {
             </Component>
           </Component>,
         );
-        for (var i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i++) {
           expect(e.tagName).toBe('DIV');
           expect(e.childNodes.length).toBe(1);
           e = e.firstChild;
@@ -575,12 +585,12 @@ describe('ReactDOMServerIntegration', () => {
         );
         expect(e.tagName).toBe('DIV');
         expect(e.childNodes.length).toBe(2);
-        for (var i = 0; i < 2; i++) {
-          var child = e.childNodes[i];
+        for (let i = 0; i < 2; i++) {
+          const child = e.childNodes[i];
           expect(child.tagName).toBe('DIV');
           expect(child.childNodes.length).toBe(2);
-          for (var j = 0; j < 2; j++) {
-            var grandchild = child.childNodes[j];
+          for (let j = 0; j < 2; j++) {
+            const grandchild = child.childNodes[j];
             expect(grandchild.tagName).toBe('DIV');
             expect(grandchild.childNodes.length).toBe(0);
           }

@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
 
-var React;
-var ReactNoop;
+let React;
+let ReactNoop;
 
 describe('ReactIncrementalSideEffects', () => {
   beforeEach(() => {
@@ -18,10 +19,6 @@ describe('ReactIncrementalSideEffects', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
-
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
 
   function div(...children) {
     children = children.map(c => (typeof c === 'string' ? {text: c} : c));
@@ -305,7 +302,7 @@ describe('ReactIncrementalSideEffects', () => {
       return <span prop={props.children} />;
     }
 
-    var middleContent = (
+    const middleContent = (
       <div>
         <Bar>Hello</Bar>
         <Bar>World</Bar>
@@ -515,7 +512,7 @@ describe('ReactIncrementalSideEffects', () => {
         ),
       ),
     ]);
-    var innerSpanA = ReactNoop.getChildren()[0].children[1].children[1];
+    const innerSpanA = ReactNoop.getChildren()[0].children[1].children[1];
     ReactNoop.render(<Foo tick={2} idx={1} />);
     ReactNoop.flushDeferredPri(30 + 25);
     expect(ReactNoop.getChildren()).toEqual([
@@ -541,7 +538,7 @@ describe('ReactIncrementalSideEffects', () => {
       ),
     ]);
 
-    var innerSpanB = ReactNoop.getChildren()[0].children[1].children[1];
+    const innerSpanB = ReactNoop.getChildren()[0].children[1].children[1];
     // This should have been an update to an existing instance, not recreation.
     // We verify that by ensuring that the child instance was the same as
     // before.
@@ -549,7 +546,7 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   xit('can defer side-effects and reuse them later - complex', function() {
-    var ops = [];
+    let ops = [];
 
     class Bar extends React.Component {
       shouldComponentUpdate(nextProps) {
@@ -693,9 +690,9 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   it('deprioritizes setStates that happens within a deprioritized tree', () => {
-    var ops = [];
+    let ops = [];
 
-    var barInstances = [];
+    const barInstances = [];
 
     class Bar extends React.Component {
       constructor() {
@@ -851,7 +848,7 @@ describe('ReactIncrementalSideEffects', () => {
   // TODO: Test that callbacks are not lost if an update is preempted.
 
   it('calls componentWillUnmount after a deletion, even if nested', () => {
-    var ops = [];
+    const ops = [];
 
     class Bar extends React.Component {
       componentWillUnmount() {
@@ -911,7 +908,7 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   it('calls componentDidMount/Update after insertion/update', () => {
-    var ops = [];
+    let ops = [];
 
     class Bar extends React.Component {
       componentDidMount() {
@@ -986,10 +983,9 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   it('invokes ref callbacks after insertion/update/unmount', () => {
-    spyOnDev(console, 'error');
-    var classInstance = null;
+    let classInstance = null;
 
-    var ops = [];
+    let ops = [];
 
     class ClassComponent extends React.Component {
       render() {
@@ -1013,7 +1009,14 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     ReactNoop.render(<Foo show={true} />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Warning: Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.\n\nCheck the render method ' +
+        'of `Foo`.\n' +
+        '    in FunctionalComponent (at **)\n' +
+        '    in div (at **)\n' +
+        '    in Foo (at **)',
+    );
     expect(ops).toEqual([
       classInstance,
       // no call for functional components
@@ -1043,24 +1046,13 @@ describe('ReactIncrementalSideEffects', () => {
       null,
       null,
     ]);
-
-    if (__DEV__) {
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Stateless function components cannot be given refs. ' +
-          'Attempts to access this ref will fail.\n\nCheck the render method ' +
-          'of `Foo`.\n' +
-          '    in FunctionalComponent (at **)\n' +
-          '    in div (at **)\n' +
-          '    in Foo (at **)',
-      );
-    }
   });
 
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the
   // expected way for aborted and resumed render life-cycles.
 
   it('supports string refs', () => {
-    var fooInstance = null;
+    let fooInstance = null;
 
     class Bar extends React.Component {
       componentDidMount() {

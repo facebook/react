@@ -1,52 +1,117 @@
 'use strict';
 
+const chalk = require('chalk');
+
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
   // require that instead.
   require('./spec-equivalence-reporter/setupTests.js');
 } else {
-  var env = jasmine.getEnv();
-  var errorMap = require('../error-codes/codes.json');
+  const env = jasmine.getEnv();
+  const errorMap = require('../error-codes/codes.json');
 
   // TODO: Stop using spyOn in all the test since that seem deprecated.
   // This is a legacy upgrade path strategy from:
   // https://github.com/facebook/jest/blob/v20.0.4/packages/jest-matchers/src/spyMatchers.js#L160
   const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
 
-  // Dev-only spyOn should be ignored in production runs.
-  global.spyOnDev =
-    process.env.NODE_ENV === 'production' ? () => {} : global.spyOn;
+  const spyOn = global.spyOn;
+  const noop = function() {};
+
+  // Spying on console methods in production builds can mask errors.
+  // This is why we added an explicit spyOnDev() helper.
+  // It's too easy to accidentally use the more familiar spyOn() helper though,
+  // So we disable it entirely.
+  // Spying on both dev and prod will require using both spyOnDev() and spyOnProd().
+  global.spyOn = function() {
+    throw new Error(
+      'Do not use spyOn(). ' +
+        'It can accidentally hide unexpected errors in production builds. ' +
+        'Use spyOnDev(), spyOnProd(), or spyOnDevAndProd() instead.'
+    );
+  };
+
+  if (process.env.NODE_ENV === 'production') {
+    global.spyOnDev = noop;
+    global.spyOnProd = spyOn;
+    global.spyOnDevAndProd = spyOn;
+  } else {
+    global.spyOnDev = spyOn;
+    global.spyOnProd = noop;
+    global.spyOnDevAndProd = spyOn;
+  }
+
+  expect.extend({
+    ...require('./matchers/toWarnDev'),
+  });
+
+  // We have a Babel transform that inserts guards against infinite loops.
+  // If a loop runs for too many iterations, we throw an error and set this
+  // global variable. The global lets us detect an infinite loop even if
+  // the actual error object ends up being caught and ignored. An infinite
+  // loop must always fail the test!
+  env.beforeEach(() => {
+    global.infiniteLoopError = null;
+  });
+  env.afterEach(() => {
+    const error = global.infiniteLoopError;
+    global.infiniteLoopError = null;
+    if (error) {
+      throw error;
+    }
+  });
 
   ['error', 'warn'].forEach(methodName => {
-    var oldMethod = console[methodName];
-    var newMethod = function() {
-      newMethod.__callCount++;
-      oldMethod.apply(this, arguments);
+    const unexpectedConsoleCallStacks = [];
+    const newMethod = function(message) {
+      // Capture the call stack now so we can warn about it later.
+      // The call stack has helpful information for the test author.
+      // Don't throw yet though b'c it might be accidentally caught and suppressed.
+      const stack = new Error().stack;
+      unexpectedConsoleCallStacks.push([
+        stack.substr(stack.indexOf('\n') + 1),
+        message,
+      ]);
     };
-    newMethod.__callCount = 0;
+
     console[methodName] = newMethod;
 
     env.beforeEach(() => {
-      newMethod.__callCount = 0;
+      unexpectedConsoleCallStacks.length = 0;
     });
 
     env.afterEach(() => {
       if (console[methodName] !== newMethod && !isSpy(console[methodName])) {
         throw new Error(
-          'Test did not tear down console.' + methodName + ' mock properly.'
+          `Test did not tear down console.${methodName} mock properly.`
         );
       }
-      if (console[methodName].__callCount !== 0) {
-        throw new Error(
-          'Expected test not to call console.' +
-            methodName +
-            '(). ' +
-            'If the warning is expected, mock it out using ' +
-            "spyOn(console, '" +
-            methodName +
-            "') and test that the " +
-            'warning occurs.'
+
+      if (unexpectedConsoleCallStacks.length > 0) {
+        const messages = unexpectedConsoleCallStacks.map(
+          ([stack, message]) =>
+            `${chalk.red(message)}\n` +
+            `${stack
+              .split('\n')
+              .map(line => chalk.gray(line))
+              .join('\n')}`
         );
+
+        const message =
+          `Expected test not to call ${chalk.bold(
+            `console.${methodName}()`
+          )}.\n\n` +
+          'If the warning is expected, test for it explicitly by:\n' +
+          `1. Using the ${chalk.bold('.toWarnDev()')} / ${chalk.bold(
+            '.toLowPriorityWarnDev()'
+          )} matchers, or...\n` +
+          `2. Mock it out using ${chalk.bold('spyOnDev')}(console, '${
+            methodName
+          }') or ${chalk.bold('spyOnProd')}(console, '${
+            methodName
+          }'), and test that the warning occurs.`;
+
+        throw new Error(`${message}\n\n${messages.join('\n\n')}`);
       }
     });
   });
@@ -54,7 +119,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   if (process.env.NODE_ENV === 'production') {
     // In production, we strip error messages and turn them into codes.
     // This decodes them back so that the test assertions on them work.
-    var decodeErrorMessage = function(message) {
+    const decodeErrorMessage = function(message) {
       if (!message) {
         return message;
       }

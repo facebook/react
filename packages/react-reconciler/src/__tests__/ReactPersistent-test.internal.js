@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
 
-var React;
-var ReactNoop;
+let React;
+let ReactNoop;
 let ReactPortal;
 
 describe('ReactPersistent', () => {
@@ -24,7 +25,7 @@ describe('ReactPersistent', () => {
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    ReactPortal = require('../ReactPortal');
+    ReactPortal = require('shared/ReactPortal');
   });
 
   const DEFAULT_ROOT_ID = 'persistent-test';
@@ -62,12 +63,12 @@ describe('ReactPersistent', () => {
 
     render(<Foo text="Hello" />);
     ReactNoop.flush();
-    var originalChildren = getChildren();
+    const originalChildren = getChildren();
     expect(originalChildren).toEqual([div(span())]);
 
     render(<Foo text="World" />);
     ReactNoop.flush();
-    var newChildren = getChildren();
+    const newChildren = getChildren();
     expect(newChildren).toEqual([div(span(), span())]);
 
     expect(originalChildren).toEqual([div(span())]);
@@ -96,12 +97,12 @@ describe('ReactPersistent', () => {
 
     render(<Foo text="Hello" />);
     ReactNoop.flush();
-    var originalChildren = getChildren();
+    const originalChildren = getChildren();
     expect(originalChildren).toEqual([div(span('Hello'))]);
 
     render(<Foo text="World" />);
     ReactNoop.flush();
-    var newChildren = getChildren();
+    const newChildren = getChildren();
     expect(newChildren).toEqual([div(span('Hello'), span('World'))]);
 
     expect(originalChildren).toEqual([div(span('Hello'))]);
@@ -122,12 +123,12 @@ describe('ReactPersistent', () => {
 
     render(<Foo text="Hello" />);
     ReactNoop.flush();
-    var originalChildren = getChildren();
+    const originalChildren = getChildren();
     expect(originalChildren).toEqual([div('Hello', span())]);
 
     render(<Foo text="World" />);
     ReactNoop.flush();
-    var newChildren = getChildren();
+    const newChildren = getChildren();
     expect(newChildren).toEqual([div('World', span())]);
 
     expect(originalChildren).toEqual([div('Hello', span())]);
@@ -170,9 +171,9 @@ describe('ReactPersistent', () => {
 
     expect(emptyPortalChildSet).toEqual([]);
 
-    var originalChildren = getChildren();
+    const originalChildren = getChildren();
     expect(originalChildren).toEqual([div()]);
-    var originalPortalChildren = portalContainer.children;
+    const originalPortalChildren = portalContainer.children;
     expect(originalPortalChildren).toEqual([div(span())]);
 
     render(
@@ -186,9 +187,9 @@ describe('ReactPersistent', () => {
     );
     ReactNoop.flush();
 
-    var newChildren = getChildren();
+    const newChildren = getChildren();
     expect(newChildren).toEqual([div()]);
-    var newPortalChildren = portalContainer.children;
+    const newPortalChildren = portalContainer.children;
     expect(newPortalChildren).toEqual([div(span(), 'Hello ', 'World')]);
 
     expect(originalChildren).toEqual([div()]);
@@ -203,7 +204,7 @@ describe('ReactPersistent', () => {
     render(<Parent />);
     ReactNoop.flush();
 
-    var clearedPortalChildren = portalContainer.children;
+    const clearedPortalChildren = portalContainer.children;
     expect(clearedPortalChildren).toEqual([]);
 
     // The original is unchanged.

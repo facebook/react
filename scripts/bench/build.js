@@ -42,21 +42,12 @@ function getDefaultReactPath() {
   return join(__dirname, 'remote-repo');
 }
 
-async function buldAllBundles(reactPath = getDefaultReactPath()) {
-  // build the react FB bundles in the build
-  await executeCommand(`cd ${reactPath} && yarn && yarn build`);
-}
-
 async function buildBenchmark(reactPath = getDefaultReactPath(), benchmark) {
   // get the build.js from the benchmark directory and execute it
   await require(join(__dirname, 'benchmarks', benchmark, 'build.js'))(
     reactPath,
     asyncCopyTo
   );
-}
-
-function getBundleResults(reactPath = getDefaultReactPath()) {
-  return require(join(reactPath, 'scripts', 'rollup', 'results.json'));
 }
 
 async function getMergeBaseFromLocalGitRepo(localRepo) {
@@ -106,17 +97,16 @@ async function buildBenchmarkBundlesFromGitRepo(
       // then we checkout the merge base
       await Git.Checkout.tree(repo, commit);
     }
-    await buildAllBundles();
+    await buildReactBundles();
   }
-  return getBundleResults();
 }
 
-async function buildAllBundles(reactPath, skipBuild) {
+async function buildReactBundles(reactPath = getDefaultReactPath(), skipBuild) {
   if (!skipBuild) {
-    // build all bundles so we can get all stats and use bundles for benchmarks
-    await buldAllBundles(reactPath);
+    await executeCommand(
+      `cd ${reactPath} && yarn && yarn build core,dom-client --type=UMD_PROD`
+    );
   }
-  return getBundleResults(reactPath);
 }
 
 // if run directly via CLI
@@ -125,7 +115,7 @@ if (require.main === module) {
 }
 
 module.exports = {
-  buildAllBundles,
+  buildReactBundles,
   buildBenchmark,
   buildBenchmarkBundlesFromGitRepo,
   getMergeBaseFromLocalGitRepo,

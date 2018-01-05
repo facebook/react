@@ -24,37 +24,54 @@ import setTextContent from './setTextContent';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
 import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
-import {getPropertyInfo, shouldSetAttribute} from '../shared/DOMProperty';
+import {
+  getPropertyInfo,
+  shouldIgnoreAttribute,
+  shouldRemoveAttribute,
+} from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
 import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
+import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
-var {
+const {
   getCurrentFiberOwnerName,
   getCurrentFiberStackAddendum,
 } = ReactDebugCurrentFiber;
-var didWarnInvalidHydration = false;
-var didWarnShadyDOM = false;
+let didWarnInvalidHydration = false;
+let didWarnShadyDOM = false;
 
-var DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
-var SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
-var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-var AUTOFOCUS = 'autoFocus';
-var CHILDREN = 'children';
-var STYLE = 'style';
-var HTML = '__html';
+const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
+const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
+const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
+const AUTOFOCUS = 'autoFocus';
+const CHILDREN = 'children';
+const STYLE = 'style';
+const HTML = '__html';
 
-var {html: HTML_NAMESPACE} = Namespaces;
+const {html: HTML_NAMESPACE} = Namespaces;
 
-var getStack = emptyFunction.thatReturns('');
+let getStack = emptyFunction.thatReturns('');
+
+let warnedUnknownTags;
+let suppressHydrationWarning;
+
+let validatePropertiesInDevelopment;
+let warnForTextDifference;
+let warnForPropDifference;
+let warnForExtraAttributes;
+let warnForInvalidEventListener;
+
+let normalizeMarkupForTextOrAttribute;
+let normalizeHTML;
 
 if (__DEV__) {
   getStack = getCurrentFiberStackAddendum;
 
-  var warnedUnknownTags = {
+  warnedUnknownTags = {
     // Chrome is the only major browser not shipping <time>. But as of July
     // 2017 it intends to ship it due to widespread usage. We intentionally
     // *don't* warn for <time> even if it's unrecognized by Chrome because
@@ -64,7 +81,7 @@ if (__DEV__) {
     dialog: true,
   };
 
-  var validatePropertiesInDevelopment = function(type, props) {
+  validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props, /* canUseEventSystem */ true);
@@ -75,10 +92,10 @@ if (__DEV__) {
   // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
   // If we have a mismatch, it might be caused by that.
   // We will still patch up in this case but not fire the warning.
-  var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
-  var NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
+  const NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
+  const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
 
-  var normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
+  normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
     const markupString =
       typeof markup === 'string' ? markup : '' + (markup: any);
     return markupString
@@ -86,7 +103,7 @@ if (__DEV__) {
       .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
   };
 
-  var warnForTextDifference = function(
+  warnForTextDifference = function(
     serverText: string,
     clientText: string | number,
   ) {
@@ -107,7 +124,7 @@ if (__DEV__) {
     );
   };
 
-  var warnForPropDifference = function(
+  warnForPropDifference = function(
     propName: string,
     serverValue: mixed,
     clientValue: mixed,
@@ -134,19 +151,19 @@ if (__DEV__) {
     );
   };
 
-  var warnForExtraAttributes = function(attributeNames: Set<string>) {
+  warnForExtraAttributes = function(attributeNames: Set<string>) {
     if (didWarnInvalidHydration) {
       return;
     }
     didWarnInvalidHydration = true;
-    var names = [];
+    const names = [];
     attributeNames.forEach(function(name) {
       names.push(name);
     });
     warning(false, 'Extra attributes from the server: %s', names);
   };
 
-  var warnForInvalidEventListener = function(registrationName, listener) {
+  warnForInvalidEventListener = function(registrationName, listener) {
     if (listener === false) {
       warning(
         false,
@@ -171,12 +188,12 @@ if (__DEV__) {
 
   // Parse the HTML and read it back to normalize the HTML string so that it
   // can be used for comparison.
-  var normalizeHTML = function(parent: Element, html: string) {
+  normalizeHTML = function(parent: Element, html: string) {
     // We could have created a separate document here to avoid
     // re-initializing custom elements if they exist. But this breaks
     // how <noscript> is being handled. So we use the same document.
     // See the discussion in https://github.com/facebook/react/pull/11157.
-    var testElement =
+    const testElement =
       parent.namespaceURI === HTML_NAMESPACE
         ? parent.ownerDocument.createElement(parent.tagName)
         : parent.ownerDocument.createElementNS(
@@ -189,10 +206,10 @@ if (__DEV__) {
 }
 
 function ensureListeningTo(rootContainerElement, registrationName) {
-  var isDocumentOrFragment =
+  const isDocumentOrFragment =
     rootContainerElement.nodeType === DOCUMENT_NODE ||
     rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
-  var doc = isDocumentOrFragment
+  const doc = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
   listenTo(registrationName, doc);
@@ -208,7 +225,7 @@ function getOwnerDocumentFromRootContainer(
 
 // There are so many media events, it makes sense to just
 // maintain a list rather than create a `trapBubbledEvent` for each
-var mediaEvents = {
+const mediaEvents = {
   topAbort: 'abort',
   topCanPlay: 'canplay',
   topCanPlayThrough: 'canplaythrough',
@@ -254,11 +271,11 @@ function setInitialDOMProperties(
   nextProps: Object,
   isCustomComponentTag: boolean,
 ): void {
-  for (var propKey in nextProps) {
+  for (const propKey in nextProps) {
     if (!nextProps.hasOwnProperty(propKey)) {
       continue;
     }
-    var nextProp = nextProps[propKey];
+    const nextProp = nextProps[propKey];
     if (propKey === STYLE) {
       if (__DEV__) {
         if (nextProp) {
@@ -270,7 +287,7 @@ function setInitialDOMProperties(
       // Relies on `updateStylesByID` not mutating `styleUpdates`.
       CSSPropertyOperations.setValueForStyles(domElement, nextProp, getStack);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      var nextHtml = nextProp ? nextProp[HTML] : undefined;
+      const nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
         setInnerHTML(domElement, nextHtml);
       }
@@ -280,7 +297,7 @@ function setInitialDOMProperties(
         // textContent on a <textarea> will cause the placeholder to not
         // show within the <textarea> until it has been focused and blurred again.
         // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-        var canSetTextContent = tag !== 'textarea' || nextProp !== '';
+        const canSetTextContent = tag !== 'textarea' || nextProp !== '';
         if (canSetTextContent) {
           setTextContent(domElement, nextProp);
         }
@@ -302,13 +319,13 @@ function setInitialDOMProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
-    } else if (isCustomComponentTag) {
-      DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
     } else if (nextProp != null) {
-      // If we're updating to null or undefined, we should remove the property
-      // from the DOM node instead of inadvertently setting to a string. This
-      // brings us in line with the same behavior we have on initial render.
-      DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
+      DOMPropertyOperations.setValueForProperty(
+        domElement,
+        propKey,
+        nextProp,
+        isCustomComponentTag,
+      );
     }
   }
 }
@@ -320,32 +337,22 @@ function updateDOMProperties(
   isCustomComponentTag: boolean,
 ): void {
   // TODO: Handle wasCustomComponentTag
-  for (var i = 0; i < updatePayload.length; i += 2) {
-    var propKey = updatePayload[i];
-    var propValue = updatePayload[i + 1];
+  for (let i = 0; i < updatePayload.length; i += 2) {
+    const propKey = updatePayload[i];
+    const propValue = updatePayload[i + 1];
     if (propKey === STYLE) {
       CSSPropertyOperations.setValueForStyles(domElement, propValue, getStack);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
-    } else if (isCustomComponentTag) {
-      if (propValue != null) {
-        DOMPropertyOperations.setValueForAttribute(
-          domElement,
-          propKey,
-          propValue,
-        );
-      } else {
-        DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
-      }
-    } else if (propValue != null) {
-      DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
     } else {
-      // If we're updating to null or undefined, we should remove the property
-      // from the DOM node instead of inadvertently setting to a string. This
-      // brings us in line with the same behavior we have on initial render.
-      DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
+      DOMPropertyOperations.setValueForProperty(
+        domElement,
+        propKey,
+        propValue,
+        isCustomComponentTag,
+      );
     }
   }
 }
@@ -356,19 +363,21 @@ export function createElement(
   rootContainerElement: Element | Document,
   parentNamespace: string,
 ): Element {
+  let isCustomComponentTag;
+
   // We create tags in the namespace of their parent container, except HTML
   // tags get no namespace.
-  var ownerDocument: Document = getOwnerDocumentFromRootContainer(
+  const ownerDocument: Document = getOwnerDocumentFromRootContainer(
     rootContainerElement,
   );
-  var domElement: Element;
-  var namespaceURI = parentNamespace;
+  let domElement: Element;
+  let namespaceURI = parentNamespace;
   if (namespaceURI === HTML_NAMESPACE) {
     namespaceURI = getIntrinsicNamespace(type);
   }
   if (namespaceURI === HTML_NAMESPACE) {
     if (__DEV__) {
-      var isCustomComponentTag = isCustomComponent(type, props);
+      isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
       // allow <SVG> or <mATH>.
       warning(
@@ -382,10 +391,10 @@ export function createElement(
     if (type === 'script') {
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
-      var div = ownerDocument.createElement('div');
+      const div = ownerDocument.createElement('div');
       div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
       // This is guaranteed to yield a script element.
-      var firstChild = ((div.firstChild: any): HTMLScriptElement);
+      const firstChild = ((div.firstChild: any): HTMLScriptElement);
       domElement = div.removeChild(firstChild);
     } else if (typeof props.is === 'string') {
       // $FlowIssue `createElement` should be updated for Web Components
@@ -438,7 +447,7 @@ export function setInitialProperties(
   rawProps: Object,
   rootContainerElement: Element | Document,
 ): void {
-  var isCustomComponentTag = isCustomComponent(tag, rawProps);
+  const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, rawProps);
     if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
@@ -453,7 +462,7 @@ export function setInitialProperties(
   }
 
   // TODO: Make sure that we check isMounted before firing any of these events.
-  var props: Object;
+  let props: Object;
   switch (tag) {
     case 'iframe':
     case 'object':
@@ -463,7 +472,7 @@ export function setInitialProperties(
     case 'video':
     case 'audio':
       // Create listener for each media event
-      for (var event in mediaEvents) {
+      for (const event in mediaEvents) {
         if (mediaEvents.hasOwnProperty(event)) {
           trapBubbledEvent(event, mediaEvents[event], domElement);
         }
@@ -571,10 +580,10 @@ export function diffProperties(
     validatePropertiesInDevelopment(tag, nextRawProps);
   }
 
-  var updatePayload: null | Array<any> = null;
+  let updatePayload: null | Array<any> = null;
 
-  var lastProps: Object;
-  var nextProps: Object;
+  let lastProps: Object;
+  let nextProps: Object;
   switch (tag) {
     case 'input':
       lastProps = ReactDOMFiberInput.getHostProps(domElement, lastRawProps);
@@ -611,9 +620,9 @@ export function diffProperties(
 
   assertValidProps(tag, nextProps, getStack);
 
-  var propKey;
-  var styleName;
-  var styleUpdates = null;
+  let propKey;
+  let styleName;
+  let styleUpdates = null;
   for (propKey in lastProps) {
     if (
       nextProps.hasOwnProperty(propKey) ||
@@ -623,7 +632,7 @@ export function diffProperties(
       continue;
     }
     if (propKey === STYLE) {
-      var lastStyle = lastProps[propKey];
+      const lastStyle = lastProps[propKey];
       for (styleName in lastStyle) {
         if (lastStyle.hasOwnProperty(styleName)) {
           if (!styleUpdates) {
@@ -655,8 +664,8 @@ export function diffProperties(
     }
   }
   for (propKey in nextProps) {
-    var nextProp = nextProps[propKey];
-    var lastProp = lastProps != null ? lastProps[propKey] : undefined;
+    const nextProp = nextProps[propKey];
+    const lastProp = lastProps != null ? lastProps[propKey] : undefined;
     if (
       !nextProps.hasOwnProperty(propKey) ||
       nextProp === lastProp ||
@@ -708,8 +717,8 @@ export function diffProperties(
         styleUpdates = nextProp;
       }
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-      var nextHtml = nextProp ? nextProp[HTML] : undefined;
-      var lastHtml = lastProp ? lastProp[HTML] : undefined;
+      const nextHtml = nextProp ? nextProp[HTML] : undefined;
+      const lastHtml = lastProp ? lastProp[HTML] : undefined;
       if (nextHtml != null) {
         if (lastHtml !== nextHtml) {
           (updatePayload = updatePayload || []).push(propKey, '' + nextHtml);
@@ -775,8 +784,8 @@ export function updateProperties(
     ReactDOMFiberInput.updateChecked(domElement, nextRawProps);
   }
 
-  var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
-  var isCustomComponentTag = isCustomComponent(tag, nextRawProps);
+  const wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
+  const isCustomComponentTag = isCustomComponent(tag, nextRawProps);
   // Apply the diff.
   updateDOMProperties(
     domElement,
@@ -805,6 +814,17 @@ export function updateProperties(
   }
 }
 
+function getPossibleStandardName(propName: string): string | null {
+  if (__DEV__) {
+    const lowerCasedName = propName.toLowerCase();
+    if (!possibleStandardNames.hasOwnProperty(lowerCasedName)) {
+      return null;
+    }
+    return possibleStandardNames[lowerCasedName] || null;
+  }
+  return null;
+}
+
 export function diffHydratedProperties(
   domElement: Element,
   tag: string,
@@ -812,10 +832,12 @@ export function diffHydratedProperties(
   parentNamespace: string,
   rootContainerElement: Element | Document,
 ): null | Array<mixed> {
+  let isCustomComponentTag;
+  let extraAttributeNames: Set<string>;
+
   if (__DEV__) {
-    var suppressHydrationWarning =
-      rawProps[SUPPRESS_HYDRATION_WARNING] === true;
-    var isCustomComponentTag = isCustomComponent(tag, rawProps);
+    suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
+    isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
     if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
       warning(
@@ -837,7 +859,7 @@ export function diffHydratedProperties(
     case 'video':
     case 'audio':
       // Create listener for each media event
-      for (var event in mediaEvents) {
+      for (const event in mediaEvents) {
         if (mediaEvents.hasOwnProperty(event)) {
           trapBubbledEvent(event, mediaEvents[event], domElement);
         }
@@ -887,10 +909,10 @@ export function diffHydratedProperties(
   assertValidProps(tag, rawProps, getStack);
 
   if (__DEV__) {
-    var extraAttributeNames: Set<string> = new Set();
-    var attributes = domElement.attributes;
-    for (var i = 0; i < attributes.length; i++) {
-      var name = attributes[i].name.toLowerCase();
+    extraAttributeNames = new Set();
+    const attributes = domElement.attributes;
+    for (let i = 0; i < attributes.length; i++) {
+      const name = attributes[i].name.toLowerCase();
       switch (name) {
         // Built-in SSR attribute is whitelisted
         case 'data-reactroot':
@@ -911,12 +933,12 @@ export function diffHydratedProperties(
     }
   }
 
-  var updatePayload = null;
-  for (var propKey in rawProps) {
+  let updatePayload = null;
+  for (const propKey in rawProps) {
     if (!rawProps.hasOwnProperty(propKey)) {
       continue;
     }
-    var nextProp = rawProps[propKey];
+    const nextProp = rawProps[propKey];
     if (propKey === CHILDREN) {
       // For text content children we compare against textContent. This
       // might match additional HTML that is hidden when we read it using
@@ -949,10 +971,14 @@ export function diffHydratedProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
-    } else if (__DEV__) {
+    } else if (
+      __DEV__ &&
+      // Convince Flow we've calculated it (it's DEV-only in this method.)
+      typeof isCustomComponentTag === 'boolean'
+    ) {
       // Validate that the properties correspond to their expected values.
-      var serverValue;
-      var propertyInfo;
+      let serverValue;
+      const propertyInfo = getPropertyInfo(propKey);
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
@@ -994,14 +1020,24 @@ export function diffHydratedProperties(
         if (nextProp !== serverValue) {
           warnForPropDifference(propKey, serverValue, nextProp);
         }
-      } else if (shouldSetAttribute(propKey, nextProp)) {
-        if ((propertyInfo = getPropertyInfo(propKey))) {
+      } else if (
+        !shouldIgnoreAttribute(propKey, propertyInfo, isCustomComponentTag) &&
+        !shouldRemoveAttribute(
+          propKey,
+          nextProp,
+          propertyInfo,
+          isCustomComponentTag,
+        )
+      ) {
+        let isMismatchDueToBadCasing = false;
+        if (propertyInfo !== null) {
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propertyInfo.attributeName);
           serverValue = DOMPropertyOperations.getValueForProperty(
             domElement,
             propKey,
             nextProp,
+            propertyInfo,
           );
         } else {
           let ownNamespace = parentNamespace;
@@ -1012,6 +1048,17 @@ export function diffHydratedProperties(
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propKey.toLowerCase());
           } else {
+            const standardName = getPossibleStandardName(propKey);
+            if (standardName !== null && standardName !== propKey) {
+              // If an SVG prop is supplied with bad casing, it will
+              // be successfully parsed from HTML, but will produce a mismatch
+              // (and would be incorrectly rendered on the client).
+              // However, we already warn about bad casing elsewhere.
+              // So we'll skip the misleading extra mismatch warning in this case.
+              isMismatchDueToBadCasing = true;
+              // $FlowFixMe - Should be inferred as not undefined.
+              extraAttributeNames.delete(standardName);
+            }
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propKey);
           }
@@ -1022,7 +1069,7 @@ export function diffHydratedProperties(
           );
         }
 
-        if (nextProp !== serverValue) {
+        if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
           warnForPropDifference(propKey, serverValue, nextProp);
         }
       }

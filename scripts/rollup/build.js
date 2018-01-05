@@ -1,41 +1,49 @@
 'use strict';
 
-const rollup = require('rollup').rollup;
+const {rollup} = require('rollup');
 const babel = require('rollup-plugin-babel');
 const closure = require('rollup-plugin-closure-compiler-js');
 const commonjs = require('rollup-plugin-commonjs');
-const alias = require('rollup-plugin-alias');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
-const join = require('path').join;
-const resolve = require('path').resolve;
-const resolvePlugin = require('rollup-plugin-node-resolve');
+const path = require('path');
+const resolve = require('rollup-plugin-node-resolve');
 const fs = require('fs');
-const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
-const sizes = require('./plugins/sizes-plugin');
 const Stats = require('./stats');
+const Sync = require('./sync');
+const sizes = require('./plugins/sizes-plugin');
+const useForks = require('./plugins/use-forks-plugin');
 const extractErrorCodes = require('../error-codes/extract-errors');
-const syncReactDom = require('./sync').syncReactDom;
-const syncReactNative = require('./sync').syncReactNative;
-const syncReactNativeRT = require('./sync').syncReactNativeRT;
-const syncReactNativeCS = require('./sync').syncReactNativeCS;
 const Packaging = require('./packaging');
+const {asyncCopyTo, asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
 
-const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
-const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
-const NODE_DEV = Bundles.bundleTypes.NODE_DEV;
-const NODE_PROD = Bundles.bundleTypes.NODE_PROD;
-const FB_DEV = Bundles.bundleTypes.FB_DEV;
-const FB_PROD = Bundles.bundleTypes.FB_PROD;
-const RN_DEV = Bundles.bundleTypes.RN_DEV;
-const RN_PROD = Bundles.bundleTypes.RN_PROD;
+// Errors in promises should be fatal.
+let loggedErrors = new Set();
+process.on('unhandledRejection', err => {
+  if (loggedErrors.has(err)) {
+    // No need to print it twice.
+    process.exit(1);
+  }
+  throw err;
+});
+
+const {
+  UMD_DEV,
+  UMD_PROD,
+  NODE_DEV,
+  NODE_PROD,
+  FB_DEV,
+  FB_PROD,
+  RN_DEV,
+  RN_PROD,
+} = Bundles.bundleTypes;
 
 const requestedBundleTypes = (argv.type || '')
   .split(',')
@@ -43,8 +51,9 @@ const requestedBundleTypes = (argv.type || '')
 const requestedBundleNames = (argv._[0] || '')
   .split(',')
   .map(type => type.toLowerCase());
-const syncFbsource = argv['sync-fbsource'];
-const syncWww = argv['sync-www'];
+const forcePrettyOutput = argv.pretty;
+const syncFBSourcePath = argv['sync-fbsource'];
+const syncWWWPath = argv['sync-www'];
 const shouldExtractErrors = argv['extract-errors'];
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -88,11 +97,9 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Use object-assign polyfill in open source
-          resolve('./scripts/babel/transform-object-assign-require'),
-
+          path.resolve('./scripts/babel/transform-object-assign-require'),
           // Minify invariant messages
           require('../error-codes/replace-invariant-error-codes'),
-
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
           require('./plugins/wrap-warning-with-env-check'),
         ]),
@@ -102,54 +109,11 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
   }
 }
 
-function handleRollupWarnings(warning) {
-  if (warning.code === 'UNRESOLVED_IMPORT') {
-    console.error(warning.message);
-    process.exit(1);
-  }
-  if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
-    const match = warning.message.match(/external module '([^']+)'/);
-    if (!match || typeof match[1] !== 'string') {
-      throw new Error(
-        'Could not parse a Rollup warning. ' + 'Fix this method.'
-      );
-    }
-    const importSideEffects = Modules.getImportSideEffects();
-    const path = match[1];
-    if (typeof importSideEffects[path] !== 'boolean') {
-      throw new Error(
-        'An external module "' +
-          path +
-          '" is used in a DEV-only code path ' +
-          'but we do not know if it is safe to omit an unused require() to it in production. ' +
-          'Please add it to the `importSideEffects` list in `scripts/rollup/modules.js`.'
-      );
-    }
-    // Don't warn. We will remove side effectless require() in a later pass.
-    return;
-  }
-  console.warn(warning.message || warning);
-}
-
-function getRollupOutputOptions(
-  filename,
-  format,
-  bundleType,
-  globals,
-  globalName,
-  moduleType
-) {
+function getRollupOutputOptions(outputPath, format, globals, globalName) {
   return Object.assign(
     {},
     {
-      destDir: 'build/',
-      file:
-        'build/' +
-        Packaging.getOutputPathRelativeToBuildFolder(
-          bundleType,
-          filename,
-          globalName
-        ),
+      file: outputPath,
       format,
       globals,
       interop: false,
@@ -217,19 +181,19 @@ function getPlugins(
   externals,
   updateBabelOptions,
   filename,
+  packageName,
   bundleType,
   globalName,
   moduleType,
-  modulesToStub,
-  featureFlags
+  modulesToStub
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
-  const shims = Modules.getShims(bundleType, entry, featureFlags);
+  const forks = Modules.getForks(bundleType, entry);
   const isProduction = isProductionBundleType(bundleType);
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_DEV || bundleType === FB_PROD;
   const isRNBundle = bundleType === RN_DEV || bundleType === RN_PROD;
-  const shouldStayReadable = isFBBundle || isRNBundle;
+  const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
   return [
     // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
@@ -238,10 +202,10 @@ function getPlugins(
         return source;
       },
     },
-    // Shim some modules for www custom behavior and optimizations.
-    alias(shims),
+    // Shim any modules that need forking in this environment.
+    useForks(forks),
     // Use Node resolution mechanism.
-    resolvePlugin({
+    resolve({
       skip: externals,
     }),
     // Remove license headers from individual modules
@@ -300,8 +264,16 @@ function getPlugins(
     // Record bundle size.
     sizes({
       getSize: (size, gzip) => {
-        const key = `${filename} (${bundleType})`;
-        Stats.currentBuildResults.bundleSizes[key] = {
+        const currentSizes = Stats.currentBuildResults.bundleSizes;
+        const recordIndex = currentSizes.findIndex(
+          record =>
+            record.filename === filename && record.bundleType === bundleType
+        );
+        const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
+        currentSizes[index] = {
+          filename,
+          bundleType,
+          packageName,
           size,
           gzip,
         };
@@ -310,17 +282,17 @@ function getPlugins(
   ].filter(Boolean);
 }
 
-function createBundle(bundle, bundleType) {
+function shouldSkipBundle(bundle, bundleType) {
   const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1;
   if (shouldSkipBundleType) {
-    return Promise.resolve();
+    return true;
   }
   if (requestedBundleTypes.length > 0) {
     const isAskingForDifferentType = requestedBundleTypes.every(
       requestedType => bundleType.indexOf(requestedType) === -1
     );
     if (isAskingForDifferentType) {
-      return Promise.resolve();
+      return true;
     }
   }
   if (requestedBundleNames.length > 0) {
@@ -328,8 +300,15 @@ function createBundle(bundle, bundleType) {
       requestedName => bundle.label.indexOf(requestedName) === -1
     );
     if (isAskingForDifferentNames) {
-      return Promise.resolve();
+      return true;
     }
+  }
+  return false;
+}
+
+async function createBundle(bundle, bundleType) {
+  if (shouldSkipBundle(bundle, bundleType)) {
+    return;
   }
 
   const filename = getFilename(bundle.entry, bundle.global, bundleType);
@@ -363,10 +342,11 @@ function createBundle(bundle, bundleType) {
     module => !importSideEffects[module]
   );
 
-  console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
-  return rollup({
+  const rollupConfig = {
     input: resolvedEntry,
-    pureExternalModules,
+    treeshake: {
+      pureExternalModules,
+    },
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
@@ -375,139 +355,146 @@ function createBundle(bundle, bundleType) {
       }
       return !!peerGlobals[id];
     },
-    onwarn: handleRollupWarnings,
+    onwarn: handleRollupWarning,
     plugins: getPlugins(
       bundle.entry,
       externals,
       bundle.babel,
       filename,
+      packageName,
       bundleType,
       bundle.global,
       bundle.moduleType,
-      bundle.modulesToStub,
-      bundle.featureFlags
+      bundle.modulesToStub
     ),
     // We can't use getters in www.
     legacy: bundleType === FB_DEV || bundleType === FB_PROD,
-  })
-    .then(result =>
-      result.write(
-        getRollupOutputOptions(
-          filename,
-          format,
-          bundleType,
-          peerGlobals,
-          bundle.global,
-          bundle.moduleType
-        )
-      )
-    )
-    .then(() => Packaging.createNodePackage(bundleType, packageName, filename))
-    .then(() => {
-      console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
-    })
-    .catch(error => {
-      if (error.code) {
-        console.error(
-          `\x1b[31m-- ${error.code}${
-            error.plugin ? ` (${error.plugin})` : ''
-          } --`
-        );
-        console.error(error.message);
+  };
+  const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
+    bundleType,
+    filename,
+    packageName
+  );
+  const rollupOutputOptions = getRollupOutputOptions(
+    mainOutputPath,
+    format,
+    peerGlobals,
+    bundle.global
+  );
 
-        const {file, line, column} = error.loc;
-        const rawLines = fs.readFileSync(file, 'utf-8');
-        // column + 1 is required due to rollup counting column start position from 0
-        // whereas babel-code-frame counts from 1
-        const frame = codeFrame(rawLines, line, column + 1, {
-          highlightCode: true,
-        });
-        console.error(frame);
-      } else {
-        console.error(error);
-      }
-      process.exit(1);
-    });
+  console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
+  try {
+    const result = await rollup(rollupConfig);
+    await result.write(rollupOutputOptions);
+  } catch (error) {
+    console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
+    handleRollupError(error);
+    throw error;
+  }
+  for (let i = 0; i < otherOutputPaths.length; i++) {
+    await asyncCopyTo(mainOutputPath, otherOutputPaths[i]);
+  }
+  console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
 }
 
-// clear the build directory
-rimraf('build', () => {
-  // create a new build directory
-  fs.mkdirSync('build');
-  // create the packages folder for NODE+UMD bundles
-  fs.mkdirSync(join('build', 'packages'));
-  // create the dist folder for UMD bundles
-  fs.mkdirSync(join('build', 'dist'));
+function handleRollupWarning(warning) {
+  if (warning.code === 'UNRESOLVED_IMPORT') {
+    console.error(warning.message);
+    process.exit(1);
+  }
+  if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
+    const match = warning.message.match(/external module '([^']+)'/);
+    if (!match || typeof match[1] !== 'string') {
+      throw new Error(
+        'Could not parse a Rollup warning. ' + 'Fix this method.'
+      );
+    }
+    const importSideEffects = Modules.getImportSideEffects();
+    const externalModule = match[1];
+    if (typeof importSideEffects[externalModule] !== 'boolean') {
+      throw new Error(
+        'An external module "' +
+          externalModule +
+          '" is used in a DEV-only code path ' +
+          'but we do not know if it is safe to omit an unused require() to it in production. ' +
+          'Please add it to the `importSideEffects` list in `scripts/rollup/modules.js`.'
+      );
+    }
+    // Don't warn. We will remove side effectless require() in a later pass.
+    return;
+  }
+  console.warn(warning.message || warning);
+}
 
-  const tasks = [
-    Packaging.createFacebookWWWBuild,
-    Packaging.createReactNativeBuild,
-    Packaging.createReactNativeRTBuild,
-    Packaging.createReactNativeCSBuild,
-  ];
+function handleRollupError(error) {
+  loggedErrors.add(error);
+  if (!error.code) {
+    console.error(error);
+    return;
+  }
+  console.error(
+    `\x1b[31m-- ${error.code}${error.plugin ? ` (${error.plugin})` : ''} --`
+  );
+  console.error(error.message);
+  const {file, line, column} = error.loc;
+  if (file) {
+    // This looks like an error from Rollup, e.g. missing export.
+    // We'll use the accurate line numbers provided by Rollup but
+    // use Babel code frame because it looks nicer.
+    const rawLines = fs.readFileSync(file, 'utf-8');
+    // column + 1 is required due to rollup counting column start position from 0
+    // whereas babel-code-frame counts from 1
+    const frame = codeFrame(rawLines, line, column + 1, {
+      highlightCode: true,
+    });
+    console.error(frame);
+  } else {
+    // This looks like an error from a plugin (e.g. Babel).
+    // In this case we'll resort to displaying the provided code frame
+    // because we can't be sure the reported location is accurate.
+    console.error(error.codeFrame);
+  }
+}
+
+async function buildEverything() {
+  await asyncRimRaf('build');
+
+  // Run them serially for better console output
+  // and to avoid any potential race conditions.
   for (const bundle of Bundles.bundles) {
-    tasks.push(
-      () => createBundle(bundle, UMD_DEV),
-      () => createBundle(bundle, UMD_PROD),
-      () => createBundle(bundle, NODE_DEV),
-      () => createBundle(bundle, NODE_PROD),
-      () => createBundle(bundle, FB_DEV),
-      () => createBundle(bundle, FB_PROD),
-      () => createBundle(bundle, RN_DEV),
-      () => createBundle(bundle, RN_PROD)
-    );
-  }
-  if (syncFbsource) {
-    tasks.push(() =>
-      syncReactNative(join('build', 'react-native'), syncFbsource)
-    );
-    tasks.push(() =>
-      syncReactNativeRT(join('build', 'react-rt'), syncFbsource)
-    );
-    tasks.push(() =>
-      syncReactNativeCS(join('build', 'react-cs'), syncFbsource)
-    );
-  } else if (syncWww) {
-    tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));
-  }
-  // rather than run concurrently, opt to run them serially
-  // this helps improve console/warning/error output
-  // and fixes a bunch of IO failures that sometimes occurred
-  return runWaterfall(tasks)
-    .then(() => {
-      // output the results
-      console.log(Stats.printResults());
-      // save the results for next run
-      Stats.saveResults();
-      if (shouldExtractErrors) {
-        console.warn(
-          '\nWarning: this build was created with --extract-errors enabled.\n' +
-            'this will result in extremely slow builds and should only be\n' +
-            'used when the error map needs to be rebuilt.\n'
-        );
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      process.exit(1);
-    });
-});
-
-function runWaterfall(promiseFactories) {
-  if (promiseFactories.length === 0) {
-    return Promise.resolve();
+    await createBundle(bundle, UMD_DEV);
+    await createBundle(bundle, UMD_PROD);
+    await createBundle(bundle, NODE_DEV);
+    await createBundle(bundle, NODE_PROD);
+    await createBundle(bundle, FB_DEV);
+    await createBundle(bundle, FB_PROD);
+    await createBundle(bundle, RN_DEV);
+    await createBundle(bundle, RN_PROD);
   }
 
-  const head = promiseFactories[0];
-  const tail = promiseFactories.slice(1);
+  await Packaging.copyAllShims();
+  await Packaging.prepareNpmPackages();
 
-  const nextPromiseFactory = head;
-  const nextPromise = nextPromiseFactory();
-  if (!nextPromise || typeof nextPromise.then !== 'function') {
-    throw new Error('runWaterfall() received something that is not a Promise.');
+  if (syncFBSourcePath) {
+    await Sync.syncReactNative('build/react-native', syncFBSourcePath);
+    await Sync.syncReactNativeRT('build/react-rt', syncFBSourcePath);
+    await Sync.syncReactNativeCS('build/react-cs', syncFBSourcePath);
+  } else if (syncWWWPath) {
+    await Sync.syncReactDom('build/facebook-www', syncWWWPath);
   }
 
-  return nextPromise.then(() => {
-    return runWaterfall(tail);
-  });
+  console.log(Stats.printResults());
+  if (!forcePrettyOutput) {
+    Stats.saveResults();
+  }
+
+  if (shouldExtractErrors) {
+    console.warn(
+      '\nWarning: this build was created with --extract-errors enabled.\n' +
+        'this will result in extremely slow builds and should only be\n' +
+        'used when the error map needs to be rebuilt.\n'
+    );
+  }
 }
+
+buildEverything();

@@ -5,12 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
 
-var React;
-var ReactNoop;
+let React;
+let ReactNoop;
 
 describe('ReactIncrementalScheduling', () => {
   beforeEach(() => {
@@ -112,8 +113,8 @@ describe('ReactIncrementalScheduling', () => {
   });
 
   it('schedules sync updates when inside componentDidMount/Update', () => {
-    var instance;
-    var ops = [];
+    let instance;
+    let ops = [];
 
     class Foo extends React.Component {
       state = {tick: 0};
