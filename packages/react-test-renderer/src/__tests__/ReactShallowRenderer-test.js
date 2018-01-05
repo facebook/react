@@ -947,4 +947,17 @@ describe('ReactShallowRenderer', () => {
     renderAndVerifyWarningAndError([], 'array');
     renderAndVerifyWarningAndError({}, 'object');
   });
+
+  it('should have initial state of null if not defined', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return <span />;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SomeComponent />);
+
+    expect(shallowRenderer.getMountedInstance().state).toBeNull();
+  });
 });
