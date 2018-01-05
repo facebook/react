@@ -57,8 +57,9 @@ module.exports = {
 
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
-    'react-internal/warning-and-invariant-args': ERROR,
+    'react-internal/no-focused-tests': ERROR,
     'react-internal/no-primitive-constructors': ERROR,
+    'react-internal/warning-and-invariant-args': ERROR,
   },
 
   globals: {
