@@ -1310,6 +1310,42 @@ describe('ReactDOMComponent', () => {
         expect(console.log.calls.argsFor(1)[0]).toContain('onLoad called');
       }
     });
+
+    it('should receive a load event on <link> elements', () => {
+      const container = document.createElement('div');
+      const onLoad = jest.fn();
+
+      ReactDOM.render(
+        <link href="http://example.org/link" onLoad={onLoad} />,
+        container,
+      );
+
+      const loadEvent = document.createEvent('Event');
+      const link = container.getElementsByTagName('link')[0];
+
+      loadEvent.initEvent('load', false, false);
+      link.dispatchEvent(loadEvent);
+
+      expect(onLoad).toHaveBeenCalledTimes(1);
+    });
+
+    it('should receive an error event on <link> elements', () => {
+      const container = document.createElement('div');
+      const onError = jest.fn();
+
+      ReactDOM.render(
+        <link href="http://example.org/link" onError={onError} />,
+        container,
+      );
+
+      const errorEvent = document.createEvent('Event');
+      const link = container.getElementsByTagName('link')[0];
+
+      errorEvent.initEvent('error', false, false);
+      link.dispatchEvent(errorEvent);
+
+      expect(onError).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('updateComponent', () => {
