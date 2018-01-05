@@ -19,6 +19,12 @@ const createMatcherFor = consoleMethod =>
 
       const unexpectedWarnings = [];
 
+      // Catch errors thrown by the callback,
+      // But only rethrow them if all test expectations have been satisfied.
+      // Otherwise an Error in the callback can mask a failed expectation,
+      // and result in a test that passes when it shouldn't.
+      let caughtError;
+
       const consoleSpy = message => {
         const normalizedMessage = normalizeCodeLocInfo(message);
 
@@ -58,6 +64,11 @@ const createMatcherFor = consoleMethod =>
 
       try {
         callback();
+      } catch (error) {
+        caughtError = error;
+      } finally {
+        // Restore the unspied method so that unexpected errors fail tests.
+        console[consoleMethod] = originalMethod;
 
         // Any unexpected warnings should be treated as a failure.
         if (unexpectedWarnings.length > 0) {
@@ -72,20 +83,18 @@ const createMatcherFor = consoleMethod =>
           return {
             message: () =>
               `Expected warning was not recorded:\n  ${this.utils.printReceived(
-                expectedMessages.join('\n')
+                expectedMessages[0]
               )}`,
             pass: false,
           };
         }
 
+        // Any unexpected Errors thrown by the callback should fail the test.
+        if (caughtError) {
+          throw caughtError;
+        }
+
         return {pass: true};
-      } catch (error) {
-        // TODO Flag this error so Jest doesn't override its stack
-        // See https://tinyurl.com/y9unakwb
-        throw error;
-      } finally {
-        // Restore the unspied method so that unexpected errors fail tests.
-        console[consoleMethod] = originalMethod;
       }
     } else {
       // Any uncaught errors or warnings should fail tests in production mode.
