@@ -32,7 +32,7 @@ const {
 
 const topLevelTypes = BrowserEventConstants.topLevelTypes;
 
-function Event(suffix) {}
+function FakeEvent(suffix) {}
 
 /**
  * @class ReactTestUtils
@@ -298,7 +298,7 @@ const ReactTestUtils = {
    * on an `Element` node.
    * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`
    * @param {!Element} node The dom to simulate an event occurring on.
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
+   * @param {?FakeEvent} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateNativeEventOnNode: function(topLevelType, node, fakeNativeEvent) {
     fakeNativeEvent.target = node;
@@ -310,7 +310,7 @@ const ReactTestUtils = {
    * on the `ReactDOMComponent` `comp`.
    * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`.
    * @param {!ReactDOMComponent} comp
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
+   * @param {?FakeEvent} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateNativeEventOnDOMComponent: function(
     topLevelType,
@@ -359,7 +359,7 @@ function makeSimulator(eventType) {
     const dispatchConfig =
       EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
-    const fakeNativeEvent = new Event();
+    const fakeNativeEvent = new FakeEvent();
     fakeNativeEvent.target = domNode;
     fakeNativeEvent.type = eventType.toLowerCase();
 
@@ -441,7 +441,7 @@ buildSimulators();
 
 function makeNativeSimulator(eventType) {
   return function(domComponentOrNode, nativeEventData) {
-    const fakeNativeEvent = new Event(eventType);
+    const fakeNativeEvent = new FakeEvent(eventType);
     Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
@@ -461,14 +461,14 @@ function makeNativeSimulator(eventType) {
 }
 
 Object.keys(topLevelTypes).forEach(function(eventType) {
-  // Event type is stored as 'topClick' - we transform that to 'click'
+  // FakeEvent type is stored as 'topClick' - we transform that to 'click'
   const convenienceName =
     eventType.indexOf('top') === 0
       ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
       : eventType;
   /**
    * @param {!Element|ReactDOMComponent} domComponentOrNode
-   * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
+   * @param {?FakeEvent} nativeEventData Fake native event to use in SyntheticEvent.
    */
   ReactTestUtils.SimulateNative[convenienceName] = makeNativeSimulator(
     eventType,

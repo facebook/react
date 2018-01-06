@@ -357,6 +357,7 @@ class Surface extends React.Component {
   }
 }
 
+/** @suppress {duplicate} */
 class Text extends React.Component {
   constructor(props) {
     super(props);
