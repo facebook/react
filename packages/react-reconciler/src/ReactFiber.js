@@ -13,6 +13,9 @@ import type {TypeOfInternalContext} from './ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactFiberUpdateQueue';
+import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+
+const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
 import invariant from 'fbjs/lib/invariant';
 import {NoEffect} from 'shared/ReactTypeOfSideEffect';
@@ -390,9 +393,10 @@ export function createFiberFromElement(
             false,
             'Element type is invalid: expected a string (for built-in ' +
               'components) or a class/function (for composite components) ' +
-              'but got: %s.%s',
+              'but got: %s.%s %s',
             type == null ? type : typeof type,
             info,
+            getCurrentFiberStackAddendum()
           );
         }
       }

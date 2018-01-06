@@ -13,6 +13,8 @@
 let PropTypes;
 let React;
 let ReactNoop;
+let ReactDebugCurrentFiber = require('./../ReactDebugCurrentFiber');
+let getCurrentFiberStackAddendum;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
@@ -20,6 +22,7 @@ describe('ReactIncrementalErrorHandling', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    getCurrentFiberStackAddendum = ReactDebugCurrentFiber.getCurrentFiberStackAddendum;
   });
 
   function div(...children) {
@@ -752,7 +755,8 @@ describe('ReactIncrementalErrorHandling', () => {
           (__DEV__
             ? " You likely forgot to export your component from the file it's " +
               'defined in, or you might have mixed up default and named imports.' +
-              '\n\nCheck the render method of `BrokenRender`.'
+              '\n\nCheck the render method of `BrokenRender`.' +
+              getCurrentFiberStackAddendum()
             : ''),
       ),
     ]);
@@ -813,10 +817,10 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.flush).toThrowError(
       'Element type is invalid: expected a string (for built-in components) or ' +
         'a class/function (for composite components) but got: undefined.' +
-        (__DEV__
+        (__DEV__ 
           ? " You likely forgot to export your component from the file it's " +
-            'defined in, or you might have mixed up default and named imports.'
-          : ''),
+            'defined in, or you might have mixed up default and named imports.' 
+          : ''), 
     );
 
     ReactNoop.render(<span prop="hi" />);
