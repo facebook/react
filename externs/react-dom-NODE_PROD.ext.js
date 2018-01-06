@@ -33,3 +33,8 @@ ReactTestUtils.scryRenderedDOMComponentsWithClass;
 ReactTestUtils.scryRenderedDOMComponentsWithTag;
 ReactTestUtils.simulateNativeEventOnDOMComponent;
 ReactTestUtils.simulateNativeEventOnNode;
+
+/** @suppress {duplicate} */
+var stream;
+stream.Readable;
+stream.Readable._read;

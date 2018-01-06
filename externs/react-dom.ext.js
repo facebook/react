@@ -73,6 +73,13 @@ ReactDOM.unstable_renderSubtreeIntoContainer = function(
 ReactDOM.hydrate = function() {};
 ReactDOM.createPortal = function() {};
 
+/** @suppress {duplicate} */
+var ReactDOMServer = {};
+ReactDOMServer.renderToString;
+ReactDOMServer.renderToStaticMarkup;
+ReactDOMServer.renderToNodeStream;
+ReactDOMServer.renderToStaticNodeStream;
+
 /**
  * React event system creates plugins and event properties dynamically.
  * These externs are needed when consuming React as a JavaScript module
