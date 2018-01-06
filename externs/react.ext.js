@@ -1,6 +1,7 @@
 /**
  * @type {!Object}
  * @const
+ * @suppress {duplicate}
  */
 var React = {};
 

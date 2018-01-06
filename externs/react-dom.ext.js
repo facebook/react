@@ -3,6 +3,7 @@
  *
  * @type {!Object}
  * @const
+ * @suppress {duplicate}
  */
 var ReactDOM = {};
 
