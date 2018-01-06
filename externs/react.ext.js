@@ -1839,8 +1839,6 @@ React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactDOMComponentTree;
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactDOMEventListener;
 
-var __REACT_DEVTOOLS_GLOBAL_HOOK__;
-
 /** @suppress {duplicate} */
 var EventPluginHub;
 EventPluginHub.injection = {};
@@ -1850,6 +1848,46 @@ EventPluginHub.enqueueEvents;
 EventPluginHub.extractEvents;
 EventPluginHub.processEventQueue;
 EventPluginHub.getListener;
+
+/** @suppress {duplicate} */
+var EventPluginRegistry;
+EventPluginRegistry.eventNameDispatchConfigs;
+
+/** @suppress {duplicate} */
+var EventPropagators;
+EventPropagators.accumulateTwoPhaseDispatches;
+EventPropagators.accumulateTwoPhaseDispatchesSkipTarget;
+EventPropagators.accumulateEnterLeaveDispatches;
+EventPropagators.accumulateDirectDispatches;
+
+/** @suppress {duplicate} */
+var ReactControlledComponent;
+ReactControlledComponent.injection = {};
+ReactControlledComponent.injection.injectFiberControlledHostComponent;
+ReactControlledComponent.enqueueStateRestore;
+ReactControlledComponent.restoreStateIfNeeded;
+
+/** @suppress {duplicate} */
+var ReactDOMComponentTree;
+ReactDOMComponentTree.precacheFiberNode;
+ReactDOMComponentTree.getClosestInstanceFromNode;
+ReactDOMComponentTree.getInstanceFromNode;
+ReactDOMComponentTree.getNodeFromInstance;
+ReactDOMComponentTree.getFiberCurrentPropsFromNode;
+ReactDOMComponentTree.updateFiberProps;
+
+/** @suppress {duplicate} */
+var ReactDOMEventListener;
+ReactDOMEventListener._enabled;
+ReactDOMEventListener._handleTopLevel;
+ReactDOMEventListener.setHandleTopLevel;
+ReactDOMEventListener.setEnabled;
+ReactDOMEventListener.isEnabled;
+ReactDOMEventListener.trapBubbledEvent;
+ReactDOMEventListener.trapCapturedEvent;
+ReactDOMEventListener.dispatchEvent;
+
+var __REACT_DEVTOOLS_GLOBAL_HOOK__;
 
 var module, require, exports, define;
 module.exports;
