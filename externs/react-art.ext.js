@@ -1,0 +1,2 @@
+var requestIdleCallback;
+var cancelIdleCallback;
