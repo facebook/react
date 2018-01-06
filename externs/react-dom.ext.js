@@ -70,3 +70,26 @@ ReactDOM.unstable_renderSubtreeIntoContainer = function(
 
 ReactDOM.hydrate = function() {};
 ReactDOM.createPortal = function() {};
+
+
+/**
+ * React event system creates plugins and event properties dynamically.
+ * These externs are needed when consuming React as a JavaScript module
+ * in light of new ClojureScript compiler additions (as of version 1.9.456).
+ * See the following link for an example.
+ * https://github.com/facebook/react/blob/c7129c/src/renderers/dom/shared/eventPlugins/SimpleEventPlugin.js#L43
+ */
+/** @suppress {duplicate} */
+var ResponderEventPlugin;
+/** @suppress {duplicate} */
+var SimpleEventPlugin;
+/** @suppress {duplicate} */
+var TapEventPlugin;
+/** @suppress {duplicate} */
+var EnterLeaveEventPlugin;
+/** @suppress {duplicate} */
+var ChangeEventPlugin;
+/** @suppress {duplicate} */
+var SelectEventPlugin;
+/** @suppress {duplicate} */
+var BeforeInputEventPlugin;
