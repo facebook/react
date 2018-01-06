@@ -1766,8 +1766,24 @@ React.ReactElement.prototype._owner;
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {};
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.assign;
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
+React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.EventPluginHub;
+React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.EventPluginRegistry;
+React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.EventPropagators;
+React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactControlledComponent;
+React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactDOMComponentTree;
+React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactDOMEventListener;
 
 var __REACT_DEVTOOLS_GLOBAL_HOOK__;
+
+/** @suppress {duplicate} */
+var EventPluginHub;
+EventPluginHub.injection = {};
+EventPluginHub.injection.injectEventPluginOrder;
+EventPluginHub.injection.injectEventPluginsByName;
+EventPluginHub.enqueueEvents;
+EventPluginHub.extractEvents;
+EventPluginHub.processEventQueue;
+EventPluginHub.getListener;
 
 var module, require, exports, define;
 module.exports;
