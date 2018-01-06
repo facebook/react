@@ -12,12 +12,12 @@ import ReactCurrentOwner from './ReactCurrentOwner';
 
 const objHasOwnProperty = Object.prototype.hasOwnProperty;
 
-const RESERVED_PROPS = {
-  key: true,
-  ref: true,
-  __self: true,
-  __source: true,
-};
+const RESERVED_PROPS = new Set([
+  "key",
+  "ref",
+  "__self",
+  "__source"
+]);
 
 let specialPropKeyWarningShown, specialPropRefWarningShown;
 
@@ -192,7 +192,7 @@ export function createElement(type, config, children) {
     for (propName in config) {
       if (
         objHasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        !RESERVED_PROPS.has(propName)
       ) {
         props[propName] = config[propName];
       }
@@ -326,7 +326,7 @@ export function cloneElement(element, config, children) {
     for (propName in config) {
       if (
         objHasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        !RESERVED_PROPS.has(propName)
       ) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props

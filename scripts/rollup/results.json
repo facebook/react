@@ -18,15 +18,15 @@
       "filename": "react.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react",
-      "size": 45812,
-      "gzip": 12711
+      "size": 45773,
+      "gzip": 12715
     },
     {
       "filename": "react.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react",
-      "size": 4916,
-      "gzip": 2210
+      "size": 4949,
+      "gzip": 2242
     },
     {
       "filename": "React-dev.js",
@@ -67,8 +67,8 @@
       "filename": "react-dom.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 75249,
-      "gzip": 27045
+      "size": 75261,
+      "gzip": 27054
     },
     {
       "filename": "ReactDOM-dev.js",
@@ -242,8 +242,8 @@
       "filename": "react-art.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-art",
-      "size": 36776,
-      "gzip": 13523
+      "size": 36788,
+      "gzip": 13529
     },
     {
       "filename": "ReactART-dev.js",
@@ -312,8 +312,8 @@
       "filename": "react-test-renderer.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-test-renderer",
-      "size": 34861,
-      "gzip": 12815
+      "size": 34873,
+      "gzip": 12817
     },
     {
       "filename": "ReactTestRenderer-dev.js",
@@ -333,8 +333,8 @@
       "filename": "react-test-renderer-shallow.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-test-renderer",
-      "size": 3890,
-      "gzip": 1713
+      "size": 3895,
+      "gzip": 1716
     },
     {
       "filename": "ReactShallowRenderer-dev.js",
@@ -368,8 +368,8 @@
       "filename": "react-reconciler.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-reconciler",
-      "size": 29747,
-      "gzip": 11135
+      "size": 29759,
+      "gzip": 11136
     },
     {
       "filename": "react-reconciler-reflection.development.js",
