@@ -38,3 +38,5 @@ ReactTestUtils.simulateNativeEventOnNode;
 var stream;
 stream.Readable;
 stream.Readable._read;
+
+Error.prototype.suppressReactErrorLogging;
