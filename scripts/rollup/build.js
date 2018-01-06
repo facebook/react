@@ -237,7 +237,7 @@ function getPlugins(
   const isProduction = isProductionBundleType(bundleType);
   const isFBBundle = bundleType === FB_DEV || bundleType === FB_PROD;
   const isRNBundle = bundleType === RN_DEV || bundleType === RN_PROD;
-  const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
+  const shouldStayReadable = isFBBundle || isRNBundle;
   return [
     // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
@@ -288,7 +288,7 @@ function getPlugins(
         )
       ),
     // Add the whitespace back if necessary.
-    shouldStayReadable && prettier(),
+    (shouldStayReadable || forcePrettyOutput) && prettier(),
     // License and haste headers, top-level `if` blocks.
     {
       transformBundle(source) {
