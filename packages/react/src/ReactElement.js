@@ -12,12 +12,7 @@ import ReactCurrentOwner from './ReactCurrentOwner';
 
 const objHasOwnProperty = Object.prototype.hasOwnProperty;
 
-const RESERVED_PROPS = new Set([
-  "key",
-  "ref",
-  "__self",
-  "__source"
-]);
+const RESERVED_PROPS = new Set(['key', 'ref', '__self', '__source']);
 
 let specialPropKeyWarningShown, specialPropRefWarningShown;
 
