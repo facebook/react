@@ -1754,6 +1754,33 @@ React.Children.toArray;
 
 React.Fragment = function() {};
 
+/** @suppress {duplicate} */
+var FiberNode = {};
+FiberNode.prototype.tag;
+FiberNode.prototype.key;
+FiberNode.prototype.type;
+FiberNode.prototype.stateNode;
+FiberNode.prototype.return;
+FiberNode.prototype.child;
+FiberNode.prototype.sibling;
+FiberNode.prototype.index;
+FiberNode.prototype.ref;
+FiberNode.prototype.pendingProps;
+FiberNode.prototype.memoizedProps;
+FiberNode.prototype.updateQueue;
+FiberNode.prototype.memoizedState;
+FiberNode.prototype.internalContextTag;
+FiberNode.prototype.effectTag;
+FiberNode.prototype.nextEffect;
+FiberNode.prototype.firstEffect;
+FiberNode.prototype.lastEffect;
+FiberNode.prototype.expirationTime;
+FiberNode.prototype.alternate;
+FiberNode.prototype._debugID;
+FiberNode.prototype._debugSource;
+FiberNode.prototype._debugOwner;
+FiberNode.prototype._debugIsCurrentlyTiming;
+
 /* Non-public API needed to compile react and react-dom independently */
 
 React.ReactElement.prototype.$$typeof;
