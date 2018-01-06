@@ -1,13 +1,7 @@
-var define;
-var exports;
-var module;
-var require;
-
 /* Globals not provided by Closure Compiler's BROWSER environment */
 var requestIdleCallback;
 var cancelIdleCallback;
 var MSApp;
-var __REACT_DEVTOOLS_GLOBAL_HOOK__;
 
 /**
  * React event system creates plugins and event properties dynamically.
