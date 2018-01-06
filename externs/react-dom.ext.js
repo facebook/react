@@ -54,6 +54,8 @@ ReactDOM.unstable_batchedUpdates = function(
   opt_f
 ) {};
 
+ReactDOM.unstable_deferredUpdates;
+
 /**
  * @param {React.Component} parentComponent The conceptual parent of this render tree.
  * @param {React.ReactElement} nextElement Component element to render.
