@@ -794,14 +794,16 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.flush).toWarnDev(
       'Warning: React.createElement: type is invalid -- expected a string',
     );
-    expect(ReactNoop.getChildren()).toEqual([
+    expect(ReactNoop.getChildren()).toErrorWithStack([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
           'a class/function (for composite components) but got: undefined.' +
           (__DEV__
             ? " You likely forgot to export your component from the file it's " +
               'defined in, or you might have mixed up default and named imports.' +
-              '\n\nCheck the render method of `BrokenRender`.'
+              '\n\nCheck the render method of `BrokenRender`.' +
+              '\n    in BrokenRender (at **)' +
+              '\n    in ErrorBoundary (at **)'
             : ''),
       ),
     ]);

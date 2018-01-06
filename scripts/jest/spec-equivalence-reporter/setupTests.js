@@ -47,6 +47,7 @@ global.spyOnProd = function(...args) {
 
 expect.extend({
   ...require('../matchers/toWarnDev'),
+  ...require('../matchers/toErrorWithStack'),
 });
 
 beforeEach(() => (numExpectations = 0));

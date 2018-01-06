@@ -5,7 +5,7 @@ function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
 }
 
-const toErrorWithStack = (received, expected) => {
+function toErrorWithStack(received, expected) {
   const normalizedMessage = normalizeCodeLocInfo(received[0].prop);
   received[0].prop = normalizedMessage;
 
@@ -23,7 +23,7 @@ const toErrorWithStack = (received, expected) => {
     (diffString ? `\n\nDifference:\n\n${diffString}` : '');
 
   return {actual: received, message, pass };
-};
+}
 
 module.exports = {
   toErrorWithStack,
