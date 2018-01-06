@@ -82,6 +82,11 @@ React.Component.prototype.isReactComponent;
 /**
  * @type {Object}
  */
+React.Component.prototype.updater;
+
+/**
+ * @type {Object}
+ */
 React.Component.prototype.props;
 
 /**
@@ -1785,6 +1790,31 @@ FiberNode.prototype._debugID;
 FiberNode.prototype._debugSource;
 FiberNode.prototype._debugOwner;
 FiberNode.prototype._debugIsCurrentlyTiming;
+
+var Deadline = {};
+Deadline.prototype.timeRemaining;
+
+var Reconciler = {};
+Reconciler.createContainer;
+Reconciler.updateContainer;
+Reconciler.updateContainerAtExpirationTime;
+Reconciler.flushRoot;
+Reconciler.requestWork;
+Reconciler.batchedUpdates;
+Reconciler.unbatchedUpdates;
+Reconciler.flushSync;
+Reconciler.deferredUpdates;
+Reconciler.injectIntoDevTools;
+Reconciler.computeUniqueAsyncExpiration;
+Reconciler.getPublicRootInstance;
+Reconciler.findHostInstance;
+Reconciler.findHostInstanceWithNoPortals;
+
+var updater = {};
+updater.isMounted;
+updater.enqueueSetState;
+updater.enqueueReplaceState;
+updater.enqueueForceUpdate;
 
 /* Non-public API needed to compile react and react-dom independently */
 
