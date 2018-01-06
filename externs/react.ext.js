@@ -551,30 +551,33 @@ React.ReactAttribute.onTransitionEnd;
 
 React.ReactAttribute.onToggle;
 
-/**
- * @interface
- */
 React.SyntheticEvent = function() {};
-
-/**
- * @return {boolean}
- */
-React.SyntheticEvent.prototype.persist = function() {};
-
-/**
- * @type {Object}
- */
+React.SyntheticEvent.extend;
+React.SyntheticEvent.eventPool;
+React.SyntheticEvent.getPooled;
+React.SyntheticEvent.release;
+React.SyntheticEvent.prototype.destructor;
+React.SyntheticEvent.prototype.persist;
+React.SyntheticEvent.prototype.isPersistent;
 React.SyntheticEvent.prototype.nativeEvent;
-
-/**
- * @type {Function}
- */
 React.SyntheticEvent.prototype.preventDefault;
-
-/**
- * @type {Function}
- */
 React.SyntheticEvent.prototype.stopPropagation;
+/** @type {DispatchConfig} */
+React.SyntheticEvent.prototype.dispatchConfig;
+React.SyntheticEvent.prototype.nativeEvent;
+React.SyntheticEvent.prototype._targetInst;
+React.SyntheticEvent.prototype.isDefaultPrevented;
+React.SyntheticEvent.prototype.isPropagationStopped;
+React.SyntheticEvent.prototype._dispatchListeners;
+React.SyntheticEvent.prototype._dispatchInstances;
+
+/** @suppress {duplicate} */
+var DispatchConfig;
+DispatchConfig.dependencies;
+DispatchConfig.phasedRegistrationNames = {};
+DispatchConfig.phasedRegistrationNames.bubbled;
+DispatchConfig.phasedRegistrationNames.captured;
+DispatchConfig.registrationName;
 
 /**
  * @type {Object}
