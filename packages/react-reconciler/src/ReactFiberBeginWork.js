@@ -559,7 +559,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } else {
       workInProgress.stateNode = reconcileChildFibers(
         workInProgress,
-        workInProgress.stateNode,
+        current.stateNode,
         nextChildren,
         renderExpirationTime,
       );
