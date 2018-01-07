@@ -64,11 +64,14 @@ const bundles = [
   },
   {
     format: 'umd',
-    filePatterns: [`./build/packages/*/umd/*.js`],
+    filePatterns: [`./build/node_modules/*/umd/*.js`],
   },
   {
     format: 'cjs',
-    filePatterns: [`./build/packages/*/*.js`, `./build/packages/*/cjs/*.js`],
+    filePatterns: [
+      `./build/node_modules/*/*.js`,
+      `./build/node_modules/*/cjs/*.js`,
+    ],
   },
 ];
 

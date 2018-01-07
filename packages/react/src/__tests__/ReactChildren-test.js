@@ -13,10 +13,6 @@ describe('ReactChildren', () => {
   let React;
   let ReactTestUtils;
 
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/at .+?:\d+/g, 'at **');
-  }
-
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -352,7 +348,6 @@ describe('ReactChildren', () => {
   });
 
   it('should be called for each child in an iterable without keys', () => {
-    spyOnDev(console, 'error');
     const threeDivIterable = {
       '@@iterator': function() {
         let i = 0;
@@ -374,7 +369,10 @@ describe('ReactChildren', () => {
       return kid;
     });
 
-    const instance = <div>{threeDivIterable}</div>;
+    let instance;
+    expect(() => (instance = <div>{threeDivIterable}</div>)).toWarnDev(
+      'Warning: Each child in an array or iterator should have a unique "key" prop.',
+    );
 
     function assertCalls() {
       expect(callback.calls.count()).toBe(3);
@@ -386,13 +384,6 @@ describe('ReactChildren', () => {
 
     React.Children.forEach(instance.props.children, callback, context);
     assertCalls();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Each child in an array or iterator should have a unique "key" prop.',
-      );
-      console.error.calls.reset();
-    }
 
     const mappedChildren = React.Children.map(
       instance.props.children,
@@ -400,9 +391,6 @@ describe('ReactChildren', () => {
       context,
     );
     assertCalls();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
     expect(mappedChildren).toEqual([
       <div key=".0" />,
       <div key=".1" />,
@@ -958,28 +946,23 @@ describe('ReactChildren', () => {
 
   describe('with fragments enabled', () => {
     it('warns for keys for arrays of elements in a fragment', () => {
-      spyOnDev(console, 'error');
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div />, <div />];
         }
       }
 
-      ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
-
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: ' +
-            'Each child in an array or iterator should have a unique "key" prop.' +
-            ' See https://fb.me/react-warning-keys for more information.' +
-            '\n    in ComponentReturningArray (at **)',
-        );
-      }
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(<ComponentReturningArray />),
+      ).toWarnDev(
+        'Warning: ' +
+          'Each child in an array or iterator should have a unique "key" prop.' +
+          ' See https://fb.me/react-warning-keys for more information.' +
+          '\n    in ComponentReturningArray (at **)',
+      );
     });
 
     it('does not warn when there are keys on  elements in a fragment', () => {
-      spyOnDev(console, 'error');
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div key="foo" />, <div key="bar" />];
@@ -987,25 +970,16 @@ describe('ReactChildren', () => {
       }
 
       ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
-
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(0);
-      }
     });
 
     it('warns for keys for arrays at the top level', () => {
-      spyOnDev(console, 'error');
-
-      ReactTestUtils.renderIntoDocument([<div />, <div />]);
-
-      if (__DEV__) {
-        expect(console.error.calls.count()).toBe(1);
-        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: ' +
-            'Each child in an array or iterator should have a unique "key" prop.' +
-            ' See https://fb.me/react-warning-keys for more information.',
-        );
-      }
+      expect(() =>
+        ReactTestUtils.renderIntoDocument([<div />, <div />]),
+      ).toWarnDev(
+        'Warning: ' +
+          'Each child in an array or iterator should have a unique "key" prop.' +
+          ' See https://fb.me/react-warning-keys for more information.',
+      );
     });
   });
 });

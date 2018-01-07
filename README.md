@@ -45,15 +45,15 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs
 
 ## Installation
 
-React is available as the `react` package on [npm](https://www.npmjs.com/). It is also available on a [CDN](https://reactjs.org/docs/installation.html#using-a-cdn).
+React is available as the `react` package on [npm](https://www.npmjs.com/). It is also available on a [CDN](https://reactjs.org/docs/cdn-links.html).
 
 React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
 
 The recommended way to install React depends on your project. Here you can find short guides for the most common scenarios:
 
-* [Trying Out React](https://reactjs.org/docs/installation.html#trying-out-react)
-* [Creating a New Application](https://reactjs.org/docs/installation.html#creating-a-new-application)
-* [Adding React to an Existing Application](https://reactjs.org/docs/installation.html#adding-react-to-an-existing-application)
+* [Trying Out React](https://reactjs.org/docs/try-react.html)
+* [Creating a New Application](https://reactjs.org/docs/add-react-to-a-new-app.html)
+* [Adding React to an Existing Application](https://reactjs.org/docs/add-react-to-an-existing-app.html)
 
 ## Contributing
 

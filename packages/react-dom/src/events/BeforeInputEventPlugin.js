@@ -29,10 +29,7 @@ if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
 // directly represent `beforeInput`. The IE `textinput` event is not as
 // useful, so we don't use it.
 const canUseTextInputEvent =
-  ExecutionEnvironment.canUseDOM &&
-  'TextEvent' in window &&
-  !documentMode &&
-  !isPresto();
+  ExecutionEnvironment.canUseDOM && 'TextEvent' in window && !documentMode;
 
 // In IE9+, we have access to composition events, but the data supplied
 // by the native compositionend event may be incorrect. Japanese ideographic
@@ -41,20 +38,6 @@ const useFallbackCompositionData =
   ExecutionEnvironment.canUseDOM &&
   (!canUseCompositionEvent ||
     (documentMode && documentMode > 8 && documentMode <= 11));
-
-/**
- * Opera <= 12 includes TextEvent in window, but does not fire
- * text input events. Rely on keypress instead.
- */
-function isPresto() {
-  const opera = window.opera;
-  return (
-    opera !== null &&
-    typeof opera === 'object' &&
-    typeof opera.version === 'function' &&
-    parseInt(opera.version(), 10) <= 12
-  );
-}
 
 const SPACEBAR_CODE = 32;
 const SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);

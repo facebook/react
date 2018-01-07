@@ -1704,21 +1704,13 @@ rc@^1.1.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-"react-dom@file:../../../../build/packages/react-dom":
-  version "16.0.0"
-  dependencies:
-    fbjs "^0.8.16"
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.0"
+"react-dom@link:../../../../build/node_modules/react-dom":
+  version "0.0.0"
+  uid ""
 
-"react@file:../../../../build/packages/react":
-  version "16.0.0"
-  dependencies:
-    fbjs "^0.8.16"
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.0"
+"react@link:../../../../build/node_modules/react":
+  version "0.0.0"
+  uid ""
 
 read-components@~0.7:
   version "0.7.0"

@@ -130,8 +130,6 @@ describe('ReactDOMRoot', () => {
       ),
     );
 
-    spyOnDev(console, 'error');
-
     // Does not hydrate by default
     const container1 = document.createElement('div');
     container1.innerHTML = markup;
@@ -142,9 +140,6 @@ describe('ReactDOMRoot', () => {
       </div>,
     );
     flush();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
 
     // Accepts `hydrate` option
     const container2 = document.createElement('div');
@@ -155,15 +150,10 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    flush();
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toMatch('Extra attributes');
-    }
+    expect(flush).toWarnDev('Extra attributes');
   });
 
   it('does not clear existing children', async () => {
-    spyOnDev(console, 'error');
     container.innerHTML = '<div>a</div><div>b</div>';
     const root = ReactDOM.createRoot(container);
     root.render(

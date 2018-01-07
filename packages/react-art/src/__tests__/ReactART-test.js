@@ -54,7 +54,12 @@ function testDOMNodeStructure(domNode, expectedStructure) {
 }
 
 describe('ReactART', () => {
+  let container;
+
   beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
     ARTCurrentMode.setCurrent(ARTSVGMode);
 
     Group = ReactART.Group;
@@ -104,6 +109,11 @@ describe('ReactART', () => {
     };
   });
 
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
+  });
+
   it('should have the correct lifecycle state', () => {
     let instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -142,7 +152,6 @@ describe('ReactART', () => {
   });
 
   it('should be able to reorder components', () => {
-    const container = document.createElement('div');
     const instance = ReactDOM.render(
       <TestComponent flipped={false} />,
       container,
@@ -189,8 +198,6 @@ describe('ReactART', () => {
   });
 
   it('should be able to reorder many components', () => {
-    const container = document.createElement('div');
-
     class Component extends React.Component {
       render() {
         const chars = this.props.chars.split('');
@@ -296,8 +303,6 @@ describe('ReactART', () => {
         );
       }
     }
-
-    const container = document.createElement('div');
     ReactDOM.render(<Outer />, container);
     expect(ref).not.toBeDefined();
     ReactDOM.render(<Outer mountCustomShape={true} />, container);
@@ -305,8 +310,6 @@ describe('ReactART', () => {
   });
 
   it('adds and updates event handlers', () => {
-    const container = document.createElement('div');
-
     function render(onClick) {
       return ReactDOM.render(
         <Surface>
@@ -319,8 +322,11 @@ describe('ReactART', () => {
     function doClick(instance) {
       const path = ReactDOM.findDOMNode(instance).querySelector('path');
 
-      // ReactTestUtils.Simulate.click doesn't work with SVG elements
-      path.click();
+      path.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
+      );
     }
 
     const onClick1 = jest.fn();
@@ -336,10 +342,6 @@ describe('ReactART', () => {
 });
 
 describe('ReactARTComponents', () => {
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   it('should generate a <Shape> with props for drawing the Circle', () => {
     const circle = renderer.create(
       <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
@@ -348,16 +350,13 @@ describe('ReactARTComponents', () => {
   });
 
   it('should warn if radius is missing on a Circle component', () => {
-    spyOnDev(console, 'error');
-    renderer.create(<Circle stroke="green" strokeWidth={3} fill="blue" />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
-          'but its value is `undefined`.' +
-          '\n    in Circle (at **)',
-      );
-    }
+    expect(() =>
+      renderer.create(<Circle stroke="green" strokeWidth={3} fill="blue" />),
+    ).toWarnDev(
+      'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
+        'but its value is `undefined`.' +
+        '\n    in Circle (at **)',
+    );
   });
 
   it('should generate a <Shape> with props for drawing the Rectangle', () => {
@@ -368,21 +367,16 @@ describe('ReactARTComponents', () => {
   });
 
   it('should warn if width/height is missing on a Rectangle component', () => {
-    spyOnDev(console, 'error');
-    renderer.create(<Rectangle stroke="green" fill="blue" />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(2);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, ' +
-          'but its value is `undefined`.' +
-          '\n    in Rectangle (at **)',
-      );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
-        'Warning: Failed prop type: The prop `height` is marked as required in `Rectangle`, ' +
-          'but its value is `undefined`.' +
-          '\n    in Rectangle (at **)',
-      );
-    }
+    expect(() =>
+      renderer.create(<Rectangle stroke="green" fill="blue" />),
+    ).toWarnDev([
+      'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, ' +
+        'but its value is `undefined`.' +
+        '\n    in Rectangle (at **)',
+      'Warning: Failed prop type: The prop `height` is marked as required in `Rectangle`, ' +
+        'but its value is `undefined`.' +
+        '\n    in Rectangle (at **)',
+    ]);
   });
 
   it('should generate a <Shape> with props for drawing the Wedge', () => {
@@ -400,25 +394,16 @@ describe('ReactARTComponents', () => {
   });
 
   it('should warn if outerRadius/startAngle/endAngle is missing on a Wedge component', () => {
-    spyOnDev(console, 'error');
-    renderer.create(<Wedge fill="blue" />);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(3);
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, ' +
-          'but its value is `undefined`.' +
-          '\n    in Wedge (at **)',
-      );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
-        'Warning: Failed prop type: The prop `startAngle` is marked as required in `Wedge`, ' +
-          'but its value is `undefined`.' +
-          '\n    in Wedge (at **)',
-      );
-      expect(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toEqual(
-        'Warning: Failed prop type: The prop `endAngle` is marked as required in `Wedge`, ' +
-          'but its value is `undefined`.' +
-          '\n    in Wedge (at **)',
-      );
-    }
+    expect(() => renderer.create(<Wedge fill="blue" />)).toWarnDev([
+      'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, ' +
+        'but its value is `undefined`.' +
+        '\n    in Wedge (at **)',
+      'Warning: Failed prop type: The prop `startAngle` is marked as required in `Wedge`, ' +
+        'but its value is `undefined`.' +
+        '\n    in Wedge (at **)',
+      'Warning: Failed prop type: The prop `endAngle` is marked as required in `Wedge`, ' +
+        'but its value is `undefined`.' +
+        '\n    in Wedge (at **)',
+    ]);
   });
 });

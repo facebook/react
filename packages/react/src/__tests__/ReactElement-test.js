@@ -58,7 +58,6 @@ describe('ReactElement', () => {
   });
 
   it('should warn when `key` is being accessed on composite element', () => {
-    spyOnDev(console, 'error');
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -76,41 +75,25 @@ describe('ReactElement', () => {
         );
       }
     }
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
-    ReactDOM.render(<Parent />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Child: `key` is not a prop. Trying to access it will result ' +
-          'in `undefined` being returned. If you need to access the same ' +
-          'value within the child component, you should pass it as a different ' +
-          'prop. (https://fb.me/react-special-props)',
-      );
-    }
+    expect(() => ReactDOM.render(<Parent />, container)).toWarnDev(
+      'Child: `key` is not a prop. Trying to access it will result ' +
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
+    );
   });
 
   it('should warn when `key` is being accessed on a host element', () => {
-    spyOnDev(console, 'error');
     const element = <div key="3" />;
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
-    void element.props.key;
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'div: `key` is not a prop. Trying to access it will result ' +
-          'in `undefined` being returned. If you need to access the same ' +
-          'value within the child component, you should pass it as a different ' +
-          'prop. (https://fb.me/react-special-props)',
-      );
-    }
+    expect(() => void element.props.key).toWarnDev(
+      'div: `key` is not a prop. Trying to access it will result ' +
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
+    );
   });
 
   it('should warn when `ref` is being accessed', () => {
-    spyOnDev(console, 'error');
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -126,19 +109,12 @@ describe('ReactElement', () => {
         );
       }
     }
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(0);
-    }
-    ReactDOM.render(<Parent />, container);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Child: `ref` is not a prop. Trying to access it will result ' +
-          'in `undefined` being returned. If you need to access the same ' +
-          'value within the child component, you should pass it as a different ' +
-          'prop. (https://fb.me/react-special-props)',
-      );
-    }
+    expect(() => ReactDOM.render(<Parent />, container)).toWarnDev(
+      'Child: `ref` is not a prop. Trying to access it will result ' +
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
+    );
   });
 
   it('allows a string to be passed as the type', () => {

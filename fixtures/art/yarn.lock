@@ -1742,31 +1742,17 @@ rc@^1.1.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-"react-art@file:../../build/packages/react-art":
-  version "16.0.0"
-  dependencies:
-    art "^0.10.1"
-    create-react-class "^15.6.2"
-    fbjs "^0.8.16"
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.0"
+"react-art@link:../../build/node_modules/react-art":
+  version "0.0.0"
+  uid ""
 
-"react-dom@file:../../build/packages/react-dom":
-  version "16.0.0"
-  dependencies:
-    fbjs "^0.8.16"
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.0"
+"react-dom@link:../../build/node_modules/react-dom":
+  version "0.0.0"
+  uid ""
 
-"react@file:../../build/packages/react":
-  version "16.0.0"
-  dependencies:
-    fbjs "^0.8.16"
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.0"
+"react@link:../../build/node_modules/react":
+  version "0.0.0"
+  uid ""
 
 "readable-stream@^2.0.0 || ^1.1.13", readable-stream@^2.0.1, readable-stream@^2.0.2, readable-stream@^2.0.5, readable-stream@^2.1.4, readable-stream@^2.2.6:
   version "2.2.6"

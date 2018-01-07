@@ -41,6 +41,8 @@ module.exports = function(initModules) {
     if (console.error.calls && console.error.calls.reset) {
       console.error.calls.reset();
     } else {
+      // TODO: Rewrite tests that use this helper to enumerate expeceted errors.
+      // This will enable the helper to use the .toWarnDev() matcher instead of spying.
       spyOnDev(console, 'error');
     }
 
@@ -321,6 +323,7 @@ module.exports = function(initModules) {
     itThrowsWhenRendering,
     asyncReactDOMRender,
     serverRender,
+    clientCleanRender,
     clientRenderOnServerString,
     renderIntoDom,
     streamRender,
