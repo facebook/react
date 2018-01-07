@@ -15,6 +15,9 @@ const ReactErrorUtils = {
   _caughtError: (null: mixed),
   _hasCaughtError: (false: boolean),
 
+  // Used by Fiber to suppress the intentionally thrown errors.
+  _hasSuppressedError: (false: boolean),
+
   // Used by event system to capture/rethrow the first error.
   _rethrowError: (null: mixed),
   _hasRethrowError: (false: boolean),
@@ -89,12 +92,21 @@ const ReactErrorUtils = {
     return ReactErrorUtils._hasCaughtError;
   },
 
+  hasSuppressedError: function() {
+    return ReactErrorUtils._hasSuppressedError;
+  },
+
   clearCaughtError: function() {
     if (ReactErrorUtils._hasCaughtError) {
       const error = ReactErrorUtils._caughtError;
       ReactErrorUtils._caughtError = null;
       ReactErrorUtils._hasCaughtError = false;
       return error;
+    } else if (ReactErrorUtils._hasSuppressedError) {
+      const suppressedError = ReactErrorUtils._caughtError;
+      ReactErrorUtils._caughtError = null;
+      ReactErrorUtils._hasCaughtError = false;
+      return suppressedError;
     } else {
       invariant(
         false,

@@ -28,10 +28,6 @@ describe('ReactIncrementalErrorLogging', () => {
     class ErrorThrowingComponent extends React.Component {
       componentWillMount() {
         const error = new Error('componentWillMount error');
-        // Note: it's `true` on the Error prototype our test environment.
-        // That lets us avoid asserting on warnings for each expected error.
-        // Here we intentionally shadow it to test logging, like in real apps.
-        error.suppressReactErrorLogging = undefined;
         throw error;
       }
       render() {
@@ -66,10 +62,6 @@ describe('ReactIncrementalErrorLogging', () => {
     class ErrorThrowingComponent extends React.Component {
       componentDidMount() {
         const error = new Error('componentDidMount error');
-        // Note: it's `true` on the Error prototype our test environment.
-        // That lets us avoid asserting on warnings for each expected error.
-        // Here we intentionally shadow it to test logging, like in real apps.
-        error.suppressReactErrorLogging = undefined;
         throw error;
       }
       render() {
@@ -119,10 +111,6 @@ describe('ReactIncrementalErrorLogging', () => {
         capturedError => {
           logCapturedErrorCalls.push(capturedError);
           const error = new Error('logCapturedError error');
-          // Note: it's `true` on the Error prototype our test environment.
-          // That lets us avoid asserting on warnings for each expected error.
-          // Here we intentionally shadow it to test logging, like in real apps.
-          error.suppressReactErrorLogging = undefined;
           throw error;
         },
       );
@@ -177,10 +165,6 @@ describe('ReactIncrementalErrorLogging', () => {
     class ErrorThrowingComponent extends React.Component {
       componentDidMount() {
         const error = new Error('componentDidMount error');
-        // Note: it's `true` on the Error prototype our test environment.
-        // That lets us avoid asserting on warnings for each expected error.
-        // Here we intentionally shadow it to test logging, like in real apps.
-        error.suppressReactErrorLogging = undefined;
         throw error;
       }
       render() {

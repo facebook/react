@@ -23,7 +23,6 @@ let invokeGuardedCallback = function<A, B, C, D, E, F, Context>(
   this._hasCaughtError = false;
   this._caughtError = null;
   this._hasSuppressedError = false;
-  this._suppressedError = null;
   const funcArgs = Array.prototype.slice.call(arguments, 3);
   try {
     func.apply(context, funcArgs);
@@ -181,8 +180,7 @@ if (__DEV__) {
 
       if (shouldIgnoreError && error != null) {
         this._hasSuppressedError = true;
-        this._suppressedError = error;
-        error.suppressReactErrorLogging = true;
+        this._caughtError = error;
       }
 
       // Remove our event listeners

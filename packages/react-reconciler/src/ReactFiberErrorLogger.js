@@ -21,6 +21,9 @@ export function logCapturedError(capturedError: CapturedError): void {
   }
 
   const error = (capturedError.error: any);
+  if (error && capturedError.hasSuppressedError()) {
+    return;
+  }
 
   if (__DEV__) {
     const {
