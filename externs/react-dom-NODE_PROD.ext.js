@@ -36,3 +36,6 @@ stream.Readable;
 stream.Readable._read;
 
 Error.prototype.suppressReactErrorLogging;
+
+var MockComponent;
+MockComponent.prototype.render.mockImplementation;
