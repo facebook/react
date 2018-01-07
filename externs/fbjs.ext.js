@@ -1,5 +1,6 @@
 /** @suppress {duplicate} */
 var ExecutionEnvironment;
+ExecutionEnvironment.canUseDOM;
 /** @suppress {duplicate} */
 var TouchEventUtils;
 /** @suppress {duplicate} */
