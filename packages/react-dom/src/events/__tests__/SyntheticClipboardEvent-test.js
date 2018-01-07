@@ -79,68 +79,6 @@ describe('SyntheticClipboardEvent', () => {
   });
 
   describe('EventInterface', () => {
-    it('normalizes properties from the Event interface', () => {
-      let expectedCount = 0;
-      let div;
-
-      const eventHandler = type => event => {
-        expect(event.target).toBe(div);
-        expect(event.type).toBe(type);
-        expectedCount++;
-      };
-
-      div = ReactDOM.render(
-        <div
-          onCopy={eventHandler('copy')}
-          onCut={eventHandler('cut')}
-          onPaste={eventHandler('paste')}
-        />,
-        container,
-      );
-
-      let event;
-      event = document.createEvent('Event');
-      event.initEvent('copy', true, true);
-      // Emulate IE8
-      Object.defineProperty(event, 'target', {
-        get() {},
-      });
-      Object.defineProperty(event, 'srcElement', {
-        get() {
-          return div;
-        },
-      });
-      div.dispatchEvent(event);
-
-      event = document.createEvent('Event');
-      event.initEvent('cut', true, true);
-      // Emulate IE8
-      Object.defineProperty(event, 'target', {
-        get() {},
-      });
-      Object.defineProperty(event, 'srcElement', {
-        get() {
-          return div;
-        },
-      });
-      div.dispatchEvent(event);
-
-      event = document.createEvent('Event');
-      event.initEvent('paste', true, true);
-      // Emulate IE8
-      Object.defineProperty(event, 'target', {
-        get() {},
-      });
-      Object.defineProperty(event, 'srcElement', {
-        get() {
-          return div;
-        },
-      });
-      div.dispatchEvent(event);
-
-      expect(expectedCount).toBe(3);
-    });
-
     it('is able to `preventDefault` and `stopPropagation`', () => {
       let expectedCount = 0;
 

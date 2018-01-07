@@ -312,8 +312,7 @@ const run = function(config, hierarchyConfig, nativeEventConfig) {
   // At this point the negotiation events have been dispatched as part of the
   // extraction process, but not the side effectful events. Below, we dispatch
   // side effectful events.
-  EventPluginHub.enqueueEvents(extractedEvents);
-  EventPluginHub.processEventQueue(true);
+  EventPluginHub.runEventsInBatch(extractedEvents, true);
 
   // Ensure that every event that declared an `order`, was actually dispatched.
   expect('number of events dispatched:' + runData.dispatchCount).toBe(

@@ -29,33 +29,6 @@ describe('SyntheticWheelEvent', () => {
     container = null;
   });
 
-  it('should normalize properties from the Event interface', () => {
-    const events = [];
-    const onWheel = event => {
-      event.persist();
-      events.push(event);
-    };
-    ReactDOM.render(<div onWheel={onWheel} />, container);
-
-    const event = new MouseEvent('wheel', {
-      bubbles: true,
-    });
-    // Emulate IE8
-    Object.defineProperty(event, 'target', {
-      get() {},
-    });
-    Object.defineProperty(event, 'srcElement', {
-      get() {
-        return container.firstChild;
-      },
-    });
-    container.firstChild.dispatchEvent(event);
-
-    expect(events.length).toBe(1);
-    expect(events[0].target).toBe(container.firstChild);
-    expect(events[0].type).toBe('wheel');
-  });
-
   it('should normalize properties from the MouseEvent interface', () => {
     const events = [];
     const onWheel = event => {

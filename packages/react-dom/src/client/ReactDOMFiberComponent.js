@@ -485,6 +485,7 @@ export function setInitialProperties(
       break;
     case 'img':
     case 'image':
+    case 'link':
       trapBubbledEvent('topError', 'error', domElement);
       trapBubbledEvent('topLoad', 'load', domElement);
       props = rawProps;
@@ -870,6 +871,7 @@ export function diffHydratedProperties(
       break;
     case 'img':
     case 'image':
+    case 'link':
       trapBubbledEvent('topError', 'error', domElement);
       trapBubbledEvent('topLoad', 'load', domElement);
       break;

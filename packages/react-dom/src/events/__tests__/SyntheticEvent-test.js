@@ -30,33 +30,6 @@ describe('SyntheticEvent', () => {
     container = null;
   });
 
-  it('should normalize `target` from the nativeEvent', () => {
-    let node;
-    let expectedCount = 0;
-
-    const eventHandler = syntheticEvent => {
-      expect(syntheticEvent.target).toBe(node);
-
-      expectedCount++;
-    };
-    node = ReactDOM.render(<div onClick={eventHandler} />, container);
-
-    const event = document.createEvent('Event');
-    event.initEvent('click', true, true);
-    // Emulate IE8
-    Object.defineProperty(event, 'target', {
-      get() {},
-    });
-    Object.defineProperty(event, 'srcElement', {
-      get() {
-        return node;
-      },
-    });
-    node.dispatchEvent(event);
-
-    expect(expectedCount).toBe(1);
-  });
-
   it('should be able to `preventDefault`', () => {
     let node;
     let expectedCount = 0;
