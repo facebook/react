@@ -33,6 +33,7 @@ test_script:
   - yarn flow
   - yarn build
   - yarn test
+  - yarn prettier
 
 cache:
  - node_modules
