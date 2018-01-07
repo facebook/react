@@ -20,6 +20,9 @@ ReactDOMServer.renderToStaticMarkup;
 ReactDOMServer.renderToNodeStream;
 ReactDOMServer.renderToStaticNodeStream;
 
+/* Used by ReactInstanceMap */
+var _reactInternalFiber;
+
 /**
  * React event system creates plugins and event properties dynamically.
  * These externs are needed when consuming React as a JavaScript module
