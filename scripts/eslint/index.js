@@ -11,14 +11,16 @@ const minimatch = require('minimatch');
 const CLIEngine = require('eslint').CLIEngine;
 const listChangedFiles = require('../shared/listChangedFiles');
 const {es5Paths, esNextPaths} = require('../shared/pathsByLanguageVersion');
-
-const allPaths = ['**/*.js'];
+const {isJUnitEnabled, writeContent} = require('../shared/reporting');
 
 let changedFiles = null;
 
+const allPaths = ['**/*.js'];
+
 function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
   const cli = new CLIEngine(options);
-  const formatter = cli.getFormatter();
+  // stylish is the default ESLint formatter. We switch to JUnit formatter in the scope of circleci
+  const formatter = cli.getFormatter(isJUnitEnabled() ? 'junit' : 'stylish');
 
   if (onlyChanged && changedFiles === null) {
     // Calculate lazily.
@@ -65,25 +67,32 @@ function runESLint({onlyChanged}) {
   if (typeof onlyChanged !== 'boolean') {
     throw new Error('Pass options.onlyChanged as a boolean.');
   }
+
   let errorCount = 0;
   let warningCount = 0;
   let output = '';
-  [
+  const eslintrcList = ['eslintrc.default', 'eslintrc.esnext', 'eslintrc.es5'];
+  const esLintRuns = [
     runESLintOnFilesWithOptions(allPaths, onlyChanged, {
-      configFile: `${__dirname}/eslintrc.default.js`,
+      configFile: `${__dirname}/${eslintrcList[0]}.js`,
       ignorePattern: [...es5Paths, ...esNextPaths],
     }),
     runESLintOnFilesWithOptions(esNextPaths, onlyChanged, {
-      configFile: `${__dirname}/eslintrc.esnext.js`,
+      configFile: `${__dirname}/${eslintrcList[1]}.js`,
     }),
     runESLintOnFilesWithOptions(es5Paths, onlyChanged, {
-      configFile: `${__dirname}/eslintrc.es5.js`,
+      configFile: `${__dirname}/${eslintrcList[2]}.js`,
     }),
-  ].forEach(result => {
+  ];
+  esLintRuns.forEach((result, index) => {
     errorCount += result.errorCount;
     warningCount += result.warningCount;
     output += result.output;
+    if (isJUnitEnabled()) {
+      writeContent(eslintrcList[index], result.output);
+    }
   });
+  // Whether we store lint results in a file or not, we also log the results in the console
   console.log(output);
   return errorCount === 0 && warningCount === 0;
 }

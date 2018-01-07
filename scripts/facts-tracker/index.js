@@ -13,6 +13,8 @@ const fs = require('fs');
 const path = require('path');
 const execFileSync = require('child_process').execFileSync;
 
+const {isJUnitEnabled, writeJUnitReport} = require('../shared/reporting');
+
 let cwd = null;
 function exec(command, args) {
   console.error('>', [command].concat(args));
@@ -33,38 +35,51 @@ if (isCI) {
     !!process.env.CI_PULL_REQUEST;
 
   if (branch !== 'master') {
-    console.error('facts-tracker: Branch is not master, exiting...');
+    const masterBranchMessage =
+      'facts-tracker: Branch is not master, exiting...';
+    console.error(masterBranchMessage);
+    if (isJUnitEnabled()) {
+      writeJUnitReport('track_stats', masterBranchMessage, true);
+    }
     process.exit(0);
   }
 
   if (isPullRequest) {
-    console.error('facts-tracker: This is a pull request, exiting...');
+    const pullRequestMessage =
+      'facts-tracker: This is a pull request, exiting...';
+    console.error(pullRequestMessage);
+    if (isJUnitEnabled()) {
+      writeJUnitReport('track_stats', pullRequestMessage, true);
+    }
     process.exit(0);
   }
 
   if (!process.env.GITHUB_USER) {
-    console.error(
+    const githubMessage =
       'In order to use facts-tracker, you need to configure a ' +
-        'few environment variables in order to be able to commit to the ' +
-        'repository. Follow those steps to get you setup:\n' +
-        '\n' +
-        'Go to https://github.com/settings/tokens/new\n' +
-        ' - Fill "Token description" with "facts-tracker for ' +
-        process.env.TRAVIS_REPO_SLUG +
-        '"\n' +
-        ' - Check "public_repo"\n' +
-        ' - Press "Generate Token"\n' +
-        '\n' +
-        'In a different tab, go to https://travis-ci.org/' +
-        process.env.TRAVIS_REPO_SLUG +
-        '/settings\n' +
-        ' - Make sure "Build only if .travis.yml is present" is ON\n' +
-        ' - Fill "Name" with "GITHUB_USER" and "Value" with the name of the ' +
-        'account you generated the token with. Press "Add"\n' +
-        '\n' +
-        'Once this is done, commit anything to the repository to restart ' +
-        'Travis and it should work :)'
-    );
+      'few environment variables in order to be able to commit to the ' +
+      'repository. Follow those steps to get you setup:\n' +
+      '\n' +
+      'Go to https://github.com/settings/tokens/new\n' +
+      ' - Fill "Token description" with "facts-tracker for ' +
+      process.env.TRAVIS_REPO_SLUG +
+      '"\n' +
+      ' - Check "public_repo"\n' +
+      ' - Press "Generate Token"\n' +
+      '\n' +
+      'In a different tab, go to https://travis-ci.org/' +
+      process.env.TRAVIS_REPO_SLUG +
+      '/settings\n' +
+      ' - Make sure "Build only if .travis.yml is present" is ON\n' +
+      ' - Fill "Name" with "GITHUB_USER" and "Value" with the name of the ' +
+      'account you generated the token with. Press "Add"\n' +
+      '\n' +
+      'Once this is done, commit anything to the repository to restart ' +
+      'Travis and it should work :)';
+    console.error(githubMessage);
+    if (isJUnitEnabled()) {
+      writeJUnitReport('track_stats', githubMessage, false);
+    }
     process.exit(1);
   }
 
@@ -83,7 +98,12 @@ if (isCI) {
 }
 
 if (process.argv.length <= 2) {
-  console.error('Usage: facts-tracker <name1> <value1> <name2> <value2>...');
+  const usageMessage =
+    'Usage: facts-tracker <name1> <value1> <name2> <value2>...';
+  console.error(usageMessage);
+  if (isJUnitEnabled()) {
+    writeJUnitReport('track_stats', usageMessage, false);
+  }
   process.exit(1);
 }
 
@@ -99,8 +119,11 @@ function getRepoSlug() {
       return match[1];
     }
   }
-
-  console.error('Cannot find repository slug, sorry.');
+  const repoMessage = 'Cannot find repository slug, sorry.';
+  console.error(repoMessage);
+  if (isJUnitEnabled()) {
+    writeJUnitReport('track_stats', repoMessage, false);
+  }
   process.exit(1);
 }
 
@@ -139,7 +162,11 @@ function checkoutFactsFolder() {
   cwd = path.resolve(factsFolder);
   exec('git', ['fetch']);
   if (exec('git', ['status', '--porcelain'])) {
-    console.error('facts-tracker: `git status` is not clean, aborting.');
+    const statusMessage = 'facts-tracker: `git status` is not clean, aborting.';
+    console.error(statusMessage);
+    if (isJUnitEnabled()) {
+      writeJUnitReport('track_stats', statusMessage, false);
+    }
     process.exit(1);
   }
   exec('git', ['rebase', 'origin/facts']);
@@ -186,6 +213,10 @@ if (exec('git', ['status', '--porcelain'])) {
   exec('git', ['commit', '-m', 'Adding facts for ' + currentCommitHash]);
   exec('git', ['push', 'origin', 'facts']);
 } else {
-  console.error('facts-tracker: nothing to update');
+  const nothingToUpdateMessage = 'facts-tracker: nothing to update';
+  console.error(nothingToUpdateMessage);
+  if (isJUnitEnabled()) {
+    writeJUnitReport('track_stats', nothingToUpdateMessage, true);
+  }
 }
 cwd = null;

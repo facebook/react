@@ -24,10 +24,15 @@ const {asyncCopyTo, asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
 
+const {isJUnitEnabled, writeJUnitReport} = require('../shared/reporting');
+
 // Errors in promises should be fatal.
 let loggedErrors = new Set();
 process.on('unhandledRejection', err => {
   if (loggedErrors.has(err)) {
+    if (isJUnitEnabled()) {
+      writeJUnitReport('build', err, false);
+    }
     // No need to print it twice.
     process.exit(1);
   }

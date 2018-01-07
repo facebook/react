@@ -4,6 +4,7 @@ const chalk = require('chalk');
 const path = require('path');
 const spawnSync = require('child_process').spawnSync;
 const glob = require('glob');
+const {isJUnitEnabled, writeJUnitReport} = require('../../shared/reporting');
 
 const extension = process.platform === 'win32' ? '.cmd' : '';
 
@@ -29,7 +30,11 @@ function lint({format, filePatterns}) {
     }
   );
   if (result.status !== 0) {
-    console.error(chalk.red(`Linting of ${format} bundles has failed.`));
+    const lintMessage = `Linting of ${format} bundles has failed.`;
+    console.error(chalk.red(lintMessage));
+    if (isJUnitEnabled()) {
+      writeJUnitReport('lint-build', lintMessage, false);
+    }
     process.exit(result.status);
   } else {
     console.log(chalk.green(`Linted ${format} bundles successfully!`));
@@ -43,7 +48,11 @@ function checkFilesExist(bundle) {
     console.log(`Checking if files exist in ${pattern}...`);
     const files = glob.sync(pattern);
     if (files.length === 0) {
-      console.error(chalk.red(`Found no ${format} bundles in ${pattern}`));
+      const bundleMessage = `Found no ${format} bundles in ${pattern}`;
+      console.error(chalk.red(bundleMessage));
+      if (isJUnitEnabled()) {
+        writeJUnitReport('lint-build', bundleMessage, false);
+      }
       process.exit(1);
     } else {
       console.log(chalk.green(`Found ${files.length} bundles.`));

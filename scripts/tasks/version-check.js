@@ -7,6 +7,8 @@
 
 'use strict';
 
+const {isJUnitEnabled, writeJUnitReport} = require('../shared/reporting');
+
 const reactVersion = require('../../package.json').version;
 const versions = {
   'packages/react/package.json': require('../../packages/react/package.json')
@@ -18,20 +20,24 @@ const versions = {
   'packages/shared/ReactVersion.js': require('../../packages/shared/ReactVersion'),
 };
 
+let errorMessages = [];
+
 let allVersionsMatch = true;
 Object.keys(versions).forEach(function(name) {
   const version = versions[name];
   if (version !== reactVersion) {
     allVersionsMatch = false;
-    console.log(
-      '%s version does not match package.json. Expected %s, saw %s.',
-      name,
-      reactVersion,
-      version
-    );
+    const errorMessage = `${name} version does not match package.json. Expected ${reactVersion}, saw ${version} .`;
+    console.log(errorMessage);
+    if (isJUnitEnabled()) {
+      errorMessages.push(errorMessage);
+    }
   }
 });
 
 if (!allVersionsMatch) {
+  if (isJUnitEnabled()) {
+    writeJUnitReport('version-check', errorMessages.join('\n'), false);
+  }
   process.exit(1);
 }

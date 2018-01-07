@@ -9,6 +9,7 @@
 
 const path = require('path');
 const spawn = require('child_process').spawn;
+const {isJUnitEnabled, writeJUnitReport} = require('../shared/reporting');
 
 const extension = process.platform === 'win32' ? '.cmd' : '';
 
@@ -24,6 +25,9 @@ spawn(path.join('node_modules', '.bin', 'danger-ci' + extension), [], {
 }).on('close', function(code) {
   if (code !== 0) {
     console.error('Danger failed');
+    if (isJUnitEnabled()) {
+      writeJUnitReport('Danger', `Danger failed with code ${code}`, false);
+    }
   } else {
     console.log('Danger passed');
   }

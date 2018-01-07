@@ -10,8 +10,14 @@ ACTUAL=$(git grep -l @providesModule -- './*.js' ':!scripts/rollup/shims/*.js')
 red=$'\e[1;31m'
 end=$'\e[0m'
 
+ANNOUNCEMENT=$(printf "%s\n" "${red}ERROR: @providesModule crept into some new files?${end}")
+DIFF=$(diff -u <(echo "$EXPECTED") <(echo "$ACTUAL") || true)
+DATA=$ANNOUNCEMENT$DIFF
+
 if [ "$EXPECTED" != "$ACTUAL" ]; then
-  printf "%s\n" "${red}ERROR: @providesModule crept into some new files?${end}"
-  diff -u <(echo "$EXPECTED") <(echo "$ACTUAL") || true
+  echo "$DATA"
+  if [ "$REPORT_FORMATTER" = "junit" ]; then
+    ./scripts/circleci/write_junit_report.sh "check_modules" "$DATA" false
+  fi
   exit 1
 fi

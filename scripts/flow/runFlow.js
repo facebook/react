@@ -9,10 +9,15 @@
 
 const chalk = require('chalk');
 const spawn = require('child_process').spawn;
+const {isJUnitEnabled, writeJUnitReport} = require('../shared/reporting');
 
 require('./createFlowConfigs');
 
 async function runFlow(renderer, args) {
+  const spawnOptions = isJUnitEnabled() ? {} : {stdio: 'inherit'};
+  let createReport = () => {};
+  let reportChunks = [];
+
   return new Promise(resolve => {
     console.log(
       'Running Flow on the ' + chalk.yellow(renderer) + ' renderer...',
@@ -21,22 +26,36 @@ async function runFlow(renderer, args) {
     if (process.platform === 'win32') {
       cmd = cmd.replace(/\//g, '\\') + '.cmd';
     }
-    spawn(cmd, args, {
-      // Allow colors to pass through:
-      stdio: 'inherit',
+    const flow = spawn(cmd, args, {
+      ...spawnOptions,
       // Use a specific renderer config:
       cwd: process.cwd() + '/scripts/flow/' + renderer + '/',
-    }).on('close', function(code) {
+    });
+
+    if (isJUnitEnabled()) {
+      flow.stdout.on('data', data => {
+        createReport = stepHasSucceeded => {
+          if (!stepHasSucceeded) {
+            reportChunks.push(data);
+          }
+          writeJUnitReport('flow', data, stepHasSucceeded);
+        };
+      });
+    }
+
+    flow.on('close', function(code) {
       if (code !== 0) {
         console.error(
           'Flow failed for the ' + chalk.red(renderer) + ' renderer',
         );
+        createReport(false);
         console.log();
         process.exit(code);
       } else {
         console.log(
           'Flow passed for the ' + chalk.green(renderer) + ' renderer',
         );
+        createReport(true);
         resolve();
       }
     });

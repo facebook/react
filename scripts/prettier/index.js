@@ -16,6 +16,8 @@ const fs = require('fs');
 const listChangedFiles = require('../shared/listChangedFiles');
 const prettierConfigPath = require.resolve('../../.prettierrc');
 
+const {isJUnitEnabled, writeJUnitReport} = require('../shared/reporting');
+
 const mode = process.argv[2] || 'check';
 const shouldWrite = mode === 'write' || mode === 'write-changed';
 const onlyChanged = mode === 'check-changed' || mode === 'write-changed';
@@ -27,6 +29,14 @@ let didError = false;
 const files = glob
   .sync('**/*.js', {ignore: '**/node_modules/**'})
   .filter(f => !onlyChanged || changedFiles.has(f));
+
+const writeReport = (data, hasSucceeded) => {
+  if (isJUnitEnabled()) {
+    writeJUnitReport('prettier', data, hasSucceeded);
+  }
+};
+
+let junitData = '';
 
 if (!files.length) {
   return;
@@ -46,30 +56,43 @@ files.forEach(file => {
     } else {
       if (!prettier.check(input, options)) {
         if (!didWarn) {
-          console.log(
+          const announcement =
             '\n' +
-              chalk.red(
-                `  This project uses prettier to format all JavaScript code.\n`
-              ) +
-              chalk.dim(`    Please run `) +
-              chalk.reset('yarn prettier-all') +
-              chalk.dim(
-                ` and add changes to files listed below to your commit:`
-              ) +
-              `\n\n`
-          );
+            chalk.red(
+              `  This project uses prettier to format all JavaScript code.\n`
+            ) +
+            chalk.dim(`    Please run `) +
+            chalk.reset('yarn prettier-all') +
+            chalk.dim(
+              ` and add changes to files listed below to your commit:`
+            ) +
+            `\n\n`;
+          console.log(announcement);
+          if (isJUnitEnabled()) {
+            junitData += announcement;
+          }
           didWarn = true;
         }
         console.log(file);
+        if (isJUnitEnabled()) {
+          junitData += file + '\n';
+        }
       }
     }
   } catch (error) {
     didError = true;
     console.log('\n\n' + error.message);
     console.log(file);
+    if (isJUnitEnabled()) {
+      junitData += '\n\n' + error.message;
+      junitData += file + '\n';
+    }
   }
 });
 
 if (didWarn || didError) {
+  writeReport(junitData, false);
   process.exit(1);
+} else {
+  writeReport(junitData, true);
 }

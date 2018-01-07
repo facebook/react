@@ -1,9 +1,11 @@
 #!/bin/bash
 
-set -e
+. ./scripts/circleci/common.sh
+
+TEMPORARY_LOG_FILE="upload_build-errors.log"
 
 if [ -z "$CI_PULL_REQUEST" ] && [ -n "$BUILD_SERVER_ENDPOINT" ]; then
-  curl \
+  process_command "upload_build" "$REPORT_FORMATTER" "$TEMPORARY_LOG_FILE" curl \
     -F "react.development=@build/dist/react.development.js" \
     -F "react.production.min=@build/dist/react.production.min.js" \
     -F "react-dom.development=@build/dist/react-dom.development.js" \

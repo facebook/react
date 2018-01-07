@@ -8,6 +8,10 @@ jobs:
     environment:
       TZ: /usr/share/zoneinfo/America/Los_Angeles
       TRAVIS_REPO_SLUG: facebook/react
+      REPORT_FORMATTER: junit
+      REPORT_DIR: reports/junit
+      JEST_JUNIT_OUTPUT: "reports/junit/jest-results.xml"
+      JEST_PROCESSOR: "jest-junit"
 
     parallelism: 4
 
@@ -34,6 +38,12 @@ jobs:
       - run:
           name: Test Packages
           command: ./scripts/circleci/test_entry_point.sh
+
+      - store_test_results:
+          path: reports/junit
+
+      - store_artifacts:
+          path: reports/junit
 
       - save_cache:
           name: Save node_modules cache

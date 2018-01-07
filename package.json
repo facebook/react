@@ -63,6 +63,8 @@
     "jasmine-check": "^1.0.0-rc.0",
     "jest": "^23.1.0",
     "jest-diff": "^23.0.1",
+    "jest-junit": "^3.4.1",
+    "junit-report-builder": "^1.2.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
