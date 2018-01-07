@@ -173,3 +173,8 @@ var topTransitionEnd;
 var topVolumeChange;
 var topWaiting;
 var topWheel;
+
+/* Globals not provided by the BROWSER environment */
+var requestIdleCallback;
+var cancelIdleCallback;
+var MSApp;

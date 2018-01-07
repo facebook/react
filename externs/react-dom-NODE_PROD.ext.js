@@ -1,7 +1,3 @@
-var requestIdleCallback;
-var cancelIdleCallback;
-var MSApp;
-
 /** @suppress {duplicate} */
 var ReactTestUtils;
 ReactTestUtils.Simulate;
