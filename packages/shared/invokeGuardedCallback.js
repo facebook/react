@@ -22,6 +22,8 @@ let invokeGuardedCallback = function<A, B, C, D, E, F, Context>(
 ) {
   this._hasCaughtError = false;
   this._caughtError = null;
+  this._hasSuppressedError = false;
+  this._suppressedError = null;
   const funcArgs = Array.prototype.slice.call(arguments, 3);
   try {
     func.apply(context, funcArgs);
@@ -125,12 +127,16 @@ if (__DEV__) {
       // Use this to track whether the error event is ever called.
       let didSetError = false;
       let isCrossOriginError = false;
+      let shouldIgnoreError = false;
 
       function onError(event) {
         error = event.error;
         didSetError = true;
         if (error === null && event.colno === 0 && event.lineno === 0) {
           isCrossOriginError = true;
+        }
+        if (event.defaultPrevented) {
+          shouldIgnoreError = true;
         }
       }
 
@@ -171,6 +177,12 @@ if (__DEV__) {
       } else {
         this._hasCaughtError = false;
         this._caughtError = null;
+      }
+
+      if (shouldIgnoreError && error != null) {
+        this._hasSuppressedError = true;
+        this._suppressedError = error;
+        error.suppressReactErrorLogging = true;
       }
 
       // Remove our event listeners
