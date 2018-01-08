@@ -17,7 +17,7 @@ function toContent(received, expected) {
   const diffString = diff(expected, received, {
     expand: this.expand,
   });
-  
+
   const message = () =>
     this.utils.matcherHint('.toContent') +
     '\n\n' +
@@ -27,7 +27,7 @@ function toContent(received, expected) {
     `  ${this.utils.printReceived(received)}` +
     (diffString ? `\n\nDifference:\n\n${diffString}` : '');
 
-  return {actual: received, message, pass };
+  return {actual: received, message, pass};
 }
 
 module.exports = {

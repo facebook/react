@@ -396,7 +396,7 @@ export function createFiberFromElement(
               'but got: %s.%s%s',
             type == null ? type : typeof type,
             info,
-            getCurrentFiberStackAddendum()
+            getCurrentFiberStackAddendum(),
           );
         }
       }
