@@ -310,9 +310,11 @@ export function setDefaultValue(
   // activeElement to compare to the default value.
   //
   // https://github.com/facebook/react/issues/11827
-  const activeElement = node.ownerDocument.activeElement.shadowRoot 
-                      ? getShadowElementRoot(node.ownerDocument.activeElement)
-                      : node.ownerDocument.activeElement;
+  let activeElement = node.ownerDocument.activeElement;
+
+  if (activeElement && activeElement.shadowRoot) {
+    activeElement = getShadowElementRoot(node.ownerDocument.activeElement);
+  }
 
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
