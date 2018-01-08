@@ -51,80 +51,6 @@ React.Component.prototype.render;
 
 React.PureComponent.prototype.isPureReactComponent;
 
-React.SyntheticEvent;
-React.SyntheticEvent.extend;
-React.SyntheticEvent.eventPool;
-React.SyntheticEvent.getPooled;
-React.SyntheticEvent.release;
-React.SyntheticEvent.prototype.destructor;
-React.SyntheticEvent.prototype.persist;
-React.SyntheticEvent.prototype.isPersistent;
-React.SyntheticEvent.prototype.nativeEvent;
-React.SyntheticEvent.prototype.preventDefault;
-React.SyntheticEvent.prototype.stopPropagation;
-/** @type {DispatchConfig} */
-React.SyntheticEvent.prototype.dispatchConfig;
-React.SyntheticEvent.prototype.nativeEvent;
-React.SyntheticEvent.prototype._targetInst;
-React.SyntheticEvent.prototype.isDefaultPrevented;
-React.SyntheticEvent.prototype.isPropagationStopped;
-React.SyntheticEvent.prototype._dispatchListeners;
-React.SyntheticEvent.prototype._dispatchInstances;
-
-/** @suppress {duplicate} */
-var DispatchConfig;
-DispatchConfig.dependencies;
-DispatchConfig.phasedRegistrationNames = {};
-DispatchConfig.phasedRegistrationNames.bubbled;
-DispatchConfig.phasedRegistrationNames.captured;
-DispatchConfig.registrationName;
-
-/** @suppress {duplicate} */
-var FiberNode = {};
-FiberNode.prototype.tag;
-FiberNode.prototype.key;
-FiberNode.prototype.type;
-FiberNode.prototype.stateNode;
-FiberNode.prototype.return;
-FiberNode.prototype.child;
-FiberNode.prototype.sibling;
-FiberNode.prototype.index;
-FiberNode.prototype.ref;
-FiberNode.prototype.pendingProps;
-FiberNode.prototype.memoizedProps;
-FiberNode.prototype.updateQueue;
-FiberNode.prototype.memoizedState;
-FiberNode.prototype.internalContextTag;
-FiberNode.prototype.effectTag;
-FiberNode.prototype.nextEffect;
-FiberNode.prototype.firstEffect;
-FiberNode.prototype.lastEffect;
-FiberNode.prototype.expirationTime;
-FiberNode.prototype.alternate;
-FiberNode.prototype._debugID;
-FiberNode.prototype._debugSource;
-FiberNode.prototype._debugOwner;
-FiberNode.prototype._debugIsCurrentlyTiming;
-
-var Deadline = {};
-Deadline.prototype.timeRemaining;
-
-var Reconciler = {};
-Reconciler.createContainer;
-Reconciler.updateContainer;
-Reconciler.updateContainerAtExpirationTime;
-Reconciler.flushRoot;
-Reconciler.requestWork;
-Reconciler.batchedUpdates;
-Reconciler.unbatchedUpdates;
-Reconciler.flushSync;
-Reconciler.deferredUpdates;
-Reconciler.injectIntoDevTools;
-Reconciler.computeUniqueAsyncExpiration;
-Reconciler.getPublicRootInstance;
-Reconciler.findHostInstance;
-Reconciler.findHostInstanceWithNoPortals;
-
 var updater = {};
 updater.isMounted;
 updater.enqueueSetState;
@@ -143,13 +69,6 @@ var _owner;
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {};
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.assign;
 React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
-React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.EventPluginHub;
-React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.EventPluginRegistry;
-React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.EventPropagators;
-React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-  .ReactControlledComponent;
-React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactDOMComponentTree;
-React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactDOMEventListener;
 
 var __REACT_DEVTOOLS_GLOBAL_HOOK__;
 
