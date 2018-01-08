@@ -556,23 +556,25 @@ describe('ReactDOMServer', () => {
   });
 
   it('should warn when server rendering a class with a render method that does not extend React.Component', () => {
-    spyOnDevAndProd(console, 'error');
     class ClassWithRenderNotExtended {
       render() {
         return <div />;
       }
     }
-    expect(console.error.calls.count()).toBe(0);
+
     expect(() => {
-      ReactDOMServer.renderToString(<ClassWithRenderNotExtended />);
-    }).toThrow(TypeError);
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(() =>
+        ReactDOMServer.renderToString(<ClassWithRenderNotExtended />),
+      ).toWarnDev(
         'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
           "but doesn't extend React.Component. This is likely to cause errors. " +
           'Change ClassWithRenderNotExtended to extend React.Component instead.',
       );
-    }
+    }).toThrow(TypeError);
+
+    // Test deduplication
+    expect(() => {
+      ReactDOMServer.renderToString(<ClassWithRenderNotExtended />);
+    }).toThrow(TypeError);
   });
 });
