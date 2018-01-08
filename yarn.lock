@@ -1743,8 +1743,9 @@ eslint-plugin-flowtype@^2.25.0:
   dependencies:
     lodash "^4.15.0"
 
-"eslint-plugin-react-internal@file:./scripts/eslint-rules":
+"eslint-plugin-react-internal@link:./scripts/eslint-rules/":
   version "0.0.0"
+  uid ""
 
 eslint-plugin-react@^6.7.1:
   version "6.10.3"
