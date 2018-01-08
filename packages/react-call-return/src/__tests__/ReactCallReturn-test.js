@@ -255,4 +255,66 @@ describe('ReactCallReturn', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span(100), span(200), span(500)]);
   });
+
+  it('should unmount and remount children', () => {
+    let ops = [];
+
+    class Call extends React.Component {
+      render() {
+        return ReactCallReturn.unstable_createCall(
+          this.props.children,
+          (p, returns) => returns,
+          {},
+        );
+      }
+    }
+
+    class Return extends React.Component {
+      render() {
+        ops.push(`Return ${this.props.value}`);
+        return ReactCallReturn.unstable_createReturn(this.props.children);
+      }
+
+      componentWillMount() {
+        ops.push(`Mount Return ${this.props.value}`);
+      }
+
+      componentWillUnmount() {
+        ops.push(`Unmount Return ${this.props.value}`);
+      }
+    }
+
+    ReactNoop.render(
+      <Call>
+        <Return value={1} />
+        <Return value={2} />
+      </Call>,
+    );
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'Mount Return 1',
+      'Return 1',
+      'Mount Return 2',
+      'Return 2',
+    ]);
+
+    ops = [];
+
+    ReactNoop.render(<Call />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Unmount Return 1', 'Unmount Return 2']);
+
+    ops = [];
+
+    ReactNoop.render(
+      <Call>
+        <Return value={3} />
+      </Call>,
+    );
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Mount Return 3', 'Return 3']);
+  });
 });

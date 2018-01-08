@@ -44,16 +44,24 @@ let didWarnAboutStateAssignmentForComponent;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
+  const didWarnOnInvalidCallback = {};
   didWarnAboutStateAssignmentForComponent = {};
 
   warnOnInvalidCallback = function(callback: mixed, callerName: string) {
-    warning(
-      callback === null || typeof callback === 'function',
-      '%s(...): Expected the last optional `callback` argument to be a ' +
-        'function. Instead received: %s.',
-      callerName,
-      callback,
-    );
+    if (callback === null || typeof callback === 'function') {
+      return;
+    }
+    const key = `${callerName}_${(callback: any)}`;
+    if (!didWarnOnInvalidCallback[key]) {
+      warning(
+        false,
+        '%s(...): Expected the last optional `callback` argument to be a ' +
+          'function. Instead received: %s.',
+        callerName,
+        callback,
+      );
+      didWarnOnInvalidCallback[key] = true;
+    }
   };
 
   // This is so gross but it's at least non-critical and can be removed if
