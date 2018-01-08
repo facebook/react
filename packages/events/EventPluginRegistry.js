@@ -66,6 +66,10 @@ function recomputePluginOrdering(): void {
     );
     plugins[pluginIndex] = pluginModule;
     const publishedEvents = pluginModule.eventTypes;
+    if (!publishedEvents) {
+      return;
+    }
+
     for (const eventName in publishedEvents) {
       invariant(
         publishEventForPlugin(
@@ -145,8 +149,11 @@ function publishRegistrationName(
     registrationName,
   );
   registrationNameModules[registrationName] = pluginModule;
-  registrationNameDependencies[registrationName] =
-    pluginModule.eventTypes[eventName].dependencies;
+
+  if (pluginModule.eventTypes) {
+    registrationNameDependencies[registrationName] =
+      pluginModule.eventTypes[eventName].dependencies;
+  }
 
   if (__DEV__) {
     const lowerCasedName = registrationName.toLowerCase();

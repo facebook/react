@@ -81,6 +81,15 @@ let reactTopListenersCounter = 0;
  */
 const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
 
+function getEventsFromRegistraionName(registrationName) {
+  if (!(registrationName in registrationNameDependencies)) {
+    registrationNameDependencies[registrationName] = [
+      `top${registrationName.slice(2)}`,
+    ];
+  }
+  return registrationNameDependencies[registrationName];
+}
+
 function getListeningForDocument(mountAt) {
   // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
   // directly.
@@ -115,7 +124,7 @@ function getListeningForDocument(mountAt) {
 export function listenTo(registrationName, contentDocumentHandle) {
   const mountAt = contentDocumentHandle;
   const isListening = getListeningForDocument(mountAt);
-  const dependencies = registrationNameDependencies[registrationName];
+  const dependencies = getEventsFromRegistraionName(registrationName);
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];

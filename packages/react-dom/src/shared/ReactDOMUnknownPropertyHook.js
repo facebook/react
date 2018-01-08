@@ -5,10 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  registrationNameModules,
-  possibleRegistrationNames,
-} from 'events/EventPluginRegistry';
+import {possibleRegistrationNames} from 'events/EventPluginRegistry';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import warning from 'fbjs/lib/warning';
 
@@ -55,7 +52,7 @@ if (__DEV__) {
 
     // We can't rely on the event system being injected on the server.
     if (canUseEventSystem) {
-      if (registrationNameModules.hasOwnProperty(name)) {
+      if (name[0] === 'o' && name[1] === 'n') {
         return true;
       }
       const registrationName = possibleRegistrationNames.hasOwnProperty(

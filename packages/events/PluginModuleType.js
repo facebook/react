@@ -20,7 +20,7 @@ export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 export type PluginName = string;
 
 export type PluginModule<NativeEvent> = {
-  eventTypes: EventTypes,
+  eventTypes?: EventTypes,
   extractEvents: (
     topLevelType: string,
     targetInst: Fiber,

@@ -9,7 +9,6 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
-import {registrationNameModules} from 'events/EventPluginRegistry';
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
 
@@ -312,7 +311,7 @@ function setInitialDOMProperties(
     } else if (propKey === AUTOFOCUS) {
       // We polyfill it separately on the client during commit.
       // We blacklist it here rather than in the property list because we emit it in SSR.
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (propKey[0] === 'o' && propKey[1] === 'n') {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
@@ -651,7 +650,7 @@ export function diffProperties(
       // Noop
     } else if (propKey === AUTOFOCUS) {
       // Noop. It doesn't work on updates anyway.
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (propKey[0] === 'o' && propKey[1] === 'n') {
       // This is a special case. If any listener updates we need to ensure
       // that the "current" fiber pointer gets updated so we need a commit
       // to update this element.
@@ -740,7 +739,7 @@ export function diffProperties(
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
       // Noop
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (propKey[0] === 'o' && propKey[1] === 'n') {
       if (nextProp != null) {
         // We eagerly listen to this even though we haven't committed yet.
         if (__DEV__ && typeof nextProp !== 'function') {
@@ -966,7 +965,7 @@ export function diffHydratedProperties(
           updatePayload = [CHILDREN, '' + nextProp];
         }
       }
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (propKey[0] === 'o' && propKey[1] === 'n') {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
