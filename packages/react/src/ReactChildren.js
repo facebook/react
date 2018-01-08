@@ -26,7 +26,7 @@ const SUBSEPARATOR = ':';
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
-function escape(key) {
+function escapeKey(key) {
   const escapeRegex = /[=:]/g;
   const escaperLookup = {
     '=': '=0',
@@ -250,7 +250,7 @@ function getComponentKey(component, index) {
     component.key != null
   ) {
     // Explicit key
-    return escape(component.key);
+    return escapeKey(component.key);
   }
   // Implicit key determined by the index in the set
   return index.toString(36);

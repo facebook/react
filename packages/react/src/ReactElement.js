@@ -10,20 +10,15 @@ import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
+const objHasOwnProperty = Object.prototype.hasOwnProperty;
 
-const RESERVED_PROPS = {
-  key: true,
-  ref: true,
-  __self: true,
-  __source: true,
-};
+const RESERVED_PROPS = new Set(['key', 'ref', '__self', '__source']);
 
 let specialPropKeyWarningShown, specialPropRefWarningShown;
 
 function hasValidRef(config) {
   if (__DEV__) {
-    if (hasOwnProperty.call(config, 'ref')) {
+    if (objHasOwnProperty.call(config, 'ref')) {
       const getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
       if (getter && getter.isReactWarning) {
         return false;
@@ -35,7 +30,7 @@ function hasValidRef(config) {
 
 function hasValidKey(config) {
   if (__DEV__) {
-    if (hasOwnProperty.call(config, 'key')) {
+    if (objHasOwnProperty.call(config, 'key')) {
       const getter = Object.getOwnPropertyDescriptor(config, 'key').get;
       if (getter && getter.isReactWarning) {
         return false;
@@ -191,8 +186,8 @@ export function createElement(type, config, children) {
     // Remaining properties are added to a new props object
     for (propName in config) {
       if (
-        hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        objHasOwnProperty.call(config, propName) &&
+        !RESERVED_PROPS.has(propName)
       ) {
         props[propName] = config[propName];
       }
@@ -325,8 +320,8 @@ export function cloneElement(element, config, children) {
     }
     for (propName in config) {
       if (
-        hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        objHasOwnProperty.call(config, propName) &&
+        !RESERVED_PROPS.has(propName)
       ) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props

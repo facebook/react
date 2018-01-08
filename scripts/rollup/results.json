@@ -11,8 +11,8 @@
       "filename": "react.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react",
-      "size": 6546,
-      "gzip": 2789
+      "size": 6229,
+      "gzip": 2711
     },
     {
       "filename": "react.development.js",
@@ -25,8 +25,8 @@
       "filename": "react.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react",
-      "size": 5341,
-      "gzip": 2343
+      "size": 5299,
+      "gzip": 2336
     },
     {
       "filename": "React-dev.js",
@@ -109,8 +109,8 @@
       "filename": "react-dom-test-utils.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 10160,
-      "gzip": 3834
+      "size": 10172,
+      "gzip": 3833
     },
     {
       "filename": "ReactTestUtils-dev.js",
@@ -242,8 +242,8 @@
       "filename": "react-art.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-art",
-      "size": 46841,
-      "gzip": 14915
+      "size": 46845,
+      "gzip": 14913
     },
     {
       "filename": "ReactART-dev.js",
