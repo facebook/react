@@ -304,10 +304,20 @@ export function setDefaultValue(
   type: ?string,
   value: *,
 ) {
+
+  // In the case of Shadow DOM, the root node is a child of the shadowRoot.
+  // If this is the case, we need to drill down to the root to get the actual
+  // activeElement to compare to the default value.
+  //
+  // https://github.com/facebook/react/issues/11827
+  const activeElement = node.ownerDocument.activeElement.shadowRoot 
+                      ? getShadowElementRoot(node.ownerDocument.activeElement)
+                      : node.ownerDocument.activeElement;
+
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
     type !== 'number' ||
-    node.ownerDocument.activeElement !== node
+    activeElement !== node
   ) {
     if (value == null) {
       node.defaultValue = '' + node._wrapperState.initialValue;
@@ -315,6 +325,16 @@ export function setDefaultValue(
       node.defaultValue = '' + value;
     }
   }
+}
+
+// Given a Shadow DOM element, returns the root activeElement.
+// Taken from https://developers.google.com/web/fundamentals/web-components/shadowdom#focus
+// Needed for fix of https://github.com/facebook/react/issues/11827
+function getShadowElementRoot(a) {
+  while (a && a.shadowRoot && a.shadowRoot.activeElement) {
+    a = a.shadowRoot.activeElement;
+  }
+  return a;
 }
 
 function getSafeValue(value: *): * {
