@@ -43,7 +43,8 @@ export function getHostProps(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   invariant(
     props.dangerouslySetInnerHTML == null,
-    '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
+    '`dangerouslySetInnerHTML` does not make sense on <textarea>.%s',
+    getCurrentFiberStackAddendum() || '',
   );
 
   // Always set children to the same thing. In IE9, the selection range will

@@ -276,7 +276,8 @@ function updateNamedCousins(rootNode, props) {
       invariant(
         otherProps,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.',
+          'same `name` is not supported.%s',
+        getCurrentFiberStackAddendum() || '',
       );
 
       // We need update the tracked value on the named cousin since the value

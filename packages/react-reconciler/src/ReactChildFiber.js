@@ -66,8 +66,7 @@ if (__DEV__) {
     invariant(
       typeof child._store === 'object',
       'React Component in warnForMissingKey should have a _store. ' +
-        'This error is likely caused by a bug in React. Please file an issue.%s',
-        getCurrentFiberStackAddendum(),
+        'This error is likely caused by a bug in React. Please file an issue.',
     );
     child._store.validated = true;
 
@@ -112,7 +111,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
         'Missing owner for string ref %s. This error is likely caused by a ' +
           'bug in React. Please file an issue.%s',
         mixedRef,
-        getCurrentFiberStackAddendum()
+        getCurrentFiberStackAddendum(),
       );
       const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
@@ -137,7 +136,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
       invariant(
         typeof mixedRef === 'string',
         'Expected ref to be a function or a string.%s',
-        getCurrentFiberStackAddendum()
+        getCurrentFiberStackAddendum(),
       );
       invariant(
         element._owner,
@@ -148,7 +147,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
           '3. You have multiple copies of React loaded\n' +
           'See https://fb.me/react-refs-must-have-owner for more information.%s',
         mixedRef,
-        getCurrentFiberStackAddendum()
+        getCurrentFiberStackAddendum(),
       );
     }
   }
@@ -170,7 +169,7 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
         ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
         : newChild,
       addendum,
-      (getCurrentFiberStackAddendum() || ''),
+      getCurrentFiberStackAddendum() || '',
     );
   }
 }
@@ -867,7 +866,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       typeof iteratorFn === 'function',
       'An object is not an iterable. This error is likely caused by a bug in ' +
         'React. Please file an issue.%s',
-        getCurrentFiberStackAddendum() || '',
+      getCurrentFiberStackAddendum() || '',
     );
 
     if (__DEV__) {
