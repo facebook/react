@@ -18,6 +18,7 @@ import memoizeStringOnly from 'fbjs/lib/memoizeStringOnly';
 import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
+import getComponentName from 'shared/getComponentName';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import {
   REACT_FRAGMENT_TYPE,
@@ -73,8 +74,7 @@ if (__DEV__) {
 
   describeStackFrame = function(element): string {
     const source = element._source;
-    const type = element.type;
-    const name = getComponentName(type);
+    const name = getComponentName(element);
     const ownerName = null;
     return describeComponentFrame(name, source, ownerName);
   };
@@ -130,12 +130,6 @@ const newlineEatingTags = {
   textarea: true,
 };
 
-function getComponentName(type) {
-  return typeof type === 'string'
-    ? type
-    : typeof type === 'function' ? type.displayName || type.name : null;
-}
-
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
 // http://www.w3.org/TR/REC-xml/#NT-Name
@@ -187,7 +181,7 @@ function warnNoop(
   if (__DEV__) {
     const constructor = publicInstance.constructor;
     const componentName =
-      (constructor && getComponentName(constructor)) || 'ReactClass';
+      (constructor && getComponentName({type: constructor})) || 'ReactClass';
     const warningKey = `${componentName}.${callerName}`;
     if (didWarnAboutNoopUpdateForComponent[warningKey]) {
       return;
@@ -348,14 +342,14 @@ function createOpenTagMarkup(
   return ret;
 }
 
-function validateRenderResult(child, type) {
+function validateRenderResult(child, element) {
   if (child === undefined) {
     invariant(
       false,
       '%s(...): Nothing was returned from render. This usually means a ' +
         'return statement is missing. Or, to render nothing, ' +
         'return null.',
-      getComponentName(type) || 'Component',
+      getComponentName(element) || 'Component',
     );
   }
 }
@@ -370,6 +364,7 @@ function resolve(
   let element: ReactElement;
 
   let Component;
+  let componentName;
   let publicContext;
   let inst, queue, replace;
   let updater;
@@ -393,6 +388,7 @@ function resolve(
       break;
     }
     publicContext = processContext(Component, context);
+    componentName = getComponentName(element) || 'Unknown';
 
     queue = [];
     replace = false;
@@ -427,8 +423,6 @@ function resolve(
           Component.prototype &&
           typeof Component.prototype.render === 'function'
         ) {
-          const componentName = getComponentName(Component) || 'Unknown';
-
           if (!didWarnAboutBadClass[componentName]) {
             warning(
               false,
@@ -444,7 +438,7 @@ function resolve(
       inst = Component(element.props, publicContext, updater);
       if (inst == null || inst.render == null) {
         child = inst;
-        validateRenderResult(child, Component);
+        validateRenderResult(child, element);
         continue;
       }
     }
@@ -500,7 +494,7 @@ function resolve(
         child = null;
       }
     }
-    validateRenderResult(child, Component);
+    validateRenderResult(child, element);
 
     if (typeof inst.getChildContext === 'function') {
       childContextTypes = Component.childContextTypes;
@@ -510,7 +504,7 @@ function resolve(
           invariant(
             contextKey in childContextTypes,
             '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-            getComponentName(Component) || 'Unknown',
+            componentName,
             contextKey,
           );
         }
@@ -519,7 +513,7 @@ function resolve(
           false,
           '%s.getChildContext(): childContextTypes must be defined in order to ' +
             'use getChildContext().',
-          getComponentName(Component) || 'Unknown',
+          componentName,
         );
       }
     }
