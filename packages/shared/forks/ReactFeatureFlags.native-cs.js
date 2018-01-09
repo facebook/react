@@ -14,7 +14,6 @@ import typeof * as CSFeatureFlagsType from './ReactFeatureFlags.native-cs';
 
 export const debugRenderPhaseSideEffects = false;
 export const enableAsyncSubtreeAPI = true;
-export const enableAsyncSchedulingByDefaultInReactDOM = false;
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
 
