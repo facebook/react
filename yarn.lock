@@ -1796,6 +1796,10 @@ eslint-plugin-flowtype@^2.25.0:
   dependencies:
     lodash "^4.15.0"
 
+eslint-plugin-jest@^21.6.1:
+  version "21.6.1"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-jest/-/eslint-plugin-jest-21.6.1.tgz#adca015bbdb8d23b210438ff9e1cee1dd9ec35df"
+
 "eslint-plugin-react-internal@link:./scripts/eslint-rules":
   version "0.0.0"
   uid ""

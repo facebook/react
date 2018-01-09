@@ -10,6 +10,7 @@ module.exports = {
   'root': true,
 
   plugins: [
+    'jest',
     'react',
     'react-internal',
   ],
@@ -65,7 +66,8 @@ module.exports = {
     {
       files: ['**/__tests__/*.js'],
       rules: {
-        'react-internal/no-focused-tests': ERROR,
+        // https://github.com/jest-community/eslint-plugin-jest
+        'jest/no-focused-tests': ERROR,
       }
     }
   ],

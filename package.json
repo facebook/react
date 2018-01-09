@@ -54,6 +54,7 @@
     "eslint-config-fbjs": "^1.1.1",
     "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-flowtype": "^2.25.0",
+    "eslint-plugin-jest": "^21.6.1",
     "eslint-plugin-react": "^6.7.1",
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules/",
     "expect": "^21.3.0-beta.4",
