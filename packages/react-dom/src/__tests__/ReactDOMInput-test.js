@@ -1674,4 +1674,31 @@ describe('ReactDOMInput', () => {
       // TODO: we should warn here.
     });
   });
+
+  describe('checked inputs without a value property', function() {
+    // In absence of a value, radio and checkboxes report a value of "on".
+    // Between 16 and 16.2, we assigned a node's value to it's current
+    // value in order to "dettach" it from defaultValue. This had the unfortunate
+    // side-effect of assigning value="on" to radio and checkboxes
+    it('does not add "on" in absence of value on a checkbox', function() {
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <input type="checkbox" defaultChecked={true} />,
+        container,
+      );
+      const node = container.firstChild;
+
+      expect(node.value).toBe('on');
+      expect(node.hasAttribute('value')).toBe(false);
+    });
+
+    it('does not add "on" in absence of value on a radio', function() {
+      const container = document.createElement('div');
+      ReactDOM.render(<input type="radio" defaultChecked={true} />, container);
+      const node = container.firstChild;
+
+      expect(node.value).toBe('on');
+      expect(node.hasAttribute('value')).toBe(false);
+    });
+  });
 });
