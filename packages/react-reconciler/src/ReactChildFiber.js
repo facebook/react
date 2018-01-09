@@ -66,7 +66,8 @@ if (__DEV__) {
     invariant(
       typeof child._store === 'object',
       'React Component in warnForMissingKey should have a _store. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
+        'This error is likely caused by a bug in React. Please file an issue.%s',
+        getCurrentFiberStackAddendum(),
     );
     child._store.validated = true;
 
@@ -109,8 +110,9 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
       invariant(
         inst,
         'Missing owner for string ref %s. This error is likely caused by a ' +
-          'bug in React. Please file an issue.',
+          'bug in React. Please file an issue.%s',
         mixedRef,
+        getCurrentFiberStackAddendum()
       );
       const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
@@ -134,7 +136,8 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
     } else {
       invariant(
         typeof mixedRef === 'string',
-        'Expected ref to be a function or a string.',
+        'Expected ref to be a function or a string.%s',
+        getCurrentFiberStackAddendum()
       );
       invariant(
         element._owner,
@@ -143,8 +146,9 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
           '1. You may be adding a ref to a functional component\n' +
           "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
           '3. You have multiple copies of React loaded\n' +
-          'See https://fb.me/react-refs-must-have-owner for more information.',
+          'See https://fb.me/react-refs-must-have-owner for more information.%s',
         mixedRef,
+        getCurrentFiberStackAddendum()
       );
     }
   }
@@ -157,16 +161,16 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
     if (__DEV__) {
       addendum =
         ' If you meant to render a collection of children, use an array ' +
-        'instead.' +
-        (getCurrentFiberStackAddendum() || '');
+        'instead.';
     }
     invariant(
       false,
-      'Objects are not valid as a React child (found: %s).%s',
+      'Objects are not valid as a React child (found: %s).%s%s',
       Object.prototype.toString.call(newChild) === '[object Object]'
         ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
         : newChild,
       addendum,
+      (getCurrentFiberStackAddendum() || ''),
     );
   }
 }
@@ -862,7 +866,8 @@ function ChildReconciler(shouldTrackSideEffects) {
     invariant(
       typeof iteratorFn === 'function',
       'An object is not an iterable. This error is likely caused by a bug in ' +
-        'React. Please file an issue.',
+        'React. Please file an issue.%s',
+        getCurrentFiberStackAddendum() || '',
     );
 
     if (__DEV__) {
