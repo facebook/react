@@ -60,9 +60,11 @@ import {
 import {NoWork, Never} from './ReactFiberExpirationTime';
 
 let warnedAboutStatelessRefs;
+let didWarnAboutBadClass;
 
 if (__DEV__) {
   warnedAboutStatelessRefs = {};
+  didWarnAboutBadClass = {};
 }
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
@@ -459,13 +461,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (__DEV__) {
       if (fn.prototype && typeof fn.prototype.render === 'function') {
         const componentName = getComponentName(workInProgress);
-        warning(
-          false,
-          "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
-            'This is likely to cause errors. Change %s to extend React.Component instead.',
-          componentName,
-          componentName,
-        );
+
+        if (componentName !== null && !didWarnAboutBadClass[componentName]) {
+          warning(
+            false,
+            "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
+              'This is likely to cause errors. Change %s to extend React.Component instead.',
+            componentName,
+            componentName,
+          );
+          didWarnAboutBadClass[componentName] = true;
+        }
       }
       ReactCurrentOwner.current = workInProgress;
       value = fn(props, context);
