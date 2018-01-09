@@ -98,8 +98,6 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
 
   now(): number,
 
-  useSyncScheduling?: boolean,
-
   +hydration?: HydrationHostConfig<T, P, I, TI, HI, C, CX, PL>,
 
   +mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,
