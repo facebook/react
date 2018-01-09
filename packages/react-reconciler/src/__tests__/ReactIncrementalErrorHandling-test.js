@@ -31,6 +31,15 @@ describe('ReactIncrementalErrorHandling', () => {
     return {type: 'span', children: [], prop};
   }
 
+  function removeStack(str) {
+    return str && str.replace(/in .+? \(at .+?:\d+\)/g, '').trim();
+  }
+
+  function stripStackTrace(obj) {
+    obj[0].prop = removeStack(obj[0].prop);
+    return obj;
+  }
+
   it('catches render error in a boundary during full deferred mounting', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -745,7 +754,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.flush).toWarnDev(
       'Warning: React.createElement: type is invalid -- expected a string',
     );
-    expect(ReactNoop.getChildren()).toContent([
+    expect(stripStackTrace(ReactNoop.getChildren())).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
           'a class/function (for composite components) but got: undefined.' +
@@ -792,7 +801,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.flush).toWarnDev(
       'Warning: React.createElement: type is invalid -- expected a string',
     );
-    expect(ReactNoop.getChildren()).toContent([
+    expect(stripStackTrace(ReactNoop.getChildren())).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
           'a class/function (for composite components) but got: undefined.' +
