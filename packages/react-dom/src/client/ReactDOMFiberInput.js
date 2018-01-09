@@ -304,7 +304,6 @@ export function setDefaultValue(
   type: ?string,
   value: *,
 ) {
-
   // In the case of Shadow DOM, the root node is a child of the shadowRoot.
   // If this is the case, we need to drill down to the root to get the actual
   // activeElement to compare to the default value.
