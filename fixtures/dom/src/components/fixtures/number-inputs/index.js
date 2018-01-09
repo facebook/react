@@ -34,6 +34,29 @@ function NumberInputs() {
       </TestCase>
 
       <TestCase
+        title="Backspacing in Shadow DOM"
+        description="The decimal place should not be lost in a Shadow DOM element">
+        <TestCase.Steps>
+          <li>Create number input inside a Shadow DOM element</li>
+          <li>Type "3.1"</li>
+          <li>Press backspace, eliminating the "1"</li>
+        </TestCase.Steps>
+
+        <TestCase.ExpectedResult>
+          The field should read "3.", preserving the decimal place
+        </TestCase.ExpectedResult>
+
+        <NumberTestCase />
+
+        <p className="footnote">
+          <b>Notes:</b> Previously, the fix for the test case titled
+          "Backspacing" did not work when the number input was attached to a
+          Shadow DOM element. This test case tests that number inputs inside a
+          Shadow DOM still properly retain the decimal point.
+        </p>
+      </TestCase>
+
+      <TestCase
         title="Decimal precision"
         description="Supports decimal precision greater than 2 places">
         <TestCase.Steps>
