@@ -338,6 +338,11 @@ describe('ReactCompositeComponent', () => {
           'Change ClassWithRenderNotExtended to extend React.Component instead.',
       );
     }).toThrow(TypeError);
+
+    // Test deduplication
+    expect(() => {
+      ReactDOM.render(<ClassWithRenderNotExtended />, container);
+    }).toThrow(TypeError);
   });
 
   it('should warn about `setState` in render', () => {
