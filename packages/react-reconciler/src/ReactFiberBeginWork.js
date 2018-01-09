@@ -460,9 +460,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (__DEV__) {
       if (fn.prototype && typeof fn.prototype.render === 'function') {
-        const componentName = getComponentName(workInProgress);
+        const componentName = getComponentName(workInProgress) || 'Unknown';
 
-        if (componentName !== null && !didWarnAboutBadClass[componentName]) {
+        if (!didWarnAboutBadClass[componentName]) {
           warning(
             false,
             "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +

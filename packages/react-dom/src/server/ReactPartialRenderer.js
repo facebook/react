@@ -427,9 +427,9 @@ function resolve(
           Component.prototype &&
           typeof Component.prototype.render === 'function'
         ) {
-          const componentName = getComponentName(Component);
+          const componentName = getComponentName(Component) || 'Unknown';
 
-          if (componentName !== null && !didWarnAboutBadClass[componentName]) {
+          if (!didWarnAboutBadClass[componentName]) {
             warning(
               false,
               "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
