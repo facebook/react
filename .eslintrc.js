@@ -10,6 +10,7 @@ module.exports = {
   'root': true,
 
   plugins: [
+    'jest',
     'react',
     'react-internal',
   ],
@@ -57,9 +58,19 @@ module.exports = {
 
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
-    'react-internal/warning-and-invariant-args': ERROR,
     'react-internal/no-primitive-constructors': ERROR,
+    'react-internal/warning-and-invariant-args': ERROR,
   },
+
+  overrides: [
+    {
+      files: ['**/__tests__/*.js'],
+      rules: {
+        // https://github.com/jest-community/eslint-plugin-jest
+        'jest/no-focused-tests': ERROR,
+      }
+    }
+  ],
 
   globals: {
     spyOnDev: true,
