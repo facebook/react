@@ -203,8 +203,6 @@ const TestRenderer = ReactFiberReconciler({
     clearTimeout(timeoutID);
   },
 
-  useSyncScheduling: true,
-
   getPublicInstance,
 
   now(): number {
