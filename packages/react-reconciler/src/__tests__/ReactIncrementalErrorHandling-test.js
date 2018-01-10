@@ -36,8 +36,9 @@ describe('ReactIncrementalErrorHandling', () => {
   }
 
   function stripStackTrace(obj) {
-    obj[0].prop = removeStack(obj[0].prop);
-    return obj;
+    let stripped = [...obj];
+    stripped[0].prop = removeStack(stripped[0].prop);
+    return stripped;
   }
 
   it('catches render error in a boundary during full deferred mounting', () => {
