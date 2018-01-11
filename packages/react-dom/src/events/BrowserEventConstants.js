@@ -10,19 +10,16 @@ import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 /**
  * Types of raw signals from the browser caught at the top level.
  *
- * For events like 'submit' which don't consistently bubble (which we
- * trap at a lower node than `document`), binding at `document` would
- * cause duplicate events so we don't include them here.
+ * For events like 'submit' or audio/video events which don't consistently
+ * bubble (which we trap at a lower node than `document`), binding
+ * at `document` would cause duplicate events so we don't include them here.
  */
-const topLevelTypes = {
-  topAbort: 'abort',
+export const topLevelTypes = {
   topAnimationEnd: getVendorPrefixedEventName('animationend'),
   topAnimationIteration: getVendorPrefixedEventName('animationiteration'),
   topAnimationStart: getVendorPrefixedEventName('animationstart'),
   topBlur: 'blur',
   topCancel: 'cancel',
-  topCanPlay: 'canplay',
-  topCanPlayThrough: 'canplaythrough',
   topChange: 'change',
   topClick: 'click',
   topClose: 'close',
@@ -41,19 +38,12 @@ const topLevelTypes = {
   topDragOver: 'dragover',
   topDragStart: 'dragstart',
   topDrop: 'drop',
-  topDurationChange: 'durationchange',
-  topEmptied: 'emptied',
-  topEncrypted: 'encrypted',
-  topEnded: 'ended',
-  topError: 'error',
   topFocus: 'focus',
   topInput: 'input',
   topKeyDown: 'keydown',
   topKeyPress: 'keypress',
   topKeyUp: 'keyup',
-  topLoadedData: 'loadeddata',
   topLoad: 'load',
-  topLoadedMetadata: 'loadedmetadata',
   topLoadStart: 'loadstart',
   topMouseDown: 'mousedown',
   topMouseMove: 'mousemove',
@@ -61,34 +51,47 @@ const topLevelTypes = {
   topMouseOver: 'mouseover',
   topMouseUp: 'mouseup',
   topPaste: 'paste',
-  topPause: 'pause',
-  topPlay: 'play',
-  topPlaying: 'playing',
-  topProgress: 'progress',
-  topRateChange: 'ratechange',
   topScroll: 'scroll',
-  topSeeked: 'seeked',
-  topSeeking: 'seeking',
   topSelectionChange: 'selectionchange',
-  topStalled: 'stalled',
-  topSuspend: 'suspend',
   topTextInput: 'textInput',
-  topTimeUpdate: 'timeupdate',
   topToggle: 'toggle',
   topTouchCancel: 'touchcancel',
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
   topTouchStart: 'touchstart',
   topTransitionEnd: getVendorPrefixedEventName('transitionend'),
-  topVolumeChange: 'volumechange',
-  topWaiting: 'waiting',
   topWheel: 'wheel',
 };
 
-export type TopLevelTypes = $Enum<typeof topLevelTypes>;
-
-const BrowserEventConstants = {
-  topLevelTypes,
+// There are so many media events, it makes sense to just
+// maintain a list of them. Note these aren't technically
+// "top-level" since they don't bubble. We should come up
+// with a better naming convention if we come to refactoring
+// the event system.
+export const mediaEventTypes = {
+  topAbort: 'abort',
+  topCanPlay: 'canplay',
+  topCanPlayThrough: 'canplaythrough',
+  topDurationChange: 'durationchange',
+  topEmptied: 'emptied',
+  topEncrypted: 'encrypted',
+  topEnded: 'ended',
+  topError: 'error',
+  topLoadedData: 'loadeddata',
+  topLoadedMetadata: 'loadedmetadata',
+  topLoadStart: 'loadstart',
+  topPause: 'pause',
+  topPlay: 'play',
+  topPlaying: 'playing',
+  topProgress: 'progress',
+  topRateChange: 'ratechange',
+  topSeeked: 'seeked',
+  topSeeking: 'seeking',
+  topStalled: 'stalled',
+  topSuspend: 'suspend',
+  topTimeUpdate: 'timeupdate',
+  topVolumeChange: 'volumechange',
+  topWaiting: 'waiting',
 };
 
-export default BrowserEventConstants;
+export type TopLevelTypes = $Enum<typeof topLevelTypes>;

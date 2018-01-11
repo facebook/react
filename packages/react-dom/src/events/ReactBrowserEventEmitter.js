@@ -13,9 +13,7 @@ import {
   trapCapturedEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
-import BrowserEventConstants from './BrowserEventConstants';
-
-const {topLevelTypes} = BrowserEventConstants;
+import {topLevelTypes} from './BrowserEventConstants';
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
