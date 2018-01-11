@@ -36,10 +36,12 @@ describe('ReactIncrementalErrorHandling', () => {
   }
 
   function stripStackTrace(compSpan) {
+    let [first, ...rest] = compSpan;
     return [
+      ...rest,
       {
-        ...compSpan[0],
-        prop: removeStack(compSpan[0].prop) || '',
+        ...first,
+        prop: removeStack(first.prop) || '',
       },
     ];
   }
