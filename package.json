@@ -57,7 +57,6 @@
     "eslint-plugin-jest": "^21.6.1",
     "eslint-plugin-react": "^6.7.1",
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules/",
-    "expect": "^21.3.0-beta.4",
     "fbjs": "^0.8.16",
     "fbjs-scripts": "^0.6.0",
     "filesize": "^3.5.6",

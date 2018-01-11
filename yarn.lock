@@ -1981,17 +1981,6 @@ expand-tilde@^1.2.2:
   dependencies:
     os-homedir "^1.0.1"
 
-expect@^21.3.0-beta.4:
-  version "21.3.0-beta.4"
-  resolved "https://registry.yarnpkg.com/expect/-/expect-21.3.0-beta.4.tgz#e1243ad493fb9dec41793ab0ffd08a3a81eb9cb4"
-  dependencies:
-    ansi-styles "^3.2.0"
-    jest-diff "21.3.0-beta.4"
-    jest-get-type "21.3.0-beta.4"
-    jest-matcher-utils "21.3.0-beta.4"
-    jest-message-util "21.3.0-beta.4"
-    jest-regex-util "^21.2.0"
-
 expect@^22.0.6:
   version "22.0.6"
   resolved "https://registry.yarnpkg.com/expect/-/expect-22.0.6.tgz#69e1761ecb5ba354513e546e6187beda79e18078"
@@ -3117,15 +3106,6 @@ jest-config@^22.0.6:
     jest-validate "^22.0.6"
     pretty-format "^22.0.6"
 
-jest-diff@21.3.0-beta.4:
-  version "21.3.0-beta.4"
-  resolved "https://registry.yarnpkg.com/jest-diff/-/jest-diff-21.3.0-beta.4.tgz#75e795e83f6c3368720c2ddd1f0cbed1543c4139"
-  dependencies:
-    chalk "^2.0.1"
-    diff "^3.2.0"
-    jest-get-type "21.3.0-beta.4"
-    pretty-format "21.3.0-beta.4"
-
 jest-diff@^22.0.6:
   version "22.0.6"
   resolved "https://registry.yarnpkg.com/jest-diff/-/jest-diff-22.0.6.tgz#38c07187324564ecf6389a980a2f0e86e7e79890"
@@ -3155,10 +3135,6 @@ jest-environment-node@^22.0.6:
   dependencies:
     jest-mock "^22.0.6"
     jest-util "^22.0.6"
-
-jest-get-type@21.3.0-beta.4:
-  version "21.3.0-beta.4"
-  resolved "https://registry.yarnpkg.com/jest-get-type/-/jest-get-type-21.3.0-beta.4.tgz#248b16f9b8fe2887a0baa35b31905d73d66e56e0"
 
 jest-get-type@^22.0.6:
   version "22.0.6"
@@ -3197,14 +3173,6 @@ jest-leak-detector@^22.0.6:
   dependencies:
     pretty-format "^22.0.6"
 
-jest-matcher-utils@21.3.0-beta.4:
-  version "21.3.0-beta.4"
-  resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-21.3.0-beta.4.tgz#a83ad12d284c4c3a4db87ba5830f84a16b9a4a91"
-  dependencies:
-    chalk "^2.0.1"
-    jest-get-type "21.3.0-beta.4"
-    pretty-format "21.3.0-beta.4"
-
 jest-matcher-utils@^22.0.6:
   version "22.0.6"
   resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-22.0.6.tgz#55675242b2af1de913f44e00aa4d68a38d349b07"
@@ -3212,15 +3180,6 @@ jest-matcher-utils@^22.0.6:
     chalk "^2.0.1"
     jest-get-type "^22.0.6"
     pretty-format "^22.0.6"
-
-jest-message-util@21.3.0-beta.4:
-  version "21.3.0-beta.4"
-  resolved "https://registry.yarnpkg.com/jest-message-util/-/jest-message-util-21.3.0-beta.4.tgz#018dd79f8d7b1a4bbbd9f5b3d59354d14ac9641f"
-  dependencies:
-    chalk "^2.0.1"
-    micromatch "^2.3.11"
-    slash "^1.0.0"
-    stack-utils "^1.0.1"
 
 jest-message-util@^22.0.6:
   version "22.0.6"
@@ -3235,10 +3194,6 @@ jest-message-util@^22.0.6:
 jest-mock@^22.0.6:
   version "22.0.6"
   resolved "https://registry.yarnpkg.com/jest-mock/-/jest-mock-22.0.6.tgz#0d1f51ec2bf1e72cd58e79cb76f587e6397306ec"
-
-jest-regex-util@^21.2.0:
-  version "21.2.0"
-  resolved "https://registry.yarnpkg.com/jest-regex-util/-/jest-regex-util-21.2.0.tgz#1b1e33e63143babc3e0f2e6c9b5ba1eb34b2d530"
 
 jest-regex-util@^22.0.6:
   version "22.0.6"
@@ -4153,13 +4108,6 @@ preserve@^0.2.0:
 prettier@1.8.1, prettier@^1.0.0:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.8.1.tgz#91064d778c08c85ac1cbe6b23195c34310d039f9"
-
-pretty-format@21.3.0-beta.4:
-  version "21.3.0-beta.4"
-  resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-21.3.0-beta.4.tgz#6b3b8aba0b7097f821156e5fd1e3bc0fa923b17f"
-  dependencies:
-    ansi-regex "^3.0.0"
-    ansi-styles "^3.2.0"
 
 pretty-format@^22.0.6:
   version "22.0.6"
