@@ -35,10 +35,11 @@ describe('ReactIncrementalErrorHandling', () => {
     return str && str.replace(/in .+? \(at .+?:\d+\)/g, '').trim();
   }
 
-  function stripStackTrace(obj) {
-    let stripped = [...obj];
-    stripped[0].prop = removeStack(stripped[0].prop);
-    return stripped;
+  function stripStackTrace(compSpan) {
+    return [{
+      ...compSpan[0],
+      prop: removeStack(compSpan[0].prop),
+    }];
   }
 
   it('catches render error in a boundary during full deferred mounting', () => {
