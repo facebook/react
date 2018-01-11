@@ -36,10 +36,12 @@ describe('ReactIncrementalErrorHandling', () => {
   }
 
   function stripStackTrace(compSpan) {
-    return [{
-      ...compSpan[0],
-      prop: removeStack(compSpan[0].prop),
-    }];
+    return [
+      {
+        ...compSpan[0],
+        prop: removeStack(compSpan[0].prop) || '',
+      },
+    ];
   }
 
   it('catches render error in a boundary during full deferred mounting', () => {

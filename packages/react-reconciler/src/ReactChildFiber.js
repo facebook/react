@@ -85,7 +85,7 @@ if (__DEV__) {
       'Each child in an array or iterator should have a unique ' +
         '"key" prop. See https://fb.me/react-warning-keys for ' +
         'more information.%s',
-      getCurrentFiberStackAddendum(),
+      getCurrentFiberStackAddendum() || '',
     );
   };
 }
@@ -111,7 +111,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
         'Missing owner for string ref %s. This error is likely caused by a ' +
           'bug in React. Please file an issue.%s',
         mixedRef,
-        getCurrentFiberStackAddendum(),
+        getCurrentFiberStackAddendum() || '',
       );
       const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
@@ -136,7 +136,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
       invariant(
         typeof mixedRef === 'string',
         'Expected ref to be a function or a string.%s',
-        getCurrentFiberStackAddendum(),
+        getCurrentFiberStackAddendum() || '',
       );
       invariant(
         element._owner,
@@ -147,7 +147,7 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
           '3. You have multiple copies of React loaded\n' +
           'See https://fb.me/react-refs-must-have-owner for more information.%s',
         mixedRef,
-        getCurrentFiberStackAddendum(),
+        getCurrentFiberStackAddendum() || '',
       );
     }
   }
@@ -683,7 +683,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               'duplicated and/or omitted — the behavior is unsupported and ' +
               'could change in a future version.%s',
             key,
-            getCurrentFiberStackAddendum(),
+            getCurrentFiberStackAddendum() || '',
           );
           break;
         default:
@@ -879,7 +879,7 @@ function ChildReconciler(shouldTrackSideEffects) {
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
               'ReactElements instead.%s',
-            getCurrentFiberStackAddendum(),
+            getCurrentFiberStackAddendum() || '',
           );
           didWarnAboutMaps = true;
         }
