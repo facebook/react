@@ -50,7 +50,7 @@ const push = async ({cwd, dry, packages, version}) => {
         }
 
         // If we've just published a stable release,
-        // Update the @next tag to also point to it (so @next doens't lag behind).
+        // Update the @next tag to also point to it (so @next doesn't lag behind).
         if (!isPrerelease) {
           await execUnlessDry(
             `npm dist-tag add ${project}@${packageVersion} next`,
