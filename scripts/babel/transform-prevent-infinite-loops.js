@@ -53,7 +53,7 @@ module.exports = ({types: t, template}) => {
           ITERATOR: iterator,
           MAX_ITERATIONS: t.numericLiteral(MAX_ITERATIONS),
         });
-        // No block statment e.g. `while (1) 1;`
+        // No block statement e.g. `while (1) 1;`
         if (!path.get('body').isBlockStatement()) {
           const statement = path.get('body').node;
           path.get('body').replaceWith(t.blockStatement([guard, statement]));
