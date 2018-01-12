@@ -1,3 +1,5 @@
+'use strict';
+
 const traverse = require('babel-traverse');
 const generate = require('babel-generator');
 const {

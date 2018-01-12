@@ -1,3 +1,5 @@
+'use strict';
+
 // @noflow
 
 const fs = require('fs');
