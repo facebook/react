@@ -21,8 +21,14 @@ class NumberTestCaseShadowDOM extends React.Component {
   };
 
   componentDidMount() {
-    this.attachShadowDomElement("#shadow-dom-host-controlled", this.controlledInputElementText);
-    this.attachShadowDomElement("#shadow-dom-host-uncontrolled", this.uncontrolledInputElementText);
+    this.attachShadowDomElement(
+      '#shadow-dom-host-controlled',
+      this.controlledInputElementText
+    );
+    this.attachShadowDomElement(
+      '#shadow-dom-host-uncontrolled',
+      this.uncontrolledInputElementText
+    );
   }
 
   attachShadowDomElement(hostElementId, stringHtmlElement) {
@@ -39,8 +45,8 @@ class NumberTestCaseShadowDOM extends React.Component {
         <div className="control-box">
           <fieldset>
             <legend>Controlled</legend>
-            <span id="shadow-dom-host-controlled"></span>
-            
+            <span id="shadow-dom-host-controlled" />
+
             <span className="hint">
               {' '}
               Value: {JSON.stringify(this.state.value)}
@@ -49,7 +55,7 @@ class NumberTestCaseShadowDOM extends React.Component {
 
           <fieldset>
             <legend>Uncontrolled</legend>
-            <span id="shadow-dom-host-uncontrolled"></span>
+            <span id="shadow-dom-host-uncontrolled" />
           </fieldset>
         </div>
       </Fixture>
