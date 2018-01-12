@@ -5,8 +5,6 @@ const babylon = require('babylon');
 const t = require('babel-types');
 const nodePath = require('path');
 
-
-
 // code  => ast
 function parse(code) {
   return babylon.parse(code, {
