@@ -3,6 +3,7 @@ import TestCase from '../../TestCase';
 import NumberTestCase from './NumberTestCase';
 import NumberInputDecimal from './NumberInputDecimal';
 import NumberInputExtraZeroes from './NumberInputExtraZeroes';
+import NumberInputTestCaseShadowDOM from './NumberTestCaseShadowDOM';
 
 const React = window.React;
 
@@ -46,7 +47,7 @@ function NumberInputs() {
           The field should read "3.", preserving the decimal place
         </TestCase.ExpectedResult>
 
-        <NumberTestCase />
+        <NumberInputTestCaseShadowDOM />
 
         <p className="footnote">
           <b>Notes:</b> Previously, the fix for the test case titled
