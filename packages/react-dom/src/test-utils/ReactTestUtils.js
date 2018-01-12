@@ -18,7 +18,7 @@ import {
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'fbjs/lib/invariant';
 
-import {topLevelTypes} from '../events/BrowserEventConstants';
+import {topLevelTypes, mediaEventTypes} from '../events/BrowserEventConstants';
 
 const {findDOMNode} = ReactDOM;
 const {
@@ -456,7 +456,12 @@ function makeNativeSimulator(eventType) {
   };
 }
 
-Object.keys(topLevelTypes).forEach(function(eventType) {
+const eventKeys = [].concat(
+  Object.keys(topLevelTypes),
+  Object.keys(mediaEventTypes),
+);
+
+eventKeys.forEach(function(eventType) {
   // Event type is stored as 'topClick' - we transform that to 'click'
   const convenienceName =
     eventType.indexOf('top') === 0
