@@ -35,6 +35,14 @@ describe('ReactTestUtils', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
+  it('Simulate should have locally attached media events', () => {
+    expect(Object.keys(ReactTestUtils.Simulate).sort()).toMatchSnapshot();
+  });
+
+  it('SimulateNative should have locally attached media events', () => {
+    expect(Object.keys(ReactTestUtils.SimulateNative).sort()).toMatchSnapshot();
+  });
+
   it('gives Jest mocks a passthrough implementation with mockComponent()', () => {
     class MockedComponent extends React.Component {
       render() {
