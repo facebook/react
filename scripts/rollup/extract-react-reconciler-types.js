@@ -7,11 +7,11 @@ const {
   bundle,
   getDir,
   write,
-} = require('./utils');
+} = require('./extract-types-utils');
 
 const MAIN_FILE = resolveFileName(
   './packages/react-reconciler/index.js',
-  process.cwd(),
+  process.cwd()
 );
 
 const alreadyExtracted = new Map();
@@ -30,12 +30,12 @@ function collectTypes(currentFileName) {
       if (importKind === 'type' || importKind === 'typeof') {
         const nextFileName = resolveFileName(
           source.value,
-          getDir(currentFileName),
+          getDir(currentFileName)
         );
 
         if (!alreadyExtracted.get(nextFileName)) {
           typeDeclarationNodes = typeDeclarationNodes.concat(
-            collectTypes(nextFileName),
+            collectTypes(nextFileName)
           );
         }
 
@@ -59,12 +59,12 @@ function collectTypes(currentFileName) {
 
           const nextFileName = resolveFileName(
             source.value,
-            getDir(currentFileName),
+            getDir(currentFileName)
           );
           // console.log(nextFileName, alreadyExtracted.get(nextFileName));
           if (!alreadyExtracted.get(nextFileName)) {
             typeDeclarationNodes = typeDeclarationNodes.concat(
-              collectTypes(nextFileName),
+              collectTypes(nextFileName)
             );
           }
 
@@ -100,10 +100,13 @@ function collectTypes(currentFileName) {
   return typeDeclarationNodes;
 }
 
-const topLevelDeclarations = collectTypes(MAIN_FILE);
+// write(
+//   './packages/react-reconciler/index.js.flow',
+//   generate.default(typeDeclarationsAST).code,
+// );
 
-const typeDeclarationsAST = bundle(topLevelDeclarations);
-write(
-  './packages/react-reconciler/src/ReactFiberReconcilerTypes.js',
-  generate.default(typeDeclarationsAST).code,
-);
+module.exports = function(outputFilePath) {
+  const topLevelDeclarations = collectTypes(MAIN_FILE);
+  const typeDeclarationsAST = bundle(topLevelDeclarations);
+  write(outputFilePath, generate.default(typeDeclarationsAST).code);
+};

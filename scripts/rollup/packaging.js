@@ -8,7 +8,7 @@ const {
   asyncExtractTar,
   asyncRimRaf,
 } = require('./utils');
-
+const extractReactReconcilerTypes = require('./extract-react-reconciler-types');
 const {
   UMD_DEV,
   UMD_PROD,
@@ -94,10 +94,9 @@ async function copyAllShims() {
   await Promise.all([copyWWWShims(), copyRNShims()]);
 }
 
-async function copyReactReconcilerTypes() {
-  await asyncCopyTo(
-    require.resolve('react-reconciler/src/ReactFiberReconcilerTypes.js'),
-    'build/packages/react-reconciler/index.js.flow'
+function bundleReactReconcilerTypes() {
+  extractReactReconcilerTypes(
+    './build/node_modules/react-reconciler/index.js.flow'
   );
 }
 
@@ -154,7 +153,7 @@ async function prepareNpmPackages() {
 
 module.exports = {
   copyAllShims,
-  copyReactReconcilerTypes,
+  bundleReactReconcilerTypes,
   getPackageName,
   getBundleOutputPaths,
   prepareNpmPackages,
