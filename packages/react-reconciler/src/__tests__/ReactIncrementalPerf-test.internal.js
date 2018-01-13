@@ -358,7 +358,14 @@ describe('ReactDebugFiberPerf', () => {
     );
     try {
       addComment('Will fatal');
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <Baddie> component:\n' +
+          '    in Baddie (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Parent (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     } catch (err) {
       expect(err.message).toBe('Game over');
     }
@@ -404,7 +411,17 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Stop on Baddie and restart from Boundary');
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev([
+      'The above error occurred in the <Baddie> component:\n' +
+        '    in Baddie (at **)\n' +
+        '    in div (at **)\n' +
+        '    in Parent (at **)\n' +
+        '    in Boundary (at **)\n' +
+        '    in div (at **)\n' +
+        '    in Parent (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, Boundary.',
+    ]);
     expect(getFlameChart()).toMatchSnapshot();
   });
 

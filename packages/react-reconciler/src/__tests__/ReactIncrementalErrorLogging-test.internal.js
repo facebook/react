@@ -229,9 +229,18 @@ it('resets instance variables before unmounting failed node', () => {
       <Foo />
     </ErrorBoundary>,
   );
-  expect(ReactNoop.flush()).toEqual([
-    'render: 0',
-    'render: 1',
-    'componentWillUnmount: 0',
+
+  expect(() => {
+    expect(ReactNoop.flush()).toEqual([
+      'render: 0',
+      'render: 1',
+      'componentWillUnmount: 0',
+    ]);
+  }).toWarnDev([
+    'The above error occurred in the <Foo> component:\n' +
+      '    in Foo (at **)\n' +
+      '    in ErrorBoundary (at **)\n\n' +
+      'React will try to recreate this component tree from scratch ' +
+      'using the error boundary you provided, ErrorBoundary.',
   ]);
 });

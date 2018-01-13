@@ -94,6 +94,7 @@ export type CapturedError = {
   errorBoundaryFound: boolean,
   errorBoundaryName: string | null,
   willRetry: boolean,
+  hasSuppressedError: Function,
 };
 
 export type HandleErrorInfo = {

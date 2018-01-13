@@ -102,11 +102,6 @@ const ReactErrorUtils = {
       ReactErrorUtils._caughtError = null;
       ReactErrorUtils._hasCaughtError = false;
       return error;
-    } else if (ReactErrorUtils._hasSuppressedError) {
-      const suppressedError = ReactErrorUtils._caughtError;
-      ReactErrorUtils._caughtError = null;
-      ReactErrorUtils._hasCaughtError = false;
-      return suppressedError;
     } else {
       invariant(
         false,
