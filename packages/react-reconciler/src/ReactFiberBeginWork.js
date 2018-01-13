@@ -58,11 +58,14 @@ import {
   invalidateContextProvider,
 } from './ReactFiberContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
+import {AsyncUpdates} from './ReactTypeOfInternalContext';
 
 let warnedAboutStatelessRefs;
+let didWarnAboutBadClass;
 
 if (__DEV__) {
   warnedAboutStatelessRefs = {};
+  didWarnAboutBadClass = {};
 }
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
@@ -72,11 +75,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
 ) {
-  const {
-    shouldSetTextContent,
-    useSyncScheduling,
-    shouldDeprioritizeSubtree,
-  } = config;
+  const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
 
@@ -414,7 +413,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Check the host config to see if the children are offscreen/hidden.
     if (
       renderExpirationTime !== Never &&
-      !useSyncScheduling &&
+      workInProgress.internalContextTag & AsyncUpdates &&
       shouldDeprioritizeSubtree(type, nextProps)
     ) {
       // Down-prioritize the children.
@@ -458,14 +457,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (__DEV__) {
       if (fn.prototype && typeof fn.prototype.render === 'function') {
-        const componentName = getComponentName(workInProgress);
-        warning(
-          false,
-          "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
-            'This is likely to cause errors. Change %s to extend React.Component instead.',
-          componentName,
-          componentName,
-        );
+        const componentName = getComponentName(workInProgress) || 'Unknown';
+
+        if (!didWarnAboutBadClass[componentName]) {
+          warning(
+            false,
+            "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
+              'This is likely to cause errors. Change %s to extend React.Component instead.',
+            componentName,
+            componentName,
+          );
+          didWarnAboutBadClass[componentName] = true;
+        }
       }
       ReactCurrentOwner.current = workInProgress;
       value = fn(props, context);
@@ -559,7 +562,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } else {
       workInProgress.stateNode = reconcileChildFibers(
         workInProgress,
-        workInProgress.stateNode,
+        current.stateNode,
         nextChildren,
         renderExpirationTime,
       );

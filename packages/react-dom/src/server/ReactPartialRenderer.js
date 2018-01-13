@@ -122,6 +122,7 @@ let didWarnDefaultSelectValue = false;
 let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
 const didWarnAboutNoopUpdateForComponent = {};
+const didWarnAboutBadClass = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
   listing: true,
@@ -421,6 +422,25 @@ function resolve(
     if (shouldConstruct(Component)) {
       inst = new Component(element.props, publicContext, updater);
     } else {
+      if (__DEV__) {
+        if (
+          Component.prototype &&
+          typeof Component.prototype.render === 'function'
+        ) {
+          const componentName = getComponentName(Component) || 'Unknown';
+
+          if (!didWarnAboutBadClass[componentName]) {
+            warning(
+              false,
+              "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
+                'This is likely to cause errors. Change %s to extend React.Component instead.',
+              componentName,
+              componentName,
+            );
+            didWarnAboutBadClass[componentName] = true;
+          }
+        }
+      }
       inst = Component(element.props, publicContext, updater);
       if (inst == null || inst.render == null) {
         child = inst;

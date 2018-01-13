@@ -182,8 +182,6 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     return false;
   },
 
-  useSyncScheduling: false,
-
   now(): number {
     // TODO: Enable expiration by implementing this method.
     return 0;

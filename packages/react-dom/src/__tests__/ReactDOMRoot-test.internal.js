@@ -302,7 +302,7 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('2');
   });
 
-  it('commits a later batch without commiting an earlier batch', () => {
+  it('commits a later batch without committing an earlier batch', () => {
     const root = ReactDOM.createRoot(container);
     const batch1 = root.createBatch();
     batch1.render(1);

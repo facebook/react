@@ -554,4 +554,27 @@ describe('ReactDOMServer', () => {
       'The experimental Call and Return types are not currently supported by the server renderer.',
     );
   });
+
+  it('should warn when server rendering a class with a render method that does not extend React.Component', () => {
+    class ClassWithRenderNotExtended {
+      render() {
+        return <div />;
+      }
+    }
+
+    expect(() => {
+      expect(() =>
+        ReactDOMServer.renderToString(<ClassWithRenderNotExtended />),
+      ).toWarnDev(
+        'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
+          "but doesn't extend React.Component. This is likely to cause errors. " +
+          'Change ClassWithRenderNotExtended to extend React.Component instead.',
+      );
+    }).toThrow(TypeError);
+
+    // Test deduplication
+    expect(() => {
+      ReactDOMServer.renderToString(<ClassWithRenderNotExtended />);
+    }).toThrow(TypeError);
+  });
 });

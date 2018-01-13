@@ -348,7 +348,7 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo text="foo" step={1} />);
     ReactNoop.flush();
 
-    // Since we did nothing to the middle subtree during the interuption,
+    // Since we did nothing to the middle subtree during the interruption,
     // we should be able to reuse the reconciliation work that we already did
     // without restarting. The side-effects should still be replayed.
 
@@ -413,7 +413,7 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo text="foo" step={1} />);
     ReactNoop.flush(30);
 
-    // Since we did nothing to the middle subtree during the interuption,
+    // Since we did nothing to the middle subtree during the interruption,
     // we should be able to reuse the reconciliation work that we already did
     // without restarting. The side-effects should still be replayed.
 

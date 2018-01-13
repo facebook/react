@@ -704,7 +704,7 @@ describe('ReactIncremental', () => {
 
     ops = [];
 
-    // Since we did nothing to the middle subtree during the interuption,
+    // Since we did nothing to the middle subtree during the interruption,
     // we should be able to reuse the reconciliation work that we already did
     // without restarting.
     ReactNoop.flush();
@@ -866,7 +866,7 @@ describe('ReactIncremental', () => {
 
     ops = [];
 
-    // Since we did nothing to the middle subtree during the interuption,
+    // Since we did nothing to the middle subtree during the interruption,
     // we should be able to reuse the reconciliation work that we already did
     // without restarting.
     ReactNoop.flush();

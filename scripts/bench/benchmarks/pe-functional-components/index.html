@@ -19,9 +19,9 @@
     </script>
     <script src="benchmark.js"></script>
     <script>
-      performance.mark('Inital Render');
+      performance.mark('Initial Render');
       render();
-      performance.measure('Inital Render', 'Inital Render');
+      performance.measure('Initial Render', 'Initial Render');
       requestAnimationFrame(() => {
         performance.mark('Update Render');
         render();
