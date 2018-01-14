@@ -12,7 +12,6 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 let didWarnForAddedNewProperty = false;
-const isProxySupported = typeof Proxy === 'function';
 const EVENT_POOL_SIZE = 10;
 
 const shouldBeReleasedProperties = [
@@ -234,6 +233,11 @@ SyntheticEvent.extend = function(Interface) {
  * in which some Event properties are set to undefined (GH#10010)
  */
 if (__DEV__) {
+  const isProxySupported =
+    typeof Proxy === 'function' &&
+    // https://github.com/facebook/react/issues/12011
+    !Object.isSealed(new Proxy({}, {}));
+
   if (isProxySupported) {
     /*eslint-disable no-func-assign */
     SyntheticEvent = new Proxy(SyntheticEvent, {
