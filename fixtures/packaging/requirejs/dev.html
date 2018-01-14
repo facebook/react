@@ -1,15 +1,10 @@
 <html>
   <body>
     <script src="https://unpkg.com/requirejs@2.3.2/require.js"></script>
+    <script src="../../../build/dist/react.development.js"></script>
+    <script src="../../../build/dist/react-dom.development.js"></script>
     <div id="container"></div>
     <script>
-      requirejs.config({
-        paths: {
-          react: '../../../build/dist/react.development',
-          'react-dom': '../../../build/dist/react-dom.development'
-        }
-      });
-
       require(['react', 'react-dom'], function(React, ReactDOM) {
         ReactDOM.render(
           React.createElement('h1', null, 'Hello World!'),
