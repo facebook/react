@@ -44,7 +44,4 @@ if (typeof window !== 'undefined') {
       event.preventDefault();
     }
   });
-
-  // Mock for ReactART.
-  HTMLCanvasElement.prototype.getContext = () => ({});
 }
