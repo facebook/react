@@ -165,7 +165,7 @@ describe('ReactComponentLifeCycle', () => {
   // had provided a getInitialState method.
   it('throws when accessing state in componentWillMount', () => {
     class StatefulComponent extends React.Component {
-      componentWillMount() {
+      unsafe_componentWillMount() {
         void this.state.yada;
       }
 
@@ -182,7 +182,7 @@ describe('ReactComponentLifeCycle', () => {
 
   it('should allow update state inside of componentWillMount', () => {
     class StatefulComponent extends React.Component {
-      componentWillMount() {
+      unsafe_componentWillMount() {
         this.setState({stateField: 'something'});
       }
 
@@ -231,7 +231,7 @@ describe('ReactComponentLifeCycle', () => {
         // reaching into the updater.
         return this.updater.isMounted(this);
       }
-      componentWillMount() {
+      unsafe_componentWillMount() {
         expect(this._isMounted()).toBeFalsy();
       }
       componentDidMount() {
@@ -258,7 +258,7 @@ describe('ReactComponentLifeCycle', () => {
         // reaching into the updater.
         return this.updater.isMounted(this);
       }
-      componentWillMount() {
+      unsafe_componentWillMount() {
         expect(this._isMounted()).toBeFalsy();
       }
       componentDidMount() {
@@ -334,7 +334,7 @@ describe('ReactComponentLifeCycle', () => {
         this.state = initState;
       }
 
-      componentWillMount() {
+      unsafe_componentWillMount() {
         this._testJournal.stateAtStartOfWillMount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillMount = getLifeCycleState(this);
         this.state.hasWillMountCompleted = true;
@@ -509,11 +509,13 @@ describe('ReactComponentLifeCycle', () => {
       };
     };
     class Outer extends React.Component {
-      componentWillMount = logger('outer componentWillMount');
+      unsafe_componentWillMount = logger('outer componentWillMount');
       componentDidMount = logger('outer componentDidMount');
-      componentWillReceiveProps = logger('outer componentWillReceiveProps');
+      unsafe_componentWillReceiveProps = logger(
+        'outer componentWillReceiveProps',
+      );
       shouldComponentUpdate = logger('outer shouldComponentUpdate');
-      componentWillUpdate = logger('outer componentWillUpdate');
+      unsafe_componentWillUpdate = logger('outer componentWillUpdate');
       componentDidUpdate = logger('outer componentDidUpdate');
       componentWillUnmount = logger('outer componentWillUnmount');
       render() {
@@ -526,11 +528,13 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     class Inner extends React.Component {
-      componentWillMount = logger('inner componentWillMount');
+      unsafe_componentWillMount = logger('inner componentWillMount');
       componentDidMount = logger('inner componentDidMount');
-      componentWillReceiveProps = logger('inner componentWillReceiveProps');
+      unsafe_componentWillReceiveProps = logger(
+        'inner componentWillReceiveProps',
+      );
       shouldComponentUpdate = logger('inner shouldComponentUpdate');
-      componentWillUpdate = logger('inner componentWillUpdate');
+      unsafe_componentWillUpdate = logger('inner componentWillUpdate');
       componentDidUpdate = logger('inner componentDidUpdate');
       componentWillUnmount = logger('inner componentWillUnmount');
       render() {
@@ -579,7 +583,7 @@ describe('ReactComponentLifeCycle', () => {
           log.push('render');
           return <Child />;
         },
-        componentWillMount() {
+        unsafe_componentWillMount() {
           log.push('will mount');
         },
         componentDidMount() {

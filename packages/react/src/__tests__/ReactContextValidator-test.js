@@ -89,7 +89,7 @@ describe('ReactContextValidator', () => {
     };
 
     class Component extends React.Component {
-      componentWillReceiveProps(nextProps, nextContext) {
+      unsafe_componentWillReceiveProps(nextProps, nextContext) {
         actualComponentWillReceiveProps = nextContext;
         return true;
       }
@@ -99,7 +99,7 @@ describe('ReactContextValidator', () => {
         return true;
       }
 
-      componentWillUpdate(nextProps, nextState, nextContext) {
+      unsafe_componentWillUpdate(nextProps, nextState, nextContext) {
         actualComponentWillUpdate = nextContext;
       }
 

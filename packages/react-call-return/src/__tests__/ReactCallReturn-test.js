@@ -275,7 +275,7 @@ describe('ReactCallReturn', () => {
         return ReactCallReturn.unstable_createReturn(this.props.children);
       }
 
-      componentWillMount() {
+      unsafe_componentWillMount() {
         ops.push(`Mount Return ${this.props.value}`);
       }
 

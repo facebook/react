@@ -26,11 +26,11 @@ describe('ReactShallowRenderer', () => {
     const logger = message => () => logs.push(message) || true;
 
     class SomeComponent extends React.Component {
-      componentWillMount = logger('componentWillMount');
+      unsafe_componentWillMount = logger('componentWillMount');
       componentDidMount = logger('componentDidMount');
-      componentWillReceiveProps = logger('componentWillReceiveProps');
+      unsafe_componentWillReceiveProps = logger('componentWillReceiveProps');
       shouldComponentUpdate = logger('shouldComponentUpdate');
-      componentWillUpdate = logger('componentWillUpdate');
+      unsafe_componentWillUpdate = logger('componentWillUpdate');
       componentDidUpdate = logger('componentDidUpdate');
       componentWillUnmount = logger('componentWillUnmount');
       render() {
@@ -437,14 +437,14 @@ describe('ReactShallowRenderer', () => {
       componentDidUpdate(...args) {
         componentDidUpdateParams.push(...args);
       }
-      componentWillReceiveProps(...args) {
+      unsafe_componentWillReceiveProps(...args) {
         componentWillReceivePropsParams.push(...args);
         this.setState((...innerArgs) => {
           setStateParams.push(...innerArgs);
           return updatedState;
         });
       }
-      componentWillUpdate(...args) {
+      unsafe_componentWillUpdate(...args) {
         componentWillUpdateParams.push(...args);
       }
       shouldComponentUpdate(...args) {
@@ -525,7 +525,7 @@ describe('ReactShallowRenderer', () => {
 
   it('can setState in componentWillMount when shallow rendering', () => {
     class SimpleComponent extends React.Component {
-      componentWillMount() {
+      unsafe_componentWillMount() {
         this.setState({groovy: 'doovy'});
       }
 
@@ -545,7 +545,7 @@ describe('ReactShallowRenderer', () => {
         separator: '-',
       };
 
-      componentWillMount() {
+      unsafe_componentWillMount() {
         this.setState({groovy: 'doovy'});
         this.setState({doovy: 'groovy'});
       }
@@ -568,7 +568,7 @@ describe('ReactShallowRenderer', () => {
         separator: '-',
       };
 
-      componentWillMount() {
+      unsafe_componentWillMount() {
         this.setState(state => ({groovy: 'doovy'}));
         this.setState(state => ({doovy: state.groovy}));
       }
@@ -589,7 +589,7 @@ describe('ReactShallowRenderer', () => {
     class SimpleComponent extends React.Component {
       state = {count: 0};
 
-      componentWillReceiveProps(nextProps) {
+      unsafe_componentWillReceiveProps(nextProps) {
         if (nextProps.updateState) {
           this.setState({count: 1});
         }
@@ -870,7 +870,7 @@ describe('ReactShallowRenderer', () => {
         };
       }
 
-      componentWillMount() {
+      unsafe_componentWillMount() {
         this.setState(
           {hasUpdatedState: true},
           () => (stateSuccessfullyUpdated = this.state.hasUpdatedState),
@@ -899,7 +899,7 @@ describe('ReactShallowRenderer', () => {
         };
       }
 
-      componentWillMount() {
+      unsafe_componentWillMount() {
         this.setState({foo: 'bar'}, () => mockFn());
         this.setState({foo: 'foobar'}, () => mockFn());
       }
