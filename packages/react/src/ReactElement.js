@@ -21,28 +21,24 @@ const RESERVED_PROPS = {
 
 let specialPropKeyWarningShown, specialPropRefWarningShown;
 
-function hasValidRef(config) {
+function hasValidProp(config, prop) {
   if (__DEV__) {
-    if (hasOwnProperty.call(config, 'ref')) {
-      const getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
+    if (hasOwnProperty.call(config, prop)) {
+      const getter = Object.getOwnPropertyDescriptor(config, prop).get;
       if (getter && getter.isReactWarning) {
         return false;
       }
     }
   }
-  return config.ref !== undefined;
+  return config[prop] !== undefined;
+}
+
+function hasValidRef(config) {
+  return hasValidProp(config, 'ref');
 }
 
 function hasValidKey(config) {
-  if (__DEV__) {
-    if (hasOwnProperty.call(config, 'key')) {
-      const getter = Object.getOwnPropertyDescriptor(config, 'key').get;
-      if (getter && getter.isReactWarning) {
-        return false;
-      }
-    }
-  }
-  return config.key !== undefined;
+  return hasValidProp(config, 'key');
 }
 
 function defineKeyPropWarningGetter(props, displayName) {
@@ -113,10 +109,10 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     $$typeof: REACT_ELEMENT_TYPE,
 
     // Built-in properties that belong on the element
-    type: type,
-    key: key,
-    ref: ref,
-    props: props,
+    type,
+    key,
+    ref,
+    props,
 
     // Record the component responsible for creating this element.
     _owner: owner,
@@ -180,7 +176,7 @@ export function createElement(type, config, children) {
 
   if (config != null) {
     if (hasValidRef(config)) {
-      ref = config.ref;
+      ({ref} = config);
     }
     if (hasValidKey(config)) {
       key = '' + config.key;
@@ -229,7 +225,7 @@ export function createElement(type, config, children) {
   if (__DEV__) {
     if (key || ref) {
       if (
-        typeof props.$$typeof === 'undefined' ||
+        props.$$typeof === undefined ||
         props.$$typeof !== REACT_ELEMENT_TYPE
       ) {
         const displayName =
@@ -296,22 +292,18 @@ export function cloneElement(element, config, children) {
   const props = Object.assign({}, element.props);
 
   // Reserved names are extracted
-  let key = element.key;
-  let ref = element.ref;
+  // And owner will be preserved, unless ref is overridden
+  let {key, ref, _owner: owner} = element;
   // Self is preserved since the owner is preserved.
-  const self = element._self;
-  // Source is preserved since cloneElement is unlikely to be targeted by a
+  // And source is preserved since cloneElement is unlikely to be targeted by a
   // transpiler, and the original source is probably a better indicator of the
   // true owner.
-  const source = element._source;
-
-  // Owner will be preserved, unless ref is overridden
-  let owner = element._owner;
+  const {_self: self, _source: source} = element;
 
   if (config != null) {
     if (hasValidRef(config)) {
       // Silently steal the ref from the parent.
-      ref = config.ref;
+      ({ref} = config);
       owner = ReactCurrentOwner.current;
     }
     if (hasValidKey(config)) {
@@ -321,7 +313,7 @@ export function cloneElement(element, config, children) {
     // Remaining properties override existing props
     let defaultProps;
     if (element.type && element.type.defaultProps) {
-      defaultProps = element.type.defaultProps;
+      ({defaultProps} = element.type);
     }
     for (propName in config) {
       if (
