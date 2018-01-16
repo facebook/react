@@ -187,13 +187,21 @@ if (__DEV__) {
   const NativeMethodsMixin_DEV = (NativeMethodsMixin: any);
   invariant(
     !NativeMethodsMixin_DEV.componentWillMount &&
-      !NativeMethodsMixin_DEV.componentWillReceiveProps,
+      !NativeMethodsMixin_DEV.componentWillReceiveProps &&
+      !NativeMethodsMixin_DEV.unsafe_componentWillMount &&
+      !NativeMethodsMixin_DEV.unsafe_componentWillReceiveProps,
     'Do not override existing functions.',
   );
   NativeMethodsMixin_DEV.componentWillMount = function() {
     throwOnStylesProp(this, this.props);
   };
   NativeMethodsMixin_DEV.componentWillReceiveProps = function(newProps) {
+    throwOnStylesProp(this, newProps);
+  };
+  NativeMethodsMixin_DEV.unsafe_componentWillMount = function() {
+    throwOnStylesProp(this, this.props);
+  };
+  NativeMethodsMixin_DEV.unsafe_componentWillReceiveProps = function(newProps) {
     throwOnStylesProp(this, newProps);
   };
 }
