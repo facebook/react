@@ -136,7 +136,7 @@ describe 'ReactCoffeeScriptClass', ->
       constructor: (props) ->
         @state = bar: props.initialValue
 
-      componentWillMount: ->
+      unsafe_componentWillMount: ->
         @setState bar: 'bar'
 
       render: ->
@@ -232,20 +232,20 @@ describe 'ReactCoffeeScriptClass', ->
       constructor: ->
         @state = {}
 
-      componentWillMount: ->
+      unsafe_componentWillMount: ->
         lifeCycles.push 'will-mount'
 
       componentDidMount: ->
         lifeCycles.push 'did-mount'
 
-      componentWillReceiveProps: (nextProps) ->
+      unsafe_componentWillReceiveProps: (nextProps) ->
         lifeCycles.push 'receive-props', nextProps
 
       shouldComponentUpdate: (nextProps, nextState) ->
         lifeCycles.push 'should-update', nextProps, nextState
         true
 
-      componentWillUpdate: (nextProps, nextState) ->
+      unsafe_componentWillUpdate: (nextProps, nextState) ->
         lifeCycles.push 'will-update', nextProps, nextState
 
       componentDidUpdate: (prevProps, prevState) ->

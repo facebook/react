@@ -117,7 +117,7 @@ class RenderOnce extends React.Component {
   state = {
     bar: this.props.initialValue,
   };
-  componentWillMount() {
+  unsafe_componentWillMount() {
     this.setState({bar: 'bar'});
   }
   render() {
@@ -206,20 +206,20 @@ let lifeCycles = [];
 class NormalLifeCycles extends React.Component {
   props: any;
   state = {};
-  componentWillMount() {
+  unsafe_componentWillMount() {
     lifeCycles.push('will-mount');
   }
   componentDidMount() {
     lifeCycles.push('did-mount');
   }
-  componentWillReceiveProps(nextProps) {
+  unsafe_componentWillReceiveProps(nextProps) {
     lifeCycles.push('receive-props', nextProps);
   }
   shouldComponentUpdate(nextProps, nextState) {
     lifeCycles.push('should-update', nextProps, nextState);
     return true;
   }
-  componentWillUpdate(nextProps, nextState) {
+  unsafe_componentWillUpdate(nextProps, nextState) {
     lifeCycles.push('will-update', nextProps, nextState);
   }
   componentDidUpdate(prevProps, prevState) {
