@@ -392,7 +392,21 @@ export default function(
   function callComponentWillMount(workInProgress, instance) {
     startPhaseTimer(workInProgress, 'componentWillMount');
     const oldState = instance.state;
-    instance.componentWillMount();
+
+    if (typeof instance.componentWillMount === 'function') {
+      if (__DEV__) {
+        warning(
+          false,
+          '%s: componentWillMount() is deprecated and will be removed in the ' +
+            'next major version. Please use unsafe_componentWillMount() instead.',
+          getComponentName(workInProgress),
+        );
+      }
+      instance.componentWillMount();
+    } else {
+      instance.unsafe_componentWillMount();
+    }
+
     stopPhaseTimer();
 
     if (oldState !== instance.state) {
@@ -415,14 +429,29 @@ export default function(
     newProps,
     newContext,
   ) {
-    startPhaseTimer(workInProgress, 'componentWillReceiveProps');
     const oldState = instance.state;
-    instance.componentWillReceiveProps(newProps, newContext);
-    stopPhaseTimer();
+    if (typeof instance.componentWillReceiveProps === 'function') {
+      if (__DEV__) {
+        warning(
+          false,
+          '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
+            'next major version. Please use unsafe_componentWillReceiveProps() instead.',
+          getComponentName(workInProgress),
+        );
+      }
 
-    // Simulate an async bailout/interruption by invoking lifecycle twice.
-    if (debugRenderPhaseSideEffects) {
+      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
       instance.componentWillReceiveProps(newProps, newContext);
+      stopPhaseTimer();
+    } else {
+      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
+      instance.unsafe_componentWillReceiveProps(newProps, newContext);
+      stopPhaseTimer();
+
+      // Simulate an async bailout/interruption by invoking lifecycle twice.
+      if (debugRenderPhaseSideEffects) {
+        instance.unsafe_componentWillReceiveProps(newProps, newContext);
+      }
     }
 
     if (instance.state !== oldState) {
@@ -473,7 +502,10 @@ export default function(
       workInProgress.internalContextTag |= AsyncUpdates;
     }
 
-    if (typeof instance.componentWillMount === 'function') {
+    if (
+      typeof instance.unsafe_componentWillMount === 'function' ||
+      typeof instance.componentWillMount === 'function'
+    ) {
       callComponentWillMount(workInProgress, instance);
       // If we had additional state updates during this life-cycle, let's
       // process them now.
@@ -619,7 +651,8 @@ export default function(
     // during componentDidUpdate we pass the "current" props.
 
     if (
-      typeof instance.componentWillReceiveProps === 'function' &&
+      (typeof instance.unsafe_componentWillReceiveProps === 'function' ||
+        typeof instance.componentWillReceiveProps === 'function') &&
       (oldProps !== newProps || oldContext !== newContext)
     ) {
       callComponentWillReceiveProps(
@@ -679,14 +712,32 @@ export default function(
     );
 
     if (shouldUpdate) {
-      if (typeof instance.componentWillUpdate === 'function') {
-        startPhaseTimer(workInProgress, 'componentWillUpdate');
-        instance.componentWillUpdate(newProps, newState, newContext);
-        stopPhaseTimer();
+      if (
+        typeof instance.unsafe_componentWillUpdate === 'function' ||
+        typeof instance.componentWillUpdate === 'function'
+      ) {
+        if (typeof instance.componentWillUpdate === 'function') {
+          if (__DEV__) {
+            warning(
+              false,
+              '%s: componentWillUpdate() is deprecated and will be removed in the ' +
+                'next major version. Please use unsafe_componentWillUpdate() instead.',
+              getComponentName(workInProgress),
+            );
+          }
 
-        // Simulate an async bailout/interruption by invoking lifecycle twice.
-        if (debugRenderPhaseSideEffects) {
+          startPhaseTimer(workInProgress, 'componentWillUpdate');
           instance.componentWillUpdate(newProps, newState, newContext);
+          stopPhaseTimer();
+        } else {
+          startPhaseTimer(workInProgress, 'componentWillUpdate');
+          instance.unsafe_componentWillUpdate(newProps, newState, newContext);
+          stopPhaseTimer();
+
+          // Simulate an async bailout/interruption by invoking lifecycle twice.
+          if (debugRenderPhaseSideEffects) {
+            instance.unsafe_componentWillUpdate(newProps, newState, newContext);
+          }
         }
       }
       if (typeof instance.componentDidUpdate === 'function') {

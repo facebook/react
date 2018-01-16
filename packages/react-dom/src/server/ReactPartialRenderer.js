@@ -457,8 +457,18 @@ function resolve(
     if (initialState === undefined) {
       inst.state = initialState = null;
     }
-    if (inst.componentWillMount) {
-      inst.componentWillMount();
+    if (inst.unsafe_componentWillMount || inst.componentWillMount) {
+      if (inst.componentWillMount) {
+        warning(
+          false,
+          '%s: componentWillMount() is deprecated and will be removed in the ' +
+            'next major version. Please use unsafe_componentWillMount() instead.',
+          getComponentName(Component) || 'Unknown',
+        );
+        inst.componentWillMount();
+      } else {
+        inst.unsafe_componentWillMount();
+      }
       if (queue.length) {
         oldQueue = queue;
         oldReplace = replace;

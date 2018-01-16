@@ -13,6 +13,7 @@ import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 import checkPropTypes from 'prop-types/checkPropTypes';
+import warning from 'fbjs/lib/warning';
 
 class ReactShallowRenderer {
   static createRenderer = function() {
@@ -73,7 +74,7 @@ class ReactShallowRenderer {
     this._context = getMaskedContext(element.type.contextTypes, context);
 
     if (this._instance) {
-      this._updateClassComponent(element.type, element.props, this._context);
+      this._updateClassComponent(element, this._context);
     } else {
       if (shouldConstruct(element.type)) {
         this._instance = new element.type(
@@ -96,7 +97,7 @@ class ReactShallowRenderer {
           currentlyValidatingElement = null;
         }
 
-        this._mountClassComponent(element.props, this._context);
+        this._mountClassComponent(element, this._context);
       } else {
         this._rendered = element.type(element.props, this._context);
       }
@@ -122,16 +123,31 @@ class ReactShallowRenderer {
     this._instance = null;
   }
 
-  _mountClassComponent(props, context) {
+  _mountClassComponent(element, context) {
     this._instance.context = context;
-    this._instance.props = props;
+    this._instance.props = element.props;
     this._instance.state = this._instance.state || null;
     this._instance.updater = this._updater;
 
-    if (typeof this._instance.componentWillMount === 'function') {
+    if (
+      typeof this._instance.unsafe_componentWillMount === 'function' ||
+      typeof this._instance.componentWillMount === 'function'
+    ) {
       const beforeState = this._newState;
 
-      this._instance.componentWillMount();
+      if (typeof this._instance.componentWillMount === 'function') {
+        if (__DEV__) {
+          warning(
+            false,
+            '%s: componentWillMount() is deprecated and will be removed in the ' +
+              'next major version. Please use unsafe_componentWillMount() instead.',
+            getName(element.type, this._instance),
+          );
+        }
+        this._instance.componentWillMount();
+      } else {
+        this._instance.unsafe_componentWillMount();
+      }
 
       // setState may have been called during cWM
       if (beforeState !== this._newState) {
@@ -144,15 +160,28 @@ class ReactShallowRenderer {
     // because DOM refs are not available.
   }
 
-  _updateClassComponent(type, props, context) {
+  _updateClassComponent(element, context) {
+    const {props, type} = element;
+
     const oldState = this._instance.state || emptyObject;
     const oldProps = this._instance.props;
 
-    if (
-      oldProps !== props &&
-      typeof this._instance.componentWillReceiveProps === 'function'
-    ) {
-      this._instance.componentWillReceiveProps(props, context);
+    if (oldProps !== props) {
+      if (typeof this._instance.componentWillReceiveProps === 'function') {
+        if (__DEV__) {
+          warning(
+            false,
+            '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
+              'next major version. Please use unsafe_componentWillReceiveProps() instead.',
+            getName(element.type, this._instance),
+          );
+        }
+        this._instance.componentWillReceiveProps(props, context);
+      } else if (
+        typeof this._instance.unsafe_componentWillReceiveProps === 'function'
+      ) {
+        this._instance.unsafe_componentWillReceiveProps(props, context);
+      }
     }
     // Read state after cWRP in case it calls setState
     const state = this._newState || oldState;
@@ -174,7 +203,20 @@ class ReactShallowRenderer {
 
     if (shouldUpdate) {
       if (typeof this._instance.componentWillUpdate === 'function') {
+        if (__DEV__) {
+          warning(
+            false,
+            '%s: componentWillUpdate() is deprecated and will be removed in the ' +
+              'next major version. Please use unsafe_componentWillUpdate() instead.',
+            getName(element.type, this._instance),
+          );
+        }
+
         this._instance.componentWillUpdate(props, state, context);
+      } else if (
+        typeof this._instance.unsafe_componentWillUpdate === 'function'
+      ) {
+        this._instance.unsafe_componentWillUpdate(props, state, context);
       }
     }
 
