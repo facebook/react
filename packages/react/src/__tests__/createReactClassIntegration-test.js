@@ -401,13 +401,25 @@ describe('create-react-class-integration', () => {
 
     const container = document.createElement('div');
 
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+    // Note: The below lifecycle warnings are unavoidable for now,
+    // Until create-react-class recognizes the unsafe_* methods.
+    // (If we try to use them before them, it will error because
+    // we are defining the same method twice.)
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev([
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',
+      'Warning: MyComponent: componentWillMount() is deprecated and will be ' +
+        'removed in the next major version. Please use ' +
+        'unsafe_componentWillMount() instead.',
+    ]);
+
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+      'Warning: MyComponent: componentWillUpdate() is deprecated and will be ' +
+        'removed in the next major version. Please use ' +
+        'unsafe_componentWillUpdate() instead.',
     );
 
-    ReactDOM.render(<Component />, container);
     ReactDOM.unmountComponentAtNode(container);
     instance.log('after unmount');
     expect(ops).toEqual([
