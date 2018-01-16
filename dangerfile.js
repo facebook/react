@@ -11,7 +11,11 @@ const {markdown, danger} = require('danger');
 const fetch = require('node-fetch');
 
 const {generateResultsArray} = require('./scripts/rollup/stats');
-const currentBuildResults = require('./scripts/rollup/results.json');
+const {readFileSync} = require('fs');
+
+const currentBuildResults = JSON.parse(
+  readFileSync('./scripts/rollup/results.json')
+);
 
 /**
  * Generates a Markdown table

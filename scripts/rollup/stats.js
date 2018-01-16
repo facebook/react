@@ -46,7 +46,9 @@ function generateResultsArray(current, prevResults) {
   return current.bundleSizes
     .map(result => {
       const prev = prevResults.bundleSizes.filter(
-        res => res.filename === result.filename
+        res =>
+          res.filename === result.filename &&
+          res.bundleType === result.bundleType
       )[0];
       if (result === prev) {
         // We didn't rebuild this bundle.
