@@ -77,6 +77,9 @@ describe('ReactDOMServerLifecycles', () => {
       'Warning: Component: componentWillMount() is deprecated and will be removed ' +
         'in the next major version. Please use unsafe_componentWillMount() instead.',
     );
+
+    // De-duped
+    ReactDOMServer.renderToString(<Component />);
   });
 
   it('should update instance.state with value returned from getDerivedStateFromProps', () => {

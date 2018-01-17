@@ -123,6 +123,7 @@ let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
 const didWarnAboutNoopUpdateForComponent = {};
 const didWarnAboutBadClass = {};
+const didWarnAboutDeprecatedWillMount = {};
 const didWarnAboutUndefinedDerivedState = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
@@ -487,12 +488,20 @@ function resolve(
     }
     if (inst.unsafe_componentWillMount || inst.componentWillMount) {
       if (inst.componentWillMount) {
-        warning(
-          false,
-          '%s: componentWillMount() is deprecated and will be removed in the ' +
-            'next major version. Please use unsafe_componentWillMount() instead.',
-          getComponentName(Component) || 'Unknown',
-        );
+        if (__DEV__) {
+          const componentName = getComponentName(Component) || 'Unknown';
+
+          if (!didWarnAboutDeprecatedWillMount[componentName]) {
+            warning(
+              false,
+              '%s: componentWillMount() is deprecated and will be removed in the ' +
+                'next major version. Please use unsafe_componentWillMount() instead.',
+              componentName,
+            );
+            didWarnAboutDeprecatedWillMount[componentName] = true;
+          }
+        }
+
         inst.componentWillMount();
       } else {
         inst.unsafe_componentWillMount();
