@@ -12,6 +12,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "index.js.flow",
     "reflection.js",
     "cjs/"
   ],

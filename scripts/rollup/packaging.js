@@ -8,7 +8,7 @@ const {
   asyncExtractTar,
   asyncRimRaf,
 } = require('./utils');
-
+const extractReactReconcilerTypes = require('./extract-react-reconciler-types');
 const {
   UMD_DEV,
   UMD_PROD,
@@ -94,6 +94,12 @@ async function copyAllShims() {
   await Promise.all([copyWWWShims(), copyRNShims()]);
 }
 
+function bundleReactReconcilerTypes() {
+  extractReactReconcilerTypes(
+    './build/node_modules/react-reconciler/index.js.flow'
+  );
+}
+
 function getTarOptions(tgzName, packageName) {
   // Files inside the `npm pack`ed archive start
   // with "package/" in their paths. We'll undo
@@ -147,6 +153,7 @@ async function prepareNpmPackages() {
 
 module.exports = {
   copyAllShims,
+  bundleReactReconcilerTypes,
   getPackageName,
   getBundleOutputPaths,
   prepareNpmPackages,
