@@ -205,6 +205,20 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
     componentWillReceiveProps: 'DEFINE_MANY',
 
     /**
+     * Replacement for (deprecated) `componentWillMount`.
+     *
+     * @optional
+     */
+    UNSAFE_componentWillMount: 'DEFINE_MANY',
+
+    /**
+     * Replacement for (deprecated) `componentWillReceiveProps`.
+     *
+     * @optional
+     */
+    UNSAFE_componentWillReceiveProps: 'DEFINE_MANY',
+
+    /**
      * Invoked while deciding if the component should be updated as a result of
      * receiving new props, state and/or context.
      *
@@ -242,6 +256,13 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
      * @optional
      */
     componentWillUpdate: 'DEFINE_MANY',
+
+    /**
+     * Replacement for (deprecated) `shouldComponentUpdate`.
+     *
+     * @optional
+     */
+    UNSAFE_shouldComponentUpdate: 'DEFINE_MANY',
 
     /**
      * Invoked when the component's DOM representation has been updated.
