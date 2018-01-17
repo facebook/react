@@ -151,6 +151,23 @@ describe('create-react-class-integration', () => {
     );
   });
 
+  // TODO (getDerivedStateFromProps) Reenable after create-react-class updated.
+  xit('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
+    expect(() =>
+      createReactClass({
+        UNSAFE_componentWillRecieveProps: function() {
+          return false;
+        },
+        render: function() {
+          return <div />;
+        },
+      }),
+    ).toWarnDev(
+      'Warning: A component has a method called UNSAFE_componentWillRecieveProps(). ' +
+        'Did you mean UNSAFE_componentWillReceiveProps()?',
+    );
+  });
+
   it('should throw if a reserved property is in statics', () => {
     expect(function() {
       createReactClass({
@@ -175,7 +192,6 @@ describe('create-react-class-integration', () => {
   });
 
   // TODO: Consider actually moving these to statics or drop this unit test.
-
   xit('should warn when using deprecated non-static spec keys', () => {
     expect(() =>
       createReactClass({
@@ -245,6 +261,20 @@ describe('create-react-class-integration', () => {
       render: function() {
         return <span />;
       },
+    });
+    let instance = <Component />;
+    instance = ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.state.occupation).toEqual('clown');
+  });
+
+  it('should work with getDerivedStateFromProps() return values', () => {
+    const Component = createReactClass({
+      render: function() {
+        return <span />;
+      },
+    });
+    Component.getDerivedStateFromProps = () => ({
+      occupation: 'clown',
     });
     let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -344,6 +374,34 @@ describe('create-react-class-integration', () => {
       ops.push('Callback: ' + instance.state.step);
     });
     expect(ops).toEqual(['Render: 0', 'Render: 1', 'Callback: 1']);
+  });
+
+  it('getDerivedStateFromProps updates state when props change', () => {
+    const Component = createReactClass({
+      render() {
+        return <div>count:{this.state.count}</div>;
+      },
+    });
+    Component.getDerivedStateFromProps = (nextProps, prevState) =>
+      prevState === null
+        ? {count: 1}
+        : {count: prevState.count + nextProps.incrementBy};
+
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(
+      <div>
+        <Component />
+      </div>,
+      container,
+    );
+    expect(instance.textContent).toEqual('count:1');
+    ReactDOM.render(
+      <div>
+        <Component incrementBy={2} />
+      </div>,
+      container,
+    );
+    expect(instance.textContent).toEqual('count:3');
   });
 
   it('isMounted works', () => {
