@@ -509,6 +509,10 @@ describe('ReactComponentLifeCycle', () => {
       };
     };
     class Outer extends React.Component {
+      static getDerivedStateFromProps(props, prevState) {
+        log.push('outer getDerivedStateFromProps');
+        return null;
+      }
       UNSAFE_componentWillMount = logger('outer componentWillMount');
       componentDidMount = logger('outer componentDidMount');
       UNSAFE_componentWillReceiveProps = logger(
@@ -528,6 +532,10 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     class Inner extends React.Component {
+      static getDerivedStateFromProps(props, prevState) {
+        log.push('inner getDerivedStateFromProps');
+        return null;
+      }
       UNSAFE_componentWillMount = logger('inner componentWillMount');
       componentDidMount = logger('inner componentDidMount');
       UNSAFE_componentWillReceiveProps = logger(
@@ -544,21 +552,33 @@ describe('ReactComponentLifeCycle', () => {
 
     const container = document.createElement('div');
     log = [];
-    ReactDOM.render(<Outer x={17} />, container);
+    expect(() => ReactDOM.render(<Outer x={1} />, container)).toWarnDev([
+      'Warning: Outer: Defines both componentWillReceiveProps() and static ' +
+        'getDerivedStateFromProps() methods. ' +
+        'We recommend using only getDerivedStateFromProps().',
+      'Warning: Inner: Defines both componentWillReceiveProps() and static ' +
+        'getDerivedStateFromProps() methods. ' +
+        'We recommend using only getDerivedStateFromProps().',
+    ]);
     expect(log).toEqual([
+      'outer getDerivedStateFromProps',
       'outer componentWillMount',
+      'inner getDerivedStateFromProps',
       'inner componentWillMount',
       'inner componentDidMount',
       'outer componentDidMount',
     ]);
 
+    // Dedup warnings
     log = [];
-    ReactDOM.render(<Outer x={42} />, container);
+    ReactDOM.render(<Outer x={2} />, container);
     expect(log).toEqual([
       'outer componentWillReceiveProps',
+      'outer getDerivedStateFromProps',
       'outer shouldComponentUpdate',
       'outer componentWillUpdate',
       'inner componentWillReceiveProps',
+      'inner getDerivedStateFromProps',
       'inner shouldComponentUpdate',
       'inner componentWillUpdate',
       'inner componentDidUpdate',
@@ -571,6 +591,37 @@ describe('ReactComponentLifeCycle', () => {
       'outer componentWillUnmount',
       'inner componentWillUnmount',
     ]);
+  });
+
+  it('warns about deprecated unsafe lifecycles', function() {
+    class MyComponent extends React.Component {
+      componentWillMount() {}
+      componentWillReceiveProps() {}
+      componentWillUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => ReactDOM.render(<MyComponent x={1} />, container)).toWarnDev([
+      'Warning: MyComponent: componentWillMount() is deprecated and will be ' +
+        'removed in the next major version. ' +
+        'Please use UNSAFE_componentWillMount() instead.',
+    ]);
+
+    expect(() => ReactDOM.render(<MyComponent x={2} />, container)).toWarnDev([
+      'Warning: MyComponent: componentWillReceiveProps() is deprecated and ' +
+        'will be removed in the next major version. ' +
+        'Please use UNSAFE_componentWillReceiveProps() instead.',
+      'Warning: MyComponent: componentWillUpdate() is deprecated and will be ' +
+        'removed in the next major version. ' +
+        'Please use UNSAFE_componentWillUpdate() instead.',
+    ]);
+
+    // Dedupe check (instantiate and update)
+    ReactDOM.render(<MyComponent key="new" x={1} />, container);
+    ReactDOM.render(<MyComponent key="new" x={2} />, container);
   });
 
   it('calls effects on module-pattern component', function() {
@@ -622,5 +673,23 @@ describe('ReactComponentLifeCycle', () => {
       'did update',
       'ref',
     ]);
+  });
+
+  it('should warn if getDerivedStateFromProps returns undefined', () => {
+    class MyComponent extends React.Component {
+      static getDerivedStateFromProps() {}
+      render() {
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
+      'MyComponent.getDerivedStateFromProps(): A valid state object (or null) must ' +
+        'be returned. You may have returned undefined.',
+    );
+
+    // De-duped
+    ReactDOM.render(<MyComponent />, div);
   });
 });

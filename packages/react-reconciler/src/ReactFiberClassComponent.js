@@ -40,12 +40,23 @@ import {hasContextChanged} from './ReactFiberContext';
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
+let didWarnAboutLegacyWillMount;
+let didWarnAboutLegacyWillReceiveProps;
+let didWarnAboutLegacyWillUpdate;
 let didWarnAboutStateAssignmentForComponent;
+let didWarnAboutUndefinedDerivedState;
+let didWarnAboutWillReceivePropsAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
-  const didWarnOnInvalidCallback = {};
+  didWarnAboutLegacyWillMount = {};
+  didWarnAboutLegacyWillReceiveProps = {};
+  didWarnAboutLegacyWillUpdate = {};
   didWarnAboutStateAssignmentForComponent = {};
+  didWarnAboutUndefinedDerivedState = {};
+  didWarnAboutWillReceivePropsAndDerivedState = {};
+
+  const didWarnOnInvalidCallback = {};
 
   warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     if (callback === null || typeof callback === 'function') {
@@ -380,8 +391,17 @@ export default function(
     const instance = new ctor(props, context);
     adoptClassInstance(workInProgress, instance);
 
-    // TODO (getDerivedStateFromProps) Call Component.getDerivedStateFromProps
-    // Merge the returned value into instance.state
+    const partialState = callGetDerivedStateFromProps(
+      workInProgress,
+      instance,
+      props,
+    );
+    if (partialState) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      instance.state = Object.assign({}, instance.state, partialState);
+    }
 
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
     // ReactFiberContext usually updates this cache but can't for newly-created instances.
@@ -398,12 +418,16 @@ export default function(
 
     if (typeof instance.componentWillMount === 'function') {
       if (__DEV__) {
-        warning(
-          false,
-          '%s: componentWillMount() is deprecated and will be removed in the ' +
-            'next major version. Please use UNSAFE_componentWillMount() instead.',
-          getComponentName(workInProgress),
-        );
+        const componentName = getComponentName(workInProgress) || 'Unknown';
+        if (!didWarnAboutLegacyWillMount[componentName]) {
+          warning(
+            false,
+            '%s: componentWillMount() is deprecated and will be removed in the ' +
+              'next major version. Please use UNSAFE_componentWillMount() instead.',
+            componentName,
+          );
+          didWarnAboutLegacyWillMount[componentName] = true;
+        }
       }
       instance.componentWillMount();
     } else {
@@ -435,12 +459,16 @@ export default function(
     const oldState = instance.state;
     if (typeof instance.componentWillReceiveProps === 'function') {
       if (__DEV__) {
-        warning(
-          false,
-          '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
-            'next major version. Please use UNSAFE_componentWillReceiveProps() instead.',
-          getComponentName(workInProgress),
-        );
+        const componentName = getComponentName(workInProgress) || 'Unknown';
+        if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
+          warning(
+            false,
+            '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
+              'next major version. Please use UNSAFE_componentWillReceiveProps() instead.',
+            componentName,
+          );
+          didWarnAboutLegacyWillReceiveProps[componentName] = true;
+        }
       }
 
       startPhaseTimer(workInProgress, 'componentWillReceiveProps');
@@ -457,18 +485,9 @@ export default function(
       }
     }
 
-    // TODO (getDerivedStateFromProps) If both cWRP and static gDSFP methods exist, warn.
-    // Call cWRP first then static gDSFP; don't bother trying to sync apply setState() changes.
-
-    // TODO (getDerivedStateFromProps) Call Component.getDerivedStateFromProps
-
-    // TODO (getDerivedStateFromProps) Returned value should not be added to update queue.
-    // Just synchronously Object.assign it into instance.state
-    // This should be covered in a test too.
-
     if (instance.state !== oldState) {
       if (__DEV__) {
-        const componentName = getComponentName(workInProgress) || 'Component';
+        const componentName = getComponentName(workInProgress) || 'Unknown';
         if (!didWarnAboutStateAssignmentForComponent[componentName]) {
           warning(
             false,
@@ -481,6 +500,50 @@ export default function(
         }
       }
       updater.enqueueReplaceState(instance, instance.state, null);
+    }
+  }
+
+  function callGetDerivedStateFromProps(workInProgress, instance, props) {
+    const {type} = workInProgress;
+
+    if (typeof type.getDerivedStateFromProps === 'function') {
+      if (__DEV__) {
+        if (
+          typeof instance.componentWillReceiveProps === 'function' ||
+          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
+        ) {
+          const componentName = getComponentName(workInProgress) || 'Unknown';
+          if (!didWarnAboutWillReceivePropsAndDerivedState[componentName]) {
+            warning(
+              false,
+              '%s: Defines both componentWillReceiveProps() and static ' +
+                'getDerivedStateFromProps() methods. We recommend using ' +
+                'only getDerivedStateFromProps().',
+              componentName,
+            );
+            didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
+          }
+        }
+      }
+
+      const partialState = type.getDerivedStateFromProps(props, instance.state);
+
+      if (__DEV__) {
+        if (partialState === undefined) {
+          const componentName = getComponentName(workInProgress) || 'Unknown';
+          if (!didWarnAboutUndefinedDerivedState[componentName]) {
+            warning(
+              false,
+              '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
+                'You may have returned undefined.',
+              componentName,
+            );
+            didWarnAboutUndefinedDerivedState[componentName] = componentName;
+          }
+        }
+      }
+
+      return partialState || null;
     }
   }
 
@@ -675,6 +738,12 @@ export default function(
       );
     }
 
+    const partialState = callGetDerivedStateFromProps(
+      workInProgress,
+      instance,
+      newProps,
+    );
+
     // Compute the next state using the memoized state and the update queue.
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
@@ -690,6 +759,13 @@ export default function(
       );
     } else {
       newState = oldState;
+    }
+
+    if (partialState) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      newState = Object.assign({}, newState, partialState);
     }
 
     if (
@@ -730,12 +806,17 @@ export default function(
       ) {
         if (typeof instance.componentWillUpdate === 'function') {
           if (__DEV__) {
-            warning(
-              false,
-              '%s: componentWillUpdate() is deprecated and will be removed in the ' +
-                'next major version. Please use UNSAFE_componentWillUpdate() instead.',
-              getComponentName(workInProgress),
-            );
+            const componentName =
+              getComponentName(workInProgress) || 'Component';
+            if (!didWarnAboutLegacyWillUpdate[componentName]) {
+              warning(
+                false,
+                '%s: componentWillUpdate() is deprecated and will be removed in the ' +
+                  'next major version. Please use UNSAFE_componentWillUpdate() instead.',
+                componentName,
+              );
+              didWarnAboutLegacyWillUpdate[componentName] = true;
+            }
           }
 
           startPhaseTimer(workInProgress, 'componentWillUpdate');

@@ -109,6 +109,60 @@ describe('ReactES6Class', () => {
     test(<Foo />, 'SPAN', 'bar');
   });
 
+  it('sets initial state with value returned by static getDerivedStateFromProps', () => {
+    class Foo extends React.Component {
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: nextProps.foo,
+          bar: 'bar',
+        };
+      }
+      render() {
+        return <div className={`${this.state.foo} ${this.state.bar}`} />;
+      }
+    }
+    test(<Foo foo="foo" />, 'DIV', 'foo bar');
+  });
+
+  it('updates initial state with values returned by static getDerivedStateFromProps', () => {
+    class Foo extends React.Component {
+      state = {
+        foo: 'foo',
+        bar: 'bar',
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: `not-${prevState.foo}`,
+        };
+      }
+      render() {
+        return <div className={`${this.state.foo} ${this.state.bar}`} />;
+      }
+    }
+    test(<Foo />, 'DIV', 'not-foo bar');
+  });
+
+  it('renders updated state with values returned by static getDerivedStateFromProps', () => {
+    class Foo extends React.Component {
+      state = {
+        value: 'initial',
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.update) {
+          return {
+            value: 'updated',
+          };
+        }
+        return null;
+      }
+      render() {
+        return <div className={this.state.value} />;
+      }
+    }
+    test(<Foo update={false} />, 'DIV', 'initial');
+    test(<Foo update={true} />, 'DIV', 'updated');
+  });
+
   it('renders based on context in the constructor', () => {
     class Foo extends React.Component {
       constructor(props, context) {

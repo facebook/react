@@ -98,6 +98,55 @@ describe 'ReactCoffeeScriptClass', ->
     test React.createElement(Foo), 'SPAN', 'bar'
     undefined
 
+  it 'sets initial state with value returned by static getDerivedStateFromProps', ->
+    class Foo extends React.Component
+      render: ->
+        div
+          className: "#{@state.foo} #{@state.bar}"
+    Foo.getDerivedStateFromProps = (nextProps, prevState) ->
+      {
+        foo: nextProps.foo
+        bar: 'bar'
+      }
+    test React.createElement(Foo, foo: 'foo'), 'DIV', 'foo bar'
+    undefined
+
+  it 'updates initial state with values returned by static getDerivedStateFromProps', ->
+    class Foo extends React.Component
+      constructor: (props, context) ->
+        super props, context
+        @state =
+          foo: 'foo'
+          bar: 'bar'
+      render: ->
+        div
+          className: "#{@state.foo} #{@state.bar}"
+    Foo.getDerivedStateFromProps = (nextProps, prevState) ->
+      {
+        foo: "not-#{prevState.foo}"
+      }
+    test React.createElement(Foo), 'DIV', 'not-foo bar'
+    undefined
+
+  it 'renders updated state with values returned by static getDerivedStateFromProps', ->
+    class Foo extends React.Component
+      constructor: (props, context) ->
+        super props, context
+        @state =
+          value: 'initial'
+      render: ->
+        div
+          className: @state.value
+    Foo.getDerivedStateFromProps = (nextProps, prevState) ->
+      if nextProps.update
+        return {
+          value: 'updated'
+        }
+      return null
+    test React.createElement(Foo, update: false), 'DIV', 'initial'
+    test React.createElement(Foo, update: true), 'DIV', 'updated'
+    undefined
+
   it 'renders based on context in the constructor', ->
     class Foo extends React.Component
       @contextTypes:
