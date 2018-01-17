@@ -123,6 +123,7 @@ let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
 const didWarnAboutNoopUpdateForComponent = {};
 const didWarnAboutBadClass = {};
+const didWarnAboutUndefinedDerivedState = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
   listing: true,
@@ -421,6 +422,33 @@ function resolve(
 
     if (shouldConstruct(Component)) {
       inst = new Component(element.props, publicContext, updater);
+
+      if (typeof Component.getDerivedStateFromProps === 'function') {
+        partialState = Component.getDerivedStateFromProps(
+          element.props,
+          inst.state,
+        );
+
+        if (__DEV__) {
+          if (partialState === undefined) {
+            const componentName = getComponentName(Component) || 'Unknown';
+
+            if (!didWarnAboutUndefinedDerivedState[componentName]) {
+              warning(
+                false,
+                '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
+                  'You may have returned undefined.',
+                componentName,
+              );
+              didWarnAboutUndefinedDerivedState[componentName] = true;
+            }
+          }
+        }
+
+        if (partialState != null) {
+          inst.state = Object.assign({}, inst.state, partialState);
+        }
+      }
     } else {
       if (__DEV__) {
         if (
