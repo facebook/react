@@ -410,6 +410,23 @@ describe 'ReactCoffeeScriptClass', ->
     )
     undefined
 
+  it 'should warn when misspelling UNSAFE_componentWillReceiveProps', ->
+    class NamedComponent extends React.Component
+      UNSAFE_componentWillRecieveProps: ->
+        false
+
+      render: ->
+        span
+          className: 'foo'
+
+    expect(->
+      test React.createElement(NamedComponent), 'SPAN', 'foo'
+    ).toWarnDev(
+      'Warning: NamedComponent has a method called UNSAFE_componentWillRecieveProps().
+       Did you mean UNSAFE_componentWillReceiveProps()?'
+    )
+    undefined
+
   it 'should throw AND warn when trying to access classic APIs', ->
     instance =
       test Inner(name: 'foo'), 'DIV', 'foo'

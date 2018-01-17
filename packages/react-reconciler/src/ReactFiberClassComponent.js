@@ -330,6 +330,14 @@ export default function(
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name,
       );
+      const noUnsafeComponentWillRecieveProps =
+        typeof instance.UNSAFE_componentWillRecieveProps !== 'function';
+      warning(
+        noUnsafeComponentWillRecieveProps,
+        '%s has a method called ' +
+          'UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?',
+        name,
+      );
       const hasMutatedProps = instance.props !== workInProgress.pendingProps;
       warning(
         instance.props === undefined || !hasMutatedProps,

@@ -273,6 +273,16 @@ class MisspelledComponent2 extends React.Component {
   }
 }
 
+// it should warn when misspelling UNSAFE_componentWillReceiveProps
+class MisspelledComponent3 extends React.Component {
+  UNSAFE_componentWillRecieveProps() {
+    return false;
+  }
+  render() {
+    return React.createElement('span', {className: 'foo'});
+  }
+}
+
 // it supports this.context passed via getChildContext
 class ReadContext extends React.Component {
   static contextTypes = {bar: PropTypes.string};
@@ -534,6 +544,16 @@ describe('ReactTypeScriptClass', function() {
       'Warning: ' +
         'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
         'Did you mean componentWillReceiveProps()?'
+    );
+  });
+
+  it('should warn when misspelling UNSAFE_componentWillReceiveProps', function() {
+    expect(() =>
+      test(React.createElement(MisspelledComponent3), 'SPAN', 'foo')
+    ).toWarnDev(
+      'Warning: ' +
+        'MisspelledComponent3 has a method called UNSAFE_componentWillRecieveProps(). ' +
+        'Did you mean UNSAFE_componentWillReceiveProps()?'
     );
   });
 

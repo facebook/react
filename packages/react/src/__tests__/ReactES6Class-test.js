@@ -433,6 +433,23 @@ describe('ReactES6Class', () => {
     );
   });
 
+  it('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
+    class NamedComponent extends React.Component {
+      UNSAFE_componentWillRecieveProps() {
+        return false;
+      }
+      render() {
+        return <span className="foo" />;
+      }
+    }
+
+    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toWarnDev(
+      'Warning: ' +
+        'NamedComponent has a method called UNSAFE_componentWillRecieveProps(). ' +
+        'Did you mean UNSAFE_componentWillReceiveProps()?',
+    );
+  });
+
   it('should throw AND warn when trying to access classic APIs', () => {
     const instance = test(<Inner name="foo" />, 'DIV', 'foo');
     expect(() =>
