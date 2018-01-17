@@ -29,6 +29,14 @@ class ReactShallowRenderer {
     this._rendering = false;
     this._forcedUpdate = false;
     this._updater = new Updater(this);
+
+    if (__DEV__) {
+      this._didWarnAboutLegacyWillMount = {};
+      this._didWarnAboutLegacyWillReceiveProps = {};
+      this._didWarnAboutLegacyWillUpdate = {};
+      this._didWarnAboutUndefinedDerivedState = {};
+      this._didWarnAboutWillReceivePropsAndDerivedState = {};
+    }
   }
 
   getMountedInstance() {
@@ -82,6 +90,8 @@ class ReactShallowRenderer {
           this._context,
           this._updater,
         );
+
+        this._updateStateFromStaticLifecycle(element.props);
 
         if (element.type.hasOwnProperty('contextTypes')) {
           currentlyValidatingElement = element;
@@ -137,12 +147,16 @@ class ReactShallowRenderer {
 
       if (typeof this._instance.componentWillMount === 'function') {
         if (__DEV__) {
-          warning(
-            false,
-            '%s: componentWillMount() is deprecated and will be removed in the ' +
-              'next major version. Please use unsafe_componentWillMount() instead.',
-            getName(element.type, this._instance),
-          );
+          const componentName = getName(element.type, this._instance);
+          if (!this._didWarnAboutLegacyWillMount[componentName]) {
+            warning(
+              false,
+              '%s: componentWillMount() is deprecated and will be removed in the ' +
+                'next major version. Please use unsafe_componentWillMount() instead.',
+              componentName,
+            );
+            this._didWarnAboutLegacyWillMount[componentName] = true;
+          }
         }
         this._instance.componentWillMount();
       } else {
@@ -169,12 +183,16 @@ class ReactShallowRenderer {
     if (oldProps !== props) {
       if (typeof this._instance.componentWillReceiveProps === 'function') {
         if (__DEV__) {
-          warning(
-            false,
-            '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
-              'next major version. Please use unsafe_componentWillReceiveProps() instead.',
-            getName(element.type, this._instance),
-          );
+          const componentName = getName(element.type, this._instance);
+          if (!this._didWarnAboutLegacyWillReceiveProps[componentName]) {
+            warning(
+              false,
+              '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
+                'next major version. Please use unsafe_componentWillReceiveProps() instead.',
+              componentName,
+            );
+            this._didWarnAboutLegacyWillReceiveProps[componentName] = true;
+          }
         }
         this._instance.componentWillReceiveProps(props, context);
       } else if (
@@ -182,7 +200,10 @@ class ReactShallowRenderer {
       ) {
         this._instance.unsafe_componentWillReceiveProps(props, context);
       }
+
+      this._updateStateFromStaticLifecycle(props);
     }
+
     // Read state after cWRP in case it calls setState
     const state = this._newState || oldState;
 
@@ -204,12 +225,16 @@ class ReactShallowRenderer {
     if (shouldUpdate) {
       if (typeof this._instance.componentWillUpdate === 'function') {
         if (__DEV__) {
-          warning(
-            false,
-            '%s: componentWillUpdate() is deprecated and will be removed in the ' +
-              'next major version. Please use unsafe_componentWillUpdate() instead.',
-            getName(element.type, this._instance),
-          );
+          const componentName = getName(element.type, this._instance);
+          if (!this._didWarnAboutLegacyWillUpdate[componentName]) {
+            warning(
+              false,
+              '%s: componentWillUpdate() is deprecated and will be removed in the ' +
+                'next major version. Please use unsafe_componentWillUpdate() instead.',
+              componentName,
+            );
+            this._didWarnAboutLegacyWillUpdate[componentName] = true;
+          }
         }
 
         this._instance.componentWillUpdate(props, state, context);
@@ -229,6 +254,63 @@ class ReactShallowRenderer {
     }
     // Intentionally do not call componentDidUpdate()
     // because DOM refs are not available.
+  }
+
+  _updateStateFromStaticLifecycle(props) {
+    const {type} = this._element;
+
+    if (typeof type.getDerivedStateFromProps === 'function') {
+      if (__DEV__) {
+        if (
+          typeof this._instance.componentWillReceiveProps === 'function' ||
+          typeof this._instance.unsafe_componentWillReceiveProps === 'function'
+        ) {
+          const componentName = getName(type, this._instance);
+          if (
+            !this._didWarnAboutWillReceivePropsAndDerivedState[componentName]
+          ) {
+            warning(
+              false,
+              '%s: Defines both componentWillReceiveProps() and static ' +
+                'getDerivedStateFromProps() methods. We recommend using ' +
+                'only getDerivedStateFromProps().',
+              componentName,
+            );
+            this._didWarnAboutWillReceivePropsAndDerivedState[
+              componentName
+            ] = true;
+          }
+        }
+      }
+
+      const partialState = type.getDerivedStateFromProps(
+        props,
+        this._instance.state,
+      );
+
+      if (__DEV__) {
+        if (partialState === undefined) {
+          const componentName = getName(type, this._instance);
+          if (!this._didWarnAboutUndefinedDerivedState[componentName]) {
+            warning(
+              false,
+              '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
+                'You may have returned undefined.',
+              componentName,
+            );
+            this._didWarnAboutUndefinedDerivedState[
+              componentName
+            ] = componentName;
+          }
+        }
+      }
+
+      if (partialState) {
+        const oldState = this._newState || this._instance.state;
+        const newState = Object.assign({}, oldState, partialState);
+        this._instance.state = this._newState = newState;
+      }
+    }
   }
 }
 
