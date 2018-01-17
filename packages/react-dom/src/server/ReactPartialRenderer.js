@@ -486,7 +486,7 @@ function resolve(
     if (initialState === undefined) {
       inst.state = initialState = null;
     }
-    if (inst.unsafe_componentWillMount || inst.componentWillMount) {
+    if (inst.UNSAFE_componentWillMount || inst.componentWillMount) {
       if (inst.componentWillMount) {
         if (__DEV__) {
           const componentName = getComponentName(Component) || 'Unknown';
@@ -495,7 +495,7 @@ function resolve(
             warning(
               false,
               '%s: componentWillMount() is deprecated and will be removed in the ' +
-                'next major version. Please use unsafe_componentWillMount() instead.',
+                'next major version. Please use UNSAFE_componentWillMount() instead.',
               componentName,
             );
             didWarnAboutDeprecatedWillMount[componentName] = true;
@@ -504,7 +504,7 @@ function resolve(
 
         inst.componentWillMount();
       } else {
-        inst.unsafe_componentWillMount();
+        inst.UNSAFE_componentWillMount();
       }
       if (queue.length) {
         oldQueue = queue;

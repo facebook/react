@@ -147,7 +147,7 @@ describe('ReactES6Class', () => {
         super(props);
         this.state = {bar: props.initialValue};
       }
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({bar: 'bar'});
       }
       render() {
@@ -257,20 +257,20 @@ describe('ReactES6Class', () => {
         super();
         this.state = {};
       }
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         lifeCycles.push('will-mount');
       }
       componentDidMount() {
         lifeCycles.push('did-mount');
       }
-      unsafe_componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         lifeCycles.push('receive-props', nextProps);
       }
       shouldComponentUpdate(nextProps, nextState) {
         lifeCycles.push('should-update', nextProps, nextState);
         return true;
       }
-      unsafe_componentWillUpdate(nextProps, nextState) {
+      UNSAFE_componentWillUpdate(nextProps, nextState) {
         lifeCycles.push('will-update', nextProps, nextState);
       }
       componentDidUpdate(prevProps, prevState) {

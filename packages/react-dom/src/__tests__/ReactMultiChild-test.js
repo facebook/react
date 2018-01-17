@@ -330,7 +330,7 @@ describe('ReactMultiChild', () => {
     const log = [];
 
     class Spy extends React.Component {
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push(this.props.name + ' componentWillMount');
       }
       render() {

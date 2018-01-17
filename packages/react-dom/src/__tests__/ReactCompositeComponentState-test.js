@@ -46,7 +46,7 @@ describe('ReactCompositeComponent-state', () => {
         return <div>{this.state.color}</div>;
       }
 
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.peekAtState('componentWillMount-start');
         this.setState(function(state) {
           this.peekAtState('before-setState-sunrise', state);
@@ -78,7 +78,7 @@ describe('ReactCompositeComponent-state', () => {
         this.peekAtState('componentDidMount-end');
       }
 
-      unsafe_componentWillReceiveProps(newProps) {
+      UNSAFE_componentWillReceiveProps(newProps) {
         this.peekAtState('componentWillReceiveProps-start');
         if (newProps.nextColor) {
           this.setState(function(state) {
@@ -105,7 +105,7 @@ describe('ReactCompositeComponent-state', () => {
         return true;
       }
 
-      unsafe_componentWillUpdate(nextProps, nextState) {
+      UNSAFE_componentWillUpdate(nextProps, nextState) {
         this.peekAtState('componentWillUpdate-currentState');
         this.peekAtState('componentWillUpdate-nextState', nextState);
       }
@@ -323,7 +323,7 @@ describe('ReactCompositeComponent-state', () => {
     }
     let updated = false;
     class Child extends React.Component {
-      unsafe_componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         if (updated) {
           return;
         }
@@ -383,7 +383,7 @@ describe('ReactCompositeComponent-state', () => {
     let ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
-      unsafe_componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         this.setState({step: 2}, () => {
           // Tests that earlier setState callbacks are not dropped
           ops.push(
@@ -426,7 +426,7 @@ describe('ReactCompositeComponent-state', () => {
     let ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({step: 2}, () => {
           // Tests that earlier setState callbacks are not dropped
           ops.push(

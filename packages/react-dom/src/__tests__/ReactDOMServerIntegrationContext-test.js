@@ -231,7 +231,7 @@ describe('ReactDOMServerIntegration', () => {
           getChildContext() {
             return {text: this.state.text};
           }
-          unsafe_componentWillMount() {
+          UNSAFE_componentWillMount() {
             this.setState({text: 'foo'});
           }
           render() {

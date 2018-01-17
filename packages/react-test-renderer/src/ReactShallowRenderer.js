@@ -140,7 +140,7 @@ class ReactShallowRenderer {
     this._instance.updater = this._updater;
 
     if (
-      typeof this._instance.unsafe_componentWillMount === 'function' ||
+      typeof this._instance.UNSAFE_componentWillMount === 'function' ||
       typeof this._instance.componentWillMount === 'function'
     ) {
       const beforeState = this._newState;
@@ -152,7 +152,7 @@ class ReactShallowRenderer {
             warning(
               false,
               '%s: componentWillMount() is deprecated and will be removed in the ' +
-                'next major version. Please use unsafe_componentWillMount() instead.',
+                'next major version. Please use UNSAFE_componentWillMount() instead.',
               componentName,
             );
             this._didWarnAboutLegacyWillMount[componentName] = true;
@@ -160,7 +160,7 @@ class ReactShallowRenderer {
         }
         this._instance.componentWillMount();
       } else {
-        this._instance.unsafe_componentWillMount();
+        this._instance.UNSAFE_componentWillMount();
       }
 
       // setState may have been called during cWM
@@ -188,7 +188,7 @@ class ReactShallowRenderer {
             warning(
               false,
               '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
-                'next major version. Please use unsafe_componentWillReceiveProps() instead.',
+                'next major version. Please use UNSAFE_componentWillReceiveProps() instead.',
               componentName,
             );
             this._didWarnAboutLegacyWillReceiveProps[componentName] = true;
@@ -196,9 +196,9 @@ class ReactShallowRenderer {
         }
         this._instance.componentWillReceiveProps(props, context);
       } else if (
-        typeof this._instance.unsafe_componentWillReceiveProps === 'function'
+        typeof this._instance.UNSAFE_componentWillReceiveProps === 'function'
       ) {
-        this._instance.unsafe_componentWillReceiveProps(props, context);
+        this._instance.UNSAFE_componentWillReceiveProps(props, context);
       }
 
       this._updateStateFromStaticLifecycle(props);
@@ -230,7 +230,7 @@ class ReactShallowRenderer {
             warning(
               false,
               '%s: componentWillUpdate() is deprecated and will be removed in the ' +
-                'next major version. Please use unsafe_componentWillUpdate() instead.',
+                'next major version. Please use UNSAFE_componentWillUpdate() instead.',
               componentName,
             );
             this._didWarnAboutLegacyWillUpdate[componentName] = true;
@@ -239,9 +239,9 @@ class ReactShallowRenderer {
 
         this._instance.componentWillUpdate(props, state, context);
       } else if (
-        typeof this._instance.unsafe_componentWillUpdate === 'function'
+        typeof this._instance.UNSAFE_componentWillUpdate === 'function'
       ) {
-        this._instance.unsafe_componentWillUpdate(props, state, context);
+        this._instance.UNSAFE_componentWillUpdate(props, state, context);
       }
     }
 
@@ -263,7 +263,7 @@ class ReactShallowRenderer {
       if (__DEV__) {
         if (
           typeof this._instance.componentWillReceiveProps === 'function' ||
-          typeof this._instance.unsafe_componentWillReceiveProps === 'function'
+          typeof this._instance.UNSAFE_componentWillReceiveProps === 'function'
         ) {
           const componentName = getName(type, this._instance);
           if (

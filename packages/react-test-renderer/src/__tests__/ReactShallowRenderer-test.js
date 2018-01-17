@@ -27,11 +27,11 @@ describe('ReactShallowRenderer', () => {
 
     class SomeComponent extends React.Component {
       static getDerivedStateFromProps = logger('getDerivedStateFromProps');
-      unsafe_componentWillMount = logger('componentWillMount');
+      UNSAFE_componentWillMount = logger('componentWillMount');
       componentDidMount = logger('componentDidMount');
-      unsafe_componentWillReceiveProps = logger('componentWillReceiveProps');
+      UNSAFE_componentWillReceiveProps = logger('componentWillReceiveProps');
       shouldComponentUpdate = logger('shouldComponentUpdate');
-      unsafe_componentWillUpdate = logger('componentWillUpdate');
+      UNSAFE_componentWillUpdate = logger('componentWillUpdate');
       componentDidUpdate = logger('componentDidUpdate');
       componentWillUnmount = logger('componentWillUnmount');
       render() {
@@ -449,14 +449,14 @@ describe('ReactShallowRenderer', () => {
         getDerivedStateFromPropsParams.push(args);
         return null;
       }
-      unsafe_componentWillReceiveProps(...args) {
+      UNSAFE_componentWillReceiveProps(...args) {
         componentWillReceivePropsParams.push(...args);
         this.setState((...innerArgs) => {
           setStateParams.push(...innerArgs);
           return updatedState;
         });
       }
-      unsafe_componentWillUpdate(...args) {
+      UNSAFE_componentWillUpdate(...args) {
         componentWillUpdateParams.push(...args);
       }
       shouldComponentUpdate(...args) {
@@ -576,7 +576,7 @@ describe('ReactShallowRenderer', () => {
 
   it('can setState in componentWillMount when shallow rendering', () => {
     class SimpleComponent extends React.Component {
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({groovy: 'doovy'});
       }
 
@@ -596,7 +596,7 @@ describe('ReactShallowRenderer', () => {
         separator: '-',
       };
 
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({groovy: 'doovy'});
         this.setState({doovy: 'groovy'});
       }
@@ -619,7 +619,7 @@ describe('ReactShallowRenderer', () => {
         separator: '-',
       };
 
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState(state => ({groovy: 'doovy'}));
         this.setState(state => ({doovy: state.groovy}));
       }
@@ -640,7 +640,7 @@ describe('ReactShallowRenderer', () => {
     class SimpleComponent extends React.Component {
       state = {count: 0};
 
-      unsafe_componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.updateState) {
           this.setState({count: 1});
         }
@@ -955,7 +955,7 @@ describe('ReactShallowRenderer', () => {
         };
       }
 
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState(
           {hasUpdatedState: true},
           () => (stateSuccessfullyUpdated = this.state.hasUpdatedState),
@@ -984,7 +984,7 @@ describe('ReactShallowRenderer', () => {
         };
       }
 
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({foo: 'bar'}, () => mockFn());
         this.setState({foo: 'foobar'}, () => mockFn());
       }
@@ -1084,15 +1084,15 @@ describe('ReactShallowRenderer', () => {
     expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev(
       'Warning: ComponentWithWarnings: componentWillMount() is deprecated and will ' +
         'be removed in the next major version. ' +
-        'Please use unsafe_componentWillMount() instead.',
+        'Please use UNSAFE_componentWillMount() instead.',
     );
     expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev([
       'Warning: ComponentWithWarnings: componentWillReceiveProps() is deprecated ' +
         'and will be removed in the next major version. ' +
-        'Please use unsafe_componentWillReceiveProps() instead.',
+        'Please use UNSAFE_componentWillReceiveProps() instead.',
       'Warning: ComponentWithWarnings: componentWillUpdate() is deprecated and will ' +
         'be removed in the next major version. ' +
-        'Please use unsafe_componentWillUpdate() instead.',
+        'Please use UNSAFE_componentWillUpdate() instead.',
     ]);
 
     // Verify no duplicate warnings
@@ -1105,7 +1105,7 @@ describe('ReactShallowRenderer', () => {
       static getDerivedStateFromProps(props, prevState) {
         return null;
       }
-      unsafe_componentWillReceiveProps(nextProps) {}
+      UNSAFE_componentWillReceiveProps(nextProps) {}
       render() {
         return null;
       }

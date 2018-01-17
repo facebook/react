@@ -37,7 +37,7 @@ describe('ReactDOMServerLifecycles', () => {
     const log = [];
 
     class Outer extends React.Component {
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('outer componentWillMount');
       }
       render() {
@@ -47,7 +47,7 @@ describe('ReactDOMServerLifecycles', () => {
     }
 
     class Inner extends React.Component {
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('inner componentWillMount');
       }
       render() {
@@ -75,7 +75,7 @@ describe('ReactDOMServerLifecycles', () => {
 
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
       'Warning: Component: componentWillMount() is deprecated and will be removed ' +
-        'in the next major version. Please use unsafe_componentWillMount() instead.',
+        'in the next major version. Please use UNSAFE_componentWillMount() instead.',
     );
 
     // De-duped

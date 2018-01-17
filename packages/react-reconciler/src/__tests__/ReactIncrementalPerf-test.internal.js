@@ -237,10 +237,10 @@ describe('ReactDebugFiberPerf', () => {
 
   it('does not treat setState from cWM or cWRP as cascading', () => {
     class NotCascading extends React.Component {
-      unsafe_componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({});
       }
-      unsafe_componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         this.setState({});
       }
       render() {
@@ -276,10 +276,10 @@ describe('ReactDebugFiberPerf', () => {
       getChildContext() {
         return {foo: 42};
       }
-      unsafe_componentWillMount() {}
+      UNSAFE_componentWillMount() {}
       componentDidMount() {}
-      unsafe_componentWillReceiveProps() {}
-      unsafe_componentWillUpdate() {}
+      UNSAFE_componentWillReceiveProps() {}
+      UNSAFE_componentWillUpdate() {}
       componentDidUpdate() {}
       componentWillUnmount() {}
       render() {

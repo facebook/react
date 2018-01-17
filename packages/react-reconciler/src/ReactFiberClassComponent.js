@@ -380,6 +380,9 @@ export default function(
     const instance = new ctor(props, context);
     adoptClassInstance(workInProgress, instance);
 
+    // TODO (getDerivedStateFromProps) Call Component.getDerivedStateFromProps
+    // Merge the returned value into instance.state
+
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
     // ReactFiberContext usually updates this cache but can't for newly-created instances.
     if (needsContext) {
@@ -398,13 +401,13 @@ export default function(
         warning(
           false,
           '%s: componentWillMount() is deprecated and will be removed in the ' +
-            'next major version. Please use unsafe_componentWillMount() instead.',
+            'next major version. Please use UNSAFE_componentWillMount() instead.',
           getComponentName(workInProgress),
         );
       }
       instance.componentWillMount();
     } else {
-      instance.unsafe_componentWillMount();
+      instance.UNSAFE_componentWillMount();
     }
 
     stopPhaseTimer();
@@ -435,7 +438,7 @@ export default function(
         warning(
           false,
           '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
-            'next major version. Please use unsafe_componentWillReceiveProps() instead.',
+            'next major version. Please use UNSAFE_componentWillReceiveProps() instead.',
           getComponentName(workInProgress),
         );
       }
@@ -445,14 +448,23 @@ export default function(
       stopPhaseTimer();
     } else {
       startPhaseTimer(workInProgress, 'componentWillReceiveProps');
-      instance.unsafe_componentWillReceiveProps(newProps, newContext);
+      instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
       stopPhaseTimer();
 
       // Simulate an async bailout/interruption by invoking lifecycle twice.
       if (debugRenderPhaseSideEffects) {
-        instance.unsafe_componentWillReceiveProps(newProps, newContext);
+        instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
       }
     }
+
+    // TODO (getDerivedStateFromProps) If both cWRP and static gDSFP methods exist, warn.
+    // Call cWRP first then static gDSFP; don't bother trying to sync apply setState() changes.
+
+    // TODO (getDerivedStateFromProps) Call Component.getDerivedStateFromProps
+
+    // TODO (getDerivedStateFromProps) Returned value should not be added to update queue.
+    // Just synchronously Object.assign it into instance.state
+    // This should be covered in a test too.
 
     if (instance.state !== oldState) {
       if (__DEV__) {
@@ -503,7 +515,7 @@ export default function(
     }
 
     if (
-      typeof instance.unsafe_componentWillMount === 'function' ||
+      typeof instance.UNSAFE_componentWillMount === 'function' ||
       typeof instance.componentWillMount === 'function'
     ) {
       callComponentWillMount(workInProgress, instance);
@@ -651,7 +663,7 @@ export default function(
     // during componentDidUpdate we pass the "current" props.
 
     if (
-      (typeof instance.unsafe_componentWillReceiveProps === 'function' ||
+      (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
         typeof instance.componentWillReceiveProps === 'function') &&
       (oldProps !== newProps || oldContext !== newContext)
     ) {
@@ -713,7 +725,7 @@ export default function(
 
     if (shouldUpdate) {
       if (
-        typeof instance.unsafe_componentWillUpdate === 'function' ||
+        typeof instance.UNSAFE_componentWillUpdate === 'function' ||
         typeof instance.componentWillUpdate === 'function'
       ) {
         if (typeof instance.componentWillUpdate === 'function') {
@@ -721,7 +733,7 @@ export default function(
             warning(
               false,
               '%s: componentWillUpdate() is deprecated and will be removed in the ' +
-                'next major version. Please use unsafe_componentWillUpdate() instead.',
+                'next major version. Please use UNSAFE_componentWillUpdate() instead.',
               getComponentName(workInProgress),
             );
           }
@@ -731,12 +743,12 @@ export default function(
           stopPhaseTimer();
         } else {
           startPhaseTimer(workInProgress, 'componentWillUpdate');
-          instance.unsafe_componentWillUpdate(newProps, newState, newContext);
+          instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
           stopPhaseTimer();
 
           // Simulate an async bailout/interruption by invoking lifecycle twice.
           if (debugRenderPhaseSideEffects) {
-            instance.unsafe_componentWillUpdate(newProps, newState, newContext);
+            instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
           }
         }
       }
