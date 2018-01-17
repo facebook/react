@@ -40,9 +40,9 @@ const React = {
 
   Fragment: REACT_FRAGMENT_TYPE,
 
-  createElement: __DEV__ ? createElementWithValidation : createElement,
-  cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
-  createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
+  createElement: createElementWithValidation,
+  cloneElement: cloneElementWithValidation,
+  createFactory: createFactoryWithValidation,
   isValidElement: isValidElement,
 
   version: ReactVersion,
