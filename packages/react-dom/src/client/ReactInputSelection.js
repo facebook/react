@@ -12,7 +12,25 @@ import * as ReactDOMSelection from './ReactDOMSelection';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 
 function isInDocument(node) {
-  return containsNode(document.documentElement, node);
+  return (
+    node &&
+    node.ownerDocument &&
+    containsNode(node.ownerDocument.documentElement, node)
+  );
+}
+
+function getActiveElementDeep() {
+  let win = window;
+  let element = getActiveElement();
+  while (element instanceof win.HTMLIFrameElement) {
+    try {
+      win = element.contentDocument.defaultView;
+    } catch (e) {
+      return element;
+    }
+    element = getActiveElement(win.document);
+  }
+  return element;
 }
 
 /**
@@ -33,7 +51,7 @@ export function hasSelectionCapabilities(elem) {
 }
 
 export function getSelectionInformation() {
-  const focusedElem = getActiveElement();
+  const focusedElem = getActiveElementDeep();
   return {
     focusedElem: focusedElem,
     selectionRange: hasSelectionCapabilities(focusedElem)
@@ -48,7 +66,7 @@ export function getSelectionInformation() {
  * nodes and place them back in, resulting in focus being lost.
  */
 export function restoreSelection(priorSelectionInformation) {
-  const curFocusedElem = getActiveElement();
+  const curFocusedElem = getActiveElementDeep();
   const priorFocusedElem = priorSelectionInformation.focusedElem;
   const priorSelectionRange = priorSelectionInformation.selectionRange;
   if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
