@@ -65,8 +65,10 @@ function getSelection(node) {
       end: node.selectionEnd,
     };
   } else {
-    const win =
-      (node.ownerDocument && node.ownerDocument.defaultView) || window;
+    let win = window;
+    if (node.ownerDocument && node.ownerDocument.defaultView) {
+      win = node.ownerDocument.defaultView;
+    }
     if (win.getSelection) {
       const selection = win.getSelection();
       return {
