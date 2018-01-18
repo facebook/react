@@ -46,6 +46,7 @@ let didWarnAboutLegacyWillReceiveProps;
 let didWarnAboutLegacyWillUpdate;
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUndefinedDerivedState;
+let didWarnAboutUninitializedState;
 let didWarnAboutWillReceivePropsAndDerivedState;
 let warnOnInvalidCallback;
 
@@ -57,6 +58,7 @@ if (__DEV__) {
   }
   didWarnAboutStateAssignmentForComponent = {};
   didWarnAboutUndefinedDerivedState = {};
+  didWarnAboutUninitializedState = {};
   didWarnAboutWillReceivePropsAndDerivedState = {};
 
   const didWarnOnInvalidCallback = {};
@@ -400,19 +402,48 @@ export default function(
       ? getMaskedContext(workInProgress, unmaskedContext)
       : emptyObject;
     const instance = new ctor(props, context);
+    const state =
+      instance.state !== null && instance.state !== undefined
+        ? instance.state
+        : null;
     adoptClassInstance(workInProgress, instance);
+
+    if (__DEV__) {
+      if (
+        typeof ctor.getDerivedStateFromProps === 'function' &&
+        state === null
+      ) {
+        const componentName = getComponentName(workInProgress) || 'Unknown';
+        if (!didWarnAboutUninitializedState[componentName]) {
+          warning(
+            false,
+            '%s: Did not properly initialize state during construction. ' +
+              'Expected state to be an object, but it was %s.',
+            componentName,
+            instance.state === null ? 'null' : 'undefined',
+          );
+          didWarnAboutUninitializedState[componentName] = true;
+        }
+      }
+    }
+
+    workInProgress.memoizedState = state;
 
     const partialState = callGetDerivedStateFromProps(
       workInProgress,
       instance,
       props,
-      instance.state,
     );
-    if (partialState != null) {
+
+    if (partialState !== null && partialState !== undefined) {
       // Render-phase updates (like this) should not be added to the update queue,
       // So that multiple render passes do not enqueue multiple updates.
       // Instead, just synchronously merge the returned state into the instance.
-      instance.state = Object.assign({}, instance.state, partialState);
+      workInProgress.memoizedState = Object.assign(
+        {},
+        workInProgress.memoizedState,
+        partialState,
+      );
     }
 
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
@@ -519,12 +550,7 @@ export default function(
     }
   }
 
-  function callGetDerivedStateFromProps(
-    workInProgress,
-    instance,
-    props,
-    state,
-  ) {
+  function callGetDerivedStateFromProps(workInProgress, instance, props) {
     const {type} = workInProgress;
 
     if (typeof type.getDerivedStateFromProps === 'function') {
@@ -550,7 +576,7 @@ export default function(
       const partialState = type.getDerivedStateFromProps.call(
         null,
         props,
-        state,
+        workInProgress.memoizedState,
       );
 
       if (__DEV__) {
@@ -584,12 +610,11 @@ export default function(
     }
 
     const instance = workInProgress.stateNode;
-    const state = instance.state || null;
     const props = workInProgress.pendingProps;
     const unmaskedContext = getUnmaskedContext(workInProgress);
 
     instance.props = props;
-    instance.state = workInProgress.memoizedState = state;
+    instance.state = workInProgress.memoizedState;
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
@@ -769,7 +794,6 @@ export default function(
         workInProgress,
         instance,
         newProps,
-        workInProgress.memoizedState,
       );
     }
 
@@ -790,12 +814,12 @@ export default function(
       newState = oldState;
     }
 
-    if (partialState != null) {
+    if (partialState !== null && partialState !== undefined) {
       // Render-phase updates (like this) should not be added to the update queue,
       // So that multiple render passes do not enqueue multiple updates.
       // Instead, just synchronously merge the returned state into the instance.
       newState =
-        newState == null
+        newState === null || newState === undefined
           ? partialState
           : Object.assign({}, newState, partialState);
     }

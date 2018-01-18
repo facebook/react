@@ -101,6 +101,7 @@ describe('ReactDOMServerLifecycles', () => {
     }
 
     class Child extends React.Component {
+      state = {};
       static getDerivedStateFromProps() {
         return {
           qux: 'qux',
@@ -119,6 +120,7 @@ describe('ReactDOMServerLifecycles', () => {
 
   it('should warn if getDerivedStateFromProps returns undefined', () => {
     class Component extends React.Component {
+      state = {};
       static getDerivedStateFromProps() {}
       render() {
         return null;
@@ -128,6 +130,25 @@ describe('ReactDOMServerLifecycles', () => {
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
       'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
+    );
+
+    // De-duped
+    ReactDOMServer.renderToString(<Component />);
+  });
+
+  it('should warn if state is not initialized before getDerivedStateFromProps', () => {
+    class Component extends React.Component {
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
+      'Component: Did not properly initialize state during construction. ' +
+        'Expected state to be an object, but it was undefined.',
     );
 
     // De-duped

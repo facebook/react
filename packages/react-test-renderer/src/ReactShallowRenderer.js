@@ -20,6 +20,7 @@ let didWarnAboutLegacyWillMount;
 let didWarnAboutLegacyWillReceiveProps;
 let didWarnAboutLegacyWillUpdate;
 let didWarnAboutUndefinedDerivedState;
+let didWarnAboutUninitializedState;
 let didWarnAboutWillReceivePropsAndDerivedState;
 
 if (__DEV__) {
@@ -29,6 +30,7 @@ if (__DEV__) {
     didWarnAboutLegacyWillUpdate = {};
   }
   didWarnAboutUndefinedDerivedState = {};
+  didWarnAboutUninitializedState = {};
   didWarnAboutWillReceivePropsAndDerivedState = {};
 }
 
@@ -99,6 +101,28 @@ class ReactShallowRenderer {
           this._context,
           this._updater,
         );
+
+        if (__DEV__) {
+          if (typeof element.type.getDerivedStateFromProps === 'function') {
+            if (
+              this._instance.state === null ||
+              this._instance.state === undefined
+            ) {
+              const componentName =
+                getName(element.type, this._instance) || 'Unknown';
+              if (!didWarnAboutUninitializedState[componentName]) {
+                warning(
+                  false,
+                  '%s: Did not properly initialize state during construction. ' +
+                    'Expected state to be an object, but it was %s.',
+                  componentName,
+                  this._instance.state === null ? 'null' : 'undefined',
+                );
+                didWarnAboutUninitializedState[componentName] = true;
+              }
+            }
+          }
+        }
 
         this._updateStateFromStaticLifecycle(element.props);
 

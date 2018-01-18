@@ -1422,6 +1422,7 @@ describe('ReactIncremental', () => {
     let instance;
 
     class LifeCycle extends React.Component {
+      state = {};
       static getDerivedStateFromProps(props, prevState) {
         ops.push('getDerivedStateFromProps');
         return {foo: 'foo'};

@@ -126,6 +126,7 @@ const didWarnAboutNoopUpdateForComponent = {};
 const didWarnAboutBadClass = {};
 const didWarnAboutDeprecatedWillMount = {};
 const didWarnAboutUndefinedDerivedState = {};
+const didWarnAboutUninitializedState = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
   listing: true,
@@ -426,6 +427,22 @@ function resolve(
       inst = new Component(element.props, publicContext, updater);
 
       if (typeof Component.getDerivedStateFromProps === 'function') {
+        if (__DEV__) {
+          if (inst.state === null || inst.state === undefined) {
+            const componentName = getComponentName(Component) || 'Unknown';
+            if (!didWarnAboutUninitializedState[componentName]) {
+              warning(
+                false,
+                '%s: Did not properly initialize state during construction. ' +
+                  'Expected state to be an object, but it was %s.',
+                componentName,
+                inst.state === null ? 'null' : 'undefined',
+              );
+              didWarnAboutUninitializedState[componentName] = true;
+            }
+          }
+        }
+
         partialState = Component.getDerivedStateFromProps.call(
           null,
           element.props,
@@ -435,7 +452,6 @@ function resolve(
         if (__DEV__) {
           if (partialState === undefined) {
             const componentName = getComponentName(Component) || 'Unknown';
-
             if (!didWarnAboutUndefinedDerivedState[componentName]) {
               warning(
                 false,

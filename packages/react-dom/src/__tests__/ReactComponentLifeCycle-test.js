@@ -509,6 +509,7 @@ describe('ReactComponentLifeCycle', () => {
       };
     };
     class Outer extends React.Component {
+      state = {};
       static getDerivedStateFromProps(props, prevState) {
         log.push('outer getDerivedStateFromProps');
         return null;
@@ -532,6 +533,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     class Inner extends React.Component {
+      state = {};
       static getDerivedStateFromProps(props, prevState) {
         log.push('inner getDerivedStateFromProps');
         return null;
@@ -646,6 +648,7 @@ describe('ReactComponentLifeCycle', () => {
 
   it('should warn if getDerivedStateFromProps returns undefined', () => {
     class MyComponent extends React.Component {
+      state = {};
       static getDerivedStateFromProps() {}
       render() {
         return null;
@@ -656,6 +659,26 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
       'MyComponent.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
+    );
+
+    // De-duped
+    ReactDOM.render(<MyComponent />, div);
+  });
+
+  it('should warn if state is not initialized before getDerivedStateFromProps', () => {
+    class MyComponent extends React.Component {
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
+      'MyComponent: Did not properly initialize state during construction. ' +
+        'Expected state to be an object, but it was undefined.',
     );
 
     // De-duped

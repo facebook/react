@@ -16,6 +16,8 @@ let React;
 
 describe('ReactShallowRenderer', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     createRenderer = require('react-test-renderer/shallow').createRenderer;
     PropTypes = require('prop-types');
     React = require('react');
@@ -26,6 +28,7 @@ describe('ReactShallowRenderer', () => {
     const logger = message => () => logs.push(message) || true;
 
     class SomeComponent extends React.Component {
+      state = {};
       static getDerivedStateFromProps = logger('getDerivedStateFromProps');
       UNSAFE_componentWillMount = logger('componentWillMount');
       componentDidMount = logger('componentDidMount');
@@ -1095,6 +1098,7 @@ describe('ReactShallowRenderer', () => {
 
   it('should warn if getDerivedStateFromProps returns undefined', () => {
     class Component extends React.Component {
+      state = {};
       static getDerivedStateFromProps() {}
       render() {
         return null;
@@ -1105,6 +1109,26 @@ describe('ReactShallowRenderer', () => {
     expect(() => shallowRenderer.render(<Component />)).toWarnDev(
       'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
+    );
+
+    // De-duped
+    shallowRenderer.render(<Component />);
+  });
+
+  it('should warn if state not initialized before getDerivedStateFromProps', () => {
+    class Component extends React.Component {
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    expect(() => shallowRenderer.render(<Component />)).toWarnDev(
+      'Component: Did not properly initialize state during construction. ' +
+        'Expected state to be an object, but it was undefined.',
     );
 
     // De-duped

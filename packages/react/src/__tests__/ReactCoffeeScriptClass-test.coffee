@@ -100,6 +100,9 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'sets initial state with value returned by static getDerivedStateFromProps', ->
     class Foo extends React.Component
+      constructor: (props) ->
+        super props
+        @state = foo: null
       render: ->
         div
           className: "#{@state.foo} #{@state.bar}"
@@ -109,6 +112,21 @@ describe 'ReactCoffeeScriptClass', ->
         bar: 'bar'
       }
     test React.createElement(Foo, foo: 'foo'), 'DIV', 'foo bar'
+    undefined
+
+  it 'warns if state not initialized before static getDerivedStateFromProps', ->
+    class Foo extends React.Component
+      render: ->
+        div
+          className: "#{@state.foo} #{@state.bar}"
+    Foo.getDerivedStateFromProps = (nextProps, prevState) ->
+      {
+        foo: nextProps.foo
+        bar: 'bar'
+      }
+    expect(->
+      ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
+    ).toWarnDev 'Foo: Did not properly initialize state during construction. Expected state to be an object, but it was undefined.'
     undefined
 
   it 'updates initial state with values returned by static getDerivedStateFromProps', ->

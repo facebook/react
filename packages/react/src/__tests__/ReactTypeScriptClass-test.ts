@@ -356,6 +356,10 @@ describe('ReactTypeScriptClass', function() {
 
   it('sets initial state with value returned by static getDerivedStateFromProps', function() {
     class Foo extends React.Component {
+      state = {
+        foo: null,
+        bar: null,
+      };
       static getDerivedStateFromProps(nextProps, prevState) {
         return {
           foo: nextProps.foo,
@@ -367,6 +371,26 @@ describe('ReactTypeScriptClass', function() {
       }
     }
     test(React.createElement(Foo, {foo: "foo"}), 'DIV', 'foo bar');
+  });
+
+  it('warns if state not initialized before static getDerivedStateFromProps', function() {
+    class Foo extends React.Component {
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: nextProps.foo,
+          bar: 'bar',
+        };
+      }
+      render() {
+        return React.createElement('div', {className: `${this.state.foo} ${this.state.bar}`});
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: "foo"}), container);
+    }).toWarnDev(
+      'Foo: Did not properly initialize state during construction. ' +
+        'Expected state to be an object, but it was undefined.'
+    );
   });
 
   it('updates initial state with values returned by static getDerivedStateFromProps', function() {

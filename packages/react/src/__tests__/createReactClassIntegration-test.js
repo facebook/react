@@ -17,6 +17,7 @@ let createReactClass;
 
 describe('create-react-class-integration', () => {
   beforeEach(() => {
+    jest.resetModules();
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
@@ -269,13 +270,16 @@ describe('create-react-class-integration', () => {
 
   it('should work with getDerivedStateFromProps() return values', () => {
     const Component = createReactClass({
+      getInitialState() {
+        return {};
+      },
       render: function() {
         return <span />;
       },
     });
-    Component.getDerivedStateFromProps = () => ({
-      occupation: 'clown',
-    });
+    Component.getDerivedStateFromProps = () => {
+      return {occupation: 'clown'};
+    };
     let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.occupation).toEqual('clown');
@@ -378,19 +382,23 @@ describe('create-react-class-integration', () => {
 
   it('getDerivedStateFromProps updates state when props change', () => {
     const Component = createReactClass({
+      getInitialState() {
+        return {
+          count: 1,
+        };
+      },
       render() {
         return <div>count:{this.state.count}</div>;
       },
     });
-    Component.getDerivedStateFromProps = (nextProps, prevState) =>
-      prevState === null
-        ? {count: 1}
-        : {count: prevState.count + nextProps.incrementBy};
+    Component.getDerivedStateFromProps = (nextProps, prevState) => ({
+      count: prevState.count + nextProps.incrementBy,
+    });
 
     const container = document.createElement('div');
     const instance = ReactDOM.render(
       <div>
-        <Component />
+        <Component incrementBy={0} />
       </div>,
       container,
     );
@@ -413,6 +421,10 @@ describe('create-react-class-integration', () => {
         },
       },
 
+      getInitialState() {
+        return {};
+      },
+
       render: function() {
         instance = this;
         return null;
@@ -420,5 +432,21 @@ describe('create-react-class-integration', () => {
     });
     ReactDOM.render(<Component />, document.createElement('div'));
     expect(instance.state.foo).toBe('bar');
+  });
+
+  it('should warn if state is not properly initialized before getDerivedStateFromProps', () => {
+    const Component = createReactClass({
+      statics: {
+        getDerivedStateFromProps: function() {
+          return null;
+        },
+      },
+      render: function() {
+        return null;
+      },
+    });
+    expect(() =>
+      ReactDOM.render(<Component />, document.createElement('div')),
+    ).toWarnDev('Did not properly initialize state during construction.');
   });
 });
