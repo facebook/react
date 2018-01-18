@@ -274,34 +274,6 @@
       "gzip": 34394
     },
     {
-      "filename": "ReactRTRenderer-dev.js",
-      "bundleType": "RN_DEV",
-      "packageName": "react-rt-renderer",
-      "size": 286506,
-      "gzip": 61843
-    },
-    {
-      "filename": "ReactRTRenderer-prod.js",
-      "bundleType": "RN_PROD",
-      "packageName": "react-rt-renderer",
-      "size": 133702,
-      "gzip": 23039
-    },
-    {
-      "filename": "ReactCSRenderer-dev.js",
-      "bundleType": "RN_DEV",
-      "packageName": "react-cs-renderer",
-      "size": 277130,
-      "gzip": 58953
-    },
-    {
-      "filename": "ReactCSRenderer-prod.js",
-      "bundleType": "RN_PROD",
-      "packageName": "react-cs-renderer",
-      "size": 126142,
-      "gzip": 21682
-    },
-    {
       "filename": "react-test-renderer.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-test-renderer",

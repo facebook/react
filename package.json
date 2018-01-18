@@ -47,6 +47,7 @@
     "coveralls": "^2.11.6",
     "create-react-class": "^15.6.2",
     "cross-env": "^5.1.1",
+    "danger": "^3.0.4",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
     "escape-string-regexp": "^1.0.5",
