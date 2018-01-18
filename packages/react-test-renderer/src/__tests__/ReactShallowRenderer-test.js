@@ -1104,7 +1104,7 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     expect(() => shallowRenderer.render(<Component />)).toWarnDev(
       'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
-        'be returned. You may have returned undefined.',
+        'be returned. You have returned undefined.',
     );
 
     // De-duped

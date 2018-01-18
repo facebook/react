@@ -127,7 +127,7 @@ describe('ReactDOMServerLifecycles', () => {
 
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
       'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
-        'be returned. You may have returned undefined.',
+        'be returned. You have returned undefined.',
     );
 
     // De-duped

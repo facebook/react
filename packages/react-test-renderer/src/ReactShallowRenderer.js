@@ -304,7 +304,7 @@ class ReactShallowRenderer {
             warning(
               false,
               '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
-                'You may have returned undefined.',
+                'You have returned undefined.',
               componentName,
             );
             this._didWarnAboutUndefinedDerivedState[

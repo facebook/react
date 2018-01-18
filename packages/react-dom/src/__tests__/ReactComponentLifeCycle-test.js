@@ -655,7 +655,7 @@ describe('ReactComponentLifeCycle', () => {
     const div = document.createElement('div');
     expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
       'MyComponent.getDerivedStateFromProps(): A valid state object (or null) must ' +
-        'be returned. You may have returned undefined.',
+        'be returned. You have returned undefined.',
     );
 
     // De-duped
