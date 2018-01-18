@@ -787,7 +787,10 @@ export default function(
       // Render-phase updates (like this) should not be added to the update queue,
       // So that multiple render passes do not enqueue multiple updates.
       // Instead, just synchronously merge the returned state into the instance.
-      newState = Object.assign({}, newState, partialState);
+      newState =
+        newState == null
+          ? partialState
+          : Object.assign({}, newState, partialState);
     }
 
     if (
