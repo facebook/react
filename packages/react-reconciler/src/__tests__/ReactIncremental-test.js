@@ -1417,6 +1417,43 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  it('does not call static getDerivedStateFromProps for state-only updates', () => {
+    let ops = [];
+    let instance;
+
+    class LifeCycle extends React.Component {
+      static getDerivedStateFromProps(props, prevState) {
+        ops.push('getDerivedStateFromProps');
+        return {foo: 'foo'};
+      }
+      changeState() {
+        this.setState({foo: 'bar'});
+      }
+      componentWillUpdate() {
+        ops.push('componentWillUpdate');
+      }
+      render() {
+        ops.push('render');
+        instance = this;
+        return null;
+      }
+    }
+
+    ReactNoop.render(<LifeCycle />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['getDerivedStateFromProps', 'render']);
+    expect(instance.state).toEqual({foo: 'foo'});
+
+    ops = [];
+
+    instance.changeState();
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['componentWillUpdate', 'render']);
+    expect(instance.state).toEqual({foo: 'bar'});
+  });
+
   xit('does not call componentWillReceiveProps for state-only updates', () => {
     let ops = [];
 

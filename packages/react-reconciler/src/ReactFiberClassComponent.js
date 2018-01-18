@@ -757,11 +757,14 @@ export default function(
       );
     }
 
-    const partialState = callGetDerivedStateFromProps(
-      workInProgress,
-      instance,
-      newProps,
-    );
+    let partialState;
+    if (oldProps !== newProps) {
+      partialState = callGetDerivedStateFromProps(
+        workInProgress,
+        instance,
+        newProps,
+      );
+    }
 
     // Compute the next state using the memoized state and the update queue.
     const oldState = workInProgress.memoizedState;
