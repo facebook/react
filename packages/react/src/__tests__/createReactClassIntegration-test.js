@@ -151,7 +151,7 @@ describe('create-react-class-integration', () => {
     );
   });
 
-  // TODO (getDerivedStateFromProps) Reenable after create-react-class updated.
+  // TODO (RFC #6) Reenable after create-react-class updated.
   xit('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
     expect(() =>
       createReactClass({
@@ -402,100 +402,6 @@ describe('create-react-class-integration', () => {
       container,
     );
     expect(instance.textContent).toEqual('count:3');
-  });
-
-  it('isMounted works', () => {
-    const ops = [];
-    let instance;
-    const Component = createReactClass({
-      displayName: 'MyComponent',
-      mixins: [
-        {
-          componentWillMount() {
-            this.log('mixin.componentWillMount');
-          },
-          componentDidMount() {
-            this.log('mixin.componentDidMount');
-          },
-          componentWillUpdate() {
-            this.log('mixin.componentWillUpdate');
-          },
-          componentDidUpdate() {
-            this.log('mixin.componentDidUpdate');
-          },
-          componentWillUnmount() {
-            this.log('mixin.componentWillUnmount');
-          },
-        },
-      ],
-      log(name) {
-        ops.push(`${name}: ${this.isMounted()}`);
-      },
-      getInitialState() {
-        this.log('getInitialState');
-        return {};
-      },
-      componentWillMount() {
-        this.log('componentWillMount');
-      },
-      componentDidMount() {
-        this.log('componentDidMount');
-      },
-      componentWillUpdate() {
-        this.log('componentWillUpdate');
-      },
-      componentDidUpdate() {
-        this.log('componentDidUpdate');
-      },
-      componentWillUnmount() {
-        this.log('componentWillUnmount');
-      },
-      render() {
-        instance = this;
-        this.log('render');
-        return <div />;
-      },
-    });
-
-    const container = document.createElement('div');
-
-    // Note: The below lifecycle warnings are unavoidable for now,
-    // Until create-react-class recognizes the UNSAFE_* methods.
-    // (If we try to use them before them, it will error because
-    // we are defining the same method twice.)
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev([
-      'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
-        'clean up subscriptions and pending requests in componentWillUnmount ' +
-        'to prevent memory leaks.',
-      'Warning: MyComponent: componentWillMount() is deprecated and will be ' +
-        'removed in the next major version. Please use ' +
-        'UNSAFE_componentWillMount() instead.',
-    ]);
-
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
-      'Warning: MyComponent: componentWillUpdate() is deprecated and will be ' +
-        'removed in the next major version. Please use ' +
-        'UNSAFE_componentWillUpdate() instead.',
-    );
-
-    ReactDOM.unmountComponentAtNode(container);
-    instance.log('after unmount');
-    expect(ops).toEqual([
-      'getInitialState: false',
-      'mixin.componentWillMount: false',
-      'componentWillMount: false',
-      'render: false',
-      'mixin.componentDidMount: true',
-      'componentDidMount: true',
-      'mixin.componentWillUpdate: true',
-      'componentWillUpdate: true',
-      'render: true',
-      'mixin.componentDidUpdate: true',
-      'componentDidUpdate: true',
-      'mixin.componentWillUnmount: true',
-      'componentWillUnmount: true',
-      'after unmount: false',
-    ]);
   });
 
   it('should support the new static getDerivedStateFromProps method', () => {

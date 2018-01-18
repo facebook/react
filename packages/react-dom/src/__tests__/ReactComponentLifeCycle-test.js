@@ -593,37 +593,6 @@ describe('ReactComponentLifeCycle', () => {
     ]);
   });
 
-  it('warns about deprecated unsafe lifecycles', function() {
-    class MyComponent extends React.Component {
-      componentWillMount() {}
-      componentWillReceiveProps() {}
-      componentWillUpdate() {}
-      render() {
-        return null;
-      }
-    }
-
-    const container = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent x={1} />, container)).toWarnDev([
-      'Warning: MyComponent: componentWillMount() is deprecated and will be ' +
-        'removed in the next major version. ' +
-        'Please use UNSAFE_componentWillMount() instead.',
-    ]);
-
-    expect(() => ReactDOM.render(<MyComponent x={2} />, container)).toWarnDev([
-      'Warning: MyComponent: componentWillReceiveProps() is deprecated and ' +
-        'will be removed in the next major version. ' +
-        'Please use UNSAFE_componentWillReceiveProps() instead.',
-      'Warning: MyComponent: componentWillUpdate() is deprecated and will be ' +
-        'removed in the next major version. ' +
-        'Please use UNSAFE_componentWillUpdate() instead.',
-    ]);
-
-    // Dedupe check (instantiate and update)
-    ReactDOM.render(<MyComponent key="new" x={1} />, container);
-    ReactDOM.render(<MyComponent key="new" x={2} />, container);
-  });
-
   it('calls effects on module-pattern component', function() {
     const log = [];
 

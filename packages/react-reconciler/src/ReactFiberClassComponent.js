@@ -14,6 +14,7 @@ import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
   debugRenderPhaseSideEffects,
   enableAsyncSubtreeAPI,
+  warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
@@ -49,9 +50,11 @@ let didWarnAboutWillReceivePropsAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
-  didWarnAboutLegacyWillMount = {};
-  didWarnAboutLegacyWillReceiveProps = {};
-  didWarnAboutLegacyWillUpdate = {};
+  if (warnAboutDeprecatedLifecycles) {
+    didWarnAboutLegacyWillMount = {};
+    didWarnAboutLegacyWillReceiveProps = {};
+    didWarnAboutLegacyWillUpdate = {};
+  }
   didWarnAboutStateAssignmentForComponent = {};
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutWillReceivePropsAndDerivedState = {};
@@ -426,15 +429,17 @@ export default function(
 
     if (typeof instance.componentWillMount === 'function') {
       if (__DEV__) {
-        const componentName = getComponentName(workInProgress) || 'Unknown';
-        if (!didWarnAboutLegacyWillMount[componentName]) {
-          warning(
-            false,
-            '%s: componentWillMount() is deprecated and will be removed in the ' +
-              'next major version. Please use UNSAFE_componentWillMount() instead.',
-            componentName,
-          );
-          didWarnAboutLegacyWillMount[componentName] = true;
+        if (warnAboutDeprecatedLifecycles) {
+          const componentName = getComponentName(workInProgress) || 'Unknown';
+          if (!didWarnAboutLegacyWillMount[componentName]) {
+            warning(
+              false,
+              '%s: componentWillMount() is deprecated and will be removed in the ' +
+                'next major version. Please use UNSAFE_componentWillMount() instead.',
+              componentName,
+            );
+            didWarnAboutLegacyWillMount[componentName] = true;
+          }
         }
       }
       instance.componentWillMount();
@@ -467,15 +472,17 @@ export default function(
     const oldState = instance.state;
     if (typeof instance.componentWillReceiveProps === 'function') {
       if (__DEV__) {
-        const componentName = getComponentName(workInProgress) || 'Unknown';
-        if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
-          warning(
-            false,
-            '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
-              'next major version. Please use UNSAFE_componentWillReceiveProps() instead.',
-            componentName,
-          );
-          didWarnAboutLegacyWillReceiveProps[componentName] = true;
+        if (warnAboutDeprecatedLifecycles) {
+          const componentName = getComponentName(workInProgress) || 'Unknown';
+          if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
+            warning(
+              false,
+              '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
+                'next major version. Please use UNSAFE_componentWillReceiveProps() instead.',
+              componentName,
+            );
+            didWarnAboutLegacyWillReceiveProps[componentName] = true;
+          }
         }
       }
 
@@ -814,16 +821,18 @@ export default function(
       ) {
         if (typeof instance.componentWillUpdate === 'function') {
           if (__DEV__) {
-            const componentName =
-              getComponentName(workInProgress) || 'Component';
-            if (!didWarnAboutLegacyWillUpdate[componentName]) {
-              warning(
-                false,
-                '%s: componentWillUpdate() is deprecated and will be removed in the ' +
-                  'next major version. Please use UNSAFE_componentWillUpdate() instead.',
-                componentName,
-              );
-              didWarnAboutLegacyWillUpdate[componentName] = true;
+            if (warnAboutDeprecatedLifecycles) {
+              const componentName =
+                getComponentName(workInProgress) || 'Component';
+              if (!didWarnAboutLegacyWillUpdate[componentName]) {
+                warning(
+                  false,
+                  '%s: componentWillUpdate() is deprecated and will be removed in the ' +
+                    'next major version. Please use UNSAFE_componentWillUpdate() instead.',
+                  componentName,
+                );
+                didWarnAboutLegacyWillUpdate[componentName] = true;
+              }
             }
           }
 

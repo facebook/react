@@ -1070,35 +1070,6 @@ describe('ReactShallowRenderer', () => {
     expect(shallowRenderer.getMountedInstance().state).toBeNull();
   });
 
-  it('should warn if deprecated lifecycles exist', () => {
-    class ComponentWithWarnings extends React.Component {
-      componentWillReceiveProps() {}
-      componentWillMount() {}
-      componentWillUpdate() {}
-      render() {
-        return null;
-      }
-    }
-
-    const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev(
-      'Warning: ComponentWithWarnings: componentWillMount() is deprecated and will ' +
-        'be removed in the next major version. ' +
-        'Please use UNSAFE_componentWillMount() instead.',
-    );
-    expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev([
-      'Warning: ComponentWithWarnings: componentWillReceiveProps() is deprecated ' +
-        'and will be removed in the next major version. ' +
-        'Please use UNSAFE_componentWillReceiveProps() instead.',
-      'Warning: ComponentWithWarnings: componentWillUpdate() is deprecated and will ' +
-        'be removed in the next major version. ' +
-        'Please use UNSAFE_componentWillUpdate() instead.',
-    ]);
-
-    // Verify no duplicate warnings
-    shallowRenderer.render(<ComponentWithWarnings />);
-  });
-
   it('should warn if both componentWillReceiveProps and static getDerivedStateFromProps exist', () => {
     class ComponentWithWarnings extends React.Component {
       state = {};

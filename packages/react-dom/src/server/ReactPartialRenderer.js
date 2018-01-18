@@ -19,6 +19,7 @@ import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_CALL_TYPE,
@@ -489,16 +490,18 @@ function resolve(
     if (inst.UNSAFE_componentWillMount || inst.componentWillMount) {
       if (inst.componentWillMount) {
         if (__DEV__) {
-          const componentName = getComponentName(Component) || 'Unknown';
+          if (warnAboutDeprecatedLifecycles) {
+            const componentName = getComponentName(Component) || 'Unknown';
 
-          if (!didWarnAboutDeprecatedWillMount[componentName]) {
-            warning(
-              false,
-              '%s: componentWillMount() is deprecated and will be removed in the ' +
-                'next major version. Please use UNSAFE_componentWillMount() instead.',
-              componentName,
-            );
-            didWarnAboutDeprecatedWillMount[componentName] = true;
+            if (!didWarnAboutDeprecatedWillMount[componentName]) {
+              warning(
+                false,
+                '%s: componentWillMount() is deprecated and will be removed in the ' +
+                  'next major version. Please use UNSAFE_componentWillMount() instead.',
+                componentName,
+              );
+              didWarnAboutDeprecatedWillMount[componentName] = true;
+            }
           }
         }
 

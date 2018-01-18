@@ -65,23 +65,6 @@ describe('ReactDOMServerLifecycles', () => {
     ]);
   });
 
-  it('should warn about deprecated lifecycle hooks', () => {
-    class Component extends React.Component {
-      componentWillMount() {}
-      render() {
-        return null;
-      }
-    }
-
-    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
-      'Warning: Component: componentWillMount() is deprecated and will be removed ' +
-        'in the next major version. Please use UNSAFE_componentWillMount() instead.',
-    );
-
-    // De-duped
-    ReactDOMServer.renderToString(<Component />);
-  });
-
   it('should update instance.state with value returned from getDerivedStateFromProps', () => {
     class Grandparent extends React.Component {
       state = {

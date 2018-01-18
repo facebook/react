@@ -16,6 +16,7 @@ export const debugRenderPhaseSideEffects = false;
 export const enableAsyncSubtreeAPI = true;
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
+export const warnAboutDeprecatedLifecycles = false;
 
 // React Native CS uses persistent reconciler.
 export const enableMutatingReconciler = false;
