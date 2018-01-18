@@ -406,6 +406,7 @@ export default function(
       workInProgress,
       instance,
       props,
+      instance.state,
     );
     if (partialState != null) {
       // Render-phase updates (like this) should not be added to the update queue,
@@ -518,7 +519,12 @@ export default function(
     }
   }
 
-  function callGetDerivedStateFromProps(workInProgress, instance, props) {
+  function callGetDerivedStateFromProps(
+    workInProgress,
+    instance,
+    props,
+    state,
+  ) {
     const {type} = workInProgress;
 
     if (typeof type.getDerivedStateFromProps === 'function') {
@@ -544,7 +550,7 @@ export default function(
       const partialState = type.getDerivedStateFromProps.call(
         null,
         props,
-        instance.state,
+        state,
       );
 
       if (__DEV__) {
@@ -763,6 +769,7 @@ export default function(
         workInProgress,
         instance,
         newProps,
+        workInProgress.memoizedState,
       );
     }
 
