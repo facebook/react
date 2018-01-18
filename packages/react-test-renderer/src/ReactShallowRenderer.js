@@ -16,6 +16,22 @@ import shallowEqual from 'fbjs/lib/shallowEqual';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'fbjs/lib/warning';
 
+let didWarnAboutLegacyWillMount;
+let didWarnAboutLegacyWillReceiveProps;
+let didWarnAboutLegacyWillUpdate;
+let didWarnAboutUndefinedDerivedState;
+let didWarnAboutWillReceivePropsAndDerivedState;
+
+if (__DEV__) {
+  if (warnAboutDeprecatedLifecycles) {
+    didWarnAboutLegacyWillMount = {};
+    didWarnAboutLegacyWillReceiveProps = {};
+    didWarnAboutLegacyWillUpdate = {};
+  }
+  didWarnAboutUndefinedDerivedState = {};
+  didWarnAboutWillReceivePropsAndDerivedState = {};
+}
+
 class ReactShallowRenderer {
   static createRenderer = function() {
     return new ReactShallowRenderer();
@@ -30,16 +46,6 @@ class ReactShallowRenderer {
     this._rendering = false;
     this._forcedUpdate = false;
     this._updater = new Updater(this);
-
-    if (__DEV__) {
-      if (warnAboutDeprecatedLifecycles) {
-        this._didWarnAboutLegacyWillMount = {};
-        this._didWarnAboutLegacyWillReceiveProps = {};
-        this._didWarnAboutLegacyWillUpdate = {};
-      }
-      this._didWarnAboutUndefinedDerivedState = {};
-      this._didWarnAboutWillReceivePropsAndDerivedState = {};
-    }
   }
 
   getMountedInstance() {
@@ -152,14 +158,14 @@ class ReactShallowRenderer {
         if (__DEV__) {
           if (warnAboutDeprecatedLifecycles) {
             const componentName = getName(element.type, this._instance);
-            if (!this._didWarnAboutLegacyWillMount[componentName]) {
+            if (!didWarnAboutLegacyWillMount[componentName]) {
               warning(
                 false,
                 '%s: componentWillMount() is deprecated and will be removed in the ' +
                   'next major version. Please use UNSAFE_componentWillMount() instead.',
                 componentName,
               );
-              this._didWarnAboutLegacyWillMount[componentName] = true;
+              didWarnAboutLegacyWillMount[componentName] = true;
             }
           }
         }
@@ -190,14 +196,14 @@ class ReactShallowRenderer {
         if (__DEV__) {
           if (warnAboutDeprecatedLifecycles) {
             const componentName = getName(element.type, this._instance);
-            if (!this._didWarnAboutLegacyWillReceiveProps[componentName]) {
+            if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
               warning(
                 false,
                 '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
                   'next major version. Please use UNSAFE_componentWillReceiveProps() instead.',
                 componentName,
               );
-              this._didWarnAboutLegacyWillReceiveProps[componentName] = true;
+              didWarnAboutLegacyWillReceiveProps[componentName] = true;
             }
           }
         }
@@ -234,14 +240,14 @@ class ReactShallowRenderer {
         if (__DEV__) {
           if (warnAboutDeprecatedLifecycles) {
             const componentName = getName(element.type, this._instance);
-            if (!this._didWarnAboutLegacyWillUpdate[componentName]) {
+            if (!didWarnAboutLegacyWillUpdate[componentName]) {
               warning(
                 false,
                 '%s: componentWillUpdate() is deprecated and will be removed in the ' +
                   'next major version. Please use UNSAFE_componentWillUpdate() instead.',
                 componentName,
               );
-              this._didWarnAboutLegacyWillUpdate[componentName] = true;
+              didWarnAboutLegacyWillUpdate[componentName] = true;
             }
           }
         }
@@ -275,9 +281,7 @@ class ReactShallowRenderer {
           typeof this._instance.UNSAFE_componentWillReceiveProps === 'function'
         ) {
           const componentName = getName(type, this._instance);
-          if (
-            !this._didWarnAboutWillReceivePropsAndDerivedState[componentName]
-          ) {
+          if (!didWarnAboutWillReceivePropsAndDerivedState[componentName]) {
             warning(
               false,
               '%s: Defines both componentWillReceiveProps() and static ' +
@@ -285,9 +289,7 @@ class ReactShallowRenderer {
                 'only getDerivedStateFromProps().',
               componentName,
             );
-            this._didWarnAboutWillReceivePropsAndDerivedState[
-              componentName
-            ] = true;
+            didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
           }
         }
       }
@@ -301,16 +303,14 @@ class ReactShallowRenderer {
       if (__DEV__) {
         if (partialState === undefined) {
           const componentName = getName(type, this._instance);
-          if (!this._didWarnAboutUndefinedDerivedState[componentName]) {
+          if (!didWarnAboutUndefinedDerivedState[componentName]) {
             warning(
               false,
               '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
                 'You have returned undefined.',
               componentName,
             );
-            this._didWarnAboutUndefinedDerivedState[
-              componentName
-            ] = componentName;
+            didWarnAboutUndefinedDerivedState[componentName] = componentName;
           }
         }
       }
