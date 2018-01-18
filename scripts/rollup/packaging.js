@@ -44,10 +44,6 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
     case RN_DEV:
     case RN_PROD:
       switch (packageName) {
-        case 'react-rt-renderer':
-          return [`build/react-rt/${filename}`];
-        case 'react-cs-renderer':
-          return [`build/react-cs/${filename}`];
         case 'react-native-renderer':
           return [`build/react-native/${filename}`];
         default:
@@ -76,16 +72,6 @@ async function copyRNShims() {
     asyncCopyTo(
       require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
       'build/react-native/shims/ReactNativeTypes.js'
-    ),
-    // React Native CS
-    asyncCopyTo(
-      require.resolve('react-cs-renderer/src/ReactNativeCSTypes.js'),
-      'build/react-cs/shims/ReactNativeCSTypes.js'
-    ),
-    // React Native RT
-    asyncCopyTo(
-      require.resolve('react-rt-renderer/src/ReactNativeRTTypes.js'),
-      'build/react-rt/shims/ReactNativeRTTypes.js'
     ),
   ]);
 }
