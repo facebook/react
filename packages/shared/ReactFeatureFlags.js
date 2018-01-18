@@ -24,7 +24,7 @@ export const enablePersistentReconciler = false;
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 
-// DEV-mode warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
+// Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
 export const warnAboutDeprecatedLifecycles = false;
 
 // Only used in www builds.

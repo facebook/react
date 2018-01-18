@@ -430,7 +430,7 @@ export default function(
     if (typeof instance.componentWillMount === 'function') {
       if (__DEV__) {
         if (warnAboutDeprecatedLifecycles) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
+          const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutLegacyWillMount[componentName]) {
             warning(
               false,
@@ -473,7 +473,7 @@ export default function(
     if (typeof instance.componentWillReceiveProps === 'function') {
       if (__DEV__) {
         if (warnAboutDeprecatedLifecycles) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
+          const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
             warning(
               false,
@@ -502,7 +502,7 @@ export default function(
 
     if (instance.state !== oldState) {
       if (__DEV__) {
-        const componentName = getComponentName(workInProgress) || 'Unknown';
+        const componentName = getComponentName(workInProgress) || 'Component';
         if (!didWarnAboutStateAssignmentForComponent[componentName]) {
           warning(
             false,
@@ -558,7 +558,7 @@ export default function(
         }
       }
 
-      return partialState || null;
+      return partialState;
     }
   }
 

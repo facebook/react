@@ -13,13 +13,6 @@ let React;
 let ReactDOM;
 let ReactFeatureFlags;
 
-/**
- * TODO: We should make any setState calls fail in
- * `getInitialState` and `componentWillMount`. They will usually fail
- * anyways because `this._renderedComponent` is empty, however, if a component
- * is *reused*, then that won't be the case and things will appear to work in
- * some cases. Better to just block all updates in initialization.
- */
 describe('ReactComponentLifeCycle', () => {
   beforeEach(() => {
     jest.resetModules();

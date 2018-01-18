@@ -85,10 +85,12 @@ describe('create-react-class-integration', () => {
 
     const container = document.createElement('div');
 
-    // Note: The below lifecycle warnings are unavoidable for now,
+    // TODO (RFC #6) The below lifecycle warnings are unavoidable for now,
     // Until create-react-class recognizes the UNSAFE_* methods.
     // (If we try to use them before them, it will error because
     // we are defining the same method twice.)
+    // Update the above component to use the new UNSAFE_* methods
+    // (and remove the expected warnings) once create-react-class has been updated.
     expect(() => ReactDOM.render(<Component />, container)).toWarnDev([
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
