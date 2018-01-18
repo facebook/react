@@ -426,7 +426,8 @@ function resolve(
       inst = new Component(element.props, publicContext, updater);
 
       if (typeof Component.getDerivedStateFromProps === 'function') {
-        partialState = Component.getDerivedStateFromProps(
+        partialState = Component.getDerivedStateFromProps.call(
+          null,
           element.props,
           inst.state,
         );

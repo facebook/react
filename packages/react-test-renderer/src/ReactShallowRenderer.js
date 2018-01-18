@@ -292,7 +292,8 @@ class ReactShallowRenderer {
         }
       }
 
-      const partialState = type.getDerivedStateFromProps(
+      const partialState = type.getDerivedStateFromProps.call(
+        null,
         props,
         this._instance.state,
       );

@@ -541,7 +541,11 @@ export default function(
         }
       }
 
-      const partialState = type.getDerivedStateFromProps(props, instance.state);
+      const partialState = type.getDerivedStateFromProps.call(
+        null,
+        props,
+        instance.state,
+      );
 
       if (__DEV__) {
         if (partialState === undefined) {
