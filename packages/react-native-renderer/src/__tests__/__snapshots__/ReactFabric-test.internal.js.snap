@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactFabric renders and reorders children 1`] = `
+"11
+ View null
+   View {\\"title\\":\\"a\\"}
+   View {\\"title\\":\\"b\\"}
+   View {\\"title\\":\\"c\\"}
+   View {\\"title\\":\\"d\\"}
+   View {\\"title\\":\\"e\\"}
+   View {\\"title\\":\\"f\\"}
+   View {\\"title\\":\\"g\\"}
+   View {\\"title\\":\\"h\\"}
+   View {\\"title\\":\\"i\\"}
+   View {\\"title\\":\\"j\\"}
+   View {\\"title\\":\\"k\\"}
+   View {\\"title\\":\\"l\\"}
+   View {\\"title\\":\\"m\\"}
+   View {\\"title\\":\\"n\\"}
+   View {\\"title\\":\\"o\\"}
+   View {\\"title\\":\\"p\\"}
+   View {\\"title\\":\\"q\\"}
+   View {\\"title\\":\\"r\\"}
+   View {\\"title\\":\\"s\\"}
+   View {\\"title\\":\\"t\\"}"
+`;
+
+exports[`ReactFabric renders and reorders children 2`] = `
+"11
+ View null
+   View {\\"title\\":\\"m\\"}
+   View {\\"title\\":\\"x\\"}
+   View {\\"title\\":\\"h\\"}
+   View {\\"title\\":\\"p\\"}
+   View {\\"title\\":\\"g\\"}
+   View {\\"title\\":\\"w\\"}
+   View {\\"title\\":\\"f\\"}
+   View {\\"title\\":\\"r\\"}
+   View {\\"title\\":\\"a\\"}
+   View {\\"title\\":\\"l\\"}
+   View {\\"title\\":\\"k\\"}
+   View {\\"title\\":\\"e\\"}
+   View {\\"title\\":\\"o\\"}
+   View {\\"title\\":\\"i\\"}
+   View {\\"title\\":\\"v\\"}
+   View {\\"title\\":\\"c\\"}
+   View {\\"title\\":\\"s\\"}
+   View {\\"title\\":\\"t\\"}
+   View {\\"title\\":\\"z\\"}
+   View {\\"title\\":\\"y\\"}"
+`;

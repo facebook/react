@@ -131,6 +131,28 @@ const bundles = [
     ],
   },
 
+  /******* React Native Fabric *******/
+  {
+    label: 'native-fabric',
+    bundleTypes: [RN_DEV, RN_PROD],
+    moduleType: RENDERER,
+    entry: 'react-native-renderer/fabric',
+    global: 'ReactFabric',
+    externals: [
+      'ExceptionsManager',
+      'InitializeCore',
+      'Platform',
+      'RCTEventEmitter',
+      'TextInputState',
+      'UIManager',
+      'FabricUIManager',
+      'View',
+      'deepDiffer',
+      'deepFreezeAndThrowOnMutationInDev',
+      'flattenStyle',
+    ],
+  },
+
   /******* React Test Renderer *******/
   {
     label: 'test',

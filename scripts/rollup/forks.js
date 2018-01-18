@@ -34,6 +34,8 @@ const forks = Object.freeze({
     switch (entry) {
       case 'react-native-renderer':
         return 'shared/forks/ReactFeatureFlags.native.js';
+      case 'react-native-renderer/src/ReactFabric':
+        return 'shared/forks/ReactFeatureFlags.native-fabric.js';
       default:
         switch (bundleType) {
           case FB_DEV:

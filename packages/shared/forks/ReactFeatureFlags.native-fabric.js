@@ -10,7 +10,7 @@
 import invariant from 'fbjs/lib/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as CSFeatureFlagsType from './ReactFeatureFlags.native-cs';
+import typeof * as FabricFeatureFlagsType from './ReactFeatureFlags.native-fabric';
 
 export const debugRenderPhaseSideEffects = false;
 export const enableAsyncSubtreeAPI = true;
@@ -18,7 +18,7 @@ export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
 
-// React Native CS uses persistent reconciler.
+// React Fabric uses persistent reconciler.
 export const enableMutatingReconciler = false;
 export const enableNoopReconciler = false;
 export const enablePersistentReconciler = true;
@@ -32,4 +32,4 @@ export function addUserTimingListener() {
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;
 // eslint-disable-next-line no-unused-expressions
-(null: Check<CSFeatureFlagsType, FeatureFlagsType>);
+(null: Check<FabricFeatureFlagsType, FeatureFlagsType>);
