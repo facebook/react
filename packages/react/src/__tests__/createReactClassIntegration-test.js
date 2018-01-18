@@ -497,4 +497,22 @@ describe('create-react-class-integration', () => {
       'after unmount: false',
     ]);
   });
+
+  it('should support the new static getDerivedStateFromProps method', () => {
+    let instance;
+    const Component = createReactClass({
+      statics: {
+        getDerivedStateFromProps: function() {
+          return {foo: 'bar'};
+        },
+      },
+
+      render: function() {
+        instance = this;
+        return null;
+      },
+    });
+    ReactDOM.render(<Component />, document.createElement('div'));
+    expect(instance.state.foo).toBe('bar');
+  });
 });
