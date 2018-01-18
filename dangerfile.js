@@ -106,7 +106,7 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
     for (var name of new Set(packagesToShow)) {
       const thisBundleResults = results.filter(r => r.packageName === name);
       const changedFiles = thisBundleResults.filter(
-        r => r.prevGzipSizeChange !== 0 || r.prevGzipSizeChange !== 0
+        r => r.prevFileSizeChange !== 0 || r.prevGzipSizeChange !== 0
       );
 
       const mdHeaders = [
