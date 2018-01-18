@@ -407,7 +407,7 @@ export default function(
       instance,
       props,
     );
-    if (partialState) {
+    if (partialState != null) {
       // Render-phase updates (like this) should not be added to the update queue,
       // So that multiple render passes do not enqueue multiple updates.
       // Instead, just synchronously merge the returned state into the instance.
@@ -776,7 +776,7 @@ export default function(
       newState = oldState;
     }
 
-    if (partialState) {
+    if (partialState != null) {
       // Render-phase updates (like this) should not be added to the update queue,
       // So that multiple render passes do not enqueue multiple updates.
       // Instead, just synchronously merge the returned state into the instance.

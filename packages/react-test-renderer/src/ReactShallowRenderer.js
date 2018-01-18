@@ -314,7 +314,7 @@ class ReactShallowRenderer {
         }
       }
 
-      if (partialState) {
+      if (partialState != null) {
         const oldState = this._newState || this._instance.state;
         const newState = Object.assign({}, oldState, partialState);
         this._instance.state = this._newState = newState;

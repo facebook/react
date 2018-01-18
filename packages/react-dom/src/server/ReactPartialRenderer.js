@@ -526,7 +526,7 @@ function resolve(
               typeof partial === 'function'
                 ? partial.call(inst, nextState, element.props, publicContext)
                 : partial;
-            if (partialState) {
+            if (partialState != null) {
               if (dontMutate) {
                 dontMutate = false;
                 nextState = Object.assign({}, nextState, partialState);
