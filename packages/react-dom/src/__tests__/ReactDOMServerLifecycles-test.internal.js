@@ -34,7 +34,7 @@ describe('ReactDOMServerLifecycles', () => {
 
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
       'Warning: Component: componentWillMount() is deprecated and will be removed ' +
-        'in the next major version. Please use UNSAFE_componentWillMount() instead.',
+        'in the next major version.',
     );
 
     // De-duped

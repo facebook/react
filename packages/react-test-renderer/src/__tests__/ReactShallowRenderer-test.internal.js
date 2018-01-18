@@ -38,16 +38,13 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev(
       'Warning: ComponentWithWarnings: componentWillMount() is deprecated and will ' +
-        'be removed in the next major version. ' +
-        'Please use UNSAFE_componentWillMount() instead.',
+        'be removed in the next major version.',
     );
     expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev([
       'Warning: ComponentWithWarnings: componentWillReceiveProps() is deprecated ' +
-        'and will be removed in the next major version. ' +
-        'Please use UNSAFE_componentWillReceiveProps() instead.',
+        'and will be removed in the next major version.',
       'Warning: ComponentWithWarnings: componentWillUpdate() is deprecated and will ' +
-        'be removed in the next major version. ' +
-        'Please use UNSAFE_componentWillUpdate() instead.',
+        'be removed in the next major version.',
     ]);
 
     // Verify no duplicate warnings

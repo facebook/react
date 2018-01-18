@@ -39,17 +39,14 @@ describe('ReactComponentLifeCycle', () => {
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<MyComponent x={1} />, container)).toWarnDev([
       'Warning: MyComponent: componentWillMount() is deprecated and will be ' +
-        'removed in the next major version. ' +
-        'Please use UNSAFE_componentWillMount() instead.',
+        'removed in the next major version.',
     ]);
 
     expect(() => ReactDOM.render(<MyComponent x={2} />, container)).toWarnDev([
       'Warning: MyComponent: componentWillReceiveProps() is deprecated and ' +
-        'will be removed in the next major version. ' +
-        'Please use UNSAFE_componentWillReceiveProps() instead.',
+        'will be removed in the next major version.',
       'Warning: MyComponent: componentWillUpdate() is deprecated and will be ' +
-        'removed in the next major version. ' +
-        'Please use UNSAFE_componentWillUpdate() instead.',
+        'removed in the next major version.',
     ]);
 
     // Dedupe check (instantiate and update)

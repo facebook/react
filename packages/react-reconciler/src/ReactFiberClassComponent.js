@@ -466,8 +466,13 @@ export default function(
           if (!didWarnAboutLegacyWillMount[componentName]) {
             warning(
               false,
-              '%s: componentWillMount() is deprecated and will be removed in the ' +
-                'next major version. Please use UNSAFE_componentWillMount() instead.',
+              '%s: componentWillMount() is deprecated and will be ' +
+                'removed in the next major version. Read about the motivations ' +
+                'behind this change: ' +
+                'https://fb.me/react-async-component-lifecycle-hooks' +
+                '\n\n' +
+                'As a temporary workaround, you can rename to ' +
+                'UNSAFE_componentWillMount instead.',
               componentName,
             );
             didWarnAboutLegacyWillMount[componentName] = true;
@@ -509,8 +514,14 @@ export default function(
           if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
             warning(
               false,
-              '%s: componentWillReceiveProps() is deprecated and will be removed in the ' +
-                'next major version. Please use UNSAFE_componentWillReceiveProps() instead.',
+              '%s: componentWillReceiveProps() is deprecated and ' +
+                'will be removed in the next major version. Use ' +
+                'static getDerivedStateFromProps() instead. Read about the ' +
+                'motivations behind this change: ' +
+                'https://fb.me/react-async-component-lifecycle-hooks' +
+                '\n\n' +
+                'As a temporary workaround, you can rename to ' +
+                'UNSAFE_componentWillReceiveProps instead.',
               componentName,
             );
             didWarnAboutLegacyWillReceiveProps[componentName] = true;
@@ -868,8 +879,13 @@ export default function(
               if (!didWarnAboutLegacyWillUpdate[componentName]) {
                 warning(
                   false,
-                  '%s: componentWillUpdate() is deprecated and will be removed in the ' +
-                    'next major version. Please use UNSAFE_componentWillUpdate() instead.',
+                  '%s: componentWillUpdate() is deprecated and will be ' +
+                    'removed in the next major version. Read about the motivations ' +
+                    'behind this change: ' +
+                    'https://fb.me/react-async-component-lifecycle-hooks' +
+                    '\n\n' +
+                    'As a temporary workaround, you can rename to ' +
+                    'UNSAFE_componentWillUpdate instead.',
                   componentName,
                 );
                 didWarnAboutLegacyWillUpdate[componentName] = true;

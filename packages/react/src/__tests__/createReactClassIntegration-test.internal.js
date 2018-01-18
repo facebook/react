@@ -96,14 +96,12 @@ describe('create-react-class-integration', () => {
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',
       'Warning: MyComponent: componentWillMount() is deprecated and will be ' +
-        'removed in the next major version. Please use ' +
-        'UNSAFE_componentWillMount() instead.',
+        'removed in the next major version.',
     ]);
 
     expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
       'Warning: MyComponent: componentWillUpdate() is deprecated and will be ' +
-        'removed in the next major version. Please use ' +
-        'UNSAFE_componentWillUpdate() instead.',
+        'removed in the next major version.',
     );
 
     ReactDOM.unmountComponentAtNode(container);
