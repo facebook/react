@@ -25,8 +25,8 @@ export class Test extends OnChangeComponent<Glob.IRouteGlobaleProps, IAffidament
     public render() {
     	return <div>
 		<input type="text" name="Test.A" value={this.state.Test.A} onChange={(e)=>OnChange(e)} />
-		<input type="text" name="Test.B[Test]" value={this.state.Test.B['Test']} onChange={(e)=>OnChange(e)} />
-		<input type="text" name="Test.C[Test]" value={this.state.Test.C['Test'].SC} onChange={(e)=>OnChange(e)} />
+		<input type="text" name="Test.B[Test]" value={this.state.Test.B["Test"]} onChange={(e)=>OnChange(e)} />
+		<input type="text" name="Test.C[Test]" value={this.state.Test.C["Test"].SC} onChange={(e)=>OnChange(e)} />
 	</div>
     }
 */
