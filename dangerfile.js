@@ -44,6 +44,10 @@ function emojiPercent(change) {
   }
 }
 
+function boldRow(row) {
+  return row.map(element => `**${element}**`);
+}
+
 // Grab the results.json before we ran CI via the GH API
 // const baseMerge = danger.github.pr.base.sha
 const parentOfOldestCommit = danger.git.commits[0].parents[0];
@@ -120,16 +124,29 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
         'ENV',
       ];
 
-      const mdRows = changedFiles.map(r => [
-        r.filename,
-        emojiPercent(r.prevFileSizeChange),
-        emojiPercent(r.prevGzipSizeChange),
-        r.prevSize,
-        r.prevFileSize,
-        r.prevGzip,
-        r.prevGzipSize,
-        r.bundleType,
-      ]);
+      const mdRows = changedFiles.map(r =>
+        r.bundleType.includes('PROD') ?
+         boldRow([
+            r.filename,
+            emojiPercent(r.prevFileSizeChange),
+            emojiPercent(r.prevGzipSizeChange),
+            r.prevSize,
+            r.prevFileSize,
+            r.prevGzip,
+            r.prevGzipSize,
+            r.bundleType,
+          ]) :
+          [
+            r.filename,
+            r.prevFileSizeChange,
+            r.prevGzipSizeChange,
+            r.prevSize,
+            r.prevFileSize,
+            r.prevGzip,
+            r.prevGzipSize,
+            r.bundleType,
+          ]
+       );
 
       allTables.push(`\n## ${name}`);
       allTables.push(generateMDTable(mdHeaders, mdRows));
