@@ -122,18 +122,6 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
     getDefaultProps: 'DEFINE_MANY_MERGED',
 
     /**
-     * This method is invoked after a component is instantiated and when it
-     * receives new props. Return an object to update state in response to
-     * prop changes. Return null to indicate no change to state.
-     *
-     * If an object is returned, its keys will be merged into the existing state.
-     *
-     * @return {object || null}
-     * @optional
-     */
-    getDerivedStateFromProps: 'DEFINE_MANY_MERGED',
-
-    /**
      * Invoked once before the component is mounted. The return value will be used
      * as the initial value of `this.state`.
      *
@@ -316,6 +304,23 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
      * @overridable
      */
     updateComponent: 'OVERRIDE_BASE'
+  };
+
+  /**
+   * Similar to ReactClassInterface but for static methods.
+   */
+  var ReactClassStaticInterface = {
+    /**
+     * This method is invoked after a component is instantiated and when it
+     * receives new props. Return an object to update state in response to
+     * prop changes. Return null to indicate no change to state.
+     *
+     * If an object is returned, its keys will be merged into the existing state.
+     *
+     * @return {object || null}
+     * @optional
+     */
+    getDerivedStateFromProps: 'DEFINE_MANY_MERGED'
   };
 
   /**
@@ -571,8 +576,8 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
 
       var isAlreadyDefined = name in Constructor;
       if (isAlreadyDefined) {
-        var specPolicy = ReactClassInterface.hasOwnProperty(name)
-          ? ReactClassInterface[name]
+        var specPolicy = ReactClassStaticInterface.hasOwnProperty(name)
+          ? ReactClassStaticInterface[name]
           : null;
 
         _invariant(
