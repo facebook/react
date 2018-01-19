@@ -89,6 +89,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   const {
     adoptClassInstance,
+    callGetDerivedStateFromProps,
     constructClassInstance,
     mountClassInstance,
     // resumeMountClassInstance,
@@ -485,8 +486,29 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       value !== null &&
       typeof value.render === 'function'
     ) {
+      const Component = workInProgress.type;
+
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
+
+      workInProgress.memoizedState =
+        value.state !== null && value.state !== undefined ? value.state : null;
+
+      if (typeof Component.getDerivedStateFromProps === 'function') {
+        const partialState = callGetDerivedStateFromProps(
+          workInProgress,
+          value,
+          props,
+        );
+
+        if (partialState !== null && partialState !== undefined) {
+          workInProgress.memoizedState = Object.assign(
+            {},
+            workInProgress.memoizedState,
+            partialState,
+          );
+        }
+      }
 
       // Push context providers early to prevent context stack mismatches.
       // During mounting we don't know the child context yet as the instance doesn't exist.

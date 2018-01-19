@@ -458,4 +458,50 @@ describe('ReactCompositeComponent-state', () => {
       'callback -- step: 3, extra: false',
     ]);
   });
+
+  it('should support stateful module pattern components', () => {
+    function Child() {
+      return {
+        state: {
+          count: 123,
+        },
+        render() {
+          return <div>{`count:${this.state.count}`}</div>;
+        },
+      };
+    }
+
+    const el = document.createElement('div');
+    ReactDOM.render(<Child />, el);
+
+    expect(el.textContent).toBe('count:123');
+  });
+
+  it('should support getDerivedStateFromProps for module pattern components', () => {
+    function Child() {
+      return {
+        state: {
+          count: 1,
+        },
+        render() {
+          return <div>{`count:${this.state.count}`}</div>;
+        },
+      };
+    }
+    Child.getDerivedStateFromProps = (props, prevState) => {
+      return {
+        count: prevState.count + props.incrementBy,
+      };
+    };
+
+    const el = document.createElement('div');
+    ReactDOM.render(<Child incrementBy={0} />, el);
+    expect(el.textContent).toBe('count:1');
+
+    ReactDOM.render(<Child incrementBy={2} />, el);
+    expect(el.textContent).toBe('count:3');
+
+    ReactDOM.render(<Child incrementBy={1} />, el);
+    expect(el.textContent).toBe('count:4');
+  });
 });

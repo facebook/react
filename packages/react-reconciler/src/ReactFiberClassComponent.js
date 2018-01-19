@@ -561,7 +561,11 @@ export default function(
     }
   }
 
-  function callGetDerivedStateFromProps(workInProgress, instance, props) {
+  function callGetDerivedStateFromProps(
+    workInProgress: Fiber,
+    instance: any,
+    props: any,
+  ) {
     const {type} = workInProgress;
 
     if (typeof type.getDerivedStateFromProps === 'function') {
@@ -939,6 +943,7 @@ export default function(
 
   return {
     adoptClassInstance,
+    callGetDerivedStateFromProps,
     constructClassInstance,
     mountClassInstance,
     // resumeMountClassInstance,
