@@ -522,4 +522,55 @@ describe('ReactClass-spec', () => {
         'to prevent memory leaks.'
     );
   });
+
+  it('should support getInitialState mixin', () => {
+    const Component = createReactClass({
+      mixins: [{
+        getInitialState: function(props) {
+          return {
+            foo: 'foo'
+          };
+        },
+      }],
+      getInitialState: function(props) {
+        return {
+          bar: 'bar'
+        };
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+    const instance = renderIntoDocument(<Component />);
+    expect(instance.state.foo).toEqual('foo');
+    expect(instance.state.bar).toEqual('bar');
+  });
+
+  it('should merge return values for static getDerivedStateFromProps mixin', () => {
+    const Component = createReactClass({
+      mixins: [{
+        statics: {
+          getDerivedStateFromProps: function(props, prevState) {
+            return {
+              foo: 'foo'
+            };
+          }
+        },
+      }],
+      statics: {
+        getDerivedStateFromProps: function(props, prevState) {
+          return {
+            bar: 'bar'
+          };
+        }
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+
+    const state = Component.getDerivedStateFromProps();
+    expect(state.foo).toEqual('foo');
+    expect(state.bar).toEqual('bar');
+  });
 });
