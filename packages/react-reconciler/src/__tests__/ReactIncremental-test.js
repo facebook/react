@@ -571,16 +571,16 @@ describe('ReactIncremental', () => {
         ops.push('constructor: ' + props.prop);
         constructorCount++;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         ops.push('componentWillMount: ' + this.props.prop);
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         ops.push('componentWillReceiveProps: ' + this.props.prop);
       }
       componentDidMount() {
         ops.push('componentDidMount: ' + this.props.prop);
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         ops.push('componentWillUpdate: ' + this.props.prop);
       }
       componentDidUpdate() {
@@ -1232,13 +1232,13 @@ describe('ReactIncremental', () => {
 
     class LifeCycle extends React.Component {
       state = {x: this.props.x};
-      componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         ops.push(
           'componentWillReceiveProps:' + this.state.x + '-' + nextProps.x,
         );
         this.setState({x: nextProps.x});
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         ops.push('componentWillMount:' + this.state.x + '-' + this.props.x);
       }
       componentDidMount() {
@@ -1291,7 +1291,7 @@ describe('ReactIncremental', () => {
         super(props);
         this.state = {x: this.props.x + '(ctor)'};
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         ops.push('componentWillMount:' + this.state.x);
         this.setState({x: this.props.x + '(willMount)'});
       }
@@ -1334,13 +1334,13 @@ describe('ReactIncremental', () => {
     let ops = [];
 
     class LifeCycle extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         ops.push('componentWillMount:' + this.props.x);
       }
       componentDidMount() {
         ops.push('componentDidMount:' + this.props.x);
       }
-      componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         ops.push(
           'componentWillReceiveProps:' + this.props.x + '-' + nextProps.x,
         );
@@ -1349,7 +1349,7 @@ describe('ReactIncremental', () => {
         ops.push('shouldComponentUpdate:' + this.props.x + '-' + nextProps.x);
         return true;
       }
-      componentWillUpdate(nextProps) {
+      UNSAFE_componentWillUpdate(nextProps) {
         ops.push('componentWillUpdate:' + this.props.x + '-' + nextProps.x);
       }
       componentDidUpdate(prevProps) {
@@ -1417,6 +1417,44 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  it('does not call static getDerivedStateFromProps for state-only updates', () => {
+    let ops = [];
+    let instance;
+
+    class LifeCycle extends React.Component {
+      state = {};
+      static getDerivedStateFromProps(props, prevState) {
+        ops.push('getDerivedStateFromProps');
+        return {foo: 'foo'};
+      }
+      changeState() {
+        this.setState({foo: 'bar'});
+      }
+      componentWillUpdate() {
+        ops.push('componentWillUpdate');
+      }
+      render() {
+        ops.push('render');
+        instance = this;
+        return null;
+      }
+    }
+
+    ReactNoop.render(<LifeCycle />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['getDerivedStateFromProps', 'render']);
+    expect(instance.state).toEqual({foo: 'foo'});
+
+    ops = [];
+
+    instance.changeState();
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['componentWillUpdate', 'render']);
+    expect(instance.state).toEqual({foo: 'bar'});
+  });
+
   xit('does not call componentWillReceiveProps for state-only updates', () => {
     let ops = [];
 
@@ -1429,21 +1467,21 @@ describe('ReactIncremental', () => {
           x: this.state.x + 1,
         });
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         instances.push(this);
         ops.push('componentWillMount:' + this.state.x);
       }
       componentDidMount() {
         ops.push('componentDidMount:' + this.state.x);
       }
-      componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         ops.push('componentWillReceiveProps');
       }
       shouldComponentUpdate(nextProps, nextState) {
         ops.push('shouldComponentUpdate:' + this.state.x + '-' + nextState.x);
         return true;
       }
-      componentWillUpdate(nextProps, nextState) {
+      UNSAFE_componentWillUpdate(nextProps, nextState) {
         ops.push('componentWillUpdate:' + this.state.x + '-' + nextState.x);
       }
       componentDidUpdate(prevProps, prevState) {
@@ -1460,7 +1498,7 @@ describe('ReactIncremental', () => {
     // output unless it fully completed.
     class Wrap extends React.Component {
       state = {y: 0};
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         instances.push(this);
       }
       tick() {
@@ -1570,13 +1608,13 @@ describe('ReactIncremental', () => {
     let ops = [];
 
     class LifeCycle extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         ops.push('componentWillMount');
       }
       componentDidMount() {
         ops.push('componentDidMount');
       }
-      componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         ops.push('componentWillReceiveProps');
       }
       shouldComponentUpdate(nextProps) {
@@ -1584,7 +1622,7 @@ describe('ReactIncremental', () => {
         // Bail
         return this.props.x !== nextProps.x;
       }
-      componentWillUpdate(nextProps) {
+      UNSAFE_componentWillUpdate(nextProps) {
         ops.push('componentWillUpdate');
       }
       componentDidUpdate(prevProps) {
@@ -2282,7 +2320,7 @@ describe('ReactIncremental', () => {
           this.setState({setStateInCDU: false});
         }
       }
-      componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         ops.push('componentWillReceiveProps');
         this.setState({setStateInCDU: true});
       }

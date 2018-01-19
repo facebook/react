@@ -98,6 +98,22 @@ describe('ReactStatelessComponent', () => {
     expect(el.textContent).toBe('mest');
   });
 
+  it('should warn for getDerivedStateFromProps on a functional component', () => {
+    function StatelessComponentWithChildContext() {
+      return null;
+    }
+    StatelessComponentWithChildContext.getDerivedStateFromProps = function() {};
+
+    const container = document.createElement('div');
+
+    expect(() =>
+      ReactDOM.render(<StatelessComponentWithChildContext />, container),
+    ).toWarnDev(
+      'StatelessComponentWithChildContext: Stateless ' +
+        'functional components do not support getDerivedStateFromProps.',
+    );
+  });
+
   it('should warn for childContextTypes on a functional component', () => {
     function StatelessComponentWithChildContext(props) {
       return <div>{props.name}</div>;

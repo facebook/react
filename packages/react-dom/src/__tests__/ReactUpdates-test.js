@@ -399,7 +399,7 @@ describe('ReactUpdates', () => {
     let didUpdates = [];
 
     const UpdateLoggingMixin = {
-      componentWillUpdate: function() {
+      UNSAFE_componentWillUpdate: function() {
         willUpdates.push(this.constructor.displayName);
       },
       componentDidUpdate: function() {
@@ -723,7 +723,7 @@ describe('ReactUpdates', () => {
         return <div />;
       }
 
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         x.go();
       }
     }
@@ -746,7 +746,7 @@ describe('ReactUpdates', () => {
     class A extends React.Component {
       state = {x: 0};
 
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         a = this;
       }
 
@@ -756,7 +756,7 @@ describe('ReactUpdates', () => {
     }
 
     class B extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         a.setState({x: 1});
       }
 
@@ -784,7 +784,7 @@ describe('ReactUpdates', () => {
     class A extends React.Component {
       state = {x: this.props.x};
 
-      componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         const newX = nextProps.x;
         this.setState({x: newX}, function() {
           // State should have updated by the time this callback gets called
@@ -945,7 +945,7 @@ describe('ReactUpdates', () => {
     class Child extends React.Component {
       state = {updated: false};
 
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         if (!once) {
           once = true;
           this.setState({updated: true});
@@ -1100,7 +1100,7 @@ describe('ReactUpdates', () => {
       let ops = [];
       class Foo extends React.Component {
         state = {a: false, b: false};
-        componentWillUpdate(_, nextState) {
+        UNSAFE_componentWillUpdate(_, nextState) {
           if (!nextState.a) {
             this.setState({a: true});
           }
@@ -1143,7 +1143,7 @@ describe('ReactUpdates', () => {
       let ops = [];
       class Foo extends React.Component {
         state = {a: false};
-        componentWillUpdate(_, nextState) {
+        UNSAFE_componentWillUpdate(_, nextState) {
           if (!nextState.a) {
             this.setState({a: true});
           }
@@ -1316,7 +1316,7 @@ describe('ReactUpdates', () => {
       componentDidMount() {
         this.setState({step: 1});
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         this.setState({step: 2});
       }
       render() {
