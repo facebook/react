@@ -1,0 +1,130 @@
+/*
+Usage:
+
+class CSubClass {
+	SC:string;
+}
+
+class CTest {
+	A:string;
+	B:{ [K: string]: string };
+	C:{ [K: string]: CSubClass };
+}
+
+interface ITestSatate {
+    Test: CTest;
+}
+
+export class Test extends OnChangeComponent<Glob.IRouteGlobaleProps, IAffidamentoListaState> {
+
+    public constructor(props: any) {
+        super(props);
+	this.state({Test: new CTest()});
+    }
+
+    public render() {
+    	return <div>
+		<input type="text" name="Test.A" value={this.state.Test.A} onChange={(e)=>OnChange(e)} />
+		<input type="text" name="Test.B[Test]" value={this.state.Test.B['Test']} onChange={(e)=>OnChange(e)} />
+		<input type="text" name="Test.C[Test]" value={this.state.Test.C['Test'].SC} onChange={(e)=>OnChange(e)} />
+	</div>
+    }
+*/
+
+export class OnChangeComponent<P = {}, S = {}> extends React.Component<P, S> {
+
+    protected OnChange(e: React.FormEvent<any>): any {
+        this.OnChangeSynchronous(e, () => { });
+    }
+
+    protected OnChangeSynchronous(e: React.FormEvent<any>, func: () => any): any {
+        var Value: any = null;
+        if ((e.currentTarget as HTMLInputElement).type == "checkbox" || (e.currentTarget as HTMLInputElement).type == "radio") {
+            Value = e.currentTarget.checked;
+        }
+        else if ((e.currentTarget as HTMLInputElement).type == "date") {
+            Value = new Date(moment(e.currentTarget.value, "YYYY-MM-DD").valueOf());
+        } else {
+            Value = e.currentTarget.value;
+        }
+        //Add more types
+
+        let List = e.currentTarget.name == "" ? e.currentTarget.id : e.currentTarget.name;
+        this.SetValue(this.state, List.split('.'), Value, 0);
+        this.setState(this.state, func);
+    }
+
+    private SetValue(obj: any, propertiesList: string[], value: any, cycles: number): boolean {
+        console.warn("SetValue (" + cycles + ",start)", obj, propertiesList, value);
+        if (propertiesList.length > 0) {
+            for (var P in obj) {
+                var Prop: string = propertiesList[0];
+                var Dict: boolean = Prop.indexOf("[") > -1;
+                var Keys: string[] = [];
+                if (Dict) {
+                    Keys = Prop.split("[");
+                    Keys.shift();
+                    for (let C in Keys) {
+                        Keys[C] = Keys[C].substring(0, Keys[C].indexOf("]"));
+                    }
+                    Prop = Prop.substring(0, Prop.indexOf("["));
+                }
+
+                if (P == Prop) {
+                    if (propertiesList.length > 1) {
+                        propertiesList.shift();
+                        let Found: boolean = false;
+                        if (Dict) {
+                            switch (Keys.length) {
+                                case 1:
+                                    Found = this.SetValue(obj[P][Keys[0]], propertiesList, value, cycles + 1);
+                                    break;
+                                case 2:
+                                    Found = this.SetValue(obj[P][Keys[0]][Keys[1]], propertiesList, value, cycles + 1);
+                                    break;
+                                case 3:
+                                    Found = this.SetValue(obj[P][Keys[0]][Keys[1]][Keys[2]], propertiesList, value, cycles + 1);
+                                    break;
+                                default:
+                                    console.error("SetValue (" + cycles + ", too many keys in the dictionary-1)", obj, propertiesList, value);
+                                    break;
+                            }
+                        }
+                        else {
+                            Found = this.SetValue(obj[P], propertiesList, value, cycles + 1);
+                        }
+                        if (Found) {
+                            console.warn("SetValue (" + cycles + ",true-end-2)", obj, propertiesList, value);
+                            return true;
+                        }
+                    }
+                    else {
+                        if (Dict) {
+                            switch (Keys.length) {
+                                case 1:
+                                    obj[P][Keys[0]] = value;
+                                    break;
+                                case 2:
+                                    obj[P][Keys[0]][Keys[1]] = value;
+                                    break;
+                                case 3:
+                                    obj[P][Keys[0]][Keys[1]][Keys[2]] = value;
+                                    break;
+                                default:
+                                    console.error("SetValue (" + cycles + ", too many keys in the dictionary-2)", obj, propertiesList, value);
+                                    break;
+                            }
+                        }
+                        else {
+                            obj[P] = value;
+                        }
+                        console.warn("SetValue (" + cycles + ",true)", obj, propertiesList, value);
+                        return true;
+                    }
+                }
+            }
+        }
+        console.warn("SetValue (" + cycles + ",false)", obj, propertiesList, value);
+        return false;
+    }
+}
