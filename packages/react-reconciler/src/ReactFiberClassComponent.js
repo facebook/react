@@ -397,7 +397,7 @@ export default function(
       ? getMaskedContext(workInProgress, unmaskedContext)
       : emptyObject;
 
-    // Simulate an async bailout/interruption by invoking lifecycle twice.
+    // Instantiate twice to help detect side-effects.
     if (debugRenderPhaseSideEffects) {
       new ctor(props, context); // eslint-disable-line no-new
     }
