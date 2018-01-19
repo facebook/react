@@ -46,8 +46,8 @@ function addPercent(change, includeEmoji) {
   }
 }
 
-function setBoldness(row, isProd) {
-  if (isProd) {
+function setBoldness(row, isBold) {
+  if (isBold) {
     return row.map(element => `**${element}**`);
   } else {
     return row;
