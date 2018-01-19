@@ -124,29 +124,30 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
         'ENV',
       ];
 
-      const mdRows = changedFiles.map(r =>
-        r.bundleType.includes('PROD') ?
-         boldRow([
-            r.filename,
-            emojiPercent(r.prevFileSizeChange),
-            emojiPercent(r.prevGzipSizeChange),
-            r.prevSize,
-            r.prevFileSize,
-            r.prevGzip,
-            r.prevGzipSize,
-            r.bundleType,
-          ]) :
-          [
-            r.filename,
-            r.prevFileSizeChange,
-            r.prevGzipSizeChange,
-            r.prevSize,
-            r.prevFileSize,
-            r.prevGzip,
-            r.prevGzipSize,
-            r.bundleType,
-          ]
-       );
+      const mdRows = changedFiles.map(
+        r =>
+          r.bundleType.includes('PROD')
+            ? boldRow([
+                r.filename,
+                emojiPercent(r.prevFileSizeChange),
+                emojiPercent(r.prevGzipSizeChange),
+                r.prevSize,
+                r.prevFileSize,
+                r.prevGzip,
+                r.prevGzipSize,
+                r.bundleType,
+              ])
+            : [
+                r.filename,
+                r.prevFileSizeChange,
+                r.prevGzipSizeChange,
+                r.prevSize,
+                r.prevFileSize,
+                r.prevGzip,
+                r.prevGzipSize,
+                r.bundleType,
+              ]
+      );
 
       allTables.push(`\n## ${name}`);
       allTables.push(generateMDTable(mdHeaders, mdRows));
