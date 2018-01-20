@@ -6,7 +6,7 @@
  */
 
 import warning from 'fbjs/lib/warning';
-import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -367,4 +367,14 @@ export function isValidElement(object) {
     object !== null &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
+}
+
+/**
+ * Verifies the object is a ReactFragmentElement.
+ * @param {?object} object
+ * @return {boolean} True if `object` is a valid fragment component.
+ * @final
+ */
+export function isValidFragmentElement(object) {
+  return isValidElement(object) && object.type === REACT_FRAGMENT_TYPE;
 }

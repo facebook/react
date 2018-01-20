@@ -316,6 +316,54 @@ describe('ReactElement', () => {
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
+  it('identifies valid fragment elements', () => {
+    // because we set global.Symbol = undefined in the beforeEach of some tests
+    // so we can't use `Object.keys` together with `for of` syntax
+    // in the 'validateFragmentProps' function of ReactElementValidator.js
+    // it will throw TypeError: can not read property 'interator' of undefined
+    // so we have to set it to orgin value
+    global.Symbol = originalSymbol;
+
+    class Component extends React.Component {
+      render() {
+        return React.createElement(
+          React.Fragment,
+          null,
+          React.createElement('div'),
+        );
+      }
+    }
+
+    expect(
+      React.isValidFragmentElement(
+        React.createElement(React.Fragment, null, React.createElement('div')),
+      ),
+    ).toEqual(true);
+
+    expect(
+      React.isValidFragmentElement(React.createElement(Component)),
+    ).toEqual(false);
+    expect(React.isValidFragmentElement(null)).toEqual(false);
+    expect(React.isValidFragmentElement(true)).toEqual(false);
+    expect(React.isValidFragmentElement({})).toEqual(false);
+    expect(React.isValidFragmentElement('string')).toEqual(false);
+    expect(React.isValidFragmentElement(React.createFactory('div'))).toEqual(
+      false,
+    );
+    expect(React.isValidFragmentElement(Component)).toEqual(false);
+    expect(
+      React.isValidFragmentElement({type: React.Fragment, props: {}}),
+    ).toEqual(false);
+
+    // symbol can not be JSON.stringify or JSON.parse, but node has not Symbol now, so
+    // it be converted to a number, and number can be JSON.stringify
+    const jsonElement = JSON.stringify(React.createElement(React.Fragment));
+    expect(jsonElement).not.toHaveProperty('type');
+    expect(React.isValidFragmentElement(JSON.parse(jsonElement))).toBe(true);
+  });
+
+  // NOTE: We're explicitly not using JSX here. This is intended to test
+  // classic JS without JSX.
   it('is indistinguishable from a plain object', () => {
     const element = React.createElement('div', {className: 'foo'});
     const object = {};

@@ -17,6 +17,7 @@ import {
   createFactory,
   cloneElement,
   isValidElement,
+  isValidFragmentElement,
 } from './ReactElement';
 import {
   createElementWithValidation,
@@ -44,6 +45,7 @@ const React = {
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
   createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
   isValidElement: isValidElement,
+  isValidFragmentElement: isValidFragmentElement,
 
   version: ReactVersion,
 

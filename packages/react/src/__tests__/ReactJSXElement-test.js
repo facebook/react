@@ -165,6 +165,21 @@ describe('ReactJSXElement', () => {
     expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
   });
 
+  it('identifies valid fragment elements', () => {
+    expect(React.isValidFragmentElement(<React.Fragment />)).toEqual(true);
+
+    expect(React.isValidFragmentElement(<div />)).toEqual(false);
+    expect(React.isValidFragmentElement(<Component />)).toEqual(false);
+    expect(React.isValidFragmentElement(null)).toEqual(false);
+    expect(React.isValidFragmentElement(true)).toEqual(false);
+    expect(React.isValidFragmentElement({})).toEqual(false);
+    expect(React.isValidFragmentElement('string')).toEqual(false);
+    expect(React.isValidFragmentElement(Component)).toEqual(false);
+    expect(React.isValidFragmentElement({type: 'div', props: {}})).toEqual(
+      false,
+    );
+  });
+
   it('is indistinguishable from a plain object', () => {
     const element = <div className="foo" />;
     const object = {};
