@@ -17,7 +17,7 @@ export default function(
     (name || 'Unknown') +
     (source
       ? ' (at ' +
-        source.fileName.replace(/^.*[\\\/]/, '') +
+        source.fileName.match(/[^\\\/]*([\\\/]index\.[^\\\/]+)?$/)[0] +
         ':' +
         source.lineNumber +
         ')'
