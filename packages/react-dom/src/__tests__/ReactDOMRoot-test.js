@@ -143,9 +143,9 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    expect(jest.runAllTimers).toWarnDev('Extra attributes', {
-      withoutStack: true,
-    });
+    expect(jest.runAllTimers).toWarnDev(
+      'Extra attributes from the server: class',
+    );
   });
 
   it('does not clear existing children', async () => {

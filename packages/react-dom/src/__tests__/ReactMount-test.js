@@ -137,7 +137,6 @@ describe('ReactMount', () => {
 
     expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
       'Did not expect server HTML to contain the text node " " in <container>.',
-      {withoutStack: true},
     );
   });
 
@@ -160,6 +159,72 @@ describe('ReactMount', () => {
     );
   });
 
+  it('should warn when a hydrated element has inner text mismatch', () => {
+    class Component extends React.Component {
+      render() {
+        return this.props.children;
+      }
+    }
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <Component>
+        <div>server text</div>
+      </Component>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <Component>
+          <div>client text</div>
+        </Component>,
+        div,
+      ),
+    ).toWarnDev(
+      'Text content did not match. ' +
+        'Server: "server text" ' +
+        'Client: "client text"\n' +
+        '    in div (at **)\n' +
+        '    in Component (at **)',
+    );
+  });
+
+  it('should warn when a hydrated element has children mismatch', () => {
+    class Component extends React.Component {
+      render() {
+        return this.props.children;
+      }
+    }
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <Component>
+        nested{' '}
+        <p>
+          children <b>text</b>
+        </p>
+      </Component>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <Component>
+          nested{' '}
+          <div>
+            children <b>text</b>
+          </div>
+        </Component>,
+        div,
+      ),
+    ).toWarnDev(
+      'Expected server HTML to contain a matching <div> in <div>.\n' +
+        '    in div (at **)\n' +
+        '    in Component (at **)',
+    );
+  });
+
   it('should account for escaping on a checksum mismatch', () => {
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
@@ -173,9 +238,51 @@ describe('ReactMount', () => {
         div,
       ),
     ).toWarnDev(
-      'Server: "This markup contains an nbsp entity:   server text" ' +
-        'Client: "This markup contains an nbsp entity:   client text"',
-      {withoutStack: true},
+      'Text content did not match. ' +
+        'Server: "This markup contains an nbsp entity:   server text" ' +
+        'Client: "This markup contains an nbsp entity:   client text"\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when a hydrated element has extra props', () => {
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(<div />);
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div data-ssr-prop-mismatch={true} data-ssr-prop-mismatch-2={true} />,
+        div,
+      ),
+    ).toWarnDev(
+      'Prop `data-ssr-prop-mismatch` did not match. ' +
+        'Server: "null" ' +
+        'Client: "true"\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should not warn when a hydrated element has an extra prop explicitly set to null', () => {
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(<div />);
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(<div data-ssr-prop-mismatch={null} />, div),
+    ).toWarnDev([]);
+  });
+
+  it('should warn when a server element has extra props', () => {
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <div data-ssr-prop-extra={true} data-ssr-prop-extra-2={true} />,
+    );
+    div.innerHTML = markup;
+
+    expect(() => ReactDOM.hydrate(<div />, div)).toWarnDev(
+      'Extra attributes from the server: data-ssr-prop-extra,data-ssr-prop-extra-2\n' +
+        '    in div (at **)',
     );
   });
 

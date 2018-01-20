@@ -203,9 +203,9 @@ describe('rendering React components at document', () => {
             'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
           {withoutStack: true},
         );
-      }).toWarnDev('Warning: Text content did not match.', {
-        withoutStack: true,
-      });
+      }).toWarnDev(
+        'Warning: Text content did not match. Server: "Goodbye world" Client: "Hello world"',
+      );
     });
 
     it('should throw on full document render w/ no markup', () => {
@@ -373,7 +373,6 @@ describe('rendering React components at document', () => {
       container.textContent = 'potato';
       expect(() => ReactDOM.hydrate(<div>parsnip</div>, container)).toWarnDev(
         'Expected server HTML to contain a matching <div> in <div>.',
-        {withoutStack: true},
       );
       expect(container.textContent).toBe('parsnip');
     });
@@ -399,9 +398,9 @@ describe('rendering React components at document', () => {
 
       expect(() =>
         ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
-      ).toWarnDev('Warning: Text content did not match.', {
-        withoutStack: true,
-      });
+      ).toWarnDev(
+        'Warning: Text content did not match. Server: "Goodbye world" Client: "Hello world"',
+      );
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
@@ -424,9 +423,7 @@ describe('rendering React components at document', () => {
       // getTestDocument() has an extra <meta> that we didn't render.
       expect(() =>
         ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
-      ).toWarnDev('Did not expect server HTML to contain a <meta> in <head>.', {
-        withoutStack: true,
-      });
+      ).toWarnDev('Did not expect server HTML to contain a <meta> in <head>.');
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 

@@ -14,8 +14,8 @@ if (process.env.NODE_ENV === 'development') {
   assets = require('../build/asset-manifest.json');
 }
 
-export default function render() {
-  var html = renderToString(<App assets={assets} />);
+export default function render(url) {
+  var html = renderToString(<App assets={assets} url={url} />);
   // There's no way to render a doctype in React so prepend manually.
   // Also append a bootstrap script tag.
   return '<!DOCTYPE html>' + html;
