@@ -126,4 +126,48 @@ describe('ReactAsyncClassComponent', () => {
       expect(instance.state.count).toBe(2);
     });
   });
+
+  describe('async subtree', () => {
+    beforeEach(() => {
+      jest.resetModules();
+
+      React = require('react');
+      ReactTestRenderer = require('react-test-renderer');
+    });
+
+    it('should warn about unsafe legacy lifecycle methods within the tree', () => {
+      class AsyncParent extends React.unstable_AsyncComponent {
+        UNSAFE_componentWillMount() {}
+        UNSAFE_componentWillUpdate() {}
+        render() {
+          return <Child />;
+        }
+      }
+      class Child extends React.Component {
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return null;
+        }
+      }
+
+      let rendered;
+
+      expect(() => {
+        rendered = ReactTestRenderer.create(<AsyncParent />);
+      }).toWarnDev(
+        'AsyncParent: An unsafe lifecycle method, ' +
+          'UNSAFE_componentWillMount, has been detected in an async tree.',
+      );
+      expect(() => rendered.update(<AsyncParent />)).toWarnDev([
+        'AsyncParent: An unsafe lifecycle method, ' +
+          'UNSAFE_componentWillUpdate, has been detected in an async tree.',
+        'Child: An unsafe lifecycle method, ' +
+          'UNSAFE_componentWillReceiveProps, has been detected in an async tree.',
+      ]);
+
+      // Dedupe
+      rendered = ReactTestRenderer.create(<AsyncParent />);
+      rendered.update(<AsyncParent />);
+    });
+  });
 });

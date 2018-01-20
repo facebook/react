@@ -48,13 +48,15 @@ describe('ReactIncrementalErrorLogging', () => {
     );
 
     expect(() => {
-      expect(ReactNoop.flushDeferredPri).toWarnDev(
+      expect(ReactNoop.flushDeferredPri).toWarnDev([
+        'ErrorThrowingComponent: An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+          'has been detected in an async tree.',
         'The above error occurred in the <ErrorThrowingComponent> component:\n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)\n\n' +
           'Consider adding an error boundary to your tree to customize error handling behavior.',
-      );
+      ]);
     }).toThrowError('componentWillMount error');
   });
 
