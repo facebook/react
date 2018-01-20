@@ -534,8 +534,16 @@ describe('TouchHitTarget', () => {
         ReactDOM.hydrate(<Test />, container);
         expect(Scheduler).toFlushWithoutYielding();
       }).toWarnDev(
-        'Warning: Expected server HTML to contain a matching <div> in <div>.',
-        {withoutStack: true},
+        'Warning: Expected server HTML to contain a matching ' +
+          "<div style={{'position': 'absolute', 'zIndex': -1, 'bottom': '-10px', ...}}> in <div>.\n\n" +
+          '  <div style="position: relative; z-index: 0">\n' +
+          "+   <div style={{'position': 'absolute', 'zIndex': -1, 'bottom': '-10px', ...}} />\n" +
+          '  </div>\n\n' +
+          '    in div\n' +
+          '    in TouchHitTarget (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Unknown (at **)\n' +
+          '    in Test (at **)',
       );
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe(

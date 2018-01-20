@@ -4,13 +4,14 @@ import Chrome from './Chrome';
 import Page from './Page';
 import Page2 from './Page2';
 import Theme from './Theme';
+import SSRMismatchTest from './SSRMismatchTest';
 
 function LoadingIndicator() {
   let theme = useContext(Theme);
   return <div className={theme + '-loading'}>Loading...</div>;
 }
 
-export default function App({assets}) {
+export default function App({assets, url}) {
   let [CurrentPage, switchPage] = useState(() => Page);
   return (
     <Chrome title="Hello World" assets={assets}>
@@ -26,6 +27,9 @@ export default function App({assets}) {
         <Suspense fallback={<LoadingIndicator />}>
           <CurrentPage />
         </Suspense>
+      </div>
+      <div>
+        <SSRMismatchTest url={url} />
       </div>
     </Chrome>
   );

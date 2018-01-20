@@ -105,9 +105,9 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    expect(() => Scheduler.flushAll()).toWarnDev('Extra attributes', {
-      withoutStack: true,
-    });
+    expect(() => Scheduler.flushAll()).toWarnDev(
+      'Warning: Extra attributes from the server: class',
+    );
   });
 
   it('does not clear existing children', async () => {
