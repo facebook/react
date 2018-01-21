@@ -22,7 +22,6 @@ import {enablePersistentReconciler} from 'shared/ReactFeatureFlags';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import * as ReactPortal from 'shared/ReactPortal';
 import emptyObject from 'fbjs/lib/emptyObject';
-import expect from 'expect';
 
 const UPDATE_SIGNAL = {};
 
