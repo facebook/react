@@ -819,17 +819,15 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
       Constructor.defaultProps = Constructor.getDefaultProps();
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      // This is a tag to indicate that the use of these method names is ok,
-      // since it's used with createClass. If it's not, then it's likely a
-      // mistake so we'll warn you to use the static property, property
-      // initializer or constructor respectively.
-      if (Constructor.getDefaultProps) {
-        Constructor.getDefaultProps.isReactClassApproved = {};
-      }
-      if (Constructor.prototype.getInitialState) {
-        Constructor.prototype.getInitialState.isReactClassApproved = {};
-      }
+    // This is a tag to indicate that the use of these method names is ok,
+    // since it's used with createClass. If it's not, then it's likely a
+    // mistake so we'll warn you to use the static property, property
+    // initializer or constructor respectively.
+    if (Constructor.getDefaultProps) {
+      Constructor.getDefaultProps.isReactClassApproved = {};
+    }
+    if (Constructor.prototype.getInitialState) {
+      Constructor.prototype.getInitialState.isReactClassApproved = {};
     }
 
     _invariant(
