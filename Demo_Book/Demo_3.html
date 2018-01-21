@@ -1,0 +1,60 @@
+<!-- http://huziketang.com/books/react/lesson3 -->
+<!-- 优化的空间：如何尽量减少这种手动 DOM 操作？ -->
+<!-- 状态改变 -> 构建新的 DOM 元素更新页面 -->
+
+<!-- 一旦状态发生改变，就重新调用 render 方法，构建一个新的 DOM 元素 -->
+<!-- 好处就是你可以在 render 方法里面使用最新的 this.state 来构造不同 HTML 结构的字符串，并且通过这个字符串构造不同的 DOM 元素。页面就更新了！ -->
+
+<div class='wrapper'> </div> 
+
+<script>
+    const wrapper = document.querySelector('.wrapper')
+
+    // 升级 Class 将string 转为Dom ，接着插入监听按钮事件
+    class LikeButton {
+        constructor() {
+            this.state = {isLiked: false}
+        }
+
+        //新增__利用它，来控制状态与渲染.
+        setState(state) {   
+            const oldEl = this.el           //保存旧DOM
+            this.state = state              //更新状态
+            this.el = this.render()         //更新DOM
+            if( this.onStateChange ) this.onStateChange(oldEl, this.el)     //调用实例方法.
+        }
+
+        changeLikeText() {
+            this.setState(
+                {isLiked : !this.state.isLiked}
+            )
+        }
+
+        render() {
+            this.el = createDOMFromString(`
+                <button class='like-btn'>
+                    <span class='like-text'>${this.state.isLiked? '取消' : '点赞'}</span>
+                    <span>👍</span>
+                </button>
+            `)
+            // 会先给转化后的DOM加上事件.再返回.
+            this.el.addEventListener('click', this.changeLikeText.bind(this), true)
+            return this.el
+        }
+    }
+
+    // String 转为 DOM
+    const createDOMFromString = (dos) => {
+        const div = document.createElement('div')
+        div.innerHTML = dos
+        return div
+    }
+
+    const likeButton1 = new LikeButton()
+    wrapper.appendChild(likeButton1.render())
+    likeButton1.onStateChange = (oldEl, newEl) => {
+        wrapper.insertBefore(newEl, oldEl) 
+        wrapper.removeChild(oldEl)
+    }
+
+</script>

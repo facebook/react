@@ -1,0 +1,24 @@
+<!-- 例子的开始 -->
+  <body>
+    <div class='wrapper'>
+      <button class='like-btn'>
+        <span class='like-text'>点赞</span>
+        <span>👍</span>
+      </button>
+    </div>
+  </body>
+
+
+  <script>
+        const   button = document.querySelector('.like-btn'),
+                buttonText = document.querySelector('.like-text')
+        let isLike = false
+        button.addEventListener('click',()=>{
+            isLike = !isLike
+            if(isLike){
+                buttonText.innerHTML = "取消"
+            }else{
+                buttonText.innerHTML = "点赞"
+            }
+        },true)
+  </script>

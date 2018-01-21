@@ -1,0 +1,117 @@
+<!-- http://huziketang.com/books/react/lesson4 -->
+<!-- 为了让代码更灵活，可以写更多的组件，我们把这种模式抽象出来，放到一个 Component 类当中 -->
+
+<!-- 组件化可以帮助我们解决前端结构的复用性问题，整个页面可以由这样的不同的组件组合、嵌套构成。 -->
+
+
+<div class='wrapper'> </div> 
+
+<script>
+
+    // 所有的组件都可以继承这个父类来构建
+    class Component {
+        constructor(props = {}) {
+            this.props = props
+        }
+        setState(state) {
+            const oldEl = this.el
+            this.state = state
+            this.el = this.renderDOM()
+            if(this.onStateChange) this.onStateChange(oldEl, this.el)
+        }
+
+        // 组件子类继承的时候只需要实现一个返回 HTML 字符串的 render 方法就可以了。
+        renderDOM() {
+            this.el = createDOMFromString(this.render())
+            if(this.onClick) {
+                this.el.addEventListener('click',this.onClick.bind(this), false)
+            }
+            return this.el
+        }
+    }
+
+    // String 转为 DOM
+    const createDOMFromString = (dos) => {
+        const div = document.createElement('div')
+        div.innerHTML = dos
+        return div
+    }
+
+    //相当 ReactDOM
+    const mount = (component, wrapper) => {
+        wrapper.appendChild(component.renderDOM())
+        component.onStateChange = (oldEl, newEl) => {
+            wrapper.insertBefore(newEl, oldEl)
+            wrapper.removeChild(oldEl)
+        }
+    }
+
+// *********************************************************************************
+// ***********                        Render                      ******************  
+// *********************************************************************************
+
+    // 升级 Class 将string 转为Dom ，接着插入监听按钮事件
+    class LikeButton extends Component {
+        constructor(props) {
+            super(props)
+            this.state = {
+                isLiked: false
+            }
+        }
+
+        //原changeLikeText
+        onClick() {
+            this.setState({
+                isLiked : !this.state.isLiked
+            })
+        }
+
+        render() {
+            return `
+                <button class='like-btn' style="background-color: ${this.props.bgColor}">
+                    <span class='like-text'>${this.state.isLiked? '取消' : '点赞'}</span>
+                    <span>👍</span>
+                </button>`
+        }
+    }
+
+ 
+    class RedBlueButton extends Component {
+      constructor (props) {
+        super(props)
+        this.state = {
+          color: 'red'
+        }
+      }
+      onClick () {
+        this.setState({
+          color: 'blue'
+        })
+      }
+      render () {
+        return `
+          <div style='color: ${this.state.color};'>${this.state.color}</div>
+        `
+      }
+    }   
+
+    const wrapper = document.querySelector('.wrapper')
+    mount(new LikeButton({bgColor: 'red'}), wrapper)
+    mount(new RedBlueButton(),wrapper)
+</script>
+
+<!-- 
+总结
+
+我们用了很长的篇幅来讲一个简单的点赞的例子，并且在这个过程里面一直在优化编写的方式。最后抽离出来了一个类，可以帮助我们更好的做组件化。在这个过程里面我们学到了什么？
+
+组件化可以帮助我们解决前端结构的复用性问题，整个页面可以由这样的不同的组件组合、嵌套构成。
+
+一个组件有自己的显示形态（上面的 HTML 结构和内容）行为，组件的显示形态和行为可以由数据状态（state）和配置参数（props）共同决定。数据状态和配置参数的改变都会影响到这个组件的显示形态。
+
+当数据变化的时候，组件的显示需要更新。所以如果组件化的模式能提供一种高效的方式自动化地帮助我们更新页面，那也就可以大大地降低我们代码的复杂度，带来更好的可维护性。
+
+好了，课程结束了。你已经学会了怎么使用 React.js 了，因为我们已经写了一个——当然我是在开玩笑，但是上面这个 Component 类其实和 React 的 Component 使用方式很类似。掌握了这几节的课程，你基本就掌握了基础的 React.js 的概念。
+
+接下来我们开始正式进入主题，开始正式介绍 React.js。你会发现，有了前面的铺垫，下面讲的内容理解起来会简单很多了。 -->
+

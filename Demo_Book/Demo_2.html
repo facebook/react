@@ -1,0 +1,48 @@
+<!-- 结构复用 -->
+
+<div class='wrapper'> </div> 
+
+<script>
+    const   wrapper = document.querySelector('.wrapper')
+
+    // 升级 Class 将string 转为Dom ，接着插入监听按钮事件
+    class LikeButton {
+        constructor() {
+            this.state = {isLiked: false}
+        }
+
+        changeLikeText() {
+            const likeText = this.el.querySelector('.like-text')
+            this.state.isLiked = !this.state.isLiked
+            likeText.innerHTML = this.state.isLiked? "取消" : "点赞"
+        }
+
+        render() {
+            this.el = createDOMFromString(`
+                <div class='wrapper'>
+                    <button class='like-btn'>
+                        <span class='like-text'>点赞</span>
+                        <span>👍</span>
+                    </button>
+                </div>
+            `)
+            // 会先给转化后的DOM加上事件.再返回.
+            this.el.addEventListener('click', this.changeLikeText.bind(this), true)
+            return this.el
+        }
+    }
+
+    // String 转为 DOM
+    const createDOMFromString = (dos) => {
+        const div = document.createElement('div')
+        div.innerHTML = dos
+        return div
+    }
+
+
+    const   likeButton1 = new LikeButton()
+    wrapper.appendChild(likeButton1.render())
+    const   likeButton2 = new LikeButton()
+    wrapper.appendChild(likeButton2.render())
+
+</script>
