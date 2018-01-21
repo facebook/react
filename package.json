@@ -96,7 +96,7 @@
     "yargs": "^6.3.0"
   },
   "devEngines": {
-    "node": "8.x"
+    "node": "8.x || 9.x"
   },
   "scripts": {
     "build": "npm run version-check && node ./scripts/rollup/build.js",

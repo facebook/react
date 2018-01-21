@@ -331,7 +331,7 @@ describe('ReactIncrementalScheduling', () => {
   it('updates do not schedule a new callback if already inside a callback', () => {
     class Foo extends React.Component {
       state = {foo: 'foo'};
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         ReactNoop.yield(
           'has callback before setState: ' + ReactNoop.hasScheduledCallback(),
         );

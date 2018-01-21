@@ -36,11 +36,21 @@ function generateMDTable(headers, body) {
  * Generates a user-readable string from a percentage change
  * @param {string[]} headers
  */
-function emojiPercent(change) {
-  if (change > 0) {
+function addPercent(change, includeEmoji) {
+  if (change > 0 && includeEmoji) {
     return `:small_red_triangle:+${change}%`;
-  } else if (change <= 0) {
+  } else if (change > 0) {
+    return `+${change}%`;
+  } else {
     return `${change}%`;
+  }
+}
+
+function setBoldness(row, isBold) {
+  if (isBold) {
+    return row.map(element => `**${element}**`);
+  } else {
+    return row;
   }
 }
 
@@ -80,8 +90,8 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
         reactProd.prevFileSizeChange !== 0 ||
         reactProd.prevGzipSizeChange !== 0
       ) {
-        const changeSize = emojiPercent(reactProd.prevFileSizeChange);
-        const changeGzip = emojiPercent(reactProd.prevGzipSizeChange);
+        const changeSize = addPercent(reactProd.prevFileSizeChange, true);
+        const changeGzip = addPercent(reactProd.prevGzipSizeChange, true);
         markdown(`React: size: ${changeSize}, gzip: ${changeGzip}`);
       }
     }
@@ -94,8 +104,8 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
         reactDOMProd.prevFileSizeChange !== 0 ||
         reactDOMProd.prevGzipSizeChange !== 0
       ) {
-        const changeSize = emojiPercent(reactDOMProd.prevFileSizeChange);
-        const changeGzip = emojiPercent(reactDOMProd.prevGzipSizeChange);
+        const changeSize = addPercent(reactDOMProd.prevFileSizeChange, true);
+        const changeGzip = addPercent(reactDOMProd.prevGzipSizeChange, true);
         markdown(`ReactDOM: size: ${changeSize}, gzip: ${changeGzip}`);
       }
     }
@@ -106,7 +116,7 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
     for (var name of new Set(packagesToShow)) {
       const thisBundleResults = results.filter(r => r.packageName === name);
       const changedFiles = thisBundleResults.filter(
-        r => r.prevGzipSizeChange !== 0 || r.prevGzipSizeChange !== 0
+        r => r.prevFileSizeChange !== 0 || r.prevGzipSizeChange !== 0
       );
 
       const mdHeaders = [
@@ -120,16 +130,22 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
         'ENV',
       ];
 
-      const mdRows = changedFiles.map(r => [
-        r.filename,
-        emojiPercent(r.prevFileSizeChange),
-        emojiPercent(r.prevGzipSizeChange),
-        r.prevSize,
-        r.prevFileSize,
-        r.prevGzip,
-        r.prevGzipSize,
-        r.bundleType,
-      ]);
+      const mdRows = changedFiles.map(r => {
+        const isProd = r.bundleType.includes('PROD');
+        return setBoldness(
+          [
+            r.filename,
+            addPercent(r.prevFileSizeChange, isProd),
+            addPercent(r.prevGzipSizeChange, isProd),
+            r.prevSize,
+            r.prevFileSize,
+            r.prevGzip,
+            r.prevGzipSize,
+            r.bundleType,
+          ],
+          isProd
+        );
+      });
 
       allTables.push(`\n## ${name}`);
       allTables.push(generateMDTable(mdHeaders, mdRows));

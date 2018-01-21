@@ -16,6 +16,8 @@ let React;
 
 describe('ReactShallowRenderer', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     createRenderer = require('react-test-renderer/shallow').createRenderer;
     PropTypes = require('prop-types');
     React = require('react');
@@ -26,11 +28,13 @@ describe('ReactShallowRenderer', () => {
     const logger = message => () => logs.push(message) || true;
 
     class SomeComponent extends React.Component {
-      componentWillMount = logger('componentWillMount');
+      state = {};
+      static getDerivedStateFromProps = logger('getDerivedStateFromProps');
+      UNSAFE_componentWillMount = logger('componentWillMount');
       componentDidMount = logger('componentDidMount');
-      componentWillReceiveProps = logger('componentWillReceiveProps');
+      UNSAFE_componentWillReceiveProps = logger('componentWillReceiveProps');
       shouldComponentUpdate = logger('shouldComponentUpdate');
-      componentWillUpdate = logger('componentWillUpdate');
+      UNSAFE_componentWillUpdate = logger('componentWillUpdate');
       componentDidUpdate = logger('componentDidUpdate');
       componentWillUnmount = logger('componentWillUnmount');
       render() {
@@ -39,11 +43,16 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(<SomeComponent foo={1} />);
+
+    expect(() => shallowRenderer.render(<SomeComponent foo={1} />)).toWarnDev(
+      'Warning: SomeComponent: Defines both componentWillReceiveProps() and static ' +
+        'getDerivedStateFromProps() methods. ' +
+        'We recommend using only getDerivedStateFromProps().',
+    );
 
     // Calling cDU might lead to problems with host component references.
     // Since our components aren't really mounted, refs won't be available.
-    expect(logs).toEqual(['componentWillMount']);
+    expect(logs).toEqual(['getDerivedStateFromProps', 'componentWillMount']);
 
     logs.splice(0);
 
@@ -59,6 +68,7 @@ describe('ReactShallowRenderer', () => {
     // The previous shallow renderer did not trigger cDU for props changes.
     expect(logs).toEqual([
       'componentWillReceiveProps',
+      'getDerivedStateFromProps',
       'shouldComponentUpdate',
       'componentWillUpdate',
     ]);
@@ -416,6 +426,7 @@ describe('ReactShallowRenderer', () => {
     const componentDidUpdateParams = [];
     const componentWillReceivePropsParams = [];
     const componentWillUpdateParams = [];
+    const getDerivedStateFromPropsParams = [];
     const setStateParams = [];
     const shouldComponentUpdateParams = [];
 
@@ -437,14 +448,18 @@ describe('ReactShallowRenderer', () => {
       componentDidUpdate(...args) {
         componentDidUpdateParams.push(...args);
       }
-      componentWillReceiveProps(...args) {
+      static getDerivedStateFromProps(...args) {
+        getDerivedStateFromPropsParams.push(args);
+        return null;
+      }
+      UNSAFE_componentWillReceiveProps(...args) {
         componentWillReceivePropsParams.push(...args);
         this.setState((...innerArgs) => {
           setStateParams.push(...innerArgs);
           return updatedState;
         });
       }
-      componentWillUpdate(...args) {
+      UNSAFE_componentWillUpdate(...args) {
         componentWillUpdateParams.push(...args);
       }
       shouldComponentUpdate(...args) {
@@ -458,11 +473,21 @@ describe('ReactShallowRenderer', () => {
 
     const shallowRenderer = createRenderer();
 
-    // No lifecycle hooks should be invoked on initial render
-    shallowRenderer.render(
-      React.createElement(SimpleComponent, initialProp),
-      initialContext,
+    // The only lifecycle hook that should be invoked on initial render
+    // Is the static getDerivedStateFromProps() methods
+    expect(() =>
+      shallowRenderer.render(
+        React.createElement(SimpleComponent, initialProp),
+        initialContext,
+      ),
+    ).toWarnDev(
+      'SimpleComponent: Defines both componentWillReceiveProps() and static ' +
+        'getDerivedStateFromProps() methods. We recommend using ' +
+        'only getDerivedStateFromProps().',
     );
+    expect(getDerivedStateFromPropsParams).toEqual([
+      [initialProp, initialState],
+    ]);
     expect(componentDidUpdateParams).toEqual([]);
     expect(componentWillReceivePropsParams).toEqual([]);
     expect(componentWillUpdateParams).toEqual([]);
@@ -479,6 +504,10 @@ describe('ReactShallowRenderer', () => {
       updatedContext,
     ]);
     expect(setStateParams).toEqual([initialState, initialProp]);
+    expect(getDerivedStateFromPropsParams).toEqual([
+      [initialProp, initialState],
+      [updatedProp, initialState],
+    ]);
     expect(shouldComponentUpdateParams).toEqual([
       updatedProp,
       updatedState,
@@ -523,9 +552,34 @@ describe('ReactShallowRenderer', () => {
     expect(result.props.className).toEqual('clicked');
   });
 
+  it('can initialize state via static getDerivedStateFromProps', () => {
+    class SimpleComponent extends React.Component {
+      state = {
+        count: 1,
+      };
+
+      static getDerivedStateFromProps(props, prevState) {
+        return {
+          count: prevState.count + props.incrementBy,
+          other: 'foobar',
+        };
+      }
+
+      render() {
+        return (
+          <div>{`count:${this.state.count}, other:${this.state.other}`}</div>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent incrementBy={2} />);
+    expect(result).toEqual(<div>count:3, other:foobar</div>);
+  });
+
   it('can setState in componentWillMount when shallow rendering', () => {
     class SimpleComponent extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({groovy: 'doovy'});
       }
 
@@ -545,7 +599,7 @@ describe('ReactShallowRenderer', () => {
         separator: '-',
       };
 
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({groovy: 'doovy'});
         this.setState({doovy: 'groovy'});
       }
@@ -568,7 +622,7 @@ describe('ReactShallowRenderer', () => {
         separator: '-',
       };
 
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState(state => ({groovy: 'doovy'}));
         this.setState(state => ({doovy: state.groovy}));
       }
@@ -589,7 +643,7 @@ describe('ReactShallowRenderer', () => {
     class SimpleComponent extends React.Component {
       state = {count: 0};
 
-      componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.updateState) {
           this.setState({count: 1});
         }
@@ -608,6 +662,40 @@ describe('ReactShallowRenderer', () => {
 
     result = shallowRenderer.render(<SimpleComponent updateState={true} />);
     expect(result.props.children).toEqual(1);
+  });
+
+  it('can update state with static getDerivedStateFromProps when shallow rendering', () => {
+    class SimpleComponent extends React.Component {
+      state = {count: 1};
+
+      static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.updateState) {
+          return {count: nextProps.incrementBy + prevState.count};
+        }
+
+        return null;
+      }
+
+      render() {
+        return <div>{this.state.count}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(
+      <SimpleComponent updateState={false} incrementBy={0} />,
+    );
+    expect(result.props.children).toEqual(1);
+
+    result = shallowRenderer.render(
+      <SimpleComponent updateState={true} incrementBy={2} />,
+    );
+    expect(result.props.children).toEqual(3);
+
+    result = shallowRenderer.render(
+      <SimpleComponent updateState={false} incrementBy={2} />,
+    );
+    expect(result.props.children).toEqual(3);
   });
 
   it('can setState with an updater function', () => {
@@ -870,7 +958,7 @@ describe('ReactShallowRenderer', () => {
         };
       }
 
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState(
           {hasUpdatedState: true},
           () => (stateSuccessfullyUpdated = this.state.hasUpdatedState),
@@ -899,7 +987,7 @@ describe('ReactShallowRenderer', () => {
         };
       }
 
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({foo: 'bar'}, () => mockFn());
         this.setState({foo: 'foobar'}, () => mockFn());
       }
@@ -983,5 +1071,67 @@ describe('ReactShallowRenderer', () => {
     shallowRenderer.render(<SomeComponent />);
 
     expect(shallowRenderer.getMountedInstance().state).toBeNull();
+  });
+
+  it('should warn if both componentWillReceiveProps and static getDerivedStateFromProps exist', () => {
+    class ComponentWithWarnings extends React.Component {
+      state = {};
+      static getDerivedStateFromProps(props, prevState) {
+        return null;
+      }
+      UNSAFE_componentWillReceiveProps(nextProps) {}
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev(
+      'ComponentWithWarnings: Defines both componentWillReceiveProps() and static ' +
+        'getDerivedStateFromProps() methods. We recommend using ' +
+        'only getDerivedStateFromProps().',
+    );
+
+    // Should not log duplicate warning
+    shallowRenderer.render(<ComponentWithWarnings />);
+  });
+
+  it('should warn if getDerivedStateFromProps returns undefined', () => {
+    class Component extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {}
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    expect(() => shallowRenderer.render(<Component />)).toWarnDev(
+      'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
+        'be returned. You have returned undefined.',
+    );
+
+    // De-duped
+    shallowRenderer.render(<Component />);
+  });
+
+  it('should warn if state not initialized before getDerivedStateFromProps', () => {
+    class Component extends React.Component {
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    expect(() => shallowRenderer.render(<Component />)).toWarnDev(
+      'Component: Did not properly initialize state during construction. ' +
+        'Expected state to be an object, but it was undefined.',
+    );
+
+    // De-duped
+    shallowRenderer.render(<Component />);
   });
 });

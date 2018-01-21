@@ -131,32 +131,6 @@ const bundles = [
     ],
   },
 
-  /******* React Native RT *******/
-  {
-    label: 'native-rt',
-    bundleTypes: [RN_DEV, RN_PROD],
-    moduleType: RENDERER,
-    entry: 'react-rt-renderer',
-    global: 'ReactRTRenderer',
-    externals: [
-      'ExceptionsManager',
-      'InitializeCore',
-      'Platform',
-      'BatchedBridge',
-      'RTManager',
-    ],
-  },
-
-  /******* React Native CS *******/
-  {
-    label: 'native-cs',
-    bundleTypes: [RN_DEV, RN_PROD],
-    moduleType: RENDERER,
-    entry: 'react-cs-renderer',
-    global: 'ReactCSRenderer',
-    externals: ['CSStatefulComponent'],
-  },
-
   /******* React Test Renderer *******/
   {
     label: 'test',

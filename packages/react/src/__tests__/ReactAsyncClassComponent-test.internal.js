@@ -38,16 +38,16 @@ describe('ReactAsyncClassComponent', () => {
         componentDidUpdate() {
           log.push('componentDidUpdate');
         }
-        componentWillMount() {
+        UNSAFE_componentWillMount() {
           log.push('componentWillMount');
         }
-        componentWillReceiveProps() {
+        UNSAFE_componentWillReceiveProps() {
           log.push('componentWillReceiveProps');
         }
         componentWillUnmount() {
           log.push('componentWillUnmount');
         }
-        componentWillUpdate() {
+        UNSAFE_componentWillUpdate() {
           log.push('componentWillUpdate');
         }
         shouldComponentUpdate() {

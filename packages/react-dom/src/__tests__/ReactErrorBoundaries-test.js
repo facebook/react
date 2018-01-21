@@ -50,16 +50,16 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenConstructor render');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenConstructor componentWillMount');
       }
       componentDidMount() {
         log.push('BrokenConstructor componentDidMount');
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push('BrokenConstructor componentWillReceiveProps');
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push('BrokenConstructor componentWillUpdate');
       }
       componentDidUpdate() {
@@ -79,17 +79,17 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenComponentWillMount render');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenComponentWillMount componentWillMount [!]');
         throw new Error('Hello');
       }
       componentDidMount() {
         log.push('BrokenComponentWillMount componentDidMount');
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push('BrokenComponentWillMount componentWillReceiveProps');
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push('BrokenComponentWillMount componentWillUpdate');
       }
       componentDidUpdate() {
@@ -109,17 +109,17 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenComponentDidMount render');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenComponentDidMount componentWillMount');
       }
       componentDidMount() {
         log.push('BrokenComponentDidMount componentDidMount [!]');
         throw new Error('Hello');
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push('BrokenComponentDidMount componentWillReceiveProps');
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push('BrokenComponentDidMount componentWillUpdate');
       }
       componentDidUpdate() {
@@ -139,19 +139,19 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenComponentWillReceiveProps render');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenComponentWillReceiveProps componentWillMount');
       }
       componentDidMount() {
         log.push('BrokenComponentWillReceiveProps componentDidMount');
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push(
           'BrokenComponentWillReceiveProps componentWillReceiveProps [!]',
         );
         throw new Error('Hello');
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push('BrokenComponentWillReceiveProps componentWillUpdate');
       }
       componentDidUpdate() {
@@ -171,16 +171,16 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenComponentWillUpdate render');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenComponentWillUpdate componentWillMount');
       }
       componentDidMount() {
         log.push('BrokenComponentWillUpdate componentDidMount');
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push('BrokenComponentWillUpdate componentWillReceiveProps');
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push('BrokenComponentWillUpdate componentWillUpdate [!]');
         throw new Error('Hello');
       }
@@ -204,16 +204,16 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenComponentDidUpdate render');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenComponentDidUpdate componentWillMount');
       }
       componentDidMount() {
         log.push('BrokenComponentDidUpdate componentDidMount');
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push('BrokenComponentDidUpdate componentWillReceiveProps');
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push('BrokenComponentDidUpdate componentWillUpdate');
       }
       componentDidUpdate() {
@@ -237,16 +237,16 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenComponentWillUnmount render');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenComponentWillUnmount componentWillMount');
       }
       componentDidMount() {
         log.push('BrokenComponentWillUnmount componentDidMount');
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push('BrokenComponentWillUnmount componentWillReceiveProps');
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push('BrokenComponentWillUnmount componentWillUpdate');
       }
       componentDidUpdate() {
@@ -272,7 +272,7 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenComponentWillMountErrorBoundary render success');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push(
           'BrokenComponentWillMountErrorBoundary componentWillMount [!]',
         );
@@ -304,7 +304,7 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenComponentDidMountErrorBoundary render success');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenComponentDidMountErrorBoundary componentWillMount');
       }
       componentDidMount() {
@@ -334,7 +334,7 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenRenderErrorBoundary render success');
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenRenderErrorBoundary componentWillMount');
       }
       componentDidMount() {
@@ -358,16 +358,16 @@ describe('ReactErrorBoundaries', () => {
         log.push('BrokenRender render [!]');
         throw new Error('Hello');
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('BrokenRender componentWillMount');
       }
       componentDidMount() {
         log.push('BrokenRender componentDidMount');
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push('BrokenRender componentWillReceiveProps');
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push('BrokenRender componentWillUpdate');
       }
       componentDidUpdate() {
@@ -387,7 +387,7 @@ describe('ReactErrorBoundaries', () => {
         log.push('NoopErrorBoundary render');
         return <BrokenRender />;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('NoopErrorBoundary componentWillMount');
       }
       componentDidMount() {
@@ -413,16 +413,16 @@ describe('ReactErrorBoundaries', () => {
         log.push(`${this.props.logName} render`);
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push(`${this.props.logName} componentWillMount`);
       }
       componentDidMount() {
         log.push(`${this.props.logName} componentDidMount`);
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push(`${this.props.logName} componentWillReceiveProps`);
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push(`${this.props.logName} componentWillUpdate`);
       }
       componentDidUpdate() {
@@ -451,16 +451,16 @@ describe('ReactErrorBoundaries', () => {
         log.push(`${this.props.logName} componentDidCatch`);
         this.setState({error});
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push(`${this.props.logName} componentWillMount`);
       }
       componentDidMount() {
         log.push(`${this.props.logName} componentDidMount`);
       }
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         log.push(`${this.props.logName} componentWillReceiveProps`);
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         log.push(`${this.props.logName} componentWillUpdate`);
       }
       componentDidUpdate() {
@@ -490,7 +490,7 @@ describe('ReactErrorBoundaries', () => {
         log.push('RetryErrorBoundary render');
         return <BrokenRender />;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('RetryErrorBoundary componentWillMount');
       }
       componentDidMount() {
@@ -511,7 +511,7 @@ describe('ReactErrorBoundaries', () => {
         super(props);
         log.push('ErrorMessage constructor');
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push('ErrorMessage componentWillMount');
       }
       componentDidMount() {
@@ -703,7 +703,7 @@ describe('ReactErrorBoundaries', () => {
       render() {
         return <div>{this.props.children}</div>;
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         throw new Error('Hello');
       }
     }
@@ -727,7 +727,7 @@ describe('ReactErrorBoundaries', () => {
         render() {
           return <div>{this.props.children}</div>;
         },
-        componentWillMount() {
+        UNSAFE_componentWillMount() {
           throw new Error('Hello');
         },
       };

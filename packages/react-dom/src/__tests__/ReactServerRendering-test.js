@@ -98,7 +98,7 @@ describe('ReactDOMServer', () => {
             this.state = {name: 'TestComponent'};
           }
 
-          componentWillMount() {
+          UNSAFE_componentWillMount() {
             lifecycle.push('componentWillMount');
           }
 
@@ -111,7 +111,7 @@ describe('ReactDOMServer', () => {
             return <span>Component name: {this.state.name}</span>;
           }
 
-          componentWillUpdate() {
+          UNSAFE_componentWillUpdate() {
             lifecycle.push('componentWillUpdate');
           }
 
@@ -123,7 +123,7 @@ describe('ReactDOMServer', () => {
             lifecycle.push('shouldComponentUpdate');
           }
 
-          componentWillReceiveProps() {
+          UNSAFE_componentWillReceiveProps() {
             lifecycle.push('componentWillReceiveProps');
           }
 
@@ -240,7 +240,7 @@ describe('ReactDOMServer', () => {
             this.state = {name: 'TestComponent'};
           }
 
-          componentWillMount() {
+          UNSAFE_componentWillMount() {
             lifecycle.push('componentWillMount');
           }
 
@@ -253,7 +253,7 @@ describe('ReactDOMServer', () => {
             return <span>Component name: {this.state.name}</span>;
           }
 
-          componentWillUpdate() {
+          UNSAFE_componentWillUpdate() {
             lifecycle.push('componentWillUpdate');
           }
 
@@ -265,7 +265,7 @@ describe('ReactDOMServer', () => {
             lifecycle.push('shouldComponentUpdate');
           }
 
-          componentWillReceiveProps() {
+          UNSAFE_componentWillReceiveProps() {
             lifecycle.push('componentWillReceiveProps');
           }
 
@@ -297,7 +297,7 @@ describe('ReactDOMServer', () => {
 
     it('allows setState in componentWillMount without using DOM', () => {
       class Component extends React.Component {
-        componentWillMount() {
+        UNSAFE_componentWillMount() {
           this.setState({text: 'hello, world'});
         }
 
@@ -316,7 +316,7 @@ describe('ReactDOMServer', () => {
           this.state = {text: 'default state'};
         }
 
-        componentWillMount() {
+        UNSAFE_componentWillMount() {
           this.setState({text: 'hello, world'});
         }
 
@@ -397,7 +397,7 @@ describe('ReactDOMServer', () => {
       }
 
       class Component extends React.Component {
-        componentWillMount() {
+        UNSAFE_componentWillMount() {
           this.setState({text: 'hello, world'});
         }
 
@@ -420,7 +420,7 @@ describe('ReactDOMServer', () => {
 
   it('warns with a no-op when an async setState is triggered', () => {
     class Foo extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({text: 'hello'});
         setTimeout(() => {
           this.setState({text: 'error'});
@@ -446,7 +446,7 @@ describe('ReactDOMServer', () => {
 
   it('warns with a no-op when an async forceUpdate is triggered', () => {
     class Baz extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.forceUpdate();
         setTimeout(() => {
           this.forceUpdate();
