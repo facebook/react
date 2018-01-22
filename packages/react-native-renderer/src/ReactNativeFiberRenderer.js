@@ -27,14 +27,14 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
 import ReactNativeTagHandles from './ReactNativeTagHandles';
 
-export type Container = number;
+type Container = number;
 export type Instance = {
   _children: Array<Instance | number>,
   _nativeTag: number,
   viewConfig: ReactNativeBaseComponentViewConfig,
 };
-export type Props = Object;
-export type TextInstance = number;
+type Props = Object;
+type TextInstance = number;
 
 function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
   if (typeof node === 'number') {
