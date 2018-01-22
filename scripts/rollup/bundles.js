@@ -131,30 +131,26 @@ const bundles = [
     ],
   },
 
-  /******* React Native RT *******/
+  /******* React Native Fabric *******/
   {
-    label: 'native-rt',
+    label: 'native-fabric',
     bundleTypes: [RN_DEV, RN_PROD],
     moduleType: RENDERER,
-    entry: 'react-rt-renderer',
-    global: 'ReactRTRenderer',
+    entry: 'react-native-renderer/fabric',
+    global: 'ReactFabric',
     externals: [
       'ExceptionsManager',
       'InitializeCore',
       'Platform',
-      'BatchedBridge',
-      'RTManager',
+      'RCTEventEmitter',
+      'TextInputState',
+      'UIManager',
+      'FabricUIManager',
+      'View',
+      'deepDiffer',
+      'deepFreezeAndThrowOnMutationInDev',
+      'flattenStyle',
     ],
-  },
-
-  /******* React Native CS *******/
-  {
-    label: 'native-cs',
-    bundleTypes: [RN_DEV, RN_PROD],
-    moduleType: RENDERER,
-    entry: 'react-cs-renderer',
-    global: 'ReactCSRenderer',
-    externals: ['CSStatefulComponent'],
   },
 
   /******* React Test Renderer *******/

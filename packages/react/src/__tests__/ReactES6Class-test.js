@@ -109,6 +109,79 @@ describe('ReactES6Class', () => {
     test(<Foo />, 'SPAN', 'bar');
   });
 
+  it('sets initial state with value returned by static getDerivedStateFromProps', () => {
+    class Foo extends React.Component {
+      state = {};
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: nextProps.foo,
+          bar: 'bar',
+        };
+      }
+      render() {
+        return <div className={`${this.state.foo} ${this.state.bar}`} />;
+      }
+    }
+    test(<Foo foo="foo" />, 'DIV', 'foo bar');
+  });
+
+  it('warns if state not initialized before static getDerivedStateFromProps', () => {
+    class Foo extends React.Component {
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: nextProps.foo,
+          bar: 'bar',
+        };
+      }
+      render() {
+        return <div className={`${this.state.foo} ${this.state.bar}`} />;
+      }
+    }
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+      'Foo: Did not properly initialize state during construction. ' +
+        'Expected state to be an object, but it was undefined.',
+    );
+  });
+
+  it('updates initial state with values returned by static getDerivedStateFromProps', () => {
+    class Foo extends React.Component {
+      state = {
+        foo: 'foo',
+        bar: 'bar',
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: `not-${prevState.foo}`,
+        };
+      }
+      render() {
+        return <div className={`${this.state.foo} ${this.state.bar}`} />;
+      }
+    }
+    test(<Foo />, 'DIV', 'not-foo bar');
+  });
+
+  it('renders updated state with values returned by static getDerivedStateFromProps', () => {
+    class Foo extends React.Component {
+      state = {
+        value: 'initial',
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.update) {
+          return {
+            value: 'updated',
+          };
+        }
+        return null;
+      }
+      render() {
+        return <div className={this.state.value} />;
+      }
+    }
+    test(<Foo update={false} />, 'DIV', 'initial');
+    test(<Foo update={true} />, 'DIV', 'updated');
+  });
+
   it('renders based on context in the constructor', () => {
     class Foo extends React.Component {
       constructor(props, context) {
@@ -147,7 +220,7 @@ describe('ReactES6Class', () => {
         super(props);
         this.state = {bar: props.initialValue};
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({bar: 'bar'});
       }
       render() {
@@ -257,20 +330,20 @@ describe('ReactES6Class', () => {
         super();
         this.state = {};
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         lifeCycles.push('will-mount');
       }
       componentDidMount() {
         lifeCycles.push('did-mount');
       }
-      componentWillReceiveProps(nextProps) {
+      UNSAFE_componentWillReceiveProps(nextProps) {
         lifeCycles.push('receive-props', nextProps);
       }
       shouldComponentUpdate(nextProps, nextState) {
         lifeCycles.push('should-update', nextProps, nextState);
         return true;
       }
-      componentWillUpdate(nextProps, nextState) {
+      UNSAFE_componentWillUpdate(nextProps, nextState) {
         lifeCycles.push('will-update', nextProps, nextState);
       }
       componentDidUpdate(prevProps, prevState) {
@@ -376,6 +449,23 @@ describe('ReactES6Class', () => {
       'Warning: ' +
         'NamedComponent has a method called componentWillRecieveProps(). Did ' +
         'you mean componentWillReceiveProps()?',
+    );
+  });
+
+  it('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
+    class NamedComponent extends React.Component {
+      UNSAFE_componentWillRecieveProps() {
+        return false;
+      }
+      render() {
+        return <span className="foo" />;
+      }
+    }
+
+    expect(() => test(<NamedComponent />, 'SPAN', 'foo')).toWarnDev(
+      'Warning: ' +
+        'NamedComponent has a method called UNSAFE_componentWillRecieveProps(). ' +
+        'Did you mean UNSAFE_componentWillReceiveProps()?',
     );
   });
 

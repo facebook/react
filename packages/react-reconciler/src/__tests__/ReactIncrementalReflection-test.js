@@ -31,7 +31,7 @@ describe('ReactIncrementalReflection', () => {
         // reaching into the updater.
         return this.updater.isMounted(this);
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         instances.push(this);
         ops.push('componentWillMount', this._isMounted());
       }
@@ -75,7 +75,7 @@ describe('ReactIncrementalReflection', () => {
       _isMounted() {
         return this.updater.isMounted(this);
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         instances.push(this);
       }
       componentWillUnmount() {
@@ -128,14 +128,14 @@ describe('ReactIncrementalReflection', () => {
     let classInstance = null;
 
     class Component extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         classInstance = this;
         ops.push('componentWillMount', ReactNoop.findInstance(this));
       }
       componentDidMount() {
         ops.push('componentDidMount', ReactNoop.findInstance(this));
       }
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         ops.push('componentWillUpdate', ReactNoop.findInstance(this));
       }
       componentDidUpdate() {

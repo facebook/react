@@ -119,11 +119,11 @@ function restoreDeletedValuesInNestedArray(
 }
 
 function diffNestedArrayProperty(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevArray: Array<NestedNode>,
   nextArray: Array<NestedNode>,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   const minLength =
     prevArray.length < nextArray.length ? prevArray.length : nextArray.length;
   let i;
@@ -157,11 +157,11 @@ function diffNestedArrayProperty(
 }
 
 function diffNestedProperty(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevProp: NestedNode,
   nextProp: NestedNode,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   if (!updatePayload && prevProp === nextProp) {
     // If no properties have been added, then we can bail out quickly on object
     // equality.
@@ -224,7 +224,7 @@ function diffNestedProperty(
  * updatePayload.
  */
 function addNestedProperty(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   nextProp: NestedNode,
   validAttributes: AttributeConfiguration,
 ) {
@@ -258,10 +258,10 @@ function addNestedProperty(
  * adds a null sentinel to the updatePayload, for each prop key.
  */
 function clearNestedProperty(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevProp: NestedNode,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   if (!prevProp) {
     return updatePayload;
   }
@@ -293,11 +293,11 @@ function clearNestedProperty(
  * anything changed.
  */
 function diffProperties(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevProps: Object,
   nextProps: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   let attributeConfig: ?(CustomAttributeConfiguration | AttributeConfiguration);
   let nextProp;
   let prevProp;
@@ -465,10 +465,10 @@ function diffProperties(
  * addProperties adds all the valid props to the payload after being processed.
  */
 function addProperties(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   props: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   // TODO: Fast path
   return diffProperties(updatePayload, emptyObject, props, validAttributes);
 }
@@ -478,10 +478,10 @@ function addProperties(
  * to the payload for each valid key.
  */
 function clearProperties(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevProps: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   // TODO: Fast path
   return diffProperties(updatePayload, prevProps, emptyObject, validAttributes);
 }
@@ -489,7 +489,7 @@ function clearProperties(
 export function create(
   props: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   return addProperties(
     null, // updatePayload
     props,
@@ -501,7 +501,7 @@ export function diff(
   prevProps: Object,
   nextProps: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   return diffProperties(
     null, // updatePayload
     prevProps,

@@ -46,7 +46,7 @@ describe('ReactCompositeComponent-state', () => {
         return <div>{this.state.color}</div>;
       }
 
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.peekAtState('componentWillMount-start');
         this.setState(function(state) {
           this.peekAtState('before-setState-sunrise', state);
@@ -78,7 +78,7 @@ describe('ReactCompositeComponent-state', () => {
         this.peekAtState('componentDidMount-end');
       }
 
-      componentWillReceiveProps(newProps) {
+      UNSAFE_componentWillReceiveProps(newProps) {
         this.peekAtState('componentWillReceiveProps-start');
         if (newProps.nextColor) {
           this.setState(function(state) {
@@ -105,7 +105,7 @@ describe('ReactCompositeComponent-state', () => {
         return true;
       }
 
-      componentWillUpdate(nextProps, nextState) {
+      UNSAFE_componentWillUpdate(nextProps, nextState) {
         this.peekAtState('componentWillUpdate-currentState');
         this.peekAtState('componentWillUpdate-nextState', nextState);
       }
@@ -323,7 +323,7 @@ describe('ReactCompositeComponent-state', () => {
     }
     let updated = false;
     class Child extends React.Component {
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         if (updated) {
           return;
         }
@@ -383,7 +383,7 @@ describe('ReactCompositeComponent-state', () => {
     let ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         this.setState({step: 2}, () => {
           // Tests that earlier setState callbacks are not dropped
           ops.push(
@@ -426,7 +426,7 @@ describe('ReactCompositeComponent-state', () => {
     let ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({step: 2}, () => {
           // Tests that earlier setState callbacks are not dropped
           ops.push(
@@ -457,5 +457,51 @@ describe('ReactCompositeComponent-state', () => {
       'render -- step: 3, extra: false',
       'callback -- step: 3, extra: false',
     ]);
+  });
+
+  it('should support stateful module pattern components', () => {
+    function Child() {
+      return {
+        state: {
+          count: 123,
+        },
+        render() {
+          return <div>{`count:${this.state.count}`}</div>;
+        },
+      };
+    }
+
+    const el = document.createElement('div');
+    ReactDOM.render(<Child />, el);
+
+    expect(el.textContent).toBe('count:123');
+  });
+
+  it('should support getDerivedStateFromProps for module pattern components', () => {
+    function Child() {
+      return {
+        state: {
+          count: 1,
+        },
+        render() {
+          return <div>{`count:${this.state.count}`}</div>;
+        },
+      };
+    }
+    Child.getDerivedStateFromProps = (props, prevState) => {
+      return {
+        count: prevState.count + props.incrementBy,
+      };
+    };
+
+    const el = document.createElement('div');
+    ReactDOM.render(<Child incrementBy={0} />, el);
+    expect(el.textContent).toBe('count:1');
+
+    ReactDOM.render(<Child incrementBy={2} />, el);
+    expect(el.textContent).toBe('count:3');
+
+    ReactDOM.render(<Child incrementBy={1} />, el);
+    expect(el.textContent).toBe('count:4');
   });
 });

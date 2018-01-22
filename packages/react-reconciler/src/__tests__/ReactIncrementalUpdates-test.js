@@ -296,7 +296,7 @@ describe('ReactIncrementalUpdates', () => {
 
     class Foo extends React.Component {
       state = {};
-      componentWillReceiveProps() {
+      UNSAFE_componentWillReceiveProps() {
         ops.push('componentWillReceiveProps');
         this.setState({b: 'b'});
       }

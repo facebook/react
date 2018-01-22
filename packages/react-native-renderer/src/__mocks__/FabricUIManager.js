@@ -1,0 +1,111 @@
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+'use strict';
+
+// Mock of the Native Hooks
+
+const invariant = require('fbjs/lib/invariant');
+
+const roots = new Map();
+const allocatedTags = new Set();
+
+const RCTFabricUIManager = {
+  __dumpHierarchyForJestTestsOnly: function() {
+    function dumpSubtree(info, indent) {
+      let out = '';
+      out +=
+        ' '.repeat(indent) + info.viewName + ' ' + JSON.stringify(info.props);
+      for (const child of info.children) {
+        out += '\n' + dumpSubtree(child, indent + 2);
+      }
+      return out;
+    }
+    let result = [];
+    for (const [rootTag, childSet] of roots) {
+      result.push(rootTag);
+      for (const child of childSet) {
+        result.push(dumpSubtree(child, 1));
+      }
+    }
+    return result.join('\n');
+  },
+  createNode: jest.fn(function createNode(
+    reactTag,
+    viewName,
+    rootTag,
+    props,
+    instanceHandle,
+  ) {
+    invariant(
+      !allocatedTags.has(reactTag),
+      'Created two native views with tag %s',
+      reactTag,
+    );
+    allocatedTags.add(reactTag);
+    return {
+      reactTag: reactTag,
+      viewName: viewName,
+      props: props,
+      children: [],
+    };
+  }),
+  cloneNode: jest.fn(function cloneNode(node) {
+    return {
+      reactTag: node.reactTag,
+      viewName: node.viewName,
+      props: node.props,
+      children: node.children,
+    };
+  }),
+  cloneNodeWithNewChildren: jest.fn(function cloneNodeWithNewChildren(node) {
+    return {
+      reactTag: node.reactTag,
+      viewName: node.viewName,
+      props: node.props,
+      children: [],
+    };
+  }),
+  cloneNodeWithNewProps: jest.fn(function cloneNodeWithNewProps(
+    node,
+    newProps,
+  ) {
+    return {
+      reactTag: node.reactTag,
+      viewName: node.viewName,
+      props: newProps,
+      children: node.children,
+    };
+  }),
+  cloneNodeWithNewChildrenAndProps: jest.fn(
+    function cloneNodeWithNewChildrenAndProps(node, newProps) {
+      return {
+        reactTag: node.reactTag,
+        viewName: node.viewName,
+        props: newProps,
+        children: [],
+      };
+    },
+  ),
+  appendChild: jest.fn(function appendChild(parentNode, childNode) {
+    parentNode.children.push(childNode);
+  }),
+
+  createChildSet: jest.fn(function createChildSet() {
+    return [];
+  }),
+
+  appendChildToSet: jest.fn(function appendChildToSet(childSet, childNode) {
+    childSet.push(childNode);
+  }),
+
+  completeRoot: jest.fn(function completeRoot(rootTag, newChildSet) {
+    roots.set(rootTag, newChildSet);
+  }),
+};
+
+module.exports = RCTFabricUIManager;

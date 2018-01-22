@@ -15,7 +15,24 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
+// TODO: Share this module between Fabric and React Native renderers
+// so that both can be used in the same tree.
+
+let findHostInstance = function(fiber: Fiber): any {
+  return null;
+};
+
+let findHostInstanceFabric = function(fiber: Fiber): any {
+  return null;
+};
+
+export function injectFindHostInstance(impl: (fiber: Fiber) => any) {
+  findHostInstance = impl;
+}
+
+export function injectFindHostInstanceFabric(impl: (fiber: Fiber) => any) {
+  findHostInstanceFabric = impl;
+}
 
 /**
  * ReactNative vs ReactWeb
@@ -81,7 +98,10 @@ function findNodeHandle(componentOrHandle: any): any {
   // ReactInstanceMap.get here will always succeed for mounted components
   const internalInstance: Fiber = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return ReactNativeFiberRenderer.findHostInstance(internalInstance);
+    return (
+      findHostInstance(internalInstance) ||
+      findHostInstanceFabric(internalInstance)
+    );
   } else {
     if (component) {
       return component;

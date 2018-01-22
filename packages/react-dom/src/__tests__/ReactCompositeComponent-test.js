@@ -850,7 +850,7 @@ describe('ReactCompositeComponent', () => {
         foo: PropTypes.string.isRequired,
       };
 
-      componentWillReceiveProps(nextProps, nextContext) {
+      UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
         expect('foo' in nextContext).toBe(true);
       }
 
@@ -865,7 +865,7 @@ describe('ReactCompositeComponent', () => {
     }
 
     class Intermediary extends React.Component {
-      componentWillReceiveProps(nextProps, nextContext) {
+      UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
         expect('foo' in nextContext).toBe(false);
       }
 
@@ -916,7 +916,7 @@ describe('ReactCompositeComponent', () => {
         foo: PropTypes.string.isRequired,
       };
 
-      componentWillReceiveProps(nextProps, nextContext) {
+      UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
         expect('foo' in nextContext).toBe(true);
 
         if (nextProps !== this.props) {
@@ -938,7 +938,7 @@ describe('ReactCompositeComponent', () => {
         foo: PropTypes.string.isRequired,
       };
 
-      componentWillReceiveProps(nextProps, nextContext) {
+      UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
         expect('foo' in nextContext).toBe(true);
 
         if (nextProps !== this.props) {
@@ -956,7 +956,7 @@ describe('ReactCompositeComponent', () => {
     }
 
     class ChildWithoutContext extends React.Component {
-      componentWillReceiveProps(nextProps, nextContext) {
+      UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
         expect('foo' in nextContext).toBe(false);
 
         if (nextProps !== this.props) {
@@ -1047,7 +1047,7 @@ describe('ReactCompositeComponent', () => {
     class Component extends React.Component {
       state = {updated: false};
 
-      componentWillReceiveProps(props) {
+      UNSAFE_componentWillReceiveProps(props) {
         expect(props.update).toBe(1);
         expect(renders).toBe(1);
         this.setState({updated: true});
@@ -1075,7 +1075,7 @@ describe('ReactCompositeComponent', () => {
     class Component extends React.Component {
       state = {updated: false};
 
-      componentWillReceiveProps(props) {
+      UNSAFE_componentWillReceiveProps(props) {
         expect(props.update).toBe(1);
         expect(renders).toBe(1);
         this.setState({updated: true});
@@ -1377,7 +1377,7 @@ describe('ReactCompositeComponent', () => {
     const log = [];
 
     class Spy extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         log.push(this.props.name + ' componentWillMount');
       }
       render() {
@@ -1556,7 +1556,7 @@ describe('ReactCompositeComponent', () => {
         };
       }
 
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState(
           {hasUpdatedState: true},
           () => (stateSuccessfullyUpdated = this.state.hasUpdatedState),
@@ -1586,7 +1586,7 @@ describe('ReactCompositeComponent', () => {
         };
       }
 
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         instance = this;
       }
 

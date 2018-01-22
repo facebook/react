@@ -9,8 +9,8 @@
 
 'use strict';
 
-const ReactNativeCS = require('./src/ReactNativeCS');
+const ReactFabric = require('./src/ReactFabric');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactNativeCS.default ? ReactNativeCS.default : ReactNativeCS;
+module.exports = ReactFabric.default ? ReactFabric.default : ReactFabric;

@@ -165,7 +165,7 @@ describe('ReactComponentLifeCycle', () => {
   // had provided a getInitialState method.
   it('throws when accessing state in componentWillMount', () => {
     class StatefulComponent extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         void this.state.yada;
       }
 
@@ -182,7 +182,7 @@ describe('ReactComponentLifeCycle', () => {
 
   it('should allow update state inside of componentWillMount', () => {
     class StatefulComponent extends React.Component {
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.setState({stateField: 'something'});
       }
 
@@ -231,7 +231,7 @@ describe('ReactComponentLifeCycle', () => {
         // reaching into the updater.
         return this.updater.isMounted(this);
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         expect(this._isMounted()).toBeFalsy();
       }
       componentDidMount() {
@@ -258,7 +258,7 @@ describe('ReactComponentLifeCycle', () => {
         // reaching into the updater.
         return this.updater.isMounted(this);
       }
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         expect(this._isMounted()).toBeFalsy();
       }
       componentDidMount() {
@@ -334,7 +334,7 @@ describe('ReactComponentLifeCycle', () => {
         this.state = initState;
       }
 
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this._testJournal.stateAtStartOfWillMount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillMount = getLifeCycleState(this);
         this.state.hasWillMountCompleted = true;
@@ -509,11 +509,18 @@ describe('ReactComponentLifeCycle', () => {
       };
     };
     class Outer extends React.Component {
-      componentWillMount = logger('outer componentWillMount');
+      state = {};
+      static getDerivedStateFromProps(props, prevState) {
+        log.push('outer getDerivedStateFromProps');
+        return null;
+      }
+      UNSAFE_componentWillMount = logger('outer componentWillMount');
       componentDidMount = logger('outer componentDidMount');
-      componentWillReceiveProps = logger('outer componentWillReceiveProps');
+      UNSAFE_componentWillReceiveProps = logger(
+        'outer componentWillReceiveProps',
+      );
       shouldComponentUpdate = logger('outer shouldComponentUpdate');
-      componentWillUpdate = logger('outer componentWillUpdate');
+      UNSAFE_componentWillUpdate = logger('outer componentWillUpdate');
       componentDidUpdate = logger('outer componentDidUpdate');
       componentWillUnmount = logger('outer componentWillUnmount');
       render() {
@@ -526,11 +533,18 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     class Inner extends React.Component {
-      componentWillMount = logger('inner componentWillMount');
+      state = {};
+      static getDerivedStateFromProps(props, prevState) {
+        log.push('inner getDerivedStateFromProps');
+        return null;
+      }
+      UNSAFE_componentWillMount = logger('inner componentWillMount');
       componentDidMount = logger('inner componentDidMount');
-      componentWillReceiveProps = logger('inner componentWillReceiveProps');
+      UNSAFE_componentWillReceiveProps = logger(
+        'inner componentWillReceiveProps',
+      );
       shouldComponentUpdate = logger('inner shouldComponentUpdate');
-      componentWillUpdate = logger('inner componentWillUpdate');
+      UNSAFE_componentWillUpdate = logger('inner componentWillUpdate');
       componentDidUpdate = logger('inner componentDidUpdate');
       componentWillUnmount = logger('inner componentWillUnmount');
       render() {
@@ -540,21 +554,33 @@ describe('ReactComponentLifeCycle', () => {
 
     const container = document.createElement('div');
     log = [];
-    ReactDOM.render(<Outer x={17} />, container);
+    expect(() => ReactDOM.render(<Outer x={1} />, container)).toWarnDev([
+      'Warning: Outer: Defines both componentWillReceiveProps() and static ' +
+        'getDerivedStateFromProps() methods. ' +
+        'We recommend using only getDerivedStateFromProps().',
+      'Warning: Inner: Defines both componentWillReceiveProps() and static ' +
+        'getDerivedStateFromProps() methods. ' +
+        'We recommend using only getDerivedStateFromProps().',
+    ]);
     expect(log).toEqual([
+      'outer getDerivedStateFromProps',
       'outer componentWillMount',
+      'inner getDerivedStateFromProps',
       'inner componentWillMount',
       'inner componentDidMount',
       'outer componentDidMount',
     ]);
 
+    // Dedup warnings
     log = [];
-    ReactDOM.render(<Outer x={42} />, container);
+    ReactDOM.render(<Outer x={2} />, container);
     expect(log).toEqual([
       'outer componentWillReceiveProps',
+      'outer getDerivedStateFromProps',
       'outer shouldComponentUpdate',
       'outer componentWillUpdate',
       'inner componentWillReceiveProps',
+      'inner getDerivedStateFromProps',
       'inner shouldComponentUpdate',
       'inner componentWillUpdate',
       'inner componentDidUpdate',
@@ -579,7 +605,7 @@ describe('ReactComponentLifeCycle', () => {
           log.push('render');
           return <Child />;
         },
-        componentWillMount() {
+        UNSAFE_componentWillMount() {
           log.push('will mount');
         },
         componentDidMount() {
@@ -618,5 +644,44 @@ describe('ReactComponentLifeCycle', () => {
       'did update',
       'ref',
     ]);
+  });
+
+  it('should warn if getDerivedStateFromProps returns undefined', () => {
+    class MyComponent extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {}
+      render() {
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
+      'MyComponent.getDerivedStateFromProps(): A valid state object (or null) must ' +
+        'be returned. You have returned undefined.',
+    );
+
+    // De-duped
+    ReactDOM.render(<MyComponent />, div);
+  });
+
+  it('should warn if state is not initialized before getDerivedStateFromProps', () => {
+    class MyComponent extends React.Component {
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
+      'MyComponent: Did not properly initialize state during construction. ' +
+        'Expected state to be an object, but it was undefined.',
+    );
+
+    // De-duped
+    ReactDOM.render(<MyComponent />, div);
   });
 });

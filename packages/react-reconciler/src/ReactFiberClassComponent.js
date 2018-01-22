@@ -14,6 +14,7 @@ import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
   debugRenderPhaseSideEffects,
   enableAsyncSubtreeAPI,
+  warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
@@ -40,12 +41,27 @@ import {hasContextChanged} from './ReactFiberContext';
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
+let didWarnAboutLegacyWillMount;
+let didWarnAboutLegacyWillReceiveProps;
+let didWarnAboutLegacyWillUpdate;
 let didWarnAboutStateAssignmentForComponent;
+let didWarnAboutUndefinedDerivedState;
+let didWarnAboutUninitializedState;
+let didWarnAboutWillReceivePropsAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
-  const didWarnOnInvalidCallback = {};
+  if (warnAboutDeprecatedLifecycles) {
+    didWarnAboutLegacyWillMount = {};
+    didWarnAboutLegacyWillReceiveProps = {};
+    didWarnAboutLegacyWillUpdate = {};
+  }
   didWarnAboutStateAssignmentForComponent = {};
+  didWarnAboutUndefinedDerivedState = {};
+  didWarnAboutUninitializedState = {};
+  didWarnAboutWillReceivePropsAndDerivedState = {};
+
+  const didWarnOnInvalidCallback = {};
 
   warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     if (callback === null || typeof callback === 'function') {
@@ -319,6 +335,14 @@ export default function(
           'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name,
       );
+      const noUnsafeComponentWillRecieveProps =
+        typeof instance.UNSAFE_componentWillRecieveProps !== 'function';
+      warning(
+        noUnsafeComponentWillRecieveProps,
+        '%s has a method called ' +
+          'UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?',
+        name,
+      );
       const hasMutatedProps = instance.props !== workInProgress.pendingProps;
       warning(
         instance.props === undefined || !hasMutatedProps,
@@ -378,7 +402,49 @@ export default function(
       ? getMaskedContext(workInProgress, unmaskedContext)
       : emptyObject;
     const instance = new ctor(props, context);
+    const state =
+      instance.state !== null && instance.state !== undefined
+        ? instance.state
+        : null;
     adoptClassInstance(workInProgress, instance);
+
+    if (__DEV__) {
+      if (
+        typeof ctor.getDerivedStateFromProps === 'function' &&
+        state === null
+      ) {
+        const componentName = getComponentName(workInProgress) || 'Unknown';
+        if (!didWarnAboutUninitializedState[componentName]) {
+          warning(
+            false,
+            '%s: Did not properly initialize state during construction. ' +
+              'Expected state to be an object, but it was %s.',
+            componentName,
+            instance.state === null ? 'null' : 'undefined',
+          );
+          didWarnAboutUninitializedState[componentName] = true;
+        }
+      }
+    }
+
+    workInProgress.memoizedState = state;
+
+    const partialState = callGetDerivedStateFromProps(
+      workInProgress,
+      instance,
+      props,
+    );
+
+    if (partialState !== null && partialState !== undefined) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      workInProgress.memoizedState = Object.assign(
+        {},
+        workInProgress.memoizedState,
+        partialState,
+      );
+    }
 
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
     // ReactFiberContext usually updates this cache but can't for newly-created instances.
@@ -392,7 +458,32 @@ export default function(
   function callComponentWillMount(workInProgress, instance) {
     startPhaseTimer(workInProgress, 'componentWillMount');
     const oldState = instance.state;
-    instance.componentWillMount();
+
+    if (typeof instance.componentWillMount === 'function') {
+      if (__DEV__) {
+        if (warnAboutDeprecatedLifecycles) {
+          const componentName = getComponentName(workInProgress) || 'Component';
+          if (!didWarnAboutLegacyWillMount[componentName]) {
+            warning(
+              false,
+              '%s: componentWillMount() is deprecated and will be ' +
+                'removed in the next major version. Read about the motivations ' +
+                'behind this change: ' +
+                'https://fb.me/react-async-component-lifecycle-hooks' +
+                '\n\n' +
+                'As a temporary workaround, you can rename to ' +
+                'UNSAFE_componentWillMount instead.',
+              componentName,
+            );
+            didWarnAboutLegacyWillMount[componentName] = true;
+          }
+        }
+      }
+      instance.componentWillMount();
+    } else {
+      instance.UNSAFE_componentWillMount();
+    }
+
     stopPhaseTimer();
 
     if (oldState !== instance.state) {
@@ -415,14 +506,41 @@ export default function(
     newProps,
     newContext,
   ) {
-    startPhaseTimer(workInProgress, 'componentWillReceiveProps');
     const oldState = instance.state;
-    instance.componentWillReceiveProps(newProps, newContext);
-    stopPhaseTimer();
+    if (typeof instance.componentWillReceiveProps === 'function') {
+      if (__DEV__) {
+        if (warnAboutDeprecatedLifecycles) {
+          const componentName = getComponentName(workInProgress) || 'Component';
+          if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
+            warning(
+              false,
+              '%s: componentWillReceiveProps() is deprecated and ' +
+                'will be removed in the next major version. Use ' +
+                'static getDerivedStateFromProps() instead. Read about the ' +
+                'motivations behind this change: ' +
+                'https://fb.me/react-async-component-lifecycle-hooks' +
+                '\n\n' +
+                'As a temporary workaround, you can rename to ' +
+                'UNSAFE_componentWillReceiveProps instead.',
+              componentName,
+            );
+            didWarnAboutLegacyWillReceiveProps[componentName] = true;
+          }
+        }
+      }
 
-    // Simulate an async bailout/interruption by invoking lifecycle twice.
-    if (debugRenderPhaseSideEffects) {
+      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
       instance.componentWillReceiveProps(newProps, newContext);
+      stopPhaseTimer();
+    } else {
+      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
+      instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
+      stopPhaseTimer();
+
+      // Simulate an async bailout/interruption by invoking lifecycle twice.
+      if (debugRenderPhaseSideEffects) {
+        instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
+      }
     }
 
     if (instance.state !== oldState) {
@@ -443,6 +561,58 @@ export default function(
     }
   }
 
+  function callGetDerivedStateFromProps(
+    workInProgress: Fiber,
+    instance: any,
+    props: any,
+  ) {
+    const {type} = workInProgress;
+
+    if (typeof type.getDerivedStateFromProps === 'function') {
+      if (__DEV__) {
+        if (
+          typeof instance.componentWillReceiveProps === 'function' ||
+          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
+        ) {
+          const componentName = getComponentName(workInProgress) || 'Unknown';
+          if (!didWarnAboutWillReceivePropsAndDerivedState[componentName]) {
+            warning(
+              false,
+              '%s: Defines both componentWillReceiveProps() and static ' +
+                'getDerivedStateFromProps() methods. We recommend using ' +
+                'only getDerivedStateFromProps().',
+              componentName,
+            );
+            didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
+          }
+        }
+      }
+
+      const partialState = type.getDerivedStateFromProps.call(
+        null,
+        props,
+        workInProgress.memoizedState,
+      );
+
+      if (__DEV__) {
+        if (partialState === undefined) {
+          const componentName = getComponentName(workInProgress) || 'Unknown';
+          if (!didWarnAboutUndefinedDerivedState[componentName]) {
+            warning(
+              false,
+              '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
+                'You have returned undefined.',
+              componentName,
+            );
+            didWarnAboutUndefinedDerivedState[componentName] = componentName;
+          }
+        }
+      }
+
+      return partialState;
+    }
+  }
+
   // Invokes the mount life-cycles on a previously never rendered instance.
   function mountClassInstance(
     workInProgress: Fiber,
@@ -455,12 +625,11 @@ export default function(
     }
 
     const instance = workInProgress.stateNode;
-    const state = instance.state || null;
     const props = workInProgress.pendingProps;
     const unmaskedContext = getUnmaskedContext(workInProgress);
 
     instance.props = props;
-    instance.state = workInProgress.memoizedState = state;
+    instance.state = workInProgress.memoizedState;
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
@@ -473,7 +642,10 @@ export default function(
       workInProgress.internalContextTag |= AsyncUpdates;
     }
 
-    if (typeof instance.componentWillMount === 'function') {
+    if (
+      typeof instance.UNSAFE_componentWillMount === 'function' ||
+      typeof instance.componentWillMount === 'function'
+    ) {
       callComponentWillMount(workInProgress, instance);
       // If we had additional state updates during this life-cycle, let's
       // process them now.
@@ -619,7 +791,8 @@ export default function(
     // during componentDidUpdate we pass the "current" props.
 
     if (
-      typeof instance.componentWillReceiveProps === 'function' &&
+      (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
+        typeof instance.componentWillReceiveProps === 'function') &&
       (oldProps !== newProps || oldContext !== newContext)
     ) {
       callComponentWillReceiveProps(
@@ -627,6 +800,15 @@ export default function(
         instance,
         newProps,
         newContext,
+      );
+    }
+
+    let partialState;
+    if (oldProps !== newProps) {
+      partialState = callGetDerivedStateFromProps(
+        workInProgress,
+        instance,
+        newProps,
       );
     }
 
@@ -645,6 +827,16 @@ export default function(
       );
     } else {
       newState = oldState;
+    }
+
+    if (partialState !== null && partialState !== undefined) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      newState =
+        newState === null || newState === undefined
+          ? partialState
+          : Object.assign({}, newState, partialState);
     }
 
     if (
@@ -679,14 +871,44 @@ export default function(
     );
 
     if (shouldUpdate) {
-      if (typeof instance.componentWillUpdate === 'function') {
-        startPhaseTimer(workInProgress, 'componentWillUpdate');
-        instance.componentWillUpdate(newProps, newState, newContext);
-        stopPhaseTimer();
+      if (
+        typeof instance.UNSAFE_componentWillUpdate === 'function' ||
+        typeof instance.componentWillUpdate === 'function'
+      ) {
+        if (typeof instance.componentWillUpdate === 'function') {
+          if (__DEV__) {
+            if (warnAboutDeprecatedLifecycles) {
+              const componentName =
+                getComponentName(workInProgress) || 'Component';
+              if (!didWarnAboutLegacyWillUpdate[componentName]) {
+                warning(
+                  false,
+                  '%s: componentWillUpdate() is deprecated and will be ' +
+                    'removed in the next major version. Read about the motivations ' +
+                    'behind this change: ' +
+                    'https://fb.me/react-async-component-lifecycle-hooks' +
+                    '\n\n' +
+                    'As a temporary workaround, you can rename to ' +
+                    'UNSAFE_componentWillUpdate instead.',
+                  componentName,
+                );
+                didWarnAboutLegacyWillUpdate[componentName] = true;
+              }
+            }
+          }
 
-        // Simulate an async bailout/interruption by invoking lifecycle twice.
-        if (debugRenderPhaseSideEffects) {
+          startPhaseTimer(workInProgress, 'componentWillUpdate');
           instance.componentWillUpdate(newProps, newState, newContext);
+          stopPhaseTimer();
+        } else {
+          startPhaseTimer(workInProgress, 'componentWillUpdate');
+          instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
+          stopPhaseTimer();
+
+          // Simulate an async bailout/interruption by invoking lifecycle twice.
+          if (debugRenderPhaseSideEffects) {
+            instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
+          }
         }
       }
       if (typeof instance.componentDidUpdate === 'function') {
@@ -721,6 +943,7 @@ export default function(
 
   return {
     adoptClassInstance,
+    callGetDerivedStateFromProps,
     constructClassInstance,
     mountClassInstance,
     // resumeMountClassInstance,

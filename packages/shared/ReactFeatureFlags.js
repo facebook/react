@@ -18,11 +18,14 @@ export const enableUserTimingAPI = __DEV__;
 export const enableMutatingReconciler = true;
 // Experimental noop mode (currently unused):
 export const enableNoopReconciler = false;
-// Experimental persistent mode (CS):
+// Experimental persistent mode (Fabric):
 export const enablePersistentReconciler = false;
 
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
+
+// Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
+export const warnAboutDeprecatedLifecycles = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

@@ -20,11 +20,19 @@ export function uncacheFiberNode(tag) {
 }
 
 function getInstanceFromTag(tag) {
-  return instanceCache[tag] || null;
+  if (typeof tag === 'number') {
+    return instanceCache[tag] || null;
+  } else {
+    // Fabric will invoke event emitters on a direct fiber reference
+    return tag;
+  }
 }
 
 function getTagFromInstance(inst) {
-  const tag = inst.stateNode._nativeTag;
+  let tag = inst.stateNode._nativeTag;
+  if (tag === undefined) {
+    tag = inst.stateNode.canonical._nativeTag;
+  }
   invariant(tag, 'All native instances should have a tag.');
   return tag;
 }

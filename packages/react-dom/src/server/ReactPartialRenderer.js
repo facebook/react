@@ -19,6 +19,7 @@ import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_CALL_TYPE,
@@ -123,6 +124,9 @@ let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
 const didWarnAboutNoopUpdateForComponent = {};
 const didWarnAboutBadClass = {};
+const didWarnAboutDeprecatedWillMount = {};
+const didWarnAboutUndefinedDerivedState = {};
+const didWarnAboutUninitializedState = {};
 const valuePropNames = ['value', 'defaultValue'];
 const newlineEatingTags = {
   listing: true,
@@ -421,6 +425,49 @@ function resolve(
 
     if (shouldConstruct(Component)) {
       inst = new Component(element.props, publicContext, updater);
+
+      if (typeof Component.getDerivedStateFromProps === 'function') {
+        if (__DEV__) {
+          if (inst.state === null || inst.state === undefined) {
+            const componentName = getComponentName(Component) || 'Unknown';
+            if (!didWarnAboutUninitializedState[componentName]) {
+              warning(
+                false,
+                '%s: Did not properly initialize state during construction. ' +
+                  'Expected state to be an object, but it was %s.',
+                componentName,
+                inst.state === null ? 'null' : 'undefined',
+              );
+              didWarnAboutUninitializedState[componentName] = true;
+            }
+          }
+        }
+
+        partialState = Component.getDerivedStateFromProps.call(
+          null,
+          element.props,
+          inst.state,
+        );
+
+        if (__DEV__) {
+          if (partialState === undefined) {
+            const componentName = getComponentName(Component) || 'Unknown';
+            if (!didWarnAboutUndefinedDerivedState[componentName]) {
+              warning(
+                false,
+                '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
+                  'You have returned undefined.',
+                componentName,
+              );
+              didWarnAboutUndefinedDerivedState[componentName] = true;
+            }
+          }
+        }
+
+        if (partialState != null) {
+          inst.state = Object.assign({}, inst.state, partialState);
+        }
+      }
     } else {
       if (__DEV__) {
         if (
@@ -457,8 +504,33 @@ function resolve(
     if (initialState === undefined) {
       inst.state = initialState = null;
     }
-    if (inst.componentWillMount) {
-      inst.componentWillMount();
+    if (inst.UNSAFE_componentWillMount || inst.componentWillMount) {
+      if (inst.componentWillMount) {
+        if (__DEV__) {
+          if (warnAboutDeprecatedLifecycles) {
+            const componentName = getComponentName(Component) || 'Unknown';
+
+            if (!didWarnAboutDeprecatedWillMount[componentName]) {
+              warning(
+                false,
+                '%s: componentWillMount() is deprecated and will be ' +
+                  'removed in the next major version. Read about the motivations ' +
+                  'behind this change: ' +
+                  'https://fb.me/react-async-component-lifecycle-hooks' +
+                  '\n\n' +
+                  'As a temporary workaround, you can rename to ' +
+                  'UNSAFE_componentWillMount instead.',
+                componentName,
+              );
+              didWarnAboutDeprecatedWillMount[componentName] = true;
+            }
+          }
+        }
+
+        inst.componentWillMount();
+      } else {
+        inst.UNSAFE_componentWillMount();
+      }
       if (queue.length) {
         oldQueue = queue;
         oldReplace = replace;
@@ -476,7 +548,7 @@ function resolve(
               typeof partial === 'function'
                 ? partial.call(inst, nextState, element.props, publicContext)
                 : partial;
-            if (partialState) {
+            if (partialState != null) {
               if (dontMutate) {
                 dontMutate = false;
                 nextState = Object.assign({}, nextState, partialState);
