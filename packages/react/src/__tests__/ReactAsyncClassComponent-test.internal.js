@@ -176,8 +176,8 @@ describe('ReactAsyncClassComponent', () => {
       );
 
       // Dedupe
-      rendered.update(<SyncRoot />);
       rendered = ReactTestRenderer.create(<SyncRoot />);
+      rendered.update(<SyncRoot />);
     });
 
     it('should coalesce warnings by lifecycle name', () => {
@@ -230,8 +230,8 @@ describe('ReactAsyncClassComponent', () => {
       );
 
       // Dedupe
-      rendered.update(<SyncRoot />);
       rendered = ReactTestRenderer.create(<SyncRoot />);
+      rendered.update(<SyncRoot />);
     });
 
     it('should group warnings by async root', () => {
@@ -305,8 +305,53 @@ describe('ReactAsyncClassComponent', () => {
       ]);
 
       // Dedupe
-      rendered.update(<SyncRoot />);
       rendered = ReactTestRenderer.create(<SyncRoot />);
+      rendered.update(<SyncRoot />);
+    });
+
+    it('should warn about components not present during the initial render', () => {
+      class AsyncRoot extends React.unstable_AsyncComponent {
+        render() {
+          return this.props.foo ? <Foo /> : <Bar />;
+        }
+      }
+      class Foo extends React.Component {
+        UNSAFE_componentWillMount() {}
+        render() {
+          return null;
+        }
+      }
+      class Bar extends React.Component {
+        UNSAFE_componentWillMount() {}
+        render() {
+          return null;
+        }
+      }
+
+      let rendered;
+      expect(() => {
+        rendered = ReactTestRenderer.create(<AsyncRoot foo={true} />);
+      }).toWarnDev(
+        'Unsafe lifecycle methods were found within the following async tree:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: Foo' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+      );
+
+      expect(() => rendered.update(<AsyncRoot foo={false} />)).toWarnDev(
+        'Unsafe lifecycle methods were found within the following async tree:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: Bar' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+      );
+
+      // Dedupe
+      rendered.update(<AsyncRoot foo={true} />);
+      rendered.update(<AsyncRoot foo={false} />);
     });
   });
 });
