@@ -70,6 +70,7 @@
     "gzip-size": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
     "jest": "^22.0.6",
+    "jest-diff": "^22.1.0",
     "merge-stream": "^1.0.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.0",
