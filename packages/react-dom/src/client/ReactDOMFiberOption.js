@@ -23,8 +23,17 @@ function flattenChildren(children) {
     if (child == null) {
       return;
     }
+
     if (typeof child === 'string' || typeof child === 'number') {
-      content += child;
+      if (typeof children === 'string') {
+        content += child;
+      } else {
+        if (!content) {
+          content = document.createElement('span');
+        }
+        const textNode = document.createTextNode(child);
+        content.appendChild(textNode);
+      }
     }
   });
 

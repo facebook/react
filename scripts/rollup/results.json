@@ -46,43 +46,43 @@
       "filename": "react-dom.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 569094,
-      "gzip": 133855
+      "size": 569227,
+      "gzip": 133885
     },
     {
       "filename": "react-dom.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 94278,
-      "gzip": 30883
+      "size": 94375,
+      "gzip": 30893
     },
     {
       "filename": "react-dom.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 553111,
-      "gzip": 130124
+      "size": 553244,
+      "gzip": 130155
     },
     {
       "filename": "react-dom.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 92696,
-      "gzip": 29923
+      "size": 92793,
+      "gzip": 29943
     },
     {
       "filename": "ReactDOM-dev.js",
       "bundleType": "FB_DEV",
       "packageName": "react-dom",
-      "size": 571833,
-      "gzip": 132486
+      "size": 571966,
+      "gzip": 132522
     },
     {
       "filename": "ReactDOM-prod.js",
       "bundleType": "FB_PROD",
       "packageName": "react-dom",
-      "size": 267496,
-      "gzip": 51395
+      "size": 267649,
+      "gzip": 51426
     },
     {
       "filename": "react-dom-test-utils.development.js",
