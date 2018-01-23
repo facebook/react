@@ -14,10 +14,8 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
  * @return {?object}
  */
 export function getOffsets(outerNode) {
-  let win = window;
-  if (outerNode.ownerDocument && outerNode.ownerDocument.defaultView) {
-    win = outerNode.ownerDocument.defaultView;
-  }
+  const win =
+    (outerNode.ownerDocument && outerNode.ownerDocument.defaultView) || window;
   const selection = win.getSelection && win.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
@@ -155,12 +153,12 @@ export function getModernOffsetsFromPoints(
  */
 export function setOffsets(node, offsets) {
   const doc = node.ownerDocument || document;
-
-  if (!doc.defaultView.getSelection) {
+  const win = doc ? doc.defaultView : window;
+  if (!win.getSelection) {
     return;
   }
 
-  const selection = doc.defaultView.getSelection();
+  const selection = win.getSelection();
   const length = node[getTextContentAccessor()].length;
   let start = Math.min(offsets.start, length);
   let end = offsets.end === undefined ? start : Math.min(offsets.end, length);
