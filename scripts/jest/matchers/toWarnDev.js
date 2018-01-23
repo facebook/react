@@ -70,6 +70,12 @@ const createMatcherFor = consoleMethod =>
         // Restore the unspied method so that unexpected errors fail tests.
         console[consoleMethod] = originalMethod;
 
+        // Any unexpected Errors thrown by the callback should fail the test.
+        // This should take precedence since unexpected errors could block warnings.
+        if (caughtError) {
+          throw caughtError;
+        }
+
         // Any unexpected warnings should be treated as a failure.
         if (unexpectedWarnings.length > 0) {
           return {
@@ -87,11 +93,6 @@ const createMatcherFor = consoleMethod =>
               )}`,
             pass: false,
           };
-        }
-
-        // Any unexpected Errors thrown by the callback should fail the test.
-        if (caughtError) {
-          throw caughtError;
         }
 
         return {pass: true};
