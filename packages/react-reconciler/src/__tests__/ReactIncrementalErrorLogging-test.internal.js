@@ -48,15 +48,13 @@ describe('ReactIncrementalErrorLogging', () => {
     );
 
     expect(() => {
-      expect(ReactNoop.flushDeferredPri).toWarnDev([
-        'componentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: ErrorThrowingComponent',
+      expect(ReactNoop.flushDeferredPri).toWarnDev(
         'The above error occurred in the <ErrorThrowingComponent> component:\n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)\n\n' +
           'Consider adding an error boundary to your tree to customize error handling behavior.',
-      ]);
+      );
     }).toThrowError('componentWillMount error');
   });
 

@@ -373,7 +373,7 @@ describe('ReactAsyncClassComponent', () => {
       rendered.update(<AsyncRoot foo={false} />);
     });
 
-    it('should warn about lifecycles even in the event of an error', () => {
+    it('should not warn about uncommitted lifecycles in the event of an error', () => {
       let caughtError;
 
       class AsyncRoot extends React.unstable_AsyncComponent {
@@ -408,20 +408,14 @@ describe('ReactAsyncClassComponent', () => {
 
       expect(() => {
         ReactTestRenderer.create(<AsyncRoot foo={true} />);
-      }).toWarnDev([
-        'Unsafe lifecycle methods were found within the following async tree:' +
-          '\n    in AsyncRoot (at **)' +
-          '\n\ncomponentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: Foo' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+      }).toWarnDev(
         'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-async-component-lifecycle-hooks',
-      ]);
+      );
 
       expect(caughtError).not.toBe(null);
     });

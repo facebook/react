@@ -24,7 +24,8 @@ type FiberToLifecycleMap = Map<Fiber, LifecycleToComponentsMap>;
 const DID_WARN_KEY = '__didWarnAboutUnsafeAsyncLifecycles';
 
 const ReactDebugAsyncWarnings = {
-  flushPendingAsyncWarnings(maybeAsyncRoot: Fiber): void {},
+  discardPendingWarnings(): void {},
+  flushPendingAsyncWarnings(): void {},
   recordLifecycleWarnings(fiber: Fiber, instance: any): void {},
 };
 
@@ -37,15 +38,13 @@ if (__DEV__) {
 
   let pendingWarningsMap: FiberToLifecycleMap = new Map();
 
-  ReactDebugAsyncWarnings.flushPendingAsyncWarnings = (
-    maybeAsyncRoot: Fiber,
-  ) => {
+  ReactDebugAsyncWarnings.discardPendingWarnings = () => {
+    pendingWarningsMap = new Map();
+  };
+
+  ReactDebugAsyncWarnings.flushPendingAsyncWarnings = () => {
     ((pendingWarningsMap: any): FiberToLifecycleMap).forEach(
       (lifecycleWarningsMap, asyncRoot) => {
-        if (asyncRoot !== maybeAsyncRoot) {
-          return;
-        }
-
         const lifecyclesWarningMesages = [];
 
         Object.keys(lifecycleWarningsMap).forEach(lifecycle => {
@@ -85,10 +84,10 @@ if (__DEV__) {
             lifecyclesWarningMesages.join('\n\n'),
           );
         }
-
-        pendingWarningsMap.delete(asyncRoot);
       },
     );
+
+    pendingWarningsMap = new Map();
   };
 
   const getAsyncRoot = (fiber: Fiber): Fiber => {

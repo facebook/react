@@ -311,6 +311,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function commitAllLifeCycles() {
+    if (__DEV__) {
+      ReactDebugAsyncWarnings.flushPendingAsyncWarnings();
+    }
+
     while (nextEffect !== null) {
       const effectTag = nextEffect.effectTag;
 
@@ -544,7 +548,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
       if (__DEV__) {
         ReactDebugCurrentFiber.resetCurrentFiber();
-        ReactDebugAsyncWarnings.flushPendingAsyncWarnings(workInProgress);
       }
 
       const returnFiber = workInProgress.return;
@@ -653,6 +656,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function performFailedUnitOfWork(workInProgress: Fiber): Fiber | null {
+    if (__DEV__) {
+      ReactDebugAsyncWarnings.discardPendingWarnings();
+    }
+
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in
