@@ -72,21 +72,21 @@ const RCTFabricUIManager = {
   }),
   cloneNodeWithNewProps: jest.fn(function cloneNodeWithNewProps(
     node,
-    newProps,
+    newPropsDiff,
   ) {
     return {
       reactTag: node.reactTag,
       viewName: node.viewName,
-      props: newProps,
+      props: {...node.props, ...newPropsDiff},
       children: node.children,
     };
   }),
   cloneNodeWithNewChildrenAndProps: jest.fn(
-    function cloneNodeWithNewChildrenAndProps(node, newProps) {
+    function cloneNodeWithNewChildrenAndProps(node, newPropsDiff) {
       return {
         reactTag: node.reactTag,
         viewName: node.viewName,
-        props: newProps,
+        props: {...node.props, ...newPropsDiff},
         children: [],
       };
     },
