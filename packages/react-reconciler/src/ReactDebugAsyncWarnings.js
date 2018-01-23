@@ -1,0 +1,143 @@
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
+import type {Fiber} from './ReactFiber';
+
+import getComponentName from 'shared/getComponentName';
+import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
+import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import warning from 'fbjs/lib/warning';
+
+type LIFECYCLE =
+  | 'UNSAFE_componentWillMount'
+  | 'UNSAFE_componentWillReceiveProps'
+  | 'UNSAFE_componentWillUpdate';
+type LifecycleToComponentsMap = {[lifecycle: LIFECYCLE]: Array<Fiber>};
+type FiberToLifecycleMap = Map<Fiber, LifecycleToComponentsMap>;
+
+const DID_WARN_KEY = '__didWarnAboutUnsafeAsyncLifecycles';
+
+const ReactDebugAsyncWarnings = {
+  flushPendingAsyncWarnings(): void {},
+  recordLifecycleWarnings(fiber: Fiber, instance: any): void {},
+};
+
+if (__DEV__) {
+  let pendingWarningsMap: FiberToLifecycleMap = new Map();
+
+  ReactDebugAsyncWarnings.flushPendingAsyncWarnings = () => {
+    ((pendingWarningsMap: any): FiberToLifecycleMap).forEach(
+      (lifecycleWarningsMap, asyncRoot) => {
+        let asyncRootComponentStack = null;
+
+        Object.keys(lifecycleWarningsMap).forEach(lifecycle => {
+          const lifecycleWarnings = lifecycleWarningsMap[lifecycle];
+          if (lifecycleWarnings.length > 0) {
+            if (asyncRootComponentStack === null) {
+              asyncRootComponentStack = getStackAddendumByWorkInProgressFiber(
+                asyncRoot,
+              );
+            }
+
+            const componentNames = [];
+            lifecycleWarnings.forEach(fiber => {
+              componentNames.push(getComponentName(fiber) || 'Component');
+              fiber.type[DID_WARN_KEY] = true;
+            });
+
+            warning(
+              false,
+              'An unsafe lifecycle method, %s, has been detected within an async tree. ' +
+                'Please update the following components: %s' +
+                '\n\nThe async tree is located:%s',
+              lifecycle,
+              componentNames.join(', '),
+              asyncRootComponentStack,
+            );
+          }
+        });
+      },
+    );
+
+    pendingWarningsMap = new Map();
+  };
+
+  const getAsyncRoot = (fiber: Fiber): Fiber => {
+    let maybeAsyncRoot = null;
+
+    while (fiber !== null) {
+      if (fiber.internalContextTag & AsyncUpdates) {
+        maybeAsyncRoot = fiber;
+      }
+
+      fiber = fiber.return;
+    }
+
+    return maybeAsyncRoot;
+  };
+
+  ReactDebugAsyncWarnings.recordLifecycleWarnings = (
+    fiber: Fiber,
+    instance: any,
+  ) => {
+    const asyncRoot = getAsyncRoot(fiber);
+
+    // Dedup strategy: Warn once per component.
+    // This is difficult to track any other way since component names
+    // are often vague and are likely to collide between 3rd party libraries.
+    // An expand property is probably okay to use here since it's DEV-only,
+    // and will only be set in the event of serious warnings.
+    if (fiber.type[DID_WARN_KEY] === true) {
+      return;
+    }
+
+    let warningsForRoot;
+    if (!pendingWarningsMap.has(asyncRoot)) {
+      warningsForRoot = {
+        UNSAFE_componentWillMount: [],
+        UNSAFE_componentWillReceiveProps: [],
+        UNSAFE_componentWillUpdate: [],
+      };
+
+      pendingWarningsMap.set(asyncRoot, warningsForRoot);
+    } else {
+      warningsForRoot = pendingWarningsMap.get(asyncRoot);
+    }
+
+    const unsafeLifecycles = [];
+    if (
+      typeof instance.componentWillMount === 'function' ||
+      typeof instance.UNSAFE_componentWillMount === 'function'
+    ) {
+      unsafeLifecycles.push('UNSAFE_componentWillMount');
+    }
+    if (
+      typeof instance.componentWillReceiveProps === 'function' ||
+      typeof instance.UNSAFE_componentWillReceiveProps === 'function'
+    ) {
+      unsafeLifecycles.push('UNSAFE_componentWillReceiveProps');
+    }
+    if (
+      typeof instance.componentWillUpdate === 'function' ||
+      typeof instance.UNSAFE_componentWillUpdate === 'function'
+    ) {
+      unsafeLifecycles.push('UNSAFE_componentWillUpdate');
+    }
+
+    if (unsafeLifecycles.length > 0) {
+      unsafeLifecycles.forEach(lifecycle => {
+        ((warningsForRoot: any): LifecycleToComponentsMap)[lifecycle].push(
+          fiber,
+        );
+      });
+    }
+  };
+}
+
+export default ReactDebugAsyncWarnings;

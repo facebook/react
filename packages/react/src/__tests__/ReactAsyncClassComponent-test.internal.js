@@ -136,7 +136,15 @@ describe('ReactAsyncClassComponent', () => {
     });
 
     it('should warn about unsafe legacy lifecycle methods within the tree', () => {
-      class AsyncParent extends React.unstable_AsyncComponent {
+      class SyncRoot extends React.Component {
+        UNSAFE_componentWillMount() {}
+        UNSAFE_componentWillUpdate() {}
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return <AsyncRoot />;
+        }
+      }
+      class AsyncRoot extends React.unstable_AsyncComponent {
         UNSAFE_componentWillMount() {}
         UNSAFE_componentWillUpdate() {}
         render() {
@@ -153,21 +161,169 @@ describe('ReactAsyncClassComponent', () => {
       let rendered;
 
       expect(() => {
-        rendered = ReactTestRenderer.create(<AsyncParent />);
-      }).toWarnDev(
-        'AsyncParent: An unsafe lifecycle method, ' +
-          'UNSAFE_componentWillMount, has been detected in an async tree.',
-      );
-      expect(() => rendered.update(<AsyncParent />)).toWarnDev([
-        'AsyncParent: An unsafe lifecycle method, ' +
-          'UNSAFE_componentWillUpdate, has been detected in an async tree.',
-        'Child: An unsafe lifecycle method, ' +
-          'UNSAFE_componentWillReceiveProps, has been detected in an async tree.',
+        rendered = ReactTestRenderer.create(<SyncRoot />);
+      }).toWarnDev([
+        'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+          'has been detected within an async tree. ' +
+          'Please update the following components: AsyncRoot' +
+          '\n\nThe async tree is located:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n    in SyncRoot (at **)',
+        'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
+          'has been detected within an async tree. ' +
+          'Please update the following components: Child' +
+          '\n\nThe async tree is located:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n    in SyncRoot (at **)',
+        'An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
+          'has been detected within an async tree. ' +
+          'Please update the following components: AsyncRoot' +
+          '\n\nThe async tree is located:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n    in SyncRoot (at **)',
       ]);
 
       // Dedupe
-      rendered = ReactTestRenderer.create(<AsyncParent />);
-      rendered.update(<AsyncParent />);
+      rendered.update(<SyncRoot />);
+      rendered = ReactTestRenderer.create(<SyncRoot />);
+    });
+
+    it('should coalesce warnings by lifecycle name', () => {
+      class SyncRoot extends React.Component {
+        UNSAFE_componentWillMount() {}
+        UNSAFE_componentWillUpdate() {}
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return <AsyncRoot />;
+        }
+      }
+      class AsyncRoot extends React.unstable_AsyncComponent {
+        UNSAFE_componentWillMount() {}
+        UNSAFE_componentWillUpdate() {}
+        render() {
+          return <Parent />;
+        }
+      }
+      class Parent extends React.Component {
+        componentWillMount() {}
+        componentWillUpdate() {}
+        componentWillReceiveProps() {}
+        render() {
+          return <Child />;
+        }
+      }
+      class Child extends React.Component {
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return null;
+        }
+      }
+
+      let rendered;
+
+      expect(
+        () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
+      ).toWarnDev([
+        'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+          'has been detected within an async tree. Please update ' +
+          'the following components: AsyncRoot, Parent' +
+          '\n\nThe async tree is located:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n    in SyncRoot (at **)',
+        'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
+          'has been detected within an async tree. Please update ' +
+          'the following components: Parent, Child' +
+          '\n\nThe async tree is located:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n    in SyncRoot (at **)',
+        'An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
+          'has been detected within an async tree. Please update ' +
+          'the following components: AsyncRoot, Parent' +
+          '\n\nThe async tree is located:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n    in SyncRoot (at **)',
+      ]);
+
+      // Dedupe
+      rendered.update(<SyncRoot />);
+      rendered = ReactTestRenderer.create(<SyncRoot />);
+    });
+
+    it('should group warnings by async root', () => {
+      class SyncRoot extends React.Component {
+        UNSAFE_componentWillMount() {}
+        UNSAFE_componentWillUpdate() {}
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return (
+            <div>
+              <AsyncRootOne />
+              <AsyncRootTwo />
+            </div>
+          );
+        }
+      }
+      class AsyncRootOne extends React.unstable_AsyncComponent {
+        render() {
+          return (
+            <Foo>
+              <Bar />
+            </Foo>
+          );
+        }
+      }
+      class AsyncRootTwo extends React.unstable_AsyncComponent {
+        render() {
+          return (
+            <Foo>
+              <Baz />
+            </Foo>
+          );
+        }
+      }
+      class Foo extends React.Component {
+        componentWillMount() {}
+        render() {
+          return this.props.children;
+        }
+      }
+      class Bar extends React.Component {
+        componentWillMount() {}
+        render() {
+          return null;
+        }
+      }
+      class Baz extends React.Component {
+        componentWillMount() {}
+        render() {
+          return null;
+        }
+      }
+
+      let rendered;
+
+      expect(
+        () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
+      ).toWarnDev([
+        'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+          'has been detected within an async tree. Please update ' +
+          'the following components: Foo, Bar' +
+          '\n\nThe async tree is located:' +
+          '\n    in AsyncRootOne (at **)' +
+          '\n    in div (at **)' +
+          '\n    in SyncRoot (at **)',
+        'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+          'has been detected within an async tree. Please update ' +
+          'the following components: Baz' +
+          '\n\nThe async tree is located:' +
+          '\n    in AsyncRootTwo (at **)' +
+          '\n    in div (at **)' +
+          '\n    in SyncRoot (at **)',
+      ]);
+
+      // Dedupe
+      rendered.update(<SyncRoot />);
+      rendered = ReactTestRenderer.create(<SyncRoot />);
     });
   });
 });

@@ -346,17 +346,16 @@ describe('ReactIncrementalScheduling', () => {
     }
 
     ReactNoop.render(<Foo step={1} />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: Foo',
+    );
 
     ReactNoop.render(<Foo step={2} />);
-    expect(() => {
-      expect(ReactNoop.flush()).toEqual([
-        'has callback before setState: false',
-        'has callback after setState: false',
-      ]);
-    }).toWarnDev(
-      'Foo: An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-        'has been detected in an async tree.',
-    );
+    expect(ReactNoop.flush()).toEqual([
+      'has callback before setState: false',
+      'has callback after setState: false',
+    ]);
   });
 });

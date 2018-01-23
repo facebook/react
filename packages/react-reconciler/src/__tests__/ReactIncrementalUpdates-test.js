@@ -307,20 +307,18 @@ describe('ReactIncrementalUpdates', () => {
       }
     }
     ReactNoop.render(<Foo />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
+        'has been detected within an async tree.',
+    );
 
     ops = [];
 
-    expect(() => {
-      ReactNoop.flushSync(() => {
-        instance.setState({a: 'a'});
+    ReactNoop.flushSync(() => {
+      instance.setState({a: 'a'});
 
-        ReactNoop.render(<Foo />); // Trigger componentWillReceiveProps
-      });
-    }).toWarnDev(
-      'Foo: An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-        'has been detected in an async tree.',
-    );
+      ReactNoop.render(<Foo />); // Trigger componentWillReceiveProps
+    });
 
     expect(instance.state).toEqual({a: 'a', b: 'b'});
     expect(ops).toEqual(['componentWillReceiveProps', 'render']);

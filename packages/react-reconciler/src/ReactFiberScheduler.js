@@ -16,6 +16,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactDebugAsyncWarnings from './ReactDebugAsyncWarnings';
 import {
   PerformedWork,
   Placement,
@@ -543,6 +544,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
       if (__DEV__) {
         ReactDebugCurrentFiber.resetCurrentFiber();
+        ReactDebugAsyncWarnings.flushPendingAsyncWarnings();
       }
 
       const returnFiber = workInProgress.return;

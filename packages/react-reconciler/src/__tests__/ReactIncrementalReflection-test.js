@@ -50,9 +50,7 @@ describe('ReactIncrementalReflection', () => {
     ReactNoop.render(<Foo />);
 
     // Render part way through but don't yet commit the updates.
-    expect(() => ReactNoop.flushDeferredPri(20)).toWarnDev(
-      'Component: An unsafe lifecycle method, UNSAFE_componentWillMount, has been detected in an async tree.',
-    );
+    ReactNoop.flushDeferredPri(20);
 
     expect(ops).toEqual(['componentWillMount', false]);
 
@@ -61,7 +59,11 @@ describe('ReactIncrementalReflection', () => {
     ops = [];
 
     // Render the rest and commit the updates.
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: Component',
+    );
 
     expect(ops).toEqual(['componentDidMount', true]);
 
@@ -100,7 +102,9 @@ describe('ReactIncrementalReflection', () => {
 
     ReactNoop.render(<Foo mount={true} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Component: An unsafe lifecycle method, UNSAFE_componentWillMount, has been detected in an async tree.',
+      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: Component',
     );
 
     expect(ops).toEqual(['Component']);
@@ -172,9 +176,14 @@ describe('ReactIncrementalReflection', () => {
 
     ReactNoop.render(<Foo step={0} />);
     // Flush past Component but don't complete rendering everything yet.
-    expect(() => ReactNoop.flushDeferredPri(30)).toWarnDev(
-      'Component: An unsafe lifecycle method, UNSAFE_componentWillMount, has been detected in an async tree.',
-    );
+    expect(() => ReactNoop.flushDeferredPri(30)).toWarnDev([
+      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: Component',
+      'An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: Component',
+    ]);
 
     expect(ops).toEqual([
       'componentWillMount',
@@ -204,9 +213,7 @@ describe('ReactIncrementalReflection', () => {
     // Flush next step which will cause an update but not yet render a new host
     // node.
     ReactNoop.render(<Foo step={1} />);
-    expect(ReactNoop.flush).toWarnDev(
-      'Component: An unsafe lifecycle method, UNSAFE_componentWillUpdate, has been detected in an async tree.',
-    );
+    ReactNoop.flush();
 
     expect(ops).toEqual([
       'componentWillUpdate',

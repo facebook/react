@@ -16,6 +16,7 @@ import {
   enableAsyncSubtreeAPI,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
+import ReactDebugAsyncWarnings from './ReactDebugAsyncWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -46,9 +47,6 @@ let didWarnAboutLegacyWillReceiveProps;
 let didWarnAboutLegacyWillUpdate;
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUndefinedDerivedState;
-let didWarnAboutUnsafeWillMountInAsyncTree;
-let didWarnAboutUnsafeWillReceivePropsInAsyncTree;
-let didWarnAboutUnsafeWillUpdateInAsyncTree;
 let didWarnAboutUninitializedState;
 let didWarnAboutWillReceivePropsAndDerivedState;
 let warnOnInvalidCallback;
@@ -62,9 +60,6 @@ if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = {};
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutUninitializedState = {};
-  didWarnAboutUnsafeWillMountInAsyncTree = {};
-  didWarnAboutUnsafeWillReceivePropsInAsyncTree = {};
-  didWarnAboutUnsafeWillUpdateInAsyncTree = {};
   didWarnAboutWillReceivePropsAndDerivedState = {};
 
   const didWarnOnInvalidCallback = {};
@@ -512,22 +507,6 @@ export default function(
     newProps,
     newContext,
   ) {
-    if (__DEV__) {
-      if (workInProgress.internalContextTag & AsyncUpdates) {
-        const componentName = getComponentName(workInProgress) || 'Component';
-        if (!didWarnAboutUnsafeWillReceivePropsInAsyncTree[componentName]) {
-          warning(
-            false,
-            '%s: An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-              'has been detected in an async tree. ' +
-              'Learn more at https://fb.me/react-async-component-lifecycle-hooks',
-            componentName,
-          );
-          didWarnAboutUnsafeWillReceivePropsInAsyncTree[componentName] = true;
-        }
-      }
-    }
-
     const oldState = instance.state;
     if (typeof instance.componentWillReceiveProps === 'function') {
       if (__DEV__) {
@@ -664,26 +643,21 @@ export default function(
       workInProgress.internalContextTag |= AsyncUpdates;
     }
 
+    if (__DEV__) {
+      // If we're inside of an async sub-tree,
+      // Warn about any unsafe lifecycles on this class component.
+      if (workInProgress.internalContextTag & AsyncUpdates) {
+        ReactDebugAsyncWarnings.recordLifecycleWarnings(
+          workInProgress,
+          instance,
+        );
+      }
+    }
+
     if (
       typeof instance.UNSAFE_componentWillMount === 'function' ||
       typeof instance.componentWillMount === 'function'
     ) {
-      if (__DEV__) {
-        if (workInProgress.internalContextTag & AsyncUpdates) {
-          const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutUnsafeWillMountInAsyncTree[componentName]) {
-            warning(
-              false,
-              '%s: An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-                'has been detected in an async tree. ' +
-                'Learn more at https://fb.me/react-async-component-lifecycle-hooks',
-              componentName,
-            );
-            didWarnAboutUnsafeWillMountInAsyncTree[componentName] = true;
-          }
-        }
-      }
-
       callComponentWillMount(workInProgress, instance);
       // If we had additional state updates during this life-cycle, let's
       // process them now.
@@ -913,23 +887,6 @@ export default function(
         typeof instance.UNSAFE_componentWillUpdate === 'function' ||
         typeof instance.componentWillUpdate === 'function'
       ) {
-        if (__DEV__) {
-          if (workInProgress.internalContextTag & AsyncUpdates) {
-            const componentName =
-              getComponentName(workInProgress) || 'Component';
-            if (!didWarnAboutUnsafeWillUpdateInAsyncTree[componentName]) {
-              warning(
-                false,
-                '%s: An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
-                  'has been detected in an async tree. ' +
-                  'Learn more at https://fb.me/react-async-component-lifecycle-hooks',
-                componentName,
-              );
-              didWarnAboutUnsafeWillUpdateInAsyncTree[componentName] = true;
-            }
-          }
-        }
-
         if (typeof instance.componentWillUpdate === 'function') {
           if (__DEV__) {
             if (warnAboutDeprecatedLifecycles) {

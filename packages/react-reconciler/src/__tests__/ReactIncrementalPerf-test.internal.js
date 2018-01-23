@@ -254,20 +254,21 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     addComment('Should not print a warning');
-    expect(ReactNoop.flush).toWarnDev(
-      'NotCascading: An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-        'has been detected in an async tree.',
-    );
+    expect(ReactNoop.flush).toWarnDev([
+      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: NotCascading',
+      'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: NotCascading',
+    ]);
     ReactNoop.render(
       <Parent>
         <NotCascading />
       </Parent>,
     );
     addComment('Should not print a warning');
-    expect(ReactNoop.flush).toWarnDev(
-      'NotCascading: An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-        'has been detected in an async tree.',
-    );
+    ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -294,18 +295,20 @@ describe('ReactDebugFiberPerf', () => {
     }
     ReactNoop.render(<AllLifecycles />);
     addComment('Mount');
-    expect(ReactNoop.flush).toWarnDev(
-      'AllLifecycles: An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-        'has been detected in an async tree.',
-    );
+    expect(ReactNoop.flush).toWarnDev([
+      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: AllLifecycles',
+      'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: AllLifecycles',
+      'An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
+        'has been detected within an async tree. ' +
+        'Please update the following components: AllLifecycles',
+    ]);
     ReactNoop.render(<AllLifecycles />);
     addComment('Update');
-    expect(ReactNoop.flush).toWarnDev([
-      'AllLifecycles: An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-        'has been detected in an async tree.',
-      'AllLifecycles: An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
-        'has been detected in an async tree.',
-    ]);
+    ReactNoop.flush();
     ReactNoop.render(null);
     addComment('Unmount');
     ReactNoop.flush();
