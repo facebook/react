@@ -308,8 +308,8 @@ describe('ReactIncrementalUpdates', () => {
     }
     ReactNoop.render(<Foo />);
     expect(ReactNoop.flush).toWarnDev(
-      'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-        'has been detected within an async tree.',
+      'UNSAFE_componentWillReceiveProps: Please update the following components ' +
+        'to use static getDerivedStateFromProps instead: Foo',
     );
 
     ops = [];

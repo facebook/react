@@ -29,39 +29,52 @@ const ReactDebugAsyncWarnings = {
 };
 
 if (__DEV__) {
+  const LIFECYCLE_SUGGESTIONS = {
+    UNSAFE_componentWillMount: 'componentDidMount',
+    UNSAFE_componentWillReceiveProps: 'static getDerivedStateFromProps',
+    UNSAFE_componentWillUpdate: 'componentDidUpdate',
+  };
+
   let pendingWarningsMap: FiberToLifecycleMap = new Map();
 
   ReactDebugAsyncWarnings.flushPendingAsyncWarnings = () => {
     ((pendingWarningsMap: any): FiberToLifecycleMap).forEach(
       (lifecycleWarningsMap, asyncRoot) => {
-        let asyncRootComponentStack = null;
+        const lifecyclesWarningMesages = [];
 
         Object.keys(lifecycleWarningsMap).forEach(lifecycle => {
           const lifecycleWarnings = lifecycleWarningsMap[lifecycle];
           if (lifecycleWarnings.length > 0) {
-            if (asyncRootComponentStack === null) {
-              asyncRootComponentStack = getStackAddendumByWorkInProgressFiber(
-                asyncRoot,
-              );
-            }
-
             const componentNames = [];
             lifecycleWarnings.forEach(fiber => {
               componentNames.push(getComponentName(fiber) || 'Component');
               fiber.type[DID_WARN_KEY] = true;
             });
 
-            warning(
-              false,
-              'An unsafe lifecycle method, %s, has been detected within an async tree. ' +
-                'Please update the following components: %s' +
-                '\n\nThe async tree is located:%s',
-              lifecycle,
-              componentNames.join(', '),
-              asyncRootComponentStack,
+            const suggestion = LIFECYCLE_SUGGESTIONS[lifecycle];
+
+            lifecyclesWarningMesages.push(
+              `${lifecycle}: Please update the following components to use ` +
+                `${suggestion} instead: ${componentNames.join(', ')}`,
             );
           }
         });
+
+        if (lifecyclesWarningMesages.length > 0) {
+          const asyncRootComponentStack = getStackAddendumByWorkInProgressFiber(
+            asyncRoot,
+          );
+
+          warning(
+            false,
+            'Unsafe lifecycle methods were found within the following async tree:%s' +
+              '\n\n%s' +
+              '\n\nLearn more about this warning here:' +
+              '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+            asyncRootComponentStack,
+            lifecyclesWarningMesages.join('\n\n'),
+          );
+        }
       },
     );
 

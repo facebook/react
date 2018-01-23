@@ -159,29 +159,21 @@ describe('ReactAsyncClassComponent', () => {
       }
 
       let rendered;
-
       expect(() => {
         rendered = ReactTestRenderer.create(<SyncRoot />);
-      }).toWarnDev([
-        'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-          'has been detected within an async tree. ' +
-          'Please update the following components: AsyncRoot' +
-          '\n\nThe async tree is located:' +
+      }).toWarnDev(
+        'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRoot (at **)' +
-          '\n    in SyncRoot (at **)',
-        'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-          'has been detected within an async tree. ' +
-          'Please update the following components: Child' +
-          '\n\nThe async tree is located:' +
-          '\n    in AsyncRoot (at **)' +
-          '\n    in SyncRoot (at **)',
-        'An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
-          'has been detected within an async tree. ' +
-          'Please update the following components: AsyncRoot' +
-          '\n\nThe async tree is located:' +
-          '\n    in AsyncRoot (at **)' +
-          '\n    in SyncRoot (at **)',
-      ]);
+          '\n    in SyncRoot (at **)' +
+          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: AsyncRoot' +
+          '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
+          'to use static getDerivedStateFromProps instead: Child' +
+          '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
+          'to use componentDidUpdate instead: AsyncRoot' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+      );
 
       // Dedupe
       rendered.update(<SyncRoot />);
@@ -223,26 +215,19 @@ describe('ReactAsyncClassComponent', () => {
 
       expect(
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
-      ).toWarnDev([
-        'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-          'has been detected within an async tree. Please update ' +
-          'the following components: AsyncRoot, Parent' +
-          '\n\nThe async tree is located:' +
+      ).toWarnDev(
+        'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRoot (at **)' +
-          '\n    in SyncRoot (at **)',
-        'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-          'has been detected within an async tree. Please update ' +
-          'the following components: Parent, Child' +
-          '\n\nThe async tree is located:' +
-          '\n    in AsyncRoot (at **)' +
-          '\n    in SyncRoot (at **)',
-        'An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
-          'has been detected within an async tree. Please update ' +
-          'the following components: AsyncRoot, Parent' +
-          '\n\nThe async tree is located:' +
-          '\n    in AsyncRoot (at **)' +
-          '\n    in SyncRoot (at **)',
-      ]);
+          '\n    in SyncRoot (at **)' +
+          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: AsyncRoot, Parent' +
+          '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
+          'to use static getDerivedStateFromProps instead: Parent, Child' +
+          '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
+          'to use componentDidUpdate instead: AsyncRoot, Parent' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+      );
 
       // Dedupe
       rendered.update(<SyncRoot />);
@@ -305,20 +290,18 @@ describe('ReactAsyncClassComponent', () => {
       expect(
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev([
-        'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-          'has been detected within an async tree. Please update ' +
-          'the following components: Foo, Bar' +
-          '\n\nThe async tree is located:' +
+        'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRootOne (at **)' +
           '\n    in div (at **)' +
-          '\n    in SyncRoot (at **)',
-        'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-          'has been detected within an async tree. Please update ' +
-          'the following components: Baz' +
-          '\n\nThe async tree is located:' +
+          '\n    in SyncRoot (at **)' +
+          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: Foo, Bar',
+        'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRootTwo (at **)' +
           '\n    in div (at **)' +
-          '\n    in SyncRoot (at **)',
+          '\n    in SyncRoot (at **)' +
+          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: Baz',
       ]);
 
       // Dedupe

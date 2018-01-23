@@ -60,9 +60,8 @@ describe('ReactIncrementalReflection', () => {
 
     // Render the rest and commit the updates.
     expect(ReactNoop.flush).toWarnDev(
-      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: Component',
+      'UNSAFE_componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Component',
     );
 
     expect(ops).toEqual(['componentDidMount', true]);
@@ -102,9 +101,8 @@ describe('ReactIncrementalReflection', () => {
 
     ReactNoop.render(<Foo mount={true} />);
     expect(ReactNoop.flush).toWarnDev(
-      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: Component',
+      'UNSAFE_componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Component',
     );
 
     expect(ops).toEqual(['Component']);
@@ -176,14 +174,12 @@ describe('ReactIncrementalReflection', () => {
 
     ReactNoop.render(<Foo step={0} />);
     // Flush past Component but don't complete rendering everything yet.
-    expect(() => ReactNoop.flushDeferredPri(30)).toWarnDev([
-      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: Component',
-      'An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: Component',
-    ]);
+    expect(() => ReactNoop.flushDeferredPri(30)).toWarnDev(
+      'UNSAFE_componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Component' +
+        '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
+        'to use componentDidUpdate instead: Component',
+    );
 
     expect(ops).toEqual([
       'componentWillMount',

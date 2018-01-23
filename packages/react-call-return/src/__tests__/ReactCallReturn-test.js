@@ -291,9 +291,8 @@ describe('ReactCallReturn', () => {
       </Call>,
     );
     expect(ReactNoop.flush).toWarnDev(
-      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: Return',
+      'UNSAFE_componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Return',
     );
 
     expect(ops).toEqual([

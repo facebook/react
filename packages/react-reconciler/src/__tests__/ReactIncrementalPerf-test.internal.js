@@ -255,12 +255,10 @@ describe('ReactDebugFiberPerf', () => {
     );
     addComment('Should not print a warning');
     expect(ReactNoop.flush).toWarnDev([
-      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: NotCascading',
-      'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: NotCascading',
+      'UNSAFE_componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: NotCascading' +
+        '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
+        'to use static getDerivedStateFromProps instead: NotCascading',
     ]);
     ReactNoop.render(
       <Parent>
@@ -295,17 +293,14 @@ describe('ReactDebugFiberPerf', () => {
     }
     ReactNoop.render(<AllLifecycles />);
     addComment('Mount');
-    expect(ReactNoop.flush).toWarnDev([
-      'An unsafe lifecycle method, UNSAFE_componentWillMount, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: AllLifecycles',
-      'An unsafe lifecycle method, UNSAFE_componentWillReceiveProps, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: AllLifecycles',
-      'An unsafe lifecycle method, UNSAFE_componentWillUpdate, ' +
-        'has been detected within an async tree. ' +
-        'Please update the following components: AllLifecycles',
-    ]);
+    expect(ReactNoop.flush).toWarnDev(
+      'UNSAFE_componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: AllLifecycles' +
+        '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
+        'to use static getDerivedStateFromProps instead: AllLifecycles' +
+        '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
+        'to use componentDidUpdate instead: AllLifecycles',
+    );
     ReactNoop.render(<AllLifecycles />);
     addComment('Update');
     ReactNoop.flush();
