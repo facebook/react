@@ -11,6 +11,8 @@
 
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
+const TEXT_NODE_TYPE = 3;
+
 let React;
 let ReactDOM;
 let ReactDOMServer;
@@ -37,6 +39,8 @@ const {
   itClientRenders,
   renderIntoDom,
   serverRender,
+  streamRender,
+  clientRenderOnServerString,
 } = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
@@ -45,6 +49,11 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('form controls', function() {
+    function expectNode(node, type, value) {
+      expect(node).not.toBe(null);
+      expect(node.nodeType).toBe(type);
+      expect(node.nodeValue).toMatch(value);
+    }
     describe('inputs', function() {
       itRenders('an input with a value and an onChange', async render => {
         const e = await render(<input value="foo" onChange={() => {}} />);
@@ -339,6 +348,31 @@ describe('ReactDOMServerIntegration', () => {
           expectSelectValue(e, 'bar');
         },
       );
+    });
+
+    describe('options', function() {
+      itRenders('an option with multiple text children', async render => {
+        const e = await render(
+          <select value="bar" readOnly={true}>
+            <option value="bar">A {'B'}</option>
+          </select>,
+          0,
+        );
+        const option = e.options[0];
+        if (
+          render === serverRender ||
+          render === streamRender ||
+          render === clientRenderOnServerString
+        ) {
+          // We have three nodes because there is a comment between them.
+          expect(option.childNodes.length).toBe(3);
+          expectNode(option.childNodes[0], TEXT_NODE_TYPE, 'A');
+          expectNode(option.childNodes[2], TEXT_NODE_TYPE, 'B');
+        } else {
+          expect(option.childNodes.length).toBe(1);
+          expectNode(option.childNodes[0], TEXT_NODE_TYPE, 'A B');
+        }
+      });
     });
 
     describe('user interaction', function() {
