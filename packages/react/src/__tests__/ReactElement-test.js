@@ -355,8 +355,6 @@ describe('ReactElement', () => {
       React.isValidFragmentElement({type: React.Fragment, props: {}}),
     ).toEqual(false);
 
-    // symbol can not be JSON.stringify or JSON.parse, but node has not Symbol now, so
-    // it be converted to a number, and number can be JSON.stringify
     const jsonElement = JSON.stringify(React.createElement(React.Fragment));
     expect(jsonElement).not.toHaveProperty('type');
     expect(React.isValidFragmentElement(JSON.parse(jsonElement))).toBe(true);
