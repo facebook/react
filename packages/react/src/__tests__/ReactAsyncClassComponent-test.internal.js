@@ -148,10 +148,29 @@ describe('ReactAsyncClassComponent', () => {
         UNSAFE_componentWillMount() {}
         UNSAFE_componentWillUpdate() {}
         render() {
-          return <Child />;
+          return (
+            <div>
+              <Wrapper>
+                <Foo />
+              </Wrapper>
+              <div>
+                <Bar />
+                <Foo />
+              </div>
+            </div>
+          );
         }
       }
-      class Child extends React.Component {
+      function Wrapper({children}) {
+        return <div>{children}</div>;
+      }
+      class Foo extends React.Component {
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return null;
+        }
+      }
+      class Bar extends React.Component {
         UNSAFE_componentWillReceiveProps() {}
         render() {
           return null;
@@ -168,7 +187,7 @@ describe('ReactAsyncClassComponent', () => {
           '\n\nUNSAFE_componentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot' +
           '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
-          'to use static getDerivedStateFromProps instead: Child' +
+          'to use static getDerivedStateFromProps instead: Bar, Foo' +
           '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
           'to use componentDidUpdate instead: AsyncRoot' +
           '\n\nLearn more about this warning here:' +
@@ -222,7 +241,7 @@ describe('ReactAsyncClassComponent', () => {
           '\n\nUNSAFE_componentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot, Parent' +
           '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
-          'to use static getDerivedStateFromProps instead: Parent, Child' +
+          'to use static getDerivedStateFromProps instead: Child, Parent' +
           '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
           'to use componentDidUpdate instead: AsyncRoot, Parent' +
           '\n\nLearn more about this warning here:' +
@@ -295,7 +314,7 @@ describe('ReactAsyncClassComponent', () => {
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\nUNSAFE_componentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: Foo, Bar',
+          'to use componentDidMount instead: Bar, Foo',
         'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRootTwo (at **)' +
           '\n    in div (at **)' +
@@ -352,6 +371,59 @@ describe('ReactAsyncClassComponent', () => {
       // Dedupe
       rendered.update(<AsyncRoot foo={true} />);
       rendered.update(<AsyncRoot foo={false} />);
+    });
+
+    it('should warn about lifecycles even in the event of an error', () => {
+      let caughtError;
+
+      class AsyncRoot extends React.unstable_AsyncComponent {
+        render() {
+          return <ErrorBoundary />;
+        }
+      }
+      class ErrorBoundary extends React.Component {
+        state = {
+          error: null,
+        };
+        componentDidCatch(error) {
+          caughtError = error;
+          this.setState({error});
+        }
+        render() {
+          return this.state.error ? <Bar /> : <Foo />;
+        }
+      }
+      class Foo extends React.Component {
+        UNSAFE_componentWillMount() {}
+        render() {
+          throw Error('whoops');
+        }
+      }
+      class Bar extends React.Component {
+        UNSAFE_componentWillMount() {}
+        render() {
+          return null;
+        }
+      }
+
+      expect(() => {
+        ReactTestRenderer.create(<AsyncRoot foo={true} />);
+      }).toWarnDev([
+        'Unsafe lifecycle methods were found within the following async tree:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: Foo' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+        'Unsafe lifecycle methods were found within the following async tree:' +
+          '\n    in AsyncRoot (at **)' +
+          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: Bar' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+      ]);
+
+      expect(caughtError).not.toBe(null);
     });
   });
 });

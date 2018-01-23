@@ -544,7 +544,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
       if (__DEV__) {
         ReactDebugCurrentFiber.resetCurrentFiber();
-        ReactDebugAsyncWarnings.flushPendingAsyncWarnings();
+        ReactDebugAsyncWarnings.flushPendingAsyncWarnings(workInProgress);
       }
 
       const returnFiber = workInProgress.return;

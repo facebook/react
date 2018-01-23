@@ -24,7 +24,7 @@ type FiberToLifecycleMap = Map<Fiber, LifecycleToComponentsMap>;
 const DID_WARN_KEY = '__didWarnAboutUnsafeAsyncLifecycles';
 
 const ReactDebugAsyncWarnings = {
-  flushPendingAsyncWarnings(): void {},
+  flushPendingAsyncWarnings(maybeAsyncRoot: Fiber): void {},
   recordLifecycleWarnings(fiber: Fiber, instance: any): void {},
 };
 
@@ -37,17 +37,23 @@ if (__DEV__) {
 
   let pendingWarningsMap: FiberToLifecycleMap = new Map();
 
-  ReactDebugAsyncWarnings.flushPendingAsyncWarnings = () => {
+  ReactDebugAsyncWarnings.flushPendingAsyncWarnings = (
+    maybeAsyncRoot: Fiber,
+  ) => {
     ((pendingWarningsMap: any): FiberToLifecycleMap).forEach(
       (lifecycleWarningsMap, asyncRoot) => {
+        if (asyncRoot !== maybeAsyncRoot) {
+          return;
+        }
+
         const lifecyclesWarningMesages = [];
 
         Object.keys(lifecycleWarningsMap).forEach(lifecycle => {
           const lifecycleWarnings = lifecycleWarningsMap[lifecycle];
           if (lifecycleWarnings.length > 0) {
-            const componentNames = [];
+            const componentNames = new Set();
             lifecycleWarnings.forEach(fiber => {
-              componentNames.push(getComponentName(fiber) || 'Component');
+              componentNames.add(getComponentName(fiber) || 'Component');
               fiber.type[DID_WARN_KEY] = true;
             });
 
@@ -55,7 +61,9 @@ if (__DEV__) {
 
             lifecyclesWarningMesages.push(
               `${lifecycle}: Please update the following components to use ` +
-                `${suggestion} instead: ${componentNames.join(', ')}`,
+                `${suggestion} instead: ${Array.from(componentNames)
+                  .sort()
+                  .join(', ')}`,
             );
           }
         });
@@ -75,10 +83,10 @@ if (__DEV__) {
             lifecyclesWarningMesages.join('\n\n'),
           );
         }
+
+        pendingWarningsMap.delete(asyncRoot);
       },
     );
-
-    pendingWarningsMap = new Map();
   };
 
   const getAsyncRoot = (fiber: Fiber): Fiber => {

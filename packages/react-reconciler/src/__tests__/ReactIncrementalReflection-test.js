@@ -174,12 +174,7 @@ describe('ReactIncrementalReflection', () => {
 
     ReactNoop.render(<Foo step={0} />);
     // Flush past Component but don't complete rendering everything yet.
-    expect(() => ReactNoop.flushDeferredPri(30)).toWarnDev(
-      'UNSAFE_componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: Component' +
-        '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
-        'to use componentDidUpdate instead: Component',
-    );
+    ReactNoop.flushDeferredPri(30);
 
     expect(ops).toEqual([
       'componentWillMount',
@@ -195,7 +190,12 @@ describe('ReactIncrementalReflection', () => {
     // not find any host nodes in it.
     expect(ReactNoop.findInstance(classInstance)).toBe(null);
 
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'UNSAFE_componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Component' +
+        '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
+        'to use componentDidUpdate instead: Component',
+    );
 
     const hostSpan = classInstance.span;
     expect(hostSpan).toBeDefined();
