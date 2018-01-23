@@ -290,7 +290,10 @@ describe('ReactCallReturn', () => {
         <Return value={2} />
       </Call>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Return',
+    );
 
     expect(ops).toEqual([
       'Mount Return 1',

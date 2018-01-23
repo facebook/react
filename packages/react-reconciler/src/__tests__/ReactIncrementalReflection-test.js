@@ -59,7 +59,10 @@ describe('ReactIncrementalReflection', () => {
     ops = [];
 
     // Render the rest and commit the updates.
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Component',
+    );
 
     expect(ops).toEqual(['componentDidMount', true]);
 
@@ -97,7 +100,10 @@ describe('ReactIncrementalReflection', () => {
     }
 
     ReactNoop.render(<Foo mount={true} />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Component',
+    );
 
     expect(ops).toEqual(['Component']);
     ops = [];
@@ -184,7 +190,12 @@ describe('ReactIncrementalReflection', () => {
     // not find any host nodes in it.
     expect(ReactNoop.findInstance(classInstance)).toBe(null);
 
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Component' +
+        '\n\ncomponentWillUpdate: Please update the following components ' +
+        'to use componentDidUpdate instead: Component',
+    );
 
     const hostSpan = classInstance.span;
     expect(hostSpan).toBeDefined();

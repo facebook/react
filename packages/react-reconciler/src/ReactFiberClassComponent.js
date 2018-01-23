@@ -16,6 +16,7 @@ import {
   enableAsyncSubtreeAPI,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
+import ReactDebugAsyncWarnings from './ReactDebugAsyncWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -640,6 +641,17 @@ export default function(
       workInProgress.type.prototype.unstable_isAsyncReactComponent === true
     ) {
       workInProgress.internalContextTag |= AsyncUpdates;
+    }
+
+    if (__DEV__) {
+      // If we're inside of an async sub-tree,
+      // Warn about any unsafe lifecycles on this class component.
+      if (workInProgress.internalContextTag & AsyncUpdates) {
+        ReactDebugAsyncWarnings.recordLifecycleWarnings(
+          workInProgress,
+          instance,
+        );
+      }
     }
 
     if (

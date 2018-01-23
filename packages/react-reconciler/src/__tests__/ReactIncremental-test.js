@@ -1430,8 +1430,8 @@ describe('ReactIncremental', () => {
       changeState() {
         this.setState({foo: 'bar'});
       }
-      componentWillUpdate() {
-        ops.push('componentWillUpdate');
+      componentDidUpdate() {
+        ops.push('componentDidUpdate');
       }
       render() {
         ops.push('render');
@@ -1451,7 +1451,7 @@ describe('ReactIncremental', () => {
     instance.changeState();
     ReactNoop.flush();
 
-    expect(ops).toEqual(['componentWillUpdate', 'render']);
+    expect(ops).toEqual(['render', 'componentDidUpdate']);
     expect(instance.state).toEqual({foo: 'bar'});
   });
 
@@ -2335,7 +2335,10 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<MyComponent />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'componentWillReceiveProps: Please update the following components ' +
+        'to use static getDerivedStateFromProps instead: MyComponent',
+    );
 
     expect(ops).toEqual([
       'render',

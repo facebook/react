@@ -16,6 +16,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactDebugAsyncWarnings from './ReactDebugAsyncWarnings';
 import {
   PerformedWork,
   Placement,
@@ -310,6 +311,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function commitAllLifeCycles() {
+    if (__DEV__) {
+      ReactDebugAsyncWarnings.flushPendingAsyncWarnings();
+    }
+
     while (nextEffect !== null) {
       const effectTag = nextEffect.effectTag;
 
@@ -651,6 +656,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function performFailedUnitOfWork(workInProgress: Fiber): Fiber | null {
+    if (__DEV__) {
+      ReactDebugAsyncWarnings.discardPendingWarnings();
+    }
+
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
     // means that we don't need an additional field on the work in

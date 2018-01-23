@@ -307,12 +307,16 @@ describe('ReactIncrementalUpdates', () => {
       }
     }
     ReactNoop.render(<Foo />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'componentWillReceiveProps: Please update the following components ' +
+        'to use static getDerivedStateFromProps instead: Foo',
+    );
 
     ops = [];
 
     ReactNoop.flushSync(() => {
       instance.setState({a: 'a'});
+
       ReactNoop.render(<Foo />); // Trigger componentWillReceiveProps
     });
 
