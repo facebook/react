@@ -136,8 +136,8 @@ export function updateWrapper(element: Element, props: Object) {
     if (newValue !== node.value) {
       node.value = newValue;
     }
-    if (props.defaultValue == null) {
-      node.defaultValue = newValue;
+    if (props.defaultValue == null && node.defaultValue !== newValue) {
+        node.defaultValue = newValue;
     }
   }
   if (props.defaultValue != null) {
