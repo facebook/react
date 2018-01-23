@@ -184,11 +184,11 @@ describe('ReactAsyncClassComponent', () => {
         'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n    in SyncRoot (at **)' +
-          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot' +
-          '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
+          '\n\ncomponentWillReceiveProps: Please update the following components ' +
           'to use static getDerivedStateFromProps instead: Bar, Foo' +
-          '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
+          '\n\ncomponentWillUpdate: Please update the following components ' +
           'to use componentDidUpdate instead: AsyncRoot' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-async-component-lifecycle-hooks',
@@ -238,11 +238,11 @@ describe('ReactAsyncClassComponent', () => {
         'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n    in SyncRoot (at **)' +
-          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot, Parent' +
-          '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
+          '\n\ncomponentWillReceiveProps: Please update the following components ' +
           'to use static getDerivedStateFromProps instead: Child, Parent' +
-          '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
+          '\n\ncomponentWillUpdate: Please update the following components ' +
           'to use componentDidUpdate instead: AsyncRoot, Parent' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-async-component-lifecycle-hooks',
@@ -313,13 +313,13 @@ describe('ReactAsyncClassComponent', () => {
           '\n    in AsyncRootOne (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
-          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar, Foo',
         'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRootTwo (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
-          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Baz',
       ]);
 
@@ -353,7 +353,7 @@ describe('ReactAsyncClassComponent', () => {
       }).toWarnDev(
         'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRoot (at **)' +
-          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Foo' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-async-component-lifecycle-hooks',
@@ -362,7 +362,7 @@ describe('ReactAsyncClassComponent', () => {
       expect(() => rendered.update(<AsyncRoot foo={false} />)).toWarnDev(
         'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRoot (at **)' +
-          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-async-component-lifecycle-hooks',
@@ -411,13 +411,13 @@ describe('ReactAsyncClassComponent', () => {
       }).toWarnDev([
         'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRoot (at **)' +
-          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Foo' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-async-component-lifecycle-hooks',
         'Unsafe lifecycle methods were found within the following async tree:' +
           '\n    in AsyncRoot (at **)' +
-          '\n\nUNSAFE_componentWillMount: Please update the following components ' +
+          '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-async-component-lifecycle-hooks',

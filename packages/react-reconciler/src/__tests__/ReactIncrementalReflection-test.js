@@ -60,7 +60,7 @@ describe('ReactIncrementalReflection', () => {
 
     // Render the rest and commit the updates.
     expect(ReactNoop.flush).toWarnDev(
-      'UNSAFE_componentWillMount: Please update the following components ' +
+      'componentWillMount: Please update the following components ' +
         'to use componentDidMount instead: Component',
     );
 
@@ -101,7 +101,7 @@ describe('ReactIncrementalReflection', () => {
 
     ReactNoop.render(<Foo mount={true} />);
     expect(ReactNoop.flush).toWarnDev(
-      'UNSAFE_componentWillMount: Please update the following components ' +
+      'componentWillMount: Please update the following components ' +
         'to use componentDidMount instead: Component',
     );
 
@@ -191,9 +191,9 @@ describe('ReactIncrementalReflection', () => {
     expect(ReactNoop.findInstance(classInstance)).toBe(null);
 
     expect(ReactNoop.flush).toWarnDev(
-      'UNSAFE_componentWillMount: Please update the following components ' +
+      'componentWillMount: Please update the following components ' +
         'to use componentDidMount instead: Component' +
-        '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
+        '\n\ncomponentWillUpdate: Please update the following components ' +
         'to use componentDidUpdate instead: Component',
     );
 

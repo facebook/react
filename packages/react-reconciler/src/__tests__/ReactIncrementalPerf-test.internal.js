@@ -255,9 +255,9 @@ describe('ReactDebugFiberPerf', () => {
     );
     addComment('Should not print a warning');
     expect(ReactNoop.flush).toWarnDev([
-      'UNSAFE_componentWillMount: Please update the following components ' +
+      'componentWillMount: Please update the following components ' +
         'to use componentDidMount instead: NotCascading' +
-        '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
+        '\n\ncomponentWillReceiveProps: Please update the following components ' +
         'to use static getDerivedStateFromProps instead: NotCascading',
     ]);
     ReactNoop.render(
@@ -294,11 +294,11 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(<AllLifecycles />);
     addComment('Mount');
     expect(ReactNoop.flush).toWarnDev(
-      'UNSAFE_componentWillMount: Please update the following components ' +
+      'componentWillMount: Please update the following components ' +
         'to use componentDidMount instead: AllLifecycles' +
-        '\n\nUNSAFE_componentWillReceiveProps: Please update the following components ' +
+        '\n\ncomponentWillReceiveProps: Please update the following components ' +
         'to use static getDerivedStateFromProps instead: AllLifecycles' +
-        '\n\nUNSAFE_componentWillUpdate: Please update the following components ' +
+        '\n\ncomponentWillUpdate: Please update the following components ' +
         'to use componentDidUpdate instead: AllLifecycles',
     );
     ReactNoop.render(<AllLifecycles />);

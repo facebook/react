@@ -57,13 +57,15 @@ if (__DEV__) {
               fiber.type[DID_WARN_KEY] = true;
             });
 
+            const formatted = lifecycle.replace('UNSAFE_', '');
             const suggestion = LIFECYCLE_SUGGESTIONS[lifecycle];
+            const sortedComponentNames = Array.from(componentNames)
+              .sort()
+              .join(', ');
 
             lifecyclesWarningMesages.push(
-              `${lifecycle}: Please update the following components to use ` +
-                `${suggestion} instead: ${Array.from(componentNames)
-                  .sort()
-                  .join(', ')}`,
+              `${formatted}: Please update the following components to use ` +
+                `${suggestion} instead: ${sortedComponentNames}`,
             );
           }
         });

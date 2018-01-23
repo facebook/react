@@ -49,7 +49,7 @@ describe('ReactIncrementalErrorLogging', () => {
 
     expect(() => {
       expect(ReactNoop.flushDeferredPri).toWarnDev([
-        'UNSAFE_componentWillMount: Please update the following components ' +
+        'componentWillMount: Please update the following components ' +
           'to use componentDidMount instead: ErrorThrowingComponent',
         'The above error occurred in the <ErrorThrowingComponent> component:\n' +
           '    in ErrorThrowingComponent (at **)\n' +

@@ -2336,7 +2336,7 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<MyComponent />);
     expect(ReactNoop.flush).toWarnDev(
-      'UNSAFE_componentWillReceiveProps: Please update the following components ' +
+      'componentWillReceiveProps: Please update the following components ' +
         'to use static getDerivedStateFromProps instead: MyComponent',
     );
 

@@ -291,7 +291,7 @@ describe('ReactCallReturn', () => {
       </Call>,
     );
     expect(ReactNoop.flush).toWarnDev(
-      'UNSAFE_componentWillMount: Please update the following components ' +
+      'componentWillMount: Please update the following components ' +
         'to use componentDidMount instead: Return',
     );
 
