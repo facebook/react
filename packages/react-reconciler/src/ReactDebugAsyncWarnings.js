@@ -21,8 +21,6 @@ type LIFECYCLE =
 type LifecycleToComponentsMap = {[lifecycle: LIFECYCLE]: Array<Fiber>};
 type FiberToLifecycleMap = Map<Fiber, LifecycleToComponentsMap>;
 
-const DID_WARN_KEY = '__didWarnAboutUnsafeAsyncLifecycles';
-
 const ReactDebugAsyncWarnings = {
   discardPendingWarnings(): void {},
   flushPendingAsyncWarnings(): void {},
@@ -37,6 +35,9 @@ if (__DEV__) {
   };
 
   let pendingWarningsMap: FiberToLifecycleMap = new Map();
+
+  // Tracks components we have already warned about.
+  const didWarnSet = new Set();
 
   ReactDebugAsyncWarnings.discardPendingWarnings = () => {
     pendingWarningsMap = new Map();
@@ -53,7 +54,7 @@ if (__DEV__) {
             const componentNames = new Set();
             lifecycleWarnings.forEach(fiber => {
               componentNames.add(getComponentName(fiber) || 'Component');
-              fiber.type[DID_WARN_KEY] = true;
+              didWarnSet.add(fiber.type);
             });
 
             const formatted = lifecycle.replace('UNSAFE_', '');
@@ -115,7 +116,7 @@ if (__DEV__) {
     // are often vague and are likely to collide between 3rd party libraries.
     // An expand property is probably okay to use here since it's DEV-only,
     // and will only be set in the event of serious warnings.
-    if (fiber.type[DID_WARN_KEY] === true) {
+    if (didWarnSet.has(fiber.type)) {
       return;
     }
 
