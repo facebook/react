@@ -432,5 +432,58 @@ describe('ReactAsyncClassComponent', () => {
 
       expect(caughtError).not.toBe(null);
     });
+
+    it('should also warn inside of pre-async trees', () => {
+      class SyncRoot extends React.Component {
+        UNSAFE_componentWillMount() {}
+        UNSAFE_componentWillUpdate() {}
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return <PreAsyncRoot />;
+        }
+      }
+      class PreAsyncRoot extends React.unstable_PreAsyncComponent {
+        UNSAFE_componentWillMount() {}
+        render() {
+          return <Wrapper />;
+        }
+      }
+      function Wrapper({children}) {
+        return (
+          <div>
+            <Bar />
+            <Foo />
+          </div>
+        );
+      }
+      class Foo extends React.Component {
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return null;
+        }
+      }
+      class Bar extends React.Component {
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return null;
+        }
+      }
+
+      expect(() => ReactTestRenderer.create(<SyncRoot />)).toWarnDev(
+        'Unsafe lifecycle methods were found within the following async tree:' +
+          '\n    in PreAsyncRoot (at **)' +
+          '\n    in SyncRoot (at **)' +
+          '\n\ncomponentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: PreAsyncRoot' +
+          '\n\ncomponentWillReceiveProps: Please update the following components ' +
+          'to use static getDerivedStateFromProps instead: Bar, Foo' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+      );
+
+      // Dedupe
+      const rendered = ReactTestRenderer.create(<SyncRoot />);
+      rendered.update(<SyncRoot />);
+    });
   });
 });

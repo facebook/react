@@ -26,7 +26,7 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {AsyncUpdates, PreAsyncUpdates} from './ReactTypeOfInternalContext';
 import {
   cacheContext,
   getMaskedContext,
@@ -642,16 +642,24 @@ export default function(
     if (
       enableAsyncSubtreeAPI &&
       workInProgress.type != null &&
-      workInProgress.type.prototype != null &&
-      workInProgress.type.prototype.unstable_isAsyncReactComponent === true
+      workInProgress.type.prototype != null
     ) {
-      workInProgress.internalContextTag |= AsyncUpdates;
+      const prototype = workInProgress.type.prototype;
+
+      if (prototype.unstable_isAsyncReactComponent === true) {
+        workInProgress.internalContextTag |= AsyncUpdates;
+      } else if (prototype.unstable_isPreAsyncReactComponent === true) {
+        workInProgress.internalContextTag |= PreAsyncUpdates;
+      }
     }
 
     if (__DEV__) {
       // If we're inside of an async sub-tree,
       // Warn about any unsafe lifecycles on this class component.
-      if (workInProgress.internalContextTag & AsyncUpdates) {
+      if (
+        workInProgress.internalContextTag & AsyncUpdates ||
+        workInProgress.internalContextTag & PreAsyncUpdates
+      ) {
         ReactDebugAsyncWarnings.recordLifecycleWarnings(
           workInProgress,
           instance,
