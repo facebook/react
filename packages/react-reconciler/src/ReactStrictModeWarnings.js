@@ -77,10 +77,10 @@ if (__DEV__) {
 
           warning(
             false,
-            'Unsafe lifecycle methods were found within the following async tree:%s' +
+            'Unsafe lifecycle methods were found within a strict-mode tree:%s' +
               '\n\n%s' +
               '\n\nLearn more about this warning here:' +
-              '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+              '\nhttps://fb.me/react-strict-mode-warnings',
             strictRootComponentStack,
             lifecyclesWarningMesages.join('\n\n'),
           );

@@ -194,7 +194,7 @@ describe('ReactAsyncClassComponent', () => {
       expect(() => {
         rendered = ReactTestRenderer.create(<SyncRoot />);
       }).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
@@ -204,7 +204,7 @@ describe('ReactAsyncClassComponent', () => {
           '\n\ncomponentWillUpdate: Please update the following components ' +
           'to use componentDidUpdate instead: AsyncRoot' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       // Dedupe
@@ -248,7 +248,7 @@ describe('ReactAsyncClassComponent', () => {
       expect(
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
@@ -258,7 +258,7 @@ describe('ReactAsyncClassComponent', () => {
           '\n\ncomponentWillUpdate: Please update the following components ' +
           'to use componentDidUpdate instead: AsyncRoot, Parent' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       // Dedupe
@@ -322,13 +322,13 @@ describe('ReactAsyncClassComponent', () => {
       expect(
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev([
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRootOne (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar, Foo',
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRootTwo (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
@@ -364,21 +364,21 @@ describe('ReactAsyncClassComponent', () => {
       expect(() => {
         rendered = ReactTestRenderer.create(<AsyncRoot foo={true} />);
       }).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Foo' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       expect(() => rendered.update(<AsyncRoot foo={false} />)).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       // Dedupe
@@ -422,12 +422,12 @@ describe('ReactAsyncClassComponent', () => {
       expect(() => {
         ReactTestRenderer.create(<AsyncRoot foo={true} />);
       }).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       expect(caughtError).not.toBe(null);
@@ -470,7 +470,7 @@ describe('ReactAsyncClassComponent', () => {
       }
 
       expect(() => ReactTestRenderer.create(<SyncRoot />)).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in PreAsyncRoot (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
@@ -478,7 +478,7 @@ describe('ReactAsyncClassComponent', () => {
           '\n\ncomponentWillReceiveProps: Please update the following components ' +
           'to use static getDerivedStateFromProps instead: Bar, Foo' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       // Dedupe
