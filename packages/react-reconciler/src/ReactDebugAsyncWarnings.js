@@ -11,7 +11,10 @@ import type {Fiber} from './ReactFiber';
 
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-import {AsyncUpdates, PreAsyncUpdates} from './ReactTypeOfInternalContext';
+import {
+  AsyncUpdates,
+  FutureCompatibilityChecks,
+} from './ReactTypeOfInternalContext';
 import warning from 'fbjs/lib/warning';
 
 type LIFECYCLE =
@@ -97,7 +100,7 @@ if (__DEV__) {
     while (fiber !== null) {
       if (
         fiber.internalContextTag & AsyncUpdates ||
-        fiber.internalContextTag & PreAsyncUpdates
+        fiber.internalContextTag & FutureCompatibilityChecks
       ) {
         maybeAsyncRoot = fiber;
       }

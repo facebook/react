@@ -26,7 +26,10 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {AsyncUpdates, PreAsyncUpdates} from './ReactTypeOfInternalContext';
+import {
+  AsyncUpdates,
+  FutureCompatibilityChecks,
+} from './ReactTypeOfInternalContext';
 import {
   cacheContext,
   getMaskedContext,
@@ -649,7 +652,7 @@ export default function(
       if (prototype.unstable_isAsyncReactComponent === true) {
         workInProgress.internalContextTag |= AsyncUpdates;
       } else if (prototype.unstable_isPreAsyncReactComponent === true) {
-        workInProgress.internalContextTag |= PreAsyncUpdates;
+        workInProgress.internalContextTag |= FutureCompatibilityChecks;
       }
     }
 
@@ -658,7 +661,7 @@ export default function(
       // Warn about any unsafe lifecycles on this class component.
       if (
         workInProgress.internalContextTag & AsyncUpdates ||
-        workInProgress.internalContextTag & PreAsyncUpdates
+        workInProgress.internalContextTag & FutureCompatibilityChecks
       ) {
         ReactDebugAsyncWarnings.recordLifecycleWarnings(
           workInProgress,
