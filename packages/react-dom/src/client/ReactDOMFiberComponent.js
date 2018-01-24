@@ -483,6 +483,7 @@ export function setInitialProperties(
     case 'option':
       ReactDOMFiberOption.validateProps(domElement, rawProps);
       props = ReactDOMFiberOption.getHostProps(domElement, rawProps);
+      ReactDOMFiberOption.reduceOptionChild(domElement);
       break;
     case 'select':
       ReactDOMFiberSelect.initWrapperState(domElement, rawProps);

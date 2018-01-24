@@ -75,3 +75,11 @@ export function getHostProps(element: Element, props: Object) {
 
   return hostProps;
 }
+
+export function reduceOptionChild(node) {
+  for (var i = 0; i < node.childNodes.length; i += 1) {
+    if (node.childNodes[i].nodeType !== 3) {
+      node.removeChild(node.childNodes[i]);
+    }
+  }
+}
