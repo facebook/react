@@ -199,11 +199,6 @@ export default function(
       );
       stopPhaseTimer();
 
-      // Simulate an async bailout/interruption by invoking lifecycle twice.
-      if (debugRenderPhaseSideEffects) {
-        instance.shouldComponentUpdate(newProps, newState, newContext);
-      }
-
       if (__DEV__) {
         warning(
           shouldUpdate !== undefined,
@@ -402,6 +397,12 @@ export default function(
     const context = needsContext
       ? getMaskedContext(workInProgress, unmaskedContext)
       : emptyObject;
+
+    // Instantiate twice to help detect side-effects.
+    if (debugRenderPhaseSideEffects) {
+      new ctor(props, context); // eslint-disable-line no-new
+    }
+
     const instance = new ctor(props, context);
     const state =
       instance.state !== null && instance.state !== undefined
@@ -537,11 +538,6 @@ export default function(
       startPhaseTimer(workInProgress, 'componentWillReceiveProps');
       instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
       stopPhaseTimer();
-
-      // Simulate an async bailout/interruption by invoking lifecycle twice.
-      if (debugRenderPhaseSideEffects) {
-        instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
-      }
     }
 
     if (instance.state !== oldState) {
@@ -587,6 +583,15 @@ export default function(
             didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
           }
         }
+      }
+
+      if (debugRenderPhaseSideEffects) {
+        // Invoke method an extra time to help detect side-effects.
+        type.getDerivedStateFromProps.call(
+          null,
+          props,
+          workInProgress.memoizedState,
+        );
       }
 
       const partialState = type.getDerivedStateFromProps.call(
@@ -916,11 +921,6 @@ export default function(
           startPhaseTimer(workInProgress, 'componentWillUpdate');
           instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
           stopPhaseTimer();
-
-          // Simulate an async bailout/interruption by invoking lifecycle twice.
-          if (debugRenderPhaseSideEffects) {
-            instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
-          }
         }
       }
       if (typeof instance.componentDidUpdate === 'function') {

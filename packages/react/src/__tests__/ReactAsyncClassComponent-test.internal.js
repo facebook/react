@@ -28,6 +28,10 @@ describe('ReactAsyncClassComponent', () => {
       let shouldComponentUpdate = false;
       class ClassComponent extends React.Component {
         state = {};
+        static getDerivedStateFromProps() {
+          log.push('getDerivedStateFromProps');
+          return null;
+        }
         constructor(props) {
           super(props);
           log.push('constructor');
@@ -60,11 +64,21 @@ describe('ReactAsyncClassComponent', () => {
         }
       }
 
-      const component = ReactTestRenderer.create(<ClassComponent />);
+      let component;
+
+      expect(() => {
+        component = ReactTestRenderer.create(<ClassComponent />);
+      }).toWarnDev(
+        'ClassComponent: Defines both componentWillReceiveProps() ' +
+          'and static getDerivedStateFromProps() methods. ' +
+          'We recommend using only getDerivedStateFromProps().',
+      );
+
       expect(log).toEqual([
         'constructor',
-        'componentWillMount',
         'constructor',
+        'getDerivedStateFromProps',
+        'getDerivedStateFromProps',
         'componentWillMount',
         'render',
         'render',
@@ -77,10 +91,9 @@ describe('ReactAsyncClassComponent', () => {
       component.update(<ClassComponent />);
       expect(log).toEqual([
         'componentWillReceiveProps',
-        'componentWillReceiveProps',
+        'getDerivedStateFromProps',
+        'getDerivedStateFromProps',
         'shouldComponentUpdate',
-        'shouldComponentUpdate',
-        'componentWillUpdate',
         'componentWillUpdate',
         'render',
         'render',
@@ -93,8 +106,8 @@ describe('ReactAsyncClassComponent', () => {
       component.update(<ClassComponent />);
       expect(log).toEqual([
         'componentWillReceiveProps',
-        'componentWillReceiveProps',
-        'shouldComponentUpdate',
+        'getDerivedStateFromProps',
+        'getDerivedStateFromProps',
         'shouldComponentUpdate',
       ]);
     });
