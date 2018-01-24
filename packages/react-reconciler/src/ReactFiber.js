@@ -30,7 +30,11 @@ import {
 import getComponentName from 'shared/getComponentName';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {NoContext, AsyncUpdates} from './ReactTypeOfInternalContext';
+import {
+  NoContext,
+  AsyncUpdates,
+  StrictMode,
+} from './ReactTypeOfInternalContext';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
@@ -293,7 +297,7 @@ export function createWorkInProgress(
 }
 
 export function createHostRootFiber(isAsync): Fiber {
-  const internalContextTag = isAsync ? AsyncUpdates : NoContext;
+  const internalContextTag = isAsync ? AsyncUpdates | StrictMode : NoContext;
   return createFiber(HostRoot, null, null, internalContextTag);
 }
 

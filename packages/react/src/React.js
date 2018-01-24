@@ -11,9 +11,9 @@ import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import {
   AsyncComponent,
-  EnableFutureCompatibilityChecks,
   Component,
   PureComponent,
+  StrictMode,
 } from './ReactBaseClasses';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -40,8 +40,8 @@ const React = {
   },
 
   Component,
-  EnableFutureCompatibilityChecks,
   PureComponent,
+  StrictMode,
   unstable_AsyncComponent: AsyncComponent,
 
   Fragment: REACT_FRAGMENT_TYPE,

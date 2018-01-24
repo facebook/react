@@ -433,7 +433,7 @@ describe('ReactAsyncClassComponent', () => {
       expect(caughtError).not.toBe(null);
     });
 
-    it('should also warn inside of pre-async trees', () => {
+    it('should also warn inside of "strict" mode trees', () => {
       class SyncRoot extends React.Component {
         UNSAFE_componentWillMount() {}
         UNSAFE_componentWillUpdate() {}
@@ -442,7 +442,7 @@ describe('ReactAsyncClassComponent', () => {
           return <PreAsyncRoot />;
         }
       }
-      class PreAsyncRoot extends React.EnableFutureCompatibilityChecks {
+      class PreAsyncRoot extends React.StrictMode {
         UNSAFE_componentWillMount() {}
         render() {
           return <Wrapper />;
