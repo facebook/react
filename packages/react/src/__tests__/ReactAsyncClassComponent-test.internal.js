@@ -442,7 +442,7 @@ describe('ReactAsyncClassComponent', () => {
           return <PreAsyncRoot />;
         }
       }
-      class PreAsyncRoot extends React.unstable_PreAsyncComponent {
+      class PreAsyncRoot extends React.EnableFutureCompatibilityChecks {
         UNSAFE_componentWillMount() {}
         render() {
           return <Wrapper />;

@@ -10,10 +10,10 @@ import ReactVersion from 'shared/ReactVersion';
 import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import {
+  AsyncComponent,
+  EnableFutureCompatibilityChecks,
   Component,
   PureComponent,
-  AsyncComponent,
-  PreAsyncComponent,
 } from './ReactBaseClasses';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -40,9 +40,9 @@ const React = {
   },
 
   Component,
+  EnableFutureCompatibilityChecks,
   PureComponent,
   unstable_AsyncComponent: AsyncComponent,
-  unstable_PreAsyncComponent: PreAsyncComponent,
 
   Fragment: REACT_FRAGMENT_TYPE,
 

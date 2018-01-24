@@ -120,53 +120,64 @@ if (__DEV__) {
 function ComponentDummy() {}
 ComponentDummy.prototype = Component.prototype;
 
-function configurePrototype(ComponentSubclass, prototypeProperties) {
-  const prototype = (ComponentSubclass.prototype = new ComponentDummy());
-  prototype.constructor = ComponentSubclass;
-
-  // Avoid an extra prototype jump for these methods.
-  Object.assign(prototype, Component.prototype);
-
-  // Mixin additional properties
-  Object.assign(prototype, prototypeProperties);
-}
-
-// Convenience component with default shallow equality check for sCU.
+/**
+ * Convenience component with default shallow equality check for sCU.
+ */
 function PureComponent(props, context, updater) {
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
   this.updater = updater || ReactNoopUpdateQueue;
 }
-configurePrototype(PureComponent, {isPureReactComponent: true});
 
-// Special component type that opts subtree into async rendering mode.
+const pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
+pureComponentPrototype.constructor = PureComponent;
+// Avoid an extra prototype jump for these methods.
+Object.assign(pureComponentPrototype, Component.prototype);
+pureComponentPrototype.isPureReactComponent = true;
+
+/**
+ * Special component type that opts subtree into async rendering mode.
+ */
 function AsyncComponent(props, context, updater) {
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
   this.updater = updater || ReactNoopUpdateQueue;
 }
-configurePrototype(AsyncComponent, {
-  unstable_isAsyncReactComponent: true,
-  render: function render() {
-    return this.props.children;
-  },
-});
 
-// Special component type that enables async rendering dev warnings.
-// This helps detect unsafe lifecycles without enabling actual async behavior.
-function PreAsyncComponent(props, context, updater) {
+const asyncComponentPrototype = (AsyncComponent.prototype = new ComponentDummy());
+asyncComponentPrototype.constructor = AsyncComponent;
+// Avoid an extra prototype jump for these methods.
+Object.assign(asyncComponentPrototype, Component.prototype);
+asyncComponentPrototype.unstable_isAsyncReactComponent = true;
+asyncComponentPrototype.render = function() {
+  return this.props.children;
+};
+
+/**
+ * Special component type that enables async rendering dev warnings.
+ * This helps detect unsafe lifecycles without enabling actual async behavior.
+ */
+function EnableFutureCompatibilityChecks(props, context, updater) {
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
   this.updater = updater || ReactNoopUpdateQueue;
 }
-configurePrototype(PreAsyncComponent, {
-  unstable_isPreAsyncReactComponent: true,
-  render: function render() {
-    return this.props.children;
-  },
-});
 
-export {Component, PureComponent, AsyncComponent, PreAsyncComponent};
+const efccPrototype = (EnableFutureCompatibilityChecks.prototype = new ComponentDummy());
+efccPrototype.constructor = EnableFutureCompatibilityChecks;
+// Avoid an extra prototype jump for these methods.
+Object.assign(efccPrototype, Component.prototype);
+efccPrototype.unstable_isAsyncReactComponent = true;
+efccPrototype.render = function() {
+  return this.props.children;
+};
+
+export {
+  Component,
+  EnableFutureCompatibilityChecks,
+  PureComponent,
+  AsyncComponent,
+};
