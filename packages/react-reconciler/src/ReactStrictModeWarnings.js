@@ -21,7 +21,7 @@ type LIFECYCLE =
 type LifecycleToComponentsMap = {[lifecycle: LIFECYCLE]: Array<Fiber>};
 type FiberToLifecycleMap = Map<Fiber, LifecycleToComponentsMap>;
 
-const ReactDebugAsyncWarnings = {
+const ReactStrictModeWarnings = {
   discardPendingWarnings(): void {},
   flushPendingAsyncWarnings(): void {},
   recordLifecycleWarnings(fiber: Fiber, instance: any): void {},
@@ -39,11 +39,11 @@ if (__DEV__) {
   // Tracks components we have already warned about.
   const didWarnSet = new Set();
 
-  ReactDebugAsyncWarnings.discardPendingWarnings = () => {
+  ReactStrictModeWarnings.discardPendingWarnings = () => {
     pendingWarningsMap = new Map();
   };
 
-  ReactDebugAsyncWarnings.flushPendingAsyncWarnings = () => {
+  ReactStrictModeWarnings.flushPendingAsyncWarnings = () => {
     ((pendingWarningsMap: any): FiberToLifecycleMap).forEach(
       (lifecycleWarningsMap, strictRoot) => {
         const lifecyclesWarningMesages = [];
@@ -105,7 +105,7 @@ if (__DEV__) {
     return maybeStrictRoot;
   };
 
-  ReactDebugAsyncWarnings.recordLifecycleWarnings = (
+  ReactStrictModeWarnings.recordLifecycleWarnings = (
     fiber: Fiber,
     instance: any,
   ) => {
@@ -163,4 +163,4 @@ if (__DEV__) {
   };
 }
 
-export default ReactDebugAsyncWarnings;
+export default ReactStrictModeWarnings;

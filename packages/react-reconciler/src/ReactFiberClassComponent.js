@@ -16,7 +16,7 @@ import {
   enableAsyncSubtreeAPI,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
-import ReactDebugAsyncWarnings from './ReactDebugAsyncWarnings';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -655,7 +655,7 @@ export default function(
 
     if (__DEV__) {
       if (workInProgress.internalContextTag & StrictMode) {
-        ReactDebugAsyncWarnings.recordLifecycleWarnings(
+        ReactStrictModeWarnings.recordLifecycleWarnings(
           workInProgress,
           instance,
         );
