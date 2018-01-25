@@ -25,6 +25,7 @@ export const enableUserTimingAPI = __DEV__;
 export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
 export const enablePersistentReconciler = false;
+export const enableNewContextAPI = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

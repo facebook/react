@@ -18,12 +18,14 @@ import {
   cloneElement,
   isValidElement,
 } from './ReactElement';
+import {createContext} from 'shared/ReactContext';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
+import {enableNewContextAPI} from 'shared/ReactFeatureFlags';
 
 const React = {
   Children: {
@@ -54,6 +56,10 @@ const React = {
     assign,
   },
 };
+
+if (enableNewContextAPI) {
+  React.unstable_createContext = createContext;
+}
 
 if (__DEV__) {
   Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {

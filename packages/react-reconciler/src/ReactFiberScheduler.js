@@ -33,6 +33,7 @@ import {
   HostComponent,
   HostPortal,
   ClassComponent,
+  ContextProvider,
 } from 'shared/ReactTypeOfWork';
 import {enableUserTimingAPI} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
@@ -64,6 +65,7 @@ import {
   stopCommitLifeCyclesTimer,
 } from './ReactDebugFiberPerf';
 import {popContextProvider} from './ReactFiberContext';
+import {popProvider} from './ReactFiberNewContext';
 import {reset} from './ReactFiberStack';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {createWorkInProgress} from './ReactFiber';
@@ -78,7 +80,8 @@ import {
 } from './ReactFiberExpirationTime';
 import {AsyncUpdates} from './ReactTypeOfInternalContext';
 import {getUpdateExpirationTime} from './ReactFiberUpdateQueue';
-import {resetContext} from './ReactFiberContext';
+import {resetContext as resetLegacyContext} from './ReactFiberContext';
+import {resetProviderStack} from './ReactFiberNewContext';
 
 const {
   invokeGuardedCallback,
@@ -238,7 +241,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Reset the stack
     reset();
     // Reset the cursors
-    resetContext();
+    resetLegacyContext();
+    resetProviderStack();
     resetHostContainer();
   }
 
@@ -1133,6 +1137,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           break;
         case HostPortal:
           popHostContainer(node);
+          break;
+        case ContextProvider:
+          popProvider(node);
           break;
       }
       if (node === to || node.alternate === to) {

@@ -7,12 +7,14 @@
  * @flow
  */
 
+import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
+
 // TODO: Use an opaque type once ESLint et al support the syntax
 export type ExpirationTime = number;
 
 export const NoWork = 0;
 export const Sync = 1;
-export const Never = 2147483647; // Max int32: Math.pow(2, 31) - 1
+export const Never = MAX_SIGNED_31_BIT_INT;
 
 const UNIT_SIZE = 10;
 const MAGIC_NUMBER_OFFSET = 2;

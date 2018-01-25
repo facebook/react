@@ -8,6 +8,11 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
+import type {
+  ReactProvider,
+  ReactConsumer,
+  ReactContext,
+} from 'shared/ReactTypes';
 
 import React from 'react';
 import emptyFunction from 'fbjs/lib/emptyFunction';
@@ -25,6 +30,8 @@ import {
   REACT_CALL_TYPE,
   REACT_RETURN_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_PROVIDER_TYPE,
+  REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -192,7 +199,7 @@ function warnNoop(
     const constructor = publicInstance.constructor;
     const componentName =
       (constructor && getComponentName(constructor)) || 'ReactClass';
-    const warningKey = `${componentName}.${callerName}`;
+    const warningKey = componentName + '.' + callerName;
     if (didWarnAboutNoopUpdateForComponent[warningKey]) {
       return;
     }
@@ -603,6 +610,7 @@ function resolve(
 }
 
 type Frame = {
+  type: mixed,
   domNamespace: string,
   children: FlatReactChildren,
   childIndex: number,
@@ -622,12 +630,16 @@ class ReactDOMServerRenderer {
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
 
+  providerStack: Array<?ReactProvider<any>>;
+  providerIndex: number;
+
   constructor(children: mixed, makeStaticMarkup: boolean) {
     const flatChildren = flattenTopLevelChildren(children);
 
     const topFrame: Frame = {
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
+      type: null,
       domNamespace: Namespaces.html,
       children: flatChildren,
       childIndex: 0,
@@ -642,6 +654,39 @@ class ReactDOMServerRenderer {
     this.currentSelectValue = null;
     this.previousWasTextNode = false;
     this.makeStaticMarkup = makeStaticMarkup;
+
+    // Context (new API)
+    this.providerStack = []; // Stack of provider objects
+    this.providerIndex = -1;
+  }
+
+  pushProvider<T>(provider: ReactProvider<T>): void {
+    this.providerIndex += 1;
+    this.providerStack[this.providerIndex] = provider;
+    const context: ReactContext<any> = provider.type.context;
+    context.currentValue = provider.props.value;
+  }
+
+  popProvider<T>(provider: ReactProvider<T>): void {
+    if (__DEV__) {
+      warning(
+        this.providerIndex > -1 &&
+          provider === this.providerStack[this.providerIndex],
+        'Unexpected pop.',
+      );
+    }
+    this.providerStack[this.providerIndex] = null;
+    this.providerIndex -= 1;
+    const context: ReactContext<any> = provider.type.context;
+    if (this.providerIndex < 0) {
+      context.currentValue = context.defaultValue;
+    } else {
+      // We assume this type is correct because of the index check above.
+      const previousProvider: ReactProvider<any> = (this.providerStack[
+        this.providerIndex
+      ]: any);
+      context.currentValue = previousProvider.props.value;
+    }
   }
 
   read(bytes: number): string | null {
@@ -663,8 +708,15 @@ class ReactDOMServerRenderer {
           this.previousWasTextNode = false;
         }
         this.stack.pop();
-        if (frame.tag === 'select') {
+        if (frame.type === 'select') {
           this.currentSelectValue = null;
+        } else if (
+          frame.type != null &&
+          frame.type.type != null &&
+          frame.type.type.$$typeof === REACT_PROVIDER_TYPE
+        ) {
+          const provider: ReactProvider<any> = (frame.type: any);
+          this.popProvider(provider);
         }
         continue;
       }
@@ -723,6 +775,7 @@ class ReactDOMServerRenderer {
         }
         const nextChildren = toArray(nextChild);
         const frame: Frame = {
+          type: null,
           domNamespace: parentNamespace,
           children: nextChildren,
           childIndex: 0,
@@ -738,12 +791,18 @@ class ReactDOMServerRenderer {
       // Safe because we just checked it's an element.
       const nextElement = ((nextChild: any): ReactElement);
       const elementType = nextElement.type;
+
+      if (typeof elementType === 'string') {
+        return this.renderDOM(nextElement, context, parentNamespace);
+      }
+
       switch (elementType) {
-        case REACT_FRAGMENT_TYPE:
+        case REACT_FRAGMENT_TYPE: {
           const nextChildren = toArray(
             ((nextChild: any): ReactElement).props.children,
           );
           const frame: Frame = {
+            type: null,
             domNamespace: parentNamespace,
             children: nextChildren,
             childIndex: 0,
@@ -755,6 +814,7 @@ class ReactDOMServerRenderer {
           }
           this.stack.push(frame);
           return '';
+        }
         case REACT_CALL_TYPE:
         case REACT_RETURN_TYPE:
           invariant(
@@ -764,8 +824,62 @@ class ReactDOMServerRenderer {
           );
         // eslint-disable-next-line-no-fallthrough
         default:
-          return this.renderDOM(nextElement, context, parentNamespace);
+          break;
       }
+      if (typeof elementType === 'object' && elementType !== null) {
+        switch (elementType.$$typeof) {
+          case REACT_PROVIDER_TYPE: {
+            const provider: ReactProvider<any> = (nextChild: any);
+            const nextProps = provider.props;
+            const nextChildren = toArray(nextProps.children);
+            const frame: Frame = {
+              type: provider,
+              domNamespace: parentNamespace,
+              children: nextChildren,
+              childIndex: 0,
+              context: context,
+              footer: '',
+            };
+            if (__DEV__) {
+              ((frame: any): FrameDev).debugElementStack = [];
+            }
+
+            this.pushProvider(provider);
+
+            this.stack.push(frame);
+            return '';
+          }
+          case REACT_CONTEXT_TYPE: {
+            const consumer: ReactConsumer<any> = (nextChild: any);
+            const nextProps = consumer.props;
+            const nextValue = consumer.type.currentValue;
+
+            const nextChildren = toArray(nextProps.render(nextValue));
+            const frame: Frame = {
+              type: nextChild,
+              domNamespace: parentNamespace,
+              children: nextChildren,
+              childIndex: 0,
+              context: context,
+              footer: '',
+            };
+            if (__DEV__) {
+              ((frame: any): FrameDev).debugElementStack = [];
+            }
+            this.stack.push(frame);
+            return '';
+          }
+          default:
+            break;
+        }
+      }
+      invariant(
+        false,
+        'Element type is invalid: expected a string (for built-in ' +
+          'components) or a class/function (for composite components) ' +
+          'but got: %s.',
+        elementType == null ? elementType : typeof elementType,
+      );
     }
   }
 
@@ -1052,7 +1166,7 @@ class ReactDOMServerRenderer {
     }
     const frame = {
       domNamespace: getChildNamespace(parentNamespace, element.type),
-      tag,
+      type: tag,
       children,
       childIndex: 0,
       context: context,

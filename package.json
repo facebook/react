@@ -80,6 +80,7 @@
     "platform": "^1.1.0",
     "prettier": "1.8.1",
     "prop-types": "^15.6.0",
+    "random-seed": "^0.3.0",
     "rimraf": "^2.6.1",
     "rollup": "^0.52.1",
     "rollup-plugin-babel": "^3.0.1",

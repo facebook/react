@@ -14,7 +14,9 @@ export type ReactNode =
   | ReactReturn<any>
   | ReactPortal
   | ReactText
-  | ReactFragment;
+  | ReactFragment
+  | ReactProvider<any>
+  | ReactConsumer<any>;
 
 export type ReactFragment = ReactEmpty | Iterable<React$Node>;
 
@@ -45,6 +47,50 @@ export type ReactReturn<V> = {
   props: {
     value: V,
   },
+};
+
+export type ReactProvider<T> = {
+  $$typeof: Symbol | number,
+  type: ReactProviderType<T>,
+  key: null | string,
+  ref: null,
+  props: {
+    value: T,
+    children?: ReactNodeList,
+  },
+};
+
+export type ReactProviderType<T> = {
+  $$typeof: Symbol | number,
+  context: ReactContext<T>,
+};
+
+export type ReactConsumer<T> = {
+  $$typeof: Symbol | number,
+  type: ReactContext<T>,
+  key: null | string,
+  ref: null,
+  props: {
+    render: (value: T) => ReactNodeList,
+    bits?: number,
+  },
+};
+
+export type ReactContext<T> = {
+  $$typeof: Symbol | number,
+  provide(value: T, children: ReactNodeList, key?: string): ReactProvider<T>,
+  consume(
+    render: (value: T) => ReactNodeList,
+    observedBits?: number,
+    key?: string,
+  ): ReactConsumer<T>,
+  calculateChangedBits: ((a: T, b: T) => number) | null,
+  defaultValue: T,
+  currentValue: T,
+  changedBits: number,
+
+  // DEV only
+  _currentRenderer?: Object | null,
 };
 
 export type ReactPortal = {

@@ -27,6 +27,12 @@ export const REACT_FRAGMENT_TYPE = hasSymbol
 export const REACT_STRICT_MODE_TYPE = hasSymbol
   ? Symbol.for('react.strict_mode')
   : 0xeacc;
+export const REACT_PROVIDER_TYPE = hasSymbol
+  ? Symbol.for('react.provider')
+  : 0xeacd;
+export const REACT_CONTEXT_TYPE = hasSymbol
+  ? Symbol.for('react.context')
+  : 0xeace;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

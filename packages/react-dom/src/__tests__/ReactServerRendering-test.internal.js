@@ -14,6 +14,7 @@ let React;
 let ReactCallReturn;
 let ReactDOMServer;
 let PropTypes;
+let ReactFeatureFlags;
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -22,6 +23,8 @@ function normalizeCodeLocInfo(str) {
 describe('ReactDOMServer', () => {
   beforeEach(() => {
     jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableNewContextAPI = true;
     React = require('react');
     ReactCallReturn = require('react-call-return');
     PropTypes = require('prop-types');
@@ -382,6 +385,99 @@ describe('ReactDOMServer', () => {
         </ContextProvider>,
       );
       expect(markup).toContain('hello, world');
+    });
+
+    it('renders with new context API', () => {
+      const Context = React.unstable_createContext(0);
+
+      function Provider(props) {
+        return Context.provide(props.value, props.children);
+      }
+
+      function Consumer(props) {
+        return Context.consume(value => {
+          return 'Result: ' + value;
+        });
+      }
+
+      const Indirection = React.Fragment;
+
+      function App(props) {
+        return (
+          <Provider value={props.value}>
+            <Provider value={2}>
+              <Consumer />
+            </Provider>
+            <Indirection>
+              <Indirection>
+                <Consumer />
+                <Provider value={3}>
+                  <Consumer />
+                </Provider>
+              </Indirection>
+            </Indirection>
+            <Consumer />
+          </Provider>
+        );
+      }
+
+      const markup = ReactDOMServer.renderToString(<App value={1} />);
+      // Extract the numbers rendered by the consumers
+      const results = markup.match(/\d+/g).map(Number);
+      expect(results).toEqual([2, 1, 3, 1]);
+    });
+
+    it('renders context API, reentrancy', () => {
+      const Context = React.unstable_createContext(0);
+
+      function Provider(props) {
+        return Context.provide(props.value, props.children);
+      }
+
+      function Consumer(props) {
+        return Context.consume(value => {
+          return 'Result: ' + value;
+        });
+      }
+
+      let reentrantMarkup;
+      function Reentrant() {
+        reentrantMarkup = ReactDOMServer.renderToString(
+          <App value={1} reentrant={false} />,
+        );
+        return null;
+      }
+
+      const Indirection = React.Fragment;
+
+      function App(props) {
+        return (
+          <Provider value={props.value}>
+            {props.reentrant && <Reentrant />}
+            <Provider value={2}>
+              <Consumer />
+            </Provider>
+            <Indirection>
+              <Indirection>
+                <Consumer />
+                <Provider value={3}>
+                  <Consumer />
+                </Provider>
+              </Indirection>
+            </Indirection>
+            <Consumer />
+          </Provider>
+        );
+      }
+
+      const markup = ReactDOMServer.renderToString(
+        <App value={1} reentrant={true} />,
+      );
+      // Extract the numbers rendered by the consumers
+      const results = markup.match(/\d+/g).map(Number);
+      const reentrantResults = reentrantMarkup.match(/\d+/g).map(Number);
+      expect(results).toEqual([2, 1, 3, 1]);
+      expect(reentrantResults).toEqual([2, 1, 3, 1]);
     });
 
     it('renders components with different batching strategies', () => {
