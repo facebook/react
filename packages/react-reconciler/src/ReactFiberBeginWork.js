@@ -40,7 +40,10 @@ import {
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
-import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
+import {
+  debugRenderPhaseSideEffects,
+  debugRenderPhaseSideEffectsForStrictMode,
+} from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
@@ -289,13 +292,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       nextChildren = instance.render();
       if (
         debugRenderPhaseSideEffects ||
-        workInProgress.internalContextTag & StrictMode
+        (debugRenderPhaseSideEffectsForStrictMode &&
+          workInProgress.internalContextTag & StrictMode)
       ) {
         instance.render();
       }
       ReactDebugCurrentFiber.setCurrentPhase(null);
     } else {
-      if (debugRenderPhaseSideEffects) {
+      if (
+        debugRenderPhaseSideEffects ||
+        (debugRenderPhaseSideEffectsForStrictMode &&
+          workInProgress.internalContextTag & StrictMode)
+      ) {
         instance.render();
       }
       nextChildren = instance.render();

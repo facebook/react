@@ -10,7 +10,10 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
+import {
+  debugRenderPhaseSideEffects,
+  debugRenderPhaseSideEffectsForStrictMode,
+} from 'shared/ReactFeatureFlags';
 import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
@@ -274,7 +277,8 @@ export function processUpdateQueue<State>(
     // Ignore the return value in this case.
     if (
       debugRenderPhaseSideEffects ||
-      (__DEV__ && workInProgress.internalContextTag & StrictMode)
+      (debugRenderPhaseSideEffectsForStrictMode &&
+        workInProgress.internalContextTag & StrictMode)
     ) {
       getStateFromUpdate(update, instance, state, props);
     }

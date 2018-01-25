@@ -13,6 +13,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
   debugRenderPhaseSideEffects,
+  debugRenderPhaseSideEffectsForStrictMode,
   enableAsyncSubtreeAPI,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
@@ -393,7 +394,8 @@ export default function(
     // Instantiate twice to help detect side-effects.
     if (
       debugRenderPhaseSideEffects ||
-      (__DEV__ && workInProgress.internalContextTag & StrictMode)
+      (debugRenderPhaseSideEffectsForStrictMode &&
+        workInProgress.internalContextTag & StrictMode)
     ) {
       new ctor(props, context); // eslint-disable-line no-new
     }
@@ -542,7 +544,8 @@ export default function(
 
       if (
         debugRenderPhaseSideEffects ||
-        (__DEV__ && workInProgress.internalContextTag & StrictMode)
+        (debugRenderPhaseSideEffectsForStrictMode &&
+          workInProgress.internalContextTag & StrictMode)
       ) {
         // Invoke method an extra time to help detect side-effects.
         type.getDerivedStateFromProps.call(
