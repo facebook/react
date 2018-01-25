@@ -13,7 +13,7 @@ let React;
 let ReactFeatureFlags;
 let ReactTestRenderer;
 
-describe('ReactAsyncClassComponent', () => {
+describe('ReactStrictMode', () => {
   describe('debugRenderPhaseSideEffects', () => {
     beforeEach(() => {
       jest.resetModules();
