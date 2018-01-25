@@ -56,7 +56,13 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    ReactNoop.flushDeferredPri();
+    expect(ReactNoop.flushDeferredPri).toWarnDev([
+      'The above error occurred in the <BrokenRender> component:\n' +
+        '    in BrokenRender (at **)\n' +
+        '    in ErrorBoundary (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, ErrorBoundary.',
+    ]);
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
   });
 
@@ -96,7 +102,15 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
 
     ops.length = 0;
-    ReactNoop.flushDeferredPri(30);
+    expect(() => {
+      ReactNoop.flushDeferredPri(30);
+    }).toWarnDev(
+      'The above error occurred in the <BrokenRender> component:\n' +
+        '    in BrokenRender (at **)\n' +
+        '    in ErrorBoundary (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, ErrorBoundary.',
+    );
     expect(ops).toEqual([
       'BrokenRender',
       'ErrorBoundary componentDidCatch',
@@ -130,13 +144,21 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    ReactNoop.flushSync(() => {
-      ReactNoop.render(
-        <ErrorBoundary>
-          <BrokenRender />
-        </ErrorBoundary>,
-      );
-    });
+    expect(() =>
+      ReactNoop.flushSync(() => {
+        ReactNoop.render(
+          <ErrorBoundary>
+            <BrokenRender />
+          </ErrorBoundary>,
+        );
+      }),
+    ).toWarnDev([
+      'The above error occurred in the <BrokenRender> component:\n' +
+        '    in BrokenRender (at **)\n' +
+        '    in ErrorBoundary (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, ErrorBoundary.',
+    ]);
 
     expect(ops).toEqual([
       'ErrorBoundary render success',
@@ -172,14 +194,22 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    ReactNoop.flushSync(() => {
-      ReactNoop.render(<ErrorBoundary>Before the storm.</ErrorBoundary>);
-      ReactNoop.render(
-        <ErrorBoundary>
-          <BrokenRender />
-        </ErrorBoundary>,
-      );
-    });
+    expect(() =>
+      ReactNoop.flushSync(() => {
+        ReactNoop.render(<ErrorBoundary>Before the storm.</ErrorBoundary>);
+        ReactNoop.render(
+          <ErrorBoundary>
+            <BrokenRender />
+          </ErrorBoundary>,
+        );
+      }),
+    ).toWarnDev(
+      'The above error occurred in the <BrokenRender> component:\n' +
+        '    in BrokenRender (at **)\n' +
+        '    in ErrorBoundary (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, ErrorBoundary.',
+    );
 
     expect(ops).toEqual([
       'ErrorBoundary render success',
@@ -215,8 +245,19 @@ describe('ReactIncrementalErrorHandling', () => {
     );
 
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n' +
+          '    in RethrowErrorBoundary (at **)\n\n' +
+          'React will try to recreate this component tree from scratch ' +
+          'using the error boundary you provided, RethrowErrorBoundary.',
+        'The above error occurred in the <RethrowErrorBoundary> component:\n' +
+          '    in RethrowErrorBoundary (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
+
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
@@ -254,7 +295,17 @@ describe('ReactIncrementalErrorHandling', () => {
 
     ops.length = 0;
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n' +
+          '    in RethrowErrorBoundary (at **)\n\n' +
+          'React will try to recreate this component tree from scratch ' +
+          'using the error boundary you provided, RethrowErrorBoundary.',
+        'The above error occurred in the <RethrowErrorBoundary> component:\n' +
+          '    in RethrowErrorBoundary (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
     expect(ops).toEqual([
       'BrokenRender',
@@ -282,14 +333,27 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     expect(() => {
-      ReactNoop.flushSync(() => {
-        ReactNoop.render(
-          <RethrowErrorBoundary>
-            <BrokenRender />
-          </RethrowErrorBoundary>,
-        );
-      });
+      expect(() =>
+        ReactNoop.flushSync(() => {
+          ReactNoop.render(
+            <RethrowErrorBoundary>
+              <BrokenRender />
+            </RethrowErrorBoundary>,
+          );
+        }),
+      ).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n' +
+          '    in RethrowErrorBoundary (at **)\n\n' +
+          'React will try to recreate this component tree from scratch ' +
+          'using the error boundary you provided, RethrowErrorBoundary.',
+        'The above error occurred in the <RethrowErrorBoundary> component:\n' +
+          '    in RethrowErrorBoundary (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
+
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
@@ -317,17 +381,30 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     expect(() => {
-      ReactNoop.flushSync(() => {
-        ReactNoop.render(
-          <RethrowErrorBoundary>Before the storm.</RethrowErrorBoundary>,
-        );
-        ReactNoop.render(
-          <RethrowErrorBoundary>
-            <BrokenRender />
-          </RethrowErrorBoundary>,
-        );
-      });
+      expect(() =>
+        ReactNoop.flushSync(() => {
+          ReactNoop.render(
+            <RethrowErrorBoundary>Before the storm.</RethrowErrorBoundary>,
+          );
+          ReactNoop.render(
+            <RethrowErrorBoundary>
+              <BrokenRender />
+            </RethrowErrorBoundary>,
+          );
+        }),
+      ).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n' +
+          '    in RethrowErrorBoundary (at **)\n\n' +
+          'React will try to recreate this component tree from scratch ' +
+          'using the error boundary you provided, RethrowErrorBoundary.',
+        'The above error occurred in the <RethrowErrorBoundary> component:\n' +
+          '    in RethrowErrorBoundary (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
+
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
@@ -395,7 +472,12 @@ describe('ReactIncrementalErrorHandling', () => {
 
     ReactNoop.render(<BrokenRender />);
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev(
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      );
     }).toThrow('Hello');
     expect(ops).toEqual(['BrokenRender']);
 
@@ -427,7 +509,12 @@ describe('ReactIncrementalErrorHandling', () => {
 
     expect(() => {
       ReactNoop.render(<BrokenRender throw={true} />);
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
     expect(ops).toEqual(['BrokenRender']);
 
@@ -459,7 +546,12 @@ describe('ReactIncrementalErrorHandling', () => {
 
     expect(() => {
       ReactNoop.render(<div />);
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenComponentWillUnmount> component:\n' +
+          '    in BrokenComponentWillUnmount (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
 
     ops = [];
@@ -500,10 +592,19 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.render(<Parent />);
     ReactNoop.flush();
     ReactNoop.render(null);
-    expect(ReactNoop.flush()).toEqual([
-      // Parent unmounts before the error is thrown.
-      'Parent componentWillUnmount',
-      'ThrowsOnUnmount componentWillUnmount',
+    expect(() => {
+      expect(ReactNoop.flush()).toEqual([
+        // Parent unmounts before the error is thrown.
+        'Parent componentWillUnmount',
+        'ThrowsOnUnmount componentWillUnmount',
+      ]);
+    }).toWarnDev([
+      'The above error occurred in the <ThrowsOnUnmount> component:\n' +
+        '    in ThrowsOnUnmount (at **)\n' +
+        '    in Boundary (at **)\n' +
+        '    in Parent (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, Boundary.',
     ]);
     ReactNoop.render(<Parent />);
   });
@@ -539,9 +640,18 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.render(<Parent />);
     ReactNoop.flush();
 
-    ReactNoop.flushSync(() => {
-      ReactNoop.render(<Parent />);
-    });
+    expect(() =>
+      ReactNoop.flushSync(() => {
+        ReactNoop.render(<Parent />);
+      }),
+    ).toWarnDev([
+      'The above error occurred in the <Child> component:\n' +
+        '    in Child (at **)\n' +
+        '    in Boundary (at **)\n' +
+        '    in Parent (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, Boundary.',
+    ]);
   });
 
   it('continues work on other roots despite caught errors', () => {
@@ -571,7 +681,14 @@ describe('ReactIncrementalErrorHandling', () => {
       'a',
     );
     ReactNoop.renderToRootWithID(<span prop="b:1" />, 'b');
-    ReactNoop.flush();
+    // ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev([
+      'The above error occurred in the <BrokenRender> component:\n' +
+        '    in BrokenRender (at **)\n' +
+        '    in ErrorBoundary (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, ErrorBoundary.',
+    ]);
     expect(ReactNoop.getChildren('a')).toEqual([
       span('Caught an error: Hello.'),
     ]);
@@ -585,14 +702,24 @@ describe('ReactIncrementalErrorHandling', () => {
 
     ReactNoop.renderToRootWithID(<BrokenRender />, 'a');
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
     expect(ReactNoop.getChildren('a')).toEqual([]);
 
     ReactNoop.renderToRootWithID(<BrokenRender />, 'a');
     ReactNoop.renderToRootWithID(<span prop="b:2" />, 'b');
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
 
     expect(ReactNoop.getChildren('a')).toEqual([]);
@@ -601,7 +728,12 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.renderToRootWithID(<span prop="a:3" />, 'a');
     ReactNoop.renderToRootWithID(<BrokenRender />, 'b');
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
     expect(ReactNoop.getChildren('a')).toEqual([span('a:3')]);
     expect(ReactNoop.getChildren('b')).toEqual([]);
@@ -610,7 +742,12 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.renderToRootWithID(<BrokenRender />, 'b');
     ReactNoop.renderToRootWithID(<span prop="c:4" />, 'c');
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
     expect(ReactNoop.getChildren('a')).toEqual([span('a:4')]);
     expect(ReactNoop.getChildren('b')).toEqual([]);
@@ -622,7 +759,12 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.renderToRootWithID(<span prop="d:5" />, 'd');
     ReactNoop.renderToRootWithID(<BrokenRender />, 'e');
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
     expect(ReactNoop.getChildren('a')).toEqual([span('a:5')]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:5')]);
@@ -637,7 +779,20 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.renderToRootWithID(<BrokenRender />, 'e');
     ReactNoop.renderToRootWithID(<span prop="f:6" />, 'f');
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+        'The above error occurred in the <BrokenRender> component:\n' +
+          '    in BrokenRender (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('Hello');
     expect(ReactNoop.getChildren('a')).toEqual([]);
     expect(ReactNoop.getChildren('b')).toEqual([span('b:6')]);
@@ -713,7 +868,19 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    ReactNoop.flush();
+    // ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev([
+      'The above error occurred in the <BadRender> component:\n' +
+        '    in BadRender (at **)\n' +
+        '    in Provider (at **)\n' +
+        '    in Provider (at **)\n' +
+        '    in Provider (at **)\n' +
+        '    in Provider (at **)\n' +
+        '    in Boundary (at **)\n' +
+        '    in Provider (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, Boundary.',
+    ]);
 
     // If the context stack does not unwind, span will get 'abcde'
     expect(ReactNoop.getChildren()).toEqual([span('a')]);
@@ -742,9 +909,14 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender />
       </ErrorBoundary>,
     );
-    expect(ReactNoop.flush).toWarnDev(
+    expect(ReactNoop.flush).toWarnDev([
+      'The above error occurred in the <BrokenRender> component:\n' +
+        '    in BrokenRender (at **)\n' +
+        '    in ErrorBoundary (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, ErrorBoundary.',
       'Warning: React.createElement: type is invalid -- expected a string',
-    );
+    ]);
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
@@ -789,9 +961,14 @@ describe('ReactIncrementalErrorHandling', () => {
         <BrokenRender fail={true} />
       </ErrorBoundary>,
     );
-    expect(ReactNoop.flush).toWarnDev(
+    expect(ReactNoop.flush).toWarnDev([
+      'The above error occurred in the <BrokenRender> component:\n' +
+        '    in BrokenRender (at **)\n' +
+        '    in ErrorBoundary (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, ErrorBoundary.',
       'Warning: React.createElement: type is invalid -- expected a string',
-    );
+    ]);
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
@@ -810,7 +987,14 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(() => ReactNoop.render(<InvalidType />)).toWarnDev(
       'Warning: React.createElement: type is invalid -- expected a string',
     );
-    expect(ReactNoop.flush).toThrowError(
+
+    expect(() => {
+      expect(ReactNoop.flush).toWarnDev(
+        'The above error occurred in one of your React components:\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      );
+    }).toThrowError(
       'Element type is invalid: expected a string (for built-in components) or ' +
         'a class/function (for composite components) but got: undefined.' +
         (__DEV__
@@ -863,7 +1047,14 @@ describe('ReactIncrementalErrorHandling', () => {
 
     inst.setState({fail: true});
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev(
+        'The above error occurred in the <BrokenRenderAndUnmount> component:\n' +
+          '    in BrokenRenderAndUnmount (at **)\n' +
+          '    in Parent (at **)\n' +
+          '    in Parent (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      );
     }).toThrowError('Hello.');
 
     expect(ops).toEqual([
@@ -909,7 +1100,16 @@ describe('ReactIncrementalErrorHandling', () => {
 
     // Unmount
     ReactNoop.render(<Foo hide={true} />);
-    expect(() => ReactNoop.flush()).toThrow('Detach error');
+    expect(() => {
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <Bar> component:\n' +
+          '    in Bar (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Foo (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
+    }).toThrow('Detach error');
     expect(ops).toEqual([
       'barRef detach',
       // Bar should unmount even though its ref threw an error while detaching
@@ -922,7 +1122,16 @@ describe('ReactIncrementalErrorHandling', () => {
   it('handles error thrown by host config while working on failed root', () => {
     ReactNoop.simulateErrorInHostConfig(() => {
       ReactNoop.render(<span />);
-      expect(() => ReactNoop.flush()).toThrow('Error in host config.');
+      expect(() => {
+        expect(ReactNoop.flush).toWarnDev([
+          'The above error occurred in one of your React components:\n\n' +
+            'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+            'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+          'The above error occurred in one of your React components:\n\n' +
+            'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+            'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+        ]);
+      }).toThrow('Error in host config.');
     });
   });
 
@@ -930,6 +1139,12 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.render(<div />, () => {
       throw new Error('Error!');
     });
-    expect(() => ReactNoop.flush()).toThrow('Error!');
+    expect(() => {
+      expect(ReactNoop.flush).toWarnDev(
+        'The above error occurred in one of your React components:\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      );
+    }).toThrow('Error!');
   });
 });

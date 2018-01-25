@@ -28,10 +28,6 @@ describe('ReactIncrementalErrorLogging', () => {
     class ErrorThrowingComponent extends React.Component {
       UNSAFE_componentWillMount() {
         const error = new Error('componentWillMount error');
-        // Note: it's `true` on the Error prototype our test environment.
-        // That lets us avoid asserting on warnings for each expected error.
-        // Here we intentionally shadow it to test logging, like in real apps.
-        error.suppressReactErrorLogging = undefined;
         throw error;
       }
       render() {
@@ -66,10 +62,6 @@ describe('ReactIncrementalErrorLogging', () => {
     class ErrorThrowingComponent extends React.Component {
       componentDidMount() {
         const error = new Error('componentDidMount error');
-        // Note: it's `true` on the Error prototype our test environment.
-        // That lets us avoid asserting on warnings for each expected error.
-        // Here we intentionally shadow it to test logging, like in real apps.
-        error.suppressReactErrorLogging = undefined;
         throw error;
       }
       render() {
@@ -119,10 +111,6 @@ describe('ReactIncrementalErrorLogging', () => {
         capturedError => {
           logCapturedErrorCalls.push(capturedError);
           const error = new Error('logCapturedError error');
-          // Note: it's `true` on the Error prototype our test environment.
-          // That lets us avoid asserting on warnings for each expected error.
-          // Here we intentionally shadow it to test logging, like in real apps.
-          error.suppressReactErrorLogging = undefined;
           throw error;
         },
       );
@@ -177,10 +165,6 @@ describe('ReactIncrementalErrorLogging', () => {
     class ErrorThrowingComponent extends React.Component {
       componentDidMount() {
         const error = new Error('componentDidMount error');
-        // Note: it's `true` on the Error prototype our test environment.
-        // That lets us avoid asserting on warnings for each expected error.
-        // Here we intentionally shadow it to test logging, like in real apps.
-        error.suppressReactErrorLogging = undefined;
         throw error;
       }
       render() {
@@ -245,9 +229,18 @@ it('resets instance variables before unmounting failed node', () => {
       <Foo />
     </ErrorBoundary>,
   );
-  expect(ReactNoop.flush()).toEqual([
-    'render: 0',
-    'render: 1',
-    'componentWillUnmount: 0',
+
+  expect(() => {
+    expect(ReactNoop.flush()).toEqual([
+      'render: 0',
+      'render: 1',
+      'componentWillUnmount: 0',
+    ]);
+  }).toWarnDev([
+    'The above error occurred in the <Foo> component:\n' +
+      '    in Foo (at **)\n' +
+      '    in ErrorBoundary (at **)\n\n' +
+      'React will try to recreate this component tree from scratch ' +
+      'using the error boundary you provided, ErrorBoundary.',
   ]);
 });

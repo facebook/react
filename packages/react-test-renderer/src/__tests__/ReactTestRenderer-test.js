@@ -442,7 +442,18 @@ describe('ReactTestRenderer', () => {
       }
     }
 
-    const renderer = ReactTestRenderer.create(<Boundary />);
+    let renderer;
+    expect(() => (renderer = ReactTestRenderer.create(<Boundary />))).toWarnDev(
+      [
+        'The above error occurred in the <Angry> component:\n' +
+          '    in Angry (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Boundary (at **)\n\n' +
+          'React will try to recreate this component tree from scratch ' +
+          'using the error boundary you provided, Boundary.',
+      ],
+    );
+
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       props: {},

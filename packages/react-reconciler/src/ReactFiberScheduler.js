@@ -89,6 +89,7 @@ import {resetProviderStack} from './ReactFiberNewContext';
 const {
   invokeGuardedCallback,
   hasCaughtError,
+  hasSuppressedError,
   clearCaughtError,
 } = ReactErrorUtils;
 
@@ -100,6 +101,7 @@ export type CapturedError = {
   errorBoundaryFound: boolean,
   errorBoundaryName: string | null,
   willRetry: boolean,
+  hasSuppressedError: Function,
 };
 
 export type HandleErrorInfo = {
@@ -1026,6 +1028,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         errorBoundaryFound,
         errorBoundaryName,
         willRetry,
+        hasSuppressedError,
       };
 
       capturedErrors.set(boundary, capturedError);
@@ -1035,8 +1038,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       } catch (e) {
         // Prevent cycle if logCapturedError() throws.
         // A cycle may still occur if logCapturedError renders a component that throws.
-        const suppressLogging = e && e.suppressReactErrorLogging;
-        if (!suppressLogging) {
+        if (!hasSuppressedError()) {
           console.error(e);
         }
       }

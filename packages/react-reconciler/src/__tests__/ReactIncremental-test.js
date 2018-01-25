@@ -1770,7 +1770,12 @@ describe('ReactIncremental', () => {
     instance.setState(updater, () => ops.push('third callback'));
 
     expect(() => {
-      ReactNoop.flush();
+      expect(ReactNoop.flush).toWarnDev([
+        'The above error occurred in the <Foo> component:\n' +
+          '    in Foo (at **)\n\n' +
+          'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.',
+      ]);
     }).toThrow('callback error');
 
     // The third callback isn't called because the second one throws
@@ -2300,7 +2305,13 @@ describe('ReactIncremental', () => {
     instance.setState({
       throwError: true,
     });
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev([
+      'The above error occurred in the <ContextProvider> component:\n' +
+        '    in ContextProvider (at **)\n' +
+        '    in Root (at **)\n\n' +
+        'React will try to recreate this component tree from scratch ' +
+        'using the error boundary you provided, Root.',
+    ]);
   });
 
   it('should not recreate masked context unless inputs have changed', () => {
@@ -2795,7 +2806,13 @@ describe('ReactIncremental', () => {
     ReactNoop = require('react-noop-renderer');
     try {
       receivedNonExtensibleObjects = false;
-      triggerCodePathThatUsesFibersAsMapKeys();
+      expect(triggerCodePathThatUsesFibersAsMapKeys).toWarnDev([
+        'The above error occurred in the <Thing> component:\n' +
+          '    in Thing (at **)\n' +
+          '    in Boundary (at **)\n\n' +
+          'React will try to recreate this component tree from scratch ' +
+          'using the error boundary you provided, Boundary.',
+      ]);
     } finally {
       // eslint-disable-next-line no-extend-native
       Map.prototype.set = realMapSet;
@@ -2821,7 +2838,13 @@ describe('ReactIncremental', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     try {
-      triggerCodePathThatUsesFibersAsMapKeys();
+      expect(triggerCodePathThatUsesFibersAsMapKeys).toWarnDev([
+        'The above error occurred in the <Thing> component:\n' +
+          '    in Thing (at **)\n' +
+          '    in Boundary (at **)\n\n' +
+          'React will try to recreate this component tree from scratch ' +
+          'using the error boundary you provided, Boundary.',
+      ]);
     } finally {
       // eslint-disable-next-line no-extend-native
       Map.prototype.set = realMapSet;
