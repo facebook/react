@@ -10,12 +10,15 @@
 'use strict';
 
 let React;
+let ReactFeatureFlags;
 let ReactNoop;
 let ReactCallReturn;
 
 describe('ReactCallReturn', () => {
   beforeEach(() => {
     jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     ReactCallReturn = require('react-call-return');

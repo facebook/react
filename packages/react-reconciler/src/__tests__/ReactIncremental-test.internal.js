@@ -11,12 +11,15 @@
 'use strict';
 
 let React;
+let ReactFeatureFlags;
 let ReactNoop;
 let PropTypes;
 
 describe('ReactIncremental', () => {
   beforeEach(() => {
     jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     PropTypes = require('prop-types');
