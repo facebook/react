@@ -17,7 +17,6 @@ import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
-  REACT_STRICT_MODE_TYPE,
   REACT_PORTAL_TYPE,
 } from 'shared/ReactSymbols';
 import {
@@ -1065,12 +1064,15 @@ function ChildReconciler(shouldTrackSideEffects) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        if (child.type === element.type) {
+        if (
+          child.tag === Fragment
+            ? element.type === REACT_FRAGMENT_TYPE
+            : child.type === element.type
+        ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
             child,
-            element.type === REACT_FRAGMENT_TYPE ||
-            element.type === REACT_STRICT_MODE_TYPE
+            element.type === REACT_FRAGMENT_TYPE
               ? element.props.children
               : element.props,
             expirationTime,

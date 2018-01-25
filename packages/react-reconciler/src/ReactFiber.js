@@ -26,6 +26,7 @@ import {
   CallComponent,
   ReturnComponent,
   Fragment,
+  Mode,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
@@ -339,11 +340,11 @@ export function createFiberFromElement(
           key,
         );
       case REACT_STRICT_MODE_TYPE:
-        fiber = createFiberFromFragment(
-          pendingProps.children,
-          internalContextTag | StrictMode,
-          expirationTime,
+        fiber = createFiber(
+          Mode,
+          pendingProps,
           key,
+          internalContextTag | StrictMode,
         );
         fiber.type = REACT_STRICT_MODE_TYPE;
         break;
@@ -431,7 +432,6 @@ export function createFiberFromFragment(
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, internalContextTag);
   fiber.expirationTime = expirationTime;
-  fiber.type = REACT_FRAGMENT_TYPE;
   return fiber;
 }
 

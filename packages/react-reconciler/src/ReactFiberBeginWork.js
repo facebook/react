@@ -26,6 +26,7 @@ import {
   CallHandlerPhase,
   ReturnComponent,
   Fragment,
+  Mode,
 } from 'shared/ReactTypeOfWork';
 import {
   PerformedWork,
@@ -146,6 +147,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateFragment(current, workInProgress) {
     const nextChildren = workInProgress.pendingProps;
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (
+      nextChildren === null ||
+      workInProgress.memoizedProps === nextChildren
+    ) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
+  function updateMode(current, workInProgress) {
+    const nextChildren = workInProgress.pendingProps.children;
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
@@ -777,6 +794,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         );
       case Fragment:
         return updateFragment(current, workInProgress);
+      case Mode:
+        return updateMode(current, workInProgress);
       default:
         invariant(
           false,
