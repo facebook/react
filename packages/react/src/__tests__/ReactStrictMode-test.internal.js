@@ -140,6 +140,158 @@ describe('ReactStrictMode', () => {
     });
   });
 
+  [true, false].forEach(debugRenderPhaseSideEffectsForStrictMode => {
+    describe(`StrictMode (${debugRenderPhaseSideEffectsForStrictMode})`, () => {
+      beforeEach(() => {
+        jest.resetModules();
+        ReactFeatureFlags = require('shared/ReactFeatureFlags');
+        ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = debugRenderPhaseSideEffectsForStrictMode;
+        React = require('react');
+        ReactTestRenderer = require('react-test-renderer');
+      });
+
+      it('should invoke precommit lifecycle methods twice in DEV', () => {
+        const {StrictMode} = React;
+
+        let log = [];
+        let shouldComponentUpdate = false;
+
+        function Root() {
+          return (
+            <StrictMode>
+              <ClassComponent />
+            </StrictMode>
+          );
+        }
+
+        class ClassComponent extends React.Component {
+          state = {};
+          static getDerivedStateFromProps() {
+            log.push('getDerivedStateFromProps');
+            return null;
+          }
+          constructor(props) {
+            super(props);
+            log.push('constructor');
+          }
+          componentDidMount() {
+            log.push('componentDidMount');
+          }
+          componentDidUpdate() {
+            log.push('componentDidUpdate');
+          }
+          componentWillUnmount() {
+            log.push('componentWillUnmount');
+          }
+          shouldComponentUpdate() {
+            log.push('shouldComponentUpdate');
+            return shouldComponentUpdate;
+          }
+          render() {
+            log.push('render');
+            return null;
+          }
+        }
+
+        const component = ReactTestRenderer.create(<Root />);
+
+        if (debugRenderPhaseSideEffectsForStrictMode) {
+          expect(log).toEqual([
+            'constructor',
+            'constructor',
+            'getDerivedStateFromProps',
+            'getDerivedStateFromProps',
+            'render',
+            'render',
+            'componentDidMount',
+          ]);
+        } else {
+          expect(log).toEqual([
+            'constructor',
+            'getDerivedStateFromProps',
+            'render',
+            'componentDidMount',
+          ]);
+        }
+
+        log = [];
+        shouldComponentUpdate = true;
+
+        component.update(<Root />);
+        if (debugRenderPhaseSideEffectsForStrictMode) {
+          expect(log).toEqual([
+            'getDerivedStateFromProps',
+            'getDerivedStateFromProps',
+            'shouldComponentUpdate',
+            'render',
+            'render',
+            'componentDidUpdate',
+          ]);
+        } else {
+          expect(log).toEqual([
+            'getDerivedStateFromProps',
+            'shouldComponentUpdate',
+            'render',
+            'componentDidUpdate',
+          ]);
+        }
+
+        log = [];
+        shouldComponentUpdate = false;
+
+        component.update(<Root />);
+        if (debugRenderPhaseSideEffectsForStrictMode) {
+          expect(log).toEqual([
+            'getDerivedStateFromProps',
+            'getDerivedStateFromProps',
+            'shouldComponentUpdate',
+          ]);
+        } else {
+          expect(log).toEqual([
+            'getDerivedStateFromProps',
+            'shouldComponentUpdate',
+          ]);
+        }
+      });
+
+      it('should invoke setState callbacks twice in DEV', () => {
+        const {StrictMode} = React;
+
+        let instance;
+        class ClassComponent extends React.Component {
+          state = {
+            count: 1,
+          };
+          render() {
+            instance = this;
+            return null;
+          }
+        }
+
+        let setStateCount = 0;
+
+        ReactTestRenderer.create(
+          <StrictMode>
+            <ClassComponent />
+          </StrictMode>,
+        );
+        instance.setState(state => {
+          setStateCount++;
+          return {
+            count: state.count + 1,
+          };
+        });
+
+        // Callback should be invoked twice (in DEV)
+        expect(setStateCount).toBe(
+          debugRenderPhaseSideEffectsForStrictMode ? 2 : 1,
+        );
+        // But each time `state` should be the previous value
+        expect(instance.state.count).toBe(2);
+      });
+    });
+  });
+
   describe('async subtree', () => {
     beforeEach(() => {
       jest.resetModules();

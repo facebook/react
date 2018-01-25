@@ -20,6 +20,7 @@ describe('ReactNewContext', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.enableNewContextAPI = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');

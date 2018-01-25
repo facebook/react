@@ -11,11 +11,14 @@
 'use strict';
 
 let React;
+let ReactFeatureFlags;
 let ReactNoop;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });

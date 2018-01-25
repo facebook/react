@@ -13,6 +13,7 @@ import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as FabricFeatureFlagsType from './ReactFeatureFlags.native-fabric';
 
 export const debugRenderPhaseSideEffects = false;
+export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableAsyncSubtreeAPI = true;
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;

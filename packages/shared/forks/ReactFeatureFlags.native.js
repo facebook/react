@@ -15,6 +15,7 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native';
 // Re-export dynamic flags from the fbsource version.
 export const {
   debugRenderPhaseSideEffects,
+  debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
 } = require('ReactFeatureFlags');
 

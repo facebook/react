@@ -10,11 +10,15 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
+import {
+  debugRenderPhaseSideEffects,
+  debugRenderPhaseSideEffectsForStrictMode,
+} from 'shared/ReactFeatureFlags';
 import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
+import {StrictMode} from './ReactTypeOfInternalContext';
 
 import {NoWork} from './ReactFiberExpirationTime';
 
@@ -183,14 +187,7 @@ export function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
 function getStateFromUpdate(update, instance, prevState, props) {
   const partialState = update.partialState;
   if (typeof partialState === 'function') {
-    const updateFn = partialState;
-
-    // Invoke setState callback an extra time to help detect side-effects.
-    if (debugRenderPhaseSideEffects) {
-      updateFn.call(instance, prevState, props);
-    }
-
-    return updateFn.call(instance, prevState, props);
+    return partialState.call(instance, prevState, props);
   } else {
     return partialState;
   }
@@ -274,6 +271,16 @@ export function processUpdateQueue<State>(
       if (queue.first === null) {
         queue.last = null;
       }
+    }
+
+    // Invoke setState callback an extra time to help detect side-effects.
+    // Ignore the return value in this case.
+    if (
+      debugRenderPhaseSideEffects ||
+      (debugRenderPhaseSideEffectsForStrictMode &&
+        workInProgress.internalContextTag & StrictMode)
+    ) {
+      getStateFromUpdate(update, instance, state, props);
     }
 
     // Process the update

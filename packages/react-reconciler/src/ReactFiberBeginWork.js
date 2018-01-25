@@ -40,7 +40,10 @@ import {
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
-import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
+import {
+  debugRenderPhaseSideEffects,
+  debugRenderPhaseSideEffectsForStrictMode,
+} from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
@@ -64,7 +67,7 @@ import {
 } from './ReactFiberContext';
 import {pushProvider} from './ReactFiberNewContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {AsyncUpdates, StrictMode} from './ReactTypeOfInternalContext';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 let didWarnAboutBadClass;
@@ -287,12 +290,20 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (__DEV__) {
       ReactDebugCurrentFiber.setCurrentPhase('render');
       nextChildren = instance.render();
-      if (debugRenderPhaseSideEffects) {
+      if (
+        debugRenderPhaseSideEffects ||
+        (debugRenderPhaseSideEffectsForStrictMode &&
+          workInProgress.internalContextTag & StrictMode)
+      ) {
         instance.render();
       }
       ReactDebugCurrentFiber.setCurrentPhase(null);
     } else {
-      if (debugRenderPhaseSideEffects) {
+      if (
+        debugRenderPhaseSideEffects ||
+        (debugRenderPhaseSideEffectsForStrictMode &&
+          workInProgress.internalContextTag & StrictMode)
+      ) {
         instance.render();
       }
       nextChildren = instance.render();
