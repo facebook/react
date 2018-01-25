@@ -35,7 +35,10 @@ import {
   ClassComponent,
   ContextProvider,
 } from 'shared/ReactTypeOfWork';
-import {enableUserTimingAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableUserTimingAPI,
+  warnAboutDeprecatedLifecycles,
+} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -316,7 +319,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function commitAllLifeCycles() {
     if (__DEV__) {
-      ReactStrictModeWarnings.flushPendingAsyncWarnings();
+      ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
+
+      if (warnAboutDeprecatedLifecycles) {
+        ReactStrictModeWarnings.flushPendingDeprecationWarnings();
+      }
     }
 
     while (nextEffect !== null) {

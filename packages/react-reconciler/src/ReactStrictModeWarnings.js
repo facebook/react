@@ -23,8 +23,10 @@ type FiberToLifecycleMap = Map<Fiber, LifecycleToComponentsMap>;
 
 const ReactStrictModeWarnings = {
   discardPendingWarnings(): void {},
-  flushPendingAsyncWarnings(): void {},
-  recordLifecycleWarnings(fiber: Fiber, instance: any): void {},
+  flushPendingDeprecationWarnings(): void {},
+  flushPendingUnsafeLifecycleWarnings(): void {},
+  recordDeprecationWarnings(fiber: Fiber, instance: any): void {},
+  recordUnsafeLifecycleWarnings(fiber: Fiber, instance: any): void {},
 };
 
 if (__DEV__) {
@@ -34,17 +36,24 @@ if (__DEV__) {
     UNSAFE_componentWillUpdate: 'componentDidUpdate',
   };
 
-  let pendingWarningsMap: FiberToLifecycleMap = new Map();
+  let pendingComponentWillMountWarnings: Array<Fiber> = [];
+  let pendingComponentWillReceivePropsWarnings: Array<Fiber> = [];
+  let pendingComponentWillUpdateWarnings: Array<Fiber> = [];
+  let pendingUnsafeLifecycleWarnings: FiberToLifecycleMap = new Map();
 
   // Tracks components we have already warned about.
-  const didWarnSet = new Set();
+  const didWarnAboutDeprecatedLifecycles = new Set();
+  const didWarnAboutUnsafeLifecycles = new Set();
 
   ReactStrictModeWarnings.discardPendingWarnings = () => {
-    pendingWarningsMap = new Map();
+    pendingComponentWillMountWarnings = [];
+    pendingComponentWillReceivePropsWarnings = [];
+    pendingComponentWillUpdateWarnings = [];
+    pendingUnsafeLifecycleWarnings = new Map();
   };
 
-  ReactStrictModeWarnings.flushPendingAsyncWarnings = () => {
-    ((pendingWarningsMap: any): FiberToLifecycleMap).forEach(
+  ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings = () => {
+    ((pendingUnsafeLifecycleWarnings: any): FiberToLifecycleMap).forEach(
       (lifecycleWarningsMap, strictRoot) => {
         const lifecyclesWarningMesages = [];
 
@@ -54,7 +63,7 @@ if (__DEV__) {
             const componentNames = new Set();
             lifecycleWarnings.forEach(fiber => {
               componentNames.add(getComponentName(fiber) || 'Component');
-              didWarnSet.add(fiber.type);
+              didWarnAboutUnsafeLifecycles.add(fiber.type);
             });
 
             const formatted = lifecycle.replace('UNSAFE_', '');
@@ -88,7 +97,7 @@ if (__DEV__) {
       },
     );
 
-    pendingWarningsMap = new Map();
+    pendingUnsafeLifecycleWarnings = new Map();
   };
 
   const getStrictRoot = (fiber: Fiber): Fiber => {
@@ -105,7 +114,103 @@ if (__DEV__) {
     return maybeStrictRoot;
   };
 
-  ReactStrictModeWarnings.recordLifecycleWarnings = (
+  ReactStrictModeWarnings.flushPendingDeprecationWarnings = () => {
+    if (pendingComponentWillMountWarnings.length > 0) {
+      const uniqueNames = new Set();
+      pendingComponentWillMountWarnings.forEach(fiber => {
+        uniqueNames.add(getComponentName(fiber) || 'Component');
+        didWarnAboutDeprecatedLifecycles.add(fiber.type);
+      });
+
+      const sortedNames = Array.from(uniqueNames)
+        .sort()
+        .join(', ');
+
+      warning(
+        false,
+        'componentWillMount is deprecated and will be removed in the next major version. ' +
+          'Use componentDidMount instead. As a temporary workaround, ' +
+          'you can rename to UNSAFE_componentWillMount.' +
+          '\n\nPlease update the following components: %s' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+        sortedNames,
+      );
+
+      pendingComponentWillMountWarnings = [];
+    }
+
+    if (pendingComponentWillReceivePropsWarnings.length > 0) {
+      const uniqueNames = new Set();
+      pendingComponentWillReceivePropsWarnings.forEach(fiber => {
+        uniqueNames.add(getComponentName(fiber) || 'Component');
+        didWarnAboutDeprecatedLifecycles.add(fiber.type);
+      });
+
+      const sortedNames = Array.from(uniqueNames)
+        .sort()
+        .join(', ');
+
+      warning(
+        false,
+        'componentWillReceiveProps is deprecated and will be removed in the next major version. ' +
+          'Use static getDerivedStateFromProps instead.' +
+          '\n\nPlease update the following components: %s' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+        sortedNames,
+      );
+
+      pendingComponentWillReceivePropsWarnings = [];
+    }
+
+    if (pendingComponentWillUpdateWarnings.length > 0) {
+      const uniqueNames = new Set();
+      pendingComponentWillUpdateWarnings.forEach(fiber => {
+        uniqueNames.add(getComponentName(fiber) || 'Component');
+        didWarnAboutDeprecatedLifecycles.add(fiber.type);
+      });
+
+      const sortedNames = Array.from(uniqueNames)
+        .sort()
+        .join(', ');
+
+      warning(
+        false,
+        'componentWillUpdate is deprecated and will be removed in the next major version. ' +
+          'Use componentDidUpdate instead. As a temporary workaround, ' +
+          'you can rename to UNSAFE_componentWillUpdate.' +
+          '\n\nPlease update the following components: %s' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+        sortedNames,
+      );
+
+      pendingComponentWillUpdateWarnings = [];
+    }
+  };
+
+  ReactStrictModeWarnings.recordDeprecationWarnings = (
+    fiber: Fiber,
+    instance: any,
+  ) => {
+    // Dedup strategy: Warn once per component.
+    if (didWarnAboutDeprecatedLifecycles.has(fiber.type)) {
+      return;
+    }
+
+    if (typeof instance.componentWillMount === 'function') {
+      pendingComponentWillMountWarnings.push(fiber);
+    }
+    if (typeof instance.componentWillReceiveProps === 'function') {
+      pendingComponentWillReceivePropsWarnings.push(fiber);
+    }
+    if (typeof instance.componentWillUpdate === 'function') {
+      pendingComponentWillUpdateWarnings.push(fiber);
+    }
+  };
+
+  ReactStrictModeWarnings.recordUnsafeLifecycleWarnings = (
     fiber: Fiber,
     instance: any,
   ) => {
@@ -116,21 +221,21 @@ if (__DEV__) {
     // are often vague and are likely to collide between 3rd party libraries.
     // An expand property is probably okay to use here since it's DEV-only,
     // and will only be set in the event of serious warnings.
-    if (didWarnSet.has(fiber.type)) {
+    if (didWarnAboutUnsafeLifecycles.has(fiber.type)) {
       return;
     }
 
     let warningsForRoot;
-    if (!pendingWarningsMap.has(strictRoot)) {
+    if (!pendingUnsafeLifecycleWarnings.has(strictRoot)) {
       warningsForRoot = {
         UNSAFE_componentWillMount: [],
         UNSAFE_componentWillReceiveProps: [],
         UNSAFE_componentWillUpdate: [],
       };
 
-      pendingWarningsMap.set(strictRoot, warningsForRoot);
+      pendingUnsafeLifecycleWarnings.set(strictRoot, warningsForRoot);
     } else {
-      warningsForRoot = pendingWarningsMap.get(strictRoot);
+      warningsForRoot = pendingUnsafeLifecycleWarnings.get(strictRoot);
     }
 
     const unsafeLifecycles = [];
