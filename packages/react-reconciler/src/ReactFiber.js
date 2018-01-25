@@ -39,7 +39,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
   REACT_CALL_TYPE,
-  REACT_USE_STRICT_TYPE,
+  REACT_STRICT_MODE_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -338,14 +338,14 @@ export function createFiberFromElement(
           expirationTime,
           key,
         );
-      case REACT_USE_STRICT_TYPE:
+      case REACT_STRICT_MODE_TYPE:
         fiber = createFiberFromFragment(
           pendingProps.children,
           internalContextTag | StrictMode,
           expirationTime,
           key,
         );
-        fiber.type = REACT_USE_STRICT_TYPE;
+        fiber.type = REACT_STRICT_MODE_TYPE;
         break;
       case REACT_CALL_TYPE:
         fiber = createFiber(
@@ -431,6 +431,7 @@ export function createFiberFromFragment(
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, internalContextTag);
   fiber.expirationTime = expirationTime;
+  fiber.type = REACT_FRAGMENT_TYPE;
   return fiber;
 }
 

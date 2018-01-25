@@ -645,11 +645,8 @@ export default function(
       if (enableAsyncSubtreeAPI) {
         if (prototype.unstable_isAsyncReactComponent === true) {
           workInProgress.internalContextTag |= AsyncUpdates;
+          workInProgress.internalContextTag |= StrictMode;
         }
-      }
-
-      if (prototype.__reactStrictMode === true) {
-        workInProgress.internalContextTag |= StrictMode;
       }
     }
 

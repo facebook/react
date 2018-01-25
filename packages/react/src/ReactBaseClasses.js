@@ -151,30 +151,8 @@ asyncComponentPrototype.constructor = AsyncComponent;
 // Avoid an extra prototype jump for these methods.
 Object.assign(asyncComponentPrototype, Component.prototype);
 asyncComponentPrototype.unstable_isAsyncReactComponent = true;
-asyncComponentPrototype.__reactStrictMode = true;
 asyncComponentPrototype.render = function() {
   return this.props.children;
 };
 
-/**
- * Special component type that enables forward-looking, advanced warnings.
- * For examples, it detects async-unsafe lifecycles (without actually enabling async mode).
- * It can also detect render-phase side effects by double-invoking certain methods.
- */
-function StrictMode(props, context, updater) {
-  this.props = props;
-  this.context = context;
-  this.refs = emptyObject;
-  this.updater = updater || ReactNoopUpdateQueue;
-}
-
-const strictModePrototype = (StrictMode.prototype = new ComponentDummy());
-strictModePrototype.constructor = StrictMode;
-// Avoid an extra prototype jump for these methods.
-Object.assign(strictModePrototype, Component.prototype);
-strictModePrototype.__reactStrictMode = true;
-strictModePrototype.render = function() {
-  return this.props.children;
-};
-
-export {AsyncComponent, Component, PureComponent, StrictMode};
+export {AsyncComponent, Component, PureComponent};
