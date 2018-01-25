@@ -26,15 +26,21 @@ import {
   CallComponent,
   ReturnComponent,
   Fragment,
+  Mode,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {NoContext, AsyncUpdates} from './ReactTypeOfInternalContext';
+import {
+  NoContext,
+  AsyncUpdates,
+  StrictMode,
+} from './ReactTypeOfInternalContext';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
   REACT_CALL_TYPE,
+  REACT_STRICT_MODE_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -293,7 +299,7 @@ export function createWorkInProgress(
 }
 
 export function createHostRootFiber(isAsync): Fiber {
-  const internalContextTag = isAsync ? AsyncUpdates : NoContext;
+  const internalContextTag = isAsync ? AsyncUpdates | StrictMode : NoContext;
   return createFiber(HostRoot, null, null, internalContextTag);
 }
 
@@ -333,6 +339,15 @@ export function createFiberFromElement(
           expirationTime,
           key,
         );
+      case REACT_STRICT_MODE_TYPE:
+        fiber = createFiber(
+          Mode,
+          pendingProps,
+          key,
+          internalContextTag | StrictMode,
+        );
+        fiber.type = REACT_STRICT_MODE_TYPE;
+        break;
       case REACT_CALL_TYPE:
         fiber = createFiber(
           CallComponent,

@@ -24,6 +24,9 @@ export const REACT_PORTAL_TYPE = hasSymbol
 export const REACT_FRAGMENT_TYPE = hasSymbol
   ? Symbol.for('react.fragment')
   : 0xeacb;
+export const REACT_STRICT_MODE_TYPE = hasSymbol
+  ? Symbol.for('react.strict_mode')
+  : 0xeacc;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

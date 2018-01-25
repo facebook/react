@@ -13,7 +13,7 @@ let React;
 let ReactFeatureFlags;
 let ReactTestRenderer;
 
-describe('ReactAsyncClassComponent', () => {
+describe('ReactStrictMode', () => {
   describe('debugRenderPhaseSideEffects', () => {
     beforeEach(() => {
       jest.resetModules();
@@ -194,7 +194,7 @@ describe('ReactAsyncClassComponent', () => {
       expect(() => {
         rendered = ReactTestRenderer.create(<SyncRoot />);
       }).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
@@ -204,7 +204,7 @@ describe('ReactAsyncClassComponent', () => {
           '\n\ncomponentWillUpdate: Please update the following components ' +
           'to use componentDidUpdate instead: AsyncRoot' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       // Dedupe
@@ -248,7 +248,7 @@ describe('ReactAsyncClassComponent', () => {
       expect(
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
@@ -258,7 +258,7 @@ describe('ReactAsyncClassComponent', () => {
           '\n\ncomponentWillUpdate: Please update the following components ' +
           'to use componentDidUpdate instead: AsyncRoot, Parent' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       // Dedupe
@@ -322,13 +322,13 @@ describe('ReactAsyncClassComponent', () => {
       expect(
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev([
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRootOne (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar, Foo',
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRootTwo (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
@@ -364,21 +364,21 @@ describe('ReactAsyncClassComponent', () => {
       expect(() => {
         rendered = ReactTestRenderer.create(<AsyncRoot foo={true} />);
       }).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Foo' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       expect(() => rendered.update(<AsyncRoot foo={false} />)).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       // Dedupe
@@ -422,15 +422,178 @@ describe('ReactAsyncClassComponent', () => {
       expect(() => {
         ReactTestRenderer.create(<AsyncRoot foo={true} />);
       }).toWarnDev(
-        'Unsafe lifecycle methods were found within the following async tree:' +
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-async-component-lifecycle-hooks',
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       expect(caughtError).not.toBe(null);
+    });
+
+    it('should also warn inside of "strict" mode trees', () => {
+      const {StrictMode} = React;
+
+      class SyncRoot extends React.Component {
+        UNSAFE_componentWillMount() {}
+        UNSAFE_componentWillUpdate() {}
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return (
+            <StrictMode>
+              <Wrapper />
+            </StrictMode>
+          );
+        }
+      }
+      function Wrapper({children}) {
+        return (
+          <div>
+            <Bar />
+            <Foo />
+          </div>
+        );
+      }
+      class Foo extends React.Component {
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return null;
+        }
+      }
+      class Bar extends React.Component {
+        UNSAFE_componentWillReceiveProps() {}
+        render() {
+          return null;
+        }
+      }
+
+      expect(() => ReactTestRenderer.create(<SyncRoot />)).toWarnDev(
+        'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in SyncRoot (at **)' +
+          '\n\ncomponentWillReceiveProps: Please update the following components ' +
+          'to use static getDerivedStateFromProps instead: Bar, Foo' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-strict-mode-warnings',
+      );
+
+      // Dedupe
+      const rendered = ReactTestRenderer.create(<SyncRoot />);
+      rendered.update(<SyncRoot />);
+    });
+  });
+
+  describe('symbol checks', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      React = require('react');
+      ReactTestRenderer = require('react-test-renderer');
+    });
+
+    it('should switch from StrictMode to a Fragment and reset state', () => {
+      const {Fragment, StrictMode} = React;
+
+      function ParentComponent({useFragment}) {
+        return useFragment ? (
+          <Fragment>
+            <ChildComponent />
+          </Fragment>
+        ) : (
+          <StrictMode>
+            <ChildComponent />
+          </StrictMode>
+        );
+      }
+
+      class ChildComponent extends React.Component {
+        state = {
+          count: 0,
+        };
+        static getDerivedStateFromProps(nextProps, prevState) {
+          return {
+            count: prevState.count + 1,
+          };
+        }
+        render() {
+          return `count:${this.state.count}`;
+        }
+      }
+
+      const rendered = ReactTestRenderer.create(
+        <ParentComponent useFragment={false} />,
+      );
+      expect(rendered.toJSON()).toBe('count:1');
+      rendered.update(<ParentComponent useFragment={true} />);
+      expect(rendered.toJSON()).toBe('count:1');
+    });
+
+    it('should switch from a Fragment to StrictMode and reset state', () => {
+      const {Fragment, StrictMode} = React;
+
+      function ParentComponent({useFragment}) {
+        return useFragment ? (
+          <Fragment>
+            <ChildComponent />
+          </Fragment>
+        ) : (
+          <StrictMode>
+            <ChildComponent />
+          </StrictMode>
+        );
+      }
+
+      class ChildComponent extends React.Component {
+        state = {
+          count: 0,
+        };
+        static getDerivedStateFromProps(nextProps, prevState) {
+          return {
+            count: prevState.count + 1,
+          };
+        }
+        render() {
+          return `count:${this.state.count}`;
+        }
+      }
+
+      const rendered = ReactTestRenderer.create(
+        <ParentComponent useFragment={true} />,
+      );
+      expect(rendered.toJSON()).toBe('count:1');
+      rendered.update(<ParentComponent useFragment={false} />);
+      expect(rendered.toJSON()).toBe('count:1');
+    });
+
+    it('should update with StrictMode without losing state', () => {
+      const {StrictMode} = React;
+
+      function ParentComponent() {
+        return (
+          <StrictMode>
+            <ChildComponent />
+          </StrictMode>
+        );
+      }
+
+      class ChildComponent extends React.Component {
+        state = {
+          count: 0,
+        };
+        static getDerivedStateFromProps(nextProps, prevState) {
+          return {
+            count: prevState.count + 1,
+          };
+        }
+        render() {
+          return `count:${this.state.count}`;
+        }
+      }
+
+      const rendered = ReactTestRenderer.create(<ParentComponent />);
+      expect(rendered.toJSON()).toBe('count:1');
+      rendered.update(<ParentComponent />);
+      expect(rendered.toJSON()).toBe('count:2');
     });
   });
 });

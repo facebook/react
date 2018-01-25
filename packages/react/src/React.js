@@ -7,9 +7,9 @@
 
 import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
-import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
+import {REACT_FRAGMENT_TYPE, REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 
-import {Component, PureComponent, AsyncComponent} from './ReactBaseClasses';
+import {AsyncComponent, Component, PureComponent} from './ReactBaseClasses';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {
@@ -39,6 +39,7 @@ const React = {
   unstable_AsyncComponent: AsyncComponent,
 
   Fragment: REACT_FRAGMENT_TYPE,
+  StrictMode: REACT_STRICT_MODE_TYPE,
 
   createElement: __DEV__ ? createElementWithValidation : createElement,
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,

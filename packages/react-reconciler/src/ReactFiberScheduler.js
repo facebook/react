@@ -16,7 +16,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
-import ReactDebugAsyncWarnings from './ReactDebugAsyncWarnings';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
   PerformedWork,
   Placement,
@@ -312,7 +312,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function commitAllLifeCycles() {
     if (__DEV__) {
-      ReactDebugAsyncWarnings.flushPendingAsyncWarnings();
+      ReactStrictModeWarnings.flushPendingAsyncWarnings();
     }
 
     while (nextEffect !== null) {
@@ -657,7 +657,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function performFailedUnitOfWork(workInProgress: Fiber): Fiber | null {
     if (__DEV__) {
-      ReactDebugAsyncWarnings.discardPendingWarnings();
+      ReactStrictModeWarnings.discardPendingWarnings();
     }
 
     // The current, flushed, state of this fiber is the alternate.

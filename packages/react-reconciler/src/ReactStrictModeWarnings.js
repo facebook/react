@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {StrictMode} from './ReactTypeOfInternalContext';
 import warning from 'fbjs/lib/warning';
 
 type LIFECYCLE =
@@ -21,7 +21,7 @@ type LIFECYCLE =
 type LifecycleToComponentsMap = {[lifecycle: LIFECYCLE]: Array<Fiber>};
 type FiberToLifecycleMap = Map<Fiber, LifecycleToComponentsMap>;
 
-const ReactDebugAsyncWarnings = {
+const ReactStrictModeWarnings = {
   discardPendingWarnings(): void {},
   flushPendingAsyncWarnings(): void {},
   recordLifecycleWarnings(fiber: Fiber, instance: any): void {},
@@ -39,13 +39,13 @@ if (__DEV__) {
   // Tracks components we have already warned about.
   const didWarnSet = new Set();
 
-  ReactDebugAsyncWarnings.discardPendingWarnings = () => {
+  ReactStrictModeWarnings.discardPendingWarnings = () => {
     pendingWarningsMap = new Map();
   };
 
-  ReactDebugAsyncWarnings.flushPendingAsyncWarnings = () => {
+  ReactStrictModeWarnings.flushPendingAsyncWarnings = () => {
     ((pendingWarningsMap: any): FiberToLifecycleMap).forEach(
-      (lifecycleWarningsMap, asyncRoot) => {
+      (lifecycleWarningsMap, strictRoot) => {
         const lifecyclesWarningMesages = [];
 
         Object.keys(lifecycleWarningsMap).forEach(lifecycle => {
@@ -71,17 +71,17 @@ if (__DEV__) {
         });
 
         if (lifecyclesWarningMesages.length > 0) {
-          const asyncRootComponentStack = getStackAddendumByWorkInProgressFiber(
-            asyncRoot,
+          const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
+            strictRoot,
           );
 
           warning(
             false,
-            'Unsafe lifecycle methods were found within the following async tree:%s' +
+            'Unsafe lifecycle methods were found within a strict-mode tree:%s' +
               '\n\n%s' +
               '\n\nLearn more about this warning here:' +
-              '\nhttps://fb.me/react-async-component-lifecycle-hooks',
-            asyncRootComponentStack,
+              '\nhttps://fb.me/react-strict-mode-warnings',
+            strictRootComponentStack,
             lifecyclesWarningMesages.join('\n\n'),
           );
         }
@@ -91,25 +91,25 @@ if (__DEV__) {
     pendingWarningsMap = new Map();
   };
 
-  const getAsyncRoot = (fiber: Fiber): Fiber => {
-    let maybeAsyncRoot = null;
+  const getStrictRoot = (fiber: Fiber): Fiber => {
+    let maybeStrictRoot = null;
 
     while (fiber !== null) {
-      if (fiber.internalContextTag & AsyncUpdates) {
-        maybeAsyncRoot = fiber;
+      if (fiber.internalContextTag & StrictMode) {
+        maybeStrictRoot = fiber;
       }
 
       fiber = fiber.return;
     }
 
-    return maybeAsyncRoot;
+    return maybeStrictRoot;
   };
 
-  ReactDebugAsyncWarnings.recordLifecycleWarnings = (
+  ReactStrictModeWarnings.recordLifecycleWarnings = (
     fiber: Fiber,
     instance: any,
   ) => {
-    const asyncRoot = getAsyncRoot(fiber);
+    const strictRoot = getStrictRoot(fiber);
 
     // Dedup strategy: Warn once per component.
     // This is difficult to track any other way since component names
@@ -121,16 +121,16 @@ if (__DEV__) {
     }
 
     let warningsForRoot;
-    if (!pendingWarningsMap.has(asyncRoot)) {
+    if (!pendingWarningsMap.has(strictRoot)) {
       warningsForRoot = {
         UNSAFE_componentWillMount: [],
         UNSAFE_componentWillReceiveProps: [],
         UNSAFE_componentWillUpdate: [],
       };
 
-      pendingWarningsMap.set(asyncRoot, warningsForRoot);
+      pendingWarningsMap.set(strictRoot, warningsForRoot);
     } else {
-      warningsForRoot = pendingWarningsMap.get(asyncRoot);
+      warningsForRoot = pendingWarningsMap.get(strictRoot);
     }
 
     const unsafeLifecycles = [];
@@ -163,4 +163,4 @@ if (__DEV__) {
   };
 }
 
-export default ReactDebugAsyncWarnings;
+export default ReactStrictModeWarnings;

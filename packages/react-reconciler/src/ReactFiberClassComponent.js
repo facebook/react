@@ -16,7 +16,7 @@ import {
   enableAsyncSubtreeAPI,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
-import ReactDebugAsyncWarnings from './ReactDebugAsyncWarnings';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -26,7 +26,7 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {AsyncUpdates, StrictMode} from './ReactTypeOfInternalContext';
 import {
   cacheContext,
   getMaskedContext,
@@ -639,20 +639,20 @@ export default function(
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
-    if (
-      enableAsyncSubtreeAPI &&
-      workInProgress.type != null &&
-      workInProgress.type.prototype != null &&
-      workInProgress.type.prototype.unstable_isAsyncReactComponent === true
-    ) {
-      workInProgress.internalContextTag |= AsyncUpdates;
+    if (workInProgress.type != null && workInProgress.type.prototype != null) {
+      const prototype = workInProgress.type.prototype;
+
+      if (enableAsyncSubtreeAPI) {
+        if (prototype.unstable_isAsyncReactComponent === true) {
+          workInProgress.internalContextTag |= AsyncUpdates;
+          workInProgress.internalContextTag |= StrictMode;
+        }
+      }
     }
 
     if (__DEV__) {
-      // If we're inside of an async sub-tree,
-      // Warn about any unsafe lifecycles on this class component.
-      if (workInProgress.internalContextTag & AsyncUpdates) {
-        ReactDebugAsyncWarnings.recordLifecycleWarnings(
+      if (workInProgress.internalContextTag & StrictMode) {
+        ReactStrictModeWarnings.recordLifecycleWarnings(
           workInProgress,
           instance,
         );
