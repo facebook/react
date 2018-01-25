@@ -767,8 +767,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // Normally we can bail out on props equality but if context has changed
         // we don't do the bailout and we have to reuse existing props instead.
       } else if (oldProps === newProps) {
-        pushProvider(workInProgress);
         workInProgress.stateNode = 0;
+        pushProvider(workInProgress);
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       workInProgress.memoizedProps = newProps;

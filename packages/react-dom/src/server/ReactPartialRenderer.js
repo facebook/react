@@ -630,7 +630,7 @@ class ReactDOMServerRenderer {
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
 
-  providerStack: Array<ReactProvider<any>>;
+  providerStack: Array<?ReactProvider<any>>;
   providerIndex: number;
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
@@ -675,14 +675,16 @@ class ReactDOMServerRenderer {
         'Unexpected pop.',
       );
     }
-    // $FlowFixMe - Intentionally unsound
     this.providerStack[this.providerIndex] = null;
     this.providerIndex -= 1;
     const context: ReactContext<any> = provider.type.context;
     if (this.providerIndex < 0) {
       context.currentValue = context.defaultValue;
     } else {
-      const previousProvider = this.providerStack[this.providerIndex];
+      // We assume this type is correct because of the index check above.
+      const previousProvider: ReactProvider<any> = (this.providerStack[
+        this.providerIndex
+      ]: any);
       context.currentValue = previousProvider.props.value;
     }
   }
