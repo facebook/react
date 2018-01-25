@@ -93,8 +93,8 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
   ): number,
   cancelDeferredCallback(callbackID: number): void,
 
-  prepareForCommit(): void,
-  resetAfterCommit(): void,
+  prepareForCommit(containerInfo: any): void,
+  resetAfterCommit(containerInfo: any, data: any): void,
 
   now(): number,
 
