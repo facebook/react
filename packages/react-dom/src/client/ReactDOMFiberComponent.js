@@ -1116,6 +1116,13 @@ export function warnForUnmatchedText(textNode: Text, text: string) {
   }
 }
 
+function getNodeSignature(node: Element) {
+  var attrs = [].slice.call(node.attributes).map(function (item) {
+    return item.name + '="'+ item.value + '"';
+  });
+  return node.nodeName.toLowerCase() + ' ' + attrs.join(' ');
+}
+
 export function warnForDeletedHydratableElement(
   parentNode: Element | Document,
   child: Element,
@@ -1127,9 +1134,9 @@ export function warnForDeletedHydratableElement(
     didWarnInvalidHydration = true;
     warning(
       false,
-      'Did not expect server HTML to contain a <%s> in <%s>.',
-      child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase(),
+      'Did not expect server HTML to contain <%s> in <%s>.',
+      getNodeSignature(child),
+      getNodeSignature(parentNode),
     );
   }
 }
@@ -1147,7 +1154,7 @@ export function warnForDeletedHydratableText(
       false,
       'Did not expect server HTML to contain the text node "%s" in <%s>.',
       child.nodeValue,
-      parentNode.nodeName.toLowerCase(),
+      getNodeSignature(parentNode),
     );
   }
 }
@@ -1166,7 +1173,7 @@ export function warnForInsertedHydratedElement(
       false,
       'Expected server HTML to contain a matching <%s> in <%s>.',
       tag,
-      parentNode.nodeName.toLowerCase(),
+      getNodeSignature(parentNode),
     );
   }
 }
@@ -1191,7 +1198,7 @@ export function warnForInsertedHydratedText(
       false,
       'Expected server HTML to contain a matching text node for "%s" in <%s>.',
       text,
-      parentNode.nodeName.toLowerCase(),
+      getNodeSignature(parentNode),
     );
   }
 }
