@@ -484,4 +484,117 @@ describe('ReactStrictMode', () => {
       rendered.update(<SyncRoot />);
     });
   });
+
+  describe('symbol checks', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      React = require('react');
+      ReactTestRenderer = require('react-test-renderer');
+    });
+
+    it('should switch from StrictMode to a Fragment and reset state', () => {
+      const {Fragment, StrictMode} = React;
+
+      function ParentComponent({useFragment}) {
+        return useFragment ? (
+          <Fragment>
+            <ChildComponent />
+          </Fragment>
+        ) : (
+          <StrictMode>
+            <ChildComponent />
+          </StrictMode>
+        );
+      }
+
+      class ChildComponent extends React.Component {
+        state = {
+          count: 0,
+        };
+        static getDerivedStateFromProps(nextProps, prevState) {
+          return {
+            count: prevState.count + 1,
+          };
+        }
+        render() {
+          return `count:${this.state.count}`;
+        }
+      }
+
+      const rendered = ReactTestRenderer.create(
+        <ParentComponent useFragment={false} />,
+      );
+      expect(rendered.toJSON()).toBe('count:1');
+      rendered.update(<ParentComponent useFragment={true} />);
+      expect(rendered.toJSON()).toBe('count:1');
+    });
+
+    it('should switch from a Fragment to StrictMode and reset state', () => {
+      const {Fragment, StrictMode} = React;
+
+      function ParentComponent({useFragment}) {
+        return useFragment ? (
+          <Fragment>
+            <ChildComponent />
+          </Fragment>
+        ) : (
+          <StrictMode>
+            <ChildComponent />
+          </StrictMode>
+        );
+      }
+
+      class ChildComponent extends React.Component {
+        state = {
+          count: 0,
+        };
+        static getDerivedStateFromProps(nextProps, prevState) {
+          return {
+            count: prevState.count + 1,
+          };
+        }
+        render() {
+          return `count:${this.state.count}`;
+        }
+      }
+
+      const rendered = ReactTestRenderer.create(
+        <ParentComponent useFragment={true} />,
+      );
+      expect(rendered.toJSON()).toBe('count:1');
+      rendered.update(<ParentComponent useFragment={false} />);
+      expect(rendered.toJSON()).toBe('count:1');
+    });
+
+    it('should update with StrictMode without losing state', () => {
+      const {StrictMode} = React;
+
+      function ParentComponent() {
+        return (
+          <StrictMode>
+            <ChildComponent />
+          </StrictMode>
+        );
+      }
+
+      class ChildComponent extends React.Component {
+        state = {
+          count: 0,
+        };
+        static getDerivedStateFromProps(nextProps, prevState) {
+          return {
+            count: prevState.count + 1,
+          };
+        }
+        render() {
+          return `count:${this.state.count}`;
+        }
+      }
+
+      const rendered = ReactTestRenderer.create(<ParentComponent />);
+      expect(rendered.toJSON()).toBe('count:1');
+      rendered.update(<ParentComponent />);
+      expect(rendered.toJSON()).toBe('count:2');
+    });
+  });
 });
