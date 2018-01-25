@@ -42,9 +42,6 @@ import {hasContextChanged} from './ReactFiberContext';
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
-let didWarnAboutLegacyWillMount;
-let didWarnAboutLegacyWillReceiveProps;
-let didWarnAboutLegacyWillUpdate;
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
@@ -52,11 +49,6 @@ let didWarnAboutWillReceivePropsAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
-  if (warnAboutDeprecatedLifecycles) {
-    didWarnAboutLegacyWillMount = {};
-    didWarnAboutLegacyWillReceiveProps = {};
-    didWarnAboutLegacyWillUpdate = {};
-  }
   didWarnAboutStateAssignmentForComponent = {};
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutUninitializedState = {};
@@ -462,25 +454,6 @@ export default function(
     const oldState = instance.state;
 
     if (typeof instance.componentWillMount === 'function') {
-      if (__DEV__) {
-        if (warnAboutDeprecatedLifecycles) {
-          const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutLegacyWillMount[componentName]) {
-            warning(
-              false,
-              '%s: componentWillMount() is deprecated and will be ' +
-                'removed in the next major version. Read about the motivations ' +
-                'behind this change: ' +
-                'https://fb.me/react-async-component-lifecycle-hooks' +
-                '\n\n' +
-                'As a temporary workaround, you can rename to ' +
-                'UNSAFE_componentWillMount instead.',
-              componentName,
-            );
-            didWarnAboutLegacyWillMount[componentName] = true;
-          }
-        }
-      }
       instance.componentWillMount();
     } else {
       instance.UNSAFE_componentWillMount();
@@ -510,27 +483,6 @@ export default function(
   ) {
     const oldState = instance.state;
     if (typeof instance.componentWillReceiveProps === 'function') {
-      if (__DEV__) {
-        if (warnAboutDeprecatedLifecycles) {
-          const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
-            warning(
-              false,
-              '%s: componentWillReceiveProps() is deprecated and ' +
-                'will be removed in the next major version. Use ' +
-                'static getDerivedStateFromProps() instead. Read about the ' +
-                'motivations behind this change: ' +
-                'https://fb.me/react-async-component-lifecycle-hooks' +
-                '\n\n' +
-                'As a temporary workaround, you can rename to ' +
-                'UNSAFE_componentWillReceiveProps instead.',
-              componentName,
-            );
-            didWarnAboutLegacyWillReceiveProps[componentName] = true;
-          }
-        }
-      }
-
       startPhaseTimer(workInProgress, 'componentWillReceiveProps');
       instance.componentWillReceiveProps(newProps, newContext);
       stopPhaseTimer();
@@ -652,7 +604,14 @@ export default function(
 
     if (__DEV__) {
       if (workInProgress.internalContextTag & StrictMode) {
-        ReactStrictModeWarnings.recordLifecycleWarnings(
+        ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
+          workInProgress,
+          instance,
+        );
+      }
+
+      if (warnAboutDeprecatedLifecycles) {
+        ReactStrictModeWarnings.recordDeprecationWarnings(
           workInProgress,
           instance,
         );
@@ -893,27 +852,6 @@ export default function(
         typeof instance.componentWillUpdate === 'function'
       ) {
         if (typeof instance.componentWillUpdate === 'function') {
-          if (__DEV__) {
-            if (warnAboutDeprecatedLifecycles) {
-              const componentName =
-                getComponentName(workInProgress) || 'Component';
-              if (!didWarnAboutLegacyWillUpdate[componentName]) {
-                warning(
-                  false,
-                  '%s: componentWillUpdate() is deprecated and will be ' +
-                    'removed in the next major version. Read about the motivations ' +
-                    'behind this change: ' +
-                    'https://fb.me/react-async-component-lifecycle-hooks' +
-                    '\n\n' +
-                    'As a temporary workaround, you can rename to ' +
-                    'UNSAFE_componentWillUpdate instead.',
-                  componentName,
-                );
-                didWarnAboutLegacyWillUpdate[componentName] = true;
-              }
-            }
-          }
-
           startPhaseTimer(workInProgress, 'componentWillUpdate');
           instance.componentWillUpdate(newProps, newState, newContext);
           stopPhaseTimer();

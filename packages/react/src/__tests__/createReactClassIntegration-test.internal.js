@@ -95,14 +95,18 @@ describe('create-react-class-integration', () => {
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',
-      'Warning: MyComponent: componentWillMount() is deprecated and will be ' +
-        'removed in the next major version.',
+      'componentWillMount is deprecated and will be removed in the next major version. ' +
+        'Use componentDidMount instead. As a temporary workaround, ' +
+        'you can rename to UNSAFE_componentWillMount.' +
+        '\n\nPlease update the following components: MyComponent',
+      'componentWillUpdate is deprecated and will be removed in the next major version. ' +
+        'Use componentDidUpdate instead. As a temporary workaround, ' +
+        'you can rename to UNSAFE_componentWillUpdate.' +
+        '\n\nPlease update the following components: MyComponent',
     ]);
 
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
-      'Warning: MyComponent: componentWillUpdate() is deprecated and will be ' +
-        'removed in the next major version.',
-    );
+    // Dedupe
+    ReactDOM.render(<Component />, container);
 
     ReactDOM.unmountComponentAtNode(container);
     instance.log('after unmount');
