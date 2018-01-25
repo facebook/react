@@ -434,18 +434,18 @@ describe('ReactStrictMode', () => {
     });
 
     it('should also warn inside of "strict" mode trees', () => {
+      const {StrictMode} = React;
+
       class SyncRoot extends React.Component {
         UNSAFE_componentWillMount() {}
         UNSAFE_componentWillUpdate() {}
         UNSAFE_componentWillReceiveProps() {}
         render() {
-          return <PreAsyncRoot />;
-        }
-      }
-      class PreAsyncRoot extends React.StrictMode {
-        UNSAFE_componentWillMount() {}
-        render() {
-          return <Wrapper />;
+          return (
+            <StrictMode>
+              <Wrapper />
+            </StrictMode>
+          );
         }
       }
       function Wrapper({children}) {
@@ -471,10 +471,8 @@ describe('ReactStrictMode', () => {
 
       expect(() => ReactTestRenderer.create(<SyncRoot />)).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in PreAsyncRoot (at **)' +
+          '\n    in StrictMode (at **)' +
           '\n    in SyncRoot (at **)' +
-          '\n\ncomponentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: PreAsyncRoot' +
           '\n\ncomponentWillReceiveProps: Please update the following components ' +
           'to use static getDerivedStateFromProps instead: Bar, Foo' +
           '\n\nLearn more about this warning here:' +
