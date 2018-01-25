@@ -161,8 +161,8 @@ if (__DEV__) {
   };
 }
 
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
   const hydrationContext: HydrationContext<C, CX> = ReactFiberHydrationContext(
@@ -395,7 +395,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       firstEffect = finishedWork.firstEffect;
     }
 
-    const data: any = prepareForCommit(root.containerInfo);
+    const data: CD = prepareForCommit(root.containerInfo);
 
     // Commit all the side-effects within a tree. We'll do this in two passes.
     // The first pass performs all the host insertions, updates, deletions and
