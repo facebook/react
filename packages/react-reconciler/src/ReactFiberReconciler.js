@@ -304,6 +304,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     flushControlled,
     deferredUpdates,
     syncUpdates,
+    batchUpdatesWithoutFlushing,
+    flushBatchedUpdates,
   } = ReactFiberScheduler(config);
 
   function scheduleRootUpdate(
@@ -439,6 +441,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     flushSync,
 
     flushControlled,
+
+    batchUpdatesWithoutFlushing,
+
+    flushBatchedUpdates,
 
     getPublicRootInstance(
       container: OpaqueRoot,

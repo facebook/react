@@ -14,9 +14,13 @@ import {restoreStateIfNeeded} from './ReactControlledComponent';
 // scheduled work and instead do synchronous work.
 
 // Defaults
-let _batchedUpdates;
+let _batchUpdatesWithoutFlushing;
 let _syncUpdates;
-_batchedUpdates = _syncUpdates = function(fn, bookkeeping) {
+let _flushBatchedUpdates;
+_batchUpdatesWithoutFlushing = _syncUpdates = _flushBatchedUpdates = function(
+  fn,
+  bookkeeping,
+) {
   return fn(bookkeeping);
 };
 
@@ -29,13 +33,14 @@ export function batchedUpdates(fn, bookkeeping) {
   }
   isBatching = true;
   try {
-    return _batchedUpdates(fn, bookkeeping);
+    return _batchUpdatesWithoutFlushing(fn, bookkeeping);
   } finally {
     // Here we wait until all updates have propagated, which is important
     // when using controlled components within layers:
     // https://github.com/facebook/react/issues/1698
     // Then we restore state of any controlled component.
     isBatching = false;
+    _flushBatchedUpdates();
     restoreStateIfNeeded();
   }
 }
@@ -46,7 +51,8 @@ export function syncUpdates(fn, a, b, c, d) {
 
 export const injection = {
   injectRenderer(renderer) {
-    _batchedUpdates = renderer.batchedUpdates;
+    _batchUpdatesWithoutFlushing = renderer.batchUpdatesWithoutFlushing;
     _syncUpdates = renderer.syncUpdates;
+    _flushBatchedUpdates = renderer.flushBatchedUpdates;
   },
 };

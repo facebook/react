@@ -1738,6 +1738,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
+  function batchUpdatesWithoutFlushing<A, R>(fn: (a: A) => R, a: A): R {
+    const previousIsBatchingUpdates = isBatchingUpdates;
+    isBatchingUpdates = true;
+    try {
+      return fn(a);
+    } finally {
+      isBatchingUpdates = previousIsBatchingUpdates;
+    }
+  }
+
+  function flushBatchedUpdates(): void {
+    if (!isRendering && !isBatchingUpdates) {
+      performWork(Sync, null);
+    }
+  }
+
   // TODO: Batching should be implemented at the renderer level, not inside
   // the reconciler.
   function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
@@ -1792,6 +1808,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     unbatchedUpdates,
     flushSync,
     flushControlled,
+    batchUpdatesWithoutFlushing,
+    flushBatchedUpdates,
     deferredUpdates,
     syncUpdates,
     computeUniqueAsyncExpiration,
