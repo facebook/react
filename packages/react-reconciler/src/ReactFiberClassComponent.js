@@ -631,8 +631,9 @@ export default function(
     }
 
     if (
-      typeof instance.UNSAFE_componentWillMount === 'function' ||
-      typeof instance.componentWillMount === 'function'
+      (typeof instance.UNSAFE_componentWillMount === 'function' ||
+        typeof instance.componentWillMount === 'function') &&
+      typeof workInProgress.type.getDerivedStateFromProps !== 'function'
     ) {
       callComponentWillMount(workInProgress, instance);
       // If we had additional state updates during this life-cycle, let's
@@ -781,14 +782,16 @@ export default function(
     if (
       (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
         typeof instance.componentWillReceiveProps === 'function') &&
-      (oldProps !== newProps || oldContext !== newContext)
+      typeof workInProgress.type.getDerivedStateFromProps !== 'function'
     ) {
-      callComponentWillReceiveProps(
-        workInProgress,
-        instance,
-        newProps,
-        newContext,
-      );
+      if (oldProps !== newProps || oldContext !== newContext) {
+        callComponentWillReceiveProps(
+          workInProgress,
+          instance,
+          newProps,
+          newContext,
+        );
+      }
     }
 
     let partialState;
@@ -860,8 +863,9 @@ export default function(
 
     if (shouldUpdate) {
       if (
-        typeof instance.UNSAFE_componentWillUpdate === 'function' ||
-        typeof instance.componentWillUpdate === 'function'
+        (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
+          typeof instance.componentWillUpdate === 'function') &&
+        typeof workInProgress.type.getDerivedStateFromProps !== 'function'
       ) {
         if (typeof instance.componentWillUpdate === 'function') {
           startPhaseTimer(workInProgress, 'componentWillUpdate');

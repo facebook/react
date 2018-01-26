@@ -203,8 +203,11 @@ class ReactShallowRenderer {
             }
           }
         }
-        this._instance.componentWillMount();
-      } else {
+
+        if (typeof element.type.getDerivedStateFromProps !== 'function') {
+          this._instance.componentWillMount();
+        }
+      } else if (typeof element.type.getDerivedStateFromProps !== 'function') {
         this._instance.UNSAFE_componentWillMount();
       }
 
@@ -247,9 +250,12 @@ class ReactShallowRenderer {
             }
           }
         }
-        this._instance.componentWillReceiveProps(props, context);
+        if (typeof element.type.getDerivedStateFromProps !== 'function') {
+          this._instance.componentWillReceiveProps(props, context);
+        }
       } else if (
-        typeof this._instance.UNSAFE_componentWillReceiveProps === 'function'
+        typeof this._instance.UNSAFE_componentWillReceiveProps === 'function' &&
+        typeof element.type.getDerivedStateFromProps !== 'function'
       ) {
         this._instance.UNSAFE_componentWillReceiveProps(props, context);
       }
@@ -297,9 +303,12 @@ class ReactShallowRenderer {
           }
         }
 
-        this._instance.componentWillUpdate(props, state, context);
+        if (typeof type.getDerivedStateFromProps !== 'function') {
+          this._instance.componentWillUpdate(props, state, context);
+        }
       } else if (
-        typeof this._instance.UNSAFE_componentWillUpdate === 'function'
+        typeof this._instance.UNSAFE_componentWillUpdate === 'function' &&
+        typeof type.getDerivedStateFromProps !== 'function'
       ) {
         this._instance.UNSAFE_componentWillUpdate(props, state, context);
       }
