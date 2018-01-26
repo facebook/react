@@ -637,9 +637,9 @@ class ReactDOMServerRenderer {
     const flatChildren = flattenTopLevelChildren(children);
 
     const topFrame: Frame = {
+      type: null,
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
-      type: null,
       domNamespace: Namespaces.html,
       children: flatChildren,
       childIndex: 0,
