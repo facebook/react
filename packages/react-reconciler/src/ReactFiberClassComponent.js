@@ -524,8 +524,11 @@ export default function(
 
     if (typeof type.getDerivedStateFromProps === 'function') {
       if (__DEV__) {
+        // Don't warn about react-lifecycles-compat polyfilled components
         if (
-          typeof instance.componentWillReceiveProps === 'function' ||
+          (typeof instance.componentWillReceiveProps === 'function' &&
+            instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+              true) ||
           typeof instance.UNSAFE_componentWillReceiveProps === 'function'
         ) {
           const componentName = getComponentName(workInProgress) || 'Unknown';
