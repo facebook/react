@@ -1309,11 +1309,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function syncUpdates<A>(fn: () => A): A {
+  function syncUpdates<A, B, C0, D, R>(
+    fn: (A, B, C0, D) => R,
+    a: A,
+    b: B,
+    c: C0,
+    d: D,
+  ): R {
     const previousExpirationContext = expirationContext;
     expirationContext = Sync;
     try {
-      return fn();
+      return fn(a, b, c, d);
     } finally {
       expirationContext = previousExpirationContext;
     }
@@ -1734,32 +1740,32 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   // TODO: Batching should be implemented at the renderer level, not inside
   // the reconciler.
-  function unbatchedUpdates<A>(fn: () => A): A {
+  function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
     if (isBatchingUpdates && !isUnbatchingUpdates) {
       isUnbatchingUpdates = true;
       try {
-        return fn();
+        return fn(a);
       } finally {
         isUnbatchingUpdates = false;
       }
     }
-    return fn();
+    return fn(a);
   }
 
   // TODO: Batching should be implemented at the renderer level, not within
   // the reconciler.
-  function flushSync<A>(fn: () => A): A {
+  function flushSync<A, R>(fn: (a: A) => R, a: A): R {
+    invariant(
+      !isRendering,
+      'flushSync was called from inside a lifecycle method. It cannot be ' +
+        'called when React is already rendering.',
+    );
     const previousIsBatchingUpdates = isBatchingUpdates;
     isBatchingUpdates = true;
     try {
-      return syncUpdates(fn);
+      return syncUpdates(fn, a);
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
-      invariant(
-        !isRendering,
-        'flushSync was called from inside a lifecycle method. It cannot be ' +
-          'called when React is already rendering.',
-      );
       performWork(Sync, null);
     }
   }
@@ -1787,6 +1793,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     flushSync,
     flushControlled,
     deferredUpdates,
+    syncUpdates,
     computeUniqueAsyncExpiration,
   };
 }

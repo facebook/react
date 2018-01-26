@@ -303,6 +303,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     flushSync,
     flushControlled,
     deferredUpdates,
+    syncUpdates,
   } = ReactFiberScheduler(config);
 
   function scheduleRootUpdate(
@@ -432,6 +433,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     unbatchedUpdates,
 
     deferredUpdates,
+
+    syncUpdates,
 
     flushSync,
 

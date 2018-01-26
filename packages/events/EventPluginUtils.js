@@ -9,6 +9,8 @@ import ReactErrorUtils from 'shared/ReactErrorUtils';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
+import {syncUpdates} from './ReactGenericBatching';
+
 export let getFiberCurrentPropsFromNode = null;
 export let getInstanceFromNode = null;
 export let getNodeFromInstance = null;
@@ -78,12 +80,22 @@ if (__DEV__) {
 function executeDispatch(event, simulated, listener, inst) {
   const type = event.type || 'unknown-event';
   event.currentTarget = getNodeFromInstance(inst);
-  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
-    type,
-    listener,
-    undefined,
-    event,
-  );
+  if (type === 'change') {
+    syncUpdates(
+      ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError,
+      type,
+      listener,
+      undefined,
+      event,
+    );
+  } else {
+    ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
+      type,
+      listener,
+      undefined,
+      event,
+    );
+  }
   event.currentTarget = null;
 }
 

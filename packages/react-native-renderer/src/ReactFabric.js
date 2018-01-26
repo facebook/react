@@ -32,9 +32,7 @@ import takeSnapshot from './takeSnapshot';
 
 injectFindHostInstanceFabric(ReactFabricRenderer.findHostInstance);
 
-ReactGenericBatching.injection.injectFiberBatchedUpdates(
-  ReactFabricRenderer.batchedUpdates,
-);
+ReactGenericBatching.injection.injectRenderer(ReactFabricRenderer);
 
 const roots = new Map();
 

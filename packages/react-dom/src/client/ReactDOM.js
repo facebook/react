@@ -989,9 +989,7 @@ const DOMRenderer = ReactFiberReconciler({
   cancelDeferredCallback: ReactDOMFrameScheduling.cIC,
 });
 
-ReactGenericBatching.injection.injectFiberBatchedUpdates(
-  DOMRenderer.batchedUpdates,
-);
+ReactGenericBatching.injection.injectRenderer(DOMRenderer);
 
 let warnedAboutHydrateAPI = false;
 
@@ -1282,7 +1280,7 @@ const ReactDOM: Object = {
     return createPortal(...args);
   },
 
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: DOMRenderer.batchedUpdates,
 
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
