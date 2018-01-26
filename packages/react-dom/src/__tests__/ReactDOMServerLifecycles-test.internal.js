@@ -40,4 +40,30 @@ describe('ReactDOMServerLifecycles', () => {
     // De-duped
     ReactDOMServer.renderToString(<Component />);
   });
+
+  describe('react-lifecycles-compat', () => {
+    // TODO Replace this with react-lifecycles-compat once it's been published
+    function polyfill(Component) {
+      Component.prototype.componentWillMount = function() {};
+      Component.prototype.componentWillMount.__suppressDeprecationWarning = true;
+      Component.prototype.componentWillReceiveProps = function() {};
+      Component.prototype.componentWillReceiveProps.__suppressDeprecationWarning = true;
+    }
+
+    it('should not warn about deprecated cWM/cWRP for polyfilled components', () => {
+      class PolyfilledComponent extends React.Component {
+        state = {};
+        static getDerivedStateFromProps() {
+          return null;
+        }
+        render() {
+          return null;
+        }
+      }
+
+      polyfill(PolyfilledComponent);
+
+      ReactDOMServer.renderToString(<PolyfilledComponent />);
+    });
+  });
 });

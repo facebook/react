@@ -514,7 +514,10 @@ function resolve(
     if (inst.UNSAFE_componentWillMount || inst.componentWillMount) {
       if (inst.componentWillMount) {
         if (__DEV__) {
-          if (warnAboutDeprecatedLifecycles) {
+          if (
+            warnAboutDeprecatedLifecycles &&
+            inst.componentWillMount.__suppressDeprecationWarning !== true
+          ) {
             const componentName = getComponentName(Component) || 'Unknown';
 
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
@@ -534,8 +537,10 @@ function resolve(
           }
         }
 
-        inst.componentWillMount();
-      } else {
+        if (typeof Component.getDerivedStateFromProps !== 'function') {
+          inst.componentWillMount();
+        }
+      } else if (typeof Component.getDerivedStateFromProps !== 'function') {
         inst.UNSAFE_componentWillMount();
       }
       if (queue.length) {
