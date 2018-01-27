@@ -338,6 +338,8 @@ function toTree(node: ?Fiber) {
       };
     case HostText: // 6
       return node.stateNode.text;
+    case Fragment: // 10
+      return toTree(node.child);
     default:
       invariant(
         false,
