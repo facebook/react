@@ -463,6 +463,8 @@ const ReactNoop = {
 
   unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
+  interactiveUpdates: NoopRenderer.interactiveUpdates,
+
   flushSync(fn: () => mixed) {
     yieldedValues = [];
     NoopRenderer.flushSync(fn);

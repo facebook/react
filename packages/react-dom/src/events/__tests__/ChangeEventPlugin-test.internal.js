@@ -451,6 +451,7 @@ describe('ChangeEventPlugin', () => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.enableAsyncSubtreeAPI = true;
+      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactFeatureFlags.enableCreateRoot = true;
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactDOM = require('react-dom');

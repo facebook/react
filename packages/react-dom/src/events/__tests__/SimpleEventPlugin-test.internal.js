@@ -13,6 +13,7 @@ describe('SimpleEventPlugin', function() {
   let React;
   let ReactDOM;
   let ReactTestUtils;
+  let ReactFeatureFlags;
 
   let onClick;
 
@@ -163,6 +164,153 @@ describe('SimpleEventPlugin', function() {
         );
         expectClickThru(element);
       });
+    });
+  });
+
+  describe('interactive events, in async mode', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.enableAsyncSubtreeAPI = true;
+      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+      ReactFeatureFlags.enableCreateRoot = true;
+      ReactDOM = require('react-dom');
+    });
+
+    it('flushes pending interactive work before extracting event handler', () => {
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+      document.body.appendChild(container);
+
+      let ops = [];
+
+      let button;
+      class Button extends React.Component {
+        state = {disabled: false};
+        onClick = () => {
+          // Perform some side-effect
+          ops.push('Side-effect');
+          // Disable the button
+          this.setState({disabled: true});
+        };
+        render() {
+          ops.push(
+            `render button: ${this.state.disabled ? 'disabled' : 'enabled'}`,
+          );
+          return (
+            <button
+              ref={el => (button = el)}
+              // Handler is removed after the first click
+              onClick={this.state.disabled ? null : this.onClick}
+            />
+          );
+        }
+      }
+
+      // Initial mount
+      root.render(<Button disabled={false} />);
+      // Should not have flushed yet because it's async
+      expect(ops).toEqual([]);
+      expect(button).toBe(undefined);
+      // Flush async work
+      jest.runAllTimers();
+      expect(ops).toEqual(['render button: enabled']);
+
+      ops = [];
+
+      function click() {
+        button.dispatchEvent(
+          new MouseEvent('click', {bubbles: true, cancelable: true}),
+        );
+      }
+
+      // Click the button to trigger the side-effect
+      click();
+      expect(ops).toEqual([
+        // The handler fired
+        'Side-effect',
+        // but the component did not re-render yet, because it's async
+      ]);
+
+      ops = [];
+
+      // Click the button again
+      click();
+      expect(ops).toEqual([
+        // Before handling this second click event, the previous interactive
+        // update is flushed
+        'render button: disabled',
+        // The event handler was removed from the button, so there's no second
+        // side-effect
+      ]);
+
+      ops = [];
+
+      // The handler should not fire again no matter how many times we
+      // click the handler.
+      click();
+      click();
+      click();
+      click();
+      click();
+      jest.runAllTimers();
+      expect(ops).toEqual([]);
+    });
+
+    it('end result of many interactive updates is deterministic', () => {
+      const container = document.createElement('div');
+      const root = ReactDOM.createRoot(container);
+      document.body.appendChild(container);
+
+      let button;
+      class Button extends React.Component {
+        state = {count: 0};
+        render() {
+          return (
+            <button
+              ref={el => (button = el)}
+              // Handler is removed after the first click
+              onClick={() =>
+                // Intentionally not using the updater form here
+                this.setState({count: this.state.count + 1})
+              }>
+              Count: {this.state.count}
+            </button>
+          );
+        }
+      }
+
+      // Initial mount
+      root.render(<Button disabled={false} />);
+      // Should not have flushed yet because it's async
+      expect(button).toBe(undefined);
+      // Flush async work
+      jest.runAllTimers();
+      expect(button.textContent).toEqual('Count: 0');
+
+      function click() {
+        button.dispatchEvent(
+          new MouseEvent('click', {bubbles: true, cancelable: true}),
+        );
+      }
+
+      // Click the button a single time
+      click();
+      // The counter should not have updated yet because it's async
+      expect(button.textContent).toEqual('Count: 0');
+
+      // Click the button many more times
+      click();
+      click();
+      click();
+      click();
+      click();
+      click();
+
+      // Flush the remaining work
+      jest.runAllTimers();
+      // The counter should equal the total number of clicks
+      expect(button.textContent).toEqual('Count: 7');
     });
   });
 

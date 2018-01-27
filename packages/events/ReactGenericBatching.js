@@ -5,7 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {restoreStateIfNeeded} from './ReactControlledComponent';
+import {
+  needsStateRestore,
+  restoreStateIfNeeded,
+} from './ReactControlledComponent';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
@@ -14,15 +17,13 @@ import {restoreStateIfNeeded} from './ReactControlledComponent';
 // scheduled work and instead do synchronous work.
 
 // Defaults
-let _batchUpdatesWithoutFlushing;
-let _syncUpdates;
-let _flushBatchedUpdates;
-_batchUpdatesWithoutFlushing = _syncUpdates = _flushBatchedUpdates = function(
-  fn,
-  bookkeeping,
-) {
+let _batchedUpdates = function(fn, bookkeeping) {
   return fn(bookkeeping);
 };
+let _interactiveUpdates = function(fn, a, b) {
+  return fn(a, b);
+};
+let _flushInteractiveUpdates = function() {};
 
 let isBatching = false;
 export function batchedUpdates(fn, bookkeeping) {
@@ -33,26 +34,36 @@ export function batchedUpdates(fn, bookkeeping) {
   }
   isBatching = true;
   try {
-    return _batchUpdatesWithoutFlushing(fn, bookkeeping);
+    return _batchedUpdates(fn, bookkeeping);
   } finally {
     // Here we wait until all updates have propagated, which is important
     // when using controlled components within layers:
     // https://github.com/facebook/react/issues/1698
     // Then we restore state of any controlled component.
     isBatching = false;
-    _flushBatchedUpdates();
-    restoreStateIfNeeded();
+    const controlledComponentsHavePendingUpdates = needsStateRestore();
+    if (controlledComponentsHavePendingUpdates) {
+      // We need to flush updates scheduled by controlled components before
+      // yielding back to the browser, so that the DOM is consistent before
+      // another event has the chance to fire.
+      _flushInteractiveUpdates();
+      restoreStateIfNeeded();
+    }
   }
 }
 
-export function syncUpdates(fn, a, b, c, d) {
-  return _syncUpdates(fn, a, b, c, d);
+export function interactiveUpdates(fn, a, b) {
+  return _interactiveUpdates(fn, a, b);
+}
+
+export function flushInteractiveUpdates() {
+  return _flushInteractiveUpdates();
 }
 
 export const injection = {
   injectRenderer(renderer) {
-    _batchUpdatesWithoutFlushing = renderer.batchUpdatesWithoutFlushing;
-    _syncUpdates = renderer.syncUpdates;
-    _flushBatchedUpdates = renderer.flushBatchedUpdates;
+    _batchedUpdates = renderer.batchedUpdates;
+    _interactiveUpdates = renderer.interactiveUpdates;
+    _flushInteractiveUpdates = renderer.flushInteractiveUpdates;
   },
 };
