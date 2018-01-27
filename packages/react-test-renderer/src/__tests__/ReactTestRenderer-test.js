@@ -530,6 +530,28 @@ describe('ReactTestRenderer', () => {
     );
   });
 
+  it('toTree() handles nested Fragments', () => {
+    const Foo = () => (
+      <React.Fragment>
+        <React.Fragment>foo</React.Fragment>
+      </React.Fragment>
+    );
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const tree = renderer.toTree();
+
+    cleanNodeOrArray(tree);
+
+    expect(prettyFormat(tree)).toEqual(
+      prettyFormat({
+        nodeType: 'component',
+        type: Foo,
+        instance: null,
+        props: {},
+        rendered: 'foo',
+      }),
+    );
+  });
+
   it('toTree() handles null rendering components', () => {
     class Foo extends React.Component {
       render() {
