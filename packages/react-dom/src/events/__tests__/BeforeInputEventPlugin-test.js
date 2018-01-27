@@ -34,6 +34,10 @@ describe('BeforeInputEventPlugin', () => {
   }
 
   function simulatePresto() {
+    /**
+     * Opera <= 12 includes TextEvent in window, but does not fire
+     * text input events.
+     */
     window.TextEvent = {};
     window.opera = {
       version: () => 12,
@@ -87,6 +91,7 @@ describe('BeforeInputEventPlugin', () => {
     delete document.documentMode;
     delete window.CompositionEvent;
     delete window.TextEvent;
+    delete window.opera;
     document.body.removeChild(container);
     container = null;
   });
@@ -622,9 +627,6 @@ describe('BeforeInputEventPlugin', () => {
     testInputComponent(environments[2], scenarios);
   });
 
-  it('should extract onBeforeInput when simulating in Presto on content editable', () => {
-    // my test case for fallback composition end is not triggering onBeforeInput
-    // still looking into understanding why
-    testContentEditableComponent(environments[2], scenarios.splice(0, 5));
-  });
+  // contenteditable is not supported in Opera browsers (Presto engine) so this
+  // case is omitted. See: https://caniuse.com/#feat=contenteditable
 });
