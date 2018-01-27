@@ -77,8 +77,8 @@ if (__DEV__) {
   didWarnAboutStatelessRefs = {};
 }
 
-export default function<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,

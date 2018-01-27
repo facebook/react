@@ -29,8 +29,8 @@ export type HydrationContext<C, CX> = {
   popHydrationState(fiber: Fiber): boolean,
 };
 
-export default function<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): HydrationContext<C, CX> {
   const {shouldSetTextContent, hydration} = config;
 

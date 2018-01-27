@@ -47,7 +47,7 @@ export type Deadline = {
 type OpaqueHandle = Fiber;
 type OpaqueRoot = FiberRoot;
 
-export type HostConfig<T, P, I, TI, HI, PI, C, CC, CD, CX, PL> = {
+export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
   getRootHostContext(rootContainerInstance: C): CX,
   getChildHostContext(parentHostContext: CX, type: T, instance: C): CX,
   getPublicInstance(instance: I | TI): PI,
@@ -93,8 +93,8 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CD, CX, PL> = {
   ): number,
   cancelDeferredCallback(callbackID: number): void,
 
-  prepareForCommit(containerInfo: C): CD,
-  resetAfterCommit(containerInfo: C, data: CD): void,
+  prepareForCommit(containerInfo: C): void,
+  resetAfterCommit(containerInfo: C): void,
 
   now(): number,
 
@@ -286,8 +286,8 @@ function getContextForSubtree(
     : parentContext;
 }
 
-export default function<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): Reconciler<C, I, TI> {
   const {getPublicInstance} = config;
 

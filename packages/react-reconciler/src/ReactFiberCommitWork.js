@@ -37,8 +37,8 @@ const {
   clearCaughtError,
 } = ReactErrorUtils;
 
-export default function<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CD, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
   const {getPublicInstance, mutation, persistence} = config;
