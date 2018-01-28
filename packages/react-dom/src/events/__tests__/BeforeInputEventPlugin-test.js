@@ -750,7 +750,7 @@ describe('BeforeInputEventPlugin', () => {
     testContentEditableComponent(environments[1], scenarios);
   });
 
-  it('should extract onBeforeInput when simulating in environment with no CompositionEvent support on input[type=text]', () => {
+  it('should extract onBeforeInput when simulating in env with no CompositionEvent on input[type=text]', () => {
     testInputComponent(environments[2], scenarios);
   });
 
@@ -758,11 +758,11 @@ describe('BeforeInputEventPlugin', () => {
   // as expected on a contenteditable as keydown and keyup events are translated
   // to keypress events
 
-  it('should extract onBeforeInput when simulating in environment with only CompositionEvent support on input[type=text]', () => {
+  it('should extract onBeforeInput when simulating in env with only CompositionEvent on input[type=text]', () => {
     testInputComponent(environments[3], scenarios);
   });
 
-  it('should extract onBeforeInput when simulating in environment with only CompositionEvent support on contenteditable', () => {
+  it('should extract onBeforeInput when simulating in env with only CompositionEvent on contenteditable', () => {
     testContentEditableComponent(environments[3], scenarios);
   });
 });
