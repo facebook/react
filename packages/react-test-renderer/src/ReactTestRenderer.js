@@ -339,7 +339,14 @@ function toTree(node: ?Fiber) {
     case HostText: // 6
       return node.stateNode.text;
     case Fragment: // 10
-      return toTree(node.child);
+      return {
+        nodeType: 'component',
+        type: node.type,
+        instance: null,
+        rendered: hasSiblings(node.child)
+          ? nodeAndSiblingsTrees(node.child)
+          : toTree(node.child),
+      };
     default:
       invariant(
         false,
