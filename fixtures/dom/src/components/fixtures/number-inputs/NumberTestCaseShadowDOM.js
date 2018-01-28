@@ -7,8 +7,8 @@ const ReactDOM = window.ReactDOM;
 class NumberTestCaseShadowDOM extends React.Component {
   componentWillMount() {
     class ShadowNumberInput extends HTMLElement {
-      connectedCallback(){
-        ReactDOM.render(<NumberTestCase />, this.attachShadow({ mode: 'open' }));
+      connectedCallback() {
+        ReactDOM.render(<NumberTestCase />, this.attachShadow({mode: 'open'}));
       }
     }
 
@@ -16,9 +16,7 @@ class NumberTestCaseShadowDOM extends React.Component {
   }
 
   render() {
-    return (
-      <shadow-number-input {...this.props} />
-    );
+    return <shadow-number-input {...this.props} />;
   }
 }
 
