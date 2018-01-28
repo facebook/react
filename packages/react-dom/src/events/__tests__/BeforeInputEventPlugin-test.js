@@ -33,15 +33,8 @@ describe('BeforeInputEventPlugin', () => {
     window.TextEvent = {};
   }
 
-  function simulatePresto() {
-    /**
-     * Opera <= 12 includes TextEvent in window, but does not fire
-     * text input events.
-     */
-    window.TextEvent = {};
-    window.opera = {
-      version: () => 12,
-    };
+  function simulateNoComposition() {
+    // no composition event in Window - will use fallback
   }
 
   function simulateEvent(elem, type, data) {
@@ -436,7 +429,7 @@ describe('BeforeInputEventPlugin', () => {
       ],
     },
     {
-      emulator: simulatePresto,
+      emulator: simulateNoComposition,
       assertions: [
         {
           run: (event, spy) => {
@@ -623,10 +616,11 @@ describe('BeforeInputEventPlugin', () => {
     testContentEditableComponent(environments[1], scenarios);
   });
 
-  it('should extract onBeforeInput when simulating in Presto on text input', () => {
+  it('should extract onBeforeInput when simulating in environment using composition fallback on text input', () => {
     testInputComponent(environments[2], scenarios);
   });
 
-  // contenteditable is not supported in Opera browsers (Presto engine) so this
-  // case is omitted. See: https://caniuse.com/#feat=contenteditable
+  // in an environment using composition fallback onBeforeInput will not work
+  // as expected on a contentEditable as keydown and keyup events are translated
+  // to keypress events
 });
