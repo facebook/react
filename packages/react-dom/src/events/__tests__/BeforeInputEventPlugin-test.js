@@ -33,6 +33,10 @@ describe('BeforeInputEventPlugin', () => {
     window.TextEvent = {};
   }
 
+  function simulateComposition() {
+    window.CompositionEvent = {};
+  }
+
   function simulateNoComposition() {
     // no composition event in Window - will use fallback
   }
@@ -96,18 +100,24 @@ describe('BeforeInputEventPlugin', () => {
   const scenarios = [
     {
       eventSimulator: simulateEvent,
-      eventSimulatorArgs: ['compositionstart', {detail: {data: 'test'}}],
+      eventSimulatorArgs: [
+        'compositionstart',
+        {detail: {data: 'test'}, data: 'test string 3'},
+      ],
     },
     {
       eventSimulator: simulateEvent,
       eventSimulatorArgs: [
         'compositionupdate',
-        {detail: {data: 'test string'}},
+        {detail: {data: 'test string'}, data: 'test string 3'},
       ],
     },
     {
       eventSimulator: simulateEvent,
-      eventSimulatorArgs: ['compositionend', {detail: {data: 'test string 3'}}],
+      eventSimulatorArgs: [
+        'compositionend',
+        {detail: {data: 'test string 3'}, data: 'test string 3'},
+      ],
     },
     {
       eventSimulator: simulateEvent,
@@ -554,6 +564,130 @@ describe('BeforeInputEventPlugin', () => {
         },
       ],
     },
+    {
+      emulator: simulateComposition,
+      assertions: [
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('compositionend');
+            expect(event.data).toBe('test string 3');
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('a');
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe(' ');
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('c');
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(1);
+            expect(event.type).toBe('keypress');
+            expect(event.data).toBe('\uD83D\uDE0A');
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+        {
+          run: (event, spy) => {
+            expect(spy.mock.calls.length).toBe(0);
+            expect(event).toBeNull();
+          },
+        },
+      ],
+    },
   ];
 
   const testInputComponent = (env, scenes) => {
@@ -602,25 +736,33 @@ describe('BeforeInputEventPlugin', () => {
     });
   };
 
-  it('should extract onBeforeInput when simulating in Webkit on text input', () => {
+  it('should extract onBeforeInput when simulating in Webkit on input[type=text]', () => {
     testInputComponent(environments[0], scenarios);
   });
-  it('should extract onBeforeInput when simulating in Webkit on content editable', () => {
+  it('should extract onBeforeInput when simulating in Webkit on contenteditable', () => {
     testContentEditableComponent(environments[0], scenarios);
   });
 
-  it('should extract onBeforeInput when simulating in IE11 on text input', () => {
+  it('should extract onBeforeInput when simulating in IE11 on input[type=text]', () => {
     testInputComponent(environments[1], scenarios);
   });
-  it('should extract onBeforeInput when simulating in IE11 on content editable', () => {
+  it('should extract onBeforeInput when simulating in IE11 on contenteditable', () => {
     testContentEditableComponent(environments[1], scenarios);
   });
 
-  it('should extract onBeforeInput when simulating in environment using composition fallback on text input', () => {
+  it('should extract onBeforeInput when simulating in environment with no CompositionEvent support on input[type=text]', () => {
     testInputComponent(environments[2], scenarios);
   });
 
   // in an environment using composition fallback onBeforeInput will not work
-  // as expected on a contentEditable as keydown and keyup events are translated
+  // as expected on a contenteditable as keydown and keyup events are translated
   // to keypress events
+
+  it('should extract onBeforeInput when simulating in environment with only CompositionEvent support on input[type=text]', () => {
+    testInputComponent(environments[3], scenarios);
+  });
+
+  it('should extract onBeforeInput when simulating in environment with only CompositionEvent support on contenteditable', () => {
+    testContentEditableComponent(environments[3], scenarios);
+  });
 });
