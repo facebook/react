@@ -80,6 +80,29 @@ Component.prototype.forceUpdate = function(callback) {
 };
 
 /**
+ * Since every UserDefined Component that has methods for handling events needs to bind it to the current object :
+ * "autobind" provides the feature for every class extending Component to automagically bind _all_ its _functions_ by a call in its constructor
+ * ES6 :
+ * class Test extends Component{
+      constructor(props){
+        super(props);
+        this.one = "one1";
+        this.two = "two2";
+        super.autobind(this);    <--------------- HERE
+      }
+ * this will replace the multiple bindings and prevent forgeting one function, also it adds expectability in userdfined Component behaviour
+ * @param {object|function} the child class|function of Component passed as "this"
+ * @final
+ * @protected
+ */
+Component.prototype.autobind= function(child){
+      var derived  = Object.getPrototypeOf(child);
+      var propList = Object.getOwnPropertyNames(derived)
+                           .filter(function(n) { return n != 'constructor';})
+                           .filter(function(n) { return typeof(derived[n]) === 'function';});     
+      propList.forEach(function(p) { child[p] = derived[p].bind(child); });
+};
+/**
  * Deprecated APIs. These APIs used to exist on classic React classes but since
  * we would like to deprecate them, we're not going to move them over to this
  * modern base class. Instead, we define a getter that warns if it's accessed.
