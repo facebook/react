@@ -8,6 +8,7 @@
   "dependencies": {
     "classnames": "^2.2.5",
     "core-js": "^2.4.1",
+    "draft-js": "^0.10.5",
     "prop-types": "^15.6.0",
     "query-string": "^4.2.3",
     "react": "^15.4.1",

@@ -35,6 +35,11 @@ function loadScript(src) {
 }
 
 export default function loadReact() {
+  // const DRAFT_JS_PATH = 'https://unpkg.com/draft-js@0.10.5/dist/Draft.js';
+  // @TODO We're using a build of draft-js provided by @acusti in https://github.com/facebook/react/pull/12037
+  // This is because currently draft doesn't support iframes. This should be changed back to the official
+  // release on unpkg once the draft fixes are merged.
+  const DRAFT_JS_PATH = 'https://cdn.rawgit.com/brandcast/draft-js-built/d6c2ffc64914b001411356c0bfab24e831bc5429/dist/Draft.js';
   let REACT_PATH = 'react.development.js';
   let DOM_PATH = 'react-dom.development.js';
 
@@ -70,6 +75,9 @@ export default function loadReact() {
       window.ReactDOM = window.React;
     });
   }
+  request = request.then(() => loadScript(DRAFT_JS_PATH));
+  // We need Draft.js for the selection events fixture. It has to load
+  // after ReactDOM.
 
   return request;
 }
