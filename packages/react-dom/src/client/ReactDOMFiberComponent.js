@@ -62,6 +62,8 @@ const HTML = '__html';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
+let getNodeSignature;
+
 let getStack = () => '';
 
 let warnedUnknownTags;
@@ -78,6 +80,17 @@ let normalizeHTML;
 
 if (__DEV__) {
   getStack = getCurrentFiberStackAddendum;
+
+  getNodeSignature = function(node: Element | Document) {
+    const attrs =
+      node instanceof Element
+        ? [].slice
+            .call(node.attributes)
+            .map(item => item.name + '="' + item.value + '"')
+        : [];
+    attrs.unshift(node.nodeName.toLowerCase());
+    return attrs.join(' ');
+  };
 
   warnedUnknownTags = {
     // Chrome is the only major browser not shipping <time>. But as of July
@@ -1114,13 +1127,6 @@ export function warnForUnmatchedText(textNode: Text, text: string) {
   if (__DEV__) {
     warnForTextDifference(textNode.nodeValue, text);
   }
-}
-
-function getNodeSignature(node: Element) {
-  var attrs = [].slice.call(node.attributes).map(function (item) {
-    return item.name + '="'+ item.value + '"';
-  });
-  return node.nodeName.toLowerCase() + ' ' + attrs.join(' ');
 }
 
 export function warnForDeletedHydratableElement(

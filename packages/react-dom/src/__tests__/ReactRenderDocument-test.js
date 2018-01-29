@@ -417,7 +417,9 @@ describe('rendering React components at document', () => {
       // getTestDocument() has an extra <meta> that we didn't render.
       expect(() =>
         ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
-      ).toWarnDev('Did not expect server HTML to contain a <meta> in <head>.');
+      ).toWarnDev(
+        'Did not expect server HTML to contain <meta charset="utf-8"> in <head>.',
+      );
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
