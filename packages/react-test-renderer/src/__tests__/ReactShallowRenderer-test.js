@@ -23,13 +23,11 @@ describe('ReactShallowRenderer', () => {
     React = require('react');
   });
 
-  it('should call all of the lifecycle hooks', () => {
+  it('should call all of the legacy lifecycle hooks', () => {
     const logs = [];
     const logger = message => () => logs.push(message) || true;
 
     class SomeComponent extends React.Component {
-      state = {};
-      static getDerivedStateFromProps = logger('getDerivedStateFromProps');
       UNSAFE_componentWillMount = logger('componentWillMount');
       componentDidMount = logger('componentDidMount');
       UNSAFE_componentWillReceiveProps = logger('componentWillReceiveProps');
@@ -43,16 +41,11 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-
-    expect(() => shallowRenderer.render(<SomeComponent foo={1} />)).toWarnDev(
-      'Warning: SomeComponent: Defines both componentWillReceiveProps() and static ' +
-        'getDerivedStateFromProps() methods. ' +
-        'We recommend using only getDerivedStateFromProps().',
-    );
+    shallowRenderer.render(<SomeComponent foo={1} />);
 
     // Calling cDU might lead to problems with host component references.
     // Since our components aren't really mounted, refs won't be available.
-    expect(logs).toEqual(['getDerivedStateFromProps', 'componentWillMount']);
+    expect(logs).toEqual(['componentWillMount']);
 
     logs.splice(0);
 
@@ -68,10 +61,73 @@ describe('ReactShallowRenderer', () => {
     // The previous shallow renderer did not trigger cDU for props changes.
     expect(logs).toEqual([
       'componentWillReceiveProps',
-      'getDerivedStateFromProps',
       'shouldComponentUpdate',
       'componentWillUpdate',
     ]);
+  });
+
+  it('should call all of the new lifecycle hooks', () => {
+    const logs = [];
+    const logger = message => () => logs.push(message) || true;
+
+    class SomeComponent extends React.Component {
+      state = {};
+      static getDerivedStateFromProps = logger('getDerivedStateFromProps');
+      componentDidMount = logger('componentDidMount');
+      shouldComponentUpdate = logger('shouldComponentUpdate');
+      componentDidUpdate = logger('componentDidUpdate');
+      componentWillUnmount = logger('componentWillUnmount');
+      render() {
+        return <div />;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SomeComponent foo={1} />);
+
+    // Calling cDU might lead to problems with host component references.
+    // Since our components aren't really mounted, refs won't be available.
+    expect(logs).toEqual(['getDerivedStateFromProps']);
+
+    logs.splice(0);
+
+    const instance = shallowRenderer.getMountedInstance();
+    instance.setState({});
+
+    expect(logs).toEqual(['shouldComponentUpdate']);
+
+    logs.splice(0);
+
+    shallowRenderer.render(<SomeComponent foo={2} />);
+
+    // The previous shallow renderer did not trigger cDU for props changes.
+    expect(logs).toEqual(['getDerivedStateFromProps', 'shouldComponentUpdate']);
+  });
+
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
+    class Component extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillMount() {
+        throw Error('unexpected');
+      }
+      componentWillReceiveProps() {
+        throw Error('unexpected');
+      }
+      componentWillUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    expect(() => shallowRenderer.render(<Component foo={2} />)).toWarnDev(
+      'Defines both componentWillReceiveProps() and static getDerivedStateFromProps()',
+    );
   });
 
   it('should only render 1 level deep', () => {
@@ -422,11 +478,10 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div />);
   });
 
-  it('passes expected params to component lifecycle methods', () => {
+  it('passes expected params to legacy component lifecycle methods', () => {
     const componentDidUpdateParams = [];
     const componentWillReceivePropsParams = [];
     const componentWillUpdateParams = [];
-    const getDerivedStateFromPropsParams = [];
     const setStateParams = [];
     const shouldComponentUpdateParams = [];
 
@@ -448,10 +503,6 @@ describe('ReactShallowRenderer', () => {
       componentDidUpdate(...args) {
         componentDidUpdateParams.push(...args);
       }
-      static getDerivedStateFromProps(...args) {
-        getDerivedStateFromPropsParams.push(args);
-        return null;
-      }
       UNSAFE_componentWillReceiveProps(...args) {
         componentWillReceivePropsParams.push(...args);
         this.setState((...innerArgs) => {
@@ -472,22 +523,10 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-
-    // The only lifecycle hook that should be invoked on initial render
-    // Is the static getDerivedStateFromProps() methods
-    expect(() =>
-      shallowRenderer.render(
-        React.createElement(SimpleComponent, initialProp),
-        initialContext,
-      ),
-    ).toWarnDev(
-      'SimpleComponent: Defines both componentWillReceiveProps() and static ' +
-        'getDerivedStateFromProps() methods. We recommend using ' +
-        'only getDerivedStateFromProps().',
+    shallowRenderer.render(
+      React.createElement(SimpleComponent, initialProp),
+      initialContext,
     );
-    expect(getDerivedStateFromPropsParams).toEqual([
-      [initialProp, initialState],
-    ]);
     expect(componentDidUpdateParams).toEqual([]);
     expect(componentWillReceivePropsParams).toEqual([]);
     expect(componentWillUpdateParams).toEqual([]);
@@ -504,10 +543,6 @@ describe('ReactShallowRenderer', () => {
       updatedContext,
     ]);
     expect(setStateParams).toEqual([initialState, initialProp]);
-    expect(getDerivedStateFromPropsParams).toEqual([
-      [initialProp, initialState],
-      [updatedProp, initialState],
-    ]);
     expect(shouldComponentUpdateParams).toEqual([
       updatedProp,
       updatedState,
@@ -516,6 +551,72 @@ describe('ReactShallowRenderer', () => {
     expect(componentWillUpdateParams).toEqual([
       updatedProp,
       updatedState,
+      updatedContext,
+    ]);
+    expect(componentDidUpdateParams).toEqual([]);
+  });
+
+  it('passes expected params to new component lifecycle methods', () => {
+    const componentDidUpdateParams = [];
+    const getDerivedStateFromPropsParams = [];
+    const shouldComponentUpdateParams = [];
+
+    const initialProp = {prop: 'init prop'};
+    const initialState = {state: 'init state'};
+    const initialContext = {context: 'init context'};
+    const updatedProp = {prop: 'updated prop'};
+    const updatedContext = {context: 'updated context'};
+
+    class SimpleComponent extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = initialState;
+      }
+      static contextTypes = {
+        context: PropTypes.string,
+      };
+      componentDidUpdate(...args) {
+        componentDidUpdateParams.push(...args);
+      }
+      static getDerivedStateFromProps(...args) {
+        getDerivedStateFromPropsParams.push(args);
+        return null;
+      }
+      shouldComponentUpdate(...args) {
+        shouldComponentUpdateParams.push(...args);
+        return true;
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+
+    // The only lifecycle hook that should be invoked on initial render
+    // Is the static getDerivedStateFromProps() methods
+    shallowRenderer.render(
+      React.createElement(SimpleComponent, initialProp),
+      initialContext,
+    );
+    expect(getDerivedStateFromPropsParams).toEqual([
+      [initialProp, initialState],
+    ]);
+    expect(componentDidUpdateParams).toEqual([]);
+    expect(shouldComponentUpdateParams).toEqual([]);
+
+    // Lifecycle hooks should be invoked with the correct prev/next params on update.
+    shallowRenderer.render(
+      React.createElement(SimpleComponent, updatedProp),
+      updatedContext,
+    );
+    expect(getDerivedStateFromPropsParams).toEqual([
+      [initialProp, initialState],
+      [updatedProp, initialState],
+    ]);
+    expect(shouldComponentUpdateParams).toEqual([
+      updatedProp,
+      initialState,
       updatedContext,
     ]);
     expect(componentDidUpdateParams).toEqual([]);

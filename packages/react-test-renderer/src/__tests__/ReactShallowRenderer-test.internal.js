@@ -23,6 +23,10 @@ describe('ReactShallowRenderer', () => {
     React = require('react');
   });
 
+  afterEach(() => {
+    jest.resetModules();
+  });
+
   // TODO (RFC #6) Merge this back into ReactShallowRenderer-test once
   // the 'warnAboutDeprecatedLifecycles' feature flag has been removed.
   it('should warn if deprecated lifecycles exist', () => {
@@ -49,5 +53,32 @@ describe('ReactShallowRenderer', () => {
 
     // Verify no duplicate warnings
     shallowRenderer.render(<ComponentWithWarnings />);
+  });
+
+  describe('react-lifecycles-compat', () => {
+    // TODO Replace this with react-lifecycles-compat once it's been published
+    function polyfill(Component) {
+      Component.prototype.componentWillMount = function() {};
+      Component.prototype.componentWillMount.__suppressDeprecationWarning = true;
+      Component.prototype.componentWillReceiveProps = function() {};
+      Component.prototype.componentWillReceiveProps.__suppressDeprecationWarning = true;
+    }
+
+    it('should not warn about deprecated cWM/cWRP for polyfilled components', () => {
+      class PolyfilledComponent extends React.Component {
+        state = {};
+        static getDerivedStateFromProps() {
+          return null;
+        }
+        render() {
+          return null;
+        }
+      }
+
+      polyfill(PolyfilledComponent);
+
+      const shallowRenderer = createRenderer();
+      shallowRenderer.render(<PolyfilledComponent />);
+    });
   });
 });

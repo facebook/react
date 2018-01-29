@@ -42,17 +42,8 @@ describe('ReactStrictMode', () => {
         componentDidUpdate() {
           log.push('componentDidUpdate');
         }
-        UNSAFE_componentWillMount() {
-          log.push('componentWillMount');
-        }
-        UNSAFE_componentWillReceiveProps() {
-          log.push('componentWillReceiveProps');
-        }
         componentWillUnmount() {
           log.push('componentWillUnmount');
-        }
-        UNSAFE_componentWillUpdate() {
-          log.push('componentWillUpdate');
         }
         shouldComponentUpdate() {
           log.push('shouldComponentUpdate');
@@ -64,22 +55,13 @@ describe('ReactStrictMode', () => {
         }
       }
 
-      let component;
-
-      expect(() => {
-        component = ReactTestRenderer.create(<ClassComponent />);
-      }).toWarnDev(
-        'ClassComponent: Defines both componentWillReceiveProps() ' +
-          'and static getDerivedStateFromProps() methods. ' +
-          'We recommend using only getDerivedStateFromProps().',
-      );
+      const component = ReactTestRenderer.create(<ClassComponent />);
 
       expect(log).toEqual([
         'constructor',
         'constructor',
         'getDerivedStateFromProps',
         'getDerivedStateFromProps',
-        'componentWillMount',
         'render',
         'render',
         'componentDidMount',
@@ -90,11 +72,9 @@ describe('ReactStrictMode', () => {
 
       component.update(<ClassComponent />);
       expect(log).toEqual([
-        'componentWillReceiveProps',
         'getDerivedStateFromProps',
         'getDerivedStateFromProps',
         'shouldComponentUpdate',
-        'componentWillUpdate',
         'render',
         'render',
         'componentDidUpdate',
@@ -105,7 +85,6 @@ describe('ReactStrictMode', () => {
 
       component.update(<ClassComponent />);
       expect(log).toEqual([
-        'componentWillReceiveProps',
         'getDerivedStateFromProps',
         'getDerivedStateFromProps',
         'shouldComponentUpdate',

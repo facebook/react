@@ -524,8 +524,11 @@ export default function(
 
     if (typeof type.getDerivedStateFromProps === 'function') {
       if (__DEV__) {
+        // Don't warn about react-lifecycles-compat polyfilled components
         if (
-          typeof instance.componentWillReceiveProps === 'function' ||
+          (typeof instance.componentWillReceiveProps === 'function' &&
+            instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+              true) ||
           typeof instance.UNSAFE_componentWillReceiveProps === 'function'
         ) {
           const componentName = getComponentName(workInProgress) || 'Unknown';
@@ -627,9 +630,12 @@ export default function(
       }
     }
 
+    // In order to support react-lifecycles-compat polyfilled components,
+    // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
     if (
-      typeof instance.UNSAFE_componentWillMount === 'function' ||
-      typeof instance.componentWillMount === 'function'
+      (typeof instance.UNSAFE_componentWillMount === 'function' ||
+        typeof instance.componentWillMount === 'function') &&
+      typeof workInProgress.type.getDerivedStateFromProps !== 'function'
     ) {
       callComponentWillMount(workInProgress, instance);
       // If we had additional state updates during this life-cycle, let's
@@ -775,17 +781,21 @@ export default function(
     // ever the previously attempted to render - not the "current". However,
     // during componentDidUpdate we pass the "current" props.
 
+    // In order to support react-lifecycles-compat polyfilled components,
+    // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
     if (
       (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
         typeof instance.componentWillReceiveProps === 'function') &&
-      (oldProps !== newProps || oldContext !== newContext)
+      typeof workInProgress.type.getDerivedStateFromProps !== 'function'
     ) {
-      callComponentWillReceiveProps(
-        workInProgress,
-        instance,
-        newProps,
-        newContext,
-      );
+      if (oldProps !== newProps || oldContext !== newContext) {
+        callComponentWillReceiveProps(
+          workInProgress,
+          instance,
+          newProps,
+          newContext,
+        );
+      }
     }
 
     let partialState;
@@ -856,9 +866,12 @@ export default function(
     );
 
     if (shouldUpdate) {
+      // In order to support react-lifecycles-compat polyfilled components,
+      // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
       if (
-        typeof instance.UNSAFE_componentWillUpdate === 'function' ||
-        typeof instance.componentWillUpdate === 'function'
+        (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
+          typeof instance.componentWillUpdate === 'function') &&
+        typeof workInProgress.type.getDerivedStateFromProps !== 'function'
       ) {
         if (typeof instance.componentWillUpdate === 'function') {
           startPhaseTimer(workInProgress, 'componentWillUpdate');

@@ -499,7 +499,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(instance.state.stateField).toBe('goodbye');
   });
 
-  it('should call nested lifecycle methods in the right order', () => {
+  it('should call nested legacy lifecycle methods in the right order', () => {
     let log;
     const logger = function(msg) {
       return function() {
@@ -509,11 +509,6 @@ describe('ReactComponentLifeCycle', () => {
       };
     };
     class Outer extends React.Component {
-      state = {};
-      static getDerivedStateFromProps(props, prevState) {
-        log.push('outer getDerivedStateFromProps');
-        return null;
-      }
       UNSAFE_componentWillMount = logger('outer componentWillMount');
       componentDidMount = logger('outer componentDidMount');
       UNSAFE_componentWillReceiveProps = logger(
@@ -533,11 +528,6 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     class Inner extends React.Component {
-      state = {};
-      static getDerivedStateFromProps(props, prevState) {
-        log.push('inner getDerivedStateFromProps');
-        return null;
-      }
       UNSAFE_componentWillMount = logger('inner componentWillMount');
       componentDidMount = logger('inner componentDidMount');
       UNSAFE_componentWillReceiveProps = logger(
@@ -554,18 +544,9 @@ describe('ReactComponentLifeCycle', () => {
 
     const container = document.createElement('div');
     log = [];
-    expect(() => ReactDOM.render(<Outer x={1} />, container)).toWarnDev([
-      'Warning: Outer: Defines both componentWillReceiveProps() and static ' +
-        'getDerivedStateFromProps() methods. ' +
-        'We recommend using only getDerivedStateFromProps().',
-      'Warning: Inner: Defines both componentWillReceiveProps() and static ' +
-        'getDerivedStateFromProps() methods. ' +
-        'We recommend using only getDerivedStateFromProps().',
-    ]);
+    ReactDOM.render(<Outer x={1} />, container);
     expect(log).toEqual([
-      'outer getDerivedStateFromProps',
       'outer componentWillMount',
-      'inner getDerivedStateFromProps',
       'inner componentWillMount',
       'inner componentDidMount',
       'outer componentDidMount',
@@ -576,11 +557,9 @@ describe('ReactComponentLifeCycle', () => {
     ReactDOM.render(<Outer x={2} />, container);
     expect(log).toEqual([
       'outer componentWillReceiveProps',
-      'outer getDerivedStateFromProps',
       'outer shouldComponentUpdate',
       'outer componentWillUpdate',
       'inner componentWillReceiveProps',
-      'inner getDerivedStateFromProps',
       'inner shouldComponentUpdate',
       'inner componentWillUpdate',
       'inner componentDidUpdate',
@@ -593,6 +572,131 @@ describe('ReactComponentLifeCycle', () => {
       'outer componentWillUnmount',
       'inner componentWillUnmount',
     ]);
+  });
+
+  it('should call nested new lifecycle methods in the right order', () => {
+    let log;
+    const logger = function(msg) {
+      return function() {
+        // return true for shouldComponentUpdate
+        log.push(msg);
+        return true;
+      };
+    };
+    class Outer extends React.Component {
+      state = {};
+      static getDerivedStateFromProps(props, prevState) {
+        log.push('outer getDerivedStateFromProps');
+        return null;
+      }
+      componentDidMount = logger('outer componentDidMount');
+      shouldComponentUpdate = logger('outer shouldComponentUpdate');
+      componentDidUpdate = logger('outer componentDidUpdate');
+      componentWillUnmount = logger('outer componentWillUnmount');
+      render() {
+        return (
+          <div>
+            <Inner x={this.props.x} />
+          </div>
+        );
+      }
+    }
+
+    class Inner extends React.Component {
+      state = {};
+      static getDerivedStateFromProps(props, prevState) {
+        log.push('inner getDerivedStateFromProps');
+        return null;
+      }
+      componentDidMount = logger('inner componentDidMount');
+      shouldComponentUpdate = logger('inner shouldComponentUpdate');
+      componentDidUpdate = logger('inner componentDidUpdate');
+      componentWillUnmount = logger('inner componentWillUnmount');
+      render() {
+        return <span>{this.props.x}</span>;
+      }
+    }
+
+    const container = document.createElement('div');
+    log = [];
+    ReactDOM.render(<Outer x={1} />, container);
+    expect(log).toEqual([
+      'outer getDerivedStateFromProps',
+      'inner getDerivedStateFromProps',
+      'inner componentDidMount',
+      'outer componentDidMount',
+    ]);
+
+    // Dedup warnings
+    log = [];
+    ReactDOM.render(<Outer x={2} />, container);
+    expect(log).toEqual([
+      'outer getDerivedStateFromProps',
+      'outer shouldComponentUpdate',
+      'inner getDerivedStateFromProps',
+      'inner shouldComponentUpdate',
+      'inner componentDidUpdate',
+      'outer componentDidUpdate',
+    ]);
+
+    log = [];
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual([
+      'outer componentWillUnmount',
+      'inner componentWillUnmount',
+    ]);
+  });
+
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
+    class Component extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillMount() {
+        throw Error('unexpected');
+      }
+      componentWillReceiveProps() {
+        throw Error('unexpected');
+      }
+      componentWillUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+      'Defines both componentWillReceiveProps',
+    );
+  });
+
+  it('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', () => {
+    class Component extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      UNSAFE_componentWillMount() {
+        throw Error('unexpected');
+      }
+      UNSAFE_componentWillReceiveProps() {
+        throw Error('unexpected');
+      }
+      UNSAFE_componentWillUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+      'Defines both componentWillReceiveProps',
+    );
   });
 
   it('calls effects on module-pattern component', function() {

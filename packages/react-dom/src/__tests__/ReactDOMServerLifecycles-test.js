@@ -33,7 +33,7 @@ describe('ReactDOMServerLifecycles', () => {
     resetModules();
   });
 
-  it('should invoke the correct lifecycle hooks', () => {
+  it('should invoke the correct legacy lifecycle hooks', () => {
     const log = [];
 
     class Outer extends React.Component {
@@ -63,6 +63,59 @@ describe('ReactDOMServerLifecycles', () => {
       'inner componentWillMount',
       'inner render',
     ]);
+  });
+
+  it('should invoke the correct new lifecycle hooks', () => {
+    const log = [];
+
+    class Outer extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        log.push('outer getDerivedStateFromProps');
+        return null;
+      }
+      render() {
+        log.push('outer render');
+        return <Inner />;
+      }
+    }
+
+    class Inner extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        log.push('inner getDerivedStateFromProps');
+        return null;
+      }
+      render() {
+        log.push('inner render');
+        return null;
+      }
+    }
+
+    ReactDOMServer.renderToString(<Outer />);
+    expect(log).toEqual([
+      'outer getDerivedStateFromProps',
+      'outer render',
+      'inner getDerivedStateFromProps',
+      'inner render',
+    ]);
+  });
+
+  it('should not invoke unsafe cWM if static gDSFP is present', () => {
+    class Component extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      UNSAFE_componentWillMount() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    ReactDOMServer.renderToString(<Component />);
   });
 
   it('should update instance.state with value returned from getDerivedStateFromProps', () => {

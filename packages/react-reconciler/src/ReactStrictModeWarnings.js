@@ -199,6 +199,16 @@ if (__DEV__) {
       return;
     }
 
+    // Don't warn about react-lifecycles-compat polyfilled components.
+    // Note that it is sufficient to check for the presence of a
+    // single lifecycle, componentWillMount, with the polyfill flag.
+    if (
+      typeof instance.componentWillMount === 'function' &&
+      instance.componentWillMount.__suppressDeprecationWarning === true
+    ) {
+      return;
+    }
+
     if (typeof instance.componentWillMount === 'function') {
       pendingComponentWillMountWarnings.push(fiber);
     }
@@ -222,6 +232,16 @@ if (__DEV__) {
     // An expand property is probably okay to use here since it's DEV-only,
     // and will only be set in the event of serious warnings.
     if (didWarnAboutUnsafeLifecycles.has(fiber.type)) {
+      return;
+    }
+
+    // Don't warn about react-lifecycles-compat polyfilled components.
+    // Note that it is sufficient to check for the presence of a
+    // single lifecycle, componentWillMount, with the polyfill flag.
+    if (
+      typeof instance.componentWillMount === 'function' &&
+      instance.componentWillMount.__suppressDeprecationWarning === true
+    ) {
       return;
     }
 

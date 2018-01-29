@@ -449,4 +449,34 @@ describe('create-react-class-integration', () => {
       ReactDOM.render(<Component />, document.createElement('div')),
     ).toWarnDev('Did not properly initialize state during construction.');
   });
+
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
+    const Component = createReactClass({
+      statics: {
+        getDerivedStateFromProps: function() {
+          return null;
+        },
+      },
+      componentWillMount: function() {
+        throw Error('unexpected');
+      },
+      componentWillReceiveProps: function() {
+        throw Error('unexpected');
+      },
+      componentWillUpdate: function() {
+        throw Error('unexpected');
+      },
+      getInitialState: function() {
+        return {};
+      },
+      render: function() {
+        return null;
+      },
+    });
+
+    expect(() => {
+      ReactDOM.render(<Component />, document.createElement('div'));
+    }).toWarnDev('Defines both componentWillReceiveProps');
+    ReactDOM.render(<Component foo={1} />, document.createElement('div'));
+  });
 });

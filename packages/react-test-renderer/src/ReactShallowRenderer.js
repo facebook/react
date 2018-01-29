@@ -180,7 +180,12 @@ class ReactShallowRenderer {
 
       if (typeof this._instance.componentWillMount === 'function') {
         if (__DEV__) {
-          if (warnAboutDeprecatedLifecycles) {
+          // Don't warn about react-lifecycles-compat polyfilled components
+          if (
+            warnAboutDeprecatedLifecycles &&
+            this._instance.componentWillMount.__suppressDeprecationWarning !==
+              true
+          ) {
             const componentName = getName(element.type, this._instance);
             if (!didWarnAboutLegacyWillMount[componentName]) {
               warning(
@@ -198,8 +203,15 @@ class ReactShallowRenderer {
             }
           }
         }
-        this._instance.componentWillMount();
-      } else {
+
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+        if (typeof element.type.getDerivedStateFromProps !== 'function') {
+          this._instance.componentWillMount();
+        }
+      } else if (typeof element.type.getDerivedStateFromProps !== 'function') {
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         this._instance.UNSAFE_componentWillMount();
       }
 
@@ -242,10 +254,17 @@ class ReactShallowRenderer {
             }
           }
         }
-        this._instance.componentWillReceiveProps(props, context);
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+        if (typeof element.type.getDerivedStateFromProps !== 'function') {
+          this._instance.componentWillReceiveProps(props, context);
+        }
       } else if (
-        typeof this._instance.UNSAFE_componentWillReceiveProps === 'function'
+        typeof this._instance.UNSAFE_componentWillReceiveProps === 'function' &&
+        typeof element.type.getDerivedStateFromProps !== 'function'
       ) {
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         this._instance.UNSAFE_componentWillReceiveProps(props, context);
       }
 
@@ -292,10 +311,17 @@ class ReactShallowRenderer {
           }
         }
 
-        this._instance.componentWillUpdate(props, state, context);
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+        if (typeof type.getDerivedStateFromProps !== 'function') {
+          this._instance.componentWillUpdate(props, state, context);
+        }
       } else if (
-        typeof this._instance.UNSAFE_componentWillUpdate === 'function'
+        typeof this._instance.UNSAFE_componentWillUpdate === 'function' &&
+        typeof type.getDerivedStateFromProps !== 'function'
       ) {
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         this._instance.UNSAFE_componentWillUpdate(props, state, context);
       }
     }
@@ -316,8 +342,11 @@ class ReactShallowRenderer {
 
     if (typeof type.getDerivedStateFromProps === 'function') {
       if (__DEV__) {
+        // Don't warn about react-lifecycles-compat polyfilled components
         if (
-          typeof this._instance.componentWillReceiveProps === 'function' ||
+          (typeof this._instance.componentWillReceiveProps === 'function' &&
+            this._instance.componentWillReceiveProps
+              .__suppressDeprecationWarning !== true) ||
           typeof this._instance.UNSAFE_componentWillReceiveProps === 'function'
         ) {
           const componentName = getName(type, this._instance);
