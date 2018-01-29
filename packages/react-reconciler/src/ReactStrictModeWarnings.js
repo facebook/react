@@ -199,7 +199,9 @@ if (__DEV__) {
       return;
     }
 
-    // Don't warn about react-lifecycles-compat polyfilled components
+    // Don't warn about react-lifecycles-compat polyfilled components.
+    // Note that it is sufficient to check for the presence of a
+    // single lifecycle, componentWillMount, with the polyfill flag.
     if (
       typeof instance.componentWillMount === 'function' &&
       instance.componentWillMount.__suppressDeprecationWarning === true
@@ -233,7 +235,9 @@ if (__DEV__) {
       return;
     }
 
-    // Don't warn about react-lifecycles-compat polyfilled components
+    // Don't warn about react-lifecycles-compat polyfilled components.
+    // Note that it is sufficient to check for the presence of a
+    // single lifecycle, componentWillMount, with the polyfill flag.
     if (
       typeof instance.componentWillMount === 'function' &&
       instance.componentWillMount.__suppressDeprecationWarning === true

@@ -204,10 +204,14 @@ class ReactShallowRenderer {
           }
         }
 
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         if (typeof element.type.getDerivedStateFromProps !== 'function') {
           this._instance.componentWillMount();
         }
       } else if (typeof element.type.getDerivedStateFromProps !== 'function') {
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         this._instance.UNSAFE_componentWillMount();
       }
 
@@ -250,6 +254,8 @@ class ReactShallowRenderer {
             }
           }
         }
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         if (typeof element.type.getDerivedStateFromProps !== 'function') {
           this._instance.componentWillReceiveProps(props, context);
         }
@@ -257,6 +263,8 @@ class ReactShallowRenderer {
         typeof this._instance.UNSAFE_componentWillReceiveProps === 'function' &&
         typeof element.type.getDerivedStateFromProps !== 'function'
       ) {
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         this._instance.UNSAFE_componentWillReceiveProps(props, context);
       }
 
@@ -303,6 +311,8 @@ class ReactShallowRenderer {
           }
         }
 
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         if (typeof type.getDerivedStateFromProps !== 'function') {
           this._instance.componentWillUpdate(props, state, context);
         }
@@ -310,6 +320,8 @@ class ReactShallowRenderer {
         typeof this._instance.UNSAFE_componentWillUpdate === 'function' &&
         typeof type.getDerivedStateFromProps !== 'function'
       ) {
+        // In order to support react-lifecycles-compat polyfilled components,
+        // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         this._instance.UNSAFE_componentWillUpdate(props, state, context);
       }
     }

@@ -23,6 +23,10 @@ describe('ReactShallowRenderer', () => {
     React = require('react');
   });
 
+  afterEach(() => {
+    jest.resetModules();
+  });
+
   // TODO (RFC #6) Merge this back into ReactShallowRenderer-test once
   // the 'warnAboutDeprecatedLifecycles' feature flag has been removed.
   it('should warn if deprecated lifecycles exist', () => {

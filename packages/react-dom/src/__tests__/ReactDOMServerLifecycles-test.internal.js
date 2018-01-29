@@ -22,6 +22,29 @@ describe('ReactDOMServerLifecycles', () => {
     ReactDOMServer = require('react-dom/server');
   });
 
+  afterEach(() => {
+    jest.resetModules();
+  });
+
+  it('should not invoke cWM if static gDSFP is present', () => {
+    class Component extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillMount() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
+      'Component: componentWillMount() is deprecated and will be removed in the next major version.',
+    );
+  });
+
   // TODO (RFC #6) Merge this back into ReactDOMServerLifecycles-test once
   // the 'warnAboutDeprecatedLifecycles' feature flag has been removed.
   it('should warn about deprecated lifecycle hooks', () => {

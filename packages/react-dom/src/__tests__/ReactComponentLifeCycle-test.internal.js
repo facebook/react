@@ -24,6 +24,10 @@ describe('ReactComponentLifeCycle', () => {
     ReactDOM = require('react-dom');
   });
 
+  afterEach(() => {
+    jest.resetModules();
+  });
+
   // TODO (RFC #6) Merge this back into ReactComponentLifeCycles-test once
   // the 'warnAboutDeprecatedLifecycles' feature flag has been removed.
   it('warns about deprecated unsafe lifecycles', function() {

@@ -101,7 +101,7 @@ describe('ReactDOMServerLifecycles', () => {
     ]);
   });
 
-  it('should not invoke cWM if static gDSFP is present', () => {
+  it('should not invoke unsafe cWM if static gDSFP is present', () => {
     class Component extends React.Component {
       state = {};
       static getDerivedStateFromProps() {

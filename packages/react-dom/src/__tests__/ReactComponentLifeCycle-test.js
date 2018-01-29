@@ -673,6 +673,32 @@ describe('ReactComponentLifeCycle', () => {
     );
   });
 
+  it('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', () => {
+    class Component extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      UNSAFE_componentWillMount() {
+        throw Error('unexpected');
+      }
+      UNSAFE_componentWillReceiveProps() {
+        throw Error('unexpected');
+      }
+      UNSAFE_componentWillUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
+      'Defines both componentWillReceiveProps',
+    );
+  });
+
   it('calls effects on module-pattern component', function() {
     const log = [];
 
