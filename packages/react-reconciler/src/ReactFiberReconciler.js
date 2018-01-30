@@ -256,7 +256,7 @@ export type Reconciler<C, I, TI> = {
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
-  flushControlled<A>(fn: () => A): A,
+  flushControlled(fn: () => mixed): void,
   deferredUpdates<A>(fn: () => A): A,
   injectIntoDevTools(devToolsConfig: DevToolsConfig<I, TI>): boolean,
   computeUniqueAsyncExpiration(): ExpirationTime,

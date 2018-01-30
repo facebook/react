@@ -378,5 +378,28 @@ describe('ReactDOMFiberAsync', () => {
         'after batchedUpdates: 2',
       ]);
     });
+
+    it('flushControlled returns nothing', () => {
+      // In the future, we may want to return a thenable "work" object.
+      let inst;
+      class Counter extends React.Component {
+        state = {counter: 0};
+        increment = () =>
+          this.setState(state => ({counter: state.counter + 1}));
+        render() {
+          inst = this;
+          return this.state.counter;
+        }
+      }
+      ReactDOM.render(<Counter />, container);
+      expect(container.textContent).toEqual('0');
+
+      const returnValue = ReactDOM.flushControlled(() => {
+        inst.increment();
+        return 'something';
+      });
+      expect(container.textContent).toEqual('1');
+      expect(returnValue).toBe(undefined);
+    });
   });
 });
