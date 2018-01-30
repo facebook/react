@@ -14,7 +14,7 @@ let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let ReactDOM;
 
-const AsyncMode = React.Unstable_AsyncMode;
+const AsyncMode = React.unstable_AsyncMode;
 
 describe('ReactDOMFiberAsync', () => {
   let container;

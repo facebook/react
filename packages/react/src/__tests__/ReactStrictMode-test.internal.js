@@ -286,9 +286,9 @@ describe('ReactStrictMode', () => {
         UNSAFE_componentWillReceiveProps() {}
         render() {
           return (
-            <React.Unstable_AsyncMode>
+            <React.unstable_AsyncMode>
               <AsyncRoot />
-            </React.Unstable_AsyncMode>
+            </React.unstable_AsyncMode>
           );
         }
       }
@@ -353,9 +353,9 @@ describe('ReactStrictMode', () => {
         UNSAFE_componentWillReceiveProps() {}
         render() {
           return (
-            <React.Unstable_AsyncMode>
+            <React.unstable_AsyncMode>
               <AsyncRoot />
-            </React.Unstable_AsyncMode>
+            </React.unstable_AsyncMode>
           );
         }
       }
@@ -420,22 +420,22 @@ describe('ReactStrictMode', () => {
       class AsyncRootOne extends React.Component {
         render() {
           return (
-            <React.Unstable_AsyncMode>
+            <React.unstable_AsyncMode>
               <Foo>
                 <Bar />
               </Foo>
-            </React.Unstable_AsyncMode>
+            </React.unstable_AsyncMode>
           );
         }
       }
       class AsyncRootTwo extends React.Component {
         render() {
           return (
-            <React.Unstable_AsyncMode>
+            <React.unstable_AsyncMode>
               <Foo>
                 <Baz />
               </Foo>
-            </React.Unstable_AsyncMode>
+            </React.unstable_AsyncMode>
           );
         }
       }
@@ -486,9 +486,9 @@ describe('ReactStrictMode', () => {
       class AsyncRoot extends React.Component {
         render() {
           return (
-            <React.Unstable_AsyncMode>
+            <React.unstable_AsyncMode>
               {this.props.foo ? <Foo /> : <Bar />}
-            </React.Unstable_AsyncMode>
+            </React.unstable_AsyncMode>
           );
         }
       }
@@ -537,9 +537,9 @@ describe('ReactStrictMode', () => {
       class AsyncRoot extends React.Component {
         render() {
           return (
-            <React.Unstable_AsyncMode>
+            <React.unstable_AsyncMode>
               <ErrorBoundary />
-            </React.Unstable_AsyncMode>
+            </React.unstable_AsyncMode>
           );
         }
       }

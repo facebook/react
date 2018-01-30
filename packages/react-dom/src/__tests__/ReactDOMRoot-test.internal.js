@@ -12,7 +12,7 @@
 let React = require('react');
 let ReactDOM = require('react-dom');
 let ReactDOMServer = require('react-dom/server');
-let AsyncMode = React.Unstable_AsyncMode;
+let AsyncMode = React.unstable_AsyncMode;
 
 describe('ReactDOMRoot', () => {
   let container;
@@ -70,7 +70,7 @@ describe('ReactDOMRoot', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    AsyncMode = React.Unstable_AsyncMode;
+    AsyncMode = React.unstable_AsyncMode;
   });
 
   it('renders children', () => {
