@@ -348,5 +348,35 @@ describe('ReactDOMFiberAsync', () => {
         'after outer flush: 3',
       ]);
     });
+
+    it('flushControlled does not flush until end of outermost batchedUpdates', () => {
+      let inst;
+      class Counter extends React.Component {
+        state = {counter: 0};
+        increment = () =>
+          this.setState(state => ({counter: state.counter + 1}));
+        render() {
+          inst = this;
+          return this.state.counter;
+        }
+      }
+      ReactDOM.render(<Counter />, container);
+
+      let ops = [];
+      ReactDOM.unstable_batchedUpdates(() => {
+        inst.increment();
+        ReactDOM.flushControlled(() => {
+          inst.increment();
+          ops.push('end of flushControlled fn: ' + container.textContent);
+        });
+        ops.push('end of batchedUpdates fn: ' + container.textContent);
+      });
+      ops.push('after batchedUpdates: ' + container.textContent);
+      expect(ops).toEqual([
+        'end of flushControlled fn: 0',
+        'end of batchedUpdates fn: 0',
+        'after batchedUpdates: 2',
+      ]);
+    });
   });
 });
