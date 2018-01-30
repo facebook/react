@@ -43,9 +43,9 @@ export function batchedUpdates(fn, bookkeeping) {
     isBatching = false;
     const controlledComponentsHavePendingUpdates = needsStateRestore();
     if (controlledComponentsHavePendingUpdates) {
-      // We need to flush updates scheduled by controlled components before
-      // yielding back to the browser, so that the DOM is consistent before
-      // another event has the chance to fire.
+      // If a controlled event was fired, we may need to restore the state of
+      // the DOM node back to the controlled value. This is necessary when React
+      // bails out of the update without touching the DOM.
       _flushInteractiveUpdates();
       restoreStateIfNeeded();
     }
