@@ -1616,41 +1616,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     isRendering = true;
 
-    // Check if this is async work or sync/expired work.
-    if (expirationTime <= currentTime) {
-      // Flush sync work.
-      let finishedWork = root.finishedWork;
-      if (finishedWork !== null) {
-        // This root is already complete. We can commit it.
-        completeRoot(root, finishedWork, expirationTime);
-      } else {
-        root.finishedWork = null;
-        finishedWork = renderRoot(root, expirationTime);
-        if (finishedWork !== null) {
-          // We've completed the root. Commit it.
-          completeRoot(root, finishedWork, expirationTime);
-        }
-      }
+    let finishedWork = root.finishedWork;
+    if (finishedWork !== null) {
+      // This root is already complete. We can commit it.
+      completeRoot(root, finishedWork, expirationTime);
     } else {
-      // Flush async work.
-      let finishedWork = root.finishedWork;
+      finishedWork = renderRoot(root, expirationTime);
       if (finishedWork !== null) {
-        // This root is already complete. We can commit it.
-        completeRoot(root, finishedWork, expirationTime);
-      } else {
-        root.finishedWork = null;
-        finishedWork = renderRoot(root, expirationTime);
-        if (finishedWork !== null) {
-          // We've completed the root. Check the deadline one more time
-          // before committing.
-          if (!shouldYield()) {
-            // Still time left. Commit the root.
-            completeRoot(root, finishedWork, expirationTime);
-          } else {
-            // There's no time left. Mark this root as complete. We'll come
-            // back and commit it later.
-            root.finishedWork = finishedWork;
-          }
+        // We've completed the root. Check if this is async work or sync/expired work.
+        // If this is sync/expired work, or this is async work and
+        // there's still time left before deadline, commit it.
+        if (expirationTime <= currentTime || !shouldYield()) {
+          completeRoot(root, finishedWork, expirationTime);
+        } else {
+          // This is async work and there's no time left. Mark this root as complete.
+          // We'll come back and commit it later.
+          root.finishedWork = finishedWork;
         }
       }
     }
