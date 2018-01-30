@@ -1764,6 +1764,19 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
+  function flushControlled<A>(fn: () => A): A {
+    const previousIsBatchingUpdates = isBatchingUpdates;
+    isBatchingUpdates = true;
+    try {
+      return syncUpdates(fn);
+    } finally {
+      isBatchingUpdates = previousIsBatchingUpdates;
+      if (!isBatchingUpdates && !isRendering) {
+        performWork(Sync, null);
+      }
+    }
+  }
+
   return {
     computeExpirationForFiber,
     scheduleWork,
@@ -1772,6 +1785,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
+    flushControlled,
     deferredUpdates,
     computeUniqueAsyncExpiration,
   };
