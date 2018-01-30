@@ -14,7 +14,6 @@ let React;
 let ReactCallReturn;
 let ReactDOMServer;
 let PropTypes;
-let ReactFeatureFlags;
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -23,8 +22,6 @@ function normalizeCodeLocInfo(str) {
 describe('ReactDOMServer', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableNewContextAPI = true;
     React = require('react');
     ReactCallReturn = require('react-call-return');
     PropTypes = require('prop-types');
@@ -388,36 +385,32 @@ describe('ReactDOMServer', () => {
     });
 
     it('renders with new context API', () => {
-      const Context = React.unstable_createContext(0);
-
-      function Provider(props) {
-        return Context.provide(props.value, props.children);
-      }
+      const Context = React.createContext(0);
 
       function Consumer(props) {
-        return Context.consume(value => {
-          return 'Result: ' + value;
-        });
+        return (
+          <Context.Consumer>{value => 'Result: ' + value}</Context.Consumer>
+        );
       }
 
       const Indirection = React.Fragment;
 
       function App(props) {
         return (
-          <Provider value={props.value}>
-            <Provider value={2}>
+          <Context.Provider value={props.value}>
+            <Context.Provider value={2}>
               <Consumer />
-            </Provider>
+            </Context.Provider>
             <Indirection>
               <Indirection>
                 <Consumer />
-                <Provider value={3}>
+                <Context.Provider value={3}>
                   <Consumer />
-                </Provider>
+                </Context.Provider>
               </Indirection>
             </Indirection>
             <Consumer />
-          </Provider>
+          </Context.Provider>
         );
       }
 
@@ -428,16 +421,12 @@ describe('ReactDOMServer', () => {
     });
 
     it('renders context API, reentrancy', () => {
-      const Context = React.unstable_createContext(0);
-
-      function Provider(props) {
-        return Context.provide(props.value, props.children);
-      }
+      const Context = React.createContext(0);
 
       function Consumer(props) {
-        return Context.consume(value => {
-          return 'Result: ' + value;
-        });
+        return (
+          <Context.Consumer>{value => 'Result: ' + value}</Context.Consumer>
+        );
       }
 
       let reentrantMarkup;
@@ -452,21 +441,21 @@ describe('ReactDOMServer', () => {
 
       function App(props) {
         return (
-          <Provider value={props.value}>
+          <Context.Provider value={props.value}>
             {props.reentrant && <Reentrant />}
-            <Provider value={2}>
+            <Context.Provider value={2}>
               <Consumer />
-            </Provider>
+            </Context.Provider>
             <Indirection>
               <Indirection>
                 <Consumer />
-                <Provider value={3}>
+                <Context.Provider value={3}>
                   <Consumer />
-                </Provider>
+                </Context.Provider>
               </Indirection>
             </Indirection>
             <Consumer />
-          </Provider>
+          </Context.Provider>
         );
       }
 

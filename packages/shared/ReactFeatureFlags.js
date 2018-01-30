@@ -19,9 +19,6 @@ export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
 // Experimental persistent mode (Fabric):
 export const enablePersistentReconciler = false;
-// Support for new context API
-export const enableNewContextAPI = false;
-
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 

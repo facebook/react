@@ -15,7 +15,6 @@ import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {enableNewContextAPI} from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
   FunctionalComponent,
@@ -678,87 +677,85 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     changedBits: number,
     renderExpirationTime: ExpirationTime,
   ): void {
-    if (enableNewContextAPI) {
-      let fiber = workInProgress.child;
-      while (fiber !== null) {
-        let nextFiber;
-        // Visit this fiber.
-        switch (fiber.tag) {
-          case ContextConsumer:
-            // Check if the context matches.
-            const observedBits: number = fiber.stateNode | 0;
-            if (fiber.type === context && (observedBits & changedBits) !== 0) {
-              // Update the expiration time of all the ancestors, including
-              // the alternates.
-              let node = fiber;
-              while (node !== null) {
-                const alternate = node.alternate;
+    let fiber = workInProgress.child;
+    while (fiber !== null) {
+      let nextFiber;
+      // Visit this fiber.
+      switch (fiber.tag) {
+        case ContextConsumer:
+          // Check if the context matches.
+          const observedBits: number = fiber.stateNode | 0;
+          if (fiber.type === context && (observedBits & changedBits) !== 0) {
+            // Update the expiration time of all the ancestors, including
+            // the alternates.
+            let node = fiber;
+            while (node !== null) {
+              const alternate = node.alternate;
+              if (
+                node.expirationTime === NoWork ||
+                node.expirationTime > renderExpirationTime
+              ) {
+                node.expirationTime = renderExpirationTime;
                 if (
-                  node.expirationTime === NoWork ||
-                  node.expirationTime > renderExpirationTime
-                ) {
-                  node.expirationTime = renderExpirationTime;
-                  if (
-                    alternate !== null &&
-                    (alternate.expirationTime === NoWork ||
-                      alternate.expirationTime > renderExpirationTime)
-                  ) {
-                    alternate.expirationTime = renderExpirationTime;
-                  }
-                } else if (
                   alternate !== null &&
                   (alternate.expirationTime === NoWork ||
                     alternate.expirationTime > renderExpirationTime)
                 ) {
                   alternate.expirationTime = renderExpirationTime;
-                } else {
-                  // Neither alternate was updated, which means the rest of the
-                  // ancestor path already has sufficient priority.
-                  break;
                 }
-                node = node.return;
+              } else if (
+                alternate !== null &&
+                (alternate.expirationTime === NoWork ||
+                  alternate.expirationTime > renderExpirationTime)
+              ) {
+                alternate.expirationTime = renderExpirationTime;
+              } else {
+                // Neither alternate was updated, which means the rest of the
+                // ancestor path already has sufficient priority.
+                break;
               }
-              // Don't scan deeper than a matching consumer. When we render the
-              // consumer, we'll continue scanning from that point. This way the
-              // scanning work is time-sliced.
-              nextFiber = null;
-            } else {
-              // Traverse down.
-              nextFiber = fiber.child;
+              node = node.return;
             }
-            break;
-          case ContextProvider:
-            // Don't scan deeper if this is a matching provider
-            nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
-            break;
-          default:
+            // Don't scan deeper than a matching consumer. When we render the
+            // consumer, we'll continue scanning from that point. This way the
+            // scanning work is time-sliced.
+            nextFiber = null;
+          } else {
             // Traverse down.
             nextFiber = fiber.child;
-            break;
-        }
-        if (nextFiber !== null) {
-          // Set the return pointer of the child to the work-in-progress fiber.
-          nextFiber.return = fiber;
-        } else {
-          // No child. Traverse to next sibling.
-          nextFiber = fiber;
-          while (nextFiber !== null) {
-            if (nextFiber === workInProgress) {
-              // We're back to the root of this subtree. Exit.
-              nextFiber = null;
-              break;
-            }
-            let sibling = nextFiber.sibling;
-            if (sibling !== null) {
-              nextFiber = sibling;
-              break;
-            }
-            // No more siblings. Traverse up.
-            nextFiber = nextFiber.return;
           }
-        }
-        fiber = nextFiber;
+          break;
+        case ContextProvider:
+          // Don't scan deeper if this is a matching provider
+          nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
+          break;
+        default:
+          // Traverse down.
+          nextFiber = fiber.child;
+          break;
       }
+      if (nextFiber !== null) {
+        // Set the return pointer of the child to the work-in-progress fiber.
+        nextFiber.return = fiber;
+      } else {
+        // No child. Traverse to next sibling.
+        nextFiber = fiber;
+        while (nextFiber !== null) {
+          if (nextFiber === workInProgress) {
+            // We're back to the root of this subtree. Exit.
+            nextFiber = null;
+            break;
+          }
+          let sibling = nextFiber.sibling;
+          if (sibling !== null) {
+            nextFiber = sibling;
+            break;
+          }
+          // No more siblings. Traverse up.
+          nextFiber = nextFiber.return;
+        }
+      }
+      fiber = nextFiber;
     }
   }
 
@@ -767,79 +764,75 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress,
     renderExpirationTime,
   ) {
-    if (enableNewContextAPI) {
-      const providerType: ReactProviderType<any> = workInProgress.type;
-      const context: ReactContext<any> = providerType.context;
+    const providerType: ReactProviderType<any> = workInProgress.type;
+    const context: ReactContext<any> = providerType.context;
 
-      const newProps = workInProgress.pendingProps;
-      const oldProps = workInProgress.memoizedProps;
+    const newProps = workInProgress.pendingProps;
+    const oldProps = workInProgress.memoizedProps;
 
-      if (hasLegacyContextChanged()) {
-        // Normally we can bail out on props equality but if context has changed
-        // we don't do the bailout and we have to reuse existing props instead.
-      } else if (oldProps === newProps) {
-        workInProgress.stateNode = 0;
-        pushProvider(workInProgress);
-        return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      }
-      workInProgress.memoizedProps = newProps;
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (oldProps === newProps) {
+      workInProgress.stateNode = 0;
+      pushProvider(workInProgress);
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    workInProgress.memoizedProps = newProps;
 
-      const newValue = newProps.value;
+    const newValue = newProps.value;
 
-      let changedBits: number;
-      if (oldProps === null) {
-        // Initial render
-        changedBits = MAX_SIGNED_31_BIT_INT;
+    let changedBits: number;
+    if (oldProps === null) {
+      // Initial render
+      changedBits = MAX_SIGNED_31_BIT_INT;
+    } else {
+      const oldValue = oldProps.value;
+      // Use Object.is to compare the new context value to the old value.
+      // Inlined Object.is polyfill.
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+      if (
+        (oldValue === newValue &&
+          (oldValue !== 0 || 1 / oldValue === 1 / newValue)) ||
+        (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
+      ) {
+        // No change.
+        changedBits = 0;
       } else {
-        const oldValue = oldProps.value;
-        // Use Object.is to compare the new context value to the old value.
-        // Inlined Object.is polyfill.
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
-        if (
-          (oldValue === newValue &&
-            (oldValue !== 0 || 1 / oldValue === 1 / newValue)) ||
-          (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
-        ) {
-          // No change.
-          changedBits = 0;
-        } else {
-          changedBits =
-            context.calculateChangedBits !== null
-              ? context.calculateChangedBits(oldValue, newValue)
-              : MAX_SIGNED_31_BIT_INT;
-          if (__DEV__) {
-            warning(
-              (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
-              'calculateChangedBits: Expected the return value to be a ' +
-                '31-bit integer. Instead received: %s',
-              changedBits,
-            );
-          }
-          changedBits |= 0;
+        changedBits =
+          typeof context.calculateChangedBits === 'function'
+            ? context.calculateChangedBits(oldValue, newValue)
+            : MAX_SIGNED_31_BIT_INT;
+        if (__DEV__) {
+          warning(
+            (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
+            'calculateChangedBits: Expected the return value to be a ' +
+              '31-bit integer. Instead received: %s',
+            changedBits,
+          );
+        }
+        changedBits |= 0;
 
-          if (changedBits !== 0) {
-            propagateContextChange(
-              workInProgress,
-              context,
-              changedBits,
-              renderExpirationTime,
-            );
-          }
+        if (changedBits !== 0) {
+          propagateContextChange(
+            workInProgress,
+            context,
+            changedBits,
+            renderExpirationTime,
+          );
         }
       }
-
-      workInProgress.stateNode = changedBits;
-      pushProvider(workInProgress);
-
-      if (oldProps !== null && oldProps.children === newProps.children) {
-        return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      }
-      const newChildren = newProps.children;
-      reconcileChildren(current, workInProgress, newChildren);
-      return workInProgress.child;
-    } else {
-      return null;
     }
+
+    workInProgress.stateNode = changedBits;
+    pushProvider(workInProgress);
+
+    if (oldProps !== null && oldProps.children === newProps.children) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    const newChildren = newProps.children;
+    reconcileChildren(current, workInProgress, newChildren);
+    return workInProgress.child;
   }
 
   function updateContextConsumer(
@@ -847,38 +840,35 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress,
     renderExpirationTime,
   ) {
-    if (enableNewContextAPI) {
-      const context: ReactContext<any> = workInProgress.type;
-      const newProps = workInProgress.pendingProps;
+    const context: ReactContext<any> = workInProgress.type;
+    const newProps = workInProgress.pendingProps;
 
-      const newValue = context.currentValue;
-      const changedBits = context.changedBits;
+    const newValue = context.currentValue;
+    const changedBits = context.changedBits;
 
-      if (changedBits !== 0) {
-        // Context change propagation stops at matching consumers, for time-
-        // slicing. Continue the propagation here.
-        propagateContextChange(
-          workInProgress,
-          context,
-          changedBits,
-          renderExpirationTime,
-        );
-      }
-
-      // Store the observedBits on the fiber's stateNode for quick access.
-      let observedBits = newProps.observedBits;
-      if (observedBits === undefined || observedBits === null) {
-        // Subscribe to all changes by default
-        observedBits = MAX_SIGNED_31_BIT_INT;
-      }
-      workInProgress.stateNode = observedBits;
-
-      const newChildren = newProps.render(newValue);
-      reconcileChildren(current, workInProgress, newChildren);
-      return workInProgress.child;
-    } else {
-      return null;
+    if (changedBits !== 0) {
+      // Context change propagation stops at matching consumers, for time-
+      // slicing. Continue the propagation here.
+      propagateContextChange(
+        workInProgress,
+        context,
+        changedBits,
+        renderExpirationTime,
+      );
     }
+
+    // Store the observedBits on the fiber's stateNode for quick access.
+    let observedBits = newProps.observedBits;
+    if (observedBits === undefined || observedBits === null) {
+      // Subscribe to all changes by default
+      observedBits = MAX_SIGNED_31_BIT_INT;
+    }
+    workInProgress.stateNode = observedBits;
+
+    const render = newProps.children;
+    const newChildren = render(newValue);
+    reconcileChildren(current, workInProgress, newChildren);
+    return workInProgress.child;
   }
 
   /*
