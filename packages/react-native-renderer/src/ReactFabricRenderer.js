@@ -16,7 +16,6 @@ import type {
 } from './ReactNativeTypes';
 
 import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
-import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
 import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
 import * as ReactNativeViewConfigRegistry from './ReactNativeViewConfigRegistry';
@@ -313,9 +312,5 @@ const ReactFabricRenderer = ReactFiberReconciler({
     ): void {},
   },
 });
-
-ReactGenericBatching.injection.injectFiberBatchedUpdates(
-  ReactFabricRenderer.batchedUpdates,
-);
 
 export default ReactFabricRenderer;

@@ -388,6 +388,7 @@ function makeSimulator(eventType) {
       ReactControlledComponent.enqueueStateRestore(domNode);
       EventPluginHub.runEventsInBatch(event, true);
     });
+    ReactControlledComponent.restoreStateIfNeeded();
   };
 }
 

@@ -34,9 +34,7 @@ import takeSnapshot from './takeSnapshot';
 
 injectFindHostInstance(ReactNativeFiberRenderer.findHostInstance);
 
-ReactGenericBatching.injection.injectFiberBatchedUpdates(
-  ReactNativeFiberRenderer.batchedUpdates,
-);
+ReactGenericBatching.injection.injectRenderer(ReactNativeFiberRenderer);
 
 const roots = new Map();
 

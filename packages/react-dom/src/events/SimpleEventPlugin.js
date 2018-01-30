@@ -49,77 +49,82 @@ import getEventCharCode from './getEventCharCode';
  *   'topAbort': { sameConfig }
  * };
  */
-const eventTypes: EventTypes = {};
-const topLevelEventsToDispatchConfig: {
-  [key: TopLevelTypes]: DispatchConfig,
-} = {};
-[
-  'abort',
-  'animationEnd',
-  'animationIteration',
-  'animationStart',
+const interactiveEventTypeNames: Array<string> = [
   'blur',
   'cancel',
-  'canPlay',
-  'canPlayThrough',
   'click',
   'close',
   'contextMenu',
   'copy',
   'cut',
   'doubleClick',
-  'drag',
   'dragEnd',
-  'dragEnter',
-  'dragExit',
-  'dragLeave',
-  'dragOver',
   'dragStart',
   'drop',
-  'durationChange',
-  'emptied',
-  'encrypted',
-  'ended',
-  'error',
   'focus',
   'input',
   'invalid',
   'keyDown',
   'keyPress',
   'keyUp',
-  'load',
-  'loadedData',
-  'loadedMetadata',
-  'loadStart',
   'mouseDown',
-  'mouseMove',
-  'mouseOut',
-  'mouseOver',
   'mouseUp',
   'paste',
   'pause',
   'play',
-  'playing',
-  'progress',
   'rateChange',
   'reset',
-  'scroll',
   'seeked',
+  'submit',
+  'touchCancel',
+  'touchEnd',
+  'touchStart',
+  'volumeChange',
+];
+const nonInteractiveEventTypeNames: Array<string> = [
+  'abort',
+  'animationEnd',
+  'animationIteration',
+  'animationStart',
+  'canPlay',
+  'canPlayThrough',
+  'drag',
+  'dragEnter',
+  'dragExit',
+  'dragLeave',
+  'dragOver',
+  'durationChange',
+  'emptied',
+  'encrypted',
+  'ended',
+  'error',
+  'load',
+  'loadedData',
+  'loadedMetadata',
+  'loadStart',
+  'mouseMove',
+  'mouseOut',
+  'mouseOver',
+  'playing',
+  'progress',
+  'scroll',
   'seeking',
   'stalled',
-  'submit',
   'suspend',
   'timeUpdate',
   'toggle',
-  'touchCancel',
-  'touchEnd',
   'touchMove',
-  'touchStart',
   'transitionEnd',
-  'volumeChange',
   'waiting',
   'wheel',
-].forEach(event => {
+];
+
+const eventTypes: EventTypes = {};
+const topLevelEventsToDispatchConfig: {
+  [key: TopLevelTypes]: DispatchConfig,
+} = {};
+
+function addEventTypeNameToConfig(event: string, isInteractive: boolean) {
   const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
   const onEvent = 'on' + capitalizedEvent;
   const topEvent = 'top' + capitalizedEvent;
@@ -130,9 +135,17 @@ const topLevelEventsToDispatchConfig: {
       captured: onEvent + 'Capture',
     },
     dependencies: [topEvent],
+    isInteractive,
   };
   eventTypes[event] = type;
   topLevelEventsToDispatchConfig[topEvent] = type;
+}
+
+interactiveEventTypeNames.forEach(eventTypeName => {
+  addEventTypeNameToConfig(eventTypeName, true);
+});
+nonInteractiveEventTypeNames.forEach(eventTypeName => {
+  addEventTypeNameToConfig(eventTypeName, false);
 });
 
 // Only used in DEV for exhaustiveness validation.
@@ -172,6 +185,11 @@ const knownHTMLTopLevelTypes = [
 
 const SimpleEventPlugin: PluginModule<MouseEvent> = {
   eventTypes: eventTypes,
+
+  isInteractiveTopLevelEventType(topLevelType: TopLevelTypes): boolean {
+    const config = topLevelEventsToDispatchConfig[topLevelType];
+    return config !== undefined && config.isInteractive === true;
+  },
 
   extractEvents: function(
     topLevelType: TopLevelTypes,
