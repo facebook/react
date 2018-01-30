@@ -208,7 +208,7 @@ describe('SimpleEventPlugin', function() {
       }
 
       // Initial mount
-      root.render(<Button disabled={false} />);
+      root.render(<Button />);
       // Should not have flushed yet because it's async
       expect(ops).toEqual([]);
       expect(button).toBe(undefined);
@@ -269,7 +269,6 @@ describe('SimpleEventPlugin', function() {
           return (
             <button
               ref={el => (button = el)}
-              // Handler is removed after the first click
               onClick={() =>
                 // Intentionally not using the updater form here
                 this.setState({count: this.state.count + 1})
@@ -281,7 +280,7 @@ describe('SimpleEventPlugin', function() {
       }
 
       // Initial mount
-      root.render(<Button disabled={false} />);
+      root.render(<Button />);
       // Should not have flushed yet because it's async
       expect(button).toBe(undefined);
       // Flush async work
@@ -311,6 +310,75 @@ describe('SimpleEventPlugin', function() {
       jest.runAllTimers();
       // The counter should equal the total number of clicks
       expect(button.textContent).toEqual('Count: 7');
+    });
+
+    it('flushes lowest pending interactive priority', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      let button;
+      class Button extends React.Component {
+        state = {lowPriCount: 0};
+        render() {
+          return (
+            <button
+              ref={el => (button = el)}
+              onClick={
+                // Intentionally not using the updater form here
+                () => this.setState({lowPriCount: this.state.lowPriCount + 1})
+              }>
+              High-pri count: {this.props.highPriCount}, Low-pri count:{' '}
+              {this.state.lowPriCount}
+            </button>
+          );
+        }
+      }
+
+      class Wrapper extends React.Component {
+        state = {highPriCount: 0};
+        render() {
+          return (
+            <div
+              onClick={
+                // Intentionally not using the updater form here
+                () => this.setState({highPriCount: this.state.highPriCount + 1})
+              }>
+              <React.unstable_AsyncMode>
+                <Button highPriCount={this.state.highPriCount} />
+              </React.unstable_AsyncMode>
+            </div>
+          );
+        }
+      }
+
+      // Initial mount
+      ReactDOM.render(<Wrapper />, container);
+      expect(button.textContent).toEqual('High-pri count: 0, Low-pri count: 0');
+
+      function click() {
+        button.dispatchEvent(
+          new MouseEvent('click', {bubbles: true, cancelable: true}),
+        );
+      }
+
+      // Click the button a single time
+      click();
+      // The high-pri counter should flush synchronously, but not the
+      // low-pri counter
+      expect(button.textContent).toEqual('High-pri count: 1, Low-pri count: 0');
+
+      // Click the button many more times
+      click();
+      click();
+      click();
+      click();
+      click();
+      click();
+
+      // Flush the remaining work
+      jest.runAllTimers();
+      // Both counters should equal the total number of clicks
+      expect(button.textContent).toEqual('High-pri count: 7, Low-pri count: 7');
     });
   });
 

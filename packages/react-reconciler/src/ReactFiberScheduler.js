@@ -1198,17 +1198,25 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (fiber.mode & AsyncMode) {
         if (isBatchingInteractiveUpdates) {
           // This is an interactive update
-          interactiveExpirationTime = expirationTime = computeInteractiveExpiration();
+          expirationTime = computeInteractiveExpiration();
         } else {
           // This is an async update
           expirationTime = computeAsyncExpiration();
         }
       } else {
-        if (isBatchingInteractiveUpdates) {
-          interactiveExpirationTime = Sync;
-        }
         // This is a sync update
         expirationTime = Sync;
+      }
+    }
+    if (isBatchingInteractiveUpdates) {
+      // This is an interactive update. Keep track of the lowest pending
+      // interactive expiration time. This allows us to synchronously flush
+      // all interactive updates when needed.
+      if (
+        lowestPendingInteractiveExpirationTime === NoWork ||
+        expirationTime > lowestPendingInteractiveExpirationTime
+      ) {
+        lowestPendingInteractiveExpirationTime = expirationTime;
       }
     }
     return expirationTime;
@@ -1340,7 +1348,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   let isRendering: boolean = false;
   let nextFlushedRoot: FiberRoot | null = null;
   let nextFlushedExpirationTime: ExpirationTime = NoWork;
-  let interactiveExpirationTime: ExpirationTime = NoWork;
+  let lowestPendingInteractiveExpirationTime: ExpirationTime = NoWork;
   let deadlineDidExpire: boolean = false;
   let hasUnhandledError: boolean = false;
   let unhandledError: mixed | null = null;
@@ -1505,14 +1513,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           root = root.nextScheduledRoot;
         }
       }
-    }
-
-    if (
-      highestPriorityWork === NoWork ||
-      highestPriorityWork < interactiveExpirationTime
-    ) {
-      // There are no more pending interactive updates.
-      interactiveExpirationTime = NoWork;
     }
 
     // If the next root is the same as the previous root, this is a nested
@@ -1818,9 +1818,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function flushInteractiveUpdates() {
-    if (!isRendering && interactiveExpirationTime !== NoWork) {
+    if (!isRendering && lowestPendingInteractiveExpirationTime !== NoWork) {
       // Synchronously flush pending interactive updates.
-      performWork(interactiveExpirationTime, false, null);
+      performWork(lowestPendingInteractiveExpirationTime, false, null);
+      lowestPendingInteractiveExpirationTime = NoWork;
     }
   }
 
@@ -1832,7 +1833,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
       if (!isBatchingUpdates && !isRendering) {
-        performWork(Sync, null);
+        performWork(Sync, false, null);
       }
     }
   }
