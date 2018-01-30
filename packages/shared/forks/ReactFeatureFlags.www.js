@@ -19,7 +19,6 @@ export const {
 
 // The rest of the flags are static for better dead code elimination.
 export const enableCreateRoot = true;
-export const enableNewContextAPI = true;
 
 // The www bundles only use the mutating reconciler.
 export const enableMutatingReconciler = true;

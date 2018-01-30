@@ -14,7 +14,6 @@ let React;
 let ReactCallReturn;
 let ReactDOMServer;
 let PropTypes;
-let ReactFeatureFlags;
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -23,8 +22,6 @@ function normalizeCodeLocInfo(str) {
 describe('ReactDOMServer', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableNewContextAPI = true;
     React = require('react');
     ReactCallReturn = require('react-call-return');
     PropTypes = require('prop-types');
@@ -388,7 +385,7 @@ describe('ReactDOMServer', () => {
     });
 
     it('renders with new context API', () => {
-      const Context = React.unstable_createContext(0);
+      const Context = React.createContext(0);
 
       function Consumer(props) {
         return (
@@ -424,7 +421,7 @@ describe('ReactDOMServer', () => {
     });
 
     it('renders context API, reentrancy', () => {
-      const Context = React.unstable_createContext(0);
+      const Context = React.createContext(0);
 
       function Consumer(props) {
         return (

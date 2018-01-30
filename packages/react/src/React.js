@@ -29,7 +29,6 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
-import {enableNewContextAPI} from 'shared/ReactFeatureFlags';
 
 const React = {
   Children: {
@@ -42,6 +41,8 @@ const React = {
 
   Component,
   PureComponent,
+
+  createContext,
 
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
@@ -60,10 +61,6 @@ const React = {
     assign,
   },
 };
-
-if (enableNewContextAPI) {
-  React.unstable_createContext = createContext;
-}
 
 if (__DEV__) {
   Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {

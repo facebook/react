@@ -10,7 +10,6 @@
 'use strict';
 
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
-ReactFeatureFlags.enableNewContextAPI = true;
 
 let React = require('react');
 let ReactNoop;
@@ -21,7 +20,6 @@ describe('ReactNewContext', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-    ReactFeatureFlags.enableNewContextAPI = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     gen = require('random-seed');
@@ -37,7 +35,7 @@ describe('ReactNewContext', () => {
   }
 
   it('simple mount and update', () => {
-    const Context = React.unstable_createContext(1);
+    const Context = React.createContext(1);
 
     function Consumer(props) {
       return (
@@ -72,7 +70,7 @@ describe('ReactNewContext', () => {
   });
 
   it('propagates through shouldComponentUpdate false', () => {
-    const Context = React.unstable_createContext(1);
+    const Context = React.createContext(1);
 
     function Provider(props) {
       ReactNoop.yield('Provider');
@@ -140,7 +138,7 @@ describe('ReactNewContext', () => {
   });
 
   it('consumers bail out if context value is the same', () => {
-    const Context = React.unstable_createContext(1);
+    const Context = React.createContext(1);
 
     function Provider(props) {
       ReactNoop.yield('Provider');
@@ -208,7 +206,7 @@ describe('ReactNewContext', () => {
   });
 
   it('nested providers', () => {
-    const Context = React.unstable_createContext(1);
+    const Context = React.createContext(1);
 
     function Provider(props) {
       return (
@@ -269,7 +267,7 @@ describe('ReactNewContext', () => {
   });
 
   it('multiple consumers in different branches', () => {
-    const Context = React.unstable_createContext(1);
+    const Context = React.createContext(1);
 
     function Provider(props) {
       return (
@@ -343,7 +341,7 @@ describe('ReactNewContext', () => {
   });
 
   it('compares context values with Object.is semantics', () => {
-    const Context = React.unstable_createContext(1);
+    const Context = React.createContext(1);
 
     function Provider(props) {
       ReactNoop.yield('Provider');
@@ -412,7 +410,7 @@ describe('ReactNewContext', () => {
   });
 
   it('context unwinds when interrupted', () => {
-    const Context = React.unstable_createContext('Default');
+    const Context = React.createContext('Default');
 
     function Consumer(props) {
       return (
@@ -463,7 +461,7 @@ describe('ReactNewContext', () => {
   });
 
   it('can skip consumers with bitmask', () => {
-    const Context = React.unstable_createContext({foo: 0, bar: 0}, (a, b) => {
+    const Context = React.createContext({foo: 0, bar: 0}, (a, b) => {
       let result = 0;
       if (a.foo !== b.foo) {
         result |= 0b01;
@@ -551,7 +549,7 @@ describe('ReactNewContext', () => {
   it('warns if calculateChangedBits returns larger than a 31-bit integer', () => {
     spyOnDev(console, 'error');
 
-    const Context = React.unstable_createContext(
+    const Context = React.createContext(
       0,
       (a, b) => Math.pow(2, 32) - 1, // Return 32 bit int
     );
@@ -574,7 +572,7 @@ describe('ReactNewContext', () => {
 
   it('warns if multiple renderers concurrently render the same context', () => {
     spyOnDev(console, 'error');
-    const Context = React.unstable_createContext(0);
+    const Context = React.createContext(0);
 
     function Foo(props) {
       ReactNoop.yield('Foo');
@@ -597,7 +595,6 @@ describe('ReactNewContext', () => {
     // Get a new copy of ReactNoop
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableNewContextAPI = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 
@@ -682,7 +679,7 @@ describe('ReactNewContext', () => {
     function ContextSimulator(maxDepth) {
       const contexts = new Map(
         contextKeys.map(key => {
-          const Context = React.unstable_createContext(0);
+          const Context = React.createContext(0);
           Context.displayName = 'Context' + key;
           return [key, Context];
         }),
