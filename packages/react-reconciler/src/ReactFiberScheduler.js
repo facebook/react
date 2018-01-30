@@ -81,7 +81,7 @@ import {
   expirationTimeToMs,
   computeExpirationBucket,
 } from './ReactFiberExpirationTime';
-import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {AsyncMode} from './ReactTypeOfMode';
 import {getUpdateExpirationTime} from './ReactFiberUpdateQueue';
 import {resetContext as resetLegacyContext} from './ReactFiberContext';
 import {resetProviderStack} from './ReactFiberNewContext';
@@ -1200,7 +1200,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } else {
       // No explicit expiration context was set, and we're not currently
       // performing work. Calculate a new expiration time.
-      if (fiber.internalContextTag & AsyncUpdates) {
+      if (fiber.mode & AsyncMode) {
         // This is an async update
         expirationTime = computeAsyncExpiration();
       } else {

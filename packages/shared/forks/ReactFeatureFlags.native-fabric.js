@@ -14,7 +14,6 @@ import typeof * as FabricFeatureFlagsType from './ReactFeatureFlags.native-fabri
 
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
-export const enableAsyncSubtreeAPI = true;
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;

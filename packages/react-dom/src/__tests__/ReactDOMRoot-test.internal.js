@@ -12,7 +12,7 @@
 let React = require('react');
 let ReactDOM = require('react-dom');
 let ReactDOMServer = require('react-dom/server');
-let AsyncComponent = React.unstable_AsyncComponent;
+let AsyncMode = React.unstable_AsyncMode;
 
 describe('ReactDOMRoot', () => {
   let container;
@@ -70,7 +70,7 @@ describe('ReactDOMRoot', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    AsyncComponent = React.unstable_AsyncComponent;
+    AsyncMode = React.unstable_AsyncMode;
   });
 
   it('renders children', () => {
@@ -92,7 +92,7 @@ describe('ReactDOMRoot', () => {
 
   it('`root.render` returns a thenable work object', () => {
     const root = ReactDOM.createRoot(container);
-    const work = root.render(<AsyncComponent>Hi</AsyncComponent>);
+    const work = root.render(<AsyncMode>Hi</AsyncMode>);
     let ops = [];
     work.then(() => {
       ops.push('inside callback: ' + container.textContent);
@@ -110,7 +110,7 @@ describe('ReactDOMRoot', () => {
 
   it('resolves `work.then` callback synchronously if the work already committed', () => {
     const root = ReactDOM.createRoot(container);
-    const work = root.render(<AsyncComponent>Hi</AsyncComponent>);
+    const work = root.render(<AsyncMode>Hi</AsyncMode>);
     flush();
     let ops = [];
     work.then(() => {
@@ -209,10 +209,9 @@ describe('ReactDOMRoot', () => {
   });
 
   it('can wait for a batch to finish', () => {
-    const Async = React.unstable_AsyncComponent;
     const root = ReactDOM.createRoot(container);
     const batch = root.createBatch();
-    batch.render(<Async>Foo</Async>);
+    batch.render(<AsyncMode>Foo</AsyncMode>);
 
     flush();
 
@@ -252,7 +251,7 @@ describe('ReactDOMRoot', () => {
 
   it('can commit an empty batch', () => {
     const root = ReactDOM.createRoot(container);
-    root.render(<AsyncComponent>1</AsyncComponent>);
+    root.render(<AsyncMode>1</AsyncMode>);
 
     expire(2000);
     // This batch has a later expiration time than the earlier update.

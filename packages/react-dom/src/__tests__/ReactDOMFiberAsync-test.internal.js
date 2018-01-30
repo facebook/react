@@ -14,7 +14,7 @@ let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let ReactDOM;
 
-const AsyncComponent = React.unstable_AsyncComponent;
+const AsyncMode = React.unstable_AsyncMode;
 
 describe('ReactDOMFiberAsync', () => {
   let container;
@@ -40,23 +40,22 @@ describe('ReactDOMFiberAsync', () => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       container = document.createElement('div');
-      ReactFeatureFlags.enableAsyncSubtreeAPI = false;
       ReactDOM = require('react-dom');
     });
 
     it('renders synchronously', () => {
       ReactDOM.render(
-        <AsyncComponent>
+        <AsyncMode>
           <div>Hi</div>
-        </AsyncComponent>,
+        </AsyncMode>,
         container,
       );
       expect(container.textContent).toEqual('Hi');
 
       ReactDOM.render(
-        <AsyncComponent>
+        <AsyncMode>
           <div>Bye</div>
-        </AsyncComponent>,
+        </AsyncMode>,
         container,
       );
       expect(container.textContent).toEqual('Bye');
@@ -68,7 +67,6 @@ describe('ReactDOMFiberAsync', () => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       container = document.createElement('div');
-      ReactFeatureFlags.enableAsyncSubtreeAPI = true;
       ReactFeatureFlags.enableCreateRoot = true;
       ReactDOM = require('react-dom');
     });
@@ -108,9 +106,9 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('1');
     });
 
-    it('AsyncComponent creates an async subtree', () => {
+    it('AsyncMode creates an async subtree', () => {
       let instance;
-      class Component extends React.unstable_AsyncComponent {
+      class Component extends React.Component {
         state = {step: 0};
         render() {
           instance = this;
@@ -119,9 +117,9 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       ReactDOM.render(
-        <div>
+        <AsyncMode>
           <Component />
-        </div>,
+        </AsyncMode>,
         container,
       );
       jest.runAllTimers();
@@ -133,12 +131,6 @@ describe('ReactDOMFiberAsync', () => {
     });
 
     it('updates inside an async subtree are async by default', () => {
-      class Component extends React.unstable_AsyncComponent {
-        render() {
-          return <Child />;
-        }
-      }
-
       let instance;
       class Child extends React.Component {
         state = {step: 0};
@@ -150,7 +142,9 @@ describe('ReactDOMFiberAsync', () => {
 
       ReactDOM.render(
         <div>
-          <Component />
+          <AsyncMode>
+            <Child />
+          </AsyncMode>
         </div>,
         container,
       );
@@ -264,7 +258,7 @@ describe('ReactDOMFiberAsync', () => {
       let ops = [];
       let instance;
 
-      class Component extends React.unstable_AsyncComponent {
+      class Component extends React.Component {
         state = {text: ''};
         push(val) {
           this.setState(state => ({text: state.text + val}));
@@ -278,7 +272,12 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      ReactDOM.render(<Component />, container);
+      ReactDOM.render(
+        <AsyncMode>
+          <Component />
+        </AsyncMode>,
+        container,
+      );
       jest.runAllTimers();
 
       // Updates are async by default

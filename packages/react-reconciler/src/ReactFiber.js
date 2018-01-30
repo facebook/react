@@ -9,7 +9,7 @@
 import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {TypeOfWork} from 'shared/ReactTypeOfWork';
-import type {TypeOfInternalContext} from './ReactTypeOfInternalContext';
+import type {TypeOfMode} from './ReactTypeOfMode';
 import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactFiberUpdateQueue';
@@ -33,11 +33,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {
-  NoContext,
-  AsyncUpdates,
-  StrictMode,
-} from './ReactTypeOfInternalContext';
+import {NoContext, AsyncMode, StrictMode} from './ReactTypeOfMode';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
@@ -45,6 +41,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_ASYNC_MODE_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -123,12 +120,12 @@ export type Fiber = {|
   memoizedState: any,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
-  // the AsyncUpdates flag indicates whether the subtree should be async-by-
-  // default. When a fiber is created, it inherits the internalContextTag of its
+  // the AsyncMode flag indicates whether the subtree should be async-by-
+  // default. When a fiber is created, it inherits the mode of its
   // parent. Additional flags can be set at creation time, but after than the
   // value should remain unchanged throughout the fiber's lifetime, particularly
   // before its child fibers are created.
-  internalContextTag: TypeOfInternalContext,
+  mode: TypeOfMode,
 
   // Effect
   effectTag: TypeOfSideEffect,
@@ -171,7 +168,7 @@ function FiberNode(
   tag: TypeOfWork,
   pendingProps: mixed,
   key: null | string,
-  internalContextTag: TypeOfInternalContext,
+  mode: TypeOfMode,
 ) {
   // Instance
   this.tag = tag;
@@ -192,7 +189,7 @@ function FiberNode(
   this.updateQueue = null;
   this.memoizedState = null;
 
-  this.internalContextTag = internalContextTag;
+  this.mode = mode;
 
   // Effects
   this.effectTag = NoEffect;
@@ -233,10 +230,10 @@ const createFiber = function(
   tag: TypeOfWork,
   pendingProps: mixed,
   key: null | string,
-  internalContextTag: TypeOfInternalContext,
+  mode: TypeOfMode,
 ): Fiber {
   // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
-  return new FiberNode(tag, pendingProps, key, internalContextTag);
+  return new FiberNode(tag, pendingProps, key, mode);
 };
 
 function shouldConstruct(Component) {
@@ -260,7 +257,7 @@ export function createWorkInProgress(
       current.tag,
       pendingProps,
       current.key,
-      current.internalContextTag,
+      current.mode,
     );
     workInProgress.type = current.type;
     workInProgress.stateNode = current.stateNode;
@@ -303,13 +300,13 @@ export function createWorkInProgress(
 }
 
 export function createHostRootFiber(isAsync): Fiber {
-  const internalContextTag = isAsync ? AsyncUpdates | StrictMode : NoContext;
-  return createFiber(HostRoot, null, null, internalContextTag);
+  const mode = isAsync ? AsyncMode | StrictMode : NoContext;
+  return createFiber(HostRoot, null, null, mode);
 }
 
 export function createFiberFromElement(
   element: ReactElement,
-  internalContextTag: TypeOfInternalContext,
+  mode: TypeOfMode,
   expirationTime: ExpirationTime,
 ): Fiber {
   let owner = null;
@@ -332,13 +329,17 @@ export function createFiberFromElement(
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(
           pendingProps.children,
-          internalContextTag,
+          mode,
           expirationTime,
           key,
         );
+      case REACT_ASYNC_MODE_TYPE:
+        fiberTag = Mode;
+        mode |= AsyncMode | StrictMode;
+        break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-        internalContextTag |= StrictMode;
+        mode |= StrictMode;
         break;
       case REACT_CALL_TYPE:
         fiberTag = CallComponent;
@@ -382,7 +383,7 @@ export function createFiberFromElement(
     }
   }
 
-  fiber = createFiber(fiberTag, pendingProps, key, internalContextTag);
+  fiber = createFiber(fiberTag, pendingProps, key, mode);
   fiber.type = type;
   fiber.expirationTime = expirationTime;
 
@@ -425,21 +426,21 @@ function throwOnInvalidElementType(type, owner) {
 
 export function createFiberFromFragment(
   elements: ReactFragment,
-  internalContextTag: TypeOfInternalContext,
+  mode: TypeOfMode,
   expirationTime: ExpirationTime,
   key: null | string,
 ): Fiber {
-  const fiber = createFiber(Fragment, elements, key, internalContextTag);
+  const fiber = createFiber(Fragment, elements, key, mode);
   fiber.expirationTime = expirationTime;
   return fiber;
 }
 
 export function createFiberFromText(
   content: string,
-  internalContextTag: TypeOfInternalContext,
+  mode: TypeOfMode,
   expirationTime: ExpirationTime,
 ): Fiber {
-  const fiber = createFiber(HostText, content, null, internalContextTag);
+  const fiber = createFiber(HostText, content, null, mode);
   fiber.expirationTime = expirationTime;
   return fiber;
 }
@@ -452,16 +453,11 @@ export function createFiberFromHostInstanceForDeletion(): Fiber {
 
 export function createFiberFromPortal(
   portal: ReactPortal,
-  internalContextTag: TypeOfInternalContext,
+  mode: TypeOfMode,
   expirationTime: ExpirationTime,
 ): Fiber {
   const pendingProps = portal.children !== null ? portal.children : [];
-  const fiber = createFiber(
-    HostPortal,
-    pendingProps,
-    portal.key,
-    internalContextTag,
-  );
+  const fiber = createFiber(HostPortal, pendingProps, portal.key, mode);
   fiber.expirationTime = expirationTime;
   fiber.stateNode = {
     containerInfo: portal.containerInfo,

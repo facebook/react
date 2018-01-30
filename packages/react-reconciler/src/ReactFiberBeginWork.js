@@ -67,7 +67,7 @@ import {
 } from './ReactFiberContext';
 import {pushProvider} from './ReactFiberNewContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {AsyncUpdates, StrictMode} from './ReactTypeOfInternalContext';
+import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 let didWarnAboutBadClass;
@@ -293,7 +293,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (
         debugRenderPhaseSideEffects ||
         (debugRenderPhaseSideEffectsForStrictMode &&
-          workInProgress.internalContextTag & StrictMode)
+          workInProgress.mode & StrictMode)
       ) {
         instance.render();
       }
@@ -302,7 +302,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (
         debugRenderPhaseSideEffects ||
         (debugRenderPhaseSideEffectsForStrictMode &&
-          workInProgress.internalContextTag & StrictMode)
+          workInProgress.mode & StrictMode)
       ) {
         instance.render();
       }
@@ -438,7 +438,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Check the host config to see if the children are offscreen/hidden.
     if (
       renderExpirationTime !== Never &&
-      workInProgress.internalContextTag & AsyncUpdates &&
+      workInProgress.mode & AsyncMode &&
       shouldDeprioritizeSubtree(type, nextProps)
     ) {
       // Down-prioritize the children.
