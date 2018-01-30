@@ -67,6 +67,7 @@ describe('ReactDOMFiberAsync', () => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       container = document.createElement('div');
+      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactFeatureFlags.enableCreateRoot = true;
       ReactDOM = require('react-dom');
     });
@@ -304,6 +305,101 @@ describe('ReactDOMFiberAsync', () => {
       jest.runAllTimers();
       expect(container.textContent).toEqual('ABCD');
       expect(ops).toEqual(['BC', 'ABCD']);
+    });
+
+    it('flushControlled flushes updates before yielding to browser', () => {
+      let inst;
+      class Counter extends React.Component {
+        state = {counter: 0};
+        increment = () =>
+          this.setState(state => ({counter: state.counter + 1}));
+        render() {
+          inst = this;
+          return this.state.counter;
+        }
+      }
+      ReactDOM.render(
+        <AsyncMode>
+          <Counter />
+        </AsyncMode>,
+        container,
+      );
+      expect(container.textContent).toEqual('0');
+
+      // Test that a normal update is async
+      inst.increment();
+      expect(container.textContent).toEqual('0');
+      jest.runAllTimers();
+      expect(container.textContent).toEqual('1');
+
+      let ops = [];
+      ReactDOM.unstable_flushControlled(() => {
+        inst.increment();
+        ReactDOM.unstable_flushControlled(() => {
+          inst.increment();
+          ops.push('end of inner flush: ' + container.textContent);
+        });
+        ops.push('end of outer flush: ' + container.textContent);
+      });
+      ops.push('after outer flush: ' + container.textContent);
+      expect(ops).toEqual([
+        'end of inner flush: 1',
+        'end of outer flush: 1',
+        'after outer flush: 3',
+      ]);
+    });
+
+    it('flushControlled does not flush until end of outermost batchedUpdates', () => {
+      let inst;
+      class Counter extends React.Component {
+        state = {counter: 0};
+        increment = () =>
+          this.setState(state => ({counter: state.counter + 1}));
+        render() {
+          inst = this;
+          return this.state.counter;
+        }
+      }
+      ReactDOM.render(<Counter />, container);
+
+      let ops = [];
+      ReactDOM.unstable_batchedUpdates(() => {
+        inst.increment();
+        ReactDOM.unstable_flushControlled(() => {
+          inst.increment();
+          ops.push('end of flushControlled fn: ' + container.textContent);
+        });
+        ops.push('end of batchedUpdates fn: ' + container.textContent);
+      });
+      ops.push('after batchedUpdates: ' + container.textContent);
+      expect(ops).toEqual([
+        'end of flushControlled fn: 0',
+        'end of batchedUpdates fn: 0',
+        'after batchedUpdates: 2',
+      ]);
+    });
+
+    it('flushControlled returns nothing', () => {
+      // In the future, we may want to return a thenable "work" object.
+      let inst;
+      class Counter extends React.Component {
+        state = {counter: 0};
+        increment = () =>
+          this.setState(state => ({counter: state.counter + 1}));
+        render() {
+          inst = this;
+          return this.state.counter;
+        }
+      }
+      ReactDOM.render(<Counter />, container);
+      expect(container.textContent).toEqual('0');
+
+      const returnValue = ReactDOM.unstable_flushControlled(() => {
+        inst.increment();
+        return 'something';
+      });
+      expect(container.textContent).toEqual('1');
+      expect(returnValue).toBe(undefined);
     });
   });
 });
