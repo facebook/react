@@ -1288,7 +1288,7 @@ const ReactDOM: Object = {
 
   flushSync: DOMRenderer.flushSync,
 
-  flushControlled: DOMRenderer.flushControlled,
+  unstable_flushControlled: DOMRenderer.flushControlled,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source

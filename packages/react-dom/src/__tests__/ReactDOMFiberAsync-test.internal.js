@@ -333,9 +333,9 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('1');
 
       let ops = [];
-      ReactDOM.flushControlled(() => {
+      ReactDOM.unstable_flushControlled(() => {
         inst.increment();
-        ReactDOM.flushControlled(() => {
+        ReactDOM.unstable_flushControlled(() => {
           inst.increment();
           ops.push('end of inner flush: ' + container.textContent);
         });
@@ -365,7 +365,7 @@ describe('ReactDOMFiberAsync', () => {
       let ops = [];
       ReactDOM.unstable_batchedUpdates(() => {
         inst.increment();
-        ReactDOM.flushControlled(() => {
+        ReactDOM.unstable_flushControlled(() => {
           inst.increment();
           ops.push('end of flushControlled fn: ' + container.textContent);
         });
@@ -394,7 +394,7 @@ describe('ReactDOMFiberAsync', () => {
       ReactDOM.render(<Counter />, container);
       expect(container.textContent).toEqual('0');
 
-      const returnValue = ReactDOM.flushControlled(() => {
+      const returnValue = ReactDOM.unstable_flushControlled(() => {
         inst.increment();
         return 'something';
       });
