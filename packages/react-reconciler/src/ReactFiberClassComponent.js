@@ -26,7 +26,7 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {StrictMode} from './ReactTypeOfInternalContext';
+import {StrictMode} from './ReactTypeOfMode';
 import {
   cacheContext,
   getMaskedContext,
@@ -394,7 +394,7 @@ export default function(
     if (
       debugRenderPhaseSideEffects ||
       (debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.internalContextTag & StrictMode)
+        workInProgress.mode & StrictMode)
     ) {
       new ctor(props, context); // eslint-disable-line no-new
     }
@@ -547,7 +547,7 @@ export default function(
       if (
         debugRenderPhaseSideEffects ||
         (debugRenderPhaseSideEffectsForStrictMode &&
-          workInProgress.internalContextTag & StrictMode)
+          workInProgress.mode & StrictMode)
       ) {
         // Invoke method an extra time to help detect side-effects.
         type.getDerivedStateFromProps.call(
@@ -602,12 +602,8 @@ export default function(
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
-    if (workInProgress.type != null && workInProgress.type.prototype != null) {
-      const prototype = workInProgress.type.prototype;
-    }
-
     if (__DEV__) {
-      if (workInProgress.internalContextTag & StrictMode) {
+      if (workInProgress.mode & StrictMode) {
         ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
           workInProgress,
           instance,

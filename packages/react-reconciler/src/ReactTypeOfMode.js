@@ -7,7 +7,7 @@
  * @flow
  */
 
-export type TypeOfInternalContext = number;
+export type TypeOfMode = number;
 
 export const NoContext = 0b00;
 export const AsyncMode = 0b01;

@@ -18,7 +18,7 @@ import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
-import {StrictMode} from './ReactTypeOfInternalContext';
+import {StrictMode} from './ReactTypeOfMode';
 
 import {NoWork} from './ReactFiberExpirationTime';
 
@@ -278,7 +278,7 @@ export function processUpdateQueue<State>(
     if (
       debugRenderPhaseSideEffects ||
       (debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.internalContextTag & StrictMode)
+        workInProgress.mode & StrictMode)
     ) {
       getStateFromUpdate(update, instance, state, props);
     }

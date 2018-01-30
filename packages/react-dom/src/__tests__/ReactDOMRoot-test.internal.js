@@ -209,7 +209,6 @@ describe('ReactDOMRoot', () => {
   });
 
   it('can wait for a batch to finish', () => {
-    const AsyncMode = React.Unstable_AsyncMode;
     const root = ReactDOM.createRoot(container);
     const batch = root.createBatch();
     batch.render(<AsyncMode>Foo</AsyncMode>);

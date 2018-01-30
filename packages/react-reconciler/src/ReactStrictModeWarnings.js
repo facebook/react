@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-import {StrictMode} from './ReactTypeOfInternalContext';
+import {StrictMode} from './ReactTypeOfMode';
 import warning from 'fbjs/lib/warning';
 
 type LIFECYCLE =
@@ -104,7 +104,7 @@ if (__DEV__) {
     let maybeStrictRoot = null;
 
     while (fiber !== null) {
-      if (fiber.internalContextTag & StrictMode) {
+      if (fiber.mode & StrictMode) {
         maybeStrictRoot = fiber;
       }
 
