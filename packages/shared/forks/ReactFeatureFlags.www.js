@@ -18,7 +18,6 @@ export const {
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
-export const enableAsyncSubtreeAPI = true;
 export const enableCreateRoot = true;
 export const enableNewContextAPI = true;
 

@@ -285,10 +285,14 @@ describe('ReactStrictMode', () => {
         UNSAFE_componentWillUpdate() {}
         UNSAFE_componentWillReceiveProps() {}
         render() {
-          return <AsyncRoot />;
+          return (
+            <React.Unstable_AsyncMode>
+              <AsyncRoot />
+            </React.Unstable_AsyncMode>
+          );
         }
       }
-      class AsyncRoot extends React.unstable_AsyncComponent {
+      class AsyncRoot extends React.Component {
         UNSAFE_componentWillMount() {}
         UNSAFE_componentWillUpdate() {}
         render() {
@@ -326,7 +330,6 @@ describe('ReactStrictMode', () => {
         rendered = ReactTestRenderer.create(<SyncRoot />);
       }).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncRoot (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot' +
@@ -349,10 +352,14 @@ describe('ReactStrictMode', () => {
         UNSAFE_componentWillUpdate() {}
         UNSAFE_componentWillReceiveProps() {}
         render() {
-          return <AsyncRoot />;
+          return (
+            <React.Unstable_AsyncMode>
+              <AsyncRoot />
+            </React.Unstable_AsyncMode>
+          );
         }
       }
-      class AsyncRoot extends React.unstable_AsyncComponent {
+      class AsyncRoot extends React.Component {
         UNSAFE_componentWillMount() {}
         UNSAFE_componentWillUpdate() {}
         render() {
@@ -380,7 +387,6 @@ describe('ReactStrictMode', () => {
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncRoot (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot, Parent' +
@@ -411,21 +417,25 @@ describe('ReactStrictMode', () => {
           );
         }
       }
-      class AsyncRootOne extends React.unstable_AsyncComponent {
+      class AsyncRootOne extends React.Component {
         render() {
           return (
-            <Foo>
-              <Bar />
-            </Foo>
+            <React.Unstable_AsyncMode>
+              <Foo>
+                <Bar />
+              </Foo>
+            </React.Unstable_AsyncMode>
           );
         }
       }
-      class AsyncRootTwo extends React.unstable_AsyncComponent {
+      class AsyncRootTwo extends React.Component {
         render() {
           return (
-            <Foo>
-              <Baz />
-            </Foo>
+            <React.Unstable_AsyncMode>
+              <Foo>
+                <Baz />
+              </Foo>
+            </React.Unstable_AsyncMode>
           );
         }
       }
@@ -473,9 +483,13 @@ describe('ReactStrictMode', () => {
     });
 
     it('should warn about components not present during the initial render', () => {
-      class AsyncRoot extends React.unstable_AsyncComponent {
+      class AsyncRoot extends React.Component {
         render() {
-          return this.props.foo ? <Foo /> : <Bar />;
+          return (
+            <React.Unstable_AsyncMode>
+              {this.props.foo ? <Foo /> : <Bar />}
+            </React.Unstable_AsyncMode>
+          );
         }
       }
       class Foo extends React.Component {
@@ -520,9 +534,13 @@ describe('ReactStrictMode', () => {
     it('should not warn about uncommitted lifecycles in the event of an error', () => {
       let caughtError;
 
-      class AsyncRoot extends React.unstable_AsyncComponent {
+      class AsyncRoot extends React.Component {
         render() {
-          return <ErrorBoundary />;
+          return (
+            <React.Unstable_AsyncMode>
+              <ErrorBoundary />
+            </React.Unstable_AsyncMode>
+          );
         }
       }
       class ErrorBoundary extends React.Component {

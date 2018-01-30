@@ -33,6 +33,9 @@ export const REACT_PROVIDER_TYPE = hasSymbol
 export const REACT_CONTEXT_TYPE = hasSymbol
   ? Symbol.for('react.context')
   : 0xeace;
+export const REACT_ASYNC_MODE_TYPE = hasSymbol
+  ? Symbol.for('react.async_mode')
+  : 0xeacf;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

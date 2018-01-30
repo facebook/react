@@ -9,6 +9,6 @@
 
 export type TypeOfInternalContext = number;
 
-export const NoContext = 0b00000000;
-export const AsyncUpdates = 0b00000001;
-export const StrictMode = 0b00000010;
+export const NoContext = 0b00;
+export const AsyncMode = 0b01;
+export const StrictMode = 0b10;

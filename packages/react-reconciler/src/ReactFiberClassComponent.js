@@ -14,7 +14,6 @@ import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
-  enableAsyncSubtreeAPI,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
@@ -27,7 +26,7 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {AsyncUpdates, StrictMode} from './ReactTypeOfInternalContext';
+import {StrictMode} from './ReactTypeOfInternalContext';
 import {
   cacheContext,
   getMaskedContext,
@@ -605,13 +604,6 @@ export default function(
 
     if (workInProgress.type != null && workInProgress.type.prototype != null) {
       const prototype = workInProgress.type.prototype;
-
-      if (enableAsyncSubtreeAPI) {
-        if (prototype.unstable_isAsyncReactComponent === true) {
-          workInProgress.internalContextTag |= AsyncUpdates;
-          workInProgress.internalContextTag |= StrictMode;
-        }
-      }
     }
 
     if (__DEV__) {

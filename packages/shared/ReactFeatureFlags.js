@@ -9,7 +9,6 @@
 
 import invariant from 'fbjs/lib/invariant';
 
-export const enableAsyncSubtreeAPI = true;
 // Exports ReactDOM.createRoot
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;

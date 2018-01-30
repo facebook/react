@@ -136,23 +136,4 @@ pureComponentPrototype.constructor = PureComponent;
 Object.assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = true;
 
-/**
- * Special component type that opts subtree into async rendering mode.
- */
-function AsyncComponent(props, context, updater) {
-  this.props = props;
-  this.context = context;
-  this.refs = emptyObject;
-  this.updater = updater || ReactNoopUpdateQueue;
-}
-
-const asyncComponentPrototype = (AsyncComponent.prototype = new ComponentDummy());
-asyncComponentPrototype.constructor = AsyncComponent;
-// Avoid an extra prototype jump for these methods.
-Object.assign(asyncComponentPrototype, Component.prototype);
-asyncComponentPrototype.unstable_isAsyncReactComponent = true;
-asyncComponentPrototype.render = function() {
-  return this.props.children;
-};
-
-export {AsyncComponent, Component, PureComponent};
+export {Component, PureComponent};

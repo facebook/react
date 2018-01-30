@@ -33,11 +33,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {
-  NoContext,
-  AsyncUpdates,
-  StrictMode,
-} from './ReactTypeOfInternalContext';
+import {NoContext, AsyncMode, StrictMode} from './ReactTypeOfInternalContext';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
@@ -45,6 +41,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_ASYNC_MODE_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -123,7 +120,7 @@ export type Fiber = {|
   memoizedState: any,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
-  // the AsyncUpdates flag indicates whether the subtree should be async-by-
+  // the AsyncMode flag indicates whether the subtree should be async-by-
   // default. When a fiber is created, it inherits the internalContextTag of its
   // parent. Additional flags can be set at creation time, but after than the
   // value should remain unchanged throughout the fiber's lifetime, particularly
@@ -303,7 +300,7 @@ export function createWorkInProgress(
 }
 
 export function createHostRootFiber(isAsync): Fiber {
-  const internalContextTag = isAsync ? AsyncUpdates | StrictMode : NoContext;
+  const internalContextTag = isAsync ? AsyncMode | StrictMode : NoContext;
   return createFiber(HostRoot, null, null, internalContextTag);
 }
 
@@ -336,6 +333,10 @@ export function createFiberFromElement(
           expirationTime,
           key,
         );
+      case REACT_ASYNC_MODE_TYPE:
+        fiberTag = Mode;
+        internalContextTag |= AsyncMode | StrictMode;
+        break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         internalContextTag |= StrictMode;
