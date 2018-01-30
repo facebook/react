@@ -39,27 +39,25 @@ describe('ReactNewContext', () => {
   it('simple mount and update', () => {
     const Context = React.unstable_createContext(1);
 
-    function Provider(props) {
-      return Context.provide(props.value, props.children);
-    }
-
     function Consumer(props) {
-      return Context.consume(value => {
-        return <span prop={'Result: ' + value} />;
-      });
+      return (
+        <Context.Consumer>
+          {value => <span prop={'Result: ' + value} />}
+        </Context.Consumer>
+      );
     }
 
     const Indirection = React.Fragment;
 
     function App(props) {
       return (
-        <Provider value={props.value}>
+        <Context.Provider value={props.value}>
           <Indirection>
             <Indirection>
               <Consumer />
             </Indirection>
           </Indirection>
-        </Provider>
+        </Context.Provider>
       );
     }
 
@@ -78,15 +76,23 @@ describe('ReactNewContext', () => {
 
     function Provider(props) {
       ReactNoop.yield('Provider');
-      return Context.provide(props.value, props.children);
+      return (
+        <Context.Provider value={props.value}>
+          {props.children}
+        </Context.Provider>
+      );
     }
 
     function Consumer(props) {
       ReactNoop.yield('Consumer');
-      return Context.consume(value => {
-        ReactNoop.yield('Consumer render prop');
-        return <span prop={'Result: ' + value} />;
-      });
+      return (
+        <Context.Consumer>
+          {value => {
+            ReactNoop.yield('Consumer render prop');
+            return <span prop={'Result: ' + value} />;
+          }}
+        </Context.Consumer>
+      );
     }
 
     class Indirection extends React.Component {
@@ -138,15 +144,23 @@ describe('ReactNewContext', () => {
 
     function Provider(props) {
       ReactNoop.yield('Provider');
-      return Context.provide(props.value, props.children);
+      return (
+        <Context.Provider value={props.value}>
+          {props.children}
+        </Context.Provider>
+      );
     }
 
     function Consumer(props) {
       ReactNoop.yield('Consumer');
-      return Context.consume(value => {
-        ReactNoop.yield('Consumer render prop');
-        return <span prop={'Result: ' + value} />;
-      });
+      return (
+        <Context.Consumer>
+          {value => {
+            ReactNoop.yield('Consumer render prop');
+            return <span prop={'Result: ' + value} />;
+          }}
+        </Context.Consumer>
+      );
     }
 
     class Indirection extends React.Component {
@@ -197,16 +211,24 @@ describe('ReactNewContext', () => {
     const Context = React.unstable_createContext(1);
 
     function Provider(props) {
-      return Context.consume(contextValue =>
-        // Multiply previous context value by 2, unless prop overrides
-        Context.provide(props.value || contextValue * 2, props.children),
+      return (
+        <Context.Consumer>
+          {contextValue => (
+            // Multiply previous context value by 2, unless prop overrides
+            <Context.Provider value={props.value || contextValue * 2}>
+              {props.children}
+            </Context.Provider>
+          )}
+        </Context.Consumer>
       );
     }
 
     function Consumer(props) {
-      return Context.consume(value => {
-        return <span prop={'Result: ' + value} />;
-      });
+      return (
+        <Context.Consumer>
+          {value => <span prop={'Result: ' + value} />}
+        </Context.Consumer>
+      );
     }
 
     class Indirection extends React.Component {
@@ -250,16 +272,24 @@ describe('ReactNewContext', () => {
     const Context = React.unstable_createContext(1);
 
     function Provider(props) {
-      return Context.consume(contextValue =>
-        // Multiply previous context value by 2, unless prop overrides
-        Context.provide(props.value || contextValue * 2, props.children),
+      return (
+        <Context.Consumer>
+          {contextValue => (
+            // Multiply previous context value by 2, unless prop overrides
+            <Context.Provider value={props.value || contextValue * 2}>
+              {props.children}
+            </Context.Provider>
+          )}
+        </Context.Consumer>
       );
     }
 
     function Consumer(props) {
-      return Context.consume(value => {
-        return <span prop={'Result: ' + value} />;
-      });
+      return (
+        <Context.Consumer>
+          {value => <span prop={'Result: ' + value} />}
+        </Context.Consumer>
+      );
     }
 
     class Indirection extends React.Component {
@@ -317,15 +347,23 @@ describe('ReactNewContext', () => {
 
     function Provider(props) {
       ReactNoop.yield('Provider');
-      return Context.provide(props.value, props.children);
+      return (
+        <Context.Provider value={props.value}>
+          {props.children}
+        </Context.Provider>
+      );
     }
 
     function Consumer(props) {
       ReactNoop.yield('Consumer');
-      return Context.consume(value => {
-        ReactNoop.yield('Consumer render prop');
-        return <span prop={'Result: ' + value} />;
-      });
+      return (
+        <Context.Consumer>
+          {value => {
+            ReactNoop.yield('Consumer render prop');
+            return <span prop={'Result: ' + value} />;
+          }}
+        </Context.Consumer>
+      );
     }
 
     class Indirection extends React.Component {
@@ -376,14 +414,12 @@ describe('ReactNewContext', () => {
   it('context unwinds when interrupted', () => {
     const Context = React.unstable_createContext('Default');
 
-    function Provider(props) {
-      return Context.provide(props.value, props.children);
-    }
-
     function Consumer(props) {
-      return Context.consume(value => {
-        return <span prop={'Result: ' + value} />;
-      });
+      return (
+        <Context.Consumer>
+          {value => <span prop={'Result: ' + value} />}
+        </Context.Consumer>
+      );
     }
 
     function BadRender() {
@@ -406,14 +442,14 @@ describe('ReactNewContext', () => {
     function App(props) {
       return (
         <React.Fragment>
-          <Provider value="Does not unwind">
+          <Context.Provider value="Does not unwind">
             <ErrorBoundary>
-              <Provider value="Unwinds after BadRender throws">
+              <Context.Provider value="Unwinds after BadRender throws">
                 <BadRender />
-              </Provider>
+              </Context.Provider>
             </ErrorBoundary>
             <Consumer />
-          </Provider>
+          </Context.Provider>
         </React.Fragment>
       );
     }
@@ -421,7 +457,7 @@ describe('ReactNewContext', () => {
     ReactNoop.render(<App value="A" />);
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([
-      // The second provider should use the default value. This proves the
+      // The second provider should use the default value.
       span('Result: Does not unwind'),
     ]);
   });
@@ -439,21 +475,33 @@ describe('ReactNewContext', () => {
     });
 
     function Provider(props) {
-      return Context.provide({foo: props.foo, bar: props.bar}, props.children);
+      return (
+        <Context.Provider value={{foo: props.foo, bar: props.bar}}>
+          {props.children}
+        </Context.Provider>
+      );
     }
 
     function Foo() {
-      return Context.consume(value => {
-        ReactNoop.yield('Foo');
-        return <span prop={'Foo: ' + value.foo} />;
-      }, 0b01);
+      return (
+        <Context.Consumer observedBits={0b01}>
+          {value => {
+            ReactNoop.yield('Foo');
+            return <span prop={'Foo: ' + value.foo} />;
+          }}
+        </Context.Consumer>
+      );
     }
 
     function Bar() {
-      return Context.consume(value => {
-        ReactNoop.yield('Bar');
-        return <span prop={'Bar: ' + value.bar} />;
-      }, 0b10);
+      return (
+        <Context.Consumer observedBits={0b10}>
+          {value => {
+            ReactNoop.yield('Bar');
+            return <span prop={'Bar: ' + value.bar} />;
+          }}
+        </Context.Consumer>
+      );
     }
 
     class Indirection extends React.Component {
@@ -508,15 +556,11 @@ describe('ReactNewContext', () => {
       (a, b) => Math.pow(2, 32) - 1, // Return 32 bit int
     );
 
-    function Provider(props) {
-      return Context.provide(props.value, props.children);
-    }
-
-    ReactNoop.render(<Provider value={1} />);
+    ReactNoop.render(<Context.Provider value={1} />);
     ReactNoop.flush();
 
     // Update
-    ReactNoop.render(<Provider value={2} />);
+    ReactNoop.render(<Context.Provider value={2} />);
     ReactNoop.flush();
 
     if (__DEV__) {
@@ -536,16 +580,13 @@ describe('ReactNewContext', () => {
       ReactNoop.yield('Foo');
       return null;
     }
-    function Provider(props) {
-      return Context.provide(props.value, props.children);
-    }
 
     function App(props) {
       return (
-        <Provider value={props.value}>
+        <Context.Provider value={props.value}>
           <Foo />
           <Foo />
-        </Provider>
+        </Context.Provider>
       );
     }
 
@@ -661,19 +702,19 @@ describe('ReactNewContext', () => {
                 this.props.rand.intBetween(0, contextKeys.length - 1)
               ];
             const Context = contexts.get(randomKey);
-            return Context.consume(
-              value => (
-                <Fragment>
-                  <span prop={`${randomKey}:${value}`} />
-                  <ConsumerTree
-                    rand={this.props.rand}
-                    depth={this.props.depth + 1}
-                    maxDepth={this.props.maxDepth}
-                  />
-                </Fragment>
-              ),
-              null,
-              i,
+            return (
+              <Context.Consumer key={i}>
+                {value => (
+                  <Fragment>
+                    <span prop={`${randomKey}:${value}`} />
+                    <ConsumerTree
+                      rand={this.props.rand}
+                      depth={this.props.depth + 1}
+                      maxDepth={this.props.maxDepth}
+                    />
+                  </Fragment>
+                )}
+              </Context.Consumer>
             );
           });
           return consumers;
@@ -684,7 +725,7 @@ describe('ReactNewContext', () => {
         return contextKeys.reduceRight((children, key) => {
           const Context = contexts.get(key);
           const value = props.values[key];
-          return Context.provide(value, children);
+          return <Context.Provider value={value}>{children}</Context.Provider>;
         }, <ConsumerTree rand={props.rand} depth={0} maxDepth={props.maxDepth} />);
       }
 

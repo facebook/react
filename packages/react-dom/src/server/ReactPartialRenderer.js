@@ -860,10 +860,10 @@ class ReactDOMServerRenderer {
           }
           case REACT_CONTEXT_TYPE: {
             const consumer: ReactConsumer<any> = (nextChild: any);
-            const nextProps = consumer.props;
+            const nextProps: any = consumer.props;
             const nextValue = consumer.type.currentValue;
 
-            const nextChildren = toArray(nextProps.render(nextValue));
+            const nextChildren = toArray(nextProps.children(nextValue));
             const frame: Frame = {
               type: nextChild,
               domNamespace: parentNamespace,

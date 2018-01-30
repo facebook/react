@@ -67,4 +67,5 @@ export function resetProviderStack(): void {
       context._currentRenderer = null;
     }
   }
+  index = -1;
 }

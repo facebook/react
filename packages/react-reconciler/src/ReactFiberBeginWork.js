@@ -804,7 +804,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           changedBits = 0;
         } else {
           changedBits =
-            context.calculateChangedBits !== null
+            typeof context.calculateChangedBits === 'function'
               ? context.calculateChangedBits(oldValue, newValue)
               : MAX_SIGNED_31_BIT_INT;
           if (__DEV__) {
@@ -873,7 +873,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       workInProgress.stateNode = observedBits;
 
-      const newChildren = newProps.render(newValue);
+      const render = newProps.children;
+      const newChildren = render(newValue);
       reconcileChildren(current, workInProgress, newChildren);
       return workInProgress.child;
     } else {

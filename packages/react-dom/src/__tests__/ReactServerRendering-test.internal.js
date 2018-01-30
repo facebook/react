@@ -390,34 +390,30 @@ describe('ReactDOMServer', () => {
     it('renders with new context API', () => {
       const Context = React.unstable_createContext(0);
 
-      function Provider(props) {
-        return Context.provide(props.value, props.children);
-      }
-
       function Consumer(props) {
-        return Context.consume(value => {
-          return 'Result: ' + value;
-        });
+        return (
+          <Context.Consumer>{value => 'Result: ' + value}</Context.Consumer>
+        );
       }
 
       const Indirection = React.Fragment;
 
       function App(props) {
         return (
-          <Provider value={props.value}>
-            <Provider value={2}>
+          <Context.Provider value={props.value}>
+            <Context.Provider value={2}>
               <Consumer />
-            </Provider>
+            </Context.Provider>
             <Indirection>
               <Indirection>
                 <Consumer />
-                <Provider value={3}>
+                <Context.Provider value={3}>
                   <Consumer />
-                </Provider>
+                </Context.Provider>
               </Indirection>
             </Indirection>
             <Consumer />
-          </Provider>
+          </Context.Provider>
         );
       }
 
@@ -430,14 +426,10 @@ describe('ReactDOMServer', () => {
     it('renders context API, reentrancy', () => {
       const Context = React.unstable_createContext(0);
 
-      function Provider(props) {
-        return Context.provide(props.value, props.children);
-      }
-
       function Consumer(props) {
-        return Context.consume(value => {
-          return 'Result: ' + value;
-        });
+        return (
+          <Context.Consumer>{value => 'Result: ' + value}</Context.Consumer>
+        );
       }
 
       let reentrantMarkup;
@@ -452,21 +444,21 @@ describe('ReactDOMServer', () => {
 
       function App(props) {
         return (
-          <Provider value={props.value}>
+          <Context.Provider value={props.value}>
             {props.reentrant && <Reentrant />}
-            <Provider value={2}>
+            <Context.Provider value={2}>
               <Consumer />
-            </Provider>
+            </Context.Provider>
             <Indirection>
               <Indirection>
                 <Consumer />
-                <Provider value={3}>
+                <Context.Provider value={3}>
                   <Consumer />
-                </Provider>
+                </Context.Provider>
               </Indirection>
             </Indirection>
             <Consumer />
-          </Provider>
+          </Context.Provider>
         );
       }
 
