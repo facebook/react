@@ -37,13 +37,13 @@ describe('create-react-class-integration', () => {
       displayName: 'MyComponent',
       mixins: [
         {
-          componentWillMount() {
+          UNSAFE_componentWillMount() {
             this.log('mixin.componentWillMount');
           },
           componentDidMount() {
             this.log('mixin.componentDidMount');
           },
-          componentWillUpdate() {
+          UNSAFE_componentWillUpdate() {
             this.log('mixin.componentWillUpdate');
           },
           componentDidUpdate() {
@@ -61,13 +61,13 @@ describe('create-react-class-integration', () => {
         this.log('getInitialState');
         return {};
       },
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.log('componentWillMount');
       },
       componentDidMount() {
         this.log('componentDidMount');
       },
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         this.log('componentWillUpdate');
       },
       componentDidUpdate() {
@@ -85,25 +85,11 @@ describe('create-react-class-integration', () => {
 
     const container = document.createElement('div');
 
-    // TODO (RFC #6) The below lifecycle warnings are unavoidable for now,
-    // Until create-react-class recognizes the UNSAFE_* methods.
-    // (If we try to use them before them, it will error because
-    // we are defining the same method twice.)
-    // Update the above component to use the new UNSAFE_* methods
-    // (and remove the expected warnings) once create-react-class has been updated.
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev([
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',
-      'componentWillMount is deprecated and will be removed in the next major version. ' +
-        'Use componentDidMount instead. As a temporary workaround, ' +
-        'you can rename to UNSAFE_componentWillMount.' +
-        '\n\nPlease update the following components: MyComponent',
-      'componentWillUpdate is deprecated and will be removed in the next major version. ' +
-        'Use componentDidUpdate instead. As a temporary workaround, ' +
-        'you can rename to UNSAFE_componentWillUpdate.' +
-        '\n\nPlease update the following components: MyComponent',
-    ]);
+    );
 
     // Dedupe
     ReactDOM.render(<Component />, container);

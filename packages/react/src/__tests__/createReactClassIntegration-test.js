@@ -152,8 +152,7 @@ describe('create-react-class-integration', () => {
     );
   });
 
-  // TODO (RFC #6) Reenable after create-react-class updated.
-  xit('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
+  it('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
     expect(() =>
       createReactClass({
         UNSAFE_componentWillRecieveProps: function() {
