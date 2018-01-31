@@ -5,11 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  batchedUpdates,
-  flushInteractiveUpdates,
-  interactiveUpdates,
-} from 'events/ReactGenericBatching';
+import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
@@ -166,11 +162,6 @@ export function trapCapturedEvent(topLevelType, handlerBaseName, element) {
 }
 
 function dispatchInteractiveEvent(topLevelType, nativeEvent) {
-  // If there are any pending interactive updates, synchronously flush them.
-  // This needs to happen before we read any handlers, because the effect of the
-  // previous event may affect which handlers are called during this event.
-  flushInteractiveUpdates();
-  // Increase the priority of updates inside this event.
   interactiveUpdates(dispatchEvent, topLevelType, nativeEvent);
 }
 

@@ -1807,13 +1807,31 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (isBatchingInteractiveUpdates) {
       return fn(a, b);
     }
-
+    // If there are any pending interactive updates, synchronously flush them.
+    // This needs to happen before we read any handlers, because the effect of
+    // the previous event may influence which handlers are called during
+    // this event.
+    if (
+      !isBatchingUpdates &&
+      !isRendering &&
+      lowestPendingInteractiveExpirationTime !== NoWork
+    ) {
+      // Synchronously flush pending interactive updates.
+      performWork(lowestPendingInteractiveExpirationTime, false, null);
+      lowestPendingInteractiveExpirationTime = NoWork;
+    }
     const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
+    const previousIsBatchingUpdates = isBatchingUpdates;
     isBatchingInteractiveUpdates = true;
+    isBatchingUpdates = true;
     try {
       return fn(a, b);
     } finally {
       isBatchingInteractiveUpdates = previousIsBatchingInteractiveUpdates;
+      isBatchingUpdates = previousIsBatchingUpdates;
+      if (!isBatchingUpdates && !isRendering) {
+        performSyncWork();
+      }
     }
   }
 

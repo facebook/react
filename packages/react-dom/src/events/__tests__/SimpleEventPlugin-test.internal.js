@@ -167,6 +167,56 @@ describe('SimpleEventPlugin', function() {
     });
   });
 
+  it('batches updates that occur as a result of a nested event dispatch', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    let ops = [];
+    let button;
+    class Button extends React.Component {
+      state = {count: 0};
+      increment = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+      componentDidUpdate() {
+        ops.push(`didUpdate - Count: ${this.state.count}`);
+      }
+      render() {
+        return (
+          <button
+            ref={el => (button = el)}
+            onFocus={this.increment}
+            onClick={() => {
+              // The focus call synchronously dispatches a nested event. All of
+              // the updates in this handler should be batched together.
+              this.increment();
+              button.focus();
+              this.increment();
+            }}>
+            Count: {this.state.count}
+          </button>
+        );
+      }
+    }
+
+    function click() {
+      button.dispatchEvent(
+        new MouseEvent('click', {bubbles: true, cancelable: true}),
+      );
+    }
+
+    ReactDOM.render(<Button />, container);
+    expect(button.textContent).toEqual('Count: 0');
+    expect(ops).toEqual([]);
+
+    click();
+
+    // There should be exactly one update.
+    expect(ops).toEqual(['didUpdate - Count: 3']);
+    expect(button.textContent).toEqual('Count: 3');
+  });
+
   describe('interactive events, in async mode', () => {
     beforeEach(() => {
       jest.resetModules();
