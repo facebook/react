@@ -65,13 +65,7 @@ describe('ReactDOMServerLifecycles', () => {
   });
 
   describe('react-lifecycles-compat', () => {
-    // TODO Replace this with react-lifecycles-compat once it's been published
-    function polyfill(Component) {
-      Component.prototype.componentWillMount = function() {};
-      Component.prototype.componentWillMount.__suppressDeprecationWarning = true;
-      Component.prototype.componentWillReceiveProps = function() {};
-      Component.prototype.componentWillReceiveProps.__suppressDeprecationWarning = true;
-    }
+    const polyfill = require('react-lifecycles-compat');
 
     it('should not warn about deprecated cWM/cWRP for polyfilled components', () => {
       class PolyfilledComponent extends React.Component {
