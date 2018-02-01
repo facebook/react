@@ -1235,4 +1235,46 @@ describe('ReactShallowRenderer', () => {
     // De-duped
     shallowRenderer.render(<Component />);
   });
+
+  it('should invoke both deprecated and new lifecycles if both are present', () => {
+    const log = [];
+
+    class Component extends React.Component {
+      componentWillMount() {
+        log.push('componentWillMount');
+      }
+      componentWillReceiveProps() {
+        log.push('componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        log.push('componentWillUpdate');
+      }
+      UNSAFE_componentWillMount() {
+        log.push('UNSAFE_componentWillMount');
+      }
+      UNSAFE_componentWillReceiveProps() {
+        log.push('UNSAFE_componentWillReceiveProps');
+      }
+      UNSAFE_componentWillUpdate() {
+        log.push('UNSAFE_componentWillUpdate');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component foo="bar" />);
+    expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
+
+    log.length = 0;
+
+    shallowRenderer.render(<Component foo="baz" />);
+    expect(log).toEqual([
+      'componentWillReceiveProps',
+      'UNSAFE_componentWillReceiveProps',
+      'componentWillUpdate',
+      'UNSAFE_componentWillUpdate',
+    ]);
+  });
 });

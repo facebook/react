@@ -207,4 +207,23 @@ describe('ReactDOMServerLifecycles', () => {
     // De-duped
     ReactDOMServer.renderToString(<Component />);
   });
+
+  it('should invoke both deprecated and new lifecycles if both are present', () => {
+    const log = [];
+
+    class Component extends React.Component {
+      componentWillMount() {
+        log.push('componentWillMount');
+      }
+      UNSAFE_componentWillMount() {
+        log.push('UNSAFE_componentWillMount');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    ReactDOMServer.renderToString(<Component />);
+    expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
+  });
 });

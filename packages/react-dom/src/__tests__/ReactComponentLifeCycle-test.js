@@ -788,4 +788,46 @@ describe('ReactComponentLifeCycle', () => {
     // De-duped
     ReactDOM.render(<MyComponent />, div);
   });
+
+  it('should invoke both deprecated and new lifecycles if both are present', () => {
+    const log = [];
+
+    class MyComponent extends React.Component {
+      componentWillMount() {
+        log.push('componentWillMount');
+      }
+      componentWillReceiveProps() {
+        log.push('componentWillReceiveProps');
+      }
+      componentWillUpdate() {
+        log.push('componentWillUpdate');
+      }
+      UNSAFE_componentWillMount() {
+        log.push('UNSAFE_componentWillMount');
+      }
+      UNSAFE_componentWillReceiveProps() {
+        log.push('UNSAFE_componentWillReceiveProps');
+      }
+      UNSAFE_componentWillUpdate() {
+        log.push('UNSAFE_componentWillUpdate');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<MyComponent foo="bar" />, div);
+    expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
+
+    log.length = 0;
+
+    ReactDOM.render(<MyComponent foo="baz" />, div);
+    expect(log).toEqual([
+      'componentWillReceiveProps',
+      'UNSAFE_componentWillReceiveProps',
+      'componentWillUpdate',
+      'UNSAFE_componentWillUpdate',
+    ]);
+  });
 });
