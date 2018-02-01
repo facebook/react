@@ -23,8 +23,17 @@ function flattenChildren(children) {
     if (child == null) {
       return;
     }
+
     if (typeof child === 'string' || typeof child === 'number') {
-      content += child;
+      if (typeof children === 'string') {
+        content += child;
+      } else {
+        if (!content) {
+          content = document.createElement('span');
+        }
+        const textNode = document.createTextNode(child);
+        content.appendChild(textNode);
+      }
     }
   });
 
@@ -65,4 +74,12 @@ export function getHostProps(element: Element, props: Object) {
   }
 
   return hostProps;
+}
+
+export function reduceOptionChild(node: Element) {
+  for (let i = 0; i < node.childNodes.length; i += 1) {
+    if (node.childNodes[i].nodeType !== 3) {
+      node.removeChild(node.childNodes[i]);
+    }
+  }
 }
