@@ -395,7 +395,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       firstEffect = finishedWork.firstEffect;
     }
 
-    prepareForCommit();
+    prepareForCommit(root.containerInfo);
 
     // Commit all the side-effects within a tree. We'll do this in two passes.
     // The first pass performs all the host insertions, updates, deletions and
@@ -434,7 +434,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     stopCommitHostEffectsTimer();
 
-    resetAfterCommit();
+    resetAfterCommit(root.containerInfo);
 
     // The work-in-progress tree is now the current tree. This must come after
     // the first pass of the commit phase, so that the previous tree is still
