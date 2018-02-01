@@ -478,4 +478,50 @@ describe('create-react-class-integration', () => {
     }).toWarnDev('Defines both componentWillReceiveProps');
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
   });
+
+  it('should invoke both deprecated and new lifecycles if both are present', () => {
+    const log = [];
+
+    const Component = createReactClass({
+      mixins: [
+        {
+          componentWillMount: function() {
+            log.push('componentWillMount');
+          },
+          componentWillReceiveProps: function() {
+            log.push('componentWillReceiveProps');
+          },
+          componentWillUpdate: function() {
+            log.push('componentWillUpdate');
+          },
+        },
+      ],
+      UNSAFE_componentWillMount: function() {
+        log.push('UNSAFE_componentWillMount');
+      },
+      UNSAFE_componentWillReceiveProps: function() {
+        log.push('UNSAFE_componentWillReceiveProps');
+      },
+      UNSAFE_componentWillUpdate: function() {
+        log.push('UNSAFE_componentWillUpdate');
+      },
+      render: function() {
+        return null;
+      },
+    });
+
+    const div = document.createElement('div');
+    ReactDOM.render(<Component foo="bar" />, div);
+    expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
+
+    log.length = 0;
+
+    ReactDOM.render(<Component foo="baz" />, div);
+    expect(log).toEqual([
+      'componentWillReceiveProps',
+      'UNSAFE_componentWillReceiveProps',
+      'componentWillUpdate',
+      'UNSAFE_componentWillUpdate',
+    ]);
+  });
 });

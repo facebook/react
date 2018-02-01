@@ -511,8 +511,11 @@ function resolve(
     if (initialState === undefined) {
       inst.state = initialState = null;
     }
-    if (inst.UNSAFE_componentWillMount || inst.componentWillMount) {
-      if (inst.componentWillMount) {
+    if (
+      typeof inst.UNSAFE_componentWillMount === 'function' ||
+      typeof inst.componentWillMount === 'function'
+    ) {
+      if (typeof inst.componentWillMount === 'function') {
         if (__DEV__) {
           if (
             warnAboutDeprecatedLifecycles &&
@@ -542,7 +545,11 @@ function resolve(
         if (typeof Component.getDerivedStateFromProps !== 'function') {
           inst.componentWillMount();
         }
-      } else if (typeof Component.getDerivedStateFromProps !== 'function') {
+      }
+      if (
+        typeof inst.UNSAFE_componentWillMount === 'function' &&
+        typeof Component.getDerivedStateFromProps !== 'function'
+      ) {
         // In order to support react-lifecycles-compat polyfilled components,
         // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         inst.UNSAFE_componentWillMount();

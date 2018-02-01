@@ -459,7 +459,8 @@ export default function(
 
     if (typeof instance.componentWillMount === 'function') {
       instance.componentWillMount();
-    } else {
+    }
+    if (typeof instance.UNSAFE_componentWillMount === 'function') {
       instance.UNSAFE_componentWillMount();
     }
 
@@ -486,15 +487,14 @@ export default function(
     newContext,
   ) {
     const oldState = instance.state;
+    startPhaseTimer(workInProgress, 'componentWillReceiveProps');
     if (typeof instance.componentWillReceiveProps === 'function') {
-      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
       instance.componentWillReceiveProps(newProps, newContext);
-      stopPhaseTimer();
-    } else {
-      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
-      instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
-      stopPhaseTimer();
     }
+    if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
+      instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
+    }
+    stopPhaseTimer();
 
     if (instance.state !== oldState) {
       if (__DEV__) {
@@ -861,15 +861,14 @@ export default function(
           typeof instance.componentWillUpdate === 'function') &&
         typeof workInProgress.type.getDerivedStateFromProps !== 'function'
       ) {
+        startPhaseTimer(workInProgress, 'componentWillUpdate');
         if (typeof instance.componentWillUpdate === 'function') {
-          startPhaseTimer(workInProgress, 'componentWillUpdate');
           instance.componentWillUpdate(newProps, newState, newContext);
-          stopPhaseTimer();
-        } else {
-          startPhaseTimer(workInProgress, 'componentWillUpdate');
-          instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
-          stopPhaseTimer();
         }
+        if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
+          instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
+        }
+        stopPhaseTimer();
       }
       if (typeof instance.componentDidUpdate === 'function') {
         workInProgress.effectTag |= Update;
