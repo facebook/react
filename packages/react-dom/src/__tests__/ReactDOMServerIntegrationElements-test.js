@@ -870,6 +870,21 @@ describe('ReactDOMServerIntegration', () => {
               'an array instead.'
             : ''),
       );
+
+      itThrowsWhenRendering(
+        'badly-typed elements',
+        async render => {
+          spyOnDev(console, 'error');
+          const EmptyComponent = {};
+          await render(<EmptyComponent />);
+        },
+        'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+          '(for composite components) but got: object.' +
+          (__DEV__
+            ? " You likely forgot to export your component from the file it's defined in, " +
+              'or you might have mixed up default and named imports.'
+            : ''),
+      );
     });
   });
 });
