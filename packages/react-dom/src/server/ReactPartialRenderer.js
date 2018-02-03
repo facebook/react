@@ -892,7 +892,7 @@ class ReactDOMServerRenderer {
 
       let info = '';
       if (__DEV__) {
-        const owner = elementType._owner;
+        const owner = elementType && elementType._owner;
         if (
           elementType === undefined ||
           (typeof elementType === 'object' &&
