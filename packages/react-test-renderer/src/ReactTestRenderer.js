@@ -370,25 +370,8 @@ function toTree(node: ?Fiber) {
     case Fragment:
       return childrenToTree(node.child);
     case ContextConsumer:
-      return {
-        nodeType: 'component',
-        type: node.type,
-        props: {...node.pendingProps},
-        instance: node.stateNode,
-        rendered: hasSiblings(node.child)
-          ? nodeAndSiblingsTrees(node.child)
-          : toTree(node.child),
-      };
     case ContextProvider:
-      return {
-        nodeType: 'component',
-        type: node.type,
-        props: {...node.memoizedProps},
-        instance: node.stateNode,
-        rendered: hasSiblings(node.child)
-          ? nodeAndSiblingsTrees(node.child)
-          : toTree(node.child),
-      };
+      return toTree(node.child);
     default:
       invariant(
         false,
@@ -456,8 +439,7 @@ class ReactTestInstance {
   }
 
   get props(): Object {
-    const fiber = this._currentFiber();
-    return fiber.memoizedProps || fiber.pendingProps;
+    return this._currentFiber().memoizedProps || {};
   }
 
   get parent(): ?ReactTestInstance {
@@ -482,14 +464,14 @@ class ReactTestInstance {
         case FunctionalComponent:
         case ClassComponent:
         case HostComponent:
-        case ContextConsumer:
-        case ContextProvider:
           children.push(wrapFiber(node));
           break;
         case HostText:
           children.push('' + node.memoizedProps);
           break;
         case Fragment:
+        case ContextConsumer:
+        case ContextProvider:
           descend = true;
           break;
         default:
@@ -572,7 +554,6 @@ function findAll(
 ): Array<ReactTestInstance> {
   const deep = options ? options.deep : true;
   const results = [];
-
   if (predicate(root)) {
     results.push(root);
     if (!deep) {
@@ -633,7 +614,6 @@ const ReactTestRendererFiber = {
     );
     invariant(root != null, 'something went wrong');
     TestRenderer.updateContainer(element, root, null, null);
-
     const entry = {
       root: undefined, // makes flow happy
       // we define a 'getter' for 'root' below using 'Object.defineProperty'
