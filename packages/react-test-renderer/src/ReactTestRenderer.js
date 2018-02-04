@@ -22,6 +22,8 @@ import {
   HostPortal,
   HostText,
   HostRoot,
+  ContextConsumer,
+  ContextProvider,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 
@@ -367,6 +369,26 @@ function toTree(node: ?Fiber) {
       return node.stateNode.text;
     case Fragment:
       return childrenToTree(node.child);
+    case ContextConsumer:
+      return {
+        nodeType: 'component',
+        type: node.type,
+        props: {...node.pendingProps},
+        instance: node.stateNode,
+        rendered: hasSiblings(node.child)
+          ? nodeAndSiblingsTrees(node.child)
+          : toTree(node.child),
+      };
+    case ContextProvider:
+      return {
+        nodeType: 'component',
+        type: node.type,
+        props: {...node.memoizedProps},
+        instance: node.stateNode,
+        rendered: hasSiblings(node.child)
+          ? nodeAndSiblingsTrees(node.child)
+          : toTree(node.child),
+      };
     default:
       invariant(
         false,
@@ -393,6 +415,8 @@ const validWrapperTypes = new Set([
   FunctionalComponent,
   ClassComponent,
   HostComponent,
+  ContextProvider,
+  ContextConsumer,
 ]);
 
 class ReactTestInstance {
@@ -432,7 +456,8 @@ class ReactTestInstance {
   }
 
   get props(): Object {
-    return this._currentFiber().memoizedProps;
+    const fiber = this._currentFiber();
+    return fiber.memoizedProps || fiber.pendingProps;
   }
 
   get parent(): ?ReactTestInstance {
@@ -457,6 +482,8 @@ class ReactTestInstance {
         case FunctionalComponent:
         case ClassComponent:
         case HostComponent:
+        case ContextConsumer:
+        case ContextProvider:
           children.push(wrapFiber(node));
           break;
         case HostText:

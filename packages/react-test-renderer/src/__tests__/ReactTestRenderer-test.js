@@ -745,6 +745,44 @@ describe('ReactTestRenderer', () => {
     );
   });
 
+  it('toTree() handles ContextConsumer and ContextProvider components', () => {
+    const {Consumer, Provider} = React.createContext('foo');
+
+    const renderer = ReactTestRenderer.create(
+      <Provider value="bar">
+        <Consumer>{value => <div>{value}</div>}</Consumer>
+      </Provider>,
+    );
+
+    const tree = renderer.toTree();
+
+    cleanNodeOrArray(tree);
+
+    expect(prettyFormat(tree)).toEqual(
+      prettyFormat({
+        type: Provider,
+        nodeType: 'component',
+        instance: null,
+        props: {
+          value: 'bar',
+        },
+        rendered: {
+          type: Consumer,
+          nodeType: 'component',
+          instance: null,
+          props: {},
+          rendered: {
+            type: 'div',
+            nodeType: 'host',
+            instance: null,
+            props: {},
+            rendered: ['bar'],
+          },
+        },
+      }),
+    );
+  });
+
   it('root instance and createNodeMock ref return the same value', () => {
     const createNodeMock = ref => ({node: ref});
     let refInst = null;
