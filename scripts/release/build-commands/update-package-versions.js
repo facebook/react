@@ -56,6 +56,10 @@ const update = async ({cwd, dry, packages, version}) => {
 
       if (project !== 'react') {
         let peerVersion = json.peerDependencies.react.replace('^', '');
+
+        // If the previous release was a pre-release version,
+        // The peer dependency will contain multiple versions, eg "^16.0.0 || 16.3.0-alpha.0"
+        // In this case, assume the first one will be the major and extract it.
         if (peerVersion.includes(' || ')) {
           peerVersion = peerVersion.split(' || ')[0];
         }
