@@ -30,30 +30,53 @@ const update = async ({cwd, dry, packages, version}) => {
     const updateProjectPackage = async project => {
       const path = join(cwd, 'packages', project, 'package.json');
       const json = await readJson(path);
+      const prerelease = semver.prerelease(version);
 
       // Unstable packages (eg version < 1.0) are treated specially:
       // Rather than use the release version (eg 16.1.0)-
       // We just auto-increment the minor version (eg 0.1.0 -> 0.2.0).
       // If we're doing a prerelease, we also append the suffix (eg 0.2.0-beta).
       if (semver.lt(json.version, '1.0.0')) {
-        const prerelease = semver.prerelease(version);
         let suffix = '';
         if (prerelease) {
           suffix = `-${prerelease.join('.')}`;
         }
 
-        json.version = `0.${semver.minor(json.version) + 1}.0${suffix}`;
+        // If this is a new pre-release, increment the minor.
+        // Else just increment (or remove) the pre-release suffix.
+        // This way our minor version isn't incremented unnecessarily with each prerelease.
+        const minor = semver.prerelease(json.version)
+          ? semver.minor(json.version)
+          : semver.minor(json.version) + 1;
+
+        json.version = `0.${minor}.0${suffix}`;
       } else {
         json.version = version;
       }
 
       if (project !== 'react') {
-        const peerVersion = json.peerDependencies.react.replace('^', '');
+        let peerVersion = json.peerDependencies.react.replace('^', '');
+
+        // If the previous release was a pre-release version,
+        // The peer dependency will contain multiple versions, eg "^16.0.0 || 16.3.0-alpha.0"
+        // In this case, assume the first one will be the major and extract it.
+        if (peerVersion.includes(' || ')) {
+          peerVersion = peerVersion.split(' || ')[0];
+        }
 
         // Release engineers can manually update minor and bugfix versions,
         // But we should ensure that major versions always match.
         if (semver.major(version) !== semver.major(peerVersion)) {
           json.peerDependencies.react = `^${semver.major(version)}.0.0`;
+        } else {
+          json.peerDependencies.react = `^${peerVersion}`;
+        }
+
+        // If this is a prerelease, update the react dependency as well.
+        // A dependency on a major version won't satisfy a prerelease version.
+        // So rather than eg "^16.0.0" we need "^16.0.0 || 16.3.0-alpha.0"
+        if (prerelease) {
+          json.peerDependencies.react += ` || ${version}`;
         }
       }
 
