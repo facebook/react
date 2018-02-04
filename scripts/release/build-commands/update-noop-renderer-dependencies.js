@@ -13,7 +13,7 @@ const getReactReconcilerVersion = async cwd => {
   return json.version;
 };
 
-const update = async ({cwd, dry, packages}) => {
+const update = async ({cwd, dry}) => {
   const path = join(cwd, 'packages', 'react-noop-renderer', 'package.json');
   const json = await readJson(path);
 
