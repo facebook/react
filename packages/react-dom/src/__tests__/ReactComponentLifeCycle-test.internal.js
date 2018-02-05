@@ -41,7 +41,9 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent x={1} />, container)).toWarnDev([
+    expect(() =>
+      ReactDOM.render(<MyComponent x={1} />, container),
+    ).toLowPriorityWarnDev([
       'componentWillMount is deprecated and will be removed in the next major version. ' +
         'Use componentDidMount instead. As a temporary workaround, ' +
         'you can rename to UNSAFE_componentWillMount.' +

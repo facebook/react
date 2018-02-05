@@ -19,6 +19,7 @@ import emptyFunction from 'fbjs/lib/emptyFunction';
 import emptyObject from 'fbjs/lib/emptyObject';
 import hyphenateStyleName from 'fbjs/lib/hyphenateStyleName';
 import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 import memoizeStringOnly from 'fbjs/lib/memoizeStringOnly';
 import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
@@ -524,7 +525,7 @@ function resolve(
             const componentName = getComponentName(Component) || 'Unknown';
 
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
-              warning(
+              lowPriorityWarning(
                 false,
                 '%s: componentWillMount() is deprecated and will be ' +
                   'removed in the next major version. Read about the motivations ' +
