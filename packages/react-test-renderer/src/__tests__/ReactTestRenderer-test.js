@@ -547,7 +547,39 @@ describe('ReactTestRenderer', () => {
         type: Foo,
         instance: null,
         props: {},
-        rendered: 'foo',
+        rendered: {
+          instance: null,
+          nodeType: 'component',
+          rendered: 'foo',
+          type: null,
+        },
+      }),
+    );
+  });
+
+  it('toTree() handles nested Fragments with multiple children', () => {
+    const Foo = () => (
+      <React.Fragment>
+        <React.Fragment>foo{'bar'}</React.Fragment>
+      </React.Fragment>
+    );
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const tree = renderer.toTree();
+
+    cleanNodeOrArray(tree);
+
+    expect(prettyFormat(tree)).toEqual(
+      prettyFormat({
+        nodeType: 'component',
+        type: Foo,
+        instance: null,
+        props: {},
+        rendered: {
+          instance: null,
+          nodeType: 'component',
+          rendered: ['foo', 'bar'],
+          type: null,
+        },
       }),
     );
   });
