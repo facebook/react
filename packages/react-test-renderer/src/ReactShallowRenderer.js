@@ -12,6 +12,7 @@ import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'fbjs/lib/warning';
@@ -188,7 +189,7 @@ class ReactShallowRenderer {
           ) {
             const componentName = getName(element.type, this._instance);
             if (!didWarnAboutLegacyWillMount[componentName]) {
-              warning(
+              lowPriorityWarning(
                 false,
                 '%s: componentWillMount() is deprecated and will be ' +
                   'removed in the next major version. Read about the motivations ' +
@@ -242,7 +243,7 @@ class ReactShallowRenderer {
           if (warnAboutDeprecatedLifecycles) {
             const componentName = getName(element.type, this._instance);
             if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
-              warning(
+              lowPriorityWarning(
                 false,
                 '%s: componentWillReceiveProps() is deprecated and ' +
                   'will be removed in the next major version. Use ' +
@@ -300,7 +301,7 @@ class ReactShallowRenderer {
           if (warnAboutDeprecatedLifecycles) {
             const componentName = getName(element.type, this._instance);
             if (!didWarnAboutLegacyWillUpdate[componentName]) {
-              warning(
+              lowPriorityWarning(
                 false,
                 '%s: componentWillUpdate() is deprecated and will be ' +
                   'removed in the next major version. Read about the motivations ' +

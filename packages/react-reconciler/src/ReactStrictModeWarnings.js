@@ -12,6 +12,7 @@ import type {Fiber} from './ReactFiber';
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {StrictMode} from './ReactTypeOfMode';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'fbjs/lib/warning';
 
 type LIFECYCLE =
@@ -126,7 +127,7 @@ if (__DEV__) {
         .sort()
         .join(', ');
 
-      warning(
+      lowPriorityWarning(
         false,
         'componentWillMount is deprecated and will be removed in the next major version. ' +
           'Use componentDidMount instead. As a temporary workaround, ' +
@@ -151,7 +152,7 @@ if (__DEV__) {
         .sort()
         .join(', ');
 
-      warning(
+      lowPriorityWarning(
         false,
         'componentWillReceiveProps is deprecated and will be removed in the next major version. ' +
           'Use static getDerivedStateFromProps instead.' +
@@ -175,7 +176,7 @@ if (__DEV__) {
         .sort()
         .join(', ');
 
-      warning(
+      lowPriorityWarning(
         false,
         'componentWillUpdate is deprecated and will be removed in the next major version. ' +
           'Use componentDidUpdate instead. As a temporary workaround, ' +
