@@ -615,7 +615,7 @@ describe('ReactTestRenderer', () => {
     );
   });
 
-  it('toTree() handles complicated tree of fragments', () => {
+  it('toTree() handles complicated tree of arrays', () => {
     class Foo extends React.Component {
       render() {
         return this.props.children;
@@ -690,6 +690,58 @@ describe('ReactTestRenderer', () => {
           },
         ],
       }),
+    );
+  });
+
+  it('toTree() handles complicated tree of fragments', () => {
+    const renderer = ReactTestRenderer.create(
+      <React.Fragment>
+        <React.Fragment>
+          <div>One</div>
+          <div>Two</div>
+          <React.Fragment>
+            <div>Three</div>
+          </React.Fragment>
+        </React.Fragment>
+        <div>Four</div>
+      </React.Fragment>,
+    );
+
+    const tree = renderer.toTree();
+
+    cleanNodeOrArray(tree);
+
+    expect(prettyFormat(tree)).toEqual(
+      prettyFormat([
+        {
+          type: 'div',
+          nodeType: 'host',
+          props: {},
+          instance: null,
+          rendered: ['One'],
+        },
+        {
+          type: 'div',
+          nodeType: 'host',
+          props: {},
+          instance: null,
+          rendered: ['Two'],
+        },
+        {
+          type: 'div',
+          nodeType: 'host',
+          props: {},
+          instance: null,
+          rendered: ['Three'],
+        },
+        {
+          type: 'div',
+          nodeType: 'host',
+          props: {},
+          instance: null,
+          rendered: ['Four'],
+        },
+      ]),
     );
   });
 
