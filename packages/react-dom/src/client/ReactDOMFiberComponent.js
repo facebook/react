@@ -63,6 +63,7 @@ let suppressHydrationWarning;
 let validatePropertiesInDevelopment;
 let warnForTextDifference;
 let warnForPropDifference;
+let warnForRenderMarkup;
 let warnForExtraAttributes;
 let warnForInvalidEventListener;
 
@@ -102,6 +103,24 @@ if (__DEV__) {
     return markupString
       .replace(NORMALIZE_NEWLINES_REGEX, '\n')
       .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
+  };
+
+  // #11596 Prints a warning when attempting to hydrate a node whose
+  // HTML contents were not rendered by ReactDOMServer.renderToString().
+  warnForRenderMarkup = function() {
+    if (didWarnInvalidHydration) {
+      return;
+    }
+    didWarnInvalidHydration = true;
+    warning(
+      false,
+      'You are trying to hydrate a node whose HTML contents were not created by ' +
+        'ReactDOMServer.renderToString().\nPerhaps you used ' +
+        'ReactDOMServer.renderToStaticMarkup() or modified the HTML string ' +
+        'after rendering.\n' +
+        'Please visit https://reactjs.org/docs/react-dom-server.html#rendertostring for ' +
+        'more information.',
+    );
   };
 
   warnForTextDifference = function(
@@ -927,14 +946,28 @@ export function diffHydratedProperties(
       if (typeof nextProp === 'string') {
         if (domElement.textContent !== nextProp) {
           if (__DEV__ && !suppressHydrationWarning) {
-            warnForTextDifference(domElement.textContent, nextProp);
+            // Determine whether renderToString() was used to produce the HTML contents
+            // of the root element by checking if the "data-reactroot" attribute exists
+            // in the root element.
+            if (!domElement.hasAttribute('data-reactroot')) {
+              warnForRenderMarkup();
+            } else {
+              warnForTextDifference(domElement.textContent, nextProp);
+            }
           }
           updatePayload = [CHILDREN, nextProp];
         }
       } else if (typeof nextProp === 'number') {
         if (domElement.textContent !== '' + nextProp) {
           if (__DEV__ && !suppressHydrationWarning) {
-            warnForTextDifference(domElement.textContent, nextProp);
+            // Determine whether renderToString() was used to produce the HTML contents
+            // of the root element by checking if the "data-reactroot" attribute exists
+            // in the root element.
+            if (!domElement.hasAttribute('data-reactroot')) {
+              warnForRenderMarkup();
+            } else {
+              warnForTextDifference(domElement.textContent, nextProp);
+            }
           }
           updatePayload = [CHILDREN, '' + nextProp];
         }
