@@ -205,6 +205,16 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React Persistent Reconciler *******/
+  {
+    label: 'react-reconciler-persistent',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RECONCILER,
+    entry: 'react-reconciler/persistent',
+    global: 'ReactPersistentReconciler',
+    externals: ['react'],
+  },
+
   /******* Reflection *******/
   {
     label: 'reconciler-reflection',
