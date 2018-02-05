@@ -7,29 +7,9 @@
  * @flow
  */
 
-import React from 'react';
 import warning from 'fbjs/lib/warning';
 
 let didWarnSelectedSetOnOption = false;
-
-function flattenChildren(children) {
-  let content = '';
-
-  // Flatten children and warn if they aren't strings or numbers;
-  // invalid types are ignored.
-  // We can silently skip them because invalid DOM nesting warning
-  // catches these cases in Fiber.
-  React.Children.forEach(children, function(child) {
-    if (child == null) {
-      return;
-    }
-    if (typeof child === 'string' || typeof child === 'number') {
-      content += child;
-    }
-  });
-
-  return content;
-}
 
 /**
  * Implements an <option> host component that warns when `selected` is set.
@@ -54,15 +34,4 @@ export function postMountWrapper(element: Element, props: Object) {
   if (props.value != null) {
     element.setAttribute('value', props.value);
   }
-}
-
-export function getHostProps(element: Element, props: Object) {
-  const hostProps = {children: undefined, ...props};
-  const content = flattenChildren(props.children);
-
-  if (content) {
-    hostProps.children = content;
-  }
-
-  return hostProps;
 }

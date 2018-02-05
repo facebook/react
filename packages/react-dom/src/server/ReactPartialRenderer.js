@@ -253,7 +253,7 @@ function flattenTopLevelChildren(children: mixed): FlatReactChildren {
 }
 
 function flattenOptionChildren(children: mixed): string {
-  let content = '';
+  let content = [];
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
   React.Children.forEach(children, function(child) {
@@ -261,7 +261,7 @@ function flattenOptionChildren(children: mixed): string {
       return;
     }
     if (typeof child === 'string' || typeof child === 'number') {
-      content += child;
+      content.push(child);
     } else {
       if (__DEV__) {
         if (!didWarnInvalidOptionChildren) {
@@ -1109,7 +1109,7 @@ class ReactDOMServerRenderer {
         if (props.value != null) {
           value = props.value + '';
         } else {
-          value = optionChildren;
+          value = optionChildren.join('');
         }
         selected = false;
         if (Array.isArray(selectValue)) {

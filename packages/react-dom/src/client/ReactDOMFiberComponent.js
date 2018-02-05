@@ -482,7 +482,7 @@ export function setInitialProperties(
       break;
     case 'option':
       ReactDOMFiberOption.validateProps(domElement, rawProps);
-      props = ReactDOMFiberOption.getHostProps(domElement, rawProps);
+      props = rawProps;
       break;
     case 'select':
       ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
@@ -562,11 +562,6 @@ export function diffProperties(
     case 'input':
       lastProps = ReactDOMFiberInput.getHostProps(domElement, lastRawProps);
       nextProps = ReactDOMFiberInput.getHostProps(domElement, nextRawProps);
-      updatePayload = [];
-      break;
-    case 'option':
-      lastProps = ReactDOMFiberOption.getHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMFiberOption.getHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'select':
