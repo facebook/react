@@ -12,6 +12,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "persistent.js",
     "reflection.js",
     "cjs/"
   ],

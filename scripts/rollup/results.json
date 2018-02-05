@@ -384,6 +384,20 @@
       "packageName": "react-native-renderer",
       "size": 204787,
       "gzip": 35784
+    },
+    {
+      "filename": "react-reconciler-persistent.development.js",
+      "bundleType": "NODE_DEV",
+      "packageName": "react-reconciler",
+      "size": 288790,
+      "gzip": 60630
+    },
+    {
+      "filename": "react-reconciler-persistent.production.min.js",
+      "bundleType": "NODE_PROD",
+      "packageName": "react-reconciler",
+      "size": 41151,
+      "gzip": 13111
     }
   ]
 }
