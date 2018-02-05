@@ -871,5 +871,71 @@ describe('ReactDOMServerIntegration', () => {
             : ''),
       );
     });
+
+    describe('badly-typed elements', function() {
+      itThrowsWhenRendering(
+        'object',
+        async render => {
+          let EmptyComponent = {};
+          expect(() => {
+            EmptyComponent = <EmptyComponent />;
+          }).toWarnDev(
+            'Warning: React.createElement: type is invalid -- expected a string ' +
+              '(for built-in components) or a class/function (for composite ' +
+              'components) but got: object. You likely forgot to export your ' +
+              "component from the file it's defined in, or you might have mixed up " +
+              'default and named imports.',
+          );
+          await render(EmptyComponent);
+        },
+        'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+          '(for composite components) but got: object.' +
+          (__DEV__
+            ? " You likely forgot to export your component from the file it's defined in, " +
+              'or you might have mixed up default and named imports.'
+            : ''),
+      );
+
+      itThrowsWhenRendering(
+        'null',
+        async render => {
+          let NullComponent = null;
+          expect(() => {
+            NullComponent = <NullComponent />;
+          }).toWarnDev(
+            'Warning: React.createElement: type is invalid -- expected a string ' +
+              '(for built-in components) or a class/function (for composite ' +
+              'components) but got: null.',
+          );
+          await render(NullComponent);
+        },
+        'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+          '(for composite components) but got: null',
+      );
+
+      itThrowsWhenRendering(
+        'undefined',
+        async render => {
+          let UndefinedComponent = undefined;
+          expect(() => {
+            UndefinedComponent = <UndefinedComponent />;
+          }).toWarnDev(
+            'Warning: React.createElement: type is invalid -- expected a string ' +
+              '(for built-in components) or a class/function (for composite ' +
+              'components) but got: undefined. You likely forgot to export your ' +
+              "component from the file it's defined in, or you might have mixed up " +
+              'default and named imports.',
+          );
+
+          await render(UndefinedComponent);
+        },
+        'Element type is invalid: expected a string (for built-in components) or a class/function ' +
+          '(for composite components) but got: undefined.' +
+          (__DEV__
+            ? " You likely forgot to export your component from the file it's defined in, " +
+              'or you might have mixed up default and named imports.'
+            : ''),
+      );
+    });
   });
 });

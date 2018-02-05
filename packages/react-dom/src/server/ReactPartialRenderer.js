@@ -889,12 +889,33 @@ class ReactDOMServerRenderer {
             break;
         }
       }
+
+      let info = '';
+      if (__DEV__) {
+        const owner = nextElement._owner;
+        if (
+          elementType === undefined ||
+          (typeof elementType === 'object' &&
+            elementType !== null &&
+            Object.keys(elementType).length === 0)
+        ) {
+          info +=
+            ' You likely forgot to export your component from the file ' +
+            "it's defined in, or you might have mixed up default and " +
+            'named imports.';
+        }
+        const ownerName = owner ? getComponentName(owner) : null;
+        if (ownerName) {
+          info += '\n\nCheck the render method of `' + ownerName + '`.';
+        }
+      }
       invariant(
         false,
         'Element type is invalid: expected a string (for built-in ' +
           'components) or a class/function (for composite components) ' +
-          'but got: %s.',
+          'but got: %s.%s',
         elementType == null ? elementType : typeof elementType,
+        info,
       );
     }
   }
