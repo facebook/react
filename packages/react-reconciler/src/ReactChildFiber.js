@@ -104,7 +104,11 @@ function coerceRef(
   element: ReactElement,
 ) {
   let mixedRef = element.ref;
-  if (mixedRef !== null && typeof mixedRef !== 'function') {
+  if (
+    mixedRef !== null &&
+    typeof mixedRef !== 'function' &&
+    typeof mixedRef !== 'object'
+  ) {
     if (__DEV__) {
       if (returnFiber.mode & StrictMode) {
         const componentName = getComponentName(returnFiber) || 'Component';
@@ -113,7 +117,7 @@ function coerceRef(
             false,
             'A string ref, "%s", has been found within a strict mode tree. ' +
               'String refs are a source of potential bugs and should be avoided. ' +
-              'We recommend using a ref callback instead.' +
+              'We recommend using createRef() instead.' +
               '\n%s' +
               '\n\nLearn more about using refs safely here:' +
               '\nhttps://fb.me/react-strict-mode-string-ref',

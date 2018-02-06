@@ -778,7 +778,7 @@ describe('ReactStrictMode', () => {
       }).toWarnDev(
         'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
-          'We recommend using a ref callback instead.\n\n' +
+          'We recommend using createRef() instead.\n\n' +
           '    in OuterComponent (at **)\n\n' +
           'Learn more about using refs safely here:\n' +
           'https://fb.me/react-strict-mode-string-ref',
@@ -819,7 +819,7 @@ describe('ReactStrictMode', () => {
       }).toWarnDev(
         'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
-          'We recommend using a ref callback instead.\n\n' +
+          'We recommend using createRef() instead.\n\n' +
           '    in InnerComponent (at **)\n' +
           '    in OuterComponent (at **)\n\n' +
           'Learn more about using refs safely here:\n' +

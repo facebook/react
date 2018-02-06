@@ -162,7 +162,7 @@ describe('ReactComponent', () => {
     ReactTestUtils.renderIntoDocument(<Parent child={<span />} />);
   });
 
-  it('should support new-style refs', () => {
+  it('should support callback-style refs', () => {
     const innerObj = {};
     const outerObj = {};
 
@@ -194,6 +194,49 @@ describe('ReactComponent', () => {
       componentDidMount() {
         expect(this.innerRef.getObject()).toEqual(innerObj);
         expect(this.outerRef.getObject()).toEqual(outerObj);
+        mounted = true;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+    expect(mounted).toBe(true);
+  });
+
+  it('should support object-style refs', () => {
+    const innerObj = {};
+    const outerObj = {};
+
+    class Wrapper extends React.Component {
+      getObject = () => {
+        return this.props.object;
+      };
+
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    let mounted = false;
+
+    class Component extends React.Component {
+      constructor() {
+        super();
+        this.innerRef = React.createRef();
+        this.outerRef = React.createRef();
+      }
+      render() {
+        const inner = <Wrapper object={innerObj} ref={this.innerRef} />;
+        const outer = (
+          <Wrapper object={outerObj} ref={this.outerRef}>
+            {inner}
+          </Wrapper>
+        );
+        return outer;
+      }
+
+      componentDidMount() {
+        expect(this.innerRef.value.getObject()).toEqual(innerObj);
+        expect(this.outerRef.value.getObject()).toEqual(outerObj);
         mounted = true;
       }
     }
