@@ -985,7 +985,7 @@ describe('ReactErrorBoundaries', () => {
     let childRef = React.createRef();
     let errorMessageRef = React.createRef();
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary errorMessageRef={errorMessageRef}>
         <div ref={childRef} />

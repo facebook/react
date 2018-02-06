@@ -163,8 +163,8 @@ describe('ReactComponent', () => {
   });
 
   it('should support callback-style refs', () => {
-    var innerObj = {};
-    var outerObj = {};
+    const innerObj = {};
+    const outerObj = {};
 
     class Wrapper extends React.Component {
       getObject = () => {
@@ -202,9 +202,9 @@ describe('ReactComponent', () => {
     expect(mounted).toBe(true);
   });
 
-  it('should support createRef() style refs', () => {
-    var innerObj = {};
-    var outerObj = {};
+  it('should support object-style refs', () => {
+    const innerObj = {};
+    const outerObj = {};
 
     class Wrapper extends React.Component {
       getObject = () => {
@@ -216,7 +216,7 @@ describe('ReactComponent', () => {
       }
     }
 
-    var mounted = false;
+    let mounted = false;
 
     class Component extends React.Component {
       constructor() {
@@ -225,8 +225,8 @@ describe('ReactComponent', () => {
         this.outerRef = React.createRef();
       }
       render() {
-        var inner = <Wrapper object={innerObj} ref={this.innerRef} />;
-        var outer = (
+        const inner = <Wrapper object={innerObj} ref={this.innerRef} />;
+        const outer = (
           <Wrapper object={outerObj} ref={this.outerRef}>
             {inner}
           </Wrapper>
