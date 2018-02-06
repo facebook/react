@@ -111,7 +111,12 @@ function coerceRef(
         if (!didWarnAboutStringRefInStrictMode[componentName]) {
           warning(
             false,
-            'A string ref has been found within a strict mode tree.%s',
+            'A string ref has been found within a strict mode tree. ' +
+              'String refs are a source of potential bugs and should be avoided. ' +
+              'We recommend using a ref callback instead.' +
+              '\n%s' +
+              '\n\nLearn more about using refs safely here:' +
+              '\nhttps://fb.me/react-strict-mode-string-ref',
             getStackAddendumByWorkInProgressFiber(returnFiber),
           );
           didWarnAboutStringRefInStrictMode[componentName] = true;
