@@ -745,4 +745,81 @@ describe('ReactStrictMode', () => {
       expect(rendered.toJSON()).toBe('count:2');
     });
   });
+
+  describe('string refs', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      React = require('react');
+      ReactTestRenderer = require('react-test-renderer');
+    });
+
+    it('should warn within a strict tree', () => {
+      const {StrictMode} = React;
+
+      class OuterComponent extends React.Component {
+        render() {
+          return (
+            <StrictMode>
+              <InnerComponent ref="somestring" />
+            </StrictMode>
+          );
+        }
+      }
+
+      class InnerComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      let renderer;
+      expect(() => {
+        renderer = ReactTestRenderer.create(<OuterComponent />);
+      }).toWarnDev(
+        'Warning: A string ref has been found within a strict mode tree.' +
+          '\n    in OuterComponent (at **)',
+      );
+
+      // Dedup
+      renderer.update(<OuterComponent />);
+    });
+
+    it('should warn within a strict tree', () => {
+      const {StrictMode} = React;
+
+      class OuterComponent extends React.Component {
+        render() {
+          return (
+            <StrictMode>
+              <InnerComponent />
+            </StrictMode>
+          );
+        }
+      }
+
+      class InnerComponent extends React.Component {
+        render() {
+          return <MiddleComponent ref="somestring" />;
+        }
+      }
+
+      class MiddleComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      let renderer;
+      expect(() => {
+        renderer = ReactTestRenderer.create(<OuterComponent />);
+      }).toWarnDev(
+        'Warning: A string ref has been found within a strict mode tree.' +
+          '\n    in InnerComponent (at **)' +
+          '\n    in OuterComponent (at **)',
+      );
+
+      // Dedup
+      renderer.update(<OuterComponent />);
+    });
+  });
 });
