@@ -1300,13 +1300,6 @@ const ReactDOM: Object = {
   },
 };
 
-if (__DEV__) {
-  // Show deprecation warnings as we don't want to support injection forever.
-  // We do it now to let the internal injection happen without warnings.
-  // https://github.com/facebook/react/issues/11689
-  EventPluginRegistry.enableWarningOnInjection();
-}
-
 type RootOptions = {
   hydrate?: boolean,
 };

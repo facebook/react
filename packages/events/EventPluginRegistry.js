@@ -15,12 +15,9 @@ import type {
 } from './PluginModuleType';
 
 import invariant from 'fbjs/lib/invariant';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
 
 type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 type EventPluginOrder = null | Array<PluginName>;
-
-let shouldWarnOnInjection = false;
 
 /**
  * Injectable ordering of event plugins.
@@ -31,10 +28,6 @@ let eventPluginOrder: EventPluginOrder = null;
  * Injectable mapping from names to event plugin modules.
  */
 const namesToPlugins: NamesToPlugins = {};
-
-export function enableWarningOnInjection() {
-  shouldWarnOnInjection = true;
-}
 
 /**
  * Recomputes the plugin list using the injected plugins and plugin ordering.
@@ -228,21 +221,6 @@ export function injectEventPluginOrder(
 export function injectEventPluginsByName(
   injectedNamesToPlugins: NamesToPlugins,
 ): void {
-  if (__DEV__) {
-    if (shouldWarnOnInjection) {
-      const names = Object.keys(injectedNamesToPlugins).join(', ');
-      lowPriorityWarning(
-        false,
-        'Injecting custom event plugins (%s) is deprecated ' +
-          'and will not work in React 17+. Please update your code ' +
-          'to not depend on React internals. The stack trace for this ' +
-          'warning should reveal the library that is using them. ' +
-          'See https://github.com/facebook/react/issues/11689 for a discussion.',
-        names,
-      );
-    }
-  }
-
   let isOrderingDirty = false;
   for (const pluginName in injectedNamesToPlugins) {
     if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
