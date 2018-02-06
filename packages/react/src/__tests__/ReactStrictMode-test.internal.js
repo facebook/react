@@ -776,7 +776,7 @@ describe('ReactStrictMode', () => {
       expect(() => {
         renderer = ReactTestRenderer.create(<OuterComponent />);
       }).toWarnDev(
-        'Warning: A string ref has been found within a strict mode tree. ' +
+        'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
           'We recommend using a ref callback instead.\n\n' +
           '    in OuterComponent (at **)\n\n' +
@@ -817,7 +817,7 @@ describe('ReactStrictMode', () => {
       expect(() => {
         renderer = ReactTestRenderer.create(<OuterComponent />);
       }).toWarnDev(
-        'Warning: A string ref has been found within a strict mode tree. ' +
+        'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
           'We recommend using a ref callback instead.\n\n' +
           '    in InnerComponent (at **)\n' +
