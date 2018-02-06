@@ -17,6 +17,12 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
 function getEventTarget(nativeEvent) {
   let target = nativeEvent.target || window;
 
+  // If composed / inside open shadow-dom use first item of composed path #9242
+  if (nativeEvent.composed) {
+    const path = nativeEvent.composedPath();
+    target = path[0];
+  }
+
   // Normalize SVG <use> element events #4963
   if (target.correspondingUseElement) {
     target = target.correspondingUseElement;
