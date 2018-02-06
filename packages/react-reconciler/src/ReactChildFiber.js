@@ -12,6 +12,7 @@ import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {ExpirationTime} from 'react-reconciler/src/ReactFiberExpirationTime';
 
+import getComponentName from 'shared/getComponentName';
 import {Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
 import {
   getIteratorFn,
@@ -26,6 +27,7 @@ import {
   HostPortal,
   Fragment,
 } from 'shared/ReactTypeOfWork';
+import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -38,16 +40,20 @@ import {
   createFiberFromPortal,
 } from './ReactFiber';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import {StrictMode} from './ReactTypeOfMode';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
 let didWarnAboutMaps;
+let didWarnAboutStringRefInStrictMode;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
 let warnForMissingKey = (child: mixed) => {};
 
 if (__DEV__) {
   didWarnAboutMaps = false;
+  didWarnAboutStringRefInStrictMode = {};
+
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or
    * object keys are not valid. This allows us to keep track of children between
@@ -92,9 +98,32 @@ if (__DEV__) {
 
 const isArray = Array.isArray;
 
-function coerceRef(current: Fiber | null, element: ReactElement) {
+function coerceRef(
+  returnFiber: Fiber,
+  current: Fiber | null,
+  element: ReactElement,
+) {
   let mixedRef = element.ref;
   if (mixedRef !== null && typeof mixedRef !== 'function') {
+    if (__DEV__) {
+      if (returnFiber.mode & StrictMode) {
+        const componentName = getComponentName(returnFiber) || 'Component';
+        if (!didWarnAboutStringRefInStrictMode[componentName]) {
+          warning(
+            false,
+            'A string ref has been found within a strict mode tree. ' +
+              'String refs are a source of potential bugs and should be avoided. ' +
+              'We recommend using a ref callback instead.' +
+              '\n%s' +
+              '\n\nLearn more about using refs safely here:' +
+              '\nhttps://fb.me/react-strict-mode-string-ref',
+            getStackAddendumByWorkInProgressFiber(returnFiber),
+          );
+          didWarnAboutStringRefInStrictMode[componentName] = true;
+        }
+      }
+    }
+
     if (element._owner) {
       const owner: ?Fiber = (element._owner: any);
       let inst;
@@ -340,7 +369,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (current !== null && current.type === element.type) {
       // Move based on index
       const existing = useFiber(current, element.props, expirationTime);
-      existing.ref = coerceRef(current, element);
+      existing.ref = coerceRef(returnFiber, current, element);
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugSource = element._source;
@@ -354,7 +383,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         returnFiber.mode,
         expirationTime,
       );
-      created.ref = coerceRef(current, element);
+      created.ref = coerceRef(returnFiber, current, element);
       created.return = returnFiber;
       return created;
     }
@@ -439,7 +468,7 @@ function ChildReconciler(shouldTrackSideEffects) {
             returnFiber.mode,
             expirationTime,
           );
-          created.ref = coerceRef(null, newChild);
+          created.ref = coerceRef(returnFiber, null, newChild);
           created.return = returnFiber;
           return created;
         }
@@ -1077,7 +1106,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               : element.props,
             expirationTime,
           );
-          existing.ref = coerceRef(child, element);
+          existing.ref = coerceRef(returnFiber, child, element);
           existing.return = returnFiber;
           if (__DEV__) {
             existing._debugSource = element._source;
@@ -1109,7 +1138,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         returnFiber.mode,
         expirationTime,
       );
-      created.ref = coerceRef(currentFirstChild, element);
+      created.ref = coerceRef(returnFiber, currentFirstChild, element);
       created.return = returnFiber;
       return created;
     }
