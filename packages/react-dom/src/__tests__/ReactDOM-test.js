@@ -377,25 +377,6 @@ describe('ReactDOM', () => {
     }
   });
 
-  // https://github.com/facebook/react/issues/11689
-  it('should warn when attempting to inject an event plugin', () => {
-    expect(() => {
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.EventPluginHub.injection.injectEventPluginsByName(
-        {
-          TapEventPlugin: {
-            extractEvents() {},
-          },
-        },
-      );
-    }).toLowPriorityWarnDev(
-      'Injecting custom event plugins (TapEventPlugin) is deprecated ' +
-        'and will not work in React 17+. Please update your code ' +
-        'to not depend on React internals. The stack trace for this ' +
-        'warning should reveal the library that is using them. ' +
-        'See https://github.com/facebook/react/issues/11689 for a discussion.',
-    );
-  });
-
   it('throws in DEV if jsdom is destroyed by the time setState() is called', () => {
     class App extends React.Component {
       state = {x: 1};
