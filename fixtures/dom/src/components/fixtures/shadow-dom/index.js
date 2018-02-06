@@ -9,7 +9,9 @@ const ReactDOM = window.ReactDOM;
 class SelectFixture extends React.Component {
   render() {
     if (!SUPPORTS_SHADOW_DOM) {
-      return <div>Browser does not support Shadow DOM, no tests to execute.</div>;
+      return (
+        <div>Browser does not support Shadow DOM, no tests to execute.</div>
+      );
     }
 
     return (
@@ -22,7 +24,7 @@ class SelectFixture extends React.Component {
             The box should turn green
           </TestCase.ExpectedResult>
           <Shadow>
-            <Box/>
+            <Box />
           </Shadow>
         </TestCase>
       </FixtureSet>
@@ -39,7 +41,7 @@ class Shadow extends React.Component {
   }
 
   render() {
-    return <div ref={ref => this.ref = ref}/>;
+    return <div ref={ref => (this.ref = ref)} />;
   }
 }
 
@@ -51,11 +53,15 @@ class Box extends React.Component {
       height: 100,
       background: this.state.active ? 'green' : 'orange',
       color: 'white',
-      marginBottom: 20
+      marginBottom: 20,
     };
-    return <div onClick={() => this.setState({active: !this.state.active})} style={style}/>
+    return (
+      <div
+        onClick={() => this.setState({active: !this.state.active})}
+        style={style}
+      />
+    );
   }
 }
-
 
 export default SelectFixture;

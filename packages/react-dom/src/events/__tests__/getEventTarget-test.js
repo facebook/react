@@ -30,33 +30,41 @@ describe('getEventTarget', () => {
   });
 
   describe('event on HTMLElement', () => {
-      it('has expected target', () => {
-        let actual;
+    it('has expected target', () => {
+      let actual;
 
-        class Comp extends React.Component {
-          render() {
-            return <div onClick={e => actual = e.target}><span /></div>;
-          }
+      class Comp extends React.Component {
+        render() {
+          return (
+            <div onClick={e => (actual = e.target)}>
+              <span />
+            </div>
+          );
         }
+      }
 
-        ReactDOM.render(<Comp />, container);
+      ReactDOM.render(<Comp />, container);
 
-        const div = container.firstChild;
-        const span = div.firstChild;
+      const div = container.firstChild;
+      const span = div.firstChild;
 
-        div.dispatchEvent(new MouseEvent('click', {
+      div.dispatchEvent(
+        new MouseEvent('click', {
           bubbles: true,
           cancelable: true,
-        }));
+        }),
+      );
 
-        expect(actual).toBe(div);
+      expect(actual).toBe(div);
 
-        span.dispatchEvent(new MouseEvent('click', {
+      span.dispatchEvent(
+        new MouseEvent('click', {
           bubbles: true,
           cancelable: true,
-        }));
+        }),
+      );
 
-        expect(actual).toBe(span);
-      });
+      expect(actual).toBe(span);
+    });
   });
 });
