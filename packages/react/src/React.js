@@ -14,6 +14,7 @@ import {
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
+import {createRef} from './ReactCreateRef';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {
@@ -39,6 +40,7 @@ const React = {
     only,
   },
 
+  createRef,
   Component,
   PureComponent,
 

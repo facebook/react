@@ -94,7 +94,11 @@ const isArray = Array.isArray;
 
 function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;
-  if (mixedRef !== null && typeof mixedRef !== 'function') {
+  if (
+    mixedRef !== null &&
+    typeof mixedRef !== 'function' &&
+    typeof mixedRef !== 'object'
+  ) {
     if (element._owner) {
       const owner: ?Fiber = (element._owner: any);
       let inst;
