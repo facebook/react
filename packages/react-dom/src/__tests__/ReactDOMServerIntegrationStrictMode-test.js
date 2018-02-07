@@ -36,36 +36,36 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('React.Fragment', () => {
-    itRenders('a fragment with one child', async render => {
+  describe('React.StrictMode', () => {
+    itRenders('a strict mode with one child', async render => {
       let e = await render(
-        <React.Fragment>
+        <React.StrictMode>
           <div>text1</div>
-        </React.Fragment>,
+        </React.StrictMode>,
       );
       let parent = e.parentNode;
       expect(parent.childNodes[0].tagName).toBe('DIV');
     });
 
-    itRenders('a fragment with several children', async render => {
+    itRenders('a strict mode with several children', async render => {
       let Header = props => {
         return <p>header</p>;
       };
       let Footer = props => {
         return (
-          <React.Fragment>
+          <React.StrictMode>
             <h2>footer</h2>
             <h3>about</h3>
-          </React.Fragment>
+          </React.StrictMode>
         );
       };
       let e = await render(
-        <React.Fragment>
+        <React.StrictMode>
           <div>text1</div>
           <span>text2</span>
           <Header />
           <Footer />
-        </React.Fragment>,
+        </React.StrictMode>,
       );
       let parent = e.parentNode;
       expect(parent.childNodes[0].tagName).toBe('DIV');
@@ -75,23 +75,23 @@ describe('ReactDOMServerIntegration', () => {
       expect(parent.childNodes[4].tagName).toBe('H3');
     });
 
-    itRenders('a nested fragment', async render => {
+    itRenders('a nested strict mode', async render => {
       let e = await render(
-        <React.Fragment>
-          <React.Fragment>
+        <React.StrictMode>
+          <React.StrictMode>
             <div>text1</div>
-          </React.Fragment>
+          </React.StrictMode>
           <span>text2</span>
-          <React.Fragment>
-            <React.Fragment>
-              <React.Fragment>
+          <React.StrictMode>
+            <React.StrictMode>
+              <React.StrictMode>
                 {null}
                 <p />
-              </React.Fragment>
+              </React.StrictMode>
               {false}
-            </React.Fragment>
-          </React.Fragment>
-        </React.Fragment>,
+            </React.StrictMode>
+          </React.StrictMode>
+        </React.StrictMode>,
       );
       let parent = e.parentNode;
       expect(parent.childNodes[0].tagName).toBe('DIV');
@@ -99,8 +99,8 @@ describe('ReactDOMServerIntegration', () => {
       expect(parent.childNodes[2].tagName).toBe('P');
     });
 
-    itRenders('an empty fragment', async render => {
-      expect(await render(<React.Fragment />)).toBe(null);
+    itRenders('an empty strict mode', async render => {
+      expect(await render(<React.StrictMode />)).toBe(null);
     });
   });
 });
