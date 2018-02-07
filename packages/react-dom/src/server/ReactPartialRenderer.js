@@ -28,6 +28,7 @@ import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
 import {
   REACT_FRAGMENT_TYPE,
+  REACT_STRICT_MODE_TYPE,
   REACT_CALL_TYPE,
   REACT_RETURN_TYPE,
   REACT_PORTAL_TYPE,
@@ -814,6 +815,7 @@ class ReactDOMServerRenderer {
       }
 
       switch (elementType) {
+        case REACT_STRICT_MODE_TYPE:
         case REACT_FRAGMENT_TYPE: {
           const nextChildren = toArray(
             ((nextChild: any): ReactElement).props.children,
