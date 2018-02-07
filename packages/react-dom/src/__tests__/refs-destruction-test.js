@@ -23,15 +23,31 @@ describe('refs-destruction', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
 
+    class ClassComponent extends React.Component {
+      render() {
+        return null;
+      }
+    }
+
     TestComponent = class extends React.Component {
       render() {
-        return (
-          <div>
-            {this.props.destroy ? null : (
-              <div ref="theInnerDiv">Lets try to destroy this.</div>
-            )}
-          </div>
-        );
+        if (this.props.destroy) {
+          return <div />;
+        } else if (this.props.removeRef) {
+          return (
+            <div>
+              <div />
+              <ClassComponent />
+            </div>
+          );
+        } else {
+          return (
+            <div>
+              <div ref="theInnerDiv" />
+              <ClassComponent ref="theInnerClassComponent" />
+            </div>
+          );
+        }
       }
     };
   });
@@ -45,7 +61,7 @@ describe('refs-destruction', () => {
     expect(
       Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
         .length,
-    ).toEqual(1);
+    ).toEqual(2);
     ReactDOM.unmountComponentAtNode(container);
     expect(
       Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
@@ -62,8 +78,25 @@ describe('refs-destruction', () => {
     expect(
       Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
         .length,
-    ).toEqual(1);
+    ).toEqual(2);
     ReactDOM.render(<TestComponent destroy={true} />, container);
+    expect(
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
+    ).toEqual(0);
+  });
+
+  it('should remove refs when removing the child ref attribute', () => {
+    const container = document.createElement('div');
+    const testInstance = ReactDOM.render(<TestComponent />, container);
+    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv)).toBe(
+      true,
+    );
+    expect(
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
+    ).toEqual(2);
+    ReactDOM.render(<TestComponent removeRef={true} />, container);
     expect(
       Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
         .length,
