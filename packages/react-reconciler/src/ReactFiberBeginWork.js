@@ -184,7 +184,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function markRef(current: Fiber | null, workInProgress: Fiber) {
     const ref = workInProgress.ref;
-    if (ref !== null && (!current || current.ref !== ref)) {
+    if (
+      (current === null && ref !== null) ||
+      (current !== null && current.ref !== ref)
+    ) {
       // Schedule a Ref effect
       workInProgress.effectTag |= Ref;
     }
