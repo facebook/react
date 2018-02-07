@@ -186,6 +186,36 @@ describe('CSSPropertyOperations', () => {
     ]);
   });
 
+  it('should warn about style containing !important', () => {
+    class Comp extends React.Component {
+      static displayName = 'Comp';
+
+      render() {
+        return (
+          <div
+            style={{
+              backgroundColor: 'red!important',
+              color: 'green!important',
+            }}
+          />
+        );
+      }
+    }
+
+    const root = document.createElement('div');
+
+    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev([
+      'Warning: Style property values shouldn\'t contain "!important". ' +
+        'Try "backgroundColor: red" instead.' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+      'Warning: Style property values shouldn\'t contain "!important". ' +
+        'Try "color: green" instead.' +
+        '\n    in div (at **)' +
+        '\n    in Comp (at **)',
+    ]);
+  });
+
   it('should warn about style containing a NaN value', () => {
     class Comp extends React.Component {
       static displayName = 'Comp';

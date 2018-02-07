@@ -18,6 +18,9 @@ if (__DEV__) {
   // style values shouldn't contain a semicolon
   const badStyleValueWithSemicolonPattern = /;\s*$/;
 
+  // style values shouldn't contain important
+  const badStyleValueWithImportantPattern = /!important\s*$/;
+
   const warnedStyleNames = {};
   const warnedStyleValues = {};
   let warnedForNaNValue = false;
@@ -69,6 +72,22 @@ if (__DEV__) {
     );
   };
 
+  const warnStyleValueWithImportant = function(name, value, getStack) {
+    if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
+      return;
+    }
+
+    warnedStyleValues[value] = true;
+    warning(
+      false,
+      'Style property values shouldn\'t contain "!important". ' +
+        'Try "%s: %s" instead.%s',
+      name,
+      value.replace(badStyleValueWithImportantPattern, ''),
+      getStack(),
+    );
+  };
+
   const warnStyleValueIsNaN = function(name, value, getStack) {
     if (warnedForNaNValue) {
       return;
@@ -104,6 +123,8 @@ if (__DEV__) {
       warnBadVendoredStyleName(name, getStack);
     } else if (badStyleValueWithSemicolonPattern.test(value)) {
       warnStyleValueWithSemicolon(name, value, getStack);
+    } else if (badStyleValueWithImportantPattern.test(value)) {
+      warnStyleValueWithImportant(name, value, getStack);
     }
 
     if (typeof value === 'number') {
