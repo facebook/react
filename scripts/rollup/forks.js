@@ -34,7 +34,7 @@ const forks = Object.freeze({
     switch (entry) {
       case 'react-native-renderer':
         return 'shared/forks/ReactFeatureFlags.native.js';
-      case 'react-native-renderer/src/ReactFabric':
+      case 'react-native-renderer/fabric':
         return 'shared/forks/ReactFeatureFlags.native-fabric.js';
       case 'react-reconciler/persistent':
         return 'shared/forks/ReactFeatureFlags.persistent.js';

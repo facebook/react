@@ -375,15 +375,15 @@
       "filename": "ReactFabric-dev.js",
       "bundleType": "RN_DEV",
       "packageName": "react-native-renderer",
-      "size": 437242,
-      "gzip": 96088
+      "size": 437639,
+      "gzip": 96091
     },
     {
       "filename": "ReactFabric-prod.js",
       "bundleType": "RN_PROD",
       "packageName": "react-native-renderer",
-      "size": 204787,
-      "gzip": 35784
+      "size": 201722,
+      "gzip": 35441
     },
     {
       "filename": "react-reconciler-persistent.development.js",
