@@ -266,6 +266,40 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Result: 12')]);
   });
 
+  it('should provide the correct (default) values to consumers outside of a provider', () => {
+    const FooContext = React.createContext({value: 'foo-initial'});
+    const BarContext = React.createContext({value: 'bar-initial'});
+
+    const Verify = ({actual, expected}) => {
+      expect(expected).toBe(actual);
+      return null;
+    };
+
+    ReactNoop.render(
+      <React.Fragment>
+        <BarContext.Provider value={{value: 'bar-updated'}}>
+          <BarContext.Consumer>
+            {({value}) => <Verify actual={value} expected="bar-updated" />}
+          </BarContext.Consumer>
+
+          <FooContext.Provider value={{value: 'foo-updated'}}>
+            <FooContext.Consumer>
+              {({value}) => <Verify actual={value} expected="foo-updated" />}
+            </FooContext.Consumer>
+          </FooContext.Provider>
+        </BarContext.Provider>
+
+        <FooContext.Consumer>
+          {({value}) => <Verify actual={value} expected="foo-initial" />}
+        </FooContext.Consumer>
+        <BarContext.Consumer>
+          {({value}) => <Verify actual={value} expected="bar-initial" />}
+        </BarContext.Consumer>
+      </React.Fragment>,
+    );
+    ReactNoop.flush();
+  });
+
   it('multiple consumers in different branches', () => {
     const Context = React.createContext(1);
 
