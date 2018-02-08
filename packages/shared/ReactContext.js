@@ -35,8 +35,7 @@ export function createContext<T>(
     $$typeof: REACT_CONTEXT_TYPE,
     calculateChangedBits,
     defaultValue,
-    currentValue: defaultValue,
-    changedBits: 0,
+    current: null,
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),

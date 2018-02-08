@@ -12,10 +12,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import warning from 'fbjs/lib/warning';
 
-let changedBitsStack: Array<any> = [];
-let currentValueStack: Array<any> = [];
-let stack: Array<Fiber> = [];
-let index = -1;
+let inProgressContexts: Set<ReactContext<mixed>> | null = null;
 
 let rendererSigil;
 if (__DEV__) {
@@ -25,13 +22,6 @@ if (__DEV__) {
 
 export function pushProvider(providerFiber: Fiber): void {
   const context: ReactContext<any> = providerFiber.type.context;
-  index += 1;
-  changedBitsStack[index] = context.changedBits;
-  currentValueStack[index] = context.currentValue;
-  stack[index] = providerFiber;
-  context.currentValue = providerFiber.pendingProps.value;
-  context.changedBits = providerFiber.stateNode;
-
   if (__DEV__) {
     warning(
       context._currentRenderer === null ||
@@ -41,35 +31,35 @@ export function pushProvider(providerFiber: Fiber): void {
     );
     context._currentRenderer = rendererSigil;
   }
+  if (inProgressContexts === null) {
+    inProgressContexts = new Set([context]);
+  } else {
+    inProgressContexts.add(context);
+  }
+  const previous = context.current;
+  context.current = {
+    previous: previous,
+    fiber: providerFiber,
+  };
 }
 
 export function popProvider(providerFiber: Fiber): void {
-  if (__DEV__) {
-    warning(index > -1 && providerFiber === stack[index], 'Unexpected pop.');
-  }
-  const changedBits = changedBitsStack[index];
-  const currentValue = currentValueStack[index];
-  changedBitsStack[index] = null;
-  currentValueStack[index] = null;
-  stack[index] = null;
-  index -= 1;
   const context: ReactContext<any> = providerFiber.type.context;
-  context.currentValue = currentValue;
-  context.changedBits = changedBits;
+  const current = context.current;
+  if (__DEV__) {
+    warning(
+      context.current !== null && context.current.fiber === providerFiber,
+      'Unexpected pop.',
+    );
+  }
+  context.current = current.previous;
 }
 
 export function resetProviderStack(): void {
-  for (let i = index; i > -1; i--) {
-    const providerFiber = stack[i];
-    const context: ReactContext<any> = providerFiber.type.context;
-    context.currentValue = context.defaultValue;
-    context.changedBits = 0;
-    changedBitsStack[i] = null;
-    currentValueStack[i] = null;
-    stack[i] = null;
-    if (__DEV__) {
-      context._currentRenderer = null;
-    }
+  if (inProgressContexts !== null) {
+    inProgressContexts.forEach(context => {
+      context.current = null;
+    });
+    inProgressContexts = null;
   }
-  index = -1;
 }

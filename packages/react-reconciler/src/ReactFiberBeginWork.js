@@ -846,8 +846,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const context: ReactContext<any> = workInProgress.type;
     const newProps = workInProgress.pendingProps;
 
-    const newValue = context.currentValue;
-    const changedBits = context.changedBits;
+    const providerFiber =
+      context.current === null ? null : context.current.fiber;
+    const newValue =
+      providerFiber === null
+        ? context.defaultValue
+        : providerFiber.pendingProps.value;
+    const changedBits = providerFiber === null ? 1 : providerFiber.stateNode;
 
     if (changedBits !== 0) {
       // Context change propagation stops at matching consumers, for time-

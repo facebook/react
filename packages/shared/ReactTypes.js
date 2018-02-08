@@ -82,8 +82,7 @@ export type ReactContext<T> = {
   Provider: ReactProviderType<T>,
   calculateChangedBits: ((a: T, b: T) => number) | null,
   defaultValue: T,
-  currentValue: T,
-  changedBits: number,
+  current: any,
 
   // DEV only
   _currentRenderer?: Object | null,
