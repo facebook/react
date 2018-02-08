@@ -266,7 +266,7 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Result: 12')]);
   });
 
-  it('should provide a default value to an consumer outside of a provider', () => {
+  it('should provide the correct (default) values to consumers outside of a provider', () => {
     const FooContext = React.createContext({value: 'foo-initial'});
     const BarContext = React.createContext({value: 'bar-initial'});
 
@@ -292,6 +292,9 @@ describe('ReactNewContext', () => {
         <FooContext.Consumer>
           {({value}) => <Verify actual={value} expected="foo-initial" />}
         </FooContext.Consumer>
+        <BarContext.Consumer>
+          {({value}) => <Verify actual={value} expected="bar-initial" />}
+        </BarContext.Consumer>
       </React.Fragment>,
     );
     ReactNoop.flush();

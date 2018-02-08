@@ -12,6 +12,8 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import warning from 'fbjs/lib/warning';
 
+let changedBitsStack: Array<any> = [];
+let currentValueStack: Array<any> = [];
 let stack: Array<Fiber> = [];
 let index = -1;
 
@@ -22,9 +24,11 @@ if (__DEV__) {
 }
 
 export function pushProvider(providerFiber: Fiber): void {
-  index += 1;
-  stack[index] = providerFiber;
   const context: ReactContext<any> = providerFiber.type.context;
+  index += 1;
+  changedBitsStack[index] = context.changedBits;
+  currentValueStack[index] = context.currentValue;
+  stack[index] = providerFiber;
   context.currentValue = providerFiber.pendingProps.value;
   context.changedBits = providerFiber.stateNode;
 
@@ -43,17 +47,15 @@ export function popProvider(providerFiber: Fiber): void {
   if (__DEV__) {
     warning(index > -1 && providerFiber === stack[index], 'Unexpected pop.');
   }
+  const changedBits = changedBitsStack[index];
+  const currentValue = currentValueStack[index];
+  changedBitsStack[index] = null;
+  currentValueStack[index] = null;
   stack[index] = null;
   index -= 1;
   const context: ReactContext<any> = providerFiber.type.context;
-  if (index < 0) {
-    context.currentValue = context.defaultValue;
-    context.changedBits = 0;
-  } else {
-    const previousProviderFiber = stack[index];
-    context.currentValue = previousProviderFiber.pendingProps.value;
-    context.changedBits = previousProviderFiber.stateNode;
-  }
+  context.currentValue = currentValue;
+  context.changedBits = changedBits;
 }
 
 export function resetProviderStack(): void {
@@ -62,6 +64,8 @@ export function resetProviderStack(): void {
     const context: ReactContext<any> = providerFiber.type.context;
     context.currentValue = context.defaultValue;
     context.changedBits = 0;
+    changedBitsStack[i] = null;
+    currentValueStack[i] = null;
     stack[i] = null;
     if (__DEV__) {
       context._currentRenderer = null;
