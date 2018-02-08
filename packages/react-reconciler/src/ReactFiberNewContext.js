@@ -46,11 +46,17 @@ export function popProvider(providerFiber: Fiber): void {
   stack[index] = null;
   index -= 1;
   const context: ReactContext<any> = providerFiber.type.context;
-  if (index < 0) {
+  let previousProviderFiber = null;
+  for (let i = index; i-- > 0;) {
+    if (stack[i].type.context === context) {
+      previousProviderFiber = stack[i];
+      break;
+    }
+  }
+  if (previousProviderFiber === null) {
     context.currentValue = context.defaultValue;
     context.changedBits = 0;
   } else {
-    const previousProviderFiber = stack[index];
     context.currentValue = previousProviderFiber.pendingProps.value;
     context.changedBits = previousProviderFiber.stateNode;
   }
