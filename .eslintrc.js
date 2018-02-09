@@ -57,7 +57,8 @@ module.exports = {
     // We don't care to do this
     'react/jsx-wrap-multilines': [ERROR, {declaration: false, assignment: false}],
 
-    // Prevent for...of loops which require Symbol
+    // Prevent for...of loops because they require a Symbol polyfill.
+    // You can disable this rule for code that isn't shipped (e.g. build scripts and tests).
     'no-for-of-loops/no-for-of-loops': ERROR,
 
     // CUSTOM RULES
