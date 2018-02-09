@@ -282,7 +282,6 @@ function validateFragmentProps(fragment) {
       getStackAddendum(),
     );
   }
-
   currentlyValidatingElement = null;
 }
 
