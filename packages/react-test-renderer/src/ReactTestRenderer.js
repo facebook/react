@@ -553,12 +553,12 @@ function findAll(
     }
   }
 
-  for (const child of root.children) {
+  root.children.forEach(child => {
     if (typeof child === 'string') {
-      continue;
+      return;
     }
     results.push(...findAll(child, predicate, options));
-  }
+  });
 
   return results;
 }
