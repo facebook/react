@@ -287,7 +287,6 @@ function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
   while (!didStop && scheduledCallback !== null) {
     let cb = scheduledCallback;
     scheduledCallback = null;
-    yieldedValues = null;
     unitsRemaining = n;
     cb({
       timeRemaining() {
@@ -418,7 +417,8 @@ const ReactNoop = {
   },
 
   flushUnitsOfWork(n: number): Array<mixed> {
-    let values = [];
+    let values = yieldedValues || [];
+    yieldedValues = null;
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const value of flushUnitsOfWork(n)) {
       values.push(...value);
@@ -454,6 +454,12 @@ const ReactNoop = {
     } else {
       yieldedValues.push(value);
     }
+  },
+
+  clearYields() {
+    const values = yieldedValues;
+    yieldedValues = null;
+    return values;
   },
 
   hasScheduledCallback() {

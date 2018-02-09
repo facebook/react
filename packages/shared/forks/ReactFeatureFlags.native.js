@@ -17,6 +17,7 @@ export const {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
+  replayFailedBeginPhaseWithInvokeGuardedCallback,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.

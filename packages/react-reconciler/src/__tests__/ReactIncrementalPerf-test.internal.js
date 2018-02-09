@@ -566,7 +566,7 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     ReactNoop.render(<Foo />);
-    ReactNoop.expire(5000);
+    ReactNoop.expire(6000);
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });

@@ -51,7 +51,11 @@ describe 'ReactCoffeeScriptClass', ->
       expect(->
         ReactDOM.render React.createElement(Foo), container
       ).toThrow()
-    ).toWarnDev('No `render` method found on the returned component instance')
+    ).toWarnDev([
+      # A failed component renders twice in DEV
+      'No `render` method found on the returned component instance',
+      'No `render` method found on the returned component instance',
+    ])
     undefined
 
   it 'renders a simple stateless component with prop', ->

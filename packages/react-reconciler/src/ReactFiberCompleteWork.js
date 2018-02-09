@@ -35,7 +35,13 @@ import {
   Fragment,
   Mode,
 } from 'shared/ReactTypeOfWork';
-import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
+import {
+  Placement,
+  Ref,
+  Update,
+  ErrLog,
+  DidCapture,
+} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
@@ -147,6 +153,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       workInProgress,
       currentFirstChild,
       nextChildren,
+      false,
       renderExpirationTime,
     );
     return workInProgress.child;
@@ -405,6 +412,20 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
         popLegacyContextProvider(workInProgress);
+
+        // If this component caught an error, schedule an error log effect.
+        const instance = workInProgress.stateNode;
+        const updateQueue = workInProgress.updateQueue;
+        if (updateQueue !== null && updateQueue.capturedValues !== null) {
+          workInProgress.effectTag &= ~DidCapture;
+          if (typeof instance.componentDidCatch === 'function') {
+            workInProgress.effectTag |= ErrLog;
+          } else {
+            // Normally we clear this in the commit phase, but since we did not
+            // schedule an effect, we need to reset it here.
+            updateQueue.capturedValues = null;
+          }
+        }
         return null;
       }
       case HostRoot: {
@@ -415,7 +436,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
-
         if (current === null || current.child === null) {
           // If we hydrated, pop so that we can delete any remaining children
           // that weren't hydrated.

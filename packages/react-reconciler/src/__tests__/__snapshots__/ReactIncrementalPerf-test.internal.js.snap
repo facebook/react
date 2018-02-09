@@ -228,7 +228,7 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
   ⚛ (Committing Host Effects: 2 Total)
-  ⚛ (Calling Lifecycle Methods: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
 
 ⚛ (React Tree Reconciliation)
   ⚛ Boundary [update]
@@ -249,8 +249,8 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
     ⚛ Baddie [mount]
 
 ⚛ (Committing Changes)
-  ⚛ (Committing Host Effects: 1 Total)
-  ⚛ (Calling Lifecycle Methods: 1 Total)
+  ⚛ (Committing Host Effects: 0 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
 
 ⚛ (Waiting for async callback...)
 

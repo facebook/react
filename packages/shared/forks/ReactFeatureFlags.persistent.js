@@ -17,6 +17,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
+export const replayFailedBeginPhaseWithInvokeGuardedCallback = __DEV__;
 
 // react-reconciler/persistent entry point
 // uses a persistent reconciler.
