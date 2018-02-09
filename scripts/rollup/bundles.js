@@ -234,6 +234,16 @@ const bundles = [
     global: 'ReactCallReturn',
     externals: [],
   },
+
+  /******* React Is *******/
+  {
+    label: 'react-is',
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-is',
+    global: 'ReactIs',
+    externals: [],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)
