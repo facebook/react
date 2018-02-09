@@ -174,6 +174,7 @@ describe('ReactIncremental', () => {
     // This will abort the previous work and restart
     ReactNoop.flushSync(() => ReactNoop.render(null));
     ReactNoop.render(<Foo text="baz" />);
+    ReactNoop.clearYields();
 
     // Flush part of the new work
     ReactNoop.flushDeferredPri(20 + 5);
@@ -2757,11 +2758,14 @@ describe('ReactIncremental', () => {
     expect(
       ReactNoop.flushSync(() => ReactNoop.render(<Parent step={2} />)),
     ).toEqual(['Parent: 2', 'Child: 2']);
+    ReactNoop.clearYields();
 
     expect(ReactNoop.flush()).toEqual([]);
   });
 
-  it('does not break with a bad Map polyfill', () => {
+  // We don't currently use fibers as keys. Re-enable this test if we
+  // ever do again.
+  it.skip('does not break with a bad Map polyfill', () => {
     const realMapSet = Map.prototype.set;
 
     function triggerCodePathThatUsesFibersAsMapKeys() {

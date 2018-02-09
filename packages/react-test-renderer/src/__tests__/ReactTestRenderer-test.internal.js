@@ -10,6 +10,8 @@
 
 'use strict';
 
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+ReactFeatureFlags.replayFailedBeginPhaseWithInvokeGuardedCallback = false;
 const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
 const prettyFormat = require('pretty-format');
@@ -438,6 +440,7 @@ describe('ReactTestRenderer', () => {
         /* do nothing */
       }
       componentDidCatch() {
+        log.push('Boundary componentDidCatch');
         this.setState({error: true});
       }
     }
@@ -452,6 +455,7 @@ describe('ReactTestRenderer', () => {
       'Boundary render',
       'Angry render',
       'Boundary componentDidMount',
+      'Boundary componentDidCatch',
       'Boundary render',
     ]);
   });

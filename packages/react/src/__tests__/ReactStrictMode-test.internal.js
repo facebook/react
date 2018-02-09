@@ -531,57 +531,6 @@ describe('ReactStrictMode', () => {
       rendered.update(<AsyncRoot foo={false} />);
     });
 
-    it('should not warn about uncommitted lifecycles in the event of an error', () => {
-      let caughtError;
-
-      class AsyncRoot extends React.Component {
-        render() {
-          return (
-            <React.unstable_AsyncMode>
-              <ErrorBoundary />
-            </React.unstable_AsyncMode>
-          );
-        }
-      }
-      class ErrorBoundary extends React.Component {
-        state = {
-          error: null,
-        };
-        componentDidCatch(error) {
-          caughtError = error;
-          this.setState({error});
-        }
-        render() {
-          return this.state.error ? <Bar /> : <Foo />;
-        }
-      }
-      class Foo extends React.Component {
-        UNSAFE_componentWillMount() {}
-        render() {
-          throw Error('whoops');
-        }
-      }
-      class Bar extends React.Component {
-        UNSAFE_componentWillMount() {}
-        render() {
-          return null;
-        }
-      }
-
-      expect(() => {
-        ReactTestRenderer.create(<AsyncRoot foo={true} />);
-      }).toWarnDev(
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncRoot (at **)' +
-          '\n\ncomponentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: Bar' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-strict-mode-warnings',
-      );
-
-      expect(caughtError).not.toBe(null);
-    });
-
     it('should also warn inside of "strict" mode trees', () => {
       const {StrictMode} = React;
 

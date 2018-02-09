@@ -95,11 +95,31 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
+export function callGetDerivedStateFromCatch(
+  ctor: any,
+  capturedValues: Array<mixed>,
+) {
+  // TODO:
+  // for (let i = 0; i < capturedValues.length; i++) {
+  //   const capturedValue: CapturedValue<mixed> = (capturedValues[i]: any);
+  //   const error = capturedValue.value;
+  //   ctor.getDerivedStateFromCatch(error);
+  // }
+}
+
 export default function(
-  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  scheduleWork: (
+    fiber: Fiber,
+    startTime: ExpirationTime,
+    expirationTime: ExpirationTime,
+  ) => void,
+  computeExpirationForFiber: (
+    startTime: ExpirationTime,
+    fiber: Fiber,
+  ) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
+  recalculateCurrentTime: () => ExpirationTime,
 ) {
   // Class component state updater
   const updater = {
@@ -110,18 +130,19 @@ export default function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      const expirationTime = computeExpirationForFiber(fiber);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = computeExpirationForFiber(currentTime, fiber);
       const update = {
         expirationTime,
         partialState,
         callback,
         isReplace: false,
         isForced: false,
-        nextCallback: null,
+        capturedValue: null,
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
-      scheduleWork(fiber, expirationTime);
+      scheduleWork(fiber, currentTime, expirationTime);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
@@ -129,18 +150,19 @@ export default function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      const expirationTime = computeExpirationForFiber(fiber);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = computeExpirationForFiber(currentTime, fiber);
       const update = {
         expirationTime,
         partialState: state,
         callback,
         isReplace: true,
         isForced: false,
-        nextCallback: null,
+        capturedValue: null,
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
-      scheduleWork(fiber, expirationTime);
+      scheduleWork(fiber, currentTime, expirationTime);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
@@ -148,18 +170,19 @@ export default function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      const expirationTime = computeExpirationForFiber(fiber);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = computeExpirationForFiber(currentTime, fiber);
       const update = {
         expirationTime,
         partialState: null,
         callback,
         isReplace: false,
         isForced: true,
-        nextCallback: null,
+        capturedValue: null,
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
-      scheduleWork(fiber, expirationTime);
+      scheduleWork(fiber, currentTime, expirationTime);
     },
   };
 
@@ -181,7 +204,7 @@ export default function(
     }
 
     const instance = workInProgress.stateNode;
-    const type = workInProgress.type;
+    const ctor = workInProgress.type;
     if (typeof instance.shouldComponentUpdate === 'function') {
       startPhaseTimer(workInProgress, 'shouldComponentUpdate');
       const shouldUpdate = instance.shouldComponentUpdate(
@@ -203,7 +226,7 @@ export default function(
       return shouldUpdate;
     }
 
-    if (type.prototype && type.prototype.isPureReactComponent) {
+    if (ctor.prototype && ctor.prototype.isPureReactComponent) {
       return (
         !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState)
       );
@@ -359,7 +382,7 @@ export default function(
     }
     if (typeof instance.getChildContext === 'function') {
       warning(
-        typeof workInProgress.type.childContextTypes === 'object',
+        typeof type.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
           'use getChildContext().',
         getComponentName(workInProgress),
@@ -587,6 +610,7 @@ export default function(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ): void {
+    const ctor = workInProgress.type;
     const current = workInProgress.alternate;
 
     if (__DEV__) {
@@ -623,7 +647,7 @@ export default function(
     if (
       (typeof instance.UNSAFE_componentWillMount === 'function' ||
         typeof instance.componentWillMount === 'function') &&
-      typeof workInProgress.type.getDerivedStateFromProps !== 'function'
+      typeof ctor.getDerivedStateFromProps !== 'function'
     ) {
       callComponentWillMount(workInProgress, instance);
       // If we had additional state updates during this life-cycle, let's
@@ -645,110 +669,167 @@ export default function(
     }
   }
 
-  // Called on a preexisting class instance. Returns false if a resumed render
-  // could be reused.
-  // function resumeMountClassInstance(
-  //   workInProgress: Fiber,
-  //   priorityLevel: PriorityLevel,
-  // ): boolean {
-  //   const instance = workInProgress.stateNode;
-  //   resetInputPointers(workInProgress, instance);
+  function resumeMountClassInstance(
+    workInProgress: Fiber,
+    renderExpirationTime: ExpirationTime,
+  ): boolean {
+    const ctor = workInProgress.type;
+    const instance = workInProgress.stateNode;
+    resetInputPointers(workInProgress, instance);
 
-  //   let newState = workInProgress.memoizedState;
-  //   let newProps = workInProgress.pendingProps;
-  //   if (!newProps) {
-  //     // If there isn't any new props, then we'll reuse the memoized props.
-  //     // This could be from already completed work.
-  //     newProps = workInProgress.memoizedProps;
-  //     invariant(
-  //       newProps != null,
-  //       'There should always be pending or memoized props. This error is ' +
-  //         'likely caused by a bug in React. Please file an issue.',
-  //     );
-  //   }
-  //   const newUnmaskedContext = getUnmaskedContext(workInProgress);
-  //   const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
+    const oldProps = workInProgress.memoizedProps;
+    const newProps = workInProgress.pendingProps;
+    const oldContext = instance.context;
+    const newUnmaskedContext = getUnmaskedContext(workInProgress);
+    const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
-  //   const oldContext = instance.context;
-  //   const oldProps = workInProgress.memoizedProps;
+    // Note: During these life-cycles, instance.props/instance.state are what
+    // ever the previously attempted to render - not the "current". However,
+    // during componentDidUpdate we pass the "current" props.
 
-  //   if (
-  //     typeof instance.componentWillReceiveProps === 'function' &&
-  //     (oldProps !== newProps || oldContext !== newContext)
-  //   ) {
-  //     callComponentWillReceiveProps(
-  //       workInProgress,
-  //       instance,
-  //       newProps,
-  //       newContext,
-  //     );
-  //   }
+    if (
+      (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
+        typeof instance.componentWillReceiveProps === 'function') &&
+      typeof ctor.getDerivedStateFromProps !== 'function'
+    ) {
+      if (oldProps !== newProps || oldContext !== newContext) {
+        callComponentWillReceiveProps(
+          workInProgress,
+          instance,
+          newProps,
+          newContext,
+        );
+      }
+    }
 
-  //   // Process the update queue before calling shouldComponentUpdate
-  //   const updateQueue = workInProgress.updateQueue;
-  //   if (updateQueue !== null) {
-  //     newState = processUpdateQueue(
-  //       workInProgress,
-  //       updateQueue,
-  //       instance,
-  //       newState,
-  //       newProps,
-  //       priorityLevel,
-  //     );
-  //   }
+    // Compute the next state using the memoized state and the update queue.
+    const oldState = workInProgress.memoizedState;
+    // TODO: Previous state can be null.
+    let newState;
+    if (workInProgress.updateQueue !== null) {
+      newState = processUpdateQueue(
+        null,
+        workInProgress,
+        workInProgress.updateQueue,
+        instance,
+        newProps,
+        renderExpirationTime,
+      );
 
-  //   // TODO: Should we deal with a setState that happened after the last
-  //   // componentWillMount and before this componentWillMount? Probably
-  //   // unsupported anyway.
+      let updateQueue = workInProgress.updateQueue;
+      if (
+        updateQueue !== null &&
+        updateQueue.capturedValues !== null &&
+        typeof ctor.getDerivedStateFromCatch === 'function'
+      ) {
+        const capturedValues = updateQueue.capturedValues;
+        // Don't remove these from the update queue yet. We need them in
+        // finishClassComponent. Do the reset there.
+        // TODO: This is awkward. Refactor class components.
+        // updateQueue.capturedValues = null;
+        callGetDerivedStateFromCatch(ctor, capturedValues);
+        newState = processUpdateQueue(
+          null,
+          workInProgress,
+          updateQueue,
+          instance,
+          newProps,
+          renderExpirationTime,
+        );
+      }
+    } else {
+      newState = oldState;
+    }
 
-  //   if (
-  //     !checkShouldComponentUpdate(
-  //       workInProgress,
-  //       workInProgress.memoizedProps,
-  //       newProps,
-  //       workInProgress.memoizedState,
-  //       newState,
-  //       newContext,
-  //     )
-  //   ) {
-  //     // Update the existing instance's state, props, and context pointers even
-  //     // though we're bailing out.
-  //     instance.props = newProps;
-  //     instance.state = newState;
-  //     instance.context = newContext;
-  //     return false;
-  //   }
+    if (
+      oldProps === newProps &&
+      oldState === newState &&
+      !hasContextChanged() &&
+      !(
+        workInProgress.updateQueue !== null &&
+        workInProgress.updateQueue.hasForceUpdate
+      )
+    ) {
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (typeof instance.componentDidUpdate === 'function') {
+        workInProgress.effectTag |= Update;
+      }
+      return false;
+    }
 
-  //   // Update the input pointers now so that they are correct when we call
-  //   // componentWillMount
-  //   instance.props = newProps;
-  //   instance.state = newState;
-  //   instance.context = newContext;
+    const shouldUpdate = checkShouldComponentUpdate(
+      workInProgress,
+      oldProps,
+      newProps,
+      oldState,
+      newState,
+      newContext,
+    );
 
-  //   if (typeof instance.componentWillMount === 'function') {
-  //     callComponentWillMount(workInProgress, instance);
-  //     // componentWillMount may have called setState. Process the update queue.
-  //     const newUpdateQueue = workInProgress.updateQueue;
-  //     if (newUpdateQueue !== null) {
-  //       newState = processUpdateQueue(
-  //         workInProgress,
-  //         newUpdateQueue,
-  //         instance,
-  //         newState,
-  //         newProps,
-  //         priorityLevel,
-  //       );
-  //     }
-  //   }
+    if (shouldUpdate) {
+      if (__DEV__) {
+        if (workInProgress.mode & StrictMode) {
+          ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
+            workInProgress,
+            instance,
+          );
+        }
 
-  //   if (typeof instance.componentDidMount === 'function') {
-  //     workInProgress.effectTag |= Update;
-  //   }
+        if (warnAboutDeprecatedLifecycles) {
+          ReactStrictModeWarnings.recordDeprecationWarnings(
+            workInProgress,
+            instance,
+          );
+        }
+      }
 
-  //   instance.state = newState;
+      // In order to support react-lifecycles-compat polyfilled components,
+      // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+      if (
+        (typeof instance.UNSAFE_componentWillMount === 'function' ||
+          typeof instance.componentWillMount === 'function') &&
+        typeof ctor.getDerivedStateFromProps !== 'function'
+      ) {
+        callComponentWillMount(workInProgress, instance);
+        // If we had additional state updates during this life-cycle, let's
+        // process them now.
+        const updateQueue = workInProgress.updateQueue;
+        if (updateQueue !== null) {
+          instance.state = processUpdateQueue(
+            workInProgress.alternate,
+            workInProgress,
+            updateQueue,
+            instance,
+            newProps,
+            renderExpirationTime,
+          );
+        }
+      }
+      if (typeof instance.componentDidMount === 'function') {
+        workInProgress.effectTag |= Update;
+      }
+    } else {
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      if (typeof instance.componentDidMount === 'function') {
+        workInProgress.effectTag |= Update;
+      }
 
-  //   return true;
-  // }
+      // If shouldComponentUpdate returned false, we should still update the
+      // memoized props/state to indicate that this work can be reused.
+      memoizeProps(workInProgress, newProps);
+      memoizeState(workInProgress, newState);
+    }
+
+    // Update the existing instance's state, props, and context pointers even
+    // if shouldComponentUpdate returns false.
+    instance.props = newProps;
+    instance.state = newState;
+    instance.context = newContext;
+
+    return shouldUpdate;
+  }
 
   // Invokes the update life-cycles and returns false if it shouldn't rerender.
   function updateClassInstance(
@@ -756,6 +837,7 @@ export default function(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ): boolean {
+    const ctor = workInProgress.type;
     const instance = workInProgress.stateNode;
     resetInputPointers(workInProgress, instance);
 
@@ -774,7 +856,7 @@ export default function(
     if (
       (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
         typeof instance.componentWillReceiveProps === 'function') &&
-      typeof workInProgress.type.getDerivedStateFromProps !== 'function'
+      typeof ctor.getDerivedStateFromProps !== 'function'
     ) {
       if (oldProps !== newProps || oldContext !== newContext) {
         callComponentWillReceiveProps(
@@ -808,6 +890,28 @@ export default function(
         newProps,
         renderExpirationTime,
       );
+
+      let updateQueue = workInProgress.updateQueue;
+      if (
+        updateQueue !== null &&
+        updateQueue.capturedValues !== null &&
+        typeof ctor.getDerivedStateFromCatch === 'function'
+      ) {
+        const capturedValues = updateQueue.capturedValues;
+        // Don't remove these from the update queue yet. We need them in
+        // finishClassComponent. Do the reset there.
+        // TODO: This is awkward. Refactor class components.
+        // updateQueue.capturedValues = null;
+        callGetDerivedStateFromCatch(ctor, capturedValues);
+        newState = processUpdateQueue(
+          null,
+          workInProgress,
+          updateQueue,
+          instance,
+          newProps,
+          renderExpirationTime,
+        );
+      }
     } else {
       newState = oldState;
     }
@@ -859,7 +963,7 @@ export default function(
       if (
         (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
           typeof instance.componentWillUpdate === 'function') &&
-        typeof workInProgress.type.getDerivedStateFromProps !== 'function'
+        typeof ctor.getDerivedStateFromProps !== 'function'
       ) {
         startPhaseTimer(workInProgress, 'componentWillUpdate');
         if (typeof instance.componentWillUpdate === 'function') {
@@ -905,7 +1009,7 @@ export default function(
     callGetDerivedStateFromProps,
     constructClassInstance,
     mountClassInstance,
-    // resumeMountClassInstance,
+    resumeMountClassInstance,
     updateClassInstance,
   };
 }

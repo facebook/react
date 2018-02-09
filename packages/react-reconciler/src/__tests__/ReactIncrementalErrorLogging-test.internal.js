@@ -19,6 +19,7 @@ describe('ReactIncrementalErrorLogging', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.replayFailedBeginPhaseWithInvokeGuardedCallback = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -153,104 +154,42 @@ describe('ReactIncrementalErrorLogging', () => {
     }
   });
 
-  it('should relay info about error boundary and retry attempts if applicable', () => {
-    // Errors are redundantly logged in production mode by ReactFiberErrorLogger.
-    // It's okay to ignore them for the purpose of this test.
-    spyOnProd(console, 'error');
-
-    class ParentComponent extends React.Component {
-      render() {
-        return <ErrorBoundaryComponent />;
-      }
-    }
-
-    let handleErrorCalls = [];
-    let renderAttempts = 0;
-
-    class ErrorBoundaryComponent extends React.Component {
+  it('resets instance variables before unmounting failed node', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
       componentDidCatch(error) {
-        handleErrorCalls.push(error);
-        this.setState({}); // Render again
+        this.setState({error});
       }
       render() {
-        return <ErrorThrowingComponent />;
+        return this.state.error ? null : this.props.children;
       }
     }
-
-    class ErrorThrowingComponent extends React.Component {
+    class Foo extends React.Component {
+      state = {step: 0};
       componentDidMount() {
-        const error = new Error('componentDidMount error');
-        // Note: it's `true` on the Error prototype our test environment.
-        // That lets us avoid asserting on warnings for each expected error.
-        // Here we intentionally shadow it to test logging, like in real apps.
-        error.suppressReactErrorLogging = undefined;
-        throw error;
+        this.setState({step: 1});
+      }
+      componentWillUnmount() {
+        ReactNoop.yield('componentWillUnmount: ' + this.state.step);
       }
       render() {
-        renderAttempts++;
-        return <div />;
+        ReactNoop.yield('render: ' + this.state.step);
+        if (this.state.step > 0) {
+          throw new Error('oops');
+        }
+        return null;
       }
     }
 
-    ReactNoop.render(<ParentComponent />);
-
-    expect(() => {
-      expect(ReactNoop.flush).toWarnDev([
-        'The above error occurred in the <ErrorThrowingComponent> component:\n' +
-          '    in ErrorThrowingComponent (at **)\n' +
-          '    in ErrorBoundaryComponent (at **)\n' +
-          '    in ParentComponent (at **)\n\n' +
-          'React will try to recreate this component tree from scratch ' +
-          'using the error boundary you provided, ErrorBoundaryComponent.',
-        'The above error occurred in the <ErrorThrowingComponent> component:\n' +
-          '    in ErrorThrowingComponent (at **)\n' +
-          '    in ErrorBoundaryComponent (at **)\n' +
-          '    in ParentComponent (at **)\n\n' +
-          'This error was initially handled by the error boundary ErrorBoundaryComponent.\n' +
-          'Recreating the tree from scratch failed so React will unmount the tree.',
-      ]);
-    }).toThrowError('componentDidMount error');
-
-    expect(renderAttempts).toBe(2);
-    expect(handleErrorCalls.length).toBe(1);
+    ReactNoop.render(
+      <ErrorBoundary>
+        <Foo />
+      </ErrorBoundary>,
+    );
+    expect(ReactNoop.flush()).toEqual([
+      'render: 0',
+      'render: 1',
+      'componentWillUnmount: 0',
+    ]);
   });
-});
-
-it('resets instance variables before unmounting failed node', () => {
-  class ErrorBoundary extends React.Component {
-    state = {error: null};
-    componentDidCatch(error) {
-      this.setState({error});
-    }
-    render() {
-      return this.state.error ? null : this.props.children;
-    }
-  }
-  class Foo extends React.Component {
-    state = {step: 0};
-    componentDidMount() {
-      this.setState({step: 1});
-    }
-    componentWillUnmount() {
-      ReactNoop.yield('componentWillUnmount: ' + this.state.step);
-    }
-    render() {
-      ReactNoop.yield('render: ' + this.state.step);
-      if (this.state.step > 0) {
-        throw new Error('oops');
-      }
-      return null;
-    }
-  }
-
-  ReactNoop.render(
-    <ErrorBoundary>
-      <Foo />
-    </ErrorBoundary>,
-  );
-  expect(ReactNoop.flush()).toEqual([
-    'render: 0',
-    'render: 1',
-    'componentWillUnmount: 0',
-  ]);
 });

@@ -177,6 +177,7 @@ describe('ReactIncrementalUpdates', () => {
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
+    ReactNoop.clearYields();
     expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
     expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
   });
@@ -235,6 +236,7 @@ describe('ReactIncrementalUpdates', () => {
     // Now flush the remaining work. Even though e and f were already processed,
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
+    ReactNoop.clearYields();
     expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
     expect(ReactNoop.getChildren()).toEqual([span('fg')]);
   });

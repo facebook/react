@@ -1200,6 +1200,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChild: any,
+    deleteExistingChildren: boolean,
     expirationTime: ExpirationTime,
   ): Fiber | null {
     // This function is not recursive.
@@ -1217,6 +1218,14 @@ function ChildReconciler(shouldTrackSideEffects) {
       newChild.key === null
     ) {
       newChild = newChild.props.children;
+    }
+
+    if (deleteExistingChildren) {
+      // Schedule all the existing children for deletion. This has the
+      // effect of re-mounting children even if their identity matches,
+      // as if all the keys changed.
+      deleteRemainingChildren(returnFiber, currentFirstChild);
+      currentFirstChild = null;
     }
 
     // Handle object types
