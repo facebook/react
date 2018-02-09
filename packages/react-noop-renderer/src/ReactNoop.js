@@ -400,6 +400,7 @@ const ReactNoop = {
     const n = timeout / 5 - 1;
 
     let values = [];
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const value of flushUnitsOfWork(n)) {
       values.push(...value);
     }
@@ -418,6 +419,7 @@ const ReactNoop = {
 
   flushUnitsOfWork(n: number): Array<mixed> {
     let values = [];
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const value of flushUnitsOfWork(n)) {
       values.push(...value);
     }
@@ -427,6 +429,7 @@ const ReactNoop = {
   flushThrough(expected: Array<mixed>): void {
     let actual = [];
     if (expected.length !== 0) {
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (const value of flushUnitsOfWork(Infinity)) {
         actual.push(...value);
         if (actual.length >= expected.length) {

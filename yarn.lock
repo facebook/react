@@ -1883,6 +1883,10 @@ eslint-plugin-jest@^21.6.1:
   version "21.6.1"
   resolved "https://registry.yarnpkg.com/eslint-plugin-jest/-/eslint-plugin-jest-21.6.1.tgz#adca015bbdb8d23b210438ff9e1cee1dd9ec35df"
 
+eslint-plugin-no-for-of-loops@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-no-for-of-loops/-/eslint-plugin-no-for-of-loops-1.0.0.tgz#a13d91a8f1922f7fefedeab351dc0055994601f6"
+
 "eslint-plugin-react-internal@link:./scripts/eslint-rules":
   version "0.0.0"
   uid ""

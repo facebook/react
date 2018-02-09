@@ -112,7 +112,7 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
 
     // Show a hidden summary table for all diffs
 
-    // eslint-disable-next-line no-var
+    // eslint-disable-next-line no-var,no-for-of-loops/no-for-of-loops
     for (var name of new Set(packagesToShow)) {
       const thisBundleResults = results.filter(r => r.packageName === name);
       const changedFiles = thisBundleResults.filter(
