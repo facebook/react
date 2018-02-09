@@ -11,6 +11,7 @@ module.exports = {
 
   plugins: [
     'jest',
+    'no-for-of-loops',
     'react',
     'react-internal',
   ],
@@ -55,6 +56,9 @@ module.exports = {
     'react/self-closing-comp': ERROR,
     // We don't care to do this
     'react/jsx-wrap-multilines': [ERROR, {declaration: false, assignment: false}],
+
+    // Prevent for...of loops which require Symbol
+    'no-for-of-loops/no-for-of-loops': ERROR,
 
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
