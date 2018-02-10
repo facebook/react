@@ -78,15 +78,7 @@ function setBoldness(row, isBold) {
  * and master.
  */
 function getMergeBase() {
-  return new Promise(res => {
-    exec('git merge-base HEAD master', (err, stdout, stderr) => {
-      if (err) {
-        throw err;
-      } else {
-        res(stdout.trim());
-      }
-    });
-  });
+  return git('merge-base HEAD origin/master');
 }
 
 /**
@@ -108,9 +100,6 @@ function git(args) {
 (async function() {
   // Use git locally to grab the commit which represents the place
   // where the branches differ
-  const logs = await git('fetch origin master');
-  markdown(`### git:\n\`\`\`sh\n${logs}\`\`\``);
-
   const mergeBaseCommit = await getMergeBase();
   const commitURL = sha =>
     `http://react.zpao.com/builds/master/_commits/${sha}/results.json`;
@@ -131,6 +120,7 @@ function git(args) {
         Math.abs(r.prevFileSizeChange) > percentToWarrentShowing ||
         Math.abs(r.prevGzipSizeChange) > percentToWarrentShowing
     )
+
     .map(r => r.packageName);
 
   if (packagesToShow.length) {

@@ -21,7 +21,13 @@ function saveResults() {
 }
 
 function percentChange(prev, current) {
-  return Math.floor((current - prev) / prev * 100);
+  const change = Math.floor((current - prev) / prev * 100);
+  // When a new package is created
+  if (isFinite(change)) {
+    return change;
+  } else {
+    return 100;
+  }
 }
 
 function percentChangeString(change) {
