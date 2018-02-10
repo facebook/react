@@ -40,6 +40,7 @@ import {
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
+  enableGetDerivedStateFromCatch,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
 } from 'shared/ReactFeatureFlags';
@@ -49,9 +50,7 @@ import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
-import ReactFiberClassComponent, {
-  callGetDerivedStateFromCatch,
-} from './ReactFiberClassComponent';
+import ReactFiberClassComponent from './ReactFiberClassComponent';
 import {
   mountChildFibers,
   reconcileChildFibers,
@@ -256,19 +255,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const hasContext = pushLegacyContextProvider(workInProgress);
     const instance = workInProgress.stateNode;
 
-    // Check if this component captured any errors. If so, grab them off
-    // the instance.
-    let didCaptureError = false;
-    let updateQueue = workInProgress.updateQueue;
-    if (updateQueue !== null) {
-      const capturedErrors = updateQueue.capturedValues;
-      if (capturedErrors !== null) {
-        didCaptureError = true;
-        invariant(instance !== null, 'Expected class to have an instance.');
-        callGetDerivedStateFromCatch(instance, capturedErrors);
-      }
-    }
-
     let shouldUpdate;
     if (current === null) {
       if (instance === null) {
@@ -295,7 +281,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // We processed the update queue inside updateClassInstance. It may have
     // included some errors that were dispatched during the commit phase.
     // TODO: Refactor class components so this is less awkward.
-    updateQueue = workInProgress.updateQueue;
+    let didCaptureError = false;
+    const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null && updateQueue.capturedValues !== null) {
       workInProgress.effectTag |= DidCapture;
       shouldUpdate = true;
@@ -339,8 +326,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     let nextChildren;
     if (
       didCaptureError &&
-      typeof ctor.getDerivedStateFromCatch !== 'function'
+      (!enableGetDerivedStateFromCatch ||
+        typeof ctor.getDerivedStateFromCatch !== 'function')
     ) {
+      // If we captured an error, but getDerivedStateFrom catch is not defined,
+      // unmount all the children. componentDidCatch will schedule an update to
+      // re-render a fallback. This is temporary until we migrate everyone to
+      // the new API.
+      // TODO: Warn in a future release.
       nextChildren = null;
     } else {
       if (__DEV__) {

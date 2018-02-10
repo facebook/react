@@ -19,6 +19,7 @@ describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedBeginPhaseWithInvokeGuardedCallback = false;
     PropTypes = require('prop-types');
@@ -95,6 +96,75 @@ describe('ReactIncrementalErrorHandling', () => {
       'ErrorBoundary (catch)',
       'ErrorMessage',
     ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
+
+  it('can recover from an error within a single render phase', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromCatch(error) {
+        ReactNoop.yield('getDerivedStateFromCatch');
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          ReactNoop.yield('ErrorBoundary (catch)');
+          return <ErrorMessage error={this.state.error} />;
+        }
+        ReactNoop.yield('ErrorBoundary (try)');
+        return this.props.children;
+      }
+    }
+
+    function ErrorMessage(props) {
+      ReactNoop.yield('ErrorMessage');
+      return <span prop={`Caught an error: ${props.error.message}`} />;
+    }
+
+    function Indirection(props) {
+      ReactNoop.yield('Indirection');
+      return props.children;
+    }
+
+    function BadRender() {
+      ReactNoop.yield('throw');
+      throw new Error('oops!');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <Indirection>
+          <Indirection>
+            <Indirection>
+              <BadRender />
+            </Indirection>
+          </Indirection>
+        </Indirection>
+      </ErrorBoundary>,
+    );
+
+    ReactNoop.flushThrough([
+      'ErrorBoundary (try)',
+      'Indirection',
+      'Indirection',
+      'Indirection',
+      // The error was thrown, but React ran out of time and yielded
+      // before recovering.
+      'throw',
+    ]);
+
+    // Nothing committed yet.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Upon resuming, getDerivedStateFromCatch is called
+    ReactNoop.flushThrough([
+      'getDerivedStateFromCatch',
+      'ErrorBoundary (catch)',
+      'ErrorMessage',
+    ]);
+    // Still hasn't committed
+    expect(ReactNoop.getChildren()).toEqual([]);
+    ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
   });
 

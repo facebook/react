@@ -9,9 +9,11 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
+  enableGetDerivedStateFromCatch,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
@@ -94,17 +96,17 @@ if (__DEV__) {
   });
   Object.freeze(fakeInternalInstance);
 }
-
-export function callGetDerivedStateFromCatch(
-  ctor: any,
-  capturedValues: Array<mixed>,
-) {
-  // TODO:
-  // for (let i = 0; i < capturedValues.length; i++) {
-  //   const capturedValue: CapturedValue<mixed> = (capturedValues[i]: any);
-  //   const error = capturedValue.value;
-  //   ctor.getDerivedStateFromCatch(error);
-  // }
+function callGetDerivedStateFromCatch(ctor: any, capturedValues: Array<mixed>) {
+  const resultState = {};
+  for (let i = 0; i < capturedValues.length; i++) {
+    const capturedValue: CapturedValue<mixed> = (capturedValues[i]: any);
+    const error = capturedValue.value;
+    const partialState = ctor.getDerivedStateFromCatch.call(null, error);
+    if (partialState !== null && partialState !== undefined) {
+      Object.assign(resultState, partialState);
+    }
+  }
+  return resultState;
 }
 
 export default function(
@@ -687,6 +689,8 @@ export default function(
     // ever the previously attempted to render - not the "current". However,
     // during componentDidUpdate we pass the "current" props.
 
+    // In order to support react-lifecycles-compat polyfilled components,
+    // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
     if (
       (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
         typeof instance.componentWillReceiveProps === 'function') &&
@@ -702,10 +706,20 @@ export default function(
       }
     }
 
+    let derivedStateFromProps;
+    if (oldProps !== newProps) {
+      derivedStateFromProps = callGetDerivedStateFromProps(
+        workInProgress,
+        instance,
+        newProps,
+      );
+    }
+
     // Compute the next state using the memoized state and the update queue.
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
     let newState;
+    let derivedStateFromCatch;
     if (workInProgress.updateQueue !== null) {
       newState = processUpdateQueue(
         null,
@@ -720,25 +734,40 @@ export default function(
       if (
         updateQueue !== null &&
         updateQueue.capturedValues !== null &&
-        typeof ctor.getDerivedStateFromCatch === 'function'
+        (enableGetDerivedStateFromCatch &&
+          typeof ctor.getDerivedStateFromCatch === 'function')
       ) {
         const capturedValues = updateQueue.capturedValues;
         // Don't remove these from the update queue yet. We need them in
         // finishClassComponent. Do the reset there.
         // TODO: This is awkward. Refactor class components.
         // updateQueue.capturedValues = null;
-        callGetDerivedStateFromCatch(ctor, capturedValues);
-        newState = processUpdateQueue(
-          null,
-          workInProgress,
-          updateQueue,
-          instance,
-          newProps,
-          renderExpirationTime,
+        derivedStateFromCatch = callGetDerivedStateFromCatch(
+          ctor,
+          capturedValues,
         );
       }
     } else {
       newState = oldState;
+    }
+
+    if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      newState =
+        newState === null || newState === undefined
+          ? derivedStateFromProps
+          : Object.assign({}, newState, derivedStateFromProps);
+    }
+    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      newState =
+        newState === null || newState === undefined
+          ? derivedStateFromCatch
+          : Object.assign({}, newState, derivedStateFromCatch);
     }
 
     if (
@@ -752,7 +781,7 @@ export default function(
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
-      if (typeof instance.componentDidUpdate === 'function') {
+      if (typeof instance.componentDidMount === 'function') {
         workInProgress.effectTag |= Update;
       }
       return false;
@@ -768,45 +797,23 @@ export default function(
     );
 
     if (shouldUpdate) {
-      if (__DEV__) {
-        if (workInProgress.mode & StrictMode) {
-          ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
-            workInProgress,
-            instance,
-          );
-        }
-
-        if (warnAboutDeprecatedLifecycles) {
-          ReactStrictModeWarnings.recordDeprecationWarnings(
-            workInProgress,
-            instance,
-          );
-        }
-      }
-
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
       if (
-        (typeof instance.UNSAFE_componentWillMount === 'function' ||
-          typeof instance.componentWillMount === 'function') &&
+        (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
+          typeof instance.componentWillUpdate === 'function') &&
         typeof ctor.getDerivedStateFromProps !== 'function'
       ) {
-        callComponentWillMount(workInProgress, instance);
-        // If we had additional state updates during this life-cycle, let's
-        // process them now.
-        const updateQueue = workInProgress.updateQueue;
-        if (updateQueue !== null) {
-          instance.state = processUpdateQueue(
-            workInProgress.alternate,
-            workInProgress,
-            updateQueue,
-            instance,
-            newProps,
-            renderExpirationTime,
-          );
+        startPhaseTimer(workInProgress, 'componentWillUpdate');
+        if (typeof instance.componentWillUpdate === 'function') {
+          instance.componentWillUpdate(newProps, newState, newContext);
         }
+        if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
+          instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
+        }
+        stopPhaseTimer();
       }
-      if (typeof instance.componentDidMount === 'function') {
+      if (typeof instance.componentDidUpdate === 'function') {
         workInProgress.effectTag |= Update;
       }
     } else {
@@ -868,9 +875,9 @@ export default function(
       }
     }
 
-    let partialState;
+    let derivedStateFromProps;
     if (oldProps !== newProps) {
-      partialState = callGetDerivedStateFromProps(
+      derivedStateFromProps = callGetDerivedStateFromProps(
         workInProgress,
         instance,
         newProps,
@@ -881,6 +888,7 @@ export default function(
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
     let newState;
+    let derivedStateFromCatch;
     if (workInProgress.updateQueue !== null) {
       newState = processUpdateQueue(
         current,
@@ -895,35 +903,40 @@ export default function(
       if (
         updateQueue !== null &&
         updateQueue.capturedValues !== null &&
-        typeof ctor.getDerivedStateFromCatch === 'function'
+        (enableGetDerivedStateFromCatch &&
+          typeof ctor.getDerivedStateFromCatch === 'function')
       ) {
         const capturedValues = updateQueue.capturedValues;
         // Don't remove these from the update queue yet. We need them in
         // finishClassComponent. Do the reset there.
         // TODO: This is awkward. Refactor class components.
         // updateQueue.capturedValues = null;
-        callGetDerivedStateFromCatch(ctor, capturedValues);
-        newState = processUpdateQueue(
-          null,
-          workInProgress,
-          updateQueue,
-          instance,
-          newProps,
-          renderExpirationTime,
+        derivedStateFromCatch = callGetDerivedStateFromCatch(
+          ctor,
+          capturedValues,
         );
       }
     } else {
       newState = oldState;
     }
 
-    if (partialState !== null && partialState !== undefined) {
+    if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
       // Render-phase updates (like this) should not be added to the update queue,
       // So that multiple render passes do not enqueue multiple updates.
       // Instead, just synchronously merge the returned state into the instance.
       newState =
         newState === null || newState === undefined
-          ? partialState
-          : Object.assign({}, newState, partialState);
+          ? derivedStateFromProps
+          : Object.assign({}, newState, derivedStateFromProps);
+    }
+    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      newState =
+        newState === null || newState === undefined
+          ? derivedStateFromCatch
+          : Object.assign({}, newState, derivedStateFromCatch);
     }
 
     if (

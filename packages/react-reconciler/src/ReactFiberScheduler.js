@@ -187,6 +187,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hostContext,
     scheduleWork,
     markUncaughtError,
+    isAlreadyFailedLegacyErrorBoundary,
   );
   const {
     commitResetTextContent,
@@ -202,6 +203,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     onCommitPhaseError,
     scheduleWork,
     computeExpirationForFiber,
+    markLegacyErrorBoundaryAsFailed,
     recalculateCurrentTime,
   );
   const {
@@ -243,6 +245,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   let isCommitting: boolean = false;
 
   let isRootReadyForCommit: boolean = false;
+
+  let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
   // Used for performance tracking.
   let interruptedBy: Fiber | null = null;
@@ -381,6 +385,21 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Ensure that we reset the effectTag here so that we can rely on effect
       // tags to reason about the current life-cycle.
       nextEffect = next;
+    }
+  }
+
+  function isAlreadyFailedLegacyErrorBoundary(instance: mixed): boolean {
+    return (
+      legacyErrorBoundariesThatAlreadyFailed !== null &&
+      legacyErrorBoundariesThatAlreadyFailed.has(instance)
+    );
+  }
+
+  function markLegacyErrorBoundaryAsFailed(instance: mixed) {
+    if (legacyErrorBoundariesThatAlreadyFailed === null) {
+      legacyErrorBoundariesThatAlreadyFailed = new Set([instance]);
+    } else {
+      legacyErrorBoundariesThatAlreadyFailed.add(instance);
     }
   }
 
@@ -528,6 +547,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     const remainingTime = root.current.expirationTime;
+    if (remainingTime === NoWork) {
+      // If there's no remaining work, we can clear the set of already failed
+      // error boundaries.
+      legacyErrorBoundariesThatAlreadyFailed = null;
+    }
     return remainingTime;
   }
 
@@ -1006,8 +1030,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     while (fiber !== null) {
       switch (fiber.tag) {
         case ClassComponent:
+          const ctor = fiber.type;
           const instance = fiber.stateNode;
-          if (typeof instance.componentDidCatch === 'function') {
+          if (
+            typeof ctor.getDerivedStateFromCatch === 'function' ||
+            (typeof instance.componentDidCatch === 'function' &&
+              !isAlreadyFailedLegacyErrorBoundary(instance))
+          ) {
             scheduleCapture(
               sourceFiber,
               fiber,

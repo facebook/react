@@ -1336,28 +1336,32 @@ describe('ReactUpdates', () => {
   });
 
   it('does not fall into an infinite error loop', () => {
-    class BadMount extends React.Component {
-      componentDidMount() {
-        throw new Error('error');
-      }
-      render() {
-        return null;
-      }
+    function BadRender() {
+      throw new Error('error');
     }
 
     class ErrorBoundary extends React.Component {
       componentDidCatch() {
-        // Noop
-        this.setState({});
+        this.props.parent.remount();
       }
       render() {
-        return <BadMount />;
+        return <BadRender />;
+      }
+    }
+
+    class NonTerminating extends React.Component {
+      state = {step: 0};
+      remount() {
+        this.setState(state => ({step: state.step + 1}));
+      }
+      render() {
+        return <ErrorBoundary key={this.state.step} parent={this} />;
       }
     }
 
     const container = document.createElement('div');
     expect(() => {
-      ReactDOM.render(<ErrorBoundary />, container);
+      ReactDOM.render(<NonTerminating />, container);
     }).toThrow('Maximum');
   });
 });

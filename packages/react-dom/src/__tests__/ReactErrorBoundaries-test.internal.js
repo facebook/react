@@ -788,7 +788,7 @@ describe('ReactErrorBoundaries', () => {
     ]);
   });
 
-  xit('propagates errors on retry on mounting', () => {
+  it('propagates errors on retry on mounting', () => {
     const container = document.createElement('div');
     ReactDOM.render(
       <ErrorBoundary>
