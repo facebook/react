@@ -19,6 +19,9 @@ export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
 // Experimental persistent mode (Fabric):
 export const enablePersistentReconciler = false;
+// Experimental error-boundary API that can recover from errors within a single
+// render phase
+export const enableGetDerivedStateFromCatch = false;
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 

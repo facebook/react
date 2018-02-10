@@ -46,6 +46,8 @@ import {
   AlgebraicEffectMask,
 } from 'shared/ReactTypeOfSideEffect';
 
+import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
+
 import {
   popContextProvider as popLegacyContextProvider,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
@@ -134,6 +136,7 @@ export default function<C, CX>(
     expirationTime: ExpirationTime,
   ) => void,
   markUncaughtError: (root: FiberRoot, error: CapturedValue<mixed>) => void,
+  isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
 ) {
   const {popHostContainer, popHostContext} = hostContext;
 
@@ -294,11 +297,15 @@ export default function<C, CX>(
         break;
       case ClassComponent: {
         popLegacyContextProvider(workInProgress);
+        const ctor = workInProgress.type;
         const instance = workInProgress.stateNode;
         if (
           (workInProgress.effectTag & DidCapture) === NoEffect &&
-          instance !== null &&
-          typeof instance.componentDidCatch === 'function'
+          ((typeof ctor.getDerivedStateFromCatch === 'function' &&
+            enableGetDerivedStateFromCatch) ||
+            (instance !== null &&
+              typeof instance.componentDidCatch === 'function' &&
+              !isAlreadyFailedLegacyErrorBoundary(instance)))
         ) {
           const errors = [];
           let previousEffect = null;

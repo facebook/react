@@ -93,6 +93,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     startTime: ExpirationTime,
     fiber: Fiber,
   ) => ExpirationTime,
+  markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {getPublicInstance, mutation, persistence} = config;
@@ -239,6 +240,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     switch (finishedWork.tag) {
       case ClassComponent:
         {
+          const ctor = finishedWork.type;
           const instance = finishedWork.stateNode;
           const updateQueue = finishedWork.updateQueue;
           invariant(
@@ -249,6 +251,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           );
           const capturedErrors = updateQueue.capturedValues;
           updateQueue.capturedValues = null;
+
+          if (typeof ctor.getDerivedStateFromCatch !== 'function') {
+            // To preserve the preexisting retry behavior of error boundaries,
+            // we keep track of which ones already failed during this batch.
+            // This gets reset before we yield back to the browser.
+            // TODO: Warn in strict mode if getDerivedStateFromCatch is
+            // not defined.
+            markLegacyErrorBoundaryAsFailed(instance);
+          }
+
           instance.props = finishedWork.memoizedProps;
           instance.state = finishedWork.memoizedState;
           for (let i = 0; i < capturedErrors.length; i++) {
