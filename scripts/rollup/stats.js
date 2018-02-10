@@ -78,7 +78,7 @@ function generateResultsArray(current, prevResults) {
 
 function printResults() {
   const table = new Table({
-    head: resultsHeaders.map(chalk.gray.yellow),
+    head: resultsHeaders.map(label => chalk.gray.yellow(label)),
   });
 
   const results = generateResultsArray(currentBuildResults, prevBuildResults);
