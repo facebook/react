@@ -40,7 +40,7 @@ describe('ReactElementValidator', () => {
     expect(() => {
       Component(null, [Component(), Component()]);
     }).toWarnDev(
-      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".',
+      'Each child in an array or iterator should have a unique "key" prop.',
     );
   });
 
@@ -64,7 +64,7 @@ describe('ReactElementValidator', () => {
     expect(() => {
       ReactTestUtils.renderIntoDocument(React.createElement(ComponentWrapper));
     }).toWarnDev(
-      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".' +
+      'Each child in an array or iterator should have a unique "key" prop.' +
         '\n\nCheck the render method of `InnerClass`. ' +
         'It was passed a child from ComponentWrapper. ',
     );
@@ -81,8 +81,8 @@ describe('ReactElementValidator', () => {
     expect(() => {
       ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
     }).toWarnDev(
-      'Warning: Each child in an array or iterator should have a "key" ' +
-        'prop as a unique "string" or "number". See https://fb.me/react-warning-keys for more information.\n' +
+      'Warning: Each child in an array or iterator should have a unique ' +
+        '"key" prop. See https://fb.me/react-warning-keys for more information.\n' +
         '    in div (at **)',
     );
   });
@@ -93,8 +93,8 @@ describe('ReactElementValidator', () => {
     expect(() => {
       ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
     }).toWarnDev(
-      'Warning: Each child in an array or iterator should have a "key" ' +
-        'prop as a unique "string" or "number".\n\nCheck the top-level render call using <div>. See ' +
+      'Warning: Each child in an array or iterator should have a unique ' +
+        '"key" prop.\n\nCheck the top-level render call using <div>. See ' +
         'https://fb.me/react-warning-keys for more information.\n' +
         '    in div (at **)',
     );
@@ -114,8 +114,8 @@ describe('ReactElementValidator', () => {
     }
 
     expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toWarnDev(
-      'Warning: Each child in an array or iterator should have a "key" ' +
-        'prop as a unique "string" or "number".\n\nCheck the render method of `Component`. See ' +
+      'Warning: Each child in an array or iterator should have a unique ' +
+        '"key" prop.\n\nCheck the render method of `Component`. See ' +
         'https://fb.me/react-warning-keys for more information.\n' +
         '    in div (at **)\n' +
         '    in Component (at **)\n' +
@@ -158,7 +158,7 @@ describe('ReactElementValidator', () => {
     };
 
     expect(() => Component(null, iterable)).toWarnDev(
-      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".',
+      'Each child in an array or iterator should have a unique "key" prop.',
     );
   });
 

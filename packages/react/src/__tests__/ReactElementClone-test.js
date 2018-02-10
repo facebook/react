@@ -260,7 +260,7 @@ describe('ReactElementClone', () => {
     expect(() =>
       React.cloneElement(<div />, null, [<div />, <div />]),
     ).toWarnDev(
-      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".',
+      'Each child in an array or iterator should have a unique "key" prop.',
     );
   });
 

@@ -77,8 +77,8 @@ if (__DEV__) {
     child._store.validated = true;
 
     const currentComponentErrorInfo =
-      'Each child in an array or iterator should have a "key" ' +
-      'prop as a unique "string" or "number". See https://fb.me/react-warning-keys for ' +
+      'Each child in an array or iterator should have a unique ' +
+      '"key" prop. See https://fb.me/react-warning-keys for ' +
       'more information.' +
       (getCurrentFiberStackAddendum() || '');
     if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
@@ -88,8 +88,8 @@ if (__DEV__) {
 
     warning(
       false,
-      'Each child in an array or iterator should have a "key" ' +
-        'prop as a unique "string" or "number". See https://fb.me/react-warning-keys for ' +
+      'Each child in an array or iterator should have a unique ' +
+        '"key" prop. See https://fb.me/react-warning-keys for ' +
         'more information.%s',
       getCurrentFiberStackAddendum(),
     );

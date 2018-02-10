@@ -358,7 +358,7 @@ describe('ReactStatelessComponent', () => {
     }
 
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).toWarnDev(
-      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".\n\n' +
+      'Each child in an array or iterator should have a unique "key" prop.\n\n' +
         'Check the render method of `Child`.',
     );
   });
