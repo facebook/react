@@ -163,7 +163,7 @@ function validateExplicitKey(element, parentType) {
   if (__DEV__) {
     warning(
       false,
-      'Each child in an array or iterator should have a unique "key" prop.' +
+      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".' +
         '%s%s See https://fb.me/react-warning-keys for more information.%s',
       currentComponentErrorInfo,
       childOwner,

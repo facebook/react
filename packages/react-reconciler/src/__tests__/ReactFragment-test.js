@@ -707,7 +707,7 @@ describe('ReactFragment', () => {
 
     ReactNoop.render(<Foo condition={false} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".',
     );
 
     expect(ops).toEqual([]);
@@ -751,12 +751,12 @@ describe('ReactFragment', () => {
 
     ReactNoop.render(<Foo condition={true} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".',
     );
 
     ReactNoop.render(<Foo condition={false} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".',
     );
 
     expect(ops).toEqual(['Update Stateful']);
@@ -764,7 +764,7 @@ describe('ReactFragment', () => {
 
     ReactNoop.render(<Foo condition={true} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".',
     );
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);

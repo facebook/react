@@ -49,7 +49,7 @@ describe('ReactJSXElementValidator', () => {
         <Component>{[<Component />, <Component />]}</Component>,
       ),
     ).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".',
     );
   });
 
@@ -69,7 +69,7 @@ describe('ReactJSXElementValidator', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(<ComponentWrapper />),
     ).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.' +
+      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".' +
         '\n\nCheck the render method of `InnerComponent`. ' +
         'It was passed a child from ComponentWrapper. ',
     );
@@ -91,7 +91,7 @@ describe('ReactJSXElementValidator', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>),
     ).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+      'Each child in an array or iterator should have a "key" prop as a unique "string" or "number".',
     );
   });
 
