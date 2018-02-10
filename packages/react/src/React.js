@@ -23,7 +23,7 @@ import {
   cloneElement,
   isValidElement,
 } from './ReactElement';
-import {createContext} from 'shared/ReactContext';
+import {createContext} from './ReactContext';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
