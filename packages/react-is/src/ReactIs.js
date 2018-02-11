@@ -45,7 +45,9 @@ export function typeOf(object: any) {
     case REACT_ASYNC_MODE_TYPE:
     case REACT_FRAGMENT_TYPE:
     case REACT_STRICT_MODE_TYPE:
-      return maybeType;
+      if (getTypeOf(object) === REACT_ELEMENT_TYPE) {
+        return maybeType;
+      }
   }
 
   maybeType = getTypeTypeOf(object);
@@ -72,7 +74,10 @@ export const Portal = REACT_PORTAL_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
 
 export function isAsyncMode(object: any) {
-  return getType(object) === REACT_ASYNC_MODE_TYPE;
+  return (
+    getType(object) === REACT_ASYNC_MODE_TYPE &&
+    getTypeOf(object) === REACT_ELEMENT_TYPE
+  );
 }
 export function isContextConsumer(object: any) {
   return getTypeTypeOf(object) === REACT_CONTEXT_TYPE;
@@ -84,11 +89,17 @@ export function isElement(object: any) {
   return getTypeOf(object) === REACT_ELEMENT_TYPE;
 }
 export function isFragment(object: any) {
-  return getType(object) === REACT_FRAGMENT_TYPE;
+  return (
+    getType(object) === REACT_FRAGMENT_TYPE &&
+    getTypeOf(object) === REACT_ELEMENT_TYPE
+  );
 }
 export function isPortal(object: any) {
   return getTypeOf(object) === REACT_PORTAL_TYPE;
 }
 export function isStrictMode(object: any) {
-  return getType(object) === REACT_STRICT_MODE_TYPE;
+  return (
+    getType(object) === REACT_STRICT_MODE_TYPE &&
+    getTypeOf(object) === REACT_ELEMENT_TYPE
+  );
 }

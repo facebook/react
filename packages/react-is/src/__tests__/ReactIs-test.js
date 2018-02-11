@@ -26,6 +26,7 @@ describe('ReactIs', () => {
       ReactIs.AsyncMode,
     );
     expect(ReactIs.isAsyncMode(<React.unstable_AsyncMode />)).toBe(true);
+    expect(ReactIs.isAsyncMode({type: ReactIs.AsyncMode})).toBe(false);
     expect(ReactIs.isAsyncMode(<React.StrictMode />)).toBe(false);
     expect(ReactIs.isAsyncMode(<div />)).toBe(false);
   });
@@ -65,6 +66,7 @@ describe('ReactIs', () => {
   it('should identify fragments', () => {
     expect(ReactIs.typeOf(<React.Fragment />)).toBe(ReactIs.Fragment);
     expect(ReactIs.isFragment(<React.Fragment />)).toBe(true);
+    expect(ReactIs.isFragment({type: ReactIs.Fragment})).toBe(false);
     expect(ReactIs.isFragment('React.Fragment')).toBe(false);
     expect(ReactIs.isFragment(<div />)).toBe(false);
     expect(ReactIs.isFragment([])).toBe(false);
@@ -81,6 +83,7 @@ describe('ReactIs', () => {
   it('should identify strict mode', () => {
     expect(ReactIs.typeOf(<React.StrictMode />)).toBe(ReactIs.StrictMode);
     expect(ReactIs.isStrictMode(<React.StrictMode />)).toBe(true);
+    expect(ReactIs.isStrictMode({type: ReactIs.StrictMode})).toBe(false);
     expect(ReactIs.isStrictMode(<React.unstable_AsyncMode />)).toBe(false);
     expect(ReactIs.isStrictMode(<div />)).toBe(false);
   });
