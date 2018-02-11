@@ -39,60 +39,56 @@ function getTypeTypeOf(object: any) {
     : null;
 }
 
-const ReactIs = {
-  typeOf(object: any) {
-    const type = getType(object);
-    switch (type) {
-      case REACT_ASYNC_MODE_TYPE:
-      case REACT_FRAGMENT_TYPE:
-      case REACT_STRICT_MODE_TYPE:
-        return type;
-    }
+export function typeOf(object: any) {
+  let maybeType = getType(object);
+  switch (maybeType) {
+    case REACT_ASYNC_MODE_TYPE:
+    case REACT_FRAGMENT_TYPE:
+    case REACT_STRICT_MODE_TYPE:
+      return maybeType;
+  }
 
-    const typeTypeOf = getTypeTypeOf(object);
-    switch (typeTypeOf) {
-      case REACT_CONTEXT_TYPE:
-      case REACT_PROVIDER_TYPE:
-        return typeTypeOf;
-    }
+  maybeType = getTypeTypeOf(object);
+  switch (maybeType) {
+    case REACT_CONTEXT_TYPE:
+    case REACT_PROVIDER_TYPE:
+      return maybeType;
+  }
 
-    const typeOf = getTypeOf(object);
-    switch (typeOf) {
-      case REACT_ELEMENT_TYPE:
-      case REACT_PORTAL_TYPE:
-        return typeOf;
-    }
-  },
+  maybeType = getTypeOf(object);
+  switch (maybeType) {
+    case REACT_ELEMENT_TYPE:
+    case REACT_PORTAL_TYPE:
+      return maybeType;
+  }
+}
 
-  AsyncMode: REACT_ASYNC_MODE_TYPE,
-  ContextConsumer: REACT_CONTEXT_TYPE,
-  ContextProvider: REACT_PROVIDER_TYPE,
-  Element: REACT_ELEMENT_TYPE,
-  Fragment: REACT_FRAGMENT_TYPE,
-  Portal: REACT_PORTAL_TYPE,
-  StrictMode: REACT_STRICT_MODE_TYPE,
+export const AsyncMode = REACT_ASYNC_MODE_TYPE;
+export const ContextConsumer = REACT_CONTEXT_TYPE;
+export const ContextProvider = REACT_PROVIDER_TYPE;
+export const Element = REACT_ELEMENT_TYPE;
+export const Fragment = REACT_FRAGMENT_TYPE;
+export const Portal = REACT_PORTAL_TYPE;
+export const StrictMode = REACT_STRICT_MODE_TYPE;
 
-  isAsyncMode(object: any) {
-    return getType(object) === REACT_ASYNC_MODE_TYPE;
-  },
-  isContextConsumer(object: any) {
-    return getTypeTypeOf(object) === REACT_CONTEXT_TYPE;
-  },
-  isContextProvider(object: any) {
-    return getTypeTypeOf(object) === REACT_PROVIDER_TYPE;
-  },
-  isElement(object: any) {
-    return getTypeOf(object) === REACT_ELEMENT_TYPE;
-  },
-  isFragment(object: any) {
-    return getType(object) === REACT_FRAGMENT_TYPE;
-  },
-  isPortal(object: any) {
-    return getTypeOf(object) === REACT_PORTAL_TYPE;
-  },
-  isStrictMode(object: any) {
-    return getType(object) === REACT_STRICT_MODE_TYPE;
-  },
-};
-
-export default ReactIs;
+export function isAsyncMode(object: any) {
+  return getType(object) === REACT_ASYNC_MODE_TYPE;
+}
+export function isContextConsumer(object: any) {
+  return getTypeTypeOf(object) === REACT_CONTEXT_TYPE;
+}
+export function isContextProvider(object: any) {
+  return getTypeTypeOf(object) === REACT_PROVIDER_TYPE;
+}
+export function isElement(object: any) {
+  return getTypeOf(object) === REACT_ELEMENT_TYPE;
+}
+export function isFragment(object: any) {
+  return getType(object) === REACT_FRAGMENT_TYPE;
+}
+export function isPortal(object: any) {
+  return getTypeOf(object) === REACT_PORTAL_TYPE;
+}
+export function isStrictMode(object: any) {
+  return getType(object) === REACT_STRICT_MODE_TYPE;
+}

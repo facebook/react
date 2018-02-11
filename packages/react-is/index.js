@@ -9,8 +9,4 @@
 
 'use strict';
 
-const ReactIs = require('./src/ReactIs');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactIs.default ? ReactIs.default : ReactIs;
+export * from './src/ReactIs';
