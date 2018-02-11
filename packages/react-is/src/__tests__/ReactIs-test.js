@@ -16,6 +16,7 @@ let ReactIs;
 describe('ReactIs', () => {
   beforeEach(() => {
     jest.resetModules();
+
     React = require('react');
     ReactDOM = require('react-dom');
     ReactIs = require('react-is');
