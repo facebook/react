@@ -52,6 +52,14 @@ describe('ReactIs', () => {
     expect(ReactIs.isElement('div')).toBe(false);
     expect(ReactIs.isElement(true)).toBe(false);
     expect(ReactIs.isElement(123)).toBe(false);
+
+    // It should also identify more specific types as elements
+    const Context = React.createContext(false);
+    expect(ReactIs.isElement(<Context.Provider />)).toBe(true);
+    expect(ReactIs.isElement(<Context.Consumer />)).toBe(true);
+    expect(ReactIs.isElement(<React.Fragment />)).toBe(true);
+    expect(ReactIs.isElement(<React.unstable_AsyncMode />)).toBe(true);
+    expect(ReactIs.isElement(<React.StrictMode />)).toBe(true);
   });
 
   it('should identify fragments', () => {
