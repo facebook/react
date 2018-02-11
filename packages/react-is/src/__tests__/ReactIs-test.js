@@ -22,6 +22,15 @@ describe('ReactIs', () => {
     ReactIs = require('react-is');
   });
 
+  it('should return undefined for unknown/invalid types', () => {
+    expect(ReactIs.typeOf('abc')).toBe(undefined);
+    expect(ReactIs.typeOf(true)).toBe(undefined);
+    expect(ReactIs.typeOf(123)).toBe(undefined);
+    expect(ReactIs.typeOf({})).toBe(undefined);
+    expect(ReactIs.typeOf(null)).toBe(undefined);
+    expect(ReactIs.typeOf(undefined)).toBe(undefined);
+  });
+
   it('should identify async mode', () => {
     expect(ReactIs.typeOf(<React.unstable_AsyncMode />)).toBe(
       ReactIs.AsyncMode,
@@ -54,6 +63,9 @@ describe('ReactIs', () => {
     expect(ReactIs.isElement('div')).toBe(false);
     expect(ReactIs.isElement(true)).toBe(false);
     expect(ReactIs.isElement(123)).toBe(false);
+    expect(ReactIs.isElement(null)).toBe(false);
+    expect(ReactIs.isElement(undefined)).toBe(false);
+    expect(ReactIs.isElement({})).toBe(false);
 
     // It should also identify more specific types as elements
     const Context = React.createContext(false);
