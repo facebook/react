@@ -17,6 +17,7 @@
     "LICENSE",
     "README.md",
     "index.js",
-    "cjs/"
+    "cjs/",
+    "umd/"
   ]
 }
