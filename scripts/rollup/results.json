@@ -398,6 +398,34 @@
       "packageName": "react-reconciler",
       "size": 41327,
       "gzip": 13133
+    },
+    {
+      "filename": "react-is.development.js",
+      "bundleType": "UMD_DEV",
+      "packageName": "react-is",
+      "size": 3760,
+      "gzip": 1086
+    },
+    {
+      "filename": "react-is.production.min.js",
+      "bundleType": "UMD_PROD",
+      "packageName": "react-is",
+      "size": 1641,
+      "gzip": 687
+    },
+    {
+      "filename": "react-is.development.js",
+      "bundleType": "NODE_DEV",
+      "packageName": "react-is",
+      "size": 3571,
+      "gzip": 1030
+    },
+    {
+      "filename": "react-is.production.min.js",
+      "bundleType": "NODE_PROD",
+      "packageName": "react-is",
+      "size": 1559,
+      "gzip": 624
     }
   ]
 }
