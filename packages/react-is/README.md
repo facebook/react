@@ -11,7 +11,7 @@ import {isAsyncMode, typeOf} from 'react-is';
 
 const AsyncMode = React.unstable_AsyncMode;
 
-typeOf(<AsyncMode />); // "ReactAsyncMode"
+typeOf(<AsyncMode />); // ReactIs.AsyncMode
 
 isAsyncMode(<AsyncMode />); // true
 ```
@@ -23,8 +23,8 @@ import {isContextConsumer, isContextProvider, typeOf} from 'react-is';
 
 const ThemeContext = React.createContext('blue');
 
-typeOf(<ThemeContext.Provider />); // "ReactContextProvider"
-typeOf(<ThemeContext.Consumer />); // "ReactContextConsumer"
+typeOf(<ThemeContext.Provider />); // ReactIs.ContextProvider
+typeOf(<ThemeContext.Consumer />); // ReactIs.ContextConsumer
 
 isContextConsumer(<ThemeContext.Consumer />); // true
 isContextProvider(<ThemeContext.Provider />); // true
@@ -35,7 +35,7 @@ isContextProvider(<ThemeContext.Provider />); // true
 import React from 'react';
 import {isElement, typeOf} from 'react-is';
 
-typeOf(<div />); // "ReactElement"
+typeOf(<div />); // ReactIs.Element
 
 isElement(<div />); // true
 ```
@@ -45,7 +45,7 @@ isElement(<div />); // true
 import React from 'react';
 import {isFragment, typeOf} from 'react-is';
 
-typeOf(<></>); // "ReactFragment"
+typeOf(<></>); // ReactIs.Fragment
 
 isFragment(<></>); // true
 ```
@@ -59,7 +59,7 @@ import {isPortal, typeOf} from 'react-is';
 const div = document.createElement('div');
 const portal = createPortal(<div />, div);
 
-typeOf(portal); // "ReactPortal"
+typeOf(portal); // ReactIs.Portal
 
 isPortal(portal); // true
 ```
@@ -69,7 +69,7 @@ isPortal(portal); // true
 import React from 'react';
 import {isStrictMode, typeOf} from 'react-is';
 
-typeOf(<React.StrictMode />); // "ReactStrictMode"
+typeOf(<React.StrictMode />); // ReactIs.StrictMode
 
 isStrictMode(<React.StrictMode />); // true
 ```

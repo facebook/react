@@ -41,29 +41,37 @@ function getTypeTypeOf(object: any) {
 
 const ReactIs = {
   typeOf(object: any) {
-    switch (getType(object)) {
+    const type = getType(object);
+    switch (type) {
       case REACT_ASYNC_MODE_TYPE:
-        return 'ReactAsyncMode';
       case REACT_FRAGMENT_TYPE:
-        return 'ReactFragment';
       case REACT_STRICT_MODE_TYPE:
-        return 'ReactStrictMode';
+        return type;
     }
 
-    switch (getTypeTypeOf(object)) {
+    const typeTypeOf = getTypeTypeOf(object);
+    switch (typeTypeOf) {
       case REACT_CONTEXT_TYPE:
-        return 'ReactContextConsumer';
       case REACT_PROVIDER_TYPE:
-        return 'ReactContextProvider';
+        return typeTypeOf;
     }
 
-    switch (getTypeOf(object)) {
+    const typeOf = getTypeOf(object);
+    switch (typeOf) {
       case REACT_ELEMENT_TYPE:
-        return 'ReactElement';
       case REACT_PORTAL_TYPE:
-        return 'ReactPortal';
+        return typeOf;
     }
   },
+
+  AsyncMode: REACT_ASYNC_MODE_TYPE,
+  ContextConsumer: REACT_CONTEXT_TYPE,
+  ContextProvider: REACT_PROVIDER_TYPE,
+  Element: REACT_ELEMENT_TYPE,
+  Fragment: REACT_FRAGMENT_TYPE,
+  Portal: REACT_PORTAL_TYPE,
+  StrictMode: REACT_STRICT_MODE_TYPE,
+
   isAsyncMode(object: any) {
     return getType(object) === REACT_ASYNC_MODE_TYPE;
   },
