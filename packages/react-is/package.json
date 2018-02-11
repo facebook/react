@@ -1,0 +1,23 @@
+{
+  "name": "react-is",
+  "version": "16.3.0-alpha.0",
+  "description": "Brand checking of React Elements.",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "keywords": ["react"],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://reactjs.org/",
+  "peerDependencies": {
+    "react": "^16.0.0 || 16.3.0-alpha.0"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "cjs/",
+    "umd/"
+  ]
+}
