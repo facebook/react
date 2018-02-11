@@ -117,12 +117,17 @@ describe('create-react-class-integration', () => {
   });
 
   describe('ReactNative NativeMethodsMixin', () => {
-    it('should not warn about default DEV-only legacy lifecycle methods', () => {
-      const ReactNative = require('react-native-renderer');
-      const {
-        NativeMethodsMixin,
-      } = ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    let ReactNative;
+    let NativeMethodsMixin;
 
+    beforeEach(() => {
+      ReactNative = require('react-native-renderer');
+      NativeMethodsMixin =
+        ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+          .NativeMethodsMixin;
+    });
+
+    it('should not warn about default DEV-only legacy lifecycle methods', () => {
       const View = createReactClass({
         mixins: [NativeMethodsMixin],
         render: () => null,
@@ -132,11 +137,6 @@ describe('create-react-class-integration', () => {
     });
 
     it('should warn if users specify their own legacy lifecycles', () => {
-      const ReactNative = require('react-native-renderer');
-      const {
-        NativeMethodsMixin,
-      } = ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
       const View = createReactClass({
         displayName: 'MyNativeComponent',
         mixins: [NativeMethodsMixin],
