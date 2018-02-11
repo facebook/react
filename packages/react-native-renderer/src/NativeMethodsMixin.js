@@ -204,6 +204,11 @@ if (__DEV__) {
   NativeMethodsMixin_DEV.UNSAFE_componentWillReceiveProps = function(newProps) {
     throwOnStylesProp(this, newProps);
   };
+
+  // React may warn about cWM/cWRP/cWU methods being deprecated.
+  // Add a flag to suppress these warnings for this special case.
+  NativeMethodsMixin_DEV.componentWillMount.__suppressDeprecationWarning = true;
+  NativeMethodsMixin_DEV.componentWillReceiveProps.__suppressDeprecationWarning = true;
 }
 
 export default NativeMethodsMixin;
