@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOM;
-let ReactTestUtils;
 
 describe('SyntheticEvent', () => {
   let container;
@@ -19,7 +18,6 @@ describe('SyntheticEvent', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -247,59 +245,57 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
-  // TODO: reenable this test. We are currently silencing these warnings when
-  // using TestUtils.Simulate to avoid spurious warnings that result from the
-  // way we simulate events.
-  xit('should properly log warnings when events simulated with rendered components', () => {
-    let event;
-    const element = document.createElement('div');
-    function assignEvent(e) {
-      event = e;
-    }
-    const node = ReactDOM.render(<div onClick={assignEvent} />, element);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(node));
-
-    // access a property to cause the warning
+  it('should warn when the pooled event has extra properties', () => {
+    let node;
+    let lastEvent;
+    ReactDOM.render(
+      <button
+        ref={el => (node = el)}
+        onClick={e => {
+          if (!lastEvent) {
+            e.foo = 'bar';
+          }
+          lastEvent = e;
+        }}
+      />,
+      container,
+    );
+    let event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    node.dispatchEvent(event);
     expect(() => {
-      event.nativeEvent; // eslint-disable-line no-unused-expressions
+      node.dispatchEvent(event);
     }).toWarnDev(
       'Warning: This synthetic event is reused for performance reasons. If ' +
-        "you're seeing this, you're accessing the property `nativeEvent` on a " +
-        'released/nullified synthetic event. This is set to null. If you must ' +
-        'keep the original synthetic event around, use event.persist(). ' +
+        "you're seeing this, you're adding a new property in the synthetic " +
+        'event object. The property is never released. ' +
         'See https://fb.me/react-event-pooling for more information.',
     );
+    // Should reuse the pooled event
+    expect(lastEvent.foo).toBe('bar');
   });
 
-  it('should warn if Proxy is supported and the synthetic event is added a property', () => {
+  it('should not warn when adding properties into the persisted synthetic event', () => {
     let node;
-    let expectedCount = 0;
-    let syntheticEvent;
-
-    const eventHandler = e => {
-      if (typeof Proxy === 'function') {
-        expect(() => {
-          e.foo = 'bar';
-        }).toWarnDev(
-          'Warning: This synthetic event is reused for performance reasons. If ' +
-            "you're seeing this, you're adding a new property in the synthetic " +
-            'event object. The property is never released. ' +
-            'See https://fb.me/react-event-pooling for more information.',
-        );
-      } else {
-        e.foo = 'bar';
-      }
-      syntheticEvent = e;
-      expectedCount++;
-    };
-    node = ReactDOM.render(<div onClick={eventHandler} />, container);
-
-    const event = document.createEvent('Event');
+    let lastEvent;
+    ReactDOM.render(
+      <button
+        ref={el => (node = el)}
+        onClick={e => {
+          if (!lastEvent) {
+            e.foo = 'bar';
+            e.persist();
+          }
+          lastEvent = e;
+        }}
+      />,
+      container,
+    );
+    let event = document.createEvent('Event');
     event.initEvent('click', true, true);
-
     node.dispatchEvent(event);
-
-    expect(syntheticEvent.foo).toBe('bar');
-    expect(expectedCount).toBe(1);
+    node.dispatchEvent(event);
+    // Should not reuse the previous event
+    expect(lastEvent.foo).toBe(undefined);
   });
 });
