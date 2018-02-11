@@ -2,74 +2,79 @@
 
 This package allows you to test arbitrary values and see if they're a particular React type, e.g. React Elements.
 
+## Installation
+```sh
+# Yarn
+yarn add react-is
+
+# NPM
+npm install react-is --save
+```
+
 ## Usage
 
 ### AsyncMode
 ```js
 import React from 'react';
-import {isAsyncMode, typeOf} from 'react-is';
+import ReactIs from 'react-is';
 
 const AsyncMode = React.unstable_AsyncMode;
 
-typeOf(<AsyncMode />); // ReactIs.AsyncMode
-
-isAsyncMode(<AsyncMode />); // true
+ReactIs.isAsyncMode(<AsyncMode />); // true
+ReactIs.typeOf(<AsyncMode />) === ReactIs.AsyncMode; // true
 ```
 
 ### Context
 ```js
 import React from 'react';
-import {isContextConsumer, isContextProvider, typeOf} from 'react-is';
+ReactIs ReactIs from 'react-is';
 
 const ThemeContext = React.createContext('blue');
 
-typeOf(<ThemeContext.Provider />); // ReactIs.ContextProvider
-typeOf(<ThemeContext.Consumer />); // ReactIs.ContextConsumer
-
-isContextConsumer(<ThemeContext.Consumer />); // true
-isContextProvider(<ThemeContext.Provider />); // true
+ReactIs.isContextConsumer(<ThemeContext.Consumer />); // true
+ReactIs.isContextProvider(<ThemeContext.Provider />); // true
+ReactIs.typeOf(<ThemeContext.Provider />) === ReactIs.ContextProvider; // true
+ReactIs.typeOf(<ThemeContext.Consumer />) === ReactIs.ContextConsumer; // true
 ```
 
 ### Element
 ```js
 import React from 'react';
-import {isElement, typeOf} from 'react-is';
+import ReactIs from 'react-is';
 
-typeOf(<div />); // ReactIs.Element
-
-isElement(<div />); // true
+ReactIs.isElement(<div />); // true
+ReactIs.typeOf(<div />) === ReactIs.Element; // true
 ```
 
 ### Fragment
 ```js
 import React from 'react';
-import {isFragment, typeOf} from 'react-is';
+import ReactIs from 'react-is';
 
-typeOf(<></>); // ReactIs.Fragment
-
-isFragment(<></>); // true
+ReactIs.isFragment(<></>); // true
+ReactIs.typeOf(<></>) === ReactIs.Fragment; // true
 ```
 
 ### Portal
 ```js
 import React from 'react';
-import {createPortal} from 'react-dom';
-import {isPortal, typeOf} from 'react-is';
+import ReactDOM from 'react-dom';
+import ReactIs from 'react-is';
 
 const div = document.createElement('div');
-const portal = createPortal(<div />, div);
+const portal = ReactDOM.createPortal(<div />, div);
 
-typeOf(portal); // ReactIs.Portal
-
-isPortal(portal); // true
+ReactIs.isPortal(portal); // true
+ReactIs.typeOf(portal) === ReactIs.Portal; // true
 ```
 
 ### StrictMode
 ```js
 import React from 'react';
-import {isStrictMode, typeOf} from 'react-is';
+import ReactIs from 'react-is';
 
-typeOf(<React.StrictMode />); // ReactIs.StrictMode
+const {StrictMode} = React;
 
-isStrictMode(<React.StrictMode />); // true
+ReactIs.isStrictMode(<StrictMode />); // true
+ReactIs.typeOf(<StrictMode />) === ReactIs.StrictMode; // true
 ```
