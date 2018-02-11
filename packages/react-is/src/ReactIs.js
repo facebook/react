@@ -33,10 +33,7 @@ export function typeOf(object: any) {
           case REACT_STRICT_MODE_TYPE:
             return type;
           default:
-            const $$typeofType =
-              typeof type === 'object' && type !== null
-                ? type.$$typeof
-                : undefined;
+            const $$typeofType = type.$$typeof;
 
             switch ($$typeofType) {
               case REACT_CONTEXT_TYPE:

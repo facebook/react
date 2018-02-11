@@ -403,29 +403,29 @@
       "filename": "react-is.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-is",
-      "size": 3414,
-      "gzip": 1029
+      "size": 3358,
+      "gzip": 1015
     },
     {
       "filename": "react-is.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-is",
-      "size": 1470,
-      "gzip": 616
+      "size": 1433,
+      "gzip": 607
     },
     {
       "filename": "react-is.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-is",
-      "size": 3603,
-      "gzip": 1084
+      "size": 3547,
+      "gzip": 1071
     },
     {
       "filename": "react-is.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-is",
-      "size": 1552,
-      "gzip": 680
+      "size": 1515,
+      "gzip": 670
     }
   ]
 }
