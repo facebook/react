@@ -136,24 +136,35 @@ describe('create-react-class-integration', () => {
       ReactNative.render(<View />, 1);
     });
 
-    it('should warn if users specify their own legacy lifecycles', () => {
+    it('should warn if users specify their own legacy componentWillMount', () => {
       const View = createReactClass({
         displayName: 'MyNativeComponent',
         mixins: [NativeMethodsMixin],
         componentWillMount: () => {},
-        componentWillReceiveProps: () => {},
         render: () => null,
       });
 
-      expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev([
+      expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
         'componentWillMount is deprecated and will be removed in the next major version. ' +
           'Use componentDidMount instead. As a temporary workaround, ' +
           'you can rename to UNSAFE_componentWillMount.' +
           '\n\nPlease update the following components: MyNativeComponent',
+      );
+    });
+
+    it('should warn if users specify their own legacy componentWillReceiveProps', () => {
+      const View = createReactClass({
+        displayName: 'MyNativeComponent',
+        mixins: [NativeMethodsMixin],
+        componentWillReceiveProps: () => {},
+        render: () => null,
+      });
+
+      expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
         'componentWillReceiveProps is deprecated and will be removed in the next major version. ' +
           'Use static getDerivedStateFromProps instead.' +
           '\n\nPlease update the following components: MyNativeComponent',
-      ]);
+      );
     });
   });
 });
