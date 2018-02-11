@@ -16,9 +16,9 @@ export const enableUserTimingAPI = __DEV__;
 // Mutating mode (React DOM, React ART, React Native):
 export const enableMutatingReconciler = true;
 // Experimental noop mode (currently unused):
-export const enableNoopReconciler = false;
+export const enableNoopReconciler = true;
 // Experimental persistent mode (Fabric):
-export const enablePersistentReconciler = false;
+export const enablePersistentReconciler = true;
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 
