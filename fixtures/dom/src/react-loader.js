@@ -1,3 +1,5 @@
+import semver from 'semver'
+
 /**
  * Take a version from the window query string and load a specific
  * version of React.
@@ -46,10 +48,13 @@ export default function loadReact() {
   let query = parseQuery(window.location.search);
   let version = query.version || 'local';
 
+
   if (version !== 'local') {
+    const {major, minor, prerelease} = semver(version);
+    const [preReleaseStage, preReleaseVersion] = prerelease;
     // The file structure was updated in 16. This wasn't the case for alphas.
     // Load the old module location for anything less than 16 RC
-    if (parseInt(version, 10) >= 16 && version.indexOf('alpha') < 0) {
+    if (major >= 16 && !(minor === 0 && preReleaseStage === 'alpha')) {
       REACT_PATH =
         'https://unpkg.com/react@' + version + '/umd/react.development.js';
       DOM_PATH =
