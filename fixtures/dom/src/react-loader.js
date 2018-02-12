@@ -1,4 +1,4 @@
-import semver from 'semver'
+import semver from 'semver';
 
 /**
  * Take a version from the window query string and load a specific
@@ -41,13 +41,13 @@ export default function loadReact() {
   // @TODO We're using a build of draft-js provided by @acusti in https://github.com/facebook/react/pull/12037
   // This is because currently draft doesn't support iframes. This should be changed back to the official
   // release on unpkg once the draft fixes are merged.
-  const DRAFT_JS_PATH = 'https://cdn.rawgit.com/brandcast/draft-js-built/d6c2ffc64914b001411356c0bfab24e831bc5429/dist/Draft.js';
+  const DRAFT_JS_PATH =
+    'https://cdn.rawgit.com/brandcast/draft-js-built/d6c2ffc64914b001411356c0bfab24e831bc5429/dist/Draft.js';
   let REACT_PATH = 'react.development.js';
   let DOM_PATH = 'react-dom.development.js';
 
   let query = parseQuery(window.location.search);
   let version = query.version || 'local';
-
 
   if (version !== 'local') {
     const {major, minor, prerelease} = semver(version);

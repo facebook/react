@@ -3,12 +3,11 @@ import Iframe from '../../Iframe';
 const React = window.React;
 
 export default class ReorderedInputsTestCase extends React.Component {
-
-  state = { count: 0 };
+  state = {count: 0};
 
   componentDidMount() {
     this.interval = setInterval(() => {
-      this.setState({ count: this.state.count + 1 });
+      this.setState({count: this.state.count + 1});
     }, 2000);
   }
 
@@ -29,9 +28,7 @@ export default class ReorderedInputsTestCase extends React.Component {
 
   render() {
     return (
-      <TestCase
-        title="Reordered input elements in iframes"
-        description="">
+      <TestCase title="Reordered input elements in iframes" description="">
         <TestCase.Steps>
           <li>The two inputs below swap positions every two seconds</li>
           <li>Select the text in either of them</li>
@@ -40,10 +37,8 @@ export default class ReorderedInputsTestCase extends React.Component {
         <TestCase.ExpectedResult>
           The selection you made should be maintained
         </TestCase.ExpectedResult>
-        <Iframe height={50}>
-          {this.renderInputs()}
-        </Iframe>
+        <Iframe height={50}>{this.renderInputs()}</Iframe>
       </TestCase>
-    )
+    );
   }
 }

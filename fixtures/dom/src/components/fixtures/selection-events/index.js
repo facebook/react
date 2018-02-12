@@ -5,7 +5,6 @@ import ReorderedInputsTestCase from './ReorderedInputsTestCase';
 import DraftJsEditorTestCase from './DraftJsEditorTestCase';
 const React = window.React;
 
-
 export default function SelectionEvents() {
   return (
     <FixtureSet
@@ -21,4 +20,4 @@ export default function SelectionEvents() {
       <DraftJsEditorTestCase />
     </FixtureSet>
   );
-};
+}

@@ -4,7 +4,7 @@ const ReactDOM = window.ReactDOM;
 class IframePortal extends React.Component {
   state = {ref: null};
 
-  handleRef = (ref) => {
+  handleRef = ref => {
     if (ref !== this.state.ref) {
       this.setState({ref});
       if (ref && ref.contentDocument && this.props.head) {
@@ -19,15 +19,16 @@ class IframePortal extends React.Component {
     if (ref && ref.contentDocument) {
       portal = ReactDOM.createPortal(
         this.props.children,
-        ref.contentDocument.body,
+        ref.contentDocument.body
       );
     }
 
     return (
       <div>
         <iframe
-          style={{ border: 'none', height: this.props.height }}
-          ref={this.handleRef} />
+          style={{border: 'none', height: this.props.height}}
+          ref={this.handleRef}
+        />
         {portal}
       </div>
     );
@@ -38,16 +39,13 @@ class IframeSubtree extends React.Component {
   warned = false;
   render() {
     if (!this.warned) {
-      console.error(`IFrame has not yet been implemented for React v${React.version}`);
+      console.error(
+        `IFrame has not yet been implemented for React v${React.version}`
+      );
       this.warned = true;
     }
-    return (
-      <div>
-        {this.props.children}
-      </div>
-    )
+    return <div>{this.props.children}</div>;
   }
 }
 
-
-export default ReactDOM.createPortal ? IframePortal : IframeSubtree;
+export default (ReactDOM.createPortal ? IframePortal : IframeSubtree);
