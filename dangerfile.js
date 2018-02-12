@@ -117,8 +117,8 @@ function git(args) {
   const packagesToShow = results
     .filter(
       r =>
-        Math.abs(r.prevFileSizeChange) > percentToWarrentShowing ||
-        Math.abs(r.prevGzipSizeChange) > percentToWarrentShowing
+        Math.abs(r.prevFileSizeChange) >= percentToWarrentShowing ||
+        Math.abs(r.prevGzipSizeChange) >= percentToWarrentShowing
     )
 
     .map(r => r.packageName);
