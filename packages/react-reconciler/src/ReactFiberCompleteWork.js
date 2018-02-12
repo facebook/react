@@ -34,6 +34,8 @@ import {
   ContextConsumer,
   Fragment,
   Mode,
+  AsyncBoundary,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
   Placement,
@@ -597,6 +599,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return null;
       case ReturnComponent:
         // Does nothing.
+        return null;
+      case AsyncBoundary:
+        return null;
+      case TimeoutComponent:
+        if (workInProgress.effectTag & DidCapture) {
+          workInProgress.effectTag |= Update;
+        }
         return null;
       case Fragment:
         return null;

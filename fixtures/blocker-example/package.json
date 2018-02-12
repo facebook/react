@@ -1,0 +1,19 @@
+{
+  "name": "blocker-example",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "glamor": "^2.20.40",
+    "react": "file:../../build/node_modules/react",
+    "react-dom": "file:../../build/node_modules/react-dom",
+    "react-router-dom": "^4.2.2",
+    "react-scripts": "1.0.17",
+    "snarkdown": "^1.2.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}

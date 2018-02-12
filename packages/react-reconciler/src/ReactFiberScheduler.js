@@ -59,6 +59,14 @@ import ReactFiberHydrationContext from './ReactFiberHydrationContext';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {
+  addPendingWork,
+  addNonInteractivePendingWork,
+  flushPendingWork,
+  findStartTime,
+  findNextExpirationTimeToWorkOn,
+  resumePendingWork,
+} from './ReactFiberPendingWork';
+import {
   recordEffect,
   recordScheduleUpdate,
   startRequestCallbackTimer,
@@ -177,6 +185,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     scheduleWork,
     computeExpirationForFiber,
     recalculateCurrentTime,
+    checkIfInRenderPhase,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -185,6 +194,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   );
   const {exitIncompleteWork} = ReactFiberIncompleteWork(
     hostContext,
+    retryOnPromiseResolution,
     scheduleWork,
     markUncaughtError,
     isAlreadyFailedLegacyErrorBoundary,
@@ -228,12 +238,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   let expirationContext: ExpirationTime = NoWork;
 
   let isWorking: boolean = false;
+  let updatesAreInteractive: boolean = false;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork: Fiber | null = null;
   let nextRoot: FiberRoot | null = null;
   // The time at which we're currently rendering work.
   let nextRenderExpirationTime: ExpirationTime = NoWork;
+  let nextStartTime: ExpirationTime = NoWork;
+  let nextStartTimeMs: number = -1;
+  let nextElapsedTimeMs: number = -1;
+  let nextRemainingTimeMs: number = -1;
+  let nextRenderCursor: ExpirationTime = NoWork;
   let nextRenderIsExpired: boolean = false;
 
   // The next fiber with an effect that we're currently committing.
@@ -267,6 +283,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     nextRoot = null;
     nextRenderExpirationTime = NoWork;
+    nextStartTime = NoWork;
+    nextStartTimeMs = -1;
+    nextElapsedTimeMs = -1;
+    nextRemainingTimeMs = -1;
+    nextRenderCursor = NoWork;
     nextRenderIsExpired = false;
     nextUnitOfWork = null;
 
@@ -546,7 +567,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
     }
 
-    const remainingTime = root.current.expirationTime;
+    flushPendingWork(root, currentTime, root.current.expirationTime);
+    const remainingTime = findNextExpirationTimeToWorkOn(root);
     if (remainingTime === NoWork) {
       // If there's no remaining work, we can clear the set of already failed
       // error boundaries.
@@ -695,9 +717,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // the stack without entering the complete phase. If this is a boundary,
         // capture values if possible.
         const next = exitIncompleteWork(
-          current,
           workInProgress,
+          nextElapsedTimeMs,
           nextRenderIsExpired,
+          nextRemainingTimeMs,
+          nextStartTime,
           nextRenderExpirationTime,
         );
         // Because this fiber did not complete, don't reset its expiration time.
@@ -893,7 +917,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function renderRoot(
     root: FiberRoot,
-    expirationTime: ExpirationTime,
+    renderCursor: ExpirationTime,
     isAsync: boolean,
   ): Fiber | null {
     invariant(
@@ -903,16 +927,37 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     );
     isWorking = true;
     // Check if we're starting from a fresh stack, or if we're resuming from
-    // previously yielded work.
+    // previously yielded work. When comparing priorities, use nextRenderCursor
+    // instead of nextRenderExpirationTime. The reason for the distinction is
+    // because updates can have same expiration time, but separate priorities.
+    // For example, if the tree is blocked from committing at expiration time
+    // 100, we may schedule a higher priority update at 99 in order to render
+    // a loading state. But the higher priority update shouldn't expire earlier
+    // than the blocked update. Same expiration, different priorities. It's a
+    // bit confusing, and perhaps a flaw in our expiration time model. Still,
+    // the "cursor" concept should be isolated to this function only.
+    // TODO: Revisit this. There's almost certainly a better solution.
     if (
-      expirationTime !== nextRenderExpirationTime ||
+      renderCursor !== nextRenderCursor ||
       root !== nextRoot ||
       nextUnitOfWork === null
     ) {
       // Reset the stack and start working from the root.
       resetContextStack();
       nextRoot = root;
-      nextRenderExpirationTime = expirationTime;
+      nextRenderCursor = renderCursor;
+      nextRenderExpirationTime = renderCursor;
+      nextStartTime = findStartTime(nextRoot, nextRenderExpirationTime);
+      recalculateCurrentTime();
+      if (nextStartTime === NoWork) {
+        nextStartTime = mostRecentCurrentTime;
+        nextStartTimeMs = mostRecentCurrentTimeMs;
+      } else {
+        nextStartTimeMs = expirationTimeToMs(nextStartTime);
+      }
+      nextElapsedTimeMs = mostRecentCurrentTimeMs - nextStartTimeMs;
+      nextRemainingTimeMs =
+        expirationTimeToMs(nextRenderExpirationTime) - mostRecentCurrentTimeMs;
       nextUnitOfWork = createWorkInProgress(
         nextRoot.current,
         null,
@@ -962,22 +1007,27 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const finishedWork = isRootReadyForCommit ? root.current.alternate : null;
       onUncaughtError(firstUncaughtError);
       resetContextStack();
-      root.pendingCommitExpirationTime = expirationTime;
+      root.pendingCommitExpirationTime = renderCursor;
       return finishedWork;
     } else if (nextUnitOfWork === null) {
       // We reached the root.
       if (isRootReadyForCommit) {
         // The root successfully completed. It's ready for commit.
-        root.pendingCommitExpirationTime = expirationTime;
+        root.pendingCommitExpirationTime = renderCursor;
         const finishedWork = root.current.alternate;
         return finishedWork;
       } else {
         // The root did not complete.
         invariant(
-          false,
-          'Should have completed the root. This error is likely caused by a ' +
-            'bug in React. Please file an issue.',
+          !nextRenderIsExpired,
+          'Expired work should have completed. This error is likely caused ' +
+            'by a bug in React. Please file an issue.',
         );
+        const firstUnblockedExpirationTime = findNextExpirationTimeToWorkOn(
+          root,
+        );
+        onBlock(firstUnblockedExpirationTime);
+        return null;
       }
     } else {
       // There's more work to do, but we ran out of time. Yield back to
@@ -1151,6 +1201,26 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return expirationTime;
   }
 
+  function checkIfInRenderPhase() {
+    return isWorking && !isCommitting;
+  }
+
+  function checkIfUpdatesAreInteractive() {
+    return !isWorking || updatesAreInteractive;
+  }
+
+  function retryOnPromiseResolution(
+    root: FiberRoot,
+    blockedTime: ExpirationTime,
+  ) {
+    resumePendingWork(root, blockedTime);
+    const retryTime = findNextExpirationTimeToWorkOn(root);
+
+    if (retryTime !== NoWork) {
+      requestRetry(root, retryTime);
+    }
+  }
+
   function scheduleWork(
     fiber: Fiber,
     startTime: ExpirationTime,
@@ -1204,6 +1274,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             interruptedBy = fiber;
             resetContextStack();
           }
+          if (checkIfUpdatesAreInteractive()) {
+            addPendingWork(root, startTime, expirationTime);
+          } else {
+            addNonInteractivePendingWork(root, startTime, expirationTime);
+          }
           requestWork(root, expirationTime);
         } else {
           if (__DEV__) {
@@ -1227,15 +1302,21 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function deferredUpdates<A>(fn: () => A): A {
     const previousExpirationContext = expirationContext;
+    const previousUpdatesAreInteractive = updatesAreInteractive;
     const currentTime = recalculateCurrentTime();
     expirationContext = computeAsyncExpiration(currentTime);
+    // We assume any use of `deferredUpdates` is to split a high-priority
+    // interactive update into separate high and low values. Set this to true so
+    // that the low-pri value is treated as if it were the result of an
+    // interaction, even if we're in the render phase.
+    updatesAreInteractive = true;
     try {
       return fn();
     } finally {
       expirationContext = previousExpirationContext;
+      updatesAreInteractive = previousUpdatesAreInteractive;
     }
   }
-
   function syncUpdates<A, B, C0, D, R>(
     fn: (A, B, C0, D) => R,
     a: A,
@@ -1305,6 +1386,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     callbackExpirationTime = expirationTime;
     callbackID = scheduleDeferredCallback(performAsyncWork, {timeout});
+  }
+
+  function requestRetry(root: FiberRoot, expirationTime: ExpirationTime) {
+    if (
+      root.remainingExpirationTime === NoWork ||
+      root.remainingExpirationTime < expirationTime
+    ) {
+      // For a retry, only update the remaining expiration time if it has a
+      // *lower priority* than the existing value. This is because, on a retry,
+      // we should attempt to coalesce as much as possible.
+      requestWork(root, expirationTime);
+    }
   }
 
   // requestWork is called by the scheduler whenever a root receives an update.
@@ -1673,6 +1766,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       hasUnhandledError = true;
       unhandledError = error;
     }
+  }
+
+  function onBlock(remainingExpirationTime: ExpirationTime) {
+    invariant(
+      nextFlushedRoot !== null,
+      'Should be working on a root. This error is likely caused by a bug in ' +
+        'React. Please file an issue.',
+    );
+    // This root was blocked. Unschedule it until there's another update.
+    nextFlushedRoot.remainingExpirationTime = remainingExpirationTime;
   }
 
   // TODO: Batching should be implemented at the renderer level, not inside

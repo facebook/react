@@ -16,17 +16,33 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
 } from 'shared/ReactFeatureFlags';
 import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
-import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
+import {ClassComponent, HostRoot, AsyncBoundary} from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 import {StrictMode} from './ReactTypeOfMode';
 
 import {NoWork} from './ReactFiberExpirationTime';
 
-let didWarnUpdateInsideUpdate;
+let didWarnUpdateInsideUpdater;
+let warnForUpdatesInsideUpdater;
 
 if (__DEV__) {
-  didWarnUpdateInsideUpdate = false;
+  didWarnUpdateInsideUpdater = false;
+  warnForUpdatesInsideUpdater = function(queue1, queue2) {
+    if (
+      (queue1.isProcessing || (queue2 !== null && queue2.isProcessing)) &&
+      !didWarnUpdateInsideUpdater
+    ) {
+      warning(
+        false,
+        'An update (setState, replaceState, or forceUpdate) was scheduled ' +
+          'from inside an update function. Update functions should be pure, ' +
+          'with zero side-effects. Consider using componentDidUpdate or a ' +
+          'callback.',
+      );
+      didWarnUpdateInsideUpdater = true;
+    }
+  };
 }
 
 type PartialState<State, Props> =
@@ -93,18 +109,111 @@ function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
   return queue;
 }
 
-export function insertUpdateIntoQueue<State>(
-  queue: UpdateQueue<State>,
+// Uses module scope to avoid allocating a tuple
+let q1;
+let q2;
+export function ensureUpdateQueues(fiber: Fiber): void {
+  // We'll have at least one and at most two distinct update queues.
+  const alternateFiber = fiber.alternate;
+  q1 = fiber.updateQueue;
+  if (q1 === null) {
+    // TODO: We don't know what the base state will be until we begin work.
+    // It depends on which fiber is the next current. Initialize with an empty
+    // base state, then set to the memoizedState when rendering. Not super
+    // happy with this approach.
+    q1 = fiber.updateQueue = createUpdateQueue((null: any));
+  }
+
+  if (alternateFiber !== null) {
+    q2 = alternateFiber.updateQueue;
+    if (q2 === null) {
+      q2 = alternateFiber.updateQueue = createUpdateQueue((null: any));
+    }
+  } else {
+    q2 = null;
+  }
+  q2 = q2 !== q1 ? q2 : null;
+}
+
+export function insertUpdateIntoFiber<State>(
+  fiber: Fiber,
   update: Update<State>,
 ): void {
-  // Append the update to the end of the list.
-  if (queue.last === null) {
-    // Queue is empty
-    queue.first = queue.last = update;
-  } else {
-    queue.last.next = update;
-    queue.last = update;
+  ensureUpdateQueues(fiber);
+  // Uses module scope to avoid allocating a tuple
+  const queue1: Fiber = (q1: any);
+  const queue2: Fiber | null = (q2: any);
+
+  // Warn if an update is scheduled from inside an updater function.
+  if (__DEV__) {
+    warnForUpdatesInsideUpdater(queue1, queue2);
   }
+
+  const expirationTime = update.expirationTime;
+  const insertAfter1 = queue1.last;
+
+  // If there's only one queue, add the update to that queue and exit.
+  if (queue2 === null) {
+    insertUpdateIntoQueue(queue1, update, insertAfter1);
+    return;
+  }
+
+  // If there are two queues, check if their insertion positions are the same.
+  // We must calculate the second insertion position *before* performing
+  // any insertions.
+  const insertAfter2 = queue2.last;
+
+  if (insertAfter1 === null || insertAfter1 !== insertAfter2) {
+    // The insertion positions are different. Insert into both queues.
+    insertUpdateIntoQueue(queue1, update, insertAfter1);
+    const update2 = {
+      expirationTime,
+      partialState: update.partialState,
+      callback: update.callback,
+      isReplace: update.isReplace,
+      isForced: update.isForced,
+      capturedValue: update.capturedValue,
+      next: null,
+    };
+    insertUpdateIntoQueue(queue2, update2, insertAfter2);
+    return;
+  }
+
+  // The insertion positions are the same. Only insert into one of the queues.
+  insertUpdateIntoQueue(queue1, update, insertAfter1);
+  // But update queue2's `first` and `last` pointers, if needed.
+  if (insertAfter2 === null) {
+    queue2.first = update;
+  }
+  if (update.next === null) {
+    queue2.last = update;
+  }
+  // And its expiration time.
+  if (
+    queue2.expirationTime === NoWork ||
+    queue2.expirationTime > update.expirationTime
+  ) {
+    queue2.expirationTime = update.expirationTime;
+  }
+}
+
+function insertUpdateIntoQueue<State>(
+  queue: UpdateQueue<State>,
+  update: Update<State>,
+  insertAfter: Update<State> | null,
+): void {
+  const insertBefore = insertAfter === null ? queue.first : insertAfter.next;
+  if (insertAfter === null) {
+    queue.first = update;
+  } else {
+    insertAfter.next = update;
+  }
+  if (insertBefore === null) {
+    queue.last = update;
+  } else {
+    update.next = insertBefore;
+  }
+  // And its expiration time.
   if (
     queue.expirationTime === NoWork ||
     queue.expirationTime > update.expirationTime
@@ -113,92 +222,109 @@ export function insertUpdateIntoQueue<State>(
   }
 }
 
-let q1;
-let q2;
-export function ensureUpdateQueues(fiber: Fiber) {
-  q1 = q2 = null;
-  // We'll have at least one and at most two distinct update queues.
-  const alternateFiber = fiber.alternate;
-  let queue1 = fiber.updateQueue;
-  if (queue1 === null) {
-    // TODO: We don't know what the base state will be until we begin work.
-    // It depends on which fiber is the next current. Initialize with an empty
-    // base state, then set to the memoizedState when rendering. Not super
-    // happy with this approach.
-    queue1 = fiber.updateQueue = createUpdateQueue((null: any));
-  }
-
-  let queue2;
-  if (alternateFiber !== null) {
-    queue2 = alternateFiber.updateQueue;
-    if (queue2 === null) {
-      queue2 = alternateFiber.updateQueue = createUpdateQueue((null: any));
+function findRenderPhaseUpdateInsertionPosition<State>(
+  queue: UpdateQueue<State>,
+  expirationTime: ExpirationTime,
+): Update<State> | null {
+  // Render phase updates are not interactions: they should be inserted into the
+  // list by priority, not insertion order. Find the first update with lower
+  // priority and insert the update right before that. It's as if the update
+  // were already part of the queue before we started rendering.
+  let insertAfter = null;
+  let insertBefore = queue.first;
+  while (insertBefore !== null) {
+    if (insertBefore.expirationTime > expirationTime) {
+      // Found the insertion position!
+      break;
     }
-  } else {
-    queue2 = null;
+    // Continue looking
+    insertAfter = insertBefore;
+    insertBefore = insertBefore.next;
   }
-  queue2 = queue2 !== queue1 ? queue2 : null;
-
-  // Use module variables instead of returning a tuple
-  q1 = queue1;
-  q2 = queue2;
+  return insertAfter;
 }
 
-export function insertUpdateIntoFiber<State>(
+export function insertRenderPhaseUpdateIntoFiber<State>(
   fiber: Fiber,
   update: Update<State>,
 ): void {
   ensureUpdateQueues(fiber);
+  // Uses module scope to avoid allocating a tuple
   const queue1: Fiber = (q1: any);
   const queue2: Fiber | null = (q2: any);
 
   // Warn if an update is scheduled from inside an updater function.
   if (__DEV__) {
-    if (
-      (queue1.isProcessing || (queue2 !== null && queue2.isProcessing)) &&
-      !didWarnUpdateInsideUpdate
-    ) {
-      warning(
-        false,
-        'An update (setState, replaceState, or forceUpdate) was scheduled ' +
-          'from inside an update function. Update functions should be pure, ' +
-          'with zero side-effects. Consider using componentDidUpdate or a ' +
-          'callback.',
-      );
-      didWarnUpdateInsideUpdate = true;
-    }
+    warnForUpdatesInsideUpdater(queue1, queue2);
   }
+
+  const expirationTime = update.expirationTime;
+  const insertAfter1 = findRenderPhaseUpdateInsertionPosition(
+    queue1,
+    expirationTime,
+  );
 
   // If there's only one queue, add the update to that queue and exit.
   if (queue2 === null) {
-    insertUpdateIntoQueue(queue1, update);
+    insertUpdateIntoQueue(queue1, update, insertAfter1);
     return;
   }
 
-  // If either queue is empty, we need to add to both queues.
-  if (queue1.last === null || queue2.last === null) {
-    insertUpdateIntoQueue(queue1, update);
-    insertUpdateIntoQueue(queue2, update);
+  // If there are two queues, check if their insertion positions are the same.
+  // We must calculate the second insertion position *before* performing
+  // any insertions.
+  const insertAfter2 = findRenderPhaseUpdateInsertionPosition(
+    queue2,
+    expirationTime,
+  );
+
+  if (insertAfter1 === null || insertAfter1 !== insertAfter2) {
+    // The insertion positions are different. Insert into both queues.
+    insertUpdateIntoQueue(queue1, update, insertAfter1);
+    const update2 = {
+      expirationTime,
+      partialState: update.partialState,
+      callback: update.callback,
+      isReplace: update.isReplace,
+      isForced: update.isForced,
+      capturedValue: update.capturedValue,
+      next: null,
+    };
+    insertUpdateIntoQueue(queue2, update2, insertAfter2);
     return;
   }
 
-  // If both lists are not empty, the last update is the same for both lists
-  // because of structural sharing. So, we should only append to one of
-  // the lists.
-  insertUpdateIntoQueue(queue1, update);
-  // But we still need to update the `last` pointer of queue2.
-  queue2.last = update;
+  // The insertion positions are the same. Only insert into one of the queues.
+  insertUpdateIntoQueue(queue1, update, insertAfter1);
+  // But update queue2's `first` and `last` pointers, if needed.
+  if (insertAfter2 === null) {
+    queue2.first = update;
+  }
+  if (update.next === null) {
+    queue2.last = update;
+  }
+  // And its expiration time.
+  if (
+    queue2.expirationTime === NoWork ||
+    queue2.expirationTime > update.expirationTime
+  ) {
+    queue2.expirationTime = update.expirationTime;
+  }
 }
 
 export function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
-  if (fiber.tag !== ClassComponent && fiber.tag !== HostRoot) {
-    return NoWork;
+  switch (fiber.tag) {
+    case HostRoot:
+    case ClassComponent:
+    case AsyncBoundary:
+      const updateQueue = fiber.updateQueue;
+      if (updateQueue === null) {
+        return NoWork;
+      }
+      return updateQueue.expirationTime;
+    default:
+      return NoWork;
   }
-  const updateQueue = fiber.updateQueue;
-  if (updateQueue === null) {
-    return NoWork;
-  }
-  return updateQueue.expirationTime;
 }
 
 function getStateFromUpdate(update, instance, prevState, props) {

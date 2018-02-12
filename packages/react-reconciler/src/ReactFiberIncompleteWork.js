@@ -1,24 +1,10 @@
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @flow
- */
-
-import type {HostContext} from './ReactFiberHostContext';
-import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
-import type {CapturedValue} from './ReactCapturedValue';
-import type {UpdateQueue} from './ReactFiberUpdateQueue';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
-
 import {createWorkInProgress} from './ReactFiber';
 import {createCapturedValue} from './ReactCapturedValue';
+import {suspendPendingWork} from './ReactFiberPendingWork';
 import {
+  processUpdateQueue,
+  insertRenderPhaseUpdateIntoFiber,
   ensureUpdateQueues,
-  insertUpdateIntoFiber,
 } from './ReactFiberUpdateQueue';
 
 import {
@@ -36,6 +22,8 @@ import {
   ContextConsumer,
   Fragment,
   Mode,
+  AsyncBoundary,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
   NoEffect,
@@ -43,8 +31,12 @@ import {
   Incomplete,
   Combined,
   Err,
+  Suspend,
+  Loading,
+  Timeout,
   AlgebraicEffectMask,
 } from 'shared/ReactTypeOfSideEffect';
+import {Sync} from './ReactFiberExpirationTime';
 
 import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
 
@@ -85,17 +77,20 @@ function addEffectToReturnFiber(returnFiber, effectFiber) {
   returnFiber.effectTag |= Incomplete;
 }
 
-export function raiseUnknownEffect(
-  returnFiber: Fiber,
-  sourceFiber: Fiber,
-  value: mixed,
-) {
+export function raiseUnknownEffect(returnFiber, sourceFiber, value) {
   let algebraicEffectTag;
-  if (value instanceof Error) {
+  if (value instanceof Promise) {
+    algebraicEffectTag = Suspend;
+  } else if (value instanceof Error) {
     algebraicEffectTag = Err;
   } else if (value !== null && typeof value === 'object') {
     // If instanceof fails, fall back to duck typing.
-    if (typeof value.stack === 'string' && typeof value.message === 'string') {
+    if (typeof value.then === 'function') {
+      algebraicEffectTag = Suspend;
+    } else if (
+      typeof value.stack === 'string' &&
+      typeof value.message === 'string'
+    ) {
       algebraicEffectTag = Err;
     } else {
       algebraicEffectTag = NoEffect;
@@ -110,26 +105,53 @@ export function raiseUnknownEffect(
   raiseEffect(returnFiber, sourceFiber, value, algebraicEffectTag);
 }
 
-export function raiseCombinedEffect(
-  returnFiber: Fiber,
-  sourceFiber: Fiber,
-  values: mixed,
-) {
+export function raiseCombinedEffect(returnFiber, sourceFiber, values) {
   raiseEffect(returnFiber, sourceFiber, values, Combined);
 }
 
+function raiseLoadingEffect(returnFiber, sourceFiber, promises) {
+  raiseEffect(returnFiber, sourceFiber, promises, Loading);
+}
+
+function raiseTimeoutEffect(returnFiber, sourceFiber, timeout) {
+  raiseEffect(returnFiber, sourceFiber, timeout, Timeout);
+}
+
 function raiseEffect(returnFiber, sourceFiber, value, algebraicEffectTag) {
-  // The source fiber's effect list is no longer valid. The effect list
-  // is likely already empty, since we reset this in the complete phase,
-  // but errors could be thrown in the complete phase, too.
-  sourceFiber.firstEffect = sourceFiber.lastEffect = null;
+  if ((sourceFiber.effectTag & Incomplete) === NoEffect) {
+    // The source fiber's effect list is no longer valid. The effect list
+    // is likely already empty, since we reset this in the complete phase,
+    // but errors could be thrown in the complete phase, too.
+    sourceFiber.firstEffect = sourceFiber.lastEffect = null;
+  }
   sourceFiber.effectTag |= Incomplete | algebraicEffectTag;
   sourceFiber.thrownValue = value;
   addEffectToReturnFiber(returnFiber, sourceFiber);
 }
 
-export default function<C, CX>(
+function createRootExpirationError(sourceFiber, renderExpirationTime) {
+  try {
+    // TODO: Better error messages.
+    invariant(
+      renderExpirationTime !== Sync,
+      'A synchronous update was suspended, but no fallback UI was provided.',
+    );
+    invariant(
+      false,
+      'An update was suspended for longer than the timeout, but no fallback ' +
+        'UI was provided.',
+    );
+  } catch (error) {
+    return createCapturedValue(error, Err, sourceFiber);
+  }
+}
+
+export default function(
   hostContext: HostContext<C, CX>,
+  retryOnPromiseResolution: (
+    root: FiberRoot,
+    blockedTime: ExpirationTime,
+  ) => void,
   scheduleWork: (
     fiber: Fiber,
     startTime: ExpirationTime,
@@ -139,6 +161,84 @@ export default function<C, CX>(
   isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
 ) {
   const {popHostContainer, popHostContext} = hostContext;
+
+  function handleRootLoading(
+    current,
+    workInProgress,
+    promises,
+    boundary,
+    suspenders,
+    renderIsExpired,
+    renderStartTime,
+    renderExpirationTime,
+  ) {
+    if (!renderIsExpired) {
+      const slightlyHigherPriority = renderExpirationTime - 1;
+      promises.push.apply(promises, suspenders);
+      const loadingUpdate = {
+        expirationTime: slightlyHigherPriority,
+        partialState: true,
+        callback: null,
+        isReplace: true,
+        isForced: false,
+        capturedValue: null,
+        next: null,
+      };
+      insertRenderPhaseUpdateIntoFiber(boundary, loadingUpdate);
+
+      const revertUpdate = {
+        expirationTime: renderExpirationTime,
+        partialState: false,
+        callback: null,
+        isReplace: true,
+        isForced: false,
+        capturedValue: null,
+        next: null,
+      };
+      insertRenderPhaseUpdateIntoFiber(boundary, revertUpdate);
+      scheduleWork(boundary, renderStartTime, slightlyHigherPriority);
+      return false;
+    }
+    const errorInfo = createRootExpirationError(boundary, renderExpirationTime);
+    return handleRootError(
+      current,
+      workInProgress,
+      errorInfo,
+      renderExpirationTime,
+    );
+  }
+
+  function handleRootSuspend(
+    current,
+    workInProgress,
+    promises,
+    sourceFiber,
+    promise,
+    renderIsExpired,
+    renderExpirationTime,
+  ) {
+    if (!renderIsExpired) {
+      promises.push(promise);
+      return false;
+    }
+    const errorInfo = createRootExpirationError(
+      sourceFiber,
+      renderExpirationTime,
+    );
+    return handleRootError(
+      current,
+      workInProgress,
+      errorInfo,
+      renderExpirationTime,
+    );
+  }
+
+  function handleRootTimeout(earliestTimeoutRef, timeout) {
+    if (timeout < earliestTimeoutRef.value) {
+      earliestTimeoutRef.value = timeout;
+    }
+    return false;
+  }
 
   function handleRootUnknown(
     current,
@@ -175,17 +275,20 @@ export default function<C, CX>(
       capturedValue: null,
       next: null,
     };
-    insertUpdateIntoFiber(workInProgress, update);
+    insertRenderPhaseUpdateIntoFiber(workInProgress, update);
     return true;
   }
 
   function handleRootEffect(
     current,
     workInProgress,
+    promises,
+    earliestTimeoutRef,
     effectSource,
     algebraicEffectTag,
     effectValue,
     renderIsExpired,
+    renderStartTime,
     renderExpirationTime,
   ) {
     switch (algebraicEffectTag) {
@@ -198,10 +301,13 @@ export default function<C, CX>(
             handleRootEffect(
               current,
               workInProgress,
+              promises,
+              earliestTimeoutRef,
               nestedValue.source,
               nestedValue.tag,
               nestedValue,
               renderIsExpired,
+              renderStartTime,
               renderExpirationTime,
             )
           ) {
@@ -209,6 +315,33 @@ export default function<C, CX>(
           }
         }
         return shouldRetry;
+      }
+      // Intentionally fall through to error type
+      case Loading: {
+        return handleRootLoading(
+          current,
+          workInProgress,
+          promises,
+          effectSource,
+          effectValue,
+          renderIsExpired,
+          renderStartTime,
+          renderExpirationTime,
+        );
+      }
+      case Suspend: {
+        return handleRootSuspend(
+          current,
+          workInProgress,
+          promises,
+          effectSource,
+          effectValue,
+          renderIsExpired,
+          renderExpirationTime,
+        );
+      }
+      case Timeout: {
+        return handleRootTimeout(earliestTimeoutRef, effectValue);
       }
       case NoEffect:
         // Anything other than a promise is treated as an error.
@@ -239,11 +372,15 @@ export default function<C, CX>(
   function exitIncompleteRoot(
     workInProgress,
     renderIsExpired,
+    remainingTimeMs,
+    renderStartTime,
     renderExpirationTime,
   ) {
     const root: FiberRoot = workInProgress.stateNode;
     const current = root.current;
 
+    const promises = [];
+    const earliestTimeoutRef = {value: remainingTimeMs};
     let shouldRetry;
     let effect = workInProgress.firstEffect;
     while (effect !== null) {
@@ -253,10 +390,13 @@ export default function<C, CX>(
       shouldRetry = handleRootEffect(
         current,
         workInProgress,
+        promises,
+        earliestTimeoutRef,
         effectSource,
         algebraicEffectTag,
         effectValue,
         renderIsExpired,
+        renderStartTime,
         renderExpirationTime,
       );
       effect = effect.nextEffect;
@@ -265,6 +405,26 @@ export default function<C, CX>(
     if (shouldRetry) {
       return createWorkInProgress(current, null, workInProgress.expirationTime);
     }
+
+    const suspendedTime = renderExpirationTime;
+    suspendPendingWork(root, suspendedTime);
+
+    // Create a promise that resolves at the earliest timeout
+    const timeoutMs = earliestTimeoutRef.value;
+    const timeoutPromise = new Promise(resolve => {
+      setTimeout(() => {
+        resolve();
+      }, timeoutMs);
+    });
+    promises.push(timeoutPromise);
+
+    // When the promise resolves, retry using the time at which the promise was
+    // thrown, even if an earlier time was suspended in the intervening time.
+    // TODO: What if a promise is rejected?
+    Promise.race(promises).then(() => {
+      retryOnPromiseResolution(root, suspendedTime);
+    });
+
     return null;
   }
 
@@ -286,11 +446,15 @@ export default function<C, CX>(
   }
 
   function exitIncompleteWork(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    renderIsExpired: boolean,
-    renderExpirationTime: ExpirationTime,
+    workInProgress,
+    elapsedMs,
+    renderIsExpired,
+    remainingTimeMs,
+    renderStartTime,
+    renderExpirationTime,
   ) {
+    const current = workInProgress.alternate;
+
     let next = null;
     switch (workInProgress.tag) {
       case FunctionalComponent:
@@ -327,9 +491,7 @@ export default function<C, CX>(
           }
           if (errors.length > 0) {
             ensureUpdateQueues(workInProgress);
-            const updateQueue: UpdateQueue<
-              any,
-            > = (workInProgress.updateQueue: any);
+            const updateQueue: UpdateQueue = (workInProgress.updateQueue: any);
             updateQueue.capturedValues = errors;
             workInProgress.effectTag |= DidCapture;
             // Render the boundary again
@@ -344,6 +506,8 @@ export default function<C, CX>(
         next = exitIncompleteRoot(
           workInProgress,
           renderIsExpired,
+          remainingTimeMs,
+          renderStartTime,
           renderExpirationTime,
         );
         break;
@@ -358,6 +522,118 @@ export default function<C, CX>(
         break;
       case ReturnComponent:
         break;
+      case AsyncBoundary:
+        const isLoading = workInProgress.memoizedState;
+        if (current !== null && !isLoading && !renderIsExpired) {
+          let promises = null;
+          let previousEffect = null;
+          let effect = workInProgress.firstEffect;
+          while (effect !== null) {
+            const thrownValue = effect.thrownValue;
+            const algebraicEffectTag = effect.effectTag & AlgebraicEffectMask;
+            switch (algebraicEffectTag) {
+              case Suspend:
+                captureEffect(workInProgress, previousEffect, effect);
+                if (promises === null) {
+                  promises = [thrownValue];
+                } else {
+                  promises.push(thrownValue);
+                }
+                break;
+              default:
+                break;
+            }
+            previousEffect = effect;
+            effect = effect.nextEffect;
+          }
+          if (promises !== null) {
+            const returnFiber = workInProgress.return;
+            if (returnFiber !== null) {
+              raiseLoadingEffect(returnFiber, workInProgress, promises);
+            }
+          }
+        }
+        break;
+      case TimeoutComponent: {
+        let nextState = workInProgress.memoizedState;
+        const updateQueue = workInProgress.updateQueue;
+        if (updateQueue !== null) {
+          nextState = workInProgress.memoizedState = processUpdateQueue(
+            current,
+            workInProgress,
+            updateQueue,
+            null,
+            null,
+            renderExpirationTime,
+          );
+        }
+
+        const didExpire = nextState !== null;
+        const didCaptureAlready = workInProgress.effectTag & DidCapture;
+
+        const timeout = workInProgress.pendingProps.ms;
+
+        // Check if the boundary should capture promises that threw.
+        let shouldCapture;
+        if (didCaptureAlready) {
+          // Already captured during this render. Can't capture again.
+          shouldCapture = false;
+        } else if (didExpire || renderIsExpired) {
+          // Render is expired.
+          shouldCapture = true;
+        } else if (typeof timeout === 'number' && elapsedMs >= timeout) {
+          // The elapsed time exceeds the provided timeout.
+          shouldCapture = true;
+        } else {
+          // There's still time left. Bubble to the next boundary.
+          shouldCapture = false;
+        }
+
+        if (shouldCapture) {
+          // Scan the list of effects and capture the promises.
+          let promises = null;
+          let previousEffect = null;
+          let effect = workInProgress.firstEffect;
+          while (effect !== null) {
+            const algebraicEffectTag = effect.effectTag & AlgebraicEffectMask;
+            switch (algebraicEffectTag) {
+              case Suspend:
+              case Loading:
+                const promise = effect.thrownValue;
+                if (promises === null) {
+                  promises = [promise];
+                } else {
+                  promises.push(promise);
+                }
+                promises.push(promise);
+                captureEffect(workInProgress, previousEffect, effect);
+                break;
+              default:
+                break;
+            }
+            previousEffect = effect;
+            effect = effect.nextEffect;
+          }
+          if (promises !== null) {
+            // Store the promises. We'll use these in the commit phase to
+            // schedule a recovery effect.
+            workInProgress.memoizedState = promises;
+            workInProgress.effectTag |= DidCapture;
+            // Render the boundary again
+            next = workInProgress;
+          }
+        }
+
+        // If we exit without completing, and a timeout is provided, raise a
+        // timeout effect to force an early expiration.
+        if (next === null && typeof timeout === 'number') {
+          const returnFiber = workInProgress.return;
+          if (returnFiber !== null) {
+            raiseTimeoutEffect(returnFiber, workInProgress, timeout);
+          }
+        }
+        break;
+      }
       case Fragment:
         break;
       case Mode:
@@ -378,6 +654,7 @@ export default function<C, CX>(
           'Unknown unit of work tag. This error is likely caused by a bug in ' +
             'React. Please file an issue.',
         );
+        break;
     }
     return next;
   }

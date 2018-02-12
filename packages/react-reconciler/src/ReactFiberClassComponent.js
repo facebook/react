@@ -37,6 +37,7 @@ import {
 } from './ReactFiberContext';
 import {
   insertUpdateIntoFiber,
+  insertRenderPhaseUpdateIntoFiber,
   processUpdateQueue,
 } from './ReactFiberUpdateQueue';
 import {hasContextChanged} from './ReactFiberContext';
@@ -122,6 +123,7 @@ export default function(
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
   recalculateCurrentTime: () => ExpirationTime,
+  checkIfInRenderPhase: () => boolean,
 ) {
   // Class component state updater
   const updater = {
@@ -143,7 +145,11 @@ export default function(
         capturedValue: null,
         next: null,
       };
-      insertUpdateIntoFiber(fiber, update);
+      if (checkIfInRenderPhase()) {
+        insertRenderPhaseUpdateIntoFiber(fiber, update);
+      } else {
+        insertUpdateIntoFiber(fiber, update);
+      }
       scheduleWork(fiber, currentTime, expirationTime);
     },
     enqueueReplaceState(instance, state, callback) {
@@ -163,7 +169,11 @@ export default function(
         capturedValue: null,
         next: null,
       };
-      insertUpdateIntoFiber(fiber, update);
+      if (checkIfInRenderPhase()) {
+        insertRenderPhaseUpdateIntoFiber(fiber, update);
+      } else {
+        insertUpdateIntoFiber(fiber, update);
+      }
       scheduleWork(fiber, currentTime, expirationTime);
     },
     enqueueForceUpdate(instance, callback) {
@@ -183,7 +193,11 @@ export default function(
         capturedValue: null,
         next: null,
       };
-      insertUpdateIntoFiber(fiber, update);
+      if (checkIfInRenderPhase()) {
+        insertRenderPhaseUpdateIntoFiber(fiber, update);
+      } else {
+        insertUpdateIntoFiber(fiber, update);
+      }
       scheduleWork(fiber, currentTime, expirationTime);
     },
   };

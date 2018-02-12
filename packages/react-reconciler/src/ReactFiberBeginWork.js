@@ -30,8 +30,11 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  AsyncBoundary,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
+  NoEffect,
   PerformedWork,
   Placement,
   ContentReset,
@@ -96,6 +99,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     fiber: Fiber,
   ) => ExpirationTime,
   recalculateCurrentTime: () => ExpirationTime,
+  checkIfInRenderPhase: () => boolean,
 ) {
   const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
@@ -120,6 +124,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     memoizeProps,
     memoizeState,
     recalculateCurrentTime,
+    checkIfInRenderPhase,
   );
 
   // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
@@ -716,6 +721,62 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return workInProgress.stateNode;
   }
 
+  function updateAsyncBoundary(current, workInProgress, renderExpirationTime) {
+    const prevProps = workInProgress.memoizedProps;
+    const nextProps = workInProgress.pendingProps;
+
+    const prevState = workInProgress.memoizedState;
+    let nextState = workInProgress.memoizedState;
+    if (nextState === null) {
+      nextState = workInProgress.memoizedState = false;
+    }
+
+    const updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null) {
+      nextState = workInProgress.memoizedState = processUpdateQueue(
+        current,
+        workInProgress,
+        updateQueue,
+        null,
+        nextProps,
+        renderExpirationTime,
+      );
+    }
+
+    const isLoading = nextState;
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (prevProps === nextProps && prevState === nextState) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    const render = nextProps.children;
+    const nextChildren = render(isLoading);
+    workInProgress.memoizedProps = nextProps;
+    reconcileChildren(current, workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
+  function updateTimeoutComponent(
+    current,
+    workInProgress,
+    capturedValues,
+    renderExpirationTime,
+  ) {
+    const nextProps = workInProgress.pendingProps;
+    const render = nextProps.children;
+
+    // Check whether we already attempted to render this boundary during
+    // this render.
+    const isExpired = (workInProgress.effectTag & DidCapture) !== NoEffect;
+
+    const nextChildren = render(isExpired);
+    workInProgress.memoizedProps = nextProps;
+    reconcileChildren(current, workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
   function updatePortalComponent(
     current,
     workInProgress,
@@ -1089,6 +1150,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // A return component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
+      case AsyncBoundary:
+        return updateAsyncBoundary(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      case TimeoutComponent:
+        return updateTimeoutComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case HostPortal:
         return updatePortalComponent(
           current,
