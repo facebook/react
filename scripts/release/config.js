@@ -23,6 +23,25 @@ const paramDefinitions = [
     alias: 'v',
     description: 'Semantic version number',
   },
+  {
+    name: 'branch',
+    type: String,
+    alias: 'b',
+    description: 'Branch to build from; defaults to [bold]{master}',
+    defaultValue: 'master',
+  },
+  {
+    name: 'local',
+    type: Boolean,
+    description: "Don't pull changes from the remote branch. Also skips CI.",
+  },
+  {
+    name: 'tag',
+    type: String,
+    description:
+      'The npm dist tag; defaults to [bold]{latest} for a stable' +
+      'release, [bold]{next} for unstable',
+  },
 ];
 
 module.exports = {

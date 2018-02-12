@@ -43,5 +43,8 @@ const check = async ({cwd}) => {
 };
 
 module.exports = async params => {
+  if (params.local) {
+    return;
+  }
   return logPromise(check(params), 'Checking CircleCI status');
 };

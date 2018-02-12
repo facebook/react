@@ -8,10 +8,21 @@ const {join} = require('path');
 const semver = require('semver');
 const {execRead, execUnlessDry, logPromise} = require('../utils');
 
-const push = async ({cwd, dry, packages, version}) => {
+const push = async ({cwd, dry, packages, version, tag}) => {
   const errors = [];
-  const isPrerelease = semver.prerelease(version);
-  const tag = isPrerelease ? 'next' : 'latest';
+  let isPrerelease;
+  if (tag === undefined) {
+    // No tag was provided. Check the version.
+    isPrerelease = semver.prerelease(version);
+    if (isPrerelease) {
+      tag = 'next';
+    } else {
+      tag = 'latest';
+    }
+  } else {
+    // Any tag besides `latest` is a prerelease
+    isPrerelease = tag === 'latest';
+  }
 
   const publishProject = async project => {
     try {
@@ -76,5 +87,6 @@ const push = async ({cwd, dry, packages, version}) => {
 };
 
 module.exports = async params => {
+  console.log(params);
   return logPromise(push(params), 'Publishing packages to NPM');
 };

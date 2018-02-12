@@ -81,5 +81,7 @@ module.exports = {
     spyOnDev: true,
     spyOnDevAndProd: true,
     spyOnProd: true,
+    // TODO: Remove dependency on Promise.race
+    Promise: true,
   },
 };
