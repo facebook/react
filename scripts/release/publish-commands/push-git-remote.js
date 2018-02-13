@@ -10,5 +10,8 @@ const push = async ({cwd, dry}) => {
 };
 
 module.exports = async params => {
+  if (params.local) {
+    return;
+  }
   return logPromise(push(params), 'Pushing to git remote');
 };
