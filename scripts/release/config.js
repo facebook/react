@@ -33,7 +33,8 @@ const paramDefinitions = [
   {
     name: 'local',
     type: Boolean,
-    description: "Don't pull changes from the remote branch. Also skips CI.",
+    description:
+      "Don't push or pull changes from remote repo. Don't check CI status.",
   },
   {
     name: 'tag',

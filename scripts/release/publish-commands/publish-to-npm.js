@@ -10,18 +10,13 @@ const {execRead, execUnlessDry, logPromise} = require('../utils');
 
 const push = async ({cwd, dry, packages, version, tag}) => {
   const errors = [];
-  let isPrerelease;
+  const isPrerelease = semver.prerelease(version);
   if (tag === undefined) {
-    // No tag was provided. Check the version.
-    isPrerelease = semver.prerelease(version);
-    if (isPrerelease) {
-      tag = 'next';
-    } else {
-      tag = 'latest';
-    }
-  } else {
-    // Any tag besides `latest` is a prerelease
-    isPrerelease = tag === 'latest';
+    // No tag was provided. Default to `latest` for stable releases and `next`
+    // for prereleases
+    tag = isPrerelease ? 'next' : 'latest';
+  } else if (tag === 'latest' && isPrerelease) {
+    throw new Error('The tag `latest` can only be used for stable versions.');
   }
 
   const publishProject = async project => {
