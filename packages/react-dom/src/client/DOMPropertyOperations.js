@@ -15,8 +15,10 @@ import {
   BOOLEAN,
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
+import warning from 'fbjs/lib/warning';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
+
 
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
@@ -132,8 +134,11 @@ export function setValueForProperty(
       const attributeName = name;
       if (value === null) {
         node.removeAttribute(attributeName);
+      }
+      else if (__DEV__){
+        node.setAttribute(attributeName, stringifyWithPerformanceWarning(value));
       } else {
-        node.setAttribute(attributeName, '' + (value: any));
+        node.setAttribute(attributeName, (value: any).toString());
       }
     }
     return;
@@ -160,10 +165,12 @@ export function setValueForProperty(
     let attributeValue;
     if (type === BOOLEAN || (type === OVERLOADED_BOOLEAN && value === true)) {
       attributeValue = '';
+    } else if (__DEV__) {
+      attributeValue = stringifyWithPerformanceWarning(value);
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      attributeValue = '' + (value: any);
+      attributeValue = (value: any).toString();
     }
     if (attributeNamespace) {
       node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
@@ -171,4 +178,15 @@ export function setValueForProperty(
       node.setAttribute(attributeName, attributeValue);
     }
   }
+}
+
+// Only used in DEV, stringifies a value and Warns if it took too long
+const stringifyWithPerformanceWarning = (value) => {
+  const stringifyStart = Date.now();
+  let attributeValue = (value: any).toString();
+  const stringifyEnd = Date.now();
+
+  warning(stringifyEnd - stringifyStart <= 2, 'Stringifying your attribute is causing perfomance issues.')
+  
+  return attributeValue;
 }
