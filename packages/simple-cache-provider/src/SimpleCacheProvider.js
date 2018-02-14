@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 function noop() {}
 function identity<T>(t: T): T {
@@ -31,35 +31,41 @@ type Record<V> = {|
 type RecordCache<K, V> = Map<K, Record<V>>;
 // TODO: How do you express this type with Flow?
 type ResourceCache = Map<any, RecordCache<any, any>>;
-type Cache = {|
-  $$typeof: Symbol | number,
+type Cache = {
   invalidate(): void,
   read<K, V>(resourceType: mixed, key: K, miss: (K) => Promise<V>): V,
   preload<K, V>(resourceType: mixed, key: K, miss: (K) => Promise<V>): void,
-|};
 
-const hasSymbol = typeof Symbol === 'function' && Symbol.for;
-const CACHE_TYPE = hasSymbol ? Symbol('simple-cache-provider.cache') : 0xcac4e;
+  // DEV-only
+  $$typeof?: Symbol | number,
+};
 
-function isCache(value) {
-  return (
-    // $FlowFixMe - Flow doesn't like that I'm accessing
-    value !== null && typeof value === 'object' && value.$$typeof === CACHE_TYPE
-  );
+let CACHE_TYPE;
+if (__DEV__) {
+  CACHE_TYPE = 0xcac4e;
+}
+
+let isCache;
+if (__DEV__) {
+  isCache = value =>
+    value !== null &&
+    typeof value === 'object' &&
+    value.$$typeof === CACHE_TYPE;
 }
 
 export function createCache(invalidator: () => mixed): Cache {
   const resourceCache: ResourceCache = new Map();
 
   function getRecord<K, V>(resourceType: any, key: K): Record<V> {
-    const typeofResourceType = typeof resourceType;
-    invariant(
-      typeofResourceType !== 'string' && typeofResourceType !== 'number',
-      'Invalid resourceType: Expected a symbol, object, or function, but ' +
-        'instead received: %s. Strings and numbers are not permitted as ' +
-        'resource types.',
-      resourceType,
-    );
+    if (__DEV__) {
+      warning(
+        typeof resourceType !== 'string' && typeof resourceType !== 'number',
+        'Invalid resourceType: Expected a symbol, object, or function, but ' +
+          'instead received: %s. Strings and numbers are not permitted as ' +
+          'resource types.',
+        resourceType,
+      );
+    }
 
     let recordCache = resourceCache.get(resourceType);
     if (recordCache !== undefined) {
@@ -103,8 +109,7 @@ export function createCache(invalidator: () => mixed): Cache {
     return suspender;
   }
 
-  return {
-    $$typeof: CACHE_TYPE,
+  const cache: Cache = {
     invalidate() {
       invalidator();
     },
@@ -147,6 +152,11 @@ export function createCache(invalidator: () => mixed): Cache {
       }
     },
   };
+
+  if (__DEV__) {
+    cache.$$typeof = CACHE_TYPE;
+  }
+  return cache;
 }
 
 type ResourceReader<K, V> = (Cache, K) => V;
@@ -162,20 +172,24 @@ export function createResource<K, V, H>(
 ): Resource<K, V> {
   // The read function itself serves as the resource type.
   function read(cache, key) {
-    invariant(
-      isCache(cache),
-      'read(): The first argument must be a cache. Instead received: %s',
-      cache,
-    );
+    if (__DEV__) {
+      warning(
+        isCache(cache),
+        'read(): The first argument must be a cache. Instead received: %s',
+        cache,
+      );
+    }
     const hashedKey = hash(key);
     return cache.read(read, hashedKey, h => loadResource(key));
   }
   read.preload = function(cache, key) {
-    invariant(
-      isCache(cache),
-      'preload(): The first argument must be a cache. Instead received: %s',
-      cache,
-    );
+    if (__DEV__) {
+      warning(
+        isCache(cache),
+        'preload(): The first argument must be a cache. Instead received: %s',
+        cache,
+      );
+    }
     const hashedKey = hash(key);
     cache.preload(read, hashedKey, h => loadResource(key));
   };
