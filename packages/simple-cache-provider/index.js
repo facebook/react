@@ -9,10 +9,4 @@
 
 'use strict';
 
-const SimpleCacheProvider = require('./src/SimpleCacheProvider');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = SimpleCacheProvider.default
-  ? SimpleCacheProvider.default
-  : SimpleCacheProvider;
+export * from './src/SimpleCacheProvider';
