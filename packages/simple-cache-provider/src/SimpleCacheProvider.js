@@ -12,11 +12,12 @@ import warning from 'fbjs/lib/warning';
 
 function noop() {}
 
-type Status = 0 | 1 | 2;
+type Status = 0 | 1 | 2 | 3;
 
 const Empty = 0;
 const Resolved = 1;
-const Rejected = 2;
+const Pending = 2;
+const Rejected = 3;
 
 type Record<V> = {|
   status: Status,
@@ -87,6 +88,7 @@ export function createCache(invalidator: () => mixed): Cache {
 
   function load<K, V>(record: Record<V>, key: K, miss: K => Promise<V>) {
     const suspender = miss(key);
+    record.status = Pending;
     record.suspender = suspender;
     suspender.then(
       value => {
@@ -112,40 +114,40 @@ export function createCache(invalidator: () => mixed): Cache {
     },
     preload<K, V>(resourceType: any, key: K, miss: K => Promise<V>): void {
       const record: Record<V> = getRecord(resourceType, key);
-      const suspender = record.suspender;
-      if (suspender !== null) {
-        // There's already a pending request.
-        return;
-      }
       switch (record.status) {
         case Empty:
           // Warm the cache.
           load(record, key, miss);
           return;
+        case Pending:
+          // There's already a pending request.
+          return;
         case Resolved:
-        case Rejected:
           // The resource is already in the cache.
+          return;
+        case Rejected:
+          // The request failed.
           return;
       }
     },
     read<K, V>(resourceType: any, key: K, miss: K => Promise<V>): V {
       const record: Record<V> = getRecord(resourceType, key);
-      const suspender = record.suspender;
-      if (suspender !== null) {
-        // There's already a pending request.
-        throw suspender;
-      }
       switch (record.status) {
         case Empty:
           // Load the requested resource.
           throw load(record, key, miss);
+        case Pending:
+          // There's already a pending request.
+          throw record.suspender;
         case Resolved:
           return ((record.value: any): V);
         case Rejected:
         default:
           // The requested resource previously failed loading.
-          // TODO: When should we try again?
-          throw record.error;
+          const error = record.error;
+          record.status = 0;
+          record.error = null;
+          throw error;
       }
     },
   };
@@ -165,9 +167,9 @@ if (__DEV__) {
         typeof key === 'boolean' ||
         key === undefined ||
         key === null,
-      '%s: Invalid key type. Expected an string, number, symbol, or boolean, ' +
+      '%s: Invalid key type. Expected a string, number, symbol, or boolean, ' +
         'but instead received: %s' +
-        '\n\nNon-primitive keys are permissable if you provide a hash ' +
+        '\n\nTo use non-primitive values as keys, you must pass a hash ' +
         'function as the second argument to createResource().',
       methodName,
       key,
