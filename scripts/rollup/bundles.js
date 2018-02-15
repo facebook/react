@@ -254,6 +254,15 @@ const bundles = [
     global: 'SimpleCacheProvider',
     externals: ['react'],
   },
+  /******* Request Idle Callback Polfyill *******/
+  {
+    label: 'request-idle-callback-polyfill',
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'request-idle-callback-polyfill',
+    global: 'requestIdleCallback',
+    externals: [],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)
