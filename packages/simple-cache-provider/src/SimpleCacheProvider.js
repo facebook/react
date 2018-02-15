@@ -12,19 +12,44 @@ import warning from 'fbjs/lib/warning';
 
 function noop() {}
 
-type Status = 0 | 1 | 2 | 3;
-
 const Empty = 0;
-const Resolved = 1;
-const Pending = 2;
+const Pending = 1;
+const Resolved = 2;
 const Rejected = 3;
 
-type Record<V> = {|
-  status: Status,
-  suspender: Promise<V> | null,
-  value: V | null,
-  error: Error | null,
+type EmptyRecord = {|
+  status: 0,
+  suspender: null,
+  value: null,
+  error: null,
 |};
+
+type PendingRecord<V> = {|
+  status: 1,
+  suspender: Promise<V>,
+  value: null,
+  error: null,
+|};
+
+type ResolvedRecord<V> = {|
+  status: 2,
+  suspender: null,
+  value: V,
+  error: null,
+|};
+
+type RejectedRecord = {|
+  status: 3,
+  suspender: null,
+  value: null,
+  error: Error,
+|};
+
+type Record<V> =
+  | EmptyRecord
+  | PendingRecord<V>
+  | ResolvedRecord<V>
+  | RejectedRecord;
 
 type RecordCache<K, V> = Map<K, Record<V>>;
 // TODO: How do you express this type with Flow?
@@ -86,23 +111,26 @@ export function createCache(invalidator: () => mixed): Cache {
     return record;
   }
 
-  function load<K, V>(record: Record<V>, key: K, miss: K => Promise<V>) {
+  function load<K, V>(emptyRecord: EmptyRecord, key: K, miss: K => Promise<V>) {
     const suspender = miss(key);
-    record.status = Pending;
-    record.suspender = suspender;
+    const pendingRecord: PendingRecord<V> = (emptyRecord: any);
+    pendingRecord.status = Pending;
+    pendingRecord.suspender = suspender;
     suspender.then(
       value => {
         // Resource loaded successfully.
-        record.suspender = null;
-        record.status = Resolved;
-        record.value = value;
+        const resolvedRecord: ResolvedRecord<V> = (pendingRecord: any);
+        resolvedRecord.status = Resolved;
+        resolvedRecord.suspender = null;
+        resolvedRecord.value = value;
       },
       error => {
         // Resource failed to load. Stash the error for later so we can throw it
         // the next time it's requested.
-        record.suspender = null;
-        record.status = Rejected;
-        record.error = error;
+        const rejectedRecord: RejectedRecord = (pendingRecord: any);
+        rejectedRecord.status = Rejected;
+        rejectedRecord.suspender = null;
+        rejectedRecord.error = error;
       },
     );
     return suspender;
@@ -140,13 +168,14 @@ export function createCache(invalidator: () => mixed): Cache {
           // There's already a pending request.
           throw record.suspender;
         case Resolved:
-          return ((record.value: any): V);
+          return record.value;
         case Rejected:
         default:
           // The requested resource previously failed loading.
           const error = record.error;
-          record.status = 0;
-          record.error = null;
+          const emptyRecord: EmptyRecord = (record: any);
+          emptyRecord.status = 0;
+          emptyRecord.error = null;
           throw error;
       }
     },
