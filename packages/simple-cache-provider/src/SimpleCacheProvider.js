@@ -56,8 +56,18 @@ type RecordCache<K, V> = Map<K, Record<V>>;
 type ResourceCache = Map<any, RecordCache<any, any>>;
 type Cache = {
   invalidate(): void,
-  read<K, V>(resourceType: mixed, key: K, miss: (K) => Promise<V>): V,
-  preload<K, V>(resourceType: mixed, key: K, miss: (K) => Promise<V>): void,
+  read<K, V, A>(
+    resourceType: mixed,
+    key: K,
+    miss: (A) => Promise<V>,
+    missArg: A,
+  ): V,
+  preload<K, V, A>(
+    resourceType: mixed,
+    key: K,
+    miss: (A) => Promise<V>,
+    missArg: A,
+  ): void,
 
   // DEV-only
   $$typeof?: Symbol | number,
@@ -111,8 +121,7 @@ export function createCache(invalidator: () => mixed): Cache {
     return record;
   }
 
-  function load<K, V>(emptyRecord: EmptyRecord, key: K, miss: K => Promise<V>) {
-    const suspender = miss(key);
+  function load<V>(emptyRecord: EmptyRecord, suspender: Promise<V>) {
     const pendingRecord: PendingRecord<V> = (emptyRecord: any);
     pendingRecord.status = Pending;
     pendingRecord.suspender = suspender;
@@ -133,19 +142,24 @@ export function createCache(invalidator: () => mixed): Cache {
         rejectedRecord.error = error;
       },
     );
-    return suspender;
   }
 
   const cache: Cache = {
     invalidate() {
       invalidator();
     },
-    preload<K, V>(resourceType: any, key: K, miss: K => Promise<V>): void {
+    preload<K, V, A>(
+      resourceType: any,
+      key: K,
+      miss: A => Promise<V>,
+      missArg: A,
+    ): void {
       const record: Record<V> = getRecord(resourceType, key);
       switch (record.status) {
         case Empty:
           // Warm the cache.
-          load(record, key, miss);
+          const suspender = miss(missArg);
+          load(record, suspender);
           return;
         case Pending:
           // There's already a pending request.
@@ -158,12 +172,19 @@ export function createCache(invalidator: () => mixed): Cache {
           return;
       }
     },
-    read<K, V>(resourceType: any, key: K, miss: K => Promise<V>): V {
+    read<K, V, A>(
+      resourceType: any,
+      key: K,
+      miss: A => Promise<V>,
+      missArg: A,
+    ): V {
       const record: Record<V> = getRecord(resourceType, key);
       switch (record.status) {
         case Empty:
           // Load the requested resource.
-          throw load(record, key, miss);
+          const suspender = miss(missArg);
+          load(record, suspender);
+          throw suspender;
         case Pending:
           // There's already a pending request.
           throw record.suspender;
@@ -247,10 +268,10 @@ export function createResource<V, K, H: primitive>(
       if (__DEV__) {
         warnIfNonPrimitiveKey(key, 'read');
       }
-      return cache.read(read, key, loadResource);
+      return cache.read(read, key, loadResource, key);
     }
     const hashedKey = hash(key);
-    return cache.read(read, hashedKey, h => loadResource(key));
+    return cache.read(read, hashedKey, loadResource, key);
   }
   read.preload = function(cache, key) {
     if (__DEV__) {
@@ -264,11 +285,11 @@ export function createResource<V, K, H: primitive>(
       if (__DEV__) {
         warnIfNonPrimitiveKey(key, 'preload');
       }
-      cache.preload(read, key, loadResource);
+      cache.preload(read, key, loadResource, key);
       return;
     }
     const hashedKey = hash(key);
-    cache.preload(read, hashedKey, h => loadResource(key));
+    cache.preload(read, hashedKey, loadResource, key);
   };
   return read;
 }
