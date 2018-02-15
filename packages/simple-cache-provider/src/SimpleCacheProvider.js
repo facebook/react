@@ -11,9 +11,6 @@ import React from 'react';
 import warning from 'fbjs/lib/warning';
 
 function noop() {}
-function identity<T>(t: T): T {
-  return t;
-}
 
 type Status = 0 | 1 | 2;
 
@@ -159,16 +156,52 @@ export function createCache(invalidator: () => mixed): Cache {
   return cache;
 }
 
+let warnIfNonPrimitiveKey;
+if (__DEV__) {
+  warnIfNonPrimitiveKey = (key, methodName) => {
+    warning(
+      typeof key === 'string' ||
+        typeof key === 'number' ||
+        typeof key === 'boolean' ||
+        key === undefined ||
+        key === null,
+      '%s: Invalid key type. Expected an string, number, symbol, or boolean, ' +
+        'but instead received: %s' +
+        '\n\nNon-primitive keys are permissable if you provide a hash ' +
+        'function as the second argument to createResource().',
+      methodName,
+      key,
+    );
+  };
+}
+
+type primitive = string | number | boolean | void | null;
 type ResourceReader<K, V> = (Cache, K) => V;
 
 type Resource<K, V> = ResourceReader<K, V> & {
   preload(cache: Cache, key: K): void,
 };
 
-export function createResource<K, V, H>(
+// These declarations are used to express function overloading. I wish there
+// were a more elegant way to do this in the function definition itself.
+
+// Primitive keys do not request a hash function.
+declare function createResource<V, K: primitive, H: primitive>(
+  loadResource: (K) => Promise<V>,
+  hash?: (K) => H,
+): Resource<K, V>;
+
+// Non-primitive keys *do* require a hash function.
+// eslint-disable-next-line no-redeclare
+declare function createResource<V, K: mixed, H: primitive>(
+  loadResource: (K) => Promise<V>,
+  hash: (K) => H,
+): Resource<K, V>;
+
+// eslint-disable-next-line no-redeclare
+export function createResource<V, K, H: primitive>(
   loadResource: K => Promise<V>,
-  // $FlowFixMe: Flow complains that K !== H.
-  hash?: K => H = identity,
+  hash: K => H,
 ): Resource<K, V> {
   // The read function itself serves as the resource type.
   function read(cache, key) {
@@ -178,6 +211,12 @@ export function createResource<K, V, H>(
         'read(): The first argument must be a cache. Instead received: %s',
         cache,
       );
+    }
+    if (hash === undefined) {
+      if (__DEV__) {
+        warnIfNonPrimitiveKey(key, 'read');
+      }
+      return cache.read(read, key, loadResource);
     }
     const hashedKey = hash(key);
     return cache.read(read, hashedKey, h => loadResource(key));
@@ -189,6 +228,13 @@ export function createResource<K, V, H>(
         'preload(): The first argument must be a cache. Instead received: %s',
         cache,
       );
+    }
+    if (hash === undefined) {
+      if (__DEV__) {
+        warnIfNonPrimitiveKey(key, 'preload');
+      }
+      cache.preload(read, key, loadResource);
+      return;
     }
     const hashedKey = hash(key);
     cache.preload(read, hashedKey, h => loadResource(key));
