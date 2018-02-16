@@ -153,7 +153,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       workInProgress,
       currentFirstChild,
       nextChildren,
-      false,
       renderExpirationTime,
     );
     return workInProgress.child;

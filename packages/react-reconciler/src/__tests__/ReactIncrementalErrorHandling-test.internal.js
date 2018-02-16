@@ -100,6 +100,15 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('can recover from an error within a single render phase', () => {
+    class Sibling extends React.Component {
+      componentWillUnmount() {
+        ReactNoop.yield('Unmount Sibling');
+      }
+      render() {
+        return null;
+      }
+    }
+
     class ErrorBoundary extends React.Component {
       state = {error: null};
       static getDerivedStateFromCatch(error) {
@@ -109,10 +118,19 @@ describe('ReactIncrementalErrorHandling', () => {
       render() {
         if (this.state.error) {
           ReactNoop.yield('ErrorBoundary (catch)');
-          return <ErrorMessage error={this.state.error} />;
+        } else {
+          ReactNoop.yield('ErrorBoundary (try)');
         }
-        ReactNoop.yield('ErrorBoundary (try)');
-        return this.props.children;
+        return (
+          <React.Fragment>
+            <Sibling />
+            {this.state.error ? (
+              <ErrorMessage error={this.state.error} />
+            ) : (
+              this.props.children
+            )}
+          </React.Fragment>
+        );
       }
     }
 
@@ -131,18 +149,24 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('oops!');
     }
 
-    ReactNoop.render(
-      <ErrorBoundary>
-        <Indirection>
+    function App(props) {
+      return (
+        <ErrorBoundary>
           <Indirection>
             <Indirection>
-              <BadRender />
+              <Indirection>
+                {props.shouldThrow ? <BadRender /> : null}
+              </Indirection>
             </Indirection>
           </Indirection>
-        </Indirection>
-      </ErrorBoundary>,
-    );
+        </ErrorBoundary>
+      );
+    }
 
+    ReactNoop.render(<App shouldThrow={false} />);
+    ReactNoop.flush();
+
+    ReactNoop.render(<App shouldThrow={true} />);
     ReactNoop.flushThrough([
       'ErrorBoundary (try)',
       'Indirection',
@@ -164,7 +188,9 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
     // Still hasn't committed
     expect(ReactNoop.getChildren()).toEqual([]);
-    ReactNoop.flush();
+    // The sibling should be re-mounted because it is the child of a failed
+    // error boundary
+    expect(ReactNoop.flush()).toEqual(['Unmount Sibling']);
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
   });
 

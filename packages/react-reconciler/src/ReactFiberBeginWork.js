@@ -128,7 +128,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       current,
       workInProgress,
       nextChildren,
-      false,
       workInProgress.expirationTime,
     );
   }
@@ -137,7 +136,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     current,
     workInProgress,
     nextChildren,
-    deleteExistingChildren,
     renderExpirationTime,
   ) {
     if (current === null) {
@@ -149,7 +147,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         null,
         nextChildren,
-        deleteExistingChildren,
         renderExpirationTime,
       );
     } else {
@@ -163,7 +160,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         current.child,
         nextChildren,
-        deleteExistingChildren,
         renderExpirationTime,
       );
     }
@@ -361,11 +357,24 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
+    if (didCaptureError) {
+      // If we're recovering from an error, reconcile twice: first to delete
+      // all the existing children.
+      reconcileChildrenAtExpirationTime(
+        current,
+        workInProgress,
+        null,
+        renderExpirationTime,
+      );
+      workInProgress.child = null;
+      // Now we can continue reconciling like normal. This has the effect of
+      // remounting all children regardless of whether their their
+      // identity matches.
+    }
     reconcileChildrenAtExpirationTime(
       current,
       workInProgress,
       nextChildren,
-      didCaptureError,
       renderExpirationTime,
     );
     // Memoize props and state using the values we just used to render.
@@ -451,7 +460,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           workInProgress,
           null,
           element,
-          false,
           renderExpirationTime,
         );
       } else {
@@ -697,7 +705,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         workInProgress.stateNode,
         nextChildren,
-        false,
         renderExpirationTime,
       );
     } else {
@@ -705,7 +712,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         current.stateNode,
         nextChildren,
-        false,
         renderExpirationTime,
       );
     }
@@ -740,7 +746,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         null,
         nextChildren,
-        false,
         renderExpirationTime,
       );
       memoizeProps(workInProgress, nextChildren);
