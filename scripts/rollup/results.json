@@ -431,15 +431,15 @@
       "filename": "simple-cache-provider.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "simple-cache-provider",
-      "size": 4800,
-      "gzip": 1647
+      "size": 5830,
+      "gzip": 1904
     },
     {
       "filename": "simple-cache-provider.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "simple-cache-provider",
-      "size": 1343,
-      "gzip": 684
+      "size": 1313,
+      "gzip": 665
     }
   ]
 }
