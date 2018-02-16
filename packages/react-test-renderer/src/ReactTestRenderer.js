@@ -22,6 +22,8 @@ import {
   HostPortal,
   HostText,
   HostRoot,
+  ContextConsumer,
+  ContextProvider,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 
@@ -367,6 +369,9 @@ function toTree(node: ?Fiber) {
       return node.stateNode.text;
     case Fragment:
       return childrenToTree(node.child);
+    case ContextConsumer:
+    case ContextProvider:
+      return toTree(node.child);
     default:
       invariant(
         false,
@@ -393,6 +398,8 @@ const validWrapperTypes = new Set([
   FunctionalComponent,
   ClassComponent,
   HostComponent,
+  ContextProvider,
+  ContextConsumer,
 ]);
 
 class ReactTestInstance {
@@ -432,7 +439,7 @@ class ReactTestInstance {
   }
 
   get props(): Object {
-    return this._currentFiber().memoizedProps;
+    return this._currentFiber().memoizedProps || {};
   }
 
   get parent(): ?ReactTestInstance {
@@ -463,6 +470,8 @@ class ReactTestInstance {
           children.push('' + node.memoizedProps);
           break;
         case Fragment:
+        case ContextConsumer:
+        case ContextProvider:
           descend = true;
           break;
         default:
@@ -545,7 +554,6 @@ function findAll(
 ): Array<ReactTestInstance> {
   const deep = options ? options.deep : true;
   const results = [];
-
   if (predicate(root)) {
     results.push(root);
     if (!deep) {
@@ -606,7 +614,6 @@ const ReactTestRendererFiber = {
     );
     invariant(root != null, 'something went wrong');
     TestRenderer.updateContainer(element, root, null, null);
-
     const entry = {
       root: undefined, // makes flow happy
       // we define a 'getter' for 'root' below using 'Object.defineProperty'

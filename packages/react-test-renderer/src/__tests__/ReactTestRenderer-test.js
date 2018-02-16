@@ -745,6 +745,30 @@ describe('ReactTestRenderer', () => {
     );
   });
 
+  it('toTree() handles ContextConsumer and ContextProvider components', () => {
+    const {Consumer, Provider} = React.createContext('foo');
+
+    const renderer = ReactTestRenderer.create(
+      <Provider value="bar">
+        <Consumer>{value => <div>{value}</div>}</Consumer>
+      </Provider>,
+    );
+
+    const tree = renderer.toTree();
+
+    cleanNodeOrArray(tree);
+
+    expect(prettyFormat(tree)).toEqual(
+      prettyFormat({
+        type: 'div',
+        nodeType: 'host',
+        instance: null,
+        props: {},
+        rendered: ['bar'],
+      }),
+    );
+  });
+
   it('root instance and createNodeMock ref return the same value', () => {
     const createNodeMock = ref => ({node: ref});
     let refInst = null;
@@ -878,5 +902,31 @@ describe('ReactTestRenderer', () => {
       },
       'world',
     ]);
+  });
+
+  it('can update Providers and Consumers', () => {
+    const {Consumer, Provider} = React.createContext('foo');
+
+    const renderer = ReactTestRenderer.create(
+      <Provider value="bar">
+        <Consumer>{value => <div>{value}</div>}</Consumer>
+      </Provider>,
+    );
+
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: ['bar'],
+      props: {},
+    });
+    renderer.update(
+      <Provider value="corge">
+        <Consumer>{value => <div>{value}</div>}</Consumer>
+      </Provider>,
+    );
+    expect(renderer.toJSON()).toEqual({
+      type: 'div',
+      children: ['corge'],
+      props: {},
+    });
   });
 });

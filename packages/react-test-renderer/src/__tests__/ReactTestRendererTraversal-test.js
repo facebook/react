@@ -17,9 +17,14 @@ const RCTView = 'RCTView';
 const View = props => <RCTView {...props} />;
 
 describe('ReactTestRendererTraversal', () => {
+  let Consumer, Provider;
+
   beforeEach(() => {
     jest.resetModules();
     ReactTestRenderer = require('react-test-renderer');
+    const context = React.createContext('corge');
+    Consumer = context.Consumer;
+    Provider = context.Provider;
   });
 
   class Example extends React.Component {
@@ -37,6 +42,9 @@ describe('ReactTestRendererTraversal', () => {
               <View void="void" />
               <View void="void" />
             </ExampleNull>
+            <Provider value="corge">
+              <Consumer>{value => <View value={value} />}</Consumer>
+            </Provider>
           </View>
         </View>
       );
@@ -54,7 +62,7 @@ describe('ReactTestRendererTraversal', () => {
 
     // assert .props, .type and .parent attributes
     const foo = render.root.find(hasFooProp);
-    expect(foo.props.children).toHaveLength(7);
+    expect(foo.props.children).toHaveLength(8);
     expect(foo.type).toBe(View);
     expect(render.root.parent).toBe(null);
     expect(foo.children[0].parent).toBe(foo);
@@ -69,6 +77,8 @@ describe('ReactTestRendererTraversal', () => {
     const hasNullProp = node => node.props.hasOwnProperty('null');
     const hasVoidProp = node => node.props.hasOwnProperty('void');
     const hasItselfProp = node => node.props.hasOwnProperty('itself');
+    const hasProviderType = node => node.type === Provider;
+    const hasConsumerType = node => node.type === Consumer;
 
     expect(() => render.root.find(hasFooProp)).not.toThrow(); // 1 match
     expect(() => render.root.find(hasBarProp)).toThrow(); // >1 matches
@@ -76,6 +86,8 @@ describe('ReactTestRendererTraversal', () => {
     expect(() => render.root.find(hasBingProp)).not.toThrow(); // 1 match
     expect(() => render.root.find(hasNullProp)).not.toThrow(); // 1 match
     expect(() => render.root.find(hasVoidProp)).toThrow(); // 0 matches
+    expect(() => render.root.find(hasProviderType)).toThrow(); // 0 matches
+    expect(() => render.root.find(hasConsumerType)).toThrow(); // 0 matches
 
     // same assertion as .find(), but confirm length
     expect(render.root.findAll(hasFooProp, {deep: false})).toHaveLength(1);
@@ -119,10 +131,12 @@ describe('ReactTestRendererTraversal', () => {
     // note: there are clearly multiple <View /> in general, but there
     //       is only one being rendered at root node level
     expect(() => render.root.findByType(ExampleNull)).toThrow(); // 2 matches
+    expect(() => render.root.findByType(Provider)).toThrow(); // 0 matches
+    expect(() => render.root.findByType(Consumer)).toThrow(); // 0 matches
 
     expect(render.root.findAllByType(ExampleFn)).toHaveLength(1);
     expect(render.root.findAllByType(View, {deep: false})).toHaveLength(1);
-    expect(render.root.findAllByType(View)).toHaveLength(7);
+    expect(render.root.findAllByType(View)).toHaveLength(8);
     expect(render.root.findAllByType(ExampleNull)).toHaveLength(2);
 
     const nulls = render.root.findAllByType(ExampleNull);
