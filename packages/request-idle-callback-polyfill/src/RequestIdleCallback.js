@@ -15,10 +15,17 @@
 // layout, paint and other browser work is counted against the available time.
 // The frame rate is dynamically adjusted.
 
-export type IdleDeadline  = {
+export type IdleDeadline = {
   timeRemaining: () => number,
   didTimeout: boolean,
 };
+
+type IdleRequestOptions = {
+  timeout: number,
+}
+
+type IdleRequestCallback = (IdleDeadline) => void;
+
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
@@ -148,8 +155,8 @@ if (hasNativePerformanceNow) {
   };
 
   export function requestIdleCallback(
-    callback: (deadline: IdleDeadline) => void,
-    options?: {timeout: number},
+  callback: IdleRequestCallback,
+  options?: IdleRequestOptions,
   ): number {
     // This assumes that we only schedule one callback at a time because that's
     // how Fiber uses it.
