@@ -22,6 +22,9 @@ import {
   HostPortal,
   HostText,
   HostRoot,
+  ContextConsumer,
+  ContextProvider,
+  Mode,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 
@@ -366,6 +369,9 @@ function toTree(node: ?Fiber) {
     case HostText:
       return node.stateNode.text;
     case Fragment:
+    case ContextProvider:
+    case ContextConsumer:
+    case Mode:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -463,6 +469,9 @@ class ReactTestInstance {
           children.push('' + node.memoizedProps);
           break;
         case Fragment:
+        case ContextProvider:
+        case ContextConsumer:
+        case Mode:
           descend = true;
           break;
         default:
