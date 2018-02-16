@@ -41,6 +41,8 @@ if (hasNativePerformanceNow) {
   };
 }
 
+let lastIdlePeriodDeadline = 0;
+
   let scheduledRICCallback = null;
   let isIdleScheduled = false;
   let timeoutTime = -1;
@@ -90,7 +92,7 @@ if (hasNativePerformanceNow) {
     isIdleScheduled = false;
 
     const currentTime = now();
-    if (frameDeadline - currentTime <= 0) {
+  if (lastIdlePeriodDeadline - currentTime <= 0) {
       // There's no time left in this idle period. Check if the callback has
       // a timeout and whether it's been exceeded.
       if (timeoutTime !== -1 && timeoutTime <= currentTime) {
@@ -123,9 +125,9 @@ if (hasNativePerformanceNow) {
   // something better for old IE.
   window.addEventListener('message', idleTick, false);
 
-  const animationTick = function(rafTime) {
+function animationTick(rafTime: number) {
     isAnimationFrameScheduled = false;
-    let nextFrameTime = rafTime - frameDeadline + activeFrameTime;
+  let nextFrameTime = rafTime - lastIdlePeriodDeadline + activeFrameTime;
     if (
       nextFrameTime < activeFrameTime &&
       previousFrameTime < activeFrameTime
@@ -147,7 +149,7 @@ if (hasNativePerformanceNow) {
     } else {
       previousFrameTime = nextFrameTime;
     }
-    frameDeadline = rafTime + activeFrameTime;
+  lastIdlePeriodDeadline = rafTime + activeFrameTime;
     if (!isIdleScheduled) {
       isIdleScheduled = true;
       window.postMessage(messageKey, '*');
