@@ -1,7 +1,7 @@
 {
   "name": "simple-cache-provider",
   "description": "A basic cache for React applications",
-  "version": "0.1.1",
+  "version": "0.2.1",
   "repository": "facebook/react",
   "files": ["LICENSE", "README.md", "index.js", "cjs/"],
   "dependencies": {
