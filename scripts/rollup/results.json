@@ -426,6 +426,20 @@
       "packageName": "react-is",
       "size": 1515,
       "gzip": 670
+    },
+    {
+      "filename": "simple-cache-provider.development.js",
+      "bundleType": "NODE_DEV",
+      "packageName": "simple-cache-provider",
+      "size": 4800,
+      "gzip": 1647
+    },
+    {
+      "filename": "simple-cache-provider.production.min.js",
+      "bundleType": "NODE_PROD",
+      "packageName": "simple-cache-provider",
+      "size": 1343,
+      "gzip": 684
     }
   ]
 }

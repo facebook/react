@@ -244,6 +244,16 @@ const bundles = [
     global: 'ReactIs',
     externals: [],
   },
+
+  /******* Simple Cache Provider (experimental) *******/
+  {
+    label: 'simple-cache-provider',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'simple-cache-provider',
+    global: 'SimpleCacheProvider',
+    externals: ['react'],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)
