@@ -22,71 +22,89 @@ export type IdleDeadline = {
 
 type IdleRequestOptions = {
   timeout: number,
-}
+};
 
-type IdleRequestCallback = (IdleDeadline) => void;
-
+type IdleRequestCallback = IdleDeadline => void;
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
 
 let now;
 if (hasNativePerformanceNow) {
-  now = function() {
+  now = function () {
     return performance.now();
   };
 } else {
-  now = function() {
+  now = function () {
     return Date.now();
   };
 }
 
+function IdleDeadlineImpl(deadline : number, didTimeout: boolean) {
+  this._deadline = deadline;
+  this.didTimeout = didTimeout;
+};
+
+IdleDeadlineImpl.prototype.timeRemaining = function() {
+  // If the callback timed out there's definitely no time remaining
+  if (this.didTimeout) {
+    return 0;
+  }
+  // We assume that if we have a performance timer that the rAF callback
+  // gets a performance timer value. Not sure if this is always true.
+  const remaining = this._deadline - now();
+  return remaining > 0 ? remaining : 0;
+}
+
+
+const idleCallbacks: Array<null | IdleRequestCallback> = [];
+const idleCallbackTimeouts : Array<null | number> = [];
+let idleCallbackIdentifier = 0;
+let currentIdleCallbackHandle = 0;
 let lastIdlePeriodDeadline = 0;
 
-  let scheduledRICCallback = null;
-  let isIdleScheduled = false;
-  let timeoutTime = -1;
+let scheduledRICCallback = null;
+let isIdleScheduled = false;
 
-  let isAnimationFrameScheduled = false;
+let isAnimationFrameScheduled = false;
+// We start out assuming that we run at 30fps but then the heuristic tracking
+// will adjust this value to a faster fps if we get more frequent animation
+// frames.
+let previousFrameTime = 33;
+let activeFrameTime = 33;
 
-  let frameDeadline = 0;
-  // We start out assuming that we run at 30fps but then the heuristic tracking
-  // will adjust this value to a faster fps if we get more frequent animation
-  // frames.
-  let previousFrameTime = 33;
-  let activeFrameTime = 33;
+// We use the postMessage trick to defer idle work until after the repaint.
+const messageKey =
+  '__reactIdleCallback$' +
+  Math.random()
+    .toString(36)
+    .slice(2);
 
-
-function timeRemaining() {
-        // We assume that if we have a performance timer that the rAF callback
-        // gets a performance timer value. Not sure if this is always true.
-  const remaining = lastIdlePeriodDeadline - now();
-        return remaining > 0 ? remaining : 0;
+const idleTick = function (event) {
+  if (event.source !== window || event.data !== messageKey) {
+    return;
   }
 
-  // We use the postMessage trick to defer idle work until after the repaint.
-  const messageKey =
-    '__reactIdleCallback$' +
-    Math.random()
-      .toString(36)
-      .slice(2);
-
-  const idleTick = function(event) {
-    if (event.source !== window || event.data !== messageKey) {
-      return;
+  isIdleScheduled = false;
+  // While there are still callbacks in the queue...
+  while (currentIdleCallbackHandle < idleCallbacks.length) {
+    // Get the callback and the timeout, if it exists 
+    const timeoutTime = idleCallbackTimeouts[currentIdleCallbackHandle];
+    const callback = idleCallbacks[currentIdleCallbackHandle];
+    // This callback might have been cancelled, continue to check the rest of the queue
+    if (!callback) {
+      currentIdleCallbackHandle++;
+      continue;
     }
-
-    isIdleScheduled = false;
-  let didTimeout = false;
-
     const currentTime = now();
-  if (lastIdlePeriodDeadline - currentTime <= 0) {
+    let didTimeout = false;
+    if (lastIdlePeriodDeadline - currentTime <= 0) {
       // There's no time left in this idle period. Check if the callback has
       // a timeout and whether it's been exceeded.
-      if (timeoutTime !== -1 && timeoutTime <= currentTime) {
+      if (timeoutTime != null && timeoutTime <= currentTime) {
         // Exceeded the timeout. Invoke the callback even though there's no
         // time left.
-      didTimeout = true;
+        didTimeout = true;
       } else {
         // No timeout.
         if (!isAnimationFrameScheduled) {
@@ -99,74 +117,69 @@ function timeRemaining() {
       }
     } else {
       // There's still time left in this idle period.
-    didTimeout = false;
+      didTimeout = false;
     }
-
-    timeoutTime = -1;
-    const callback = scheduledRICCallback;
-    scheduledRICCallback = null;
-    if (callback !== null) {
-    callback({didTimeout, timeRemaining});
-    }
-  };
-  // Assumes that we have addEventListener in this environment. Might need
-  // something better for old IE.
-  window.addEventListener('message', idleTick, false);
+    currentIdleCallbackHandle++;
+    callback(new IdleDeadlineImpl(lastIdlePeriodDeadline, didTimeout)); 
+  }
+};
+// Assumes that we have addEventListener in this environment. Might need
+// something better for old IE.
+window.addEventListener('message', idleTick, false);
 
 function animationTick(rafTime: number) {
-    isAnimationFrameScheduled = false;
+  isAnimationFrameScheduled = false;
   let nextFrameTime = rafTime - lastIdlePeriodDeadline + activeFrameTime;
-    if (
-      nextFrameTime < activeFrameTime &&
-      previousFrameTime < activeFrameTime
-    ) {
-      if (nextFrameTime < 8) {
-        // Defensive coding. We don't support higher frame rates than 120hz.
-        // If we get lower than that, it is probably a bug.
-        nextFrameTime = 8;
-      }
-      // If one frame goes long, then the next one can be short to catch up.
-      // If two frames are short in a row, then that's an indication that we
-      // actually have a higher frame rate than what we're currently optimizing.
-      // We adjust our heuristic dynamically accordingly. For example, if we're
-      // running on 120hz display or 90hz VR display.
-      // Take the max of the two in case one of them was an anomaly due to
-      // missed frame deadlines.
-      activeFrameTime =
-        nextFrameTime < previousFrameTime ? previousFrameTime : nextFrameTime;
-    } else {
-      previousFrameTime = nextFrameTime;
+  if (nextFrameTime < activeFrameTime && previousFrameTime < activeFrameTime) {
+    if (nextFrameTime < 8) {
+      // Defensive coding. We don't support higher frame rates than 120hz.
+      // If we get lower than that, it is probably a bug.
+      nextFrameTime = 8;
     }
+    // If one frame goes long, then the next one can be short to catch up.
+    // If two frames are short in a row, then that's an indication that we
+    // actually have a higher frame rate than what we're currently optimizing.
+    // We adjust our heuristic dynamically accordingly. For example, if we're
+    // running on 120hz display or 90hz VR display.
+    // Take the max of the two in case one of them was an anomaly due to
+    // missed frame deadlines.
+    activeFrameTime =
+      nextFrameTime < previousFrameTime ? previousFrameTime : nextFrameTime;
+  } else {
+    previousFrameTime = nextFrameTime;
+  }
   lastIdlePeriodDeadline = rafTime + activeFrameTime;
-    if (!isIdleScheduled) {
-      isIdleScheduled = true;
-      window.postMessage(messageKey, '*');
-    }
-  };
+  if (!isIdleScheduled) {
+    isIdleScheduled = true;
+    window.postMessage(messageKey, '*');
+  }
+}
 
-  export function requestIdleCallback(
+export function requestIdleCallback(
   callback: IdleRequestCallback,
   options?: IdleRequestOptions,
-  ): number {
-    // This assumes that we only schedule one callback at a time because that's
-    // how Fiber uses it.
-    scheduledRICCallback = callback;
-    if (options != null && typeof options.timeout === 'number') {
-      timeoutTime = now() + options.timeout;
-    }
-    if (!isAnimationFrameScheduled) {
-      // If rAF didn't already schedule one, we need to schedule a frame.
-      // TODO: If this rAF doesn't materialize because the browser throttles, we
-      // might want to still have setTimeout trigger rIC as a backup to ensure
-      // that we keep performing work.
-      isAnimationFrameScheduled = true;
-      requestAnimationFrame(animationTick);
-    }
-    return 0;
-  };
+): number {
+  scheduledRICCallback = callback;
+  const handle = idleCallbackIdentifier++;
+  idleCallbacks[handle] = callback;
 
-  export function cancelIdleCallback() {
-    scheduledRICCallback = null;
-    isIdleScheduled = false;
-    timeoutTime = -1;
-  };
+  if (options != null && typeof options.timeout === 'number') {
+    idleCallbackTimeouts[handle] = now() + options.timeout;
+  }
+  if (!isAnimationFrameScheduled) {
+    // If rAF didn't already schedule one, we need to schedule a frame.
+    // TODO: If this rAF doesn't materialize because the browser throttles, we
+    // might want to still have setTimeout trigger rIC as a backup to ensure
+    // that we keep performing work.
+    isAnimationFrameScheduled = true;
+    requestAnimationFrame(animationTick);
+  }
+  return 0;
+}
+
+export function cancelIdleCallback(handle: number) {
+  idleCallbacks[handle] = null;
+  idleCallbackTimeouts[handle] = null;
+  // @TODO this isn't true if there are still scheduled callbacks in the queue
+  isIdleScheduled = false;
+}
