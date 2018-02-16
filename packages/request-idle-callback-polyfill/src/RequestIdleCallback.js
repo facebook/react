@@ -56,26 +56,12 @@ let lastIdlePeriodDeadline = 0;
   let previousFrameTime = 33;
   let activeFrameTime = 33;
 
-  let frameDeadlineObject;
-  if (hasNativePerformanceNow) {
-    frameDeadlineObject = {
-      didTimeout: false,
-      timeRemaining() {
+
+function timeRemaining() {
         // We assume that if we have a performance timer that the rAF callback
         // gets a performance timer value. Not sure if this is always true.
-        const remaining = frameDeadline - performance.now();
+  const remaining = lastIdlePeriodDeadline - now();
         return remaining > 0 ? remaining : 0;
-      },
-    };
-  } else {
-    frameDeadlineObject = {
-      didTimeout: false,
-      timeRemaining() {
-        // Fallback to Date.now()
-        const remaining = frameDeadline - Date.now();
-        return remaining > 0 ? remaining : 0;
-      },
-    };
   }
 
   // We use the postMessage trick to defer idle work until after the repaint.
@@ -84,12 +70,14 @@ let lastIdlePeriodDeadline = 0;
     Math.random()
       .toString(36)
       .slice(2);
+
   const idleTick = function(event) {
     if (event.source !== window || event.data !== messageKey) {
       return;
     }
 
     isIdleScheduled = false;
+  let didTimeout = false;
 
     const currentTime = now();
   if (lastIdlePeriodDeadline - currentTime <= 0) {
@@ -98,7 +86,7 @@ let lastIdlePeriodDeadline = 0;
       if (timeoutTime !== -1 && timeoutTime <= currentTime) {
         // Exceeded the timeout. Invoke the callback even though there's no
         // time left.
-        frameDeadlineObject.didTimeout = true;
+      didTimeout = true;
       } else {
         // No timeout.
         if (!isAnimationFrameScheduled) {
@@ -111,14 +99,14 @@ let lastIdlePeriodDeadline = 0;
       }
     } else {
       // There's still time left in this idle period.
-      frameDeadlineObject.didTimeout = false;
+    didTimeout = false;
     }
 
     timeoutTime = -1;
     const callback = scheduledRICCallback;
     scheduledRICCallback = null;
     if (callback !== null) {
-      callback(frameDeadlineObject);
+    callback({didTimeout, timeRemaining});
     }
   };
   // Assumes that we have addEventListener in this environment. Might need
