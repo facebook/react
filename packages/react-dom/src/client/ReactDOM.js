@@ -53,7 +53,7 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
-import { setInitialSpecialProperties } from './ReactDOMFiberComponent';
+import {setInitialSpecialProperties} from './ReactDOMFiberComponent';
 const {
   createElement,
   createTextNode,

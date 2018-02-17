@@ -426,7 +426,7 @@ export function setInitialSpecialProperties(
       warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
-        'cause things to break subtly.',
+          'cause things to break subtly.',
         getCurrentFiberOwnerName() || 'A component',
       );
       didWarnShadyDOM = true;
@@ -451,7 +451,6 @@ export function setInitialSpecialProperties(
     props,
     isCustomComponentTag,
   );
-
 }
 
 export function setInitialProperties(
