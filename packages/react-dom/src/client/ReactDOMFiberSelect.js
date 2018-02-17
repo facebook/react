@@ -173,6 +173,7 @@ export function initWrapperState(element: Element, props: Object) {
 
 export function postMountWrapper(element: Element, props: Object) {
   const node = ((element: any): SelectWithWrapperState);
+  //Set selected index to -1 before doing anything else to prevent first option from being selected by default
   node.selectedIndex = -1;
   node.multiple = !!props.multiple;
   const value = props.value;
