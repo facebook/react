@@ -115,7 +115,7 @@ const NativeRenderer = ReactFiberReconciler({
     return tag;
   },
 
-  setInitialSpecialProperties(
+  preprocessChildrenSpecialProperties(
     parentInstance: Instance,
     type: string,
     props: Props,

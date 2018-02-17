@@ -413,6 +413,46 @@ export function createTextNode(
     text,
   );
 }
+export function setInitialSpecialProperties(
+  domElement: Element,
+  tag: string,
+  rawProps: Object,
+  rootContainerElement: Element | Document,
+): void {
+  const isCustomComponentTag = isCustomComponent(tag, rawProps);
+  if (__DEV__) {
+    validatePropertiesInDevelopment(tag, rawProps);
+    if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+      warning(
+        false,
+        '%s is using shady DOM. Using shady DOM with React can ' +
+        'cause things to break subtly.',
+        getCurrentFiberOwnerName() || 'A component',
+      );
+      didWarnShadyDOM = true;
+    }
+  }
+
+  // TODO: Make sure that we check isMounted before firing any of these events.
+  let props: Object;
+  switch (tag) {
+    case 'select':
+      ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
+      props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
+      break;
+  }
+
+  assertValidProps(tag, props, getStack);
+
+  setInitialDOMProperties(
+    tag,
+    domElement,
+    rootContainerElement,
+    props,
+    isCustomComponentTag,
+  );
+
+}
 
 export function setInitialProperties(
   domElement: Element,
@@ -485,8 +525,6 @@ export function setInitialProperties(
       props = ReactDOMFiberOption.getHostProps(domElement, rawProps);
       break;
     case 'select':
-      ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
-      props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
       trapBubbledEvent('topInvalid', 'invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
