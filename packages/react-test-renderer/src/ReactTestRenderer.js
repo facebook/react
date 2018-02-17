@@ -148,6 +148,15 @@ const TestRenderer = ReactFiberReconciler({
     };
   },
 
+  setInitialProperties(
+    testElement: Instance,
+    type: string,
+    props: Props,
+    rootContainerInstance: Container,
+  ): boolean {
+    return false;
+  },
+
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,

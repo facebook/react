@@ -609,6 +609,15 @@ const DOMRenderer = ReactFiberReconciler({
     return domElement;
   },
 
+  setInitialSpecialProperties(
+    domElement: Instance,
+    type: string,
+    props: Props,
+    rootContainerInstance: Container,
+  ): void {
+    console.log(1);
+  },
+
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
