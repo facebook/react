@@ -173,6 +173,7 @@ export function initWrapperState(element: Element, props: Object) {
 
 export function postMountWrapper(element: Element, props: Object) {
   const node = ((element: any): SelectWithWrapperState);
+  node.selectedIndex = -1;
   node.multiple = !!props.multiple;
   const value = props.value;
   if (value != null) {
