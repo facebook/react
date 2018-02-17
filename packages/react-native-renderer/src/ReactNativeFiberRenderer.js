@@ -120,8 +120,8 @@ const NativeRenderer = ReactFiberReconciler({
     type: string,
     props: Props,
     rootContainerInstance: Container,
-  ): boolean {
-    return false;
+  ): void {
+    // We don't want to do anything here since this will be handled as normal in finalizeInitialChildren.
   },
 
   finalizeInitialChildren(
