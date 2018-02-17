@@ -109,7 +109,7 @@ let SharedHostConfig = {
     return inst;
   },
 
-  setInitialProperties(
+  setInitialSpecialProperties(
     domElement: Instance,
     type: string,
     props: Props,

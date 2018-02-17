@@ -431,7 +431,7 @@ const ARTRenderer = ReactFiberReconciler({
   createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
     return text;
   },
-  setInitialProperties(domElement, type, props) {
+  setInitialSpecialProperties(domElement, type, props) {
     return false;
   },
   finalizeInitialChildren(domElement, type, props) {

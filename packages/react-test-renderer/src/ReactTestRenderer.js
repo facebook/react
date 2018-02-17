@@ -148,7 +148,7 @@ const TestRenderer = ReactFiberReconciler({
     };
   },
 
-  setInitialProperties(
+  setInitialSpecialProperties(
     testElement: Instance,
     type: string,
     props: Props,

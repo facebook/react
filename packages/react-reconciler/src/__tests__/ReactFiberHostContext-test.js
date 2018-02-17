@@ -37,7 +37,7 @@ describe('ReactFiberHostContext', () => {
       createInstance: function() {
         creates++;
       },
-      setInitialProperties: function() {
+      setInitialSpecialProperties: function() {
         return null;
       },
       appendInitialChild: function() {

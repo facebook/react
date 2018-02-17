@@ -615,7 +615,6 @@ const DOMRenderer = ReactFiberReconciler({
     props: Props,
     rootContainerInstance: Container,
   ): void {
-    console.log(1);
   },
 
   appendInitialChild(

@@ -186,7 +186,7 @@ const ReactFabricRenderer = ReactFiberReconciler({
     };
   },
 
-  setInitialProperties(
+  setInitialSpecialProperties(
     parentInstance: Instance,
     type: string,
     props: Props,
