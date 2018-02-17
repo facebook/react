@@ -795,7 +795,7 @@ describe('ReactDOMSelect', () => {
 
   it('should not select first option by default when multiple is set and no defaultValue is set', () => {
     const stub = (
-      <select multiple onChange={noop}>
+      <select multiple={true} onChange={noop}>
         <option value="a">a</option>
         <option value="b">b</option>
         <option value="c">c</option>
