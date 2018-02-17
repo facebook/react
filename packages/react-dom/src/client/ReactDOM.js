@@ -53,6 +53,7 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
+import {setInitialSpecialProperties} from './ReactDOMFiberComponent';
 const {
   createElement,
   createTextNode,
@@ -607,6 +608,15 @@ const DOMRenderer = ReactFiberReconciler({
     precacheFiberNode(internalInstanceHandle, domElement);
     updateFiberProps(domElement, props);
     return domElement;
+  },
+
+  preprocessChildrenSpecialProperties(
+    domElement: Instance,
+    type: string,
+    props: Props,
+    rootContainerInstance: Container,
+  ): void {
+    setInitialSpecialProperties(domElement, type, props, rootContainerInstance);
   },
 
   appendInitialChild(

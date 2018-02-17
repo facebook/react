@@ -59,6 +59,12 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
     hostContext: CX,
     internalInstanceHandle: OpaqueHandle,
   ): I,
+  setInitialSpecialProperties(
+    parentInstance: I,
+    type: T,
+    props: P,
+    rootContainerInstance: C,
+  ): void,
   appendInitialChild(parentInstance: I, child: I | TI): void,
   finalizeInitialChildren(
     parentInstance: I,

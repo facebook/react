@@ -115,6 +115,15 @@ const NativeRenderer = ReactFiberReconciler({
     return tag;
   },
 
+  preprocessChildrenSpecialProperties(
+    parentInstance: Instance,
+    type: string,
+    props: Props,
+    rootContainerInstance: Container,
+  ): void {
+    // We don't want to do anything here since this will be handled as normal in finalizeInitialChildren.
+  },
+
   finalizeInitialChildren(
     parentInstance: Instance,
     type: string,

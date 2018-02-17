@@ -53,6 +53,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const {
     createInstance,
     createTextInstance,
+    preprocessChildrenSpecialProperties,
     appendInitialChild,
     finalizeInitialChildren,
     prepareUpdate,
@@ -502,6 +503,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               rootContainerInstance,
               currentHostContext,
               workInProgress,
+            );
+            preprocessChildrenSpecialProperties(
+              instance,
+              type,
+              newProps,
+              rootContainerInstance,
             );
 
             appendAllChildren(instance, workInProgress);

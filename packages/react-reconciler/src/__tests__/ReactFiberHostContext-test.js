@@ -37,10 +37,13 @@ describe('ReactFiberHostContext', () => {
       createInstance: function() {
         creates++;
       },
-      finalizeInitialChildren: function() {
+      preprocessChildrenSpecialProperties: function() {
         return null;
       },
       appendInitialChild: function() {
+        return null;
+      },
+      finalizeInitialChildren: function() {
         return null;
       },
       now: function() {
@@ -86,10 +89,13 @@ describe('ReactFiberHostContext', () => {
       createInstance: function() {
         return null;
       },
-      finalizeInitialChildren: function() {
+      preprocessChildrenSpecialProperties: function() {
         return null;
       },
       appendInitialChild: function() {
+        return null;
+      },
+      finalizeInitialChildren: function() {
         return null;
       },
       now: function() {

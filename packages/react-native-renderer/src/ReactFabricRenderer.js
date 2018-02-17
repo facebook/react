@@ -186,6 +186,15 @@ const ReactFabricRenderer = ReactFiberReconciler({
     };
   },
 
+  preprocessChildrenSpecialProperties(
+    parentInstance: Instance,
+    type: string,
+    props: Props,
+    rootContainerInstance: Container,
+  ): boolean {
+    return false;
+  },
+
   finalizeInitialChildren(
     parentInstance: Instance,
     type: string,

@@ -109,6 +109,14 @@ let SharedHostConfig = {
     return inst;
   },
 
+  preprocessChildrenSpecialProperties(
+    domElement: Instance,
+    type: string,
+    props: Props,
+  ): boolean {
+    return false;
+  },
+
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
