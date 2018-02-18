@@ -160,6 +160,8 @@ describe('ReactMount', () => {
   });
 
   it('should warn when a hydrated element has inner text mismatch', () => {
+    // See fixtures/ssr: ssr-warnForTextDifference
+
     class Component extends React.Component {
       render() {
         return this.props.children;
@@ -190,7 +192,71 @@ describe('ReactMount', () => {
     );
   });
 
+  it('should warn when hydrating a text node over a mismatching text node', () => {
+    // See fixtures/ssr: ssr-warnForTextDifference-warnForUnmatchedText-didNotMatchHydratedContainerTextInstance
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString('server text');
+    div.innerHTML = markup;
+
+    expect(() => ReactDOM.hydrate('client text', div)).toWarnDev(
+      'Text content did not match. ' +
+        'Server: "server text" ' +
+        'Client: "client text"',
+      // Without the component stack here because it's empty: rendering a text node directly into the root node.
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn when a hydrated element has first text match but second text mismatch', () => {
+    // See fixtures/ssr: ssr-warnForTextDifference-warnForUnmatchedText-didNotMatchHydratedTextInstance
+
+    class Component extends React.Component {
+      render() {
+        return this.props.children;
+      }
+    }
+
+    const serverRandom = Math.random();
+    const clientRandom = Math.random();
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <Component>
+        <em>
+          {'SSRMismatchTest static text and '}
+          {'server random text ' + serverRandom}
+        </em>
+      </Component>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <Component>
+          <em>
+            {'SSRMismatchTest static text and '}
+            {'client random text ' + clientRandom}
+          </em>
+        </Component>,
+        div,
+      ),
+    ).toWarnDev(
+      'Text content did not match. ' +
+        'Server: "server random text ' +
+        serverRandom +
+        '" ' +
+        'Client: "client random text ' +
+        clientRandom +
+        '"\n' +
+        '    in em (at **)\n' +
+        '    in Component (at **)',
+    );
+  });
+
   it('should warn when a hydrated element has children mismatch', () => {
+    // See fixtures/ssr: ssr-warnForInsertedHydratedText-didNotFindHydratableTextInstance
+
     class Component extends React.Component {
       render() {
         return this.props.children;
@@ -245,43 +311,281 @@ describe('ReactMount', () => {
     );
   });
 
-  it('should warn when a hydrated element has extra props', () => {
+  it('should warn when a hydrated element has extra props with non-null values', () => {
+    // See fixtures/ssr: ssr-warnForPropDifference
+
     const div = document.createElement('div');
-    const markup = ReactDOMServer.renderToString(<div />);
+    const markup = ReactDOMServer.renderToString(
+      <div>
+        <em>SSRMismatchTest default text</em>
+      </div>,
+    );
     div.innerHTML = markup;
 
     expect(() =>
       ReactDOM.hydrate(
-        <div data-ssr-prop-mismatch={true} data-ssr-prop-mismatch-2={true} />,
+        <div data-ssr-extra-prop={true} data-ssr-extra-prop-2={true}>
+          <em>SSRMismatchTest default text</em>
+        </div>,
         div,
       ),
     ).toWarnDev(
-      'Prop `data-ssr-prop-mismatch` did not match. ' +
+      'Prop `data-ssr-extra-prop` did not match. ' +
         'Server: "null" ' +
         'Client: "true"\n' +
         '    in div (at **)',
     );
   });
 
-  it('should not warn when a hydrated element has an extra prop explicitly set to null', () => {
+  it('should not warn when a hydrated element has extra props explicitly set to null', () => {
+    // See fixtures/ssr: ssr-warnForPropDifference-null-no-warning
+
     const div = document.createElement('div');
-    const markup = ReactDOMServer.renderToString(<div />);
+    const markup = ReactDOMServer.renderToString(
+      <div>
+        <em>SSRMismatchTest default text</em>
+      </div>,
+    );
     div.innerHTML = markup;
 
     expect(() =>
-      ReactDOM.hydrate(<div data-ssr-prop-mismatch={null} />, div),
+      ReactDOM.hydrate(
+        <div data-ssr-extra-prop={null} data-ssr-extra-prop-2={null}>
+          <em>SSRMismatchTest default text</em>
+        </div>,
+        div,
+      ),
     ).toWarnDev([]);
   });
 
   it('should warn when a server element has extra props', () => {
+    // See fixtures/ssr: ssr-warnForExtraAttributes
+
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
-      <div data-ssr-prop-extra={true} data-ssr-prop-extra-2={true} />,
+      <div data-ssr-extra-prop={true} data-ssr-extra-prop-2={true}>
+        <em>SSRMismatchTest default text</em>
+      </div>,
     );
     div.innerHTML = markup;
 
-    expect(() => ReactDOM.hydrate(<div />, div)).toWarnDev(
-      'Extra attributes from the server: data-ssr-prop-extra,data-ssr-prop-extra-2\n' +
+    expect(() =>
+      ReactDOM.hydrate(
+        <div>
+          <em>SSRMismatchTest default text</em>
+        </div>,
+        div,
+      ),
+    ).toWarnDev(
+      'Extra attributes from the server: data-ssr-extra-prop,data-ssr-extra-prop-2\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when a browser element has an event handler which is set to false', () => {
+    // See fixtures/ssr: ssr-warnForInvalidEventListener-false
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(<div onClick={() => {}} />);
+    div.innerHTML = markup;
+
+    expect(() => ReactDOM.hydrate(<div onClick={false} />, div)).toWarnDev(
+      'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
+        'If you used to conditionally omit it with onClick={condition && value}, ' +
+        'pass onClick={condition ? value : undefined} instead.\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when a browser element has an event handler which is set to a non-function, non-false value', () => {
+    // See fixtures/ssr: ssr-warnForInvalidEventListener-typeof
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(<div onClick={() => {}} />);
+    div.innerHTML = markup;
+
+    expect(() => ReactDOM.hydrate(<div onClick={'a string'} />, div)).toWarnDev(
+      'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when hydrate removes an element from a server-rendered sequence in the root container', () => {
+    // See fixtures/ssr: ssr-warnForDeletedHydratableElement-didNotHydrateContainerInstance
+
+    const div = document.createElement('div');
+    const markup =
+      'SSRMismatchTest first text' +
+      '<br />' +
+      '<br />' +
+      'SSRMismatchTest second text';
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        [
+          'SSRMismatchTest first text',
+          <br key={1} />,
+          'SSRMismatchTest second text',
+        ],
+        div,
+      ),
+    ).toWarnDev(
+      'Did not expect server HTML to contain a <br> in <div>.',
+      // Without the component stack here because it's empty: rendering a text node directly into the root node.
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn when hydrate removes an element from a server-rendered sequence', () => {
+    // See fixtures/ssr: ssr-warnForDeletedHydratableElement-didNotHydrateInstance
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <div>
+        <div />
+        <span />
+      </div>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div>
+          <span />
+        </div>,
+        div,
+      ),
+    ).toWarnDev(
+      'Did not expect server HTML to contain a <div> in <div>.\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when hydrate removes a text node from a server-rendered sequence in the root container', () => {
+    // See fixtures/ssr: ssr-warnForDeletedHydratableText-didNotHydrateContainerInstance
+
+    const div = document.createElement('div');
+    const markup =
+      'SSRMismatchTest server text' + '<br />' + 'SSRMismatchTest default text';
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate([<br key={1} />, 'SSRMismatchTest default text'], div),
+    ).toWarnDev(
+      'Did not expect server HTML to contain the text node "SSRMismatchTest server text" in <div>.\n' +
+        '    in br (at **)',
+    );
+  });
+
+  it('should warn when hydrate removes a text node from a server-rendered sequence', () => {
+    // See fixtures/ssr: ssr-warnForDeletedHydratableText-didNotHydrateInstance
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <div>
+        SSRMismatchTest server text
+        <span />
+      </div>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div>
+          <span />
+        </div>,
+        div,
+      ),
+    ).toWarnDev(
+      'Did not expect server HTML to contain the text node "SSRMismatchTest server text" in <div>.\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when hydrate inserts an element to replace a text node in the root container', () => {
+    // See fixtures/ssr: ssr-warnForInsertedHydratedElement-didNotFindHydratableContainerInstance
+
+    const div = document.createElement('div');
+    const markup = 'SSRMismatchTest default text';
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(<span>SSRMismatchTest default text</span>, div),
+    ).toWarnDev(
+      'Expected server HTML to contain a matching <span> in <div>.\n' +
+        '    in span (at **)',
+    );
+  });
+
+  it('should warn when hydrate inserts an element to replace a different element', () => {
+    // See fixtures/ssr: ssr-warnForInsertedHydratedElement-didNotFindHydratableInstance
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <div>
+        <em>SSRMismatchTest default text</em>
+      </div>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div>
+          <p>SSRMismatchTest default text</p>
+        </div>,
+        div,
+      ),
+    ).toWarnDev(
+      'Expected server HTML to contain a matching <p> in <div>.\n' +
+        '    in p (at **)\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when hydrate inserts a text node to replace an element in the root container', () => {
+    // See fixtures/ssr: ssr-warnForInsertedHydratedText-didNotFindHydratableContainerTextInstance
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <span>SSRMismatchTest default text</span>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate('SSRMismatchTest default text', div),
+    ).toWarnDev(
+      'Expected server HTML to contain a matching text node for "SSRMismatchTest default text" in <div>.',
+      // Without the component stack here because it's empty: rendering a text node directly into the root node.
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn when hydrate inserts a text node between matching elements', () => {
+    // See fixtures/ssr: ssr-warnForInsertedHydratedText-didNotFindHydratableTextInstance
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <div>
+        <span />
+        <span />
+      </div>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div>
+          <span />
+          SSRMismatchTest client text
+          <span />
+        </div>,
+        div,
+      ),
+    ).toWarnDev(
+      'Expected server HTML to contain a matching text node for "SSRMismatchTest client text" in <div>.\n' +
         '    in div (at **)',
     );
   });
