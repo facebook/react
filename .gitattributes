@@ -1,1 +1,31 @@
-* text=auto
+'* text=auto
+'
+' - spawn-sync@1.0.15 postinstall /home/scrutinizer/build/node_modules/spawn-sync
+'  - node postinstall
+'  - flow-bin@0.27.0 postinstall /home/scrutinizer/build/node_modules/flow-bin
+'  - postinstall
+'  -  node "lib/install.js"
+'  -  flow binary passed sucessfully
+'  -  npm WARN prefer global cover@0.2.9 should be installed -g
+'  -  abab@1.0.3 install /home/scrutinizer/build/node_modules/abab
+'  -  react-build@16.0.0-alpha postinstall /home/scrutinizer/build
+'  -  node "node_modules/fbjs-scripts/node/check-dev-engines.js" package-json
+'  -  @0072016
+'  -   https://developers.facebook.com
+'  -  window.jazzy = {'docset' : false}
+'  -  // Keeps the document from jumping to the hash.
+'  -  var 'href = $(tnis).attr('href');
+'  -  if (history.pushState) {
+'  -  history.pushState({}, '', href);
+'  -  } else {
+'  -  location.hash = href;
+'  -  @0072016
+'  -  https://developers.facebook.com
+'  -  2018-02-18 04:44:2018
+'  */
+'
+'  -  
+'  -  
+'  -  
+'   -  
+'  -  
