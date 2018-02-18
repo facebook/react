@@ -558,9 +558,10 @@ export function didNotFindHydratableContainerInstance(
   parentContainer: Container,
   type: string,
   props: Props,
+  index: number,
 ) {
   if (__DEV__) {
-    warnForInsertedHydratedElement(parentContainer, type, props);
+    warnForInsertedHydratedElement(parentContainer, type, props, index);
   }
 }
 
@@ -579,9 +580,10 @@ export function didNotFindHydratableInstance(
   parentInstance: Instance,
   type: string,
   props: Props,
+  index: number,
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    warnForInsertedHydratedElement(parentInstance, type, props);
+    warnForInsertedHydratedElement(parentInstance, type, props, index);
   }
 }
 

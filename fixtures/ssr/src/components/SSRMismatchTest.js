@@ -196,14 +196,38 @@ const testCases = [
   {
     key: 'ssr-warnForInsertedHydratedElement-didNotFindHydratableInstance',
     renderServer: () => (
-      <div>
-        <em>SSRMismatchTest default text</em>
+      <div className="SSRMismatchTest__wrapper">
+        <span className="SSRMismatchTest__1">1</span>
+        <span className="SSRMismatchTest__2">2</span>
+        <span className="SSRMismatchTest__3">3</span>
+        <span className="SSRMismatchTest__4">4</span>
+        <span className="SSRMismatchTest__5">5</span>
+        <span className="SSRMismatchTest__6">6</span>
+        <strong> SSRMismatchTest default text </strong>
+        <span className="SSRMismatchTest__7">7</span>
+        <span className="SSRMismatchTest__8">8</span>
+        <span className="SSRMismatchTest__9">9</span>
+        <span className="SSRMismatchTest__10">10</span>
+        <span className="SSRMismatchTest__11">11</span>
+        <span className="SSRMismatchTest__12">12</span>
       </div>
     ),
     renderBrowser: () => (
       // The inner element type is different from the server render, but the inner text is the same.
-      <div>
-        <p>SSRMismatchTest default text</p>
+      <div className="SSRMismatchTest__wrapper">
+        <span className="SSRMismatchTest__1">1</span>
+        <span className="SSRMismatchTest__2">2</span>
+        <span className="SSRMismatchTest__3">3</span>
+        <span className="SSRMismatchTest__4">4</span>
+        <span className="SSRMismatchTest__5">5</span>
+        <span className="SSRMismatchTest__6">6</span>
+        <em> SSRMismatchTest default text </em>
+        <span className="SSRMismatchTest__7">7</span>
+        <span className="SSRMismatchTest__8">8</span>
+        <span className="SSRMismatchTest__9">9</span>
+        <span className="SSRMismatchTest__10">10</span>
+        <span className="SSRMismatchTest__11">11</span>
+        <span className="SSRMismatchTest__12">12</span>
       </div>
     ),
   },

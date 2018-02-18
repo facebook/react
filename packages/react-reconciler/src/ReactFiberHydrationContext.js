@@ -109,7 +109,12 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
           case HostComponent:
             const type = fiber.type;
             const props = fiber.pendingProps;
-            didNotFindHydratableContainerInstance(parentContainer, type, props);
+            didNotFindHydratableContainerInstance(
+              parentContainer,
+              type,
+              props,
+              fiber.index,
+            );
             break;
           case HostText:
             const text = fiber.pendingProps;
@@ -132,6 +137,7 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               parentInstance,
               type,
               props,
+              fiber.index,
             );
             break;
           case HostText:

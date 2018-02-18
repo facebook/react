@@ -39,7 +39,11 @@ import {
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
-import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
+import {
+  DOCUMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
+  ELEMENT_NODE,
+} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
@@ -1179,17 +1183,75 @@ export function warnForInsertedHydratedElement(
   parentNode: Element | Document,
   tag: string,
   props: Object,
+  index: number,
 ) {
   if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
     didWarnInvalidHydration = true;
+    let htmlContext = [];
+    const ic = parentNode.childNodes.length;
+    const parentNodeName = parentNode.nodeName.toLowerCase();
+    if (parentNode.nodeType === ELEMENT_NODE) {
+      // $FlowFixMe https://github.com/facebook/flow/issues/1032
+      const parentElement = (parentNode: Element);
+      htmlContext.push(
+        ' <' +
+          parentNodeName +
+          (parentElement.className
+            ? ' className="' + parentElement.className + '"'
+            : '') +
+          '>',
+      );
+    } else {
+      htmlContext.push(' <' + parentNodeName + '>');
+    }
+    if (index - 5 > 0) {
+      htmlContext.push('   …');
+    }
+    for (let i = index - 5; i <= index + 5; ++i) {
+      if (i >= 0 && i < ic) {
+        const childNode = parentNode.childNodes[i];
+        const childNodeName = childNode.nodeName.toLowerCase();
+        const diffPrefix = i === index ? '-  ' : '   ';
+        if (childNode.nodeType === ELEMENT_NODE) {
+          // $FlowFixMe https://github.com/facebook/flow/issues/1032
+          const childElement = (childNode: Element);
+          htmlContext.push(
+            diffPrefix +
+              '<' +
+              childNodeName +
+              (childElement.className
+                ? ' className="' + childElement.className + '"'
+                : '') +
+              (childElement.textContent
+                ? '>' + childElement.textContent + '</' + childNodeName + '>'
+                : ' />'),
+          );
+        } else {
+          htmlContext.push(diffPrefix + childNode.textContent);
+        }
+        if (i === index) {
+          htmlContext.push(
+            '+  <' +
+              tag +
+              (props.className ? ' className="' + props.className + '"' : '') +
+              ' />',
+          );
+        }
+      }
+    }
+    if (index + 5 < ic - 1) {
+      htmlContext.push('   …');
+    }
+    htmlContext.push(' </' + parentNodeName + '>');
     warning(
       false,
-      'Expected server HTML to contain a matching <%s> in <%s>.',
+      'Expected server HTML to contain a matching <%s> in <%s>.%s',
       tag,
-      parentNode.nodeName.toLowerCase(),
+      parentNodeName,
+      '\n' + htmlContext.join('\n') + '\n',
     );
   }
 }

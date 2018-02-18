@@ -286,6 +286,14 @@ describe('ReactMount', () => {
       ),
     ).toWarnDev(
       'Expected server HTML to contain a matching <div> in <div>.\n' +
+        ' <div>\n' +
+        '   nested\n' +
+        '    \n' +
+        '-   \n' +
+        '+  <div />\n' +
+        '   <p>children text</p>\n' +
+        ' </div>\n' +
+        '\n' +
         '    in div (at **)\n' +
         '    in Component (at **)',
     );
@@ -516,6 +524,11 @@ describe('ReactMount', () => {
       ReactDOM.hydrate(<span>SSRMismatchTest default text</span>, div),
     ).toWarnDev(
       'Expected server HTML to contain a matching <span> in <div>.\n' +
+        ' <div>\n' +
+        '-  SSRMismatchTest default text\n' +
+        '+  <span />\n' +
+        ' </div>\n' +
+        '\n' +
         '    in span (at **)',
     );
   });
@@ -540,6 +553,11 @@ describe('ReactMount', () => {
       ),
     ).toWarnDev(
       'Expected server HTML to contain a matching <p> in <div>.\n' +
+        ' <div>\n' +
+        '-  <em>SSRMismatchTest default text</em>\n' +
+        '+  <p />\n' +
+        ' </div>\n' +
+        '\n' +
         '    in p (at **)\n' +
         '    in div (at **)',
     );
