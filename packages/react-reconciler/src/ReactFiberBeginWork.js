@@ -849,16 +849,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newProps = workInProgress.pendingProps;
     const oldProps = workInProgress.memoizedProps;
 
-    if (hasLegacyContextChanged()) {
-      // Normally we can bail out on props equality but if context has changed
-      // we don't do the bailout and we have to reuse existing props instead.
-    } else if (oldProps === newProps) {
-      workInProgress.stateNode = 0;
-      pushProvider(workInProgress);
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
-    }
-    workInProgress.memoizedProps = newProps;
-
     const newValue = newProps.value;
 
     let changedBits: number;
@@ -906,9 +896,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress.stateNode = changedBits;
     pushProvider(workInProgress);
 
-    if (oldProps !== null && oldProps.children === newProps.children) {
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (oldProps === newProps) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
+
+    workInProgress.memoizedProps = newProps;
     const newChildren = newProps.children;
     reconcileChildren(current, workInProgress, newChildren);
     return workInProgress.child;
@@ -921,6 +916,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ) {
     const context: ReactContext<any> = workInProgress.type;
     const newProps = workInProgress.pendingProps;
+    const oldProps = workInProgress.memoizedProps;
 
     const newValue = context.currentValue;
     const changedBits = context.changedBits;
@@ -944,6 +940,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     workInProgress.stateNode = observedBits;
 
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (changedBits === 0 && oldProps === newProps) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    workInProgress.memoizedProps = newProps;
     const render = newProps.children;
 
     if (typeof render !== 'function') {

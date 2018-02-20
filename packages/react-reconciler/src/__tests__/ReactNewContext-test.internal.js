@@ -644,6 +644,45 @@ describe('ReactNewContext', () => {
     }
   });
 
+  it("does not re-render if there's an update in a child", () => {
+    const Context = React.createContext(0);
+
+    let child;
+    class Child extends React.Component {
+      state = {step: 0};
+      render() {
+        ReactNoop.yield('Child');
+        return (
+          <span
+            prop={`Context: ${this.props.context}, Step: ${this.state.step}`}
+          />
+        );
+      }
+    }
+
+    function App(props) {
+      return (
+        <Context.Provider value={props.value}>
+          <Context.Consumer>
+            {value => {
+              ReactNoop.yield('Consumer render prop');
+              return <Child ref={inst => (child = inst)} context={value} />;
+            }}
+          </Context.Consumer>
+        </Context.Provider>
+      );
+    }
+
+    // Initial mount
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual(['Consumer render prop', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 0')]);
+
+    child.setState({step: 1});
+    expect(ReactNoop.flush()).toEqual(['Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 1')]);
+  });
+
   describe('fuzz test', () => {
     const Fragment = React.Fragment;
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
