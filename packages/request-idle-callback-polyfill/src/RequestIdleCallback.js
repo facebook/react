@@ -155,6 +155,14 @@ function animationTick(rafTime: number) {
   }
 }
 
+function invokerIdleCallbackTimeout(handle: number) {
+  const callback = idleCallbacks[handle];
+  if (callback !== null) {
+    cancelIdleCallback(handle);
+    callback(new IdleDeadlineImpl(now(), true))
+  }
+}
+
 export function requestIdleCallback(
   callback: IdleRequestCallback,
   options?: IdleRequestOptions,
@@ -165,6 +173,10 @@ export function requestIdleCallback(
 
   if (options != null && typeof options.timeout === 'number') {
     idleCallbackTimeouts[handle] = now() + options.timeout;
+    window.setTimeout(
+      () => invokerIdleCallbackTimeout(handle),
+      options.timeout
+    );
   }
   if (!isAnimationFrameScheduled) {
     // If rAF didn't already schedule one, we need to schedule a frame.
@@ -176,6 +188,7 @@ export function requestIdleCallback(
   }
   return 0;
 }
+
 
 export function cancelIdleCallback(handle: number) {
   idleCallbacks[handle] = null;
