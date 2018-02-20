@@ -31,19 +31,19 @@ const hasNativePerformanceNow =
 
 let now;
 if (hasNativePerformanceNow) {
-  now = function () {
+  now = function() {
     return performance.now();
   };
 } else {
-  now = function () {
+  now = function() {
     return Date.now();
   };
 }
 
-function IdleDeadlineImpl(deadline : number, didTimeout: boolean) {
+function IdleDeadlineImpl(deadline: number, didTimeout: boolean) {
   this._deadline = deadline;
   this.didTimeout = didTimeout;
-};
+}
 
 IdleDeadlineImpl.prototype.timeRemaining = function() {
   // If the callback timed out there's definitely no time remaining
@@ -54,11 +54,10 @@ IdleDeadlineImpl.prototype.timeRemaining = function() {
   // gets a performance timer value. Not sure if this is always true.
   const remaining = this._deadline - now();
   return remaining > 0 ? remaining : 0;
-}
-
+};
 
 const idleCallbacks: Array<null | IdleRequestCallback> = [];
-const idleCallbackTimeouts : Array<null | number> = [];
+const idleCallbackTimeouts: Array<null | number> = [];
 let idleCallbackIdentifier = 0;
 let currentIdleCallbackHandle = 0;
 let lastIdlePeriodDeadline = 0;
@@ -80,7 +79,7 @@ const messageKey =
     .toString(36)
     .slice(2);
 
-const idleTick = function (event) {
+const idleTick = function(event) {
   if (event.source !== window || event.data !== messageKey) {
     return;
   }
@@ -88,7 +87,7 @@ const idleTick = function (event) {
   isIdleScheduled = false;
   // While there are still callbacks in the queue...
   while (currentIdleCallbackHandle < idleCallbacks.length) {
-    // Get the callback and the timeout, if it exists 
+    // Get the callback and the timeout, if it exists
     const timeoutTime = idleCallbackTimeouts[currentIdleCallbackHandle];
     const callback = idleCallbacks[currentIdleCallbackHandle];
     // This callback might have been cancelled, continue to check the rest of the queue
@@ -120,7 +119,7 @@ const idleTick = function (event) {
       didTimeout = false;
     }
     currentIdleCallbackHandle++;
-    callback(new IdleDeadlineImpl(lastIdlePeriodDeadline, didTimeout)); 
+    callback(new IdleDeadlineImpl(lastIdlePeriodDeadline, didTimeout));
   }
 };
 // Assumes that we have addEventListener in this environment. Might need
@@ -159,7 +158,7 @@ function invokerIdleCallbackTimeout(handle: number) {
   const callback = idleCallbacks[handle];
   if (callback !== null) {
     cancelIdleCallback(handle);
-    callback(new IdleDeadlineImpl(now(), true))
+    callback(new IdleDeadlineImpl(now(), true));
   }
 }
 
@@ -175,7 +174,7 @@ export function requestIdleCallback(
     idleCallbackTimeouts[handle] = now() + options.timeout;
     window.setTimeout(
       () => invokerIdleCallbackTimeout(handle),
-      options.timeout
+      options.timeout,
     );
   }
   if (!isAnimationFrameScheduled) {
@@ -188,7 +187,6 @@ export function requestIdleCallback(
   }
   return 0;
 }
-
 
 export function cancelIdleCallback(handle: number) {
   idleCallbacks[handle] = null;
