@@ -186,7 +186,7 @@ const stringifyWithPerformanceWarning = (value) => {
   let attributeValue = (value: any).toString();
   const stringifyEnd = Date.now();
 
-  warning(stringifyEnd - stringifyStart <= 2, 'Stringifying your attribute is causing perfomance issues.')
+  warning(stringifyEnd - stringifyStart >= 2, 'Stringifying your attribute is causing perfomance issues.')
   
   return attributeValue;
-}
+};
