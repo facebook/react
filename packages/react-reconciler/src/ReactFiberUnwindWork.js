@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ */
+
 import {createCapturedValue} from './ReactCapturedValue';
 import {ensureUpdateQueues} from './ReactFiberUpdateQueue';
 
@@ -110,7 +118,7 @@ export default function(
     } while (workInProgress !== null);
   }
 
-  function exitIncompleteWork(workInProgress) {
+  function unwindWork(workInProgress) {
     switch (workInProgress.tag) {
       case ClassComponent: {
         popLegacyContextProvider(workInProgress);
@@ -147,6 +155,6 @@ export default function(
   }
   return {
     throwException,
-    exitIncompleteWork,
+    unwindWork,
   };
 }

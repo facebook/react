@@ -49,7 +49,7 @@ import warning from 'fbjs/lib/warning';
 
 import ReactFiberBeginWork from './ReactFiberBeginWork';
 import ReactFiberCompleteWork from './ReactFiberCompleteWork';
-import ReactFiberIncompleteWork from './ReactFiberIncompleteWork';
+import ReactFiberUnwindWork from './ReactFiberUnwindWork';
 import ReactFiberCommitWork from './ReactFiberCommitWork';
 import ReactFiberHostContext from './ReactFiberHostContext';
 import ReactFiberHydrationContext from './ReactFiberHydrationContext';
@@ -180,7 +180,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hostContext,
     hydrationContext,
   );
-  const {throwException, exitIncompleteWork} = ReactFiberIncompleteWork(
+  const {throwException, unwindWork} = ReactFiberUnwindWork(
     hostContext,
     scheduleWork,
     isAlreadyFailedLegacyErrorBoundary,
@@ -574,7 +574,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress.expirationTime = newExpirationTime;
   }
 
-  function unwindUnitOfWork(workInProgress: Fiber): Fiber | null {
+  function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
     // Attempt to complete the current unit of work, then move to the
     // next sibling. If there are no more siblings, return to the
     // parent fiber.
@@ -671,7 +671,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // This fiber did not complete because something threw. Pop values off
         // the stack without entering the complete phase. If this is a boundary,
         // capture values if possible.
-        const next = exitIncompleteWork(workInProgress);
+        const next = unwindWork(workInProgress);
         // Because this fiber did not complete, don't reset its expiration time.
         if (workInProgress.effectTag & DidCapture) {
           // Restarting an error boundary
@@ -826,7 +826,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (next === null) {
       // If this doesn't spawn new work, complete the current work.
-      next = unwindUnitOfWork(workInProgress);
+      next = completeUnitOfWork(workInProgress);
     }
 
     ReactCurrentOwner.current = null;
@@ -902,7 +902,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           break;
         }
         throwException(returnFiber, sourceFiber, thrownValue);
-        nextUnitOfWork = unwindUnitOfWork(sourceFiber);
+        nextUnitOfWork = completeUnitOfWork(sourceFiber);
       }
       break;
     } while (true);
