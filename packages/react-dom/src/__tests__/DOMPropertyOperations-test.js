@@ -148,7 +148,7 @@ describe('DOMPropertyOperations', () => {
         ReactDOM.render(
           <input type="text" onChange={function () { }} />,
           container,
-        ),
+        )
       ).toWarnDev(
         'A component is changing a controlled input of type text to be uncontrolled',
       );
@@ -160,17 +160,15 @@ describe('DOMPropertyOperations', () => {
       const container = document.createElement('div');
       expect(() =>
         ReactDOM.render(<div data-foo="bar" />, container),
-      ).not.toWarnDev(
-        'Stringifying your attribute is causing perfomance issues',
-      );
+      ).toWarnDev('work please');
     });
 
-    it('should warn if custom attributes do take too long to stringify', () => {
+    it('should warn if custom attributes take too long to stringify', () => {
       const container = document.createElement('div');
       const attributeValue = { foo: 'bar' }
       attributeValue.toString = function() {
         // finds 2000th prime to waste time
-        nthPrime(2000);
+        nthPrime(1);
 
         let originalToString = Object.prototype.toString;
         console.log(originalToString.apply(this));
