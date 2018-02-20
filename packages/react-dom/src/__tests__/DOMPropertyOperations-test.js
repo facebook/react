@@ -67,7 +67,7 @@ describe('DOMPropertyOperations', () => {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
       const obj = {
-        toString: function() {
+        toString: function () {
           return 'css-class';
         },
       };
@@ -117,7 +117,7 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.hasAttribute('hidden')).toBe(false);
     });
 
-    it('should always assign the value attribute for non-inputs', function() {
+    it('should always assign the value attribute for non-inputs', function () {
       const container = document.createElement('div');
       ReactDOM.render(<progress />, container);
       spyOnDevAndProd(container.firstChild, 'setAttribute');
@@ -139,14 +139,14 @@ describe('DOMPropertyOperations', () => {
     it('should not remove attributes for special properties', () => {
       const container = document.createElement('div');
       ReactDOM.render(
-        <input type="text" value="foo" onChange={function() {}} />,
+        <input type="text" value="foo" onChange={function () { }} />,
         container,
       );
       expect(container.firstChild.getAttribute('value')).toBe('foo');
       expect(container.firstChild.value).toBe('foo');
       expect(() =>
         ReactDOM.render(
-          <input type="text" onChange={function() {}} />,
+          <input type="text" onChange={function () { }} />,
           container,
         ),
       ).toWarnDev(
@@ -154,6 +154,58 @@ describe('DOMPropertyOperations', () => {
       );
       expect(container.firstChild.getAttribute('value')).toBe('foo');
       expect(container.firstChild.value).toBe('foo');
+    });
+
+    it('should not warn if custom attributes do not take too long to stringify', () => {
+      const container = document.createElement('div');
+      expect(() =>
+        ReactDOM.render(<div data-foo="bar" />, container),
+      ).not.toWarnDev(
+        'Stringifying your attribute is causing perfomance issues',
+      );
+    });
+
+    it('should warn if custom attributes do take too long to stringify', () => {
+      const container = document.createElement('div');
+      const attributeValue = { foo: 'bar' }
+      attributeValue.toString = function() {
+        // finds 2000th prime to waste time
+        nthPrime(2000);
+
+        let originalToString = Object.prototype.toString;
+        console.log(originalToString.apply(this));
+        return originalToString.apply(this);
+      };
+
+      const nthPrime = n => {
+        let sieve = [2];
+        let current = 3;
+        let prime;
+
+        while (sieve.length < n) {
+          current += 2
+          if (current % 2 === 0) {
+            continue;
+          }
+          prime = true;
+          for (let j in sieve) {
+            if (current % sieve[j] === 0) {
+              prime = false;
+              break;
+            }
+          }
+          if (prime) {
+            sieve.push(current)
+          }
+        }
+        return current;
+      };
+        expect(() =>
+          ReactDOM.render(<div data-foo={attributeValue} />, container),
+      ).toWarnDev(
+        'Stringifying your attribute is causing perfomance issues',
+      );
+
     });
   });
 });
