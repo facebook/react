@@ -62,7 +62,6 @@ let idleCallbackIdentifier = 0;
 let currentIdleCallbackHandle = 0;
 let lastIdlePeriodDeadline = 0;
 
-let scheduledRICCallback = null;
 let isIdleScheduled = false;
 
 let isAnimationFrameScheduled = false;
@@ -166,7 +165,6 @@ export function requestIdleCallback(
   callback: IdleRequestCallback,
   options?: IdleRequestOptions,
 ): number {
-  scheduledRICCallback = callback;
   const handle = idleCallbackIdentifier++;
   idleCallbacks[handle] = callback;
 
