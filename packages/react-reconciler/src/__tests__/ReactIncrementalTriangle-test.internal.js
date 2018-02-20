@@ -175,10 +175,11 @@ describe('ReactIncrementalTriangle', () => {
         }
         const {counter, depth} = this.props;
         if (depth === 0) {
-          if (this.state.isActive) {
-            return <span prop={'*' + counter + '*'} />;
-          }
-          return <span prop={counter} />;
+          const output = JSON.stringify({
+            prop: counter,
+            isActive: this.state.isActive,
+          });
+          return <span prop={output} />;
         }
         return [
           <Triangle key={1} counter={counter} depth={depth - 1} />,
@@ -235,32 +236,36 @@ describe('ReactIncrementalTriangle', () => {
         throw new Error('Wrong number of children.');
       }
 
+      let expectedCounter = counter;
+
       for (let i = 0; i < children.length; i++) {
         let child = children[i];
-        let num = child.prop;
+
+        const output = JSON.parse(child.prop);
+        const prop = output.prop;
+        const isActive = output.isActive;
 
         // If an expected counter is not specified, use the value of the
         // first child.
-        if (counter === undefined) {
-          if (typeof num === 'string') {
-            counter = parseInt(num.substr(1, num.length - 2), 10);
-          } else {
-            counter = num;
-          }
+        if (expectedCounter === undefined) {
+          expectedCounter = prop;
+        }
+        const expectedIsActive = i === activeIndex;
+
+        if (prop !== expectedCounter) {
+          throw new Error(
+            `Triangle ${i} is inconsistent: prop ${prop} instead of ${
+              expectedCounter
+            }`,
+          );
         }
 
-        if (i === activeIndex) {
-          if (num !== `*${counter}*`) {
-            throw new Error(
-              `Triangle ${i} is inconsistent: ${num} instead of *${counter}*.`,
-            );
-          }
-        } else {
-          if (num !== counter) {
-            throw new Error(
-              `Triangle ${i} is inconsistent: ${num} instead of ${counter}.`,
-            );
-          }
+        if (isActive !== expectedIsActive) {
+          throw new Error(
+            `Triangle ${i} is inconsistent: isActive ${isActive} instead of ${
+              expectedIsActive
+            }`,
+          );
         }
       }
     }
