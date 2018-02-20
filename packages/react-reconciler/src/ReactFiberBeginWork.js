@@ -35,7 +35,6 @@ import {
   PerformedWork,
   Placement,
   ContentReset,
-  DidCapture,
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
@@ -69,8 +68,6 @@ import {pushProvider} from './ReactFiberNewContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
-
-import {raiseCombinedEffect} from './ReactFiberIncompleteWork';
 
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
@@ -249,11 +246,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
     const hasContext = pushLegacyContextProvider(workInProgress);
-    const instance = workInProgress.stateNode;
-
     let shouldUpdate;
     if (current === null) {
-      if (instance === null) {
+      if (workInProgress.stateNode === null) {
         // In the initial pass we might need to construct the instance.
         constructClassInstance(workInProgress, workInProgress.pendingProps);
         mountClassInstance(workInProgress, renderExpirationTime);
@@ -280,7 +275,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     let didCaptureError = false;
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null && updateQueue.capturedValues !== null) {
-      workInProgress.effectTag |= DidCapture;
       shouldUpdate = true;
       didCaptureError = true;
     }
@@ -420,22 +414,19 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
       memoizeState(workInProgress, state);
       updateQueue = workInProgress.updateQueue;
+
+      let element;
       if (updateQueue !== null && updateQueue.capturedValues !== null) {
-        const capturedValues = updateQueue.capturedValues;
-        updateQueue.capturedValues = null;
-        // Append the root fiber to its own effect list.
-        const sourceFiber = workInProgress;
-        const returnFiber = workInProgress;
-        raiseCombinedEffect(sourceFiber, returnFiber, capturedValues);
-        return null;
-      }
-      if (prevState === state) {
+        // There's an uncaught error. Unmount the whole root.
+        element = null;
+      } else if (prevState === state) {
         // If the state is the same as before, that's a bailout because we had
         // no work that expires at this time.
         resetHydrationState();
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      } else {
+        element = state.element;
       }
-      const element = state.element;
       const root: FiberRoot = workInProgress.stateNode;
       if (
         (current === null || current.child === null) &&
@@ -1052,12 +1043,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ): Fiber | null {
-    // The effect list is no longer valid.
-    workInProgress.nextEffect = null;
-    workInProgress.firstEffect = null;
-    workInProgress.lastEffect = null;
-    workInProgress.thrownValue = null;
-
     if (
       workInProgress.expirationTime === NoWork ||
       workInProgress.expirationTime > renderExpirationTime

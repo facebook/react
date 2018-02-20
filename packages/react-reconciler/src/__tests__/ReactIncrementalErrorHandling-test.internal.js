@@ -1138,7 +1138,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(() => ReactNoop.flush()).toThrow('Error!');
   });
 
-  it('error boundaries do not capture non-errors', () => {
+  it('error boundaries capture non-errors', () => {
     spyOnProd(console, 'error');
     spyOnDev(console, 'error');
     let ops = [];
@@ -1153,7 +1153,11 @@ describe('ReactIncrementalErrorHandling', () => {
       render() {
         if (this.state.error) {
           ops.push('ErrorBoundary (catch)');
-          return <span prop={`Caught an error: ${this.state.error.message}`} />;
+          return (
+            <span
+              prop={`Caught an error: ${this.state.error.nonStandardMessage}`}
+            />
+          );
         }
         ops.push('ErrorBoundary (try)');
         return this.props.children;
@@ -1165,7 +1169,7 @@ describe('ReactIncrementalErrorHandling', () => {
       return props.children;
     }
 
-    const notAnError = {};
+    const notAnError = {nonStandardMessage: 'oops'};
     function BadRender() {
       ops.push('BadRender');
       throw notAnError;
@@ -1178,16 +1182,16 @@ describe('ReactIncrementalErrorHandling', () => {
         </Indirection>
       </ErrorBoundary>,
     );
+    ReactNoop.flush();
 
-    let caught;
-    try {
-      ReactNoop.flush();
-    } catch (e) {
-      caught = e;
-    }
-    // Rethrow object at the root
-    expect(caught).toBe(notAnError);
-    expect(ops).toEqual(['ErrorBoundary (try)', 'Indirection', 'BadRender']);
+    expect(ops).toEqual([
+      'ErrorBoundary (try)',
+      'Indirection',
+      'BadRender',
+      'componentDidCatch',
+      'ErrorBoundary (catch)',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops')]);
 
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(1);
@@ -1199,6 +1203,8 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(console.error.calls.argsFor(0)[0]).toBe(notAnError);
     }
   });
+
+  // TODO: Error boundary does not catch promises
 
   it('continues working on siblings of a component that throws', () => {
     class ErrorBoundary extends React.Component {

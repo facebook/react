@@ -139,8 +139,6 @@ export type Fiber = {|
   firstEffect: Fiber | null,
   lastEffect: Fiber | null,
 
-  thrownValue: any,
-
   // Represents a time in the future by which this work should be completed.
   // This is also used to quickly determine if a subtree has no pending changes.
   expirationTime: ExpirationTime,
@@ -199,8 +197,6 @@ function FiberNode(
 
   this.firstEffect = null;
   this.lastEffect = null;
-
-  this.thrownValue = null;
 
   this.expirationTime = NoWork;
 
@@ -281,6 +277,11 @@ export function createWorkInProgress(
     // We already have an alternate.
     // Reset the effect tag.
     workInProgress.effectTag = NoEffect;
+
+    // The effect list is no longer valid.
+    workInProgress.nextEffect = null;
+    workInProgress.firstEffect = null;
+    workInProgress.lastEffect = null;
   }
 
   workInProgress.expirationTime = expirationTime;

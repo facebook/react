@@ -191,14 +191,17 @@ export function insertUpdateIntoFiber<State>(
 }
 
 export function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
-  if (fiber.tag !== ClassComponent && fiber.tag !== HostRoot) {
-    return NoWork;
+  switch (fiber.tag) {
+    case HostRoot:
+    case ClassComponent:
+      const updateQueue = fiber.updateQueue;
+      if (updateQueue === null) {
+        return NoWork;
+      }
+      return updateQueue.expirationTime;
+    default:
+      return NoWork;
   }
-  const updateQueue = fiber.updateQueue;
-  if (updateQueue === null) {
-    return NoWork;
-  }
-  return updateQueue.expirationTime;
 }
 
 function getStateFromUpdate(update, instance, prevState, props) {

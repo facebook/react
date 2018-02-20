@@ -27,7 +27,6 @@ import {
   Callback,
   DidCapture,
   Ref,
-  Err,
   Incomplete,
   HostEffectMask,
   ErrLog,
@@ -50,10 +49,8 @@ import warning from 'fbjs/lib/warning';
 
 import ReactFiberBeginWork from './ReactFiberBeginWork';
 import ReactFiberCompleteWork from './ReactFiberCompleteWork';
-import ReactFiberIncompleteWork, {
-  raiseUnknownEffect,
-} from './ReactFiberIncompleteWork';
-import ReactFiberCommitWork, {logError} from './ReactFiberCommitWork';
+import ReactFiberIncompleteWork from './ReactFiberIncompleteWork';
+import ReactFiberCommitWork from './ReactFiberCommitWork';
 import ReactFiberHostContext from './ReactFiberHostContext';
 import ReactFiberHydrationContext from './ReactFiberHydrationContext';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -183,10 +180,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hostContext,
     hydrationContext,
   );
-  const {exitIncompleteWork} = ReactFiberIncompleteWork(
+  const {throwException, exitIncompleteWork} = ReactFiberIncompleteWork(
     hostContext,
     scheduleWork,
-    markUncaughtError,
     isAlreadyFailedLegacyErrorBoundary,
   );
   const {
@@ -234,13 +230,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   let nextRoot: FiberRoot | null = null;
   // The time at which we're currently rendering work.
   let nextRenderExpirationTime: ExpirationTime = NoWork;
-  let nextRenderIsExpired: boolean = false;
 
   // The next fiber with an effect that we're currently committing.
   let nextEffect: Fiber | null = null;
-
-  let didThrowUncaughtError: boolean = false;
-  let firstUncaughtError: mixed | null = null;
 
   let isCommitting: boolean = false;
 
@@ -267,12 +259,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     nextRoot = null;
     nextRenderExpirationTime = NoWork;
-    nextRenderIsExpired = false;
     nextUnitOfWork = null;
 
     isRootReadyForCommit = false;
-    didThrowUncaughtError = false;
-    firstUncaughtError = null;
   }
 
   function commitAllHostEffects() {
@@ -368,7 +357,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
 
       if (effectTag & ErrLog) {
-        commitErrorLogging(nextEffect);
+        commitErrorLogging(nextEffect, onUncaughtError);
       }
 
       if (effectTag & Ref) {
@@ -585,18 +574,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress.expirationTime = newExpirationTime;
   }
 
-  function markUncaughtError(rootFiber, errorInfo) {
-    if (!didThrowUncaughtError) {
-      const error = errorInfo.value;
-      // Mark this error so that it's rethrown later. If there are
-      // multiple uncaught errors, subsequent ones will not be
-      // rethrown (but they were logged above).
-      didThrowUncaughtError = true;
-      firstUncaughtError = error;
-      logError(rootFiber, errorInfo);
-    }
-  }
-
   function unwindUnitOfWork(workInProgress: Fiber): Fiber | null {
     // Attempt to complete the current unit of work, then move to the
     // next sibling. If there are no more siblings, return to the
@@ -694,12 +671,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // This fiber did not complete because something threw. Pop values off
         // the stack without entering the complete phase. If this is a boundary,
         // capture values if possible.
-        const next = exitIncompleteWork(
-          current,
-          workInProgress,
-          nextRenderIsExpired,
-          nextRenderExpirationTime,
-        );
+        const next = exitIncompleteWork(workInProgress);
         // Because this fiber did not complete, don't reset its expiration time.
         if (workInProgress.effectTag & DidCapture) {
           // Restarting an error boundary
@@ -726,24 +698,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
 
         if (returnFiber !== null) {
-          if ((returnFiber.effectTag & Incomplete) === NoEffect) {
-            // If the parent was not already marked as incomplete, reset its
-            // effect list in case earlier siblings already completed.
-            returnFiber.firstEffect = returnFiber.lastEffect = null;
-            returnFiber.effectTag |= Incomplete;
-          }
-
-          // Append all the effects of the subtree and this fiber onto the effect
-          // list of the parent.
-          if (returnFiber.firstEffect === null) {
-            returnFiber.firstEffect = workInProgress.firstEffect;
-          }
-          if (workInProgress.lastEffect !== null) {
-            if (returnFiber.lastEffect !== null) {
-              returnFiber.lastEffect.nextEffect = workInProgress.firstEffect;
-            }
-            returnFiber.lastEffect = workInProgress.lastEffect;
-          }
+          // Mark the parent fiber as incomplete and clear its effect list.
+          returnFiber.firstEffect = returnFiber.lastEffect = null;
+          returnFiber.effectTag |= Incomplete;
         }
 
         if (__DEV__ && ReactFiberInstrumentation.debugTool) {
@@ -902,6 +859,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         'by a bug in React. Please file an issue.',
     );
     isWorking = true;
+
     // Check if we're starting from a fresh stack, or if we're resuming from
     // previously yielded work.
     if (
@@ -921,8 +879,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       root.pendingCommitExpirationTime = NoWork;
     }
 
-    nextRenderIsExpired =
-      !isAsync || nextRenderExpirationTime <= mostRecentCurrentTime;
+    let didFatal = false;
 
     startWorkLoopTimer(nextUnitOfWork);
 
@@ -931,22 +888,21 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workLoop(isAsync);
       } catch (thrownValue) {
         if (nextUnitOfWork === null) {
-          // Should have a nextUnitOfWork here.
-          didThrowUncaughtError = true;
-          firstUncaughtError = thrownValue;
+          // This is a fatal error.
+          didFatal = true;
+          onUncaughtError(thrownValue);
           break;
         }
         const sourceFiber: Fiber = nextUnitOfWork;
-        const returnFiber = sourceFiber.return;
-        if (returnFiber !== null) {
-          raiseUnknownEffect(returnFiber, sourceFiber, thrownValue);
-          nextUnitOfWork = unwindUnitOfWork(sourceFiber);
-          continue;
-        } else {
-          // The root failed to render. This is a fatal error.
-          didThrowUncaughtError = true;
-          firstUncaughtError = thrownValue;
+        let returnFiber = sourceFiber.return;
+        if (returnFiber === null) {
+          // This is a fatal error.
+          didFatal = true;
+          onUncaughtError(thrownValue);
+          break;
         }
+        throwException(returnFiber, sourceFiber, thrownValue);
+        nextUnitOfWork = unwindUnitOfWork(sourceFiber);
       }
       break;
     } while (true);
@@ -957,13 +913,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     isWorking = false;
 
     // Yield back to main thread.
-    if (didThrowUncaughtError) {
-      // There was an uncaught error.
-      const finishedWork = isRootReadyForCommit ? root.current.alternate : null;
-      onUncaughtError(firstUncaughtError);
-      resetContextStack();
-      root.pendingCommitExpirationTime = expirationTime;
-      return finishedWork;
+    if (didFatal) {
+      // There was a fatal error.
+      return null;
     } else if (nextUnitOfWork === null) {
       // We reached the root.
       if (isRootReadyForCommit) {
@@ -975,8 +927,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // The root did not complete.
         invariant(
           false,
-          'Should have completed the root. This error is likely caused by a ' +
-            'bug in React. Please file an issue.',
+          'Expired work should have completed. This error is likely caused ' +
+            'by a bug in React. Please file an issue.',
         );
       }
     } else {
@@ -994,12 +946,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     expirationTime,
   ) {
     // TODO: We only support dispatching errors.
-    const algebraicEffectTag = Err;
-    const capturedValue = createCapturedValue(
-      value,
-      algebraicEffectTag,
-      sourceFiber,
-    );
+    const capturedValue = createCapturedValue(value, sourceFiber);
     const update = {
       expirationTime,
       partialState: null,
@@ -1204,7 +1151,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             interruptedBy = fiber;
             resetContextStack();
           }
-          requestWork(root, expirationTime);
+          if (nextRoot !== root || !isWorking) {
+            requestWork(root, expirationTime);
+          }
+          if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
+            invariant(
+              false,
+              'Maximum update depth exceeded. This can happen when a ' +
+                'component repeatedly calls setState inside ' +
+                'componentWillUpdate or componentDidUpdate. React limits ' +
+                'the number of nested updates to prevent infinite loops.',
+            );
+          }
         } else {
           if (__DEV__) {
             if (!isErrorRecovery && fiber.tag === ClassComponent) {
@@ -1235,7 +1193,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       expirationContext = previousExpirationContext;
     }
   }
-
   function syncUpdates<A, B, C0, D, R>(
     fn: (A, B, C0, D) => R,
     a: A,
@@ -1310,16 +1267,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   // requestWork is called by the scheduler whenever a root receives an update.
   // It's up to the renderer to call renderRoot at some point in the future.
   function requestWork(root: FiberRoot, expirationTime: ExpirationTime) {
-    if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
-      invariant(
-        false,
-        'Maximum update depth exceeded. This can happen when a ' +
-          'component repeatedly calls setState inside componentWillUpdate or ' +
-          'componentDidUpdate. React limits the number of nested updates to ' +
-          'prevent infinite loops.',
-      );
-    }
-
     addRootToSchedule(root, expirationTime);
 
     if (isRendering) {

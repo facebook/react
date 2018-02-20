@@ -43,7 +43,7 @@ const {
   clearCaughtError,
 } = ReactErrorUtils;
 
-export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
+function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   const source = errorInfo.source;
   let stack = errorInfo.stack;
   if (stack === null) {
@@ -236,7 +236,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function commitErrorLogging(finishedWork: Fiber) {
+  function commitErrorLogging(
+    finishedWork: Fiber,
+    onUncaughtError: (error: Error) => void,
+  ) {
     switch (finishedWork.tag) {
       case ClassComponent:
         {
@@ -271,6 +274,23 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
         }
         break;
+      case HostRoot: {
+        const updateQueue = finishedWork.updateQueue;
+        invariant(
+          updateQueue !== null && updateQueue.capturedValues !== null,
+          'An error logging effect should not have been scheduled if no errors ' +
+            'were captured. This error is likely caused by a bug in React. ' +
+            'Please file an issue.',
+        );
+        const capturedErrors = updateQueue.capturedValues;
+        updateQueue.capturedValues = null;
+        for (let i = 0; i < capturedErrors.length; i++) {
+          const errorInfo = capturedErrors[i];
+          logError(finishedWork, errorInfo);
+          onUncaughtError(errorInfo.value);
+        }
+        break;
+      }
       default:
         invariant(
           false,

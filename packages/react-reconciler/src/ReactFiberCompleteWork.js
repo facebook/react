@@ -444,6 +444,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           workInProgress.effectTag &= ~Placement;
         }
         updateHostContainer(workInProgress);
+
+        const updateQueue = workInProgress.updateQueue;
+        if (updateQueue !== null && updateQueue.capturedValues !== null) {
+          workInProgress.effectTag |= ErrLog;
+        }
         return null;
       }
       case HostComponent: {
@@ -460,6 +465,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           // Even better would be if children weren't special cased at all tho.
           const instance: I = workInProgress.stateNode;
           const currentHostContext = getHostContext();
+          // TODO: Experiencing an error where oldProps is null. Suggests a host
+          // component is hitting the resume path. Figure out why. Possibly
+          // related to `hidden`.
           const updatePayload = prepareUpdate(
             instance,
             type,

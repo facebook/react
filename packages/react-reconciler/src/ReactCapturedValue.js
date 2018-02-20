@@ -10,11 +10,9 @@
 import type {Fiber} from './ReactFiber';
 
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-import {Err} from 'shared/ReactTypeOfSideEffect';
 
 export type CapturedValue<T> = {
   value: T,
-  tag: number,
   source: Fiber | null,
   stack: string | null,
 };
@@ -31,15 +29,13 @@ export type CapturedError = {
 
 export function createCapturedValue<T>(
   value: T,
-  tag: number,
   source: Fiber | null,
 ): CapturedValue<T> {
   // If the value is an error, call this function immediately after it is thrown
   // so the stack is accurate.
   return {
     value,
-    tag,
     source,
-    stack: tag === Err ? getStackAddendumByWorkInProgressFiber(source) : null,
+    stack: getStackAddendumByWorkInProgressFiber(source),
   };
 }
