@@ -112,16 +112,40 @@ describe('ReactIncrementalTriangle', () => {
   }
 
   function randomAction() {
-    switch (randomInteger(0, 5)) {
-      case 0:
+    const weights = [
+      [FLUSH, 1],
+      [STEP, 1],
+      [INTERRUPT, 1],
+      [TOGGLE, 1],
+      [EXPIRE, 1],
+    ];
+    let totalWeight = 0;
+    for (let i = 0; i < weights.length; i++) {
+      totalWeight += weights[i][1];
+    }
+
+    const randomNumber = Math.random() * totalWeight;
+    let actionType;
+    let remainingWeight = randomNumber;
+    for (let i = 0; i < weights.length; i++) {
+      const [option, weight] = weights[i];
+      remainingWeight -= weight;
+      if (remainingWeight <= 0) {
+        actionType = option;
+        break;
+      }
+    }
+
+    switch (actionType) {
+      case FLUSH:
         return flush(randomInteger(0, TOTAL_TRIANGLES * 1.5));
-      case 1:
+      case STEP:
         return step(randomInteger(0, 10));
-      case 2:
+      case INTERRUPT:
         return interrupt();
-      case 3:
+      case TOGGLE:
         return toggle(randomInteger(0, TOTAL_CHILDREN));
-      case 4:
+      case EXPIRE:
         return expire(randomInteger(0, 1500));
       default:
         throw new Error('Switch statement should be exhaustive');
