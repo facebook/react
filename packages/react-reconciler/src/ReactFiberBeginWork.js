@@ -83,16 +83,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
-  scheduleWork: (
-    fiber: Fiber,
-    startTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-  ) => void,
-  computeExpirationForFiber: (
-    startTime: ExpirationTime,
-    fiber: Fiber,
-  ) => ExpirationTime,
-  recalculateCurrentTime: () => ExpirationTime,
+  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
+  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
 ) {
   const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
@@ -116,7 +108,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     computeExpirationForFiber,
     memoizeProps,
     memoizeState,
-    recalculateCurrentTime,
   );
 
   // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.

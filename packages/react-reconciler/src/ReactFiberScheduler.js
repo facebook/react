@@ -173,7 +173,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hydrationContext,
     scheduleWork,
     computeExpirationForFiber,
-    recalculateCurrentTime,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -938,13 +937,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function scheduleCapture(
-    sourceFiber,
-    boundaryFiber,
-    value,
-    startTime,
-    expirationTime,
-  ) {
+  function scheduleCapture(sourceFiber, boundaryFiber, value, expirationTime) {
     // TODO: We only support dispatching errors.
     const capturedValue = createCapturedValue(value, sourceFiber);
     const update = {
@@ -957,13 +950,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       next: null,
     };
     insertUpdateIntoFiber(boundaryFiber, update);
-    scheduleWork(boundaryFiber, startTime, expirationTime);
+    scheduleWork(boundaryFiber, expirationTime);
   }
 
   function dispatch(
     sourceFiber: Fiber,
     value: mixed,
-    startTime: ExpirationTime,
     expirationTime: ExpirationTime,
   ) {
     invariant(
@@ -984,19 +976,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             (typeof instance.componentDidCatch === 'function' &&
               !isAlreadyFailedLegacyErrorBoundary(instance))
           ) {
-            scheduleCapture(
-              sourceFiber,
-              fiber,
-              value,
-              startTime,
-              expirationTime,
-            );
+            scheduleCapture(sourceFiber, fiber, value, expirationTime);
             return;
           }
           break;
         // TODO: Handle async boundaries
         case HostRoot:
-          scheduleCapture(sourceFiber, fiber, value, startTime, expirationTime);
+          scheduleCapture(sourceFiber, fiber, value, expirationTime);
           return;
       }
       fiber = fiber.return;
@@ -1005,19 +991,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (sourceFiber.tag === HostRoot) {
       // Error was thrown at the root. There is no parent, so the root
       // itself should capture it.
-      scheduleCapture(
-        sourceFiber,
-        sourceFiber,
-        value,
-        startTime,
-        expirationTime,
-      );
+      scheduleCapture(sourceFiber, sourceFiber, value, expirationTime);
     }
   }
 
   function onCommitPhaseError(fiber: Fiber, error: mixed) {
-    const startTime = recalculateCurrentTime();
-    return dispatch(fiber, error, startTime, Sync);
+    return dispatch(fiber, error, Sync);
   }
 
   function computeAsyncExpiration(currentTime: ExpirationTime) {
@@ -1050,10 +1029,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return lastUniqueAsyncExpiration;
   }
 
-  function computeExpirationForFiber(
-    currentTime: ExpirationTime,
-    fiber: Fiber,
-  ) {
+  function computeExpirationForFiber(fiber: Fiber) {
     let expirationTime;
     if (expirationContext !== NoWork) {
       // An explicit expiration context was set;
@@ -1074,9 +1050,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (fiber.mode & AsyncMode) {
         if (isBatchingInteractiveUpdates) {
           // This is an interactive update
+          const currentTime = recalculateCurrentTime();
           expirationTime = computeInteractiveExpiration(currentTime);
         } else {
           // This is an async update
+          const currentTime = recalculateCurrentTime();
           expirationTime = computeAsyncExpiration(currentTime);
         }
       } else {
@@ -1098,17 +1076,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return expirationTime;
   }
 
-  function scheduleWork(
-    fiber: Fiber,
-    startTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-  ) {
-    return scheduleWorkImpl(fiber, startTime, expirationTime, false);
+  function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
+    return scheduleWorkImpl(fiber, expirationTime, false);
   }
 
   function scheduleWorkImpl(
     fiber: Fiber,
-    startTime: ExpirationTime,
     expirationTime: ExpirationTime,
     isErrorRecovery: boolean,
   ) {

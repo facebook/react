@@ -110,18 +110,10 @@ function callGetDerivedStateFromCatch(ctor: any, capturedValues: Array<mixed>) {
 }
 
 export default function(
-  scheduleWork: (
-    fiber: Fiber,
-    startTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-  ) => void,
-  computeExpirationForFiber: (
-    startTime: ExpirationTime,
-    fiber: Fiber,
-  ) => ExpirationTime,
+  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
+  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
-  recalculateCurrentTime: () => ExpirationTime,
 ) {
   // Class component state updater
   const updater = {
@@ -132,8 +124,7 @@ export default function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      const currentTime = recalculateCurrentTime();
-      const expirationTime = computeExpirationForFiber(currentTime, fiber);
+      const expirationTime = computeExpirationForFiber(fiber);
       const update = {
         expirationTime,
         partialState,
@@ -144,7 +135,7 @@ export default function(
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
-      scheduleWork(fiber, currentTime, expirationTime);
+      scheduleWork(fiber, expirationTime);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
@@ -152,8 +143,7 @@ export default function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      const currentTime = recalculateCurrentTime();
-      const expirationTime = computeExpirationForFiber(currentTime, fiber);
+      const expirationTime = computeExpirationForFiber(fiber);
       const update = {
         expirationTime,
         partialState: state,
@@ -164,7 +154,7 @@ export default function(
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
-      scheduleWork(fiber, currentTime, expirationTime);
+      scheduleWork(fiber, expirationTime);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
@@ -172,8 +162,7 @@ export default function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      const currentTime = recalculateCurrentTime();
-      const expirationTime = computeExpirationForFiber(currentTime, fiber);
+      const expirationTime = computeExpirationForFiber(fiber);
       const update = {
         expirationTime,
         partialState: null,
@@ -184,7 +173,7 @@ export default function(
         next: null,
       };
       insertUpdateIntoFiber(fiber, update);
-      scheduleWork(fiber, currentTime, expirationTime);
+      scheduleWork(fiber, expirationTime);
     },
   };
 
