@@ -24,7 +24,7 @@ type IdleRequestOptions = {
   timeout: number,
 };
 
-type IdleRequestCallback = IdleDeadline => void;
+export type IdleRequestCallback = IdleDeadline => void;
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
