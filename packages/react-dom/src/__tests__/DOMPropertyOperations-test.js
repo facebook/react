@@ -67,7 +67,7 @@ describe('DOMPropertyOperations', () => {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
       const obj = {
-        toString: function () {
+        toString: function() {
           return 'css-class';
         },
       };
@@ -117,7 +117,7 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.hasAttribute('hidden')).toBe(false);
     });
 
-    it('should always assign the value attribute for non-inputs', function () {
+    it('should always assign the value attribute for non-inputs', function() {
       const container = document.createElement('div');
       ReactDOM.render(<progress />, container);
       spyOnDevAndProd(container.firstChild, 'setAttribute');
@@ -139,16 +139,16 @@ describe('DOMPropertyOperations', () => {
     it('should not remove attributes for special properties', () => {
       const container = document.createElement('div');
       ReactDOM.render(
-        <input type="text" value="foo" onChange={function () { }} />,
+        <input type="text" value="foo" onChange={function() {}} />,
         container,
       );
       expect(container.firstChild.getAttribute('value')).toBe('foo');
       expect(container.firstChild.value).toBe('foo');
       expect(() =>
         ReactDOM.render(
-          <input type="text" onChange={function () { }} />,
+          <input type="text" onChange={function() {}} />,
           container,
-        )
+        ),
       ).toWarnDev(
         'A component is changing a controlled input of type text to be uncontrolled',
       );
@@ -158,8 +158,8 @@ describe('DOMPropertyOperations', () => {
 
     it('should warn if custom attributes take too long to stringify', () => {
       const container = document.createElement('div');
-      const attributeValue = { foo: 'bar' }
-      attributeValue.toString = function () {
+      const attributeValue = {foo: 'bar'};
+      attributeValue.toString = function() {
         // finds 2000th prime to waste time
         nthPrime(1225);
         let originalToString = Object.prototype.toString;
@@ -172,7 +172,7 @@ describe('DOMPropertyOperations', () => {
         let prime;
 
         while (sieve.length < n) {
-          current += 2
+          current += 2;
           if (current % 2 === 0) {
             continue;
           }
@@ -184,17 +184,14 @@ describe('DOMPropertyOperations', () => {
             }
           }
           if (prime) {
-            sieve.push(current)
+            sieve.push(current);
           }
         }
         return current;
       };
       expect(() =>
         ReactDOM.render(<div data-foo={attributeValue} />, container),
-      ).toWarnDev(
-        'Stringifying your attribute is causing perfomance issues',
-      );
-
+      ).toWarnDev('Stringifying your attribute is causing perfomance issues');
     });
   });
 });

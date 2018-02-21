@@ -19,7 +19,6 @@ import warning from 'fbjs/lib/warning';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
-
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
  * The "expected" argument is used as a hint of what the expected value is.
@@ -134,9 +133,11 @@ export function setValueForProperty(
       const attributeName = name;
       if (value === null) {
         node.removeAttribute(attributeName);
-      }
-      else if (__DEV__) {
-        node.setAttribute(attributeName, stringifyWithPerformanceWarning(value));
+      } else if (__DEV__) {
+        node.setAttribute(
+          attributeName,
+          stringifyWithPerformanceWarning(value),
+        );
       } else {
         node.setAttribute(attributeName, (value: any).toString());
       }
@@ -181,12 +182,15 @@ export function setValueForProperty(
 }
 
 // Only used in DEV, stringifies a value and Warns if it took too long
-const stringifyWithPerformanceWarning = (value) => {
+const stringifyWithPerformanceWarning = value => {
   const stringifyStart = Date.now();
   let attributeValue = (value: any).toString();
   const stringifyEnd = Date.now();
 
-  warning(stringifyEnd - stringifyStart <= 2, 'Stringifying your attribute is causing perfomance issues');
-  
+  warning(
+    stringifyEnd - stringifyStart <= 2,
+    'Stringifying your attribute is causing perfomance issues',
+  );
+
   return attributeValue;
 };
