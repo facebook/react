@@ -70,6 +70,9 @@ let isAnimationFrameScheduled = false;
 // frames.
 let previousFrameTime = 33;
 let activeFrameTime = 33;
+// Tracks whether the 'message' event listener has been registered, which is done
+// lazily the first time requestIdleCallback is called
+let registeredMessageListener = false;
 
 // We use the postMessage trick to defer idle work until after the repaint.
 const messageKey =
@@ -121,9 +124,6 @@ const idleTick = function(event) {
     callback(new IdleDeadlineImpl(lastIdlePeriodDeadline, didTimeout));
   }
 };
-// Assumes that we have addEventListener in this environment. Might need
-// something better for old IE.
-window.addEventListener('message', idleTick, false);
 
 function animationTick(rafTime: number) {
   isAnimationFrameScheduled = false;
@@ -174,6 +174,14 @@ export function requestIdleCallback(
       () => invokerIdleCallbackTimeout(handle),
       options.timeout,
     );
+  }
+
+  // Lazily register the listener when rIC is first called
+  if (!registeredMessageListener) {
+    // Assumes that we have addEventListener in this environment. Might need
+    // something better for old IE.
+    window.addEventListener('message', idleTick, false);
+    registeredMessageListener = true;
   }
   if (!isAnimationFrameScheduled) {
     // If rAF didn't already schedule one, we need to schedule a frame.
