@@ -135,7 +135,7 @@ export function setValueForProperty(
       if (value === null) {
         node.removeAttribute(attributeName);
       }
-      else if (__DEV__){
+      else if (__DEV__) {
         node.setAttribute(attributeName, stringifyWithPerformanceWarning(value));
       } else {
         node.setAttribute(attributeName, (value: any).toString());
@@ -186,7 +186,7 @@ const stringifyWithPerformanceWarning = (value) => {
   let attributeValue = (value: any).toString();
   const stringifyEnd = Date.now();
 
-  warning(stringifyEnd - stringifyStart <= 2, 'Stringifying your attribute is causing perfomance issues')
+  warning(stringifyEnd - stringifyStart <= 2, 'Stringifying your attribute is causing perfomance issues');
   
   return attributeValue;
 };

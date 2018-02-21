@@ -156,20 +156,12 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.value).toBe('foo');
     });
 
-    it('should not warn if custom attributes do not take too long to stringify', () => {
-      const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<div data-foo="bar" />, container),
-      ).not.toWarnDev('Stringifying your attribute is causing perfomance issues');
-    });
-
     it('should warn if custom attributes take too long to stringify', () => {
       const container = document.createElement('div');
       const attributeValue = { foo: 'bar' }
-      attributeValue.toString = function() {
+      attributeValue.toString = function () {
         // finds 2000th prime to waste time
         nthPrime(1225);
-
         let originalToString = Object.prototype.toString;
         return originalToString.apply(this);
       };
@@ -197,8 +189,8 @@ describe('DOMPropertyOperations', () => {
         }
         return current;
       };
-        expect(() =>
-          ReactDOM.render(<div data-foo={attributeValue} />, container),
+      expect(() =>
+        ReactDOM.render(<div data-foo={attributeValue} />, container),
       ).toWarnDev(
         'Stringifying your attribute is causing perfomance issues',
       );
