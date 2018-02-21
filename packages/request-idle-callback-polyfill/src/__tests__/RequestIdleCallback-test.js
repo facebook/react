@@ -55,9 +55,6 @@ function mockLongRunningCode() {
 
 describe('RequestIdleCallback', () => {
   beforeAll(() => {
-    // When error supression is enabled, jest is not reporting expect failures
-    // inside of idle callbacks.
-    Error.prototype.suppressReactErrorLogging = false;
     previousRAF = window.requestAnimationFrame;
     previousPostMessage = window.postMessage;
     window.postMessage = postMessage;
@@ -104,15 +101,19 @@ describe('RequestIdleCallback', () => {
     });
 
     it('passes a deadline to the callback', () => {
+      const ops = [];
       const callback = jest.fn(deadline => {
-        expect(deadline.didTimeout).toBe(false);
-        expect(deadline.timeRemaining()).toBeGreaterThan(0);
+        ops.push(deadline.didTimeout);
+        ops.push(deadline.timeRemaining());
         mockLongRunningCode();
-        expect(deadline.timeRemaining()).toBe(0);
+        ops.push(deadline.timeRemaining());
       });
       requestIdleCallback(callback);
       mockRunNextFrame();
       expect(callback).toBeCalled();
+      expect(ops[0]).toBe(false);
+      expect(ops[1]).toBeGreaterThan(0);
+      expect(ops[2]).toBe(0);
     });
 
     it('stops executing callbacks if the deadline expires', () => {
@@ -131,13 +132,14 @@ describe('RequestIdleCallback', () => {
     });
 
     it('executes callbacks that timeout', () => {
+      const ops = [];
       const callback = jest.fn(deadline => {
-        expect(deadline.didTimeout).toBe(true);
-        expect(deadline.timeRemaining()).toBe(0);
+        ops.push(deadline.didTimeout);
+        ops.push(deadline.timeRemaining());
       });
       requestIdleCallback(callback, {timeout: 100});
       jest.runAllTimers();
-      expect(callback).toBeCalled();
+      expect(ops).toEqual([true, 0]);
     });
   });
 });
