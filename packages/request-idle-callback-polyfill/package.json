@@ -8,11 +8,7 @@
     "homepage": "https://facebook.github.io/react/",
     "bugs": "https://github.com/facebook/react/issues",
     "license": "MIT",
-    "files": [
-      "LICENSE",
-      "README.md",
-      "index.js"
-    ],
+    "files": ["LICENSE", "README.md", "index.js", "cjs/"],
     "main": "index.js",
     "repository": "facebook/react",
     "dependencies": {
