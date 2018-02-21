@@ -56,12 +56,19 @@ function generateMDTable(headers, body) {
  * @param {string[]} headers
  */
 function addPercent(change, includeEmoji) {
-  if (change > 0 && includeEmoji) {
-    return `:small_red_triangle:+${change}%`;
-  } else if (change > 0) {
-    return `+${change}%`;
+  if (!isFinite(change)) {
+    // When a new package is created
+    return 'n/a';
+  }
+  const formatted = (change * 100).toFixed(1);
+  if (/^-|^0(?:\.0+)$/.test(formatted)) {
+    return `${formatted}%`;
   } else {
-    return `${change}%`;
+    if (includeEmoji) {
+      return `:small_red_triangle:+${formatted}%`;
+    } else {
+      return `+${formatted}%`;
+    }
   }
 }
 
