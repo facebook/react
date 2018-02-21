@@ -31,6 +31,10 @@ const ReactNativeBridgeEventPlugin = {
     nativeEvent: AnyNativeEvent,
     nativeEventTarget: Object,
   ): ?Object {
+    if (targetInst == null) {
+      // Probably a node belonging to another renderer's tree.
+      return null;
+    }
     const bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     const directDispatchConfig = customDirectEventTypes[topLevelType];
     invariant(
