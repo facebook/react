@@ -160,7 +160,7 @@ describe('DOMPropertyOperations', () => {
       const container = document.createElement('div');
       expect(() =>
         ReactDOM.render(<div data-foo="bar" />, container),
-      ).toWarnDev('work please');
+      ).not.toWarnDev('Stringifying your attribute is causing perfomance issues');
     });
 
     it('should warn if custom attributes take too long to stringify', () => {
@@ -168,10 +168,9 @@ describe('DOMPropertyOperations', () => {
       const attributeValue = { foo: 'bar' }
       attributeValue.toString = function() {
         // finds 2000th prime to waste time
-        nthPrime(1);
+        nthPrime(1225);
 
         let originalToString = Object.prototype.toString;
-        console.log(originalToString.apply(this));
         return originalToString.apply(this);
       };
 
