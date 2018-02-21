@@ -7,7 +7,10 @@ const {existsSync} = require('fs');
 const {readJson} = require('fs-extra');
 const {join} = require('path');
 
-module.exports = async ({cwd, version}) => {
+module.exports = async ({cwd, version, local}) => {
+  if (local) {
+    return;
+  }
   const packagePath = join(
     cwd,
     'build',

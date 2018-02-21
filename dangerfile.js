@@ -77,14 +77,6 @@ function setBoldness(row, isBold) {
  * Gets the commit that represents the merge between the current branch
  * and master.
  */
-function getMergeBase() {
-  return git('merge-base HEAD origin/master');
-}
-
-/**
- * Gets the commit that represents the merge between the current branch
- * and master.
- */
 function git(args) {
   return new Promise(res => {
     exec('git ' + args, (err, stdout, stderr) => {
@@ -100,7 +92,12 @@ function git(args) {
 (async function() {
   // Use git locally to grab the commit which represents the place
   // where the branches differ
-  const mergeBaseCommit = await getMergeBase();
+  const upstreamRepo = danger.github.pr.base.repo.full_name;
+  const upstreamRef = danger.github.pr.base.ref;
+  await git(`remote add upstream https://github.com/${upstreamRepo}.git`);
+  await git('fetch upstream');
+  const mergeBaseCommit = await git(`merge-base HEAD upstream/${upstreamRef}`);
+
   const commitURL = sha =>
     `http://react.zpao.com/builds/master/_commits/${sha}/results.json`;
   const response = await fetch(commitURL(mergeBaseCommit));

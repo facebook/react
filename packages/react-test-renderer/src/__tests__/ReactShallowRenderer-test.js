@@ -336,6 +336,34 @@ describe('ReactShallowRenderer', () => {
     ]);
   });
 
+  it('should shallow render a React.fragment', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return <div />;
+      }
+    }
+    class Fragment extends React.Component {
+      render() {
+        return (
+          <React.Fragment>
+            <div />
+            <span />
+            <SomeComponent />
+          </React.Fragment>
+        );
+      }
+    }
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<Fragment />);
+    expect(result).toEqual(
+      <React.Fragment>
+        <div />
+        <span />
+        <SomeComponent />
+      </React.Fragment>,
+    );
+  });
+
   it('should throw for invalid elements', () => {
     class SomeComponent extends React.Component {
       render() {
