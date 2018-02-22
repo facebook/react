@@ -869,6 +869,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress.stateNode = observedBits;
 
     const render = newProps.children;
+
+    if (typeof render !== 'function') {
+      invariant(
+        false,
+        "A context consumer was rendered with multiple children, or a child that isn't a function. " +
+          'A context consumer expects a single child that is a function. ' +
+          'If you did pass a function, make sure there is no trailing or leading whitespace around it.',
+      );
+    }
+
     const newChildren = render(newValue);
     reconcileChildren(current, workInProgress, newChildren);
     return workInProgress.child;
