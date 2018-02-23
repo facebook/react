@@ -37,3 +37,5 @@ export const Fragment = 10;
 export const Mode = 11;
 export const ContextConsumer = 12;
 export const ContextProvider = 13;
+export const LoadingComponent = 14;
+export const TimeoutComponent = 15;

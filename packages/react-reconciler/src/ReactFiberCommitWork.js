@@ -25,6 +25,8 @@ import {
   HostText,
   HostPortal,
   CallComponent,
+  LoadingComponent,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {Placement, Update, ContentReset} from 'shared/ReactTypeOfSideEffect';
@@ -33,6 +35,7 @@ import invariant from 'fbjs/lib/invariant';
 import {commitCallbacks} from './ReactFiberUpdateQueue';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
+import {insertUpdateIntoFiber} from './ReactFiberUpdateQueue';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
@@ -152,6 +155,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
+  function scheduleExpirationBoundaryRecovery(fiber) {
+    const currentTime = recalculateCurrentTime();
+    const expirationTime = computeExpirationForFiber(currentTime, fiber);
+    const update = {
+      expirationTime,
+      partialState: false,
+      callback: null,
+      isReplace: true,
+      isForced: false,
+      capturedValue: null,
+      next: null,
+    };
+    insertUpdateIntoFiber(fiber, update);
+    scheduleWork(fiber, currentTime, expirationTime);
+  }
+
   function commitLifeCycles(
     finishedRoot: FiberRoot,
     current: Fiber | null,
@@ -224,6 +243,23 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       case HostPortal: {
         // We have no life-cycles associated with portals.
+        return;
+      }
+      case LoadingComponent: {
+        return;
+      }
+      case TimeoutComponent: {
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue !== null) {
+          const promises = updateQueue.capturedValues;
+          if (promises !== null) {
+            // TODO: Remove dependency on Promise.race
+            // eslint-disable-next-line no-undef
+            Promise.race(promises).then(() =>
+              scheduleExpirationBoundaryRecovery(finishedWork),
+            );
+          }
+        }
         return;
       }
       default: {
@@ -782,6 +818,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return;
       }
       case HostRoot: {
+        return;
+      }
+      case LoadingComponent: {
+        return;
+      }
+      case TimeoutComponent: {
         return;
       }
       default: {

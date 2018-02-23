@@ -30,11 +30,15 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  LoadingComponent,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
+  NoEffect,
   PerformedWork,
   Placement,
   ContentReset,
+  DidCapture,
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
@@ -83,8 +87,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
-  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  scheduleWork: (
+    fiber: Fiber,
+    startTime: ExpirationTime,
+    expirationTime: ExpirationTime,
+  ) => void,
+  computeExpirationForFiber: (
+    startTime: ExpirationTime,
+    fiber: Fiber,
+  ) => ExpirationTime,
+  recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
@@ -108,6 +120,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     computeExpirationForFiber,
     memoizeProps,
     memoizeState,
+    recalculateCurrentTime,
   );
 
   // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
@@ -704,6 +717,94 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return workInProgress.stateNode;
   }
 
+  function updateLoadingComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
+    const nextProps = workInProgress.pendingProps;
+    const prevProps = workInProgress.memoizedProps;
+
+    let nextState = workInProgress.memoizedState;
+    if (nextState === null) {
+      nextState = workInProgress.memoizedState = false;
+    }
+    const prevState = current === null ? nextState : current.memoizedState;
+
+    const updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null) {
+      nextState = workInProgress.memoizedState = processUpdateQueue(
+        current,
+        workInProgress,
+        updateQueue,
+        null,
+        nextProps,
+        renderExpirationTime,
+      );
+    }
+
+    const isLoading = nextState;
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (prevProps === nextProps && prevState === nextState) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    const render = nextProps.children;
+    const nextChildren = render(isLoading);
+    workInProgress.memoizedProps = nextProps;
+    reconcileChildren(current, workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
+  function updateTimeoutComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
+    const nextProps = workInProgress.pendingProps;
+    const prevProps = workInProgress.memoizedProps;
+
+    let nextState = workInProgress.memoizedState;
+    if (nextState === null) {
+      nextState = workInProgress.memoizedState = false;
+    }
+    const prevState = current === null ? nextState : current.memoizedState;
+
+    const updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null) {
+      nextState = workInProgress.memoizedState = processUpdateQueue(
+        current,
+        workInProgress,
+        updateQueue,
+        null,
+        null,
+        renderExpirationTime,
+      );
+    }
+
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (
+      // Don't bail out if this is a restart
+      (workInProgress.effectTag & DidCapture) === NoEffect &&
+      prevProps === nextProps &&
+      prevState === nextState
+    ) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    const isExpired = nextState;
+    const render = nextProps.children;
+    const nextChildren = render(isExpired);
+    workInProgress.memoizedProps = nextProps;
+    workInProgress.memoizedState = nextState;
+    reconcileChildren(current, workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
   function updatePortalComponent(
     current,
     workInProgress,
@@ -1080,6 +1181,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // A return component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
+      case LoadingComponent:
+        return updateLoadingComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      case TimeoutComponent:
+        return updateTimeoutComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case HostPortal:
         return updatePortalComponent(
           current,

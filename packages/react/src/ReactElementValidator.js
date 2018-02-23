@@ -22,6 +22,8 @@ import {
   REACT_ASYNC_MODE_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_LOADING_TYPE,
+  REACT_TIMEOUT_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'fbjs/lib/warning';
@@ -294,6 +296,8 @@ export function createElementWithValidation(type, props, children) {
     type === REACT_FRAGMENT_TYPE ||
     type === REACT_ASYNC_MODE_TYPE ||
     type === REACT_STRICT_MODE_TYPE ||
+    type === REACT_LOADING_TYPE ||
+    type === REACT_TIMEOUT_TYPE ||
     (typeof type === 'object' &&
       type !== null &&
       (type.$$typeof === REACT_PROVIDER_TYPE ||

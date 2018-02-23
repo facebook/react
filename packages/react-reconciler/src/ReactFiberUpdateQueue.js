@@ -16,7 +16,11 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
 } from 'shared/ReactFeatureFlags';
 import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
-import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
+import {
+  ClassComponent,
+  HostRoot,
+  LoadingComponent,
+} from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 import {StrictMode} from './ReactTypeOfMode';
@@ -194,6 +198,7 @@ export function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
   switch (fiber.tag) {
     case HostRoot:
     case ClassComponent:
+    case LoadingComponent:
       const updateQueue = fiber.updateQueue;
       if (updateQueue === null) {
         return NoWork;
