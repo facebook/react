@@ -31,11 +31,6 @@ import {
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
 
-type TypeOfException = 0 | 1;
-
-const UnknownException = 0;
-const ErrorException = 1;
-
 export default function(
   hostContext: HostContext<C, CX>,
   scheduleWork: (
@@ -50,65 +45,49 @@ export default function(
   function throwException(
     returnFiber: Fiber,
     sourceFiber: Fiber,
-    value: mixed,
+    rawValue: mixed,
   ) {
     // The source fiber did not complete.
     sourceFiber.effectTag |= Incomplete;
     // Its effect list is no longer valid.
     sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
-    let typeOfException: TypeOfException = UnknownException;
+    const value = createCapturedValue(rawValue, sourceFiber);
 
     let workInProgress = returnFiber;
     do {
       switch (workInProgress.tag) {
         case HostRoot: {
-          switch (typeOfException) {
-            case UnknownException: {
-              // We didn't find a boundary that could handle this type of
-              // exception. Start over and traverse parent path again, this time
-              // treating the exception as an error.
-              value = createCapturedValue(value, sourceFiber);
-              workInProgress = returnFiber;
-              typeOfException = ErrorException;
-              continue;
-            }
-            case ErrorException: {
-              // Uncaught error
-              const errorInfo = value;
-              ensureUpdateQueues(workInProgress);
-              const updateQueue: UpdateQueue = (workInProgress.updateQueue: any);
-              updateQueue.capturedValues = [errorInfo];
-              workInProgress.effectTag |= ShouldCapture;
-              return;
-            }
-          }
+          // Uncaught error
+          const errorInfo = value;
+          ensureUpdateQueues(workInProgress);
+          const updateQueue: UpdateQueue = (workInProgress.updateQueue: any);
+          updateQueue.capturedValues = [errorInfo];
+          workInProgress.effectTag |= ShouldCapture;
           return;
         }
         case ClassComponent:
-          if (typeOfException === ErrorException) {
-            // Capture and retry
-            const ctor = workInProgress.type;
-            const instance = workInProgress.stateNode;
-            if (
-              (workInProgress.effectTag & DidCapture) === NoEffect &&
-              ((typeof ctor.getDerivedStateFromCatch === 'function' &&
-                enableGetDerivedStateFromCatch) ||
-                (instance !== null &&
-                  typeof instance.componentDidCatch === 'function' &&
-                  !isAlreadyFailedLegacyErrorBoundary(instance)))
-            ) {
-              ensureUpdateQueues(workInProgress);
-              const updateQueue: UpdateQueue = (workInProgress.updateQueue: any);
-              const capturedValues = updateQueue.capturedValues;
-              if (capturedValues === null) {
-                updateQueue.capturedValues = [value];
-              } else {
-                capturedValues.push(value);
-              }
-              workInProgress.effectTag |= ShouldCapture;
-              return;
+          // Capture and retry
+          const ctor = workInProgress.type;
+          const instance = workInProgress.stateNode;
+          if (
+            (workInProgress.effectTag & DidCapture) === NoEffect &&
+            ((typeof ctor.getDerivedStateFromCatch === 'function' &&
+              enableGetDerivedStateFromCatch) ||
+              (instance !== null &&
+                typeof instance.componentDidCatch === 'function' &&
+                !isAlreadyFailedLegacyErrorBoundary(instance)))
+          ) {
+            ensureUpdateQueues(workInProgress);
+            const updateQueue: UpdateQueue = (workInProgress.updateQueue: any);
+            const capturedValues = updateQueue.capturedValues;
+            if (capturedValues === null) {
+              updateQueue.capturedValues = [value];
+            } else {
+              capturedValues.push(value);
             }
+            workInProgress.effectTag |= ShouldCapture;
+            return;
           }
           break;
         default:
