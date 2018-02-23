@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {PendingWork} from './ReactFiberPendingWork';
 
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
@@ -28,6 +29,7 @@ export type FiberRoot = {
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
+  firstPendingWork: PendingWork | null,
   pendingCommitExpirationTime: ExpirationTime,
   // A finished work-in-progress HostRoot that's ready to be committed.
   // TODO: The reason this is separate from isReadyForCommit is because the
@@ -63,6 +65,7 @@ export function createFiberRoot(
     containerInfo: containerInfo,
     pendingChildren: null,
     pendingCommitExpirationTime: NoWork,
+    firstPendingWork: null,
     finishedWork: null,
     context: null,
     pendingContext: null,
