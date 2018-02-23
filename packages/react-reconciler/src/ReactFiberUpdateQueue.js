@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {PriorityLevel} from './ReactPriorityLevel';
 import type {CapturedValue} from './ReactCapturedValue';
 
 import {
@@ -26,6 +27,7 @@ import warning from 'fbjs/lib/warning';
 import {StrictMode} from './ReactTypeOfMode';
 
 import {NoWork} from './ReactFiberExpirationTime';
+import {NoPriority} from './ReactPriorityLevel';
 
 let didWarnUpdateInsideUpdate;
 
@@ -42,6 +44,7 @@ type Callback = mixed;
 
 export type Update<State> = {
   expirationTime: ExpirationTime,
+  priorityLevel: PriorityLevel,
   partialState: PartialState<any, any>,
   callback: Callback | null,
   isReplace: boolean,
@@ -101,6 +104,27 @@ export function insertUpdateIntoQueue<State>(
   queue: UpdateQueue<State>,
   update: Update<State>,
 ): void {
+  const priorityLevel = update.priorityLevel;
+  if (
+    priorityLevel !== NoPriority &&
+    queue.expirationTime <= update.expirationTime
+  ) {
+    let node = queue.first;
+    let latestExpirationTimeWithMatchingPriority = NoWork;
+    while (node !== null) {
+      if (
+        node.priorityLevel === priorityLevel &&
+        node.expirationTime > latestExpirationTimeWithMatchingPriority
+      ) {
+        latestExpirationTimeWithMatchingPriority = node.expirationTime;
+      }
+      node = node.next;
+    }
+    if (latestExpirationTimeWithMatchingPriority !== NoWork) {
+      update.expirationTime = latestExpirationTimeWithMatchingPriority;
+    }
+  }
+
   // Append the update to the end of the list.
   if (queue.last === null) {
     // Queue is empty

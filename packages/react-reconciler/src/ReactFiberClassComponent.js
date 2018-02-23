@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue} from './ReactCapturedValue';
+import type {PriorityLevel} from './ReactPriorityLevel';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
@@ -115,13 +116,14 @@ export default function(
     startTime: ExpirationTime,
     expirationTime: ExpirationTime,
   ) => void,
-  computeExpirationForFiber: (
-    startTime: ExpirationTime,
-    fiber: Fiber,
-  ) => ExpirationTime,
+  computeUpdatePriorityForFiber: (fiber: Fiber) => PriorityLevel,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
   recalculateCurrentTime: () => ExpirationTime,
+  computeExpirationTimeForPriority: (
+    priorityLevel: PriorityLevel,
+    startTime: ExpirationTime,
+  ) => ExpirationTime,
 ) {
   // Class component state updater
   const updater = {
@@ -132,10 +134,15 @@ export default function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
+      const priorityLevel = computeUpdatePriorityForFiber(fiber);
       const currentTime = recalculateCurrentTime();
-      const expirationTime = computeExpirationForFiber(currentTime, fiber);
+      const expirationTime = computeExpirationTimeForPriority(
+        priorityLevel,
+        currentTime,
+      );
       const update = {
         expirationTime,
+        priorityLevel,
         partialState,
         callback,
         isReplace: false,
@@ -152,10 +159,15 @@ export default function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
+      const priorityLevel = computeUpdatePriorityForFiber(fiber);
       const currentTime = recalculateCurrentTime();
-      const expirationTime = computeExpirationForFiber(currentTime, fiber);
+      const expirationTime = computeExpirationTimeForPriority(
+        priorityLevel,
+        currentTime,
+      );
       const update = {
         expirationTime,
+        priorityLevel,
         partialState: state,
         callback,
         isReplace: true,
@@ -172,11 +184,16 @@ export default function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
+      const priorityLevel = computeUpdatePriorityForFiber(fiber);
       const currentTime = recalculateCurrentTime();
-      const expirationTime = computeExpirationForFiber(currentTime, fiber);
+      const expirationTime = computeExpirationTimeForPriority(
+        priorityLevel,
+        currentTime,
+      );
       const update = {
         expirationTime,
         partialState: null,
+        priorityLevel,
         callback,
         isReplace: false,
         isForced: true,

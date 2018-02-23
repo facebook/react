@@ -11,6 +11,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {PriorityLevel} from './ReactPriorityLevel';
 
 import {
   findCurrentHostFiber,
@@ -33,6 +34,7 @@ import ReactFiberScheduler from './ReactFiberScheduler';
 import {insertUpdateIntoFiber} from './ReactFiberUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import {NoPriority} from './ReactPriorityLevel';
 
 let didWarnAboutNestedUpdates;
 
@@ -296,7 +298,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const {
     computeUniqueAsyncExpiration,
     recalculateCurrentTime,
-    computeExpirationForFiber,
+    computeUpdatePriorityForFiber,
+    computeExpirationTimeForPriority,
     scheduleWork,
     requestWork,
     flushRoot,
@@ -310,13 +313,37 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     flushInteractiveUpdates,
   } = ReactFiberScheduler(config);
 
-  function scheduleRootUpdate(
-    current: Fiber,
+  function updateContainerAtExpirationTime(
     element: ReactNodeList,
+    container: OpaqueRoot,
+    parentComponent: ?React$Component<any, any>,
     currentTime: ExpirationTime,
+    priorityLevel: PriorityLevel,
     expirationTime: ExpirationTime,
     callback: ?Function,
   ) {
+    // TODO: If this is a nested container, this won't be the root.
+    const current = container.current;
+
+    if (__DEV__) {
+      if (ReactFiberInstrumentation.debugTool) {
+        if (current.alternate === null) {
+          ReactFiberInstrumentation.debugTool.onMountContainer(container);
+        } else if (element === null) {
+          ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+        } else {
+          ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+        }
+      }
+    }
+
+    const context = getContextForSubtree(parentComponent);
+    if (container.context === null) {
+      container.context = context;
+    } else {
+      container.pendingContext = context;
+    }
+
     if (__DEV__) {
       if (
         ReactDebugCurrentFiber.phase === 'render' &&
@@ -347,6 +374,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     const update = {
       expirationTime,
+      priorityLevel,
       partialState: {element},
       callback,
       isReplace: false,
@@ -358,45 +386,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     scheduleWork(current, currentTime, expirationTime);
 
     return expirationTime;
-  }
-
-  function updateContainerAtExpirationTime(
-    element: ReactNodeList,
-    container: OpaqueRoot,
-    parentComponent: ?React$Component<any, any>,
-    currentTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-    callback: ?Function,
-  ) {
-    // TODO: If this is a nested container, this won't be the root.
-    const current = container.current;
-
-    if (__DEV__) {
-      if (ReactFiberInstrumentation.debugTool) {
-        if (current.alternate === null) {
-          ReactFiberInstrumentation.debugTool.onMountContainer(container);
-        } else if (element === null) {
-          ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
-        } else {
-          ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
-        }
-      }
-    }
-
-    const context = getContextForSubtree(parentComponent);
-    if (container.context === null) {
-      container.context = context;
-    } else {
-      container.pendingContext = context;
-    }
-
-    return scheduleRootUpdate(
-      current,
-      element,
-      currentTime,
-      expirationTime,
-      callback,
-    );
   }
 
   function findHostInstance(fiber: Fiber): PI | null {
@@ -423,13 +412,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       callback: ?Function,
     ): ExpirationTime {
       const current = container.current;
+      const priorityLevel = computeUpdatePriorityForFiber(current);
       const currentTime = recalculateCurrentTime();
-      const expirationTime = computeExpirationForFiber(currentTime, current);
+      const expirationTime = computeExpirationTimeForPriority(
+        priorityLevel,
+        currentTime,
+      );
       return updateContainerAtExpirationTime(
         element,
         container,
         parentComponent,
         currentTime,
+        priorityLevel,
         expirationTime,
         callback,
       );
@@ -442,12 +436,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       expirationTime,
       callback,
     ) {
+      // TODO: Rethink this API. It's only used by the createBatch() API. Need
+      // to revisit that implementation once suspenders are implemented.
+      const priorityLevel = NoPriority;
       const currentTime = recalculateCurrentTime();
       return updateContainerAtExpirationTime(
         element,
         container,
         parentComponent,
         currentTime,
+        priorityLevel,
         expirationTime,
         callback,
       );

@@ -12,6 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
+import type {PriorityLevel} from './ReactPriorityLevel';
 
 import {
   enableMutatingReconciler,
@@ -92,12 +93,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     startTime: ExpirationTime,
     expirationTime: ExpirationTime,
   ) => void,
-  computeExpirationForFiber: (
-    startTime: ExpirationTime,
-    fiber: Fiber,
-  ) => ExpirationTime,
+  computeUpdatePriorityForFiber: (fiber: Fiber) => PriorityLevel,
   markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   recalculateCurrentTime: () => ExpirationTime,
+  computeExpirationTimeForPriority: (
+    priorityLevel: PriorityLevel,
+    startTime: ExpirationTime,
+  ) => ExpirationTime,
 ) {
   const {getPublicInstance, mutation, persistence} = config;
 
@@ -156,10 +158,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function scheduleExpirationBoundaryRecovery(fiber) {
+    const priorityLevel = computeUpdatePriorityForFiber(fiber);
     const currentTime = recalculateCurrentTime();
-    const expirationTime = computeExpirationForFiber(currentTime, fiber);
+    const expirationTime = computeExpirationTimeForPriority(
+      priorityLevel,
+      currentTime,
+    );
     const update = {
       expirationTime,
+      priorityLevel,
       partialState: false,
       callback: null,
       isReplace: true,

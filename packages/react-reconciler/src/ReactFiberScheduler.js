@@ -12,6 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {PriorityLevel} from './ReactPriorityLevel';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
@@ -80,6 +81,13 @@ import {
   startCommitLifeCyclesTimer,
   stopCommitLifeCyclesTimer,
 } from './ReactDebugFiberPerf';
+import {
+  NoPriority,
+  RenderPriority,
+  SyncPriority,
+  DeferredPriority,
+  InteractivePriority,
+} from './ReactPriorityLevel';
 import {reset} from './ReactFiberStack';
 import {createWorkInProgress} from './ReactFiber';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
@@ -180,8 +188,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hostContext,
     hydrationContext,
     scheduleWork,
-    computeExpirationForFiber,
+    computeUpdatePriorityForFiber,
     recalculateCurrentTime,
+    computeExpirationTimeForPriority,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -208,9 +217,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     config,
     onCommitPhaseError,
     scheduleWork,
-    computeExpirationForFiber,
+    computeUpdatePriorityForFiber,
     markLegacyErrorBoundaryAsFailed,
     recalculateCurrentTime,
+    computeExpirationTimeForPriority,
   );
   const {
     now,
@@ -228,10 +238,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   // Used to ensure computeUniqueAsyncExpiration is monotonically increases.
   let lastUniqueAsyncExpiration: number = 0;
 
-  // Represents the expiration time that incoming updates should use. (If this
-  // is NoWork, use the default strategy: async updates in async mode, sync
+  // Represents the priority that incoming updates should use. (If this is
+  // NoPriority, use the default strategy: async updates in async mode, sync
   // updates in sync mode.)
-  let expirationContext: ExpirationTime = NoWork;
+  let priorityContext: PriorityLevel = NoPriority;
 
   let isWorking: boolean = false;
 
@@ -990,6 +1000,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     sourceFiber,
     boundaryFiber,
     value,
+    priorityLevel,
     startTime,
     expirationTime,
   ) {
@@ -997,6 +1008,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const capturedValue = createCapturedValue(value, sourceFiber);
     const update = {
       expirationTime,
+      priorityLevel,
       partialState: null,
       callback: null,
       isReplace: false,
@@ -1011,6 +1023,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function dispatch(
     sourceFiber: Fiber,
     value: mixed,
+    priorityLevel: PriorityLevel,
     startTime: ExpirationTime,
     expirationTime: ExpirationTime,
   ) {
@@ -1036,6 +1049,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               sourceFiber,
               fiber,
               value,
+              priorityLevel,
               startTime,
               expirationTime,
             );
@@ -1044,7 +1058,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           break;
         // TODO: Handle async boundaries
         case HostRoot:
-          scheduleCapture(sourceFiber, fiber, value, startTime, expirationTime);
+          scheduleCapture(
+            sourceFiber,
+            fiber,
+            value,
+            priorityLevel,
+            startTime,
+            expirationTime,
+          );
           return;
       }
       fiber = fiber.return;
@@ -1057,6 +1078,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         sourceFiber,
         sourceFiber,
         value,
+        priorityLevel,
         startTime,
         expirationTime,
       );
@@ -1065,7 +1087,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function onCommitPhaseError(fiber: Fiber, error: mixed) {
     const startTime = recalculateCurrentTime();
-    return dispatch(fiber, error, startTime, Sync);
+    return dispatch(fiber, error, SyncPriority, startTime, Sync);
   }
 
   function computeAsyncExpiration(currentTime: ExpirationTime) {
@@ -1098,23 +1120,20 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return lastUniqueAsyncExpiration;
   }
 
-  function computeExpirationForFiber(
-    currentTime: ExpirationTime,
-    fiber: Fiber,
-  ) {
-    let expirationTime;
-    if (expirationContext !== NoWork) {
-      // An explicit expiration context was set;
-      expirationTime = expirationContext;
+  function computeUpdatePriorityForFiber(fiber: Fiber): PriorityLevel {
+    let priorityLevel;
+    if (priorityContext !== NoPriority) {
+      // An explicit priority context was set;
+      priorityLevel = priorityContext;
     } else if (isWorking) {
       if (isCommitting) {
         // Updates that occur during the commit phase should have sync priority
         // by default.
-        expirationTime = Sync;
+        priorityLevel = SyncPriority;
       } else {
         // Updates during the render phase should expire at the same time as
         // the work that is being rendered.
-        expirationTime = nextRenderExpirationTime;
+        priorityLevel = RenderPriority;
       }
     } else {
       // No explicit expiration context was set, and we're not currently
@@ -1122,28 +1141,36 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (fiber.mode & AsyncMode) {
         if (isBatchingInteractiveUpdates) {
           // This is an interactive update
-          expirationTime = computeInteractiveExpiration(currentTime);
+          priorityLevel = InteractivePriority;
         } else {
           // This is an async update
-          expirationTime = computeAsyncExpiration(currentTime);
+          priorityLevel = DeferredPriority;
         }
       } else {
         // This is a sync update
-        expirationTime = Sync;
+        priorityLevel = SyncPriority;
       }
     }
-    if (isBatchingInteractiveUpdates) {
-      // This is an interactive update. Keep track of the lowest pending
-      // interactive expiration time. This allows us to synchronously flush
-      // all interactive updates when needed.
-      if (
-        lowestPendingInteractiveExpirationTime === NoWork ||
-        expirationTime > lowestPendingInteractiveExpirationTime
-      ) {
-        lowestPendingInteractiveExpirationTime = expirationTime;
-      }
+    return priorityLevel;
+  }
+
+  function computeExpirationTimeForPriority(
+    priorityLevel: PriorityLevel,
+    startTime: ExpirationTime,
+  ) {
+    switch (priorityLevel) {
+      case NoPriority:
+        return nextRenderExpirationTime;
+      case SyncPriority:
+        return Sync;
+      case RenderPriority:
+        return nextRenderExpirationTime;
+      case InteractivePriority:
+        return computeInteractiveExpiration(startTime);
+      case DeferredPriority:
+      default:
+        return computeAsyncExpiration(startTime);
     }
-    return expirationTime;
   }
 
   function retryOnPromiseResolution(
@@ -1190,6 +1217,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (!isErrorRecovery && fiber.tag === ClassComponent) {
         const instance = fiber.stateNode;
         warnAboutInvalidUpdates(instance);
+      }
+    }
+
+    if (isBatchingInteractiveUpdates) {
+      // This is an interactive update. Keep track of the lowest pending
+      // interactive expiration time. This allows us to synchronously flush
+      // all interactive updates when needed.
+      if (
+        lowestPendingInteractiveExpirationTime === NoWork ||
+        expirationTime > lowestPendingInteractiveExpirationTime
+      ) {
+        lowestPendingInteractiveExpirationTime = expirationTime;
       }
     }
 
@@ -1262,13 +1301,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function deferredUpdates<A>(fn: () => A): A {
-    const previousExpirationContext = expirationContext;
-    const currentTime = recalculateCurrentTime();
-    expirationContext = computeAsyncExpiration(currentTime);
+    const previousPriorityContext = priorityContext;
+    priorityContext = DeferredPriority;
     try {
       return fn();
     } finally {
-      expirationContext = previousExpirationContext;
+      priorityContext = previousPriorityContext;
     }
   }
   function syncUpdates<A, B, C0, D, R>(
@@ -1278,12 +1316,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     c: C0,
     d: D,
   ): R {
-    const previousExpirationContext = expirationContext;
-    expirationContext = Sync;
+    const previousPriorityContext = priorityContext;
+    priorityContext = SyncPriority;
     try {
       return fn(a, b, c, d);
     } finally {
-      expirationContext = previousExpirationContext;
+      priorityContext = previousPriorityContext;
     }
   }
 
@@ -1824,7 +1862,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   return {
     recalculateCurrentTime,
-    computeExpirationForFiber,
+    computeUpdatePriorityForFiber,
+    computeExpirationTimeForPriority,
     scheduleWork,
     requestWork,
     flushRoot,

@@ -29,6 +29,7 @@ import {
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
 import {Sync} from './ReactFiberExpirationTime';
+import {NoPriority} from './ReactPriorityLevel';
 
 import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
 
@@ -85,9 +86,10 @@ export default function(
     renderStartTime,
     renderExpirationTime,
   ) {
-    const slightlyHigherPriority = renderExpirationTime - 1;
+    const slightlyEarlierExpirationTime = renderExpirationTime - 1;
     const loadingUpdate = {
-      expirationTime: slightlyHigherPriority,
+      expirationTime: slightlyEarlierExpirationTime,
+      priorityLevel: NoPriority,
       partialState: true,
       callback: null,
       isReplace: true,
@@ -99,6 +101,7 @@ export default function(
 
     const revertUpdate = {
       expirationTime: renderExpirationTime,
+      priorityLevel: NoPriority,
       partialState: false,
       callback: null,
       isReplace: true,
@@ -107,7 +110,11 @@ export default function(
       next: null,
     };
     insertUpdateIntoFiber(workInProgress, revertUpdate);
-    scheduleWork(workInProgress, renderStartTime, slightlyHigherPriority);
+    scheduleWork(
+      workInProgress,
+      renderStartTime,
+      slightlyEarlierExpirationTime,
+    );
     return false;
   }
 
