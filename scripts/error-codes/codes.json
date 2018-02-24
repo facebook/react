@@ -259,5 +259,13 @@
   "257": "Portals are not currently supported by the server renderer. Render them conditionally so that they only appear on the client render.",
   "258": "Unknown element-like object type: %s. This is likely a bug in React. Please file an issue.",
   "259": "The experimental Call and Return types are not currently supported by the server renderer.",
-  "260": "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: %s."
+  "260": "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: %s.",
+  "261": "Cannot commit an incomplete root. This error is likely caused by a bug in React. Please file an issue.",
+  "262": "Expired work should have completed. This error is likely caused by a bug in React. Please file an issue.",
+  "263": "dispatch: Cannot dispatch during the render phase.",
+  "264": "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it.",
+  "265": "A synchronous update was suspended, but no fallback UI was provided.",
+  "266": "An update was suspended for longer than the timeout, but no fallback UI was provided.",
+  "267": "An error logging effect should not have been scheduled if no errors were captured. This error is likely caused by a bug in React. Please file an issue.",
+  "268": "This unit of work tag cannot capture errors.  This error is likely caused by a bug in React. Please file an issue."
 }
