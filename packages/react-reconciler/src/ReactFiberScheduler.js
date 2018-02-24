@@ -41,7 +41,7 @@ import {
 import {
   enableUserTimingAPI,
   warnAboutDeprecatedLifecycles,
-  replayFailedBeginPhaseWithInvokeGuardedCallback,
+  replayFailedUnitOfWorkWithInvokeGuardedCallback,
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
@@ -241,6 +241,42 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   // Used for performance tracking.
   let interruptedBy: Fiber | null = null;
+
+  let stashedWorkInProgressProperties;
+  let replayUnitOfWork;
+  if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+    stashedWorkInProgressProperties = null;
+    replayUnitOfWork = (failedUnitOfWork: Fiber, isAsync: boolean) => {
+      // Retore the original state of the work-in-progress
+      Object.assign(failedUnitOfWork, stashedWorkInProgressProperties);
+      switch (failedUnitOfWork.tag) {
+        case HostRoot:
+          popHostContainer(failedUnitOfWork);
+          popTopLevelLegacyContextObject(failedUnitOfWork);
+          break;
+        case HostComponent:
+          popHostContext(failedUnitOfWork);
+          break;
+        case ClassComponent:
+          popLegacyContextProvider(failedUnitOfWork);
+          break;
+        case HostPortal:
+          popHostContainer(failedUnitOfWork);
+          break;
+        case ContextProvider:
+          popProvider(failedUnitOfWork);
+          break;
+      }
+      // Replay the begin phase.
+      invokeGuardedCallback(null, workLoop, null, isAsync);
+      if (hasCaughtError()) {
+        clearCaughtError();
+      } else {
+        // This should be unreachable because the render phase is
+        // idempotent
+      }
+    };
+  }
 
   function resetContextStack() {
     // Reset the stack
@@ -725,78 +761,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return null;
   }
 
-  let invokeBeginWork = beginWork;
-  if (__DEV__ && replayFailedBeginPhaseWithInvokeGuardedCallback) {
-    invokeBeginWork = function beginWorkInDEV(
-      current,
-      workInProgress,
-      expirationTime,
-    ) {
-      const stashedWorkInProgressProperties = Object.assign({}, workInProgress);
-      try {
-        return beginWork(current, workInProgress, expirationTime);
-      } catch (value) {
-        let thrownValue = value;
-        // Check if the thrown value is an error. If it is, we will replay the
-        // begin phase using invokeGuardedCallback, so that the error is not
-        // treated as caught by the debugger.
-        if (
-          value instanceof Error ||
-          (typeof value === 'object' &&
-            value !== null &&
-            typeof value.message === 'string' &&
-            typeof value.stack === 'string')
-        ) {
-          // Retore the original state of the work-in-progress
-          Object.assign(workInProgress, stashedWorkInProgressProperties);
-
-          switch (workInProgress.tag) {
-            case HostRoot:
-              popHostContainer(workInProgress);
-              popTopLevelLegacyContextObject(workInProgress);
-              break;
-            case HostComponent:
-              popHostContext(workInProgress);
-              break;
-            case ClassComponent:
-              popLegacyContextProvider(workInProgress);
-              break;
-            case HostPortal:
-              popHostContainer(workInProgress);
-              break;
-            case ContextProvider:
-              popProvider(workInProgress);
-              break;
-          }
-
-          // Replay the begin phase.
-          invokeGuardedCallback(
-            null,
-            beginWork,
-            null,
-            current,
-            workInProgress,
-            expirationTime,
-          );
-          if (hasCaughtError()) {
-            thrownValue = clearCaughtError();
-          } else {
-            // This should be unreachable because the render phase is
-            // idempotent, but even we don't throw the second time, we should
-            // still rethrow the original thrown value
-          }
-        } else {
-          // If it's not an error, then it's a promise or other algebraic
-          // effect. We don't want the debugger to treat these as uncaught, so
-          // we should rethrow it without replaying.
-        }
-        // Rethrow to unwind the stack. This maintains the same control flow
-        // in development and production.
-        throw thrownValue;
-      }
-    };
-  }
-
   function performUnitOfWork(workInProgress: Fiber): Fiber | null {
     // The current, flushed, state of this fiber is the alternate.
     // Ideally nothing should rely on this, but relying on it here
@@ -810,11 +774,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
     }
 
-    let next = invokeBeginWork(
-      current,
-      workInProgress,
-      nextRenderExpirationTime,
-    );
+    if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+      stashedWorkInProgressProperties = Object.assign({}, workInProgress);
+    }
+    let next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();
@@ -892,6 +855,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           onUncaughtError(thrownValue);
           break;
         }
+
+        if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+          const failedUnitOfWork = nextUnitOfWork;
+          replayUnitOfWork(failedUnitOfWork, isAsync);
+        }
+
         const sourceFiber: Fiber = nextUnitOfWork;
         let returnFiber = sourceFiber.return;
         if (returnFiber === null) {

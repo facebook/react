@@ -38,7 +38,7 @@ describe('ReactErrorBoundaries', () => {
     jest.resetModules();
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.replayFailedBeginPhaseWithInvokeGuardedCallback = false;
+    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     React = require('react');
 
