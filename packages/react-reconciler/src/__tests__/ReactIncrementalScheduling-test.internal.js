@@ -221,6 +221,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
     // Now flush the cDM update.
+    ReactNoop.clearYields();
     expect(ReactNoop.flush()).toEqual(['render: 1', 'componentDidUpdate: 1']);
     expect(ReactNoop.getChildren()).toEqual([span(1)]);
 

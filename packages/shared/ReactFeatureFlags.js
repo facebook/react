@@ -10,7 +10,7 @@
 import invariant from 'fbjs/lib/invariant';
 
 // Exports ReactDOM.createRoot
-export const enableCreateRoot = false;
+export const enableCreateRoot = true;
 export const enableUserTimingAPI = __DEV__;
 
 // Mutating mode (React DOM, React ART, React Native):
@@ -19,6 +19,9 @@ export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
 // Experimental persistent mode (Fabric):
 export const enablePersistentReconciler = false;
+// Experimental error-boundary API that can recover from errors within a single
+// render phase
+export const enableGetDerivedStateFromCatch = false;
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 
@@ -27,6 +30,10 @@ export const debugRenderPhaseSideEffects = false;
 // And it can be bad for performance in production.
 // This feature flag can be used to control the behavior:
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
+
+// To preserve the "Pause on caught exceptions" behavior of the debugger, we
+// replay the begin phase of a failed component inside invokeGuardedCallback.
+export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 
 // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
 export const warnAboutDeprecatedLifecycles = false;

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {CapturedError} from '../ReactFiberScheduler';
+import type {CapturedError} from '../ReactCapturedValue';
 
 import invariant from 'fbjs/lib/invariant';
 

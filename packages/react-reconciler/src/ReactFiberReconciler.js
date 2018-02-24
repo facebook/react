@@ -295,6 +295,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   const {
     computeUniqueAsyncExpiration,
+    recalculateCurrentTime,
     computeExpirationForFiber,
     scheduleWork,
     requestWork,
@@ -312,6 +313,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function scheduleRootUpdate(
     current: Fiber,
     element: ReactNodeList,
+    currentTime: ExpirationTime,
     expirationTime: ExpirationTime,
     callback: ?Function,
   ) {
@@ -349,6 +351,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       callback,
       isReplace: false,
       isForced: false,
+      capturedValue: null,
       next: null,
     };
     insertUpdateIntoFiber(current, update);
@@ -361,6 +364,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
+    currentTime: ExpirationTime,
     expirationTime: ExpirationTime,
     callback: ?Function,
   ) {
@@ -386,7 +390,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       container.pendingContext = context;
     }
 
-    return scheduleRootUpdate(current, element, expirationTime, callback);
+    return scheduleRootUpdate(
+      current,
+      element,
+      currentTime,
+      expirationTime,
+      callback,
+    );
   }
 
   function findHostInstance(fiber: Fiber): PI | null {
@@ -413,17 +423,35 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       callback: ?Function,
     ): ExpirationTime {
       const current = container.current;
+      const currentTime = recalculateCurrentTime();
       const expirationTime = computeExpirationForFiber(current);
       return updateContainerAtExpirationTime(
         element,
         container,
         parentComponent,
+        currentTime,
         expirationTime,
         callback,
       );
     },
 
-    updateContainerAtExpirationTime,
+    updateContainerAtExpirationTime(
+      element,
+      container,
+      parentComponent,
+      expirationTime,
+      callback,
+    ) {
+      const currentTime = recalculateCurrentTime();
+      return updateContainerAtExpirationTime(
+        element,
+        container,
+        parentComponent,
+        currentTime,
+        expirationTime,
+        callback,
+      );
+    },
 
     flushRoot,
 
