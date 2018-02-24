@@ -32,8 +32,8 @@ describe('ReactExpiration', () => {
     ReactNoop.flushExpired();
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    // Advance by 300ms, not enough to expire the low pri update.
-    ReactNoop.expire(300);
+    // Advance time a bit, but not enough to expire the low pri update.
+    ReactNoop.expire(4500);
     ReactNoop.flushExpired();
     expect(ReactNoop.getChildren()).toEqual([]);
 

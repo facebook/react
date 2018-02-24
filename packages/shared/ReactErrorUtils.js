@@ -34,7 +34,7 @@ const ReactErrorUtils = {
    */
   invokeGuardedCallback: function<A, B, C, D, E, F, Context>(
     name: string | null,
-    func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
+    func: (a: A, b: B, c: C, d: D, e: E, f: F) => mixed,
     context: Context,
     a: A,
     b: B,
