@@ -1,7 +1,7 @@
 {
   "name": "react-call-return",
   "description": "Experimental APIs for multi-pass rendering in React.",
-  "version": "0.6.0-alpha.1",
+  "version": "0.6.0-alpha.3174632",
   "repository": "facebook/react",
   "files": [
     "LICENSE",
@@ -14,6 +14,6 @@
     "object-assign": "^4.1.1"
   },
   "peerDependencies": {
-    "react": "^16.0.0 || 16.3.0-alpha.1"
+    "react": "^16.0.0 || 16.4.0-alpha.3174632"
   }
 }
