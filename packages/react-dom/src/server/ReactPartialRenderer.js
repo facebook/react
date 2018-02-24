@@ -670,6 +670,11 @@ function resolve(
       context = Object.assign({}, context, childContext);
     }
   }
+
+  if (React.isPortalElement(child)) {
+    child = null;
+  }
+
   return {child, context};
 }
 

@@ -22,6 +22,7 @@ import {
   createFactory,
   cloneElement,
   isValidElement,
+  isPortalElement,
   jsx,
 } from './ReactElement';
 import {createContext} from './ReactContext';
@@ -96,6 +97,7 @@ const React = {
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
   createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
   isValidElement: isValidElement,
+  isPortalElement: isPortalElement,
 
   version: ReactVersion,
 

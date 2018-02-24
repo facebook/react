@@ -7,7 +7,7 @@
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {REACT_ELEMENT_TYPE, REACT_PORTAL_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -501,5 +501,20 @@ export function isValidElement(object) {
     typeof object === 'object' &&
     object !== null &&
     object.$$typeof === REACT_ELEMENT_TYPE
+  );
+}
+
+/**
+ * Verifies the object is a ReactPortal.
+ * See https://reactjs.org/docs/react-api.html#isportalelement
+ * @param {?object} object
+ * @return {boolean} True if `object` is a portal component.
+ * @final
+ */
+export function isPortalElement(object) {
+  return (
+    typeof object === 'object' &&
+    object !== null &&
+    object.$$typeof === REACT_PORTAL_TYPE
   );
 }
