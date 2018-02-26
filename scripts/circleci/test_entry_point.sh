@@ -25,7 +25,9 @@ if [ $((2 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
   COMMANDS_TO_RUN+=('yarn test-build --maxWorkers=2')
   COMMANDS_TO_RUN+=('yarn test-build-prod --maxWorkers=2')
-  COMMANDS_TO_RUN+=('node ./scripts/tasks/danger')
+  # The Github API requests danger makes are currently failing. Disabling it
+  # until we can fix that.
+  # COMMANDS_TO_RUN+=('node ./scripts/tasks/danger')
   COMMANDS_TO_RUN+=('./scripts/circleci/upload_build.sh')
 fi
 
