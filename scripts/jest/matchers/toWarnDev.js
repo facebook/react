@@ -49,11 +49,11 @@ const createMatcherFor = consoleMethod =>
         } else if (expectedMessages.length === 1) {
           errorMessage =
             'Unexpected warning recorded: ' +
-            jestDiff(normalizedMessage, expectedMessages[0]);
+            jestDiff(expectedMessages[0], normalizedMessage);
         } else {
           errorMessage =
             'Unexpected warning recorded: ' +
-            jestDiff([normalizedMessage], expectedMessages);
+            jestDiff(expectedMessages, [normalizedMessage]);
         }
 
         // Record the call stack for unexpected warnings.
