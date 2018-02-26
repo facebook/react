@@ -680,6 +680,8 @@ const ReactTestRendererFiber = {
   /* eslint-disable camelcase */
   unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
+
+  toJSON: toJSON,
 };
 
 export default ReactTestRendererFiber;

@@ -13,6 +13,7 @@
 const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 const React = require('react');
+const ReactDOM = require('react-dom');
 const ReactTestRenderer = require('react-test-renderer');
 const prettyFormat = require('pretty-format');
 
@@ -955,6 +956,31 @@ describe('ReactTestRenderer', () => {
         },
         type: App,
       }),
+    );
+  });
+
+  it('supports portal.', () => {
+    // We need to provide an object with the correct
+    // APIs to be used by both `react-test-renderer` and
+    // `React.createPortal()`.
+    const ELEMENT_NODE = 1;
+    const container = { children: [], nodeType: ELEMENT_NODE };
+
+    const Portal = () => (
+      ReactDOM.createPortal(
+        <div>hello</div>,
+        container
+      )
+    );
+
+    ReactTestRenderer.create(
+      <div>
+        <Portal />
+      </div>
+    );
+
+    expect(ReactTestRenderer.toJSON(container.children[0])).toEqual(
+      { type: 'div', props: {}, children: ['hello'] }
     );
   });
 });
