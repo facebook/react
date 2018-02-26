@@ -145,7 +145,7 @@ const testCases = [
     key: 'ssr-warnForDeletedHydratableElement-didNotHydrateInstance',
     renderServer: () => (
       <div>
-        <div />
+        <div>SSRMismatchTest default text</div>
         <span />
       </div>
     ),
@@ -243,18 +243,45 @@ const testCases = [
     ),
   },
   {
-    key: 'ssr-warnForInsertedHydratedText-didNotFindHydratableTextInstance',
+    key:
+      'ssr-warnForInsertedHydratedText-didNotFindHydratableTextInstance-replacement',
     renderServer: () => (
       <div>
-        <span />
-        <span />
+        nested{' '}
+        <p>
+          children <b>text</b>
+        </p>
       </div>
     ),
     renderBrowser: () => (
       <div>
-        <span />
-        SSRMismatchTest client text
-        <span />
+        nested{' '}
+        <div>
+          children <b>text</b>
+        </div>
+      </div>
+    ),
+  },
+  {
+    key:
+      'ssr-warnForInsertedHydratedText-didNotFindHydratableTextInstance-insertion',
+    renderServer: () => (
+      <div>
+        nested{' '}
+        <p>
+          children <b>text</b>
+        </p>
+      </div>
+    ),
+    renderBrowser: () => (
+      <div>
+        nested{' '}
+        <p>
+          children <b>text</b>
+        </p>
+        <div>
+          children <b>text</b>
+        </div>
       </div>
     ),
   },

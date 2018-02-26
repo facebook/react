@@ -99,7 +99,11 @@ function deleteHydratableInstance(
   }
 }
 
-function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
+function insertNonHydratedInstance(
+  returnFiber: Fiber,
+  fiber: Fiber,
+  isReplaced: boolean,
+) {
   fiber.effectTag |= Placement;
   if (__DEV__) {
     switch (returnFiber.tag) {
@@ -114,11 +118,17 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               type,
               props,
               fiber.index,
+              isReplaced,
             );
             break;
           case HostText:
             const text = fiber.pendingProps;
-            didNotFindHydratableContainerTextInstance(parentContainer, text);
+            didNotFindHydratableContainerTextInstance(
+              parentContainer,
+              text,
+              fiber.index,
+              isReplaced,
+            );
             break;
         }
         break;
@@ -138,6 +148,7 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               type,
               props,
               fiber.index,
+              isReplaced,
             );
             break;
           case HostText:
@@ -147,6 +158,8 @@ function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
               parentProps,
               parentInstance,
               text,
+              fiber.index,
+              isReplaced,
             );
             break;
         }
@@ -191,7 +204,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
     // Nothing to hydrate. Make it an insertion.
-    insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+    insertNonHydratedInstance((hydrationParentFiber: any), fiber, false);
     isHydrating = false;
     hydrationParentFiber = fiber;
     return;
@@ -204,7 +217,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     nextInstance = getNextHydratableSibling(firstAttemptedInstance);
     if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
       // Nothing to hydrate. Make it an insertion.
-      insertNonHydratedInstance((hydrationParentFiber: any), fiber);
+      insertNonHydratedInstance((hydrationParentFiber: any), fiber, true);
       isHydrating = false;
       hydrationParentFiber = fiber;
       return;

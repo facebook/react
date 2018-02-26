@@ -368,13 +368,35 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
-    it('renders over an existing text child without throwing', () => {
+    it('renders over an existing text child without throwing, warning has replacement diff', () => {
       const container = document.createElement('div');
       container.textContent = 'potato';
       expect(() => ReactDOM.hydrate(<div>parsnip</div>, container)).toWarnDev(
-        'Expected server HTML to contain a matching <div> in <div>.',
+        'Warning: Expected server HTML to contain a matching <div>parsnip</div> in <div>potato</div>.\n' +
+          '  <div>\n' +
+          "-   {'potato'}\n" +
+          '+   <div>parsnip</div>\n' +
+          '  </div>\n' +
+          '    in div (at **)',
       );
       expect(container.textContent).toBe('parsnip');
+    });
+
+    it('renders an array of texts over an existing text child without throwing, warning has replacement diff', () => {
+      const container = document.createElement('div');
+      container.textContent = 'potato';
+      expect(() =>
+        ReactDOM.hydrate(<div>{['parsnip', 'carrot']}</div>, container),
+      ).toWarnDev(
+        "Warning: Expected server HTML to contain a matching <div>{['parsnip', 'carrot']}</div>" +
+          ' in <div>potato</div>.\n' +
+          '  <div>\n' +
+          "-   {'potato'}\n" +
+          "+   <div>{['parsnip', 'carrot']}</div>\n" +
+          '  </div>\n' +
+          '    in div (at **)',
+      );
+      expect(container.textContent).toBe('parsnipcarrot');
     });
 
     it('should give helpful errors on state desync', () => {
@@ -423,7 +445,62 @@ describe('rendering React components at document', () => {
       // getTestDocument() has an extra <meta> that we didn't render.
       expect(() =>
         ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
-      ).toWarnDev('Did not expect server HTML to contain a <meta> in <head>.');
+      ).toWarnDev(
+        'Warning: Did not expect server HTML to contain a <meta charset="utf-8" />' +
+          ' in <head><meta charset="utf-8"><title>test doc</title></head>.\n' +
+          '  <head>\n' +
+          '-   <meta charset="utf-8" />\n' +
+          '    <title>test doc</title>\n' +
+          '  </head>\n' +
+          '    in title (at **)\n' +
+          '    in head (at **)\n' +
+          '    in html (at **)\n' +
+          '    in Component (at **)',
+      );
+      expect(testDocument.body.innerHTML).toBe('Hello world');
+    });
+
+    it('clips the hydrate warning if the content is too long', () => {
+      let longTitle = 'test doc';
+      while (longTitle.length < 100) {
+        longTitle += ' long title';
+      }
+      const testDocument = getTestDocument(
+        '<!doctype html><html><meta charset=utf-8><title>' +
+          longTitle +
+          '</title>',
+      );
+
+      class Component extends React.Component {
+        render() {
+          return (
+            <html>
+              <head>
+                <title>Hello World</title>
+              </head>
+              <body>{this.props.text}</body>
+            </html>
+          );
+        }
+      }
+
+      // getTestDocument() has an extra <meta> that we didn't render.
+      expect(() =>
+        ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
+      ).toWarnDev(
+        'Warning: Did not expect server HTML to contain a <meta charset="utf-8" />' +
+          ' in <head><meta charset="utf-8"><title>' +
+          'test doc long title long title long title long title long title long ti…</head>.\n' +
+          '  <head>\n' +
+          '-   <meta charset="utf-8" />\n' +
+          '    <title>test doc long title long title long title long title long title' +
+          ' long title long title long title lon…</title>\n' +
+          '  </head>\n' +
+          '    in title (at **)\n' +
+          '    in head (at **)\n' +
+          '    in html (at **)\n' +
+          '    in Component (at **)',
+      );
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 

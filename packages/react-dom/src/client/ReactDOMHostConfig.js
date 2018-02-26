@@ -559,18 +559,27 @@ export function didNotFindHydratableContainerInstance(
   type: string,
   props: Props,
   index: number,
+  isReplaced: boolean,
 ) {
   if (__DEV__) {
-    warnForInsertedHydratedElement(parentContainer, type, props, index);
+    warnForInsertedHydratedElement(
+      parentContainer,
+      type,
+      props,
+      index,
+      isReplaced,
+    );
   }
 }
 
 export function didNotFindHydratableContainerTextInstance(
   parentContainer: Container,
   text: string,
+  index: number,
+  isReplaced: boolean,
 ) {
   if (__DEV__) {
-    warnForInsertedHydratedText(parentContainer, text);
+    warnForInsertedHydratedText(parentContainer, text, index, isReplaced);
   }
 }
 
@@ -581,9 +590,16 @@ export function didNotFindHydratableInstance(
   type: string,
   props: Props,
   index: number,
+  isReplaced: boolean,
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    warnForInsertedHydratedElement(parentInstance, type, props, index);
+    warnForInsertedHydratedElement(
+      parentInstance,
+      type,
+      props,
+      index,
+      isReplaced,
+    );
   }
 }
 
@@ -592,8 +608,10 @@ export function didNotFindHydratableTextInstance(
   parentProps: Props,
   parentInstance: Instance,
   text: string,
+  index: number,
+  isReplaced: boolean,
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    warnForInsertedHydratedText(parentInstance, text);
+    warnForInsertedHydratedText(parentInstance, text, index, isReplaced);
   }
 }

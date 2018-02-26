@@ -40,11 +40,14 @@ import {
 } from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
 import {
+  ELEMENT_NODE,
+  TEXT_NODE,
+  COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
-  ELEMENT_NODE,
 } from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
+import omittedCloseTags from '../shared/omittedCloseTags';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
@@ -63,6 +66,18 @@ const HTML = '__html';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
+let getNodeSignature = (node: Node, openTagOnly = false) => '<…>';
+let getTagWithPropsSignature = (tag: string, props: Object) => '<…>';
+let getNodeSurroundingsAndDiff = (
+  parentNode: Element | Document,
+  deletedIndex: number,
+  insertedIndex: number,
+  insertTag: string | null,
+  insertProps: Object | null,
+  insertText: string | null,
+) => '';
+let findNodeIndex = (nodes: NodeList<Node>, node: Node) => -1;
+
 let warnedUnknownTags;
 let suppressHydrationWarning;
 
@@ -77,6 +92,190 @@ let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
 
 if (__DEV__) {
+  getNodeSignature = function(node: Node, openTagOnly = false) {
+    // TODO: How do we want to print quotes inside quotes?
+    // TODO: How do we want to print special characters such as &nbsp;?
+    const nodeType = node.nodeType;
+    if (nodeType === COMMENT_NODE) {
+      return '<!--' + node.textContent + '-->';
+    }
+    if (nodeType === TEXT_NODE) {
+      return "{'" + node.textContent + "'}";
+    }
+    if (nodeType !== ELEMENT_NODE) {
+      return node.nodeName;
+    }
+    const tag = node.nodeName.toLowerCase();
+    let ret = '<' + tag;
+    if (node instanceof Element) {
+      const attrs = node.attributes;
+      const ic = attrs.length;
+      for (let i = 0; i < ic; ++i) {
+        ret += ' ' + attrs[i].name + '="' + attrs[i].value + '"';
+      }
+    }
+    if (openTagOnly) {
+      ret += '>';
+    } else {
+      const childrenString =
+        node instanceof Element ? node.innerHTML : node.textContent;
+      if (omittedCloseTags.hasOwnProperty(tag)) {
+        ret += ' />';
+      } else {
+        if (childrenString) {
+          ret +=
+            '>' +
+            childrenString.substring(0, 100) +
+            (childrenString.length > 100 ? '…' : '') +
+            '</';
+        } else {
+          ret += '></';
+        }
+        ret += tag + '>';
+      }
+    }
+    return ret;
+  };
+
+  const objectPrototypeToString = Object.prototype.toString;
+
+  // TODO: Reuse RESERVED_PROPS from ReactPartialRenderer.
+  const RESERVED_PROPS = {
+    children: null,
+    dangerouslySetInnerHTML: null,
+    suppressContentEditableWarning: null,
+    suppressHydrationWarning: null,
+  };
+
+  getTagWithPropsSignature = function(tag: string, props: Object) {
+    let ret = '<' + tag;
+
+    for (const propKey in props) {
+      if (!props.hasOwnProperty(propKey)) {
+        continue;
+      }
+      let propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      if (RESERVED_PROPS.hasOwnProperty(propKey)) {
+        continue;
+      }
+      let markup = null;
+      if (propKey === STYLE) {
+        markup = propKey + '={…}';
+      } else if (typeof propValue === 'function') {
+        markup = propKey + '={' + propValue.name || propValue.toString() + '}';
+      } else {
+        try {
+          markup = propKey + '={' + JSON.stringify(propValue) + '}';
+        } catch (ex) {
+          markup =
+            propKey + '={' + objectPrototypeToString.call(propValue) + '}';
+        }
+      }
+      if (markup) {
+        ret += ' ' + markup;
+      }
+    }
+
+    if (omittedCloseTags.hasOwnProperty(tag)) {
+      ret += ' />';
+    } else {
+      if (typeof props.children === 'string') {
+        ret += '>' + props.children + '</';
+      } else if (Array.isArray(props.children)) {
+        ret += '>{[';
+        const ic = props.children.length;
+        for (let i = 0; i < ic; ++i) {
+          ret += i > 0 ? ', ' : '';
+          const child = props.children[i];
+          if (typeof child === 'string') {
+            ret += "'" + child + "'";
+          } else {
+            ret += '…';
+          }
+        }
+        ret += ']}</';
+      } else if (props.children) {
+        ret += '>{…}</';
+      } else {
+        ret += '></';
+      }
+      ret += tag + '>';
+    }
+
+    return ret;
+  };
+
+  getNodeSurroundingsAndDiff = function(
+    parentNode: Element | Document,
+    deletedIndex: number,
+    insertedIndex: number,
+    insertTag: string | null,
+    insertProps: Object | null,
+    insertText: string | null,
+  ) {
+    let ret = '';
+    const INDENT = '  ';
+    const DIFF_ADDED = '\n+ ';
+    const DIFF_REMOVED = '\n- ';
+    const DIFF_UNCHANGED = '\n  ';
+    ret += DIFF_UNCHANGED + getNodeSignature(parentNode, true);
+    let inserted = false;
+    const insert = () => {
+      if (!inserted) {
+        if (insertTag) {
+          inserted = true;
+          ret +=
+            DIFF_ADDED +
+            INDENT +
+            getTagWithPropsSignature(insertTag, insertProps || {});
+        } else if (typeof insertText === 'string') {
+          inserted = true;
+          ret += DIFF_ADDED + INDENT + "{'" + insertText + "'}";
+        }
+      }
+    };
+    const childNodes = parentNode.childNodes;
+    const ic = childNodes.length;
+    let skipped = 0;
+    for (let i = 0; i < ic; ++i) {
+      const node = childNodes[i];
+      // TODO: Copy-paste condition from `getNextHydratableSibling`, reuse?
+      if (
+        node &&
+        node.nodeType !== ELEMENT_NODE &&
+        node.nodeType !== TEXT_NODE
+      ) {
+        ++skipped;
+        continue;
+      }
+      if (i - skipped === deletedIndex) {
+        ret += DIFF_REMOVED + INDENT + getNodeSignature(node);
+      } else {
+        ret += DIFF_UNCHANGED + INDENT + getNodeSignature(node);
+      }
+      if (i - skipped === insertedIndex) {
+        insert();
+      }
+    }
+    insert();
+    // TODO: Cannot tell if more sibling React elements were expected to be hydrated after the current one.
+    ret += DIFF_UNCHANGED + '</' + parentNode.nodeName.toLowerCase() + '>';
+    return ret;
+  };
+
+  findNodeIndex = function(nodes: NodeList<Node>, node: Node) {
+    const ic = nodes.length;
+    for (let i = 0; i < ic; ++i) {
+      if (nodes[i] === node) {
+        return i;
+      }
+    }
+    return -1;
+  };
+
   warnedUnknownTags = {
     // Chrome is the only major browser not shipping <time>. But as of July
     // 2017 it intends to ship it due to widespread usage. We intentionally
@@ -1154,9 +1353,17 @@ export function warnForDeletedHydratableElement(
     didWarnInvalidHydration = true;
     warning(
       false,
-      'Did not expect server HTML to contain a <%s> in <%s>.',
-      child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase(),
+      'Did not expect server HTML to contain a %s in %s.%s',
+      getNodeSignature(child),
+      getNodeSignature(parentNode),
+      getNodeSurroundingsAndDiff(
+        parentNode,
+        findNodeIndex(parentNode.childNodes, child),
+        -1,
+        null,
+        null,
+        null,
+      ),
     );
   }
 }
@@ -1172,9 +1379,17 @@ export function warnForDeletedHydratableText(
     didWarnInvalidHydration = true;
     warning(
       false,
-      'Did not expect server HTML to contain the text node "%s" in <%s>.',
+      "Did not expect server HTML to contain the text node {'%s'} in %s.%s",
       child.nodeValue,
-      parentNode.nodeName.toLowerCase(),
+      getNodeSignature(parentNode),
+      getNodeSurroundingsAndDiff(
+        parentNode,
+        findNodeIndex(parentNode.childNodes, child),
+        -1,
+        null,
+        null,
+        null,
+      ),
     );
   }
 }
@@ -1184,74 +1399,26 @@ export function warnForInsertedHydratedElement(
   tag: string,
   props: Object,
   index: number,
+  isReplaced: boolean,
 ) {
   if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
     didWarnInvalidHydration = true;
-    let htmlContext = [];
-    const ic = parentNode.childNodes.length;
-    const parentNodeName = parentNode.nodeName.toLowerCase();
-    if (parentNode.nodeType === ELEMENT_NODE) {
-      // $FlowFixMe https://github.com/facebook/flow/issues/1032
-      const parentElement = (parentNode: Element);
-      htmlContext.push(
-        ' <' +
-          parentNodeName +
-          (parentElement.className
-            ? ' className="' + parentElement.className + '"'
-            : '') +
-          '>',
-      );
-    } else {
-      htmlContext.push(' <' + parentNodeName + '>');
-    }
-    if (index - 5 > 0) {
-      htmlContext.push('   …');
-    }
-    for (let i = index - 5; i <= index + 5; ++i) {
-      if (i >= 0 && i < ic) {
-        const childNode = parentNode.childNodes[i];
-        const childNodeName = childNode.nodeName.toLowerCase();
-        const diffPrefix = i === index ? '-  ' : '   ';
-        if (childNode.nodeType === ELEMENT_NODE) {
-          // $FlowFixMe https://github.com/facebook/flow/issues/1032
-          const childElement = (childNode: Element);
-          htmlContext.push(
-            diffPrefix +
-              '<' +
-              childNodeName +
-              (childElement.className
-                ? ' className="' + childElement.className + '"'
-                : '') +
-              (childElement.textContent
-                ? '>' + childElement.textContent + '</' + childNodeName + '>'
-                : ' />'),
-          );
-        } else {
-          htmlContext.push(diffPrefix + childNode.textContent);
-        }
-        if (i === index) {
-          htmlContext.push(
-            '+  <' +
-              tag +
-              (props.className ? ' className="' + props.className + '"' : '') +
-              ' />',
-          );
-        }
-      }
-    }
-    if (index + 5 < ic - 1) {
-      htmlContext.push('   …');
-    }
-    htmlContext.push(' </' + parentNodeName + '>');
     warning(
       false,
-      'Expected server HTML to contain a matching <%s> in <%s>.%s',
-      tag,
-      parentNodeName,
-      '\n' + htmlContext.join('\n') + '\n',
+      'Expected server HTML to contain a matching %s in %s.%s',
+      getTagWithPropsSignature(tag, props),
+      getNodeSignature(parentNode),
+      getNodeSurroundingsAndDiff(
+        parentNode,
+        isReplaced ? index : -1,
+        index,
+        tag,
+        props,
+        null,
+      ),
     );
   }
 }
@@ -1259,6 +1426,8 @@ export function warnForInsertedHydratedElement(
 export function warnForInsertedHydratedText(
   parentNode: Element | Document,
   text: string,
+  index: number,
+  isReplaced: boolean,
 ) {
   if (__DEV__) {
     if (text === '') {
@@ -1274,9 +1443,17 @@ export function warnForInsertedHydratedText(
     didWarnInvalidHydration = true;
     warning(
       false,
-      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
+      "Expected server HTML to contain a matching text node for {'%s'} in %s.%s",
       text,
-      parentNode.nodeName.toLowerCase(),
+      getNodeSignature(parentNode),
+      getNodeSurroundingsAndDiff(
+        parentNode,
+        isReplaced ? index : -1,
+        index,
+        null,
+        null,
+        text,
+      ),
     );
   }
 }
