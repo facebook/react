@@ -247,4 +247,29 @@ describe('ReactFabric', () => {
     ReactFabric.render(<Component />, 11);
     expect(mockArgs.length).toEqual(0);
   });
+
+  it('should call complete after inserting children', () => {
+    const View = createReactNativeComponentClass('View', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'View',
+    }));
+
+    const snapshots = [];
+    FabricUIManager.completeRoot.mockImplementation(function(
+      rootTag,
+      newChildSet,
+    ) {
+      snapshots.push(
+        FabricUIManager.__dumpChildSetForJestTestsOnly(newChildSet),
+      );
+    });
+
+    ReactFabric.render(
+      <View foo="a">
+        <View foo="b" />
+      </View>,
+      22,
+    );
+    expect(snapshots).toMatchSnapshot();
+  });
 });

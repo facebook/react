@@ -14,18 +14,26 @@ const invariant = require('fbjs/lib/invariant');
 const roots = new Map();
 const allocatedTags = new Set();
 
+function dumpSubtree(info, indent) {
+  let out = '';
+  out += ' '.repeat(indent) + info.viewName + ' ' + JSON.stringify(info.props);
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const child of info.children) {
+    out += '\n' + dumpSubtree(child, indent + 2);
+  }
+  return out;
+}
+
 const RCTFabricUIManager = {
-  __dumpHierarchyForJestTestsOnly: function() {
-    function dumpSubtree(info, indent) {
-      let out = '';
-      out +=
-        ' '.repeat(indent) + info.viewName + ' ' + JSON.stringify(info.props);
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const child of info.children) {
-        out += '\n' + dumpSubtree(child, indent + 2);
-      }
-      return out;
+  __dumpChildSetForJestTestsOnly: function(childSet) {
+    let result = [];
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const child of childSet) {
+      result.push(dumpSubtree(child, 0));
     }
+    return result.join('\n');
+  },
+  __dumpHierarchyForJestTestsOnly: function() {
     let result = [];
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const [rootTag, childSet] of roots) {
