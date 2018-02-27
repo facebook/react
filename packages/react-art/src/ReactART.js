@@ -469,7 +469,9 @@ const ARTRenderer = ReactFiberReconciler({
   },
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
-
+  
+  cancelDeferredCallback:ReactDOMFrameScheduling.cIC,
+  
   shouldSetTextContent(type, props) {
     return (
       typeof props.children === 'string' || typeof props.children === 'number'
