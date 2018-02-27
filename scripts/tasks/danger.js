@@ -12,8 +12,8 @@ const spawn = require('child_process').spawn;
 
 const extension = process.platform === 'win32' ? '.cmd' : '';
 
-// This came from React Native's circle.yml
-const token = 'e622517d9f1136ea8900' + '07c6373666312cdfaa69';
+// Facebook-Open-Source-Bot public_repo token
+const token = 'b186c9a82bab3b08ec80' + 'c0818117619eec6f281a';
 spawn(path.join('node_modules', '.bin', 'danger-ci' + extension), [], {
   // Allow colors to pass through
   stdio: 'inherit',
