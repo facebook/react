@@ -130,6 +130,12 @@ let SharedHostConfig = {
     oldProps: Props,
     newProps: Props,
   ): null | {} {
+    if (oldProps === null) {
+      throw new Error('Should have old props');
+    }
+    if (newProps === null) {
+      throw new Error('Should have old props');
+    }
     return UPDATE_SIGNAL;
   },
 
@@ -196,6 +202,9 @@ const NoopRenderer = ReactFiberReconciler({
       oldProps: Props,
       newProps: Props,
     ): void {
+      if (oldProps === null) {
+        throw new Error('Should have old props');
+      }
       instance.prop = newProps.prop;
     },
 
