@@ -281,14 +281,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         } else {
           const container = portalOrRoot.containerInfo;
           let newChildSet = createContainerChildSet(container);
-          if (finalizeContainerChildren(container, newChildSet)) {
-            markUpdate(workInProgress);
-          }
-          portalOrRoot.pendingChildren = newChildSet;
           // If children might have changed, we have to add them all to the set.
           appendAllChildrenToContainer(newChildSet, workInProgress);
+          portalOrRoot.pendingChildren = newChildSet;
           // Schedule an update on the container to swap out the container.
           markUpdate(workInProgress);
+          finalizeContainerChildren(container, newChildSet);
         }
       };
       updateHostComponent = function(
