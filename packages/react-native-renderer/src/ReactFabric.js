@@ -85,7 +85,7 @@ const ReactFabric: ReactNativeType = {
     NativeMethodsMixin,
     // Used by react-native-github/Libraries/ components
     ReactNativeBridgeEventPlugin, // requireNativeComponent
-    ReactNativeComponentTree, // InspectorUtils, ScrollResponder
+    ReactNativeComponentTree, // ScrollResponder
     ReactNativePropRegistry, // flattenStyle, Stylesheet
     TouchHistoryMath, // PanResponder
     createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART
