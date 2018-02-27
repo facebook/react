@@ -15,7 +15,6 @@ import './ReactFabricInjection';
 import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import TouchHistoryMath from 'events/TouchHistoryMath';
-import * as ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
 import ReactVersion from 'shared/ReactVersion';
 
 import NativeMethodsMixin from './NativeMethodsMixin';
@@ -86,7 +85,6 @@ const ReactFabric: ReactNativeType = {
     NativeMethodsMixin,
     // Used by react-native-github/Libraries/ components
     ReactNativeBridgeEventPlugin, // requireNativeComponent
-    ReactGlobalSharedState, // Systrace
     ReactNativeComponentTree, // InspectorUtils, ScrollResponder
     ReactNativePropRegistry, // flattenStyle, Stylesheet
     TouchHistoryMath, // PanResponder
