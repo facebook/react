@@ -194,9 +194,6 @@ export function createCache(invalidator: () => mixed): Cache {
         default:
           // The requested resource previously failed loading.
           const error = record.error;
-          const emptyRecord: EmptyRecord = (record: any);
-          emptyRecord.status = 0;
-          emptyRecord.error = null;
           throw error;
       }
     },
