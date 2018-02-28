@@ -71,15 +71,15 @@ describe('SimpleCacheProvider', () => {
     expect(() => readUpperCase(cache, 'hello')).toThrow(error);
     expect(error.message).toBe('oh no');
 
-    // On a subsequent read, it should complete successfully.
+    // On a subsequent read, it should still throw.
     try {
       readUpperCase(cache, 'hello');
     } catch (v) {
       suspender = v;
     }
     await suspender;
-    const result = readUpperCase(cache, 'hello');
-    expect(result).toBe('HELLO');
+    expect(() => readUpperCase(cache, 'hello')).toThrow(error);
+    expect(error.message).toBe('oh no');
   });
 
   it('can preload data ahead of time', async () => {
