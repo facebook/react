@@ -23,18 +23,18 @@ describe('SimpleCacheProvider', () => {
     function loadUpperCase(text) {
       return Promise.resolve(text.toUpperCase());
     }
-    const readUpperCase = createResource(loadUpperCase);
+    const UpperCase = createResource(loadUpperCase);
     const cache = createCache();
 
     let suspender;
     try {
-      readUpperCase(cache, 'hello');
+      UpperCase.read(cache, 'hello');
     } catch (v) {
       suspender = v;
     }
 
     await suspender;
-    const result = readUpperCase(cache, 'hello');
+    const result = UpperCase.read(cache, 'hello');
     expect(result).toBe('HELLO');
   });
 
@@ -52,12 +52,12 @@ describe('SimpleCacheProvider', () => {
         return Promise.resolve(text.toUpperCase());
       }
     }
-    const readUpperCase = createResource(loadUpperCase);
+    const UpperCase = createResource(loadUpperCase);
     const cache = createCache();
 
     let suspender;
     try {
-      readUpperCase(cache, 'hello');
+      UpperCase.read(cache, 'hello');
     } catch (v) {
       suspender = v;
     }
@@ -68,17 +68,17 @@ describe('SimpleCacheProvider', () => {
     } catch (e) {
       error = e;
     }
-    expect(() => readUpperCase(cache, 'hello')).toThrow(error);
+    expect(() => UpperCase.read(cache, 'hello')).toThrow(error);
     expect(error.message).toBe('oh no');
 
     // On a subsequent read, it should still throw.
     try {
-      readUpperCase(cache, 'hello');
+      UpperCase.read(cache, 'hello');
     } catch (v) {
       suspender = v;
     }
     await suspender;
-    expect(() => readUpperCase(cache, 'hello')).toThrow(error);
+    expect(() => UpperCase.read(cache, 'hello')).toThrow(error);
     expect(error.message).toBe('oh no');
   });
 
@@ -88,13 +88,13 @@ describe('SimpleCacheProvider', () => {
     function loadUpperCase(text) {
       return Promise.resolve(text.toUpperCase());
     }
-    const readUpperCase = createResource(loadUpperCase);
+    const UpperCase = createResource(loadUpperCase);
     const cache = createCache();
 
-    readUpperCase.preload(cache, 'hello');
+    UpperCase.preload(cache, 'hello');
     // Wait for next tick
     await Promise.resolve();
-    const result = readUpperCase(cache, 'hello');
+    const result = UpperCase.read(cache, 'hello');
     expect(result).toBe('HELLO');
   });
 
@@ -104,14 +104,14 @@ describe('SimpleCacheProvider', () => {
     function loadUpperCase(text) {
       return Promise.reject(new Error('uh oh'));
     }
-    const readUpperCase = createResource(loadUpperCase);
+    const UpperCase = createResource(loadUpperCase);
     const cache = createCache();
 
-    readUpperCase.preload(cache, 'hello');
+    UpperCase.preload(cache, 'hello');
     // Wait for next tick
     await Promise.resolve();
 
-    expect(() => readUpperCase(cache, 'hello')).toThrow('uh oh');
+    expect(() => UpperCase.read(cache, 'hello')).toThrow('uh oh');
   });
 
   it('accepts custom hash function', async () => {
@@ -123,18 +123,18 @@ describe('SimpleCacheProvider', () => {
     function hash([a, b]) {
       return `${a + b}`;
     }
-    const readSum = createResource(loadSum, hash);
+    const Sum = createResource(loadSum, hash);
     const cache = createCache();
 
-    readSum.preload(cache, [5, 5]);
-    readSum.preload(cache, [1, 2]);
+    Sum.preload(cache, [5, 5]);
+    Sum.preload(cache, [1, 2]);
     await Promise.resolve();
 
-    expect(readSum(cache, [5, 5])).toEqual(10);
-    expect(readSum(cache, [1, 2])).toEqual(3);
+    expect(Sum.read(cache, [5, 5])).toEqual(10);
+    expect(Sum.read(cache, [1, 2])).toEqual(3);
     // The fact that the next line returns synchronously and doesn't throw, even
     // though [3, 7] was not preloaded, proves that the hashing function works.
-    expect(readSum(cache, [3, 7])).toEqual(10);
+    expect(Sum.read(cache, [3, 7])).toEqual(10);
   });
 
   it('warns if resourceType is a string or number', () => {
@@ -171,11 +171,11 @@ describe('SimpleCacheProvider', () => {
       return Promise.resolve(a + b);
     }
 
-    const readSum = createResource(loadSum);
+    const Sum = createResource(loadSum);
     const cache = createCache();
 
     function fn() {
-      readSum.preload(cache, [5, 5]);
+      Sum.preload(cache, [5, 5]);
     }
 
     if (__DEV__) {

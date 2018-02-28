@@ -225,11 +225,11 @@ if (__DEV__) {
 }
 
 type primitive = string | number | boolean | void | null;
-type ResourceReader<K, V> = (Cache, K) => V;
 
-type Resource<K, V> = ResourceReader<K, V> & {
+type Resource<K, V> = {|
+  read(Cache, K): V,
   preload(cache: Cache, key: K): void,
-};
+|};
 
 // These declarations are used to express function overloading. I wish there
 // were a more elegant way to do this in the function definition itself.
@@ -252,43 +252,44 @@ export function createResource<V, K, H: primitive>(
   loadResource: K => Promise<V>,
   hash: K => H,
 ): Resource<K, V> {
-  // The read function itself serves as the resource type.
-  function read(cache, key) {
-    if (__DEV__) {
-      warning(
-        isCache(cache),
-        'read(): The first argument must be a cache. Instead received: %s',
-        cache,
-      );
-    }
-    if (hash === undefined) {
+  const resource = {
+    read(cache, key) {
       if (__DEV__) {
-        warnIfNonPrimitiveKey(key, 'read');
+        warning(
+          isCache(cache),
+          'read(): The first argument must be a cache. Instead received: %s',
+          cache,
+        );
       }
-      return cache.read(read, key, loadResource, key);
-    }
-    const hashedKey = hash(key);
-    return cache.read(read, hashedKey, loadResource, key);
-  }
-  read.preload = function(cache, key) {
-    if (__DEV__) {
-      warning(
-        isCache(cache),
-        'preload(): The first argument must be a cache. Instead received: %s',
-        cache,
-      );
-    }
-    if (hash === undefined) {
+      if (hash === undefined) {
+        if (__DEV__) {
+          warnIfNonPrimitiveKey(key, 'read');
+        }
+        return cache.read(resource, key, loadResource, key);
+      }
+      const hashedKey = hash(key);
+      return cache.read(resource, hashedKey, loadResource, key);
+    },
+    preload(cache, key) {
       if (__DEV__) {
-        warnIfNonPrimitiveKey(key, 'preload');
+        warning(
+          isCache(cache),
+          'preload(): The first argument must be a cache. Instead received: %s',
+          cache,
+        );
       }
-      cache.preload(read, key, loadResource, key);
-      return;
-    }
-    const hashedKey = hash(key);
-    cache.preload(read, hashedKey, loadResource, key);
+      if (hash === undefined) {
+        if (__DEV__) {
+          warnIfNonPrimitiveKey(key, 'preload');
+        }
+        cache.preload(resource, key, loadResource, key);
+        return;
+      }
+      const hashedKey = hash(key);
+      cache.preload(resource, hashedKey, loadResource, key);
+    },
   };
-  return read;
+  return resource;
 }
 
 // Global cache has no eviction policy (except for, ya know, a browser refresh).
