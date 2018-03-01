@@ -98,7 +98,7 @@ describe('SimpleCacheProvider', () => {
     expect(result).toBe('HELLO');
   });
 
-  it('does not throw if preloaded promise rejects', async () => {
+  it('throws an error on first read if preloaded promise rejects', async () => {
     const {createCache, createResource} = SimpleCacheProvider;
 
     function loadUpperCase(text) {
