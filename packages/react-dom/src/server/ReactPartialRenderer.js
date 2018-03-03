@@ -381,36 +381,26 @@ function resolve(
   child: mixed,
   context: Object,
 |} {
-  let element: ReactElement;
-
-  let Component;
-  let publicContext;
-  let inst, queue, replace;
-  let updater;
-
-  let initialState;
-  let oldQueue, oldReplace;
-  let nextState, dontMutate;
-  let partial, partialState;
-
-  let childContext;
-  let childContextTypes, contextKey;
-
   while (React.isValidElement(child)) {
     // Safe because we just checked it's an element.
-    element = ((child: any): ReactElement);
+    let element: ReactElement = (child: any);
+    let Component = element.type;
     if (__DEV__) {
       pushElementToDebugStack(element);
     }
-    Component = element.type;
     if (typeof Component !== 'function') {
       break;
     }
-    publicContext = processContext(Component, context);
+    processChild(element, Component);
+  }
 
-    queue = [];
-    replace = false;
-    updater = {
+  // Extra closure so queue and replace can be captured properly
+  function processChild(element, Component) {
+    let publicContext = processContext(Component, context);
+
+    let queue = [];
+    let replace = false;
+    let updater = {
       isMounted: function(publicInstance) {
         return false;
       },
@@ -433,6 +423,7 @@ function resolve(
       },
     };
 
+    let inst;
     if (shouldConstruct(Component)) {
       inst = new Component(element.props, publicContext, updater);
 
@@ -453,7 +444,7 @@ function resolve(
           }
         }
 
-        partialState = Component.getDerivedStateFromProps.call(
+        let partialState = Component.getDerivedStateFromProps.call(
           null,
           element.props,
           inst.state,
@@ -502,7 +493,7 @@ function resolve(
       if (inst == null || inst.render == null) {
         child = inst;
         validateRenderResult(child, Component);
-        continue;
+        return;
       }
     }
 
@@ -510,7 +501,7 @@ function resolve(
     inst.context = publicContext;
     inst.updater = updater;
 
-    initialState = inst.state;
+    let initialState = inst.state;
     if (initialState === undefined) {
       inst.state = initialState = null;
     }
@@ -558,19 +549,19 @@ function resolve(
         inst.UNSAFE_componentWillMount();
       }
       if (queue.length) {
-        oldQueue = queue;
-        oldReplace = replace;
+        let oldQueue = queue;
+        let oldReplace = replace;
         queue = null;
         replace = false;
 
         if (oldReplace && oldQueue.length === 1) {
           inst.state = oldQueue[0];
         } else {
-          nextState = oldReplace ? oldQueue[0] : inst.state;
-          dontMutate = true;
+          let nextState = oldReplace ? oldQueue[0] : inst.state;
+          let dontMutate = true;
           for (let i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
-            partial = oldQueue[i];
-            partialState =
+            let partial = oldQueue[i];
+            let partialState =
               typeof partial === 'function'
                 ? partial.call(inst, nextState, element.props, publicContext)
                 : partial;
@@ -600,11 +591,12 @@ function resolve(
     }
     validateRenderResult(child, Component);
 
+    let childContext;
     if (typeof inst.getChildContext === 'function') {
-      childContextTypes = Component.childContextTypes;
+      let childContextTypes = Component.childContextTypes;
       if (typeof childContextTypes === 'object') {
         childContext = inst.getChildContext();
-        for (contextKey in childContext) {
+        for (let contextKey in childContext) {
           invariant(
             contextKey in childContextTypes,
             '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
