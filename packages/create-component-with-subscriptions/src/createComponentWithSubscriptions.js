@@ -112,18 +112,22 @@ export function createComponent(
           this.setState(state => {
             const currentWrapper = state[propertyName];
 
-            // If this event belongs to the current data source, update state.
-            // Otherwise we should ignore it.
-            if (subscribable === currentWrapper.subscribable) {
-              return {
-                [propertyName]: {
-                  ...currentWrapper,
-                  value,
-                },
-              };
+            // If the value is the same, skip the unnecessary state update.
+            if (currentWrapper.value === value) {
+              return null;
             }
 
-            return null;
+            // If this event belongs to an old or uncommitted data source, ignore it.
+            if (subscribable !== currentWrapper.subscribable) {
+              return null;
+            }
+
+            return {
+              [propertyName]: {
+                ...currentWrapper,
+                value,
+              },
+            };
           });
         };
 

@@ -22,29 +22,42 @@ describe('CreateComponentWithSubscriptions', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
-  // Mimics the interface of RxJS `BehaviorSubject`
-  function createFauxObservable(initialValue) {
+  // Mimics a partial interface of RxJS `BehaviorSubject`
+  function createFauxBehaviorSubject(initialValue) {
     let currentValue = initialValue;
-    let subscribedCallback = null;
+    let subscribedCallbacks = [];
     return {
       getValue: () => currentValue,
       subscribe: callback => {
-        expect(subscribedCallback).toBe(null);
-        subscribedCallback = callback;
+        subscribedCallbacks.push(callback);
         return {
           unsubscribe: () => {
-            expect(subscribedCallback).not.toBe(null);
-            subscribedCallback = null;
+            subscribedCallbacks.splice(
+              subscribedCallbacks.indexOf(callback),
+              1,
+            );
           },
         };
       },
       update: value => {
         currentValue = value;
-        if (typeof subscribedCallback === 'function') {
-          subscribedCallback(value);
-        }
+        subscribedCallbacks.forEach(subscribedCallback =>
+          subscribedCallback(value),
+        );
       },
     };
+  }
+
+  // Mimics a partial interface of RxJS `ReplaySubject`
+  function createFauxReplaySubject(initialValue) {
+    const observable = createFauxBehaviorSubject(initialValue);
+    const {getValue, subscribe} = observable;
+    observable.getValue = undefined;
+    observable.subscribe = callback => {
+      callback(getValue());
+      return subscribe(callback);
+    };
+    return observable;
   }
 
   it('supports basic subscription pattern', () => {
@@ -70,7 +83,7 @@ describe('CreateComponentWithSubscriptions', () => {
       },
     );
 
-    const observable = createFauxObservable();
+    const observable = createFauxBehaviorSubject();
     ReactNoop.render(<Subscriber observable={observable} />);
 
     // Updates while subscribed should re-render the child component
@@ -129,8 +142,8 @@ describe('CreateComponentWithSubscriptions', () => {
       },
     );
 
-    const foo = createFauxObservable();
-    const bar = createFauxObservable();
+    const foo = createFauxBehaviorSubject();
+    const bar = createFauxBehaviorSubject();
 
     ReactNoop.render(<Subscriber foo={foo} bar={bar} />);
 
@@ -146,6 +159,37 @@ describe('CreateComponentWithSubscriptions', () => {
     // Unsetting the subscriber prop should reset subscribed values
     ReactNoop.render(<Subscriber />);
     expect(ReactNoop.flush()).toEqual([`bar:undefined, foo:undefined`]);
+  });
+
+  it('should support "cold" observable types like RxJS ReplaySubject', () => {
+    const Subscriber = createComponent(
+      {
+        subscribablePropertiesMap: {observable: 'value'},
+        getDataFor: (subscribable, propertyName, subscription) => {
+          let currentValue;
+          const temporarySubscription = subscribable.subscribe(value => {
+            currentValue = value;
+          });
+          temporarySubscription.unsubscribe();
+          return currentValue;
+        },
+        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
+          subscribable.subscribe(valueChangedCallback),
+        unsubscribeFrom: (subscribable, propertyName, subscription) =>
+          subscription.unsubscribe(),
+      },
+      ({value}) => {
+        ReactNoop.yield(value);
+        return null;
+      },
+    );
+
+    const observable = createFauxReplaySubject('initial');
+
+    ReactNoop.render(<Subscriber observable={observable} />);
+    expect(ReactNoop.flush()).toEqual(['initial']);
+    observable.update('updated');
+    expect(ReactNoop.flush()).toEqual(['updated']);
   });
 
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
@@ -164,8 +208,8 @@ describe('CreateComponentWithSubscriptions', () => {
       },
     );
 
-    const observableA = createFauxObservable('a-0');
-    const observableB = createFauxObservable('b-0');
+    const observableA = createFauxBehaviorSubject('a-0');
+    const observableB = createFauxBehaviorSubject('b-0');
 
     ReactNoop.render(<Subscriber observable={observableA} />);
 
@@ -228,8 +272,8 @@ describe('CreateComponentWithSubscriptions', () => {
       }
     }
 
-    const observableA = createFauxObservable('a-0');
-    const observableB = createFauxObservable('b-0');
+    const observableA = createFauxBehaviorSubject('a-0');
+    const observableB = createFauxBehaviorSubject('b-0');
 
     ReactNoop.render(<Parent observable={observableA} />);
     expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
@@ -302,8 +346,8 @@ describe('CreateComponentWithSubscriptions', () => {
       }
     }
 
-    const observableA = createFauxObservable('a-0');
-    const observableB = createFauxObservable('b-0');
+    const observableA = createFauxBehaviorSubject('a-0');
+    const observableB = createFauxBehaviorSubject('b-0');
 
     ReactNoop.render(<Parent observable={observableA} />);
     expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
@@ -349,7 +393,7 @@ describe('CreateComponentWithSubscriptions', () => {
       },
     );
 
-    const observable = createFauxObservable(true);
+    const observable = createFauxBehaviorSubject(true);
     ReactNoop.render(
       <Subscriber observable={observable} foo={123} bar="abc" />,
     );
