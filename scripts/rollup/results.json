@@ -440,6 +440,20 @@
       "packageName": "simple-cache-provider",
       "size": 1313,
       "gzip": 665
+    },
+    {
+      "filename": "create-component-with-subscriptions.development.js",
+      "bundleType": "NODE_DEV",
+      "packageName": "create-component-with-subscriptions",
+      "size": 9931,
+      "gzip": 3067
+    },
+    {
+      "filename": "create-component-with-subscriptions.production.min.js",
+      "bundleType": "NODE_PROD",
+      "packageName": "create-component-with-subscriptions",
+      "size": 3783,
+      "gzip": 1637
     }
   ]
 }
