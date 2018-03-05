@@ -9,18 +9,22 @@
 
 import React from 'react';
 
-type SubscribableConfig = {
-  // Maps property names of subscribable data sources (e.g. 'someObservable'),
-  // To state names for subscribed values (e.g. 'someValue').
+type SubscrptionConfig = {
+  // Maps property names of subscribable sources (e.g. 'eventDispatcher'),
+  // To property names for subscribed values (e.g. 'value').
   subscribablePropertiesMap: {[subscribableProperty: string]: string},
 
   // Synchronously get data for a given subscribable property.
-  // It is okay to return null if the subscribable does not support sync value reading.
+  // If your component has multiple subscriptions,
+  // The second 'propertyName' parameter can be used to distinguish between them.
   getDataFor: (subscribable: any, propertyName: string) => any,
 
-  // Subscribe to a given subscribable.
+  // Subscribe to a subscribable.
   // Due to the variety of change event types, subscribers should provide their own handlers.
-  // Those handlers should NOT update state though; they should call the valueChangedCallback() instead.
+  // Those handlers should NOT update state though;
+  // They should call the valueChangedCallback() instead when a subscription changes.
+  // If your component has multiple subscriptions,
+  // The third 'propertyName' parameter can be used to distinguish between them.
   subscribeTo: (
     valueChangedCallback: (value: any) => void,
     subscribable: any,
@@ -28,7 +32,9 @@ type SubscribableConfig = {
   ) => any,
 
   // Unsubscribe from a given subscribable.
-  // The optional subscription object returned by subscribeTo() is passed as a third parameter.
+  // If your component has multiple subscriptions,
+  // The second 'propertyName' parameter can be used to distinguish between them.
+  // The value returned by subscribeTo() is the third 'subscription' parameter.
   unsubscribeFrom: (
     subscribable: any,
     propertyName: string,
@@ -37,7 +43,7 @@ type SubscribableConfig = {
 };
 
 export function createComponent(
-  config: SubscribableConfig,
+  config: SubscrptionConfig,
   Component: React$ComponentType<*>,
 ): React$ComponentType<*> {
   const {
