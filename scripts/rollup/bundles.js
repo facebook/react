@@ -255,7 +255,7 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* Simple Cache Provider (experimental) *******/
+  /******* createComponentWithSubscriptions (experimental) *******/
   {
     label: 'create-component-with-subscriptions',
     bundleTypes: [NODE_DEV, NODE_PROD],
