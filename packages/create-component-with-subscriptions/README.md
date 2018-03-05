@@ -1,31 +1,28 @@
 # create-component-with-subscriptions
 
-Better docs coming soon...
+Below is an example showing how the container can be used:
 
 ```js
-// Here is an example of using the subscribable HOC.
-// It shows a couple of potentially common subscription types.
-function ExampleComponent(props: Props) {
-  const {
-    observedValue,
-    relayData,
-    scrollTop,
-  } = props;
-
-  // The rendered output is not interesting.
-  // The interesting thing is the incoming props/values.
+// This is an example functional component that subscribes to some values.
+function ExampleComponent({
+  examplePassThroughProperty,
+  friendsList,
+  userProfile
+}) {
+  // The rendered output of this component is not very important.
+  // It just exists to show how the observed values are provided.
+  // Properties not related to subscriptions are passed through as-is,
+  // (e.g. examplePassThroughProperty).
 }
 
+// In the below example, "friendsList" mimics an RxJS BehaviorSubject,
+// and "userProfile" mimics an event dispatcher (like a DOM element).
 function getDataFor(subscribable, propertyName) {
   switch (propertyName) {
-    case 'fragmentResolver':
-      return subscribable.resolve();
-    case 'observableStream':
-      // This only works for some observable types (e.g. BehaviorSubject)
-      // It's okay to just return null/undefined here for other types.
+    case "friendsListSubject":
       return subscribable.getValue();
-    case 'scrollTarget':
-      return subscribable.scrollTop;
+    case "userProfile":
+      return subscribable.value;
     default:
       throw Error(`Invalid subscribable, "${propertyName}", specified.`);
   }
@@ -33,18 +30,14 @@ function getDataFor(subscribable, propertyName) {
 
 function subscribeTo(valueChangedCallback, subscribable, propertyName) {
   switch (propertyName) {
-    case 'fragmentResolver':
-      subscribable.setCallback(
-        () => valueChangedCallback(subscribable.resolve()
-      );
-      break;
-    case 'observableStream':
-      // Return the subscription; it's necessary to unsubscribe.
+    case "friendsListSubject":
+      // Return the subscription in this case; it's necessary to unsubscribe.
       return subscribable.subscribe(valueChangedCallback);
-    case 'scrollTarget':
-      const onScroll = () => valueChangedCallback(subscribable.scrollTop);
-      subscribable.addEventListener(onScroll);
-      return onScroll;
+    case "userProfile":
+      const onChange = () => valueChangedCallback(subscribable.value);
+      subscribable.addEventListener(onChange);
+      // Return the event handling callback, since it's required to unsubscribe.
+      return onChange;
     default:
       throw Error(`Invalid subscribable, "${propertyName}", specified.`);
   }
@@ -52,13 +45,10 @@ function subscribeTo(valueChangedCallback, subscribable, propertyName) {
 
 function unsubscribeFrom(subscribable, propertyName, subscription) {
   switch (propertyName) {
-    case 'fragmentResolver':
-      subscribable.dispose();
-      break;
-    case 'observableStream':
+    case "friendsListSubject":
       // Unsubscribe using the subscription rather than the subscribable.
       subscription.unsubscribe();
-    case 'scrollTarget':
+    case "userProfile":
       // In this case, 'subscription', is the event handler/function.
       subscribable.removeEventListener(subscription);
       break;
@@ -67,15 +57,25 @@ function unsubscribeFrom(subscribable, propertyName, subscription) {
   }
 }
 
-// 3: This is the component you would export.
-createSubscribable({
-  subscribablePropertiesMap: {
-    fragmentResolver: 'relayData',
-    observableStream: 'observedValue',
-    scrollTarget: 'scrollTop',
+// Map incoming subscriptions property names (e.g. friendsListSubject)
+// to property names expected by our functional component (e.g. friendsList).
+const subscribablePropertiesMap = {
+  friendsListSubject: "friendsList",
+  userProfile: "userProfile"
+};
+
+// Decorate our functional component with a subscriber component.
+// This HOC will automatically manage subscriptions to the incoming props,
+// and map them to subscribed values to be passed to the inner component.
+// All other props will be passed through as-is.
+export default createSubscribable(
+  {
+    getDataFor,
+    subscribablePropertiesMap,
+    subscribeTo,
+    unsubscribeFrom
   },
-  getDataFor,
-  subscribeTo,
-  unsubscribeFrom,
-}, ExampleComponent);
+  ExampleComponent
+);
+
 ```
