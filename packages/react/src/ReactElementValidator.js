@@ -164,7 +164,8 @@ function validateExplicitKey(element, parentType) {
     warning(
       false,
       'Each child in an array or iterator should have a unique "key" prop.' +
-        '%s%s See https://fb.me/react-warning-keys for more information.%s',
+        '%s%s%s See https://fb.me/react-warning-keys for more information.%s',
+      invalidExplicitKeyPropTypeWarn,
       currentComponentErrorInfo,
       childOwner,
       getStackAddendum(),
@@ -250,6 +251,37 @@ function validatePropTypes(element) {
       'getDefaultProps is only used on classic React.createClass ' +
         'definitions. Use a static property named `defaultProps` instead.',
     );
+  }
+}
+
+let invalidExplicitKeyPropTypeWarn = '';
+/**
+ * Given an invalid key prop type value (i.e neither a number nor a string) within the props object,
+ * the key warning eventually will be added to the tracing.
+ * `ReactElement` sets statically the `ReactElementValidator` keys to `null` as default.
+ * In this case, we should be firing this beforehand or by using the props param from `createElementWithValidation`.
+ *
+ * @param {*} props
+ */
+function imposeInvalidExplicitKeyPropType(props) {
+  let config = {key: ''};
+  if (props != null) {
+    if ('child' in props) {
+      config = props.child;
+    }
+
+    if ('key' in props) {
+      config = props;
+    }
+  }
+
+  const key = config.key;
+
+  if (typeof key !== 'number' && typeof key !== 'string') {
+    invalidExplicitKeyPropTypeWarn =
+      '\nOne of the passed keys was `' +
+      (key !== null ? typeof key : 'null') +
+      '` which is not a valid value for a key.';
   }
 }
 
@@ -356,6 +388,8 @@ export function createElementWithValidation(type, props, children) {
   // (Rendering will throw with a helpful message and as soon as the type is
   // fixed, the key warnings will appear.)
   if (validType) {
+    imposeInvalidExplicitKeyPropType(props);
+
     for (let i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], type);
     }

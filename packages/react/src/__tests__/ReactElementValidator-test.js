@@ -87,6 +87,20 @@ describe('ReactElementValidator', () => {
     );
   });
 
+  it('warns for explicit invalid keys by rendering array', () => {
+    const divs = [<div key={'quack'} />, <div key={undefined} />];
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
+    }).toWarnDev(
+      'Warning: Each child in an array or iterator should have a unique ' +
+        '"key" prop.\nOne of the passed keys was `undefined` which is not a valid value for a key.' +
+        '\n\nCheck the top-level render call using <div>. See ' +
+        'https://fb.me/react-warning-keys for more information.\n' +
+        '    in div (at **)',
+    );
+  });
+
   it('warns for keys for arrays of elements with no owner info', () => {
     const divs = [<div />, <div />];
 
@@ -115,7 +129,8 @@ describe('ReactElementValidator', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toWarnDev(
       'Warning: Each child in an array or iterator should have a unique ' +
-        '"key" prop.\n\nCheck the render method of `Component`. See ' +
+        '"key" prop.\nOne of the passed keys was `null` which is not a valid value for a key.' +
+        '\n\nCheck the render method of `Component`. See ' +
         'https://fb.me/react-warning-keys for more information.\n' +
         '    in div (at **)\n' +
         '    in Component (at **)\n' +
