@@ -32,6 +32,8 @@ Creating a subscription component requires a configuration object and a React co
 
 # Examples
 
+This API can be used to subscribe to a variety of "subscribable" sources, from Flux stores to RxJS observables. Below are a few examples of how to subscribe to common types.
+
 ## Subscribing to event dispatchers
 
 Below is an example showing how `create-component-with-subscriptions` can be used to subscribe to event dispatchers such as DOM elements or Flux stores.
@@ -130,6 +132,8 @@ const SubscribedComponent = createComponent(
 Below is an example showing how `create-component-with-subscriptions` can be used with native Promises.
 
 **Note** that it an initial render value of `undefined` is unavoidable due to the fact that Promises provide no way to synchronously read their current value.
+
+**Note** the lack of a way to "unsubscribe" from a Promise can result in memory leaks as long as something has a reference to the Promise. This should be taken into considerationg when determining whether Promises are appropriate to use in this way within your application.
 
 ```js
 import React from "react";
