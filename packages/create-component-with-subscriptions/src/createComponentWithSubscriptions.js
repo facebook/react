@@ -36,8 +36,6 @@ type SubscribableConfig = {
   ) => void,
 };
 
-// TODO Decide how to handle missing subscribables.
-
 export function createComponent(
   config: SubscribableConfig,
   Component: React$ComponentType<*>,
