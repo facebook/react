@@ -161,7 +161,7 @@ describe('CreateComponentWithSubscriptions', () => {
     expect(ReactNoop.flush()).toEqual([`bar:undefined, foo:undefined`]);
   });
 
-  it('should support "cold" observable types like RxJS ReplaySubject', () => {
+  it('should support observable types like RxJS ReplaySubject', () => {
     const Subscriber = createComponent(
       {
         subscribablePropertiesMap: {observable: 'value'},
@@ -190,6 +190,58 @@ describe('CreateComponentWithSubscriptions', () => {
     expect(ReactNoop.flush()).toEqual(['initial']);
     observable.update('updated');
     expect(ReactNoop.flush()).toEqual(['updated']);
+
+    // Unsetting the subscriber prop should reset subscribed values
+    ReactNoop.render(<Subscriber />);
+    expect(ReactNoop.flush()).toEqual([undefined]);
+  });
+
+  it('should support Promises', async () => {
+    const Subscriber = createComponent(
+      {
+        subscribablePropertiesMap: {promise: 'value'},
+        getDataFor: (subscribable, propertyName, subscription) => undefined,
+        subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
+          let subscribed = true;
+          subscribable.then(value => {
+            if (subscribed) {
+              valueChangedCallback(value);
+            }
+          });
+          return {
+            unsubscribe() {
+              subscribed = false;
+            },
+          };
+        },
+        unsubscribeFrom: (subscribable, propertyName, subscription) =>
+          subscription.unsubscribe(),
+      },
+      ({value}) => {
+        ReactNoop.yield(value);
+        return null;
+      },
+    );
+
+    let resolveA, resolveB;
+    const promiseA = new Promise(r => (resolveA = r));
+    const promiseB = new Promise(r => (resolveB = r));
+
+    // Test a promise that resolves after render
+    ReactNoop.render(<Subscriber promise={promiseA} />);
+    expect(ReactNoop.flush()).toEqual([undefined]);
+    resolveA('abc');
+    await promiseA;
+    expect(ReactNoop.flush()).toEqual(['abc']);
+
+    // Test a promise that resolves before render
+    // Note that this will require an extra render anyway,
+    // Because there is no way to syncrhonously get a Promise's value
+    resolveB(123);
+    ReactNoop.render(<Subscriber promise={promiseB} />);
+    expect(ReactNoop.flush()).toEqual([undefined]);
+    await promiseB;
+    expect(ReactNoop.flush()).toEqual([123]);
   });
 
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {

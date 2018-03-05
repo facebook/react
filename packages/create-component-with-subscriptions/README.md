@@ -70,7 +70,7 @@ const FollowerCountComponent = createComponent(
 );
 
 // Your component can now be used as shown below.
-// (In this example, `followerStore` represents a generic event dispatcher.)
+// In this example, `followerStore` represents a generic event dispatcher.
 <FollowerCountComponent followerStore={followerStore} username="Brian" />;
 ```
 
@@ -123,4 +123,54 @@ const SubscribedComponent = createComponent(
   behaviorSubject={behaviorSubject}
   replaySubject={replaySubject}
 />;
+```
+
+## Subscribing to a Promise
+
+Below is an example showing how `create-component-with-subscriptions` can be used with native Promises.
+
+**Note** that it an initial render value of `undefined` is unavoidable due to the fact that Promises provide no way to synchronously read their current value.
+
+```js
+import React from "react";
+import createComponent from "create-component-with-subscriptions";
+
+// Start with a simple functional (or class-based) component.
+function InnerComponent({ followerCount, username }) {
+  return (
+    <div>
+      {username} has {followerCount} follower
+    </div>
+  );
+}
+
+// Wrap the functional component with a subscriber HOC.
+// This HOC will manage subscriptions and pass values to the decorated component.
+// It will add and remove subscriptions in an async-safe way when props change.
+const FollowerCountComponent = createComponent(
+  {
+    subscribablePropertiesMap: { followerPromise: "followerCount" },
+    getDataFor: (subscribable, propertyName, subscription) => undefined,
+    subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
+      let subscribed = true;
+      subscribable.then(value => {
+        if (subscribed) {
+          valueChangedCallback(value);
+        }
+      });
+      return {
+        unsubscribe() {
+          subscribed = false;
+        }
+      };
+    },
+    unsubscribeFrom: (subscribable, propertyName, subscription) =>
+      subscription.unsubscribe()
+  },
+  InnerComponent
+);
+
+// Your component can now be used as shown below.
+// In this example, `followerPromise` represents a native JavaScript Promise.
+<FollowerCountComponent followerPromise={followerPromise} username="Brian" />;
 ```
