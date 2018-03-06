@@ -55,17 +55,16 @@ describe('CreateComponentWithSubscriptions', () => {
     it('should support class components', () => {
       const Subscriber = createComponent(
         {
-          subscribablePropertiesMap: {observable: 'value'},
-          getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-            subscribable.subscribe(valueChangedCallback),
-          unsubscribeFrom: (subscribable, propertyName, subscription) =>
-            subscription.unsubscribe(),
+          property: 'observed',
+          getValue: props => props.observed.getValue(),
+          subscribe: (props, valueChangedCallback) =>
+            props.observed.subscribe(valueChangedCallback),
+          unsubscribe: (props, subscription) => subscription.unsubscribe(),
         },
         class extends React.Component {
           state = {};
           render() {
-            ReactNoop.yield(this.state.value);
+            ReactNoop.yield(this.state.observed);
             return null;
           }
         },
@@ -73,7 +72,7 @@ describe('CreateComponentWithSubscriptions', () => {
 
       const observable = createFauxBehaviorSubject('initial');
 
-      ReactNoop.render(<Subscriber observable={observable} />);
+      ReactNoop.render(<Subscriber observed={observable} />);
       expect(ReactNoop.flush()).toEqual(['initial']);
       observable.update('updated');
       expect(ReactNoop.flush()).toEqual(['updated']);
@@ -87,12 +86,11 @@ describe('CreateComponentWithSubscriptions', () => {
       const log = [];
       const Subscriber = createComponent(
         {
-          subscribablePropertiesMap: {observable: 'value'},
-          getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-            subscribable.subscribe(valueChangedCallback),
-          unsubscribeFrom: (subscribable, propertyName, subscription) =>
-            subscription.unsubscribe(),
+          property: 'observed',
+          getValue: props => props.observed.getValue(),
+          subscribe: (props, valueChangedCallback) =>
+            props.observed.subscribe(valueChangedCallback),
+          unsubscribe: (props, subscription) => subscription.unsubscribe(),
         },
         class extends React.Component {
           state = {
@@ -118,7 +116,10 @@ describe('CreateComponentWithSubscriptions', () => {
             log.push('componentWillUnmount');
           }
           render() {
-            ReactNoop.yield({foo: this.state.foo, value: this.state.value});
+            ReactNoop.yield({
+              foo: this.state.foo,
+              observed: this.state.observed,
+            });
             return null;
           }
         },
@@ -126,8 +127,8 @@ describe('CreateComponentWithSubscriptions', () => {
 
       const observable = createFauxBehaviorSubject('initial');
 
-      ReactNoop.render(<Subscriber observable={observable} />);
-      expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'initial'}]);
+      ReactNoop.render(<Subscriber observed={observable} />);
+      expect(ReactNoop.flush()).toEqual([{foo: 2, observed: 'initial'}]);
       expect(log).toEqual([
         'constructor',
         'getDerivedStateFromProps',
@@ -135,13 +136,13 @@ describe('CreateComponentWithSubscriptions', () => {
       ]);
       log.length = 0;
       observable.update('updated');
-      expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'updated'}]);
+      expect(ReactNoop.flush()).toEqual([{foo: 2, observed: 'updated'}]);
       expect(log).toEqual(['componentDidUpdate']);
 
       // Unsetting the subscriber prop should reset subscribed values
       log.length = 0;
       ReactNoop.render(<Subscriber />);
-      expect(ReactNoop.flush()).toEqual([{foo: 3, value: undefined}]);
+      expect(ReactNoop.flush()).toEqual([{foo: 3, observed: undefined}]);
       expect(log).toEqual(['getDerivedStateFromProps', 'componentDidUpdate']);
 
       // Test unmounting lifecycle as well
@@ -154,12 +155,11 @@ describe('CreateComponentWithSubscriptions', () => {
     it('should not mask the displayName used for errors and DevTools', () => {
       const Subscriber = createComponent(
         {
-          subscribablePropertiesMap: {observable: 'value'},
-          getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-            subscribable.subscribe(valueChangedCallback),
-          unsubscribeFrom: (subscribable, propertyName, subscription) =>
-            subscription.unsubscribe(),
+          property: 'observed',
+          getValue: props => props.observed.getValue(),
+          subscribe: (props, valueChangedCallback) =>
+            props.observed.subscribe(valueChangedCallback),
+          unsubscribe: (props, subscription) => subscription.unsubscribe(),
         },
         class MyExampleComponent extends React.Component {
           static displayName = 'MyExampleComponent';
@@ -178,18 +178,17 @@ describe('CreateComponentWithSubscriptions', () => {
         state = {};
         customMethod() {}
         render() {
-          ReactNoop.yield(this.state.value);
+          ReactNoop.yield(this.state.observed);
           return null;
         }
       }
       const Subscriber = createComponent(
         {
-          subscribablePropertiesMap: {observable: 'value'},
-          getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-            subscribable.subscribe(valueChangedCallback),
-          unsubscribeFrom: (subscribable, propertyName, subscription) =>
-            subscription.unsubscribe(),
+          property: 'observed',
+          getValue: props => props.observed.getValue(),
+          subscribe: (props, valueChangedCallback) =>
+            props.observed.subscribe(valueChangedCallback),
+          unsubscribe: (props, subscription) => subscription.unsubscribe(),
         },
         MyExampleComponent,
       );
@@ -197,7 +196,7 @@ describe('CreateComponentWithSubscriptions', () => {
       const observable = createFauxBehaviorSubject('initial');
       const ref = React.createRef();
 
-      ReactNoop.render(<Subscriber ref={ref} observable={observable} />);
+      ReactNoop.render(<Subscriber ref={ref} observed={observable} />);
       expect(ReactNoop.flush()).toEqual(['initial']);
 
       expect(ref.value instanceof MyExampleComponent).toBe(true);
@@ -247,7 +246,7 @@ describe('CreateComponentWithSubscriptions', () => {
         log.push('componentWillUnmount');
       },
       render() {
-        ReactNoop.yield(this.state.value);
+        ReactNoop.yield(this.state.observed);
         return null;
       },
       statics: {
@@ -260,19 +259,18 @@ describe('CreateComponentWithSubscriptions', () => {
 
     const Subscriber = createComponent(
       {
-        subscribablePropertiesMap: {observable: 'value'},
-        getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-          subscribable.subscribe(valueChangedCallback),
-        unsubscribeFrom: (subscribable, propertyName, subscription) =>
-          subscription.unsubscribe(),
+        property: 'observed',
+        getValue: props => props.observed.getValue(),
+        subscribe: (props, valueChangedCallback) =>
+          props.observed.subscribe(valueChangedCallback),
+        unsubscribe: (props, subscription) => subscription.unsubscribe(),
       },
       Component,
     );
 
     const observable = createFauxBehaviorSubject('initial');
 
-    ReactNoop.render(<Subscriber observable={observable} />);
+    ReactNoop.render(<Subscriber observed={observable} />);
     expect(ReactNoop.flush()).toEqual(['initial']);
     expect(log).toEqual([
       'mixin getDerivedStateFromProps',
@@ -316,32 +314,31 @@ describe('CreateComponentWithSubscriptions', () => {
         };
       }
       render() {
-        ReactNoop.yield({foo: this.state.foo, value: this.state.value});
+        ReactNoop.yield({foo: this.state.foo, observed: this.state.observed});
         return null;
       }
     }
     const Subscriber = createComponent(
       {
-        subscribablePropertiesMap: {observable: 'value'},
-        getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-          subscribable.subscribe(valueChangedCallback),
-        unsubscribeFrom: (subscribable, propertyName, subscription) =>
-          subscription.unsubscribe(),
+        property: 'observed',
+        getValue: props => props.observed.getValue(),
+        subscribe: (props, valueChangedCallback) =>
+          props.observed.subscribe(valueChangedCallback),
+        unsubscribe: (props, subscription) => subscription.unsubscribe(),
       },
       polyfill(MyExampleComponent),
     );
 
     const observable = createFauxBehaviorSubject('initial');
 
-    ReactNoop.render(<Subscriber observable={observable} />);
-    expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'initial'}]);
+    ReactNoop.render(<Subscriber observed={observable} />);
+    expect(ReactNoop.flush()).toEqual([{foo: 2, observed: 'initial'}]);
     observable.update('updated');
-    expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'updated'}]);
+    expect(ReactNoop.flush()).toEqual([{foo: 2, observed: 'updated'}]);
 
     // Unsetting the subscriber prop should reset subscribed values
     ReactNoop.render(<Subscriber />);
-    expect(ReactNoop.flush()).toEqual([{foo: 3, value: undefined}]);
+    expect(ReactNoop.flush()).toEqual([{foo: 3, observed: undefined}]);
 
     // Test unmounting lifecycle as well
     ReactNoop.render(<div />);

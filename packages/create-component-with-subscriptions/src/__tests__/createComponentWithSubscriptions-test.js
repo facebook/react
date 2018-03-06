@@ -63,28 +63,20 @@ describe('CreateComponentWithSubscriptions', () => {
   it('supports basic subscription pattern', () => {
     const Subscriber = createComponent(
       {
-        subscribablePropertiesMap: {observable: 'value'},
-        getDataFor: (subscribable, propertyName) => {
-          expect(propertyName).toBe('observable');
-          return subscribable.getValue();
-        },
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
-          expect(propertyName).toBe('observable');
-          return subscribable.subscribe(valueChangedCallback);
-        },
-        unsubscribeFrom: (subscribable, propertyName, subscription) => {
-          expect(propertyName).toBe('observable');
-          subscription.unsubscribe();
-        },
+        property: 'observed',
+        getValue: props => props.observed.getValue(),
+        subscribe: (props, valueChangedCallback) =>
+          props.observed.subscribe(valueChangedCallback),
+        unsubscribe: (props, subscription) => subscription.unsubscribe(),
       },
-      ({value = 'default'}) => {
-        ReactNoop.yield(value);
+      ({observed = 'default'}) => {
+        ReactNoop.yield(observed);
         return null;
       },
     );
 
     const observable = createFauxBehaviorSubject();
-    ReactNoop.render(<Subscriber observable={observable} />);
+    ReactNoop.render(<Subscriber observed={observable} />);
 
     // Updates while subscribed should re-render the child component
     expect(ReactNoop.flush()).toEqual(['default']);
@@ -100,47 +92,29 @@ describe('CreateComponentWithSubscriptions', () => {
   });
 
   it('supports multiple subscriptions', () => {
+    const InnerComponent = ({bar, foo}) => {
+      ReactNoop.yield(`bar:${bar}, foo:${foo}`);
+      return null;
+    };
+
     const Subscriber = createComponent(
       {
-        subscribablePropertiesMap: {
-          foo: 'foo',
-          bar: 'bar',
-        },
-        getDataFor: (subscribable, propertyName) => {
-          switch (propertyName) {
-            case 'foo':
-              return subscribable.getValue();
-            case 'bar':
-              return subscribable.getValue();
-            default:
-              throw Error('Unexpected propertyName ' + propertyName);
-          }
-        },
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
-          switch (propertyName) {
-            case 'foo':
-              return subscribable.subscribe(valueChangedCallback);
-            case 'bar':
-              return subscribable.subscribe(valueChangedCallback);
-            default:
-              throw Error('Unexpected propertyName ' + propertyName);
-          }
-        },
-        unsubscribeFrom: (subscribable, propertyName, subscription) => {
-          switch (propertyName) {
-            case 'foo':
-            case 'bar':
-              subscription.unsubscribe();
-              break;
-            default:
-              throw Error('Unexpected propertyName ' + propertyName);
-          }
-        },
+        property: 'foo',
+        getValue: props => props.foo.getValue(),
+        subscribe: (props, valueChangedCallback) =>
+          props.foo.subscribe(valueChangedCallback),
+        unsubscribe: (props, subscription) => subscription.unsubscribe(),
       },
-      ({bar, foo}) => {
-        ReactNoop.yield(`bar:${bar}, foo:${foo}`);
-        return null;
-      },
+      createComponent(
+        {
+          property: 'bar',
+          getValue: props => props.bar.getValue(),
+          subscribe: (props, valueChangedCallback) =>
+            props.bar.subscribe(valueChangedCallback),
+          unsubscribe: (props, subscription) => subscription.unsubscribe(),
+        },
+        InnerComponent,
+      ),
     );
 
     const foo = createFauxBehaviorSubject();
@@ -165,29 +139,28 @@ describe('CreateComponentWithSubscriptions', () => {
   it('should support observable types like RxJS ReplaySubject', () => {
     const Subscriber = createComponent(
       {
-        subscribablePropertiesMap: {observable: 'value'},
-        getDataFor: (subscribable, propertyName, subscription) => {
+        property: 'observed',
+        getValue: props => {
           let currentValue;
-          const temporarySubscription = subscribable.subscribe(value => {
+          const temporarySubscription = props.observed.subscribe(value => {
             currentValue = value;
           });
           temporarySubscription.unsubscribe();
           return currentValue;
         },
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-          subscribable.subscribe(valueChangedCallback),
-        unsubscribeFrom: (subscribable, propertyName, subscription) =>
-          subscription.unsubscribe(),
+        subscribe: (props, valueChangedCallback) =>
+          props.observed.subscribe(valueChangedCallback),
+        unsubscribe: (props, subscription) => subscription.unsubscribe(),
       },
-      ({value}) => {
-        ReactNoop.yield(value);
+      ({observed}) => {
+        ReactNoop.yield(observed);
         return null;
       },
     );
 
     const observable = createFauxReplaySubject('initial');
 
-    ReactNoop.render(<Subscriber observable={observable} />);
+    ReactNoop.render(<Subscriber observed={observable} />);
     expect(ReactNoop.flush()).toEqual(['initial']);
     observable.update('updated');
     expect(ReactNoop.flush()).toEqual(['updated']);
@@ -201,15 +174,15 @@ describe('CreateComponentWithSubscriptions', () => {
     it('should support Promises', async () => {
       const Subscriber = createComponent(
         {
-          subscribablePropertiesMap: {loadingPromise: 'hasLoaded'},
-          getDataFor: (subscribable, propertyName, subscription) => undefined,
-          subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
-            subscribable.then(
+          property: 'hasLoaded',
+          getValue: props => undefined,
+          subscribe: (props, valueChangedCallback) => {
+            props.hasLoaded.then(
               () => valueChangedCallback(true),
               () => valueChangedCallback(false),
             );
           },
-          unsubscribeFrom: (subscribable, propertyName, subscription) => {},
+          unsubscribe: (props, subscription) => {},
         },
         ({hasLoaded}) => {
           if (hasLoaded === undefined) {
@@ -230,7 +203,7 @@ describe('CreateComponentWithSubscriptions', () => {
       });
 
       // Test a promise that resolves after render
-      ReactNoop.render(<Subscriber loadingPromise={promiseA} />);
+      ReactNoop.render(<Subscriber hasLoaded={promiseA} />);
       expect(ReactNoop.flush()).toEqual(['loading']);
       resolveA();
       await promiseA;
@@ -240,7 +213,7 @@ describe('CreateComponentWithSubscriptions', () => {
       // Note that this will require an extra render anyway,
       // Because there is no way to syncrhonously get a Promise's value
       rejectB();
-      ReactNoop.render(<Subscriber loadingPromise={promiseB} />);
+      ReactNoop.render(<Subscriber hasLoaded={promiseB} />);
       expect(ReactNoop.flush()).toEqual(['loading']);
       await promiseB.catch(() => true);
       expect(ReactNoop.flush()).toEqual(['failed']);
@@ -249,14 +222,14 @@ describe('CreateComponentWithSubscriptions', () => {
     it('should still work if unsubscription is managed incorrectly', async () => {
       const Subscriber = createComponent(
         {
-          subscribablePropertiesMap: {promise: 'value'},
-          getDataFor: (subscribable, propertyName, subscription) => undefined,
-          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-            subscribable.then(valueChangedCallback),
-          unsubscribeFrom: (subscribable, propertyName, subscription) => {},
+          property: 'promised',
+          getValue: props => undefined,
+          subscribe: (props, valueChangedCallback) =>
+            props.promised.then(valueChangedCallback),
+          unsubscribe: (props, subscription) => {},
         },
-        ({value}) => {
-          ReactNoop.yield(value);
+        ({promised}) => {
+          ReactNoop.yield(promised);
           return null;
         },
       );
@@ -266,9 +239,9 @@ describe('CreateComponentWithSubscriptions', () => {
       const promiseB = new Promise(resolve => (resolveB = resolve));
 
       // Subscribe first to Promise A then Promsie B
-      ReactNoop.render(<Subscriber promise={promiseA} />);
+      ReactNoop.render(<Subscriber promised={promiseA} />);
       expect(ReactNoop.flush()).toEqual([undefined]);
-      ReactNoop.render(<Subscriber promise={promiseB} />);
+      ReactNoop.render(<Subscriber promised={promiseB} />);
       expect(ReactNoop.flush()).toEqual([undefined]);
 
       // Resolve both Promises
@@ -284,15 +257,14 @@ describe('CreateComponentWithSubscriptions', () => {
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
     const Subscriber = createComponent(
       {
-        subscribablePropertiesMap: {observable: 'value'},
-        getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-          subscribable.subscribe(valueChangedCallback),
-        unsubscribeFrom: (subscribable, propertyName, subscription) =>
-          subscription.unsubscribe(),
+        property: 'observed',
+        getValue: props => props.observed.getValue(),
+        subscribe: (props, valueChangedCallback) =>
+          props.observed.subscribe(valueChangedCallback),
+        unsubscribe: (props, subscription) => subscription.unsubscribe(),
       },
-      ({value}) => {
-        ReactNoop.yield(value);
+      ({observed}) => {
+        ReactNoop.yield(observed);
         return null;
       },
     );
@@ -300,13 +272,13 @@ describe('CreateComponentWithSubscriptions', () => {
     const observableA = createFauxBehaviorSubject('a-0');
     const observableB = createFauxBehaviorSubject('b-0');
 
-    ReactNoop.render(<Subscriber observable={observableA} />);
+    ReactNoop.render(<Subscriber observed={observableA} />);
 
     // Updates while subscribed should re-render the child component
     expect(ReactNoop.flush()).toEqual(['a-0']);
 
     // Unsetting the subscriber prop should reset subscribed values
-    ReactNoop.render(<Subscriber observable={observableB} />);
+    ReactNoop.render(<Subscriber observed={observableB} />);
     expect(ReactNoop.flush()).toEqual(['b-0']);
 
     // Updates to the old subscribable should not re-render the child component
@@ -328,16 +300,15 @@ describe('CreateComponentWithSubscriptions', () => {
 
     const Subscriber = createComponent(
       {
-        subscribablePropertiesMap: {observable: 'value'},
-        getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-          subscribable.subscribe(valueChangedCallback),
-        unsubscribeFrom: (subscribable, propertyName, subscription) =>
-          subscription.unsubscribe(),
+        property: 'observed',
+        getValue: props => props.observed.getValue(),
+        subscribe: (props, valueChangedCallback) =>
+          props.observed.subscribe(valueChangedCallback),
+        unsubscribe: (props, subscription) => subscription.unsubscribe(),
       },
-      ({value}) => {
-        ReactNoop.yield('Subscriber: ' + value);
-        return <Child value={value} />;
+      ({observed}) => {
+        ReactNoop.yield('Subscriber: ' + observed);
+        return <Child value={observed} />;
       },
     );
 
@@ -345,9 +316,9 @@ describe('CreateComponentWithSubscriptions', () => {
       state = {};
 
       static getDerivedStateFromProps(nextProps, prevState) {
-        if (nextProps.observable !== prevState.observable) {
+        if (nextProps.observed !== prevState.observed) {
           return {
-            observable: nextProps.observable,
+            observed: nextProps.observed,
           };
         }
 
@@ -357,18 +328,18 @@ describe('CreateComponentWithSubscriptions', () => {
       render() {
         parentInstance = this;
 
-        return <Subscriber observable={this.state.observable} />;
+        return <Subscriber observed={this.state.observed} />;
       }
     }
 
     const observableA = createFauxBehaviorSubject('a-0');
     const observableB = createFauxBehaviorSubject('b-0');
 
-    ReactNoop.render(<Parent observable={observableA} />);
+    ReactNoop.render(<Parent observed={observableA} />);
     expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
 
     // Start React update, but don't finish
-    ReactNoop.render(<Parent observable={observableB} />);
+    ReactNoop.render(<Parent observed={observableB} />);
     ReactNoop.flushThrough(['Subscriber: b-0']);
 
     // Emit some updates from the uncommitted subscribable
@@ -377,7 +348,7 @@ describe('CreateComponentWithSubscriptions', () => {
     observableB.update('b-3');
 
     // Mimic a higher-priority interruption
-    parentInstance.setState({observable: observableA});
+    parentInstance.setState({observed: observableA});
 
     // Flush everything and ensure that the correct subscribable is used
     // We expect the last emitted update to be rendered (because of the commit phase value check)
@@ -402,16 +373,15 @@ describe('CreateComponentWithSubscriptions', () => {
 
     const Subscriber = createComponent(
       {
-        subscribablePropertiesMap: {observable: 'value'},
-        getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-          subscribable.subscribe(valueChangedCallback),
-        unsubscribeFrom: (subscribable, propertyName, subscription) =>
-          subscription.unsubscribe(),
+        property: 'observed',
+        getValue: props => props.observed.getValue(),
+        subscribe: (props, valueChangedCallback) =>
+          props.observed.subscribe(valueChangedCallback),
+        unsubscribe: (props, subscription) => subscription.unsubscribe(),
       },
-      ({value}) => {
-        ReactNoop.yield('Subscriber: ' + value);
-        return <Child value={value} />;
+      ({observed}) => {
+        ReactNoop.yield('Subscriber: ' + observed);
+        return <Child value={observed} />;
       },
     );
 
@@ -419,9 +389,9 @@ describe('CreateComponentWithSubscriptions', () => {
       state = {};
 
       static getDerivedStateFromProps(nextProps, prevState) {
-        if (nextProps.observable !== prevState.observable) {
+        if (nextProps.observed !== prevState.observed) {
           return {
-            observable: nextProps.observable,
+            observed: nextProps.observed,
           };
         }
 
@@ -431,18 +401,18 @@ describe('CreateComponentWithSubscriptions', () => {
       render() {
         parentInstance = this;
 
-        return <Subscriber observable={this.state.observable} />;
+        return <Subscriber observed={this.state.observed} />;
       }
     }
 
     const observableA = createFauxBehaviorSubject('a-0');
     const observableB = createFauxBehaviorSubject('b-0');
 
-    ReactNoop.render(<Parent observable={observableA} />);
+    ReactNoop.render(<Parent observed={observableA} />);
     expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
 
     // Start React update, but don't finish
-    ReactNoop.render(<Parent observable={observableB} />);
+    ReactNoop.render(<Parent observed={observableB} />);
     ReactNoop.flushThrough(['Subscriber: b-0']);
 
     // Emit some updates from the old subscribable
@@ -450,7 +420,7 @@ describe('CreateComponentWithSubscriptions', () => {
     observableA.update('a-2');
 
     // Mimic a higher-priority interruption
-    parentInstance.setState({observable: observableA});
+    parentInstance.setState({observed: observableA});
 
     // Flush everything and ensure that the correct subscribable is used
     // We expect the new subscribable to finish rendering,
@@ -469,24 +439,21 @@ describe('CreateComponentWithSubscriptions', () => {
   it('should pass all non-subscribable props through to the child component', () => {
     const Subscriber = createComponent(
       {
-        subscribablePropertiesMap: {observable: 'value'},
-        getDataFor: (subscribable, propertyName) => subscribable.getValue(),
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-          subscribable.subscribe(valueChangedCallback),
-        unsubscribeFrom: (subscribable, propertyName, subscription) =>
-          subscription.unsubscribe(),
+        property: 'observed',
+        getValue: props => props.observed.getValue(),
+        subscribe: (props, valueChangedCallback) =>
+          props.observed.subscribe(valueChangedCallback),
+        unsubscribe: (props, subscription) => subscription.unsubscribe(),
       },
-      ({bar, foo, value}) => {
-        ReactNoop.yield(`bar:${bar}, foo:${foo}, value:${value}`);
+      ({bar, foo, observed}) => {
+        ReactNoop.yield(`bar:${bar}, foo:${foo}, observed:${observed}`);
         return null;
       },
     );
 
     const observable = createFauxBehaviorSubject(true);
-    ReactNoop.render(
-      <Subscriber observable={observable} foo={123} bar="abc" />,
-    );
-    expect(ReactNoop.flush()).toEqual(['bar:abc, foo:123, value:true']);
+    ReactNoop.render(<Subscriber observed={observable} foo={123} bar="abc" />);
+    expect(ReactNoop.flush()).toEqual(['bar:abc, foo:123, observed:true']);
   });
 
   describe('invariants', () => {
@@ -494,68 +461,66 @@ describe('CreateComponentWithSubscriptions', () => {
       expect(() => {
         createComponent(
           {
-            subscribablePropertiesMap: {},
-            getDataFor: () => {},
-            subscribeTo: () => {},
-            unsubscribeFrom: () => {},
+            property: 'somePropertyName',
+            getValue: () => {},
+            subscribe: () => {},
+            unsubscribe: () => {},
           },
           null,
         );
       }).toThrow('Invalid subscribable Component specified');
     });
 
-    it('should error for invalid missing subscribablePropertiesMap', () => {
+    it('should error for invalid missing property', () => {
       expect(() => {
         createComponent(
           {
-            getDataFor: () => {},
-            subscribeTo: () => {},
-            unsubscribeFrom: () => {},
+            getValue: () => {},
+            subscribe: () => {},
+            unsubscribe: () => {},
           },
           () => null,
         );
-      }).toThrow(
-        'Subscribable config must specify a subscribablePropertiesMap map',
-      );
+      }).toThrow('Subscribable config must specify a subscribable property');
     });
 
-    it('should error for invalid missing getDataFor', () => {
+    it('should error for invalid missing getValue', () => {
       expect(() => {
         createComponent(
           {
-            subscribablePropertiesMap: {},
-            subscribeTo: () => {},
-            unsubscribeFrom: () => {},
+            property: 'somePropertyName',
+            subscribe: () => {},
+            unsubscribe: () => {},
           },
           () => null,
         );
-      }).toThrow('Subscribable config must specify a getDataFor function');
+      }).toThrow('Subscribable config must specify a getValue function');
     });
 
-    it('should error for invalid missing subscribeTo', () => {
+    it('should error for invalid missing subscribe', () => {
       expect(() => {
         createComponent(
           {
-            subscribablePropertiesMap: {},
-            getDataFor: () => {},
-            unsubscribeFrom: () => {},
+            property: 'somePropertyName',
+            getValue: () => {},
+            unsubscribe: () => {},
           },
           () => null,
         );
-      }).toThrow('Subscribable config must specify a subscribeTo function');
+      }).toThrow('Subscribable config must specify a subscribe function');
     });
 
-    it('should error for invalid missing unsubscribeFrom', () => {
+    it('should error for invalid missing unsubscribe', () => {
       expect(() => {
         createComponent(
           {
-            subscribablePropertiesMap: {},
-            getDataFor: () => {},
-            subscribeTo: () => {},
+            property: 'somePropertyName',
+            getValue: () => {},
+            subscribe: () => {},
           },
           () => null,
         );
-      }).toThrow('Subscribable config must specify a unsubscribeFrom function');
+      }).toThrow('Subscribable config must specify a unsubscribe function');
     });
   });
 });

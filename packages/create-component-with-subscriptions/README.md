@@ -18,65 +18,45 @@ npm install create-component-with-subscriptions --save
 
 Creating a subscription component requires a configuration object and a React component. The configuration object must have four properties:
 
-#### `subscribablePropertiesMap: {[subscribableProperty: string]: string}`
+#### `property: string`
 
-Maps property names of incoming subscribable sources (e.g. "eventDispatcher") to property names for their values (e.g. "value").
+Property name of the subscribable sources (e.g. "hasLoaded").
+
+#### `getValue: (props: Props) => Value`
+
+Synchronously returns the value of the subscribable property.
+
+You should return `undefined` if the subscribable type does not support this operation (e.g. native Promises).
 
 For example:
 ```js
-{
-  followerStore: 'followerCount',
-  scrollContainer: 'scrollTop',
+function getValue(props: Props) {
+  return props.scrollContainer.scrollTop;
 }
 ```
 
-#### `getDataFor(subscribable: any, propertyName: string) => any`
+#### `subscribe(props: Props, valueChangedCallback: (value: any) => void) => Subscription`
 
-Synchronously returns the value of the specified subscribable property. If your component has multiple subscriptions, the second `propertyName` parameter can be used to distinguish between them.
+Setup a subscription for the subscribable value in `props`. This subscription should call the `valueChangedCallback` parameter whenever a subscription changes.
 
 For example:
 ```js
-function getDataFor(subscribable, propertyName) {
-  switch (propertyName) {
-    case "followerStore":
-      return subscribable.getValue();
-    case "scrollContainer":
-      return subscriber.scrollTop;
-  }
+function subscribe(props: Props, valueChangedCallback: (value: any) => void) {
+  const {scrollContainer} = props;
+  const onScroll = event => valueChangedCallback(scrollContainer.scrollTop);
+  scrollContainer.addEventListener("scroll", onScroll);
+  return onScroll;
 }
 ```
 
-#### `subscribeTo(valueChangedCallback: (value: any) => void, subscribable: any, propertyName: string) => any`
+#### `unsubscribe: (props: Props, subscription: Subscription) => void`
 
-Subscribes to the specified subscribable and call the `valueChangedCallback` parameter whenever a subscription changes. If your component has multiple subscriptions, the third 'propertyName' parameter can be used to distinguish between them.
-
-For example:
-```js
-function subscribeTo(valueChangedCallback, subscribable, propertyName) {
-  switch (propertyName) {
-    case "followerStore":
-      return subscribable.subscribe(valueChangedCallback);
-    case "scrollContainer":
-      const onScroll = event => valueChangedCallback(subscribable.scrollTop);
-      subscribable.addEventListener("scroll", onScroll);
-      return onChange;
-  }
-}
-```
-
-#### `unsubscribeFrom(subscribable: any, propertyName: string, subscription: any) => void`
-
-Unsubscribes from the specified subscribable.  If your component has multiple subscriptions, the second `propertyName` parameter can be used to distinguish between them. The value returned by `subscribeTo()` is the third `subscription` parameter.
+Unsubsribe from the subscribable value in `props`. The value returned by `subscribe()` is the second, `subscription` parameter.
 
 For example:
 ```js
-function unsubscribeFrom(subscribable, propertyName, subscription) {
-  switch (propertyName) {
-    case "followerStore":
-      return subscription.unsubscribe();
-    case "scrollContainer":
-      subscribable.removeEventListener("change", subscription);
-  }
+function unsubscribe(props, subscription) {
+  props.scrollContainer.removeEventListener("scroll", subscription);
 }
 ```
 
@@ -84,22 +64,22 @@ function unsubscribeFrom(subscribable, propertyName, subscription) {
 
 Depending on the type of React component specified, `create-component-with-subscriptions` will either create a wrapper component or use a mixin technique.
 
-If a stateless functional component is specified, a high-order component will be wrapped around it. The wrapper will pass through all `props` (including "subscribables"). In addition, it will also pass the values of each subscribable as `props` (using the name specified by `subscribablePropertiesMap`).
+If a stateless functional component is specified, a high-order component will be wrapped around it. The wrapper will pass through all `props`. The subscribed value will be passed in place of the "subscribable" prop though.
 
 Given the above example, a stateless functional component would look something like this:
 ```js
-function ExampleComponent({ followerCount, scrollTop, ...rest }) {
+function ExampleComponent({ scrollTop, ...rest }) {
   // Render ...
 }
 ```
 
-If a class (or `create-react-class`) component is specified, the library uses an ["ES6 mixin"](https://gist.github.com/sebmarkbage/fac0830dbb13ccbff596) technique in order to preserve compatibility with refs and to avoid the overhead of an additional fiber. Subscription values will be stored in `state` (using the name specified by `subscribablePropertiesMap`) to be accessed from within the `render` method.
+If a class (or `create-react-class`) component is specified, the library uses an ["ES6 mixin"](https://gist.github.com/sebmarkbage/fac0830dbb13ccbff596) technique in order to preserve compatibility with refs and to avoid the overhead of an additional fiber. In this case, the subscription value will be stored in `state` (using the same `property` name) and be accessed from within the `render` method.
 
 Given the above example, a class component would look something like this:
 ```js
 class ExampleComponent extends React.Component {
   render() {
-    const { followerCount, scrollTop, ...rest } = this.props;
+    const { scrollTop } = this.state;
     // Render ...
   }
 }
@@ -121,10 +101,10 @@ import createComponent from "create-component-with-subscriptions";
 
 // Start with a simple component.
 // In this case, it's a functional component, but it could have been a class.
-function InnerComponent({ followerCount, username }) {
+function InnerComponent({ followers, username }) {
   return (
     <div>
-      {username} has {followerCount} follower
+      {username} has {followers} follower
     </div>
   );
 }
@@ -134,16 +114,17 @@ function InnerComponent({ followerCount, username }) {
 // It will add and remove subscriptions in an async-safe way when props change.
 const FollowerCountComponent = createComponent(
   {
-    subscribablePropertiesMap: { followerStore: "followerCount" },
-    getDataFor: (subscribable, propertyName) => subscribable.value,
-    subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
-      const onChange = event => valueChangedCallback(subscribable.value);
-      subscribable.addEventListener("change", onChange);
+    property: "followers",
+    getValue: props => subscribable.value,
+    subscribe: (props, valueChangedCallback) => {
+      const { followers } = props;
+      const onChange = event => valueChangedCallback(followers.value);
+      followers.addEventListener("change", onChange);
       return onChange;
     },
-    unsubscribeFrom: (subscribable, propertyName, subscription) => {
-      // `subscription` is the value returned from subscribeTo, our event handler.
-      subscribable.removeEventListener("change", subscription);
+    unsubscribe: (props, subscription) => {
+      // `subscription` is the value returned from subscribe, our event handler.
+      props.followers.removeEventListener("change", subscription);
     }
   },
   InnerComponent
@@ -151,29 +132,26 @@ const FollowerCountComponent = createComponent(
 
 // Your component can now be used as shown below.
 // In this example, `followerStore` represents a generic event dispatcher.
-<FollowerCountComponent followerStore={followerStore} username="Brian" />;
+<FollowerCountComponent followers={followersStore} username="Brian" />;
 ```
 
 ## Subscribing to observables
+
+TODO Break up
 
 Below is an example showing how `create-component-with-subscriptions` can be used to subscribe to certain types of observables (e.g. RxJS `BehaviorSubject` and `ReplaySubject`).
 
 **Note** that it is not possible to support all observable types (e.g. RxJS `Subject` or `Observable`) because some provide no way to read the "current" value after it has been emitted.
 
+### `BehaviorSubject`
 ```js
 import React from "react";
 import createComponent from "create-component-with-subscriptions";
 
-// This example uses a class component, but it could have been functional.
-class InnerComponent extends React.Component {
-  // Subscribed values are stored in state for class components.
-  state = {};
-
-  render() {
-    const { behaviorValue, replayValue } = this.state;
-
-    // Render ...
-  }
+// Start with a simple component.
+// In this case, it's a functional component, but it could have been a class.
+function InnerComponent({ behaviorSubject }) {
+  // Render ...
 }
 
 // Add subscription logic mixin to the class component.
@@ -181,28 +159,11 @@ class InnerComponent extends React.Component {
 // It will add and remove subscriptions in an async-safe way when props change.
 const SubscribedComponent = createComponent(
   {
-    subscribablePropertiesMap: {
-      behaviorSubject: "behaviorValue",
-      replaySubject: "replayValue"
-    },
-    getDataFor: (subscribable, propertyName) => {
-      switch (propertyName) {
-        case "behaviorSubject":
-          return subscribable.getValue();
-        case "replaySubject":
-          let currentValue;
-          // ReplaySubject does not have a sync data getter,
-          // So we need to temporarily subscribe to retrieve the most recent value.
-          const temporarySubscription = subscribable.subscribe(value => {
-            currentValue = value;
-          });
-          temporarySubscription.unsubscribe();
-          return currentValue;
-      }
-    },
-    subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
-      subscribable.subscribe(valueChangedCallback),
-    unsubscribeFrom: (subscribable, propertyName, subscription) =>
+    property: "behaviorSubject",
+    getValue: (props) => props.behaviorSubject.getValue(),
+    subscribe: (props, valueChangedCallback) =>
+      props.behaviorSubject.subscribe(valueChangedCallback),
+    unsubscribe: (props, subscription) =>
       subscription.unsubscribe()
   },
   InnerComponent
@@ -210,10 +171,46 @@ const SubscribedComponent = createComponent(
 
 // Your component can now be used as shown below.
 // In this example, both properties below represent RxJS types with the same name.
-<SubscribedComponent
-  behaviorSubject={behaviorSubject}
-  replaySubject={replaySubject}
-/>;
+<SubscribedComponent behaviorSubject={behaviorSubject} />;
+```
+
+### `ReplaySubject`
+```js
+import React from "react";
+import createComponent from "create-component-with-subscriptions";
+
+// Start with a simple component.
+// In this case, it's a functional component, but it could have been a class.
+function InnerComponent({ replaySubject }) {
+  // Render ...
+}
+
+// Add subscription logic mixin to the class component.
+// The mixin will manage subscriptions and store the values in state.
+// It will add and remove subscriptions in an async-safe way when props change.
+const SubscribedComponent = createComponent(
+  {
+    property: "replaySubject",
+    getValue: props => {
+      let currentValue;
+      // ReplaySubject does not have a sync data getter,
+      // So we need to temporarily subscribe to retrieve the most recent value.
+      const temporarySubscription = props.replaySubject.subscribe(value => {
+        currentValue = value;
+      });
+      temporarySubscription.unsubscribe();
+      return currentValue;
+    },
+    subscribe: (props, valueChangedCallback) =>
+      props.replaySubject.subscribe(valueChangedCallback),
+    unsubscribe: (props, subscription) => subscription.unsubscribe()
+  },
+  InnerComponent
+);
+
+// Your component can now be used as shown below.
+// In this example, both properties below represent RxJS types with the same name.
+<SubscribedComponent replaySubject={replaySubject} />;
 ```
 
 ## Subscribing to a Promise
@@ -244,21 +241,21 @@ function InnerComponent({ loadingStatus }) {
 // It will add and remove subscriptions in an async-safe way when props change.
 const LoadingComponent = createComponent(
   {
-    subscribablePropertiesMap: { loadingPromise: "loadingStatus" },
-    getDataFor: (subscribable, propertyName, subscription) => {
+    property: "loadingStatus",
+    getValue: (props, subscription) => {
       // There is no way to synchronously read a Promise's value,
       // So this method should return undefined.
       return undefined;
     },
-    subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
-      subscribable.then(
+    subscribe: (props, valueChangedCallback) => {
+      props.loadingStatus.then(
         // Success
         () => valueChangedCallback(true),
         // Failure
         () => valueChangedCallback(false)
       );
     },
-    unsubscribeFrom: (subscribable, propertyName, subscription) => {
+    unsubscribe: (props, subscription) => {
       // There is no way to "unsubscribe" from a Promise.
       // In this case, create-component-with-subscriptions will block stale values from rendering.
     }
@@ -267,19 +264,19 @@ const LoadingComponent = createComponent(
 );
 
 // Your component can now be used as shown below.
-<LoadingComponent loadingPromise={loadingPromise} />;
+<LoadingComponent loadingStatus={loadingPromise} />;
 ```
 
 ## Optional parameters and default values
 
 Subscribable properties are treated as optional by `create-component-with-subscriptions`. In the event that a subscribable `prop` is missing, a value of `undefined` will be passed to the decorated component (using `props` for a functional component or `state` for a class component).
 
-If you would like to set default values for missing subscribables, you can do this as shown below.
+If you would like to set default values for missing subscriptions, you can do this as shown below.
 
 For functional components, declare a default value while destructuring the `props` parameter:
 ```js
-function InnerComponent({ followerCount = 0 }) {
-  return <div>You have {followerCount} followers.</div>;
+function InnerComponent({ followers = 0 }) {
+  return <div>You have {followers} followers.</div>;
 }
 ```
 
@@ -288,8 +285,41 @@ For class components, declare a default value while destructuring `state`:
 class InnerComponent extends React.Component {
   state = {};
   render() {
-    const { followerCount = 0 } = this.state;
-    return <div>You have {followerCount} followers.</div>;
+    const { followers = 0 } = this.state;
+    return <div>You have {followers} followers.</div>;
   }
 }
+```
+
+## Subscribing to multiple sources
+
+It is possible for a single component to subscribe to multiple data sources. To do this, compose the return value of `create-component-with-subscriptions` as shown below:
+
+```js
+function InnerComponent({ bar, foo }) {
+  // Render ...
+}
+
+const MultiSubscriptionComponent = createComponent(
+  {
+    property: "promiseTwo",
+    getValue: props => props.promiseTwo.getValue(),
+    subscribe: (props, valueChangedCallback) =>
+      props.promiseTwo.subscribe(valueChangedCallback),
+    unsubscribe: (props, subscription) => subscription.unsubscribe()
+  },
+  createComponent(
+    {
+      property: "promiseTwo",
+      getValue: props => props.promiseTwo.getValue(),
+      subscribe: (props, valueChangedCallback) =>
+        props.promiseTwo.subscribe(valueChangedCallback),
+      unsubscribe: (props, subscription) => subscription.unsubscribe()
+    },
+    InnerComponent
+  )
+);
+
+// Your component can now be used as shown below.
+<MultiSubscriptionComponent promiseOne={promiseOne} promiseTwo={promiseTwo} />;
 ```
