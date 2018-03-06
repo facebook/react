@@ -249,26 +249,15 @@ const LoadingComponent = createComponent(
       let subscribed = true;
       subscribable.then(
         // Success
-        () => {
-          if (subscribed) {
-            valueChangedCallback(true);
-          }
-        },
+        () => valueChangedCallback(true),
         // Failure
-        () => {
-          if (subscribed) {
-            valueChangedCallback(false);
-          }
-        }
+        () => valueChangedCallback(false),
       );
-      return {
-        unsubscribe() {
-          subscribed = false;
-        }
-      };
     },
-    unsubscribeFrom: (subscribable, propertyName, subscription) =>
-      subscription.unsubscribe()
+    unsubscribeFrom: (subscribable, propertyName, subscription) => {
+      // There is no way to "unsubscribe" from a Promise.
+      // In this case, create-component-with-subscriptions will block stale values from rendering.
+    }
   },
   InnerComponent
 );

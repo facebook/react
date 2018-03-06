@@ -200,75 +200,88 @@ describe('CreateComponentWithSubscriptions', () => {
     expect(ReactNoop.flush()).toEqual([undefined]);
   });
 
-  it('should support Promises', async () => {
-    class InnerComponent extends React.Component {
-      state = {};
-      render() {
-        const {hasLoaded} = this.state;
-        if (hasLoaded === undefined) {
-          ReactNoop.yield('loading');
-        } else {
-          ReactNoop.yield(hasLoaded ? 'finished' : 'failed');
-        }
-        return null;
-      }
-    }
-
-    const Subscriber = createComponent(
-      {
-        subscribablePropertiesMap: {loadingPromise: 'hasLoaded'},
-        getDataFor: (subscribable, propertyName, subscription) => undefined,
-        subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
-          let subscribed = true;
-          subscribable.then(
-            // Success
-            () => {
-              if (subscribed) {
-                valueChangedCallback(true);
-              }
-            },
-            // Failure
-            () => {
-              if (subscribed) {
-                valueChangedCallback(false);
-              }
-            },
-          );
-          return {
-            unsubscribe() {
-              subscribed = false;
-            },
-          };
+  describe('Promises', () => {
+    it('should support Promises', async () => {
+      const Subscriber = createComponent(
+        {
+          subscribablePropertiesMap: {loadingPromise: 'hasLoaded'},
+          getDataFor: (subscribable, propertyName, subscription) => undefined,
+          subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
+            subscribable.then(
+              () => valueChangedCallback(true),
+              () => valueChangedCallback(false),
+            );
+          },
+          unsubscribeFrom: (subscribable, propertyName, subscription) => {},
         },
-        unsubscribeFrom: (subscribable, propertyName, subscription) =>
-          subscription.unsubscribe(),
-      },
-      InnerComponent,
-    );
+        ({hasLoaded}) => {
+          if (hasLoaded === undefined) {
+            ReactNoop.yield('loading');
+          } else {
+            ReactNoop.yield(hasLoaded ? 'finished' : 'failed');
+          }
+          return null;
+        },
+      );
 
-    let resolveA, rejectB;
-    const promiseA = new Promise((resolve, reject) => {
-      resolveA = resolve;
+      let resolveA, rejectB;
+      const promiseA = new Promise((resolve, reject) => {
+        resolveA = resolve;
+      });
+      const promiseB = new Promise((resolve, reject) => {
+        rejectB = reject;
+      });
+
+      // Test a promise that resolves after render
+      ReactNoop.render(<Subscriber loadingPromise={promiseA} />);
+      expect(ReactNoop.flush()).toEqual(['loading']);
+      resolveA();
+      await promiseA;
+      expect(ReactNoop.flush()).toEqual(['finished']);
+
+      // Test a promise that resolves before render
+      // Note that this will require an extra render anyway,
+      // Because there is no way to syncrhonously get a Promise's value
+      rejectB();
+      ReactNoop.render(<Subscriber loadingPromise={promiseB} />);
+      expect(ReactNoop.flush()).toEqual(['loading']);
+      await promiseB.catch(() => true);
+      expect(ReactNoop.flush()).toEqual(['failed']);
     });
-    const promiseB = new Promise((resolve, reject) => {
-      rejectB = reject;
+
+    it('should still work if unsubscription is managed incorrectly', async () => {
+      const Subscriber = createComponent(
+        {
+          subscribablePropertiesMap: {promise: 'value'},
+          getDataFor: (subscribable, propertyName, subscription) => undefined,
+          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
+            subscribable.then(valueChangedCallback),
+          unsubscribeFrom: (subscribable, propertyName, subscription) => {},
+        },
+        ({value}) => {
+          ReactNoop.yield(value);
+          return null;
+        },
+      );
+
+      let resolveA, resolveB;
+      const promiseA = new Promise(resolve => (resolveA = resolve));
+      const promiseB = new Promise(resolve => (resolveB = resolve));
+
+      // Subscribe first to Promise A then Promsie B
+      ReactNoop.render(<Subscriber promise={promiseA} />);
+      expect(ReactNoop.flush()).toEqual([undefined]);
+      ReactNoop.render(<Subscriber promise={promiseB} />);
+      expect(ReactNoop.flush()).toEqual([undefined]);
+
+      // Resolve both Promises
+      resolveB(123);
+      resolveA('abc');
+      await Promise.all([promiseA, promiseB]);
+
+      // Ensure that only Promise B causes an update
+      expect(ReactNoop.flush()).toEqual([123]);
     });
-
-    // Test a promise that resolves after render
-    ReactNoop.render(<Subscriber loadingPromise={promiseA} />);
-    expect(ReactNoop.flush()).toEqual(['loading']);
-    resolveA(true);
-    await promiseA;
-    expect(ReactNoop.flush()).toEqual(['finished']);
-
-    // Test a promise that resolves before render
-    // Note that this will require an extra render anyway,
-    // Because there is no way to syncrhonously get a Promise's value
-    rejectB();
-    ReactNoop.render(<Subscriber loadingPromise={promiseB} />);
-    expect(ReactNoop.flush()).toEqual(['loading']);
-    await promiseB.catch(() => true);
-    expect(ReactNoop.flush()).toEqual(['failed']);
   });
 
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
