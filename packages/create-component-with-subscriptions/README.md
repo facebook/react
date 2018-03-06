@@ -143,49 +143,22 @@ Below are examples showing how `create-component-with-subscriptions` can be used
 
 ### `BehaviorSubject`
 ```js
-import React from "react";
-import createComponent from "create-component-with-subscriptions";
-
-// Start with a simple component.
-// In this case, it's a functional component, but it could have been a class.
-function InnerComponent({ behaviorSubject }) {
-  // Render ...
-}
-
-// Add subscription logic mixin to the class component.
-// The mixin will manage subscriptions and store the values in state.
-// It will add and remove subscriptions in an async-safe way when props change.
 const SubscribedComponent = createComponent(
   {
     property: "behaviorSubject",
-    getValue: (props) => props.behaviorSubject.getValue(),
+    getValue: props => props.behaviorSubject.getValue(),
     subscribe: (props, valueChangedCallback) =>
       props.behaviorSubject.subscribe(valueChangedCallback),
-    unsubscribe: (props, subscription) =>
-      subscription.unsubscribe()
+    unsubscribe: (props, subscription) => subscription.unsubscribe()
   },
-  InnerComponent
+  ({ behaviorSubject }) => {
+    // Render ...
+  }
 );
-
-// Your component can now be used as shown below.
-// In this example, both properties below represent RxJS types with the same name.
-<SubscribedComponent behaviorSubject={behaviorSubject} />;
 ```
 
 ### `ReplaySubject`
 ```js
-import React from "react";
-import createComponent from "create-component-with-subscriptions";
-
-// Start with a simple component.
-// In this case, it's a functional component, but it could have been a class.
-function InnerComponent({ replaySubject }) {
-  // Render ...
-}
-
-// Add subscription logic mixin to the class component.
-// The mixin will manage subscriptions and store the values in state.
-// It will add and remove subscriptions in an async-safe way when props change.
 const SubscribedComponent = createComponent(
   {
     property: "replaySubject",
@@ -203,12 +176,10 @@ const SubscribedComponent = createComponent(
       props.replaySubject.subscribe(valueChangedCallback),
     unsubscribe: (props, subscription) => subscription.unsubscribe()
   },
-  InnerComponent
+  ({ replaySubject }) => {
+    // Render ...
+  }
 );
-
-// Your component can now be used as shown below.
-// In this example, both properties below represent RxJS types with the same name.
-<SubscribedComponent replaySubject={replaySubject} />;
 ```
 
 ## Subscribing to a Promise
