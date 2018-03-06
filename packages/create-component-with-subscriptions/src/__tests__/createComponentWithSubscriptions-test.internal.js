@@ -708,7 +708,50 @@ describe('CreateComponentWithSubscriptions', () => {
     expect(log).toEqual(['mixin componentWillUnmount', 'componentWillUnmount']);
   });
 
-  // TODO Test with react-lifecycle-polyfill to make sure gDSFP isn't broken by mixin approach
+  it('should be compatible with react-lifecycles-compat', () => {
+    const polyfill = require('react-lifecycles-compat');
+
+    class MyExampleComponent extends React.Component {
+      state = {
+        foo: 1,
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: prevState.foo + 1,
+        };
+      }
+      render() {
+        ReactNoop.yield({foo: this.state.foo, value: this.state.value});
+        return null;
+      }
+    }
+    const Subscriber = createComponent(
+      {
+        subscribablePropertiesMap: {observable: 'value'},
+        getDataFor: (subscribable, propertyName) => subscribable.getValue(),
+        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
+          subscribable.subscribe(valueChangedCallback),
+        unsubscribeFrom: (subscribable, propertyName, subscription) =>
+          subscription.unsubscribe(),
+      },
+      polyfill(MyExampleComponent),
+    );
+
+    const observable = createFauxBehaviorSubject('initial');
+
+    ReactNoop.render(<Subscriber observable={observable} />);
+    expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'initial'}]);
+    observable.update('updated');
+    expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'updated'}]);
+
+    // Unsetting the subscriber prop should reset subscribed values
+    ReactNoop.render(<Subscriber />);
+    expect(ReactNoop.flush()).toEqual([{foo: 3, value: undefined}]);
+
+    // Test unmounting lifecycle as well
+    ReactNoop.render(<div />);
+    expect(ReactNoop.flush()).toEqual([]);
+  });
 
   describe('invariants', () => {
     it('should error for invalid Component', () => {
