@@ -489,7 +489,7 @@ describe('CreateComponentWithSubscriptions', () => {
     });
 
     it('should class mixed-in class component lifecycles', () => {
-      const lifecycles = [];
+      const log = [];
       const Subscriber = createComponent(
         {
           subscribablePropertiesMap: {observable: 'value'},
@@ -505,22 +505,22 @@ describe('CreateComponentWithSubscriptions', () => {
           };
           constructor(props) {
             super(props);
-            lifecycles.push('constructor');
+            log.push('constructor');
           }
           static getDerivedStateFromProps(nextProps, prevState) {
-            lifecycles.push('getDerivedStateFromProps');
+            log.push('getDerivedStateFromProps');
             return {
               foo: prevState.foo + 1,
             };
           }
           componentDidMount() {
-            lifecycles.push('componentDidMount');
+            log.push('componentDidMount');
           }
           componentDidUpdate(prevProps, prevState) {
-            lifecycles.push('componentDidUpdate');
+            log.push('componentDidUpdate');
           }
           componentWillUnmount() {
-            lifecycles.push('componentWillUnmount');
+            log.push('componentWillUnmount');
           }
           render() {
             ReactNoop.yield({foo: this.state.foo, value: this.state.value});
@@ -533,30 +533,27 @@ describe('CreateComponentWithSubscriptions', () => {
 
       ReactNoop.render(<Subscriber observable={observable} />);
       expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'initial'}]);
-      expect(lifecycles).toEqual([
+      expect(log).toEqual([
         'constructor',
         'getDerivedStateFromProps',
         'componentDidMount',
       ]);
-      lifecycles.length = 0;
+      log.length = 0;
       observable.update('updated');
       expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'updated'}]);
-      expect(lifecycles).toEqual(['componentDidUpdate']);
+      expect(log).toEqual(['componentDidUpdate']);
 
       // Unsetting the subscriber prop should reset subscribed values
-      lifecycles.length = 0;
+      log.length = 0;
       ReactNoop.render(<Subscriber />);
       expect(ReactNoop.flush()).toEqual([{foo: 3, value: undefined}]);
-      expect(lifecycles).toEqual([
-        'getDerivedStateFromProps',
-        'componentDidUpdate',
-      ]);
+      expect(log).toEqual(['getDerivedStateFromProps', 'componentDidUpdate']);
 
       // Test unmounting lifecycle as well
-      lifecycles.length = 0;
+      log.length = 0;
       ReactNoop.render(<div />);
       expect(ReactNoop.flush()).toEqual([]);
-      expect(lifecycles).toEqual(['componentWillUnmount']);
+      expect(log).toEqual(['componentWillUnmount']);
     });
 
     it('should not mask the displayName used for errors and DevTools', () => {
@@ -582,7 +579,103 @@ describe('CreateComponentWithSubscriptions', () => {
     });
   });
 
-  // TODO Test create-class component (for FluxSubscriberMixin use case)
+  it('should support create-react-class components', () => {
+    const createReactClass = require('create-react-class/factory')(
+      React.Component,
+      React.isValidElement,
+      new React.Component().updater,
+    );
+
+    const log = [];
+
+    const Component = createReactClass({
+      mixins: [
+        {
+          componentDidMount() {
+            log.push('mixin componentDidMount');
+          },
+          componentDidUpdate() {
+            log.push('mixin componentDidUpdate');
+          },
+          componentWillUnmount() {
+            log.push('mixin componentWillUnmount');
+          },
+          statics: {
+            getDerivedStateFromProps() {
+              log.push('mixin getDerivedStateFromProps');
+              return null;
+            },
+          },
+        },
+      ],
+      getInitialState() {
+        return {};
+      },
+      componentDidMount() {
+        log.push('componentDidMount');
+      },
+      componentDidUpdate() {
+        log.push('componentDidUpdate');
+      },
+      componentWillUnmount() {
+        log.push('componentWillUnmount');
+      },
+      render() {
+        ReactNoop.yield(this.state.value);
+        return null;
+      },
+      statics: {
+        getDerivedStateFromProps() {
+          log.push('getDerivedStateFromProps');
+          return null;
+        },
+      },
+    });
+
+    const Subscriber = createComponent(
+      {
+        subscribablePropertiesMap: {observable: 'value'},
+        getDataFor: (subscribable, propertyName) => subscribable.getValue(),
+        subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
+          subscribable.subscribe(valueChangedCallback),
+        unsubscribeFrom: (subscribable, propertyName, subscription) =>
+          subscription.unsubscribe(),
+      },
+      Component,
+    );
+
+    const observable = createFauxBehaviorSubject('initial');
+
+    ReactNoop.render(<Subscriber observable={observable} />);
+    expect(ReactNoop.flush()).toEqual(['initial']);
+    expect(log).toEqual([
+      'mixin getDerivedStateFromProps',
+      'getDerivedStateFromProps',
+      'mixin componentDidMount',
+      'componentDidMount',
+    ]);
+    log.length = 0;
+    observable.update('updated');
+    expect(ReactNoop.flush()).toEqual(['updated']);
+    expect(log).toEqual(['mixin componentDidUpdate', 'componentDidUpdate']);
+
+    // Unsetting the subscriber prop should reset subscribed values
+    log.length = 0;
+    ReactNoop.render(<Subscriber />);
+    expect(ReactNoop.flush()).toEqual([undefined]);
+    expect(log).toEqual([
+      'mixin getDerivedStateFromProps',
+      'getDerivedStateFromProps',
+      'mixin componentDidUpdate',
+      'componentDidUpdate',
+    ]);
+
+    // Test unmounting lifecycle as well
+    log.length = 0;
+    ReactNoop.render(<div />);
+    expect(ReactNoop.flush()).toEqual([]);
+    expect(log).toEqual(['mixin componentWillUnmount', 'componentWillUnmount']);
+  });
 
   // TODO Test with react-lifecycle-polyfill to make sure gDSFP isn't broken by mixin approach
 
