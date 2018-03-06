@@ -164,10 +164,21 @@ Below is an example showing how `create-component-with-subscriptions` can be use
 import React from "react";
 import createComponent from "create-component-with-subscriptions";
 
-function InnerComponent({ behaviorValue, replayValue }) {
-  // Render ...
+// This example uses a class component, but it could have been functional.
+class InnerComponent extends React.Component {
+  // Subscribed values are stored in state for class components.
+  state = {};
+
+  render() {
+    const { behaviorValue, replayValue } = this.state;
+
+    // Render ...
+  }
 }
 
+// Add subscription logic mixin to the class component.
+// The mixin will manage subscriptions and store the values in state.
+// It will add and remove subscriptions in an async-safe way when props change.
 const SubscribedComponent = createComponent(
   {
     subscribablePropertiesMap: {
@@ -218,24 +229,18 @@ import React from "react";
 import createComponent from "create-component-with-subscriptions";
 
 // Start with a simple component.
-// In this case, it's a class component, but it could have been functional.
-class InnerComponent extends React.Component {
-  // Subscribed values will be stored in state.
-  state = {};
-  render() {
-    const { loadingStatus } = this.state;
-    if (loadingStatus === undefined) {
-      // Loading
-    } else if (loadingStatus) {
-      // Success
-    } else {
-      // Error
-    }
+function InnerComponent({ loadingStatus }) {
+  if (loadingStatus === undefined) {
+    // Loading
+  } else if (loadingStatus) {
+    // Success
+  } else {
+    // Error
   }
 }
 
-// Add subscription logic mixin to the class component.
-// The mixin will manage subscriptions and store the values in state.
+// Wrap the functional component with a subscriber HOC.
+// This HOC will manage subscriptions and pass values to the decorated component.
 // It will add and remove subscriptions in an async-safe way when props change.
 const LoadingComponent = createComponent(
   {
@@ -246,12 +251,11 @@ const LoadingComponent = createComponent(
       return undefined;
     },
     subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
-      let subscribed = true;
       subscribable.then(
         // Success
         () => valueChangedCallback(true),
         // Failure
-        () => valueChangedCallback(false),
+        () => valueChangedCallback(false)
       );
     },
     unsubscribeFrom: (subscribable, propertyName, subscription) => {
