@@ -577,6 +577,37 @@ describe('CreateComponentWithSubscriptions', () => {
 
       expect(Subscriber.displayName).toBe('MyExampleComponent');
     });
+
+    it('should preserve refs attached to class components', () => {
+      class MyExampleComponent extends React.Component {
+        state = {};
+        customMethod() {}
+        render() {
+          ReactNoop.yield(this.state.value);
+          return null;
+        }
+      }
+      const Subscriber = createComponent(
+        {
+          subscribablePropertiesMap: {observable: 'value'},
+          getDataFor: (subscribable, propertyName) => subscribable.getValue(),
+          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
+            subscribable.subscribe(valueChangedCallback),
+          unsubscribeFrom: (subscribable, propertyName, subscription) =>
+            subscription.unsubscribe(),
+        },
+        MyExampleComponent,
+      );
+
+      const observable = createFauxBehaviorSubject('initial');
+      const ref = React.createRef();
+
+      ReactNoop.render(<Subscriber ref={ref} observable={observable} />);
+      expect(ReactNoop.flush()).toEqual(['initial']);
+
+      expect(ref.value instanceof MyExampleComponent).toBe(true);
+      expect(typeof ref.value.customMethod).toBe('function');
+    });
   });
 
   it('should support create-react-class components', () => {
