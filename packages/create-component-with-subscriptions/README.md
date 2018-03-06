@@ -30,6 +30,14 @@ Creating a subscription component requires a configuration object and a React co
     subscription: any,
   ) => void` - Unsubscribes from the specified subscribable.  If your component has multiple subscriptions, the second `propertyName` parameter can be used to distinguish between them. The value returned by `subscribeTo()` is the third `subscription` parameter.
 
+Depending on the type of React component specified, `create-component-with-subscriptions` will either create a wrapper component or use a mixin technique.
+
+If a stateless functional component is specified, a high-order component will be wrapped around it. The wrapper will pass through all `props` (including "subscribables"). In addition, it will also pass the values of each subscribable as `props` (using the name specified by `subscribablePropertiesMap`).
+
+If a class (or `create-react-class`) component is specified, the library uses an ["ES6 mixin"](https://gist.github.com/sebmarkbage/fac0830dbb13ccbff596) technique in order to preserve compatibility with refs and to avoid the overhead of an additional fiber. Subscription values will be stored in `state` (using the name specified by `subscribablePropertiesMap`) to be accessed from within the `render` method.
+
+Examples of both [functional](#subscribing-to-event-dispatchers) and [class](#subscribing-to-a-promise) components are provided below.
+
 # Examples
 
 This API can be used to subscribe to a variety of "subscribable" sources, from Flux stores to RxJS observables. Below are a few examples of how to subscribe to common types.
@@ -42,7 +50,8 @@ Below is an example showing how `create-component-with-subscriptions` can be use
 import React from "react";
 import createComponent from "create-component-with-subscriptions";
 
-// Start with a simple functional (or class-based) component.
+// Start with a simple component.
+// In this case, it's a functional component, but it could have been a class.
 function InnerComponent({ followerCount, username }) {
   return (
     <div>
@@ -139,17 +148,23 @@ Below is an example showing how `create-component-with-subscriptions` can be use
 import React from "react";
 import createComponent from "create-component-with-subscriptions";
 
-// Start with a simple functional (or class-based) component.
-function InnerComponent({ followerCount, username }) {
-  return (
-    <div>
-      {username} has {followerCount} follower
-    </div>
-  );
+// Start with a simple component.
+// In this case, it's a class component, but it could have been functional.
+class InnerComponent extends React.Component {
+  // Subscribed values will be stored in state.
+  state = {};
+
+  render() {
+    return (
+      <div>
+        {this.state.username} has {this.state.followerCount} follower
+      </div>
+    );
+  }
 }
 
-// Wrap the functional component with a subscriber HOC.
-// This HOC will manage subscriptions and pass values to the decorated component.
+// Add subscription logic mixin to the class component.
+// The mixin will manage subscriptions and store the values in state.
 // It will add and remove subscriptions in an async-safe way when props change.
 const FollowerCountComponent = createComponent(
   {
