@@ -78,12 +78,13 @@ export function createComponent(
 
   // If possible, extend the specified component to add subscriptions.
   // This preserves ref compatibility and avoids the overhead of an extra fiber.
-  let BaseClass = Component;
+  let BaseClass = (Component: any);
+  const prototype = (Component: any).prototype;
 
   // If this is a functional component, use a HOC.
   // Since functional components can't have refs, that isn't a problem.
   // Class component lifecycles are required, so a class component is needed anyway.
-  if (typeof Component.prototype.render !== 'function') {
+  if (typeof prototype === 'object' && typeof prototype.render !== 'function') {
     BaseClass = class extends React.Component {
       render() {
         const subscribedValues = {};
