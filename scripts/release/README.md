@@ -1,6 +1,6 @@
-# React Release Script
+# React Release Scripts
 
-At a high-level, the release script runs in 2 passes: **build** and **publish**.
+At a high-level, the release process uses two scripts: **build** and **publish**.
 1. The **build** script does the heavy lifting (e.g., checking CI, running automated tests, building Rollup bundles) and then prints instructions for manual verification.
 1. The **publish** script then publishes the built artifacts to npm and pushes to GitHub.
 
