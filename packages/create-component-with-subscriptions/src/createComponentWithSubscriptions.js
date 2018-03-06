@@ -84,7 +84,7 @@ export function createComponent(
   // If this is a functional component, use a HOC.
   // Since functional components can't have refs, that isn't a problem.
   // Class component lifecycles are required, so a class component is needed anyway.
-  if (typeof prototype === 'object' && typeof prototype.render !== 'function') {
+  if (typeof prototype !== 'object' || typeof prototype.render !== 'function') {
     BaseClass = class extends React.Component {
       render() {
         const subscribedValues = {};
@@ -115,8 +115,8 @@ export function createComponent(
           }
 
           const currentSubscribable =
-            instance.state[stateWrapperKey] !== undefined
-              ? instance.state[stateWrapperKey].subscribable
+            state[stateWrapperKey] !== undefined
+              ? state[stateWrapperKey].subscribable
               : null;
 
           // If this event belongs to an old or uncommitted data source, ignore it.
