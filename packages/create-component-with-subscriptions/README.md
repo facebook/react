@@ -193,3 +193,27 @@ const FollowerCountComponent = createComponent(
 // In this example, `followerPromise` represents a native JavaScript Promise.
 <FollowerCountComponent followerPromise={followerPromise} username="Brian" />;
 ```
+
+## Optional parameters and default values
+
+Subscribable properties are treated as optional by `create-component-with-subscriptions`. In the event that a subscribable `prop` is missing, a value of `undefined` will be passed to the decorated component (using `props` for a functional component or `state` for a class component).
+
+If you would like to set default values for missing subscribables, you can do this as shown below.
+
+For functional components, declare a default value while destructuring the `props` parameter:
+```js
+function InnerComponent({ followerCount = 0 }) {
+  return <div>You have {followerCount} followers.</div>;
+}
+```
+
+For class components, declare a default value while destructuring `state`:
+```js
+class InnerComponent extends React.Component {
+  state = {};
+  render() {
+    const { followerCount = 0 } = this.state;
+    return <div>You have {followerCount} followers.</div>;
+  }
+}
+```

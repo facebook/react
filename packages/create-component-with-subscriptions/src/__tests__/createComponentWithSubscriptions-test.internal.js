@@ -80,7 +80,7 @@ describe('CreateComponentWithSubscriptions', () => {
           subscription.unsubscribe();
         },
       },
-      ({value}) => {
+      ({value = 'default'}) => {
         ReactNoop.yield(value);
         return null;
       },
@@ -90,7 +90,7 @@ describe('CreateComponentWithSubscriptions', () => {
     ReactNoop.render(<Subscriber observable={observable} />);
 
     // Updates while subscribed should re-render the child component
-    expect(ReactNoop.flush()).toEqual([undefined]);
+    expect(ReactNoop.flush()).toEqual(['default']);
     observable.update(123);
     expect(ReactNoop.flush()).toEqual([123]);
     observable.update('abc');
