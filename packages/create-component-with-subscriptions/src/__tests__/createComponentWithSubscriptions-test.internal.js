@@ -11,6 +11,7 @@
 
 let createComponent;
 let React;
+let ReactFeatureFlags;
 let ReactNoop;
 
 describe('CreateComponentWithSubscriptions', () => {
@@ -18,6 +19,8 @@ describe('CreateComponentWithSubscriptions', () => {
     jest.resetModules();
     createComponent = require('create-component-with-subscriptions')
       .createComponent;
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -93,9 +96,10 @@ describe('CreateComponentWithSubscriptions', () => {
     observable.update('abc');
     expect(ReactNoop.flush()).toEqual(['abc']);
 
-    // Unsetting the subscriber prop should reset subscribed values
-    ReactNoop.render(<Subscriber observable={null} />);
-    expect(ReactNoop.flush()).toEqual([undefined]);
+    // Unmounting the subscriber should remove listeners
+    ReactNoop.render(<div />);
+    observable.update(456);
+    expect(ReactNoop.flush()).toEqual([]);
   });
 
   it('supports multiple subscriptions', () => {
@@ -450,5 +454,205 @@ describe('CreateComponentWithSubscriptions', () => {
       <Subscriber observable={observable} foo={123} bar="abc" />,
     );
     expect(ReactNoop.flush()).toEqual(['bar:abc, foo:123, value:true']);
+  });
+
+  describe('class component', () => {
+    it('should support class components', () => {
+      const Subscriber = createComponent(
+        {
+          subscribablePropertiesMap: {observable: 'value'},
+          getDataFor: (subscribable, propertyName) => subscribable.getValue(),
+          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
+            subscribable.subscribe(valueChangedCallback),
+          unsubscribeFrom: (subscribable, propertyName, subscription) =>
+            subscription.unsubscribe(),
+        },
+        class extends React.Component {
+          state = {};
+          render() {
+            ReactNoop.yield(this.state.value);
+            return null;
+          }
+        },
+      );
+
+      const observable = createFauxBehaviorSubject('initial');
+
+      ReactNoop.render(<Subscriber observable={observable} />);
+      expect(ReactNoop.flush()).toEqual(['initial']);
+      observable.update('updated');
+      expect(ReactNoop.flush()).toEqual(['updated']);
+
+      // Unsetting the subscriber prop should reset subscribed values
+      ReactNoop.render(<Subscriber />);
+      expect(ReactNoop.flush()).toEqual([undefined]);
+    });
+
+    it('should class mixed-in class component lifecycles', () => {
+      const lifecycles = [];
+      const Subscriber = createComponent(
+        {
+          subscribablePropertiesMap: {observable: 'value'},
+          getDataFor: (subscribable, propertyName) => subscribable.getValue(),
+          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
+            subscribable.subscribe(valueChangedCallback),
+          unsubscribeFrom: (subscribable, propertyName, subscription) =>
+            subscription.unsubscribe(),
+        },
+        class extends React.Component {
+          state = {
+            foo: 1,
+          };
+          constructor(props) {
+            super(props);
+            lifecycles.push('constructor');
+          }
+          static getDerivedStateFromProps(nextProps, prevState) {
+            lifecycles.push('getDerivedStateFromProps');
+            return {
+              foo: prevState.foo + 1,
+            };
+          }
+          componentDidMount() {
+            lifecycles.push('componentDidMount');
+          }
+          componentDidUpdate(prevProps, prevState) {
+            lifecycles.push('componentDidUpdate');
+          }
+          componentWillUnmount() {
+            lifecycles.push('componentWillUnmount');
+          }
+          render() {
+            ReactNoop.yield({foo: this.state.foo, value: this.state.value});
+            return null;
+          }
+        },
+      );
+
+      const observable = createFauxBehaviorSubject('initial');
+
+      ReactNoop.render(<Subscriber observable={observable} />);
+      expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'initial'}]);
+      expect(lifecycles).toEqual([
+        'constructor',
+        'getDerivedStateFromProps',
+        'componentDidMount',
+      ]);
+      lifecycles.length = 0;
+      observable.update('updated');
+      expect(ReactNoop.flush()).toEqual([{foo: 2, value: 'updated'}]);
+      expect(lifecycles).toEqual(['componentDidUpdate']);
+
+      // Unsetting the subscriber prop should reset subscribed values
+      lifecycles.length = 0;
+      ReactNoop.render(<Subscriber />);
+      expect(ReactNoop.flush()).toEqual([{foo: 3, value: undefined}]);
+      expect(lifecycles).toEqual([
+        'getDerivedStateFromProps',
+        'componentDidUpdate',
+      ]);
+
+      // Test unmounting lifecycle as well
+      lifecycles.length = 0;
+      ReactNoop.render(<div />);
+      expect(ReactNoop.flush()).toEqual([]);
+      expect(lifecycles).toEqual(['componentWillUnmount']);
+    });
+
+    it('should not mask the displayName used for errors and DevTools', () => {
+      const Subscriber = createComponent(
+        {
+          subscribablePropertiesMap: {observable: 'value'},
+          getDataFor: (subscribable, propertyName) => subscribable.getValue(),
+          subscribeTo: (valueChangedCallback, subscribable, propertyName) =>
+            subscribable.subscribe(valueChangedCallback),
+          unsubscribeFrom: (subscribable, propertyName, subscription) =>
+            subscription.unsubscribe(),
+        },
+        class MyExampleComponent extends React.Component {
+          static displayName = 'MyExampleComponent';
+          state = {};
+          render() {
+            return null;
+          }
+        },
+      );
+
+      expect(Subscriber.displayName).toBe('MyExampleComponent');
+    });
+  });
+
+  // TODO Test create-class component (for FluxSubscriberMixin use case)
+
+  // TODO Test with react-lifecycle-polyfill to make sure gDSFP isn't broken by mixin approach
+
+  describe('invariants', () => {
+    it('should error for invalid Component', () => {
+      expect(() => {
+        createComponent(
+          {
+            subscribablePropertiesMap: {},
+            getDataFor: () => {},
+            subscribeTo: () => {},
+            unsubscribeFrom: () => {},
+          },
+          null,
+        );
+      }).toThrow('Invalid subscribable Component specified');
+    });
+
+    it('should error for invalid missing subscribablePropertiesMap', () => {
+      expect(() => {
+        createComponent(
+          {
+            getDataFor: () => {},
+            subscribeTo: () => {},
+            unsubscribeFrom: () => {},
+          },
+          () => null,
+        );
+      }).toThrow(
+        'Subscribable config must specify a subscribablePropertiesMap map',
+      );
+    });
+
+    it('should error for invalid missing getDataFor', () => {
+      expect(() => {
+        createComponent(
+          {
+            subscribablePropertiesMap: {},
+            subscribeTo: () => {},
+            unsubscribeFrom: () => {},
+          },
+          () => null,
+        );
+      }).toThrow('Subscribable config must specify a getDataFor function');
+    });
+
+    it('should error for invalid missing subscribeTo', () => {
+      expect(() => {
+        createComponent(
+          {
+            subscribablePropertiesMap: {},
+            getDataFor: () => {},
+            unsubscribeFrom: () => {},
+          },
+          () => null,
+        );
+      }).toThrow('Subscribable config must specify a subscribeTo function');
+    });
+
+    it('should error for invalid missing unsubscribeFrom', () => {
+      expect(() => {
+        createComponent(
+          {
+            subscribablePropertiesMap: {},
+            getDataFor: () => {},
+            subscribeTo: () => {},
+          },
+          () => null,
+        );
+      }).toThrow('Subscribable config must specify a unsubscribeFrom function');
+    });
   });
 });

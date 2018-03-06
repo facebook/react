@@ -8,10 +8,11 @@
  */
 
 import React from 'react';
+import invariant from 'fbjs/lib/invariant';
 
 type SubscrptionConfig = {
   // Maps property names of subscribable sources (e.g. 'eventDispatcher'),
-  // To property names for subscribed values (e.g. 'value').
+  // To state names for subscribed values (e.g. 'value').
   subscribablePropertiesMap: {[subscribableProperty: string]: string},
 
   // Synchronously get data for a given subscribable property.
@@ -46,6 +47,25 @@ export function createComponent(
   config: SubscrptionConfig,
   Component: React$ComponentType<*>,
 ): React$ComponentType<*> {
+  invariant(Component != null, 'Invalid subscribable Component specified');
+  invariant(
+    config.subscribablePropertiesMap !== null &&
+      typeof config.subscribablePropertiesMap === 'object',
+    'Subscribable config must specify a subscribablePropertiesMap map',
+  );
+  invariant(
+    typeof config.getDataFor === 'function',
+    'Subscribable config must specify a getDataFor function',
+  );
+  invariant(
+    typeof config.subscribeTo === 'function',
+    'Subscribable config must specify a subscribeTo function',
+  );
+  invariant(
+    typeof config.unsubscribeFrom === 'function',
+    'Subscribable config must specify a unsubscribeFrom function',
+  );
+
   const {
     getDataFor,
     subscribablePropertiesMap,
@@ -53,8 +73,106 @@ export function createComponent(
     unsubscribeFrom,
   } = config;
 
-  class SubscribableContainer extends React.Component {
-    state = {};
+  // Unique state key name to avoid conflicts.
+  const getStateWrapperKey = propertyName => `____${propertyName}`;
+
+  // If possible, extend the specified component to add subscriptions.
+  // This preserves ref compatibility and avoids the overhead of an extra fiber.
+  let BaseClass = Component;
+
+  // If this is a functional component, use a HOC.
+  // Since functional components can't have refs, that isn't a problem.
+  // Class component lifecycles are required, so a class component is needed anyway.
+  if (typeof Component.prototype.render !== 'function') {
+    BaseClass = class extends React.Component {
+      render() {
+        const subscribedValues = {};
+        for (let propertyName in subscribablePropertiesMap) {
+          const stateValueKey = subscribablePropertiesMap[propertyName];
+          subscribedValues[stateValueKey] = this.state[stateValueKey];
+        }
+
+        return <Component {...this.props} {...subscribedValues} />;
+      }
+    };
+  }
+
+  // Event listeners are only safe to add during the commit phase,
+  // So they won't leak if render is interrupted or errors.
+  const subscribeToHelper = (subscribable, propertyName, instance) => {
+    if (subscribable != null) {
+      const stateWrapperKey = getStateWrapperKey(propertyName);
+      const stateValueKey = subscribablePropertiesMap[propertyName];
+
+      const wrapper = instance.state[stateWrapperKey];
+
+      const valueChangedCallback = value => {
+        instance.setState(state => {
+          // If the value is the same, skip the unnecessary state update.
+          if (state[stateValueKey] === value) {
+            return null;
+          }
+
+          const currentSubscribable =
+            instance.state[stateWrapperKey] !== undefined
+              ? instance.state[stateWrapperKey].subscribable
+              : null;
+
+          // If this event belongs to an old or uncommitted data source, ignore it.
+          if (wrapper.subscribable !== currentSubscribable) {
+            return null;
+          }
+
+          return {
+            [stateValueKey]: value,
+          };
+        });
+      };
+
+      // Store subscription for later (in case it's needed to unsubscribe).
+      // This is safe to do via mutation since:
+      // 1) It does not impact render.
+      // 2) This method will only be called during the "commit" phase.
+      wrapper.subscription = subscribeTo(
+        valueChangedCallback,
+        subscribable,
+        propertyName,
+      );
+
+      // External values could change between render and mount,
+      // In some cases it may be important to handle this case.
+      const value = getDataFor(subscribable, propertyName);
+      if (value !== instance.state[stateValueKey]) {
+        instance.setState({
+          [stateValueKey]: value,
+        });
+      }
+    }
+  };
+
+  const unsubscribeFromHelper = (subscribable, propertyName, instance) => {
+    if (subscribable != null) {
+      const stateWrapperKey = getStateWrapperKey(propertyName);
+      const wrapper = instance.state[stateWrapperKey];
+
+      unsubscribeFrom(subscribable, propertyName, wrapper.subscription);
+
+      wrapper.subscription = null;
+    }
+  };
+
+  // Extend specified component class to hook into subscriptions.
+  class Subscribable extends BaseClass {
+    constructor(props) {
+      super(props);
+
+      // Ensure state is initialized, so getDerivedStateFromProps doesn't warn.
+      // Parent class components might not use state outside of this helper,
+      // So it might be confusing for them to have to initialize it.
+      if (this.state == null) {
+        this.state = {};
+      }
+    }
 
     static getDerivedStateFromProps(nextProps, prevState) {
       const nextState = {};
@@ -63,134 +181,76 @@ export function createComponent(
 
       // Read value (if sync read is possible) for upcoming render
       for (let propertyName in subscribablePropertiesMap) {
-        const prevSubscribable = prevState[propertyName];
+        const stateWrapperKey = getStateWrapperKey(propertyName);
+        const stateValueKey = subscribablePropertiesMap[propertyName];
+
+        const prevSubscribable =
+          prevState[stateWrapperKey] !== undefined
+            ? prevState[stateWrapperKey].subscribable
+            : null;
         const nextSubscribable = nextProps[propertyName];
 
         if (prevSubscribable !== nextSubscribable) {
-          nextState[propertyName] = {
-            ...prevState[propertyName],
+          nextState[stateWrapperKey] = {
+            ...prevState[stateWrapperKey],
             subscribable: nextSubscribable,
-            value:
-              nextSubscribable != null
-                ? getDataFor(nextSubscribable, propertyName)
-                : undefined,
           };
+          nextState[stateValueKey] =
+            nextSubscribable != null
+              ? getDataFor(nextSubscribable, propertyName)
+              : undefined;
 
           hasUpdates = true;
         }
       }
 
-      return hasUpdates ? nextState : null;
+      const nextSuperState =
+        typeof Component.getDerivedStateFromProps === 'function'
+          ? Component.getDerivedStateFromProps(nextProps, prevState)
+          : null;
+
+      return hasUpdates || nextSuperState !== null
+        ? {...nextSuperState, ...nextState}
+        : null;
     }
 
     componentDidMount() {
+      if (typeof super.componentDidMount === 'function') {
+        super.componentDidMount();
+      }
+
       for (let propertyName in subscribablePropertiesMap) {
         const subscribable = this.props[propertyName];
-        this.subscribeTo(subscribable, propertyName);
+        subscribeToHelper(subscribable, propertyName, this);
       }
     }
 
     componentDidUpdate(prevProps, prevState) {
+      if (typeof super.componentDidUpdate === 'function') {
+        super.componentDidUpdate(prevProps, prevState);
+      }
+
       for (let propertyName in subscribablePropertiesMap) {
         const prevSubscribable = prevProps[propertyName];
         const nextSubscribable = this.props[propertyName];
         if (prevSubscribable !== nextSubscribable) {
-          this.unsubscribeFrom(prevSubscribable, propertyName);
-          this.subscribeTo(nextSubscribable, propertyName);
+          unsubscribeFromHelper(prevSubscribable, propertyName, this);
+          subscribeToHelper(nextSubscribable, propertyName, this);
         }
       }
     }
 
     componentWillUnmount() {
+      if (typeof super.componentWillUnmount === 'function') {
+        super.componentWillUnmount();
+      }
+
       for (let propertyName in subscribablePropertiesMap) {
         const subscribable = this.props[propertyName];
-        this.unsubscribeFrom(subscribable, propertyName);
+        unsubscribeFromHelper(subscribable, propertyName, this);
       }
-    }
-
-    // Event listeners are only safe to add during the commit phase,
-    // So they won't leak if render is interrupted or errors.
-    subscribeTo(subscribable, propertyName) {
-      if (subscribable != null) {
-        const wrapper = this.state[propertyName];
-
-        const valueChangedCallback = value => {
-          this.setState(state => {
-            const currentWrapper = state[propertyName];
-
-            // If the value is the same, skip the unnecessary state update.
-            if (currentWrapper.value === value) {
-              return null;
-            }
-
-            // If this event belongs to an old or uncommitted data source, ignore it.
-            if (subscribable !== currentWrapper.subscribable) {
-              return null;
-            }
-
-            return {
-              [propertyName]: {
-                ...currentWrapper,
-                value,
-              },
-            };
-          });
-        };
-
-        // Store subscription for later (in case it's needed to unsubscribe).
-        // This is safe to do via mutation since:
-        // 1) It does not impact render.
-        // 2) This method will only be called during the "commit" phase.
-        wrapper.subscription = subscribeTo(
-          valueChangedCallback,
-          subscribable,
-          propertyName,
-        );
-
-        // External values could change between render and mount,
-        // In some cases it may be important to handle this case.
-        const value = getDataFor(subscribable, propertyName);
-        if (value !== wrapper.value) {
-          this.setState({
-            [propertyName]: {
-              ...wrapper,
-              value,
-            },
-          });
-        }
-      }
-    }
-
-    unsubscribeFrom(subscribable, propertyName) {
-      if (subscribable != null) {
-        const wrapper = this.state[propertyName];
-
-        unsubscribeFrom(subscribable, propertyName, wrapper.subscription);
-
-        wrapper.subscription = null;
-      }
-    }
-
-    render() {
-      const filteredProps = {};
-      const subscribedValues = {};
-
-      for (let key in this.props) {
-        if (!subscribablePropertiesMap.hasOwnProperty(key)) {
-          filteredProps[key] = this.props[key];
-        }
-      }
-
-      for (let fromProperty in subscribablePropertiesMap) {
-        const toProperty = subscribablePropertiesMap[fromProperty];
-        const wrapper = this.state[fromProperty];
-        subscribedValues[toProperty] =
-          wrapper != null ? wrapper.value : undefined;
-      }
-
-      return <Component {...filteredProps} {...subscribedValues} />;
     }
   }
 
-  return SubscribableContainer;
+  return Subscribable;
 }
