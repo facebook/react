@@ -17,24 +17,93 @@ npm install create-component-with-subscriptions --save
 # API
 
 Creating a subscription component requires a configuration object and a React component. The configuration object must have four properties:
-* **subscribablePropertiesMap** `{[subscribableProperty: string]: string}` - Maps property names of incoming subscribable sources (e.g. "eventDispatcher") to property names for their values (e.g. "value").
-* **getDataFor** `(subscribable: any, propertyName: string) => any` - Synchronously returns the value of the specified subscribable property. If your component has multiple subscriptions,the second 'propertyName' parameter can be used to distinguish between them.
-* **subscribeTo** `(
-    valueChangedCallback: (value: any) => void,
-    subscribable: any,
-    propertyName: string,
-  ) => any` - Subscribes to the specified subscribable and call the `valueChangedCallback` parameter whenever a subscription changes. If your component has multiple subscriptions, the third 'propertyName' parameter can be used to distinguish between them.
-* **unsubscribeFrom** `(
-    subscribable: any,
-    propertyName: string,
-    subscription: any,
-  ) => void` - Unsubscribes from the specified subscribable.  If your component has multiple subscriptions, the second `propertyName` parameter can be used to distinguish between them. The value returned by `subscribeTo()` is the third `subscription` parameter.
+
+#### `subscribablePropertiesMap: {[subscribableProperty: string]: string}`
+
+Maps property names of incoming subscribable sources (e.g. "eventDispatcher") to property names for their values (e.g. "value").
+
+For example:
+```js
+{
+  followerStore: 'followerCount',
+  scrollContainer: 'scrollTop',
+}
+```
+
+#### `getDataFor(subscribable: any, propertyName: string) => any`
+
+Synchronously returns the value of the specified subscribable property. If your component has multiple subscriptions, the second `propertyName` parameter can be used to distinguish between them.
+
+For example:
+```js
+function getDataFor(subscribable, propertyName) {
+  switch (propertyName) {
+    case "followerStore":
+      return subscribable.getValue();
+    case "scrollContainer":
+      return subscriber.scrollTop;
+  }
+}
+```
+
+#### `subscribeTo(valueChangedCallback: (value: any) => void, subscribable: any, propertyName: string) => any`
+
+Subscribes to the specified subscribable and call the `valueChangedCallback` parameter whenever a subscription changes. If your component has multiple subscriptions, the third 'propertyName' parameter can be used to distinguish between them.
+
+For example:
+```js
+function subscribeTo(valueChangedCallback, subscribable, propertyName) {
+  switch (propertyName) {
+    case "followerStore":
+      return subscribable.subscribe(valueChangedCallback);
+    case "scrollContainer":
+      const onScroll = event => valueChangedCallback(subscribable.scrollTop);
+      subscribable.addEventListener("scroll", onScroll);
+      return onChange;
+  }
+}
+```
+
+#### `unsubscribeFrom(subscribable: any, propertyName: string, subscription: any) => void`
+
+Unsubscribes from the specified subscribable.  If your component has multiple subscriptions, the second `propertyName` parameter can be used to distinguish between them. The value returned by `subscribeTo()` is the third `subscription` parameter.
+
+For example:
+```js
+function unsubscribeFrom(subscribable, propertyName, subscription) {
+  switch (propertyName) {
+    case "followerStore":
+      return subscription.unsubscribe();
+    case "scrollContainer":
+      subscribable.removeEventListener("change", subscription);
+  }
+}
+```
+
+# How it works
 
 Depending on the type of React component specified, `create-component-with-subscriptions` will either create a wrapper component or use a mixin technique.
 
 If a stateless functional component is specified, a high-order component will be wrapped around it. The wrapper will pass through all `props` (including "subscribables"). In addition, it will also pass the values of each subscribable as `props` (using the name specified by `subscribablePropertiesMap`).
 
+Given the above example, a stateless functional component would look something like this:
+```js
+function ExampleComponent({ followerCount, scrollTop, ...rest }) {
+  // Render ...
+}
+```
+
 If a class (or `create-react-class`) component is specified, the library uses an ["ES6 mixin"](https://gist.github.com/sebmarkbage/fac0830dbb13ccbff596) technique in order to preserve compatibility with refs and to avoid the overhead of an additional fiber. Subscription values will be stored in `state` (using the name specified by `subscribablePropertiesMap`) to be accessed from within the `render` method.
+
+Given the above example, a class component would look something like this:
+```js
+class ExampleComponent extends React.Component {
+  render() {
+    const { followerCount, scrollTop, ...rest } = this.props;
+    // Render ...
+  }
+}
+```
 
 Examples of both [functional](#subscribing-to-event-dispatchers) and [class](#subscribing-to-a-promise) components are provided below.
 
@@ -69,12 +138,12 @@ const FollowerCountComponent = createComponent(
     getDataFor: (subscribable, propertyName) => subscribable.value,
     subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
       const onChange = event => valueChangedCallback(subscribable.value);
-      subscribable.addEventListener(onChange);
+      subscribable.addEventListener("change", onChange);
       return onChange;
     },
     unsubscribeFrom: (subscribable, propertyName, subscription) => {
       // `subscription` is the value returned from subscribeTo, our event handler.
-      subscribable.removeEventListener(subscription);
+      subscribable.removeEventListener("change", subscription);
     }
   },
   InnerComponent
@@ -153,30 +222,45 @@ import createComponent from "create-component-with-subscriptions";
 class InnerComponent extends React.Component {
   // Subscribed values will be stored in state.
   state = {};
-
   render() {
-    return (
-      <div>
-        {this.state.username} has {this.state.followerCount} follower
-      </div>
-    );
+    const { loadingStatus } = this.state;
+    if (loadingStatus === undefined) {
+      // Loading
+    } else if (loadingStatus) {
+      // Success
+    } else {
+      // Error
+    }
   }
 }
 
 // Add subscription logic mixin to the class component.
 // The mixin will manage subscriptions and store the values in state.
 // It will add and remove subscriptions in an async-safe way when props change.
-const FollowerCountComponent = createComponent(
+const LoadingComponent = createComponent(
   {
-    subscribablePropertiesMap: { followerPromise: "followerCount" },
-    getDataFor: (subscribable, propertyName, subscription) => undefined,
+    subscribablePropertiesMap: { loadingPromise: "loadingStatus" },
+    getDataFor: (subscribable, propertyName, subscription) => {
+      // There is no way to synchronously read a Promise's value,
+      // So this method should return undefined.
+      return undefined;
+    },
     subscribeTo: (valueChangedCallback, subscribable, propertyName) => {
       let subscribed = true;
-      subscribable.then(value => {
-        if (subscribed) {
-          valueChangedCallback(value);
+      subscribable.then(
+        // Success
+        () => {
+          if (subscribed) {
+            valueChangedCallback(true);
+          }
+        },
+        // Failure
+        () => {
+          if (subscribed) {
+            valueChangedCallback(false);
+          }
         }
-      });
+      );
       return {
         unsubscribe() {
           subscribed = false;
@@ -190,8 +274,7 @@ const FollowerCountComponent = createComponent(
 );
 
 // Your component can now be used as shown below.
-// In this example, `followerPromise` represents a native JavaScript Promise.
-<FollowerCountComponent followerPromise={followerPromise} username="Brian" />;
+<LoadingComponent loadingPromise={loadingPromise} />;
 ```
 
 ## Optional parameters and default values
