@@ -115,7 +115,7 @@ function InnerComponent({ followers, username }) {
 const FollowerCountComponent = createComponent(
   {
     property: "followers",
-    getValue: props => subscribable.value,
+    getValue: props => props.followers.value,
     subscribe: (props, valueChangedCallback) => {
       const { followers } = props;
       const onChange = event => valueChangedCallback(followers.value);
@@ -137,9 +137,7 @@ const FollowerCountComponent = createComponent(
 
 ## Subscribing to observables
 
-TODO Break up
-
-Below is an example showing how `create-component-with-subscriptions` can be used to subscribe to certain types of observables (e.g. RxJS `BehaviorSubject` and `ReplaySubject`).
+Below are examples showing how `create-component-with-subscriptions` can be used to subscribe to certain types of observables (e.g. RxJS `BehaviorSubject` and `ReplaySubject`).
 
 **Note** that it is not possible to support all observable types (e.g. RxJS `Subject` or `Observable`) because some provide no way to read the "current" value after it has been emitted.
 
