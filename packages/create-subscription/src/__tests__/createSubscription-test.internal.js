@@ -65,8 +65,7 @@ describe('createSubscription', () => {
   it('supports basic subscription pattern', () => {
     const Subscription = createSubscription({
       getValue: source => source.getValue(),
-      subscribe: (source, valueChangedCallback) =>
-        source.subscribe(valueChangedCallback),
+      subscribe: (source, callback) => source.subscribe(callback),
       unsubscribe: (source, subscription) => subscription.unsubscribe(),
     });
 
@@ -104,8 +103,7 @@ describe('createSubscription', () => {
           .unsubscribe();
         return currentValue;
       },
-      subscribe: (source, valueChangedCallback) =>
-        source.subscribe(valueChangedCallback),
+      subscribe: (source, callback) => source.subscribe(callback),
       unsubscribe: (source, subscription) => subscription.unsubscribe(),
     });
 
@@ -139,11 +137,8 @@ describe('createSubscription', () => {
     it('should support Promises', async () => {
       const Subscription = createSubscription({
         getValue: source => undefined,
-        subscribe: (source, valueChangedCallback) =>
-          source.then(
-            () => valueChangedCallback(true),
-            () => valueChangedCallback(false),
-          ),
+        subscribe: (source, callback) =>
+          source.then(() => callback(true), () => callback(false)),
         unsubscribe: (source, subscription) => {},
       });
 
@@ -189,8 +184,7 @@ describe('createSubscription', () => {
     it('should still work if unsubscription is managed incorrectly', async () => {
       const Subscription = createSubscription({
         getValue: source => undefined,
-        subscribe: (source, valueChangedCallback) =>
-          source.then(valueChangedCallback),
+        subscribe: (source, callback) => source.then(callback),
         unsubscribe: (source, subscription) => {},
       });
 
@@ -227,8 +221,7 @@ describe('createSubscription', () => {
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
     const Subscription = createSubscription({
       getValue: source => source.getValue(),
-      subscribe: (source, valueChangedCallback) =>
-        source.subscribe(valueChangedCallback),
+      subscribe: (source, callback) => source.subscribe(callback),
       unsubscribe: (source, subscription) => subscription.unsubscribe(),
     });
 
@@ -272,8 +265,7 @@ describe('createSubscription', () => {
 
     const Subscription = createSubscription({
       getValue: source => source.getValue(),
-      subscribe: (source, valueChangedCallback) =>
-        source.subscribe(valueChangedCallback),
+      subscribe: (source, callback) => source.subscribe(callback),
       unsubscribe: (source, subscription) => subscription.unsubscribe(),
     });
 
@@ -345,8 +337,7 @@ describe('createSubscription', () => {
 
     const Subscription = createSubscription({
       getValue: source => source.getValue(),
-      subscribe: (source, valueChangedCallback) =>
-        source.subscribe(valueChangedCallback),
+      subscribe: (source, callback) => source.subscribe(callback),
       unsubscribe: (source, subscription) => subscription.unsubscribe(),
     });
 

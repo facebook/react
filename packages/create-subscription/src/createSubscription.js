@@ -23,11 +23,11 @@ export function createSubscription<
   // Setup a subscription for the subscribable value in props.
   // Due to the variety of change event types, subscribers should provide their own handlers.
   // Those handlers should not attempt to update state though;
-  // They should call the valueChangedCallback() instead when a subscription changes.
+  // They should call the callback() instead when a subscription changes.
   // You may optionally return a subscription value to later unsubscribe (e.g. event handler).
   +subscribe: (
     source: Property,
-    valueChangedCallback: (value: Value) => void,
+    callback: (value: Value) => void,
   ) => CreatedSubscription,
 
   // Unsubsribe from the subscribable value in props.
@@ -110,7 +110,7 @@ export function createSubscription<
     subscribe() {
       const {source} = this.state;
       if (source != null) {
-        const valueChangedCallback = (value: Value) => {
+        const callback = (value: Value) => {
           this.setState(state => {
             // If the value is the same, skip the unnecessary state update.
             if (value === state.value) {
@@ -128,7 +128,7 @@ export function createSubscription<
 
         // Event listeners are only safe to add during the commit phase,
         // So they won't leak if render is interrupted or errors.
-        const subscription = subscribe(source, valueChangedCallback);
+        const subscription = subscribe(source, callback);
 
         // Store subscription for later (in case it's needed to unsubscribe).
         // This is safe to do via mutation since:

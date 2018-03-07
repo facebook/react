@@ -26,9 +26,9 @@ const Subscription = createComponent({
     // Return the current value of the subscription (source),
     // or `undefined` if the value can't be read synchronously (e.g. native Promises).
   },
-  subscribe(source, valueChangedCallback) {
+  subscribe(source, callback) {
     // Subscribe (e.g. add an event listener) to the subscription (source).
-    // Call valueChangedCallback() whenever a subscription changes.
+    // Call callback() whenever a subscription changes.
     // Return any value that will later be needed to unsubscribe (e.g. an event handler).
   },
   unsubscribe(source, subscription) {
@@ -66,21 +66,21 @@ function FollowerComponent({ followersCount }) {
 
 // Create a wrapper component to manage the subscription.
 const EventHandlerSubscription = createComponent({
-  getValue: followers => followers.value,
-  subscribe: (followers, valueChangedCallback) => {
-    const onChange = event => valueChangedCallback(followers.value);
-    followers.addEventListener("change", onChange);
+  getValue: eventDispatcher => eventDispatcher.value,
+  subscribe: (eventDispatcher, callback) => {
+    const onChange = event => callback(eventDispatcher.value);
+    eventDispatcher.addEventListener("change", onChange);
     return onChange;
   },
-  unsubscribe: (followers, subscription) => {
-    followers.removeEventListener("change", subscription);
+  unsubscribe: (eventDispatcher, subscription) => {
+    eventDispatcher.removeEventListener("change", subscription);
   }
 });
 
 // Your component can now be used as shown below.
-// In this example, `followerStore` represents a generic event dispatcher.
-<EventHandlerSubscription source={followersStore}>
-  {followersCount => <FollowerComponent followersCount={followersCount} />}
+// In this example, 'eventDispatcher' represents a generic event dispatcher.
+<EventHandlerSubscription source={eventDispatcher}>
+  {value => <FollowerComponent followersCount={value} />}
 </EventHandlerSubscription>
 ```
 
@@ -94,8 +94,8 @@ Below are examples showing how `create-subscription` can be used to subscribe to
 ```js
 const BehaviorSubscription = createComponent({
   getValue: behaviorSubject => behaviorSubject.getValue(),
-  subscribe: (behaviorSubject, valueChangedCallback) =>
-    behaviorSubject.subscribe(valueChangedCallback),
+  subscribe: (behaviorSubject, callback) =>
+    behaviorSubject.subscribe(callback),
   unsubscribe: (behaviorSubject, subscription) => behaviorSubject.unsubscribe()
 });
 ```
@@ -114,8 +114,8 @@ const ReplaySubscription = createComponent({
       .unsubscribe();
     return currentValue;
   },
-  subscribe: (replaySubject, valueChangedCallback) =>
-    replaySubject.subscribe(valueChangedCallback),
+  subscribe: (replaySubject, callback) =>
+    replaySubject.subscribe(callback),
   unsubscribe: (replaySubject, subscription) => replaySubject.unsubscribe()
 });
 ```
@@ -133,7 +133,7 @@ import React from "react";
 import createComponent from "create-subscription";
 
 // Start with a simple component.
-function InnerComponent({ loadingStatus }) {
+function LoadingComponent({ loadingStatus }) {
   if (loadingStatus === undefined) {
     // Loading
   } else if (loadingStatus) {
@@ -146,31 +146,28 @@ function InnerComponent({ loadingStatus }) {
 // Wrap the functional component with a subscriber HOC.
 // This HOC will manage subscriptions and pass values to the decorated component.
 // It will add and remove subscriptions in an async-safe way when props change.
-const PromiseSubscription = createComponent(
-  {
-    getValue: promise => {
-      // There is no way to synchronously read a Promise's value,
-      // So this method should return undefined.
-      return undefined;
-    },
-    subscribe: (promise, valueChangedCallback) => {
-      promise.then(
-        // Success
-        () => valueChangedCallback(true),
-        // Failure
-        () => valueChangedCallback(false)
-      );
-    },
-    unsubscribe: (promise, subscription) => {
-      // There is no way to "unsubscribe" from a Promise.
-      // In this case, create-subscription will block stale values from rendering.
-    }
+const PromiseSubscription = createComponent({
+  getValue: promise => {
+    // There is no way to synchronously read a Promise's value,
+    // So this method should return undefined.
+    return undefined;
   },
-  InnerComponent
-);
+  subscribe: (promise, callback) => {
+    promise.then(
+      // Success
+      () => callback(true),
+      // Failure
+      () => callback(false)
+    );
+  },
+  unsubscribe: (promise, subscription) => {
+    // There is no way to "unsubscribe" from a Promise.
+    // In this case, create-subscription will block stale values from rendering.
+  }
+});
 
 // Your component can now be used as shown below.
 <PromiseSubscription source={loadingPromise}>
-  {loadingStatus => <InnerComponent loadingStatus={loadingStatus} />}
-</PromiseSubscription>;
+  {loadingStatus => <LoadingComponent loadingStatus={loadingStatus} />}
+</PromiseSubscription>
 ```
