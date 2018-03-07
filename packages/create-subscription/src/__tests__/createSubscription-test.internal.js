@@ -10,9 +10,11 @@
 'use strict';
 
 let createSubscription;
+let BehaviorSubject;
 let ReactFeatureFlags;
 let React;
 let ReactNoop;
+let ReplaySubject;
 
 describe('createSubscription', () => {
   beforeEach(() => {
@@ -22,44 +24,25 @@ describe('createSubscription', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+
+    BehaviorSubject = require('rxjs/BehaviorSubject').BehaviorSubject;
+    ReplaySubject = require('rxjs/ReplaySubject').ReplaySubject;
   });
 
-  // Mimics a partial interface of RxJS `BehaviorSubject`
-  function createFauxBehaviorSubject(initialValue) {
-    let currentValue = initialValue;
-    let subscribedCallbacks = [];
-    return {
-      getValue: () => currentValue,
-      subscribe: callback => {
-        subscribedCallbacks.push(callback);
-        return {
-          unsubscribe: () => {
-            subscribedCallbacks.splice(
-              subscribedCallbacks.indexOf(callback),
-              1,
-            );
-          },
-        };
-      },
-      update: value => {
-        currentValue = value;
-        subscribedCallbacks.forEach(subscribedCallback =>
-          subscribedCallback(value),
-        );
-      },
-    };
+  function createBehaviorSubject(initialValue) {
+    const behaviorSubject = new BehaviorSubject();
+    if (initialValue) {
+      behaviorSubject.next(initialValue);
+    }
+    return behaviorSubject;
   }
 
-  // Mimics a partial interface of RxJS `ReplaySubject`
-  function createFauxReplaySubject(initialValue) {
-    const observable = createFauxBehaviorSubject(initialValue);
-    const {getValue, subscribe} = observable;
-    observable.getValue = undefined;
-    observable.subscribe = callback => {
-      callback(getValue());
-      return subscribe(callback);
-    };
-    return observable;
+  function createReplaySubject(initialValue) {
+    const replaySubject = new ReplaySubject();
+    if (initialValue) {
+      replaySubject.next(initialValue);
+    }
+    return replaySubject;
   }
 
   it('supports basic subscription pattern', () => {
@@ -69,7 +52,7 @@ describe('createSubscription', () => {
       unsubscribe: (source, subscription) => subscription.unsubscribe(),
     });
 
-    const observable = createFauxBehaviorSubject();
+    const observable = createBehaviorSubject();
     ReactNoop.render(
       <Subscription source={observable}>
         {(value = 'default') => {
@@ -81,14 +64,14 @@ describe('createSubscription', () => {
 
     // Updates while subscribed should re-render the child component
     expect(ReactNoop.flush()).toEqual(['default']);
-    observable.update(123);
+    observable.next(123);
     expect(ReactNoop.flush()).toEqual([123]);
-    observable.update('abc');
+    observable.next('abc');
     expect(ReactNoop.flush()).toEqual(['abc']);
 
     // Unmounting the subscriber should remove listeners
     ReactNoop.render(<div />);
-    observable.update(456);
+    observable.next(456);
     expect(ReactNoop.flush()).toEqual([]);
   });
 
@@ -112,11 +95,11 @@ describe('createSubscription', () => {
       return null;
     }
 
-    const observable = createFauxReplaySubject('initial');
+    const observable = createReplaySubject('initial');
 
     ReactNoop.render(<Subscription source={observable}>{render}</Subscription>);
     expect(ReactNoop.flush()).toEqual(['initial']);
-    observable.update('updated');
+    observable.next('updated');
     expect(ReactNoop.flush()).toEqual(['updated']);
 
     // Unsetting the subscriber prop should reset subscribed values
@@ -211,8 +194,8 @@ describe('createSubscription', () => {
       return null;
     }
 
-    const observableA = createFauxBehaviorSubject('a-0');
-    const observableB = createFauxBehaviorSubject('b-0');
+    const observableA = createBehaviorSubject('a-0');
+    const observableB = createBehaviorSubject('b-0');
 
     ReactNoop.render(
       <Subscription source={observableA}>{render}</Subscription>,
@@ -228,11 +211,11 @@ describe('createSubscription', () => {
     expect(ReactNoop.flush()).toEqual(['b-0']);
 
     // Updates to the old subscribable should not re-render the child component
-    observableA.update('a-1');
+    observableA.next('a-1');
     expect(ReactNoop.flush()).toEqual([]);
 
     // Updates to the bew subscribable should re-render the child component
-    observableB.update('b-1');
+    observableB.next('b-1');
     expect(ReactNoop.flush()).toEqual(['b-1']);
   });
 
@@ -277,8 +260,8 @@ describe('createSubscription', () => {
       }
     }
 
-    const observableA = createFauxBehaviorSubject('a-0');
-    const observableB = createFauxBehaviorSubject('b-0');
+    const observableA = createBehaviorSubject('a-0');
+    const observableB = createBehaviorSubject('b-0');
 
     ReactNoop.render(<Parent observed={observableA} />);
     expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
@@ -288,9 +271,9 @@ describe('createSubscription', () => {
     ReactNoop.flushThrough(['Subscriber: b-0']);
 
     // Emit some updates from the uncommitted subscribable
-    observableB.update('b-1');
-    observableB.update('b-2');
-    observableB.update('b-3');
+    observableB.next('b-1');
+    observableB.next('b-2');
+    observableB.next('b-3');
 
     // Mimic a higher-priority interruption
     parentInstance.setState({observed: observableA});
@@ -349,8 +332,8 @@ describe('createSubscription', () => {
       }
     }
 
-    const observableA = createFauxBehaviorSubject('a-0');
-    const observableB = createFauxBehaviorSubject('b-0');
+    const observableA = createBehaviorSubject('a-0');
+    const observableB = createBehaviorSubject('b-0');
 
     ReactNoop.render(<Parent observed={observableA} />);
     expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
@@ -360,8 +343,8 @@ describe('createSubscription', () => {
     ReactNoop.flushThrough(['Subscriber: b-0']);
 
     // Emit some updates from the old subscribable
-    observableA.update('a-1');
-    observableA.update('a-2');
+    observableA.next('a-1');
+    observableA.next('a-2');
 
     // Mimic a higher-priority interruption
     parentInstance.setState({observed: observableA});
@@ -376,7 +359,7 @@ describe('createSubscription', () => {
     ]);
 
     // Updates from the new subsribable should be ignored.
-    observableB.update('b-1');
+    observableB.next('b-1');
     expect(ReactNoop.flush()).toEqual([]);
   });
 
