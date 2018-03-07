@@ -18,7 +18,7 @@ export function createSubscription<
   // Synchronously gets the value for the subscribed property.
   // Return undefined if the subscribable value is undefined,
   // Or does not support synchronous reading (e.g. native Promise).
-  +getValue: (source: Property) => Value,
+  +getValue: (source: Property) => Value | void,
 
   // Setup a subscription for the subscribable value in props.
   // Due to the variety of change event types, subscribers should provide their own handlers.
@@ -27,7 +27,7 @@ export function createSubscription<
   // You may optionally return a subscription value to later unsubscribe (e.g. event handler).
   +subscribe: (
     source: Property,
-    callback: (value: Value) => void,
+    callback: (value: Value | void) => void,
   ) => CreatedSubscription,
 
   // Unsubsribe from the subscribable value in props.
@@ -61,7 +61,7 @@ export function createSubscription<
     subscriptionWrapper: {
       subscription?: CreatedSubscription,
     },
-    value?: Value,
+    value: Value | void,
   };
 
   // Reference: https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3
@@ -108,7 +108,7 @@ export function createSubscription<
     subscribe() {
       const {source} = this.state;
       if (source != null) {
-        const callback = (value: Value) => {
+        const callback = (value: Value | void) => {
           this.setState(state => {
             // If the value is the same, skip the unnecessary state update.
             if (value === state.value) {
