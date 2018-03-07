@@ -1,5 +1,5 @@
 {
-  "name": "create-component-with-subscriptions",
+  "name": "create-subscription",
   "description": "HOC for creating async-safe React components with subscriptions",
   "version": "0.0.1",
   "repository": "facebook/react",
@@ -14,9 +14,5 @@
   },
   "peerDependencies": {
     "react": "16.3.0-alpha.1"
-  },
-  "devDependencies": {
-    "create-react-class": "^15.6.3",
-    "react-lifecycles-compat": "^1.0.2"
   }
 }

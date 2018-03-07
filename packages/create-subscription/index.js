@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './src/createComponentWithSubscriptions';
+export * from './src/createSubscription';

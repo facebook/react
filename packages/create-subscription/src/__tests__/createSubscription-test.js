@@ -16,7 +16,7 @@ let ReactNoop;
 describe('createSubscription', () => {
   beforeEach(() => {
     jest.resetModules();
-    createSubscription = require('create-component-with-subscriptions')
+    createSubscription = require('create-subscription')
       .createSubscription;
     React = require('react');
     ReactNoop = require('react-noop-renderer');

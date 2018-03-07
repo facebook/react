@@ -1,17 +1,17 @@
-# create-component-with-subscriptions
+# create-subscription
 
 [Async-safe subscriptions are hard to get right.](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)
 
-This complexity is acceptible for libraries like Redux/Relay/MobX, but it's not ideal to have mixed in with application code. `create-component-with-subscriptions` provides an interface to easily manage subscriptions in an async-safe way.
+This complexity is acceptible for libraries like Redux/Relay/MobX, but it's not ideal to have mixed in with application code. `create-subscription` provides an interface to easily manage subscriptions in an async-safe way.
 
 ## Installation
 
 ```sh
 # Yarn
-yarn add create-component-with-subscriptions
+yarn add create-subscription
 
 # NPM
-npm install create-component-with-subscriptions --save
+npm install create-subscription --save
 ```
 
 # API
@@ -62,7 +62,7 @@ function unsubscribe(props, subscription) {
 
 # How it works
 
-Depending on the type of React component specified, `create-component-with-subscriptions` will either create a wrapper component or use a mixin technique.
+Depending on the type of React component specified, `create-subscription` will either create a wrapper component or use a mixin technique.
 
 If a stateless functional component is specified, a high-order component will be wrapped around it. The wrapper will pass through all `props`. The subscribed value will be passed in place of the "subscribable" prop though.
 
@@ -93,11 +93,11 @@ This API can be used to subscribe to a variety of "subscribable" sources, from F
 
 ## Subscribing to event dispatchers
 
-Below is an example showing how `create-component-with-subscriptions` can be used to subscribe to event dispatchers such as DOM elements or Flux stores.
+Below is an example showing how `create-subscription` can be used to subscribe to event dispatchers such as DOM elements or Flux stores.
 
 ```js
 import React from "react";
-import createComponent from "create-component-with-subscriptions";
+import createComponent from "create-subscription";
 
 // Start with a simple component.
 // In this case, it's a functional component, but it could have been a class.
@@ -137,7 +137,7 @@ const FollowerCountComponent = createComponent(
 
 ## Subscribing to observables
 
-Below are examples showing how `create-component-with-subscriptions` can be used to subscribe to certain types of observables (e.g. RxJS `BehaviorSubject` and `ReplaySubject`).
+Below are examples showing how `create-subscription` can be used to subscribe to certain types of observables (e.g. RxJS `BehaviorSubject` and `ReplaySubject`).
 
 **Note** that it is not possible to support all observable types (e.g. RxJS `Subject` or `Observable`) because some provide no way to read the "current" value after it has been emitted.
 
@@ -184,7 +184,7 @@ const SubscribedComponent = createComponent(
 
 ## Subscribing to a Promise
 
-Below is an example showing how `create-component-with-subscriptions` can be used with native Promises.
+Below is an example showing how `create-subscription` can be used with native Promises.
 
 **Note** that it an initial render value of `undefined` is unavoidable due to the fact that Promises provide no way to synchronously read their current value.
 
@@ -192,7 +192,7 @@ Below is an example showing how `create-component-with-subscriptions` can be use
 
 ```js
 import React from "react";
-import createComponent from "create-component-with-subscriptions";
+import createComponent from "create-subscription";
 
 // Start with a simple component.
 function InnerComponent({ loadingStatus }) {
@@ -226,7 +226,7 @@ const LoadingComponent = createComponent(
     },
     unsubscribe: (props, subscription) => {
       // There is no way to "unsubscribe" from a Promise.
-      // In this case, create-component-with-subscriptions will block stale values from rendering.
+      // In this case, create-subscription will block stale values from rendering.
     }
   },
   InnerComponent
@@ -238,7 +238,7 @@ const LoadingComponent = createComponent(
 
 ## Optional parameters and default values
 
-Subscribable properties are treated as optional by `create-component-with-subscriptions`. In the event that a subscribable `prop` is missing, a value of `undefined` will be passed to the decorated component (using `props` for a functional component or `state` for a class component).
+Subscribable properties are treated as optional by `create-subscription`. In the event that a subscribable `prop` is missing, a value of `undefined` will be passed to the decorated component (using `props` for a functional component or `state` for a class component).
 
 If you would like to set default values for missing subscriptions, you can do this as shown below.
 
@@ -262,7 +262,7 @@ class InnerComponent extends React.Component {
 
 ## Subscribing to multiple sources
 
-It is possible for a single component to subscribe to multiple data sources. To do this, compose the return value of `create-component-with-subscriptions` as shown below:
+It is possible for a single component to subscribe to multiple data sources. To do this, compose the return value of `create-subscription` as shown below:
 
 ```js
 function InnerComponent({ bar, foo }) {

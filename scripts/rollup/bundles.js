@@ -257,11 +257,11 @@ const bundles = [
 
   /******* createComponentWithSubscriptions (experimental) *******/
   {
-    label: 'create-component-with-subscriptions',
+    label: 'create-subscription',
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'create-component-with-subscriptions',
-    global: 'createComponentWithSubscriptions',
+    entry: 'create-subscription',
+    global: 'createSubscription',
     externals: ['react'],
   },
 ];
