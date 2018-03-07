@@ -18,10 +18,8 @@ Other cases have better long-term solutions:
 This abstraction can handle a variety of subscription types, including:
 * Event dispatchers like `HTMLInputElement`.
 * Custom pub/sub components like Relay's `FragmentSpecResolver`.
-* Observable types like RxJS `BehaviorSubject` and `ReplaySubject`.
+* Observable types like RxJS `BehaviorSubject` and `ReplaySubject`. (Types like RxJS `Subject` or `Observable` are not supported, because they provide no way to read the "current" value after it has been emitted.)
 * Native Promises.
-
-Observable types like RxJS `Subject` or `Observable` are not supported, because they provide no way to read the "current" value after it has been emitted.
 
 # Installation
 
