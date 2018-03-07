@@ -10,14 +10,16 @@
 'use strict';
 
 let createSubscription;
+let ReactFeatureFlags;
 let React;
 let ReactNoop;
 
 describe('createSubscription', () => {
   beforeEach(() => {
     jest.resetModules();
-    createSubscription = require('create-subscription')
-      .createSubscription;
+    createSubscription = require('create-subscription').createSubscription;
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -79,12 +81,11 @@ describe('createSubscription', () => {
     );
 
     // Updates while subscribed should re-render the child component
-    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
-    expect(ReactNoop.flush()).toEqual(['default', 'default']);
+    expect(ReactNoop.flush()).toEqual(['default']);
     observable.update(123);
-    expect(ReactNoop.flush()).toEqual([123, 123]);
+    expect(ReactNoop.flush()).toEqual([123]);
     observable.update('abc');
-    expect(ReactNoop.flush()).toEqual(['abc', 'abc']);
+    expect(ReactNoop.flush()).toEqual(['abc']);
 
     // Unmounting the subscriber should remove listeners
     ReactNoop.render(<div />);
@@ -109,7 +110,6 @@ describe('createSubscription', () => {
 
     const observable = createFauxReplaySubject('initial');
 
-    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
     ReactNoop.render(
       <Subscription source={observable}>
         {(value = 'default') => {
@@ -118,9 +118,9 @@ describe('createSubscription', () => {
         }}
       </Subscription>,
     );
-    expect(ReactNoop.flush()).toEqual(['initial', 'initial']);
+    expect(ReactNoop.flush()).toEqual(['initial']);
     observable.update('updated');
-    expect(ReactNoop.flush()).toEqual(['updated', 'updated']);
+    expect(ReactNoop.flush()).toEqual(['updated']);
 
     // Unsetting the subscriber prop should reset subscribed values
     ReactNoop.render(
@@ -131,7 +131,7 @@ describe('createSubscription', () => {
         }}
       </Subscription>,
     );
-    expect(ReactNoop.flush()).toEqual(['default', 'default']);
+    expect(ReactNoop.flush()).toEqual(['default']);
   });
 
   describe('Promises', () => {
@@ -164,14 +164,14 @@ describe('createSubscription', () => {
       });
 
       // Test a promise that resolves after render
-      // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
+
       ReactNoop.render(
         <Subscription source={promiseA}>{childrenFunction}</Subscription>,
       );
-      expect(ReactNoop.flush()).toEqual(['loading', 'loading']);
+      expect(ReactNoop.flush()).toEqual(['loading']);
       resolveA();
       await promiseA;
-      expect(ReactNoop.flush()).toEqual(['finished', 'finished']);
+      expect(ReactNoop.flush()).toEqual(['finished']);
 
       // Test a promise that resolves before render
       // Note that this will require an extra render anyway,
@@ -180,9 +180,9 @@ describe('createSubscription', () => {
       ReactNoop.render(
         <Subscription source={promiseB}>{childrenFunction}</Subscription>,
       );
-      expect(ReactNoop.flush()).toEqual(['loading', 'loading']);
+      expect(ReactNoop.flush()).toEqual(['loading']);
       await promiseB.catch(() => true);
-      expect(ReactNoop.flush()).toEqual(['failed', 'failed']);
+      expect(ReactNoop.flush()).toEqual(['failed']);
     });
 
     it('should still work if unsubscription is managed incorrectly', async () => {
@@ -203,15 +203,15 @@ describe('createSubscription', () => {
       const promiseB = new Promise(resolve => (resolveB = resolve));
 
       // Subscribe first to Promise A then Promsie B
-      // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
+
       ReactNoop.render(
         <Subscription source={promiseA}>{childrenFunction}</Subscription>,
       );
-      expect(ReactNoop.flush()).toEqual(['default', 'default']);
+      expect(ReactNoop.flush()).toEqual(['default']);
       ReactNoop.render(
         <Subscription source={promiseB}>{childrenFunction}</Subscription>,
       );
-      expect(ReactNoop.flush()).toEqual(['default', 'default']);
+      expect(ReactNoop.flush()).toEqual(['default']);
 
       // Resolve both Promises
       resolveB(123);
@@ -219,7 +219,7 @@ describe('createSubscription', () => {
       await Promise.all([promiseA, promiseB]);
 
       // Ensure that only Promise B causes an update
-      expect(ReactNoop.flush()).toEqual([123, 123]);
+      expect(ReactNoop.flush()).toEqual([123]);
     });
   });
 
@@ -239,19 +239,18 @@ describe('createSubscription', () => {
     const observableA = createFauxBehaviorSubject('a-0');
     const observableB = createFauxBehaviorSubject('b-0');
 
-    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
     ReactNoop.render(
       <Subscription source={observableA}>{childrenFunction}</Subscription>,
     );
 
     // Updates while subscribed should re-render the child component
-    expect(ReactNoop.flush()).toEqual(['a-0', 'a-0']);
+    expect(ReactNoop.flush()).toEqual(['a-0']);
 
     // Unsetting the subscriber prop should reset subscribed values
     ReactNoop.render(
       <Subscription source={observableB}>{childrenFunction}</Subscription>,
     );
-    expect(ReactNoop.flush()).toEqual(['b-0', 'b-0']);
+    expect(ReactNoop.flush()).toEqual(['b-0']);
 
     // Updates to the old subscribable should not re-render the child component
     observableA.update('a-1');
@@ -259,7 +258,7 @@ describe('createSubscription', () => {
 
     // Updates to the bew subscribable should re-render the child component
     observableB.update('b-1');
-    expect(ReactNoop.flush()).toEqual(['b-1', 'b-1']);
+    expect(ReactNoop.flush()).toEqual(['b-1']);
   });
 
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
@@ -307,17 +306,12 @@ describe('createSubscription', () => {
     const observableA = createFauxBehaviorSubject('a-0');
     const observableB = createFauxBehaviorSubject('b-0');
 
-    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
     ReactNoop.render(<Parent observed={observableA} />);
-    expect(ReactNoop.flush()).toEqual([
-      'Subscriber: a-0',
-      'Subscriber: a-0',
-      'Child: a-0',
-    ]);
+    expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
 
     // Start React update, but don't finish
     ReactNoop.render(<Parent observed={observableB} />);
-    ReactNoop.flushThrough(['Subscriber: b-0', 'Subscriber: b-0']);
+    ReactNoop.flushThrough(['Subscriber: b-0']);
 
     // Emit some updates from the uncommitted subscribable
     observableB.update('b-1');
@@ -334,9 +328,7 @@ describe('createSubscription', () => {
     expect(ReactNoop.flush()).toEqual([
       'Child: b-0',
       'Subscriber: b-3',
-      'Subscriber: b-3',
       'Child: b-3',
-      'Subscriber: a-0',
       'Subscriber: a-0',
       'Child: a-0',
     ]);
@@ -387,17 +379,12 @@ describe('createSubscription', () => {
     const observableA = createFauxBehaviorSubject('a-0');
     const observableB = createFauxBehaviorSubject('b-0');
 
-    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
     ReactNoop.render(<Parent observed={observableA} />);
-    expect(ReactNoop.flush()).toEqual([
-      'Subscriber: a-0',
-      'Subscriber: a-0',
-      'Child: a-0',
-    ]);
+    expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
 
     // Start React update, but don't finish
     ReactNoop.render(<Parent observed={observableB} />);
-    ReactNoop.flushThrough(['Subscriber: b-0', 'Subscriber: b-0']);
+    ReactNoop.flushThrough(['Subscriber: b-0']);
 
     // Emit some updates from the old subscribable
     observableA.update('a-1');
@@ -411,7 +398,6 @@ describe('createSubscription', () => {
     // But then the updated values from the old subscribable should be used.
     expect(ReactNoop.flush()).toEqual([
       'Child: b-0',
-      'Subscriber: a-2',
       'Subscriber: a-2',
       'Child: a-2',
     ]);
@@ -432,7 +418,7 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a getValue function');
+      }).toThrow('Subscription must specify a getValue function');
     });
 
     it('should error for invalid missing subscribe', () => {
@@ -445,7 +431,7 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a subscribe function');
+      }).toThrow('Subscription must specify a subscribe function');
     });
 
     it('should error for invalid missing unsubscribe', () => {
@@ -458,7 +444,7 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a unsubscribe function');
+      }).toThrow('Subscription must specify a unsubscribe function');
     });
   });
 });
