@@ -153,10 +153,10 @@ import createComponent from "create-subscription";
 function LoadingComponent({ loadingStatus }) {
   if (loadingStatus === undefined) {
     // Loading
-  } else if (loadingStatus) {
-    // Success
-  } else {
+  } else if (loadingStatus === null) {
     // Error
+  } else {
+    // Success
   }
 }
 
@@ -172,9 +172,9 @@ const PromiseSubscription = createComponent({
   subscribe: (promise, callback) => {
     promise.then(
       // Success
-      () => callback(true),
+      value => callback(value),
       // Failure
-      () => callback(false)
+      () => callback(null)
     );
   },
   unsubscribe: (promise, subscription) => {

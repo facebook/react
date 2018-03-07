@@ -129,7 +129,7 @@ describe('createSubscription', () => {
       const Subscription = createSubscription({
         getValue: source => undefined,
         subscribe: (source, callback) =>
-          source.then(() => callback(true), () => callback(false)),
+          source.then(value => callback(value), value => callback(value)),
         unsubscribe: (source, subscription) => {},
       });
 
@@ -153,14 +153,14 @@ describe('createSubscription', () => {
       // Test a promise that resolves after render
       ReactNoop.render(<Subscription source={promiseA}>{render}</Subscription>);
       expect(ReactNoop.flush()).toEqual(['loading']);
-      resolveA();
+      resolveA(true);
       await promiseA;
       expect(ReactNoop.flush()).toEqual(['finished']);
 
       // Test a promise that resolves before render
       // Note that this will require an extra render anyway,
       // Because there is no way to syncrhonously get a Promise's value
-      rejectB();
+      rejectB(false);
       ReactNoop.render(<Subscription source={promiseB}>{render}</Subscription>);
       expect(ReactNoop.flush()).toEqual(['loading']);
       await promiseB.catch(() => true);
