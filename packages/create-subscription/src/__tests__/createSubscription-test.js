@@ -432,7 +432,7 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toThrow('Subscription must specify a getValue function');
+      }).toWarnDev('Subscription must specify a getValue function');
     });
 
     it('should error for invalid missing subscribe', () => {
@@ -445,7 +445,7 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toThrow('Subscription must specify a subscribe function');
+      }).toWarnDev('Subscription must specify a subscribe function');
     });
 
     it('should error for invalid missing unsubscribe', () => {
@@ -458,7 +458,7 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toThrow('Subscription must specify a unsubscribe function');
+      }).toWarnDev('Subscription must specify a unsubscribe function');
     });
   });
 });
