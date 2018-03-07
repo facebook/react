@@ -97,10 +97,11 @@ describe('createSubscription', () => {
     const Subscription = createSubscription({
       getValue: source => {
         let currentValue;
-        const temporarySubscription = source.subscribe(value => {
-          currentValue = value;
-        });
-        temporarySubscription.unsubscribe();
+        source
+          .subscribe(value => {
+            currentValue = value;
+          })
+          .unsubscribe();
         return currentValue;
       },
       subscribe: (source, valueChangedCallback) =>
