@@ -107,29 +107,20 @@ describe('createSubscription', () => {
       unsubscribe: (source, subscription) => subscription.unsubscribe(),
     });
 
+    function render(value = 'default') {
+      ReactNoop.yield(value);
+      return null;
+    }
+
     const observable = createFauxReplaySubject('initial');
 
-    ReactNoop.render(
-      <Subscription source={observable}>
-        {(value = 'default') => {
-          ReactNoop.yield(value);
-          return null;
-        }}
-      </Subscription>,
-    );
+    ReactNoop.render(<Subscription source={observable}>{render}</Subscription>);
     expect(ReactNoop.flush()).toEqual(['initial']);
     observable.update('updated');
     expect(ReactNoop.flush()).toEqual(['updated']);
 
     // Unsetting the subscriber prop should reset subscribed values
-    ReactNoop.render(
-      <Subscription>
-        {(value = 'default') => {
-          ReactNoop.yield(value);
-          return null;
-        }}
-      </Subscription>,
-    );
+    ReactNoop.render(<Subscription>{render}</Subscription>);
     expect(ReactNoop.flush()).toEqual(['default']);
   });
 
@@ -142,7 +133,7 @@ describe('createSubscription', () => {
         unsubscribe: (source, subscription) => {},
       });
 
-      function childrenFunction(hasLoaded) {
+      function render(hasLoaded) {
         if (hasLoaded === undefined) {
           ReactNoop.yield('loading');
         } else {
@@ -160,10 +151,7 @@ describe('createSubscription', () => {
       });
 
       // Test a promise that resolves after render
-
-      ReactNoop.render(
-        <Subscription source={promiseA}>{childrenFunction}</Subscription>,
-      );
+      ReactNoop.render(<Subscription source={promiseA}>{render}</Subscription>);
       expect(ReactNoop.flush()).toEqual(['loading']);
       resolveA();
       await promiseA;
@@ -173,9 +161,7 @@ describe('createSubscription', () => {
       // Note that this will require an extra render anyway,
       // Because there is no way to syncrhonously get a Promise's value
       rejectB();
-      ReactNoop.render(
-        <Subscription source={promiseB}>{childrenFunction}</Subscription>,
-      );
+      ReactNoop.render(<Subscription source={promiseB}>{render}</Subscription>);
       expect(ReactNoop.flush()).toEqual(['loading']);
       await promiseB.catch(() => true);
       expect(ReactNoop.flush()).toEqual(['failed']);
@@ -188,7 +174,7 @@ describe('createSubscription', () => {
         unsubscribe: (source, subscription) => {},
       });
 
-      function childrenFunction(value = 'default') {
+      function render(value = 'default') {
         ReactNoop.yield(value);
         return null;
       }
@@ -198,14 +184,9 @@ describe('createSubscription', () => {
       const promiseB = new Promise(resolve => (resolveB = resolve));
 
       // Subscribe first to Promise A then Promsie B
-
-      ReactNoop.render(
-        <Subscription source={promiseA}>{childrenFunction}</Subscription>,
-      );
+      ReactNoop.render(<Subscription source={promiseA}>{render}</Subscription>);
       expect(ReactNoop.flush()).toEqual(['default']);
-      ReactNoop.render(
-        <Subscription source={promiseB}>{childrenFunction}</Subscription>,
-      );
+      ReactNoop.render(<Subscription source={promiseB}>{render}</Subscription>);
       expect(ReactNoop.flush()).toEqual(['default']);
 
       // Resolve both Promises
@@ -225,7 +206,7 @@ describe('createSubscription', () => {
       unsubscribe: (source, subscription) => subscription.unsubscribe(),
     });
 
-    function childrenFunction(value = 'default') {
+    function render(value = 'default') {
       ReactNoop.yield(value);
       return null;
     }
@@ -234,7 +215,7 @@ describe('createSubscription', () => {
     const observableB = createFauxBehaviorSubject('b-0');
 
     ReactNoop.render(
-      <Subscription source={observableA}>{childrenFunction}</Subscription>,
+      <Subscription source={observableA}>{render}</Subscription>,
     );
 
     // Updates while subscribed should re-render the child component
@@ -242,7 +223,7 @@ describe('createSubscription', () => {
 
     // Unsetting the subscriber prop should reset subscribed values
     ReactNoop.render(
-      <Subscription source={observableB}>{childrenFunction}</Subscription>,
+      <Subscription source={observableB}>{render}</Subscription>,
     );
     expect(ReactNoop.flush()).toEqual(['b-0']);
 
