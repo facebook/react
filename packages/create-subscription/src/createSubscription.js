@@ -92,8 +92,6 @@ export function createSubscription<
 
     componentDidUpdate(prevProps, prevState) {
       if (this.state.source !== prevState.source) {
-        // Similar to adding subscriptions,
-        // It's only safe to unsubscribe during the commit phase.
         this.unsubscribe(prevState);
         this.subscribe();
       }
@@ -126,15 +124,14 @@ export function createSubscription<
           });
         };
 
-        // Event listeners are only safe to add during the commit phase,
-        // So they won't leak if render is interrupted or errors.
-        const subscription = subscribe(source, callback);
-
         // Store subscription for later (in case it's needed to unsubscribe).
         // This is safe to do via mutation since:
         // 1) It does not impact render.
         // 2) This method will only be called during the "commit" phase.
-        this.state.subscriptionWrapper.subscription = subscription;
+        this.state.subscriptionWrapper.subscription = subscribe(
+          source,
+          callback,
+        );
 
         // External values could change between render and mount,
         // In some cases it may be important to handle this case.
