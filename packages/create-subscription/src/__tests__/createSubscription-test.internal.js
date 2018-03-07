@@ -399,7 +399,7 @@ describe('createSubscription', () => {
     expect(ReactNoop.flush()).toEqual([]);
   });
 
-  describe('invariants', () => {
+  describe('warnings', () => {
     it('should error for invalid missing getValue', () => {
       expect(() => {
         createSubscription(
@@ -436,7 +436,7 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toThrow('Subscription must specify a unsubscribe function');
+      }).toThrow('Subscription must specify an unsubscribe function');
     });
   });
 });

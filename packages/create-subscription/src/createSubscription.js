@@ -49,7 +49,7 @@ export function createSubscription<
   );
   warning(
     typeof unsubscribe === 'function',
-    'Subscription must specify a unsubscribe function',
+    'Subscription must specify an unsubscribe function',
   );
 
   type Props = {
