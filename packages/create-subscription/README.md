@@ -28,7 +28,7 @@ const Subscription = createComponent({
   },
   subscribe(source, callback) {
     // Subscribe (e.g. add an event listener) to the subscription (source).
-    // Call callback() whenever a subscription changes.
+    // Call callback(newValue) whenever a subscription changes.
     // Return any value that will later be needed to unsubscribe (e.g. an event handler).
   },
   unsubscribe(source, subscription) {
@@ -38,7 +38,7 @@ const Subscription = createComponent({
 });
 ```
 
-To use the `Subscription` component, pass the subscribable property (e.g. an event dispatcher, Flux store, observable) as the `source` property and use a [`children` render prop](https://reactjs.org/docs/render-props.html) to handle the subscribed value when it changes:
+To use the `Subscription` component, pass the subscribable property (e.g. an event dispatcher, Flux store, observable) as the `source` property and use a [render prop](https://reactjs.org/docs/render-props.html), `children`, to handle the subscribed value when it changes:
 
 ```js
 <Subscription source={eventDispatcher}>
