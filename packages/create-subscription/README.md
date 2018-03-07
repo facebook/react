@@ -2,9 +2,29 @@
 
 [Async-safe subscriptions are hard to get right.](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)
 
-This complexity is acceptible for libraries like Redux/Relay/MobX, but it's not ideal to have mixed in with application code. `create-subscription` provides an interface to easily manage subscriptions in an async-safe way.
+`create-subscription` provides an simple, async-safe interface to manage a subscription.
 
-## Installation
+## Who should use this?
+
+This utility is should be used for subscriptions to a single value that are typically only read in one place and may update frequently (e.g. a component that subscribes to the geolocation API to show a dot on a map).
+
+Other cases have better long-term solutions:
+* Redux/Flux stores should use the [context API](https://reactjs.org/docs/context.html) instead.
+* I/O subscriptions (e.g. notifications) that update infrequently should use [`simple-cache-provider`](https://github.com/facebook/react/blob/master/packages/simple-cache-provider/README.md) instead.
+* Complex things like Relay/Apollo should use this same technique (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)), in a way that is most optimized for their library usage.
+
+## What types of subscriptions can this support?
+
+This abstraction can handle a variety of "subscribable" types. For example:
+ * Event dispatchers like `HTMLInputElement` with `addEventListener()`, `removeEventListener()`, and `value` attributes.
+ * Custom pub/sub components like Relay's `FragmentSpecResolver` with `subscribe()`, `unsubscribe()`, and `resolve()` methods.
+ * Observable types like RxJS `BehaviorSubject` with `subscribe()`, `subscription.unsubscribe()`, and `getValue()` methods.
+ * Observable types like RxJS `ReplaySubject`. (**Note** that these types require a temporary subscription inside of `getValue` to retrieve the latest current/value. See tests for an example.)
+* Native Promises. (**Note** that it an initial render value of `undefined` is unavoidable due to the fact that Promises provide no way to synchronously read their current value.)
+
+Observable types like RxJS `Subject` or `Observable` are not supported, because they provide no way to read the "current" value after it has been emitted.
+
+# Installation
 
 ```sh
 # Yarn
