@@ -34,7 +34,7 @@ export function createSubscription<
   // The subscription value returned from subscribe() is passed as the second parameter.
   +unsubscribe: (source: Property, subscription: CreatedSubscription) => void,
 |}): React$ComponentType<{
-  children: (value: Value) => React$Element<any>,
+  children: (value: Value) => React$Node,
   source: any,
 }> {
   const {getValue, subscribe, unsubscribe} = config;
