@@ -9,15 +9,15 @@
 
 'use strict';
 
-let createComponent;
+let createSubscription;
 let React;
 let ReactNoop;
 
-describe('CreateComponentWithSubscriptions', () => {
+describe('createSubscription', () => {
   beforeEach(() => {
     jest.resetModules();
-    createComponent = require('create-component-with-subscriptions')
-      .createComponent;
+    createSubscription = require('create-component-with-subscriptions')
+      .createSubscription;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -61,29 +61,30 @@ describe('CreateComponentWithSubscriptions', () => {
   }
 
   it('supports basic subscription pattern', () => {
-    const Subscriber = createComponent(
-      {
-        property: 'observed',
-        getValue: props => props.observed.getValue(),
-        subscribe: (props, valueChangedCallback) =>
-          props.observed.subscribe(valueChangedCallback),
-        unsubscribe: (props, subscription) => subscription.unsubscribe(),
-      },
-      ({observed = 'default'}) => {
-        ReactNoop.yield(observed);
-        return null;
-      },
-    );
+    const Subscription = createSubscription({
+      getValue: source => source.getValue(),
+      subscribe: (source, valueChangedCallback) =>
+        source.subscribe(valueChangedCallback),
+      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+    });
 
     const observable = createFauxBehaviorSubject();
-    ReactNoop.render(<Subscriber observed={observable} />);
+    ReactNoop.render(
+      <Subscription source={observable}>
+        {(value = 'default') => {
+          ReactNoop.yield(value);
+          return null;
+        }}
+      </Subscription>,
+    );
 
     // Updates while subscribed should re-render the child component
-    expect(ReactNoop.flush()).toEqual(['default']);
+    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
+    expect(ReactNoop.flush()).toEqual(['default', 'default']);
     observable.update(123);
-    expect(ReactNoop.flush()).toEqual([123]);
+    expect(ReactNoop.flush()).toEqual([123, 123]);
     observable.update('abc');
-    expect(ReactNoop.flush()).toEqual(['abc']);
+    expect(ReactNoop.flush()).toEqual(['abc', 'abc']);
 
     // Unmounting the subscriber should remove listeners
     ReactNoop.render(<div />);
@@ -91,108 +92,68 @@ describe('CreateComponentWithSubscriptions', () => {
     expect(ReactNoop.flush()).toEqual([]);
   });
 
-  it('supports multiple subscriptions', () => {
-    const InnerComponent = ({bar, foo}) => {
-      ReactNoop.yield(`bar:${bar}, foo:${foo}`);
-      return null;
-    };
-
-    const Subscriber = createComponent(
-      {
-        property: 'foo',
-        getValue: props => props.foo.getValue(),
-        subscribe: (props, valueChangedCallback) =>
-          props.foo.subscribe(valueChangedCallback),
-        unsubscribe: (props, subscription) => subscription.unsubscribe(),
-      },
-      createComponent(
-        {
-          property: 'bar',
-          getValue: props => props.bar.getValue(),
-          subscribe: (props, valueChangedCallback) =>
-            props.bar.subscribe(valueChangedCallback),
-          unsubscribe: (props, subscription) => subscription.unsubscribe(),
-        },
-        InnerComponent,
-      ),
-    );
-
-    const foo = createFauxBehaviorSubject();
-    const bar = createFauxBehaviorSubject();
-
-    ReactNoop.render(<Subscriber foo={foo} bar={bar} />);
-
-    // Updates while subscribed should re-render the child component
-    expect(ReactNoop.flush()).toEqual([`bar:undefined, foo:undefined`]);
-    foo.update(123);
-    expect(ReactNoop.flush()).toEqual([`bar:undefined, foo:123`]);
-    bar.update('abc');
-    expect(ReactNoop.flush()).toEqual([`bar:abc, foo:123`]);
-    foo.update(456);
-    expect(ReactNoop.flush()).toEqual([`bar:abc, foo:456`]);
-
-    // Unsetting the subscriber prop should reset subscribed values
-    ReactNoop.render(<Subscriber />);
-    expect(ReactNoop.flush()).toEqual([`bar:undefined, foo:undefined`]);
-  });
-
   it('should support observable types like RxJS ReplaySubject', () => {
-    const Subscriber = createComponent(
-      {
-        property: 'observed',
-        getValue: props => {
-          let currentValue;
-          const temporarySubscription = props.observed.subscribe(value => {
-            currentValue = value;
-          });
-          temporarySubscription.unsubscribe();
-          return currentValue;
-        },
-        subscribe: (props, valueChangedCallback) =>
-          props.observed.subscribe(valueChangedCallback),
-        unsubscribe: (props, subscription) => subscription.unsubscribe(),
+    const Subscription = createSubscription({
+      getValue: source => {
+        let currentValue;
+        const temporarySubscription = source.subscribe(value => {
+          currentValue = value;
+        });
+        temporarySubscription.unsubscribe();
+        return currentValue;
       },
-      ({observed}) => {
-        ReactNoop.yield(observed);
-        return null;
-      },
-    );
+      subscribe: (source, valueChangedCallback) =>
+        source.subscribe(valueChangedCallback),
+      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+    });
 
     const observable = createFauxReplaySubject('initial');
 
-    ReactNoop.render(<Subscriber observed={observable} />);
-    expect(ReactNoop.flush()).toEqual(['initial']);
+    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
+    ReactNoop.render(
+      <Subscription source={observable}>
+        {(value = 'default') => {
+          ReactNoop.yield(value);
+          return null;
+        }}
+      </Subscription>,
+    );
+    expect(ReactNoop.flush()).toEqual(['initial', 'initial']);
     observable.update('updated');
-    expect(ReactNoop.flush()).toEqual(['updated']);
+    expect(ReactNoop.flush()).toEqual(['updated', 'updated']);
 
     // Unsetting the subscriber prop should reset subscribed values
-    ReactNoop.render(<Subscriber />);
-    expect(ReactNoop.flush()).toEqual([undefined]);
+    ReactNoop.render(
+      <Subscription>
+        {(value = 'default') => {
+          ReactNoop.yield(value);
+          return null;
+        }}
+      </Subscription>,
+    );
+    expect(ReactNoop.flush()).toEqual(['default', 'default']);
   });
 
   describe('Promises', () => {
     it('should support Promises', async () => {
-      const Subscriber = createComponent(
-        {
-          property: 'hasLoaded',
-          getValue: props => undefined,
-          subscribe: (props, valueChangedCallback) => {
-            props.hasLoaded.then(
-              () => valueChangedCallback(true),
-              () => valueChangedCallback(false),
-            );
-          },
-          unsubscribe: (props, subscription) => {},
-        },
-        ({hasLoaded}) => {
-          if (hasLoaded === undefined) {
-            ReactNoop.yield('loading');
-          } else {
-            ReactNoop.yield(hasLoaded ? 'finished' : 'failed');
-          }
-          return null;
-        },
-      );
+      const Subscription = createSubscription({
+        getValue: source => undefined,
+        subscribe: (source, valueChangedCallback) =>
+          source.then(
+            () => valueChangedCallback(true),
+            () => valueChangedCallback(false),
+          ),
+        unsubscribe: (source, subscription) => {},
+      });
+
+      function childrenFunction(hasLoaded) {
+        if (hasLoaded === undefined) {
+          ReactNoop.yield('loading');
+        } else {
+          ReactNoop.yield(hasLoaded ? 'finished' : 'failed');
+        }
+        return null;
+      }
 
       let resolveA, rejectB;
       const promiseA = new Promise((resolve, reject) => {
@@ -203,46 +164,54 @@ describe('CreateComponentWithSubscriptions', () => {
       });
 
       // Test a promise that resolves after render
-      ReactNoop.render(<Subscriber hasLoaded={promiseA} />);
-      expect(ReactNoop.flush()).toEqual(['loading']);
+      // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
+      ReactNoop.render(
+        <Subscription source={promiseA}>{childrenFunction}</Subscription>,
+      );
+      expect(ReactNoop.flush()).toEqual(['loading', 'loading']);
       resolveA();
       await promiseA;
-      expect(ReactNoop.flush()).toEqual(['finished']);
+      expect(ReactNoop.flush()).toEqual(['finished', 'finished']);
 
       // Test a promise that resolves before render
       // Note that this will require an extra render anyway,
       // Because there is no way to syncrhonously get a Promise's value
       rejectB();
-      ReactNoop.render(<Subscriber hasLoaded={promiseB} />);
-      expect(ReactNoop.flush()).toEqual(['loading']);
+      ReactNoop.render(
+        <Subscription source={promiseB}>{childrenFunction}</Subscription>,
+      );
+      expect(ReactNoop.flush()).toEqual(['loading', 'loading']);
       await promiseB.catch(() => true);
-      expect(ReactNoop.flush()).toEqual(['failed']);
+      expect(ReactNoop.flush()).toEqual(['failed', 'failed']);
     });
 
     it('should still work if unsubscription is managed incorrectly', async () => {
-      const Subscriber = createComponent(
-        {
-          property: 'promised',
-          getValue: props => undefined,
-          subscribe: (props, valueChangedCallback) =>
-            props.promised.then(valueChangedCallback),
-          unsubscribe: (props, subscription) => {},
-        },
-        ({promised}) => {
-          ReactNoop.yield(promised);
-          return null;
-        },
-      );
+      const Subscription = createSubscription({
+        getValue: source => undefined,
+        subscribe: (source, valueChangedCallback) =>
+          source.then(valueChangedCallback),
+        unsubscribe: (source, subscription) => {},
+      });
+
+      function childrenFunction(value = 'default') {
+        ReactNoop.yield(value);
+        return null;
+      }
 
       let resolveA, resolveB;
       const promiseA = new Promise(resolve => (resolveA = resolve));
       const promiseB = new Promise(resolve => (resolveB = resolve));
 
       // Subscribe first to Promise A then Promsie B
-      ReactNoop.render(<Subscriber promised={promiseA} />);
-      expect(ReactNoop.flush()).toEqual([undefined]);
-      ReactNoop.render(<Subscriber promised={promiseB} />);
-      expect(ReactNoop.flush()).toEqual([undefined]);
+      // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
+      ReactNoop.render(
+        <Subscription source={promiseA}>{childrenFunction}</Subscription>,
+      );
+      expect(ReactNoop.flush()).toEqual(['default', 'default']);
+      ReactNoop.render(
+        <Subscription source={promiseB}>{childrenFunction}</Subscription>,
+      );
+      expect(ReactNoop.flush()).toEqual(['default', 'default']);
 
       // Resolve both Promises
       resolveB(123);
@@ -250,36 +219,39 @@ describe('CreateComponentWithSubscriptions', () => {
       await Promise.all([promiseA, promiseB]);
 
       // Ensure that only Promise B causes an update
-      expect(ReactNoop.flush()).toEqual([123]);
+      expect(ReactNoop.flush()).toEqual([123, 123]);
     });
   });
 
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
-    const Subscriber = createComponent(
-      {
-        property: 'observed',
-        getValue: props => props.observed.getValue(),
-        subscribe: (props, valueChangedCallback) =>
-          props.observed.subscribe(valueChangedCallback),
-        unsubscribe: (props, subscription) => subscription.unsubscribe(),
-      },
-      ({observed}) => {
-        ReactNoop.yield(observed);
-        return null;
-      },
-    );
+    const Subscription = createSubscription({
+      getValue: source => source.getValue(),
+      subscribe: (source, valueChangedCallback) =>
+        source.subscribe(valueChangedCallback),
+      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+    });
+
+    function childrenFunction(value = 'default') {
+      ReactNoop.yield(value);
+      return null;
+    }
 
     const observableA = createFauxBehaviorSubject('a-0');
     const observableB = createFauxBehaviorSubject('b-0');
 
-    ReactNoop.render(<Subscriber observed={observableA} />);
+    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
+    ReactNoop.render(
+      <Subscription source={observableA}>{childrenFunction}</Subscription>,
+    );
 
     // Updates while subscribed should re-render the child component
-    expect(ReactNoop.flush()).toEqual(['a-0']);
+    expect(ReactNoop.flush()).toEqual(['a-0', 'a-0']);
 
     // Unsetting the subscriber prop should reset subscribed values
-    ReactNoop.render(<Subscriber observed={observableB} />);
-    expect(ReactNoop.flush()).toEqual(['b-0']);
+    ReactNoop.render(
+      <Subscription source={observableB}>{childrenFunction}</Subscription>,
+    );
+    expect(ReactNoop.flush()).toEqual(['b-0', 'b-0']);
 
     // Updates to the old subscribable should not re-render the child component
     observableA.update('a-1');
@@ -287,7 +259,7 @@ describe('CreateComponentWithSubscriptions', () => {
 
     // Updates to the bew subscribable should re-render the child component
     observableB.update('b-1');
-    expect(ReactNoop.flush()).toEqual(['b-1']);
+    expect(ReactNoop.flush()).toEqual(['b-1', 'b-1']);
   });
 
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
@@ -298,19 +270,12 @@ describe('CreateComponentWithSubscriptions', () => {
       return null;
     }
 
-    const Subscriber = createComponent(
-      {
-        property: 'observed',
-        getValue: props => props.observed.getValue(),
-        subscribe: (props, valueChangedCallback) =>
-          props.observed.subscribe(valueChangedCallback),
-        unsubscribe: (props, subscription) => subscription.unsubscribe(),
-      },
-      ({observed}) => {
-        ReactNoop.yield('Subscriber: ' + observed);
-        return <Child value={observed} />;
-      },
-    );
+    const Subscription = createSubscription({
+      getValue: source => source.getValue(),
+      subscribe: (source, valueChangedCallback) =>
+        source.subscribe(valueChangedCallback),
+      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+    });
 
     class Parent extends React.Component {
       state = {};
@@ -328,19 +293,31 @@ describe('CreateComponentWithSubscriptions', () => {
       render() {
         parentInstance = this;
 
-        return <Subscriber observed={this.state.observed} />;
+        return (
+          <Subscription source={this.state.observed}>
+            {(value = 'default') => {
+              ReactNoop.yield('Subscriber: ' + value);
+              return <Child value={value} />;
+            }}
+          </Subscription>
+        );
       }
     }
 
     const observableA = createFauxBehaviorSubject('a-0');
     const observableB = createFauxBehaviorSubject('b-0');
 
+    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
     ReactNoop.render(<Parent observed={observableA} />);
-    expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
+    expect(ReactNoop.flush()).toEqual([
+      'Subscriber: a-0',
+      'Subscriber: a-0',
+      'Child: a-0',
+    ]);
 
     // Start React update, but don't finish
     ReactNoop.render(<Parent observed={observableB} />);
-    ReactNoop.flushThrough(['Subscriber: b-0']);
+    ReactNoop.flushThrough(['Subscriber: b-0', 'Subscriber: b-0']);
 
     // Emit some updates from the uncommitted subscribable
     observableB.update('b-1');
@@ -357,7 +334,9 @@ describe('CreateComponentWithSubscriptions', () => {
     expect(ReactNoop.flush()).toEqual([
       'Child: b-0',
       'Subscriber: b-3',
+      'Subscriber: b-3',
       'Child: b-3',
+      'Subscriber: a-0',
       'Subscriber: a-0',
       'Child: a-0',
     ]);
@@ -371,19 +350,12 @@ describe('CreateComponentWithSubscriptions', () => {
       return null;
     }
 
-    const Subscriber = createComponent(
-      {
-        property: 'observed',
-        getValue: props => props.observed.getValue(),
-        subscribe: (props, valueChangedCallback) =>
-          props.observed.subscribe(valueChangedCallback),
-        unsubscribe: (props, subscription) => subscription.unsubscribe(),
-      },
-      ({observed}) => {
-        ReactNoop.yield('Subscriber: ' + observed);
-        return <Child value={observed} />;
-      },
-    );
+    const Subscription = createSubscription({
+      getValue: source => source.getValue(),
+      subscribe: (source, valueChangedCallback) =>
+        source.subscribe(valueChangedCallback),
+      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+    });
 
     class Parent extends React.Component {
       state = {};
@@ -401,19 +373,31 @@ describe('CreateComponentWithSubscriptions', () => {
       render() {
         parentInstance = this;
 
-        return <Subscriber observed={this.state.observed} />;
+        return (
+          <Subscription source={this.state.observed}>
+            {(value = 'default') => {
+              ReactNoop.yield('Subscriber: ' + value);
+              return <Child value={value} />;
+            }}
+          </Subscription>
+        );
       }
     }
 
     const observableA = createFauxBehaviorSubject('a-0');
     const observableB = createFauxBehaviorSubject('b-0');
 
+    // NOTE: Redundant yields are expected due to 'debugRenderPhaseSideEffectsForStrictMode'
     ReactNoop.render(<Parent observed={observableA} />);
-    expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
+    expect(ReactNoop.flush()).toEqual([
+      'Subscriber: a-0',
+      'Subscriber: a-0',
+      'Child: a-0',
+    ]);
 
     // Start React update, but don't finish
     ReactNoop.render(<Parent observed={observableB} />);
-    ReactNoop.flushThrough(['Subscriber: b-0']);
+    ReactNoop.flushThrough(['Subscriber: b-0', 'Subscriber: b-0']);
 
     // Emit some updates from the old subscribable
     observableA.update('a-1');
@@ -428,6 +412,7 @@ describe('CreateComponentWithSubscriptions', () => {
     expect(ReactNoop.flush()).toEqual([
       'Child: b-0',
       'Subscriber: a-2',
+      'Subscriber: a-2',
       'Child: a-2',
     ]);
 
@@ -436,57 +421,10 @@ describe('CreateComponentWithSubscriptions', () => {
     expect(ReactNoop.flush()).toEqual([]);
   });
 
-  it('should pass all non-subscribable props through to the child component', () => {
-    const Subscriber = createComponent(
-      {
-        property: 'observed',
-        getValue: props => props.observed.getValue(),
-        subscribe: (props, valueChangedCallback) =>
-          props.observed.subscribe(valueChangedCallback),
-        unsubscribe: (props, subscription) => subscription.unsubscribe(),
-      },
-      ({bar, foo, observed}) => {
-        ReactNoop.yield(`bar:${bar}, foo:${foo}, observed:${observed}`);
-        return null;
-      },
-    );
-
-    const observable = createFauxBehaviorSubject(true);
-    ReactNoop.render(<Subscriber observed={observable} foo={123} bar="abc" />);
-    expect(ReactNoop.flush()).toEqual(['bar:abc, foo:123, observed:true']);
-  });
-
   describe('invariants', () => {
-    it('should error for invalid Component', () => {
-      expect(() => {
-        createComponent(
-          {
-            property: 'somePropertyName',
-            getValue: () => {},
-            subscribe: () => {},
-            unsubscribe: () => {},
-          },
-          null,
-        );
-      }).toThrow('Invalid subscribable Component specified');
-    });
-
-    it('should error for invalid missing property', () => {
-      expect(() => {
-        createComponent(
-          {
-            getValue: () => {},
-            subscribe: () => {},
-            unsubscribe: () => {},
-          },
-          () => null,
-        );
-      }).toThrow('Subscribable config must specify a subscribable property');
-    });
-
     it('should error for invalid missing getValue', () => {
       expect(() => {
-        createComponent(
+        createSubscription(
           {
             property: 'somePropertyName',
             subscribe: () => {},
@@ -494,12 +432,12 @@ describe('CreateComponentWithSubscriptions', () => {
           },
           () => null,
         );
-      }).toThrow('Subscribable config must specify a getValue function');
+      }).toThrow('Subscription must specify a getValue function');
     });
 
     it('should error for invalid missing subscribe', () => {
       expect(() => {
-        createComponent(
+        createSubscription(
           {
             property: 'somePropertyName',
             getValue: () => {},
@@ -507,12 +445,12 @@ describe('CreateComponentWithSubscriptions', () => {
           },
           () => null,
         );
-      }).toThrow('Subscribable config must specify a subscribe function');
+      }).toThrow('Subscription must specify a subscribe function');
     });
 
     it('should error for invalid missing unsubscribe', () => {
       expect(() => {
-        createComponent(
+        createSubscription(
           {
             property: 'somePropertyName',
             getValue: () => {},
@@ -520,7 +458,7 @@ describe('CreateComponentWithSubscriptions', () => {
           },
           () => null,
         );
-      }).toThrow('Subscribable config must specify a unsubscribe function');
+      }).toThrow('Subscription must specify a unsubscribe function');
     });
   });
 });
