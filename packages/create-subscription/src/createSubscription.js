@@ -10,30 +10,28 @@
 import React from 'react';
 import warning from 'fbjs/lib/invariant';
 
-export function createSubscription<
-  Property,
-  CreatedSubscription,
-  Value,
->(config: {|
-  // Synchronously gets the value for the subscribed property.
-  // Return undefined if the subscribable value is undefined,
-  // Or does not support synchronous reading (e.g. native Promise).
-  +getValue: (source: Property) => Value | void,
+export function createSubscription<Property, CreatedSubscription, Value>(
+  config: $ReadOnly<{|
+    // Synchronously gets the value for the subscribed property.
+    // Return undefined if the subscribable value is undefined,
+    // Or does not support synchronous reading (e.g. native Promise).
+    getValue: (source: Property) => Value | void,
 
-  // Setup a subscription for the subscribable value in props.
-  // Due to the variety of change event types, subscribers should provide their own handlers.
-  // Those handlers should not attempt to update state though;
-  // They should call the callback() instead when a subscription changes.
-  // You may optionally return a subscription value to later unsubscribe (e.g. event handler).
-  +subscribe: (
-    source: Property,
-    callback: (value: Value | void) => void,
-  ) => CreatedSubscription,
+    // Setup a subscription for the subscribable value in props.
+    // Due to the variety of change event types, subscribers should provide their own handlers.
+    // Those handlers should not attempt to update state though;
+    // They should call the callback() instead when a subscription changes.
+    // You may optionally return a subscription value to later unsubscribe (e.g. event handler).
+    subscribe: (
+      source: Property,
+      callback: (value: Value | void) => void,
+    ) => CreatedSubscription,
 
-  // Unsubsribe from the subscribable value in props.
-  // The subscription value returned from subscribe() is passed as the second parameter.
-  +unsubscribe: (source: Property, subscription: CreatedSubscription) => void,
-|}): React$ComponentType<{
+    // Unsubsribe from the subscribable value in props.
+    // The subscription value returned from subscribe() is passed as the second parameter.
+    unsubscribe: (source: Property, subscription: CreatedSubscription) => void,
+  |}>,
+): React$ComponentType<{
   children: (value: Value) => React$Node,
   source: any,
 }> {
