@@ -244,10 +244,11 @@ describe('ReactCompositeComponent', () => {
     ReactDOM.unmountComponentAtNode(container);
 
     expect(() => instance.forceUpdate()).toWarnDev(
-      'Can only update a mounted or mounting component. This usually means ' +
-        'you called setState, replaceState, or forceUpdate on an unmounted ' +
-        'component. This is a no-op.\n\nPlease check the code for the ' +
-        'Component component.',
+      "Warning: Can't call setState (or forceUpdate) on an unmounted " +
+        'component. This is a no-op, but it indicates a memory leak in your ' +
+        'application. To fix, cancel all subscriptions and asynchronous ' +
+        'tasks in the componentWillUnmount method.\n' +
+        '    in Component (at **)',
     );
 
     // No additional warning should be recorded
@@ -269,10 +270,15 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    let instance = <Component />;
-    expect(instance.setState).not.toBeDefined();
-
-    instance = ReactDOM.render(instance, container);
+    let instance;
+    ReactDOM.render(
+      <div>
+        <span>
+          <Component ref={c => (instance = c || instance)} />
+        </span>
+      </div>,
+      container,
+    );
 
     expect(renders).toBe(1);
 
@@ -280,15 +286,17 @@ describe('ReactCompositeComponent', () => {
 
     expect(renders).toBe(2);
 
-    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<div />, container);
 
     expect(() => {
       instance.setState({value: 2});
     }).toWarnDev(
-      'Can only update a mounted or mounting component. This usually means ' +
-        'you called setState, replaceState, or forceUpdate on an unmounted ' +
-        'component. This is a no-op.\n\nPlease check the code for the ' +
-        'Component component.',
+      "Warning: Can't call setState (or forceUpdate) on an unmounted " +
+        'component. This is a no-op, but it indicates a memory leak in your ' +
+        'application. To fix, cancel all subscriptions and asynchronous ' +
+        'tasks in the componentWillUnmount method.\n' +
+        '    in Component (at **)\n' +
+        '    in span',
     );
 
     expect(renders).toBe(2);
