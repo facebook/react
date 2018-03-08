@@ -148,4 +148,26 @@ describe('useRef', () => {
     ]);
     expect(ref.value).toBe(null);
   });
+
+  it('should support rendering null', () => {
+    const RefForwardingComponent = React.useRef((props, ref) => null);
+
+    const ref = React.createRef();
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} />);
+    ReactNoop.flush();
+    expect(ref.value).toBe(null);
+  });
+
+  it('should error if not provided a callback', () => {
+    expect(() => React.useRef(undefined)).toThrow(
+      'useRef requires a render prop but was given undefined.',
+    );
+    expect(() => React.useRef(null)).toThrow(
+      'useRef requires a render prop but was given null.',
+    );
+    expect(() => React.useRef('foo')).toThrow(
+      'useRef requires a render prop but was given string.',
+    );
+  });
 });

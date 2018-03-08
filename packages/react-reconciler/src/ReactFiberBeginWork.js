@@ -168,7 +168,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateUseRef(current, workInProgress) {
-    const nextChildren = workInProgress.type.callback(
+    const nextChildren = workInProgress.type.renderProp(
       workInProgress.pendingProps,
       workInProgress.ref,
     );
