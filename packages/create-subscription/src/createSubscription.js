@@ -8,34 +8,34 @@
  */
 
 import React from 'react';
-import warning from 'fbjs/lib/invariant';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-export function createSubscription<Property, CreatedSubscription, Value>(
+type Unsubscribe = () => void;
+type CannotUnsubscribe = false;
+
+export function createSubscription<Property, Value>(
   config: $ReadOnly<{|
     // Synchronously gets the value for the subscribed property.
     // Return undefined if the subscribable value is undefined,
     // Or does not support synchronous reading (e.g. native Promise).
     getValue: (source: Property) => Value | void,
 
-    // Setup a subscription for the subscribable value in props.
+    // Setup a subscription for the subscribable value in props, and return an unsubscribe function.
+    // Return false to indicate the property cannot be unsubscribed from (e.g. native Promises).
     // Due to the variety of change event types, subscribers should provide their own handlers.
     // Those handlers should not attempt to update state though;
     // They should call the callback() instead when a subscription changes.
-    // You may optionally return a subscription value to later unsubscribe (e.g. event handler).
     subscribe: (
       source: Property,
       callback: (value: Value | void) => void,
-    ) => CreatedSubscription,
-
-    // Unsubsribe from the subscribable value in props.
-    // The subscription value returned from subscribe() is passed as the second parameter.
-    unsubscribe: (source: Property, subscription: CreatedSubscription) => void,
+    ) => Unsubscribe | CannotUnsubscribe,
   |}>,
 ): React$ComponentType<{
   children: (value: Value) => React$Node,
   source: any,
 }> {
-  const {getValue, subscribe, unsubscribe} = config;
+  const {getValue, subscribe} = config;
 
   warning(
     typeof getValue === 'function',
@@ -45,10 +45,6 @@ export function createSubscription<Property, CreatedSubscription, Value>(
     typeof subscribe === 'function',
     'Subscription must specify a subscribe function',
   );
-  warning(
-    typeof unsubscribe === 'function',
-    'Subscription must specify an unsubscribe function',
-  );
 
   type Props = {
     children: (value: Value) => React$Element<any>,
@@ -56,8 +52,8 @@ export function createSubscription<Property, CreatedSubscription, Value>(
   };
   type State = {
     source: Property,
-    subscriptionWrapper: {
-      subscription?: CreatedSubscription,
+    unsubscribeContainer: {
+      unsubscribe?: Unsubscribe | CannotUnsubscribe,
     },
     value: Value | void,
   };
@@ -66,7 +62,7 @@ export function createSubscription<Property, CreatedSubscription, Value>(
   class Subscription extends React.Component<Props, State> {
     state: State = {
       source: this.props.source,
-      subscriptionWrapper: {},
+      unsubscribeContainer: {},
       value:
         this.props.source != null ? getValue(this.props.source) : undefined,
     };
@@ -75,7 +71,7 @@ export function createSubscription<Property, CreatedSubscription, Value>(
       if (nextProps.source !== prevState.source) {
         return {
           source: nextProps.source,
-          subscriptionWrapper: {},
+          unsubscribeContainer: {},
           value:
             nextProps.source != null ? getValue(nextProps.source) : undefined,
         };
@@ -126,10 +122,15 @@ export function createSubscription<Property, CreatedSubscription, Value>(
         // This is safe to do via mutation since:
         // 1) It does not impact render.
         // 2) This method will only be called during the "commit" phase.
-        this.state.subscriptionWrapper.subscription = subscribe(
-          source,
-          callback,
+        const unsubscribeOrBoolean = subscribe(source, callback);
+
+        invariant(
+          unsubscribeOrBoolean === false ||
+            typeof unsubscribeOrBoolean === 'function',
+          'A subscription should return either an unsubscribe function or false.',
         );
+
+        this.state.unsubscribeContainer.unsubscribe = unsubscribeOrBoolean;
 
         // External values could change between render and mount,
         // In some cases it may be important to handle this case.
@@ -141,11 +142,9 @@ export function createSubscription<Property, CreatedSubscription, Value>(
     }
 
     unsubscribe(state: State) {
-      if (state.source != null) {
-        unsubscribe(
-          state.source,
-          ((state.subscriptionWrapper.subscription: any): CreatedSubscription),
-        );
+      const {unsubscribe} = state.unsubscribeContainer;
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
       }
     }
   }

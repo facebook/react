@@ -48,8 +48,10 @@ describe('createSubscription', () => {
   it('supports basic subscription pattern', () => {
     const Subscription = createSubscription({
       getValue: source => source.getValue(),
-      subscribe: (source, callback) => source.subscribe(callback),
-      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+      subscribe: (source, callback) => {
+        const subscription = source.subscribe(callback);
+        return () => subscription.unsubscribe;
+      },
     });
 
     const observable = createBehaviorSubject();
@@ -86,8 +88,10 @@ describe('createSubscription', () => {
           .unsubscribe();
         return currentValue;
       },
-      subscribe: (source, callback) => source.subscribe(callback),
-      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+      subscribe: (source, callback) => {
+        const subscription = source.subscribe(callback);
+        return () => subscription.unsubscribe;
+      },
     });
 
     function render(value = 'default') {
@@ -111,9 +115,11 @@ describe('createSubscription', () => {
     it('should support Promises', async () => {
       const Subscription = createSubscription({
         getValue: source => undefined,
-        subscribe: (source, callback) =>
-          source.then(value => callback(value), value => callback(value)),
-        unsubscribe: (source, subscription) => {},
+        subscribe: (source, callback) => {
+          source.then(value => callback(value), value => callback(value));
+          // (Can't unsubscribe from a Promise)
+          return false;
+        },
       });
 
       function render(hasLoaded) {
@@ -153,8 +159,11 @@ describe('createSubscription', () => {
     it('should still work if unsubscription is managed incorrectly', async () => {
       const Subscription = createSubscription({
         getValue: source => undefined,
-        subscribe: (source, callback) => source.then(callback),
-        unsubscribe: (source, subscription) => {},
+        subscribe: (source, callback) => {
+          source.then(callback);
+          // (Can't unsubscribe from a Promise)
+          return false;
+        },
       });
 
       function render(value = 'default') {
@@ -185,8 +194,10 @@ describe('createSubscription', () => {
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
     const Subscription = createSubscription({
       getValue: source => source.getValue(),
-      subscribe: (source, callback) => source.subscribe(callback),
-      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+      subscribe: (source, callback) => {
+        const subscription = source.subscribe(callback);
+        return () => subscription.unsubscribe();
+      },
     });
 
     function render(value = 'default') {
@@ -229,8 +240,10 @@ describe('createSubscription', () => {
 
     const Subscription = createSubscription({
       getValue: source => source.getValue(),
-      subscribe: (source, callback) => source.subscribe(callback),
-      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+      subscribe: (source, callback) => {
+        const subscription = source.subscribe(callback);
+        return () => subscription.unsubscribe();
+      },
     });
 
     class Parent extends React.Component {
@@ -301,8 +314,10 @@ describe('createSubscription', () => {
 
     const Subscription = createSubscription({
       getValue: source => source.getValue(),
-      subscribe: (source, callback) => source.subscribe(callback),
-      unsubscribe: (source, subscription) => subscription.unsubscribe(),
+      subscribe: (source, callback) => {
+        const subscription = source.subscribe(callback);
+        return () => subscription.unsubscribe();
+      },
     });
 
     class Parent extends React.Component {
@@ -368,39 +383,38 @@ describe('createSubscription', () => {
       expect(() => {
         createSubscription(
           {
-            property: 'somePropertyName',
-            subscribe: () => {},
-            unsubscribe: () => {},
+            subscribe: () => () => {},
           },
           () => null,
         );
-      }).toThrow('Subscription must specify a getValue function');
+      }).toWarnDev('Subscription must specify a getValue function');
     });
 
     it('should error for invalid missing subscribe', () => {
       expect(() => {
         createSubscription(
           {
-            property: 'somePropertyName',
-            getValue: () => {},
-            unsubscribe: () => {},
+            getValue: () => () => {},
           },
           () => null,
         );
-      }).toThrow('Subscription must specify a subscribe function');
+      }).toWarnDev('Subscription must specify a subscribe function');
     });
 
-    it('should error for invalid missing unsubscribe', () => {
-      expect(() => {
-        createSubscription(
-          {
-            property: 'somePropertyName',
-            getValue: () => {},
-            subscribe: () => {},
-          },
-          () => null,
-        );
-      }).toThrow('Subscription must specify an unsubscribe function');
+    it('should error if subscribe does not return an unsubscribe method', () => {
+      const Subscription = createSubscription({
+        getValue: source => undefined,
+        subscribe: (source, callback) => {},
+      });
+
+      const observable = createBehaviorSubject();
+      ReactNoop.render(
+        <Subscription source={observable}>{value => null}</Subscription>,
+      );
+
+      expect(ReactNoop.flush).toThrow(
+        'A subscription should return either an unsubscribe function or false.',
+      );
     });
   });
 });

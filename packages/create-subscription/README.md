@@ -33,7 +33,7 @@ npm install create-subscription --save
 
 # Usage
 
-To configure a subscription, you must specify three properties: `getValue`, `subscribe`, and `unsubscribe`.
+To configure a subscription, you must provide two methods: `getValue` and `subscribe`.
 
 ```js
 import { createSubscription } from "create-subscription";
@@ -46,11 +46,8 @@ const Subscription = createSubscription({
   subscribe(source, callback) {
     // Subscribe (e.g. add an event listener) to the subscription (source).
     // Call callback(newValue) whenever a subscription changes.
-    // Return any value that will later be needed to unsubscribe (e.g. an event handler).
-  },
-  unsubscribe(source, subscription) {
-    // Remove your subscription from source.
-    // The value returned by subscribe() is the second, 'subscription' parameter.
+    // Return an unsubscribe method,
+    // Or false if unsubscribe is not supported (e.g. native Promises).
   }
 });
 ```
@@ -87,10 +84,7 @@ const EventHandlerSubscription = createSubscription({
   subscribe: (eventDispatcher, callback) => {
     const onChange = event => callback(eventDispatcher.value);
     eventDispatcher.addEventListener("change", onChange);
-    return onChange;
-  },
-  unsubscribe: (eventDispatcher, subscription) => {
-    eventDispatcher.removeEventListener("change", subscription);
+    return () => eventDispatcher.removeEventListener("change", onChange);
   }
 });
 
@@ -98,7 +92,7 @@ const EventHandlerSubscription = createSubscription({
 // In this example, 'eventDispatcher' represents a generic event dispatcher.
 <EventHandlerSubscription source={eventDispatcher}>
   {value => <FollowerComponent followersCount={value} />}
-</EventHandlerSubscription>
+</EventHandlerSubscription>;
 ```
 
 ## Subscribing to observables
@@ -111,9 +105,10 @@ Below are examples showing how `create-subscription` can be used to subscribe to
 ```js
 const BehaviorSubscription = createSubscription({
   getValue: behaviorSubject => behaviorSubject.getValue(),
-  subscribe: (behaviorSubject, callback) =>
-    behaviorSubject.subscribe(callback),
-  unsubscribe: (behaviorSubject, subscription) => behaviorSubject.unsubscribe()
+  subscribe: (behaviorSubject, callback) => {
+    const subscription = behaviorSubject.subscribe(callback);
+    return () => subscription.unsubscribe();
+  }
 });
 ```
 
@@ -131,9 +126,10 @@ const ReplaySubscription = createSubscription({
       .unsubscribe();
     return currentValue;
   },
-  subscribe: (replaySubject, callback) =>
-    replaySubject.subscribe(callback),
-  unsubscribe: (replaySubject, subscription) => replaySubject.unsubscribe()
+  subscribe: (replaySubject, callback) => {
+    const subscription = replaySubject.subscribe(callback);
+    return () => subscription.unsubscribe();
+  }
 });
 ```
 
@@ -176,10 +172,10 @@ const PromiseSubscription = createSubscription({
       // Failure
       () => callback(null)
     );
-  },
-  unsubscribe: (promise, subscription) => {
+
     // There is no way to "unsubscribe" from a Promise.
-    // In this case, create-subscription will block stale values from rendering.
+    // create-subscription will still prevent stale values from rendering.
+    return false;
   }
 });
 
