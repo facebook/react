@@ -2102,7 +2102,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual([
       'Intl:read {}',
       'Intl:provide {"locale":"fr"}',
-      'IndirectionFn {}',
+      'IndirectionFn undefined',
       'IndirectionClass {}',
       'ShowLocaleClass:read {"locale":"fr"}',
       'ShowLocaleFn:read {"locale":"fr"}',
@@ -2190,7 +2190,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual([
       'Intl:read {}',
       'Intl:provide {"locale":"fr"}',
-      'IndirectionFn {}',
+      'IndirectionFn undefined',
       'IndirectionClass {}',
       'ShowLocaleClass:read {"locale":"fr"}',
       'ShowLocaleFn:read {"locale":"fr"}',
@@ -2207,7 +2207,7 @@ describe('ReactIncremental', () => {
       'Intl:provide {"locale":"gr"}',
       // TODO: it's unfortunate that we can't reuse work on
       // these components even though they don't depend on context.
-      'IndirectionFn {}',
+      'IndirectionFn undefined',
       'IndirectionClass {}',
       // These components depend on context:
       'ShowLocaleClass:read {"locale":"gr"}',
