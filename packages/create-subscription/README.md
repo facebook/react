@@ -36,7 +36,7 @@ npm install create-subscription --save
 To configure a subscription, you must specify three properties: `getValue`, `subscribe`, and `unsubscribe`.
 
 ```js
-import createComponent from "create-subscription";
+import { createSubscription } from "create-subscription";
 
 const Subscription = createComponent({
   getValue(source) {
@@ -73,7 +73,7 @@ Below is an example showing how `create-subscription` can be used to subscribe t
 
 ```js
 import React from "react";
-import createComponent from "create-subscription";
+import { createSubscription } from "create-subscription";
 
 // Start with a simple component.
 // In this case, it's a functional component, but it could have been a class.
@@ -147,7 +147,7 @@ Below is an example showing how `create-subscription` can be used with native Pr
 
 ```js
 import React from "react";
-import createComponent from "create-subscription";
+import { createSubscription } from "create-subscription";
 
 // Start with a simple component.
 function LoadingComponent({ loadingStatus }) {
