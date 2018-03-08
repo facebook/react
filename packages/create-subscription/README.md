@@ -38,7 +38,7 @@ To configure a subscription, you must specify three properties: `getValue`, `sub
 ```js
 import { createSubscription } from "create-subscription";
 
-const Subscription = createComponent({
+const Subscription = createSubscription({
   getValue(source) {
     // Return the current value of the subscription (source),
     // or `undefined` if the value can't be read synchronously (e.g. native Promises).
@@ -82,7 +82,7 @@ function FollowerComponent({ followersCount }) {
 }
 
 // Create a wrapper component to manage the subscription.
-const EventHandlerSubscription = createComponent({
+const EventHandlerSubscription = createSubscription({
   getValue: eventDispatcher => eventDispatcher.value,
   subscribe: (eventDispatcher, callback) => {
     const onChange = event => callback(eventDispatcher.value);
@@ -109,7 +109,7 @@ Below are examples showing how `create-subscription` can be used to subscribe to
 
 ### `BehaviorSubject`
 ```js
-const BehaviorSubscription = createComponent({
+const BehaviorSubscription = createSubscription({
   getValue: behaviorSubject => behaviorSubject.getValue(),
   subscribe: (behaviorSubject, callback) =>
     behaviorSubject.subscribe(callback),
@@ -119,7 +119,7 @@ const BehaviorSubscription = createComponent({
 
 ### `ReplaySubject`
 ```js
-const ReplaySubscription = createComponent({
+const ReplaySubscription = createSubscription({
   getValue: replaySubject => {
     let currentValue;
     // ReplaySubject does not have a sync data getter,
@@ -163,7 +163,7 @@ function LoadingComponent({ loadingStatus }) {
 // Wrap the functional component with a subscriber HOC.
 // This HOC will manage subscriptions and pass values to the decorated component.
 // It will add and remove subscriptions in an async-safe way when props change.
-const PromiseSubscription = createComponent({
+const PromiseSubscription = createSubscription({
   getValue: promise => {
     // There is no way to synchronously read a Promise's value,
     // So this method should return undefined.
