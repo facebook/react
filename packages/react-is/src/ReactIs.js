@@ -17,6 +17,7 @@ import {
   REACT_PORTAL_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
+  REACT_USE_REF_TYPE,
 } from 'shared/ReactSymbols';
 
 export function typeOf(object: any) {
@@ -38,6 +39,7 @@ export function typeOf(object: any) {
             switch ($$typeofType) {
               case REACT_CONTEXT_TYPE:
               case REACT_PROVIDER_TYPE:
+              case REACT_USE_REF_TYPE:
                 return $$typeofType;
               default:
                 return $$typeof;
@@ -58,6 +60,7 @@ export const Element = REACT_ELEMENT_TYPE;
 export const Fragment = REACT_FRAGMENT_TYPE;
 export const Portal = REACT_PORTAL_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
+export const UseRef = REACT_USE_REF_TYPE;
 
 export function isAsyncMode(object: any) {
   return typeOf(object) === REACT_ASYNC_MODE_TYPE;
@@ -83,4 +86,7 @@ export function isPortal(object: any) {
 }
 export function isStrictMode(object: any) {
   return typeOf(object) === REACT_STRICT_MODE_TYPE;
+}
+export function isUseRef(object: any) {
+  return typeOf(object) === REACT_USE_REF_TYPE;
 }

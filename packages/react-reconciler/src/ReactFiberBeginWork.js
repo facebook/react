@@ -30,6 +30,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  UseRef,
 } from 'shared/ReactTypeOfWork';
 import {
   PerformedWork,
@@ -161,6 +162,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } else if (workInProgress.memoizedProps === nextChildren) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
+  function updateUseRef(current, workInProgress) {
+    const nextChildren = workInProgress.type.callback(
+      workInProgress.pendingProps,
+      workInProgress.ref,
+    );
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextChildren);
     return workInProgress.child;
@@ -1102,6 +1113,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return updateFragment(current, workInProgress);
       case Mode:
         return updateMode(current, workInProgress);
+      case UseRef:
+        return updateUseRef(current, workInProgress);
       case ContextProvider:
         return updateContextProvider(
           current,

@@ -29,6 +29,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  UseRef,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
@@ -42,6 +43,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_ASYNC_MODE_TYPE,
+  REACT_USE_REF_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -356,6 +358,9 @@ export function createFiberFromElement(
             case REACT_CONTEXT_TYPE:
               // This is a consumer
               fiberTag = ContextConsumer;
+              break;
+            case REACT_USE_REF_TYPE:
+              fiberTag = UseRef;
               break;
             default:
               if (typeof type.tag === 'number') {
