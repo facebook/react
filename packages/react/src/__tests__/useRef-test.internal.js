@@ -161,13 +161,13 @@ describe('useRef', () => {
 
   it('should error if not provided a callback', () => {
     expect(() => React.useRef(undefined)).toWarnDev(
-      'useRef requires a render prop but was given undefined.',
+      'useRef requires a render function but was given undefined.',
     );
     expect(() => React.useRef(null)).toWarnDev(
-      'useRef requires a render prop but was given null.',
+      'useRef requires a render function but was given null.',
     );
     expect(() => React.useRef('foo')).toWarnDev(
-      'useRef requires a render prop but was given string.',
+      'useRef requires a render function but was given string.',
     );
   });
 });

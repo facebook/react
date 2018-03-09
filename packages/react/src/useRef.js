@@ -14,7 +14,7 @@ export default function useRef<Props, ElementType: React$ElementType>(
 ) {
   warning(
     typeof renderProp === 'function',
-    'useRef requires a render prop but was given %s.',
+    'useRef requires a render function but was given %s.',
     renderProp === null ? 'null' : typeof renderProp,
   );
 
