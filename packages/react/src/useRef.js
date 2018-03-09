@@ -7,12 +7,12 @@
 
 import {REACT_USE_REF_TYPE} from 'shared/ReactSymbols';
 
-import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 export default function useRef<Props, ElementType: React$ElementType>(
   renderProp: (props: Props, ref: React$ElementRef<ElementType>) => React$Node,
 ) {
-  invariant(
+  warning(
     typeof renderProp === 'function',
     'useRef requires a render prop but was given %s.',
     renderProp === null ? 'null' : typeof renderProp,

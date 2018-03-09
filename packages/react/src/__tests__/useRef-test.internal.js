@@ -160,13 +160,13 @@ describe('useRef', () => {
   });
 
   it('should error if not provided a callback', () => {
-    expect(() => React.useRef(undefined)).toThrow(
+    expect(() => React.useRef(undefined)).toWarnDev(
       'useRef requires a render prop but was given undefined.',
     );
-    expect(() => React.useRef(null)).toThrow(
+    expect(() => React.useRef(null)).toWarnDev(
       'useRef requires a render prop but was given null.',
     );
-    expect(() => React.useRef('foo')).toThrow(
+    expect(() => React.useRef('foo')).toWarnDev(
       'useRef requires a render prop but was given string.',
     );
   });
