@@ -109,7 +109,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
   }
 }
 
-function getRollupOutputOptions(outputPath, format, globals, globalName) {
+function getRollupOutputOptions(outputPath, format, globals, globalName, externals) {
   return Object.assign(
     {},
     {
@@ -119,6 +119,7 @@ function getRollupOutputOptions(outputPath, format, globals, globalName) {
       interop: false,
       name: globalName,
       sourcemap: false,
+      external: externals,
     }
   );
 }
@@ -206,7 +207,6 @@ function getPlugins(
     useForks(forks),
     // Use Node resolution mechanism.
     resolve({
-      skip: externals,
     }),
     // Remove license headers from individual modules
     stripBanner({
@@ -379,7 +379,8 @@ async function createBundle(bundle, bundleType) {
     mainOutputPath,
     format,
     peerGlobals,
-    bundle.global
+    bundle.global,
+    externals,
   );
 
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
