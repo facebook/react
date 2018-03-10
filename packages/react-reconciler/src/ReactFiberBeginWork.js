@@ -168,7 +168,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateUseRef(current, workInProgress) {
-    const nextChildren = workInProgress.type.renderProp(
+    const renderProp = workInProgress.type.renderProp;
+    invariant(
+      typeof renderProp === 'function',
+      'useRef requires a render function but was given %s.%s',
+      renderProp === null ? 'null' : typeof renderProp,
+      ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
+    );
+    const nextChildren = renderProp(
       workInProgress.pendingProps,
       workInProgress.ref,
     );

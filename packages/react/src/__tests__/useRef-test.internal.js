@@ -14,6 +14,10 @@ describe('useRef', () => {
   let ReactFeatureFlags;
   let ReactNoop;
 
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -159,7 +163,7 @@ describe('useRef', () => {
     expect(ref.value).toBe(null);
   });
 
-  it('should error if not provided a callback', () => {
+  it('should warn if not provided a callback during creation', () => {
     expect(() => React.useRef(undefined)).toWarnDev(
       'useRef requires a render function but was given undefined.',
     );
@@ -168,6 +172,31 @@ describe('useRef', () => {
     );
     expect(() => React.useRef('foo')).toWarnDev(
       'useRef requires a render function but was given string.',
+    );
+  });
+
+  it('should error with a callstack if rendered without a function', () => {
+    let RefForwardingComponent;
+    expect(() => {
+      RefForwardingComponent = React.useRef();
+    }).toWarnDev('useRef requires a render function but was given undefined.');
+
+    ReactNoop.render(
+      <div>
+        <RefForwardingComponent />
+      </div>,
+    );
+
+    let caughtError;
+    try {
+      ReactNoop.flush();
+    } catch (error) {
+      caughtError = error;
+    }
+    expect(caughtError).toBeDefined();
+    expect(normalizeCodeLocInfo(caughtError.message)).toBe(
+      'useRef requires a render function but was given undefined.' +
+        (__DEV__ ? '\n    in div (at **)' : ''),
     );
   });
 });
