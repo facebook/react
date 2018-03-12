@@ -893,8 +893,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           changedBits = 0;
         } else {
           changedBits =
-            typeof context.calculateChangedBits === 'function'
-              ? context.calculateChangedBits(oldValue, newValue)
+            typeof context._calculateChangedBits === 'function'
+              ? context._calculateChangedBits(oldValue, newValue)
               : MAX_SIGNED_31_BIT_INT;
           if (__DEV__) {
             warning(
@@ -942,8 +942,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newProps = workInProgress.pendingProps;
     const oldProps = workInProgress.memoizedProps;
 
-    const newValue = context.currentValue;
-    const changedBits = context.changedBits;
+    const newValue = context._currentValue;
+    const changedBits = context._changedBits;
 
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed

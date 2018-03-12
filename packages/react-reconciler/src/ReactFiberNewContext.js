@@ -26,11 +26,11 @@ if (__DEV__) {
 export function pushProvider(providerFiber: Fiber): void {
   const context: ReactContext<any> = providerFiber.type.context;
   index += 1;
-  changedBitsStack[index] = context.changedBits;
-  currentValueStack[index] = context.currentValue;
+  changedBitsStack[index] = context._changedBits;
+  currentValueStack[index] = context._currentValue;
   stack[index] = providerFiber;
-  context.currentValue = providerFiber.pendingProps.value;
-  context.changedBits = providerFiber.stateNode;
+  context._currentValue = providerFiber.pendingProps.value;
+  context._changedBits = providerFiber.stateNode;
 
   if (__DEV__) {
     warning(
@@ -54,16 +54,16 @@ export function popProvider(providerFiber: Fiber): void {
   stack[index] = null;
   index -= 1;
   const context: ReactContext<any> = providerFiber.type.context;
-  context.currentValue = currentValue;
-  context.changedBits = changedBits;
+  context._currentValue = currentValue;
+  context._changedBits = changedBits;
 }
 
 export function resetProviderStack(): void {
   for (let i = index; i > -1; i--) {
     const providerFiber = stack[i];
     const context: ReactContext<any> = providerFiber.type.context;
-    context.currentValue = context.defaultValue;
-    context.changedBits = 0;
+    context._currentValue = context._defaultValue;
+    context._changedBits = 0;
     changedBitsStack[i] = null;
     currentValueStack[i] = null;
     stack[i] = null;
