@@ -98,8 +98,13 @@ describe('forwardRef', () => {
     expect(ref.value instanceof Child).toBe(true);
   });
 
-  it('should maintain ref through updates', () => {
+  it('should maintain child instance and ref through updates', () => {
+    let childInstantiatedCount = 0;
     class Child extends React.Component {
+      constructor(props) {
+        super(props);
+        childInstantiatedCount++;
+      }
       render() {
         ReactNoop.yield(this.props.value);
         return null;
@@ -124,10 +129,17 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={setRef} value={123} />);
     expect(ReactNoop.flush()).toEqual([123]);
+    expect(childInstantiatedCount).toBe(1);
     expect(ref instanceof Child).toBe(true);
     expect(setRefCount).toBe(1);
     ReactNoop.render(<RefForwardingComponent ref={setRef} value={456} />);
     expect(ReactNoop.flush()).toEqual([456]);
+    expect(childInstantiatedCount).toBe(1);
+    expect(ref instanceof Child).toBe(true);
+    expect(setRefCount).toBe(1);
+    ReactNoop.render(<RefForwardingComponent ref={setRef} value={789} />);
+    expect(ReactNoop.flush()).toEqual([789]);
+    expect(childInstantiatedCount).toBe(1);
     expect(ref instanceof Child).toBe(true);
     expect(setRefCount).toBe(1);
   });

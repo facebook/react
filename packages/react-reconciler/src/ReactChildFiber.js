@@ -453,6 +453,28 @@ function ChildReconciler(shouldTrackSideEffects) {
     newChild: any,
     expirationTime: ExpirationTime,
   ): Fiber | null {
+    if (
+      typeof newChild === 'object' &&
+      newChild !== null &&
+      typeof newChild.type === 'object' &&
+      newChild.type !== null &&
+      newChild.type.$$typeof === REACT_FORWARD_REF_TYPE
+    ) {
+      const renderFn = newChild.type.renderFn;
+      invariant(
+        typeof renderFn === 'function',
+        'forwardRef requires a render function but was given %s.%s',
+        renderFn === null ? 'null' : typeof renderFn,
+        ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
+      );
+
+      return createChild(
+        returnFiber,
+        renderFn(newChild.props, newChild.ref),
+        expirationTime,
+      );
+    }
+
     if (typeof newChild === 'string' || typeof newChild === 'number') {
       // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
@@ -467,26 +489,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
-      if (
-        typeof newChild.type === 'object' &&
-        newChild.type !== null &&
-        newChild.type.$$typeof === REACT_FORWARD_REF_TYPE
-      ) {
-        const renderFn = newChild.type.renderFn;
-        invariant(
-          typeof renderFn === 'function',
-          'forwardRef requires a render function but was given %s.%s',
-          renderFn === null ? 'null' : typeof renderFn,
-          ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
-        );
-
-        return createChild(
-          returnFiber,
-          renderFn(newChild.props, newChild.ref),
-          expirationTime,
-        );
-      }
-
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           const created = createFiberFromElement(
@@ -1115,6 +1117,23 @@ function ChildReconciler(shouldTrackSideEffects) {
   ): Fiber {
     const key = element.key;
     let child = currentFirstChild;
+
+    if (
+      typeof element.type === 'object' &&
+      element.type !== null &&
+      element.type.$$typeof === REACT_FORWARD_REF_TYPE
+    ) {
+      const renderFn = element.type.renderFn;
+      invariant(
+        typeof renderFn === 'function',
+        'forwardRef requires a render function but was given %s.%s',
+        renderFn === null ? 'null' : typeof renderFn,
+        ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
+      );
+
+      element = renderFn(element.props, element.ref);
+    }
+
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
@@ -1147,32 +1166,6 @@ function ChildReconciler(shouldTrackSideEffects) {
         deleteChild(returnFiber, child);
       }
       child = child.sibling;
-    }
-
-    if (
-      typeof element.type === 'object' &&
-      element.type !== null &&
-      element.type.$$typeof === REACT_FORWARD_REF_TYPE
-    ) {
-      const renderFn = element.type.renderFn;
-      invariant(
-        typeof renderFn === 'function',
-        'forwardRef requires a render function but was given %s.%s',
-        renderFn === null ? 'null' : typeof renderFn,
-        ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
-      );
-
-      const newElement = renderFn(element.props, element.ref);
-      if (newElement == null) {
-        return null;
-      }
-
-      return reconcileSingleElement(
-        returnFiber,
-        currentFirstChild,
-        newElement,
-        expirationTime,
-      );
     }
 
     if (element.type === REACT_FRAGMENT_TYPE) {
@@ -1254,30 +1247,33 @@ function ChildReconciler(shouldTrackSideEffects) {
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
 
+    if (
+      typeof newChild === 'object' &&
+      newChild !== null &&
+      typeof newChild.type === 'object' &&
+      newChild.type !== null &&
+      newChild.type.$$typeof === REACT_FORWARD_REF_TYPE
+    ) {
+      const renderFn = newChild.type.renderFn;
+      invariant(
+        typeof renderFn === 'function',
+        'forwardRef requires a render function but was given %s.%s',
+        renderFn === null ? 'null' : typeof renderFn,
+        ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
+      );
+      newChild = renderFn(newChild.props, newChild.ref);
+    }
+
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
     if (
       typeof newChild === 'object' &&
       newChild !== null &&
-      newChild.key === null
+      newChild.key === null &&
+      newChild.type === REACT_FRAGMENT_TYPE
     ) {
-      if (newChild.type === REACT_FRAGMENT_TYPE) {
-        newChild = newChild.props.children;
-      } else if (
-        typeof newChild.type === 'object' &&
-        newChild.type !== null &&
-        newChild.type.$$typeof === REACT_FORWARD_REF_TYPE
-      ) {
-        const renderFn = newChild.type.renderFn;
-        invariant(
-          typeof renderFn === 'function',
-          'forwardRef requires a render function but was given %s.%s',
-          renderFn === null ? 'null' : typeof renderFn,
-          ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
-        );
-        newChild = renderFn(newChild.props, newChild.ref);
-      }
+      newChild = newChild.props.children;
     }
 
     // Handle object types
