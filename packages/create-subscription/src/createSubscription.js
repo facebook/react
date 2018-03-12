@@ -32,7 +32,7 @@ export function createSubscription<Property, Value>(
     ) => Unsubscribe | CannotUnsubscribe,
   |}>,
 ): React$ComponentType<{
-  children: (value: Value) => React$Node,
+  children: (value: Value | void) => React$Node,
   source: any,
 }> {
   const {getValue, subscribe} = config;
