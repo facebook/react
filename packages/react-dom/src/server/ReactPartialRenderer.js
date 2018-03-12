@@ -675,7 +675,7 @@ class ReactDOMServerRenderer {
     this.providerIndex += 1;
     this.providerStack[this.providerIndex] = provider;
     const context: ReactContext<any> = provider.type.context;
-    context.currentValue = provider.props.value;
+    context._currentValue = provider.props.value;
   }
 
   popProvider<T>(provider: ReactProvider<T>): void {
@@ -690,13 +690,13 @@ class ReactDOMServerRenderer {
     this.providerIndex -= 1;
     const context: ReactContext<any> = provider.type.context;
     if (this.providerIndex < 0) {
-      context.currentValue = context.defaultValue;
+      context._currentValue = context._defaultValue;
     } else {
       // We assume this type is correct because of the index check above.
       const previousProvider: ReactProvider<any> = (this.providerStack[
         this.providerIndex
       ]: any);
-      context.currentValue = previousProvider.props.value;
+      context._currentValue = previousProvider.props.value;
     }
   }
 
@@ -865,7 +865,7 @@ class ReactDOMServerRenderer {
           case REACT_CONTEXT_TYPE: {
             const consumer: ReactConsumer<any> = (nextChild: any);
             const nextProps: any = consumer.props;
-            const nextValue = consumer.type.currentValue;
+            const nextValue = consumer.type._currentValue;
 
             const nextChildren = toArray(nextProps.children(nextValue));
             const frame: Frame = {

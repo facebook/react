@@ -80,10 +80,12 @@ export type ReactContext<T> = {
   $$typeof: Symbol | number,
   Consumer: ReactContext<T>,
   Provider: ReactProviderType<T>,
-  calculateChangedBits: ((a: T, b: T) => number) | null,
-  defaultValue: T,
-  currentValue: T,
-  changedBits: number,
+
+  _calculateChangedBits: ((a: T, b: T) => number) | null,
+  _defaultValue: T,
+
+  _currentValue: T,
+  _changedBits: number,
 
   // DEV only
   _currentRenderer?: Object | null,
