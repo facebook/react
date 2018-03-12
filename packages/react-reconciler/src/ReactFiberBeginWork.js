@@ -859,45 +859,68 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     const newValue = newProps.value;
+    workInProgress.memoizedProps = newProps;
 
     let changedBits: number;
     if (oldProps === null) {
       // Initial render
       changedBits = MAX_SIGNED_31_BIT_INT;
     } else {
-      const oldValue = oldProps.value;
-      // Use Object.is to compare the new context value to the old value.
-      // Inlined Object.is polyfill.
-      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
-      if (
-        (oldValue === newValue &&
-          (oldValue !== 0 || 1 / oldValue === 1 / newValue)) ||
-        (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
-      ) {
-        // No change.
+      if (oldProps.value === newProps.value) {
+        // No change. Bailout early if children are the same.
+        if (oldProps.children === newProps.children) {
+          workInProgress.stateNode = 0;
+          pushProvider(workInProgress);
+          return bailoutOnAlreadyFinishedWork(current, workInProgress);
+        }
         changedBits = 0;
       } else {
-        changedBits =
-          typeof context.calculateChangedBits === 'function'
-            ? context.calculateChangedBits(oldValue, newValue)
-            : MAX_SIGNED_31_BIT_INT;
-        if (__DEV__) {
-          warning(
-            (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
-            'calculateChangedBits: Expected the return value to be a ' +
-              '31-bit integer. Instead received: %s',
-            changedBits,
-          );
-        }
-        changedBits |= 0;
+        const oldValue = oldProps.value;
+        // Use Object.is to compare the new context value to the old value.
+        // Inlined Object.is polyfill.
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+        if (
+          (oldValue === newValue &&
+            (oldValue !== 0 || 1 / oldValue === 1 / newValue)) ||
+          (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
+        ) {
+          // No change. Bailout early if children are the same.
+          if (oldProps.children === newProps.children) {
+            workInProgress.stateNode = 0;
+            pushProvider(workInProgress);
+            return bailoutOnAlreadyFinishedWork(current, workInProgress);
+          }
+          changedBits = 0;
+        } else {
+          changedBits =
+            typeof context.calculateChangedBits === 'function'
+              ? context.calculateChangedBits(oldValue, newValue)
+              : MAX_SIGNED_31_BIT_INT;
+          if (__DEV__) {
+            warning(
+              (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
+              'calculateChangedBits: Expected the return value to be a ' +
+                '31-bit integer. Instead received: %s',
+              changedBits,
+            );
+          }
+          changedBits |= 0;
 
-        if (changedBits !== 0) {
-          propagateContextChange(
-            workInProgress,
-            context,
-            changedBits,
-            renderExpirationTime,
-          );
+          if (changedBits === 0) {
+            // No change. Bailout early if children are the same.
+            if (oldProps.children === newProps.children) {
+              workInProgress.stateNode = 0;
+              pushProvider(workInProgress);
+              return bailoutOnAlreadyFinishedWork(current, workInProgress);
+            }
+          } else {
+            propagateContextChange(
+              workInProgress,
+              context,
+              changedBits,
+              renderExpirationTime,
+            );
+          }
         }
       }
     }
@@ -905,7 +928,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress.stateNode = changedBits;
     pushProvider(workInProgress);
 
-    workInProgress.memoizedProps = newProps;
     const newChildren = newProps.children;
     reconcileChildren(current, workInProgress, newChildren);
     return workInProgress.child;
@@ -923,14 +945,23 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newValue = context.currentValue;
     const changedBits = context.changedBits;
 
-    if (changedBits === 0) {
-      if (hasLegacyContextChanged()) {
-        // Normally we can bail out on props equality but if context has changed
-        // we don't do the bailout and we have to reuse existing props instead.
-      } else if (oldProps === newProps) {
-        return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      }
-    } else {
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (changedBits === 0 && oldProps === newProps) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    workInProgress.memoizedProps = newProps;
+
+    let observedBits = newProps.observedBits;
+    if (observedBits === undefined || observedBits === null) {
+      // Subscribe to all changes by default
+      observedBits = MAX_SIGNED_31_BIT_INT;
+    }
+    // Store the observedBits on the fiber's stateNode for quick access.
+    workInProgress.stateNode = observedBits;
+
+    if ((changedBits & observedBits) !== 0) {
       // Context change propagation stops at matching consumers, for time-
       // slicing. Continue the propagation here.
       propagateContextChange(
@@ -939,17 +970,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         changedBits,
         renderExpirationTime,
       );
+    } else if (oldProps !== null && oldProps.children === newProps.children) {
+      // No change. Bailout early if children are the same.
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    // Store the observedBits on the fiber's stateNode for quick access.
-    let observedBits = newProps.observedBits;
-    if (observedBits === undefined || observedBits === null) {
-      // Subscribe to all changes by default
-      observedBits = MAX_SIGNED_31_BIT_INT;
-    }
-    workInProgress.stateNode = observedBits;
-
-    workInProgress.memoizedProps = newProps;
     const render = newProps.children;
 
     if (typeof render !== 'function') {

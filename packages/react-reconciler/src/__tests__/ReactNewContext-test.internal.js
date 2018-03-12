@@ -683,6 +683,72 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 1')]);
   });
 
+  it('provider bails out if children and value are unchanged (like sCU)', () => {
+    const Context = React.createContext(0);
+
+    function Child() {
+      ReactNoop.yield('Child');
+      return <span prop="Child" />;
+    }
+
+    const children = <Child />;
+
+    function App(props) {
+      ReactNoop.yield('App');
+      return (
+        <Context.Provider value={props.value}>{children}</Context.Provider>
+      );
+    }
+
+    // Initial mount
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual(['App', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual([
+      'App',
+      // Child does not re-render
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+  });
+
+  it('consumer bails out if children and value are unchanged (like sCU)', () => {
+    const Context = React.createContext(0);
+
+    function Child() {
+      ReactNoop.yield('Child');
+      return <span prop="Child" />;
+    }
+
+    function renderConsumer(context) {
+      return <Child context={context} />;
+    }
+
+    function App(props) {
+      ReactNoop.yield('App');
+      return (
+        <Context.Provider value={props.value}>
+          <Context.Consumer>{renderConsumer}</Context.Consumer>
+        </Context.Provider>
+      );
+    }
+
+    // Initial mount
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual(['App', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual([
+      'App',
+      // Child does not re-render
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+  });
+
   describe('fuzz test', () => {
     const Fragment = React.Fragment;
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
