@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {LegacyContext} from './ReactFiberContext';
 import type {CapturedValue} from './ReactCapturedValue';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
@@ -30,16 +31,9 @@ import warning from 'fbjs/lib/warning';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {StrictMode} from './ReactTypeOfMode';
 import {
-  cacheContext,
-  getMaskedContext,
-  getUnmaskedContext,
-  isContextConsumer,
-} from './ReactFiberContext';
-import {
   insertUpdateIntoFiber,
   processUpdateQueue,
 } from './ReactFiberUpdateQueue';
-import {hasContextChanged} from './ReactFiberContext';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -110,11 +104,20 @@ function callGetDerivedStateFromCatch(ctor: any, capturedValues: Array<mixed>) {
 }
 
 export default function(
+  legacyContext: LegacyContext,
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
 ) {
+  const {
+    cacheContext,
+    getMaskedContext,
+    getUnmaskedContext,
+    isContextConsumer,
+    hasContextChanged,
+  } = legacyContext;
+
   // Class component state updater
   const updater = {
     isMounted,

@@ -72,7 +72,6 @@ import {
   startCommitLifeCyclesTimer,
   stopCommitLifeCyclesTimer,
 } from './ReactDebugFiberPerf';
-import {reset} from './ReactFiberStack';
 import {createWorkInProgress} from './ReactFiber';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
 import {
@@ -84,18 +83,14 @@ import {
   computeExpirationBucket,
 } from './ReactFiberExpirationTime';
 import {AsyncMode} from './ReactTypeOfMode';
-import {
-  resetContext as resetLegacyContext,
-  popContextProvider as popLegacyContextProvider,
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
-import {resetProviderStack} from './ReactFiberNewContext';
+import ReactFiberLegacyContext from './ReactFiberContext';
+import ReactFiberNewContext from './ReactFiberNewContext';
 import {
   getUpdateExpirationTime,
   insertUpdateIntoFiber,
 } from './ReactFiberUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
+import ReactFiberStack from './ReactFiberStack';
 
 const {
   invokeGuardedCallback,
@@ -161,8 +156,18 @@ if (__DEV__) {
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
-  const hostContext = ReactFiberHostContext(config);
+  const stack = ReactFiberStack();
+  const {reset: resetStack} = stack;
+  const hostContext = ReactFiberHostContext(config, stack);
+  const legacyContext = ReactFiberLegacyContext(stack);
+  const newContext = ReactFiberNewContext();
   const {popHostContext, popHostContainer} = hostContext;
+  const {
+    popTopLevelContextObject: popTopLevelLegacyContextObject,
+    popContextProvider: popLegacyContextProvider,
+    resetContext: resetLegacyContext,
+  } = legacyContext;
+  const {popProvider, resetProviderStack} = newContext;
   const hydrationContext: HydrationContext<C, CX> = ReactFiberHydrationContext(
     config,
   );
@@ -170,6 +175,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const {beginWork} = ReactFiberBeginWork(
     config,
     hostContext,
+    legacyContext,
+    newContext,
     hydrationContext,
     scheduleWork,
     computeExpirationForFiber,
@@ -177,10 +184,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const {completeWork} = ReactFiberCompleteWork(
     config,
     hostContext,
+    legacyContext,
+    newContext,
     hydrationContext,
   );
   const {throwException, unwindWork} = ReactFiberUnwindWork(
     hostContext,
+    legacyContext,
+    newContext,
     scheduleWork,
     isAlreadyFailedLegacyErrorBoundary,
   );
@@ -280,7 +291,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function resetContextStack() {
     // Reset the stack
-    reset();
+    resetStack();
     // Reset the cursors
     resetLegacyContext();
     resetHostContainer();
@@ -1679,5 +1690,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     interactiveUpdates,
     flushInteractiveUpdates,
     computeUniqueAsyncExpiration,
+    legacyContext,
   };
 }
