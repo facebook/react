@@ -19,6 +19,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_USE_REF_TYPE,
 } from 'shared/ReactSymbols';
 import {
   FunctionalComponent,
@@ -466,6 +467,26 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
+      if (
+        typeof newChild.type === 'object' &&
+        newChild.type !== null &&
+        newChild.type.$$typeof === REACT_USE_REF_TYPE
+      ) {
+        const renderFn = newChild.type.renderFn;
+        invariant(
+          typeof renderFn === 'function',
+          'forwardRef requires a render function but was given %s.%s',
+          renderFn === null ? 'null' : typeof renderFn,
+          ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
+        );
+
+        return createChild(
+          returnFiber,
+          renderFn(newChild.props, newChild.ref),
+          expirationTime,
+        );
+      }
+
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           const created = createFiberFromElement(
@@ -1128,6 +1149,32 @@ function ChildReconciler(shouldTrackSideEffects) {
       child = child.sibling;
     }
 
+    if (
+      typeof element.type === 'object' &&
+      element.type !== null &&
+      element.type.$$typeof === REACT_USE_REF_TYPE
+    ) {
+      const renderFn = element.type.renderFn;
+      invariant(
+        typeof renderFn === 'function',
+        'forwardRef requires a render function but was given %s.%s',
+        renderFn === null ? 'null' : typeof renderFn,
+        ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
+      );
+
+      const newElement = renderFn(element.props, element.ref);
+      if (newElement == null) {
+        return null;
+      }
+
+      return reconcileSingleElement(
+        returnFiber,
+        currentFirstChild,
+        newElement,
+        expirationTime,
+      );
+    }
+
     if (element.type === REACT_FRAGMENT_TYPE) {
       const created = createFiberFromFragment(
         element.props.children,
@@ -1213,10 +1260,24 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (
       typeof newChild === 'object' &&
       newChild !== null &&
-      newChild.type === REACT_FRAGMENT_TYPE &&
       newChild.key === null
     ) {
-      newChild = newChild.props.children;
+      if (newChild.type === REACT_FRAGMENT_TYPE) {
+        newChild = newChild.props.children;
+      } else if (
+        typeof newChild.type === 'object' &&
+        newChild.type !== null &&
+        newChild.type.$$typeof === REACT_USE_REF_TYPE
+      ) {
+        const renderFn = newChild.type.renderFn;
+        invariant(
+          typeof renderFn === 'function',
+          'forwardRef requires a render function but was given %s.%s',
+          renderFn === null ? 'null' : typeof renderFn,
+          ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
+        );
+        newChild = renderFn(newChild.props, newChild.ref);
+      }
     }
 
     // Handle object types

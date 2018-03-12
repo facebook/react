@@ -34,7 +34,6 @@ import {
   ContextConsumer,
   Fragment,
   Mode,
-  UseRef,
 } from 'shared/ReactTypeOfWork';
 import {
   Placement,
@@ -617,8 +616,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         popProvider(workInProgress);
         return null;
       case ContextConsumer:
-        return null;
-      case UseRef:
         return null;
       // Error cases
       case IndeterminateComponent:

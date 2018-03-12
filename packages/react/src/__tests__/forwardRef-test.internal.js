@@ -46,7 +46,7 @@ describe('forwardRef', () => {
     expect(ReactNoop.flush()).toEqual([123]);
   });
 
-  it('should forward a ref to a chosen component', () => {
+  it('should forward a ref for a single child', () => {
     class Child extends React.Component {
       render() {
         ReactNoop.yield(this.props.value);
@@ -65,6 +65,35 @@ describe('forwardRef', () => {
     const ref = React.createRef();
 
     ReactNoop.render(<RefForwardingComponent ref={ref} value={123} />);
+    expect(ReactNoop.flush()).toEqual([123]);
+    expect(ref.value instanceof Child).toBe(true);
+  });
+
+  it('should forward a ref for multiple children', () => {
+    class Child extends React.Component {
+      render() {
+        ReactNoop.yield(this.props.value);
+        return null;
+      }
+    }
+
+    function Wrapper(props) {
+      return <Child {...props} ref={props.forwardedRef} />;
+    }
+
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
+      <Wrapper {...props} forwardedRef={ref} />
+    ));
+
+    const ref = React.createRef();
+
+    ReactNoop.render(
+      <div>
+        <div />
+        <RefForwardingComponent ref={ref} value={123} />
+        <div />
+      </div>,
+    );
     expect(ReactNoop.flush()).toEqual([123]);
     expect(ref.value instanceof Child).toBe(true);
   });
@@ -159,6 +188,22 @@ describe('forwardRef', () => {
     const ref = React.createRef();
 
     ReactNoop.render(<RefForwardingComponent ref={ref} />);
+    ReactNoop.flush();
+    expect(ref.value).toBe(null);
+  });
+
+  it('should support rendering null for multiple children', () => {
+    const RefForwardingComponent = React.forwardRef((props, ref) => null);
+
+    const ref = React.createRef();
+
+    ReactNoop.render(
+      <div>
+        <div />
+        <RefForwardingComponent ref={ref} />
+        <div />
+      </div>,
+    );
     ReactNoop.flush();
     expect(ref.value).toBe(null);
   });
