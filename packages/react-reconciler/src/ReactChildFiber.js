@@ -1270,8 +1270,8 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (
       typeof newChild === 'object' &&
       newChild !== null &&
-      newChild.key === null &&
-      newChild.type === REACT_FRAGMENT_TYPE
+      newChild.type === REACT_FRAGMENT_TYPE &&
+      newChild.key === null
     ) {
       newChild = newChild.props.children;
     }
