@@ -953,7 +953,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     workInProgress.memoizedProps = newProps;
 
-    let observedBits = newProps.observedBits;
+    let observedBits = newProps.unstable_observedBits;
     if (observedBits === undefined || observedBits === null) {
       // Subscribe to all changes by default
       observedBits = MAX_SIGNED_31_BIT_INT;

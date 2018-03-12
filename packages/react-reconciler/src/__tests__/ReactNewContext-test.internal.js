@@ -516,7 +516,7 @@ describe('ReactNewContext', () => {
 
     function Foo() {
       return (
-        <Context.Consumer observedBits={0b01}>
+        <Context.Consumer unstable_observedBits={0b01}>
           {value => {
             ReactNoop.yield('Foo');
             return <span prop={'Foo: ' + value.foo} />;
@@ -527,7 +527,7 @@ describe('ReactNewContext', () => {
 
     function Bar() {
       return (
-        <Context.Consumer observedBits={0b10}>
+        <Context.Consumer unstable_observedBits={0b10}>
           {value => {
             ReactNoop.yield('Bar');
             return <span prop={'Bar: ' + value.bar} />;
