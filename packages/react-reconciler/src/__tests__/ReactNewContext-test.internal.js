@@ -644,6 +644,19 @@ describe('ReactNewContext', () => {
     }
   });
 
+  it('warns if consumer child is not a function', () => {
+    spyOnDev(console, 'error');
+    const Context = React.createContext(0);
+    ReactNoop.render(<Context.Consumer />);
+    expect(ReactNoop.flush).toThrow('render is not a function');
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'A context consumer was rendered with multiple children, or a child ' +
+          "that isn't a function",
+      );
+    }
+  });
+
   it("does not re-render if there's an update in a child", () => {
     const Context = React.createContext(0);
 

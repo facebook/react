@@ -977,12 +977,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     const render = newProps.children;
 
-    if (typeof render !== 'function') {
-      invariant(
-        false,
-        "A context consumer was rendered with multiple children, or a child that isn't a function. " +
-          'A context consumer expects a single child that is a function. ' +
-          'If you did pass a function, make sure there is no trailing or leading whitespace around it.',
+    if (__DEV__) {
+      warning(
+        typeof render === 'function',
+        'A context consumer was rendered with multiple children, or a child ' +
+          "that isn't a function. A context consumer expects a single child " +
+          'that is a function. If you did pass a function, make sure there ' +
+          'is no trailing or leading whitespace around it.',
       );
     }
 
