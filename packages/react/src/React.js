@@ -24,7 +24,7 @@ import {
   isValidElement,
 } from './ReactElement';
 import {createContext} from './ReactContext';
-import useRef from './useRef';
+import forwardRef from './forwardRef';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -46,7 +46,7 @@ const React = {
   PureComponent,
 
   createContext,
-  useRef,
+  forwardRef,
 
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,

@@ -9,7 +9,7 @@
 
 'use strict';
 
-describe('useRef', () => {
+describe('forwardRef', () => {
   let React;
   let ReactFeatureFlags;
   let ReactNoop;
@@ -38,7 +38,7 @@ describe('useRef', () => {
       return <Child {...props} ref={props.forwardedRef} />;
     }
 
-    const RefForwardingComponent = React.useRef((props, ref) => (
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
       <Wrapper {...props} forwardedRef={ref} />
     ));
 
@@ -58,7 +58,7 @@ describe('useRef', () => {
       return <Child {...props} ref={props.forwardedRef} />;
     }
 
-    const RefForwardingComponent = React.useRef((props, ref) => (
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
       <Wrapper {...props} forwardedRef={ref} />
     ));
 
@@ -81,7 +81,7 @@ describe('useRef', () => {
       return <Child {...props} ref={props.forwardedRef} />;
     }
 
-    const RefForwardingComponent = React.useRef((props, ref) => (
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
       <Wrapper {...props} forwardedRef={ref} />
     ));
 
@@ -132,7 +132,7 @@ describe('useRef', () => {
       return <BadRender {...props} ref={props.forwardedRef} />;
     }
 
-    const RefForwardingComponent = React.useRef((props, ref) => (
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
       <Wrapper {...props} forwardedRef={ref} />
     ));
 
@@ -154,7 +154,7 @@ describe('useRef', () => {
   });
 
   it('should support rendering null', () => {
-    const RefForwardingComponent = React.useRef((props, ref) => null);
+    const RefForwardingComponent = React.forwardRef((props, ref) => null);
 
     const ref = React.createRef();
 
@@ -164,22 +164,24 @@ describe('useRef', () => {
   });
 
   it('should warn if not provided a callback during creation', () => {
-    expect(() => React.useRef(undefined)).toWarnDev(
-      'useRef requires a render function but was given undefined.',
+    expect(() => React.forwardRef(undefined)).toWarnDev(
+      'forwardRef requires a render function but was given undefined.',
     );
-    expect(() => React.useRef(null)).toWarnDev(
-      'useRef requires a render function but was given null.',
+    expect(() => React.forwardRef(null)).toWarnDev(
+      'forwardRef requires a render function but was given null.',
     );
-    expect(() => React.useRef('foo')).toWarnDev(
-      'useRef requires a render function but was given string.',
+    expect(() => React.forwardRef('foo')).toWarnDev(
+      'forwardRef requires a render function but was given string.',
     );
   });
 
   it('should error with a callstack if rendered without a function', () => {
     let RefForwardingComponent;
     expect(() => {
-      RefForwardingComponent = React.useRef();
-    }).toWarnDev('useRef requires a render function but was given undefined.');
+      RefForwardingComponent = React.forwardRef();
+    }).toWarnDev(
+      'forwardRef requires a render function but was given undefined.',
+    );
 
     ReactNoop.render(
       <div>
@@ -195,7 +197,7 @@ describe('useRef', () => {
     }
     expect(caughtError).toBeDefined();
     expect(normalizeCodeLocInfo(caughtError.message)).toBe(
-      'useRef requires a render function but was given undefined.' +
+      'forwardRef requires a render function but was given undefined.' +
         (__DEV__ ? '\n    in div (at **)' : ''),
     );
   });

@@ -102,7 +102,7 @@ describe('ReactIs', () => {
   });
 
   it('should identify ref forwarding component', () => {
-    const RefForwardingComponent = React.useRef((props, ref) => null);
+    const RefForwardingComponent = React.forwardRef((props, ref) => null);
     expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.UseRef);
     expect(ReactIs.isUseRef(<RefForwardingComponent />)).toBe(true);
     expect(ReactIs.isUseRef({type: ReactIs.StrictMode})).toBe(false);
