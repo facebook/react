@@ -19,7 +19,7 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
-  REACT_USE_REF_TYPE,
+  REACT_FORWARD_REF_TYPE,
 } from 'shared/ReactSymbols';
 import {
   FunctionalComponent,
@@ -470,7 +470,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       if (
         typeof newChild.type === 'object' &&
         newChild.type !== null &&
-        newChild.type.$$typeof === REACT_USE_REF_TYPE
+        newChild.type.$$typeof === REACT_FORWARD_REF_TYPE
       ) {
         const renderFn = newChild.type.renderFn;
         invariant(
@@ -1152,7 +1152,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (
       typeof element.type === 'object' &&
       element.type !== null &&
-      element.type.$$typeof === REACT_USE_REF_TYPE
+      element.type.$$typeof === REACT_FORWARD_REF_TYPE
     ) {
       const renderFn = element.type.renderFn;
       invariant(
@@ -1267,7 +1267,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       } else if (
         typeof newChild.type === 'object' &&
         newChild.type !== null &&
-        newChild.type.$$typeof === REACT_USE_REF_TYPE
+        newChild.type.$$typeof === REACT_FORWARD_REF_TYPE
       ) {
         const renderFn = newChild.type.renderFn;
         invariant(

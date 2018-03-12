@@ -22,7 +22,7 @@ import {
   REACT_ASYNC_MODE_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
-  REACT_USE_REF_TYPE,
+  REACT_FORWARD_REF_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'fbjs/lib/warning';
@@ -299,7 +299,7 @@ export function createElementWithValidation(type, props, children) {
       type !== null &&
       (type.$$typeof === REACT_PROVIDER_TYPE ||
         type.$$typeof === REACT_CONTEXT_TYPE ||
-        type.$$typeof === REACT_USE_REF_TYPE));
+        type.$$typeof === REACT_FORWARD_REF_TYPE));
 
   // We warn in this case but don't throw. We expect the element creation to
   // succeed and there will likely be errors in render.

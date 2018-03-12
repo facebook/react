@@ -103,10 +103,10 @@ describe('ReactIs', () => {
 
   it('should identify ref forwarding component', () => {
     const RefForwardingComponent = React.forwardRef((props, ref) => null);
-    expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.UseRef);
-    expect(ReactIs.isUseRef(<RefForwardingComponent />)).toBe(true);
-    expect(ReactIs.isUseRef({type: ReactIs.StrictMode})).toBe(false);
-    expect(ReactIs.isUseRef(<React.unstable_AsyncMode />)).toBe(false);
-    expect(ReactIs.isUseRef(<div />)).toBe(false);
+    expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.ForwardRef);
+    expect(ReactIs.isForwardRef(<RefForwardingComponent />)).toBe(true);
+    expect(ReactIs.isForwardRef({type: ReactIs.StrictMode})).toBe(false);
+    expect(ReactIs.isForwardRef(<React.unstable_AsyncMode />)).toBe(false);
+    expect(ReactIs.isForwardRef(<div />)).toBe(false);
   });
 });

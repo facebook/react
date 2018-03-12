@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {REACT_USE_REF_TYPE} from 'shared/ReactSymbols';
+import {REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
 import warning from 'fbjs/lib/warning';
 
@@ -21,7 +21,7 @@ export default function forwardRef<Props, ElementType: React$ElementType>(
   }
 
   return {
-    $$typeof: REACT_USE_REF_TYPE,
+    $$typeof: REACT_FORWARD_REF_TYPE,
     renderFn,
   };
 }
