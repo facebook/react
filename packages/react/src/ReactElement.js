@@ -190,10 +190,7 @@ export function createElement(type, config, children) {
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
     for (propName in config) {
-      if (
-        hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
-      ) {
+      if (hasOwnProperty.call(config, propName) && !RESERVED_PROPS[propName]) {
         props[propName] = config[propName];
       }
     }
@@ -324,10 +321,7 @@ export function cloneElement(element, config, children) {
       defaultProps = element.type.defaultProps;
     }
     for (propName in config) {
-      if (
-        hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
-      ) {
+      if (hasOwnProperty.call(config, propName) && !RESERVED_PROPS[propName]) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props
           props[propName] = defaultProps[propName];
