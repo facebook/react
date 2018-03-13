@@ -12,7 +12,6 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 type Unsubscribe = () => void;
-type CannotUnsubscribe = false;
 
 export function createSubscription<Property, Value>(
   config: $ReadOnly<{|
@@ -29,11 +28,11 @@ export function createSubscription<Property, Value>(
     subscribe: (
       source: Property,
       callback: (value: Value | void) => void,
-    ) => Unsubscribe | CannotUnsubscribe,
+    ) => Unsubscribe,
   |}>,
 ): React$ComponentType<{
   children: (value: Value | void) => React$Node,
-  source: any,
+  source: Property,
 }> {
   const {getValue, subscribe} = config;
 
@@ -53,7 +52,7 @@ export function createSubscription<Property, Value>(
   type State = {
     source: Property,
     unsubscribeContainer: {
-      unsubscribe?: Unsubscribe | CannotUnsubscribe,
+      unsubscribe: Unsubscribe | null,
     },
     value: Value | void,
   };
@@ -62,7 +61,9 @@ export function createSubscription<Property, Value>(
   class Subscription extends React.Component<Props, State> {
     state: State = {
       source: this.props.source,
-      unsubscribeContainer: {},
+      unsubscribeContainer: {
+        unsubscribe: null,
+      },
       value:
         this.props.source != null ? getValue(this.props.source) : undefined,
     };
@@ -71,7 +72,9 @@ export function createSubscription<Property, Value>(
       if (nextProps.source !== prevState.source) {
         return {
           source: nextProps.source,
-          unsubscribeContainer: {},
+          unsubscribeContainer: {
+            unsubscribe: null,
+          },
           value:
             nextProps.source != null ? getValue(nextProps.source) : undefined,
         };
@@ -122,15 +125,14 @@ export function createSubscription<Property, Value>(
         // This is safe to do via mutation since:
         // 1) It does not impact render.
         // 2) This method will only be called during the "commit" phase.
-        const unsubscribeOrBoolean = subscribe(source, callback);
+        const unsubscribe = subscribe(source, callback);
 
         invariant(
-          unsubscribeOrBoolean === false ||
-            typeof unsubscribeOrBoolean === 'function',
+          typeof unsubscribe === 'function',
           'A subscription should return either an unsubscribe function or false.',
         );
 
-        this.state.unsubscribeContainer.unsubscribe = unsubscribeOrBoolean;
+        this.state.unsubscribeContainer.unsubscribe = unsubscribe;
 
         // External values could change between render and mount,
         // In some cases it may be important to handle this case.

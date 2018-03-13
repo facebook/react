@@ -1,14 +1,12 @@
 # create-subscription
 
-[Async-safe subscriptions are hard to get right.](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)
+`create-subscription` provides an async-safe interface to manage a subscription.
 
-`create-subscription` provides an simple, async-safe interface to manage a subscription.
-
-## Who should use this?
+## When should you NOT use this?
 
 This utility is should be used for subscriptions to a single value that are typically only read in one place and may update frequently (e.g. a component that subscribes to a geolocation API to show a dot on a map).
 
-Other cases have better long-term solutions:
+Other cases have **better long-term solutions**:
 * Redux/Flux stores should use the [context API](https://reactjs.org/docs/context.html) instead.
 * I/O subscriptions (e.g. notifications) that update infrequently should use [`simple-cache-provider`](https://github.com/facebook/react/blob/master/packages/simple-cache-provider/README.md) instead.
 * Complex libraries like Relay/Apollo should use this same technique (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)) in a way that is most optimized for their library usage.

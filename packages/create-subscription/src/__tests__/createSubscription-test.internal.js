@@ -118,7 +118,7 @@ describe('createSubscription', () => {
         subscribe: (source, callback) => {
           source.then(value => callback(value), value => callback(value));
           // (Can't unsubscribe from a Promise)
-          return false;
+          return () => {};
         },
       });
 
@@ -162,7 +162,7 @@ describe('createSubscription', () => {
         subscribe: (source, callback) => {
           source.then(callback);
           // (Can't unsubscribe from a Promise)
-          return false;
+          return () => {};
         },
       });
 
@@ -175,7 +175,7 @@ describe('createSubscription', () => {
       const promiseA = new Promise(resolve => (resolveA = resolve));
       const promiseB = new Promise(resolve => (resolveB = resolve));
 
-      // Subscribe first to Promise A then Promsie B
+      // Subscribe first to Promise A then Promise B
       ReactNoop.render(<Subscription source={promiseA}>{render}</Subscription>);
       expect(ReactNoop.flush()).toEqual(['default']);
       ReactNoop.render(<Subscription source={promiseB}>{render}</Subscription>);
@@ -231,6 +231,7 @@ describe('createSubscription', () => {
   });
 
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
+    const log = [];
     let parentInstance;
 
     function Child({value}) {
@@ -259,6 +260,14 @@ describe('createSubscription', () => {
         return null;
       }
 
+      componentDidMount() {
+        log.push('Parent.componentDidMount');
+      }
+
+      componentDidUpdate() {
+        log.push('Parent.componentDidUpdate');
+      }
+
       render() {
         parentInstance = this;
 
@@ -278,10 +287,12 @@ describe('createSubscription', () => {
 
     ReactNoop.render(<Parent observed={observableA} />);
     expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
+    expect(log).toEqual(['Parent.componentDidMount']);
 
     // Start React update, but don't finish
     ReactNoop.render(<Parent observed={observableB} />);
     ReactNoop.flushThrough(['Subscriber: b-0']);
+    expect(log).toEqual(['Parent.componentDidMount']);
 
     // Emit some updates from the uncommitted subscribable
     observableB.next('b-1');
@@ -302,9 +313,15 @@ describe('createSubscription', () => {
       'Subscriber: a-0',
       'Child: a-0',
     ]);
+    expect(log).toEqual([
+      'Parent.componentDidMount',
+      'Parent.componentDidUpdate',
+      'Parent.componentDidUpdate',
+    ]);
   });
 
   it('should not drop values emitted between updates', () => {
+    const log = [];
     let parentInstance;
 
     function Child({value}) {
@@ -333,6 +350,14 @@ describe('createSubscription', () => {
         return null;
       }
 
+      componentDidMount() {
+        log.push('Parent.componentDidMount');
+      }
+
+      componentDidUpdate() {
+        log.push('Parent.componentDidUpdate');
+      }
+
       render() {
         parentInstance = this;
 
@@ -352,10 +377,12 @@ describe('createSubscription', () => {
 
     ReactNoop.render(<Parent observed={observableA} />);
     expect(ReactNoop.flush()).toEqual(['Subscriber: a-0', 'Child: a-0']);
+    expect(log).toEqual(['Parent.componentDidMount']);
 
     // Start React update, but don't finish
     ReactNoop.render(<Parent observed={observableB} />);
     ReactNoop.flushThrough(['Subscriber: b-0']);
+    expect(log).toEqual(['Parent.componentDidMount']);
 
     // Emit some updates from the old subscribable
     observableA.next('a-1');
@@ -372,14 +399,24 @@ describe('createSubscription', () => {
       'Subscriber: a-2',
       'Child: a-2',
     ]);
+    expect(log).toEqual([
+      'Parent.componentDidMount',
+      'Parent.componentDidUpdate',
+      'Parent.componentDidUpdate',
+    ]);
 
     // Updates from the new subsribable should be ignored.
     observableB.next('b-1');
     expect(ReactNoop.flush()).toEqual([]);
+    expect(log).toEqual([
+      'Parent.componentDidMount',
+      'Parent.componentDidUpdate',
+      'Parent.componentDidUpdate',
+    ]);
   });
 
   describe('warnings', () => {
-    it('should error for invalid missing getValue', () => {
+    it('should warn for invalid missing getValue', () => {
       expect(() => {
         createSubscription(
           {
@@ -390,7 +427,7 @@ describe('createSubscription', () => {
       }).toWarnDev('Subscription must specify a getValue function');
     });
 
-    it('should error for invalid missing subscribe', () => {
+    it('should warn for invalid missing subscribe', () => {
       expect(() => {
         createSubscription(
           {
@@ -401,7 +438,7 @@ describe('createSubscription', () => {
       }).toWarnDev('Subscription must specify a subscribe function');
     });
 
-    it('should error if subscribe does not return an unsubscribe method', () => {
+    it('should warn if subscribe does not return an unsubscribe method', () => {
       const Subscription = createSubscription({
         getValue: source => undefined,
         subscribe: (source, callback) => {},
