@@ -45,7 +45,7 @@ const Subscription = createSubscription({
     // Subscribe (e.g. add an event listener) to the subscription (source).
     // Call callback(newValue) whenever a subscription changes.
     // Return an unsubscribe method,
-    // Or false if unsubscribe is not supported (e.g. native Promises).
+    // Or a no-op if unsubscribe is not supported (e.g. native Promises).
   }
 });
 ```
@@ -173,7 +173,7 @@ const PromiseSubscription = createSubscription({
 
     // There is no way to "unsubscribe" from a Promise.
     // create-subscription will still prevent stale values from rendering.
-    return false;
+    return () => {};
   }
 });
 
