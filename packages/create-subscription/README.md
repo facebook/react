@@ -60,11 +60,11 @@ To use the `Subscription` component, pass the subscribable property (e.g. an eve
 
 # Examples
 
-This API can be used to subscribe to a variety of "subscribable" sources, from Flux stores to RxJS observables. Below are a few examples of how to subscribe to common types.
+This API can be used to subscribe to a variety of "subscribable" sources, from event dispatchers to RxJS observables. Below are a few examples of how to subscribe to common types.
 
 ## Subscribing to event dispatchers
 
-Below is an example showing how `create-subscription` can be used to subscribe to event dispatchers such as DOM elements or Flux stores.
+Below is an example showing how `create-subscription` can be used to subscribe to event dispatchers such as DOM elements.
 
 ```js
 import React from "react";
