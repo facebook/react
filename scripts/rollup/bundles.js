@@ -254,6 +254,16 @@ const bundles = [
     global: 'SimpleCacheProvider',
     externals: ['react'],
   },
+
+  /******* createComponentWithSubscriptions (experimental) *******/
+  {
+    label: 'create-subscription',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'create-subscription',
+    global: 'createSubscription',
+    externals: ['react'],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)
