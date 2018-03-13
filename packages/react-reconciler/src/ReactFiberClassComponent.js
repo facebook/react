@@ -789,20 +789,20 @@ export default function(
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
       if (
-        (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
-          typeof instance.componentWillUpdate === 'function') &&
+        (typeof instance.UNSAFE_componentWillMount === 'function' ||
+          typeof instance.componentWillMount === 'function') &&
         typeof ctor.getDerivedStateFromProps !== 'function'
       ) {
-        startPhaseTimer(workInProgress, 'componentWillUpdate');
-        if (typeof instance.componentWillUpdate === 'function') {
-          instance.componentWillUpdate(newProps, newState, newContext);
+        startPhaseTimer(workInProgress, 'componentWillMount');
+        if (typeof instance.componentWillMount === 'function') {
+          instance.componentWillMount();
         }
-        if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
-          instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
+        if (typeof instance.UNSAFE_componentWillMount === 'function') {
+          instance.UNSAFE_componentWillMount();
         }
         stopPhaseTimer();
       }
-      if (typeof instance.componentDidUpdate === 'function') {
+      if (typeof instance.componentDidMount === 'function') {
         workInProgress.effectTag |= Update;
       }
     } else {

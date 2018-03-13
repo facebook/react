@@ -1259,4 +1259,47 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
   });
+
+  it('calls the correct lifecycles on the error boundary after catching an error (mixed)', () => {
+    // This test seems a bit contrived, but it's based on an actual regression
+    // where we checked for the existence of didUpdate instead of didMount, and
+    // didMount was not defined.
+    function BadRender() {
+      ReactNoop.yield('throw');
+      throw new Error('oops!');
+    }
+
+    let parent;
+    class Parent extends React.Component {
+      state = {error: null, other: false};
+      componentDidCatch(error) {
+        ReactNoop.yield('did catch');
+        this.setState({error});
+      }
+      componentDidUpdate() {
+        ReactNoop.yield('did update');
+      }
+      render() {
+        parent = this;
+        if (this.state.error) {
+          ReactNoop.yield('render error message');
+          return <span prop={`Caught an error: ${this.state.error.message}`} />;
+        }
+        ReactNoop.yield('render');
+        return <BadRender />;
+      }
+    }
+
+    ReactNoop.render(<Parent step={1} />);
+    ReactNoop.flushThrough(['render', 'throw']);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    parent.setState({other: true});
+    expect(ReactNoop.flush()).toEqual([
+      'did catch',
+      'render error message',
+      'did update',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
 });
