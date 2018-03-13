@@ -9,20 +9,21 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ReactContext} from 'shared/ReactTypes';
+import type {StackCursor, Stack} from './ReactFiberStack';
 
 import warning from 'fbjs/lib/warning';
 
 export type NewContext = {
   pushProvider(providerFiber: Fiber): void,
   popProvider(providerFiber: Fiber): void,
-  resetProviderStack(): void,
 };
 
-export default function() {
-  let changedBitsStack: Array<any> = [];
-  let currentValueStack: Array<any> = [];
-  let stack: Array<Fiber> = [];
-  let index = -1;
+export default function(stack: Stack) {
+  const {createCursor, push, pop} = stack;
+
+  const providerCursor: StackCursor<Fiber | null> = createCursor(null);
+  const valueCursor: StackCursor<mixed> = createCursor(null);
+  const changedBitsCursor: StackCursor<number> = createCursor(0);
 
   let rendererSigil;
   if (__DEV__) {
@@ -32,10 +33,11 @@ export default function() {
 
   function pushProvider(providerFiber: Fiber): void {
     const context: ReactContext<any> = providerFiber.type.context;
-    index += 1;
-    changedBitsStack[index] = context._changedBits;
-    currentValueStack[index] = context._currentValue;
-    stack[index] = providerFiber;
+
+    push(changedBitsCursor, context._changedBits, providerFiber);
+    push(valueCursor, context._currentValue, providerFiber);
+    push(providerCursor, providerFiber, providerFiber);
+
     context._currentValue = providerFiber.pendingProps.value;
     context._changedBits = providerFiber.stateNode;
 
@@ -51,39 +53,20 @@ export default function() {
   }
 
   function popProvider(providerFiber: Fiber): void {
-    if (__DEV__) {
-      warning(index > -1 && providerFiber === stack[index], 'Unexpected pop.');
-    }
-    const changedBits = changedBitsStack[index];
-    const currentValue = currentValueStack[index];
-    changedBitsStack[index] = null;
-    currentValueStack[index] = null;
-    stack[index] = null;
-    index -= 1;
+    const changedBits = changedBitsCursor.current;
+    const currentValue = valueCursor.current;
+
+    pop(providerCursor, providerFiber);
+    pop(valueCursor, providerFiber);
+    pop(changedBitsCursor, providerFiber);
+
     const context: ReactContext<any> = providerFiber.type.context;
     context._currentValue = currentValue;
     context._changedBits = changedBits;
   }
 
-  function resetProviderStack(): void {
-    for (let i = index; i > -1; i--) {
-      const providerFiber = stack[i];
-      const context: ReactContext<any> = providerFiber.type.context;
-      context._currentValue = context._defaultValue;
-      context._changedBits = 0;
-      changedBitsStack[i] = null;
-      currentValueStack[i] = null;
-      stack[i] = null;
-      if (__DEV__) {
-        context._currentRenderer = null;
-      }
-    }
-    index = -1;
-  }
-
   return {
     pushProvider,
     popProvider,
-    resetProviderStack,
   };
 }

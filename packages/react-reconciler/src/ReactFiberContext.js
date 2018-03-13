@@ -48,7 +48,6 @@ export type LegacyContext = {
   processChildContext(fiber: Fiber, parentContext: Object): Object,
   pushContextProvider(workInProgress: Fiber): boolean,
   invalidateContextProvider(workInProgress: Fiber, didChange: boolean): void,
-  resetContext(): void,
   findCurrentUnmaskedContext(fiber: Fiber): Object,
 };
 
@@ -292,12 +291,6 @@ export default function(stack: Stack): LegacyContext {
     }
   }
 
-  function resetContext(): void {
-    previousContext = emptyObject;
-    contextStackCursor.current = emptyObject;
-    didPerformWorkStackCursor.current = false;
-  }
-
   function findCurrentUnmaskedContext(fiber: Fiber): Object {
     // Currently this is only used with renderSubtreeIntoContainer; not sure if it
     // makes sense elsewhere
@@ -336,7 +329,6 @@ export default function(stack: Stack): LegacyContext {
     processChildContext,
     pushContextProvider,
     invalidateContextProvider,
-    resetContext,
     findCurrentUnmaskedContext,
   };
 }

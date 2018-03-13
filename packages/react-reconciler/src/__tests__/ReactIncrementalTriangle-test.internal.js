@@ -542,6 +542,13 @@ ${formatActions(actions)}
         ['c', step(2)],
         ['b', interrupt()],
       );
+
+      simulateMultipleRoots(
+        ['c', toggle(0)],
+        ['c', step(1)],
+        ['b', flush(7)],
+        ['c', toggle(0)],
+      );
     });
 
     it('generative tests', () => {

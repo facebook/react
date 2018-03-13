@@ -145,8 +145,36 @@ export default function<C, CX>(
         return null;
     }
   }
+
+  function unwindInterruptedWork(interruptedWork: Fiber) {
+    switch (interruptedWork.tag) {
+      case ClassComponent: {
+        popLegacyContextProvider(interruptedWork);
+        break;
+      }
+      case HostRoot: {
+        popHostContainer(interruptedWork);
+        popTopLevelLegacyContextObject(interruptedWork);
+        break;
+      }
+      case HostComponent: {
+        popHostContext(interruptedWork);
+        break;
+      }
+      case HostPortal:
+        popHostContainer(interruptedWork);
+        break;
+      case ContextProvider:
+        popProvider(interruptedWork);
+        break;
+      default:
+        break;
+    }
+  }
+
   return {
     throwException,
     unwindWork,
+    unwindInterruptedWork,
   };
 }

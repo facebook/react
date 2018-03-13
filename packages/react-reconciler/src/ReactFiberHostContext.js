@@ -23,7 +23,6 @@ export type HostContext<C, CX> = {
   popHostContext(fiber: Fiber): void,
   pushHostContainer(fiber: Fiber, container: C): void,
   pushHostContext(fiber: Fiber): void,
-  resetHostContainer(): void,
 };
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
@@ -108,11 +107,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     pop(contextFiberStackCursor, fiber);
   }
 
-  function resetHostContainer() {
-    contextStackCursor.current = NO_CONTEXT;
-    rootInstanceStackCursor.current = NO_CONTEXT;
-  }
-
   return {
     getHostContext,
     getRootHostContainer,
@@ -120,6 +114,5 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     popHostContext,
     pushHostContainer,
     pushHostContext,
-    resetHostContainer,
   };
 }

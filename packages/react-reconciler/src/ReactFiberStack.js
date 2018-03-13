@@ -20,7 +20,6 @@ export type Stack = {
   isEmpty(): boolean,
   push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber): void,
   pop<T>(cursor: StackCursor<T>, fiber: Fiber): void,
-  reset(): void,
 };
 
 export default function(): Stack {
@@ -81,23 +80,10 @@ export default function(): Stack {
     cursor.current = value;
   }
 
-  function reset(): void {
-    while (index > -1) {
-      valueStack[index] = null;
-
-      if (__DEV__) {
-        fiberStack[index] = null;
-      }
-
-      index--;
-    }
-  }
-
   return {
     createCursor,
     isEmpty,
     pop,
     push,
-    reset,
   };
 }

@@ -157,21 +157,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
   const stack = ReactFiberStack();
-  const {reset: resetStack} = stack;
   const hostContext = ReactFiberHostContext(config, stack);
   const legacyContext = ReactFiberLegacyContext(stack);
-  const newContext = ReactFiberNewContext();
+  const newContext = ReactFiberNewContext(stack);
   const {popHostContext, popHostContainer} = hostContext;
   const {
     popTopLevelContextObject: popTopLevelLegacyContextObject,
     popContextProvider: popLegacyContextProvider,
-    resetContext: resetLegacyContext,
   } = legacyContext;
-  const {popProvider, resetProviderStack} = newContext;
+  const {popProvider} = newContext;
   const hydrationContext: HydrationContext<C, CX> = ReactFiberHydrationContext(
     config,
   );
-  const {resetHostContainer} = hostContext;
   const {beginWork} = ReactFiberBeginWork(
     config,
     hostContext,
@@ -188,7 +185,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     newContext,
     hydrationContext,
   );
-  const {throwException, unwindWork} = ReactFiberUnwindWork(
+  const {
+    throwException,
+    unwindWork,
+    unwindInterruptedWork,
+  } = ReactFiberUnwindWork(
     hostContext,
     legacyContext,
     newContext,
@@ -289,15 +290,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     };
   }
 
-  function resetContextStack() {
-    // Reset the stack
-    resetStack();
-    // Reset the cursors
-    resetLegacyContext();
-    resetHostContainer();
-
-    // TODO: Unify new context implementation with other stacks
-    resetProviderStack();
+  function resetStack() {
+    if (nextUnitOfWork !== null) {
+      let interruptedWork = nextUnitOfWork.return;
+      while (interruptedWork !== null) {
+        unwindInterruptedWork(interruptedWork);
+        interruptedWork = interruptedWork.return;
+      }
+    }
 
     if (__DEV__) {
       ReactStrictModeWarnings.discardPendingWarnings();
@@ -841,7 +841,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       nextUnitOfWork === null
     ) {
       // Reset the stack and start working from the root.
-      resetContextStack();
+      resetStack();
       nextRoot = root;
       nextRenderExpirationTime = expirationTime;
       nextUnitOfWork = createWorkInProgress(
@@ -1102,7 +1102,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           ) {
             // This is an interruption. (Used for performance tracking.)
             interruptedBy = fiber;
-            resetContextStack();
+            resetStack();
           }
           if (nextRoot !== root || !isWorking) {
             requestWork(root, expirationTime);
