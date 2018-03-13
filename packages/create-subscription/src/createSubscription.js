@@ -18,7 +18,7 @@ export function createSubscription<Property, Value>(
     // Synchronously gets the value for the subscribed property.
     // Return undefined if the subscribable value is undefined,
     // Or does not support synchronous reading (e.g. native Promise).
-    getValue: (source: Property) => Value | void,
+    getCurrentValue: (source: Property) => Value | void,
 
     // Setup a subscription for the subscribable value in props, and return an unsubscribe function.
     // Return false to indicate the property cannot be unsubscribed from (e.g. native Promises).
@@ -34,11 +34,11 @@ export function createSubscription<Property, Value>(
   children: (value: Value | void) => React$Node,
   source: Property,
 }> {
-  const {getValue, subscribe} = config;
+  const {getCurrentValue, subscribe} = config;
 
   warning(
-    typeof getValue === 'function',
-    'Subscription must specify a getValue function',
+    typeof getCurrentValue === 'function',
+    'Subscription must specify a getCurrentValue function',
   );
   warning(
     typeof subscribe === 'function',
@@ -65,7 +65,9 @@ export function createSubscription<Property, Value>(
         unsubscribe: null,
       },
       value:
-        this.props.source != null ? getValue(this.props.source) : undefined,
+        this.props.source != null
+          ? getCurrentValue(this.props.source)
+          : undefined,
     };
 
     static getDerivedStateFromProps(nextProps, prevState) {
@@ -76,7 +78,9 @@ export function createSubscription<Property, Value>(
             unsubscribe: null,
           },
           value:
-            nextProps.source != null ? getValue(nextProps.source) : undefined,
+            nextProps.source != null
+              ? getCurrentValue(nextProps.source)
+              : undefined,
         };
       }
 
@@ -129,14 +133,14 @@ export function createSubscription<Property, Value>(
 
         invariant(
           typeof unsubscribe === 'function',
-          'A subscription should return either an unsubscribe function or false.',
+          'A subscription must return an unsubscribe function.',
         );
 
         this.state.unsubscribeContainer.unsubscribe = unsubscribe;
 
         // External values could change between render and mount,
         // In some cases it may be important to handle this case.
-        const value = getValue(this.props.source);
+        const value = getCurrentValue(this.props.source);
         if (value !== this.state.value) {
           this.setState({value});
         }

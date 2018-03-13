@@ -4,12 +4,12 @@
 
 ## When should you NOT use this?
 
-This utility is should be used for subscriptions to a single value that are typically only read in one place and may update frequently (e.g. a component that subscribes to a geolocation API to show a dot on a map).
+This utility should be used for subscriptions to a single value that are typically only read in one place and may update frequently (e.g. a component that subscribes to a geolocation API to show a dot on a map).
 
 Other cases have **better long-term solutions**:
 * Redux/Flux stores should use the [context API](https://reactjs.org/docs/context.html) instead.
 * I/O subscriptions (e.g. notifications) that update infrequently should use [`simple-cache-provider`](https://github.com/facebook/react/blob/master/packages/simple-cache-provider/README.md) instead.
-* Complex libraries like Relay/Apollo should use this same technique (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)) in a way that is most optimized for their library usage.
+* Complex libraries like Relay/Apollo should manage subscriptions manually with the same techniques which this library uses under the hood (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)) in a way that is most optimized for their library usage.
 
 ## What types of subscriptions can this support?
 
@@ -31,13 +31,13 @@ npm install create-subscription --save
 
 # Usage
 
-To configure a subscription, you must provide two methods: `getValue` and `subscribe`.
+To configure a subscription, you must provide two methods: `getCurrentValue` and `subscribe`.
 
 ```js
 import { createSubscription } from "create-subscription";
 
 const Subscription = createSubscription({
-  getValue(source) {
+  getCurrentValue(source) {
     // Return the current value of the subscription (source),
     // or `undefined` if the value can't be read synchronously (e.g. native Promises).
   },
@@ -78,7 +78,7 @@ function FollowerComponent({ followersCount }) {
 
 // Create a wrapper component to manage the subscription.
 const EventHandlerSubscription = createSubscription({
-  getValue: eventDispatcher => eventDispatcher.value,
+  getCurrentValue: eventDispatcher => eventDispatcher.value,
   subscribe: (eventDispatcher, callback) => {
     const onChange = event => callback(eventDispatcher.value);
     eventDispatcher.addEventListener("change", onChange);
@@ -102,7 +102,7 @@ Below are examples showing how `create-subscription` can be used to subscribe to
 ### `BehaviorSubject`
 ```js
 const BehaviorSubscription = createSubscription({
-  getValue: behaviorSubject => behaviorSubject.getValue(),
+  getCurrentValue: behaviorSubject => behaviorSubject.getValue(),
   subscribe: (behaviorSubject, callback) => {
     const subscription = behaviorSubject.subscribe(callback);
     return () => subscription.unsubscribe();
@@ -113,7 +113,7 @@ const BehaviorSubscription = createSubscription({
 ### `ReplaySubject`
 ```js
 const ReplaySubscription = createSubscription({
-  getValue: replaySubject => {
+  getCurrentValue: replaySubject => {
     let currentValue;
     // ReplaySubject does not have a sync data getter,
     // So we need to temporarily subscribe to retrieve the most recent value.
@@ -158,7 +158,7 @@ function LoadingComponent({ loadingStatus }) {
 // This HOC will manage subscriptions and pass values to the decorated component.
 // It will add and remove subscriptions in an async-safe way when props change.
 const PromiseSubscription = createSubscription({
-  getValue: promise => {
+  getCurrentValue: promise => {
     // There is no way to synchronously read a Promise's value,
     // So this method should return undefined.
     return undefined;

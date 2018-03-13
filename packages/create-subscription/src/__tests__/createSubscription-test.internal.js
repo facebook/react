@@ -47,7 +47,7 @@ describe('createSubscription', () => {
 
   it('supports basic subscription pattern', () => {
     const Subscription = createSubscription({
-      getValue: source => source.getValue(),
+      getCurrentValue: source => source.getValue(),
       subscribe: (source, callback) => {
         const subscription = source.subscribe(callback);
         return () => subscription.unsubscribe;
@@ -79,7 +79,7 @@ describe('createSubscription', () => {
 
   it('should support observable types like RxJS ReplaySubject', () => {
     const Subscription = createSubscription({
-      getValue: source => {
+      getCurrentValue: source => {
         let currentValue;
         source
           .subscribe(value => {
@@ -114,7 +114,7 @@ describe('createSubscription', () => {
   describe('Promises', () => {
     it('should support Promises', async () => {
       const Subscription = createSubscription({
-        getValue: source => undefined,
+        getCurrentValue: source => undefined,
         subscribe: (source, callback) => {
           source.then(value => callback(value), value => callback(value));
           // (Can't unsubscribe from a Promise)
@@ -158,7 +158,7 @@ describe('createSubscription', () => {
 
     it('should still work if unsubscription is managed incorrectly', async () => {
       const Subscription = createSubscription({
-        getValue: source => undefined,
+        getCurrentValue: source => undefined,
         subscribe: (source, callback) => {
           source.then(callback);
           // (Can't unsubscribe from a Promise)
@@ -193,7 +193,7 @@ describe('createSubscription', () => {
 
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
     const Subscription = createSubscription({
-      getValue: source => source.getValue(),
+      getCurrentValue: source => source.getValue(),
       subscribe: (source, callback) => {
         const subscription = source.subscribe(callback);
         return () => subscription.unsubscribe();
@@ -240,7 +240,7 @@ describe('createSubscription', () => {
     }
 
     const Subscription = createSubscription({
-      getValue: source => source.getValue(),
+      getCurrentValue: source => source.getValue(),
       subscribe: (source, callback) => {
         const subscription = source.subscribe(callback);
         return () => subscription.unsubscribe();
@@ -330,7 +330,7 @@ describe('createSubscription', () => {
     }
 
     const Subscription = createSubscription({
-      getValue: source => source.getValue(),
+      getCurrentValue: source => source.getValue(),
       subscribe: (source, callback) => {
         const subscription = source.subscribe(callback);
         return () => subscription.unsubscribe();
@@ -416,7 +416,7 @@ describe('createSubscription', () => {
   });
 
   describe('warnings', () => {
-    it('should warn for invalid missing getValue', () => {
+    it('should warn for invalid missing getCurrentValue', () => {
       expect(() => {
         createSubscription(
           {
@@ -424,14 +424,14 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a getValue function');
+      }).toWarnDev('Subscription must specify a getCurrentValue function');
     });
 
     it('should warn for invalid missing subscribe', () => {
       expect(() => {
         createSubscription(
           {
-            getValue: () => () => {},
+            getCurrentValue: () => () => {},
           },
           () => null,
         );
@@ -440,7 +440,7 @@ describe('createSubscription', () => {
 
     it('should warn if subscribe does not return an unsubscribe method', () => {
       const Subscription = createSubscription({
-        getValue: source => undefined,
+        getCurrentValue: source => undefined,
         subscribe: (source, callback) => {},
       });
 
@@ -450,7 +450,7 @@ describe('createSubscription', () => {
       );
 
       expect(ReactNoop.flush).toThrow(
-        'A subscription should return either an unsubscribe function or false.',
+        'A subscription must return an unsubscribe function.',
       );
     });
   });
