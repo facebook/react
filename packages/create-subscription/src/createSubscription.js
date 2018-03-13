@@ -47,7 +47,7 @@ export function createSubscription<Property, Value>(
 
   type Props = {
     children: (value: Value) => React$Element<any>,
-    source: any,
+    source: Property,
   };
   type State = {
     source: Property,
