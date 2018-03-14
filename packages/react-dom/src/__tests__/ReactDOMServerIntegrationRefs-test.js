@@ -114,7 +114,7 @@ describe('ReactDOMServerIntegration', () => {
       <OuterComponent ref={divRef} value="hello" />,
     );
 
-    expect(divRef.value).not.toBe(null);
-    expect(divRef.value.textContent).toBe('hello');
+    expect(divRef.current).not.toBe(null);
+    expect(divRef.current.textContent).toBe('hello');
   });
 });

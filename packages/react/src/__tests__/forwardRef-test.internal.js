@@ -62,7 +62,7 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} value={123} />);
     expect(ReactNoop.flush()).toEqual([123]);
-    expect(ref.value instanceof Child).toBe(true);
+    expect(ref.current instanceof Child).toBe(true);
   });
 
   it('should forward a ref for multiple children', () => {
@@ -91,7 +91,7 @@ describe('forwardRef', () => {
       </div>,
     );
     expect(ReactNoop.flush()).toEqual([123]);
-    expect(ref.value instanceof Child).toBe(true);
+    expect(ref.current instanceof Child).toBe(true);
   });
 
   it('should update refs when switching between children', () => {
@@ -112,11 +112,11 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} setRefOnDiv={true} />);
     ReactNoop.flush();
-    expect(ref.value.type).toBe('div');
+    expect(ref.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} setRefOnDiv={false} />);
     ReactNoop.flush();
-    expect(ref.value.type).toBe('span');
+    expect(ref.current.type).toBe('span');
   });
 
   it('should maintain child instance and ref through updates', () => {
@@ -203,7 +203,7 @@ describe('forwardRef', () => {
       'ErrorBoundary.componentDidCatch',
       'ErrorBoundary.render: catch',
     ]);
-    expect(ref.value).toBe(null);
+    expect(ref.current).toBe(null);
   });
 
   it('should support rendering null', () => {
@@ -213,7 +213,7 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} />);
     ReactNoop.flush();
-    expect(ref.value).toBe(null);
+    expect(ref.current).toBe(null);
   });
 
   it('should support rendering null for multiple children', () => {
@@ -229,7 +229,7 @@ describe('forwardRef', () => {
       </div>,
     );
     ReactNoop.flush();
-    expect(ref.value).toBe(null);
+    expect(ref.current).toBe(null);
   });
 
   it('should warn if not provided a callback during creation', () => {
