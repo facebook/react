@@ -155,7 +155,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateForwardRef(current, workInProgress) {
-    const nextChildren = workInProgress.type.render(
+    const render = workInProgress.type.render;
+    const nextChildren = render(
       workInProgress.pendingProps,
       workInProgress.ref,
     );
