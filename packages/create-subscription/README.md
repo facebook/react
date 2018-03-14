@@ -1,6 +1,6 @@
 # create-subscription
 
-`create-subscription` provides an async-safe interface to manage a subscription.
+`create-subscription` is a utility for subscribing to external data sources inside React components. It is officially supported and maintained by the React team.
 
 ## When should you NOT use this?
 
@@ -50,7 +50,7 @@ const Subscription = createSubscription({
 });
 ```
 
-To use the `Subscription` component, pass the subscribable property (e.g. an event dispatcher, Flux store, observable) as the `source` property and use a [render prop](https://reactjs.org/docs/render-props.html), `children`, to handle the subscribed value when it changes:
+To use the `Subscription` component, pass the subscribable property (e.g. an event dispatcher, observable) as the `source` property and use a [render prop](https://reactjs.org/docs/render-props.html), `children`, to handle the subscribed value when it changes:
 
 ```js
 <Subscription source={eventDispatcher}>
