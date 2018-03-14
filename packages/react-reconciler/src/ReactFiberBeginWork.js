@@ -155,14 +155,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateForwardRef(current, workInProgress) {
-    const renderFn = workInProgress.type.renderFn;
+    const render = workInProgress.type.render;
     invariant(
-      typeof renderFn === 'function',
+      typeof render === 'function',
       'forwardRef requires a render function but was given %s.%s',
-      renderFn === null ? 'null' : typeof renderFn,
+      render === null ? 'null' : typeof render,
       ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || '',
     );
-    const nextChildren = renderFn(
+    const nextChildren = render(
       workInProgress.pendingProps,
       workInProgress.ref,
     );

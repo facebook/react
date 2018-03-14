@@ -10,18 +10,18 @@ import {REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 import warning from 'fbjs/lib/warning';
 
 export default function forwardRef<Props, ElementType: React$ElementType>(
-  renderFn: (props: Props, ref: React$ElementRef<ElementType>) => React$Node,
+  render: (props: Props, ref: React$ElementRef<ElementType>) => React$Node,
 ) {
   if (__DEV__) {
     warning(
-      typeof renderFn === 'function',
+      typeof render === 'function',
       'forwardRef requires a render function but was given %s.',
-      renderFn === null ? 'null' : typeof renderFn,
+      render === null ? 'null' : typeof render,
     );
   }
 
   return {
     $$typeof: REACT_FORWARD_REF_TYPE,
-    renderFn,
+    render,
   };
 }
