@@ -14,10 +14,6 @@ describe('forwardRef', () => {
   let ReactFeatureFlags;
   let ReactNoop;
 
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -223,30 +219,9 @@ describe('forwardRef', () => {
     );
   });
 
-  it('should error with a callstack if rendered without a function', () => {
-    let RefForwardingComponent;
-    expect(() => {
-      RefForwardingComponent = React.forwardRef();
-    }).toWarnDev(
+  it('should warn if no render function is provided', () => {
+    expect(React.forwardRef).toWarnDev(
       'forwardRef requires a render function but was given undefined.',
-    );
-
-    ReactNoop.render(
-      <div>
-        <RefForwardingComponent />
-      </div>,
-    );
-
-    let caughtError;
-    try {
-      ReactNoop.flush();
-    } catch (error) {
-      caughtError = error;
-    }
-    expect(caughtError).toBeDefined();
-    expect(normalizeCodeLocInfo(caughtError.message)).toBe(
-      'forwardRef requires a render function but was given undefined.' +
-        (__DEV__ ? '\n    in div (at **)' : ''),
     );
   });
 });
