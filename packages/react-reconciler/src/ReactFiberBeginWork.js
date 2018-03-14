@@ -26,6 +26,7 @@ import {
   CallComponent,
   CallHandlerPhase,
   ReturnComponent,
+  ForwardRef,
   Fragment,
   Mode,
   ContextProvider,
@@ -151,6 +152,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         renderExpirationTime,
       );
     }
+  }
+
+  function updateForwardRef(current, workInProgress) {
+    const render = workInProgress.type.render;
+    const nextChildren = render(
+      workInProgress.pendingProps,
+      workInProgress.ref,
+    );
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextChildren);
+    return workInProgress.child;
   }
 
   function updateFragment(current, workInProgress) {
@@ -1130,6 +1142,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           workInProgress,
           renderExpirationTime,
         );
+      case ForwardRef:
+        return updateForwardRef(current, workInProgress);
       case Fragment:
         return updateFragment(current, workInProgress);
       case Mode:

@@ -13,6 +13,7 @@ import {
   REACT_ASYNC_MODE_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_ELEMENT_TYPE,
+  REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROVIDER_TYPE,
@@ -37,6 +38,7 @@ export function typeOf(object: any) {
 
             switch ($$typeofType) {
               case REACT_CONTEXT_TYPE:
+              case REACT_FORWARD_REF_TYPE:
               case REACT_PROVIDER_TYPE:
                 return $$typeofType;
               default:
@@ -55,6 +57,7 @@ export const AsyncMode = REACT_ASYNC_MODE_TYPE;
 export const ContextConsumer = REACT_CONTEXT_TYPE;
 export const ContextProvider = REACT_PROVIDER_TYPE;
 export const Element = REACT_ELEMENT_TYPE;
+export const ForwardRef = REACT_FORWARD_REF_TYPE;
 export const Fragment = REACT_FRAGMENT_TYPE;
 export const Portal = REACT_PORTAL_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
@@ -74,6 +77,9 @@ export function isElement(object: any) {
     object !== null &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
+}
+export function isForwardRef(object: any) {
+  return typeOf(object) === REACT_FORWARD_REF_TYPE;
 }
 export function isFragment(object: any) {
   return typeOf(object) === REACT_FRAGMENT_TYPE;
