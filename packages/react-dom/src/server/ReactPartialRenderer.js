@@ -27,6 +27,7 @@ import describeComponentFrame from 'shared/describeComponentFrame';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
 import {
+  REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_ASYNC_MODE_TYPE,
@@ -841,6 +842,25 @@ class ReactDOMServerRenderer {
       }
       if (typeof elementType === 'object' && elementType !== null) {
         switch (elementType.$$typeof) {
+          case REACT_FORWARD_REF_TYPE: {
+            const element: ReactElement = ((nextChild: any): ReactElement);
+            const nextChildren = toArray(
+              elementType.render(element.props, element.ref),
+            );
+            const frame: Frame = {
+              type: null,
+              domNamespace: parentNamespace,
+              children: nextChildren,
+              childIndex: 0,
+              context: context,
+              footer: '',
+            };
+            if (__DEV__) {
+              ((frame: any): FrameDev).debugElementStack = [];
+            }
+            this.stack.push(frame);
+            return '';
+          }
           case REACT_PROVIDER_TYPE: {
             const provider: ReactProvider<any> = (nextChild: any);
             const nextProps = provider.props;
