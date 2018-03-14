@@ -101,5 +101,5 @@ export type ReactPortal = {
 };
 
 export type RefObject = {|
-  value: any,
+  current: any,
 |};
