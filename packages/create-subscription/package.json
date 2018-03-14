@@ -1,6 +1,6 @@
 {
   "name": "create-subscription",
-  "description": "HOC for creating async-safe React components with subscriptions",
+  "description": "utility for subscribing to external data sources inside React components",
   "version": "0.1.0-alpha.2",
   "repository": "facebook/react",
   "files": [
