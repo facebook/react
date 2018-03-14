@@ -260,7 +260,9 @@ function validatePropTypes(element) {
 function validateFragmentProps(fragment) {
   currentlyValidatingElement = fragment;
 
-  for (const key of Object.keys(fragment.props)) {
+  const keys = Object.keys(fragment.props);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
     if (!VALID_FRAGMENT_PROPS.has(key)) {
       warning(
         false,

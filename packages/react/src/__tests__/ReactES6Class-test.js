@@ -59,10 +59,13 @@ describe('ReactES6Class', () => {
     class Foo extends React.Component {}
     expect(() =>
       expect(() => ReactDOM.render(<Foo />, container)).toThrow(),
-    ).toWarnDev(
+    ).toWarnDev([
+      // A failed component renders twice in DEV
       'Warning: Foo(...): No `render` method found on the returned component ' +
         'instance: you may have forgotten to define `render`.',
-    );
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+        'instance: you may have forgotten to define `render`.',
+    ]);
   });
 
   it('renders a simple stateless component with prop', () => {

@@ -20,15 +20,20 @@ function saveResults() {
   );
 }
 
-function percentChange(prev, current) {
-  return Math.floor((current - prev) / prev * 100);
+function fractionalChange(prev, current) {
+  return (current - prev) / prev;
 }
 
 function percentChangeString(change) {
-  if (change > 0) {
-    return chalk.red.bold(`+${change} %`);
-  } else if (change <= 0) {
-    return chalk.green.bold(change + ' %');
+  if (!isFinite(change)) {
+    // When a new package is created
+    return 'n/a';
+  }
+  const formatted = (change * 100).toFixed(1);
+  if (/^-|^0(?:\.0+)$/.test(formatted)) {
+    return `${formatted}%`;
+  } else {
+    return `+${formatted}%`;
   }
 }
 
@@ -66,10 +71,10 @@ function generateResultsArray(current, prevResults) {
         packageName: result.packageName,
         prevSize: filesize(prevSize),
         prevFileSize: filesize(size),
-        prevFileSizeChange: percentChange(prevSize, size),
+        prevFileSizeChange: fractionalChange(prevSize, size),
         prevGzip: filesize(prevGzip),
         prevGzipSize: filesize(gzip),
-        prevGzipSizeChange: percentChange(prevGzip, gzip),
+        prevGzipSizeChange: fractionalChange(prevGzip, gzip),
       };
       // Strip any nulls
     })
@@ -78,7 +83,7 @@ function generateResultsArray(current, prevResults) {
 
 function printResults() {
   const table = new Table({
-    head: resultsHeaders.map(chalk.gray.yellow),
+    head: resultsHeaders.map(label => chalk.gray.yellow(label)),
   });
 
   const results = generateResultsArray(currentBuildResults, prevBuildResults);

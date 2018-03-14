@@ -234,6 +234,36 @@ const bundles = [
     global: 'ReactCallReturn',
     externals: [],
   },
+
+  /******* React Is *******/
+  {
+    label: 'react-is',
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-is',
+    global: 'ReactIs',
+    externals: [],
+  },
+
+  /******* Simple Cache Provider (experimental) *******/
+  {
+    label: 'simple-cache-provider',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'simple-cache-provider',
+    global: 'SimpleCacheProvider',
+    externals: ['react'],
+  },
+
+  /******* createComponentWithSubscriptions (experimental) *******/
+  {
+    label: 'create-subscription',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'create-subscription',
+    global: 'createSubscription',
+    externals: ['react'],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)

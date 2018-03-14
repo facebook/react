@@ -266,6 +266,40 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Result: 12')]);
   });
 
+  it('should provide the correct (default) values to consumers outside of a provider', () => {
+    const FooContext = React.createContext({value: 'foo-initial'});
+    const BarContext = React.createContext({value: 'bar-initial'});
+
+    const Verify = ({actual, expected}) => {
+      expect(expected).toBe(actual);
+      return null;
+    };
+
+    ReactNoop.render(
+      <React.Fragment>
+        <BarContext.Provider value={{value: 'bar-updated'}}>
+          <BarContext.Consumer>
+            {({value}) => <Verify actual={value} expected="bar-updated" />}
+          </BarContext.Consumer>
+
+          <FooContext.Provider value={{value: 'foo-updated'}}>
+            <FooContext.Consumer>
+              {({value}) => <Verify actual={value} expected="foo-updated" />}
+            </FooContext.Consumer>
+          </FooContext.Provider>
+        </BarContext.Provider>
+
+        <FooContext.Consumer>
+          {({value}) => <Verify actual={value} expected="foo-initial" />}
+        </FooContext.Consumer>
+        <BarContext.Consumer>
+          {({value}) => <Verify actual={value} expected="bar-initial" />}
+        </BarContext.Consumer>
+      </React.Fragment>,
+    );
+    ReactNoop.flush();
+  });
+
   it('multiple consumers in different branches', () => {
     const Context = React.createContext(1);
 
@@ -482,7 +516,7 @@ describe('ReactNewContext', () => {
 
     function Foo() {
       return (
-        <Context.Consumer observedBits={0b01}>
+        <Context.Consumer unstable_observedBits={0b01}>
           {value => {
             ReactNoop.yield('Foo');
             return <span prop={'Foo: ' + value.foo} />;
@@ -493,7 +527,7 @@ describe('ReactNewContext', () => {
 
     function Bar() {
       return (
-        <Context.Consumer observedBits={0b10}>
+        <Context.Consumer unstable_observedBits={0b10}>
           {value => {
             ReactNoop.yield('Bar');
             return <span prop={'Bar: ' + value.bar} />;
@@ -608,6 +642,124 @@ describe('ReactNewContext', () => {
           'context provider. This is currently unsupported',
       );
     }
+  });
+
+  it('warns if consumer child is not a function', () => {
+    spyOnDev(console, 'error');
+    const Context = React.createContext(0);
+    ReactNoop.render(<Context.Consumer />);
+    expect(ReactNoop.flush).toThrow('render is not a function');
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'A context consumer was rendered with multiple children, or a child ' +
+          "that isn't a function",
+      );
+    }
+  });
+
+  it("does not re-render if there's an update in a child", () => {
+    const Context = React.createContext(0);
+
+    let child;
+    class Child extends React.Component {
+      state = {step: 0};
+      render() {
+        ReactNoop.yield('Child');
+        return (
+          <span
+            prop={`Context: ${this.props.context}, Step: ${this.state.step}`}
+          />
+        );
+      }
+    }
+
+    function App(props) {
+      return (
+        <Context.Provider value={props.value}>
+          <Context.Consumer>
+            {value => {
+              ReactNoop.yield('Consumer render prop');
+              return <Child ref={inst => (child = inst)} context={value} />;
+            }}
+          </Context.Consumer>
+        </Context.Provider>
+      );
+    }
+
+    // Initial mount
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual(['Consumer render prop', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 0')]);
+
+    child.setState({step: 1});
+    expect(ReactNoop.flush()).toEqual(['Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 1')]);
+  });
+
+  it('provider bails out if children and value are unchanged (like sCU)', () => {
+    const Context = React.createContext(0);
+
+    function Child() {
+      ReactNoop.yield('Child');
+      return <span prop="Child" />;
+    }
+
+    const children = <Child />;
+
+    function App(props) {
+      ReactNoop.yield('App');
+      return (
+        <Context.Provider value={props.value}>{children}</Context.Provider>
+      );
+    }
+
+    // Initial mount
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual(['App', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual([
+      'App',
+      // Child does not re-render
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+  });
+
+  it('consumer bails out if children and value are unchanged (like sCU)', () => {
+    const Context = React.createContext(0);
+
+    function Child() {
+      ReactNoop.yield('Child');
+      return <span prop="Child" />;
+    }
+
+    function renderConsumer(context) {
+      return <Child context={context} />;
+    }
+
+    function App(props) {
+      ReactNoop.yield('App');
+      return (
+        <Context.Provider value={props.value}>
+          <Context.Consumer>{renderConsumer}</Context.Consumer>
+        </Context.Provider>
+      );
+    }
+
+    // Initial mount
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual(['App', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual([
+      'App',
+      // Child does not re-render
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
   });
 
   describe('fuzz test', () => {

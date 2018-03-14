@@ -7,11 +7,30 @@
 
 'use strict';
 
+// Hi, if this is your first time editing/reading a Dangerfile, here's a summary:
+// It's a JS runtime which helps you provide continuous feedback inside GitHub.
+//
+// You can see the docs here: http://danger.systems/js/
+//
+// If you want to test changes Danger, I'd recommend checking out an existing PR
+// and then running the `danger pr` command.
+//
+// You'll need a GitHub token, you can re-use this one:
+//
+//  e622517d9f1136ea8900 07c6373666312cdfaa69
+//
+// (Just remove the space)
+//
+// So, for example:
+//
+// `DANGER_GITHUB_API_TOKEN=[ENV_ABOVE] yarn danger pr https://github.com/facebook/react/pull/11865
+
 const {markdown, danger} = require('danger');
 const fetch = require('node-fetch');
 
 const {generateResultsArray} = require('./scripts/rollup/stats');
 const {readFileSync} = require('fs');
+const {exec} = require('child_process');
 
 const currentBuildResults = JSON.parse(
   readFileSync('./scripts/rollup/results.json')
@@ -37,12 +56,19 @@ function generateMDTable(headers, body) {
  * @param {string[]} headers
  */
 function addPercent(change, includeEmoji) {
-  if (change > 0 && includeEmoji) {
-    return `:small_red_triangle:+${change}%`;
-  } else if (change > 0) {
-    return `+${change}%`;
+  if (!isFinite(change)) {
+    // When a new package is created
+    return 'n/a';
+  }
+  const formatted = (change * 100).toFixed(1);
+  if (/^-|^0(?:\.0+)$/.test(formatted)) {
+    return `${formatted}%`;
   } else {
-    return `${change}%`;
+    if (includeEmoji) {
+      return `:small_red_triangle:+${formatted}%`;
+    } else {
+      return `+${formatted}%`;
+    }
   }
 }
 
@@ -54,13 +80,37 @@ function setBoldness(row, isBold) {
   }
 }
 
-// Grab the results.json before we ran CI via the GH API
-// const baseMerge = danger.github.pr.base.sha
-const parentOfOldestCommit = danger.git.commits[0].parents[0];
-const commitURL = sha =>
-  `http://react.zpao.com/builds/master/_commits/${sha}/results.json`;
+/**
+ * Gets the commit that represents the merge between the current branch
+ * and master.
+ */
+function git(args) {
+  return new Promise(res => {
+    exec('git ' + args, (err, stdout, stderr) => {
+      if (err) {
+        throw err;
+      } else {
+        res(stdout.trim());
+      }
+    });
+  });
+}
 
-fetch(commitURL(parentOfOldestCommit)).then(async response => {
+(async function() {
+  // Use git locally to grab the commit which represents the place
+  // where the branches differ
+  const upstreamRepo = danger.github.pr.base.repo.full_name;
+  const upstreamRef = danger.github.pr.base.ref;
+  await git(`remote add upstream https://github.com/${upstreamRepo}.git`);
+  await git('fetch upstream');
+  const mergeBaseCommit = await git(`merge-base HEAD upstream/${upstreamRef}`);
+
+  const commitURL = sha =>
+    `http://react.zpao.com/builds/master/_commits/${sha}/results.json`;
+  const response = await fetch(commitURL(mergeBaseCommit));
+
+  // Take the JSON of the build response and
+  // make an array comparing the results for printing
   const previousBuildResults = await response.json();
   const results = generateResultsArray(
     currentBuildResults,
@@ -71,9 +121,10 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
   const packagesToShow = results
     .filter(
       r =>
-        Math.abs(r.prevFileSizeChange) > percentToWarrentShowing ||
-        Math.abs(r.prevGzipSizeChange) > percentToWarrentShowing
+        Math.abs(r.prevFileSizeChange) >= percentToWarrentShowing ||
+        Math.abs(r.prevGzipSizeChange) >= percentToWarrentShowing
     )
+
     .map(r => r.packageName);
 
   if (packagesToShow.length) {
@@ -112,7 +163,7 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
 
     // Show a hidden summary table for all diffs
 
-    // eslint-disable-next-line no-var
+    // eslint-disable-next-line no-var,no-for-of-loops/no-for-of-loops
     for (var name of new Set(packagesToShow)) {
       const thisBundleResults = results.filter(r => r.packageName === name);
       const changedFiles = thisBundleResults.filter(
@@ -152,16 +203,16 @@ fetch(commitURL(parentOfOldestCommit)).then(async response => {
     }
 
     const summary = `
-<details>
-<summary>Details of bundled changes.</summary>
+  <details>
+  <summary>Details of bundled changes.</summary>
 
-<p>Comparing: ${parentOfOldestCommit}...${danger.github.pr.head.sha}</p>
+  <p>Comparing: ${mergeBaseCommit}...${danger.github.pr.head.sha}</p>
 
 
-${allTables.join('\n')}
+  ${allTables.join('\n')}
 
-</details>
-`;
+  </details>
+  `;
     markdown(summary);
   }
-});
+})();

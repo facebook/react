@@ -116,6 +116,7 @@ describe('ReactDebugFiberPerf', () => {
     global.performance = createUserTimingPolyfill();
 
     require('shared/ReactFeatureFlags').enableUserTimingAPI = true;
+    require('shared/ReactFeatureFlags').replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 
     // Import after the polyfill is set up:
     React = require('react');
@@ -566,7 +567,7 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     ReactNoop.render(<Foo />);
-    ReactNoop.expire(5000);
+    ReactNoop.expire(6000);
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });

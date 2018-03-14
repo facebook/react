@@ -224,12 +224,12 @@ const properties = {};
 
 // A few React string attributes have a different name.
 // This is a mapping from React prop names to the attribute names.
-new Map([
+[
   ['acceptCharset', 'accept-charset'],
   ['className', 'class'],
   ['htmlFor', 'for'],
   ['httpEquiv', 'http-equiv'],
-]).forEach((attributeName, name) => {
+].forEach(([name, attributeName]) => {
   properties[name] = new PropertyInfoRecord(
     name,
     STRING,

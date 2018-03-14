@@ -226,4 +226,38 @@ describe('ReactDOMServerLifecycles', () => {
     ReactDOMServer.renderToString(<Component />);
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
   });
+
+  it('tracks state updates across components', () => {
+    class Outer extends React.Component {
+      UNSAFE_componentWillMount() {
+        this.setState({x: 1});
+      }
+      render() {
+        return <Inner updateParent={this.updateParent}>{this.state.x}</Inner>;
+      }
+      updateParent = () => {
+        this.setState({x: 3});
+      };
+    }
+    class Inner extends React.Component {
+      UNSAFE_componentWillMount() {
+        this.setState({x: 2});
+        this.props.updateParent();
+      }
+      render() {
+        return <div>{this.props.children + '-' + this.state.x}</div>;
+      }
+    }
+    expect(() => {
+      // Shouldn't be 1-3.
+      expect(ReactDOMServer.renderToStaticMarkup(<Outer />)).toBe(
+        '<div>1-2</div>',
+      );
+    }).toWarnDev(
+      'Warning: setState(...): Can only update a mounting component. This ' +
+        'usually means you called setState() outside componentWillMount() on ' +
+        'the server. This is a no-op.\n\n' +
+        'Please check the code for the Outer component.',
+    );
+  });
 });

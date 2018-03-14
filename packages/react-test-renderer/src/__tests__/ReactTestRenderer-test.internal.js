@@ -10,6 +10,8 @@
 
 'use strict';
 
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
 const prettyFormat = require('pretty-format');
@@ -438,6 +440,7 @@ describe('ReactTestRenderer', () => {
         /* do nothing */
       }
       componentDidCatch() {
+        log.push('Boundary componentDidCatch');
         this.setState({error: true});
       }
     }
@@ -452,6 +455,7 @@ describe('ReactTestRenderer', () => {
       'Boundary render',
       'Angry render',
       'Boundary componentDidMount',
+      'Boundary componentDidCatch',
       'Boundary render',
     ]);
   });
@@ -878,5 +882,79 @@ describe('ReactTestRenderer', () => {
       },
       'world',
     ]);
+  });
+
+  it('supports context providers and consumers', () => {
+    const {Consumer, Provider} = React.createContext('a');
+
+    function Child(props) {
+      return props.value;
+    }
+
+    function App() {
+      return (
+        <Provider value="b">
+          <Consumer>{value => <Child value={value} />}</Consumer>
+        </Provider>
+      );
+    }
+
+    const renderer = ReactTestRenderer.create(<App />);
+    const child = renderer.root.findByType(Child);
+    expect(child.children).toEqual(['b']);
+    expect(prettyFormat(renderer.toTree())).toEqual(
+      prettyFormat({
+        instance: null,
+        nodeType: 'component',
+        props: {},
+        rendered: {
+          instance: null,
+          nodeType: 'component',
+          props: {
+            value: 'b',
+          },
+          rendered: 'b',
+          type: Child,
+        },
+        type: App,
+      }),
+    );
+  });
+
+  it('supports modes', () => {
+    function Child(props) {
+      return props.value;
+    }
+
+    function App(props) {
+      return (
+        <React.StrictMode>
+          <Child value={props.value} />
+        </React.StrictMode>
+      );
+    }
+
+    const renderer = ReactTestRenderer.create(<App value="a" />);
+    const child = renderer.root.findByType(Child);
+    expect(child.children).toEqual(['a']);
+    expect(prettyFormat(renderer.toTree())).toEqual(
+      prettyFormat({
+        instance: null,
+        nodeType: 'component',
+        props: {
+          value: 'a',
+        },
+        rendered: {
+          instance: null,
+          nodeType: 'component',
+          props: {
+            value: 'a',
+          },
+          rendered: 'a',
+          type: Child,
+        },
+        type: App,
+      }),
+    );
   });
 });

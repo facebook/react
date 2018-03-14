@@ -192,6 +192,8 @@ if (__DEV__) {
       !NativeMethodsMixin_DEV.UNSAFE_componentWillReceiveProps,
     'Do not override existing functions.',
   );
+  // TODO (bvaughn) Remove cWM and cWRP in a future version of React Native,
+  // Once these lifecycles have been remove from the reconciler.
   NativeMethodsMixin_DEV.componentWillMount = function() {
     throwOnStylesProp(this, this.props);
   };
@@ -204,6 +206,12 @@ if (__DEV__) {
   NativeMethodsMixin_DEV.UNSAFE_componentWillReceiveProps = function(newProps) {
     throwOnStylesProp(this, newProps);
   };
+
+  // React may warn about cWM/cWRP/cWU methods being deprecated.
+  // Add a flag to suppress these warnings for this special case.
+  // TODO (bvaughn) Remove this flag once the above methods have been removed.
+  NativeMethodsMixin_DEV.componentWillMount.__suppressDeprecationWarning = true;
+  NativeMethodsMixin_DEV.componentWillReceiveProps.__suppressDeprecationWarning = true;
 }
 
 export default NativeMethodsMixin;

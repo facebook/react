@@ -12,6 +12,8 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import warning from 'fbjs/lib/warning';
 
+let changedBitsStack: Array<any> = [];
+let currentValueStack: Array<any> = [];
 let stack: Array<Fiber> = [];
 let index = -1;
 
@@ -22,11 +24,13 @@ if (__DEV__) {
 }
 
 export function pushProvider(providerFiber: Fiber): void {
-  index += 1;
-  stack[index] = providerFiber;
   const context: ReactContext<any> = providerFiber.type.context;
-  context.currentValue = providerFiber.pendingProps.value;
-  context.changedBits = providerFiber.stateNode;
+  index += 1;
+  changedBitsStack[index] = context._changedBits;
+  currentValueStack[index] = context._currentValue;
+  stack[index] = providerFiber;
+  context._currentValue = providerFiber.pendingProps.value;
+  context._changedBits = providerFiber.stateNode;
 
   if (__DEV__) {
     warning(
@@ -43,25 +47,25 @@ export function popProvider(providerFiber: Fiber): void {
   if (__DEV__) {
     warning(index > -1 && providerFiber === stack[index], 'Unexpected pop.');
   }
+  const changedBits = changedBitsStack[index];
+  const currentValue = currentValueStack[index];
+  changedBitsStack[index] = null;
+  currentValueStack[index] = null;
   stack[index] = null;
   index -= 1;
   const context: ReactContext<any> = providerFiber.type.context;
-  if (index < 0) {
-    context.currentValue = context.defaultValue;
-    context.changedBits = 0;
-  } else {
-    const previousProviderFiber = stack[index];
-    context.currentValue = previousProviderFiber.pendingProps.value;
-    context.changedBits = previousProviderFiber.stateNode;
-  }
+  context._currentValue = currentValue;
+  context._changedBits = changedBits;
 }
 
 export function resetProviderStack(): void {
   for (let i = index; i > -1; i--) {
     const providerFiber = stack[i];
     const context: ReactContext<any> = providerFiber.type.context;
-    context.currentValue = context.defaultValue;
-    context.changedBits = 0;
+    context._currentValue = context._defaultValue;
+    context._changedBits = 0;
+    changedBitsStack[i] = null;
+    currentValueStack[i] = null;
     stack[i] = null;
     if (__DEV__) {
       context._currentRenderer = null;
