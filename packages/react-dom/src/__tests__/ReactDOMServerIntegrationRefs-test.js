@@ -102,7 +102,7 @@ describe('ReactDOMServerIntegration', () => {
 
     class InnerComponent extends React.Component {
       render() {
-        return <div ref={this.props.forwardedRef}>hello</div>;
+        return <div ref={this.props.forwardedRef}>{this.props.value}</div>;
       }
     }
 
@@ -110,7 +110,9 @@ describe('ReactDOMServerIntegration', () => {
       <InnerComponent {...props} forwardedRef={ref} />
     ));
 
-    await clientRenderOnServerString(<OuterComponent ref={divRef} />);
+    await clientRenderOnServerString(
+      <OuterComponent ref={divRef} value="hello" />,
+    );
 
     expect(divRef.value).not.toBe(null);
     expect(divRef.value.textContent).toBe('hello');
