@@ -94,6 +94,31 @@ describe('forwardRef', () => {
     expect(ref.value instanceof Child).toBe(true);
   });
 
+  it('should update refs when switching between children', () => {
+    function FunctionalComponent({forwardedRef, setRefOnDiv}) {
+      return (
+        <section>
+          <div ref={setRefOnDiv ? forwardedRef : null}>First</div>
+          <span ref={setRefOnDiv ? null : forwardedRef}>Second</span>
+        </section>
+      );
+    }
+
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
+      <FunctionalComponent {...props} forwardedRef={ref} />
+    ));
+
+    const ref = React.createRef();
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} setRefOnDiv={true} />);
+    ReactNoop.flush();
+    expect(ref.value.type).toBe('div');
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} setRefOnDiv={false} />);
+    ReactNoop.flush();
+    expect(ref.value.type).toBe('span');
+  });
+
   it('should maintain child instance and ref through updates', () => {
     class Child extends React.Component {
       constructor(props) {
