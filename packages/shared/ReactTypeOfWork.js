@@ -21,7 +21,8 @@ export type TypeOfWork =
   | 10
   | 11
   | 12
-  | 13;
+  | 13
+  | 14;
 
 export const IndeterminateComponent = 0; // Before we know whether it is functional or class
 export const FunctionalComponent = 1;
@@ -37,3 +38,4 @@ export const Fragment = 10;
 export const Mode = 11;
 export const ContextConsumer = 12;
 export const ContextProvider = 13;
+export const ForwardRef = 14;

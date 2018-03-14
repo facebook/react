@@ -76,6 +76,15 @@ describe('ReactIs', () => {
     expect(ReactIs.isElement(<React.StrictMode />)).toBe(true);
   });
 
+  it('should identify ref forwarding component', () => {
+    const RefForwardingComponent = React.forwardRef((props, ref) => null);
+    expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.ForwardRef);
+    expect(ReactIs.isForwardRef(<RefForwardingComponent />)).toBe(true);
+    expect(ReactIs.isForwardRef({type: ReactIs.StrictMode})).toBe(false);
+    expect(ReactIs.isForwardRef(<React.unstable_AsyncMode />)).toBe(false);
+    expect(ReactIs.isForwardRef(<div />)).toBe(false);
+  });
+
   it('should identify fragments', () => {
     expect(ReactIs.typeOf(<React.Fragment />)).toBe(ReactIs.Fragment);
     expect(ReactIs.isFragment(<React.Fragment />)).toBe(true);

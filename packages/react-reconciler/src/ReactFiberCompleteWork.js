@@ -32,6 +32,7 @@ import {
   ReturnComponent,
   ContextProvider,
   ContextConsumer,
+  ForwardRef,
   Fragment,
   Mode,
 } from 'shared/ReactTypeOfWork';
@@ -602,6 +603,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return null;
       case ReturnComponent:
         // Does nothing.
+        return null;
+      case ForwardRef:
         return null;
       case Fragment:
         return null;

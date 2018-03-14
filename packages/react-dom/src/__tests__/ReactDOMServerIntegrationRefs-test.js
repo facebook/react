@@ -96,4 +96,25 @@ describe('ReactDOMServerIntegration', () => {
       expect(component.refs.myDiv).toBe(root.firstChild);
     });
   });
+
+  it('should forward refs', async () => {
+    const divRef = React.createRef();
+
+    class InnerComponent extends React.Component {
+      render() {
+        return <div ref={this.props.forwardedRef}>{this.props.value}</div>;
+      }
+    }
+
+    const OuterComponent = React.forwardRef((props, ref) => (
+      <InnerComponent {...props} forwardedRef={ref} />
+    ));
+
+    await clientRenderOnServerString(
+      <OuterComponent ref={divRef} value="hello" />,
+    );
+
+    expect(divRef.current).not.toBe(null);
+    expect(divRef.current.textContent).toBe('hello');
+  });
 });

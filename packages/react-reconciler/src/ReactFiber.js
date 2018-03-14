@@ -25,6 +25,7 @@ import {
   HostPortal,
   CallComponent,
   ReturnComponent,
+  ForwardRef,
   Fragment,
   Mode,
   ContextProvider,
@@ -35,6 +36,7 @@ import getComponentName from 'shared/getComponentName';
 import {NoWork} from './ReactFiberExpirationTime';
 import {NoContext, AsyncMode, StrictMode} from './ReactTypeOfMode';
 import {
+  REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
   REACT_CALL_TYPE,
@@ -356,6 +358,9 @@ export function createFiberFromElement(
             case REACT_CONTEXT_TYPE:
               // This is a consumer
               fiberTag = ContextConsumer;
+              break;
+            case REACT_FORWARD_REF_TYPE:
+              fiberTag = ForwardRef;
               break;
             default:
               if (typeof type.tag === 'number') {
