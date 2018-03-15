@@ -321,7 +321,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             warning(
               false,
               'Unexpected ref object provided for %s. ' +
-                'Use either a ref-setter function or Reacte.createRef().%s',
+                'Use either a ref-setter function or React.createRef().%s',
               getComponentName(finishedWork),
               getStackAddendumByWorkInProgressFiber(finishedWork),
             );
