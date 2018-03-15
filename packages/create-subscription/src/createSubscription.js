@@ -118,16 +118,15 @@ export function createSubscription<Property, Value>(
           });
         };
 
-        // Store subscription for later (in case it's needed to unsubscribe).
+        // Store the unsubscribe method for later (in case the subscribable prop changes).
         const unsubscribe = subscribe(source, callback);
         invariant(
           typeof unsubscribe === 'function',
           'A subscription must return an unsubscribe function.',
         );
 
-        // Storing unsubscribe is safe to do via mutation since:
-        // 1) It does not impact render.
-        // 2) This method will only be called during the "commit" phase.
+        // It's safe to store unsubscribe on the instance because
+        // We only read or write that property during the "commit" phase.
         this._unsubscribe = unsubscribe;
 
         // External values could change between render and mount,
