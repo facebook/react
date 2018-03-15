@@ -39,7 +39,7 @@ describe('ReactCreateRef', () => {
       ),
     ).toWarnDev(
       'Unexpected ref object provided for div. ' +
-        'Use either a ref-setter function or Reacte.createRef().\n' +
+        'Use either a ref-setter function or React.createRef().\n' +
         '    in div (at **)\n' +
         '    in Wrapper (at **)',
     );
@@ -52,7 +52,7 @@ describe('ReactCreateRef', () => {
       ),
     ).toWarnDev(
       'Unexpected ref object provided for ExampleComponent. ' +
-        'Use either a ref-setter function or Reacte.createRef().\n' +
+        'Use either a ref-setter function or React.createRef().\n' +
         '    in ExampleComponent (at **)\n' +
         '    in Wrapper (at **)',
     );
