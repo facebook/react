@@ -51,7 +51,6 @@ export function createSubscription<Property, Value>(
   };
   type State = {
     source: Property,
-    unsubscribe: Unsubscribe | null,
     value: Value | void,
   };
 
@@ -59,18 +58,18 @@ export function createSubscription<Property, Value>(
   class Subscription extends React.Component<Props, State> {
     state: State = {
       source: this.props.source,
-      unsubscribe: null,
       value:
         this.props.source != null
           ? getCurrentValue(this.props.source)
           : undefined,
     };
 
+    _unsubscribe: Unsubscribe | null = null;
+
     static getDerivedStateFromProps(nextProps, prevState) {
       if (nextProps.source !== prevState.source) {
         return {
           source: nextProps.source,
-          unsubscribe: null,
           value:
             nextProps.source != null
               ? getCurrentValue(nextProps.source)
@@ -129,7 +128,7 @@ export function createSubscription<Property, Value>(
         // Storing unsubscribe is safe to do via mutation since:
         // 1) It does not impact render.
         // 2) This method will only be called during the "commit" phase.
-        this.state.unsubscribe = unsubscribe;
+        this._unsubscribe = unsubscribe;
 
         // External values could change between render and mount,
         // In some cases it may be important to handle this case.
@@ -141,9 +140,8 @@ export function createSubscription<Property, Value>(
     }
 
     unsubscribe(state: State) {
-      const {unsubscribe} = state;
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
+      if (typeof this._unsubscribe === 'function') {
+        this._unsubscribe();
       }
     }
   }
