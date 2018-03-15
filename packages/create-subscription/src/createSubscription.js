@@ -51,9 +51,7 @@ export function createSubscription<Property, Value>(
   };
   type State = {
     source: Property,
-    unsubscribeContainer: {
-      unsubscribe: Unsubscribe | null,
-    },
+    unsubscribe: Unsubscribe | null,
     value: Value | void,
   };
 
@@ -61,9 +59,7 @@ export function createSubscription<Property, Value>(
   class Subscription extends React.Component<Props, State> {
     state: State = {
       source: this.props.source,
-      unsubscribeContainer: {
-        unsubscribe: null,
-      },
+      unsubscribe: null,
       value:
         this.props.source != null
           ? getCurrentValue(this.props.source)
@@ -74,9 +70,7 @@ export function createSubscription<Property, Value>(
       if (nextProps.source !== prevState.source) {
         return {
           source: nextProps.source,
-          unsubscribeContainer: {
-            unsubscribe: null,
-          },
+          unsubscribe: null,
           value:
             nextProps.source != null
               ? getCurrentValue(nextProps.source)
@@ -126,17 +120,16 @@ export function createSubscription<Property, Value>(
         };
 
         // Store subscription for later (in case it's needed to unsubscribe).
-        // This is safe to do via mutation since:
-        // 1) It does not impact render.
-        // 2) This method will only be called during the "commit" phase.
         const unsubscribe = subscribe(source, callback);
-
         invariant(
           typeof unsubscribe === 'function',
           'A subscription must return an unsubscribe function.',
         );
 
-        this.state.unsubscribeContainer.unsubscribe = unsubscribe;
+        // Storing unsubscribe is safe to do via mutation since:
+        // 1) It does not impact render.
+        // 2) This method will only be called during the "commit" phase.
+        this.state.unsubscribe = unsubscribe;
 
         // External values could change between render and mount,
         // In some cases it may be important to handle this case.
@@ -148,7 +141,7 @@ export function createSubscription<Property, Value>(
     }
 
     unsubscribe(state: State) {
-      const {unsubscribe} = state.unsubscribeContainer;
+      const {unsubscribe} = state;
       if (typeof unsubscribe === 'function') {
         unsubscribe();
       }
