@@ -19,72 +19,55 @@ const RESERVED_PROPS = {
   __source: true,
 };
 
-let specialPropKeyWarningShown, specialPropRefWarningShown;
+const specialPropWarningShown = {};
 
-function hasValidRef(config) {
+function hasValidProp(config, prop) {
   if (__DEV__) {
-    if (hasOwnProperty.call(config, 'ref')) {
-      const getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
+    if (hasOwnProperty.call(config, prop)) {
+      const getter = Object.getOwnPropertyDescriptor(config, prop).get;
       if (getter && getter.isReactWarning) {
         return false;
       }
     }
   }
-  return config.ref !== undefined;
+  return config[prop] !== undefined;
 }
 
 function hasValidKey(config) {
-  if (__DEV__) {
-    if (hasOwnProperty.call(config, 'key')) {
-      const getter = Object.getOwnPropertyDescriptor(config, 'key').get;
-      if (getter && getter.isReactWarning) {
-        return false;
-      }
+  return hasValidProp(config, 'key');
+}
+
+function hasValidRef(config) {
+  return hasValidProp(config, 'ref');
+}
+
+function defineSpecialPropWarningGetter(props, displayName, prop) {
+  const warnAboutAccessingProp = function() {
+    if (!specialPropWarningShown[prop]) {
+      specialPropWarningShown[prop] = true;
+      warning(
+        false,
+        '%s: `' + prop + '` is not a prop. Trying to access it will result ' +
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+        displayName,
+      );
     }
-  }
-  return config.key !== undefined;
+  };
+  warnAboutAccessingProp.isReactWarning = true;
+  Object.defineProperty(props, prop, {
+    get: warnAboutAccessingProp,
+    configurable: true,
+  });
 }
 
 function defineKeyPropWarningGetter(props, displayName) {
-  const warnAboutAccessingKey = function() {
-    if (!specialPropKeyWarningShown) {
-      specialPropKeyWarningShown = true;
-      warning(
-        false,
-        '%s: `key` is not a prop. Trying to access it will result ' +
-          'in `undefined` being returned. If you need to access the same ' +
-          'value within the child component, you should pass it as a different ' +
-          'prop. (https://fb.me/react-special-props)',
-        displayName,
-      );
-    }
-  };
-  warnAboutAccessingKey.isReactWarning = true;
-  Object.defineProperty(props, 'key', {
-    get: warnAboutAccessingKey,
-    configurable: true,
-  });
+  defineSpecialPropWarningGetter(props, displayName, 'key');
 }
 
 function defineRefPropWarningGetter(props, displayName) {
-  const warnAboutAccessingRef = function() {
-    if (!specialPropRefWarningShown) {
-      specialPropRefWarningShown = true;
-      warning(
-        false,
-        '%s: `ref` is not a prop. Trying to access it will result ' +
-          'in `undefined` being returned. If you need to access the same ' +
-          'value within the child component, you should pass it as a different ' +
-          'prop. (https://fb.me/react-special-props)',
-        displayName,
-      );
-    }
-  };
-  warnAboutAccessingRef.isReactWarning = true;
-  Object.defineProperty(props, 'ref', {
-    get: warnAboutAccessingRef,
-    configurable: true,
-  });
+  defineSpecialPropWarningGetter(props, displayName, 'ref');
 }
 
 /**
