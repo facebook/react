@@ -958,7 +958,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } while (true);
 
     // We're done performing work. Time to clean up.
-    stopWorkLoopTimer(interruptedBy);
+    const didCompleteRoot = (nextUnitOfWork === null) && isRootReadyForCommit;
+    stopWorkLoopTimer(interruptedBy, didCompleteRoot);
     interruptedBy = null;
     isWorking = false;
 

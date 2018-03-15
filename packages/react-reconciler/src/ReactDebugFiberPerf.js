@@ -369,7 +369,7 @@ export function startWorkLoopTimer(nextUnitOfWork: Fiber | null): void {
   }
 }
 
-export function stopWorkLoopTimer(interruptedBy: Fiber | null): void {
+export function stopWorkLoopTimer(interruptedBy: Fiber | null, didCompleteRoot?: boolean): void {
   if (enableUserTimingAPI) {
     if (!supportsUserTiming) {
       return;
@@ -388,10 +388,13 @@ export function stopWorkLoopTimer(interruptedBy: Fiber | null): void {
       warning = 'There were cascading updates';
     }
     commitCountInCurrentWorkLoop = 0;
+    let label = didCompleteRoot ?
+      '(React Tree Reconciliation: Completed Root)' :
+      '(React Tree Reconciliation)';
     // Pause any measurements until the next loop.
     pauseTimers();
     endMark(
-      '(React Tree Reconciliation)',
+      label,
       '(React Tree Reconciliation)',
       warning,
     );
