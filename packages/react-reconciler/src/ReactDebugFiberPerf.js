@@ -369,7 +369,10 @@ export function startWorkLoopTimer(nextUnitOfWork: Fiber | null): void {
   }
 }
 
-export function stopWorkLoopTimer(interruptedBy: Fiber | null, didCompleteRoot?: boolean): void {
+export function stopWorkLoopTimer(
+  interruptedBy: Fiber | null,
+  didCompleteRoot?: boolean,
+): void {
   if (enableUserTimingAPI) {
     if (!supportsUserTiming) {
       return;
@@ -388,16 +391,12 @@ export function stopWorkLoopTimer(interruptedBy: Fiber | null, didCompleteRoot?:
       warning = 'There were cascading updates';
     }
     commitCountInCurrentWorkLoop = 0;
-    let label = didCompleteRoot ?
-      '(React Tree Reconciliation: Completed Root)' :
-      '(React Tree Reconciliation)';
+    let label = didCompleteRoot
+      ? '(React Tree Reconciliation: Completed Root)'
+      : '(React Tree Reconciliation)';
     // Pause any measurements until the next loop.
     pauseTimers();
-    endMark(
-      label,
-      '(React Tree Reconciliation)',
-      warning,
-    );
+    endMark(label, '(React Tree Reconciliation)', warning);
   }
 }
 
