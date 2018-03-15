@@ -142,6 +142,7 @@ export function createSubscription<Property, Value>(
       if (typeof this._unsubscribe === 'function') {
         this._unsubscribe();
       }
+      this._unsubscribe = null;
     }
   }
 
