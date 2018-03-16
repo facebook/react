@@ -72,7 +72,6 @@ import {
   startCommitLifeCyclesTimer,
   stopCommitLifeCyclesTimer,
 } from './ReactDebugFiberPerf';
-import {reset} from './ReactFiberStack';
 import {createWorkInProgress} from './ReactFiber';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
 import {
@@ -84,18 +83,14 @@ import {
   computeExpirationBucket,
 } from './ReactFiberExpirationTime';
 import {AsyncMode} from './ReactTypeOfMode';
-import {
-  resetContext as resetLegacyContext,
-  popContextProvider as popLegacyContextProvider,
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
-import {resetProviderStack} from './ReactFiberNewContext';
+import ReactFiberLegacyContext from './ReactFiberContext';
+import ReactFiberNewContext from './ReactFiberNewContext';
 import {
   getUpdateExpirationTime,
   insertUpdateIntoFiber,
 } from './ReactFiberUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
+import ReactFiberStack from './ReactFiberStack';
 
 const {
   invokeGuardedCallback,
@@ -161,15 +156,24 @@ if (__DEV__) {
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
-  const hostContext = ReactFiberHostContext(config);
+  const stack = ReactFiberStack();
+  const hostContext = ReactFiberHostContext(config, stack);
+  const legacyContext = ReactFiberLegacyContext(stack);
+  const newContext = ReactFiberNewContext(stack);
   const {popHostContext, popHostContainer} = hostContext;
+  const {
+    popTopLevelContextObject: popTopLevelLegacyContextObject,
+    popContextProvider: popLegacyContextProvider,
+  } = legacyContext;
+  const {popProvider} = newContext;
   const hydrationContext: HydrationContext<C, CX> = ReactFiberHydrationContext(
     config,
   );
-  const {resetHostContainer} = hostContext;
   const {beginWork} = ReactFiberBeginWork(
     config,
     hostContext,
+    legacyContext,
+    newContext,
     hydrationContext,
     scheduleWork,
     computeExpirationForFiber,
@@ -177,10 +181,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const {completeWork} = ReactFiberCompleteWork(
     config,
     hostContext,
+    legacyContext,
+    newContext,
     hydrationContext,
   );
-  const {throwException, unwindWork} = ReactFiberUnwindWork(
+  const {
+    throwException,
+    unwindWork,
+    unwindInterruptedWork,
+  } = ReactFiberUnwindWork(
     hostContext,
+    legacyContext,
+    newContext,
     scheduleWork,
     isAlreadyFailedLegacyErrorBoundary,
   );
@@ -278,18 +290,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     };
   }
 
-  function resetContextStack() {
-    // Reset the stack
-    reset();
-    // Reset the cursors
-    resetLegacyContext();
-    resetHostContainer();
-
-    // TODO: Unify new context implementation with other stacks
-    resetProviderStack();
+  function resetStack() {
+    if (nextUnitOfWork !== null) {
+      let interruptedWork = nextUnitOfWork.return;
+      while (interruptedWork !== null) {
+        unwindInterruptedWork(interruptedWork);
+        interruptedWork = interruptedWork.return;
+      }
+    }
 
     if (__DEV__) {
       ReactStrictModeWarnings.discardPendingWarnings();
+      stack.checkThatStackIsEmpty();
     }
 
     nextRoot = null;
@@ -830,7 +842,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       nextUnitOfWork === null
     ) {
       // Reset the stack and start working from the root.
-      resetContextStack();
+      resetStack();
       nextRoot = root;
       nextRenderExpirationTime = expirationTime;
       nextUnitOfWork = createWorkInProgress(
@@ -883,6 +895,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Yield back to main thread.
     if (didFatal) {
       // There was a fatal error.
+      if (__DEV__) {
+        stack.resetStackAfterFatalErrorInDev();
+      }
       return null;
     } else if (nextUnitOfWork === null) {
       // We reached the root.
@@ -1091,7 +1106,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           ) {
             // This is an interruption. (Used for performance tracking.)
             interruptedBy = fiber;
-            resetContextStack();
+            resetStack();
           }
           if (nextRoot !== root || !isWorking) {
             requestWork(root, expirationTime);
@@ -1679,5 +1694,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     interactiveUpdates,
     flushInteractiveUpdates,
     computeUniqueAsyncExpiration,
+    legacyContext,
   };
 }
