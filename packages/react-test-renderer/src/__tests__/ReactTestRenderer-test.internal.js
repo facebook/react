@@ -957,4 +957,46 @@ describe('ReactTestRenderer', () => {
       }),
     );
   });
+
+  it.only('supports forwardRef', () => {
+    const InnerRefed = React.forwardRef((props, ref) => (
+      <div>
+        <span ref={ref} />
+      </div>
+    ));
+
+    class App extends React.Component {
+      render() {
+        return <InnerRefed ref={r => (this.ref = r)} />;
+      }
+    }
+
+    const renderer = ReactTestRenderer.create(<App />);
+    const tree = renderer.toTree();
+    cleanNodeOrArray(tree);
+
+    expect(prettyFormat(tree)).toEqual(
+      prettyFormat({
+        instance: null,
+        nodeType: 'component',
+        props: {},
+        rendered: {
+          instance: null,
+          nodeType: 'host',
+          props: {},
+          rendered: [
+            {
+              instance: null,
+              nodeType: 'host',
+              props: {},
+              rendered: [],
+              type: 'span',
+            },
+          ],
+          type: 'div',
+        },
+        type: App,
+      }),
+    );
+  });
 });
