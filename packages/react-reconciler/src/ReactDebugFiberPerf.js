@@ -393,7 +393,7 @@ export function stopWorkLoopTimer(
     commitCountInCurrentWorkLoop = 0;
     let label = didCompleteRoot
       ? '(React Tree Reconciliation: Completed Root)'
-      : '(React Tree Reconciliation)';
+      : '(React Tree Reconciliation: Yielded)';
     // Pause any measurements until the next loop.
     pauseTimers();
     endMark(label, '(React Tree Reconciliation)', warning);
