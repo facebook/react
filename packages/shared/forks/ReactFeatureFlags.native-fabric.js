@@ -24,6 +24,7 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableMutatingReconciler = false;
 export const enableNoopReconciler = false;
 export const enablePersistentReconciler = true;
+export const alwaysUseRequestIdleCallbackPolyfill = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
