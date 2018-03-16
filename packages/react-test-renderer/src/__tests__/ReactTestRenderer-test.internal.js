@@ -404,6 +404,7 @@ describe('ReactTestRenderer', () => {
         log.push('Angry render');
         throw new Error('Please, do not render me.');
       }
+
       componentDidMount() {
         log.push('Angry componentDidMount');
       }
@@ -958,7 +959,7 @@ describe('ReactTestRenderer', () => {
     );
   });
 
-  it.only('supports forwardRef', () => {
+  it('supports forwardRef', () => {
     const InnerRefed = React.forwardRef((props, ref) => (
       <div>
         <span ref={ref} />
