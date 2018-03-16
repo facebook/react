@@ -17,6 +17,7 @@
 
 import type {Deadline} from 'react-reconciler';
 
+import {alwaysUseRequestIdleCallbackPolyfill} from 'shared/ReactFeatureFlags';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import warning from 'fbjs/lib/warning';
 
@@ -69,6 +70,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     clearTimeout(timeoutID);
   };
 } else if (
+  alwaysUseRequestIdleCallbackPolyfill ||
   typeof requestIdleCallback !== 'function' ||
   typeof cancelIdleCallback !== 'function'
 ) {
