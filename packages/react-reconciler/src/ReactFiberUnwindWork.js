@@ -4,7 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
+ * @flow
  */
+
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {HostContext} from './ReactFiberHostContext';
+import type {LegacyContext} from './ReactFiberContext';
+import type {NewContext} from './ReactFiberNewContext';
+import type {UpdateQueue} from './ReactFiberUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {ensureUpdateQueues} from './ReactFiberUpdateQueue';
@@ -25,14 +33,10 @@ import {
 
 import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
 
-import {
-  popContextProvider as popLegacyContextProvider,
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
-
-export default function(
+export default function<C, CX>(
   hostContext: HostContext<C, CX>,
+  legacyContext: LegacyContext,
+  newContext: NewContext,
   scheduleWork: (
     fiber: Fiber,
     startTime: ExpirationTime,
@@ -41,6 +45,11 @@ export default function(
   isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
 ) {
   const {popHostContainer, popHostContext} = hostContext;
+  const {
+    popContextProvider: popLegacyContextProvider,
+    popTopLevelContextObject: popTopLevelLegacyContextObject,
+  } = legacyContext;
+  const {popProvider} = newContext;
 
   function throwException(
     returnFiber: Fiber,
@@ -61,7 +70,9 @@ export default function(
           // Uncaught error
           const errorInfo = value;
           ensureUpdateQueues(workInProgress);
-          const updateQueue: UpdateQueue = (workInProgress.updateQueue: any);
+          const updateQueue: UpdateQueue<
+            any,
+          > = (workInProgress.updateQueue: any);
           updateQueue.capturedValues = [errorInfo];
           workInProgress.effectTag |= ShouldCapture;
           return;
@@ -79,7 +90,9 @@ export default function(
                 !isAlreadyFailedLegacyErrorBoundary(instance)))
           ) {
             ensureUpdateQueues(workInProgress);
-            const updateQueue: UpdateQueue = (workInProgress.updateQueue: any);
+            const updateQueue: UpdateQueue<
+              any,
+            > = (workInProgress.updateQueue: any);
             const capturedValues = updateQueue.capturedValues;
             if (capturedValues === null) {
               updateQueue.capturedValues = [value];
@@ -97,7 +110,7 @@ export default function(
     } while (workInProgress !== null);
   }
 
-  function unwindWork(workInProgress) {
+  function unwindWork(workInProgress: Fiber) {
     switch (workInProgress.tag) {
       case ClassComponent: {
         popLegacyContextProvider(workInProgress);
@@ -132,8 +145,36 @@ export default function(
         return null;
     }
   }
+
+  function unwindInterruptedWork(interruptedWork: Fiber) {
+    switch (interruptedWork.tag) {
+      case ClassComponent: {
+        popLegacyContextProvider(interruptedWork);
+        break;
+      }
+      case HostRoot: {
+        popHostContainer(interruptedWork);
+        popTopLevelLegacyContextObject(interruptedWork);
+        break;
+      }
+      case HostComponent: {
+        popHostContext(interruptedWork);
+        break;
+      }
+      case HostPortal:
+        popHostContainer(interruptedWork);
+        break;
+      case ContextProvider:
+        popProvider(interruptedWork);
+        break;
+      default:
+        break;
+    }
+  }
+
   return {
     throwException,
     unwindWork,
+    unwindInterruptedWork,
   };
 }

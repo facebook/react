@@ -11,6 +11,8 @@ import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
+import type {LegacyContext} from './ReactFiberContext';
+import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 
@@ -46,15 +48,12 @@ import {
 import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
-import {
-  popContextProvider as popLegacyContextProvider,
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
+  legacyContext: LegacyContext,
+  newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
 ) {
   const {
@@ -73,6 +72,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     getHostContext,
     popHostContainer,
   } = hostContext;
+
+  const {
+    popContextProvider: popLegacyContextProvider,
+    popTopLevelContextObject: popTopLevelLegacyContextObject,
+  } = legacyContext;
+
+  const {popProvider} = newContext;
 
   const {
     prepareToHydrateHostInstance,

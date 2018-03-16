@@ -22,11 +22,6 @@ import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
 
-import {
-  findCurrentUnmaskedContext,
-  isContextProvider,
-  processChildContext,
-} from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import ReactFiberScheduler from './ReactFiberScheduler';
@@ -274,20 +269,6 @@ export type Reconciler<C, I, TI> = {
   findHostInstanceWithNoPortals(component: Fiber): I | TI | null,
 };
 
-function getContextForSubtree(
-  parentComponent: ?React$Component<any, any>,
-): Object {
-  if (!parentComponent) {
-    return emptyObject;
-  }
-
-  const fiber = ReactInstanceMap.get(parentComponent);
-  const parentContext = findCurrentUnmaskedContext(fiber);
-  return isContextProvider(fiber)
-    ? processChildContext(fiber, parentContext)
-    : parentContext;
-}
-
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): Reconciler<C, I, TI> {
@@ -308,7 +289,28 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     syncUpdates,
     interactiveUpdates,
     flushInteractiveUpdates,
+    legacyContext,
   } = ReactFiberScheduler(config);
+
+  const {
+    findCurrentUnmaskedContext,
+    isContextProvider,
+    processChildContext,
+  } = legacyContext;
+
+  function getContextForSubtree(
+    parentComponent: ?React$Component<any, any>,
+  ): Object {
+    if (!parentComponent) {
+      return emptyObject;
+    }
+
+    const fiber = ReactInstanceMap.get(parentComponent);
+    const parentContext = findCurrentUnmaskedContext(fiber);
+    return isContextProvider(fiber)
+      ? processChildContext(fiber, parentContext)
+      : parentContext;
+  }
 
   function scheduleRootUpdate(
     current: Fiber,

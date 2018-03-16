@@ -11,6 +11,8 @@ import type {HostConfig} from 'react-reconciler';
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {HostContext} from './ReactFiberHostContext';
+import type {LegacyContext} from './ReactFiberContext';
+import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -57,15 +59,6 @@ import {
   cloneChildFibers,
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactFiberUpdateQueue';
-import {
-  getMaskedContext,
-  getUnmaskedContext,
-  hasContextChanged as hasLegacyContextChanged,
-  pushContextProvider as pushLegacyContextProvider,
-  pushTopLevelContextObject,
-  invalidateContextProvider,
-} from './ReactFiberContext';
-import {pushProvider} from './ReactFiberNewContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
@@ -83,6 +76,8 @@ if (__DEV__) {
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
+  legacyContext: LegacyContext,
+  newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
@@ -90,6 +85,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
+
+  const {pushProvider} = newContext;
+
+  const {
+    getMaskedContext,
+    getUnmaskedContext,
+    hasContextChanged: hasLegacyContextChanged,
+    pushContextProvider: pushLegacyContextProvider,
+    pushTopLevelContextObject,
+    invalidateContextProvider,
+  } = legacyContext;
 
   const {
     enterHydrationState,
@@ -105,6 +111,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     resumeMountClassInstance,
     updateClassInstance,
   } = ReactFiberClassComponent(
+    legacyContext,
     scheduleWork,
     computeExpirationForFiber,
     memoizeProps,
