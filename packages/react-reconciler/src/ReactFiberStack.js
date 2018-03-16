@@ -20,6 +20,10 @@ export type Stack = {
   isEmpty(): boolean,
   push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber): void,
   pop<T>(cursor: StackCursor<T>, fiber: Fiber): void,
+
+  // DEV only
+  checkThatStackIsEmpty(): void,
+  resetStackAfterFatalErrorInDev(): void,
 };
 
 export default function(): Stack {
@@ -80,10 +84,31 @@ export default function(): Stack {
     cursor.current = value;
   }
 
+  function checkThatStackIsEmpty() {
+    if (__DEV__) {
+      if (index !== -1) {
+        warning(
+          false,
+          'Expected an empty stack. Something was not reset properly.',
+        );
+      }
+    }
+  }
+
+  function resetStackAfterFatalErrorInDev() {
+    if (__DEV__) {
+      index = -1;
+      valueStack.length = 0;
+      fiberStack.length = 0;
+    }
+  }
+
   return {
     createCursor,
     isEmpty,
     pop,
     push,
+    checkThatStackIsEmpty,
+    resetStackAfterFatalErrorInDev,
   };
 }

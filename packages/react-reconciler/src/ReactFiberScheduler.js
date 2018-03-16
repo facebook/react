@@ -301,6 +301,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (__DEV__) {
       ReactStrictModeWarnings.discardPendingWarnings();
+      stack.checkThatStackIsEmpty();
     }
 
     nextRoot = null;
@@ -894,6 +895,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Yield back to main thread.
     if (didFatal) {
       // There was a fatal error.
+      if (__DEV__) {
+        stack.resetStackAfterFatalErrorInDev();
+      }
       return null;
     } else if (nextUnitOfWork === null) {
       // We reached the root.
