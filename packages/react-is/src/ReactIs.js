@@ -34,7 +34,7 @@ export function typeOf(object: any) {
           case REACT_STRICT_MODE_TYPE:
             return type;
           default:
-            const $$typeofType = type.$$typeof;
+            const $$typeofType = type && type.$$typeof;
 
             switch ($$typeofType) {
               case REACT_CONTEXT_TYPE:

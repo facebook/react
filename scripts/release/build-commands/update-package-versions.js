@@ -78,6 +78,16 @@ const update = async ({cwd, dry, packages, version}) => {
         if (prerelease) {
           json.peerDependencies.react += ` || ${version}`;
         }
+
+        // Update inter-package dependencies as well.
+        // e.g. react-test-renderer depends on react-is
+        if (json.dependencies) {
+          Object.keys(json.dependencies).forEach(dependency => {
+            if (packages.indexOf(dependency) >= 0) {
+              json.dependencies[dependency] = `^${version}`;
+            }
+          });
+        }
       }
 
       await writeJson(path, json, {spaces: 2});

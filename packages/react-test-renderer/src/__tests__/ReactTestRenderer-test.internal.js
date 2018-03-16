@@ -404,6 +404,7 @@ describe('ReactTestRenderer', () => {
         log.push('Angry render');
         throw new Error('Please, do not render me.');
       }
+
       componentDidMount() {
         log.push('Angry componentDidMount');
       }
@@ -952,6 +953,48 @@ describe('ReactTestRenderer', () => {
           },
           rendered: 'a',
           type: Child,
+        },
+        type: App,
+      }),
+    );
+  });
+
+  it('supports forwardRef', () => {
+    const InnerRefed = React.forwardRef((props, ref) => (
+      <div>
+        <span ref={ref} />
+      </div>
+    ));
+
+    class App extends React.Component {
+      render() {
+        return <InnerRefed ref={r => (this.ref = r)} />;
+      }
+    }
+
+    const renderer = ReactTestRenderer.create(<App />);
+    const tree = renderer.toTree();
+    cleanNodeOrArray(tree);
+
+    expect(prettyFormat(tree)).toEqual(
+      prettyFormat({
+        instance: null,
+        nodeType: 'component',
+        props: {},
+        rendered: {
+          instance: null,
+          nodeType: 'host',
+          props: {},
+          rendered: [
+            {
+              instance: null,
+              nodeType: 'host',
+              props: {},
+              rendered: [],
+              type: 'span',
+            },
+          ],
+          type: 'div',
         },
         type: App,
       }),
