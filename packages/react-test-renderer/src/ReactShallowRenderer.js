@@ -98,7 +98,7 @@ class ReactShallowRenderer {
       this._updateClassComponent(element, this._context);
     } else {
       if (isForwardRef(element)) {
-        this._rendered = element.type.render(element.props, null);
+        this._rendered = element.type.render(element.props, element.ref);
       } else if (shouldConstruct(element.type)) {
         this._instance = new element.type(
           element.props,

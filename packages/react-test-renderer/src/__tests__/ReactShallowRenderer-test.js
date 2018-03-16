@@ -169,20 +169,22 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('should handle ForwardRef', () => {
-    const SomeComponent = React.forwardRef((props, ref) => (
-      <div>
-        {(expect(ref).toEqual(null), null)}
-        <span className="child1" />
-        <span className="child2" />
-      </div>
-    ));
+    const testRef = React.createRef();
+    const SomeComponent = React.forwardRef((props, ref) => {
+      expect(ref).toEqual(testRef);
+      return (
+        <div>
+          <span className="child1" />
+          <span className="child2" />
+        </div>
+      );
+    });
 
     const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(<SomeComponent />);
+    const result = shallowRenderer.render(<SomeComponent ref={testRef} />);
 
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
-      null,
       <span className="child1" />,
       <span className="child2" />,
     ]);
