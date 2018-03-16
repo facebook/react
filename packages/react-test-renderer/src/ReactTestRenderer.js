@@ -25,6 +25,7 @@ import {
   ContextConsumer,
   ContextProvider,
   Mode,
+  ForwardRef,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 
@@ -372,6 +373,7 @@ function toTree(node: ?Fiber) {
     case ContextProvider:
     case ContextConsumer:
     case Mode:
+    case ForwardRef:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -472,6 +474,7 @@ class ReactTestInstance {
         case ContextProvider:
         case ContextConsumer:
         case Mode:
+        case ForwardRef:
           descend = true;
           break;
         default:
