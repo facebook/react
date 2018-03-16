@@ -181,7 +181,7 @@ exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Start mounting Parent and A
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ A [mount]
       ⚛ Child [mount]
@@ -189,7 +189,7 @@ exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Mount B just a little (but not enough to memoize)
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ B [mount]
 
@@ -235,7 +235,7 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Stop on Baddie and restart from Boundary
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⛔ Boundary [mount] Warning: An error was thrown inside this error boundary
       ⚛ Parent [mount]
@@ -265,7 +265,7 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Will fatal
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ Baddie [mount]
 
@@ -341,7 +341,7 @@ exports[`ReactDebugFiberPerf supports returns 1`] = `
 exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Foo [mount]
 
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
