@@ -21,28 +21,24 @@ const RESERVED_PROPS = {
 
 let specialPropKeyWarningShown, specialPropRefWarningShown;
 
-function hasValidRef(config) {
+function hasValidProp(config, prop) {
   if (__DEV__) {
-    if (hasOwnProperty.call(config, 'ref')) {
-      const getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
+    if (hasOwnProperty.call(config, prop)) {
+      const getter = Object.getOwnPropertyDescriptor(config, prop).get;
       if (getter && getter.isReactWarning) {
         return false;
       }
     }
   }
-  return config.ref !== undefined;
+  return config[prop] !== undefined;
 }
 
 function hasValidKey(config) {
-  if (__DEV__) {
-    if (hasOwnProperty.call(config, 'key')) {
-      const getter = Object.getOwnPropertyDescriptor(config, 'key').get;
-      if (getter && getter.isReactWarning) {
-        return false;
-      }
-    }
-  }
-  return config.key !== undefined;
+  return hasValidProp(config, 'key');
+}
+
+function hasValidRef(config) {
+  return hasValidProp(config, 'ref');
 }
 
 function defineKeyPropWarningGetter(props, displayName) {
