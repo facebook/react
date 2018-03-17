@@ -23,33 +23,17 @@ describe('ReactFiberHostContext', () => {
   it('works with null host context', () => {
     let creates = 0;
     const Renderer = ReactFiberReconciler({
-      prepareForCommit: function() {},
-      resetAfterCommit: function() {},
-      getRootHostContext: function() {
-        return null;
-      },
-      getChildHostContext: function() {
-        return null;
-      },
-      shouldSetTextContent: function() {
-        return false;
-      },
-      createInstance: function() {
-        creates++;
-      },
-      finalizeInitialChildren: function() {
-        return null;
-      },
-      appendInitialChild: function() {
-        return null;
-      },
-      now: function() {
-        return 0;
-      },
+      prepareForCommit: () => {},
+      resetAfterCommit: () => {},
+      getRootHostContext: () => null,
+      getChildHostContext: () => null,
+      shouldSetTextContent: () => false,
+      createInstance: () => creates++,
+      finalizeInitialChildren: () => null,
+      appendInitialChild: () => null,
+      now: () => 0,
       mutation: {
-        appendChildToContainer: function() {
-          return null;
-        },
+        appendChildToContainer: () => null,
       },
     });
 
@@ -68,37 +52,17 @@ describe('ReactFiberHostContext', () => {
   it('should send the context to prepareForCommit and resetAfterCommit', () => {
     let rootContext = {};
     const Renderer = ReactFiberReconciler({
-      prepareForCommit: function(hostContext) {
-        expect(hostContext).toBe(rootContext);
-      },
-      resetAfterCommit: function(hostContext) {
-        expect(hostContext).toBe(rootContext);
-      },
-      getRootHostContext: function() {
-        return null;
-      },
-      getChildHostContext: function() {
-        return null;
-      },
-      shouldSetTextContent: function() {
-        return false;
-      },
-      createInstance: function() {
-        return null;
-      },
-      finalizeInitialChildren: function() {
-        return null;
-      },
-      appendInitialChild: function() {
-        return null;
-      },
-      now: function() {
-        return 0;
-      },
+      prepareForCommit: (hostContext) => expect(hostContext).toBe(rootContext),
+      resetAfterCommit: (hostContext) => expect(hostContext).toBe(rootContext),
+      getRootHostContext: () => null,
+      getChildHostContext: () => null,
+      shouldSetTextContent: () => false,
+      createInstance: () => null,
+      finalizeInitialChildren: () => null,
+      appendInitialChild: () => null,
+      now: () => 0,
       mutation: {
-        appendChildToContainer: function() {
-          return null;
-        },
+        appendChildToContainer: () => null,
       },
     });
 
