@@ -11,6 +11,7 @@
 'use strict';
 
 let React;
+let Component;
 let ReactFeatureFlags;
 let ReactNoop;
 
@@ -20,12 +21,11 @@ describe('ReactIncrementalScheduling', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
+    Component = React.Component;
     ReactNoop = require('react-noop-renderer');
   });
 
-  function span(prop) {
-    return {type: 'span', children: [], prop};
-  }
+  const span = prop => ({ type: 'span', children: [], prop });
 
   it('schedules and flushes deferred work', () => {
     ReactNoop.render(<span prop="1" />);
@@ -119,7 +119,7 @@ describe('ReactIncrementalScheduling', () => {
     let instance;
     let ops = [];
 
-    class Foo extends React.Component {
+    class Foo extends Component {
       state = {tick: 0};
 
       componentDidMount() {
@@ -177,7 +177,7 @@ describe('ReactIncrementalScheduling', () => {
 
   it('can opt-in to async scheduling inside componentDidMount/Update', () => {
     let instance;
-    class Foo extends React.Component {
+    class Foo extends Component {
       state = {tick: 0};
 
       componentDidMount() {
@@ -242,7 +242,7 @@ describe('ReactIncrementalScheduling', () => {
   });
 
   it('performs Task work even after time runs out', () => {
-    class Foo extends React.Component {
+    class Foo extends Component {
       state = {step: 1};
       componentDidMount() {
         this.setState({step: 2}, () => {
@@ -333,7 +333,7 @@ describe('ReactIncrementalScheduling', () => {
   });
 
   it('updates do not schedule a new callback if already inside a callback', () => {
-    class Foo extends React.Component {
+    class Foo extends Component {
       state = {foo: 'foo'};
       UNSAFE_componentWillReceiveProps() {
         ReactNoop.yield(
