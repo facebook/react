@@ -19,9 +19,7 @@ describe('ReactExpiration', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
-  function span(prop) {
-    return {type: 'span', children: [], prop};
-  }
+  const span = prop => ({ type: 'span', children: [], prop });
 
   it('increases priority of updates as time progresses', () => {
     ReactNoop.render(<span prop="done" />);
