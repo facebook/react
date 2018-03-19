@@ -251,8 +251,8 @@ function prepareChildrenArray(childrenArray) {
 function prepareChildrenIterable(childrenArray) {
   return {
     '@@iterator': function*() {
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const child of childrenArray) {
+      for (let i = 0; i < childrenArray.length; i++) {
+        let child = childrenArray[i];
         yield child;
       }
     },

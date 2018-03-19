@@ -17,8 +17,8 @@ const allocatedTags = new Set();
 function dumpSubtree(info, indent) {
   let out = '';
   out += ' '.repeat(indent) + info.viewName + ' ' + JSON.stringify(info.props);
-  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (const child of info.children) {
+  for (let i = 0; i < info.children.length; i++) {
+    const child = info.children[i];
     out += '\n' + dumpSubtree(child, indent + 2);
   }
   return out;
@@ -27,22 +27,21 @@ function dumpSubtree(info, indent) {
 const RCTFabricUIManager = {
   __dumpChildSetForJestTestsOnly: function(childSet) {
     let result = [];
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const child of childSet) {
+    for (let i = 0; i < childSet.length; i++) {
+      const child = childSet[i];
       result.push(dumpSubtree(child, 0));
     }
     return result.join('\n');
   },
   __dumpHierarchyForJestTestsOnly: function() {
     let result = [];
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const [rootTag, childSet] of roots) {
+    roots.forEach(function(childSet, rootTag){
       result.push(rootTag);
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const child of childSet) {
+      for (let i = 0; i < childSet.length; i++) {
+        const child = childSet[i];
         result.push(dumpSubtree(child, 1));
       }
-    }
+    });
     return result.join('\n');
   },
   createNode: jest.fn(function createNode(
