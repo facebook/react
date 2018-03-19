@@ -591,6 +591,7 @@ describe('ReactComponentLifeCycle', () => {
       }
       componentDidMount = logger('outer componentDidMount');
       shouldComponentUpdate = logger('outer shouldComponentUpdate');
+      getSnapshotBeforeUpdate = logger('outer getSnapshotBeforeUpdate');
       componentDidUpdate = logger('outer componentDidUpdate');
       componentWillUnmount = logger('outer componentWillUnmount');
       render() {
@@ -610,6 +611,7 @@ describe('ReactComponentLifeCycle', () => {
       }
       componentDidMount = logger('inner componentDidMount');
       shouldComponentUpdate = logger('inner shouldComponentUpdate');
+      getSnapshotBeforeUpdate = logger('inner getSnapshotBeforeUpdate');
       componentDidUpdate = logger('inner componentDidUpdate');
       componentWillUnmount = logger('inner componentWillUnmount');
       render() {
@@ -635,6 +637,8 @@ describe('ReactComponentLifeCycle', () => {
       'outer shouldComponentUpdate',
       'inner getDerivedStateFromProps',
       'inner shouldComponentUpdate',
+      'inner getSnapshotBeforeUpdate',
+      'outer getSnapshotBeforeUpdate',
       'inner componentDidUpdate',
       'outer componentDidUpdate',
     ]);
@@ -874,5 +878,81 @@ describe('ReactComponentLifeCycle', () => {
     // Trigger batched setState() calls
     ReactTestUtils.Simulate.click(divRef.current);
     expect(divRef.current.textContent).toBe('remote:2, local:2');
+  });
+
+  it('should pass the return value from getSnapshotBeforeUpdate to componentDidUpdate', () => {
+    const log = [];
+
+    class MyComponent extends React.Component {
+      state = {
+        value: 0,
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          value: prevState.value + 1,
+        };
+      }
+      getSnapshotBeforeUpdate(prevProps, prevState) {
+        log.push(
+          `getSnapshotBeforeUpdate() prevProps:${prevProps.value} prevState:${
+            prevState.value
+          }`,
+        );
+        return 'abc';
+      }
+      componentDidUpdate(prevProps, prevState, snapshot) {
+        log.push(
+          `componentDidUpdate() prevProps:${prevProps.value} prevState:${
+            prevState.value
+          } snapshot:${snapshot}`,
+        );
+      }
+      render() {
+        log.push('render');
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(
+      <div>
+        <MyComponent value="foo" />
+      </div>,
+      div,
+    );
+    expect(log).toEqual(['render']);
+    log.length = 0;
+
+    ReactDOM.render(
+      <div>
+        <MyComponent value="bar" />
+      </div>,
+      div,
+    );
+    expect(log).toEqual([
+      'render',
+      'getSnapshotBeforeUpdate() prevProps:foo prevState:1',
+      'componentDidUpdate() prevProps:foo prevState:1 snapshot:abc',
+    ]);
+    log.length = 0;
+
+    ReactDOM.render(
+      <div>
+        <MyComponent value="baz" />
+      </div>,
+      div,
+    );
+    expect(log).toEqual([
+      'render',
+      'getSnapshotBeforeUpdate() prevProps:bar prevState:2',
+      'componentDidUpdate() prevProps:bar prevState:2 snapshot:abc',
+    ]);
+    log.length = 0;
+
+    ReactDOM.render(<div />, div);
+    expect(log).toEqual([]);
+
+    // De-duped
+    ReactDOM.render(<MyComponent />, div);
   });
 });

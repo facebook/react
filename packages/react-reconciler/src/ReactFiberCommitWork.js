@@ -27,7 +27,12 @@ import {
   CallComponent,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
-import {Placement, Update, ContentReset} from 'shared/ReactTypeOfSideEffect';
+import {
+  Placement,
+  Update,
+  ContentReset,
+  Snapshot,
+} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
@@ -153,6 +158,47 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
+  function commitBeforeMutationLifeCycles(
+    current: Fiber | null,
+    finishedWork: Fiber,
+  ): void {
+    switch (finishedWork.tag) {
+      case ClassComponent: {
+        const instance = finishedWork.stateNode;
+        if (finishedWork.effectTag & Snapshot) {
+          if (current !== null) {
+            const prevProps = current.memoizedProps;
+            const prevState = current.memoizedState;
+            startPhaseTimer(finishedWork, 'getSnapshotBeforeUpdate');
+            instance.props = finishedWork.memoizedProps;
+            instance.state = finishedWork.memoizedState;
+            const snapshot = instance.getSnapshotBeforeUpdate(
+              prevProps,
+              prevState,
+            );
+            // TODO Warn about undefined return value
+            current.snapshot = snapshot != null ? snapshot : null;
+            stopPhaseTimer();
+          }
+        }
+        return;
+      }
+      case HostRoot:
+      case HostComponent:
+      case HostText:
+      case HostPortal:
+        // Nothing to do for these component types
+        return;
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+      }
+    }
+  }
+
   function commitLifeCycles(
     finishedRoot: FiberRoot,
     current: Fiber | null,
@@ -176,7 +222,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             startPhaseTimer(finishedWork, 'componentDidUpdate');
             instance.props = finishedWork.memoizedProps;
             instance.state = finishedWork.memoizedState;
-            instance.componentDidUpdate(prevProps, prevState);
+            instance.componentDidUpdate(prevProps, prevState, current.snapshot);
             stopPhaseTimer();
           }
         }
@@ -494,6 +540,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           commitContainer(finishedWork);
         },
         commitLifeCycles,
+        commitBeforeMutationLifeCycles,
         commitErrorLogging,
         commitAttachRef,
         commitDetachRef,
@@ -816,6 +863,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   if (enableMutatingReconciler) {
     return {
+      commitBeforeMutationLifeCycles,
       commitResetTextContent,
       commitPlacement,
       commitDeletion,

@@ -150,6 +150,9 @@ export type Fiber = {|
   // memory if we need to.
   alternate: Fiber | null,
 
+  // Stores getSnapshotBeforeUpdate return value to be passed to componentDidUpdate
+  snapshot: any | null,
+
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
@@ -203,6 +206,8 @@ function FiberNode(
   this.expirationTime = NoWork;
 
   this.alternate = null;
+
+  this.snapshot = null;
 
   if (__DEV__) {
     this._debugID = debugCounter++;

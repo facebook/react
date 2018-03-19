@@ -12,7 +12,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {LegacyContext} from './ReactFiberContext';
 import type {CapturedValue} from './ReactCapturedValue';
 
-import {Update} from 'shared/ReactTypeOfSideEffect';
+import {Update, Snapshot} from 'shared/ReactTypeOfSideEffect';
 import {
   enableGetDerivedStateFromCatch,
   debugRenderPhaseSideEffects,
@@ -873,6 +873,7 @@ export default function(
     // TODO: Previous state can be null.
     let newState;
     let derivedStateFromCatch;
+
     if (workInProgress.updateQueue !== null) {
       newState = processUpdateQueue(
         current,
@@ -954,6 +955,14 @@ export default function(
           workInProgress.effectTag |= Update;
         }
       }
+      if (typeof instance.getSnapshotBeforeUpdate === 'function') {
+        if (
+          oldProps !== current.memoizedProps ||
+          oldState !== current.memoizedState
+        ) {
+          workInProgress.effectTag |= Snapshot;
+        }
+      }
       return false;
     }
 
@@ -986,6 +995,9 @@ export default function(
       if (typeof instance.componentDidUpdate === 'function') {
         workInProgress.effectTag |= Update;
       }
+      if (typeof instance.getSnapshotBeforeUpdate === 'function') {
+        workInProgress.effectTag |= Snapshot;
+      }
     } else {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -995,6 +1007,14 @@ export default function(
           oldState !== current.memoizedState
         ) {
           workInProgress.effectTag |= Update;
+        }
+      }
+      if (typeof instance.getSnapshotBeforeUpdate === 'function') {
+        if (
+          oldProps !== current.memoizedProps ||
+          oldState !== current.memoizedState
+        ) {
+          workInProgress.effectTag |= Snapshot;
         }
       }
 
