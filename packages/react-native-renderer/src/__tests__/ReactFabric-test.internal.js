@@ -109,7 +109,7 @@ describe('ReactFabric', () => {
     ).toBe(1);
   });
 
-  it('should only pass props diffs to FabricUIManager.cloneNode', () => {
+  it.only('should only pass props diffs to FabricUIManager.cloneNode', () => {
     const View = createReactNativeComponentClass('View', () => ({
       validAttributes: {foo: true, bar: true},
       uiViewClassName: 'View',
