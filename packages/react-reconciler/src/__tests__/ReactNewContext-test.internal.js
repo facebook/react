@@ -762,6 +762,41 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Child')]);
   });
 
+  // This is a regression case for https://github.com/facebook/react/issues/12389.
+  it('does not run into an infinite loop', () => {
+    const Context = React.createContext(null);
+
+    class App extends React.Component {
+      renderItem(id) {
+        return (
+          <span key={id}>
+            <Context.Consumer>{() => <span>inner</span>}</Context.Consumer>
+            <span>outer</span>
+          </span>
+        );
+      }
+      renderList() {
+        const list = [1, 2].map(id => this.renderItem(id));
+        if (this.props.reverse) {
+          list.reverse();
+        }
+        return list;
+      }
+      render() {
+        return (
+          <Context.Provider value={{}}>{this.renderList()}</Context.Provider>
+        );
+      }
+    }
+
+    ReactNoop.render(<App reverse={false} />);
+    ReactNoop.flush();
+    ReactNoop.render(<App reverse={true} />);
+    ReactNoop.flush();
+    ReactNoop.render(<App reverse={false} />);
+    ReactNoop.flush();
+  });
+
   describe('fuzz test', () => {
     const Fragment = React.Fragment;
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
