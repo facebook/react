@@ -164,12 +164,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
-        const instance = finishedWork.stateNode;
         if (finishedWork.effectTag & Snapshot) {
           if (current !== null) {
             const prevProps = current.memoizedProps;
             const prevState = current.memoizedState;
             startPhaseTimer(finishedWork, 'getSnapshotBeforeUpdate');
+            const instance = finishedWork.stateNode;
             instance.props = finishedWork.memoizedProps;
             instance.state = finishedWork.memoizedState;
             const snapshot = instance.getSnapshotBeforeUpdate(
@@ -177,7 +177,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               prevState,
             );
             // TODO Warn about undefined return value
-            current.snapshot = snapshot != null ? snapshot : null;
+            instance.__reactInternalSnapshotBeforeUpdate = snapshot;
             stopPhaseTimer();
           }
         }
@@ -222,7 +222,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             startPhaseTimer(finishedWork, 'componentDidUpdate');
             instance.props = finishedWork.memoizedProps;
             instance.state = finishedWork.memoizedState;
-            instance.componentDidUpdate(prevProps, prevState, current.snapshot);
+            instance.componentDidUpdate(
+              prevProps,
+              prevState,
+              instance.__reactInternalSnapshotBeforeUpdate,
+            );
             stopPhaseTimer();
           }
         }
