@@ -832,6 +832,7 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
+    const divRef = React.createRef();
     let childInstance;
 
     class Child extends React.Component {
@@ -846,7 +847,7 @@ describe('ReactComponentLifeCycle', () => {
       render() {
         childInstance = this;
         return (
-          <div onClick={this.updateState}>{`remote:${
+          <div onClick={this.updateState} ref={divRef}>{`remote:${
             this.state.remote
           }, local:${this.state.local}`}</div>
         );
@@ -863,16 +864,15 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Parent />);
-    const element = ReactDOM.findDOMNode(instance);
-    expect(element.textContent).toBe('remote:0, local:0');
+    ReactTestUtils.renderIntoDocument(<Parent />);
+    expect(divRef.current.textContent).toBe('remote:0, local:0');
 
     // Trigger setState() calls
     childInstance.updateState();
-    expect(element.textContent).toBe('remote:1, local:1');
+    expect(divRef.current.textContent).toBe('remote:1, local:1');
 
     // Trigger batched setState() calls
-    ReactTestUtils.Simulate.click(element);
-    expect(element.textContent).toBe('remote:2, local:2');
+    ReactTestUtils.Simulate.click(divRef.current);
+    expect(divRef.current.textContent).toBe('remote:2, local:2');
   });
 });
