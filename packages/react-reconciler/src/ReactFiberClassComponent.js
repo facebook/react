@@ -448,6 +448,7 @@ export default function(
       workInProgress,
       instance,
       props,
+      state,
     );
 
     if (partialState !== null && partialState !== undefined) {
@@ -534,7 +535,8 @@ export default function(
   function callGetDerivedStateFromProps(
     workInProgress: Fiber,
     instance: any,
-    props: any,
+    nextProps: any,
+    prevState: any,
   ) {
     const {type} = workInProgress;
 
@@ -567,17 +569,13 @@ export default function(
           workInProgress.mode & StrictMode)
       ) {
         // Invoke method an extra time to help detect side-effects.
-        type.getDerivedStateFromProps.call(
-          null,
-          props,
-          workInProgress.memoizedState,
-        );
+        type.getDerivedStateFromProps.call(null, nextProps, prevState);
       }
 
       const partialState = type.getDerivedStateFromProps.call(
         null,
-        props,
-        workInProgress.memoizedState,
+        nextProps,
+        prevState,
       );
 
       if (__DEV__) {
@@ -698,19 +696,21 @@ export default function(
       }
     }
 
+    // Compute the next state using the memoized state and the update queue.
+    const oldState = workInProgress.memoizedState;
+    // TODO: Previous state can be null.
+    let newState;
+
     let derivedStateFromProps;
     if (oldProps !== newProps) {
       derivedStateFromProps = callGetDerivedStateFromProps(
         workInProgress,
         instance,
         newProps,
+        oldState,
       );
     }
 
-    // Compute the next state using the memoized state and the update queue.
-    const oldState = workInProgress.memoizedState;
-    // TODO: Previous state can be null.
-    let newState;
     let derivedStateFromCatch;
     if (workInProgress.updateQueue !== null) {
       newState = processUpdateQueue(
@@ -867,19 +867,11 @@ export default function(
       }
     }
 
-    let derivedStateFromProps;
-    if (oldProps !== newProps) {
-      derivedStateFromProps = callGetDerivedStateFromProps(
-        workInProgress,
-        instance,
-        newProps,
-      );
-    }
-
     // Compute the next state using the memoized state and the update queue.
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
-    let newState;
+    let newState = oldState;
+
     let derivedStateFromCatch;
     if (workInProgress.updateQueue !== null) {
       newState = processUpdateQueue(
@@ -908,8 +900,28 @@ export default function(
           capturedValues,
         );
       }
-    } else {
-      newState = oldState;
+    }
+
+    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      newState =
+        newState === null || newState === undefined
+          ? derivedStateFromCatch
+          : Object.assign({}, newState, derivedStateFromCatch);
+    }
+
+    let derivedStateFromProps;
+    if (oldProps !== newProps) {
+      // In this case, the prevState parameter should be the partially updated state,
+      // Otherwise, spreading state in return values could override updates.
+      derivedStateFromProps = callGetDerivedStateFromProps(
+        workInProgress,
+        instance,
+        newProps,
+        newState,
+      );
     }
 
     if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
@@ -920,15 +932,6 @@ export default function(
         newState === null || newState === undefined
           ? derivedStateFromProps
           : Object.assign({}, newState, derivedStateFromProps);
-    }
-    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
-      // Render-phase updates (like this) should not be added to the update queue,
-      // So that multiple render passes do not enqueue multiple updates.
-      // Instead, just synchronously merge the returned state into the instance.
-      newState =
-        newState === null || newState === undefined
-          ? derivedStateFromCatch
-          : Object.assign({}, newState, derivedStateFromCatch);
     }
 
     if (
