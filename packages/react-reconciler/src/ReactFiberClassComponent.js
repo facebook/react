@@ -700,7 +700,6 @@ export default function(
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
     let newState;
-
     let derivedStateFromCatch;
     if (workInProgress.updateQueue !== null) {
       newState = processUpdateQueue(
@@ -872,8 +871,7 @@ export default function(
     // Compute the next state using the memoized state and the update queue.
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
-    let newState = oldState;
-
+    let newState;
     let derivedStateFromCatch;
     if (workInProgress.updateQueue !== null) {
       newState = processUpdateQueue(
@@ -902,6 +900,8 @@ export default function(
           capturedValues,
         );
       }
+    } else {
+      newState = oldState;
     }
 
     let derivedStateFromProps;
@@ -916,15 +916,6 @@ export default function(
       );
     }
 
-    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
-      // Render-phase updates (like this) should not be added to the update queue,
-      // So that multiple render passes do not enqueue multiple updates.
-      // Instead, just synchronously merge the returned state into the instance.
-      newState =
-        newState === null || newState === undefined
-          ? derivedStateFromCatch
-          : Object.assign({}, newState, derivedStateFromCatch);
-    }
     if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
       // Render-phase updates (like this) should not be added to the update queue,
       // So that multiple render passes do not enqueue multiple updates.
@@ -933,6 +924,15 @@ export default function(
         newState === null || newState === undefined
           ? derivedStateFromProps
           : Object.assign({}, newState, derivedStateFromProps);
+    }
+    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      newState =
+        newState === null || newState === undefined
+          ? derivedStateFromCatch
+          : Object.assign({}, newState, derivedStateFromCatch);
     }
 
     if (
