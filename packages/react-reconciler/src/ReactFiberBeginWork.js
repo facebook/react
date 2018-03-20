@@ -776,6 +776,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     renderExpirationTime: ExpirationTime,
   ): void {
     let fiber = workInProgress.child;
+    if (fiber !== null) {
+      // Set the return pointer of the child to the work-in-progress fiber.
+      fiber.return = workInProgress;
+    }
     while (fiber !== null) {
       let nextFiber;
       // Visit this fiber.
