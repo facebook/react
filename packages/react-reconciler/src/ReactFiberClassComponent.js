@@ -701,16 +701,6 @@ export default function(
     // TODO: Previous state can be null.
     let newState;
 
-    let derivedStateFromProps;
-    if (oldProps !== newProps) {
-      derivedStateFromProps = callGetDerivedStateFromProps(
-        workInProgress,
-        instance,
-        newProps,
-        oldState,
-      );
-    }
-
     let derivedStateFromCatch;
     if (workInProgress.updateQueue !== null) {
       newState = processUpdateQueue(
@@ -741,6 +731,18 @@ export default function(
       }
     } else {
       newState = oldState;
+    }
+
+    let derivedStateFromProps;
+    if (oldProps !== newProps) {
+      // The prevState parameter should be the partially updated state.
+      // Otherwise, spreading state in return values could override updates.
+      derivedStateFromProps = callGetDerivedStateFromProps(
+        workInProgress,
+        instance,
+        newProps,
+        newState,
+      );
     }
 
     if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
@@ -902,19 +904,9 @@ export default function(
       }
     }
 
-    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
-      // Render-phase updates (like this) should not be added to the update queue,
-      // So that multiple render passes do not enqueue multiple updates.
-      // Instead, just synchronously merge the returned state into the instance.
-      newState =
-        newState === null || newState === undefined
-          ? derivedStateFromCatch
-          : Object.assign({}, newState, derivedStateFromCatch);
-    }
-
     let derivedStateFromProps;
     if (oldProps !== newProps) {
-      // In this case, the prevState parameter should be the partially updated state,
+      // The prevState parameter should be the partially updated state.
       // Otherwise, spreading state in return values could override updates.
       derivedStateFromProps = callGetDerivedStateFromProps(
         workInProgress,
@@ -924,6 +916,15 @@ export default function(
       );
     }
 
+    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
+      // Render-phase updates (like this) should not be added to the update queue,
+      // So that multiple render passes do not enqueue multiple updates.
+      // Instead, just synchronously merge the returned state into the instance.
+      newState =
+        newState === null || newState === undefined
+          ? derivedStateFromCatch
+          : Object.assign({}, newState, derivedStateFromCatch);
+    }
     if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
       // Render-phase updates (like this) should not be added to the update queue,
       // So that multiple render passes do not enqueue multiple updates.
