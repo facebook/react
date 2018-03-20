@@ -49,6 +49,11 @@ const {
   clearCaughtError,
 } = ReactErrorUtils;
 
+let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
+if (__DEV__) {
+  didWarnAboutUndefinedSnapshotBeforeUpdate = new Set();
+}
+
 function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   const source = errorInfo.source;
   let stack = errorInfo.stack;
@@ -176,7 +181,23 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               prevProps,
               prevState,
             );
-            // TODO Warn about undefined return value
+            if (__DEV__) {
+              const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<
+                mixed,
+              >);
+              if (
+                snapshot === undefined &&
+                !didWarnSet.has(finishedWork.type)
+              ) {
+                didWarnSet.add(finishedWork.type);
+                warning(
+                  false,
+                  '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
+                    'must be returned. You have returned undefined.',
+                  getComponentName(finishedWork),
+                );
+              }
+            }
             instance.__reactInternalSnapshotBeforeUpdate = snapshot;
             stopPhaseTimer();
           }

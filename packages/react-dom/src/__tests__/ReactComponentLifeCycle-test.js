@@ -955,4 +955,44 @@ describe('ReactComponentLifeCycle', () => {
     // De-duped
     ReactDOM.render(<MyComponent />, div);
   });
+
+  it('should warn if getSnapshotBeforeUpdate returns undefined', () => {
+    class MyComponent extends React.Component {
+      getSnapshotBeforeUpdate() {}
+      componentDidUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<MyComponent value="foo" />, div);
+    expect(() => ReactDOM.render(<MyComponent value="bar" />, div)).toWarnDev(
+      'MyComponent.getSnapshotBeforeUpdate(): A snapshot value (or null) must ' +
+        'be returned. You have returned undefined.',
+    );
+
+    // De-duped
+    ReactDOM.render(<MyComponent value="baz" />, div);
+  });
+
+  it('should warn if getSnapshotBeforeUpdate is defined with no componentDidUpdate', () => {
+    class MyComponent extends React.Component {
+      getSnapshotBeforeUpdate() {
+        return null;
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
+      'MyComponent: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
+        'This component defines getSnapshotBeforeUpdate() only.',
+    );
+
+    // De-duped
+    ReactDOM.render(<MyComponent />, div);
+  });
 });

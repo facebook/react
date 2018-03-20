@@ -42,6 +42,7 @@ let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
 let didWarnAboutWillReceivePropsAndDerivedState;
+let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
@@ -49,6 +50,7 @@ if (__DEV__) {
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutUninitializedState = {};
   didWarnAboutWillReceivePropsAndDerivedState = {};
+  didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
 
   const didWarnOnInvalidCallback = {};
 
@@ -364,6 +366,20 @@ export default function(
         name,
         name,
       );
+
+      if (
+        typeof instance.getSnapshotBeforeUpdate === 'function' &&
+        typeof instance.componentDidUpdate !== 'function' &&
+        !didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(type)
+      ) {
+        didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(type);
+        warning(
+          false,
+          '%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
+            'This component defines getSnapshotBeforeUpdate() only.',
+          getComponentName(workInProgress),
+        );
+      }
     }
 
     const state = instance.state;
