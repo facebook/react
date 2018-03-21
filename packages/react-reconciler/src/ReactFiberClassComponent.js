@@ -95,7 +95,10 @@ function callGetDerivedStateFromCatch(ctor: any, capturedValues: Array<mixed>) {
   for (let i = 0; i < capturedValues.length; i++) {
     const capturedValue: CapturedValue<mixed> = (capturedValues[i]: any);
     const error = capturedValue.value;
-    const partialState = ctor.getDerivedStateFromCatch.call(null, error);
+    const stack = capturedValue.stack;
+    const partialState = ctor.getDerivedStateFromCatch.call(null, error, {
+      componentStack: stack !== null ? stack : '',
+    });
     if (partialState !== null && partialState !== undefined) {
       Object.assign(resultState, partialState);
     }

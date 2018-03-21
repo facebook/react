@@ -270,8 +270,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           for (let i = 0; i < capturedErrors.length; i++) {
             const errorInfo = capturedErrors[i];
             const error = errorInfo.value;
+            const stack = errorInfo.stack;
             logError(finishedWork, errorInfo);
-            instance.componentDidCatch(error);
+            instance.componentDidCatch(error, {
+              componentStack: stack !== null ? stack : '',
+            });
           }
         }
         break;
