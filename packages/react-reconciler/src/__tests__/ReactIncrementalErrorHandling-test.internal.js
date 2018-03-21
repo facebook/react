@@ -1340,8 +1340,8 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Caught an error:\n' +
-          '    in BrokenRender (at **)\n' +
-          '    in ErrorBoundary (at **).',
+          (__DEV__ ? '    in BrokenRender (at **)\n' : '    in BrokenRender\n') +
+          (__DEV__ ? '    in ErrorBoundary (at **).' : '    in ErrorBoundary.'),
       ),
     ]);
   });
@@ -1379,8 +1379,8 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Caught an error:\n' +
-          '    in BrokenRender (at **)\n' +
-          '    in ErrorBoundary (at **).',
+          (__DEV__ ? '    in BrokenRender (at **)\n' : '    in BrokenRender\n') +
+          (__DEV__ ? '    in ErrorBoundary (at **).' : '    in ErrorBoundary.'),
       ),
     ]);
   });
