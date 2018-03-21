@@ -36,6 +36,10 @@ describe('ReactIncrementalErrorHandling', () => {
     return {type: 'span', children: [], prop};
   }
 
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   it('recovers from errors asynchronously', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1301,5 +1305,75 @@ describe('ReactIncrementalErrorHandling', () => {
       'did update',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
+
+  it('provides component stack to the error boundary with componentDidCatch', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null, errorInfo: null};
+      componentDidCatch(error, errorInfo) {
+        this.setState({error, errorInfo});
+      }
+      render() {
+        if (this.state.errorInfo) {
+          ReactNoop.yield('render error message');
+          return (
+            <span
+              prop={`Caught an error:${normalizeCodeLocInfo(
+                this.state.errorInfo.componentStack,
+              )}.`}
+            />
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      throw new Error('Hello');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+    );
+    ReactNoop.flushDeferredPri();
+    expect(ReactNoop.getChildren()).toEqual([
+      span(
+        'Caught an error:\n' +
+          (__DEV__
+            ? '    in BrokenRender (at **)\n'
+            : '    in BrokenRender\n') +
+          (__DEV__ ? '    in ErrorBoundary (at **).' : '    in ErrorBoundary.'),
+      ),
+    ]);
+  });
+
+  it('does not provide component stack to the error boundary with getDerivedStateFromCatch', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromCatch(error, errorInfo) {
+        expect(errorInfo).toBeUndefined();
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          return <span prop={`Caught an error: ${this.state.error.message}`} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      throw new Error('Hello');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+    );
+    ReactNoop.flushDeferredPri();
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
   });
 });
