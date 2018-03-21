@@ -377,23 +377,23 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('should not throw a TypeError when reading stateNode on ReactCurrentOwner', () => {
+  it('should not crash calling findDOMNode inside a functional component', () => {
+    const container = document.createElement('div');
+
     class Component extends React.Component {
       render() {
         return <div />;
       }
     }
 
-    const App = () => ReactDOM.findDOMNode(Component);
-    const container = document.createElement('div');
-    const stateNodeErr = new TypeError(
-      "Cannot read property '_warnedAboutRefsInRender' of null",
-    );
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const App = () => {
+      ReactDOM.findDOMNode(instance);
+      return <div />;
+    };
 
     if (__DEV__) {
-      expect(() => {
-        ReactDOM.render(<App />, container);
-      }).not.toThrow(stateNodeErr);
+      ReactDOM.render(<App />, container);
     }
   });
 
