@@ -43,9 +43,9 @@ describe('BeforeInputEventPlugin', () => {
 
   function simulateEvent(elem, type, data) {
     const event = new Event(type, {bubbles: true});
-    Object.keys(data).forEach(key => {
+    for (let key in data) {
       event[key] = data[key];
-    });
+    }
     elem.dispatchEvent(event);
   }
 
