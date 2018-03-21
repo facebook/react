@@ -36,6 +36,10 @@ describe('ReactIncrementalErrorHandling', () => {
     return {type: 'span', children: [], prop};
   }
 
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   it('recovers from errors asynchronously', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1301,5 +1305,44 @@ describe('ReactIncrementalErrorHandling', () => {
       'did update',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
+
+  it('provides component stack to the error boundary', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error, errorInfo) {
+        this.setState({error, errorInfo});
+      }
+      render() {
+        if (this.state.errorInfo) {
+          return (
+            <span
+              prop={`Caught an error:${normalizeCodeLocInfo(
+                this.state.errorInfo.componentStack,
+              )}.`}
+            />
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      throw new Error('Hello');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+    );
+    ReactNoop.flushDeferredPri();
+    expect(ReactNoop.getChildren()).toEqual([
+      span(
+        'Caught an error:\n' +
+          '    in BrokenRender (at **)\n' +
+          '    in ErrorBoundary (at **).',
+      ),
+    ]);
   });
 });
