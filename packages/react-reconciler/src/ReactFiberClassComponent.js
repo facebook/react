@@ -448,6 +448,7 @@ export default function(
       workInProgress,
       instance,
       props,
+      state,
     );
 
     if (partialState !== null && partialState !== undefined) {
@@ -534,7 +535,8 @@ export default function(
   function callGetDerivedStateFromProps(
     workInProgress: Fiber,
     instance: any,
-    props: any,
+    nextProps: any,
+    prevState: any,
   ) {
     const {type} = workInProgress;
 
@@ -567,17 +569,13 @@ export default function(
           workInProgress.mode & StrictMode)
       ) {
         // Invoke method an extra time to help detect side-effects.
-        type.getDerivedStateFromProps.call(
-          null,
-          props,
-          workInProgress.memoizedState,
-        );
+        type.getDerivedStateFromProps.call(null, nextProps, prevState);
       }
 
       const partialState = type.getDerivedStateFromProps.call(
         null,
-        props,
-        workInProgress.memoizedState,
+        nextProps,
+        prevState,
       );
 
       if (__DEV__) {
@@ -698,15 +696,6 @@ export default function(
       }
     }
 
-    let derivedStateFromProps;
-    if (oldProps !== newProps) {
-      derivedStateFromProps = callGetDerivedStateFromProps(
-        workInProgress,
-        instance,
-        newProps,
-      );
-    }
-
     // Compute the next state using the memoized state and the update queue.
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
@@ -741,6 +730,18 @@ export default function(
       }
     } else {
       newState = oldState;
+    }
+
+    let derivedStateFromProps;
+    if (oldProps !== newProps) {
+      // The prevState parameter should be the partially updated state.
+      // Otherwise, spreading state in return values could override updates.
+      derivedStateFromProps = callGetDerivedStateFromProps(
+        workInProgress,
+        instance,
+        newProps,
+        newState,
+      );
     }
 
     if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
@@ -867,15 +868,6 @@ export default function(
       }
     }
 
-    let derivedStateFromProps;
-    if (oldProps !== newProps) {
-      derivedStateFromProps = callGetDerivedStateFromProps(
-        workInProgress,
-        instance,
-        newProps,
-      );
-    }
-
     // Compute the next state using the memoized state and the update queue.
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
@@ -910,6 +902,18 @@ export default function(
       }
     } else {
       newState = oldState;
+    }
+
+    let derivedStateFromProps;
+    if (oldProps !== newProps) {
+      // The prevState parameter should be the partially updated state.
+      // Otherwise, spreading state in return values could override updates.
+      derivedStateFromProps = callGetDerivedStateFromProps(
+        workInProgress,
+        instance,
+        newProps,
+        newState,
+      );
     }
 
     if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {

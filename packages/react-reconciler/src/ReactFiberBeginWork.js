@@ -612,6 +612,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           workInProgress,
           value,
           props,
+          workInProgress.memoizedState,
         );
 
         if (partialState !== null && partialState !== undefined) {
