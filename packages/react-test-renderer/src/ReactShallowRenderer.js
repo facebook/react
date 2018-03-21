@@ -23,7 +23,7 @@ let didWarnAboutLegacyWillReceiveProps;
 let didWarnAboutLegacyWillUpdate;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
-let didWarnAboutWillReceivePropsAndDerivedState;
+let didWarnAboutLegacyLifecyclesAndDerivedState;
 
 if (__DEV__) {
   if (warnAboutDeprecatedLifecycles) {
@@ -33,7 +33,7 @@ if (__DEV__) {
   }
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutUninitializedState = {};
-  didWarnAboutWillReceivePropsAndDerivedState = {};
+  didWarnAboutLegacyLifecyclesAndDerivedState = {};
 }
 
 class ReactShallowRenderer {
@@ -352,23 +352,40 @@ class ReactShallowRenderer {
 
     if (typeof type.getDerivedStateFromProps === 'function') {
       if (__DEV__) {
-        // Don't warn about react-lifecycles-compat polyfilled components
-        if (
-          (typeof this._instance.componentWillReceiveProps === 'function' &&
-            this._instance.componentWillReceiveProps
-              .__suppressDeprecationWarning !== true) ||
-          typeof this._instance.UNSAFE_componentWillReceiveProps === 'function'
-        ) {
-          const componentName = getName(type, this._instance);
-          if (!didWarnAboutWillReceivePropsAndDerivedState[componentName]) {
+        const instance = this._instance;
+
+        // If getDerivedStateFromProps() is defined, "unsafe" lifecycles won't be called.
+        // Warn about these lifecycles if they are present.
+        // Don't warn about react-lifecycles-compat polyfilled methods though.
+        const definesWillMount =
+          (typeof instance.componentWillMount === 'function' &&
+            instance.componentWillMount.__suppressDeprecationWarning !==
+              true) ||
+          typeof instance.UNSAFE_componentWillMount === 'function';
+        const definesWillReceiveProps =
+          (typeof instance.componentWillReceiveProps === 'function' &&
+            instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+              true) ||
+          typeof instance.UNSAFE_componentWillReceiveProps === 'function';
+        const definesWillUpdate =
+          typeof instance.componentWillUpdate === 'function' ||
+          typeof instance.UNSAFE_componentWillUpdate === 'function';
+
+        if (definesWillMount || definesWillReceiveProps || definesWillUpdate) {
+          const componentName = getName(type, instance);
+          if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
             warning(
               false,
-              '%s: Defines both componentWillReceiveProps() and static ' +
-                'getDerivedStateFromProps() methods. We recommend using ' +
-                'only getDerivedStateFromProps().',
+              'Unsafe legacy lifecycles will not be called for components using ' +
+                'the new getDerivedStateFromProps() API.\n\n' +
+                '%s uses getDerivedStateFromProps() but also contains the following legacy lifecycles:' +
+                '%s%s%s',
               componentName,
+              definesWillMount ? '\n  componentWillMount' : '',
+              definesWillReceiveProps ? '\n  componentWillReceiveProps' : '',
+              definesWillUpdate ? '\n  componentWillUpdate' : '',
             );
-            didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
+            didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
           }
         }
       }

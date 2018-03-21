@@ -475,7 +475,13 @@ describe('create-react-class-integration', () => {
 
     expect(() => {
       ReactDOM.render(<Component />, document.createElement('div'));
-    }).toWarnDev('Defines both componentWillReceiveProps');
+    }).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'Unknown uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  componentWillReceiveProps\n' +
+        '  componentWillUpdate',
+    );
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
   });
 

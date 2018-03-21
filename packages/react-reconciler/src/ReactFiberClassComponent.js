@@ -41,14 +41,14 @@ const isArray = Array.isArray;
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
-let didWarnAboutWillReceivePropsAndDerivedState;
+let didWarnAboutLegacyLifecyclesAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = {};
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutUninitializedState = {};
-  didWarnAboutWillReceivePropsAndDerivedState = {};
+  didWarnAboutLegacyLifecyclesAndDerivedState = {};
 
   const didWarnOnInvalidCallback = {};
 
@@ -424,20 +424,54 @@ export default function(
     adoptClassInstance(workInProgress, instance);
 
     if (__DEV__) {
-      if (
-        typeof ctor.getDerivedStateFromProps === 'function' &&
-        state === null
-      ) {
-        const componentName = getComponentName(workInProgress) || 'Unknown';
-        if (!didWarnAboutUninitializedState[componentName]) {
-          warning(
-            false,
-            '%s: Did not properly initialize state during construction. ' +
-              'Expected state to be an object, but it was %s.',
-            componentName,
-            instance.state === null ? 'null' : 'undefined',
-          );
-          didWarnAboutUninitializedState[componentName] = true;
+      if (typeof ctor.getDerivedStateFromProps === 'function') {
+        if (state === null) {
+          const componentName = getComponentName(workInProgress) || 'Unknown';
+          if (!didWarnAboutUninitializedState[componentName]) {
+            warning(
+              false,
+              '%s: Did not properly initialize state during construction. ' +
+                'Expected state to be an object, but it was %s.',
+              componentName,
+              instance.state === null ? 'null' : 'undefined',
+            );
+            didWarnAboutUninitializedState[componentName] = true;
+          }
+        }
+
+        // If getDerivedStateFromProps() is defined, "unsafe" lifecycles won't be called.
+        // Warn about these lifecycles if they are present.
+        // Don't warn about react-lifecycles-compat polyfilled methods though.
+        const definesWillMount =
+          (typeof instance.componentWillMount === 'function' &&
+            instance.componentWillMount.__suppressDeprecationWarning !==
+              true) ||
+          typeof instance.UNSAFE_componentWillMount === 'function';
+        const definesWillReceiveProps =
+          (typeof instance.componentWillReceiveProps === 'function' &&
+            instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+              true) ||
+          typeof instance.UNSAFE_componentWillReceiveProps === 'function';
+        const definesWillUpdate =
+          typeof instance.componentWillUpdate === 'function' ||
+          typeof instance.UNSAFE_componentWillUpdate === 'function';
+
+        if (definesWillMount || definesWillReceiveProps || definesWillUpdate) {
+          const componentName = getComponentName(workInProgress) || 'Unknown';
+          if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
+            warning(
+              false,
+              'Unsafe legacy lifecycles will not be called for components using ' +
+                'the new getDerivedStateFromProps() API.\n\n' +
+                '%s uses getDerivedStateFromProps() but also contains the following legacy lifecycles:' +
+                '%s%s%s',
+              componentName,
+              definesWillMount ? '\n  componentWillMount' : '',
+              definesWillReceiveProps ? '\n  componentWillReceiveProps' : '',
+              definesWillUpdate ? '\n  componentWillUpdate' : '',
+            );
+            didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
+          }
         }
       }
     }
@@ -539,28 +573,6 @@ export default function(
     const {type} = workInProgress;
 
     if (typeof type.getDerivedStateFromProps === 'function') {
-      if (__DEV__) {
-        // Don't warn about react-lifecycles-compat polyfilled components
-        if (
-          (typeof instance.componentWillReceiveProps === 'function' &&
-            instance.componentWillReceiveProps.__suppressDeprecationWarning !==
-              true) ||
-          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
-        ) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
-          if (!didWarnAboutWillReceivePropsAndDerivedState[componentName]) {
-            warning(
-              false,
-              '%s: Defines both componentWillReceiveProps() and static ' +
-                'getDerivedStateFromProps() methods. We recommend using ' +
-                'only getDerivedStateFromProps().',
-              componentName,
-            );
-            didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
-          }
-        }
-      }
-
       if (
         debugRenderPhaseSideEffects ||
         (debugRenderPhaseSideEffectsForStrictMode &&

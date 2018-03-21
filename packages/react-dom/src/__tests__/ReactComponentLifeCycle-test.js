@@ -669,7 +669,7 @@ describe('ReactComponentLifeCycle', () => {
 
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
-      'Defines both componentWillReceiveProps',
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.',
     );
   });
 
@@ -695,7 +695,85 @@ describe('ReactComponentLifeCycle', () => {
 
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
-      'Defines both componentWillReceiveProps',
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.',
+    );
+  });
+
+  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
+    const container = document.createElement('div');
+
+    class AllLegacyLifecycles extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillMount() {}
+      componentWillReceiveProps() {}
+      componentWillUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOM.render(<AllLegacyLifecycles />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  componentWillReceiveProps\n' +
+        '  componentWillUpdate',
+    );
+
+    class WillMount extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillMount() {}
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOM.render(<WillMount />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount',
+    );
+
+    class WillMountAndUpdate extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillMount() {}
+      componentWillUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOM.render(<WillMountAndUpdate />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  componentWillUpdate',
+    );
+
+    class WillReceiveProps extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillReceiveProps() {}
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillReceiveProps',
     );
   });
 
