@@ -25,4 +25,3 @@ if (__DEV__) {
 BatchedBridge.registerCallableModule('ReactFabric', ReactFabric);
 
 module.exports = (ReactFabric: ReactNativeType);
-
