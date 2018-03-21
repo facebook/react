@@ -830,4 +830,49 @@ describe('ReactComponentLifeCycle', () => {
       'UNSAFE_componentWillUpdate',
     ]);
   });
+
+  it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
+    const divRef = React.createRef();
+    let childInstance;
+
+    class Child extends React.Component {
+      state = {local: 0};
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {...prevState, remote: nextProps.remote};
+      }
+      updateState = () => {
+        this.setState(state => ({local: state.local + 1}));
+        this.props.onChange(this.state.remote + 1);
+      };
+      render() {
+        childInstance = this;
+        return (
+          <div onClick={this.updateState} ref={divRef}>{`remote:${
+            this.state.remote
+          }, local:${this.state.local}`}</div>
+        );
+      }
+    }
+
+    class Parent extends React.Component {
+      state = {value: 0};
+      handleChange = value => {
+        this.setState({value});
+      };
+      render() {
+        return <Child remote={this.state.value} onChange={this.handleChange} />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Parent />);
+    expect(divRef.current.textContent).toBe('remote:0, local:0');
+
+    // Trigger setState() calls
+    childInstance.updateState();
+    expect(divRef.current.textContent).toBe('remote:1, local:1');
+
+    // Trigger batched setState() calls
+    ReactTestUtils.Simulate.click(divRef.current);
+    expect(divRef.current.textContent).toBe('remote:2, local:2');
+  });
 });
