@@ -1126,7 +1126,7 @@ const ReactDOM: Object = {
   ): null | Element | Text {
     if (__DEV__) {
       let owner = (ReactCurrentOwner.current: any);
-      if (owner !== null) {
+      if (owner !== null && owner.stateNode !== null) {
         const warnedAboutRefsInRender =
           owner.stateNode._warnedAboutRefsInRender;
         warning(
