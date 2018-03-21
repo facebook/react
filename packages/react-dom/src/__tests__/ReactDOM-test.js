@@ -377,6 +377,26 @@ describe('ReactDOM', () => {
     }
   });
 
+  it('should not throw a TypeError when reading stateNode on ReactCurrentOwner', () => {
+    class Component extends React.Component {
+      render() {
+        return <div />;
+      }
+    }
+
+    const App = () => ReactDOM.findDOMNode(Component);
+    const container = document.createElement('div');
+    const stateNodeErr = new TypeError(
+      "Cannot read property '_warnedAboutRefsInRender' of null",
+    );
+
+    if (__DEV__) {
+      expect(() => {
+        ReactDOM.render(<App />, container);
+      }).not.toThrow(stateNodeErr);
+    }
+  });
+
   it('throws in DEV if jsdom is destroyed by the time setState() is called', () => {
     class App extends React.Component {
       state = {x: 1};
