@@ -372,7 +372,7 @@ class ReactShallowRenderer {
           typeof instance.UNSAFE_componentWillUpdate === 'function';
 
         if (definesWillMount || definesWillReceiveProps || definesWillUpdate) {
-          const componentName = getName(type, instance);
+          const componentName = getName(type, instance) || 'Component';
           if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
             warning(
               false,

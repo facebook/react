@@ -457,7 +457,7 @@ export default function(
           typeof instance.UNSAFE_componentWillUpdate === 'function';
 
         if (definesWillMount || definesWillReceiveProps || definesWillUpdate) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
+          const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
             warning(
               false,

@@ -477,7 +477,7 @@ describe('create-react-class-integration', () => {
       ReactDOM.render(<Component />, document.createElement('div'));
     }).toWarnDev(
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
-        'Unknown uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        'Component uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
         '  componentWillReceiveProps\n' +
         '  componentWillUpdate\n\n' +
