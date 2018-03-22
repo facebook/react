@@ -125,8 +125,98 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<Component foo={2} />)).toWarnDev(
-      'Defines both componentWillReceiveProps() and static getDerivedStateFromProps()',
+    expect(() => shallowRenderer.render(<Component />)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.',
+    );
+  });
+
+  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
+    let shallowRenderer;
+
+    class AllLegacyLifecycles extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillMount() {}
+      UNSAFE_componentWillReceiveProps() {}
+      componentWillUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    shallowRenderer = createRenderer();
+    expect(() => shallowRenderer.render(<AllLegacyLifecycles />)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  UNSAFE_componentWillReceiveProps\n' +
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
+
+    class WillMount extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      UNSAFE_componentWillMount() {}
+      render() {
+        return null;
+      }
+    }
+
+    shallowRenderer = createRenderer();
+    expect(() => shallowRenderer.render(<WillMount />)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  UNSAFE_componentWillMount\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
+
+    class WillMountAndUpdate extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillMount() {}
+      UNSAFE_componentWillUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    shallowRenderer = createRenderer();
+    expect(() => shallowRenderer.render(<WillMountAndUpdate />)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  UNSAFE_componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
+
+    class WillReceiveProps extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillReceiveProps() {}
+      render() {
+        return null;
+      }
+    }
+
+    shallowRenderer = createRenderer();
+    expect(() => shallowRenderer.render(<WillReceiveProps />)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillReceiveProps\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
   });
 
@@ -1238,9 +1328,7 @@ describe('ReactShallowRenderer', () => {
 
     const shallowRenderer = createRenderer();
     expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev(
-      'ComponentWithWarnings: Defines both componentWillReceiveProps() and static ' +
-        'getDerivedStateFromProps() methods. We recommend using ' +
-        'only getDerivedStateFromProps().',
+      'ComponentWithWarnings uses getDerivedStateFromProps() but also contains the following legacy lifecycles',
     );
 
     // Should not log duplicate warning

@@ -189,6 +189,38 @@ describe('createSubscription', () => {
       // Ensure that only Promise B causes an update
       expect(ReactNoop.flush()).toEqual([123]);
     });
+
+    it('should not call setState for a Promise that resolves after unmount', async () => {
+      const Subscription = createSubscription({
+        getCurrentValue: source => undefined,
+        subscribe: (source, callback) => {
+          source.then(value => callback(value), value => callback(value));
+          // (Can't unsubscribe from a Promise)
+          return () => {};
+        },
+      });
+
+      function render(hasLoaded) {
+        ReactNoop.yield('rendered');
+        return null;
+      }
+
+      let resolvePromise;
+      const promise = new Promise((resolve, reject) => {
+        resolvePromise = resolve;
+      });
+
+      ReactNoop.render(<Subscription source={promise}>{render}</Subscription>);
+      expect(ReactNoop.flush()).toEqual(['rendered']);
+
+      // Unmount
+      ReactNoop.render(null);
+      ReactNoop.flush();
+
+      // Resolve Promise should not trigger a setState warning
+      resolvePromise(true);
+      await promise;
+    });
   });
 
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {

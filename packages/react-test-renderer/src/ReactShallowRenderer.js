@@ -23,7 +23,7 @@ let didWarnAboutLegacyWillReceiveProps;
 let didWarnAboutLegacyWillUpdate;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
-let didWarnAboutWillReceivePropsAndDerivedState;
+let didWarnAboutLegacyLifecyclesAndDerivedState;
 
 if (__DEV__) {
   if (warnAboutDeprecatedLifecycles) {
@@ -33,7 +33,7 @@ if (__DEV__) {
   }
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutUninitializedState = {};
-  didWarnAboutWillReceivePropsAndDerivedState = {};
+  didWarnAboutLegacyLifecyclesAndDerivedState = {};
 }
 
 class ReactShallowRenderer {
@@ -352,23 +352,61 @@ class ReactShallowRenderer {
 
     if (typeof type.getDerivedStateFromProps === 'function') {
       if (__DEV__) {
-        // Don't warn about react-lifecycles-compat polyfilled components
+        const instance = this._instance;
+
+        // If getDerivedStateFromProps() is defined, "unsafe" lifecycles won't be called.
+        // Warn about these lifecycles if they are present.
+        // Don't warn about react-lifecycles-compat polyfilled methods though.
+        let foundWillMountName = null;
+        let foundWillReceivePropsName = null;
+        let foundWillUpdateName = null;
         if (
-          (typeof this._instance.componentWillReceiveProps === 'function' &&
-            this._instance.componentWillReceiveProps
-              .__suppressDeprecationWarning !== true) ||
-          typeof this._instance.UNSAFE_componentWillReceiveProps === 'function'
+          typeof instance.componentWillMount === 'function' &&
+          instance.componentWillMount.__suppressDeprecationWarning !== true
         ) {
-          const componentName = getName(type, this._instance);
-          if (!didWarnAboutWillReceivePropsAndDerivedState[componentName]) {
+          foundWillMountName = 'componentWillMount';
+        } else if (typeof instance.UNSAFE_componentWillMount === 'function') {
+          foundWillMountName = 'UNSAFE_componentWillMount';
+        }
+        if (
+          typeof instance.componentWillReceiveProps === 'function' &&
+          instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+            true
+        ) {
+          foundWillReceivePropsName = 'componentWillReceiveProps';
+        } else if (
+          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
+        ) {
+          foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
+        }
+        if (typeof instance.componentWillUpdate === 'function') {
+          foundWillUpdateName = 'componentWillUpdate';
+        } else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
+          foundWillUpdateName = 'UNSAFE_componentWillUpdate';
+        }
+        if (
+          foundWillMountName !== null ||
+          foundWillReceivePropsName !== null ||
+          foundWillUpdateName !== null
+        ) {
+          const componentName = getName(type, instance) || 'Component';
+          if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
             warning(
               false,
-              '%s: Defines both componentWillReceiveProps() and static ' +
-                'getDerivedStateFromProps() methods. We recommend using ' +
-                'only getDerivedStateFromProps().',
+              'Unsafe legacy lifecycles will not be called for components using ' +
+                'the new getDerivedStateFromProps() API.\n\n' +
+                '%s uses getDerivedStateFromProps() but also contains the following legacy lifecycles:' +
+                '%s%s%s\n\n' +
+                'The above lifecycles should be removed. Learn more about this warning here:\n' +
+                'https://fb.me/react-async-component-lifecycle-hooks',
               componentName,
+              foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
+              foundWillReceivePropsName !== null
+                ? `\n  ${foundWillReceivePropsName}`
+                : '',
+              foundWillUpdateName !== null ? `\n  ${foundWillUpdateName}` : '',
             );
-            didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
+            didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
           }
         }
       }

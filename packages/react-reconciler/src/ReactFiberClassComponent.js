@@ -41,16 +41,16 @@ const isArray = Array.isArray;
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
-let didWarnAboutWillReceivePropsAndDerivedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
+let didWarnAboutLegacyLifecyclesAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = {};
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutUninitializedState = {};
-  didWarnAboutWillReceivePropsAndDerivedState = {};
   didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
+  didWarnAboutLegacyLifecyclesAndDerivedState = {};
 
   const didWarnOnInvalidCallback = {};
 
@@ -215,7 +215,7 @@ export default function(
           shouldUpdate !== undefined,
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
             'boolean value. Make sure to return true or false.',
-          getComponentName(workInProgress) || 'Unknown',
+          getComponentName(workInProgress) || 'Component',
         );
       }
 
@@ -235,7 +235,7 @@ export default function(
     const instance = workInProgress.stateNode;
     const type = workInProgress.type;
     if (__DEV__) {
-      const name = getComponentName(workInProgress);
+      const name = getComponentName(workInProgress) || 'Component';
       const renderPresent = instance.render;
 
       if (!renderPresent) {
@@ -380,23 +380,35 @@ export default function(
           getComponentName(workInProgress),
         );
       }
-    }
 
-    const state = instance.state;
-    if (state && (typeof state !== 'object' || isArray(state))) {
+      const noInstanceGetDerivedStateFromProps =
+        typeof instance.getDerivedStateFromProps !== 'function';
       warning(
-        false,
-        '%s.state: must be set to an object or null',
-        getComponentName(workInProgress),
+        noInstanceGetDerivedStateFromProps,
+        '%s: getDerivedStateFromProps() is defined as an instance method ' +
+          'and will be ignored. Instead, declare it as a static method.',
+        name,
       );
-    }
-    if (typeof instance.getChildContext === 'function') {
+      const noInstanceGetDerivedStateFromCatch =
+        typeof instance.getDerivedStateFromCatch !== 'function';
       warning(
-        typeof type.childContextTypes === 'object',
-        '%s.getChildContext(): childContextTypes must be defined in order to ' +
-          'use getChildContext().',
-        getComponentName(workInProgress),
+        noInstanceGetDerivedStateFromCatch,
+        '%s: getDerivedStateFromCatch() is defined as an instance method ' +
+          'and will be ignored. Instead, declare it as a static method.',
+        name,
       );
+      const state = instance.state;
+      if (state && (typeof state !== 'object' || isArray(state))) {
+        warning(false, '%s.state: must be set to an object or null', name);
+      }
+      if (typeof instance.getChildContext === 'function') {
+        warning(
+          typeof type.childContextTypes === 'object',
+          '%s.getChildContext(): childContextTypes must be defined in order to ' +
+            'use getChildContext().',
+          name,
+        );
+      }
     }
   }
 
@@ -440,20 +452,75 @@ export default function(
     adoptClassInstance(workInProgress, instance);
 
     if (__DEV__) {
-      if (
-        typeof ctor.getDerivedStateFromProps === 'function' &&
-        state === null
-      ) {
-        const componentName = getComponentName(workInProgress) || 'Unknown';
-        if (!didWarnAboutUninitializedState[componentName]) {
-          warning(
-            false,
-            '%s: Did not properly initialize state during construction. ' +
-              'Expected state to be an object, but it was %s.',
-            componentName,
-            instance.state === null ? 'null' : 'undefined',
-          );
-          didWarnAboutUninitializedState[componentName] = true;
+      if (typeof ctor.getDerivedStateFromProps === 'function') {
+        if (state === null) {
+          const componentName = getComponentName(workInProgress) || 'Component';
+          if (!didWarnAboutUninitializedState[componentName]) {
+            warning(
+              false,
+              '%s: Did not properly initialize state during construction. ' +
+                'Expected state to be an object, but it was %s.',
+              componentName,
+              instance.state === null ? 'null' : 'undefined',
+            );
+            didWarnAboutUninitializedState[componentName] = true;
+          }
+        }
+
+        // If getDerivedStateFromProps() is defined, "unsafe" lifecycles won't be called.
+        // Warn about these lifecycles if they are present.
+        // Don't warn about react-lifecycles-compat polyfilled methods though.
+        let foundWillMountName = null;
+        let foundWillReceivePropsName = null;
+        let foundWillUpdateName = null;
+        if (
+          typeof instance.componentWillMount === 'function' &&
+          instance.componentWillMount.__suppressDeprecationWarning !== true
+        ) {
+          foundWillMountName = 'componentWillMount';
+        } else if (typeof instance.UNSAFE_componentWillMount === 'function') {
+          foundWillMountName = 'UNSAFE_componentWillMount';
+        }
+        if (
+          typeof instance.componentWillReceiveProps === 'function' &&
+          instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+            true
+        ) {
+          foundWillReceivePropsName = 'componentWillReceiveProps';
+        } else if (
+          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
+        ) {
+          foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
+        }
+        if (typeof instance.componentWillUpdate === 'function') {
+          foundWillUpdateName = 'componentWillUpdate';
+        } else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
+          foundWillUpdateName = 'UNSAFE_componentWillUpdate';
+        }
+        if (
+          foundWillMountName !== null ||
+          foundWillReceivePropsName !== null ||
+          foundWillUpdateName !== null
+        ) {
+          const componentName = getComponentName(workInProgress) || 'Component';
+          if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
+            warning(
+              false,
+              'Unsafe legacy lifecycles will not be called for components using ' +
+                'the new getDerivedStateFromProps() API.\n\n' +
+                '%s uses getDerivedStateFromProps() but also contains the following legacy lifecycles:' +
+                '%s%s%s\n\n' +
+                'The above lifecycles should be removed. Learn more about this warning here:\n' +
+                'https://fb.me/react-async-component-lifecycle-hooks',
+              componentName,
+              foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
+              foundWillReceivePropsName !== null
+                ? `\n  ${foundWillReceivePropsName}`
+                : '',
+              foundWillUpdateName !== null ? `\n  ${foundWillUpdateName}` : '',
+            );
+            didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
+          }
         }
       }
     }
@@ -507,7 +574,7 @@ export default function(
           '%s.componentWillMount(): Assigning directly to this.state is ' +
             "deprecated (except inside a component's " +
             'constructor). Use setState instead.',
-          getComponentName(workInProgress),
+          getComponentName(workInProgress) || 'Component',
         );
       }
       updater.enqueueReplaceState(instance, instance.state, null);
@@ -557,28 +624,6 @@ export default function(
     const {type} = workInProgress;
 
     if (typeof type.getDerivedStateFromProps === 'function') {
-      if (__DEV__) {
-        // Don't warn about react-lifecycles-compat polyfilled components
-        if (
-          (typeof instance.componentWillReceiveProps === 'function' &&
-            instance.componentWillReceiveProps.__suppressDeprecationWarning !==
-              true) ||
-          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
-        ) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
-          if (!didWarnAboutWillReceivePropsAndDerivedState[componentName]) {
-            warning(
-              false,
-              '%s: Defines both componentWillReceiveProps() and static ' +
-                'getDerivedStateFromProps() methods. We recommend using ' +
-                'only getDerivedStateFromProps().',
-              componentName,
-            );
-            didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
-          }
-        }
-      }
-
       if (
         debugRenderPhaseSideEffects ||
         (debugRenderPhaseSideEffectsForStrictMode &&
@@ -596,7 +641,7 @@ export default function(
 
       if (__DEV__) {
         if (partialState === undefined) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
+          const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutUndefinedDerivedState[componentName]) {
             warning(
               false,

@@ -433,6 +433,40 @@ describe('create-react-class-integration', () => {
     expect(instance.state.foo).toBe('bar');
   });
 
+  it('warns if getDerivedStateFromProps is not static', () => {
+    const Foo = createReactClass({
+      getDerivedStateFromProps() {
+        return {};
+      },
+      render() {
+        return <div />;
+      },
+    });
+    expect(() =>
+      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
+    ).toWarnDev(
+      'Component: getDerivedStateFromProps() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
+  it('warns if getDerivedStateFromCatch is not static', () => {
+    const Foo = createReactClass({
+      getDerivedStateFromCatch() {
+        return {};
+      },
+      render() {
+        return <div />;
+      },
+    });
+    expect(() =>
+      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
+    ).toWarnDev(
+      'Component: getDerivedStateFromCatch() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
   it('should warn if state is not properly initialized before getDerivedStateFromProps', () => {
     const Component = createReactClass({
       statics: {
@@ -475,7 +509,15 @@ describe('create-react-class-integration', () => {
 
     expect(() => {
       ReactDOM.render(<Component />, document.createElement('div'));
-    }).toWarnDev('Defines both componentWillReceiveProps');
+    }).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'Component uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  componentWillReceiveProps\n' +
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
   });
 
