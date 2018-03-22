@@ -64,6 +64,7 @@ export function createSubscription<Property, Value>(
           : undefined,
     };
 
+    _hasUnmounted: boolean = false;
     _unsubscribe: Unsubscribe | null = null;
 
     static getDerivedStateFromProps(nextProps, prevState) {
@@ -93,6 +94,10 @@ export function createSubscription<Property, Value>(
 
     componentWillUnmount() {
       this.unsubscribe(this.state);
+
+      // Track mounted to avoid calling setState after unmounting
+      // For source like Promises that can't be unsubscribed from.
+      this._hasUnmounted = true;
     }
 
     render() {
@@ -103,6 +108,10 @@ export function createSubscription<Property, Value>(
       const {source} = this.state;
       if (source != null) {
         const callback = (value: Value | void) => {
+          if (this._hasUnmounted) {
+            return;
+          }
+
           this.setState(state => {
             // If the value is the same, skip the unnecessary state update.
             if (value === state.value) {
