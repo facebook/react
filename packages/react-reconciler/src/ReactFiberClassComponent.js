@@ -41,14 +41,14 @@ const isArray = Array.isArray;
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
-let didWarnAboutWillReceivePropsAndDerivedState;
+let didWarnAboutLegacyLifecyclesAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = {};
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutUninitializedState = {};
-  didWarnAboutWillReceivePropsAndDerivedState = {};
+  didWarnAboutLegacyLifecyclesAndDerivedState = {};
 
   const didWarnOnInvalidCallback = {};
 
@@ -435,20 +435,75 @@ export default function(
     adoptClassInstance(workInProgress, instance);
 
     if (__DEV__) {
-      if (
-        typeof ctor.getDerivedStateFromProps === 'function' &&
-        state === null
-      ) {
-        const componentName = getComponentName(workInProgress) || 'Component';
-        if (!didWarnAboutUninitializedState[componentName]) {
-          warning(
-            false,
-            '%s: Did not properly initialize state during construction. ' +
-              'Expected state to be an object, but it was %s.',
-            componentName,
-            instance.state === null ? 'null' : 'undefined',
-          );
-          didWarnAboutUninitializedState[componentName] = true;
+      if (typeof ctor.getDerivedStateFromProps === 'function') {
+        if (state === null) {
+          const componentName = getComponentName(workInProgress) || 'Component';
+          if (!didWarnAboutUninitializedState[componentName]) {
+            warning(
+              false,
+              '%s: Did not properly initialize state during construction. ' +
+                'Expected state to be an object, but it was %s.',
+              componentName,
+              instance.state === null ? 'null' : 'undefined',
+            );
+            didWarnAboutUninitializedState[componentName] = true;
+          }
+        }
+
+        // If getDerivedStateFromProps() is defined, "unsafe" lifecycles won't be called.
+        // Warn about these lifecycles if they are present.
+        // Don't warn about react-lifecycles-compat polyfilled methods though.
+        let foundWillMountName = null;
+        let foundWillReceivePropsName = null;
+        let foundWillUpdateName = null;
+        if (
+          typeof instance.componentWillMount === 'function' &&
+          instance.componentWillMount.__suppressDeprecationWarning !== true
+        ) {
+          foundWillMountName = 'componentWillMount';
+        } else if (typeof instance.UNSAFE_componentWillMount === 'function') {
+          foundWillMountName = 'UNSAFE_componentWillMount';
+        }
+        if (
+          typeof instance.componentWillReceiveProps === 'function' &&
+          instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+            true
+        ) {
+          foundWillReceivePropsName = 'componentWillReceiveProps';
+        } else if (
+          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
+        ) {
+          foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
+        }
+        if (typeof instance.componentWillUpdate === 'function') {
+          foundWillUpdateName = 'componentWillUpdate';
+        } else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
+          foundWillUpdateName = 'UNSAFE_componentWillUpdate';
+        }
+        if (
+          foundWillMountName !== null ||
+          foundWillReceivePropsName !== null ||
+          foundWillUpdateName !== null
+        ) {
+          const componentName = getComponentName(workInProgress) || 'Component';
+          if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
+            warning(
+              false,
+              'Unsafe legacy lifecycles will not be called for components using ' +
+                'the new getDerivedStateFromProps() API.\n\n' +
+                '%s uses getDerivedStateFromProps() but also contains the following legacy lifecycles:' +
+                '%s%s%s\n\n' +
+                'The above lifecycles should be removed. Learn more about this warning here:\n' +
+                'https://fb.me/react-async-component-lifecycle-hooks',
+              componentName,
+              foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
+              foundWillReceivePropsName !== null
+                ? `\n  ${foundWillReceivePropsName}`
+                : '',
+              foundWillUpdateName !== null ? `\n  ${foundWillUpdateName}` : '',
+            );
+            didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
+          }
         }
       }
     }
@@ -552,28 +607,6 @@ export default function(
     const {type} = workInProgress;
 
     if (typeof type.getDerivedStateFromProps === 'function') {
-      if (__DEV__) {
-        // Don't warn about react-lifecycles-compat polyfilled components
-        if (
-          (typeof instance.componentWillReceiveProps === 'function' &&
-            instance.componentWillReceiveProps.__suppressDeprecationWarning !==
-              true) ||
-          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
-        ) {
-          const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutWillReceivePropsAndDerivedState[componentName]) {
-            warning(
-              false,
-              '%s: Defines both componentWillReceiveProps() and static ' +
-                'getDerivedStateFromProps() methods. We recommend using ' +
-                'only getDerivedStateFromProps().',
-              componentName,
-            );
-            didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
-          }
-        }
-      }
-
       if (
         debugRenderPhaseSideEffects ||
         (debugRenderPhaseSideEffectsForStrictMode &&

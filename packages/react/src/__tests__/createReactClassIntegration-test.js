@@ -509,7 +509,15 @@ describe('create-react-class-integration', () => {
 
     expect(() => {
       ReactDOM.render(<Component />, document.createElement('div'));
-    }).toWarnDev('Defines both componentWillReceiveProps');
+    }).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+        'Component uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  componentWillReceiveProps\n' +
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
   });
 
