@@ -51,9 +51,6 @@ export function createSubscription<Property, Value>(
   };
   type State = {
     source: Property,
-    unsubscribeContainer: {
-      unsubscribe: Unsubscribe | null,
-    },
     value: Value | void,
   };
 
@@ -61,22 +58,18 @@ export function createSubscription<Property, Value>(
   class Subscription extends React.Component<Props, State> {
     state: State = {
       source: this.props.source,
-      unsubscribeContainer: {
-        unsubscribe: null,
-      },
       value:
         this.props.source != null
           ? getCurrentValue(this.props.source)
           : undefined,
     };
 
+    _unsubscribe: Unsubscribe | null = null;
+
     static getDerivedStateFromProps(nextProps, prevState) {
       if (nextProps.source !== prevState.source) {
         return {
           source: nextProps.source,
-          unsubscribeContainer: {
-            unsubscribe: null,
-          },
           value:
             nextProps.source != null
               ? getCurrentValue(nextProps.source)
@@ -125,18 +118,16 @@ export function createSubscription<Property, Value>(
           });
         };
 
-        // Store subscription for later (in case it's needed to unsubscribe).
-        // This is safe to do via mutation since:
-        // 1) It does not impact render.
-        // 2) This method will only be called during the "commit" phase.
+        // Store the unsubscribe method for later (in case the subscribable prop changes).
         const unsubscribe = subscribe(source, callback);
-
         invariant(
           typeof unsubscribe === 'function',
           'A subscription must return an unsubscribe function.',
         );
 
-        this.state.unsubscribeContainer.unsubscribe = unsubscribe;
+        // It's safe to store unsubscribe on the instance because
+        // We only read or write that property during the "commit" phase.
+        this._unsubscribe = unsubscribe;
 
         // External values could change between render and mount,
         // In some cases it may be important to handle this case.
@@ -148,10 +139,10 @@ export function createSubscription<Property, Value>(
     }
 
     unsubscribe(state: State) {
-      const {unsubscribe} = state.unsubscribeContainer;
-      if (typeof unsubscribe === 'function') {
-        unsubscribe();
+      if (typeof this._unsubscribe === 'function') {
+        this._unsubscribe();
       }
+      this._unsubscribe = null;
     }
   }
 

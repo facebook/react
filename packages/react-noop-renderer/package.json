@@ -11,7 +11,7 @@
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.0",
     "regenerator-runtime": "^0.11.0",
-    "react-reconciler": "* || 0.8.0-alpha.1"
+    "react-reconciler": "* || 0.8.0-alpha.2"
   },
   "peerDependencies": {
     "react": "^16.0.0"

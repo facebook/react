@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import {isForwardRef} from 'react-is';
 import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
@@ -77,7 +78,7 @@ class ReactShallowRenderer {
       element.type,
     );
     invariant(
-      typeof element.type === 'function',
+      isForwardRef(element) || typeof element.type === 'function',
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, but the provided element type was `%s`.',
       Array.isArray(element.type)
@@ -96,7 +97,9 @@ class ReactShallowRenderer {
     if (this._instance) {
       this._updateClassComponent(element, this._context);
     } else {
-      if (shouldConstruct(element.type)) {
+      if (isForwardRef(element)) {
+        this._rendered = element.type.render(element.props, element.ref);
+      } else if (shouldConstruct(element.type)) {
         this._instance = new element.type(
           element.props,
           this._context,

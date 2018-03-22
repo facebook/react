@@ -29,6 +29,7 @@ import {
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {Placement, Update, ContentReset} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 import {commitCallbacks} from './ReactFiberUpdateQueue';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
@@ -147,7 +148,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
         }
       } else {
-        ref.value = null;
+        ref.current = null;
       }
     }
   }
@@ -269,8 +270,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           for (let i = 0; i < capturedErrors.length; i++) {
             const errorInfo = capturedErrors[i];
             const error = errorInfo.value;
+            const stack = errorInfo.stack;
             logError(finishedWork, errorInfo);
-            instance.componentDidCatch(error);
+            instance.componentDidCatch(error, {
+              componentStack: stack !== null ? stack : '',
+            });
           }
         }
         break;
@@ -315,7 +319,19 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (typeof ref === 'function') {
         ref(instanceToUse);
       } else {
-        ref.value = instanceToUse;
+        if (__DEV__) {
+          if (!ref.hasOwnProperty('current')) {
+            warning(
+              false,
+              'Unexpected ref object provided for %s. ' +
+                'Use either a ref-setter function or React.createRef().%s',
+              getComponentName(finishedWork),
+              getStackAddendumByWorkInProgressFiber(finishedWork),
+            );
+          }
+        }
+
+        ref.current = instanceToUse;
       }
     }
   }
@@ -326,7 +342,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (typeof currentRef === 'function') {
         currentRef(null);
       } else {
-        currentRef.value = null;
+        currentRef.current = null;
       }
     }
   }
