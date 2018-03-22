@@ -8,33 +8,12 @@
 
 import React from 'react';
 import {isForwardRef} from 'react-is';
-import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 import checkPropTypes from 'prop-types/checkPropTypes';
-import warning from 'fbjs/lib/warning';
-
-let didWarnAboutLegacyWillMount;
-let didWarnAboutLegacyWillReceiveProps;
-let didWarnAboutLegacyWillUpdate;
-let didWarnAboutUndefinedDerivedState;
-let didWarnAboutUninitializedState;
-let didWarnAboutLegacyLifecyclesAndDerivedState;
-
-if (__DEV__) {
-  if (warnAboutDeprecatedLifecycles) {
-    didWarnAboutLegacyWillMount = {};
-    didWarnAboutLegacyWillReceiveProps = {};
-    didWarnAboutLegacyWillUpdate = {};
-  }
-  didWarnAboutUndefinedDerivedState = {};
-  didWarnAboutUninitializedState = {};
-  didWarnAboutLegacyLifecyclesAndDerivedState = {};
-}
 
 class ReactShallowRenderer {
   static createRenderer = function() {
@@ -106,28 +85,6 @@ class ReactShallowRenderer {
           this._updater,
         );
 
-        if (__DEV__) {
-          if (typeof element.type.getDerivedStateFromProps === 'function') {
-            if (
-              this._instance.state === null ||
-              this._instance.state === undefined
-            ) {
-              const componentName =
-                getName(element.type, this._instance) || 'Unknown';
-              if (!didWarnAboutUninitializedState[componentName]) {
-                warning(
-                  false,
-                  '%s: Did not properly initialize state during construction. ' +
-                    'Expected state to be an object, but it was %s.',
-                  componentName,
-                  this._instance.state === null ? 'null' : 'undefined',
-                );
-                didWarnAboutUninitializedState[componentName] = true;
-              }
-            }
-          }
-        }
-
         this._updateStateFromStaticLifecycle(element.props);
 
         if (element.type.hasOwnProperty('contextTypes')) {
@@ -183,31 +140,6 @@ class ReactShallowRenderer {
       const beforeState = this._newState;
 
       if (typeof this._instance.componentWillMount === 'function') {
-        if (__DEV__) {
-          // Don't warn about react-lifecycles-compat polyfilled components
-          if (
-            warnAboutDeprecatedLifecycles &&
-            this._instance.componentWillMount.__suppressDeprecationWarning !==
-              true
-          ) {
-            const componentName = getName(element.type, this._instance);
-            if (!didWarnAboutLegacyWillMount[componentName]) {
-              lowPriorityWarning(
-                false,
-                '%s: componentWillMount() is deprecated and will be ' +
-                  'removed in the next major version. Read about the motivations ' +
-                  'behind this change: ' +
-                  'https://fb.me/react-async-component-lifecycle-hooks' +
-                  '\n\n' +
-                  'As a temporary workaround, you can rename to ' +
-                  'UNSAFE_componentWillMount instead.',
-                componentName,
-              );
-              didWarnAboutLegacyWillMount[componentName] = true;
-            }
-          }
-        }
-
         // In order to support react-lifecycles-compat polyfilled components,
         // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         if (typeof element.type.getDerivedStateFromProps !== 'function') {
@@ -242,26 +174,6 @@ class ReactShallowRenderer {
 
     if (oldProps !== props) {
       if (typeof this._instance.componentWillReceiveProps === 'function') {
-        if (__DEV__) {
-          if (warnAboutDeprecatedLifecycles) {
-            const componentName = getName(element.type, this._instance);
-            if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
-              lowPriorityWarning(
-                false,
-                '%s: componentWillReceiveProps() is deprecated and ' +
-                  'will be removed in the next major version. Use ' +
-                  'static getDerivedStateFromProps() instead. Read about the ' +
-                  'motivations behind this change: ' +
-                  'https://fb.me/react-async-component-lifecycle-hooks' +
-                  '\n\n' +
-                  'As a temporary workaround, you can rename to ' +
-                  'UNSAFE_componentWillReceiveProps instead.',
-                componentName,
-              );
-              didWarnAboutLegacyWillReceiveProps[componentName] = true;
-            }
-          }
-        }
         // In order to support react-lifecycles-compat polyfilled components,
         // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         if (typeof element.type.getDerivedStateFromProps !== 'function') {
@@ -300,26 +212,6 @@ class ReactShallowRenderer {
 
     if (shouldUpdate) {
       if (typeof this._instance.componentWillUpdate === 'function') {
-        if (__DEV__) {
-          if (warnAboutDeprecatedLifecycles) {
-            const componentName = getName(element.type, this._instance);
-            if (!didWarnAboutLegacyWillUpdate[componentName]) {
-              lowPriorityWarning(
-                false,
-                '%s: componentWillUpdate() is deprecated and will be ' +
-                  'removed in the next major version. Read about the motivations ' +
-                  'behind this change: ' +
-                  'https://fb.me/react-async-component-lifecycle-hooks' +
-                  '\n\n' +
-                  'As a temporary workaround, you can rename to ' +
-                  'UNSAFE_componentWillUpdate instead.',
-                componentName,
-              );
-              didWarnAboutLegacyWillUpdate[componentName] = true;
-            }
-          }
-        }
-
         // In order to support react-lifecycles-compat polyfilled components,
         // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
         if (typeof type.getDerivedStateFromProps !== 'function') {
@@ -351,86 +243,11 @@ class ReactShallowRenderer {
     const {type} = this._element;
 
     if (typeof type.getDerivedStateFromProps === 'function') {
-      if (__DEV__) {
-        const instance = this._instance;
-
-        // If getDerivedStateFromProps() is defined, "unsafe" lifecycles won't be called.
-        // Warn about these lifecycles if they are present.
-        // Don't warn about react-lifecycles-compat polyfilled methods though.
-        let foundWillMountName = null;
-        let foundWillReceivePropsName = null;
-        let foundWillUpdateName = null;
-        if (
-          typeof instance.componentWillMount === 'function' &&
-          instance.componentWillMount.__suppressDeprecationWarning !== true
-        ) {
-          foundWillMountName = 'componentWillMount';
-        } else if (typeof instance.UNSAFE_componentWillMount === 'function') {
-          foundWillMountName = 'UNSAFE_componentWillMount';
-        }
-        if (
-          typeof instance.componentWillReceiveProps === 'function' &&
-          instance.componentWillReceiveProps.__suppressDeprecationWarning !==
-            true
-        ) {
-          foundWillReceivePropsName = 'componentWillReceiveProps';
-        } else if (
-          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
-        ) {
-          foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
-        }
-        if (typeof instance.componentWillUpdate === 'function') {
-          foundWillUpdateName = 'componentWillUpdate';
-        } else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
-          foundWillUpdateName = 'UNSAFE_componentWillUpdate';
-        }
-        if (
-          foundWillMountName !== null ||
-          foundWillReceivePropsName !== null ||
-          foundWillUpdateName !== null
-        ) {
-          const componentName = getName(type, instance) || 'Component';
-          if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
-            warning(
-              false,
-              'Unsafe legacy lifecycles will not be called for components using ' +
-                'the new getDerivedStateFromProps() API.\n\n' +
-                '%s uses getDerivedStateFromProps() but also contains the following legacy lifecycles:' +
-                '%s%s%s\n\n' +
-                'The above lifecycles should be removed. Learn more about this warning here:\n' +
-                'https://fb.me/react-async-component-lifecycle-hooks',
-              componentName,
-              foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
-              foundWillReceivePropsName !== null
-                ? `\n  ${foundWillReceivePropsName}`
-                : '',
-              foundWillUpdateName !== null ? `\n  ${foundWillUpdateName}` : '',
-            );
-            didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
-          }
-        }
-      }
-
       const partialState = type.getDerivedStateFromProps.call(
         null,
         props,
         this._instance.state,
       );
-
-      if (__DEV__) {
-        if (partialState === undefined) {
-          const componentName = getName(type, this._instance);
-          if (!didWarnAboutUndefinedDerivedState[componentName]) {
-            warning(
-              false,
-              '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
-                'You have returned undefined.',
-              componentName,
-            );
-            didWarnAboutUndefinedDerivedState[componentName] = componentName;
-          }
-        }
-      }
 
       if (partialState != null) {
         const oldState = this._newState || this._instance.state;
