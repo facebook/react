@@ -213,7 +213,7 @@ export default function(
           shouldUpdate !== undefined,
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
             'boolean value. Make sure to return true or false.',
-          getComponentName(workInProgress) || 'Unknown',
+          getComponentName(workInProgress) || 'Component',
         );
       }
 
@@ -233,7 +233,7 @@ export default function(
     const instance = workInProgress.stateNode;
     const type = workInProgress.type;
     if (__DEV__) {
-      const name = getComponentName(workInProgress);
+      const name = getComponentName(workInProgress) || 'Component';
       const renderPresent = instance.render;
 
       if (!renderPresent) {
@@ -364,23 +364,18 @@ export default function(
         name,
         name,
       );
-    }
-
-    const state = instance.state;
-    if (state && (typeof state !== 'object' || isArray(state))) {
-      warning(
-        false,
-        '%s.state: must be set to an object or null',
-        getComponentName(workInProgress),
-      );
-    }
-    if (typeof instance.getChildContext === 'function') {
-      warning(
-        typeof type.childContextTypes === 'object',
-        '%s.getChildContext(): childContextTypes must be defined in order to ' +
-          'use getChildContext().',
-        getComponentName(workInProgress),
-      );
+      const state = instance.state;
+      if (state && (typeof state !== 'object' || isArray(state))) {
+        warning(false, '%s.state: must be set to an object or null', name);
+      }
+      if (typeof instance.getChildContext === 'function') {
+        warning(
+          typeof type.childContextTypes === 'object',
+          '%s.getChildContext(): childContextTypes must be defined in order to ' +
+            'use getChildContext().',
+          name,
+        );
+      }
     }
   }
 
@@ -426,7 +421,7 @@ export default function(
     if (__DEV__) {
       if (typeof ctor.getDerivedStateFromProps === 'function') {
         if (state === null) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
+          const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutUninitializedState[componentName]) {
             warning(
               false,
@@ -484,6 +479,7 @@ export default function(
       workInProgress,
       instance,
       props,
+      state,
     );
 
     if (partialState !== null && partialState !== undefined) {
@@ -526,7 +522,7 @@ export default function(
           '%s.componentWillMount(): Assigning directly to this.state is ' +
             "deprecated (except inside a component's " +
             'constructor). Use setState instead.',
-          getComponentName(workInProgress),
+          getComponentName(workInProgress) || 'Component',
         );
       }
       updater.enqueueReplaceState(instance, instance.state, null);
@@ -570,7 +566,8 @@ export default function(
   function callGetDerivedStateFromProps(
     workInProgress: Fiber,
     instance: any,
-    props: any,
+    nextProps: any,
+    prevState: any,
   ) {
     const {type} = workInProgress;
 
@@ -581,22 +578,18 @@ export default function(
           workInProgress.mode & StrictMode)
       ) {
         // Invoke method an extra time to help detect side-effects.
-        type.getDerivedStateFromProps.call(
-          null,
-          props,
-          workInProgress.memoizedState,
-        );
+        type.getDerivedStateFromProps.call(null, nextProps, prevState);
       }
 
       const partialState = type.getDerivedStateFromProps.call(
         null,
-        props,
-        workInProgress.memoizedState,
+        nextProps,
+        prevState,
       );
 
       if (__DEV__) {
         if (partialState === undefined) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
+          const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutUndefinedDerivedState[componentName]) {
             warning(
               false,
@@ -712,15 +705,6 @@ export default function(
       }
     }
 
-    let derivedStateFromProps;
-    if (oldProps !== newProps) {
-      derivedStateFromProps = callGetDerivedStateFromProps(
-        workInProgress,
-        instance,
-        newProps,
-      );
-    }
-
     // Compute the next state using the memoized state and the update queue.
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
@@ -755,6 +739,18 @@ export default function(
       }
     } else {
       newState = oldState;
+    }
+
+    let derivedStateFromProps;
+    if (oldProps !== newProps) {
+      // The prevState parameter should be the partially updated state.
+      // Otherwise, spreading state in return values could override updates.
+      derivedStateFromProps = callGetDerivedStateFromProps(
+        workInProgress,
+        instance,
+        newProps,
+        newState,
+      );
     }
 
     if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
@@ -881,15 +877,6 @@ export default function(
       }
     }
 
-    let derivedStateFromProps;
-    if (oldProps !== newProps) {
-      derivedStateFromProps = callGetDerivedStateFromProps(
-        workInProgress,
-        instance,
-        newProps,
-      );
-    }
-
     // Compute the next state using the memoized state and the update queue.
     const oldState = workInProgress.memoizedState;
     // TODO: Previous state can be null.
@@ -924,6 +911,18 @@ export default function(
       }
     } else {
       newState = oldState;
+    }
+
+    let derivedStateFromProps;
+    if (oldProps !== newProps) {
+      // The prevState parameter should be the partially updated state.
+      // Otherwise, spreading state in return values could override updates.
+      derivedStateFromProps = callGetDerivedStateFromProps(
+        workInProgress,
+        instance,
+        newProps,
+        newState,
+      );
     }
 
     if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
