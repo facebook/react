@@ -480,7 +480,9 @@ describe('create-react-class-integration', () => {
         'Unknown uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
         '  componentWillReceiveProps\n' +
-        '  componentWillUpdate',
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
   });

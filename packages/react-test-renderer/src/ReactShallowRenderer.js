@@ -379,7 +379,9 @@ class ReactShallowRenderer {
               'Unsafe legacy lifecycles will not be called for components using ' +
                 'the new getDerivedStateFromProps() API.\n\n' +
                 '%s uses getDerivedStateFromProps() but also contains the following legacy lifecycles:' +
-                '%s%s%s',
+                '%s%s%s\n\n' +
+                'The above lifecycles should be removed. Learn more about this warning here:\n' +
+                'https://fb.me/react-async-component-lifecycle-hooks',
               componentName,
               definesWillMount ? '\n  componentWillMount' : '',
               definesWillReceiveProps ? '\n  componentWillReceiveProps' : '',

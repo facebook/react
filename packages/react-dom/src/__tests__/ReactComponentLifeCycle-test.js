@@ -720,7 +720,9 @@ describe('ReactComponentLifeCycle', () => {
         'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
         '  componentWillReceiveProps\n' +
-        '  componentWillUpdate',
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
 
     class WillMount extends React.Component {
@@ -737,7 +739,9 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => ReactDOM.render(<WillMount />, container)).toWarnDev(
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
         'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  componentWillMount',
+        '  componentWillMount\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
 
     class WillMountAndUpdate extends React.Component {
@@ -756,7 +760,9 @@ describe('ReactComponentLifeCycle', () => {
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
         'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
-        '  componentWillUpdate',
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
 
     class WillReceiveProps extends React.Component {
@@ -773,7 +779,9 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
         'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  componentWillReceiveProps',
+        '  componentWillReceiveProps\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
   });
 

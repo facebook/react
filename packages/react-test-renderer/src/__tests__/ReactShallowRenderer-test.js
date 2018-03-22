@@ -152,7 +152,9 @@ describe('ReactShallowRenderer', () => {
         'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
         '  componentWillReceiveProps\n' +
-        '  componentWillUpdate',
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
 
     class WillMount extends React.Component {
@@ -170,7 +172,9 @@ describe('ReactShallowRenderer', () => {
     expect(() => shallowRenderer.render(<WillMount />)).toWarnDev(
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
         'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  componentWillMount',
+        '  componentWillMount\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
 
     class WillMountAndUpdate extends React.Component {
@@ -190,7 +194,9 @@ describe('ReactShallowRenderer', () => {
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
         'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
-        '  componentWillUpdate',
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
 
     class WillReceiveProps extends React.Component {
@@ -208,7 +214,9 @@ describe('ReactShallowRenderer', () => {
     expect(() => shallowRenderer.render(<WillReceiveProps />)).toWarnDev(
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
         'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  componentWillReceiveProps',
+        '  componentWillReceiveProps\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
     );
   });
 
