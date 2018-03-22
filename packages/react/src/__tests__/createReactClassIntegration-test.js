@@ -433,6 +433,40 @@ describe('create-react-class-integration', () => {
     expect(instance.state.foo).toBe('bar');
   });
 
+  it('warns if getDerivedStateFromProps is not static', () => {
+    const Foo = createReactClass({
+      getDerivedStateFromProps() {
+        return {};
+      },
+      render() {
+        return <div />;
+      },
+    });
+    expect(() =>
+      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
+    ).toWarnDev(
+      'Component: getDerivedStateFromProps() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
+  it('warns if getDerivedStateFromCatch is not static', () => {
+    const Foo = createReactClass({
+      getDerivedStateFromCatch() {
+        return {};
+      },
+      render() {
+        return <div />;
+      },
+    });
+    expect(() =>
+      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
+    ).toWarnDev(
+      'Component: getDerivedStateFromCatch() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
   it('should warn if state is not properly initialized before getDerivedStateFromProps', () => {
     const Component = createReactClass({
       statics: {

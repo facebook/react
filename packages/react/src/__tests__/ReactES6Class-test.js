@@ -128,6 +128,36 @@ describe('ReactES6Class', () => {
     test(<Foo foo="foo" />, 'DIV', 'foo bar');
   });
 
+  it('warns if getDerivedStateFromProps is not static', () => {
+    class Foo extends React.Component {
+      getDerivedStateFromProps() {
+        return {};
+      }
+      render() {
+        return <div />;
+      }
+    }
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+      'Foo: getDerivedStateFromProps() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
+  it('warns if getDerivedStateFromCatch is not static', () => {
+    class Foo extends React.Component {
+      getDerivedStateFromCatch() {
+        return {};
+      }
+      render() {
+        return <div />;
+      }
+    }
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+      'Foo: getDerivedStateFromCatch() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
   it('warns if state not initialized before static getDerivedStateFromProps', () => {
     class Foo extends React.Component {
       static getDerivedStateFromProps(nextProps, prevState) {

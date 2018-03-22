@@ -364,6 +364,22 @@ export default function(
         name,
         name,
       );
+      const noInstanceGetDerivedStateFromProps =
+        typeof instance.getDerivedStateFromProps !== 'function';
+      warning(
+        noInstanceGetDerivedStateFromProps,
+        '%s: getDerivedStateFromProps() is defined as an instance method ' +
+          'and will be ignored. Instead, declare it as a static method.',
+        name,
+      );
+      const noInstanceGetDerivedStateFromCatch =
+        typeof instance.getDerivedStateFromCatch !== 'function';
+      warning(
+        noInstanceGetDerivedStateFromCatch,
+        '%s: getDerivedStateFromCatch() is defined as an instance method ' +
+          'and will be ignored. Instead, declare it as a static method.',
+        name,
+      );
       const state = instance.state;
       if (state && (typeof state !== 'object' || isArray(state))) {
         warning(false, '%s.state: must be set to an object or null', name);
