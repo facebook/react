@@ -213,7 +213,7 @@ export default function(
           shouldUpdate !== undefined,
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
             'boolean value. Make sure to return true or false.',
-          getComponentName(workInProgress) || 'Unknown',
+          getComponentName(workInProgress) || 'Component',
         );
       }
 
@@ -364,23 +364,18 @@ export default function(
         name,
         name,
       );
-    }
-
-    const state = instance.state;
-    if (state && (typeof state !== 'object' || isArray(state))) {
-      warning(
-        false,
-        '%s.state: must be set to an object or null',
-        getComponentName(workInProgress),
-      );
-    }
-    if (typeof instance.getChildContext === 'function') {
-      warning(
-        typeof type.childContextTypes === 'object',
-        '%s.getChildContext(): childContextTypes must be defined in order to ' +
-          'use getChildContext().',
-        getComponentName(workInProgress),
-      );
+      const state = instance.state;
+      if (state && (typeof state !== 'object' || isArray(state))) {
+        warning(false, '%s.state: must be set to an object or null', name);
+      }
+      if (typeof instance.getChildContext === 'function') {
+        warning(
+          typeof type.childContextTypes === 'object',
+          '%s.getChildContext(): childContextTypes must be defined in order to ' +
+            'use getChildContext().',
+          name,
+        );
+      }
     }
   }
 
@@ -491,7 +486,7 @@ export default function(
           '%s.componentWillMount(): Assigning directly to this.state is ' +
             "deprecated (except inside a component's " +
             'constructor). Use setState instead.',
-          getComponentName(workInProgress),
+          getComponentName(workInProgress) || 'Component',
         );
       }
       updater.enqueueReplaceState(instance, instance.state, null);
@@ -549,7 +544,7 @@ export default function(
               true) ||
           typeof instance.UNSAFE_componentWillReceiveProps === 'function'
         ) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
+          const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutWillReceivePropsAndDerivedState[componentName]) {
             warning(
               false,
