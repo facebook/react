@@ -510,9 +510,10 @@ export default function(
           foundWillUpdateName !== null
         ) {
           const componentName = getComponentName(workInProgress) || 'Component';
-          const newApiName = ctor.getDerivedStateFromProps
-            ? 'getDerivedStateFromProps()'
-            : 'getSnapshotBeforeUpdate()';
+          const newApiName =
+            typeof ctor.getDerivedStateFromProps === 'function'
+              ? 'getDerivedStateFromProps()'
+              : 'getSnapshotBeforeUpdate()';
           if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
             warning(
               false,
