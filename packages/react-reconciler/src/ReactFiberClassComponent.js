@@ -437,37 +437,37 @@ export default function(
         // If getDerivedStateFromProps() is defined, "unsafe" lifecycles won't be called.
         // Warn about these lifecycles if they are present.
         // Don't warn about react-lifecycles-compat polyfilled methods though.
-        let willMount = null;
-        let willReceiveProps = null;
-        let willUpdate = null;
+        let foundWillMountName = null;
+        let foundWillReceivePropsName = null;
+        let foundWillUpdateName = null;
         if (
           typeof instance.componentWillMount === 'function' &&
           instance.componentWillMount.__suppressDeprecationWarning !== true
         ) {
-          willMount = 'componentWillMount';
+          foundWillMountName = 'componentWillMount';
         } else if (typeof instance.UNSAFE_componentWillMount === 'function') {
-          willMount = 'UNSAFE_componentWillMount';
+          foundWillMountName = 'UNSAFE_componentWillMount';
         }
         if (
           typeof instance.componentWillReceiveProps === 'function' &&
           instance.componentWillReceiveProps.__suppressDeprecationWarning !==
             true
         ) {
-          willReceiveProps = 'componentWillReceiveProps';
+          foundWillReceivePropsName = 'componentWillReceiveProps';
         } else if (
           typeof instance.UNSAFE_componentWillReceiveProps === 'function'
         ) {
-          willReceiveProps = 'UNSAFE_componentWillReceiveProps';
+          foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
         }
         if (typeof instance.componentWillUpdate === 'function') {
-          willUpdate = 'componentWillUpdate';
+          foundWillUpdateName = 'componentWillUpdate';
         } else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
-          willUpdate = 'UNSAFE_componentWillUpdate';
+          foundWillUpdateName = 'UNSAFE_componentWillUpdate';
         }
         if (
-          willMount !== null ||
-          willReceiveProps !== null ||
-          willUpdate !== null
+          foundWillMountName !== null ||
+          foundWillReceivePropsName !== null ||
+          foundWillUpdateName !== null
         ) {
           const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
@@ -480,9 +480,11 @@ export default function(
                 'The above lifecycles should be removed. Learn more about this warning here:\n' +
                 'https://fb.me/react-async-component-lifecycle-hooks',
               componentName,
-              willMount !== null ? `\n  ${willMount}` : '',
-              willReceiveProps !== null ? `\n  ${willReceiveProps}` : '',
-              willUpdate !== null ? `\n  ${willUpdate}` : '',
+              foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
+              foundWillReceivePropsName !== null
+                ? `\n  ${foundWillReceivePropsName}`
+                : '',
+              foundWillUpdateName !== null ? `\n  ${foundWillUpdateName}` : '',
             );
             didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
           }
