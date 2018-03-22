@@ -233,7 +233,7 @@ export default function(
     const instance = workInProgress.stateNode;
     const type = workInProgress.type;
     if (__DEV__) {
-      const name = getComponentName(workInProgress);
+      const name = getComponentName(workInProgress) || 'Component';
       const renderPresent = instance.render;
 
       if (!renderPresent) {
@@ -423,7 +423,7 @@ export default function(
         typeof ctor.getDerivedStateFromProps === 'function' &&
         state === null
       ) {
-        const componentName = getComponentName(workInProgress) || 'Unknown';
+        const componentName = getComponentName(workInProgress) || 'Component';
         if (!didWarnAboutUninitializedState[componentName]) {
           warning(
             false,
@@ -575,7 +575,7 @@ export default function(
 
       if (__DEV__) {
         if (partialState === undefined) {
-          const componentName = getComponentName(workInProgress) || 'Unknown';
+          const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutUndefinedDerivedState[componentName]) {
             warning(
               false,
