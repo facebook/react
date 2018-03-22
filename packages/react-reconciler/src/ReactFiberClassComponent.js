@@ -437,21 +437,38 @@ export default function(
         // If getDerivedStateFromProps() is defined, "unsafe" lifecycles won't be called.
         // Warn about these lifecycles if they are present.
         // Don't warn about react-lifecycles-compat polyfilled methods though.
-        const definesWillMount =
-          (typeof instance.componentWillMount === 'function' &&
-            instance.componentWillMount.__suppressDeprecationWarning !==
-              true) ||
-          typeof instance.UNSAFE_componentWillMount === 'function';
-        const definesWillReceiveProps =
-          (typeof instance.componentWillReceiveProps === 'function' &&
-            instance.componentWillReceiveProps.__suppressDeprecationWarning !==
-              true) ||
-          typeof instance.UNSAFE_componentWillReceiveProps === 'function';
-        const definesWillUpdate =
-          typeof instance.componentWillUpdate === 'function' ||
-          typeof instance.UNSAFE_componentWillUpdate === 'function';
-
-        if (definesWillMount || definesWillReceiveProps || definesWillUpdate) {
+        let willMount = null;
+        let willReceiveProps = null;
+        let willUpdate = null;
+        if (
+          typeof instance.componentWillMount === 'function' &&
+          instance.componentWillMount.__suppressDeprecationWarning !== true
+        ) {
+          willMount = 'componentWillMount';
+        } else if (typeof instance.UNSAFE_componentWillMount === 'function') {
+          willMount = 'UNSAFE_componentWillMount';
+        }
+        if (
+          typeof instance.componentWillReceiveProps === 'function' &&
+          instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+            true
+        ) {
+          willReceiveProps = 'componentWillReceiveProps';
+        } else if (
+          typeof instance.UNSAFE_componentWillReceiveProps === 'function'
+        ) {
+          willReceiveProps = 'UNSAFE_componentWillReceiveProps';
+        }
+        if (typeof instance.componentWillUpdate === 'function') {
+          willUpdate = 'componentWillUpdate';
+        } else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
+          willUpdate = 'UNSAFE_componentWillUpdate';
+        }
+        if (
+          willMount !== null ||
+          willReceiveProps !== null ||
+          willUpdate !== null
+        ) {
           const componentName = getComponentName(workInProgress) || 'Component';
           if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
             warning(
@@ -463,9 +480,9 @@ export default function(
                 'The above lifecycles should be removed. Learn more about this warning here:\n' +
                 'https://fb.me/react-async-component-lifecycle-hooks',
               componentName,
-              definesWillMount ? '\n  componentWillMount' : '',
-              definesWillReceiveProps ? '\n  componentWillReceiveProps' : '',
-              definesWillUpdate ? '\n  componentWillUpdate' : '',
+              willMount !== null ? `\n  ${willMount}` : '',
+              willReceiveProps !== null ? `\n  ${willReceiveProps}` : '',
+              willUpdate !== null ? `\n  ${willUpdate}` : '',
             );
             didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
           }

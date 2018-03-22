@@ -139,7 +139,7 @@ describe('ReactShallowRenderer', () => {
         return null;
       }
       componentWillMount() {}
-      componentWillReceiveProps() {}
+      UNSAFE_componentWillReceiveProps() {}
       componentWillUpdate() {}
       render() {
         return null;
@@ -151,7 +151,7 @@ describe('ReactShallowRenderer', () => {
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
         'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
-        '  componentWillReceiveProps\n' +
+        '  UNSAFE_componentWillReceiveProps\n' +
         '  componentWillUpdate\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
@@ -162,7 +162,7 @@ describe('ReactShallowRenderer', () => {
       static getDerivedStateFromProps() {
         return null;
       }
-      componentWillMount() {}
+      UNSAFE_componentWillMount() {}
       render() {
         return null;
       }
@@ -172,7 +172,7 @@ describe('ReactShallowRenderer', () => {
     expect(() => shallowRenderer.render(<WillMount />)).toWarnDev(
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
         'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  componentWillMount\n\n' +
+        '  UNSAFE_componentWillMount\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
     );
@@ -183,7 +183,7 @@ describe('ReactShallowRenderer', () => {
         return null;
       }
       componentWillMount() {}
-      componentWillUpdate() {}
+      UNSAFE_componentWillUpdate() {}
       render() {
         return null;
       }
@@ -194,7 +194,7 @@ describe('ReactShallowRenderer', () => {
       'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
         'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
-        '  componentWillUpdate\n\n' +
+        '  UNSAFE_componentWillUpdate\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
     );
