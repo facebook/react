@@ -53,9 +53,9 @@ function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
 
   const capturedError: CapturedError = {
     componentName: source !== null ? getComponentName(source) : null,
+    componentStack: stack !== null ? stack : '',
     error: errorInfo.value,
     errorBoundary: null,
-    componentStack: stack !== null ? stack : '',
     errorBoundaryName: null,
     errorBoundaryFound: false,
     willRetry: false,
