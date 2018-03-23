@@ -61,11 +61,11 @@ function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
     willRetry: false,
   };
 
-  if (boundary !== null) {
+  if (boundary !== null && boundary.tag === ClassComponent) {
     capturedError.errorBoundary = boundary.stateNode;
     capturedError.errorBoundaryName = getComponentName(boundary);
-    capturedError.errorBoundaryFound = capturedError.willRetry =
-      boundary.tag === ClassComponent;
+    capturedError.errorBoundaryFound = true;
+    capturedError.willRetry = true;
   }
 
   try {
