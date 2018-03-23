@@ -93,6 +93,7 @@
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-strip-banner": "^0.2.0",
     "run-sequence": "^1.1.4",
+    "semver": "^5.5.0",
     "targz": "^1.0.1",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
