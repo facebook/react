@@ -125,7 +125,7 @@ export function createCache(invalidator: () => mixed): Cache {
     const pendingRecord: PendingRecord<V> = (emptyRecord: any);
     pendingRecord.status = Pending;
     pendingRecord.suspender = suspender;
-    suspender.then(
+    return suspender.then(
       value => {
         // Resource loaded successfully.
         const resolvedRecord: ResolvedRecord<V> = (pendingRecord: any);
@@ -182,8 +182,7 @@ export function createCache(invalidator: () => mixed): Cache {
       switch (record.status) {
         case Empty:
           // Load the requested resource.
-          const suspender = miss(missArg);
-          load(record, suspender);
+          const suspender = load(record, miss(missArg));
           throw suspender;
         case Pending:
           // There's already a pending request.
