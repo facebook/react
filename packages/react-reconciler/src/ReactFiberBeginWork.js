@@ -98,16 +98,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     memoizeState,
   );
 
-  // // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
-  // function reconcileChildren(current, workInProgress, nextChildren) {
-  //   reconcileChildrenAtExpirationTime(
-  //     current,
-  //     workInProgress,
-  //     nextChildren,
-  //     workInProgress.expirationTime,
-  //   );
-  // }
-
   function reconcileChildrenAtExpirationTime(
     current,
     workInProgress,
