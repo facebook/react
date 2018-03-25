@@ -179,7 +179,6 @@ export function updateWrapper(element: Element, props: Object) {
   updateChecked(element, props);
 
   const value = getSafeValue(props.value);
-
   if (value != null) {
     if (props.type === 'number') {
       if (
@@ -187,6 +186,8 @@ export function updateWrapper(element: Element, props: Object) {
         // eslint-disable-next-line
         node.value != value
       ) {
+        node.value = '' + value;
+      } else if (value !== 0 && node.value !== '' + value) {
         node.value = '' + value;
       }
     } else if (node.value !== '' + value) {

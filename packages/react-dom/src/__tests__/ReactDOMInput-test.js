@@ -167,6 +167,49 @@ describe('ReactDOMInput', () => {
     document.body.removeChild(container);
   });
 
+  it('should handle when initial state is 0', () => {
+
+    class App extends React.Component {
+      inputRef = null;
+      constructor(props) {
+        super(props);
+        this.state = {
+          value : 0,
+        };
+      }
+
+      render() {
+        return (
+          <div>
+            <h1>Hello, {this.props.name}</h1>
+            <input type="number" value={this.state.value}
+                   ref={n =>(this.inputRef = n)}
+                   onChange={e =>this.setState({value: parseFloat(e.target.value) ? parseFloat(e.target.value) : 0})} />
+          </div>
+        );
+      }
+    }
+
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<App />, container);
+
+    document.body.appendChild(container);
+    const node = ReactDOM.findDOMNode(instance.inputRef);
+    node.value = '01';
+    ReactTestUtils.Simulate.change(node);
+
+    expect(node.getAttribute('value')).toBe('1');
+    expect(node.value).toBe('1');
+
+    //now clear the node value
+    node.value = '';
+    ReactTestUtils.Simulate.change(node);
+
+    //now value should be back to 0
+    expect(node.getAttribute('value')).toBe('0');
+    expect(node.value).toBe('0');
+  });
+
   describe('switching text inputs between numeric and string numbers', () => {
     it('does change the number 2 to "2.0" with no change handler', () => {
       let stub = <input type="text" value={2} onChange={jest.fn()} />;
