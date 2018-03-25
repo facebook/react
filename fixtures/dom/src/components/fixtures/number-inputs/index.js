@@ -27,9 +27,9 @@ function NumberInputs() {
         <NumberTestCase />
 
         <p className="footnote">
-          <b>Notes:</b> Chrome and Safari clear trailing decimals on blur. React
-          makes this concession so that the value attribute remains in sync with
-          the value property.
+          <b>Notes:</b> Modern Chrome and Safari {'<='} 6 clear trailing
+          decimals on blur. React makes this concession so that the value
+          attribute remains in sync with the value property.
         </p>
       </TestCase>
 

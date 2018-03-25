@@ -61,7 +61,7 @@ const bundles = [
   {
     label: 'dom-test-utils',
     moduleType: RENDERER_UTILS,
-    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
+    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     externals: ['react', 'react-dom'],
@@ -131,31 +131,26 @@ const bundles = [
     ],
   },
 
-  /******* React Native RT *******/
+  /******* React Native Fabric *******/
   {
-    label: 'native-rt',
+    label: 'native-fabric',
     bundleTypes: [RN_DEV, RN_PROD],
     moduleType: RENDERER,
-    entry: 'react-rt-renderer',
-    global: 'ReactRTRenderer',
+    entry: 'react-native-renderer/fabric',
+    global: 'ReactFabric',
     externals: [
       'ExceptionsManager',
       'InitializeCore',
       'Platform',
-      'BatchedBridge',
-      'RTManager',
+      'RCTEventEmitter',
+      'TextInputState',
+      'UIManager',
+      'FabricUIManager',
+      'View',
+      'deepDiffer',
+      'deepFreezeAndThrowOnMutationInDev',
+      'flattenStyle',
     ],
-  },
-
-  /******* React Native CS *******/
-  {
-    label: 'native-cs',
-    bundleTypes: [RN_DEV, RN_PROD],
-    moduleType: RENDERER,
-    entry: 'react-cs-renderer',
-    global: 'ReactCSRenderer',
-    externals: ['CSStatefulComponent'],
-    featureFlags: 'react-cs-renderer/src/ReactNativeCSFeatureFlags',
   },
 
   /******* React Test Renderer *******/
@@ -177,14 +172,27 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
+  /******* React Noop Renderer (used for tests) *******/
   {
     label: 'noop',
-    bundleTypes: [NODE_DEV],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
     externals: ['react', 'expect'],
+    // React Noop uses generators. However GCC currently
+    // breaks when we attempt to use them in the output.
+    // So we precompile them with regenerator, and include
+    // it as a runtime dependency of React Noop. In practice
+    // this isn't an issue because React Noop is only used
+    // in our tests. We wouldn't want to do this for any
+    // public package though.
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          require.resolve('babel-plugin-transform-regenerator'),
+        ]),
+      }),
   },
 
   /******* React Reconciler *******/
@@ -197,6 +205,26 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React Persistent Reconciler *******/
+  {
+    label: 'react-reconciler-persistent',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RECONCILER,
+    entry: 'react-reconciler/persistent',
+    global: 'ReactPersistentReconciler',
+    externals: ['react'],
+  },
+
+  /******* Reflection *******/
+  {
+    label: 'reconciler-reflection',
+    moduleType: RENDERER_UTILS,
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    entry: 'react-reconciler/reflection',
+    global: 'ReactFiberTreeReflection',
+    externals: [],
+  },
+
   /******* React Call Return (experimental) *******/
   {
     label: 'react-call-return',
@@ -205,6 +233,36 @@ const bundles = [
     entry: 'react-call-return',
     global: 'ReactCallReturn',
     externals: [],
+  },
+
+  /******* React Is *******/
+  {
+    label: 'react-is',
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-is',
+    global: 'ReactIs',
+    externals: [],
+  },
+
+  /******* Simple Cache Provider (experimental) *******/
+  {
+    label: 'simple-cache-provider',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'simple-cache-provider',
+    global: 'SimpleCacheProvider',
+    externals: ['react'],
+  },
+
+  /******* createComponentWithSubscriptions (experimental) *******/
+  {
+    label: 'create-subscription',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'create-subscription',
+    global: 'createSubscription',
+    externals: ['react'],
   },
 ];
 

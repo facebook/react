@@ -58,7 +58,7 @@ function setCurrentPhase(phase: LifeCyclePhase | null) {
   ReactDebugCurrentFiber.phase = phase;
 }
 
-var ReactDebugCurrentFiber = {
+const ReactDebugCurrentFiber = {
   current: (null: Fiber | null),
   phase: (null: LifeCyclePhase | null),
   resetCurrentFiber,

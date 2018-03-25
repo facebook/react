@@ -12,17 +12,13 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactNativeInjection';
 
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import * as ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
-import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import TouchHistoryMath from 'events/TouchHistoryMath';
-import * as ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
 import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import UIManager from 'UIManager';
 
-import {showDialog} from './ReactNativeFiberErrorDialog';
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeComponent from './ReactNativeComponent';
@@ -31,18 +27,15 @@ import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
 import ReactNativePropRegistry from './ReactNativePropRegistry';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import createReactNativeComponentClass from './createReactNativeComponentClass';
+import {injectFindHostInstance} from './findNodeHandle';
 import findNumericNodeHandle from './findNumericNodeHandle';
 import takeSnapshot from './takeSnapshot';
 
-ReactGenericBatching.injection.injectFiberBatchedUpdates(
-  ReactNativeFiberRenderer.batchedUpdates,
-);
+injectFindHostInstance(ReactNativeFiberRenderer.findHostInstance);
+
+ReactGenericBatching.injection.injectRenderer(ReactNativeFiberRenderer);
 
 const roots = new Map();
-
-// Intercept lifecycle errors and ensure they are shown with the correct stack
-// trace within the native redbox component.
-ReactFiberErrorLogger.injection.injectDialog(showDialog);
 
 const ReactNativeRenderer: ReactNativeType = {
   NativeComponent: ReactNativeComponent,
@@ -55,7 +48,11 @@ const ReactNativeRenderer: ReactNativeType = {
     if (!root) {
       // TODO (bvaughn): If we decide to keep the wrapper component,
       // We could create a wrapper for containerTag as well to reduce special casing.
-      root = ReactNativeFiberRenderer.createContainer(containerTag, false);
+      root = ReactNativeFiberRenderer.createContainer(
+        containerTag,
+        false,
+        false,
+      );
       roots.set(containerTag, root);
     }
     ReactNativeFiberRenderer.updateContainer(element, root, null, callback);
@@ -97,8 +94,7 @@ const ReactNativeRenderer: ReactNativeType = {
     NativeMethodsMixin,
     // Used by react-native-github/Libraries/ components
     ReactNativeBridgeEventPlugin, // requireNativeComponent
-    ReactGlobalSharedState, // Systrace
-    ReactNativeComponentTree, // InspectorUtils, ScrollResponder
+    ReactNativeComponentTree, // ScrollResponder
     ReactNativePropRegistry, // flattenStyle, Stylesheet
     TouchHistoryMath, // PanResponder
     createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART

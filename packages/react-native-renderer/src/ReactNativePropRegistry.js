@@ -7,13 +7,13 @@
  * @flow
  */
 
-var objects = {};
-var uniqueID = 1;
-var emptyObject = {};
+const objects = {};
+let uniqueID = 1;
+const emptyObject = {};
 
 class ReactNativePropRegistry {
   static register(object: Object): number {
-    var id = ++uniqueID;
+    const id = ++uniqueID;
     if (__DEV__) {
       Object.freeze(object);
     }
@@ -28,7 +28,7 @@ class ReactNativePropRegistry {
       return emptyObject;
     }
 
-    var object = objects[id];
+    const object = objects[id];
     if (!object) {
       console.warn('Invalid style with id `' + id + '`. Skipping ...');
       return emptyObject;

@@ -9,10 +9,10 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactDOMServer;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactDOMServer;
+let ReactTestUtils;
 
 describe('ReactComponent', () => {
   function normalizeCodeLocInfo(str) {
@@ -27,7 +27,7 @@ describe('ReactComponent', () => {
   });
 
   it('should throw on invalid render targets', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
     expect(function() {
       ReactDOM.render(<div />, [container]);
@@ -39,19 +39,28 @@ describe('ReactComponent', () => {
   });
 
   it('should throw when supplying a ref outside of render method', () => {
-    var instance = <div ref="badDiv" />;
+    let instance = <div ref="badDiv" />;
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
 
-  it('should warn when children are mutated during render', () => {
-    spyOn(console, 'error');
+  it('should throw (in dev) when children are mutated during render', () => {
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
     }
-    expect(() => {
+    if (__DEV__) {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <Wrapper>
+            <span key={0} />
+            <span key={1} />
+            <span key={2} />
+          </Wrapper>,
+        );
+      }).toThrowError(/Cannot assign to read only property.*/);
+    } else {
       ReactTestUtils.renderIntoDocument(
         <Wrapper>
           <span key={0} />
@@ -59,12 +68,10 @@ describe('ReactComponent', () => {
           <span key={2} />
         </Wrapper>,
       );
-    }).toThrowError(/Cannot assign to read only property.*/);
+    }
   });
 
-  it('should warn when children are mutated during update', () => {
-    spyOn(console, 'error');
-
+  it('should throw (in dev) when children are mutated during update', () => {
     class Wrapper extends React.Component {
       componentDidMount() {
         this.props.children[1] = <p key={1} />; // Mutation is illegal
@@ -76,7 +83,17 @@ describe('ReactComponent', () => {
       }
     }
 
-    expect(() => {
+    if (__DEV__) {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <Wrapper>
+            <span key={0} />
+            <span key={1} />
+            <span key={2} />
+          </Wrapper>,
+        );
+      }).toThrowError(/Cannot assign to read only property.*/);
+    } else {
       ReactTestUtils.renderIntoDocument(
         <Wrapper>
           <span key={0} />
@@ -84,12 +101,12 @@ describe('ReactComponent', () => {
           <span key={2} />
         </Wrapper>,
       );
-    }).toThrowError(/Cannot assign to read only property.*/);
+    }
   });
 
   it('should support refs on owned components', () => {
-    var innerObj = {};
-    var outerObj = {};
+    const innerObj = {};
+    const outerObj = {};
 
     class Wrapper extends React.Component {
       getObject = () => {
@@ -103,8 +120,8 @@ describe('ReactComponent', () => {
 
     class Component extends React.Component {
       render() {
-        var inner = <Wrapper object={innerObj} ref="inner" />;
-        var outer = (
+        const inner = <Wrapper object={innerObj} ref="inner" />;
+        const outer = (
           <Wrapper object={outerObj} ref="outer">
             {inner}
           </Wrapper>
@@ -145,9 +162,9 @@ describe('ReactComponent', () => {
     ReactTestUtils.renderIntoDocument(<Parent child={<span />} />);
   });
 
-  it('should support new-style refs', () => {
-    var innerObj = {};
-    var outerObj = {};
+  it('should support callback-style refs', () => {
+    const innerObj = {};
+    const outerObj = {};
 
     class Wrapper extends React.Component {
       getObject = () => {
@@ -159,14 +176,14 @@ describe('ReactComponent', () => {
       }
     }
 
-    var mounted = false;
+    let mounted = false;
 
     class Component extends React.Component {
       render() {
-        var inner = (
+        const inner = (
           <Wrapper object={innerObj} ref={c => (this.innerRef = c)} />
         );
-        var outer = (
+        const outer = (
           <Wrapper object={outerObj} ref={c => (this.outerRef = c)}>
             {inner}
           </Wrapper>
@@ -177,6 +194,49 @@ describe('ReactComponent', () => {
       componentDidMount() {
         expect(this.innerRef.getObject()).toEqual(innerObj);
         expect(this.outerRef.getObject()).toEqual(outerObj);
+        mounted = true;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+    expect(mounted).toBe(true);
+  });
+
+  it('should support object-style refs', () => {
+    const innerObj = {};
+    const outerObj = {};
+
+    class Wrapper extends React.Component {
+      getObject = () => {
+        return this.props.object;
+      };
+
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    let mounted = false;
+
+    class Component extends React.Component {
+      constructor() {
+        super();
+        this.innerRef = React.createRef();
+        this.outerRef = React.createRef();
+      }
+      render() {
+        const inner = <Wrapper object={innerObj} ref={this.innerRef} />;
+        const outer = (
+          <Wrapper object={outerObj} ref={this.outerRef}>
+            {inner}
+          </Wrapper>
+        );
+        return outer;
+      }
+
+      componentDidMount() {
+        expect(this.innerRef.current.getObject()).toEqual(innerObj);
+        expect(this.outerRef.current.getObject()).toEqual(outerObj);
         mounted = true;
       }
     }
@@ -196,7 +256,7 @@ describe('ReactComponent', () => {
       }
     }
 
-    var mounted = false;
+    let mounted = false;
 
     class Component extends React.Component {
       getInner = () => {
@@ -228,7 +288,7 @@ describe('ReactComponent', () => {
   });
 
   it('should call refs at the correct time', () => {
-    var log = [];
+    const log = [];
 
     class Inner extends React.Component {
       render() {
@@ -283,7 +343,7 @@ describe('ReactComponent', () => {
     }
 
     // mount, update, unmount
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     log.push('start mount');
     ReactDOM.render(<Outer />, el);
     log.push('start update');
@@ -324,8 +384,8 @@ describe('ReactComponent', () => {
   });
 
   it('fires the callback after a component is rendered', () => {
-    var callback = jest.fn();
-    var container = document.createElement('div');
+    const callback = jest.fn();
+    const container = document.createElement('div');
     ReactDOM.render(<div />, container, callback);
     expect(callback.mock.calls.length).toBe(1);
     ReactDOM.render(<div className="foo" />, container, callback);
@@ -335,30 +395,35 @@ describe('ReactComponent', () => {
   });
 
   it('throws usefully when rendering badly-typed elements', () => {
-    spyOn(console, 'error');
-
-    var X = undefined;
-    expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrowError(
+    const X = undefined;
+    expect(() => {
+      expect(() => ReactTestUtils.renderIntoDocument(<X />)).toWarnDev(
+        'React.createElement: type is invalid -- expected a string (for built-in components) ' +
+          'or a class/function (for composite components) but got: undefined.',
+      );
+    }).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-        'or a class/function (for composite components) but got: undefined. ' +
-        "You likely forgot to export your component from the file it's " +
-        'defined in, or you might have mixed up default and named imports.',
+        'or a class/function (for composite components) but got: undefined.' +
+        (__DEV__
+          ? " You likely forgot to export your component from the file it's " +
+            'defined in, or you might have mixed up default and named imports.'
+          : ''),
     );
 
-    var Y = null;
-    expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toThrowError(
+    const Y = null;
+    expect(() => {
+      expect(() => ReactTestUtils.renderIntoDocument(<Y />)).toWarnDev(
+        'React.createElement: type is invalid -- expected a string (for built-in components) ' +
+          'or a class/function (for composite components) but got: null.',
+      );
+    }).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: null.',
     );
-
-    // One warning for each element creation
-    expectDev(console.error.calls.count()).toBe(2);
   });
 
   it('includes owner name in the error about badly-typed elements', () => {
-    spyOn(console, 'error');
-
-    var X = undefined;
+    const X = undefined;
 
     function Indirection(props) {
       return <div>{props.children}</div>;
@@ -376,27 +441,31 @@ describe('ReactComponent', () => {
       return <Bar />;
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toThrowError(
+    expect(() => {
+      expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toWarnDev(
+        'React.createElement: type is invalid -- expected a string (for built-in components) ' +
+          'or a class/function (for composite components) but got: undefined.',
+      );
+    }).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-        'or a class/function (for composite components) but got: undefined. ' +
-        "You likely forgot to export your component from the file it's " +
-        'defined in, or you might have mixed up default and named imports.' +
-        '\n\nCheck the render method of `Bar`.',
+        'or a class/function (for composite components) but got: undefined.' +
+        (__DEV__
+          ? " You likely forgot to export your component from the file it's " +
+            'defined in, or you might have mixed up default and named imports.' +
+            '\n\nCheck the render method of `Bar`.'
+          : ''),
     );
-
-    // One warning for each element creation
-    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('throws if a plain object is used as a child', () => {
-    var children = {
+    const children = {
       x: <span />,
       y: <span />,
       z: <span />,
     };
-    var element = <div>{[children]}</div>;
-    var container = document.createElement('div');
-    var ex;
+    const element = <div>{[children]}</div>;
+    const container = document.createElement('div');
+    let ex;
     try {
       ReactDOM.render(element, container);
     } catch (e) {
@@ -404,17 +473,19 @@ describe('ReactComponent', () => {
     }
     expect(ex).toBeDefined();
     expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{x, y, z}). If you meant to render a collection of children, use ' +
-        'an array instead.' +
-        '\n    in div (at **)',
+      'Objects are not valid as a React child (found: object with keys {x, y, z}).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use ' +
+            'an array instead.' +
+            '\n    in div (at **)'
+          : ''),
     );
   });
 
   it('throws if a plain object even if it is in an owner', () => {
     class Foo extends React.Component {
       render() {
-        var children = {
+        const children = {
           a: <span />,
           b: <span />,
           c: <span />,
@@ -422,8 +493,8 @@ describe('ReactComponent', () => {
         return <div>{[children]}</div>;
       }
     }
-    var container = document.createElement('div');
-    var ex;
+    const container = document.createElement('div');
+    let ex;
     try {
       ReactDOM.render(<Foo />, container);
     } catch (e) {
@@ -431,22 +502,24 @@ describe('ReactComponent', () => {
     }
     expect(ex).toBeDefined();
     expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{a, b, c}). If you meant to render a collection of children, use ' +
-        'an array instead.\n' +
-        '    in div (at **)\n' +
-        '    in Foo (at **)',
+      'Objects are not valid as a React child (found: object with keys {a, b, c}).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use ' +
+            'an array instead.\n' +
+            '    in div (at **)\n' +
+            '    in Foo (at **)'
+          : ''),
     );
   });
 
   it('throws if a plain object is used as a child when using SSR', async () => {
-    var children = {
+    const children = {
       x: <span />,
       y: <span />,
       z: <span />,
     };
-    var element = <div>{[children]}</div>;
-    var ex;
+    const element = <div>{[children]}</div>;
+    let ex;
     try {
       ReactDOMServer.renderToString(element);
     } catch (e) {
@@ -454,17 +527,19 @@ describe('ReactComponent', () => {
     }
     expect(ex).toBeDefined();
     expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{x, y, z}). If you meant to render a collection of children, use ' +
-        'an array instead.' +
-        '\n    in div (at **)',
+      'Objects are not valid as a React child (found: object with keys {x, y, z}).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use ' +
+            'an array instead.' +
+            '\n    in div (at **)'
+          : ''),
     );
   });
 
   it('throws if a plain object even if it is in an owner when using SSR', async () => {
     class Foo extends React.Component {
       render() {
-        var children = {
+        const children = {
           a: <span />,
           b: <span />,
           c: <span />,
@@ -472,8 +547,8 @@ describe('ReactComponent', () => {
         return <div>{[children]}</div>;
       }
     }
-    var container = document.createElement('div');
-    var ex;
+    const container = document.createElement('div');
+    let ex;
     try {
       ReactDOMServer.renderToString(<Foo />, container);
     } catch (e) {
@@ -481,11 +556,13 @@ describe('ReactComponent', () => {
     }
     expect(ex).toBeDefined();
     expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{a, b, c}). If you meant to render a collection of children, use ' +
-        'an array instead.\n' +
-        '    in div (at **)\n' +
-        '    in Foo (at **)',
+      'Objects are not valid as a React child (found: object with keys {a, b, c}).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use ' +
+            'an array instead.\n' +
+            '    in div (at **)\n' +
+            '    in Foo (at **)'
+          : ''),
     );
   });
 
@@ -494,11 +571,8 @@ describe('ReactComponent', () => {
       function Foo() {
         return Foo;
       }
-      spyOn(console, 'error');
-      var container = document.createElement('div');
-      ReactDOM.render(<Foo />, container);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      const container = document.createElement('div');
+      expect(() => ReactDOM.render(<Foo />, container)).toWarnDev(
         'Warning: Functions are not valid as a React child. This may happen if ' +
           'you return a Component instead of <Component /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
@@ -512,11 +586,8 @@ describe('ReactComponent', () => {
           return Foo;
         }
       }
-      spyOn(console, 'error');
-      var container = document.createElement('div');
-      ReactDOM.render(<Foo />, container);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      const container = document.createElement('div');
+      expect(() => ReactDOM.render(<Foo />, container)).toWarnDev(
         'Warning: Functions are not valid as a React child. This may happen if ' +
           'you return a Component instead of <Component /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
@@ -532,11 +603,8 @@ describe('ReactComponent', () => {
           </div>
         );
       }
-      spyOn(console, 'error');
-      var container = document.createElement('div');
-      ReactDOM.render(<Foo />, container);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      const container = document.createElement('div');
+      expect(() => ReactDOM.render(<Foo />, container)).toWarnDev(
         'Warning: Functions are not valid as a React child. This may happen if ' +
           'you return a Component instead of <Component /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
@@ -553,15 +621,12 @@ describe('ReactComponent', () => {
       function Foo() {
         return <Bar>{() => 'Hello'}</Bar>;
       }
-      spyOn(console, 'error');
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<Foo />, container);
       expect(container.innerHTML).toBe('Hello');
-      expectDev(console.error.calls.count()).toBe(0);
     });
 
     it('deduplicates function type warnings based on component type', () => {
-      spyOn(console, 'error');
       class Foo extends React.PureComponent {
         constructor() {
           super();
@@ -580,25 +645,24 @@ describe('ReactComponent', () => {
           );
         }
       }
-      var container = document.createElement('div');
-      var component = ReactDOM.render(<Foo />, container);
-      component.setState({type: 'portobello mushrooms'});
-      expectDev(console.error.calls.count()).toBe(2);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      const container = document.createElement('div');
+      let component;
+      expect(() => {
+        component = ReactDOM.render(<Foo />, container);
+      }).toWarnDev([
         'Warning: Functions are not valid as a React child. This may happen if ' +
           'you return a Component instead of <Component /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '    in div (at **)\n' +
           '    in Foo (at **)',
-      );
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Functions are not valid as a React child. This may happen if ' +
           'you return a Component instead of <Component /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
           '    in span (at **)\n' +
           '    in div (at **)\n' +
           '    in Foo (at **)',
-      );
+      ]);
+      component.setState({type: 'portobello mushrooms'});
     });
   });
 });

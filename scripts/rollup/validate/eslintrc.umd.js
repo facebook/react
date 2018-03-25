@@ -17,6 +17,7 @@ module.exports = {
     // UMD wrapper code
     // TODO: this is too permissive.
     // Ideally we should only allow these *inside* the UMD wrapper.
+    exports: true,
     module: true,
     define: true,
     require: true,

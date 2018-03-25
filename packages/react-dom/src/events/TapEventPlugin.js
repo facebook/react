@@ -46,10 +46,10 @@ type CoordinatesType = {
  * Number of pixels that are tolerated in between a `touchStart` and `touchEnd`
  * in order to still be considered a 'tap' event.
  */
-var tapMoveThreshold = 10;
-var startCoords: CoordinatesType = {x: 0, y: 0};
+const tapMoveThreshold = 10;
+const startCoords: CoordinatesType = {x: 0, y: 0};
 
-var Axis: AxisType = {
+const Axis: AxisType = {
   x: {page: 'pageX', client: 'clientX', envScroll: 'currentPageScrollLeft'},
   y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'},
 };
@@ -58,7 +58,7 @@ function getAxisCoordOfEvent(
   axis: AxisCoordinateData,
   nativeEvent: _Touch,
 ): number {
-  var singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
+  const singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
   if (singleTouch) {
     return singleTouch[axis.page];
   }
@@ -66,26 +66,26 @@ function getAxisCoordOfEvent(
 }
 
 function getDistance(coords: CoordinatesType, nativeEvent: _Touch): number {
-  var pageX = getAxisCoordOfEvent(Axis.x, nativeEvent);
-  var pageY = getAxisCoordOfEvent(Axis.y, nativeEvent);
+  const pageX = getAxisCoordOfEvent(Axis.x, nativeEvent);
+  const pageY = getAxisCoordOfEvent(Axis.y, nativeEvent);
   return Math.pow(
     Math.pow(pageX - coords.x, 2) + Math.pow(pageY - coords.y, 2),
     0.5,
   );
 }
 
-var touchEvents = [
+const touchEvents = [
   'topTouchStart',
   'topTouchCancel',
   'topTouchEnd',
   'topTouchMove',
 ];
 
-var dependencies = ['topMouseDown', 'topMouseMove', 'topMouseUp'].concat(
+const dependencies = ['topMouseDown', 'topMouseMove', 'topMouseUp'].concat(
   touchEvents,
 );
 
-var eventTypes = {
+const eventTypes = {
   touchTap: {
     phasedRegistrationNames: {
       bubbled: 'onTouchTap',
@@ -95,11 +95,11 @@ var eventTypes = {
   },
 };
 
-var usedTouch = false;
-var usedTouchTime = 0;
-var TOUCH_DELAY = 1000;
+let usedTouch = false;
+let usedTouchTime = 0;
+const TOUCH_DELAY = 1000;
 
-var TapEventPlugin = {
+const TapEventPlugin = {
   tapMoveThreshold: tapMoveThreshold,
 
   eventTypes: eventTypes,
@@ -124,8 +124,8 @@ var TapEventPlugin = {
         return null;
       }
     }
-    var event = null;
-    var distance = getDistance(startCoords, nativeEvent);
+    let event = null;
+    const distance = getDistance(startCoords, nativeEvent);
     if (isEndish(topLevelType) && distance < tapMoveThreshold) {
       event = SyntheticUIEvent.getPooled(
         eventTypes.touchTap,

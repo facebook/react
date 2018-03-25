@@ -49,92 +49,107 @@ import getEventCharCode from './getEventCharCode';
  *   'topAbort': { sameConfig }
  * };
  */
-var eventTypes: EventTypes = {};
-var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
-[
-  'abort',
-  'animationEnd',
-  'animationIteration',
-  'animationStart',
+const interactiveEventTypeNames: Array<string> = [
   'blur',
   'cancel',
-  'canPlay',
-  'canPlayThrough',
   'click',
   'close',
   'contextMenu',
   'copy',
   'cut',
   'doubleClick',
-  'drag',
   'dragEnd',
-  'dragEnter',
-  'dragExit',
-  'dragLeave',
-  'dragOver',
   'dragStart',
   'drop',
-  'durationChange',
-  'emptied',
-  'encrypted',
-  'ended',
-  'error',
   'focus',
   'input',
   'invalid',
   'keyDown',
   'keyPress',
   'keyUp',
-  'load',
-  'loadedData',
-  'loadedMetadata',
-  'loadStart',
   'mouseDown',
-  'mouseMove',
-  'mouseOut',
-  'mouseOver',
   'mouseUp',
   'paste',
   'pause',
   'play',
-  'playing',
-  'progress',
   'rateChange',
   'reset',
-  'scroll',
   'seeked',
+  'submit',
+  'touchCancel',
+  'touchEnd',
+  'touchStart',
+  'volumeChange',
+];
+const nonInteractiveEventTypeNames: Array<string> = [
+  'abort',
+  'animationEnd',
+  'animationIteration',
+  'animationStart',
+  'canPlay',
+  'canPlayThrough',
+  'drag',
+  'dragEnter',
+  'dragExit',
+  'dragLeave',
+  'dragOver',
+  'durationChange',
+  'emptied',
+  'encrypted',
+  'ended',
+  'error',
+  'load',
+  'loadedData',
+  'loadedMetadata',
+  'loadStart',
+  'mouseMove',
+  'mouseOut',
+  'mouseOver',
+  'playing',
+  'progress',
+  'scroll',
   'seeking',
   'stalled',
-  'submit',
   'suspend',
   'timeUpdate',
   'toggle',
-  'touchCancel',
-  'touchEnd',
   'touchMove',
-  'touchStart',
   'transitionEnd',
-  'volumeChange',
   'waiting',
   'wheel',
-].forEach(event => {
-  var capitalizedEvent = event[0].toUpperCase() + event.slice(1);
-  var onEvent = 'on' + capitalizedEvent;
-  var topEvent = 'top' + capitalizedEvent;
+];
 
-  var type = {
+const eventTypes: EventTypes = {};
+const topLevelEventsToDispatchConfig: {
+  [key: TopLevelTypes]: DispatchConfig,
+} = {};
+
+function addEventTypeNameToConfig(event: string, isInteractive: boolean) {
+  const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
+  const onEvent = 'on' + capitalizedEvent;
+  const topEvent = 'top' + capitalizedEvent;
+
+  const type = {
     phasedRegistrationNames: {
       bubbled: onEvent,
       captured: onEvent + 'Capture',
     },
     dependencies: [topEvent],
+    isInteractive,
   };
   eventTypes[event] = type;
   topLevelEventsToDispatchConfig[topEvent] = type;
+}
+
+interactiveEventTypeNames.forEach(eventTypeName => {
+  addEventTypeNameToConfig(eventTypeName, true);
+});
+nonInteractiveEventTypeNames.forEach(eventTypeName => {
+  addEventTypeNameToConfig(eventTypeName, false);
 });
 
 // Only used in DEV for exhaustiveness validation.
-var knownHTMLTopLevelTypes = [
+const knownHTMLTopLevelTypes = [
   'topAbort',
   'topCancel',
   'topCanPlay',
@@ -168,8 +183,13 @@ var knownHTMLTopLevelTypes = [
   'topWaiting',
 ];
 
-var SimpleEventPlugin: PluginModule<MouseEvent> = {
+const SimpleEventPlugin: PluginModule<MouseEvent> = {
   eventTypes: eventTypes,
+
+  isInteractiveTopLevelEventType(topLevelType: TopLevelTypes): boolean {
+    const config = topLevelEventsToDispatchConfig[topLevelType];
+    return config !== undefined && config.isInteractive === true;
+  },
 
   extractEvents: function(
     topLevelType: TopLevelTypes,
@@ -177,11 +197,11 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
   ): null | ReactSyntheticEvent {
-    var dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
+    const dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {
       return null;
     }
-    var EventConstructor;
+    let EventConstructor;
     switch (topLevelType) {
       case 'topKeyPress':
         // Firefox creates a keypress event for function keys too. This removes
@@ -268,7 +288,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
         EventConstructor = SyntheticEvent;
         break;
     }
-    var event = EventConstructor.getPooled(
+    const event = EventConstructor.getPooled(
       dispatchConfig,
       targetInst,
       nativeEvent,

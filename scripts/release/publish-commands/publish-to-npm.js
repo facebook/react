@@ -8,20 +8,26 @@ const {join} = require('path');
 const semver = require('semver');
 const {execRead, execUnlessDry, logPromise} = require('../utils');
 
-const push = async ({cwd, dry, packages, version}) => {
+const push = async ({cwd, dry, packages, version, tag}) => {
   const errors = [];
   const isPrerelease = semver.prerelease(version);
-  const tag = isPrerelease ? 'next' : 'latest';
+  if (tag === undefined) {
+    // No tag was provided. Default to `latest` for stable releases and `next`
+    // for prereleases
+    tag = isPrerelease ? 'next' : 'latest';
+  } else if (tag === 'latest' && isPrerelease) {
+    throw new Error('The tag `latest` can only be used for stable versions.');
+  }
 
   const publishProject = async project => {
     try {
-      const path = join(cwd, 'build', 'packages', project);
+      const path = join(cwd, 'build', 'node_modules', project);
       await execUnlessDry(`npm publish --tag ${tag}`, {cwd: path, dry});
 
       const packagePath = join(
         cwd,
         'build',
-        'packages',
+        'node_modules',
         project,
         'package.json'
       );
@@ -50,7 +56,7 @@ const push = async ({cwd, dry, packages, version}) => {
         }
 
         // If we've just published a stable release,
-        // Update the @next tag to also point to it (so @next doens't lag behind).
+        // Update the @next tag to also point to it (so @next doesn't lag behind).
         if (!isPrerelease) {
           await execUnlessDry(
             `npm dist-tag add ${project}@${packageVersion} next`,

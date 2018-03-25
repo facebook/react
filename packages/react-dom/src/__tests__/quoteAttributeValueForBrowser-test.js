@@ -9,40 +9,67 @@
 
 'use strict';
 
-describe('quoteAttributeValueForBrowser', () => {
-  // TODO: can we express this test with only public API?
-  var quoteAttributeValueForBrowser = require('../shared/quoteAttributeValueForBrowser')
-    .default;
+let React;
+let ReactDOMServer;
 
-  it('should escape boolean to string', () => {
-    expect(quoteAttributeValueForBrowser(true)).toBe('"true"');
-    expect(quoteAttributeValueForBrowser(false)).toBe('"false"');
+describe('quoteAttributeValueForBrowser', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    React = require('react');
+    ReactDOMServer = require('react-dom/server');
   });
 
-  it('should escape object to string', () => {
-    var escaped = quoteAttributeValueForBrowser({
+  it('ampersand is escaped inside attributes', () => {
+    const response = ReactDOMServer.renderToString(<img data-attr="&" />);
+    expect(response).toMatch('<img data-attr="&amp;" data-reactroot=""/>');
+  });
+
+  it('double quote is escaped inside attributes', () => {
+    const response = ReactDOMServer.renderToString(<img data-attr={'"'} />);
+    expect(response).toMatch('<img data-attr="&quot;" data-reactroot=""/>');
+  });
+
+  it('single quote is escaped inside attributes', () => {
+    const response = ReactDOMServer.renderToString(<img data-attr="'" />);
+    expect(response).toMatch('<img data-attr="&#x27;" data-reactroot=""/>');
+  });
+
+  it('greater than entity is escaped inside attributes', () => {
+    const response = ReactDOMServer.renderToString(<img data-attr=">" />);
+    expect(response).toMatch('<img data-attr="&gt;" data-reactroot=""/>');
+  });
+
+  it('lower than entity is escaped inside attributes', () => {
+    const response = ReactDOMServer.renderToString(<img data-attr="<" />);
+    expect(response).toMatch('<img data-attr="&lt;" data-reactroot=""/>');
+  });
+
+  it('number is escaped to string inside attributes', () => {
+    const response = ReactDOMServer.renderToString(<img data-attr={42} />);
+    expect(response).toMatch('<img data-attr="42" data-reactroot=""/>');
+  });
+
+  it('object is passed to a string inside attributes', () => {
+    const sampleObject = {
       toString: function() {
         return 'ponys';
       },
-    });
+    };
 
-    expect(escaped).toBe('"ponys"');
-  });
-
-  it('should escape number to string', () => {
-    expect(quoteAttributeValueForBrowser(42)).toBe('"42"');
-  });
-
-  it('should escape string', () => {
-    var escaped = quoteAttributeValueForBrowser(
-      '<script type=\'\' src=""></script>',
+    const response = ReactDOMServer.renderToString(
+      <img data-attr={sampleObject} />,
     );
-    expect(escaped).not.toContain('<');
-    expect(escaped).not.toContain('>');
-    expect(escaped).not.toContain("'");
-    expect(escaped.substr(1, -1)).not.toContain('"');
+    expect(response).toMatch('<img data-attr="ponys" data-reactroot=""/>');
+  });
 
-    escaped = quoteAttributeValueForBrowser('&');
-    expect(escaped).toBe('"&amp;"');
+  it('script tag is escaped inside attributes', () => {
+    const response = ReactDOMServer.renderToString(
+      <img data-attr={'<script type=\'\' src=""></script>'} />,
+    );
+    expect(response).toMatch(
+      '<img data-attr="&lt;script type=&#x27;&#x27; ' +
+        'src=&quot;&quot;&gt;&lt;/script&gt;" ' +
+        'data-reactroot=""/>',
+    );
   });
 });

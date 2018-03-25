@@ -4200,13 +4200,9 @@ react-dev-utils@^0.5.2:
     sockjs-client "1.0.1"
     strip-ansi "3.0.1"
 
-"react-dom@file:../../build/packages/react-dom":
-  version "16.0.0"
-  dependencies:
-    fbjs "^0.8.16"
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.0"
+"react-dom@link:../../build/node_modules/react-dom":
+  version "0.0.0"
+  uid ""
 
 react-scripts@0.9.5:
   version "0.9.5"
@@ -4253,13 +4249,9 @@ react-scripts@0.9.5:
   optionalDependencies:
     fsevents "1.0.17"
 
-"react@file:../../build/packages/react":
-  version "16.0.0"
-  dependencies:
-    fbjs "^0.8.16"
-    loose-envify "^1.1.0"
-    object-assign "^4.1.1"
-    prop-types "^15.6.0"
+"react@link:../../build/node_modules/react":
+  version "0.0.0"
+  uid ""
 
 read-pkg-up@^1.0.1:
   version "1.0.1"

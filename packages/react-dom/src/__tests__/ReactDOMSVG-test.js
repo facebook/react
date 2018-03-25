@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactDOMServer;
+let React;
+let ReactDOM;
+let ReactDOMServer;
 
 describe('ReactDOMSVG', () => {
   beforeEach(() => {
@@ -21,7 +21,7 @@ describe('ReactDOMSVG', () => {
   });
 
   it('creates initial namespaced markup', () => {
-    var markup = ReactDOMServer.renderToString(
+    const markup = ReactDOMServer.renderToString(
       <svg>
         <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
       </svg>,
@@ -30,8 +30,8 @@ describe('ReactDOMSVG', () => {
   });
 
   it('creates elements with SVG namespace inside SVG tag during mount', () => {
-    var node = document.createElement('div');
-    var div,
+    const node = document.createElement('div');
+    let div,
       div2,
       div3,
       foreignObject,
@@ -111,7 +111,7 @@ describe('ReactDOMSVG', () => {
   });
 
   it('creates elements with SVG namespace inside SVG tag during update', () => {
-    var inst,
+    let inst,
       div,
       div2,
       foreignObject,
@@ -158,7 +158,7 @@ describe('ReactDOMSVG', () => {
       }
     }
 
-    var node = document.createElement('div');
+    const node = document.createElement('div');
     ReactDOM.render(
       <svg ref={el => (svg = el)}>
         <App />
@@ -194,29 +194,32 @@ describe('ReactDOMSVG', () => {
   });
 
   it('can render SVG into a non-React SVG tree', () => {
-    var outerSVGRoot = document.createElementNS(
+    const outerSVGRoot = document.createElementNS(
       'http://www.w3.org/2000/svg',
       'svg',
     );
-    var container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const container = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'g',
+    );
     outerSVGRoot.appendChild(container);
-    var image;
+    let image;
     ReactDOM.render(<image ref={el => (image = el)} />, container);
     expect(image.namespaceURI).toBe('http://www.w3.org/2000/svg');
     expect(image.tagName).toBe('image');
   });
 
   it('can render HTML into a foreignObject in non-React SVG tree', () => {
-    var outerSVGRoot = document.createElementNS(
+    const outerSVGRoot = document.createElementNS(
       'http://www.w3.org/2000/svg',
       'svg',
     );
-    var container = document.createElementNS(
+    const container = document.createElementNS(
       'http://www.w3.org/2000/svg',
       'foreignObject',
     );
     outerSVGRoot.appendChild(container);
-    var div;
+    let div;
     ReactDOM.render(<div ref={el => (div = el)} />, container);
     expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
     expect(div.tagName).toBe('DIV');

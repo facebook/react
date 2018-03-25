@@ -9,25 +9,25 @@
 
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var execFileSync = require('child_process').execFileSync;
+const fs = require('fs');
+const path = require('path');
+const execFileSync = require('child_process').execFileSync;
 
-var cwd = null;
+let cwd = null;
 function exec(command, args) {
   console.error('>', [command].concat(args));
-  var options = {};
+  const options = {};
   if (cwd) {
     options.cwd = cwd;
   }
   return execFileSync(command, args, options).toString();
 }
 
-var isCI = !!process.env.TRAVIS_REPO_SLUG;
+const isCI = !!process.env.TRAVIS_REPO_SLUG;
 
 if (isCI) {
-  var branch = process.env.TRAVIS_BRANCH || process.env.CIRCLE_BRANCH;
-  var isPullRequest =
+  const branch = process.env.TRAVIS_BRANCH || process.env.CIRCLE_BRANCH;
+  const isPullRequest =
     (!!process.env.TRAVIS_PULL_REQUEST &&
       process.env.TRAVIS_PULL_REQUEST !== 'false') ||
     !!process.env.CI_PULL_REQUEST;
@@ -92,9 +92,9 @@ function getRepoSlug() {
     return process.env.TRAVIS_REPO_SLUG;
   }
 
-  var remotes = exec('git', ['remote', '-v']).split('\n');
-  for (var i = 0; i < remotes.length; ++i) {
-    var match = remotes[i].match(/^origin\t[^:]+:([^\.]+).+\(fetch\)/);
+  const remotes = exec('git', ['remote', '-v']).split('\n');
+  for (let i = 0; i < remotes.length; ++i) {
+    const match = remotes[i].match(/^origin\t[^:]+:([^\.]+).+\(fetch\)/);
     if (match) {
       return match[1];
     }
@@ -104,17 +104,17 @@ function getRepoSlug() {
   process.exit(1);
 }
 
-var repoSlug = getRepoSlug();
-var currentCommitHash = exec('git', ['rev-parse', 'HEAD']).trim();
-var currentTimestamp = new Date()
+const repoSlug = getRepoSlug();
+const currentCommitHash = exec('git', ['rev-parse', 'HEAD']).trim();
+const currentTimestamp = new Date()
   .toISOString()
   .replace('T', ' ')
   .replace(/\..+/, '');
 
 function checkoutFactsFolder() {
-  var factsFolder = '../' + repoSlug.split('/')[1] + '-facts';
+  const factsFolder = '../' + repoSlug.split('/')[1] + '-facts';
   if (!fs.existsSync(factsFolder)) {
-    var repoURL;
+    let repoURL;
     if (isCI) {
       repoURL =
         'https://' +
@@ -146,9 +146,9 @@ function checkoutFactsFolder() {
 }
 checkoutFactsFolder();
 
-for (var i = 2; i < process.argv.length; i += 2) {
-  var name = process.argv[i].trim();
-  var value = process.argv[i + 1];
+for (let i = 2; i < process.argv.length; i += 2) {
+  const name = process.argv[i].trim();
+  const value = process.argv[i + 1];
   if (value.indexOf('\n') !== -1) {
     console.error(
       'facts-tracker: skipping',
@@ -159,13 +159,14 @@ for (var i = 2; i < process.argv.length; i += 2) {
     continue;
   }
 
-  var filename = name + '.txt';
+  const filename = name + '.txt';
+  let lastLine;
   try {
-    var lastLine = exec('tail', ['-n', '1', filename]);
+    lastLine = exec('tail', ['-n', '1', filename]);
   } catch (e) {
     // ignore error
   }
-  var lastValue =
+  const lastValue =
     lastLine && lastLine.replace(/^[^\t]+\t[^\t]+\t/, '').slice(0, -1); // commit hash \t timestamp \t // trailing \n
 
   if (value !== lastValue) {

@@ -12,8 +12,8 @@
     "ignore-styles": "^5.0.1",
     "import-export": "^1.0.1",
     "node-fetch": "^1.6.3",
-    "react": "file:../../build/packages/react",
-    "react-dom": "file:../../build/packages/react-dom"
+    "react": "link:../../build/node_modules/react",
+    "react-dom": "link:../../build/node_modules/react-dom"
   },
   "scripts": {
     "start": "concurrently \"npm run start:server\" \"npm run start:client\"",

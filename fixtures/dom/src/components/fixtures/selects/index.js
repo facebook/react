@@ -123,7 +123,7 @@ class SelectFixture extends React.Component {
             <li>Click the "Reset" button</li>
           </TestCase.Steps>
           <TestCase.ExpectedResult>
-            The select should be reset to the inital value, "bar"
+            The select should be reset to the initial value, "bar"
           </TestCase.ExpectedResult>
 
           <div className="test-fixture">

@@ -10,9 +10,9 @@
 'use strict';
 
 describe('ReactDOMInvalidARIAHook', () => {
-  var React;
-  var ReactTestUtils;
-  var mountComponent;
+  let React;
+  let ReactTestUtils;
+  let mountComponent;
 
   beforeEach(() => {
     jest.resetModules();
@@ -26,59 +26,44 @@ describe('ReactDOMInvalidARIAHook', () => {
 
   describe('aria-* props', () => {
     it('should allow valid aria-* props', () => {
-      spyOn(console, 'error');
       mountComponent({'aria-label': 'Bumble bees'});
-      expectDev(console.error.calls.count()).toBe(0);
     });
     it('should warn for one invalid aria-* prop', () => {
-      spyOn(console, 'error');
-      mountComponent({'aria-badprop': 'maybe'});
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      expect(() => mountComponent({'aria-badprop': 'maybe'})).toWarnDev(
         'Warning: Invalid aria prop `aria-badprop` on <div> tag. ' +
           'For details, see https://fb.me/invalid-aria-prop',
       );
     });
     it('should warn for many invalid aria-* props', () => {
-      spyOn(console, 'error');
-      mountComponent({
-        'aria-badprop': 'Very tall trees',
-        'aria-malprop': 'Turbulent seas',
-      });
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      expect(() =>
+        mountComponent({
+          'aria-badprop': 'Very tall trees',
+          'aria-malprop': 'Turbulent seas',
+        }),
+      ).toWarnDev(
         'Warning: Invalid aria props `aria-badprop`, `aria-malprop` on <div> ' +
           'tag. For details, see https://fb.me/invalid-aria-prop',
       );
     });
     it('should warn for an improperly cased aria-* prop', () => {
-      spyOn(console, 'error');
       // The valid attribute name is aria-haspopup.
-      mountComponent({'aria-hasPopup': 'true'});
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      expect(() => mountComponent({'aria-hasPopup': 'true'})).toWarnDev(
         'Warning: Unknown ARIA attribute `aria-hasPopup`. ' +
           'Did you mean `aria-haspopup`?',
       );
     });
 
     it('should warn for use of recognized camel case aria attributes', () => {
-      spyOn(console, 'error');
       // The valid attribute name is aria-haspopup.
-      mountComponent({ariaHasPopup: 'true'});
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      expect(() => mountComponent({ariaHasPopup: 'true'})).toWarnDev(
         'Warning: Invalid ARIA attribute `ariaHasPopup`. ' +
           'Did you mean `aria-haspopup`?',
       );
     });
 
     it('should warn for use of unrecognized camel case aria attributes', () => {
-      spyOn(console, 'error');
       // The valid attribute name is aria-haspopup.
-      mountComponent({ariaSomethingInvalid: 'true'});
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      expect(() => mountComponent({ariaSomethingInvalid: 'true'})).toWarnDev(
         'Warning: Invalid ARIA attribute `ariaSomethingInvalid`. ARIA ' +
           'attributes follow the pattern aria-* and must be lowercase.',
       );

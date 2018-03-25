@@ -9,6 +9,9 @@
 
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
 import {
   enableMutatingReconciler,
@@ -26,20 +29,75 @@ import {
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {Placement, Update, ContentReset} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 import {commitCallbacks} from './ReactFiberUpdateQueue';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
+import {logCapturedError} from './ReactFiberErrorLogger';
+import getComponentName from 'shared/getComponentName';
+import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 
-var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
+const {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = ReactErrorUtils;
+
+function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
+  const source = errorInfo.source;
+  let stack = errorInfo.stack;
+  if (stack === null) {
+    stack = getStackAddendumByWorkInProgressFiber(source);
+  }
+
+  const capturedError: CapturedError = {
+    componentName: source !== null ? getComponentName(source) : null,
+    componentStack: stack !== null ? stack : '',
+    error: errorInfo.value,
+    errorBoundary: null,
+    errorBoundaryName: null,
+    errorBoundaryFound: false,
+    willRetry: false,
+  };
+
+  if (boundary !== null && boundary.tag === ClassComponent) {
+    capturedError.errorBoundary = boundary.stateNode;
+    capturedError.errorBoundaryName = getComponentName(boundary);
+    capturedError.errorBoundaryFound = true;
+    capturedError.willRetry = true;
+  }
+
+  try {
+    logCapturedError(capturedError);
+  } catch (e) {
+    // Prevent cycle if logCapturedError() throws.
+    // A cycle may still occur if logCapturedError renders a component that throws.
+    const suppressLogging = e && e.suppressReactErrorLogging;
+    if (!suppressLogging) {
+      console.error(e);
+    }
+  }
+}
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
+  scheduleWork: (
+    fiber: Fiber,
+    startTime: ExpirationTime,
+    expirationTime: ExpirationTime,
+  ) => void,
+  computeExpirationForFiber: (
+    startTime: ExpirationTime,
+    fiber: Fiber,
+  ) => ExpirationTime,
+  markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
+  recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {getPublicInstance, mutation, persistence} = config;
 
-  var callComponentWillUnmountWithTimer = function(current, instance) {
+  const callComponentWillUnmountWithTimer = function(current, instance) {
     startPhaseTimer(current, 'componentWillUnmount');
     instance.props = current.memoizedProps;
     instance.state = current.memoizedState;
@@ -73,23 +131,33 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function safelyDetachRef(current: Fiber) {
     const ref = current.ref;
     if (ref !== null) {
-      if (__DEV__) {
-        invokeGuardedCallback(null, ref, null, null);
-        if (hasCaughtError()) {
-          const refError = clearCaughtError();
-          captureError(current, refError);
+      if (typeof ref === 'function') {
+        if (__DEV__) {
+          invokeGuardedCallback(null, ref, null, null);
+          if (hasCaughtError()) {
+            const refError = clearCaughtError();
+            captureError(current, refError);
+          }
+        } else {
+          try {
+            ref(null);
+          } catch (refError) {
+            captureError(current, refError);
+          }
         }
       } else {
-        try {
-          ref(null);
-        } catch (refError) {
-          captureError(current, refError);
-        }
+        ref.current = null;
       }
     }
   }
 
-  function commitLifeCycles(current: Fiber | null, finishedWork: Fiber): void {
+  function commitLifeCycles(
+    finishedRoot: FiberRoot,
+    current: Fiber | null,
+    finishedWork: Fiber,
+    currentTime: ExpirationTime,
+    committedExpirationTime: ExpirationTime,
+  ): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         const instance = finishedWork.stateNode;
@@ -119,8 +187,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          const instance =
-            finishedWork.child !== null ? finishedWork.child.stateNode : null;
+          let instance = null;
+          if (finishedWork.child !== null) {
+            switch (finishedWork.child.tag) {
+              case HostComponent:
+                instance = getPublicInstance(finishedWork.child.stateNode);
+                break;
+              case ClassComponent:
+                instance = finishedWork.child.stateNode;
+                break;
+            }
+          }
           commitCallbacks(updateQueue, instance);
         }
         return;
@@ -158,16 +235,101 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
+  function commitErrorLogging(
+    finishedWork: Fiber,
+    onUncaughtError: (error: Error) => void,
+  ) {
+    switch (finishedWork.tag) {
+      case ClassComponent:
+        {
+          const ctor = finishedWork.type;
+          const instance = finishedWork.stateNode;
+          const updateQueue = finishedWork.updateQueue;
+          invariant(
+            updateQueue !== null && updateQueue.capturedValues !== null,
+            'An error logging effect should not have been scheduled if no errors ' +
+              'were captured. This error is likely caused by a bug in React. ' +
+              'Please file an issue.',
+          );
+          const capturedErrors = updateQueue.capturedValues;
+          updateQueue.capturedValues = null;
+
+          if (typeof ctor.getDerivedStateFromCatch !== 'function') {
+            // To preserve the preexisting retry behavior of error boundaries,
+            // we keep track of which ones already failed during this batch.
+            // This gets reset before we yield back to the browser.
+            // TODO: Warn in strict mode if getDerivedStateFromCatch is
+            // not defined.
+            markLegacyErrorBoundaryAsFailed(instance);
+          }
+
+          instance.props = finishedWork.memoizedProps;
+          instance.state = finishedWork.memoizedState;
+          for (let i = 0; i < capturedErrors.length; i++) {
+            const errorInfo = capturedErrors[i];
+            const error = errorInfo.value;
+            const stack = errorInfo.stack;
+            logError(finishedWork, errorInfo);
+            instance.componentDidCatch(error, {
+              componentStack: stack !== null ? stack : '',
+            });
+          }
+        }
+        break;
+      case HostRoot: {
+        const updateQueue = finishedWork.updateQueue;
+        invariant(
+          updateQueue !== null && updateQueue.capturedValues !== null,
+          'An error logging effect should not have been scheduled if no errors ' +
+            'were captured. This error is likely caused by a bug in React. ' +
+            'Please file an issue.',
+        );
+        const capturedErrors = updateQueue.capturedValues;
+        updateQueue.capturedValues = null;
+        for (let i = 0; i < capturedErrors.length; i++) {
+          const errorInfo = capturedErrors[i];
+          logError(finishedWork, errorInfo);
+          onUncaughtError(errorInfo.value);
+        }
+        break;
+      }
+      default:
+        invariant(
+          false,
+          'This unit of work tag cannot capture errors.  This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+    }
+  }
+
   function commitAttachRef(finishedWork: Fiber) {
     const ref = finishedWork.ref;
     if (ref !== null) {
       const instance = finishedWork.stateNode;
+      let instanceToUse;
       switch (finishedWork.tag) {
         case HostComponent:
-          ref(getPublicInstance(instance));
+          instanceToUse = getPublicInstance(instance);
           break;
         default:
-          ref(instance);
+          instanceToUse = instance;
+      }
+      if (typeof ref === 'function') {
+        ref(instanceToUse);
+      } else {
+        if (__DEV__) {
+          if (!ref.hasOwnProperty('current')) {
+            warning(
+              false,
+              'Unexpected ref object provided for %s. ' +
+                'Use either a ref-setter function or React.createRef().%s',
+              getComponentName(finishedWork),
+              getStackAddendumByWorkInProgressFiber(finishedWork),
+            );
+          }
+        }
+
+        ref.current = instanceToUse;
       }
     }
   }
@@ -175,7 +337,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function commitDetachRef(current: Fiber) {
     const currentRef = current.ref;
     if (currentRef !== null) {
-      currentRef(null);
+      if (typeof currentRef === 'function') {
+        currentRef(null);
+      } else {
+        currentRef.current = null;
+      }
     }
   }
 
@@ -267,11 +433,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
+  let emptyPortalContainer;
+
   if (!mutation) {
     let commitContainer;
     if (persistence) {
       const {replaceContainerChildren, createContainerChildSet} = persistence;
-      var emptyPortalContainer = function(current: Fiber) {
+      emptyPortalContainer = function(current: Fiber) {
         const portal: {containerInfo: C, pendingChildren: CC} =
           current.stateNode;
         const {containerInfo} = portal;
@@ -324,6 +492,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           commitContainer(finishedWork);
         },
         commitLifeCycles,
+        commitErrorLogging,
         commitAttachRef,
         commitDetachRef,
       };
@@ -650,6 +819,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       commitDeletion,
       commitWork,
       commitLifeCycles,
+      commitErrorLogging,
       commitAttachRef,
       commitDetachRef,
     };

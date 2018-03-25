@@ -19,12 +19,12 @@
  * same logic and follow the same code paths.
  */
 
-var lowPriorityWarning = function() {};
+let lowPriorityWarning = function() {};
 
 if (__DEV__) {
   const printWarning = function(format, ...args) {
-    var argIndex = 0;
-    var message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
+    let argIndex = 0;
+    const message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
     if (typeof console !== 'undefined') {
       console.warn(message);
     }

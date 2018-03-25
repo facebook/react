@@ -8,7 +8,7 @@
 // When adding attributes to the HTML or SVG whitelist, be sure to
 // also add them to this module to ensure casing and incorrect name
 // warnings.
-var possibleStandardNames = {
+const possibleStandardNames = {
   // HTML
   accept: 'accept',
   acceptcharset: 'acceptCharset',
@@ -106,6 +106,7 @@ var possibleStandardNames = {
   multiple: 'multiple',
   muted: 'muted',
   name: 'name',
+  nomodule: 'noModule',
   nonce: 'nonce',
   novalidate: 'noValidate',
   open: 'open',

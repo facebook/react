@@ -15,9 +15,9 @@ import PropTypes = require('prop-types');
 
 // Before Each
 
-var container;
-var attachedListener = null;
-var renderedName = null;
+let container;
+let attachedListener = null;
+let renderedName = null;
 
 class Inner extends React.Component {
   getName() {
@@ -26,12 +26,12 @@ class Inner extends React.Component {
   render() {
     attachedListener = this.props.onClick;
     renderedName = this.props.name;
-    return React.createElement('div', { className: this.props.name });
+    return React.createElement('div', {className: this.props.name});
   }
 }
 
 function test(element, expectedTag, expectedClassName) {
-  var instance = ReactDOM.render(element, container);
+  const instance = ReactDOM.render(element, container);
   expect(container.firstChild).not.toBeNull();
   expect(container.firstChild.tagName).toBe(expectedTag);
   expect(container.firstChild.className).toBe(expectedClassName);
@@ -45,11 +45,11 @@ function test(element, expectedTag, expectedClassName) {
 
 // it preserves the name of the class for use in error messages
 // it throws if no render function is defined
-class Empty extends React.Component { }
+class Empty extends React.Component {}
 
 // it renders a simple stateless component with prop
 class SimpleStateless extends React.Component {
-  props : any;
+  props: any;
   render() {
     return React.createElement(Inner, {name: this.props.bar});
   }
@@ -58,7 +58,7 @@ class SimpleStateless extends React.Component {
 // it renders based on state using initial values in this.props
 class InitialState extends React.Component {
   state = {
-    bar: this.props.initialValue
+    bar: this.props.initialValue,
   };
   render() {
     return React.createElement('span', {className: this.state.bar});
@@ -69,10 +69,10 @@ class InitialState extends React.Component {
 class StateBasedOnProps extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { bar: props.initialValue };
+    this.state = {bar: props.initialValue};
   }
   changeState() {
-    this.setState({ bar: 'bar' });
+    this.setState({bar: 'bar'});
   }
   render() {
     if (this.state.bar === 'foo') {
@@ -86,14 +86,14 @@ class StateBasedOnProps extends React.Component {
 class StateBasedOnContext extends React.Component {
   static contextTypes = {
     tag: PropTypes.string,
-    className: PropTypes.string
+    className: PropTypes.string,
   };
   state = {
     tag: this.context.tag,
-    className: this.context.className
+    className: this.context.className,
   };
   render() {
-    var Tag = this.state.tag;
+    const Tag = this.state.tag;
     return React.createElement(Tag, {className: this.state.className});
   }
 }
@@ -101,10 +101,10 @@ class StateBasedOnContext extends React.Component {
 class ProvideChildContextTypes extends React.Component {
   static childContextTypes = {
     tag: PropTypes.string,
-    className: PropTypes.string
+    className: PropTypes.string,
   };
   getChildContext() {
-    return { tag: 'span', className: 'foo' };
+    return {tag: 'span', className: 'foo'};
   }
   render() {
     return React.createElement(StateBasedOnContext);
@@ -112,13 +112,13 @@ class ProvideChildContextTypes extends React.Component {
 }
 
 // it renders only once when setting state in componentWillMount
-var renderCount = 0;
+let renderCount = 0;
 class RenderOnce extends React.Component {
   state = {
-    bar: this.props.initialValue
+    bar: this.props.initialValue,
   };
-  componentWillMount() {
-    this.setState({ bar: 'bar' });
+  UNSAFE_componentWillMount() {
+    this.setState({bar: 'bar'});
   }
   render() {
     renderCount++;
@@ -157,72 +157,69 @@ class NullState extends React.Component {
 // it setState through an event handler
 class BoundEventHandler extends React.Component {
   state = {
-    bar: this.props.initialValue
+    bar: this.props.initialValue,
   };
   handleClick = () => {
-    this.setState({ bar: 'bar' });
+    this.setState({bar: 'bar'});
   };
   render() {
-    return (
-      React.createElement(Inner, {
-        name: this.state.bar,
-        onClick: this.handleClick
-      })
-    );
+    return React.createElement(Inner, {
+      name: this.state.bar,
+      onClick: this.handleClick,
+    });
   }
 }
 
 // it should not implicitly bind event handlers
 class UnboundEventHandler extends React.Component {
   state = {
-    bar: this.props.initialValue
+    bar: this.props.initialValue,
   };
   handleClick() {
-    this.setState({ bar: 'bar' });
+    this.setState({bar: 'bar'});
   }
   render() {
-    return React.createElement(
-      Inner, { name: this.state.bar, onClick: this.handleClick }
-    );
+    return React.createElement(Inner, {
+      name: this.state.bar,
+      onClick: this.handleClick,
+    });
   }
 }
 
 // it renders using forceUpdate even when there is no state
 class ForceUpdateWithNoState extends React.Component {
-  mutativeValue : string = this.props.initialValue;
+  mutativeValue: string = this.props.initialValue;
   handleClick() {
     this.mutativeValue = 'bar';
     this.forceUpdate();
   }
   render() {
-    return (
-      React.createElement(Inner, {
-        name: this.mutativeValue,
-        onClick: this.handleClick.bind(this)}
-      )
-    );
+    return React.createElement(Inner, {
+      name: this.mutativeValue,
+      onClick: this.handleClick.bind(this),
+    });
   }
 }
 
 // it will call all the normal life cycle methods
-var lifeCycles = [];
+let lifeCycles = [];
 class NormalLifeCycles extends React.Component {
-  props : any;
+  props: any;
   state = {};
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     lifeCycles.push('will-mount');
   }
   componentDidMount() {
     lifeCycles.push('did-mount');
   }
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     lifeCycles.push('receive-props', nextProps);
   }
   shouldComponentUpdate(nextProps, nextState) {
     lifeCycles.push('should-update', nextProps, nextState);
     return true;
   }
-  componentWillUpdate(nextProps, nextState) {
+  UNSAFE_componentWillUpdate(nextProps, nextState) {
     lifeCycles.push('will-update', nextProps, nextState);
   }
   componentDidUpdate(prevProps, prevState) {
@@ -238,8 +235,8 @@ class NormalLifeCycles extends React.Component {
 
 // warns when classic properties are defined on the instance,
 // but does not invoke them.
-var getInitialStateWasCalled = false;
-var getDefaultPropsWasCalled = false;
+let getInitialStateWasCalled = false;
+let getDefaultPropsWasCalled = false;
 class ClassicProperties extends React.Component {
   contextTypes = {};
   propTypes = {};
@@ -276,17 +273,27 @@ class MisspelledComponent2 extends React.Component {
   }
 }
 
+// it should warn when misspelling UNSAFE_componentWillReceiveProps
+class MisspelledComponent3 extends React.Component {
+  UNSAFE_componentWillRecieveProps() {
+    return false;
+  }
+  render() {
+    return React.createElement('span', {className: 'foo'});
+  }
+}
+
 // it supports this.context passed via getChildContext
 class ReadContext extends React.Component {
-  static contextTypes = { bar: PropTypes.string };
+  static contextTypes = {bar: PropTypes.string};
   render() {
-    return React.createElement('div', { className: this.context.bar });
+    return React.createElement('div', {className: this.context.bar});
   }
 }
 class ProvideContext extends React.Component {
-  static childContextTypes = { bar: PropTypes.string };
+  static childContextTypes = {bar: PropTypes.string};
   getChildContext() {
-    return { bar: 'bar-through-context' };
+    return {bar: 'bar-through-context'};
   }
   render() {
     return React.createElement(ReadContext);
@@ -303,7 +310,6 @@ class ClassicRefs extends React.Component {
 // Describe the actual test cases.
 
 describe('ReactTypeScriptClass', function() {
-
   beforeEach(function() {
     container = document.createElement('div');
     attachedListener = null;
@@ -315,15 +321,17 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('throws if no render function is defined', function() {
-    spyOn(console, 'error');
-
-    expect(() => ReactDOM.render(React.createElement(Empty), container)).toThrow();
-
-    expect((<any>console.error).calls.count()).toBe(1);
-    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+    expect(() =>
+      expect(() =>
+        ReactDOM.render(React.createElement(Empty), container)
+      ).toThrow()
+    ).toWarnDev([
+      // A failed component renders twice in DEV
       'Warning: Empty(...): No `render` method found on the returned ' +
-      'component instance: you may have forgotten to define `render`.'
-    );
+        'component instance: you may have forgotten to define `render`.',
+      'Warning: Empty(...): No `render` method found on the returned ' +
+        'component instance: you may have forgotten to define `render`.',
+    ]);
   });
 
   it('renders a simple stateless component with prop', function() {
@@ -340,13 +348,131 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('renders based on state using props in the constructor', function() {
-    var instance = test(
+    const instance = test(
       React.createElement(StateBasedOnProps, {initialValue: 'foo'}),
       'DIV',
       'foo'
     );
     instance.changeState();
     test(React.createElement(StateBasedOnProps), 'SPAN', 'bar');
+  });
+
+  it('sets initial state with value returned by static getDerivedStateFromProps', function() {
+    class Foo extends React.Component {
+      state = {
+        foo: null,
+        bar: null,
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: nextProps.foo,
+          bar: 'bar',
+        };
+      }
+      render() {
+        return React.createElement('div', {
+          className: `${this.state.foo} ${this.state.bar}`,
+        });
+      }
+    }
+    test(React.createElement(Foo, {foo: 'foo'}), 'DIV', 'foo bar');
+  });
+
+  it('warns if getDerivedStateFromProps is not static', function() {
+    class Foo extends React.Component {
+      getDerivedStateFromProps() {
+        return {};
+      }
+      render() {
+        return React.createElement('div', {});
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
+    }).toWarnDev(
+      'Foo: getDerivedStateFromProps() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.'
+    );
+  });
+
+  it('warns if getDerivedStateFromCatch is not static', function() {
+    class Foo extends React.Component {
+      getDerivedStateFromCatch() {
+        return {};
+      }
+      render() {
+        return React.createElement('div');
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
+    }).toWarnDev(
+      'Foo: getDerivedStateFromCatch() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.'
+    );
+  });
+
+  it('warns if state not initialized before static getDerivedStateFromProps', function() {
+    class Foo extends React.Component {
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: nextProps.foo,
+          bar: 'bar',
+        };
+      }
+      render() {
+        return React.createElement('div', {
+          className: `${this.state.foo} ${this.state.bar}`,
+        });
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
+    }).toWarnDev(
+      'Foo: Did not properly initialize state during construction. ' +
+        'Expected state to be an object, but it was undefined.'
+    );
+  });
+
+  it('updates initial state with values returned by static getDerivedStateFromProps', function() {
+    class Foo extends React.Component {
+      state = {
+        foo: 'foo',
+        bar: 'bar',
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          foo: `not-${prevState.foo}`,
+        };
+      }
+      render() {
+        return React.createElement('div', {
+          className: `${this.state.foo} ${this.state.bar}`,
+        });
+      }
+    }
+    test(React.createElement(Foo), 'DIV', 'not-foo bar');
+  });
+
+  it('renders updated state with values returned by static getDerivedStateFromProps', function() {
+    class Foo extends React.Component {
+      state = {
+        value: 'initial',
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.update) {
+          return {
+            value: 'updated',
+          };
+        }
+        return null;
+      }
+      render() {
+        return React.createElement('div', {className: this.state.value});
+      }
+    }
+    test(React.createElement(Foo, {update: false}), 'DIV', 'initial');
+    test(React.createElement(Foo, {update: true}), 'DIV', 'updated');
   });
 
   it('renders based on context in the constructor', function() {
@@ -359,17 +485,14 @@ describe('ReactTypeScriptClass', function() {
     expect(renderCount).toBe(1);
   });
 
-  it('should throw with non-object in the initial state property', function() {
-    expect(() => test(React.createElement(ArrayState), 'span', ''))
-    .toThrowError(
+  it('should warn with non-object in the initial state property', function() {
+    expect(() => test(React.createElement(ArrayState), 'SPAN', '')).toWarnDev(
       'ArrayState.state: must be set to an object or null'
     );
-    expect(() => test(React.createElement(StringState), 'span', ''))
-    .toThrowError(
+    expect(() => test(React.createElement(StringState), 'SPAN', '')).toWarnDev(
       'StringState.state: must be set to an object or null'
     );
-    expect(() => test(React.createElement(NumberState), 'span', ''))
-    .toThrowError(
+    expect(() => test(React.createElement(NumberState), 'SPAN', '')).toWarnDev(
       'NumberState.state: must be set to an object or null'
     );
   });
@@ -410,108 +533,111 @@ describe('ReactTypeScriptClass', function() {
   it('will call all the normal life cycle methods', function() {
     lifeCycles = [];
     test(React.createElement(NormalLifeCycles, {value: 'foo'}), 'SPAN', 'foo');
-    expect(lifeCycles).toEqual([
-      'will-mount',
-      'did-mount'
-    ]);
+    expect(lifeCycles).toEqual(['will-mount', 'did-mount']);
     lifeCycles = []; // reset
     test(React.createElement(NormalLifeCycles, {value: 'bar'}), 'SPAN', 'bar');
     expect(lifeCycles).toEqual([
-      'receive-props', { value: 'bar' },
-      'should-update', { value: 'bar' }, {},
-      'will-update', { value: 'bar' }, {},
-      'did-update', { value: 'foo' }, {}
+      'receive-props',
+      {value: 'bar'},
+      'should-update',
+      {value: 'bar'},
+      {},
+      'will-update',
+      {value: 'bar'},
+      {},
+      'did-update',
+      {value: 'foo'},
+      {},
     ]);
     lifeCycles = []; // reset
     ReactDOM.unmountComponentAtNode(container);
-    expect(lifeCycles).toEqual([
-      'will-unmount'
-    ]);
+    expect(lifeCycles).toEqual(['will-unmount']);
   });
 
-  it('warns when classic properties are defined on the instance, ' +
-     'but does not invoke them.', function() {
-    spyOn(console, 'error');
-    getInitialStateWasCalled = false;
-    getDefaultPropsWasCalled = false;
-    test(React.createElement(ClassicProperties), 'SPAN', 'foo');
-    expect(getInitialStateWasCalled).toBe(false);
-    expect(getDefaultPropsWasCalled).toBe(false);
-    expect((<any>console.error).calls.count()).toBe(4);
-    expect((<any>console.error).calls.argsFor(0)[0]).toContain(
-      'getInitialState was defined on ClassicProperties, ' +
-      'a plain JavaScript class.'
-    );
-    expect((<any>console.error).calls.argsFor(1)[0]).toContain(
-      'getDefaultProps was defined on ClassicProperties, ' +
-      'a plain JavaScript class.'
-    );
-    expect((<any>console.error).calls.argsFor(2)[0]).toContain(
-      'propTypes was defined as an instance property on ClassicProperties.'
-    );
-    expect((<any>console.error).calls.argsFor(3)[0]).toContain(
-      'contextTypes was defined as an instance property on ClassicProperties.'
-    );
-  });
-
-  it('does not warn about getInitialState() on class components ' +
-     'if state is also defined.', () => {
-    spyOn(console, 'error');
-
-    class Example extends React.Component {
-      state = {};
-      getInitialState() {
-        return {};
-      }
-      render() {
-        return React.createElement('span', {className: 'foo'});
-      }
+  it(
+    'warns when classic properties are defined on the instance, ' +
+      'but does not invoke them.',
+    function() {
+      getInitialStateWasCalled = false;
+      getDefaultPropsWasCalled = false;
+      expect(() =>
+        test(React.createElement(ClassicProperties), 'SPAN', 'foo')
+      ).toWarnDev([
+        'getInitialState was defined on ClassicProperties, ' +
+          'a plain JavaScript class.',
+        'getDefaultProps was defined on ClassicProperties, ' +
+          'a plain JavaScript class.',
+        'propTypes was defined as an instance property on ClassicProperties.',
+        'contextTypes was defined as an instance property on ClassicProperties.',
+      ]);
+      expect(getInitialStateWasCalled).toBe(false);
+      expect(getDefaultPropsWasCalled).toBe(false);
     }
+  );
 
-    test(React.createElement(Example), 'SPAN', 'foo');
-    expect((<any>console.error).calls.count()).toBe(0);
-  });
+  it(
+    'does not warn about getInitialState() on class components ' +
+      'if state is also defined.',
+    () => {
+      class Example extends React.Component {
+        state = {};
+        getInitialState() {
+          return {};
+        }
+        render() {
+          return React.createElement('span', {className: 'foo'});
+        }
+      }
+
+      test(React.createElement(Example), 'SPAN', 'foo');
+    }
+  );
 
   it('should warn when misspelling shouldComponentUpdate', function() {
-    spyOn(console, 'error');
-
-    test(React.createElement(MisspelledComponent1), 'SPAN', 'foo');
-
-    expect((<any>console.error).calls.count()).toBe(1);
-    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+    expect(() =>
+      test(React.createElement(MisspelledComponent1), 'SPAN', 'foo')
+    ).toWarnDev(
       'Warning: ' +
-      'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
-      'you mean shouldComponentUpdate()? The name is phrased as a question ' +
-      'because the function is expected to return a value.'
+        'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
+        'you mean shouldComponentUpdate()? The name is phrased as a question ' +
+        'because the function is expected to return a value.'
     );
   });
 
   it('should warn when misspelling componentWillReceiveProps', function() {
-    spyOn(console, 'error');
-
-    test(React.createElement(MisspelledComponent2), 'SPAN', 'foo');
-
-    expect((<any>console.error).calls.count()).toBe(1);
-    expect((<any>console.error).calls.argsFor(0)[0]).toBe(
+    expect(() =>
+      test(React.createElement(MisspelledComponent2), 'SPAN', 'foo')
+    ).toWarnDev(
       'Warning: ' +
-      'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
-      'Did you mean componentWillReceiveProps()?'
+        'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
+        'Did you mean componentWillReceiveProps()?'
+    );
+  });
+
+  it('should warn when misspelling UNSAFE_componentWillReceiveProps', function() {
+    expect(() =>
+      test(React.createElement(MisspelledComponent3), 'SPAN', 'foo')
+    ).toWarnDev(
+      'Warning: ' +
+        'MisspelledComponent3 has a method called UNSAFE_componentWillRecieveProps(). ' +
+        'Did you mean UNSAFE_componentWillReceiveProps()?'
     );
   });
 
   it('should throw AND warn when trying to access classic APIs', function() {
-    spyOn(console, 'warn');
-    var instance = test(
+    const instance = test(
       React.createElement(Inner, {name: 'foo'}),
-      'DIV','foo'
+      'DIV',
+      'foo'
     );
-    expect(() => instance.replaceState({})).toThrow();
-    expect(() => instance.isMounted()).toThrow();
-    expect((<any>console.warn).calls.count()).toBe(2);
-    expect((<any>console.warn).calls.argsFor(0)[0]).toContain(
+    expect(() =>
+      expect(() => instance.replaceState({})).toThrow()
+    ).toLowPriorityWarnDev(
       'replaceState(...) is deprecated in plain JavaScript React classes'
     );
-    expect((<any>console.warn).calls.argsFor(1)[0]).toContain(
+    expect(() =>
+      expect(() => instance.isMounted()).toThrow()
+    ).toLowPriorityWarnDev(
       'isMounted(...) is deprecated in plain JavaScript React classes'
     );
   });
@@ -521,18 +647,17 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('supports classic refs', function() {
-    var instance = test(React.createElement(ClassicRefs), 'DIV', 'foo');
+    const instance = test(React.createElement(ClassicRefs), 'DIV', 'foo');
     expect(instance.refs.inner.getName()).toBe('foo');
   });
 
   it('supports drilling through to the DOM using findDOMNode', function() {
-    var instance = test(
+    const instance = test(
       React.createElement(Inner, {name: 'foo'}),
       'DIV',
       'foo'
     );
-    var node = ReactDOM.findDOMNode(instance);
+    const node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
   });
-
 });

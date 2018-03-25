@@ -7,11 +7,11 @@
 
 import warning from 'fbjs/lib/warning';
 
-var didWarnStateUpdateForUnmountedComponent = {};
+const didWarnStateUpdateForUnmountedComponent = {};
 
 function warnNoop(publicInstance, callerName) {
   if (__DEV__) {
-    var constructor = publicInstance.constructor;
+    const constructor = publicInstance.constructor;
     const componentName =
       (constructor && (constructor.displayName || constructor.name)) ||
       'ReactClass';
@@ -35,7 +35,7 @@ function warnNoop(publicInstance, callerName) {
 /**
  * This is the abstract API for an update queue.
  */
-var ReactNoopUpdateQueue = {
+const ReactNoopUpdateQueue = {
   /**
    * Checks whether or not this composite component is mounted.
    * @param {ReactClass} publicInstance The instance we want to test.

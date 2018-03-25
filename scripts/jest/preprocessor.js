@@ -1,38 +1,29 @@
 'use strict';
 
-// React's test can only work in NODE_ENV=test because of how things
-// are set up. So we might as well enforce it.
-process.env.NODE_ENV = 'test';
+const path = require('path');
 
-var path = require('path');
+const babel = require('babel-core');
+const coffee = require('coffee-script');
 
-var babel = require('babel-core');
-var coffee = require('coffee-script');
-
-var tsPreprocessor = require('./ts-preprocessor');
-var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
+const tsPreprocessor = require('./typescript/preprocessor');
+const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
 // Use require.resolve to be resilient to file moves, npm updates, etc
-var pathToBabel = path.join(
+const pathToBabel = path.join(
   require.resolve('babel-core'),
   '..',
   'package.json'
 );
-var pathToModuleMap = require.resolve('fbjs/module-map');
-var pathToBabelPluginDevWithCode = require.resolve(
+const pathToBabelPluginDevWithCode = require.resolve(
   '../error-codes/replace-invariant-error-codes'
 );
-var pathToBabelPluginModules = require.resolve(
-  'fbjs-scripts/babel-6/rewrite-modules'
-);
-var pathToBabelPluginAsyncToGenerator = require.resolve(
+const pathToBabelPluginAsyncToGenerator = require.resolve(
   'babel-plugin-transform-async-to-generator'
 );
-var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
-var pathToErrorCodes = require.resolve('../error-codes/codes.json');
+const pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
+const pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
-// TODO: make sure this stays in sync with gulpfile
-var babelOptions = {
+const babelOptions = {
   plugins: [
     // For Node environment only. For builds, Rollup takes care of ESM.
     require.resolve('babel-plugin-transform-es2015-modules-commonjs'),
@@ -43,6 +34,8 @@ var babelOptions = {
     // into ReactART builds that include JSX.
     // TODO: I have not verified that this actually works.
     require.resolve('babel-plugin-transform-react-jsx-source'),
+
+    require.resolve('../babel/transform-prevent-infinite-loops'),
   ],
   retainLines: true,
 };
@@ -58,7 +51,7 @@ module.exports = {
     if (!filePath.match(/\/third_party\//)) {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
-      var isTestFile = !!filePath.match(/\/__tests__\//);
+      const isTestFile = !!filePath.match(/\/__tests__\//);
       return babel.transform(
         src,
         Object.assign(
@@ -81,9 +74,7 @@ module.exports = {
     __filename,
     pathToBabel,
     pathToBabelrc,
-    pathToModuleMap,
     pathToBabelPluginDevWithCode,
-    pathToBabelPluginModules,
     pathToErrorCodes,
   ]),
 };

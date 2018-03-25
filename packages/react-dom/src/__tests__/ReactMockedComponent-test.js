@@ -9,11 +9,11 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
-var MockedComponent;
-var ReactDOMServer;
+let MockedComponent;
+let ReactDOMServer;
 
 describe('ReactMockedComponent', () => {
   beforeEach(() => {
@@ -30,18 +30,42 @@ describe('ReactMockedComponent', () => {
     MockedComponent.prototype.render = jest.fn();
   });
 
-  it('should allow a mocked component to be rendered', () => {
-    var container = document.createElement('container');
-    ReactDOM.render(<MockedComponent />, container);
+  it('should allow a mocked component to be rendered in dev', () => {
+    const container = document.createElement('container');
+    if (__DEV__) {
+      ReactDOM.render(<MockedComponent />, container);
+    } else {
+      expect(() => ReactDOM.render(<MockedComponent />, container)).toThrow(
+        'Nothing was returned from render.',
+      );
+    }
   });
 
-  it('should allow a mocked component to be updated', () => {
-    var container = document.createElement('container');
-    ReactDOM.render(<MockedComponent />, container);
-    ReactDOM.render(<MockedComponent />, container);
+  it('should allow a mocked component to be updated in dev', () => {
+    const container = document.createElement('container');
+    if (__DEV__) {
+      ReactDOM.render(<MockedComponent />, container);
+    } else {
+      expect(() => ReactDOM.render(<MockedComponent />, container)).toThrow(
+        'Nothing was returned from render.',
+      );
+    }
+    if (__DEV__) {
+      ReactDOM.render(<MockedComponent />, container);
+    } else {
+      expect(() => ReactDOM.render(<MockedComponent />, container)).toThrow(
+        'Nothing was returned from render.',
+      );
+    }
   });
 
-  it('should allow a mocked component to be rendered (SSR)', () => {
-    ReactDOMServer.renderToString(<MockedComponent />);
+  it('should allow a mocked component to be rendered in dev (SSR)', () => {
+    if (__DEV__) {
+      ReactDOMServer.renderToString(<MockedComponent />);
+    } else {
+      expect(() => ReactDOMServer.renderToString(<MockedComponent />)).toThrow(
+        'Nothing was returned from render.',
+      );
+    }
   });
 });

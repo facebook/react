@@ -13,7 +13,7 @@ import flattenStyle from 'flattenStyle';
 
 import ReactNativePropRegistry from './ReactNativePropRegistry';
 
-var emptyObject = {};
+const emptyObject = {};
 
 /**
  * Create a payload that contains all the updates between two sets of props.
@@ -41,8 +41,8 @@ type AttributeConfiguration = {
 type NestedNode = Array<NestedNode> | Object | number;
 
 // Tracks removed keys
-var removedKeys = null;
-var removedKeyCount = 0;
+let removedKeys = null;
+let removedKeyCount = 0;
 
 function defaultDiffer(prevProp: mixed, nextProp: mixed): boolean {
   if (typeof nextProp !== 'object' || nextProp === null) {
@@ -67,7 +67,7 @@ function restoreDeletedValuesInNestedArray(
   validAttributes: AttributeConfiguration,
 ) {
   if (Array.isArray(node)) {
-    var i = node.length;
+    let i = node.length;
     while (i-- && removedKeyCount > 0) {
       restoreDeletedValuesInNestedArray(
         updatePayload,
@@ -76,17 +76,17 @@ function restoreDeletedValuesInNestedArray(
       );
     }
   } else if (node && removedKeyCount > 0) {
-    var obj = resolveObject(node);
-    for (var propKey in removedKeys) {
+    const obj = resolveObject(node);
+    for (const propKey in removedKeys) {
       if (!removedKeys[propKey]) {
         continue;
       }
-      var nextProp = obj[propKey];
+      let nextProp = obj[propKey];
       if (nextProp === undefined) {
         continue;
       }
 
-      var attributeConfig = validAttributes[propKey];
+      const attributeConfig = validAttributes[propKey];
       if (!attributeConfig) {
         continue; // not a valid native prop
       }
@@ -106,7 +106,7 @@ function restoreDeletedValuesInNestedArray(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue =
+        const nextValue =
           typeof attributeConfig.process === 'function'
             ? attributeConfig.process(nextProp)
             : nextProp;
@@ -119,14 +119,14 @@ function restoreDeletedValuesInNestedArray(
 }
 
 function diffNestedArrayProperty(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevArray: Array<NestedNode>,
   nextArray: Array<NestedNode>,
   validAttributes: AttributeConfiguration,
-): ?Object {
-  var minLength =
+): null | Object {
+  const minLength =
     prevArray.length < nextArray.length ? prevArray.length : nextArray.length;
-  var i;
+  let i;
   for (i = 0; i < minLength; i++) {
     // Diff any items in the array in the forward direction. Repeated keys
     // will be overwritten by later values.
@@ -157,11 +157,11 @@ function diffNestedArrayProperty(
 }
 
 function diffNestedProperty(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevProp: NestedNode,
   nextProp: NestedNode,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   if (!updatePayload && prevProp === nextProp) {
     // If no properties have been added, then we can bail out quickly on object
     // equality.
@@ -224,7 +224,7 @@ function diffNestedProperty(
  * updatePayload.
  */
 function addNestedProperty(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   nextProp: NestedNode,
   validAttributes: AttributeConfiguration,
 ) {
@@ -241,7 +241,7 @@ function addNestedProperty(
     );
   }
 
-  for (var i = 0; i < nextProp.length; i++) {
+  for (let i = 0; i < nextProp.length; i++) {
     // Add all the properties of the array.
     updatePayload = addNestedProperty(
       updatePayload,
@@ -258,10 +258,10 @@ function addNestedProperty(
  * adds a null sentinel to the updatePayload, for each prop key.
  */
 function clearNestedProperty(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevProp: NestedNode,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   if (!prevProp) {
     return updatePayload;
   }
@@ -275,7 +275,7 @@ function clearNestedProperty(
     );
   }
 
-  for (var i = 0; i < prevProp.length; i++) {
+  for (let i = 0; i < prevProp.length; i++) {
     // Add all the properties of the array.
     updatePayload = clearNestedProperty(
       updatePayload,
@@ -293,16 +293,16 @@ function clearNestedProperty(
  * anything changed.
  */
 function diffProperties(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevProps: Object,
   nextProps: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
-  var attributeConfig: ?(CustomAttributeConfiguration | AttributeConfiguration);
-  var nextProp;
-  var prevProp;
+): null | Object {
+  let attributeConfig: ?(CustomAttributeConfiguration | AttributeConfiguration);
+  let nextProp;
+  let prevProp;
 
-  for (var propKey in nextProps) {
+  for (const propKey in nextProps) {
     attributeConfig = validAttributes[propKey];
     if (!attributeConfig) {
       continue; // not a valid native prop
@@ -350,7 +350,7 @@ function diffProperties(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue =
+        const nextValue =
           typeof attributeConfig.process === 'function'
             ? attributeConfig.process(nextProp)
             : nextProp;
@@ -375,13 +375,13 @@ function diffProperties(
       typeof attributeConfig.process === 'function'
     ) {
       // case: CustomAttributeConfiguration
-      var shouldUpdate =
+      const shouldUpdate =
         prevProp === undefined ||
         (typeof attributeConfig.diff === 'function'
           ? attributeConfig.diff(prevProp, nextProp)
           : defaultDiffer(prevProp, nextProp));
       if (shouldUpdate) {
-        nextValue =
+        const nextValue =
           typeof attributeConfig.process === 'function'
             ? attributeConfig.process(nextProp)
             : nextProp;
@@ -413,7 +413,7 @@ function diffProperties(
   // Also iterate through all the previous props to catch any that have been
   // removed and make sure native gets the signal so it can reset them to the
   // default.
-  for (propKey in prevProps) {
+  for (const propKey in prevProps) {
     if (nextProps[propKey] !== undefined) {
       continue; // we've already covered this key in the previous pass
     }
@@ -465,10 +465,10 @@ function diffProperties(
  * addProperties adds all the valid props to the payload after being processed.
  */
 function addProperties(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   props: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   // TODO: Fast path
   return diffProperties(updatePayload, emptyObject, props, validAttributes);
 }
@@ -478,10 +478,10 @@ function addProperties(
  * to the payload for each valid key.
  */
 function clearProperties(
-  updatePayload: ?Object,
+  updatePayload: null | Object,
   prevProps: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   // TODO: Fast path
   return diffProperties(updatePayload, prevProps, emptyObject, validAttributes);
 }
@@ -489,7 +489,7 @@ function clearProperties(
 export function create(
   props: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   return addProperties(
     null, // updatePayload
     props,
@@ -501,7 +501,7 @@ export function diff(
   prevProps: Object,
   nextProps: Object,
   validAttributes: AttributeConfiguration,
-): ?Object {
+): null | Object {
   return diffProperties(
     null, // updatePayload
     prevProps,

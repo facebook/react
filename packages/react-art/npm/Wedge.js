@@ -163,7 +163,7 @@ var Wedge = createReactClass({
     var startAngle = this.props.startAngle;
     var endAngle = this.props.endAngle;
     if (startAngle - endAngle === 0) {
-      return;
+      return null;
     }
 
     // radii are provided in pixels

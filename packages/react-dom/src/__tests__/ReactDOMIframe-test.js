@@ -10,9 +10,9 @@
 'use strict';
 
 describe('ReactDOMIframe', () => {
-  var React;
-  var ReactDOM;
-  var ReactTestUtils;
+  let React;
+  let ReactDOM;
+  let ReactTestUtils;
 
   beforeEach(() => {
     React = require('react');
@@ -21,11 +21,11 @@ describe('ReactDOMIframe', () => {
   });
 
   it('should trigger load events', () => {
-    var onLoadSpy = jasmine.createSpy();
-    var iframe = React.createElement('iframe', {onLoad: onLoadSpy});
+    const onLoadSpy = jasmine.createSpy();
+    let iframe = React.createElement('iframe', {onLoad: onLoadSpy});
     iframe = ReactTestUtils.renderIntoDocument(iframe);
 
-    var loadEvent = document.createEvent('Event');
+    const loadEvent = document.createEvent('Event');
     loadEvent.initEvent('load', false, false);
 
     ReactDOM.findDOMNode(iframe).dispatchEvent(loadEvent);

@@ -82,10 +82,25 @@ const logPromise = async (promise, text, isLongRunningTask = false) => {
   }
 };
 
+const runYarnTask = async (cwd, task, errorMessage) => {
+  try {
+    await exec(`yarn ${task}`, {cwd});
+  } catch (error) {
+    throw Error(
+      chalk`
+      ${errorMessage}
+
+      {white ${error.stdout}}
+    `
+    );
+  }
+};
+
 module.exports = {
   execRead,
   execUnlessDry,
   getPublicPackages,
   getUnexecutedCommands,
   logPromise,
+  runYarnTask,
 };

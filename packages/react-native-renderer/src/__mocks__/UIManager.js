@@ -57,7 +57,7 @@ function removeChild(parent, child) {
   childInfo.parent = null;
 }
 
-var RCTUIManager = {
+const RCTUIManager = {
   __dumpHierarchyForJestTestsOnly: function() {
     return roots.map(tag => dumpSubtree(tag, 0)).join('\n');
 
@@ -66,6 +66,7 @@ var RCTUIManager = {
       let out = '';
       out +=
         ' '.repeat(indent) + info.viewName + ' ' + JSON.stringify(info.props);
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (const child of info.children) {
         out += '\n' + dumpSubtree(child, indent + 2);
       }
@@ -143,6 +144,7 @@ var RCTUIManager = {
       indicesToInsert.push([addAtIndices[i], addChildReactTags[i]]);
     });
     indicesToInsert.sort((a, b) => a[0] - b[0]);
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const [i, tag] of indicesToInsert) {
       insertSubviewAtIndex(parentTag, tag, i);
     }

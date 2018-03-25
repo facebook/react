@@ -9,11 +9,11 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
 describe('SyntheticWheelEvent', () => {
-  var container;
+  let container;
 
   beforeEach(() => {
     React = require('react');
@@ -29,36 +29,9 @@ describe('SyntheticWheelEvent', () => {
     container = null;
   });
 
-  it('should normalize properties from the Event interface', () => {
-    const events = [];
-    var onWheel = event => {
-      event.persist();
-      events.push(event);
-    };
-    ReactDOM.render(<div onWheel={onWheel} />, container);
-
-    const event = new MouseEvent('wheel', {
-      bubbles: true,
-    });
-    // Emulate IE8
-    Object.defineProperty(event, 'target', {
-      get() {},
-    });
-    Object.defineProperty(event, 'srcElement', {
-      get() {
-        return container.firstChild;
-      },
-    });
-    container.firstChild.dispatchEvent(event);
-
-    expect(events.length).toBe(1);
-    expect(events[0].target).toBe(container.firstChild);
-    expect(events[0].type).toBe('wheel');
-  });
-
   it('should normalize properties from the MouseEvent interface', () => {
     const events = [];
-    var onWheel = event => {
+    const onWheel = event => {
       event.persist();
       events.push(event);
     };
@@ -76,14 +49,14 @@ describe('SyntheticWheelEvent', () => {
   });
 
   it('should normalize properties from the WheelEvent interface', () => {
-    var events = [];
-    var onWheel = event => {
+    const events = [];
+    const onWheel = event => {
       event.persist();
       events.push(event);
     };
     ReactDOM.render(<div onWheel={onWheel} />, container);
 
-    var event = new MouseEvent('wheel', {
+    let event = new MouseEvent('wheel', {
       bubbles: true,
     });
     // jsdom doesn't support these so we add them manually.
@@ -111,8 +84,8 @@ describe('SyntheticWheelEvent', () => {
   });
 
   it('should be able to `preventDefault` and `stopPropagation`', () => {
-    var events = [];
-    var onWheel = event => {
+    const events = [];
+    const onWheel = event => {
       expect(event.isDefaultPrevented()).toBe(false);
       event.preventDefault();
       expect(event.isDefaultPrevented()).toBe(true);
@@ -141,8 +114,8 @@ describe('SyntheticWheelEvent', () => {
   });
 
   it('should be able to `persist`', () => {
-    var events = [];
-    var onWheel = event => {
+    const events = [];
+    const onWheel = event => {
       expect(event.isPersistent()).toBe(false);
       event.persist();
       expect(event.isPersistent()).toBe(true);

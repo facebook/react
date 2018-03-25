@@ -7,17 +7,17 @@
 'use strict';
 
 module.exports = function(babel, options) {
-  var t = babel.types;
+  const t = babel.types;
 
-  var DEV_EXPRESSION = t.identifier('__DEV__');
+  const DEV_EXPRESSION = t.identifier('__DEV__');
 
-  var SEEN_SYMBOL = Symbol('expression.seen');
+  const SEEN_SYMBOL = Symbol('expression.seen');
 
   return {
     visitor: {
       CallExpression: {
         exit: function(path) {
-          var node = path.node;
+          const node = path.node;
 
           // Ignore if it's already been processed
           if (node[SEEN_SYMBOL]) {

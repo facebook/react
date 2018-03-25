@@ -12,14 +12,10 @@
 
 'use strict';
 
-var React;
-var ReactTestUtils;
+let React;
+let ReactTestUtils;
 
 describe('ReactChildReconciler', () => {
-  function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-  }
-
   beforeEach(() => {
     jest.resetModules();
 
@@ -30,7 +26,7 @@ describe('ReactChildReconciler', () => {
   function createIterable(array) {
     return {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next() {
             const next = {
@@ -46,18 +42,13 @@ describe('ReactChildReconciler', () => {
   }
 
   it('warns for duplicated array keys', () => {
-    spyOn(console, 'error');
-
     class Component extends React.Component {
       render() {
         return <div>{[<div key="1" />, <div key="1" />]}</div>;
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Component />);
-
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
       'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
         'duplicated and/or omitted — the behavior is unsupported and ' +
@@ -66,8 +57,6 @@ describe('ReactChildReconciler', () => {
   });
 
   it('warns for duplicated array keys with component stack info', () => {
-    spyOn(console, 'error');
-
     class Component extends React.Component {
       render() {
         return <div>{[<div key="1" />, <div key="1" />]}</div>;
@@ -86,12 +75,7 @@ describe('ReactChildReconciler', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<GrandParent />);
-
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(
-      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-    ).toContain(
+    expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toWarnDev(
       'Encountered two children with the same key, `1`. ' +
         'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
@@ -105,18 +89,13 @@ describe('ReactChildReconciler', () => {
   });
 
   it('warns for duplicated iterable keys', () => {
-    spyOn(console, 'error');
-
     class Component extends React.Component {
       render() {
         return <div>{createIterable([<div key="1" />, <div key="1" />])}</div>;
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Component />);
-
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
       'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
         'duplicated and/or omitted — the behavior is unsupported and ' +
@@ -125,8 +104,6 @@ describe('ReactChildReconciler', () => {
   });
 
   it('warns for duplicated iterable keys with component stack info', () => {
-    spyOn(console, 'error');
-
     class Component extends React.Component {
       render() {
         return <div>{createIterable([<div key="1" />, <div key="1" />])}</div>;
@@ -145,12 +122,7 @@ describe('ReactChildReconciler', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<GrandParent />);
-
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(
-      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-    ).toContain(
+    expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toWarnDev(
       'Encountered two children with the same key, `1`. ' +
         'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +

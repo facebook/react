@@ -5,16 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {batchedUpdates} from 'events/ReactGenericBatching';
-import {isFiberMounted} from 'shared/ReactFiberTreeReflection';
+import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
+import {runExtractedEventsInBatch} from 'events/EventPluginHub';
+import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
-import EventListener from 'fbjs/lib/EventListener';
 
+import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import SimpleEventPlugin from './SimpleEventPlugin';
 
-var CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
-var callbackBookkeepingPool = [];
+const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
+
+const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
+const callbackBookkeepingPool = [];
 
 /**
  * Find the deepest React component completely containing the root of the
@@ -62,20 +66,20 @@ function releaseTopLevelCallbackBookKeeping(instance) {
   }
 }
 
-function handleTopLevelImpl(bookKeeping) {
-  var targetInst = bookKeeping.targetInst;
+function handleTopLevel(bookKeeping) {
+  let targetInst = bookKeeping.targetInst;
 
   // Loop through the hierarchy, in case there's any nested components.
   // It's important that we build the array of ancestors before calling any
   // event handlers, because event handlers can modify the DOM, leading to
   // inconsistencies with ReactMount's node cache. See #1105.
-  var ancestor = targetInst;
+  let ancestor = targetInst;
   do {
     if (!ancestor) {
       bookKeeping.ancestors.push(ancestor);
       break;
     }
-    var root = findRootContainerNode(ancestor);
+    const root = findRootContainerNode(ancestor);
     if (!root) {
       break;
     }
@@ -83,9 +87,9 @@ function handleTopLevelImpl(bookKeeping) {
     ancestor = getClosestInstanceFromNode(root);
   } while (ancestor);
 
-  for (var i = 0; i < bookKeeping.ancestors.length; i++) {
+  for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
-    _handleTopLevel(
+    runExtractedEventsInBatch(
       bookKeeping.topLevelType,
       targetInst,
       bookKeeping.nativeEvent,
@@ -96,11 +100,6 @@ function handleTopLevelImpl(bookKeeping) {
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
-export let _handleTopLevel: null;
-
-export function setHandleTopLevel(handleTopLevel) {
-  _handleTopLevel = handleTopLevel;
-}
 
 export function setEnabled(enabled) {
   _enabled = !!enabled;
@@ -124,10 +123,15 @@ export function trapBubbledEvent(topLevelType, handlerBaseName, element) {
   if (!element) {
     return null;
   }
-  return EventListener.listen(
+  const dispatch = isInteractiveTopLevelEventType(topLevelType)
+    ? dispatchInteractiveEvent
+    : dispatchEvent;
+
+  addEventBubbleListener(
     element,
     handlerBaseName,
-    dispatchEvent.bind(null, topLevelType),
+    // Check if interactive and wrap in interactiveUpdates
+    dispatch.bind(null, topLevelType),
   );
 }
 
@@ -145,11 +149,20 @@ export function trapCapturedEvent(topLevelType, handlerBaseName, element) {
   if (!element) {
     return null;
   }
-  return EventListener.capture(
+  const dispatch = isInteractiveTopLevelEventType(topLevelType)
+    ? dispatchInteractiveEvent
+    : dispatchEvent;
+
+  addEventCaptureListener(
     element,
     handlerBaseName,
-    dispatchEvent.bind(null, topLevelType),
+    // Check if interactive and wrap in interactiveUpdates
+    dispatch.bind(null, topLevelType),
   );
+}
+
+function dispatchInteractiveEvent(topLevelType, nativeEvent) {
+  interactiveUpdates(dispatchEvent, topLevelType, nativeEvent);
 }
 
 export function dispatchEvent(topLevelType, nativeEvent) {
@@ -157,8 +170,8 @@ export function dispatchEvent(topLevelType, nativeEvent) {
     return;
   }
 
-  var nativeEventTarget = getEventTarget(nativeEvent);
-  var targetInst = getClosestInstanceFromNode(nativeEventTarget);
+  const nativeEventTarget = getEventTarget(nativeEvent);
+  let targetInst = getClosestInstanceFromNode(nativeEventTarget);
   if (
     targetInst !== null &&
     typeof targetInst.tag === 'number' &&
@@ -171,7 +184,7 @@ export function dispatchEvent(topLevelType, nativeEvent) {
     targetInst = null;
   }
 
-  var bookKeeping = getTopLevelCallbackBookKeeping(
+  const bookKeeping = getTopLevelCallbackBookKeeping(
     topLevelType,
     nativeEvent,
     targetInst,
@@ -180,7 +193,7 @@ export function dispatchEvent(topLevelType, nativeEvent) {
   try {
     // Event queue being processed in the same cycle allows
     // `preventDefault`.
-    batchedUpdates(handleTopLevelImpl, bookKeeping);
+    batchedUpdates(handleTopLevel, bookKeeping);
   } finally {
     releaseTopLevelCallbackBookKeeping(bookKeeping);
   }

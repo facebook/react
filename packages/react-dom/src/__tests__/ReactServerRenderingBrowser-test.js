@@ -5,13 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
 
-var React;
-var ReactDOMServer;
-var ReactDOMServerBrowser;
+let React;
+let ReactDOMServer;
+let ReactDOMServerBrowser;
 
 describe('ReactServerRenderingBrowser', () => {
   beforeEach(() => {

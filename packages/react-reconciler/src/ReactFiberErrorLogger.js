@@ -7,24 +7,25 @@
  * @flow
  */
 
-import type {CapturedError} from './ReactFiberScheduler';
+import type {CapturedError} from './ReactCapturedValue';
 
-import invariant from 'fbjs/lib/invariant';
-
-const defaultShowDialog = (capturedError: CapturedError) => true;
-
-let showDialog = defaultShowDialog;
+import {showErrorDialog} from './ReactFiberErrorDialog';
 
 export function logCapturedError(capturedError: CapturedError): void {
-  const logError = showDialog(capturedError);
+  const logError = showErrorDialog(capturedError);
 
-  // Allow injected showDialog() to prevent default console.error logging.
+  // Allow injected showErrorDialog() to prevent default console.error logging.
   // This enables renderers like ReactNative to better manage redbox behavior.
   if (logError === false) {
     return;
   }
 
   const error = (capturedError.error: any);
+  const suppressLogging = error && error.suppressReactErrorLogging;
+  if (suppressLogging) {
+    return;
+  }
+
   if (__DEV__) {
     const {
       componentName,
@@ -73,21 +74,3 @@ export function logCapturedError(capturedError: CapturedError): void {
     console.error(error);
   }
 }
-
-export const injection = {
-  /**
-   * Display custom dialog for lifecycle errors.
-   * Return false to prevent default behavior of logging to console.error.
-   */
-  injectDialog(fn: (e: CapturedError) => boolean) {
-    invariant(
-      showDialog === defaultShowDialog,
-      'The custom dialog was already injected.',
-    );
-    invariant(
-      typeof fn === 'function',
-      'Injected showDialog() must be a function.',
-    );
-    showDialog = fn;
-  },
-};

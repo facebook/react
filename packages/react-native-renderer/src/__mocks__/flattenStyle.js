@@ -9,6 +9,6 @@
 
 // TODO: Move flattenStyle into react
 
-var flattenStyle = function() {};
+const flattenStyle = function() {};
 
 module.exports = flattenStyle;

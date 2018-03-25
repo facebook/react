@@ -7,35 +7,33 @@
  * @flow
  */
 
+import {
+  REACT_CALL_TYPE,
+  REACT_RETURN_TYPE,
+  REACT_ELEMENT_TYPE,
+} from 'shared/ReactSymbols';
+
 import type {ReactCall, ReactNodeList, ReactReturn} from 'shared/ReactTypes';
 
-// The Symbol used to tag the special React types. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_CALL_TYPE;
-var REACT_RETURN_TYPE;
-if (typeof Symbol === 'function' && Symbol.for) {
-  REACT_CALL_TYPE = Symbol.for('react.call');
-  REACT_RETURN_TYPE = Symbol.for('react.return');
-} else {
-  REACT_CALL_TYPE = 0xeac8;
-  REACT_RETURN_TYPE = 0xeac9;
-}
+type CallHandler<T, V> = (props: T, returns: Array<V>) => ReactNodeList;
 
-type CallHandler<T> = (props: T, returns: Array<mixed>) => ReactNodeList;
-
-export function unstable_createCall<T>(
-  children: mixed,
-  handler: CallHandler<T>,
+export function unstable_createCall<T, V>(
+  children: ReactNodeList,
+  handler: CallHandler<T, V>,
   props: T,
   key: ?string = null,
-): ReactCall {
-  var call = {
+): ReactCall<V> {
+  const call = {
     // This tag allow us to uniquely identify this as a React Call
-    $$typeof: REACT_CALL_TYPE,
+    $$typeof: REACT_ELEMENT_TYPE,
+    type: REACT_CALL_TYPE,
     key: key == null ? null : '' + key,
-    children: children,
-    handler: handler,
-    props: props,
+    ref: null,
+    props: {
+      props,
+      handler,
+      children: children,
+    },
   };
 
   if (__DEV__) {
@@ -49,11 +47,16 @@ export function unstable_createCall<T>(
   return call;
 }
 
-export function unstable_createReturn(value: mixed): ReactReturn {
-  var returnNode = {
-    // This tag allow us to uniquely identify this as a React Return
-    $$typeof: REACT_RETURN_TYPE,
-    value: value,
+export function unstable_createReturn<V>(value: V): ReactReturn<V> {
+  const returnNode = {
+    // This tag allow us to uniquely identify this as a React Call
+    $$typeof: REACT_ELEMENT_TYPE,
+    type: REACT_RETURN_TYPE,
+    key: null,
+    ref: null,
+    props: {
+      value,
+    },
   };
 
   if (__DEV__) {
@@ -73,7 +76,7 @@ export function unstable_isCall(object: mixed): boolean {
   return (
     typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_CALL_TYPE
+    object.type === REACT_CALL_TYPE
   );
 }
 
@@ -84,7 +87,7 @@ export function unstable_isReturn(object: mixed): boolean {
   return (
     typeof object === 'object' &&
     object !== null &&
-    object.$$typeof === REACT_RETURN_TYPE
+    object.type === REACT_RETURN_TYPE
   );
 }
 
