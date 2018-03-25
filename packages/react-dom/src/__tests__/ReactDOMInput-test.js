@@ -168,13 +168,12 @@ describe('ReactDOMInput', () => {
   });
 
   it('should handle when initial state is 0', () => {
-
     class App extends React.Component {
       inputRef = null;
       constructor(props) {
         super(props);
         this.state = {
-          value : 0,
+          value: 0,
         };
       }
 
@@ -182,9 +181,18 @@ describe('ReactDOMInput', () => {
         return (
           <div>
             <h1>Hello, {this.props.name}</h1>
-            <input type="number" value={this.state.value}
-                   ref={n =>(this.inputRef = n)}
-                   onChange={e =>this.setState({value: parseFloat(e.target.value) ? parseFloat(e.target.value) : 0})} />
+            <input
+              type="number"
+              value={this.state.value}
+              ref={n => (this.inputRef = n)}
+              onChange={e =>
+                this.setState({
+                  value: parseFloat(e.target.value)
+                    ? parseFloat(e.target.value)
+                    : 0,
+                })
+              }
+            />
           </div>
         );
       }
