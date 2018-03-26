@@ -499,7 +499,10 @@ export default function(
         ) {
           foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
         }
-        if (typeof instance.componentWillUpdate === 'function') {
+        if (
+          typeof instance.componentWillUpdate === 'function' &&
+          instance.componentWillUpdate.__suppressDeprecationWarning !== true
+        ) {
           foundWillUpdateName = 'componentWillUpdate';
         } else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
           foundWillUpdateName = 'UNSAFE_componentWillUpdate';
