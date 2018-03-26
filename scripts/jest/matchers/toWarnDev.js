@@ -2,6 +2,13 @@
 
 const jestDiff = require('jest-diff');
 
+function diffString(a, b) {
+  // jest-diff does not currently handle single line strings correctly
+  // The easiest work around is to ensure that both strings are multiline
+  // https://github.com/facebook/jest/issues/5657
+  return jestDiff(a + '\n', b + '\n');
+}
+
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
 }
@@ -49,11 +56,11 @@ const createMatcherFor = consoleMethod =>
         } else if (expectedMessages.length === 1) {
           errorMessage =
             'Unexpected warning recorded: ' +
-            jestDiff(normalizedMessage, expectedMessages[0]);
+            diffString(normalizedMessage, expectedMessages[0]);
         } else {
           errorMessage =
             'Unexpected warning recorded: ' +
-            jestDiff([normalizedMessage], expectedMessages);
+            diffString([normalizedMessage], expectedMessages);
         }
 
         // Record the call stack for unexpected warnings.
