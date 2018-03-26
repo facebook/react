@@ -26,7 +26,7 @@ export const ErrLog = /*                */ 0b000100000000;
 export const Snapshot = /*              */ 0b100000000000;
 
 // Union of all host effects
-export const HostEffectMask = /*        */ 0b000111111111;
+export const HostEffectMask = /*        */ 0b100111111111;
 
 export const Incomplete = /*            */ 0b001000000000;
 export const ShouldCapture = /*         */ 0b010000000000;
