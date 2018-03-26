@@ -72,7 +72,7 @@ export type ReactConsumer<T> = {
   ref: null,
   props: {
     children: (value: T) => ReactNodeList,
-    bits?: number,
+    unstable_observedBits?: number,
   },
 };
 
