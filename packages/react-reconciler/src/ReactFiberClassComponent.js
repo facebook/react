@@ -747,6 +747,10 @@ export default function(
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
+    const hasNewLifecycles =
+      typeof ctor.getDerivedStateFromProps === 'function' ||
+      typeof instance.getSnapshotBeforeUpdate === 'function';
+
     // Note: During these life-cycles, instance.props/instance.state are what
     // ever the previously attempted to render - not the "current". However,
     // during componentDidUpdate we pass the "current" props.
@@ -754,8 +758,7 @@ export default function(
     // In order to support react-lifecycles-compat polyfilled components,
     // Unsafe lifecycles should not be invoked for components using the new APIs.
     if (
-      typeof ctor.getDerivedStateFromProps !== 'function' &&
-      typeof instance.getSnapshotBeforeUpdate !== 'function' &&
+      !hasNewLifecycles &&
       (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
         typeof instance.componentWillReceiveProps === 'function')
     ) {
@@ -866,8 +869,7 @@ export default function(
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
-        typeof ctor.getDerivedStateFromProps !== 'function' &&
-        typeof instance.getSnapshotBeforeUpdate !== 'function' &&
+        !hasNewLifecycles &&
         (typeof instance.UNSAFE_componentWillMount === 'function' ||
           typeof instance.componentWillMount === 'function')
       ) {
@@ -921,6 +923,10 @@ export default function(
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
+    const hasNewLifecycles =
+      typeof ctor.getDerivedStateFromProps === 'function' ||
+      typeof instance.getSnapshotBeforeUpdate === 'function';
+
     // Note: During these life-cycles, instance.props/instance.state are what
     // ever the previously attempted to render - not the "current". However,
     // during componentDidUpdate we pass the "current" props.
@@ -928,8 +934,7 @@ export default function(
     // In order to support react-lifecycles-compat polyfilled components,
     // Unsafe lifecycles should not be invoked for components using the new APIs.
     if (
-      typeof ctor.getDerivedStateFromProps !== 'function' &&
-      typeof instance.getSnapshotBeforeUpdate !== 'function' &&
+      !hasNewLifecycles &&
       (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
         typeof instance.componentWillReceiveProps === 'function')
     ) {
@@ -1054,8 +1059,7 @@ export default function(
       // In order to support react-lifecycles-compat polyfilled components,
       // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
-        typeof ctor.getDerivedStateFromProps !== 'function' &&
-        typeof instance.getSnapshotBeforeUpdate !== 'function' &&
+        !hasNewLifecycles &&
         (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
           typeof instance.componentWillUpdate === 'function')
       ) {
