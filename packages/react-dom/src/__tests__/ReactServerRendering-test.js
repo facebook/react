@@ -646,12 +646,12 @@ describe('ReactDOMServer', () => {
     expect(() => {
       expect(() =>
         ReactDOMServer.renderToString(<ClassWithRenderNotExtended />),
-      ).toWarnDev(
-        'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
-          "but doesn't extend React.Component. This is likely to cause errors. " +
-          'Change ClassWithRenderNotExtended to extend React.Component instead.',
-      );
-    }).toThrow(TypeError);
+      ).toThrow(TypeError);
+    }).toWarnDev(
+      'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
+        "but doesn't extend React.Component. This is likely to cause errors. " +
+        'Change ClassWithRenderNotExtended to extend React.Component instead.',
+    );
 
     // Test deduplication
     expect(() => {

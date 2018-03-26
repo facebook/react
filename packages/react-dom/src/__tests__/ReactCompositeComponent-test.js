@@ -428,12 +428,12 @@ describe('ReactCompositeComponent', () => {
     expect(() => {
       expect(() => {
         ReactDOM.render(<ClassWithRenderNotExtended />, container);
-      }).toWarnDev(
-        'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
-          "but doesn't extend React.Component. This is likely to cause errors. " +
-          'Change ClassWithRenderNotExtended to extend React.Component instead.',
-      );
-    }).toThrow(TypeError);
+      }).toThrow(TypeError);
+    }).toWarnDev(
+      'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
+        "but doesn't extend React.Component. This is likely to cause errors. " +
+        'Change ClassWithRenderNotExtended to extend React.Component instead.',
+    );
 
     // Test deduplication
     expect(() => {
@@ -1728,6 +1728,7 @@ describe('ReactCompositeComponent', () => {
     expect(() => {
       expect(() => {
         ReactTestUtils.renderIntoDocument(<RenderTextInvalidConstructor />);
+        // eslint-disable-next-line react-internal/no-to-warn-dev-within-to-throw
       }).toWarnDev(
         'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
           'did you accidentally return an object from the constructor?',
@@ -1741,6 +1742,7 @@ describe('ReactCompositeComponent', () => {
     expect(() => {
       expect(() => {
         ReactTestUtils.renderIntoDocument(<RenderTestUndefinedRender />);
+        // eslint-disable-next-line react-internal/no-to-warn-dev-within-to-throw
       }).toWarnDev(
         'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
           'component instance: you may have forgotten to define `render`.',

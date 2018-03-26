@@ -352,13 +352,15 @@ describe('ReactDOMTextarea', () => {
 
   it('should throw with multiple or invalid children', () => {
     expect(() => {
-      expect(() =>
-        ReactTestUtils.renderIntoDocument(
-          <textarea>
-            {'hello'}
-            {'there'}
-          </textarea>,
-        ),
+      expect(
+        () =>
+          ReactTestUtils.renderIntoDocument(
+            <textarea>
+              {'hello'}
+              {'there'}
+            </textarea>,
+          ),
+        // eslint-disable-next-line react-internal/no-to-warn-dev-within-to-throw
       ).toWarnDev(
         'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
       );
@@ -373,10 +375,10 @@ describe('ReactDOMTextarea', () => {
               <strong />
             </textarea>,
           )),
-      ).toWarnDev(
-        'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
-      );
-    }).not.toThrow();
+      ).not.toThrow();
+    }).toWarnDev(
+      'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+    );
 
     expect(node.value).toBe('[object Object]');
   });
