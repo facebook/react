@@ -238,7 +238,7 @@ const bundles = [
   /******* React Is *******/
   {
     label: 'react-is',
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, UMD_DEV, UMD_PROD],
     moduleType: ISOMORPHIC,
     entry: 'react-is',
     global: 'ReactIs',
