@@ -46,20 +46,21 @@ let didWarnAboutLegacyLifecyclesAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
-  didWarnAboutStateAssignmentForComponent = {};
-  didWarnAboutUndefinedDerivedState = {};
-  didWarnAboutUninitializedState = {};
+  didWarnAboutStateAssignmentForComponent = new Set();
+  didWarnAboutUndefinedDerivedState = new Set();
+  didWarnAboutUninitializedState = new Set();
   didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
-  didWarnAboutLegacyLifecyclesAndDerivedState = {};
+  didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
 
-  const didWarnOnInvalidCallback = {};
+  const didWarnOnInvalidCallback = new Set();
 
   warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
     const key = `${callerName}_${(callback: any)}`;
-    if (!didWarnOnInvalidCallback[key]) {
+    if (!didWarnOnInvalidCallback.has(key)) {
+      didWarnOnInvalidCallback.add(key);
       warning(
         false,
         '%s(...): Expected the last optional `callback` argument to be a ' +
@@ -67,7 +68,6 @@ if (__DEV__) {
         callerName,
         callback,
       );
-      didWarnOnInvalidCallback[key] = true;
     }
   };
 
@@ -458,7 +458,8 @@ export default function(
         state === null
       ) {
         const componentName = getComponentName(workInProgress) || 'Component';
-        if (!didWarnAboutUninitializedState[componentName]) {
+        if (!didWarnAboutUninitializedState.has(componentName)) {
+          didWarnAboutUninitializedState.add(componentName);
           warning(
             false,
             '%s: Did not properly initialize state during construction. ' +
@@ -466,7 +467,6 @@ export default function(
             componentName,
             instance.state === null ? 'null' : 'undefined',
           );
-          didWarnAboutUninitializedState[componentName] = true;
         }
       }
 
@@ -514,7 +514,8 @@ export default function(
             typeof ctor.getDerivedStateFromProps === 'function'
               ? 'getDerivedStateFromProps()'
               : 'getSnapshotBeforeUpdate()';
-          if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
+          if (!didWarnAboutLegacyLifecyclesAndDerivedState.has(componentName)) {
+            didWarnAboutLegacyLifecyclesAndDerivedState.add(componentName);
             warning(
               false,
               'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
@@ -529,7 +530,6 @@ export default function(
                 : '',
               foundWillUpdateName !== null ? `\n  ${foundWillUpdateName}` : '',
             );
-            didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
           }
         }
       }
@@ -610,7 +610,8 @@ export default function(
     if (instance.state !== oldState) {
       if (__DEV__) {
         const componentName = getComponentName(workInProgress) || 'Component';
-        if (!didWarnAboutStateAssignmentForComponent[componentName]) {
+        if (!didWarnAboutStateAssignmentForComponent.has(componentName)) {
+          didWarnAboutStateAssignmentForComponent.add(componentName);
           warning(
             false,
             '%s.componentWillReceiveProps(): Assigning directly to ' +
@@ -618,7 +619,6 @@ export default function(
               'constructor). Use setState instead.',
             componentName,
           );
-          didWarnAboutStateAssignmentForComponent[componentName] = true;
         }
       }
       updater.enqueueReplaceState(instance, instance.state, null);
@@ -652,14 +652,14 @@ export default function(
       if (__DEV__) {
         if (partialState === undefined) {
           const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutUndefinedDerivedState[componentName]) {
+          if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
+            didWarnAboutUndefinedDerivedState.add(componentName);
             warning(
               false,
               '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
                 'You have returned undefined.',
               componentName,
             );
-            didWarnAboutUndefinedDerivedState[componentName] = componentName;
           }
         }
       }
