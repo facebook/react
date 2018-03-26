@@ -213,7 +213,10 @@ if (__DEV__) {
     ) {
       pendingComponentWillReceivePropsWarnings.push(fiber);
     }
-    if (typeof instance.componentWillUpdate === 'function') {
+    if (
+      typeof instance.componentWillUpdate === 'function' &&
+      instance.componentWillUpdate.__suppressDeprecationWarning !== true
+    ) {
       pendingComponentWillUpdateWarnings.push(fiber);
     }
   };

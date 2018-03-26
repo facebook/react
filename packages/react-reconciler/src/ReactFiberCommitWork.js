@@ -27,7 +27,12 @@ import {
   CallComponent,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
-import {Placement, Update, ContentReset} from 'shared/ReactTypeOfSideEffect';
+import {
+  Placement,
+  Update,
+  ContentReset,
+  Snapshot,
+} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
@@ -43,6 +48,11 @@ const {
   hasCaughtError,
   clearCaughtError,
 } = ReactErrorUtils;
+
+let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
+if (__DEV__) {
+  didWarnAboutUndefinedSnapshotBeforeUpdate = new Set();
+}
 
 function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   const source = errorInfo.source;
@@ -151,6 +161,63 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
+  function commitBeforeMutationLifeCycles(
+    current: Fiber | null,
+    finishedWork: Fiber,
+  ): void {
+    switch (finishedWork.tag) {
+      case ClassComponent: {
+        if (finishedWork.effectTag & Snapshot) {
+          if (current !== null) {
+            const prevProps = current.memoizedProps;
+            const prevState = current.memoizedState;
+            startPhaseTimer(finishedWork, 'getSnapshotBeforeUpdate');
+            const instance = finishedWork.stateNode;
+            instance.props = finishedWork.memoizedProps;
+            instance.state = finishedWork.memoizedState;
+            const snapshot = instance.getSnapshotBeforeUpdate(
+              prevProps,
+              prevState,
+            );
+            if (__DEV__) {
+              const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<
+                mixed,
+              >);
+              if (
+                snapshot === undefined &&
+                !didWarnSet.has(finishedWork.type)
+              ) {
+                didWarnSet.add(finishedWork.type);
+                warning(
+                  false,
+                  '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
+                    'must be returned. You have returned undefined.',
+                  getComponentName(finishedWork),
+                );
+              }
+            }
+            instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+            stopPhaseTimer();
+          }
+        }
+        return;
+      }
+      case HostRoot:
+      case HostComponent:
+      case HostText:
+      case HostPortal:
+        // Nothing to do for these component types
+        return;
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+      }
+    }
+  }
+
   function commitLifeCycles(
     finishedRoot: FiberRoot,
     current: Fiber | null,
@@ -174,7 +241,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             startPhaseTimer(finishedWork, 'componentDidUpdate');
             instance.props = finishedWork.memoizedProps;
             instance.state = finishedWork.memoizedState;
-            instance.componentDidUpdate(prevProps, prevState);
+            instance.componentDidUpdate(
+              prevProps,
+              prevState,
+              instance.__reactInternalSnapshotBeforeUpdate,
+            );
             stopPhaseTimer();
           }
         }
@@ -492,6 +563,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           commitContainer(finishedWork);
         },
         commitLifeCycles,
+        commitBeforeMutationLifeCycles,
         commitErrorLogging,
         commitAttachRef,
         commitDetachRef,
@@ -814,6 +886,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   if (enableMutatingReconciler) {
     return {
+      commitBeforeMutationLifeCycles,
       commitResetTextContent,
       commitPlacement,
       commitDeletion,

@@ -31,7 +31,8 @@ type MeasurementPhase =
   | 'componentWillUpdate'
   | 'componentDidUpdate'
   | 'componentDidMount'
-  | 'getChildContext';
+  | 'getChildContext'
+  | 'getSnapshotBeforeUpdate';
 
 // Prefix measurements so that it's possible to filter them.
 // Longer prefixes are hard to read in DevTools.

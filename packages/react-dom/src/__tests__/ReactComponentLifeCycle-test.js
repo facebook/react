@@ -591,6 +591,7 @@ describe('ReactComponentLifeCycle', () => {
       }
       componentDidMount = logger('outer componentDidMount');
       shouldComponentUpdate = logger('outer shouldComponentUpdate');
+      getSnapshotBeforeUpdate = logger('outer getSnapshotBeforeUpdate');
       componentDidUpdate = logger('outer componentDidUpdate');
       componentWillUnmount = logger('outer componentWillUnmount');
       render() {
@@ -610,6 +611,7 @@ describe('ReactComponentLifeCycle', () => {
       }
       componentDidMount = logger('inner componentDidMount');
       shouldComponentUpdate = logger('inner shouldComponentUpdate');
+      getSnapshotBeforeUpdate = logger('inner getSnapshotBeforeUpdate');
       componentDidUpdate = logger('inner componentDidUpdate');
       componentWillUnmount = logger('inner componentWillUnmount');
       render() {
@@ -635,6 +637,8 @@ describe('ReactComponentLifeCycle', () => {
       'outer shouldComponentUpdate',
       'inner getDerivedStateFromProps',
       'inner shouldComponentUpdate',
+      'inner getSnapshotBeforeUpdate',
+      'outer getSnapshotBeforeUpdate',
       'inner componentDidUpdate',
       'outer componentDidUpdate',
     ]);
@@ -669,8 +673,36 @@ describe('ReactComponentLifeCycle', () => {
 
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.',
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.',
     );
+  });
+
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+    class Component extends React.Component {
+      state = {};
+      getSnapshotBeforeUpdate() {
+        return null;
+      }
+      componentWillMount() {
+        throw Error('unexpected');
+      }
+      componentWillReceiveProps() {
+        throw Error('unexpected');
+      }
+      componentWillUpdate() {
+        throw Error('unexpected');
+      }
+      componentDidUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => ReactDOM.render(<Component value={1} />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.',
+    );
+    ReactDOM.render(<Component value={2} />, container);
   });
 
   it('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', () => {
@@ -694,9 +726,10 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.',
+    expect(() => ReactDOM.render(<Component value={1} />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.',
     );
+    ReactDOM.render(<Component value={2} />, container);
   });
 
   it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
@@ -716,7 +749,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => ReactDOM.render(<AllLegacyLifecycles />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
         'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
         '  UNSAFE_componentWillReceiveProps\n' +
@@ -737,7 +770,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => ReactDOM.render(<WillMount />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
         'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
@@ -757,7 +790,7 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => ReactDOM.render(<WillMountAndUpdate />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
         'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  componentWillMount\n' +
         '  UNSAFE_componentWillUpdate\n\n' +
@@ -777,8 +810,90 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
-      'Unsafe legacy lifecycles will not be called for components using the new getDerivedStateFromProps() API.\n\n' +
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
         'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillReceiveProps\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
+  });
+
+  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+    const container = document.createElement('div');
+
+    class AllLegacyLifecycles extends React.Component {
+      state = {};
+      getSnapshotBeforeUpdate() {}
+      componentWillMount() {}
+      UNSAFE_componentWillReceiveProps() {}
+      componentWillUpdate() {}
+      componentDidUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOM.render(<AllLegacyLifecycles />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+        'AllLegacyLifecycles uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  UNSAFE_componentWillReceiveProps\n' +
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
+
+    class WillMount extends React.Component {
+      state = {};
+      getSnapshotBeforeUpdate() {}
+      UNSAFE_componentWillMount() {}
+      componentDidUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOM.render(<WillMount />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+        'WillMount uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
+        '  UNSAFE_componentWillMount\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
+
+    class WillMountAndUpdate extends React.Component {
+      state = {};
+      getSnapshotBeforeUpdate() {}
+      componentWillMount() {}
+      UNSAFE_componentWillUpdate() {}
+      componentDidUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOM.render(<WillMountAndUpdate />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+        'WillMountAndUpdate uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  UNSAFE_componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
+
+    class WillReceiveProps extends React.Component {
+      state = {};
+      getSnapshotBeforeUpdate() {}
+      componentWillReceiveProps() {}
+      componentDidUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    expect(() => ReactDOM.render(<WillReceiveProps />, container)).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+        'WillReceiveProps uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
         '  componentWillReceiveProps\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
@@ -960,5 +1075,118 @@ describe('ReactComponentLifeCycle', () => {
     // Trigger batched setState() calls
     ReactTestUtils.Simulate.click(divRef.current);
     expect(divRef.current.textContent).toBe('remote:2, local:2');
+  });
+
+  it('should pass the return value from getSnapshotBeforeUpdate to componentDidUpdate', () => {
+    const log = [];
+
+    class MyComponent extends React.Component {
+      state = {
+        value: 0,
+      };
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {
+          value: prevState.value + 1,
+        };
+      }
+      getSnapshotBeforeUpdate(prevProps, prevState) {
+        log.push(
+          `getSnapshotBeforeUpdate() prevProps:${prevProps.value} prevState:${
+            prevState.value
+          }`,
+        );
+        return 'abc';
+      }
+      componentDidUpdate(prevProps, prevState, snapshot) {
+        log.push(
+          `componentDidUpdate() prevProps:${prevProps.value} prevState:${
+            prevState.value
+          } snapshot:${snapshot}`,
+        );
+      }
+      render() {
+        log.push('render');
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(
+      <div>
+        <MyComponent value="foo" />
+      </div>,
+      div,
+    );
+    expect(log).toEqual(['render']);
+    log.length = 0;
+
+    ReactDOM.render(
+      <div>
+        <MyComponent value="bar" />
+      </div>,
+      div,
+    );
+    expect(log).toEqual([
+      'render',
+      'getSnapshotBeforeUpdate() prevProps:foo prevState:1',
+      'componentDidUpdate() prevProps:foo prevState:1 snapshot:abc',
+    ]);
+    log.length = 0;
+
+    ReactDOM.render(
+      <div>
+        <MyComponent value="baz" />
+      </div>,
+      div,
+    );
+    expect(log).toEqual([
+      'render',
+      'getSnapshotBeforeUpdate() prevProps:bar prevState:2',
+      'componentDidUpdate() prevProps:bar prevState:2 snapshot:abc',
+    ]);
+    log.length = 0;
+
+    ReactDOM.render(<div />, div);
+    expect(log).toEqual([]);
+  });
+
+  it('should warn if getSnapshotBeforeUpdate returns undefined', () => {
+    class MyComponent extends React.Component {
+      getSnapshotBeforeUpdate() {}
+      componentDidUpdate() {}
+      render() {
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<MyComponent value="foo" />, div);
+    expect(() => ReactDOM.render(<MyComponent value="bar" />, div)).toWarnDev(
+      'MyComponent.getSnapshotBeforeUpdate(): A snapshot value (or null) must ' +
+        'be returned. You have returned undefined.',
+    );
+
+    // De-duped
+    ReactDOM.render(<MyComponent value="baz" />, div);
+  });
+
+  it('should warn if getSnapshotBeforeUpdate is defined with no componentDidUpdate', () => {
+    class MyComponent extends React.Component {
+      getSnapshotBeforeUpdate() {
+        return null;
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const div = document.createElement('div');
+    expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
+      'MyComponent: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
+        'This component defines getSnapshotBeforeUpdate() only.',
+    );
+
+    // De-duped
+    ReactDOM.render(<MyComponent />, div);
   });
 });

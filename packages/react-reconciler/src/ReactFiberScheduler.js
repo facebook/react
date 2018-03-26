@@ -21,6 +21,7 @@ import {
   PerformedWork,
   Placement,
   Update,
+  Snapshot,
   PlacementAndUpdate,
   Deletion,
   ContentReset,
@@ -197,6 +198,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     isAlreadyFailedLegacyErrorBoundary,
   );
   const {
+    commitBeforeMutationLifeCycles,
     commitResetTextContent,
     commitPlacement,
     commitDeletion,
@@ -319,6 +321,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       recordEffect();
 
       const effectTag = nextEffect.effectTag;
+
+      if (effectTag & Snapshot) {
+        const current = nextEffect.alternate;
+        commitBeforeMutationLifeCycles(current, nextEffect);
+      }
+
       if (effectTag & ContentReset) {
         commitResetTextContent(nextEffect);
       }
