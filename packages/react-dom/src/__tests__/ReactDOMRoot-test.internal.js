@@ -185,6 +185,57 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('Hi');
   });
 
+  it('can defer a commit by batching it', () => {
+    const root = ReactDOM.createRoot(container);
+    const batch = root.createBatch();
+    batch.render(<div>Hi</div>);
+    // Hasn't committed yet
+    expect(container.textContent).toEqual('');
+    // Commit
+    batch.commit();
+    expect(container.textContent).toEqual('Hi');
+  });
+
+  it('applies setState in componentDidMount synchronously in a batch', done => {
+    class App extends React.Component {
+      state = {mounted: false};
+      componentDidMount() {
+        this.setState({
+          mounted: true,
+        });
+      }
+      render() {
+        return this.state.mounted ? 'Hi' : 'Bye';
+      }
+    }
+
+    const root = ReactDOM.createRoot(container);
+    const batch = root.createBatch();
+    batch.render(
+      <AsyncMode>
+        <App />
+      </AsyncMode>,
+    );
+
+    flush();
+
+    // Hasn't updated yet
+    expect(container.textContent).toEqual('');
+
+    let ops = [];
+    batch.then(() => {
+      // Still hasn't updated
+      ops.push(container.textContent);
+
+      // Should synchronously commit
+      batch.commit();
+      ops.push(container.textContent);
+
+      expect(ops).toEqual(['', 'Hi']);
+      done();
+    });
+  });
+
   it('does not restart a completed batch when committing if there were no intervening updates', () => {
     let ops = [];
     function Foo(props) {
