@@ -68,6 +68,8 @@ import {
   stopWorkLoopTimer,
   startCommitTimer,
   stopCommitTimer,
+  startCommitSnapshotEffectsTimer,
+  stopCommitSnapshotEffectsTimer,
   startCommitHostEffectsTimer,
   stopCommitHostEffectsTimer,
   startCommitLifeCyclesTimer,
@@ -504,7 +506,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     // Invoke instances of getSnapshotBeforeUpdate before mutation.
     nextEffect = firstEffect;
-    // TODO Start new commit phase timer from ReactDebugFiberPerf
+    startCommitSnapshotEffectsTimer();
     while (nextEffect !== null) {
       let didError = false;
       let error;
@@ -535,7 +537,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
       }
     }
-    // TODO Stop new commit phase timer from ReactDebugFiberPerf
+    stopCommitSnapshotEffectsTimer();
 
     // Commit all the side-effects within a tree. We'll do this in two passes.
     // The first pass performs all the host insertions, updates, deletions and
