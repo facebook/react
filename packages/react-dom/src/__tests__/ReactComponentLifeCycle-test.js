@@ -1150,6 +1150,45 @@ describe('ReactComponentLifeCycle', () => {
     expect(log).toEqual([]);
   });
 
+  it('should call getSnapshotBeforeUpdate before mutations are committed', () => {
+    const log = [];
+
+    class MyComponent extends React.Component {
+      divRef = React.createRef();
+      getSnapshotBeforeUpdate(prevProps, prevState) {
+        log.push('getSnapshotBeforeUpdate');
+        expect(this.divRef.current.textContent).toBe(
+          `value:${prevProps.value}`,
+        );
+        return 'foobar';
+      }
+      componentDidUpdate(prevProps, prevState, snapshot) {
+        log.push('componentDidUpdate');
+        expect(this.divRef.current.textContent).toBe(
+          `value:${this.props.value}`,
+        );
+        expect(snapshot).toBe('foobar');
+      }
+      render() {
+        log.push('render');
+        return <div ref={this.divRef}>{`value:${this.props.value}`}</div>;
+      }
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<MyComponent value="foo" />, div);
+    expect(log).toEqual(['render']);
+    log.length = 0;
+
+    ReactDOM.render(<MyComponent value="bar" />, div);
+    expect(log).toEqual([
+      'render',
+      'getSnapshotBeforeUpdate',
+      'componentDidUpdate',
+    ]);
+    log.length = 0;
+  });
+
   it('should warn if getSnapshotBeforeUpdate returns undefined', () => {
     class MyComponent extends React.Component {
       getSnapshotBeforeUpdate() {}

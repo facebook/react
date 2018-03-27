@@ -322,11 +322,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
       const effectTag = nextEffect.effectTag;
 
-      if (effectTag & Snapshot) {
-        const current = nextEffect.alternate;
-        commitBeforeMutationLifeCycles(current, nextEffect);
-      }
-
       if (effectTag & ContentReset) {
         commitResetTextContent(nextEffect);
       }
@@ -381,6 +376,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();
+    }
+  }
+
+  function commitBeforeMutationLifecycles() {
+    while (nextEffect !== null) {
+      const effectTag = nextEffect.effectTag;
+
+      if (effectTag & Snapshot) {
+        recordEffect();
+        const current = nextEffect.alternate;
+        commitBeforeMutationLifeCycles(current, nextEffect);
+      }
+
+      // Don't cleanup effects yet;
+      // This will be done by commitAllLifeCycles()
+      nextEffect = nextEffect.nextEffect;
     }
   }
 
@@ -490,6 +501,41 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     prepareForCommit(root.containerInfo);
+
+    // Invoke instances of getSnapshotBeforeUpdate before mutation.
+    nextEffect = firstEffect;
+    // TODO Start new commit phase timer from ReactDebugFiberPerf
+    while (nextEffect !== null) {
+      let didError = false;
+      let error;
+      if (__DEV__) {
+        invokeGuardedCallback(null, commitBeforeMutationLifecycles, null);
+        if (hasCaughtError()) {
+          didError = true;
+          error = clearCaughtError();
+        }
+      } else {
+        try {
+          commitBeforeMutationLifecycles();
+        } catch (e) {
+          didError = true;
+          error = e;
+        }
+      }
+      if (didError) {
+        invariant(
+          nextEffect !== null,
+          'Should have next effect. This error is likely caused by a bug ' +
+            'in React. Please file an issue.',
+        );
+        onCommitPhaseError(nextEffect, error);
+        // Clean-up
+        if (nextEffect !== null) {
+          nextEffect = nextEffect.nextEffect;
+        }
+      }
+    }
+    // TODO Stop new commit phase timer from ReactDebugFiberPerf
 
     // Commit all the side-effects within a tree. We'll do this in two passes.
     // The first pass performs all the host insertions, updates, deletions and
