@@ -1118,6 +1118,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
           if (nextRoot !== root || !isWorking) {
             requestWork(root, expirationTime);
+          } else {
+            addRootToSchedule(root, expirationTime);
           }
           if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
             invariant(
@@ -1444,7 +1446,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Perform work on root as if the given expiration time is the current time.
     // This has the effect of synchronously flushing all work up to and
     // including the given time.
-    performWorkOnRoot(root, expirationTime, false);
+    do {
+      performWorkOnRoot(root, expirationTime, false);
+      findHighestPriorityRoot();
+    } while (nextFlushedRoot === root && nextFlushedExpirationTime === Sync);
+
     finishRendering();
   }
 
