@@ -2081,4 +2081,44 @@ describe('ReactErrorBoundaries', () => {
       });
     }).toThrow('foo error');
   });
+
+  it('handles errors that occur in before-mutation commit hook', () => {
+    const errors = [];
+    let caughtError;
+    class Parent extends React.Component {
+      getSnapshotBeforeUpdate() {
+        errors.push('parent sad');
+        throw new Error('parent sad');
+      }
+      componentDidUpdate() {}
+      render() {
+        return <Child {...this.props} />;
+      }
+    }
+    class Child extends React.Component {
+      getSnapshotBeforeUpdate() {
+        errors.push('child sad');
+        throw new Error('child sad');
+      }
+      componentDidUpdate() {}
+      render() {
+        return <div />;
+      }
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<Parent value={1} />, container);
+    try {
+      ReactDOM.render(<Parent value={2} />, container);
+    } catch (e) {
+      if (e.message !== 'parent sad' && e.message !== 'child sad') {
+        throw e;
+      }
+      caughtError = e;
+    }
+
+    expect(errors).toEqual(['child sad', 'parent sad']);
+    // Error should be the first thrown
+    expect(caughtError.message).toBe('child sad');
+  });
 });

@@ -12,7 +12,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {LegacyContext} from './ReactFiberContext';
 import type {CapturedValue} from './ReactCapturedValue';
 
-import {Update} from 'shared/ReactTypeOfSideEffect';
+import {Update, Snapshot} from 'shared/ReactTypeOfSideEffect';
 import {
   enableGetDerivedStateFromCatch,
   debugRenderPhaseSideEffects,
@@ -41,23 +41,26 @@ const isArray = Array.isArray;
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
+let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 let didWarnAboutLegacyLifecyclesAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
-  didWarnAboutStateAssignmentForComponent = {};
-  didWarnAboutUndefinedDerivedState = {};
-  didWarnAboutUninitializedState = {};
-  didWarnAboutLegacyLifecyclesAndDerivedState = {};
+  didWarnAboutStateAssignmentForComponent = new Set();
+  didWarnAboutUndefinedDerivedState = new Set();
+  didWarnAboutUninitializedState = new Set();
+  didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
+  didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
 
-  const didWarnOnInvalidCallback = {};
+  const didWarnOnInvalidCallback = new Set();
 
   warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
     const key = `${callerName}_${(callback: any)}`;
-    if (!didWarnOnInvalidCallback[key]) {
+    if (!didWarnOnInvalidCallback.has(key)) {
+      didWarnOnInvalidCallback.add(key);
       warning(
         false,
         '%s(...): Expected the last optional `callback` argument to be a ' +
@@ -65,7 +68,6 @@ if (__DEV__) {
         callerName,
         callback,
       );
-      didWarnOnInvalidCallback[key] = true;
     }
   };
 
@@ -364,6 +366,22 @@ export default function(
         name,
         name,
       );
+
+      if (
+        typeof instance.getSnapshotBeforeUpdate === 'function' &&
+        typeof instance.componentDidUpdate !== 'function' &&
+        typeof instance.componentDidUpdate !== 'function' &&
+        !didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(type)
+      ) {
+        didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(type);
+        warning(
+          false,
+          '%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
+            'This component defines getSnapshotBeforeUpdate() only.',
+          getComponentName(workInProgress),
+        );
+      }
+
       const noInstanceGetDerivedStateFromProps =
         typeof instance.getDerivedStateFromProps !== 'function';
       warning(
@@ -435,24 +453,30 @@ export default function(
     adoptClassInstance(workInProgress, instance);
 
     if (__DEV__) {
-      if (typeof ctor.getDerivedStateFromProps === 'function') {
-        if (state === null) {
-          const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutUninitializedState[componentName]) {
-            warning(
-              false,
-              '%s: Did not properly initialize state during construction. ' +
-                'Expected state to be an object, but it was %s.',
-              componentName,
-              instance.state === null ? 'null' : 'undefined',
-            );
-            didWarnAboutUninitializedState[componentName] = true;
-          }
+      if (
+        typeof ctor.getDerivedStateFromProps === 'function' &&
+        state === null
+      ) {
+        const componentName = getComponentName(workInProgress) || 'Component';
+        if (!didWarnAboutUninitializedState.has(componentName)) {
+          didWarnAboutUninitializedState.add(componentName);
+          warning(
+            false,
+            '%s: Did not properly initialize state during construction. ' +
+              'Expected state to be an object, but it was %s.',
+            componentName,
+            instance.state === null ? 'null' : 'undefined',
+          );
         }
+      }
 
-        // If getDerivedStateFromProps() is defined, "unsafe" lifecycles won't be called.
-        // Warn about these lifecycles if they are present.
-        // Don't warn about react-lifecycles-compat polyfilled methods though.
+      // If new component APIs are defined, "unsafe" lifecycles won't be called.
+      // Warn about these lifecycles if they are present.
+      // Don't warn about react-lifecycles-compat polyfilled methods though.
+      if (
+        typeof ctor.getDerivedStateFromProps === 'function' ||
+        typeof instance.getSnapshotBeforeUpdate === 'function'
+      ) {
         let foundWillMountName = null;
         let foundWillReceivePropsName = null;
         let foundWillUpdateName = null;
@@ -475,7 +499,10 @@ export default function(
         ) {
           foundWillReceivePropsName = 'UNSAFE_componentWillReceiveProps';
         }
-        if (typeof instance.componentWillUpdate === 'function') {
+        if (
+          typeof instance.componentWillUpdate === 'function' &&
+          instance.componentWillUpdate.__suppressDeprecationWarning !== true
+        ) {
           foundWillUpdateName = 'componentWillUpdate';
         } else if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
           foundWillUpdateName = 'UNSAFE_componentWillUpdate';
@@ -486,23 +513,26 @@ export default function(
           foundWillUpdateName !== null
         ) {
           const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutLegacyLifecyclesAndDerivedState[componentName]) {
+          const newApiName =
+            typeof ctor.getDerivedStateFromProps === 'function'
+              ? 'getDerivedStateFromProps()'
+              : 'getSnapshotBeforeUpdate()';
+          if (!didWarnAboutLegacyLifecyclesAndDerivedState.has(componentName)) {
+            didWarnAboutLegacyLifecyclesAndDerivedState.add(componentName);
             warning(
               false,
-              'Unsafe legacy lifecycles will not be called for components using ' +
-                'the new getDerivedStateFromProps() API.\n\n' +
-                '%s uses getDerivedStateFromProps() but also contains the following legacy lifecycles:' +
-                '%s%s%s\n\n' +
+              'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+                '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
                 'The above lifecycles should be removed. Learn more about this warning here:\n' +
                 'https://fb.me/react-async-component-lifecycle-hooks',
               componentName,
+              newApiName,
               foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
               foundWillReceivePropsName !== null
                 ? `\n  ${foundWillReceivePropsName}`
                 : '',
               foundWillUpdateName !== null ? `\n  ${foundWillUpdateName}` : '',
             );
-            didWarnAboutLegacyLifecyclesAndDerivedState[componentName] = true;
           }
         }
       }
@@ -583,7 +613,8 @@ export default function(
     if (instance.state !== oldState) {
       if (__DEV__) {
         const componentName = getComponentName(workInProgress) || 'Component';
-        if (!didWarnAboutStateAssignmentForComponent[componentName]) {
+        if (!didWarnAboutStateAssignmentForComponent.has(componentName)) {
+          didWarnAboutStateAssignmentForComponent.add(componentName);
           warning(
             false,
             '%s.componentWillReceiveProps(): Assigning directly to ' +
@@ -591,7 +622,6 @@ export default function(
               'constructor). Use setState instead.',
             componentName,
           );
-          didWarnAboutStateAssignmentForComponent[componentName] = true;
         }
       }
       updater.enqueueReplaceState(instance, instance.state, null);
@@ -625,14 +655,14 @@ export default function(
       if (__DEV__) {
         if (partialState === undefined) {
           const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutUndefinedDerivedState[componentName]) {
+          if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
+            didWarnAboutUndefinedDerivedState.add(componentName);
             warning(
               false,
               '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
                 'You have returned undefined.',
               componentName,
             );
-            didWarnAboutUndefinedDerivedState[componentName] = componentName;
           }
         }
       }
@@ -679,11 +709,12 @@ export default function(
     }
 
     // In order to support react-lifecycles-compat polyfilled components,
-    // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+    // Unsafe lifecycles should not be invoked for components using the new APIs.
     if (
+      typeof ctor.getDerivedStateFromProps !== 'function' &&
+      typeof instance.getSnapshotBeforeUpdate !== 'function' &&
       (typeof instance.UNSAFE_componentWillMount === 'function' ||
-        typeof instance.componentWillMount === 'function') &&
-      typeof ctor.getDerivedStateFromProps !== 'function'
+        typeof instance.componentWillMount === 'function')
     ) {
       callComponentWillMount(workInProgress, instance);
       // If we had additional state updates during this life-cycle, let's
@@ -719,16 +750,20 @@ export default function(
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
+    const hasNewLifecycles =
+      typeof ctor.getDerivedStateFromProps === 'function' ||
+      typeof instance.getSnapshotBeforeUpdate === 'function';
+
     // Note: During these life-cycles, instance.props/instance.state are what
     // ever the previously attempted to render - not the "current". However,
     // during componentDidUpdate we pass the "current" props.
 
     // In order to support react-lifecycles-compat polyfilled components,
-    // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+    // Unsafe lifecycles should not be invoked for components using the new APIs.
     if (
+      !hasNewLifecycles &&
       (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
-        typeof instance.componentWillReceiveProps === 'function') &&
-      typeof ctor.getDerivedStateFromProps !== 'function'
+        typeof instance.componentWillReceiveProps === 'function')
     ) {
       if (oldProps !== newProps || oldContext !== newContext) {
         callComponentWillReceiveProps(
@@ -835,11 +870,11 @@ export default function(
 
     if (shouldUpdate) {
       // In order to support react-lifecycles-compat polyfilled components,
-      // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+      // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
+        !hasNewLifecycles &&
         (typeof instance.UNSAFE_componentWillMount === 'function' ||
-          typeof instance.componentWillMount === 'function') &&
-        typeof ctor.getDerivedStateFromProps !== 'function'
+          typeof instance.componentWillMount === 'function')
       ) {
         startPhaseTimer(workInProgress, 'componentWillMount');
         if (typeof instance.componentWillMount === 'function') {
@@ -891,16 +926,20 @@ export default function(
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
+    const hasNewLifecycles =
+      typeof ctor.getDerivedStateFromProps === 'function' ||
+      typeof instance.getSnapshotBeforeUpdate === 'function';
+
     // Note: During these life-cycles, instance.props/instance.state are what
     // ever the previously attempted to render - not the "current". However,
     // during componentDidUpdate we pass the "current" props.
 
     // In order to support react-lifecycles-compat polyfilled components,
-    // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+    // Unsafe lifecycles should not be invoked for components using the new APIs.
     if (
+      !hasNewLifecycles &&
       (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
-        typeof instance.componentWillReceiveProps === 'function') &&
-      typeof ctor.getDerivedStateFromProps !== 'function'
+        typeof instance.componentWillReceiveProps === 'function')
     ) {
       if (oldProps !== newProps || oldContext !== newContext) {
         callComponentWillReceiveProps(
@@ -917,6 +956,7 @@ export default function(
     // TODO: Previous state can be null.
     let newState;
     let derivedStateFromCatch;
+
     if (workInProgress.updateQueue !== null) {
       newState = processUpdateQueue(
         current,
@@ -998,6 +1038,14 @@ export default function(
           workInProgress.effectTag |= Update;
         }
       }
+      if (typeof instance.getSnapshotBeforeUpdate === 'function') {
+        if (
+          oldProps !== current.memoizedProps ||
+          oldState !== current.memoizedState
+        ) {
+          workInProgress.effectTag |= Snapshot;
+        }
+      }
       return false;
     }
 
@@ -1012,11 +1060,11 @@ export default function(
 
     if (shouldUpdate) {
       // In order to support react-lifecycles-compat polyfilled components,
-      // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
+      // Unsafe lifecycles should not be invoked for components using the new APIs.
       if (
+        !hasNewLifecycles &&
         (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
-          typeof instance.componentWillUpdate === 'function') &&
-        typeof ctor.getDerivedStateFromProps !== 'function'
+          typeof instance.componentWillUpdate === 'function')
       ) {
         startPhaseTimer(workInProgress, 'componentWillUpdate');
         if (typeof instance.componentWillUpdate === 'function') {
@@ -1030,6 +1078,9 @@ export default function(
       if (typeof instance.componentDidUpdate === 'function') {
         workInProgress.effectTag |= Update;
       }
+      if (typeof instance.getSnapshotBeforeUpdate === 'function') {
+        workInProgress.effectTag |= Snapshot;
+      }
     } else {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -1039,6 +1090,14 @@ export default function(
           oldState !== current.memoizedState
         ) {
           workInProgress.effectTag |= Update;
+        }
+      }
+      if (typeof instance.getSnapshotBeforeUpdate === 'function') {
+        if (
+          oldProps !== current.memoizedProps ||
+          oldState !== current.memoizedState
+        ) {
+          workInProgress.effectTag |= Snapshot;
         }
       }
 

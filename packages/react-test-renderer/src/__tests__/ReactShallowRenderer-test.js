@@ -128,6 +128,48 @@ describe('ReactShallowRenderer', () => {
     shallowRenderer.render(<Component />);
   });
 
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+    class Component extends React.Component {
+      getSnapshotBeforeUpdate() {
+        return null;
+      }
+      componentWillMount() {
+        throw Error('unexpected');
+      }
+      componentWillReceiveProps() {
+        throw Error('unexpected');
+      }
+      componentWillUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component value={1} />);
+    shallowRenderer.render(<Component value={2} />);
+  });
+
+  it('should not call getSnapshotBeforeUpdate or componentDidUpdate when updating since refs wont exist', () => {
+    class Component extends React.Component {
+      getSnapshotBeforeUpdate() {
+        throw Error('unexpected');
+      }
+      componentDidUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component value={1} />);
+    shallowRenderer.render(<Component value={2} />);
+  });
+
   it('should only render 1 level deep', () => {
     function Parent() {
       return (
