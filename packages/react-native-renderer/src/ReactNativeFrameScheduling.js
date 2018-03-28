@@ -23,6 +23,7 @@ let frameDeadline: number = 0;
 
 const frameDeadlineObject: Deadline = {
   timeRemaining: () => frameDeadline - now(),
+  didTimeout: false,
 };
 
 function setTimeoutCallback() {

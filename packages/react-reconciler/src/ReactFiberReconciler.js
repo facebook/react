@@ -37,6 +37,7 @@ if (__DEV__) {
 
 export type Deadline = {
   timeRemaining: () => number,
+  didTimeout: boolean,
 };
 
 type OpaqueHandle = Fiber;

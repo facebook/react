@@ -308,6 +308,10 @@ function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
         didStop = true;
         return 0;
       },
+      // React's scheduler has its own way of keeping track of expired
+      // work and doesn't read this, so don't bother setting it to the
+      // correct value.
+      didTimeout: false,
     });
 
     if (yieldedValues !== null) {
