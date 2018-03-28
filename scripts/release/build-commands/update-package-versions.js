@@ -54,7 +54,7 @@ const update = async ({cwd, dry, packages, version}) => {
         json.version = version;
       }
 
-      if (project !== 'react') {
+      if (project !== 'react' && json.peerDependencies) {
         let peerVersion = json.peerDependencies.react.replace('^', '');
 
         // If the previous release was a pre-release version,
