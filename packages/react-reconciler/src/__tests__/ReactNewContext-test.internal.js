@@ -762,6 +762,45 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Child')]);
   });
 
+  it('renders context children when child is an instance method', () => {
+    const Context = React.createContext(0);
+
+    class App extends React.Component {
+      state = {
+        value: 0,
+      };
+
+      renderConsumer = (context) => {
+        ReactNoop.yield('App#renderConsumer');
+        return <span prop={this.state.value} />;
+      };
+
+      render() {
+        ReactNoop.yield('App');
+        return (
+          <Context.Provider value={this.props.value}>
+            <Context.Consumer>{this.renderConsumer}</Context.Consumer>
+          </Context.Provider>
+        );
+      }
+    }
+
+    // Initial mount
+    let inst;
+    ReactNoop.render(<App value={1} ref={ref => inst = ref} />);
+    expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+    expect(ReactNoop.getChildren()).toEqual([span(0)]);
+
+    // Update
+    inst.setState({ value: 1});
+    expect(ReactNoop.flush()).toEqual([
+      'App',
+      // Child does because it may read from the instance
+      'App#renderConsumer',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span(1)]);
+  });
+
   // This is a regression case for https://github.com/facebook/react/issues/12389.
   it('does not run into an infinite loop', () => {
     const Context = React.createContext(null);
