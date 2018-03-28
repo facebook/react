@@ -398,6 +398,14 @@ export default function(
           'and will be ignored. Instead, declare it as a static method.',
         name,
       );
+      const noStaticGetSnapshotBeforeUpdate =
+        typeof type.getSnapshotBeforeUpdate !== 'function';
+      warning(
+        noStaticGetSnapshotBeforeUpdate,
+        '%s: getSnapshotBeforeUpdate() is defined as a static method ' +
+          'and will be ignored. Instead, declare it as an instance method.',
+        name,
+      );
       const state = instance.state;
       if (state && (typeof state !== 'object' || isArray(state))) {
         warning(false, '%s.state: must be set to an object or null', name);
