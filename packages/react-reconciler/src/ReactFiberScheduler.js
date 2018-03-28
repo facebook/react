@@ -1432,7 +1432,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (enableUserTimingAPI && deadline !== null) {
       const didExpire = nextFlushedExpirationTime < recalculateCurrentTime();
-      stopRequestCallbackTimer(didExpire);
+      const timeout = expirationTimeToMs(nextFlushedExpirationTime);
+      stopRequestCallbackTimer(didExpire, timeout);
     }
 
     if (isAsync) {
