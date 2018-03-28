@@ -38,6 +38,8 @@ const forks = Object.freeze({
         return 'shared/forks/ReactFeatureFlags.native-fabric.js';
       case 'react-reconciler/persistent':
         return 'shared/forks/ReactFeatureFlags.persistent.js';
+      case 'react-test-renderer':
+        return 'shared/forks/ReactFeatureFlags.test-renderer.js';
       default:
         switch (bundleType) {
           case FB_DEV:
