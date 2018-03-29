@@ -320,4 +320,14 @@ describe('ReactDOMRoot', () => {
     flush();
     expect(container.textContent).toEqual('1');
   });
+
+  it('handles fatal errors triggered by batch.commit()', () => {
+    const root = ReactDOM.createRoot(container);
+    const batch = root.createBatch();
+    const InvalidType = undefined;
+    expect(() => batch.render(<InvalidType />)).toWarnDev([
+      'React.createElement: type is invalid',
+    ]);
+    expect(() => batch.commit()).toThrow('Element type is invalid');
+  });
 });

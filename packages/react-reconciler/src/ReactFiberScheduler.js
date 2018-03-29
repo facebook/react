@@ -932,7 +932,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         const sourceFiber: Fiber = nextUnitOfWork;
         let returnFiber = sourceFiber.return;
         if (returnFiber === null) {
-          // This is a fatal error.
+          // This is the root. The root could capture its own errors. However,
+          // we don't know if it errors before or after we pushed the host
+          // context. This information is needed to avoid a stack mismatch.
+          // Because we're not sure, treat this as a fatal error. We could track
+          // which phase it fails in, but doesn't seem worth it. At least
+          // for now.
           didFatal = true;
           onUncaughtError(thrownValue);
           break;
@@ -1492,6 +1497,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Perform work on root as if the given expiration time is the current time.
     // This has the effect of synchronously flushing all work up to and
     // including the given time.
+    nextFlushedRoot = root;
+    nextFlushedExpirationTime = expirationTime;
     performWorkOnRoot(root, expirationTime, false);
     finishRendering();
   }
