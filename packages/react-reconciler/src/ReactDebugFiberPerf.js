@@ -254,7 +254,7 @@ export function stopRequestCallbackTimer(didExpire: boolean, expirationTime: num
       isWaitingForCallback = false;
       const warning = didExpire ? 'React was blocked by main thread' : null;
       endMark(
-        `(Waiting for async callback... timeout is ${expirationTime})`,
+        `(Waiting for async callback... will force flush in ${expirationTime} ms)`,
         '(Waiting for async callback...)',
         warning,
       );
