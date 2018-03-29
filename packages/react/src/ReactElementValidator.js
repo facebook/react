@@ -14,18 +14,14 @@
 
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import describeComponentFrame from 'shared/describeComponentFrame';
+import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
 import {getIteratorFn, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'fbjs/lib/warning';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
-import {
-  isValidElement,
-  isValidElementType,
-  createElement,
-  cloneElement,
-} from './ReactElement';
+import {isValidElement, createElement, cloneElement} from './ReactElement';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 let currentlyValidatingElement;

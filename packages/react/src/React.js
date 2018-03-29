@@ -22,7 +22,6 @@ import {
   createFactory,
   cloneElement,
   isValidElement,
-  isValidElementType,
 } from './ReactElement';
 import {createContext} from './ReactContext';
 import forwardRef from './forwardRef';
@@ -57,7 +56,6 @@ const React = {
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
   createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
   isValidElement: isValidElement,
-  isValidElementType: isValidElementType,
 
   version: ReactVersion,
 

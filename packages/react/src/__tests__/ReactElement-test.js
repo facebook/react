@@ -314,40 +314,6 @@ describe('ReactElement', () => {
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(true);
   });
 
-  it('identifies valid element types', () => {
-    class Component extends React.Component {
-      render() {
-        return React.createElement('div');
-      }
-    }
-
-    const StatelessComponent = () => React.createElement('div');
-
-    const ForwardRefComponent = React.forwardRef((props, ref) =>
-      React.createElement(Component, {forwardedRef: ref, ...props}),
-    );
-
-    const Context = React.createContext(false);
-
-    expect(React.isValidElementType('div')).toEqual(true);
-    expect(React.isValidElementType(Component)).toEqual(true);
-    expect(React.isValidElementType(StatelessComponent)).toEqual(true);
-    expect(React.isValidElementType(ForwardRefComponent)).toEqual(true);
-    expect(React.isValidElementType(Context.Provider)).toEqual(true);
-    expect(React.isValidElementType(Context.Consumer)).toEqual(true);
-    expect(React.isValidElementType(React.createFactory('div'))).toEqual(true);
-    expect(React.isValidElementType(React.Fragment)).toEqual(true);
-    expect(React.isValidElementType(React.unstable_AsyncMode)).toEqual(true);
-    expect(React.isValidElementType(React.StrictMode)).toEqual(true);
-
-    expect(React.isValidElementType(true)).toEqual(false);
-    expect(React.isValidElementType(123)).toEqual(false);
-    expect(React.isValidElementType({})).toEqual(false);
-    expect(React.isValidElementType(null)).toEqual(false);
-    expect(React.isValidElementType(undefined)).toEqual(false);
-    expect(React.isValidElementType({type: 'div', props: {}})).toEqual(false);
-  });
-
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
   it('is indistinguishable from a plain object', () => {

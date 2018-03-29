@@ -6,15 +6,7 @@
  */
 
 import warning from 'fbjs/lib/warning';
-import {
-  REACT_ELEMENT_TYPE,
-  REACT_FRAGMENT_TYPE,
-  REACT_ASYNC_MODE_TYPE,
-  REACT_STRICT_MODE_TYPE,
-  REACT_PROVIDER_TYPE,
-  REACT_CONTEXT_TYPE,
-  REACT_FORWARD_REF_TYPE,
-} from 'shared/ReactSymbols';
+import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -374,27 +366,5 @@ export function isValidElement(object) {
     typeof object === 'object' &&
     object !== null &&
     object.$$typeof === REACT_ELEMENT_TYPE
-  );
-}
-
-/**
- * Verifies that the given type may be used to create a ReactElement.
- * @param {*} type
- * @return {boolean} True if `type` is a valid ReactElement type.
- * @final
- */
-export function isValidElementType(type) {
-  return (
-    typeof type === 'string' ||
-    typeof type === 'function' ||
-    // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
-    type === REACT_FRAGMENT_TYPE ||
-    type === REACT_ASYNC_MODE_TYPE ||
-    type === REACT_STRICT_MODE_TYPE ||
-    (typeof type === 'object' &&
-      type !== null &&
-      (type.$$typeof === REACT_PROVIDER_TYPE ||
-        type.$$typeof === REACT_CONTEXT_TYPE ||
-        type.$$typeof === REACT_FORWARD_REF_TYPE))
   );
 }

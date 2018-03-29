@@ -19,6 +19,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
 } from 'shared/ReactSymbols';
+import isValidElementType from 'shared/isValidElementType';
 
 export function typeOf(object: any) {
   if (typeof object === 'object' && object !== null) {
@@ -61,6 +62,8 @@ export const ForwardRef = REACT_FORWARD_REF_TYPE;
 export const Fragment = REACT_FRAGMENT_TYPE;
 export const Portal = REACT_PORTAL_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
+
+export {isValidElementType};
 
 export function isAsyncMode(object: any) {
   return typeOf(object) === REACT_ASYNC_MODE_TYPE;
