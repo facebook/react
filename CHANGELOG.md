@@ -60,11 +60,11 @@
 
 ### React Lifecycles Compat (New)
 
-* First release of the [new package](https://github.com/facebook/react/tree/master/packages/react-lifecycles-compat) to help library developers target multiple versions of React. ([@bvaughn](https://github.com/bvaughn) in [#12105](https://github.com/facebook/react/pull/12105))
+* First release of the [new package](https://github.com/reactjs/react-lifecycles-compat) to help library developers target multiple versions of React. ([@bvaughn](https://github.com/bvaughn) in [#12105](https://github.com/facebook/react/pull/12105))
 
 ### Create Subscription (New)
 
-* First release of the [new package](https://github.com/facebook/react/tree/master/packages/react-lifecycles-compat) to subscribe to external data sources safely for async rendering. ([@bvaughn](https://github.com/bvaughn) in [#12325](https://github.com/facebook/react/pull/12325))
+* First release of the [new package](https://github.com/facebook/react/tree/master/packages/create-subscription) to subscribe to external data sources safely for async rendering. ([@bvaughn](https://github.com/bvaughn) in [#12325](https://github.com/facebook/react/pull/12325))
 
 ### React Reconciler (Experimental)
 
