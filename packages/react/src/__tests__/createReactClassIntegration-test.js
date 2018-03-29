@@ -467,6 +467,25 @@ describe('create-react-class-integration', () => {
     );
   });
 
+  it('warns if getSnapshotBeforeUpdate is static', () => {
+    const Foo = createReactClass({
+      statics: {
+        getSnapshotBeforeUpdate: function() {
+          return null;
+        },
+      },
+      render() {
+        return <div />;
+      },
+    });
+    expect(() =>
+      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
+    ).toWarnDev(
+      'Component: getSnapshotBeforeUpdate() is defined as a static method ' +
+        'and will be ignored. Instead, declare it as an instance method.',
+    );
+  });
+
   it('should warn if state is not properly initialized before getDerivedStateFromProps', () => {
     const Component = createReactClass({
       statics: {

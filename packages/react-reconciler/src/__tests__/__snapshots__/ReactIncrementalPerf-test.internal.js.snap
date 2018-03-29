@@ -10,6 +10,7 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
     ⚛ AllLifecycles.getChildContext
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 1 Total)
     ⚛ AllLifecycles.componentDidMount
@@ -25,6 +26,7 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
     ⚛ AllLifecycles.getChildContext
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 2 Total)
     ⚛ AllLifecycles.componentDidUpdate
@@ -35,6 +37,7 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
 ⚛ (React Tree Reconciliation)
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
     ⚛ AllLifecycles.componentWillUnmount
   ⚛ (Calling Lifecycle Methods: 0 Total)
@@ -53,6 +56,7 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
     ⚛ B [update]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 9 Total)
   ⚛ (Calling Lifecycle Methods: 9 Total)
     ⚛ A.componentDidUpdate
@@ -70,6 +74,7 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
     ⚛ B [update]
 
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 9 Total)
   ⚛ (Calling Lifecycle Methods: 9 Total)
     ⚛ A.componentDidUpdate
@@ -79,6 +84,7 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
   ⚛ B [update]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 3 Total)
   ⚛ (Calling Lifecycle Methods: 3 Total)
     ⚛ B.componentDidUpdate
@@ -90,6 +96,7 @@ exports[`ReactDebugFiberPerf does not schedule an extra callback if setState is 
   ⚛ Component [mount]
 
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 1 Total)
     ⛔ Component.componentDidMount Warning: Scheduled a cascading update
@@ -98,6 +105,7 @@ exports[`ReactDebugFiberPerf does not schedule an extra callback if setState is 
   ⚛ Component [update]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 1 Total)
 "
@@ -113,6 +121,7 @@ exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascadi
       ⚛ NotCascading.componentWillMount
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
@@ -125,6 +134,7 @@ exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascadi
       ⚛ NotCascading.componentWillReceiveProps
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 2 Total)
 "
@@ -139,6 +149,7 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
     ⚛ Child [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
@@ -150,6 +161,7 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
     ⚛ Child [update]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 2 Total)
 
@@ -159,6 +171,7 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
 ⚛ (React Tree Reconciliation)
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 "
@@ -189,6 +202,7 @@ exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
       ⚛ Child [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 "
@@ -200,6 +214,7 @@ exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
   ⚛ Parent [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
@@ -210,6 +225,7 @@ exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
   ⚛ Child [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 3 Total)
   ⚛ (Calling Lifecycle Methods: 2 Total)
 "
@@ -230,6 +246,7 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
     ⚛ Boundary [mount]
 
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
@@ -238,6 +255,7 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
     ⚛ ErrorReport [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 1 Total)
 "
@@ -254,6 +272,7 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
 ⚛ (React Tree Reconciliation)
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
@@ -265,6 +284,7 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
     ⚛ Child [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 "
@@ -279,6 +299,7 @@ exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
   ⚛ B [update]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 6 Total)
   ⚛ (Calling Lifecycle Methods: 6 Total)
 "
@@ -292,6 +313,7 @@ exports[`ReactDebugFiberPerf supports portals 1`] = `
     ⚛ Child [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 "
@@ -310,6 +332,7 @@ exports[`ReactDebugFiberPerf supports returns 1`] = `
       ⚛ Continuation [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 3 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 "
@@ -325,12 +348,14 @@ exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] =
   ⛔ (React Tree Reconciliation) Warning: A top-level update interrupted the previous render
     ⚛ Foo [mount]
   ⚛ (Committing Changes)
+    ⚛ (Committing Snapshot Effects: 0 Total)
     ⚛ (Committing Host Effects: 1 Total)
     ⚛ (Calling Lifecycle Methods: 0 Total)
 
 ⚛ (React Tree Reconciliation)
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 1 Total)
 "
@@ -343,6 +368,7 @@ exports[`ReactDebugFiberPerf warns if async work expires (starvation) 1`] = `
   ⚛ Foo [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 "
@@ -357,6 +383,7 @@ exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
     ⚛ Cascading [mount]
 
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 1 Total)
     ⛔ Cascading.componentDidMount Warning: Scheduled a cascading update
@@ -365,6 +392,7 @@ exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
   ⚛ Cascading [update]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 2 Total)
 "
@@ -378,6 +406,7 @@ exports[`ReactDebugFiberPerf warns on cascading renders from top-level render 1`
   ⚛ Cascading [mount]
 
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 1 Total)
     ⛔ Cascading.componentDidMount Warning: Scheduled a cascading update
@@ -387,6 +416,7 @@ exports[`ReactDebugFiberPerf warns on cascading renders from top-level render 1`
   ⚛ Child [mount]
 
 ⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 "

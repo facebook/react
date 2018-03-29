@@ -63,6 +63,7 @@ if (!ExecutionEnvironment.canUseDOM) {
         timeRemaining() {
           return Infinity;
         },
+        didTimeout: false,
       });
     });
   };

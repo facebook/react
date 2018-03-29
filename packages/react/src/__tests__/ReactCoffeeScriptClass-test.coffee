@@ -140,6 +140,17 @@ describe 'ReactCoffeeScriptClass', ->
     ).toWarnDev 'Foo: getDerivedStateFromCatch() is defined as an instance method and will be ignored. Instead, declare it as a static method.',
     undefined
 
+  it 'warns if getSnapshotBeforeUpdate is static', ->
+    class Foo extends React.Component
+      render: ->
+        div()
+    Foo.getSnapshotBeforeUpdate = () ->
+      {}
+    expect(->
+      ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
+    ).toWarnDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.',
+    undefined
+
   it 'warns if state not initialized before static getDerivedStateFromProps', ->
     class Foo extends React.Component
       render: ->

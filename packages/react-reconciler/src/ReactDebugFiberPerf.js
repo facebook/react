@@ -426,6 +426,31 @@ export function stopCommitTimer(): void {
   }
 }
 
+export function startCommitSnapshotEffectsTimer(): void {
+  if (enableUserTimingAPI) {
+    if (!supportsUserTiming) {
+      return;
+    }
+    effectCountInCurrentCommit = 0;
+    beginMark('(Committing Snapshot Effects)');
+  }
+}
+
+export function stopCommitSnapshotEffectsTimer(): void {
+  if (enableUserTimingAPI) {
+    if (!supportsUserTiming) {
+      return;
+    }
+    const count = effectCountInCurrentCommit;
+    effectCountInCurrentCommit = 0;
+    endMark(
+      `(Committing Snapshot Effects: ${count} Total)`,
+      '(Committing Snapshot Effects)',
+      null,
+    );
+  }
+}
+
 export function startCommitHostEffectsTimer(): void {
   if (enableUserTimingAPI) {
     if (!supportsUserTiming) {
