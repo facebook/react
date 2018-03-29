@@ -732,13 +732,15 @@ describe('ReactNewContext', () => {
 
     function renderChildValue(value) {
       ReactNoop.yield('Consumer');
-      return <span prop={value} />
+      return <span prop={value} />;
     }
 
     function ChildWithInlineRenderCallback() {
       ReactNoop.yield('ChildWithInlineRenderCallback');
       // Note: we are intentionally passing an inline arrow. Don't refactor.
-      return <Context.Consumer>{value => renderChildValue(value)}</Context.Consumer>;
+      return (
+        <Context.Consumer>{value => renderChildValue(value)}</Context.Consumer>
+      );
     }
 
     function ChildWithCachedRenderCallback() {
@@ -770,9 +772,15 @@ describe('ReactNewContext', () => {
     }
 
     // Initial mount
-    let inst;
     ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
-    expect(ReactNoop.flush()).toEqual(['App', 'PureIndirection', 'ChildWithInlineRenderCallback', 'Consumer', 'ChildWithCachedRenderCallback', 'Consumer']);
+    expect(ReactNoop.flush()).toEqual([
+      'App',
+      'PureIndirection',
+      'ChildWithInlineRenderCallback',
+      'Consumer',
+      'ChildWithCachedRenderCallback',
+      'Consumer',
+    ]);
     expect(ReactNoop.getChildren()).toEqual([span(1), span(1)]);
 
     // Update (bailout)
