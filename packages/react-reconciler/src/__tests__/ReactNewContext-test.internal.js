@@ -727,39 +727,111 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Child')]);
   });
 
-  it('consumer bails out if children and value are unchanged (like sCU)', () => {
+  it('consumer bails out if value is unchanged and something above bailed out', () => {
     const Context = React.createContext(0);
 
-    function Child() {
-      ReactNoop.yield('Child');
-      return <span prop="Child" />;
+    function renderChildValue(value) {
+      ReactNoop.yield('Consumer');
+      return <span prop={value} />;
     }
 
-    function renderConsumer(context) {
-      return <Child context={context} />;
-    }
-
-    function App(props) {
-      ReactNoop.yield('App');
+    function ChildWithInlineRenderCallback() {
+      ReactNoop.yield('ChildWithInlineRenderCallback');
+      // Note: we are intentionally passing an inline arrow. Don't refactor.
       return (
-        <Context.Provider value={props.value}>
-          <Context.Consumer>{renderConsumer}</Context.Consumer>
-        </Context.Provider>
+        <Context.Consumer>{value => renderChildValue(value)}</Context.Consumer>
       );
+    }
+
+    function ChildWithCachedRenderCallback() {
+      ReactNoop.yield('ChildWithCachedRenderCallback');
+      return <Context.Consumer>{renderChildValue}</Context.Consumer>;
+    }
+
+    class PureIndirection extends React.PureComponent {
+      render() {
+        ReactNoop.yield('PureIndirection');
+        return (
+          <React.Fragment>
+            <ChildWithInlineRenderCallback />
+            <ChildWithCachedRenderCallback />
+          </React.Fragment>
+        );
+      }
+    }
+
+    class App extends React.Component {
+      render() {
+        ReactNoop.yield('App');
+        return (
+          <Context.Provider value={this.props.value}>
+            <PureIndirection />
+          </Context.Provider>
+        );
+      }
     }
 
     // Initial mount
     ReactNoop.render(<App value={1} />);
-    expect(ReactNoop.flush()).toEqual(['App', 'Child']);
-    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
-
-    // Update
-    ReactNoop.render(<App value={1} />);
     expect(ReactNoop.flush()).toEqual([
       'App',
-      // Child does not re-render
+      'PureIndirection',
+      'ChildWithInlineRenderCallback',
+      'Consumer',
+      'ChildWithCachedRenderCallback',
+      'Consumer',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+    expect(ReactNoop.getChildren()).toEqual([span(1), span(1)]);
+
+    // Update (bailout)
+    ReactNoop.render(<App value={1} />);
+    expect(ReactNoop.flush()).toEqual(['App']);
+    expect(ReactNoop.getChildren()).toEqual([span(1), span(1)]);
+
+    // Update (no bailout)
+    ReactNoop.render(<App value={2} />);
+    expect(ReactNoop.flush()).toEqual(['App', 'Consumer', 'Consumer']);
+    expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
+  });
+
+  // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+  // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+  // If we bailed out on referential equality, it would be confusing that you
+  // can call this.setState(), but an autobound render callback "blocked" the update.
+  // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+  it('consumer does not bail out if there were no bailouts above it', () => {
+    const Context = React.createContext(0);
+
+    class App extends React.Component {
+      state = {
+        text: 'hello',
+      };
+
+      renderConsumer = context => {
+        ReactNoop.yield('App#renderConsumer');
+        return <span prop={this.state.text} />;
+      };
+
+      render() {
+        ReactNoop.yield('App');
+        return (
+          <Context.Provider value={this.props.value}>
+            <Context.Consumer>{this.renderConsumer}</Context.Consumer>
+          </Context.Provider>
+        );
+      }
+    }
+
+    // Initial mount
+    let inst;
+    ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+    expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+    expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+    // Update
+    inst.setState({text: 'goodbye'});
+    expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
+    expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
   });
 
   // This is a regression case for https://github.com/facebook/react/issues/12389.
