@@ -248,13 +248,18 @@ export function startRequestCallbackTimer(): void {
   }
 }
 
-export function stopRequestCallbackTimer(didExpire: boolean): void {
+export function stopRequestCallbackTimer(
+  didExpire: boolean,
+  expirationTime: number,
+): void {
   if (enableUserTimingAPI) {
     if (supportsUserTiming) {
       isWaitingForCallback = false;
       const warning = didExpire ? 'React was blocked by main thread' : null;
       endMark(
-        '(Waiting for async callback...)',
+        `(Waiting for async callback... will force flush in ${
+          expirationTime
+        } ms)`,
         '(Waiting for async callback...)',
         warning,
       );
