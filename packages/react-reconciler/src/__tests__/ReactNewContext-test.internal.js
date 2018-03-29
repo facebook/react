@@ -772,7 +772,7 @@ describe('ReactNewContext', () => {
     }
 
     // Initial mount
-    ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+    ReactNoop.render(<App value={1} />);
     expect(ReactNoop.flush()).toEqual([
       'App',
       'PureIndirection',
@@ -784,12 +784,12 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span(1), span(1)]);
 
     // Update (bailout)
-    ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+    ReactNoop.render(<App value={1} />);
     expect(ReactNoop.flush()).toEqual(['App']);
     expect(ReactNoop.getChildren()).toEqual([span(1), span(1)]);
 
     // Update (no bailout)
-    ReactNoop.render(<App value={2} ref={ref => (inst = ref)} />);
+    ReactNoop.render(<App value={2} />);
     expect(ReactNoop.flush()).toEqual(['App', 'Consumer', 'Consumer']);
     expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
   });
