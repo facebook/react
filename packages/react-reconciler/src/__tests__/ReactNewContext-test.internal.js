@@ -762,7 +762,10 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Child')]);
   });
 
-  it('renders context children when child is an instance method', () => {
+  // The closure may reference this.state, and if we did bail out, it would've been
+  // very confusing. Calling setState() would have no effect if the render callback
+  // is auto-bound. https://github.com/facebook/react/pull/12470#issuecomment-376917711
+  it('does not bail out when context child closure is referentially equal', () => {
     const Context = React.createContext(0);
 
     class App extends React.Component {
@@ -770,7 +773,7 @@ describe('ReactNewContext', () => {
         value: 0,
       };
 
-      renderConsumer = (context) => {
+      renderConsumer = context => {
         ReactNoop.yield('App#renderConsumer');
         return <span prop={this.state.value} />;
       };
@@ -787,17 +790,13 @@ describe('ReactNewContext', () => {
 
     // Initial mount
     let inst;
-    ReactNoop.render(<App value={1} ref={ref => inst = ref} />);
+    ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
     expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
     expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
     // Update
-    inst.setState({ value: 1});
-    expect(ReactNoop.flush()).toEqual([
-      'App',
-      // Child does because it may read from the instance
-      'App#renderConsumer',
-    ]);
+    inst.setState({value: 1});
+    expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
     expect(ReactNoop.getChildren()).toEqual([span(1)]);
   });
 
