@@ -66,7 +66,6 @@ describe('ReactDOMRoot', () => {
     };
 
     jest.resetModules();
-    require('shared/ReactFeatureFlags').enableCreateRoot = true;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -74,14 +73,14 @@ describe('ReactDOMRoot', () => {
   });
 
   it('renders children', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
     flush();
     expect(container.textContent).toEqual('Hi');
   });
 
   it('unmounts children', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
     flush();
     expect(container.textContent).toEqual('Hi');
@@ -91,7 +90,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('`root.render` returns a thenable work object', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const work = root.render(<AsyncMode>Hi</AsyncMode>);
     let ops = [];
     work.then(() => {
@@ -109,7 +108,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('resolves `work.then` callback synchronously if the work already committed', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const work = root.render(<AsyncMode>Hi</AsyncMode>);
     flush();
     let ops = [];
@@ -133,7 +132,7 @@ describe('ReactDOMRoot', () => {
     // Does not hydrate by default
     const container1 = document.createElement('div');
     container1.innerHTML = markup;
-    const root1 = ReactDOM.createRoot(container1);
+    const root1 = ReactDOM.unstable_createRoot(container1);
     root1.render(
       <div>
         <span />
@@ -144,7 +143,7 @@ describe('ReactDOMRoot', () => {
     // Accepts `hydrate` option
     const container2 = document.createElement('div');
     container2.innerHTML = markup;
-    const root2 = ReactDOM.createRoot(container2, {hydrate: true});
+    const root2 = ReactDOM.unstable_createRoot(container2, {hydrate: true});
     root2.render(
       <div>
         <span />
@@ -155,7 +154,7 @@ describe('ReactDOMRoot', () => {
 
   it('does not clear existing children', async () => {
     container.innerHTML = '<div>a</div><div>b</div>';
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     root.render(
       <div>
         <span>c</span>
@@ -175,7 +174,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('can defer a commit by batching it', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
     batch.render(<div>Hi</div>);
     // Hasn't committed yet
@@ -198,7 +197,7 @@ describe('ReactDOMRoot', () => {
       }
     }
 
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
     batch.render(
       <AsyncMode>
@@ -231,7 +230,7 @@ describe('ReactDOMRoot', () => {
       ops.push('Foo');
       return props.children;
     }
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
     batch.render(<Foo>Hi</Foo>);
     // Flush all async work.
@@ -249,7 +248,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('can wait for a batch to finish', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
     batch.render(<AsyncMode>Foo</AsyncMode>);
 
@@ -271,7 +270,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('`batch.render` returns a thenable work object', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
     const work = batch.render('Hi');
     let ops = [];
@@ -290,7 +289,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('can commit an empty batch', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     root.render(<AsyncMode>1</AsyncMode>);
 
     expire(2000);
@@ -307,7 +306,7 @@ describe('ReactDOMRoot', () => {
 
   it('two batches created simultaneously are committed separately', () => {
     // (In other words, they have distinct expiration times)
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const batch1 = root.createBatch();
     batch1.render(1);
     const batch2 = root.createBatch();
@@ -323,7 +322,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('commits an earlier batch without committing a later batch', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const batch1 = root.createBatch();
     batch1.render(1);
 
@@ -342,7 +341,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('commits a later batch without committing an earlier batch', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const batch1 = root.createBatch();
     batch1.render(1);
 
@@ -362,7 +361,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('handles fatal errors triggered by batch.commit()', () => {
-    const root = ReactDOM.createRoot(container);
+    const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
     const InvalidType = undefined;
     expect(() => batch.render(<InvalidType />)).toWarnDev([

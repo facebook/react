@@ -28,7 +28,6 @@ import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginRegistry from 'events/EventPluginRegistry';
 import * as EventPropagators from 'events/EventPropagators';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {enableCreateRoot} from 'shared/ReactFeatureFlags';
 import ReactVersion from 'shared/ReactVersion';
 import * as ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
@@ -1304,15 +1303,13 @@ type RootOptions = {
   hydrate?: boolean,
 };
 
-if (enableCreateRoot) {
-  ReactDOM.createRoot = function createRoot(
-    container: DOMContainer,
-    options?: RootOptions,
-  ): ReactRoot {
-    const hydrate = options != null && options.hydrate === true;
-    return new ReactRoot(container, true, hydrate);
-  };
-}
+ReactDOM.unstable_createRoot = function createRoot(
+  container: DOMContainer,
+  options?: RootOptions,
+): ReactRoot {
+  const hydrate = options != null && options.hydrate === true;
+  return new ReactRoot(container, true, hydrate);
+};
 
 const foundDevTools = DOMRenderer.injectIntoDevTools({
   findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,

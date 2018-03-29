@@ -223,13 +223,12 @@ describe('SimpleEventPlugin', function() {
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.enableAsyncSubtreeAPI = true;
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-      ReactFeatureFlags.enableCreateRoot = true;
       ReactDOM = require('react-dom');
     });
 
     it('flushes pending interactive work before extracting event handler', () => {
       const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       document.body.appendChild(container);
 
       let ops = [];
@@ -309,7 +308,7 @@ describe('SimpleEventPlugin', function() {
 
     it('end result of many interactive updates is deterministic', () => {
       const container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       document.body.appendChild(container);
 
       let button;

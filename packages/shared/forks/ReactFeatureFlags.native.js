@@ -22,7 +22,6 @@ export const {
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
-export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
 export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
