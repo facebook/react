@@ -997,7 +997,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     // There is no bailout on `children` equality because we expect people
     // to often pass a bound method as a child, but it may reference
-    // `this.state` (and thus may need to re-render on `setState`).
+    // `this.state` or `this.props` (and thus needs to re-render on `setState`).
 
     const render = newProps.children;
 
