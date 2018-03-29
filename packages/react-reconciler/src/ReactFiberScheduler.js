@@ -1116,10 +1116,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             interruptedBy = fiber;
             resetStack();
           }
-          if (nextRoot !== root || !isWorking) {
+          if (
+            // If we're in the render phase, we don't need to schedule this root
+            // for an update, because we'll do it before we exit...
+            !isWorking ||
+            isCommitting ||
+            // ...unless this is a different root than the one we're rendering.
+            nextRoot !== root
+          ) {
+            // Add this root to the root schedule.
             requestWork(root, expirationTime);
-          } else {
-            addRootToSchedule(root, expirationTime);
           }
           if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
             invariant(
@@ -1446,11 +1452,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Perform work on root as if the given expiration time is the current time.
     // This has the effect of synchronously flushing all work up to and
     // including the given time.
-    do {
-      performWorkOnRoot(root, expirationTime, false);
-      findHighestPriorityRoot();
-    } while (nextFlushedRoot === root && nextFlushedExpirationTime === Sync);
-
+    nextFlushedRoot = root;
+    nextFlushedExpirationTime = expirationTime;
+    performWorkOnRoot(root, expirationTime, false);
+    // Flush any sync work that was scheduled by lifecycles
+    performSyncWork();
     finishRendering();
   }
 
