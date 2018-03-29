@@ -10,6 +10,7 @@
 
 ### React
 
+* Add a new officially supported context API. ([@acdlite](https://github.com/acdlite) in [#11818](https://github.com/facebook/react/pull/11818))
 * Add a new `React.createRef()` API as an ergonomic alternative to callback refs. ([@trueadm](https://github.com/trueadm) in [#12162](https://github.com/facebook/react/pull/12162))
 * Add a new `React.forwardRef()` API to let components forward their refs to a child. ([@bvaughn](https://github.com/bvaughn) in [#12346](https://github.com/facebook/react/pull/12346))
 * Fix a false positive warning in IE11 when using `React.Fragment`. ([@XaveScor](https://github.com/XaveScor) in [#11823](https://github.com/facebook/react/pull/11823))
@@ -18,7 +19,6 @@
 
 ### React DOM
 
-* Add a new officially supported context API. ([@acdlite](https://github.com/acdlite) in [#11818](https://github.com/facebook/react/pull/11818))
 * Add a new `getDerivedStateFromProps()` lifecycle and `UNSAFE_` aliases for the legacy lifecycles. ([@bvaughn](https://github.com/bvaughn) in [#12028](https://github.com/facebook/react/pull/12028))
 * Add a new `getSnapshotForUpdate()` lifecycle. ([@bvaughn](https://github.com/bvaughn) in [#12404](https://github.com/facebook/react/pull/12404))
 * Add a new `<React.StrictMode>` wrapper to help prepare apps for async rendering. ([@bvaughn](https://github.com/bvaughn) in [#12083](https://github.com/facebook/react/pull/12083))
