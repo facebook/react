@@ -995,18 +995,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         renderExpirationTime,
       );
     } else if (oldProps !== null && oldProps.children === newProps.children) {
-      let bail = true;
-      const stateNode = current.return.return.stateNode;
-      for (const key in stateNode) {
-        if (stateNode[key] === newProps.children) {
-          bail = false;
-          break;
-        }
-      }
-      if (bail) {
-        // No change. Bailout early if children are the same.
-        return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      }
+      // No change. Bailout early if children are the same.
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
     const render = newProps.children;
