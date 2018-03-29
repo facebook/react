@@ -14,6 +14,7 @@ import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
@@ -112,17 +113,19 @@ if (__DEV__) {
   const didWarnStateUpdateForUnmountedComponent = {};
 
   warnAboutUpdateOnUnmounted = function(fiber: Fiber) {
+    // We show the whole stack but dedupe on the top component's name because
+    // the problematic code almost always lies inside that component.
     const componentName = getComponentName(fiber) || 'ReactClass';
     if (didWarnStateUpdateForUnmountedComponent[componentName]) {
       return;
     }
     warning(
       false,
-      'Can only update a mounted or mounting ' +
-        'component. This usually means you called setState, replaceState, ' +
-        'or forceUpdate on an unmounted component. This is a no-op.\n\nPlease ' +
-        'check the code for the %s component.',
-      componentName,
+      "Can't call setState (or forceUpdate) on an unmounted component. This " +
+        'is a no-op, but it indicates a memory leak in your application. To ' +
+        'fix, cancel all subscriptions and asynchronous tasks in the ' +
+        'componentWillUnmount method.%s',
+      getStackAddendumByWorkInProgressFiber(fiber),
     );
     didWarnStateUpdateForUnmountedComponent[componentName] = true;
   };
