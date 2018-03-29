@@ -370,44 +370,4 @@ describe('ReactDOMRoot', () => {
     ]);
     expect(() => batch.commit()).toThrow('Element type is invalid');
   });
-
-  it('applies setState in componentDidMount synchronously in a batch', done => {
-    class App extends React.Component {
-      state = {mounted: false};
-      componentDidMount() {
-        this.setState({
-          mounted: true,
-        });
-      }
-      render() {
-        return this.state.mounted ? 'Hi' : 'Bye';
-      }
-    }
-
-    const root = ReactDOM.createRoot(container);
-    const batch = root.createBatch();
-    batch.render(
-      <AsyncMode>
-        <App />
-      </AsyncMode>,
-    );
-
-    flush();
-
-    // Hasn't updated yet
-    expect(container.textContent).toEqual('');
-
-    let ops = [];
-    batch.then(() => {
-      // Still hasn't updated
-      ops.push(container.textContent);
-
-      // Should synchronously commit
-      batch.commit();
-      ops.push(container.textContent);
-
-      expect(ops).toEqual(['', 'Hi']);
-      done();
-    });
-  });
 });
