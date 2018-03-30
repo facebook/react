@@ -23,6 +23,7 @@ const run = async () => {
   const runAutomatedTests = require('./build-commands/run-automated-tests');
   const runAutomatedBundleTests = require('./build-commands/run-automated-bundle-tests');
   const updateGit = require('./build-commands/update-git');
+  const updateNoopRendererDependencies = require('./build-commands/update-noop-renderer-dependencies');
   const updatePackageVersions = require('./build-commands/update-package-versions');
   const updateYarnDependencies = require('./build-commands/update-yarn-dependencies');
   const validateVersion = require('./build-commands/validate-version');
@@ -42,6 +43,7 @@ const run = async () => {
     await updateYarnDependencies(params);
     await runAutomatedTests(params);
     await updatePackageVersions(params);
+    await updateNoopRendererDependencies(params);
     await buildArtifacts(params);
     await runAutomatedBundleTests(params);
     await addGitTag(params);

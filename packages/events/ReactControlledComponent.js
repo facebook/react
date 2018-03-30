@@ -63,6 +63,10 @@ export function enqueueStateRestore(target) {
   }
 }
 
+export function needsStateRestore(): boolean {
+  return restoreTarget !== null || restoreQueue !== null;
+}
+
 export function restoreStateIfNeeded() {
   if (!restoreTarget) {
     return;

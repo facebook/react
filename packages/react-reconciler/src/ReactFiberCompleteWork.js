@@ -30,16 +30,20 @@ import {
   CallComponent,
   CallHandlerPhase,
   ReturnComponent,
+  ContextProvider,
+  ContextConsumer,
   Fragment,
+  Mode,
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
 import {
-  popContextProvider,
-  popTopLevelContextObject,
+  popContextProvider as popLegacyContextProvider,
+  popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
+import {popProvider} from './ReactFiberNewContext';
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
@@ -400,12 +404,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return null;
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
-        popContextProvider(workInProgress);
+        popLegacyContextProvider(workInProgress);
         return null;
       }
       case HostRoot: {
         popHostContainer(workInProgress);
-        popTopLevelContextObject(workInProgress);
+        popTopLevelLegacyContextObject(workInProgress);
         const fiberRoot = (workInProgress.stateNode: FiberRoot);
         if (fiberRoot.pendingContext) {
           fiberRoot.context = fiberRoot.pendingContext;
@@ -576,9 +580,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return null;
       case Fragment:
         return null;
+      case Mode:
+        return null;
       case HostPortal:
         popHostContainer(workInProgress);
         updateHostContainer(workInProgress);
+        return null;
+      case ContextProvider:
+        // Pop provider fiber
+        popProvider(workInProgress);
+        return null;
+      case ContextConsumer:
         return null;
       // Error cases
       case IndeterminateComponent:

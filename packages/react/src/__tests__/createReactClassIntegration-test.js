@@ -152,8 +152,7 @@ describe('create-react-class-integration', () => {
     );
   });
 
-  // TODO (RFC #6) Reenable after create-react-class updated.
-  xit('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
+  it('should warn when misspelling UNSAFE_componentWillReceiveProps', () => {
     expect(() =>
       createReactClass({
         UNSAFE_componentWillRecieveProps: function() {
@@ -448,5 +447,81 @@ describe('create-react-class-integration', () => {
     expect(() =>
       ReactDOM.render(<Component />, document.createElement('div')),
     ).toWarnDev('Did not properly initialize state during construction.');
+  });
+
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
+    const Component = createReactClass({
+      statics: {
+        getDerivedStateFromProps: function() {
+          return null;
+        },
+      },
+      componentWillMount: function() {
+        throw Error('unexpected');
+      },
+      componentWillReceiveProps: function() {
+        throw Error('unexpected');
+      },
+      componentWillUpdate: function() {
+        throw Error('unexpected');
+      },
+      getInitialState: function() {
+        return {};
+      },
+      render: function() {
+        return null;
+      },
+    });
+
+    expect(() => {
+      ReactDOM.render(<Component />, document.createElement('div'));
+    }).toWarnDev('Defines both componentWillReceiveProps');
+    ReactDOM.render(<Component foo={1} />, document.createElement('div'));
+  });
+
+  it('should invoke both deprecated and new lifecycles if both are present', () => {
+    const log = [];
+
+    const Component = createReactClass({
+      mixins: [
+        {
+          componentWillMount: function() {
+            log.push('componentWillMount');
+          },
+          componentWillReceiveProps: function() {
+            log.push('componentWillReceiveProps');
+          },
+          componentWillUpdate: function() {
+            log.push('componentWillUpdate');
+          },
+        },
+      ],
+      UNSAFE_componentWillMount: function() {
+        log.push('UNSAFE_componentWillMount');
+      },
+      UNSAFE_componentWillReceiveProps: function() {
+        log.push('UNSAFE_componentWillReceiveProps');
+      },
+      UNSAFE_componentWillUpdate: function() {
+        log.push('UNSAFE_componentWillUpdate');
+      },
+      render: function() {
+        return null;
+      },
+    });
+
+    const div = document.createElement('div');
+    ReactDOM.render(<Component foo="bar" />, div);
+    expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
+
+    log.length = 0;
+
+    ReactDOM.render(<Component foo="baz" />, div);
+    expect(log).toEqual([
+      'componentWillReceiveProps',
+      'UNSAFE_componentWillReceiveProps',
+      'componentWillUpdate',
+      'UNSAFE_componentWillUpdate',
+    ]);
   });
 });

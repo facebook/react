@@ -99,7 +99,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(parent.childNodes[2].tagName).toBe('P');
     });
 
-    itRenders('an empty framgent', async render => {
+    itRenders('an empty fragment', async render => {
       expect(await render(<React.Fragment />)).toBe(null);
     });
   });

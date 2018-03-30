@@ -1,5 +1,7 @@
 'use strict';
 
+const jestDiff = require('jest-diff');
+
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
 }
@@ -39,13 +41,19 @@ const createMatcherFor = consoleMethod =>
           }
         }
 
-        let errorMessage = `Unexpected warning recorded:\n${this.utils.printReceived(
-          message
-        )}`;
-        if (expectedMessages.length > 0) {
-          errorMessage += `\n\nThe following expected warnings were not yet seen:\n${expectedMessages
-            .map(unformatted => this.utils.printExpected(unformatted))
-            .join('\n')}`;
+        let errorMessage;
+        if (expectedMessages.length === 0) {
+          errorMessage =
+            'Unexpected warning recorded: ' +
+            this.utils.printReceived(normalizedMessage);
+        } else if (expectedMessages.length === 1) {
+          errorMessage =
+            'Unexpected warning recorded: ' +
+            jestDiff(normalizedMessage, expectedMessages[0]);
+        } else {
+          errorMessage =
+            'Unexpected warning recorded: ' +
+            jestDiff([normalizedMessage], expectedMessages);
         }
 
         // Record the call stack for unexpected warnings.
@@ -70,6 +78,12 @@ const createMatcherFor = consoleMethod =>
         // Restore the unspied method so that unexpected errors fail tests.
         console[consoleMethod] = originalMethod;
 
+        // Any unexpected Errors thrown by the callback should fail the test.
+        // This should take precedence since unexpected errors could block warnings.
+        if (caughtError) {
+          throw caughtError;
+        }
+
         // Any unexpected warnings should be treated as a failure.
         if (unexpectedWarnings.length > 0) {
           return {
@@ -87,11 +101,6 @@ const createMatcherFor = consoleMethod =>
               )}`,
             pass: false,
           };
-        }
-
-        // Any unexpected Errors thrown by the callback should fail the test.
-        if (caughtError) {
-          throw caughtError;
         }
 
         return {pass: true};

@@ -13,9 +13,10 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
   debugRenderPhaseSideEffects,
-  enableAsyncSubtreeAPI,
+  debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -25,7 +26,7 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {StrictMode} from './ReactTypeOfMode';
 import {
   cacheContext,
   getMaskedContext,
@@ -41,9 +42,6 @@ import {hasContextChanged} from './ReactFiberContext';
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
-let didWarnAboutLegacyWillMount;
-let didWarnAboutLegacyWillReceiveProps;
-let didWarnAboutLegacyWillUpdate;
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
@@ -51,11 +49,6 @@ let didWarnAboutWillReceivePropsAndDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
-  if (warnAboutDeprecatedLifecycles) {
-    didWarnAboutLegacyWillMount = {};
-    didWarnAboutLegacyWillReceiveProps = {};
-    didWarnAboutLegacyWillUpdate = {};
-  }
   didWarnAboutStateAssignmentForComponent = {};
   didWarnAboutUndefinedDerivedState = {};
   didWarnAboutUninitializedState = {};
@@ -197,11 +190,6 @@ export default function(
         newContext,
       );
       stopPhaseTimer();
-
-      // Simulate an async bailout/interruption by invoking lifecycle twice.
-      if (debugRenderPhaseSideEffects) {
-        instance.shouldComponentUpdate(newProps, newState, newContext);
-      }
 
       if (__DEV__) {
         warning(
@@ -401,6 +389,16 @@ export default function(
     const context = needsContext
       ? getMaskedContext(workInProgress, unmaskedContext)
       : emptyObject;
+
+    // Instantiate twice to help detect side-effects.
+    if (
+      debugRenderPhaseSideEffects ||
+      (debugRenderPhaseSideEffectsForStrictMode &&
+        workInProgress.mode & StrictMode)
+    ) {
+      new ctor(props, context); // eslint-disable-line no-new
+    }
+
     const instance = new ctor(props, context);
     const state =
       instance.state !== null && instance.state !== undefined
@@ -460,27 +458,9 @@ export default function(
     const oldState = instance.state;
 
     if (typeof instance.componentWillMount === 'function') {
-      if (__DEV__) {
-        if (warnAboutDeprecatedLifecycles) {
-          const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutLegacyWillMount[componentName]) {
-            warning(
-              false,
-              '%s: componentWillMount() is deprecated and will be ' +
-                'removed in the next major version. Read about the motivations ' +
-                'behind this change: ' +
-                'https://fb.me/react-async-component-lifecycle-hooks' +
-                '\n\n' +
-                'As a temporary workaround, you can rename to ' +
-                'UNSAFE_componentWillMount instead.',
-              componentName,
-            );
-            didWarnAboutLegacyWillMount[componentName] = true;
-          }
-        }
-      }
       instance.componentWillMount();
-    } else {
+    }
+    if (typeof instance.UNSAFE_componentWillMount === 'function') {
       instance.UNSAFE_componentWillMount();
     }
 
@@ -507,41 +487,14 @@ export default function(
     newContext,
   ) {
     const oldState = instance.state;
+    startPhaseTimer(workInProgress, 'componentWillReceiveProps');
     if (typeof instance.componentWillReceiveProps === 'function') {
-      if (__DEV__) {
-        if (warnAboutDeprecatedLifecycles) {
-          const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutLegacyWillReceiveProps[componentName]) {
-            warning(
-              false,
-              '%s: componentWillReceiveProps() is deprecated and ' +
-                'will be removed in the next major version. Use ' +
-                'static getDerivedStateFromProps() instead. Read about the ' +
-                'motivations behind this change: ' +
-                'https://fb.me/react-async-component-lifecycle-hooks' +
-                '\n\n' +
-                'As a temporary workaround, you can rename to ' +
-                'UNSAFE_componentWillReceiveProps instead.',
-              componentName,
-            );
-            didWarnAboutLegacyWillReceiveProps[componentName] = true;
-          }
-        }
-      }
-
-      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
       instance.componentWillReceiveProps(newProps, newContext);
-      stopPhaseTimer();
-    } else {
-      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
-      instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
-      stopPhaseTimer();
-
-      // Simulate an async bailout/interruption by invoking lifecycle twice.
-      if (debugRenderPhaseSideEffects) {
-        instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
-      }
     }
+    if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
+      instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
+    }
+    stopPhaseTimer();
 
     if (instance.state !== oldState) {
       if (__DEV__) {
@@ -570,8 +523,11 @@ export default function(
 
     if (typeof type.getDerivedStateFromProps === 'function') {
       if (__DEV__) {
+        // Don't warn about react-lifecycles-compat polyfilled components
         if (
-          typeof instance.componentWillReceiveProps === 'function' ||
+          (typeof instance.componentWillReceiveProps === 'function' &&
+            instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+              true) ||
           typeof instance.UNSAFE_componentWillReceiveProps === 'function'
         ) {
           const componentName = getComponentName(workInProgress) || 'Unknown';
@@ -586,6 +542,19 @@ export default function(
             didWarnAboutWillReceivePropsAndDerivedState[componentName] = true;
           }
         }
+      }
+
+      if (
+        debugRenderPhaseSideEffects ||
+        (debugRenderPhaseSideEffectsForStrictMode &&
+          workInProgress.mode & StrictMode)
+      ) {
+        // Invoke method an extra time to help detect side-effects.
+        type.getDerivedStateFromProps.call(
+          null,
+          props,
+          workInProgress.memoizedState,
+        );
       }
 
       const partialState = type.getDerivedStateFromProps.call(
@@ -633,18 +602,28 @@ export default function(
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
-    if (
-      enableAsyncSubtreeAPI &&
-      workInProgress.type != null &&
-      workInProgress.type.prototype != null &&
-      workInProgress.type.prototype.unstable_isAsyncReactComponent === true
-    ) {
-      workInProgress.internalContextTag |= AsyncUpdates;
+    if (__DEV__) {
+      if (workInProgress.mode & StrictMode) {
+        ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
+          workInProgress,
+          instance,
+        );
+      }
+
+      if (warnAboutDeprecatedLifecycles) {
+        ReactStrictModeWarnings.recordDeprecationWarnings(
+          workInProgress,
+          instance,
+        );
+      }
     }
 
+    // In order to support react-lifecycles-compat polyfilled components,
+    // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
     if (
-      typeof instance.UNSAFE_componentWillMount === 'function' ||
-      typeof instance.componentWillMount === 'function'
+      (typeof instance.UNSAFE_componentWillMount === 'function' ||
+        typeof instance.componentWillMount === 'function') &&
+      typeof workInProgress.type.getDerivedStateFromProps !== 'function'
     ) {
       callComponentWillMount(workInProgress, instance);
       // If we had additional state updates during this life-cycle, let's
@@ -790,17 +769,21 @@ export default function(
     // ever the previously attempted to render - not the "current". However,
     // during componentDidUpdate we pass the "current" props.
 
+    // In order to support react-lifecycles-compat polyfilled components,
+    // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
     if (
       (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
         typeof instance.componentWillReceiveProps === 'function') &&
-      (oldProps !== newProps || oldContext !== newContext)
+      typeof workInProgress.type.getDerivedStateFromProps !== 'function'
     ) {
-      callComponentWillReceiveProps(
-        workInProgress,
-        instance,
-        newProps,
-        newContext,
-      );
+      if (oldProps !== newProps || oldContext !== newContext) {
+        callComponentWillReceiveProps(
+          workInProgress,
+          instance,
+          newProps,
+          newContext,
+        );
+      }
     }
 
     let partialState;
@@ -871,45 +854,21 @@ export default function(
     );
 
     if (shouldUpdate) {
+      // In order to support react-lifecycles-compat polyfilled components,
+      // Unsafe lifecycles should not be invoked for any component with the new gDSFP.
       if (
-        typeof instance.UNSAFE_componentWillUpdate === 'function' ||
-        typeof instance.componentWillUpdate === 'function'
+        (typeof instance.UNSAFE_componentWillUpdate === 'function' ||
+          typeof instance.componentWillUpdate === 'function') &&
+        typeof workInProgress.type.getDerivedStateFromProps !== 'function'
       ) {
+        startPhaseTimer(workInProgress, 'componentWillUpdate');
         if (typeof instance.componentWillUpdate === 'function') {
-          if (__DEV__) {
-            if (warnAboutDeprecatedLifecycles) {
-              const componentName =
-                getComponentName(workInProgress) || 'Component';
-              if (!didWarnAboutLegacyWillUpdate[componentName]) {
-                warning(
-                  false,
-                  '%s: componentWillUpdate() is deprecated and will be ' +
-                    'removed in the next major version. Read about the motivations ' +
-                    'behind this change: ' +
-                    'https://fb.me/react-async-component-lifecycle-hooks' +
-                    '\n\n' +
-                    'As a temporary workaround, you can rename to ' +
-                    'UNSAFE_componentWillUpdate instead.',
-                  componentName,
-                );
-                didWarnAboutLegacyWillUpdate[componentName] = true;
-              }
-            }
-          }
-
-          startPhaseTimer(workInProgress, 'componentWillUpdate');
           instance.componentWillUpdate(newProps, newState, newContext);
-          stopPhaseTimer();
-        } else {
-          startPhaseTimer(workInProgress, 'componentWillUpdate');
-          instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
-          stopPhaseTimer();
-
-          // Simulate an async bailout/interruption by invoking lifecycle twice.
-          if (debugRenderPhaseSideEffects) {
-            instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
-          }
         }
+        if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
+          instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
+        }
+        stopPhaseTimer();
       }
       if (typeof instance.componentDidUpdate === 'function') {
         workInProgress.effectTag |= Update;

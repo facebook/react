@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {batchedUpdates} from 'events/ReactGenericBatching';
+import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
@@ -13,6 +13,9 @@ import {HostRoot} from 'shared/ReactTypeOfWork';
 import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import SimpleEventPlugin from './SimpleEventPlugin';
+
+const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
@@ -120,10 +123,15 @@ export function trapBubbledEvent(topLevelType, handlerBaseName, element) {
   if (!element) {
     return null;
   }
+  const dispatch = isInteractiveTopLevelEventType(topLevelType)
+    ? dispatchInteractiveEvent
+    : dispatchEvent;
+
   addEventBubbleListener(
     element,
     handlerBaseName,
-    dispatchEvent.bind(null, topLevelType),
+    // Check if interactive and wrap in interactiveUpdates
+    dispatch.bind(null, topLevelType),
   );
 }
 
@@ -141,11 +149,20 @@ export function trapCapturedEvent(topLevelType, handlerBaseName, element) {
   if (!element) {
     return null;
   }
+  const dispatch = isInteractiveTopLevelEventType(topLevelType)
+    ? dispatchInteractiveEvent
+    : dispatchEvent;
+
   addEventCaptureListener(
     element,
     handlerBaseName,
-    dispatchEvent.bind(null, topLevelType),
+    // Check if interactive and wrap in interactiveUpdates
+    dispatch.bind(null, topLevelType),
   );
+}
+
+function dispatchInteractiveEvent(topLevelType, nativeEvent) {
+  interactiveUpdates(dispatchEvent, topLevelType, nativeEvent);
 }
 
 export function dispatchEvent(topLevelType, nativeEvent) {

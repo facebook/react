@@ -248,5 +248,16 @@
   "246": "Should be working on a root. This error is likely caused by a bug in React. Please file an issue.",
   "247": "A call cannot have host component children.",
   "248": "Not implemented.",
-  "249": "ReactShallowRenderer render(): Shallow rendering works only with custom components, but the provided element type was `%s`."
+  "249": "ReactShallowRenderer render(): Shallow rendering works only with custom components, but the provided element type was `%s`.",
+  "250": "batch.render: Cannot render a batch that already committed.",
+  "251": "batch.commit: Cannot commit a batch multiple times.",
+  "252": "The `document` global was defined when React was initialized, but is not defined anymore. This can happen in a test environment if a component schedules an update from an asynchronous callback, but the test has already finished running. To solve this, you can either unmount the component at the end of your test (and ensure that any asynchronous operations get canceled in `componentWillUnmount`), or you can change the test itself to be asynchronous.",
+  "253": "work.commit(): Cannot commit while already rendering. This likely means you attempted to commit from inside a lifecycle method.",
+  "254": "Element ref was specified as a string (%s) but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a functional component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://fb.me/react-refs-must-have-owner for more information.",
+  "255": "Expected ReactFbErrorUtils.invokeGuardedCallback to be a function.",
+  "256": "Expected ReactFiberErrorDialog.showErrorDialog to existbe a function.",
+  "257": "Portals are not currently supported by the server renderer. Render them conditionally so that they only appear on the client render.",
+  "258": "Unknown element-like object type: %s. This is likely a bug in React. Please file an issue.",
+  "259": "The experimental Call and Return types are not currently supported by the server renderer.",
+  "260": "Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: %s."
 }

@@ -989,9 +989,7 @@ const DOMRenderer = ReactFiberReconciler({
   cancelDeferredCallback: ReactDOMFrameScheduling.cIC,
 });
 
-ReactGenericBatching.injection.injectFiberBatchedUpdates(
-  DOMRenderer.batchedUpdates,
-);
+ReactGenericBatching.injection.injectRenderer(DOMRenderer);
 
 let warnedAboutHydrateAPI = false;
 
@@ -1282,11 +1280,13 @@ const ReactDOM: Object = {
     return createPortal(...args);
   },
 
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: DOMRenderer.batchedUpdates,
 
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
   flushSync: DOMRenderer.flushSync,
+
+  unstable_flushControlled: DOMRenderer.flushControlled,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
@@ -1299,13 +1299,6 @@ const ReactDOM: Object = {
     ReactDOMEventListener,
   },
 };
-
-if (__DEV__) {
-  // Show deprecation warnings as we don't want to support injection forever.
-  // We do it now to let the internal injection happen without warnings.
-  // https://github.com/facebook/react/issues/11689
-  EventPluginRegistry.enableWarningOnInjection();
-}
 
 type RootOptions = {
   hydrate?: boolean,

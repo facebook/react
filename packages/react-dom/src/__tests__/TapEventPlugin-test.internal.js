@@ -86,13 +86,9 @@ describe('TapEventPlugin', () => {
 
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    expect(() =>
-      EventPluginHub.injection.injectEventPluginsByName({
-        TapEventPlugin: TapEventPlugin,
-      }),
-    ).toLowPriorityWarnDev(
-      'Injecting custom event plugins (TapEventPlugin) is deprecated',
-    );
+    EventPluginHub.injection.injectEventPluginsByName({
+      TapEventPlugin: TapEventPlugin,
+    });
   });
 
   /**

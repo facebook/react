@@ -64,4 +64,52 @@ describe('ReactFiberHostContext', () => {
     );
     expect(creates).toBe(2);
   });
+
+  it('should send the context to prepareForCommit and resetAfterCommit', () => {
+    let rootContext = {};
+    const Renderer = ReactFiberReconciler({
+      prepareForCommit: function(hostContext) {
+        expect(hostContext).toBe(rootContext);
+      },
+      resetAfterCommit: function(hostContext) {
+        expect(hostContext).toBe(rootContext);
+      },
+      getRootHostContext: function() {
+        return null;
+      },
+      getChildHostContext: function() {
+        return null;
+      },
+      shouldSetTextContent: function() {
+        return false;
+      },
+      createInstance: function() {
+        return null;
+      },
+      finalizeInitialChildren: function() {
+        return null;
+      },
+      appendInitialChild: function() {
+        return null;
+      },
+      now: function() {
+        return 0;
+      },
+      mutation: {
+        appendChildToContainer: function() {
+          return null;
+        },
+      },
+    });
+
+    const container = Renderer.createContainer(rootContext);
+    Renderer.updateContainer(
+      <a>
+        <b />
+      </a>,
+      container,
+      /* parentComponent: */ null,
+      /* callback: */ null,
+    );
+  });
 });

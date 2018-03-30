@@ -49,3 +49,15 @@ exports[`ReactFabric renders and reorders children 2`] = `
    View {\\"title\\":\\"z\\"}
    View {\\"title\\":\\"y\\"}"
 `;
+
+exports[`ReactFabric should only pass props diffs to FabricUIManager.cloneNode 1`] = `
+"11
+ View {\\"foo\\":\\"a\\",\\"bar\\":\\"b\\"}
+   RCTRawText {\\"text\\":\\"1\\"}"
+`;
+
+exports[`ReactFabric should only pass props diffs to FabricUIManager.cloneNode 2`] = `
+"11
+ View {\\"foo\\":\\"b\\",\\"bar\\":\\"b\\"}
+   RCTRawText {\\"text\\":\\"2\\"}"
+`;

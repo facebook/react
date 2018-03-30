@@ -109,6 +109,48 @@ describe('ReactFabric', () => {
     ).toBe(1);
   });
 
+  it('should only pass props diffs to FabricUIManager.cloneNode', () => {
+    const View = createReactNativeComponentClass('View', () => ({
+      validAttributes: {foo: true, bar: true},
+      uiViewClassName: 'View',
+    }));
+
+    ReactFabric.render(
+      <View foo="a" bar="a">
+        1
+      </View>,
+      11,
+    );
+    expect(FabricUIManager.cloneNode).not.toBeCalled();
+    expect(FabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
+    expect(FabricUIManager.cloneNodeWithNewProps).not.toBeCalled();
+    expect(FabricUIManager.cloneNodeWithNewChildrenAndProps).not.toBeCalled();
+
+    ReactFabric.render(
+      <View foo="a" bar="b">
+        1
+      </View>,
+      11,
+    );
+    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls[0][1]).toEqual({
+      bar: 'b',
+    });
+    expect(FabricUIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+
+    ReactFabric.render(
+      <View foo="b" bar="b">
+        2
+      </View>,
+      11,
+    );
+    expect(
+      FabricUIManager.cloneNodeWithNewChildrenAndProps.mock.calls[0][1],
+    ).toEqual({
+      foo: 'b',
+    });
+    expect(FabricUIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+  });
+
   it('should not call UIManager.updateView from setNativeProps for properties that have not changed', () => {
     const View = createReactNativeComponentClass('View', () => ({
       validAttributes: {foo: true},

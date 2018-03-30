@@ -20,14 +20,17 @@ const RCTFabricUIManager = {
       let out = '';
       out +=
         ' '.repeat(indent) + info.viewName + ' ' + JSON.stringify(info.props);
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (const child of info.children) {
         out += '\n' + dumpSubtree(child, indent + 2);
       }
       return out;
     }
     let result = [];
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const [rootTag, childSet] of roots) {
       result.push(rootTag);
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (const child of childSet) {
         result.push(dumpSubtree(child, 1));
       }
@@ -72,21 +75,21 @@ const RCTFabricUIManager = {
   }),
   cloneNodeWithNewProps: jest.fn(function cloneNodeWithNewProps(
     node,
-    newProps,
+    newPropsDiff,
   ) {
     return {
       reactTag: node.reactTag,
       viewName: node.viewName,
-      props: newProps,
+      props: {...node.props, ...newPropsDiff},
       children: node.children,
     };
   }),
   cloneNodeWithNewChildrenAndProps: jest.fn(
-    function cloneNodeWithNewChildrenAndProps(node, newProps) {
+    function cloneNodeWithNewChildrenAndProps(node, newPropsDiff) {
       return {
         reactTag: node.reactTag,
         viewName: node.viewName,
-        props: newProps,
+        props: {...node.props, ...newPropsDiff},
         children: [],
       };
     },

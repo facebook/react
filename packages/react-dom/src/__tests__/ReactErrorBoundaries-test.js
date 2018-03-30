@@ -937,7 +937,7 @@ describe('ReactErrorBoundaries', () => {
     expect(log).toEqual(['ErrorBoundary componentWillUnmount']);
   });
 
-  it('resets refs if mounting aborts', () => {
+  it('resets callback refs if mounting aborts', () => {
     function childRef(x) {
       log.push('Child ref is set to ' + x);
     }
@@ -979,6 +979,44 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentWillUnmount',
       'Error message ref is set to null',
     ]);
+  });
+
+  it('resets object refs if mounting aborts', () => {
+    let childRef = React.createRef();
+    let errorMessageRef = React.createRef();
+
+    const container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundary errorMessageRef={errorMessageRef}>
+        <div ref={childRef} />
+        <BrokenRender />
+      </ErrorBoundary>,
+      container,
+    );
+    expect(container.textContent).toBe('Caught an error: Hello.');
+    expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+      // Handle error:
+      // Finish mounting with null children
+      'ErrorBoundary componentDidMount',
+      // Handle the error
+      'ErrorBoundary componentDidCatch',
+      // Render the error message
+      'ErrorBoundary componentWillUpdate',
+      'ErrorBoundary render error',
+      'ErrorBoundary componentDidUpdate',
+    ]);
+    expect(errorMessageRef.value.toString()).toEqual('[object HTMLDivElement]');
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual(['ErrorBoundary componentWillUnmount']);
+    expect(errorMessageRef.value).toEqual(null);
   });
 
   it('successfully mounts if no error occurs', () => {

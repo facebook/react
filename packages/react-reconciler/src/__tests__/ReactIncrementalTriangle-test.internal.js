@@ -11,11 +11,14 @@
 'use strict';
 
 let React;
+let ReactFeatureFlags;
 let ReactNoop;
 
 describe('ReactIncrementalTriangle', () => {
   beforeEach(() => {
     jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -319,6 +322,7 @@ describe('ReactIncrementalTriangle', () => {
 
     function simulate(...actions) {
       const gen = simulateAndYield();
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (let action of actions) {
         gen.next(action);
       }
@@ -404,6 +408,7 @@ ${formatActions(actions)}
 
     function simulateMultipleRoots(...actions) {
       const roots = new Map();
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (let rootID of rootIDs) {
         const simulator = TriangleSimulator(rootID);
         const generator = simulator.simulateAndYield();

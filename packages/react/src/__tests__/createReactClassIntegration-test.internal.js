@@ -10,17 +10,17 @@
 'use strict';
 
 let React;
-let ReactDOM;
 let ReactFeatureFlags;
 let createReactClass;
 
 describe('create-react-class-integration', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.warnAboutDeprecatedLifecycles = true;
 
     React = require('react');
-    ReactDOM = require('react-dom');
     createReactClass = require('create-react-class/factory')(
       React.Component,
       React.isValidElement,
@@ -31,19 +31,21 @@ describe('create-react-class-integration', () => {
   // TODO (RFC #6) Merge this back into createReactClassIntegration-test once
   // the 'warnAboutDeprecatedLifecycles' feature flag has been removed.
   it('isMounted works', () => {
+    const ReactDOM = require('react-dom');
+
     const ops = [];
     let instance;
     const Component = createReactClass({
       displayName: 'MyComponent',
       mixins: [
         {
-          componentWillMount() {
+          UNSAFE_componentWillMount() {
             this.log('mixin.componentWillMount');
           },
           componentDidMount() {
             this.log('mixin.componentDidMount');
           },
-          componentWillUpdate() {
+          UNSAFE_componentWillUpdate() {
             this.log('mixin.componentWillUpdate');
           },
           componentDidUpdate() {
@@ -61,13 +63,13 @@ describe('create-react-class-integration', () => {
         this.log('getInitialState');
         return {};
       },
-      componentWillMount() {
+      UNSAFE_componentWillMount() {
         this.log('componentWillMount');
       },
       componentDidMount() {
         this.log('componentDidMount');
       },
-      componentWillUpdate() {
+      UNSAFE_componentWillUpdate() {
         this.log('componentWillUpdate');
       },
       componentDidUpdate() {
@@ -85,24 +87,14 @@ describe('create-react-class-integration', () => {
 
     const container = document.createElement('div');
 
-    // TODO (RFC #6) The below lifecycle warnings are unavoidable for now,
-    // Until create-react-class recognizes the UNSAFE_* methods.
-    // (If we try to use them before them, it will error because
-    // we are defining the same method twice.)
-    // Update the above component to use the new UNSAFE_* methods
-    // (and remove the expected warnings) once create-react-class has been updated.
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev([
+    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',
-      'Warning: MyComponent: componentWillMount() is deprecated and will be ' +
-        'removed in the next major version.',
-    ]);
-
-    expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
-      'Warning: MyComponent: componentWillUpdate() is deprecated and will be ' +
-        'removed in the next major version.',
     );
+
+    // Dedupe
+    ReactDOM.render(<Component />, container);
 
     ReactDOM.unmountComponentAtNode(container);
     instance.log('after unmount');
@@ -122,5 +114,57 @@ describe('create-react-class-integration', () => {
       'componentWillUnmount: true',
       'after unmount: false',
     ]);
+  });
+
+  describe('ReactNative NativeMethodsMixin', () => {
+    let ReactNative;
+    let NativeMethodsMixin;
+
+    beforeEach(() => {
+      ReactNative = require('react-native-renderer');
+      NativeMethodsMixin =
+        ReactNative.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+          .NativeMethodsMixin;
+    });
+
+    it('should not warn about default DEV-only legacy lifecycle methods', () => {
+      const View = createReactClass({
+        mixins: [NativeMethodsMixin],
+        render: () => null,
+      });
+
+      ReactNative.render(<View />, 1);
+    });
+
+    it('should warn if users specify their own legacy componentWillMount', () => {
+      const View = createReactClass({
+        displayName: 'MyNativeComponent',
+        mixins: [NativeMethodsMixin],
+        componentWillMount: () => {},
+        render: () => null,
+      });
+
+      expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
+        'componentWillMount is deprecated and will be removed in the next major version. ' +
+          'Use componentDidMount instead. As a temporary workaround, ' +
+          'you can rename to UNSAFE_componentWillMount.' +
+          '\n\nPlease update the following components: MyNativeComponent',
+      );
+    });
+
+    it('should warn if users specify their own legacy componentWillReceiveProps', () => {
+      const View = createReactClass({
+        displayName: 'MyNativeComponent',
+        mixins: [NativeMethodsMixin],
+        componentWillReceiveProps: () => {},
+        render: () => null,
+      });
+
+      expect(() => ReactNative.render(<View />, 1)).toLowPriorityWarnDev(
+        'componentWillReceiveProps is deprecated and will be removed in the next major version. ' +
+          'Use static getDerivedStateFromProps instead.' +
+          '\n\nPlease update the following components: MyNativeComponent',
+      );
+    });
   });
 });

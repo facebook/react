@@ -23,6 +23,10 @@ describe('ReactShallowRenderer', () => {
     React = require('react');
   });
 
+  afterEach(() => {
+    jest.resetModules();
+  });
+
   // TODO (RFC #6) Merge this back into ReactShallowRenderer-test once
   // the 'warnAboutDeprecatedLifecycles' feature flag has been removed.
   it('should warn if deprecated lifecycles exist', () => {
@@ -36,11 +40,15 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev(
+    expect(() =>
+      shallowRenderer.render(<ComponentWithWarnings />),
+    ).toLowPriorityWarnDev(
       'Warning: ComponentWithWarnings: componentWillMount() is deprecated and will ' +
         'be removed in the next major version.',
     );
-    expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev([
+    expect(() =>
+      shallowRenderer.render(<ComponentWithWarnings />),
+    ).toLowPriorityWarnDev([
       'Warning: ComponentWithWarnings: componentWillReceiveProps() is deprecated ' +
         'and will be removed in the next major version.',
       'Warning: ComponentWithWarnings: componentWillUpdate() is deprecated and will ' +
@@ -49,5 +57,26 @@ describe('ReactShallowRenderer', () => {
 
     // Verify no duplicate warnings
     shallowRenderer.render(<ComponentWithWarnings />);
+  });
+
+  describe('react-lifecycles-compat', () => {
+    const polyfill = require('react-lifecycles-compat');
+
+    it('should not warn about deprecated cWM/cWRP for polyfilled components', () => {
+      class PolyfilledComponent extends React.Component {
+        state = {};
+        static getDerivedStateFromProps() {
+          return null;
+        }
+        render() {
+          return null;
+        }
+      }
+
+      polyfill(PolyfilledComponent);
+
+      const shallowRenderer = createRenderer();
+      shallowRenderer.render(<PolyfilledComponent />);
+    });
   });
 });

@@ -10,12 +10,15 @@
 'use strict';
 
 let React;
+let ReactFeatureFlags;
 let ReactNoop;
 let ReactCallReturn;
 
 describe('ReactCallReturn', () => {
   beforeEach(() => {
     jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     ReactCallReturn = require('react-call-return');
@@ -290,7 +293,10 @@ describe('ReactCallReturn', () => {
         <Return value={2} />
       </Call>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'componentWillMount: Please update the following components ' +
+        'to use componentDidMount instead: Return',
+    );
 
     expect(ops).toEqual([
       'Mount Return 1',

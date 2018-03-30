@@ -21,7 +21,13 @@ function saveResults() {
 }
 
 function percentChange(prev, current) {
-  return Math.floor((current - prev) / prev * 100);
+  const change = Math.floor((current - prev) / prev * 100);
+  // When a new package is created
+  if (isFinite(change)) {
+    return change;
+  } else {
+    return 100;
+  }
 }
 
 function percentChangeString(change) {
@@ -78,7 +84,7 @@ function generateResultsArray(current, prevResults) {
 
 function printResults() {
   const table = new Table({
-    head: resultsHeaders.map(chalk.gray.yellow),
+    head: resultsHeaders.map(label => chalk.gray.yellow(label)),
   });
 
   const results = generateResultsArray(currentBuildResults, prevBuildResults);

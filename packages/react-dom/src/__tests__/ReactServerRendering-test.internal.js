@@ -384,6 +384,91 @@ describe('ReactDOMServer', () => {
       expect(markup).toContain('hello, world');
     });
 
+    it('renders with new context API', () => {
+      const Context = React.createContext(0);
+
+      function Consumer(props) {
+        return (
+          <Context.Consumer>{value => 'Result: ' + value}</Context.Consumer>
+        );
+      }
+
+      const Indirection = React.Fragment;
+
+      function App(props) {
+        return (
+          <Context.Provider value={props.value}>
+            <Context.Provider value={2}>
+              <Consumer />
+            </Context.Provider>
+            <Indirection>
+              <Indirection>
+                <Consumer />
+                <Context.Provider value={3}>
+                  <Consumer />
+                </Context.Provider>
+              </Indirection>
+            </Indirection>
+            <Consumer />
+          </Context.Provider>
+        );
+      }
+
+      const markup = ReactDOMServer.renderToString(<App value={1} />);
+      // Extract the numbers rendered by the consumers
+      const results = markup.match(/\d+/g).map(Number);
+      expect(results).toEqual([2, 1, 3, 1]);
+    });
+
+    it('renders context API, reentrancy', () => {
+      const Context = React.createContext(0);
+
+      function Consumer(props) {
+        return (
+          <Context.Consumer>{value => 'Result: ' + value}</Context.Consumer>
+        );
+      }
+
+      let reentrantMarkup;
+      function Reentrant() {
+        reentrantMarkup = ReactDOMServer.renderToString(
+          <App value={1} reentrant={false} />,
+        );
+        return null;
+      }
+
+      const Indirection = React.Fragment;
+
+      function App(props) {
+        return (
+          <Context.Provider value={props.value}>
+            {props.reentrant && <Reentrant />}
+            <Context.Provider value={2}>
+              <Consumer />
+            </Context.Provider>
+            <Indirection>
+              <Indirection>
+                <Consumer />
+                <Context.Provider value={3}>
+                  <Consumer />
+                </Context.Provider>
+              </Indirection>
+            </Indirection>
+            <Consumer />
+          </Context.Provider>
+        );
+      }
+
+      const markup = ReactDOMServer.renderToString(
+        <App value={1} reentrant={true} />,
+      );
+      // Extract the numbers rendered by the consumers
+      const results = markup.match(/\d+/g).map(Number);
+      const reentrantResults = reentrantMarkup.match(/\d+/g).map(Number);
+      expect(results).toEqual([2, 1, 3, 1]);
+      expect(reentrantResults).toEqual([2, 1, 3, 1]);
+    });
+
     it('renders components with different batching strategies', () => {
       class StaticComponent extends React.Component {
         render() {

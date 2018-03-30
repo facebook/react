@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "16.2.0",
+  "version": "16.3.0-alpha.1",
   "workspaces": [
     "packages/*"
   ],
@@ -45,7 +45,7 @@
     "coffee-script": "^1.8.0",
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
-    "create-react-class": "^15.6.2",
+    "create-react-class": "^15.6.3",
     "cross-env": "^5.1.1",
     "danger": "^3.0.4",
     "del": "^2.0.2",
@@ -56,6 +56,7 @@
     "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-flowtype": "^2.25.0",
     "eslint-plugin-jest": "^21.6.1",
+    "eslint-plugin-no-for-of-loops": "^1.0.0",
     "eslint-plugin-react": "^6.7.1",
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules/",
     "fbjs": "^0.8.16",
@@ -70,6 +71,7 @@
     "gzip-size": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
     "jest": "^22.0.6",
+    "jest-diff": "^22.1.0",
     "merge-stream": "^1.0.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.0",
@@ -79,6 +81,8 @@
     "platform": "^1.1.0",
     "prettier": "1.8.1",
     "prop-types": "^15.6.0",
+    "random-seed": "^0.3.0",
+    "react-lifecycles-compat": "^1.0.2",
     "rimraf": "^2.6.1",
     "rollup": "^0.52.1",
     "rollup-plugin-babel": "^3.0.1",
