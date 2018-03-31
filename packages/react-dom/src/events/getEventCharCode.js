@@ -16,8 +16,8 @@
  * @return {number} Normalized `charCode` property.
  */
 function getEventCharCode(nativeEvent) {
-  var charCode;
-  var keyCode = nativeEvent.keyCode;
+  let charCode;
+  const keyCode = nativeEvent.keyCode;
 
   if ('charCode' in nativeEvent) {
     charCode = nativeEvent.charCode;
@@ -29,6 +29,12 @@ function getEventCharCode(nativeEvent) {
   } else {
     // IE8 does not implement `charCode`, but `keyCode` has the correct value.
     charCode = keyCode;
+  }
+
+  // IE and Edge (on Windows) and Chrome / Safari (on Windows and Linux)
+  // report Enter as charCode 10 when ctrl is pressed.
+  if (charCode === 10) {
+    charCode = 13;
   }
 
   // Some non-printable keys are reported in `charCode`/`keyCode`, discard them.

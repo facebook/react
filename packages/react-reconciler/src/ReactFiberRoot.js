@@ -13,6 +13,14 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
 
+// TODO: This should be lifted into the renderer.
+export type Batch = {
+  _defer: boolean,
+  _expirationTime: ExpirationTime,
+  _onComplete: () => mixed,
+  _next: Batch | null,
+};
+
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
   containerInfo: any,
@@ -20,10 +28,7 @@ export type FiberRoot = {
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
-  // Remaining expiration time on this root.
-  remainingExpirationTime: ExpirationTime,
-  // Determines if this root can be committed.
-  isReadyForCommit: boolean,
+  pendingCommitExpirationTime: ExpirationTime,
   // A finished work-in-progress HostRoot that's ready to be committed.
   // TODO: The reason this is separate from isReadyForCommit is because the
   // FiberRoot concept will likely be lifted out of the reconciler and into
@@ -34,27 +39,36 @@ export type FiberRoot = {
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
+  // Remaining expiration time on this root.
+  // TODO: Lift this into the renderer
+  remainingExpirationTime: ExpirationTime,
+  // List of top-level batches. This list indicates whether a commit should be
+  // deferred. Also contains completion callbacks.
+  // TODO: Lift this into the renderer
+  firstBatch: Batch | null,
   // Linked-list of roots
   nextScheduledRoot: FiberRoot | null,
 };
 
 export function createFiberRoot(
   containerInfo: any,
+  isAsync: boolean,
   hydrate: boolean,
 ): FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostRootFiber();
+  const uninitializedFiber = createHostRootFiber(isAsync);
   const root = {
     current: uninitializedFiber,
     containerInfo: containerInfo,
     pendingChildren: null,
-    remainingExpirationTime: NoWork,
-    isReadyForCommit: false,
+    pendingCommitExpirationTime: NoWork,
     finishedWork: null,
     context: null,
     pendingContext: null,
     hydrate,
+    remainingExpirationTime: NoWork,
+    firstBatch: null,
     nextScheduledRoot: null,
   };
   uninitializedFiber.stateNode = root;

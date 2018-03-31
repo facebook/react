@@ -9,168 +9,111 @@
 
 'use strict';
 
-var validateDOMNesting;
+const React = require('react');
+const ReactDOM = require('react-dom');
 
-// https://html.spec.whatwg.org/multipage/syntax.html#special
-var specialTags = [
-  'address',
-  'applet',
-  'area',
-  'article',
-  'aside',
-  'base',
-  'basefont',
-  'bgsound',
-  'blockquote',
-  'body',
-  'br',
-  'button',
-  'caption',
-  'center',
-  'col',
-  'colgroup',
-  'dd',
-  'details',
-  'dir',
-  'div',
-  'dl',
-  'dt',
-  'embed',
-  'fieldset',
-  'figcaption',
-  'figure',
-  'footer',
-  'form',
-  'frame',
-  'frameset',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'head',
-  'header',
-  'hgroup',
-  'hr',
-  'html',
-  'iframe',
-  'img',
-  'input',
-  'isindex',
-  'li',
-  'link',
-  'listing',
-  'main',
-  'marquee',
-  'menu',
-  'menuitem',
-  'meta',
-  'nav',
-  'noembed',
-  'noframes',
-  'noscript',
-  'object',
-  'ol',
-  'p',
-  'param',
-  'plaintext',
-  'pre',
-  'script',
-  'section',
-  'select',
-  'source',
-  'style',
-  'summary',
-  'table',
-  'tbody',
-  'td',
-  'template',
-  'textarea',
-  'tfoot',
-  'th',
-  'thead',
-  'title',
-  'tr',
-  'track',
-  'ul',
-  'wbr',
-  'xmp',
-];
+function expectWarnings(tags, warnings = []) {
+  tags = [...tags];
+  warnings = [...warnings];
 
-// https://html.spec.whatwg.org/multipage/syntax.html#formatting
-var formattingTags = [
-  'a',
-  'b',
-  'big',
-  'code',
-  'em',
-  'font',
-  'i',
-  'nobr',
-  's',
-  'small',
-  'strike',
-  'strong',
-  'tt',
-  'u',
-];
+  let element = null;
+  const containerTag = tags.shift();
+  const container =
+    containerTag === 'svg'
+      ? document.createElementNS('http://www.w3.org/2000/svg', containerTag)
+      : document.createElement(containerTag);
 
-function isTagStackValid(stack) {
-  var ancestorInfo = null;
-  for (var i = 0; i < stack.length; i++) {
-    if (!validateDOMNesting.isTagValidInContext(stack[i], ancestorInfo)) {
-      return false;
-    }
-    ancestorInfo = validateDOMNesting.updatedAncestorInfo(
-      ancestorInfo,
-      stack[i],
-      null,
-    );
+  while (tags.length) {
+    const Tag = tags.pop();
+    element = <Tag>{element}</Tag>;
   }
-  return true;
+
+  expect(() => ReactDOM.render(element, container)).toWarnDev(warnings);
 }
 
-describe('ReactContextValidator', () => {
-  beforeEach(() => {
-    jest.resetModules();
-
-    // TODO: can we express this test with only public API?
-    validateDOMNesting = require('../client/validateDOMNesting').default;
-  });
-
-  it('allows any tag with no context', () => {
-    // With renderToString (for example), we don't know where we're mounting the
-    // tag so we must err on the side of leniency.
-    var allTags = [].concat(specialTags, formattingTags, ['mysterytag']);
-    allTags.forEach(function(tag) {
-      expect(validateDOMNesting.isTagValidInContext(tag, null)).toBe(true);
-    });
-  });
-
+describe('validateDOMNesting', () => {
   it('allows valid nestings', () => {
-    expect(isTagStackValid(['table', 'tbody', 'tr', 'td', 'b'])).toBe(true);
-    expect(isTagStackValid(['body', 'datalist', 'option'])).toBe(true);
-    expect(isTagStackValid(['div', 'a', 'object', 'a'])).toBe(true);
-    expect(isTagStackValid(['div', 'p', 'button', 'p'])).toBe(true);
-    expect(isTagStackValid(['p', 'svg', 'foreignObject', 'p'])).toBe(true);
-    expect(isTagStackValid(['html', 'body', 'div'])).toBe(true);
+    expectWarnings(['table', 'tbody', 'tr', 'td', 'b']);
+    expectWarnings(
+      ['body', 'datalist', 'option'],
+      [
+        'render(): Rendering components directly into document.body is discouraged',
+      ],
+    );
+    expectWarnings(['div', 'a', 'object', 'a']);
+    expectWarnings(['div', 'p', 'button', 'p']);
+    expectWarnings(['p', 'svg', 'foreignObject', 'p']);
+    expectWarnings(['html', 'body', 'div']);
 
     // Invalid, but not changed by browser parsing so we allow them
-    expect(isTagStackValid(['div', 'ul', 'ul', 'li'])).toBe(true);
-    expect(isTagStackValid(['div', 'label', 'div'])).toBe(true);
-    expect(isTagStackValid(['div', 'ul', 'li', 'section', 'li'])).toBe(true);
-    expect(isTagStackValid(['div', 'ul', 'li', 'dd', 'li'])).toBe(true);
+    expectWarnings(['div', 'ul', 'ul', 'li']);
+    expectWarnings(['div', 'label', 'div']);
+    expectWarnings(['div', 'ul', 'li', 'section', 'li']);
+    expectWarnings(['div', 'ul', 'li', 'dd', 'li']);
   });
 
   it('prevents problematic nestings', () => {
-    expect(isTagStackValid(['a', 'a'])).toBe(false);
-    expect(isTagStackValid(['form', 'form'])).toBe(false);
-    expect(isTagStackValid(['p', 'p'])).toBe(false);
-    expect(isTagStackValid(['table', 'tr'])).toBe(false);
-    expect(isTagStackValid(['div', 'ul', 'li', 'div', 'li'])).toBe(false);
-    expect(isTagStackValid(['div', 'html'])).toBe(false);
-    expect(isTagStackValid(['body', 'body'])).toBe(false);
-    expect(isTagStackValid(['svg', 'foreignObject', 'body', 'p'])).toBe(false);
+    expectWarnings(
+      ['a', 'a'],
+      [
+        'validateDOMNesting(...): <a> cannot appear as a descendant of <a>.\n' +
+          '    in a (at **)',
+      ],
+    );
+    expectWarnings(
+      ['form', 'form'],
+      [
+        'validateDOMNesting(...): <form> cannot appear as a descendant of <form>.\n' +
+          '    in form (at **)',
+      ],
+    );
+    expectWarnings(
+      ['p', 'p'],
+      [
+        'validateDOMNesting(...): <p> cannot appear as a descendant of <p>.\n' +
+          '    in p (at **)',
+      ],
+    );
+    expectWarnings(
+      ['table', 'tr'],
+      [
+        'validateDOMNesting(...): <tr> cannot appear as a child of <table>. ' +
+          'Add a <tbody> to your code to match the DOM tree generated by the browser.\n' +
+          '    in tr (at **)',
+      ],
+    );
+    expectWarnings(
+      ['div', 'ul', 'li', 'div', 'li'],
+      [
+        'validateDOMNesting(...): <li> cannot appear as a descendant of <li>.\n' +
+          '    in li (at **)\n' +
+          '    in div (at **)\n' +
+          '    in li (at **)\n' +
+          '    in ul (at **)',
+      ],
+    );
+    expectWarnings(
+      ['div', 'html'],
+      [
+        'validateDOMNesting(...): <html> cannot appear as a child of <div>.\n' +
+          '    in html (at **)',
+      ],
+    );
+    expectWarnings(
+      ['body', 'body'],
+      [
+        'render(): Rendering components directly into document.body is discouraged',
+        'validateDOMNesting(...): <body> cannot appear as a child of <body>.\n' +
+          '    in body (at **)',
+      ],
+    );
+    expectWarnings(
+      ['svg', 'foreignObject', 'body', 'p'],
+      [
+        'validateDOMNesting(...): <body> cannot appear as a child of <foreignObject>.\n' +
+          '    in body (at **)\n' +
+          '    in foreignObject (at **)',
+      ],
+    );
   });
 });

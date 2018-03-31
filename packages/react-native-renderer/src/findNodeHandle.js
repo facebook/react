@@ -15,7 +15,24 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
+// TODO: Share this module between Fabric and React Native renderers
+// so that both can be used in the same tree.
+
+let findHostInstance = function(fiber: Fiber): any {
+  return null;
+};
+
+let findHostInstanceFabric = function(fiber: Fiber): any {
+  return null;
+};
+
+export function injectFindHostInstance(impl: (fiber: Fiber) => any) {
+  findHostInstance = impl;
+}
+
+export function injectFindHostInstanceFabric(impl: (fiber: Fiber) => any) {
+  findHostInstanceFabric = impl;
+}
 
 /**
  * ReactNative vs ReactWeb
@@ -52,7 +69,7 @@ import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
 // accidentally deep-requiring this version.
 function findNodeHandle(componentOrHandle: any): any {
   if (__DEV__) {
-    var owner = ReactCurrentOwner.current;
+    const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
       warning(
         owner.stateNode._warnedAboutRefsInRender,
@@ -75,13 +92,16 @@ function findNodeHandle(componentOrHandle: any): any {
     return componentOrHandle;
   }
 
-  var component = componentOrHandle;
+  const component = componentOrHandle;
 
   // TODO (balpert): Wrap iOS native components in a composite wrapper, then
   // ReactInstanceMap.get here will always succeed for mounted components
-  var internalInstance: Fiber = ReactInstanceMap.get(component);
+  const internalInstance: Fiber = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return ReactNativeFiberRenderer.findHostInstance(internalInstance);
+    return (
+      findHostInstance(internalInstance) ||
+      findHostInstanceFabric(internalInstance)
+    );
   } else {
     if (component) {
       return component;

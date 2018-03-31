@@ -30,7 +30,7 @@ import type {AnyNativeEvent} from './PluginModuleType';
  * Internal queue of events that have accumulated their dispatches and are
  * waiting to have their dispatches executed.
  */
-var eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
+let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
 
 /**
  * Dispatches an event and releases it back into the pool, unless persistent.
@@ -39,7 +39,7 @@ var eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
  * @param {boolean} simulated If the event is simulated (changes exn behavior)
  * @private
  */
-var executeDispatchesAndRelease = function(
+const executeDispatchesAndRelease = function(
   event: ReactSyntheticEvent,
   simulated: boolean,
 ) {
@@ -51,10 +51,10 @@ var executeDispatchesAndRelease = function(
     }
   }
 };
-var executeDispatchesAndReleaseSimulated = function(e) {
+const executeDispatchesAndReleaseSimulated = function(e) {
   return executeDispatchesAndRelease(e, true);
 };
-var executeDispatchesAndReleaseTopLevel = function(e) {
+const executeDispatchesAndReleaseTopLevel = function(e) {
   return executeDispatchesAndRelease(e, false);
 };
 
@@ -130,7 +130,7 @@ export const injection = {
  * @return {?function} The stored callback.
  */
 export function getListener(inst: Fiber, registrationName: string) {
-  var listener;
+  let listener;
 
   // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
   // live here; needs to be moved to a better place soon
@@ -164,18 +164,18 @@ export function getListener(inst: Fiber, registrationName: string) {
  * @return {*} An accumulation of synthetic events.
  * @internal
  */
-export function extractEvents(
+function extractEvents(
   topLevelType: string,
   targetInst: Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
-) {
-  var events;
-  for (var i = 0; i < plugins.length; i++) {
+): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
+  let events = null;
+  for (let i = 0; i < plugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
-    var possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
+    const possiblePlugin: PluginModule<AnyNativeEvent> = plugins[i];
     if (possiblePlugin) {
-      var extractedEvents = possiblePlugin.extractEvents(
+      const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,
         targetInst,
         nativeEvent,
@@ -189,30 +189,17 @@ export function extractEvents(
   return events;
 }
 
-/**
- * Enqueues a synthetic event that should be dispatched when
- * `processEventQueue` is invoked.
- *
- * @param {*} events An accumulation of synthetic events.
- * @internal
- */
-export function enqueueEvents(
-  events: Array<ReactSyntheticEvent> | ReactSyntheticEvent,
+export function runEventsInBatch(
+  events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null,
+  simulated: boolean,
 ) {
-  if (events) {
+  if (events !== null) {
     eventQueue = accumulateInto(eventQueue, events);
   }
-}
 
-/**
- * Dispatches all synthetic events on the event queue.
- *
- * @internal
- */
-export function processEventQueue(simulated: boolean) {
   // Set `eventQueue` to null before processing it so that we can tell if more
   // events get enqueued while processing.
-  var processingEventQueue = eventQueue;
+  const processingEventQueue = eventQueue;
   eventQueue = null;
 
   if (!processingEventQueue) {
@@ -237,4 +224,19 @@ export function processEventQueue(simulated: boolean) {
   );
   // This would be a good time to rethrow if any of the event handlers threw.
   ReactErrorUtils.rethrowCaughtError();
+}
+
+export function runExtractedEventsInBatch(
+  topLevelType: string,
+  targetInst: Fiber,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: EventTarget,
+) {
+  const events = extractEvents(
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+  );
+  runEventsInBatch(events, false);
 }

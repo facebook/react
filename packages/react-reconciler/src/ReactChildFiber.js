@@ -8,50 +8,61 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactCall, ReactPortal, ReactReturn} from 'shared/ReactTypes';
+import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {ExpirationTime} from 'react-reconciler/src/ReactFiberExpirationTime';
 
-import {enableReactFragment} from 'shared/ReactFeatureFlags';
+import getComponentName from 'shared/getComponentName';
 import {Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
+import {
+  getIteratorFn,
+  REACT_ELEMENT_TYPE,
+  REACT_FRAGMENT_TYPE,
+  REACT_PORTAL_TYPE,
+} from 'shared/ReactSymbols';
 import {
   FunctionalComponent,
   ClassComponent,
   HostText,
   HostPortal,
-  CallComponent,
-  ReturnComponent,
   Fragment,
 } from 'shared/ReactTypeOfWork';
+import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import {REACT_PORTAL_TYPE} from './ReactPortal';
 import {
   createWorkInProgress,
   createFiberFromElement,
   createFiberFromFragment,
   createFiberFromText,
-  createFiberFromCall,
-  createFiberFromReturn,
   createFiberFromPortal,
 } from './ReactFiber';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import {StrictMode} from './ReactTypeOfMode';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
+let didWarnAboutMaps;
+let didWarnAboutStringRefInStrictMode;
+let ownerHasKeyUseWarning;
+let ownerHasFunctionTypeWarning;
+let warnForMissingKey = (child: mixed) => {};
+
 if (__DEV__) {
-  var didWarnAboutMaps = false;
+  didWarnAboutMaps = false;
+  didWarnAboutStringRefInStrictMode = {};
+
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or
    * object keys are not valid. This allows us to keep track of children between
    * updates.
    */
-  var ownerHasKeyUseWarning = {};
-  var ownerHasFunctionTypeWarning = {};
+  ownerHasKeyUseWarning = {};
+  ownerHasFunctionTypeWarning = {};
 
-  var warnForMissingKey = (child: mixed) => {
+  warnForMissingKey = (child: mixed) => {
     if (child === null || typeof child !== 'object') {
       return;
     }
@@ -65,7 +76,7 @@ if (__DEV__) {
     );
     child._store.validated = true;
 
-    var currentComponentErrorInfo =
+    const currentComponentErrorInfo =
       'Each child in an array or iterator should have a unique ' +
       '"key" prop. See https://fb.me/react-warning-keys for ' +
       'more information.' +
@@ -87,43 +98,37 @@ if (__DEV__) {
 
 const isArray = Array.isArray;
 
-const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
-const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
-
-// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE;
-var REACT_CALL_TYPE;
-var REACT_RETURN_TYPE;
-var REACT_FRAGMENT_TYPE;
-if (typeof Symbol === 'function' && Symbol.for) {
-  REACT_ELEMENT_TYPE = Symbol.for('react.element');
-  REACT_CALL_TYPE = Symbol.for('react.call');
-  REACT_RETURN_TYPE = Symbol.for('react.return');
-  REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
-} else {
-  REACT_ELEMENT_TYPE = 0xeac7;
-  REACT_CALL_TYPE = 0xeac8;
-  REACT_RETURN_TYPE = 0xeac9;
-  REACT_FRAGMENT_TYPE = 0xeacb;
-}
-
-function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
-  if (maybeIterable === null || typeof maybeIterable === 'undefined') {
-    return null;
-  }
-  const iteratorFn =
-    (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
-    maybeIterable[FAUX_ITERATOR_SYMBOL];
-  if (typeof iteratorFn === 'function') {
-    return iteratorFn;
-  }
-  return null;
-}
-
-function coerceRef(current: Fiber | null, element: ReactElement) {
+function coerceRef(
+  returnFiber: Fiber,
+  current: Fiber | null,
+  element: ReactElement,
+) {
   let mixedRef = element.ref;
-  if (mixedRef !== null && typeof mixedRef !== 'function') {
+  if (
+    mixedRef !== null &&
+    typeof mixedRef !== 'function' &&
+    typeof mixedRef !== 'object'
+  ) {
+    if (__DEV__) {
+      if (returnFiber.mode & StrictMode) {
+        const componentName = getComponentName(returnFiber) || 'Component';
+        if (!didWarnAboutStringRefInStrictMode[componentName]) {
+          warning(
+            false,
+            'A string ref, "%s", has been found within a strict mode tree. ' +
+              'String refs are a source of potential bugs and should be avoided. ' +
+              'We recommend using createRef() instead.' +
+              '\n%s' +
+              '\n\nLearn more about using refs safely here:' +
+              '\nhttps://fb.me/react-strict-mode-string-ref',
+            mixedRef,
+            getStackAddendumByWorkInProgressFiber(returnFiber),
+          );
+          didWarnAboutStringRefInStrictMode[componentName] = true;
+        }
+      }
+    }
+
     if (element._owner) {
       const owner: ?Fiber = (element._owner: any);
       let inst;
@@ -167,9 +172,12 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
       );
       invariant(
         element._owner,
-        'Element ref was specified as a string (%s) but no owner was ' +
-          'set. You may have multiple copies of React loaded. ' +
-          '(details: https://fb.me/react-refs-must-have-owner).',
+        'Element ref was specified as a string (%s) but no owner was set. This could happen for one of' +
+          ' the following reasons:\n' +
+          '1. You may be adding a ref to a functional component\n' +
+          "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
+          '3. You have multiple copies of React loaded\n' +
+          'See https://fb.me/react-refs-must-have-owner for more information.',
         mixedRef,
       );
     }
@@ -344,7 +352,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Insert
       const created = createFiberFromText(
         textContent,
-        returnFiber.internalContextTag,
+        returnFiber.mode,
         expirationTime,
       );
       created.return = returnFiber;
@@ -366,7 +374,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (current !== null && current.type === element.type) {
       // Move based on index
       const existing = useFiber(current, element.props, expirationTime);
-      existing.ref = coerceRef(current, element);
+      existing.ref = coerceRef(returnFiber, current, element);
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugSource = element._source;
@@ -377,61 +385,12 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Insert
       const created = createFiberFromElement(
         element,
-        returnFiber.internalContextTag,
+        returnFiber.mode,
         expirationTime,
       );
-      created.ref = coerceRef(current, element);
+      created.ref = coerceRef(returnFiber, current, element);
       created.return = returnFiber;
       return created;
-    }
-  }
-
-  function updateCall(
-    returnFiber: Fiber,
-    current: Fiber | null,
-    call: ReactCall,
-    expirationTime: ExpirationTime,
-  ): Fiber {
-    // TODO: Should this also compare handler to determine whether to reuse?
-    if (current === null || current.tag !== CallComponent) {
-      // Insert
-      const created = createFiberFromCall(
-        call,
-        returnFiber.internalContextTag,
-        expirationTime,
-      );
-      created.return = returnFiber;
-      return created;
-    } else {
-      // Move based on index
-      const existing = useFiber(current, call, expirationTime);
-      existing.return = returnFiber;
-      return existing;
-    }
-  }
-
-  function updateReturn(
-    returnFiber: Fiber,
-    current: Fiber | null,
-    returnNode: ReactReturn,
-    expirationTime: ExpirationTime,
-  ): Fiber {
-    if (current === null || current.tag !== ReturnComponent) {
-      // Insert
-      const created = createFiberFromReturn(
-        returnNode,
-        returnFiber.internalContextTag,
-        expirationTime,
-      );
-      created.type = returnNode.value;
-      created.return = returnFiber;
-      return created;
-    } else {
-      // Move based on index
-      const existing = useFiber(current, null, expirationTime);
-      existing.type = returnNode.value;
-      existing.return = returnFiber;
-      return existing;
     }
   }
 
@@ -450,7 +409,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Insert
       const created = createFiberFromPortal(
         portal,
-        returnFiber.internalContextTag,
+        returnFiber.mode,
         expirationTime,
       );
       created.return = returnFiber;
@@ -474,7 +433,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Insert
       const created = createFiberFromFragment(
         fragment,
-        returnFiber.internalContextTag,
+        returnFiber.mode,
         expirationTime,
         key,
       );
@@ -499,7 +458,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // node.
       const created = createFiberFromText(
         '' + newChild,
-        returnFiber.internalContextTag,
+        returnFiber.mode,
         expirationTime,
       );
       created.return = returnFiber;
@@ -509,52 +468,19 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (newChild.type === REACT_FRAGMENT_TYPE) {
-            const created = createFiberFromFragment(
-              newChild.props.children,
-              returnFiber.internalContextTag,
-              expirationTime,
-              newChild.key,
-            );
-            created.return = returnFiber;
-            return created;
-          } else {
-            const created = createFiberFromElement(
-              newChild,
-              returnFiber.internalContextTag,
-              expirationTime,
-            );
-            created.ref = coerceRef(null, newChild);
-            created.return = returnFiber;
-            return created;
-          }
-        }
-
-        case REACT_CALL_TYPE: {
-          const created = createFiberFromCall(
+          const created = createFiberFromElement(
             newChild,
-            returnFiber.internalContextTag,
+            returnFiber.mode,
             expirationTime,
           );
+          created.ref = coerceRef(returnFiber, null, newChild);
           created.return = returnFiber;
           return created;
         }
-
-        case REACT_RETURN_TYPE: {
-          const created = createFiberFromReturn(
-            newChild,
-            returnFiber.internalContextTag,
-            expirationTime,
-          );
-          created.type = newChild.value;
-          created.return = returnFiber;
-          return created;
-        }
-
         case REACT_PORTAL_TYPE: {
           const created = createFiberFromPortal(
             newChild,
-            returnFiber.internalContextTag,
+            returnFiber.mode,
             expirationTime,
           );
           created.return = returnFiber;
@@ -565,7 +491,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       if (isArray(newChild) || getIteratorFn(newChild)) {
         const created = createFiberFromFragment(
           newChild,
-          returnFiber.internalContextTag,
+          returnFiber.mode,
           expirationTime,
           null,
         );
@@ -633,31 +559,6 @@ function ChildReconciler(shouldTrackSideEffects) {
             return null;
           }
         }
-
-        case REACT_CALL_TYPE: {
-          if (newChild.key === key) {
-            return updateCall(returnFiber, oldFiber, newChild, expirationTime);
-          } else {
-            return null;
-          }
-        }
-
-        case REACT_RETURN_TYPE: {
-          // Returns don't have keys. If the previous node is implicitly keyed
-          // we can continue to replace it without aborting even if it is not a
-          // yield.
-          if (key === null) {
-            return updateReturn(
-              returnFiber,
-              oldFiber,
-              newChild,
-              expirationTime,
-            );
-          } else {
-            return null;
-          }
-        }
-
         case REACT_PORTAL_TYPE: {
           if (newChild.key === key) {
             return updatePortal(
@@ -740,32 +641,6 @@ function ChildReconciler(shouldTrackSideEffects) {
             expirationTime,
           );
         }
-
-        case REACT_CALL_TYPE: {
-          const matchedFiber =
-            existingChildren.get(
-              newChild.key === null ? newIdx : newChild.key,
-            ) || null;
-          return updateCall(
-            returnFiber,
-            matchedFiber,
-            newChild,
-            expirationTime,
-          );
-        }
-
-        case REACT_RETURN_TYPE: {
-          // Returns don't have keys, so we neither have to check the old nor
-          // new node for the key. If both are returns, they match.
-          const matchedFiber = existingChildren.get(newIdx) || null;
-          return updateReturn(
-            returnFiber,
-            matchedFiber,
-            newChild,
-            expirationTime,
-          );
-        }
-
         case REACT_PORTAL_TYPE: {
           const matchedFiber =
             existingChildren.get(
@@ -816,7 +691,6 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
       switch (child.$$typeof) {
         case REACT_ELEMENT_TYPE:
-        case REACT_CALL_TYPE:
         case REACT_PORTAL_TYPE:
           warnForMissingKey(child);
           const key = child.key;
@@ -1205,7 +1079,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     deleteRemainingChildren(returnFiber, currentFirstChild);
     const created = createFiberFromText(
       textContent,
-      returnFiber.internalContextTag,
+      returnFiber.mode,
       expirationTime,
     );
     created.return = returnFiber;
@@ -1237,7 +1111,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               : element.props,
             expirationTime,
           );
-          existing.ref = coerceRef(child, element);
+          existing.ref = coerceRef(returnFiber, child, element);
           existing.return = returnFiber;
           if (__DEV__) {
             existing._debugSource = element._source;
@@ -1257,7 +1131,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (element.type === REACT_FRAGMENT_TYPE) {
       const created = createFiberFromFragment(
         element.props.children,
-        returnFiber.internalContextTag,
+        returnFiber.mode,
         expirationTime,
         element.key,
       );
@@ -1266,79 +1140,13 @@ function ChildReconciler(shouldTrackSideEffects) {
     } else {
       const created = createFiberFromElement(
         element,
-        returnFiber.internalContextTag,
+        returnFiber.mode,
         expirationTime,
       );
-      created.ref = coerceRef(currentFirstChild, element);
+      created.ref = coerceRef(returnFiber, currentFirstChild, element);
       created.return = returnFiber;
       return created;
     }
-  }
-
-  function reconcileSingleCall(
-    returnFiber: Fiber,
-    currentFirstChild: Fiber | null,
-    call: ReactCall,
-    expirationTime: ExpirationTime,
-  ): Fiber {
-    const key = call.key;
-    let child = currentFirstChild;
-    while (child !== null) {
-      // TODO: If key === null and child.key === null, then this only applies to
-      // the first item in the list.
-      if (child.key === key) {
-        if (child.tag === CallComponent) {
-          deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, call, expirationTime);
-          existing.return = returnFiber;
-          return existing;
-        } else {
-          deleteRemainingChildren(returnFiber, child);
-          break;
-        }
-      } else {
-        deleteChild(returnFiber, child);
-      }
-      child = child.sibling;
-    }
-
-    const created = createFiberFromCall(
-      call,
-      returnFiber.internalContextTag,
-      expirationTime,
-    );
-    created.return = returnFiber;
-    return created;
-  }
-
-  function reconcileSingleReturn(
-    returnFiber: Fiber,
-    currentFirstChild: Fiber | null,
-    returnNode: ReactReturn,
-    expirationTime: ExpirationTime,
-  ): Fiber {
-    // There's no need to check for keys on yields since they're stateless.
-    let child = currentFirstChild;
-    if (child !== null) {
-      if (child.tag === ReturnComponent) {
-        deleteRemainingChildren(returnFiber, child.sibling);
-        const existing = useFiber(child, null, expirationTime);
-        existing.type = returnNode.value;
-        existing.return = returnFiber;
-        return existing;
-      } else {
-        deleteRemainingChildren(returnFiber, child);
-      }
-    }
-
-    const created = createFiberFromReturn(
-      returnNode,
-      returnFiber.internalContextTag,
-      expirationTime,
-    );
-    created.type = returnNode.value;
-    created.return = returnFiber;
-    return created;
   }
 
   function reconcileSinglePortal(
@@ -1378,7 +1186,7 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     const created = createFiberFromPortal(
       portal,
-      returnFiber.internalContextTag,
+      returnFiber.mode,
       expirationTime,
     );
     created.return = returnFiber;
@@ -1403,7 +1211,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
     if (
-      enableReactFragment &&
       typeof newChild === 'object' &&
       newChild !== null &&
       newChild.type === REACT_FRAGMENT_TYPE &&
@@ -1420,25 +1227,6 @@ function ChildReconciler(shouldTrackSideEffects) {
         case REACT_ELEMENT_TYPE:
           return placeSingleChild(
             reconcileSingleElement(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
-
-        case REACT_CALL_TYPE:
-          return placeSingleChild(
-            reconcileSingleCall(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
-        case REACT_RETURN_TYPE:
-          return placeSingleChild(
-            reconcileSingleReturn(
               returnFiber,
               currentFirstChild,
               newChild,

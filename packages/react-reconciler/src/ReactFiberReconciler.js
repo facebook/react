@@ -10,23 +10,18 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
-} from 'shared/ReactFiberTreeReflection';
+} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {HostComponent} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
 
-import {
-  findCurrentUnmaskedContext,
-  isContextProvider,
-  processChildContext,
-} from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import ReactFiberScheduler from './ReactFiberScheduler';
@@ -34,8 +29,10 @@ import {insertUpdateIntoFiber} from './ReactFiberUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 
+let didWarnAboutNestedUpdates;
+
 if (__DEV__) {
-  var didWarnAboutNestedUpdates = false;
+  didWarnAboutNestedUpdates = false;
 }
 
 export type Deadline = {
@@ -63,6 +60,7 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
     type: T,
     props: P,
     rootContainerInstance: C,
+    hostContext: CX,
   ): boolean,
 
   prepareUpdate(
@@ -90,12 +88,10 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
   ): number,
   cancelDeferredCallback(callbackID: number): void,
 
-  prepareForCommit(): void,
-  resetAfterCommit(): void,
+  prepareForCommit(containerInfo: C): void,
+  resetAfterCommit(containerInfo: C): void,
 
   now(): number,
-
-  useSyncScheduling?: boolean,
 
   +hydration?: HydrationHostConfig<T, P, I, TI, HI, C, CX, PL>,
 
@@ -232,18 +228,34 @@ type DevToolsConfig<I, TI> = {|
 |};
 
 export type Reconciler<C, I, TI> = {
-  createContainer(containerInfo: C, hydrate: boolean): OpaqueRoot,
+  createContainer(
+    containerInfo: C,
+    isAsync: boolean,
+    hydrate: boolean,
+  ): OpaqueRoot,
   updateContainer(
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
     callback: ?Function,
-  ): void,
+  ): ExpirationTime,
+  updateContainerAtExpirationTime(
+    element: ReactNodeList,
+    container: OpaqueRoot,
+    parentComponent: ?React$Component<any, any>,
+    expirationTime: ExpirationTime,
+    callback: ?Function,
+  ): ExpirationTime,
+  flushRoot(root: OpaqueRoot, expirationTime: ExpirationTime): void,
+  requestWork(root: OpaqueRoot, expirationTime: ExpirationTime): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
+  flushControlled(fn: () => mixed): void,
   deferredUpdates<A>(fn: () => A): A,
+  interactiveUpdates<A>(fn: () => A): A,
   injectIntoDevTools(devToolsConfig: DevToolsConfig<I, TI>): boolean,
+  computeUniqueAsyncExpiration(): ExpirationTime,
 
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(
@@ -257,38 +269,54 @@ export type Reconciler<C, I, TI> = {
   findHostInstanceWithNoPortals(component: Fiber): I | TI | null,
 };
 
-function getContextForSubtree(
-  parentComponent: ?React$Component<any, any>,
-): Object {
-  if (!parentComponent) {
-    return emptyObject;
-  }
-
-  const fiber = ReactInstanceMap.get(parentComponent);
-  const parentContext = findCurrentUnmaskedContext(fiber);
-  return isContextProvider(fiber)
-    ? processChildContext(fiber, parentContext)
-    : parentContext;
-}
-
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): Reconciler<C, I, TI> {
-  var {getPublicInstance} = config;
+  const {getPublicInstance} = config;
 
-  var {
-    computeAsyncExpiration,
+  const {
+    computeUniqueAsyncExpiration,
+    recalculateCurrentTime,
     computeExpirationForFiber,
     scheduleWork,
+    requestWork,
+    flushRoot,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
+    flushControlled,
     deferredUpdates,
+    syncUpdates,
+    interactiveUpdates,
+    flushInteractiveUpdates,
+    legacyContext,
   } = ReactFiberScheduler(config);
 
-  function scheduleTopLevelUpdate(
+  const {
+    findCurrentUnmaskedContext,
+    isContextProvider,
+    processChildContext,
+  } = legacyContext;
+
+  function getContextForSubtree(
+    parentComponent: ?React$Component<any, any>,
+  ): Object {
+    if (!parentComponent) {
+      return emptyObject;
+    }
+
+    const fiber = ReactInstanceMap.get(parentComponent);
+    const parentContext = findCurrentUnmaskedContext(fiber);
+    return isContextProvider(fiber)
+      ? processChildContext(fiber, parentContext)
+      : parentContext;
+  }
+
+  function scheduleRootUpdate(
     current: Fiber,
     element: ReactNodeList,
+    currentTime: ExpirationTime,
+    expirationTime: ExpirationTime,
     callback: ?Function,
   ) {
     if (__DEV__) {
@@ -319,33 +347,58 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
 
-    let expirationTime;
-    // Check if the top-level element is an async wrapper component. If so,
-    // treat updates to the root as async. This is a bit weird but lets us
-    // avoid a separate `renderAsync` API.
-    if (
-      enableAsyncSubtreeAPI &&
-      element != null &&
-      (element: any).type != null &&
-      (element: any).type.prototype != null &&
-      (element: any).type.prototype.unstable_isAsyncReactComponent === true
-    ) {
-      expirationTime = computeAsyncExpiration();
-    } else {
-      expirationTime = computeExpirationForFiber(current);
-    }
-
     const update = {
       expirationTime,
       partialState: {element},
       callback,
       isReplace: false,
       isForced: false,
-      nextCallback: null,
+      capturedValue: null,
       next: null,
     };
     insertUpdateIntoFiber(current, update);
     scheduleWork(current, expirationTime);
+
+    return expirationTime;
+  }
+
+  function updateContainerAtExpirationTime(
+    element: ReactNodeList,
+    container: OpaqueRoot,
+    parentComponent: ?React$Component<any, any>,
+    currentTime: ExpirationTime,
+    expirationTime: ExpirationTime,
+    callback: ?Function,
+  ) {
+    // TODO: If this is a nested container, this won't be the root.
+    const current = container.current;
+
+    if (__DEV__) {
+      if (ReactFiberInstrumentation.debugTool) {
+        if (current.alternate === null) {
+          ReactFiberInstrumentation.debugTool.onMountContainer(container);
+        } else if (element === null) {
+          ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+        } else {
+          ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+        }
+      }
+    }
+
+    const context = getContextForSubtree(parentComponent);
+    if (container.context === null) {
+      container.context = context;
+    } else {
+      container.pendingContext = context;
+    }
+
+    return scheduleRootUpdate(
+      current,
+      element,
+      currentTime,
+      expirationTime,
+      callback,
+    );
   }
 
   function findHostInstance(fiber: Fiber): PI | null {
@@ -357,8 +410,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   return {
-    createContainer(containerInfo: C, hydrate: boolean): OpaqueRoot {
-      return createFiberRoot(containerInfo, hydrate);
+    createContainer(
+      containerInfo: C,
+      isAsync: boolean,
+      hydrate: boolean,
+    ): OpaqueRoot {
+      return createFiberRoot(containerInfo, isAsync, hydrate);
     },
 
     updateContainer(
@@ -366,37 +423,57 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       container: OpaqueRoot,
       parentComponent: ?React$Component<any, any>,
       callback: ?Function,
-    ): void {
-      // TODO: If this is a nested container, this won't be the root.
+    ): ExpirationTime {
       const current = container.current;
-
-      if (__DEV__) {
-        if (ReactFiberInstrumentation.debugTool) {
-          if (current.alternate === null) {
-            ReactFiberInstrumentation.debugTool.onMountContainer(container);
-          } else if (element === null) {
-            ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
-          } else {
-            ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
-          }
-        }
-      }
-
-      const context = getContextForSubtree(parentComponent);
-      if (container.context === null) {
-        container.context = context;
-      } else {
-        container.pendingContext = context;
-      }
-
-      scheduleTopLevelUpdate(current, element, callback);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = computeExpirationForFiber(current);
+      return updateContainerAtExpirationTime(
+        element,
+        container,
+        parentComponent,
+        currentTime,
+        expirationTime,
+        callback,
+      );
     },
+
+    updateContainerAtExpirationTime(
+      element,
+      container,
+      parentComponent,
+      expirationTime,
+      callback,
+    ) {
+      const currentTime = recalculateCurrentTime();
+      return updateContainerAtExpirationTime(
+        element,
+        container,
+        parentComponent,
+        currentTime,
+        expirationTime,
+        callback,
+      );
+    },
+
+    flushRoot,
+
+    requestWork,
+
+    computeUniqueAsyncExpiration,
 
     batchedUpdates,
 
     unbatchedUpdates,
 
     deferredUpdates,
+
+    syncUpdates,
+
+    interactiveUpdates,
+
+    flushInteractiveUpdates,
+
+    flushControlled,
 
     flushSync,
 

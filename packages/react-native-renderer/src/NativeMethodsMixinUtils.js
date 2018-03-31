@@ -37,9 +37,9 @@ export function mountSafeCallback(context: any, callback: ?Function): any {
 
 export function throwOnStylesProp(component: any, props: any) {
   if (props.styles !== undefined) {
-    var owner = component._owner || null;
-    var name = component.constructor.displayName;
-    var msg =
+    const owner = component._owner || null;
+    const name = component.constructor.displayName;
+    let msg =
       '`styles` is not a supported property of `' +
       name +
       '`, did ' +
@@ -56,7 +56,7 @@ export function throwOnStylesProp(component: any, props: any) {
 }
 
 export function warnForStyleProps(props: any, validAttributes: any) {
-  for (var key in validAttributes.style) {
+  for (const key in validAttributes.style) {
     if (!(validAttributes[key] || props[key] === undefined)) {
       console.error(
         'You are setting the style `{ ' +

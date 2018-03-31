@@ -6,7 +6,6 @@
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
-
 import {
   setEnabled,
   isEnabled,
@@ -14,11 +13,7 @@ import {
   trapCapturedEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
-import BrowserEventConstants from './BrowserEventConstants';
-
-export * from 'events/ReactEventEmitterMixin';
-
-var {topLevelTypes} = BrowserEventConstants;
+import {topLevelTypes} from './BrowserEventConstants';
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -76,13 +71,13 @@ var {topLevelTypes} = BrowserEventConstants;
  *    React Core     .  General Purpose Event Plugin System
  */
 
-var alreadyListeningTo = {};
-var reactTopListenersCounter = 0;
+const alreadyListeningTo = {};
+let reactTopListenersCounter = 0;
 
 /**
  * To ensure no conflicts with other potential React instances on the page
  */
-var topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
+const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
 
 function getListeningForDocument(mountAt) {
   // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
@@ -116,24 +111,14 @@ function getListeningForDocument(mountAt) {
  * @param {object} contentDocumentHandle Document which owns the container
  */
 export function listenTo(registrationName, contentDocumentHandle) {
-  var mountAt = contentDocumentHandle;
-  var isListening = getListeningForDocument(mountAt);
-  var dependencies = registrationNameDependencies[registrationName];
+  const mountAt = contentDocumentHandle;
+  const isListening = getListeningForDocument(mountAt);
+  const dependencies = registrationNameDependencies[registrationName];
 
-  for (var i = 0; i < dependencies.length; i++) {
-    var dependency = dependencies[i];
+  for (let i = 0; i < dependencies.length; i++) {
+    const dependency = dependencies[i];
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
-      if (dependency === 'topWheel') {
-        if (isEventSupported('wheel')) {
-          trapBubbledEvent('topWheel', 'wheel', mountAt);
-        } else if (isEventSupported('mousewheel')) {
-          trapBubbledEvent('topWheel', 'mousewheel', mountAt);
-        } else {
-          // Firefox needs to capture a different mouse scroll event.
-          // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-          trapBubbledEvent('topWheel', 'DOMMouseScroll', mountAt);
-        }
-      } else if (dependency === 'topScroll') {
+      if (dependency === 'topScroll') {
         trapCapturedEvent('topScroll', 'scroll', mountAt);
       } else if (dependency === 'topFocus' || dependency === 'topBlur') {
         trapCapturedEvent('topFocus', 'focus', mountAt);
@@ -162,10 +147,10 @@ export function listenTo(registrationName, contentDocumentHandle) {
 }
 
 export function isListeningToAllDependencies(registrationName, mountAt) {
-  var isListening = getListeningForDocument(mountAt);
-  var dependencies = registrationNameDependencies[registrationName];
-  for (var i = 0; i < dependencies.length; i++) {
-    var dependency = dependencies[i];
+  const isListening = getListeningForDocument(mountAt);
+  const dependencies = registrationNameDependencies[registrationName];
+  for (let i = 0; i < dependencies.length; i++) {
+    const dependency = dependencies[i];
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
       return false;
     }

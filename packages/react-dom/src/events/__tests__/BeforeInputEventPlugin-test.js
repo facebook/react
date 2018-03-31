@@ -9,245 +9,820 @@
 
 'use strict';
 
-var React = require('react');
-var ReactTestUtils = require('react-dom/test-utils');
+let React;
+let ReactDOM;
 
-var EventMapping = {
-  compositionstart: 'topCompositionStart',
-  compositionend: 'topCompositionEnd',
-  keyup: 'topKeyUp',
-  keydown: 'topKeyDown',
-  keypress: 'topKeyPress',
-  textInput: 'topTextInput',
-  textinput: null, // Not defined now
-};
+describe('BeforeInputEventPlugin', () => {
+  let container;
 
-describe('BeforeInputEventPlugin', function() {
-  var ModuleCache;
+  function loadReactDOM(envSimulator) {
+    jest.resetModules();
+    if (envSimulator) {
+      envSimulator();
+    }
+    return require('react-dom');
+  }
 
   function simulateIE11() {
     document.documentMode = 11;
     window.CompositionEvent = {};
-    delete window.TextEvent;
   }
 
   function simulateWebkit() {
-    delete document.documentMode;
     window.CompositionEvent = {};
     window.TextEvent = {};
   }
 
-  function initialize(simulator) {
-    // Need to delete cached modules before executing simulator
-    jest.resetModules();
-
-    // Initialize variables in the scope of BeforeInputEventPlugin
-    simulator();
-
-    // Modules which have dependency on BeforeInputEventPlugin are stored
-    // in ModuleCache so that we can use these modules ouside test functions.
-    this.ReactDOM = require('react-dom');
-
-    // TODO: can we express this test with only public API?
-    this.ReactDOMComponentTree = require('../../client/ReactDOMComponentTree');
-    this.SyntheticCompositionEvent = require('../SyntheticCompositionEvent').default;
-    this.SyntheticInputEvent = require('../SyntheticInputEvent').default;
-    this.BeforeInputEventPlugin = require('../BeforeInputEventPlugin').default;
+  function simulateComposition() {
+    window.CompositionEvent = {};
   }
 
-  function extract(node, eventType, optionalData) {
-    var evt = document.createEvent('HTMLEvents');
-    evt.initEvent(eventType, true, true);
-    evt = Object.assign(evt, optionalData);
-    return ModuleCache.BeforeInputEventPlugin.extractEvents(
-      EventMapping[eventType],
-      ModuleCache.ReactDOMComponentTree.getInstanceFromNode(node),
-      evt,
-      node,
-    );
+  function simulateNoComposition() {
+    // no composition event in Window - will use fallback
   }
 
-  function setElementText(node) {
-    return args => (node.innerHTML = args);
+  function simulateEvent(elem, type, data) {
+    const event = new Event(type, {bubbles: true});
+    Object.assign(event, data);
+    elem.dispatchEvent(event);
   }
 
-  function accumulateEvents(node, events) {
-    // We don't use accumulateInto module to apply partial application.
-    return function() {
-      var newArgs = [node].concat(Array.prototype.slice.call(arguments));
-      var newEvents = extract.apply(this, newArgs);
-      Array.prototype.push.apply(events, newEvents);
-    };
-  }
-
-  function EventMismatchError(idx, message) {
-    this.name = 'EventMismatchError';
-    this.message = '[' + idx + '] ' + message;
-  }
-  EventMismatchError.prototype = Object.create(Error.prototype);
-
-  function verifyEvents(actualEvents, expectedEvents) {
-    expect(actualEvents.length).toBe(expectedEvents.length);
-    expectedEvents.forEach(function(expected, idx) {
-      var actual = actualEvents[idx];
-      expect(function() {
-        if (actual === null && expected.type === null) {
-          // Both are null.  Expected.
-        } else if (actual === null) {
-          throw new EventMismatchError(idx, 'Expected not to be null');
-        } else if (
-          expected.type === null ||
-          !(actual instanceof expected.type)
-        ) {
-          throw new EventMismatchError(idx, 'Unexpected type: ' + actual);
-        } else {
-          // Type match.
-          Object.keys(expected.data).forEach(function(expectedKey) {
-            if (!(expectedKey in actual)) {
-              throw new EventMismatchError(idx, 'KeyNotFound: ' + expectedKey);
-            } else if (actual[expectedKey] !== expected.data[expectedKey]) {
-              throw new EventMismatchError(
-                idx,
-                'ValueMismatch: ' + actual[expectedKey],
-              );
-            }
-          });
-        }
-      }).not.toThrow();
+  function simulateKeyboardEvent(elem, type, data) {
+    const {char, value, ...rest} = data;
+    const event = new KeyboardEvent(type, {
+      bubbles: true,
+      ...rest,
     });
-  }
-
-  // IE fires an event named `textinput` with all lowercase characters,
-  // instead of a standard name `textInput`.  As of now, React does not have
-  // a corresponding topEvent to IE's textinput, but both events are added to
-  // this scenario data for future use.
-  var Test_Scenario = [
-    // Composition test
-    {run: accumulateEvents, arg: ['compositionstart', {data: ''}]},
-    {run: accumulateEvents, arg: ['textInput', {data: 'A'}]},
-    {run: accumulateEvents, arg: ['textinput', {data: 'A'}]},
-    {run: accumulateEvents, arg: ['keyup', {keyCode: 65}]},
-    {run: setElementText, arg: ['ABC']},
-    {run: accumulateEvents, arg: ['textInput', {data: 'abc'}]},
-    {run: accumulateEvents, arg: ['textinput', {data: 'abc'}]},
-    {run: accumulateEvents, arg: ['keyup', {keyCode: 32}]},
-    {run: setElementText, arg: ['XYZ']},
-    {run: accumulateEvents, arg: ['textInput', {data: 'xyz'}]},
-    {run: accumulateEvents, arg: ['textinput', {data: 'xyz'}]},
-    {run: accumulateEvents, arg: ['keyup', {keyCode: 32}]},
-    {run: accumulateEvents, arg: ['compositionend', {data: 'Hello'}]},
-
-    // Emoji test
-    {
-      run: accumulateEvents,
-      arg: ['keypress', {char: '\uD83D\uDE0A', which: 65}],
-    },
-    {run: accumulateEvents, arg: ['textInput', {data: '\uD83D\uDE0A'}]},
-  ];
-
-  /* Defined expected results as a factory of result data because we need
-     lazy evaluation for event modules.
-     Event modules are reloaded to simulate a different platform per testcase.
-     If we define expected results as a simple dictionary here, the comparison
-     of 'instanceof' fails after module cache is reset.  */
-
-  // Webkit behavior is simple.  We expect SyntheticInputEvent at each
-  // textInput, SyntheticCompositionEvent at composition, and nothing from
-  // keyUp.
-  var Expected_Webkit = () => [
-    {type: ModuleCache.SyntheticCompositionEvent, data: {}},
-    {type: null},
-    {type: null},
-    {type: ModuleCache.SyntheticInputEvent, data: {data: 'A'}},
-    {type: null},
-    {type: null}, // textinput of A
-    {type: null},
-    {type: null}, // keyUp of 65
-    {type: null},
-    {type: ModuleCache.SyntheticInputEvent, data: {data: 'abc'}},
-    {type: null},
-    {type: null}, // textinput of abc
-    {type: null},
-    {type: null}, // keyUp of 32
-    {type: null},
-    {type: ModuleCache.SyntheticInputEvent, data: {data: 'xyz'}},
-    {type: null},
-    {type: null}, // textinput of xyz
-    {type: null},
-    {type: null}, // keyUp of 32
-    {type: ModuleCache.SyntheticCompositionEvent, data: {data: 'Hello'}},
-    {type: null},
-
-    // Emoji test
-    {type: null},
-    {type: null},
-    {type: null},
-    {type: ModuleCache.SyntheticInputEvent, data: {data: '\uD83D\uDE0A'}},
-  ];
-
-  // For IE11, we use fallback data instead of IE's textinput events.
-  // We expect no SyntheticInputEvent from textinput. Fallback beforeInput is
-  // expected to be triggered at compositionend with a text of the target
-  // element, not event data.
-  var Expected_IE11 = () => [
-    {type: ModuleCache.SyntheticCompositionEvent, data: {}},
-    {type: null},
-    {type: null},
-    {type: null}, // textInput of A
-    {type: null},
-    {type: null}, // textinput of A
-    {type: null},
-    {type: null}, // keyUp of 65
-    {type: null},
-    {type: null}, // textInput of abc
-    {type: null},
-    {type: null}, // textinput of abc
-
-    // fallbackData should NOT be set at keyUp with any of END_KEYCODES
-    {type: null},
-    {type: null}, // keyUp of 32
-
-    {type: null},
-    {type: null}, // textInput of xyz
-    {type: null},
-    {type: null}, // textinput of xyz
-    {type: null},
-    {type: null}, // keyUp of 32
-
-    // fallbackData is retrieved from the element, which is XYZ,
-    // at a time of compositionend
-    {type: ModuleCache.SyntheticCompositionEvent, data: {}},
-    {type: ModuleCache.SyntheticInputEvent, data: {data: 'XYZ'}},
-
-    // Emoji test
-    {type: null},
-    {type: ModuleCache.SyntheticInputEvent, data: {data: '\uD83D\uDE0A'}},
-    {type: null},
-    {type: null},
-  ];
-
-  function TestEditableReactComponent(Emulator, Scenario, ExpectedResult) {
-    ModuleCache = new initialize(Emulator);
-
-    class EditableDiv extends React.Component {
-      render() {
-        return <div contentEditable="true" />;
-      }
+    if (char) {
+      event.char = char;
     }
-    var rendered = ReactTestUtils.renderIntoDocument(<EditableDiv />);
-
-    var node = ModuleCache.ReactDOM.findDOMNode(rendered);
-    var events = [];
-
-    Scenario.forEach(el => el.run.call(this, node, events).apply(this, el.arg));
-    verifyEvents(events, ExpectedResult());
+    if (value) {
+      elem.value = value;
+    }
+    elem.dispatchEvent(event);
   }
 
-  it('extract onBeforeInput from native textinput events', function() {
-    TestEditableReactComponent(simulateWebkit, Test_Scenario, Expected_Webkit);
+  function simulatePaste(elem) {
+    const pasteEvent = new Event('paste', {
+      bubbles: true,
+    });
+    pasteEvent.clipboardData = {
+      dropEffect: null,
+      effectAllowed: null,
+      files: null,
+      items: null,
+      types: null,
+    };
+    elem.dispatchEvent(pasteEvent);
+  }
+
+  beforeEach(() => {
+    React = require('react');
+    container = document.createElement('div');
+    document.body.appendChild(container);
   });
 
-  it('extract onBeforeInput from fallback objects', function() {
-    TestEditableReactComponent(simulateIE11, Test_Scenario, Expected_IE11);
+  afterEach(() => {
+    delete document.documentMode;
+    delete window.CompositionEvent;
+    delete window.TextEvent;
+    delete window.opera;
+    document.body.removeChild(container);
+    container = null;
+  });
+
+  function keyCode(char) {
+    return char.charCodeAt(0);
+  }
+
+  const scenarios = [
+    {
+      eventSimulator: simulateEvent,
+      eventSimulatorArgs: [
+        'compositionstart',
+        {detail: {data: 'test'}, data: 'test'},
+      ],
+    },
+    {
+      eventSimulator: simulateEvent,
+      eventSimulatorArgs: [
+        'compositionupdate',
+        {detail: {data: 'test string'}, data: 'test string'},
+      ],
+    },
+    {
+      eventSimulator: simulateEvent,
+      eventSimulatorArgs: [
+        'compositionend',
+        {detail: {data: 'test string 3'}, data: 'test string 3'},
+      ],
+    },
+    {
+      eventSimulator: simulateEvent,
+      eventSimulatorArgs: ['textInput', {data: 'abcß'}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keypress', {which: keyCode('a')}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keypress', {which: keyCode(' ')}, ' '],
+    },
+    {
+      eventSimulator: simulateEvent,
+      eventSimulatorArgs: ['textInput', {data: ' '}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keypress', {which: keyCode('a'), ctrlKey: true}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keypress', {which: keyCode('b'), altKey: true}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: [
+        'keypress',
+        {which: keyCode('c'), altKey: true, ctrlKey: true},
+      ],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: [
+        'keypress',
+        {which: keyCode('X'), char: '\uD83D\uDE0A'},
+      ],
+    },
+    {
+      eventSimulator: simulateEvent,
+      eventSimulatorArgs: ['textInput', {data: '\uD83D\uDE0A'}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keydown', {keyCode: 229, value: 'foo'}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keydown', {keyCode: 9, value: 'foobar'}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keydown', {keyCode: 229, value: 'foofoo'}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keyup', {keyCode: 9, value: 'fooBARfoo'}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keydown', {keyCode: 229, value: 'foofoo'}],
+    },
+    {
+      eventSimulator: simulateKeyboardEvent,
+      eventSimulatorArgs: ['keypress', {keyCode: 60, value: 'Barfoofoo'}],
+    },
+    {
+      eventSimulator: simulatePaste,
+      eventSimulatorArgs: [],
+    },
+  ];
+
+  const environments = [
+    {
+      emulator: simulateWebkit,
+      assertions: [
+        {
+          run: ({
+            beforeInputEvent,
+            compositionStartEvent,
+            spyOnBeforeInput,
+            spyOnCompositionStart,
+          }) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+            expect(spyOnCompositionStart.mock.calls.length).toBe(1);
+            expect(compositionStartEvent.type).toBe('compositionstart');
+            expect(compositionStartEvent.data).toBe('test');
+          },
+        },
+        {
+          run: ({
+            beforeInputEvent,
+            compositionUpdateEvent,
+            spyOnBeforeInput,
+            spyOnCompositionUpdate,
+          }) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+            expect(spyOnCompositionUpdate.mock.calls.length).toBe(1);
+            expect(compositionUpdateEvent.type).toBe('compositionupdate');
+            expect(compositionUpdateEvent.data).toBe('test string');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('compositionend');
+            expect(beforeInputEvent.data).toBe('test string 3');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('textInput');
+            expect(beforeInputEvent.data).toBe('abcß');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe(' ');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('textInput');
+            expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+      ],
+    },
+    {
+      emulator: simulateIE11,
+      assertions: [
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('a');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe(' ');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('c');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+      ],
+    },
+    {
+      emulator: simulateNoComposition,
+      assertions: [
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('a');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe(' ');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('c');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keydown');
+            expect(beforeInputEvent.data).toBe('bar');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keyup');
+            expect(beforeInputEvent.data).toBe('BAR');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('Bar');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+      ],
+    },
+    {
+      emulator: simulateComposition,
+      assertions: [
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('compositionend');
+            expect(beforeInputEvent.data).toBe('test string 3');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('a');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe(' ');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('c');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+        {
+          run: ({beforeInputEvent, spyOnBeforeInput}) => {
+            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(beforeInputEvent).toBeNull();
+          },
+        },
+      ],
+    },
+  ];
+
+  const testInputComponent = (env, scenes) => {
+    let beforeInputEvent;
+    let compositionStartEvent;
+    let compositionUpdateEvent;
+    let spyOnBeforeInput;
+    let spyOnCompositionStart;
+    let spyOnCompositionUpdate;
+    ReactDOM = loadReactDOM(env.emulator);
+    const node = ReactDOM.render(
+      <input
+        type="text"
+        onBeforeInput={({type, data}) => {
+          spyOnBeforeInput();
+          beforeInputEvent = {type, data};
+        }}
+        onCompositionStart={({type, data}) => {
+          spyOnCompositionStart();
+          compositionStartEvent = {type, data};
+        }}
+        onCompositionUpdate={({type, data}) => {
+          spyOnCompositionUpdate();
+          compositionUpdateEvent = {type, data};
+        }}
+      />,
+      container,
+    );
+
+    scenes.forEach((s, id) => {
+      beforeInputEvent = null;
+      compositionStartEvent = null;
+      compositionUpdateEvent = null;
+      spyOnBeforeInput = jest.fn();
+      spyOnCompositionStart = jest.fn();
+      spyOnCompositionUpdate = jest.fn();
+      s.eventSimulator.apply(null, [node, ...s.eventSimulatorArgs]);
+      env.assertions[id].run({
+        beforeInputEvent,
+        compositionStartEvent,
+        compositionUpdateEvent,
+        spyOnBeforeInput,
+        spyOnCompositionStart,
+        spyOnCompositionUpdate,
+      });
+    });
+  };
+
+  const testContentEditableComponent = (env, scenes) => {
+    let beforeInputEvent;
+    let compositionStartEvent;
+    let compositionUpdateEvent;
+    let spyOnBeforeInput;
+    let spyOnCompositionStart;
+    let spyOnCompositionUpdate;
+    ReactDOM = loadReactDOM(env.emulator);
+    const node = ReactDOM.render(
+      <div
+        contentEditable={true}
+        onBeforeInput={({type, data}) => {
+          spyOnBeforeInput();
+          beforeInputEvent = {type, data};
+        }}
+        onCompositionStart={({type, data}) => {
+          spyOnCompositionStart();
+          compositionStartEvent = {type, data};
+        }}
+        onCompositionUpdate={({type, data}) => {
+          spyOnCompositionUpdate();
+          compositionUpdateEvent = {type, data};
+        }}
+      />,
+      container,
+    );
+
+    scenes.forEach((s, id) => {
+      beforeInputEvent = null;
+      compositionStartEvent = null;
+      compositionUpdateEvent = null;
+      spyOnBeforeInput = jest.fn();
+      spyOnCompositionStart = jest.fn();
+      spyOnCompositionUpdate = jest.fn();
+      s.eventSimulator.apply(null, [node, ...s.eventSimulatorArgs]);
+      env.assertions[id].run({
+        beforeInputEvent,
+        compositionStartEvent,
+        compositionUpdateEvent,
+        spyOnBeforeInput,
+        spyOnCompositionStart,
+        spyOnCompositionUpdate,
+      });
+    });
+  };
+
+  it('should extract onBeforeInput when simulating in Webkit on input[type=text]', () => {
+    testInputComponent(environments[0], scenarios);
+  });
+  it('should extract onBeforeInput when simulating in Webkit on contenteditable', () => {
+    testContentEditableComponent(environments[0], scenarios);
+  });
+
+  it('should extract onBeforeInput when simulating in IE11 on input[type=text]', () => {
+    testInputComponent(environments[1], scenarios);
+  });
+  it('should extract onBeforeInput when simulating in IE11 on contenteditable', () => {
+    testContentEditableComponent(environments[1], scenarios);
+  });
+
+  it('should extract onBeforeInput when simulating in env with no CompositionEvent on input[type=text]', () => {
+    testInputComponent(environments[2], scenarios);
+  });
+
+  // in an environment using composition fallback onBeforeInput will not work
+  // as expected on a contenteditable as keydown and keyup events are translated
+  // to keypress events
+
+  it('should extract onBeforeInput when simulating in env with only CompositionEvent on input[type=text]', () => {
+    testInputComponent(environments[3], scenarios);
+  });
+
+  it('should extract onBeforeInput when simulating in env with only CompositionEvent on contenteditable', () => {
+    testContentEditableComponent(environments[3], scenarios);
   });
 });

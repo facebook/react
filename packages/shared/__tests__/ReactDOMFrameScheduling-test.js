@@ -15,10 +15,7 @@ describe('ReactDOMFrameScheduling', () => {
     try {
       global.requestAnimationFrame = undefined;
       jest.resetModules();
-      spyOn(console, 'error');
-      require('react-dom');
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      expect(() => require('react-dom')).toWarnDev(
         'React depends on requestAnimationFrame.',
       );
     } finally {

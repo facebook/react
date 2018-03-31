@@ -16,8 +16,11 @@ import {
   HostComponent,
   HostText,
   HostPortal,
+  CallComponent,
   ReturnComponent,
   Fragment,
+  ContextProvider,
+  ContextConsumer,
 } from 'shared/ReactTypeOfWork';
 
 type MeasurementPhase =
@@ -28,7 +31,8 @@ type MeasurementPhase =
   | 'componentWillUpdate'
   | 'componentDidUpdate'
   | 'componentDidMount'
-  | 'getChildContext';
+  | 'getChildContext'
+  | 'getSnapshotBeforeUpdate';
 
 // Prefix measurements so that it's possible to filter them.
 // Longer prefixes are hard to read in DevTools.
@@ -166,8 +170,11 @@ const shouldIgnoreFiber = (fiber: Fiber): boolean => {
     case HostComponent:
     case HostText:
     case HostPortal:
+    case CallComponent:
     case ReturnComponent:
     case Fragment:
+    case ContextProvider:
+    case ContextConsumer:
       return true;
     default:
       return false;
@@ -416,6 +423,31 @@ export function stopCommitTimer(): void {
     labelsInCurrentCommit.clear();
 
     endMark('(Committing Changes)', '(Committing Changes)', warning);
+  }
+}
+
+export function startCommitSnapshotEffectsTimer(): void {
+  if (enableUserTimingAPI) {
+    if (!supportsUserTiming) {
+      return;
+    }
+    effectCountInCurrentCommit = 0;
+    beginMark('(Committing Snapshot Effects)');
+  }
+}
+
+export function stopCommitSnapshotEffectsTimer(): void {
+  if (enableUserTimingAPI) {
+    if (!supportsUserTiming) {
+      return;
+    }
+    const count = effectCountInCurrentCommit;
+    effectCountInCurrentCommit = 0;
+    endMark(
+      `(Committing Snapshot Effects: ${count} Total)`,
+      '(Committing Snapshot Effects)',
+      null,
+    );
   }
 }
 

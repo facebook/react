@@ -8,10 +8,11 @@
  */
 
 import type {HostConfig} from 'react-reconciler';
-import type {ReactCall} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
+import type {LegacyContext} from './ReactFiberContext';
+import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 
@@ -31,21 +32,28 @@ import {
   CallComponent,
   CallHandlerPhase,
   ReturnComponent,
+  ContextProvider,
+  ContextConsumer,
+  ForwardRef,
   Fragment,
+  Mode,
 } from 'shared/ReactTypeOfWork';
-import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
+import {
+  Placement,
+  Ref,
+  Update,
+  ErrLog,
+  DidCapture,
+} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
-import {
-  popContextProvider,
-  popTopLevelContextObject,
-} from './ReactFiberContext';
-import {Never} from './ReactFiberExpirationTime';
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
+  legacyContext: LegacyContext,
+  newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
 ) {
   const {
@@ -64,6 +72,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     getHostContext,
     popHostContainer,
   } = hostContext;
+
+  const {
+    popContextProvider: popLegacyContextProvider,
+    popTopLevelContextObject: popTopLevelLegacyContextObject,
+  } = legacyContext;
+
+  const {popProvider} = newContext;
 
   const {
     prepareToHydrateHostInstance,
@@ -94,7 +109,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       ) {
         invariant(false, 'A call cannot have host component children.');
       } else if (node.tag === ReturnComponent) {
-        returns.push(node.type);
+        returns.push(node.pendingProps.value);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -116,9 +131,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ) {
-    var call = (workInProgress.memoizedProps: ?ReactCall);
+    const props = workInProgress.memoizedProps;
     invariant(
-      call,
+      props,
       'Should be resolved by now. This error is likely caused by a bug in ' +
         'React. Please file an issue.',
     );
@@ -134,13 +149,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     // Build up the returns.
     // TODO: Compare this to a generator or opaque helpers like Children.
-    var returns: Array<mixed> = [];
+    const returns: Array<mixed> = [];
     appendAllReturns(returns, workInProgress);
-    var fn = call.handler;
-    var props = call.props;
-    var nextChildren = fn(props, returns);
+    const fn = props.handler;
+    const childProps = props.props;
+    const nextChildren = fn(childProps, returns);
 
-    var currentFirstChild = current !== null ? current.child : null;
+    const currentFirstChild = current !== null ? current.child : null;
     workInProgress.child = reconcileChildFibers(
       workInProgress,
       currentFirstChild,
@@ -197,6 +212,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         oldProps: P,
         newProps: P,
         rootContainerInstance: C,
+        currentHostContext: CX,
       ) {
         // TODO: Type this specific to this type of component.
         workInProgress.updateQueue = (updatePayload: any);
@@ -272,14 +288,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         } else {
           const container = portalOrRoot.containerInfo;
           let newChildSet = createContainerChildSet(container);
-          if (finalizeContainerChildren(container, newChildSet)) {
-            markUpdate(workInProgress);
-          }
-          portalOrRoot.pendingChildren = newChildSet;
           // If children might have changed, we have to add them all to the set.
           appendAllChildrenToContainer(newChildSet, workInProgress);
+          portalOrRoot.pendingChildren = newChildSet;
           // Schedule an update on the container to swap out the container.
           markUpdate(workInProgress);
+          finalizeContainerChildren(container, newChildSet);
         }
       };
       updateHostComponent = function(
@@ -290,6 +304,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         oldProps: P,
         newProps: P,
         rootContainerInstance: C,
+        currentHostContext: CX,
       ) {
         // If there are no effects associated with this node, then none of our children had any updates.
         // This guarantees that we can reuse all of them.
@@ -317,6 +332,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               type,
               newProps,
               rootContainerInstance,
+              currentHostContext,
             )
           ) {
             markUpdate(workInProgress);
@@ -371,6 +387,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         oldProps: P,
         newProps: P,
         rootContainerInstance: C,
+        currentHostContext: CX,
       ) {
         // Noop
       };
@@ -392,35 +409,37 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ): Fiber | null {
-    // Get the latest props.
-    let newProps = workInProgress.pendingProps;
-    if (newProps === null) {
-      newProps = workInProgress.memoizedProps;
-    } else if (
-      workInProgress.expirationTime !== Never ||
-      renderExpirationTime === Never
-    ) {
-      // Reset the pending props, unless this was a down-prioritization.
-      workInProgress.pendingProps = null;
-    }
-
+    const newProps = workInProgress.pendingProps;
     switch (workInProgress.tag) {
       case FunctionalComponent:
         return null;
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
-        popContextProvider(workInProgress);
+        popLegacyContextProvider(workInProgress);
+
+        // If this component caught an error, schedule an error log effect.
+        const instance = workInProgress.stateNode;
+        const updateQueue = workInProgress.updateQueue;
+        if (updateQueue !== null && updateQueue.capturedValues !== null) {
+          workInProgress.effectTag &= ~DidCapture;
+          if (typeof instance.componentDidCatch === 'function') {
+            workInProgress.effectTag |= ErrLog;
+          } else {
+            // Normally we clear this in the commit phase, but since we did not
+            // schedule an effect, we need to reset it here.
+            updateQueue.capturedValues = null;
+          }
+        }
         return null;
       }
       case HostRoot: {
         popHostContainer(workInProgress);
-        popTopLevelContextObject(workInProgress);
+        popTopLevelLegacyContextObject(workInProgress);
         const fiberRoot = (workInProgress.stateNode: FiberRoot);
         if (fiberRoot.pendingContext) {
           fiberRoot.context = fiberRoot.pendingContext;
           fiberRoot.pendingContext = null;
         }
-
         if (current === null || current.child === null) {
           // If we hydrated, pop so that we can delete any remaining children
           // that weren't hydrated.
@@ -430,6 +449,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           workInProgress.effectTag &= ~Placement;
         }
         updateHostContainer(workInProgress);
+
+        const updateQueue = workInProgress.updateQueue;
+        if (updateQueue !== null && updateQueue.capturedValues !== null) {
+          workInProgress.effectTag |= ErrLog;
+        }
         return null;
       }
       case HostComponent: {
@@ -446,6 +470,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           // Even better would be if children weren't special cased at all tho.
           const instance: I = workInProgress.stateNode;
           const currentHostContext = getHostContext();
+          // TODO: Experiencing an error where oldProps is null. Suggests a host
+          // component is hitting the resume path. Figure out why. Possibly
+          // related to `hidden`.
           const updatePayload = prepareUpdate(
             instance,
             type,
@@ -463,6 +490,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             oldProps,
             newProps,
             rootContainerInstance,
+            currentHostContext,
           );
 
           if (current.ref !== workInProgress.ref) {
@@ -519,6 +547,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
                 type,
                 newProps,
                 rootContainerInstance,
+                currentHostContext,
               )
             ) {
               markUpdate(workInProgress);
@@ -581,11 +610,21 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case ReturnComponent:
         // Does nothing.
         return null;
+      case ForwardRef:
+        return null;
       case Fragment:
+        return null;
+      case Mode:
         return null;
       case HostPortal:
         popHostContainer(workInProgress);
         updateHostContainer(workInProgress);
+        return null;
+      case ContextProvider:
+        // Pop provider fiber
+        popProvider(workInProgress);
+        return null;
+      case ContextConsumer:
         return null;
       // Error cases
       case IndeterminateComponent:
