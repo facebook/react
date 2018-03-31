@@ -675,7 +675,7 @@ class ReactDOMServerRenderer {
   pushProvider<T>(provider: ReactProvider<T>): void {
     this.providerIndex += 1;
     this.providerStack[this.providerIndex] = provider;
-    const context: ReactContext<any> = provider.type.context;
+    const context: ReactContext<any> = provider.type._context;
     context._currentValue = provider.props.value;
   }
 
@@ -689,7 +689,7 @@ class ReactDOMServerRenderer {
     }
     this.providerStack[this.providerIndex] = null;
     this.providerIndex -= 1;
-    const context: ReactContext<any> = provider.type.context;
+    const context: ReactContext<any> = provider.type._context;
     if (this.providerIndex < 0) {
       context._currentValue = context._defaultValue;
     } else {

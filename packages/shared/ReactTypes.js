@@ -62,7 +62,7 @@ export type ReactProvider<T> = {
 
 export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
-  context: ReactContext<T>,
+  _context: ReactContext<T>,
 };
 
 export type ReactConsumer<T> = {

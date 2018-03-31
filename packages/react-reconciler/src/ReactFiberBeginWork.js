@@ -868,7 +868,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     renderExpirationTime,
   ) {
     const providerType: ReactProviderType<any> = workInProgress.type;
-    const context: ReactContext<any> = providerType.context;
+    const context: ReactContext<any> = providerType._context;
 
     const newProps = workInProgress.pendingProps;
     const oldProps = workInProgress.memoizedProps;
