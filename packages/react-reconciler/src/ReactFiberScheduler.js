@@ -72,7 +72,7 @@ import {
   startCommitLifeCyclesTimer,
   stopCommitLifeCyclesTimer,
 } from './ReactDebugFiberPerf';
-import {createWorkInProgress} from './ReactFiber';
+import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
 import {
   NoWork,
@@ -260,7 +260,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     stashedWorkInProgressProperties = null;
     replayUnitOfWork = (failedUnitOfWork: Fiber, isAsync: boolean) => {
       // Retore the original state of the work-in-progress
-      Object.assign(failedUnitOfWork, stashedWorkInProgressProperties);
+      assignFiberPropertiesInDEV(
+        failedUnitOfWork,
+        stashedWorkInProgressProperties,
+      );
       switch (failedUnitOfWork.tag) {
         case HostRoot:
           popHostContainer(failedUnitOfWork);
@@ -787,7 +790,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-      stashedWorkInProgressProperties = Object.assign({}, workInProgress);
+      stashedWorkInProgressProperties = assignFiberPropertiesInDEV(
+        null,
+        workInProgress,
+      );
     }
     let next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
