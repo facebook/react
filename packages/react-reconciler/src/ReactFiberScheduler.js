@@ -791,7 +791,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       stashedWorkInProgressProperties = assignFiberPropertiesInDEV(
-        null,
+        stashedWorkInProgressProperties,
         workInProgress,
       );
     }
