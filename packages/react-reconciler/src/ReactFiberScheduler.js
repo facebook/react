@@ -958,12 +958,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } while (true);
 
     // We're done performing work. Time to clean up.
-    stopWorkLoopTimer(interruptedBy);
-    interruptedBy = null;
+    let didCompleteRoot = false;
     isWorking = false;
 
     // Yield back to main thread.
     if (didFatal) {
+      stopWorkLoopTimer(interruptedBy, didCompleteRoot);
+      interruptedBy = null;
       // There was a fatal error.
       if (__DEV__) {
         stack.resetStackAfterFatalErrorInDev();
@@ -972,12 +973,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } else if (nextUnitOfWork === null) {
       // We reached the root.
       if (isRootReadyForCommit) {
+        didCompleteRoot = true;
+        stopWorkLoopTimer(interruptedBy, didCompleteRoot);
+        interruptedBy = null;
         // The root successfully completed. It's ready for commit.
         root.pendingCommitExpirationTime = expirationTime;
         const finishedWork = root.current.alternate;
         return finishedWork;
       } else {
         // The root did not complete.
+        stopWorkLoopTimer(interruptedBy, didCompleteRoot);
+        interruptedBy = null;
         invariant(
           false,
           'Expired work should have completed. This error is likely caused ' +
@@ -985,6 +991,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         );
       }
     } else {
+      stopWorkLoopTimer(interruptedBy, didCompleteRoot);
+      interruptedBy = null;
       // There's more work to do, but we ran out of time. Yield back to
       // the renderer.
       return null;

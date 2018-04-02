@@ -4,7 +4,7 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Mount
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ AllLifecycles [mount]
     ⚛ AllLifecycles.componentWillMount
     ⚛ AllLifecycles.getChildContext
@@ -18,7 +18,7 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Update
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ AllLifecycles [update]
     ⚛ AllLifecycles.componentWillReceiveProps
     ⚛ AllLifecycles.shouldComponentUpdate
@@ -34,7 +34,7 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Unmount
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
@@ -48,7 +48,7 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // The commit phase should mention A and B just once
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [update]
     ⚛ A [update]
     ⚛ B [update]
@@ -66,7 +66,7 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
 
 // Because of deduplication, we don't know B was cascading,
 // but we should still see the warning for the commit phase.
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [update]
     ⚛ A [update]
     ⚛ B [update]
@@ -80,7 +80,7 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
     ⚛ A.componentDidUpdate
     ⚛ B.componentDidUpdate
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ B [update]
 
 ⚛ (Committing Changes)
@@ -92,7 +92,7 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
 `;
 
 exports[`ReactDebugFiberPerf does not schedule an extra callback if setState is called during a synchronous commit phase 1`] = `
-"⚛ (React Tree Reconciliation)
+"⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Component [mount]
 
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
@@ -101,7 +101,7 @@ exports[`ReactDebugFiberPerf does not schedule an extra callback if setState is 
   ⚛ (Calling Lifecycle Methods: 1 Total)
     ⛔ Component.componentDidMount Warning: Scheduled a cascading update
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Component [update]
 
 ⚛ (Committing Changes)
@@ -115,7 +115,7 @@ exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascadi
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Should not print a warning
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⚛ NotCascading [mount]
       ⚛ NotCascading.componentWillMount
@@ -128,7 +128,7 @@ exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascadi
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Should not print a warning
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [update]
     ⚛ NotCascading [update]
       ⚛ NotCascading.componentWillReceiveProps
@@ -144,7 +144,7 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Mount
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⚛ Child [mount]
 
@@ -156,7 +156,7 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Update
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [update]
     ⚛ Child [update]
 
@@ -168,7 +168,7 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Unmount
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
@@ -181,7 +181,7 @@ exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Start mounting Parent and A
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ A [mount]
       ⚛ Child [mount]
@@ -189,14 +189,14 @@ exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Mount B just a little (but not enough to memoize)
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ B [mount]
 
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Complete B and Parent
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⚛ B [mount]
       ⚛ Child [mount]
@@ -210,7 +210,7 @@ exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
 
 exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
 "// Flush the parent
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
 
 ⚛ (Committing Changes)
@@ -221,7 +221,7 @@ exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
 ⚛ (Waiting for async callback... will force flush in 10737418210 ms)
 
 // Flush the child
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Child [mount]
 
 ⚛ (Committing Changes)
@@ -235,13 +235,13 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Stop on Baddie and restart from Boundary
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⛔ Boundary [mount] Warning: An error was thrown inside this error boundary
       ⚛ Parent [mount]
         ⚛ Baddie [mount]
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⚛ Boundary [mount]
 
@@ -250,7 +250,7 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Boundary [update]
     ⚛ ErrorReport [mount]
 
@@ -265,11 +265,11 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Will fatal
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ Baddie [mount]
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
@@ -279,7 +279,7 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Will reconcile from a clean state
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⚛ Child [mount]
 
@@ -294,7 +294,7 @@ exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Should include just A and B, no Parents
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ A [update]
   ⚛ B [update]
 
@@ -308,7 +308,7 @@ exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
 exports[`ReactDebugFiberPerf supports portals 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⚛ Child [mount]
 
@@ -322,7 +322,7 @@ exports[`ReactDebugFiberPerf supports portals 1`] = `
 exports[`ReactDebugFiberPerf supports returns 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ App [mount]
     ⚛ CoParent [mount]
       ⚛ Indirection [mount]
@@ -341,18 +341,18 @@ exports[`ReactDebugFiberPerf supports returns 1`] = `
 exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Yielded)
   ⚛ Foo [mount]
 
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
-  ⛔ (React Tree Reconciliation) Warning: A top-level update interrupted the previous render
+  ⛔ (React Tree Reconciliation: Completed Root) Warning: A top-level update interrupted the previous render
     ⚛ Foo [mount]
   ⚛ (Committing Changes)
     ⚛ (Committing Snapshot Effects: 0 Total)
     ⚛ (Committing Host Effects: 1 Total)
     ⚛ (Calling Lifecycle Methods: 0 Total)
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
@@ -364,7 +364,7 @@ exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] =
 exports[`ReactDebugFiberPerf warns if async work expires (starvation) 1`] = `
 "⛔ (Waiting for async callback... will force flush in 5230 ms) Warning: React was blocked by main thread
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Foo [mount]
 
 ⚛ (Committing Changes)
@@ -378,7 +378,7 @@ exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Should print a warning
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⚛ Cascading [mount]
 
@@ -388,7 +388,7 @@ exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
   ⚛ (Calling Lifecycle Methods: 1 Total)
     ⛔ Cascading.componentDidMount Warning: Scheduled a cascading update
 
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Cascading [update]
 
 ⚛ (Committing Changes)
@@ -402,7 +402,7 @@ exports[`ReactDebugFiberPerf warns on cascading renders from top-level render 1`
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Rendering the first root
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Cascading [mount]
 
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
@@ -412,7 +412,7 @@ exports[`ReactDebugFiberPerf warns on cascading renders from top-level render 1`
     ⛔ Cascading.componentDidMount Warning: Scheduled a cascading update
 
 // Scheduling another root from componentDidMount
-⚛ (React Tree Reconciliation)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Child [mount]
 
 ⚛ (Committing Changes)
