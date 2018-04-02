@@ -268,6 +268,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     stashedWorkInProgressProperties = null;
     isReplayingFailedUnitOfWork = false;
+    originalReplayError = null;
     replayUnitOfWork = (
       failedUnitOfWork: Fiber,
       error: mixed,
@@ -301,6 +302,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       originalReplayError = error;
       invokeGuardedCallback(null, workLoop, null, isAsync);
       isReplayingFailedUnitOfWork = false;
+      originalReplayError = null;
       if (hasCaughtError()) {
         clearCaughtError();
       } else {
