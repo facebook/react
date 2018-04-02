@@ -60,12 +60,19 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Push current root instance onto the stack;
     // This allows us to reset root when portals are popped.
     push(rootInstanceStackCursor, nextRootInstance, fiber);
-
-    const nextRootContext = getRootHostContext(nextRootInstance);
-
     // Track the context and the Fiber that provided it.
     // This enables us to pop only Fibers that provide unique contexts.
     push(contextFiberStackCursor, fiber, fiber);
+
+    // Finally, we need to push the host context to the stack.
+    // However, we can't just call getRootHostContext() and push it because
+    // we'd have a different number of entries on the stack depending on
+    // whether getRootHostContext() throws somewhere in renderer code or not.
+    // So we push an empty value first. This lets us safely unwind on errors.
+    push(contextStackCursor, NO_CONTEXT, fiber);
+    const nextRootContext = getRootHostContext(nextRootInstance);
+    // Now that we know this function doesn't throw, replace it.
+    pop(contextStackCursor, fiber);
     push(contextStackCursor, nextRootContext, fiber);
   }
 

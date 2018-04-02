@@ -263,10 +263,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   let stashedWorkInProgressProperties;
   let replayUnitOfWork;
+  let isReplayingFailedUnitOfWork;
+  let originalReplayError;
   if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     stashedWorkInProgressProperties = null;
-    replayUnitOfWork = (failedUnitOfWork: Fiber, isAsync: boolean) => {
-      // Retore the original state of the work-in-progress
+    isReplayingFailedUnitOfWork = false;
+    originalReplayError = null;
+    replayUnitOfWork = (
+      failedUnitOfWork: Fiber,
+      error: mixed,
+      isAsync: boolean,
+    ) => {
+      // Restore the original state of the work-in-progress
       assignFiberPropertiesInDEV(
         failedUnitOfWork,
         stashedWorkInProgressProperties,
@@ -290,12 +298,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           break;
       }
       // Replay the begin phase.
+      isReplayingFailedUnitOfWork = true;
+      originalReplayError = error;
       invokeGuardedCallback(null, workLoop, null, isAsync);
+      isReplayingFailedUnitOfWork = false;
+      originalReplayError = null;
       if (hasCaughtError()) {
         clearCaughtError();
       } else {
-        // This should be unreachable because the render phase is
-        // idempotent
+        // If the begin phase did not fail the second time, set this pointer
+        // back to the original value.
+        nextUnitOfWork = failedUnitOfWork;
       }
     };
   }
@@ -855,9 +868,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
     let next = beginWork(current, workInProgress, nextRenderExpirationTime);
-
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();
+      if (isReplayingFailedUnitOfWork) {
+        // Currently replaying a failed unit of work. This should be unreachable,
+        // because the render phase is meant to be idempotent, and it should
+        // have thrown again. Since it didn't, rethrow the original error, so
+        // React's internal stack is not misaligned.
+        throw originalReplayError;
+      }
     }
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -935,7 +954,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
         if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
           const failedUnitOfWork = nextUnitOfWork;
-          replayUnitOfWork(failedUnitOfWork, isAsync);
+          replayUnitOfWork(failedUnitOfWork, thrownValue, isAsync);
         }
 
         const sourceFiber: Fiber = nextUnitOfWork;
