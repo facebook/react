@@ -1,8 +1,6 @@
 import TestCase from '../../TestCase';
 import Iframe from '../../Iframe';
 const React = window.React;
-const ReactDOM = window.ReactDOM;
-const {EditorState, Editor} = window.Draft;
 
 class OnSelectIframe extends React.Component {
   state = {count: 0, value: 'Select Me!'};
@@ -32,13 +30,6 @@ class OnSelectIframe extends React.Component {
 }
 
 export default class OnSelectEventTestCase extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {editorState: EditorState.createEmpty()};
-    this.onChange = editorState => {
-      this.setState({editorState});
-    };
-  }
   render() {
     return (
       <TestCase

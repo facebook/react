@@ -1,6 +1,4 @@
 import FixtureSet from '../../FixtureSet';
-import TestCase from '../../TestCase';
-import Iframe from '../../Iframe';
 import ReorderedInputsTestCase from './ReorderedInputsTestCase';
 import OnSelectEventTestCase from './OnSelectEventTestCase';
 const React = window.React;
