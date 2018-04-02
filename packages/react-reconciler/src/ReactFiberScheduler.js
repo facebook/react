@@ -274,7 +274,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       error: mixed,
       isAsync: boolean,
     ) => {
-      // Retore the original state of the work-in-progress
+      // Restore the original state of the work-in-progress
       assignFiberPropertiesInDEV(
         failedUnitOfWork,
         stashedWorkInProgressProperties,
