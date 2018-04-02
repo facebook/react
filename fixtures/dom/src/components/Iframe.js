@@ -2,19 +2,25 @@ const React = window.React;
 const ReactDOM = window.ReactDOM;
 
 class IframePortal extends React.Component {
-  state = {ref: null};
+  iframeRef = null;
 
   handleRef = ref => {
-    if (ref !== this.state.ref) {
-      this.setState({ref});
-      if (ref && ref.contentDocument && this.props.head) {
-        ref.contentDocument.head.innerHTML = this.props.head;
+    if (ref !== this.iframeRef) {
+      this.iframeRef = ref;
+      if (ref) {
+        if (ref.contentDocument && this.props.head) {
+          ref.contentDocument.head.innerHTML = this.props.head;
+        }
+        // Re-render must take place in the next tick (Firefox)
+        setTimeout(() => {
+          this.forceUpdate();
+        });
       }
     }
   };
 
   render() {
-    const {ref} = this.state;
+    const ref = this.iframeRef;
     let portal = null;
     if (ref && ref.contentDocument) {
       portal = ReactDOM.createPortal(
