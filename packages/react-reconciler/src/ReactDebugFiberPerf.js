@@ -371,7 +371,7 @@ export function startWorkLoopTimer(nextUnitOfWork: Fiber | null): void {
 
 export function stopWorkLoopTimer(
   interruptedBy: Fiber | null,
-  didCompleteRoot?: boolean,
+  didCompleteRoot: boolean,
 ): void {
   if (enableUserTimingAPI) {
     if (!supportsUserTiming) {
