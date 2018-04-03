@@ -93,7 +93,6 @@ ${source}`;
 ${license}
  *
  * @noflow
- * @providesModule ${globalName}-dev
  * @preventMunge
  */
 
@@ -112,7 +111,6 @@ ${source}
 ${license}
  *
  * @noflow
- * @providesModule ${globalName}-prod
  * @preventMunge
  */
 
