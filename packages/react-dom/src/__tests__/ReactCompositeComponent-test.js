@@ -239,11 +239,9 @@ describe('ReactCompositeComponent', () => {
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<MyComponent />, container)).toWarnDev(
       "Warning: Can't call forceUpdate on a component that is not yet mounted. " +
-        'This is a no-op, but it might indicate a bug in your application.\n\n' +
-        'To fix, assign the initial state in the MyComponent constructor. ' +
-        'If the state needs to reflect an external data source, ' +
-        'you may also add a componentDidMount lifecycle hook to MyComponent ' +
-        'and call setState there if the external data has changed.',
+        'This is a no-op, but it might indicate a bug in your application. ' +
+        'Instead, assign to `this.state` directly or define a `state = {};` ' +
+        'class property with the desired state in the MyComponent component.',
     );
 
     // No additional warning should be recorded
@@ -265,11 +263,9 @@ describe('ReactCompositeComponent', () => {
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<MyComponent />, container)).toWarnDev(
       "Warning: Can't call setState on a component that is not yet mounted. " +
-        'This is a no-op, but it might indicate a bug in your application.\n\n' +
-        'To fix, assign the initial state in the MyComponent constructor. ' +
-        'If the state needs to reflect an external data source, ' +
-        'you may also add a componentDidMount lifecycle hook to MyComponent ' +
-        'and call setState there if the external data has changed.',
+        'This is a no-op, but it might indicate a bug in your application. ' +
+        'Instead, assign to `this.state` directly or define a `state = {};` ' +
+        'class property with the desired state in the MyComponent component.',
     );
 
     // No additional warning should be recorded
