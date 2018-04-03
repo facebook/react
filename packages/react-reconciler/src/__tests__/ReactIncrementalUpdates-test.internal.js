@@ -373,4 +373,52 @@ describe('ReactIncrementalUpdates', () => {
     });
     ReactNoop.flush();
   });
+
+  it('getDerivedStateFromProps should update base state of updateQueue (based on product bug)', () => {
+    // Based on real-world bug.
+
+    let foo;
+    class Foo extends React.Component {
+      state = {value: 'initial state'};
+      static getDerivedStateFromProps() {
+        return {value: 'derived state'};
+      }
+      render() {
+        foo = this;
+        return (
+          <React.Fragment>
+            <span prop={this.state.value} />
+            <Bar />
+          </React.Fragment>
+        );
+      }
+    }
+
+    let bar;
+    class Bar extends React.Component {
+      render() {
+        bar = this;
+        return null;
+      }
+    }
+
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Foo />);
+    });
+    expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
+
+    ReactNoop.flushSync(() => {
+      // Triggers getDerivedStateFromProps again
+      ReactNoop.render(<Foo />);
+      // The noop callback is needed to trigger the specific internal path that
+      // led to this bug. Removing it causes it to "accidentally" work.
+      foo.setState({value: 'update state'}, function noop() {});
+    });
+    expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
+
+    ReactNoop.flushSync(() => {
+      bar.setState({});
+    });
+    expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
+  });
 });
