@@ -44,7 +44,7 @@ export function createContext<T>(
 
   context.Provider = {
     $$typeof: REACT_PROVIDER_TYPE,
-    context,
+    _context: context,
   };
   context.Consumer = context;
 

@@ -32,7 +32,7 @@ export default function(stack: Stack) {
   }
 
   function pushProvider(providerFiber: Fiber): void {
-    const context: ReactContext<any> = providerFiber.type.context;
+    const context: ReactContext<any> = providerFiber.type._context;
 
     push(changedBitsCursor, context._changedBits, providerFiber);
     push(valueCursor, context._currentValue, providerFiber);
@@ -60,7 +60,7 @@ export default function(stack: Stack) {
     pop(valueCursor, providerFiber);
     pop(changedBitsCursor, providerFiber);
 
-    const context: ReactContext<any> = providerFiber.type.context;
+    const context: ReactContext<any> = providerFiber.type._context;
     context._currentValue = currentValue;
     context._changedBits = changedBits;
   }
