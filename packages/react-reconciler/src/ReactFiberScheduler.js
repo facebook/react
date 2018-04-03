@@ -265,6 +265,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   let replayUnitOfWork;
   let isReplayingFailedUnitOfWork;
   let originalReplayError;
+  let rethrowOriginalError;
   if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     stashedWorkInProgressProperties = null;
     isReplayingFailedUnitOfWork = false;
@@ -310,6 +311,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // back to the original value.
         nextUnitOfWork = failedUnitOfWork;
       }
+    };
+    rethrowOriginalError = () => {
+      throw originalReplayError;
     };
   }
 
@@ -875,7 +879,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // because the render phase is meant to be idempotent, and it should
         // have thrown again. Since it didn't, rethrow the original error, so
         // React's internal stack is not misaligned.
-        throw originalReplayError;
+        rethrowOriginalError();
       }
     }
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
