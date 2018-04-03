@@ -21,11 +21,14 @@ function warnNoop(publicInstance, callerName) {
     }
     warning(
       false,
-      '%s(...): Can only update a mounted or mounting component. ' +
-        'This usually means you called %s() on an unmounted component. ' +
-        'This is a no-op.\n\nPlease check the code for the %s component.',
+      "Can't call %s on a component that is not yet mounted. " +
+        'This is a no-op, but it might indicate a bug in your application.\n\n' +
+        'To fix, assign the initial state in the %s constructor. ' +
+        'If the state needs to reflect an external data source, ' +
+        'you may also add a componentDidMount lifecycle hook to %s ' +
+        'and call setState there if the external data has changed.',
       callerName,
-      callerName,
+      componentName,
       componentName,
     );
     didWarnStateUpdateForUnmountedComponent[warningKey] = true;
