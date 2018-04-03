@@ -311,10 +311,10 @@ function processContext(type, context) {
 
 const STYLE = 'style';
 const RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-  suppressHydrationWarning: null,
+  children: true,
+  dangerouslySetInnerHTML: true,
+  suppressContentEditableWarning: true,
+  suppressHydrationWarning: true,
 };
 
 function createOpenTagMarkup(
@@ -340,7 +340,7 @@ function createOpenTagMarkup(
     }
     let markup = null;
     if (isCustomComponent(tagLowercase, props)) {
-      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+      if (!RESERVED_PROPS[propKey]) {
         markup = createMarkupForCustomAttribute(propKey, propValue);
       }
     } else {
