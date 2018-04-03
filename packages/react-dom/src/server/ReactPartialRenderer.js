@@ -310,6 +310,10 @@ function processContext(type, context) {
 }
 
 const STYLE = 'style';
+
+/**
+ * @nocollapse
+ */
 const RESERVED_PROPS = {
   children: null,
   dangerouslySetInnerHTML: null,

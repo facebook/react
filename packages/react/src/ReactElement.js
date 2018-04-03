@@ -12,6 +12,9 @@ import ReactCurrentOwner from './ReactCurrentOwner';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
+/**
+ * @nocollapse
+ */
 const RESERVED_PROPS = {
   key: true,
   ref: true,
