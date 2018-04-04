@@ -608,7 +608,7 @@ describe('ReactNewContext', () => {
             return (
               <React.Fragment>
                 <span prop={'Foo: ' + value.foo} />
-                {props.children}
+                {props.children && props.children()}
               </React.Fragment>
             );
           }}
@@ -624,7 +624,7 @@ describe('ReactNewContext', () => {
             return (
               <React.Fragment>
                 <span prop={'Bar: ' + value.bar} />
-                {props.children}
+                {props.children && props.children()}
               </React.Fragment>
             );
           }}
@@ -646,13 +646,18 @@ describe('ReactNewContext', () => {
         <Provider foo={props.foo} bar={props.bar}>
           <Indirection>
             <Foo>
-              <Indirection>
-                <Bar>
-                  <Indirection>
-                    <Foo />
-                  </Indirection>
-                </Bar>
-              </Indirection>
+              {/* Use a render prop so we don't test constant elements. */}
+              {() => (
+                <Indirection>
+                  <Bar>
+                    {() => (
+                      <Indirection>
+                        <Foo />
+                      </Indirection>
+                    )}
+                  </Bar>
+                </Indirection>
+              )}
             </Foo>
           </Indirection>
         </Provider>
