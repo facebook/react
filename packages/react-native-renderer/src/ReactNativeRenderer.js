@@ -19,6 +19,8 @@ import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import UIManager from 'UIManager';
 
+import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
+
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeComponent from './ReactNativeComponent';
@@ -34,6 +36,14 @@ import takeSnapshot from './takeSnapshot';
 injectFindHostInstance(ReactNativeFiberRenderer.findHostInstance);
 
 ReactGenericBatching.injection.injectRenderer(ReactNativeFiberRenderer);
+
+function computeComponentStackForErrorReporting(reactTag: number): string {
+  let fiber = ReactNativeComponentTree.getClosestInstanceFromNode(reactTag);
+  if (!fiber) {
+    return '';
+  }
+  return getStackAddendumByWorkInProgressFiber(fiber);
+}
 
 const roots = new Map();
 
@@ -99,6 +109,7 @@ const ReactNativeRenderer: ReactNativeType = {
     TouchHistoryMath, // PanResponder
     createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART
     takeSnapshot, // react-native-implementation
+    computeComponentStackForErrorReporting,
   },
 };
 
