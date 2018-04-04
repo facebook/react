@@ -291,7 +291,7 @@ export function cloneAndReplaceKey(oldElement, newKey) {
  */
 export function cloneElement(element, config, children) {
   if (element === undefined) {
-    throw new Error("Cannot call 'cloneElement' on undefined.");
+    throw new TypeError("Cannot call 'cloneElement' on undefined.");
   }
 
   let propName;
