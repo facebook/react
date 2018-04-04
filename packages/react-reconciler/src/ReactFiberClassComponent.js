@@ -370,7 +370,6 @@ export default function(
       if (
         typeof instance.getSnapshotBeforeUpdate === 'function' &&
         typeof instance.componentDidUpdate !== 'function' &&
-        typeof instance.componentDidUpdate !== 'function' &&
         !didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(type)
       ) {
         didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(type);
