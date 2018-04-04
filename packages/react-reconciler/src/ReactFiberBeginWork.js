@@ -994,6 +994,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         changedBits,
         renderExpirationTime,
       );
+    } else if (oldProps === newProps) {
+      // Skip over a memoized parent with a bitmask bailout even
+      // if we began working on it because of a deeper matching child.
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
     // There is no bailout on `children` equality because we expect people
     // to often pass a bound method as a child, but it may reference
