@@ -36,7 +36,7 @@ describe('wrap-warning-with-env-check', () => {
   it('should wrap warning calls', () => {
     compare(
       "warning(condition, 'a %s b', 'c');",
-      "__DEV__ ? warning(condition, 'a %s b', 'c') : void 0;"
+      "__DEV__ ? !condition ? warning(false, 'a %s b', 'c') : void 0 : void 0;"
     );
   });
 
