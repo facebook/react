@@ -604,11 +604,13 @@ describe('ReactDOMServer', () => {
     ).toWarnDev([
       'Warning: <inPUT /> is using incorrect casing. ' +
         'Use PascalCase for React components, ' +
-        'or lowercase letters and dashes for HTML.',
+        'or lowercase letters and dashes for HTML ' +
+        'and HTML5 custom elements',
       // linearGradient doesn't warn
       'Warning: <iFrame /> is using incorrect casing. ' +
         'Use PascalCase for React components, ' +
-        'or lowercase letters and dashes for HTML.',
+        'or lowercase letters and dashes for HTML ' +
+        'and HTML5 custom elements',
     ]);
   });
 

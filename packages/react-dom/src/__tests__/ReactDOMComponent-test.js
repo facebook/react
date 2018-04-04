@@ -1003,7 +1003,8 @@ describe('ReactDOMComponent', () => {
       }).toWarnDev(
         '<BR /> is using incorrect casing. ' +
           'Use PascalCase for React components, ' +
-          'or lowercase letters and dashes for HTML.',
+          'or lowercase letters and dashes for HTML ' +
+          'and HTML5 custom elements',
       );
       expect(returnedValue).not.toContain('</BR>');
     });
@@ -1019,7 +1020,8 @@ describe('ReactDOMComponent', () => {
       ).toWarnDev(
         '<IMG /> is using incorrect casing. ' +
           'Use PascalCase for React components, ' +
-          'or lowercase letters and dashes for HTML.',
+          'or lowercase letters and dashes for HTML ' +
+          'and HTML5 custom elements',
       );
     });
 
@@ -1069,7 +1071,8 @@ describe('ReactDOMComponent', () => {
         ).toWarnDev([
           '<hasOwnProperty /> is using incorrect casing. ' +
             'Use PascalCase for React components, ' +
-            'or lowercase letters and dashes for HTML.',
+            'or lowercase letters and dashes for HTML ' +
+            'and HTML5 custom elements',
           'The tag <hasOwnProperty> is unrecognized in this browser',
         ]);
       } finally {
