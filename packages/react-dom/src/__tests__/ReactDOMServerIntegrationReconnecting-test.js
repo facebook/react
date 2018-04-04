@@ -420,5 +420,30 @@ describe('ReactDOMServerIntegration', () => {
           suppressHydrationWarning={true}
         />,
       ));
+
+    it('should preserve the correct props on similar siblings intersperse with explicit whitespaces', async () => {
+      // prettier-ignore
+      const App = () => (
+        <span>
+          First line
+          {' '}
+          <a href="https://first.url">First url</a>
+          {' '}
+          <a href="https://second.url">Second url</a>
+        </span>
+      );
+
+      // Remove any HTML comment to simulate minification
+      const serverSideMarkup = ReactDOMServer.renderToString(<App />);
+      const minified = serverSideMarkup.replace(/<!-- -->/g, '');
+
+      const domElement = document.createElement('div');
+      domElement.innerHTML = minified;
+
+      ReactDOM.hydrate(<App />, domElement);
+      const clientSideMarkup = domElement.innerHTML;
+
+      expect(clientSideMarkup).toBe(minified);
+    });
   });
 });
