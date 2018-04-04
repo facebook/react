@@ -46,6 +46,14 @@ if (__DEV__) {
   const didWarnAboutDeprecatedLifecycles = new Set();
   const didWarnAboutUnsafeLifecycles = new Set();
 
+  const setToSortedString = set => {
+    const array = [];
+    set.forEach(value => {
+      array.push(value);
+    });
+    return array.sort().join(', ');
+  };
+
   ReactStrictModeWarnings.discardPendingWarnings = () => {
     pendingComponentWillMountWarnings = [];
     pendingComponentWillReceivePropsWarnings = [];
@@ -69,9 +77,7 @@ if (__DEV__) {
 
             const formatted = lifecycle.replace('UNSAFE_', '');
             const suggestion = LIFECYCLE_SUGGESTIONS[lifecycle];
-            const sortedComponentNames = Array.from(componentNames)
-              .sort()
-              .join(', ');
+            const sortedComponentNames = setToSortedString(componentNames);
 
             lifecyclesWarningMesages.push(
               `${formatted}: Please update the following components to use ` +
@@ -123,9 +129,7 @@ if (__DEV__) {
         didWarnAboutDeprecatedLifecycles.add(fiber.type);
       });
 
-      const sortedNames = Array.from(uniqueNames)
-        .sort()
-        .join(', ');
+      const sortedNames = setToSortedString(uniqueNames);
 
       lowPriorityWarning(
         false,
@@ -148,9 +152,7 @@ if (__DEV__) {
         didWarnAboutDeprecatedLifecycles.add(fiber.type);
       });
 
-      const sortedNames = Array.from(uniqueNames)
-        .sort()
-        .join(', ');
+      const sortedNames = setToSortedString(uniqueNames);
 
       lowPriorityWarning(
         false,
@@ -172,9 +174,7 @@ if (__DEV__) {
         didWarnAboutDeprecatedLifecycles.add(fiber.type);
       });
 
-      const sortedNames = Array.from(uniqueNames)
-        .sort()
-        .join(', ');
+      const sortedNames = setToSortedString(uniqueNames);
 
       lowPriorityWarning(
         false,
