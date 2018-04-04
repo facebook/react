@@ -290,6 +290,10 @@ export function cloneAndReplaceKey(oldElement, newKey) {
  * See https://reactjs.org/docs/react-api.html#cloneelement
  */
 export function cloneElement(element, config, children) {
+  if (element === undefined) {
+    throw new Error("Cannot call 'cloneElement' on undefined.");
+  }
+
   let propName;
 
   // Original props are copied
