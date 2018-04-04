@@ -87,7 +87,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('./plugins/wrap-warning-with-env-check'),
+          require('../babel/wrap-warning-with-env-check'),
         ]),
       });
     case UMD_DEV:
@@ -101,7 +101,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
           // Minify invariant messages
           require('../error-codes/replace-invariant-error-codes'),
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('./plugins/wrap-warning-with-env-check'),
+          require('../babel/wrap-warning-with-env-check'),
         ]),
       });
     default:

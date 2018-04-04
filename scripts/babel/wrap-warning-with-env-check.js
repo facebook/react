@@ -25,8 +25,6 @@ module.exports = function(babel, options) {
           }
 
           if (path.get('callee').isIdentifier({name: 'warning'})) {
-            node[SEEN_SYMBOL] = true;
-
             // Turns this code:
             //
             // warning(condition, argument, argument);
@@ -34,14 +32,28 @@ module.exports = function(babel, options) {
             // into this:
             //
             // if (__DEV__) {
-            //   warning(condition, argument, argument);
+            //   if (!condition) {
+            //     warning(false, argument, argument);
+            //   }
             // }
             //
-            // The goal is to strip out warning calls entirely in production.
+            // The goal is to strip out warning calls entirely in production
+            // and to avoid evaluating the arguments in development.
+            const condition = node.arguments[0];
+            const newNode = t.callExpression(
+              node.callee,
+              [t.booleanLiteral(false)].concat(node.arguments.slice(1))
+            );
+            newNode[SEEN_SYMBOL] = true;
             path.replaceWith(
               t.ifStatement(
                 DEV_EXPRESSION,
-                t.blockStatement([t.expressionStatement(node)])
+                t.blockStatement([
+                  t.ifStatement(
+                    t.unaryExpression('!', condition),
+                    t.expressionStatement(newNode)
+                  ),
+                ])
               )
             );
           }
