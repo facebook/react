@@ -787,7 +787,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       switch (fiber.tag) {
         case ContextConsumer:
           // Check if the context matches.
-          const observedBits: number = fiber.stateNode | 0;
+          const observedBits: number = fiber.stateNode.bits | 0;
           if (fiber.type === context && (observedBits & changedBits) !== 0) {
             // Update the expiration time of all the ancestors, including
             // the alternates.
@@ -877,7 +877,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
     } else if (oldProps === newProps) {
-      workInProgress.stateNode = 0;
+      workInProgress.stateNode.bits = 0;
       pushProvider(workInProgress);
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
@@ -885,15 +885,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newValue = newProps.value;
     workInProgress.memoizedProps = newProps;
 
-    let changedBits: number;
     if (oldProps === null) {
       // Initial render
-      changedBits = MAX_SIGNED_31_BIT_INT;
+      workInProgress.stateNode = {bits: MAX_SIGNED_31_BIT_INT};
     } else {
+      let changedBits: number;
       if (oldProps.value === newProps.value) {
         // No change. Bailout early if children are the same.
         if (oldProps.children === newProps.children) {
-          workInProgress.stateNode = 0;
+          workInProgress.stateNode.bits = 0;
           pushProvider(workInProgress);
           return bailoutOnAlreadyFinishedWork(current, workInProgress);
         }
@@ -910,7 +910,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         ) {
           // No change. Bailout early if children are the same.
           if (oldProps.children === newProps.children) {
-            workInProgress.stateNode = 0;
+            workInProgress.stateNode.bits = 0;
             pushProvider(workInProgress);
             return bailoutOnAlreadyFinishedWork(current, workInProgress);
           }
@@ -933,7 +933,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           if (changedBits === 0) {
             // No change. Bailout early if children are the same.
             if (oldProps.children === newProps.children) {
-              workInProgress.stateNode = 0;
+              workInProgress.stateNode.bits = 0;
               pushProvider(workInProgress);
               return bailoutOnAlreadyFinishedWork(current, workInProgress);
             }
@@ -947,9 +947,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
         }
       }
+      workInProgress.stateNode.bits = changedBits;
     }
 
-    workInProgress.stateNode = changedBits;
     pushProvider(workInProgress);
 
     const newChildren = newProps.children;
@@ -982,8 +982,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Subscribe to all changes by default
       observedBits = MAX_SIGNED_31_BIT_INT;
     }
+
     // Store the observedBits on the fiber's stateNode for quick access.
-    workInProgress.stateNode = observedBits;
+    if (oldProps === null) {
+      workInProgress.stateNode = {bits: observedBits};
+    } else {
+      workInProgress.stateNode.bits = observedBits;
+    }
 
     if ((changedBits & observedBits) !== 0) {
       // Context change propagation stops at matching consumers, for time-

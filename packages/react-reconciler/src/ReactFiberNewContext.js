@@ -39,7 +39,7 @@ export default function(stack: Stack) {
     push(providerCursor, providerFiber, providerFiber);
 
     context._currentValue = providerFiber.pendingProps.value;
-    context._changedBits = providerFiber.stateNode;
+    context._changedBits = providerFiber.stateNode.bits;
 
     if (__DEV__) {
       warning(
