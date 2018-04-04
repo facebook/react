@@ -39,7 +39,7 @@ describe('reactProdInvariant', () => {
       reactProdInvariant(124, 'foo', 'bar');
     }).toThrowError(
       'Minified React error #124; visit ' +
-        'http://facebook.github.io/react/docs/error-decoder.html?invariant=124&args[]=foo&args[]=bar' +
+        'http://reactjs.org/docs/error-decoder.html?invariant=124&args[]=foo&args[]=bar' +
         ' for the full message or use the non-minified dev environment' +
         ' for full errors and additional helpful warnings.',
     );
@@ -48,7 +48,7 @@ describe('reactProdInvariant', () => {
       reactProdInvariant(20);
     }).toThrowError(
       'Minified React error #20; visit ' +
-        'http://facebook.github.io/react/docs/error-decoder.html?invariant=20' +
+        'http://reactjs.org/docs/error-decoder.html?invariant=20' +
         ' for the full message or use the non-minified dev environment' +
         ' for full errors and additional helpful warnings.',
     );
@@ -57,7 +57,7 @@ describe('reactProdInvariant', () => {
       reactProdInvariant(77, '<div>', '&?bar');
     }).toThrowError(
       'Minified React error #77; visit ' +
-        'http://facebook.github.io/react/docs/error-decoder.html?invariant=77&args[]=%3Cdiv%3E&args[]=%26%3Fbar' +
+        'http://reactjs.org/docs/error-decoder.html?invariant=77&args[]=%3Cdiv%3E&args[]=%26%3Fbar' +
         ' for the full message or use the non-minified dev environment' +
         ' for full errors and additional helpful warnings.',
     );
