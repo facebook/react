@@ -957,7 +957,7 @@ class ReactDOMServerRenderer {
           tag === element.type,
           '<%s /> is using incorrect casing. ' +
             'Use PascalCase for React components, ' +
-            'or lowercase letters for HTML elements.',
+            'or lowercase for HTML elements.',
           element.type,
         );
       }

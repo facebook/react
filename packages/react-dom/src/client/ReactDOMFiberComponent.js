@@ -357,7 +357,7 @@ export function createElement(
         isCustomComponentTag || type === type.toLowerCase(),
         '<%s /> is using incorrect casing. ' +
           'Use PascalCase for React components, ' +
-          'or lowercase letters for HTML elements.',
+          'or lowercase for HTML elements.',
         type,
       );
     }
