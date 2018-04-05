@@ -12,6 +12,8 @@ import ReactCurrentOwner from './ReactCurrentOwner';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
+const invariant = require('fbjs/lib/invariant');
+
 const RESERVED_PROPS = {
   key: true,
   ref: true,
@@ -290,10 +292,10 @@ export function cloneAndReplaceKey(oldElement, newKey) {
  * See https://reactjs.org/docs/react-api.html#cloneelement
  */
 export function cloneElement(element, config, children) {
-
-  if (!element) {
-    throw new TypeError('Cannot clone null or undefined.');
-  }
+  invariant(
+      !(element === null || element === undefined),
+      'Cannot clone a null or undefined element.'
+  );
 
   let propName;
 
