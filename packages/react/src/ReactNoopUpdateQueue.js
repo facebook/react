@@ -21,10 +21,10 @@ function warnNoop(publicInstance, callerName) {
     }
     warning(
       false,
-      '%s(...): Can only update a mounted or mounting component. ' +
-        'This usually means you called %s() on an unmounted component. ' +
-        'This is a no-op.\n\nPlease check the code for the %s component.',
-      callerName,
+      "Can't call %s on a component that is not yet mounted. " +
+        'This is a no-op, but it might indicate a bug in your application. ' +
+        'Instead, assign to `this.state` directly or define a `state = {};` ' +
+        'class property with the desired state in the %s component.',
       callerName,
       componentName,
     );

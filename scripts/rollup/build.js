@@ -72,7 +72,7 @@ const closureOptions = {
 
 function getBabelConfig(updateBabelOptions, bundleType, filename) {
   let options = {
-    exclude: 'node_modules/**',
+    exclude: '/**/node_modules/**',
     presets: [],
     plugins: [],
   };
@@ -87,7 +87,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('./plugins/wrap-warning-with-env-check'),
+          require('../babel/wrap-warning-with-env-check'),
         ]),
       });
     case UMD_DEV:
@@ -101,7 +101,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
           // Minify invariant messages
           require('../error-codes/replace-invariant-error-codes'),
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
-          require('./plugins/wrap-warning-with-env-check'),
+          require('../babel/wrap-warning-with-env-check'),
         ]),
       });
     default:
@@ -230,7 +230,9 @@ function getPlugins(
     // www still needs require('React') rather than require('react')
     isFBBundle && {
       transformBundle(source) {
-        return source.replace(/require\(['"]react['"]\)/g, "require('React')");
+        return source
+          .replace(/require\(['"]react['"]\)/g, "require('React')")
+          .replace(/require\(['"]react-is['"]\)/g, "require('ReactIs')");
       },
     },
     // Apply dead code elimination and/or minification.

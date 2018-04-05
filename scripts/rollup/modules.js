@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const forks = require('./forks');
 const bundleTypes = require('./bundles').bundleTypes;
 
@@ -44,9 +43,9 @@ function getPeerGlobals(externals, moduleType) {
 
 // Determines node_modules packages that are safe to assume will exist.
 function getDependencies(bundleType, entry) {
-  const packageJson = require(path.basename(
-    path.dirname(require.resolve(entry))
-  ) + '/package.json');
+  // Replaces any part of the entry that follow the package name (like
+  // "/server" in "react-dom/server") by the path to the package settings
+  const packageJson = require(entry.replace(/(\/.*)?$/, '/package.json'));
   // Both deps and peerDeps are assumed as accessible.
   return Array.from(
     new Set([

@@ -37,11 +37,14 @@ import findNumericNodeHandle from './findNumericNodeHandle';
  *
  * @abstract
  */
-class ReactNativeComponent<DefaultProps, Props, State> extends React.Component<
+class ReactNativeComponent<Props, State = void> extends React.Component<
   Props,
   State,
 > {
-  static defaultProps: DefaultProps;
+  /**
+   * Due to bugs in Flow's handling of React.createClass, some fields already
+   * declared in the base class need to be redeclared below.
+   */
   props: Props;
   state: State;
 

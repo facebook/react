@@ -14,17 +14,19 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native';
 
 // Re-export dynamic flags from the fbsource version.
 export const {
+  enableGetDerivedStateFromCatch,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
+  replayFailedUnitOfWorkWithInvokeGuardedCallback,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
-export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
 export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
 export const enablePersistentReconciler = false;
+export const alwaysUseRequestIdleCallbackPolyfill = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

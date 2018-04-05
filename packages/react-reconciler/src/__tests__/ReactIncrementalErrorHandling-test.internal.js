@@ -19,7 +19,9 @@ describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
@@ -33,6 +35,215 @@ describe('ReactIncrementalErrorHandling', () => {
   function span(prop) {
     return {type: 'span', children: [], prop};
   }
+
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
+  it('recovers from errors asynchronously', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        ReactNoop.yield('componentDidCatch');
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          ReactNoop.yield('ErrorBoundary (catch)');
+          return <ErrorMessage error={this.state.error} />;
+        }
+        ReactNoop.yield('ErrorBoundary (try)');
+        return this.props.children;
+      }
+    }
+
+    function ErrorMessage(props) {
+      ReactNoop.yield('ErrorMessage');
+      return <span prop={`Caught an error: ${props.error.message}`} />;
+    }
+
+    function Indirection(props) {
+      ReactNoop.yield('Indirection');
+      return props.children;
+    }
+
+    function BadRender() {
+      ReactNoop.yield('throw');
+      throw new Error('oops!');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <Indirection>
+          <Indirection>
+            <Indirection>
+              <BadRender />
+            </Indirection>
+          </Indirection>
+        </Indirection>
+      </ErrorBoundary>,
+    );
+
+    ReactNoop.flushThrough([
+      'ErrorBoundary (try)',
+      'Indirection',
+      'Indirection',
+      'Indirection',
+      // The error was thrown, but React ran out of time and yielded
+      // before recovering.
+      'throw',
+    ]);
+
+    // Upon resuming, componentDidCatch is called
+    ReactNoop.flushThrough([
+      'componentDidCatch',
+      'ErrorBoundary (catch)',
+      'ErrorMessage',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
+
+  it('can recover from an error within a single render phase', () => {
+    class Sibling extends React.Component {
+      componentWillUnmount() {
+        ReactNoop.yield('Unmount Sibling');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromCatch(error) {
+        ReactNoop.yield('getDerivedStateFromCatch');
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          ReactNoop.yield('ErrorBoundary (catch)');
+        } else {
+          ReactNoop.yield('ErrorBoundary (try)');
+        }
+        return (
+          <React.Fragment>
+            <Sibling />
+            {this.state.error ? (
+              <ErrorMessage error={this.state.error} />
+            ) : (
+              this.props.children
+            )}
+          </React.Fragment>
+        );
+      }
+    }
+
+    function ErrorMessage(props) {
+      ReactNoop.yield('ErrorMessage');
+      return <span prop={`Caught an error: ${props.error.message}`} />;
+    }
+
+    function Indirection(props) {
+      ReactNoop.yield('Indirection');
+      return props.children;
+    }
+
+    function BadRender() {
+      ReactNoop.yield('throw');
+      throw new Error('oops!');
+    }
+
+    function App(props) {
+      return (
+        <ErrorBoundary>
+          <Indirection>
+            <Indirection>
+              <Indirection>
+                {props.shouldThrow ? <BadRender /> : null}
+              </Indirection>
+            </Indirection>
+          </Indirection>
+        </ErrorBoundary>
+      );
+    }
+
+    ReactNoop.render(<App shouldThrow={false} />);
+    ReactNoop.flush();
+
+    ReactNoop.render(<App shouldThrow={true} />);
+    ReactNoop.flushThrough([
+      'ErrorBoundary (try)',
+      'Indirection',
+      'Indirection',
+      'Indirection',
+      // The error was thrown, but React ran out of time and yielded
+      // before recovering.
+      'throw',
+    ]);
+
+    // Nothing committed yet.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Upon resuming, getDerivedStateFromCatch is called
+    ReactNoop.flushThrough([
+      'getDerivedStateFromCatch',
+      'ErrorBoundary (catch)',
+      'ErrorMessage',
+    ]);
+    // Still hasn't committed
+    expect(ReactNoop.getChildren()).toEqual([]);
+    // The sibling should be re-mounted because it is the child of a failed
+    // error boundary
+    expect(ReactNoop.flush()).toEqual(['Unmount Sibling']);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
+
+  it('calls componentDidCatch multiple times for multiple errors', () => {
+    let id = 0;
+    class BadMount extends React.Component {
+      componentDidMount() {
+        throw new Error(`Error ${++id}`);
+      }
+      render() {
+        ReactNoop.yield('BadMount');
+        return null;
+      }
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {errorCount: 0};
+      componentDidCatch(error) {
+        ReactNoop.yield(`componentDidCatch: ${error.message}`);
+        this.setState(state => ({errorCount: state.errorCount + 1}));
+      }
+      render() {
+        if (this.state.errorCount > 0) {
+          return <span prop={`Number of errors: ${this.state.errorCount}`} />;
+        }
+        ReactNoop.yield('ErrorBoundary');
+        return this.props.children;
+      }
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BadMount />
+        <BadMount />
+        <BadMount />
+      </ErrorBoundary>,
+    );
+
+    expect(ReactNoop.flush()).toEqual([
+      'ErrorBoundary',
+      'BadMount',
+      'BadMount',
+      'BadMount',
+      'componentDidCatch: Error 1',
+      'componentDidCatch: Error 2',
+      'componentDidCatch: Error 3',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Number of errors: 3')]);
+  });
 
   it('catches render error in a boundary during full deferred mounting', () => {
     class ErrorBoundary extends React.Component {
@@ -64,27 +275,26 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches render error in a boundary during partial deferred mounting', () => {
-    const ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
-        ops.push('ErrorBoundary componentDidCatch');
+        ReactNoop.yield('ErrorBoundary componentDidCatch');
         this.setState({error});
       }
       render() {
         if (this.state.error) {
-          ops.push('ErrorBoundary render error');
+          ReactNoop.yield('ErrorBoundary render error');
           return (
             <span prop={`Caught an error: ${this.state.error.message}.`} />
           );
         }
-        ops.push('ErrorBoundary render success');
+        ReactNoop.yield('ErrorBoundary render success');
         return this.props.children;
       }
     }
 
     function BrokenRender(props) {
-      ops.push('BrokenRender');
+      ReactNoop.yield('BrokenRender');
       throw new Error('Hello');
     }
 
@@ -94,13 +304,10 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
 
-    ReactNoop.flushDeferredPri(15);
-    expect(ops).toEqual(['ErrorBoundary render success']);
+    ReactNoop.flushThrough(['ErrorBoundary render success']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    ops.length = 0;
-    ReactNoop.flushDeferredPri(30);
-    expect(ops).toEqual([
+    expect(ReactNoop.flush()).toEqual([
       'BrokenRender',
       'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
@@ -401,7 +608,6 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop.flush();
     }).toThrow('Hello');
     expect(ops).toEqual(['BrokenRender']);
-
     ops = [];
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
@@ -934,5 +1140,240 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Error!');
     });
     expect(() => ReactNoop.flush()).toThrow('Error!');
+  });
+
+  it('error boundaries capture non-errors', () => {
+    spyOnProd(console, 'error');
+    spyOnDev(console, 'error');
+    let ops = [];
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        // Should not be called
+        ops.push('componentDidCatch');
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          ops.push('ErrorBoundary (catch)');
+          return (
+            <span
+              prop={`Caught an error: ${this.state.error.nonStandardMessage}`}
+            />
+          );
+        }
+        ops.push('ErrorBoundary (try)');
+        return this.props.children;
+      }
+    }
+
+    function Indirection(props) {
+      ops.push('Indirection');
+      return props.children;
+    }
+
+    const notAnError = {nonStandardMessage: 'oops'};
+    function BadRender() {
+      ops.push('BadRender');
+      throw notAnError;
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <Indirection>
+          <BadRender />
+        </Indirection>
+      </ErrorBoundary>,
+    );
+    ReactNoop.flush();
+
+    expect(ops).toEqual([
+      'ErrorBoundary (try)',
+      'Indirection',
+      'BadRender',
+      'componentDidCatch',
+      'ErrorBoundary (catch)',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops')]);
+
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'The above error occurred in the <BadRender> component:',
+      );
+    } else {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(notAnError);
+    }
+  });
+
+  // TODO: Error boundary does not catch promises
+
+  it('continues working on siblings of a component that throws', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        ReactNoop.yield('componentDidCatch');
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          ReactNoop.yield('ErrorBoundary (catch)');
+          return <ErrorMessage error={this.state.error} />;
+        }
+        ReactNoop.yield('ErrorBoundary (try)');
+        return this.props.children;
+      }
+    }
+
+    function ErrorMessage(props) {
+      ReactNoop.yield('ErrorMessage');
+      return <span prop={`Caught an error: ${props.error.message}`} />;
+    }
+
+    function BadRenderSibling(props) {
+      ReactNoop.yield('BadRenderSibling');
+      return null;
+    }
+
+    function BadRender() {
+      ReactNoop.yield('throw');
+      throw new Error('oops!');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BadRender />
+        <BadRenderSibling />
+        <BadRenderSibling />
+      </ErrorBoundary>,
+    );
+
+    expect(ReactNoop.flush()).toEqual([
+      'ErrorBoundary (try)',
+      'throw',
+      // Continue rendering siblings after BadRender throws
+      'BadRenderSibling',
+      'BadRenderSibling',
+      // Recover from the error
+      'componentDidCatch',
+      'ErrorBoundary (catch)',
+      'ErrorMessage',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
+
+  it('calls the correct lifecycles on the error boundary after catching an error (mixed)', () => {
+    // This test seems a bit contrived, but it's based on an actual regression
+    // where we checked for the existence of didUpdate instead of didMount, and
+    // didMount was not defined.
+    function BadRender() {
+      ReactNoop.yield('throw');
+      throw new Error('oops!');
+    }
+
+    let parent;
+    class Parent extends React.Component {
+      state = {error: null, other: false};
+      componentDidCatch(error) {
+        ReactNoop.yield('did catch');
+        this.setState({error});
+      }
+      componentDidUpdate() {
+        ReactNoop.yield('did update');
+      }
+      render() {
+        parent = this;
+        if (this.state.error) {
+          ReactNoop.yield('render error message');
+          return <span prop={`Caught an error: ${this.state.error.message}`} />;
+        }
+        ReactNoop.yield('render');
+        return <BadRender />;
+      }
+    }
+
+    ReactNoop.render(<Parent step={1} />);
+    ReactNoop.flushThrough(['render', 'throw']);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    parent.setState({other: true});
+    expect(ReactNoop.flush()).toEqual([
+      'did catch',
+      'render error message',
+      'did update',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
+
+  it('provides component stack to the error boundary with componentDidCatch', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null, errorInfo: null};
+      componentDidCatch(error, errorInfo) {
+        this.setState({error, errorInfo});
+      }
+      render() {
+        if (this.state.errorInfo) {
+          ReactNoop.yield('render error message');
+          return (
+            <span
+              prop={`Caught an error:${normalizeCodeLocInfo(
+                this.state.errorInfo.componentStack,
+              )}.`}
+            />
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      throw new Error('Hello');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+    );
+    ReactNoop.flushDeferredPri();
+    expect(ReactNoop.getChildren()).toEqual([
+      span(
+        'Caught an error:\n' +
+          (__DEV__
+            ? '    in BrokenRender (at **)\n'
+            : '    in BrokenRender\n') +
+          (__DEV__ ? '    in ErrorBoundary (at **).' : '    in ErrorBoundary.'),
+      ),
+    ]);
+  });
+
+  it('does not provide component stack to the error boundary with getDerivedStateFromCatch', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromCatch(error, errorInfo) {
+        expect(errorInfo).toBeUndefined();
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          return <span prop={`Caught an error: ${this.state.error.message}`} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      throw new Error('Hello');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+    );
+    ReactNoop.flushDeferredPri();
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
   });
 });

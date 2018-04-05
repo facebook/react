@@ -31,6 +31,42 @@ describe('ReactIs', () => {
     expect(ReactIs.typeOf(undefined)).toBe(undefined);
   });
 
+  it('identifies valid element types', () => {
+    class Component extends React.Component {
+      render() {
+        return React.createElement('div');
+      }
+    }
+
+    const StatelessComponent = () => React.createElement('div');
+
+    const ForwardRefComponent = React.forwardRef((props, ref) =>
+      React.createElement(Component, {forwardedRef: ref, ...props}),
+    );
+
+    const Context = React.createContext(false);
+
+    expect(ReactIs.isValidElementType('div')).toEqual(true);
+    expect(ReactIs.isValidElementType(Component)).toEqual(true);
+    expect(ReactIs.isValidElementType(StatelessComponent)).toEqual(true);
+    expect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true);
+    expect(ReactIs.isValidElementType(Context.Provider)).toEqual(true);
+    expect(ReactIs.isValidElementType(Context.Consumer)).toEqual(true);
+    expect(ReactIs.isValidElementType(React.createFactory('div'))).toEqual(
+      true,
+    );
+    expect(ReactIs.isValidElementType(React.Fragment)).toEqual(true);
+    expect(ReactIs.isValidElementType(React.unstable_AsyncMode)).toEqual(true);
+    expect(ReactIs.isValidElementType(React.StrictMode)).toEqual(true);
+
+    expect(ReactIs.isValidElementType(true)).toEqual(false);
+    expect(ReactIs.isValidElementType(123)).toEqual(false);
+    expect(ReactIs.isValidElementType({})).toEqual(false);
+    expect(ReactIs.isValidElementType(null)).toEqual(false);
+    expect(ReactIs.isValidElementType(undefined)).toEqual(false);
+    expect(ReactIs.isValidElementType({type: 'div', props: {}})).toEqual(false);
+  });
+
   it('should identify async mode', () => {
     expect(ReactIs.typeOf(<React.unstable_AsyncMode />)).toBe(
       ReactIs.AsyncMode,
@@ -74,6 +110,15 @@ describe('ReactIs', () => {
     expect(ReactIs.isElement(<React.Fragment />)).toBe(true);
     expect(ReactIs.isElement(<React.unstable_AsyncMode />)).toBe(true);
     expect(ReactIs.isElement(<React.StrictMode />)).toBe(true);
+  });
+
+  it('should identify ref forwarding component', () => {
+    const RefForwardingComponent = React.forwardRef((props, ref) => null);
+    expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.ForwardRef);
+    expect(ReactIs.isForwardRef(<RefForwardingComponent />)).toBe(true);
+    expect(ReactIs.isForwardRef({type: ReactIs.StrictMode})).toBe(false);
+    expect(ReactIs.isForwardRef(<React.unstable_AsyncMode />)).toBe(false);
+    expect(ReactIs.isForwardRef(<div />)).toBe(false);
   });
 
   it('should identify fragments', () => {

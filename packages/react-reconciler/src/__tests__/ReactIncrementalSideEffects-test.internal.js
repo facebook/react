@@ -758,7 +758,7 @@ describe('ReactIncrementalSideEffects', () => {
     // items. Including the set state since that is deprioritized.
     // TODO: The cycles it takes to do this could be lowered with further
     // optimizations.
-    ReactNoop.flushDeferredPri(60 + 5);
+    ReactNoop.flushDeferredPri(35);
     expect(ReactNoop.getChildren()).toEqual([
       div(
         // Updated.
@@ -790,7 +790,7 @@ describe('ReactIncrementalSideEffects', () => {
       ),
     ]);
 
-    expect(ops).toEqual(['Bar', 'Bar']);
+    expect(ops).toEqual(['Bar', 'Bar', 'Bar']);
   });
   // TODO: Test that side-effects are not cut off when a work in progress node
   // moves to "current" without flushing due to having lower priority. Does this

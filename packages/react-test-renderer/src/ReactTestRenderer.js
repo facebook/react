@@ -9,6 +9,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+import type {Deadline} from 'react-reconciler/src/ReactFiberReconciler';
 
 import ReactFiberReconciler from 'react-reconciler';
 import {batchedUpdates} from 'events/ReactGenericBatching';
@@ -22,11 +23,16 @@ import {
   HostPortal,
   HostText,
   HostRoot,
+  ContextConsumer,
+  ContextProvider,
+  Mode,
+  ForwardRef,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
+  unstable_isAsync: boolean,
 };
 
 type ReactTestRendererJSON = {|
@@ -112,6 +118,11 @@ function removeChild(
   parentInstance.children.splice(index, 1);
 }
 
+// Current virtual time
+let currentTime: number = 0;
+let scheduledCallback: ((deadline: Deadline) => mixed) | null = null;
+let yieldedValues: Array<mixed> | null = null;
+
 const TestRenderer = ReactFiberReconciler({
   getRootHostContext() {
     return emptyObject;
@@ -196,19 +207,22 @@ const TestRenderer = ReactFiberReconciler({
     };
   },
 
-  scheduleDeferredCallback(fn: Function): number {
-    return setTimeout(fn, 0, {timeRemaining: Infinity});
+  scheduleDeferredCallback(
+    callback: (deadline: Deadline) => mixed,
+    options?: {timeout: number},
+  ): number {
+    scheduledCallback = callback;
+    return 0;
   },
 
   cancelDeferredCallback(timeoutID: number): void {
-    clearTimeout(timeoutID);
+    scheduledCallback = null;
   },
 
   getPublicInstance,
 
   now(): number {
-    // Test renderer does not use expiration
-    return 0;
+    return currentTime;
   },
 
   mutation: {
@@ -366,6 +380,10 @@ function toTree(node: ?Fiber) {
     case HostText:
       return node.stateNode.text;
     case Fragment:
+    case ContextProvider:
+    case ContextConsumer:
+    case Mode:
+    case ForwardRef:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -463,6 +481,10 @@ class ReactTestInstance {
           children.push('' + node.memoizedProps);
           break;
         case Fragment:
+        case ContextProvider:
+        case ContextConsumer:
+        case Mode:
+        case ForwardRef:
           descend = true;
           break;
         default:
@@ -591,8 +613,14 @@ function propsMatch(props: Object, filter: Object): boolean {
 const ReactTestRendererFiber = {
   create(element: React$Element<any>, options: TestRendererOptions) {
     let createNodeMock = defaultTestOptions.createNodeMock;
-    if (options && typeof options.createNodeMock === 'function') {
-      createNodeMock = options.createNodeMock;
+    let isAsync = false;
+    if (typeof options === 'object' && options !== null) {
+      if (typeof options.createNodeMock === 'function') {
+        createNodeMock = options.createNodeMock;
+      }
+      if (options.unstable_isAsync === true) {
+        isAsync = true;
+      }
     }
     let container = {
       children: [],
@@ -601,7 +629,7 @@ const ReactTestRendererFiber = {
     };
     let root: FiberRoot | null = TestRenderer.createContainer(
       container,
-      false,
+      isAsync,
       false,
     );
     invariant(root != null, 'something went wrong');
@@ -641,6 +669,66 @@ const ReactTestRendererFiber = {
         TestRenderer.updateContainer(null, root, null, null);
         container = null;
         root = null;
+      },
+      unstable_flushAll(): Array<mixed> {
+        yieldedValues = null;
+        while (scheduledCallback !== null) {
+          const cb = scheduledCallback;
+          scheduledCallback = null;
+          cb({
+            timeRemaining() {
+              // Keep rendering until there's no more work
+              return 999;
+            },
+            // React's scheduler has its own way of keeping track of expired
+            // work and doesn't read this, so don't bother setting it to the
+            // correct value.
+            didTimeout: false,
+          });
+        }
+        if (yieldedValues === null) {
+          // Always return an array.
+          return [];
+        }
+        return yieldedValues;
+      },
+      unstable_flushThrough(expectedValues: Array<mixed>): Array<mixed> {
+        let didStop = false;
+        yieldedValues = null;
+        while (scheduledCallback !== null && !didStop) {
+          const cb = scheduledCallback;
+          scheduledCallback = null;
+          cb({
+            timeRemaining() {
+              if (
+                yieldedValues !== null &&
+                yieldedValues.length >= expectedValues.length
+              ) {
+                // We at least as many values as expected. Stop rendering.
+                didStop = true;
+                return 0;
+              }
+              // Keep rendering.
+              return 999;
+            },
+            // React's scheduler has its own way of keeping track of expired
+            // work and doesn't read this, so don't bother setting it to the
+            // correct value.
+            didTimeout: false,
+          });
+        }
+        if (yieldedValues === null) {
+          // Always return an array.
+          return [];
+        }
+        return yieldedValues;
+      },
+      unstable_yield(value: mixed): void {
+        if (yieldedValues === null) {
+          yieldedValues = [value];
+        } else {
+          yieldedValues.push(value);
+        }
       },
       getInstance() {
         if (root == null || root.current == null) {

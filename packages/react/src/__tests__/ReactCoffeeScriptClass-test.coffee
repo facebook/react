@@ -51,7 +51,11 @@ describe 'ReactCoffeeScriptClass', ->
       expect(->
         ReactDOM.render React.createElement(Foo), container
       ).toThrow()
-    ).toWarnDev('No `render` method found on the returned component instance')
+    ).toWarnDev([
+      # A failed component renders twice in DEV
+      'No `render` method found on the returned component instance',
+      'No `render` method found on the returned component instance',
+    ])
     undefined
 
   it 'renders a simple stateless component with prop', ->
@@ -112,6 +116,39 @@ describe 'ReactCoffeeScriptClass', ->
         bar: 'bar'
       }
     test React.createElement(Foo, foo: 'foo'), 'DIV', 'foo bar'
+    undefined
+
+  it 'warns if getDerivedStateFromProps is not static', ->
+    class Foo extends React.Component
+      render: ->
+        div()
+      getDerivedStateFromProps: ->
+        {}
+    expect(->
+      ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
+    ).toWarnDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.',
+    undefined
+
+  it 'warns if getDerivedStateFromCatch is not static', ->
+    class Foo extends React.Component
+      render: ->
+        div()
+      getDerivedStateFromCatch: ->
+        {}
+    expect(->
+      ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
+    ).toWarnDev 'Foo: getDerivedStateFromCatch() is defined as an instance method and will be ignored. Instead, declare it as a static method.',
+    undefined
+
+  it 'warns if getSnapshotBeforeUpdate is static', ->
+    class Foo extends React.Component
+      render: ->
+        div()
+    Foo.getSnapshotBeforeUpdate = () ->
+      {}
+    expect(->
+      ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
+    ).toWarnDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.',
     undefined
 
   it 'warns if state not initialized before static getDerivedStateFromProps', ->

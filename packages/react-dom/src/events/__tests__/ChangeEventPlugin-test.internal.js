@@ -452,12 +452,11 @@ describe('ChangeEventPlugin', () => {
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.enableAsyncSubtreeAPI = true;
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-      ReactFeatureFlags.enableCreateRoot = true;
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactDOM = require('react-dom');
     });
     it('text input', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let input;
 
       let ops = [];
@@ -504,7 +503,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     it('checkbox input', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let input;
 
       let ops = [];
@@ -566,7 +565,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     it('textarea', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let textarea;
 
       let ops = [];
@@ -613,7 +612,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     it('parent of input', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let input;
 
       let ops = [];
@@ -664,7 +663,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     it('is async for non-input events', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let input;
 
       let ops = [];

@@ -433,6 +433,59 @@ describe('create-react-class-integration', () => {
     expect(instance.state.foo).toBe('bar');
   });
 
+  it('warns if getDerivedStateFromProps is not static', () => {
+    const Foo = createReactClass({
+      getDerivedStateFromProps() {
+        return {};
+      },
+      render() {
+        return <div />;
+      },
+    });
+    expect(() =>
+      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
+    ).toWarnDev(
+      'Component: getDerivedStateFromProps() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
+  it('warns if getDerivedStateFromCatch is not static', () => {
+    const Foo = createReactClass({
+      getDerivedStateFromCatch() {
+        return {};
+      },
+      render() {
+        return <div />;
+      },
+    });
+    expect(() =>
+      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
+    ).toWarnDev(
+      'Component: getDerivedStateFromCatch() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
+  it('warns if getSnapshotBeforeUpdate is static', () => {
+    const Foo = createReactClass({
+      statics: {
+        getSnapshotBeforeUpdate: function() {
+          return null;
+        },
+      },
+      render() {
+        return <div />;
+      },
+    });
+    expect(() =>
+      ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
+    ).toWarnDev(
+      'Component: getSnapshotBeforeUpdate() is defined as a static method ' +
+        'and will be ignored. Instead, declare it as an instance method.',
+    );
+  });
+
   it('should warn if state is not properly initialized before getDerivedStateFromProps', () => {
     const Component = createReactClass({
       statics: {
@@ -475,7 +528,49 @@ describe('create-react-class-integration', () => {
 
     expect(() => {
       ReactDOM.render(<Component />, document.createElement('div'));
-    }).toWarnDev('Defines both componentWillReceiveProps');
+    }).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+        'Component uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  componentWillReceiveProps\n' +
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
+    ReactDOM.render(<Component foo={1} />, document.createElement('div'));
+  });
+
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+    const Component = createReactClass({
+      getSnapshotBeforeUpdate: function() {
+        return null;
+      },
+      componentWillMount: function() {
+        throw Error('unexpected');
+      },
+      componentWillReceiveProps: function() {
+        throw Error('unexpected');
+      },
+      componentWillUpdate: function() {
+        throw Error('unexpected');
+      },
+      componentDidUpdate: function() {},
+      render: function() {
+        return null;
+      },
+    });
+
+    expect(() => {
+      ReactDOM.render(<Component />, document.createElement('div'));
+    }).toWarnDev(
+      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+        'Component uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
+        '  componentWillMount\n' +
+        '  componentWillReceiveProps\n' +
+        '  componentWillUpdate\n\n' +
+        'The above lifecycles should be removed. Learn more about this warning here:\n' +
+        'https://fb.me/react-async-component-lifecycle-hooks',
+    );
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
   });
 

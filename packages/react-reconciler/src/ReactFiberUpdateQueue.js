@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {CapturedValue} from './ReactCapturedValue';
 
 import {
   debugRenderPhaseSideEffects,
@@ -41,6 +42,7 @@ export type Update<State> = {
   callback: Callback | null,
   isReplace: boolean,
   isForced: boolean,
+  capturedValue: CapturedValue<mixed> | null,
   next: Update<State> | null,
 };
 
@@ -68,6 +70,7 @@ export type UpdateQueue<State> = {
   callbackList: Array<Update<State>> | null,
   hasForceUpdate: boolean,
   isInitialized: boolean,
+  capturedValues: Array<CapturedValue<mixed>> | null,
 
   // Dev only
   isProcessing?: boolean,
@@ -82,6 +85,7 @@ function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     callbackList: null,
     hasForceUpdate: false,
     isInitialized: false,
+    capturedValues: null,
   };
   if (__DEV__) {
     queue.isProcessing = false;
@@ -109,10 +113,10 @@ export function insertUpdateIntoQueue<State>(
   }
 }
 
-export function insertUpdateIntoFiber<State>(
-  fiber: Fiber,
-  update: Update<State>,
-): void {
+let q1;
+let q2;
+export function ensureUpdateQueues(fiber: Fiber) {
+  q1 = q2 = null;
   // We'll have at least one and at most two distinct update queues.
   const alternateFiber = fiber.alternate;
   let queue1 = fiber.updateQueue;
@@ -134,6 +138,19 @@ export function insertUpdateIntoFiber<State>(
     queue2 = null;
   }
   queue2 = queue2 !== queue1 ? queue2 : null;
+
+  // Use module variables instead of returning a tuple
+  q1 = queue1;
+  q2 = queue2;
+}
+
+export function insertUpdateIntoFiber<State>(
+  fiber: Fiber,
+  update: Update<State>,
+): void {
+  ensureUpdateQueues(fiber);
+  const queue1: Fiber = (q1: any);
+  const queue2: Fiber | null = (q2: any);
 
   // Warn if an update is scheduled from inside an updater function.
   if (__DEV__) {
@@ -174,14 +191,17 @@ export function insertUpdateIntoFiber<State>(
 }
 
 export function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
-  if (fiber.tag !== ClassComponent && fiber.tag !== HostRoot) {
-    return NoWork;
+  switch (fiber.tag) {
+    case HostRoot:
+    case ClassComponent:
+      const updateQueue = fiber.updateQueue;
+      if (updateQueue === null) {
+        return NoWork;
+      }
+      return updateQueue.expirationTime;
+    default:
+      return NoWork;
   }
-  const updateQueue = fiber.updateQueue;
-  if (updateQueue === null) {
-    return NoWork;
-  }
-  return updateQueue.expirationTime;
 }
 
 function getStateFromUpdate(update, instance, prevState, props) {
@@ -210,6 +230,7 @@ export function processUpdateQueue<State>(
       first: currentQueue.first,
       last: currentQueue.last,
       isInitialized: currentQueue.isInitialized,
+      capturedValues: currentQueue.capturedValues,
       // These fields are no longer valid because they were already committed.
       // Reset them.
       callbackList: null,
@@ -311,12 +332,24 @@ export function processUpdateQueue<State>(
       }
       callbackList.push(update);
     }
+    if (update.capturedValue !== null) {
+      let capturedValues = queue.capturedValues;
+      if (capturedValues === null) {
+        queue.capturedValues = [update.capturedValue];
+      } else {
+        capturedValues.push(update.capturedValue);
+      }
+    }
     update = update.next;
   }
 
   if (queue.callbackList !== null) {
     workInProgress.effectTag |= CallbackEffect;
-  } else if (queue.first === null && !queue.hasForceUpdate) {
+  } else if (
+    queue.first === null &&
+    !queue.hasForceUpdate &&
+    queue.capturedValues === null
+  ) {
     // The queue is empty. We can reset it.
     workInProgress.updateQueue = null;
   }

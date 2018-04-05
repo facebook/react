@@ -20,7 +20,7 @@ function reactProdInvariant(code: string): void {
     'Minified React error #' +
     code +
     '; visit ' +
-    'http://facebook.github.io/react/docs/error-decoder.html?invariant=' +
+    'http://reactjs.org/docs/error-decoder.html?invariant=' +
     code;
 
   for (let argIdx = 0; argIdx < argCount; argIdx++) {

@@ -54,7 +54,7 @@ const update = async ({cwd, dry, packages, version}) => {
         json.version = version;
       }
 
-      if (project !== 'react') {
+      if (project !== 'react' && json.peerDependencies) {
         let peerVersion = json.peerDependencies.react.replace('^', '');
 
         // If the previous release was a pre-release version,
@@ -77,6 +77,16 @@ const update = async ({cwd, dry, packages, version}) => {
         // So rather than eg "^16.0.0" we need "^16.0.0 || 16.3.0-alpha.0"
         if (prerelease) {
           json.peerDependencies.react += ` || ${version}`;
+        }
+
+        // Update inter-package dependencies as well.
+        // e.g. react-test-renderer depends on react-is
+        if (json.dependencies) {
+          Object.keys(json.dependencies).forEach(dependency => {
+            if (packages.indexOf(dependency) >= 0) {
+              json.dependencies[dependency] = `^${version}`;
+            }
+          });
         }
       }
 

@@ -27,6 +27,7 @@ import describeComponentFrame from 'shared/describeComponentFrame';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
 import {
+  REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_ASYNC_MODE_TYPE,
@@ -381,36 +382,26 @@ function resolve(
   child: mixed,
   context: Object,
 |} {
-  let element: ReactElement;
-
-  let Component;
-  let publicContext;
-  let inst, queue, replace;
-  let updater;
-
-  let initialState;
-  let oldQueue, oldReplace;
-  let nextState, dontMutate;
-  let partial, partialState;
-
-  let childContext;
-  let childContextTypes, contextKey;
-
   while (React.isValidElement(child)) {
     // Safe because we just checked it's an element.
-    element = ((child: any): ReactElement);
+    let element: ReactElement = (child: any);
+    let Component = element.type;
     if (__DEV__) {
       pushElementToDebugStack(element);
     }
-    Component = element.type;
     if (typeof Component !== 'function') {
       break;
     }
-    publicContext = processContext(Component, context);
+    processChild(element, Component);
+  }
 
-    queue = [];
-    replace = false;
-    updater = {
+  // Extra closure so queue and replace can be captured properly
+  function processChild(element, Component) {
+    let publicContext = processContext(Component, context);
+
+    let queue = [];
+    let replace = false;
+    let updater = {
       isMounted: function(publicInstance) {
         return false;
       },
@@ -433,6 +424,7 @@ function resolve(
       },
     };
 
+    let inst;
     if (shouldConstruct(Component)) {
       inst = new Component(element.props, publicContext, updater);
 
@@ -453,7 +445,7 @@ function resolve(
           }
         }
 
-        partialState = Component.getDerivedStateFromProps.call(
+        let partialState = Component.getDerivedStateFromProps.call(
           null,
           element.props,
           inst.state,
@@ -502,7 +494,7 @@ function resolve(
       if (inst == null || inst.render == null) {
         child = inst;
         validateRenderResult(child, Component);
-        continue;
+        return;
       }
     }
 
@@ -510,7 +502,7 @@ function resolve(
     inst.context = publicContext;
     inst.updater = updater;
 
-    initialState = inst.state;
+    let initialState = inst.state;
     if (initialState === undefined) {
       inst.state = initialState = null;
     }
@@ -558,19 +550,19 @@ function resolve(
         inst.UNSAFE_componentWillMount();
       }
       if (queue.length) {
-        oldQueue = queue;
-        oldReplace = replace;
+        let oldQueue = queue;
+        let oldReplace = replace;
         queue = null;
         replace = false;
 
         if (oldReplace && oldQueue.length === 1) {
           inst.state = oldQueue[0];
         } else {
-          nextState = oldReplace ? oldQueue[0] : inst.state;
-          dontMutate = true;
+          let nextState = oldReplace ? oldQueue[0] : inst.state;
+          let dontMutate = true;
           for (let i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
-            partial = oldQueue[i];
-            partialState =
+            let partial = oldQueue[i];
+            let partialState =
               typeof partial === 'function'
                 ? partial.call(inst, nextState, element.props, publicContext)
                 : partial;
@@ -600,11 +592,12 @@ function resolve(
     }
     validateRenderResult(child, Component);
 
+    let childContext;
     if (typeof inst.getChildContext === 'function') {
-      childContextTypes = Component.childContextTypes;
+      let childContextTypes = Component.childContextTypes;
       if (typeof childContextTypes === 'object') {
         childContext = inst.getChildContext();
-        for (contextKey in childContext) {
+        for (let contextKey in childContext) {
           invariant(
             contextKey in childContextTypes,
             '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
@@ -682,8 +675,8 @@ class ReactDOMServerRenderer {
   pushProvider<T>(provider: ReactProvider<T>): void {
     this.providerIndex += 1;
     this.providerStack[this.providerIndex] = provider;
-    const context: ReactContext<any> = provider.type.context;
-    context.currentValue = provider.props.value;
+    const context: ReactContext<any> = provider.type._context;
+    context._currentValue = provider.props.value;
   }
 
   popProvider<T>(provider: ReactProvider<T>): void {
@@ -696,15 +689,15 @@ class ReactDOMServerRenderer {
     }
     this.providerStack[this.providerIndex] = null;
     this.providerIndex -= 1;
-    const context: ReactContext<any> = provider.type.context;
+    const context: ReactContext<any> = provider.type._context;
     if (this.providerIndex < 0) {
-      context.currentValue = context.defaultValue;
+      context._currentValue = context._defaultValue;
     } else {
       // We assume this type is correct because of the index check above.
       const previousProvider: ReactProvider<any> = (this.providerStack[
         this.providerIndex
       ]: any);
-      context.currentValue = previousProvider.props.value;
+      context._currentValue = previousProvider.props.value;
     }
   }
 
@@ -849,6 +842,25 @@ class ReactDOMServerRenderer {
       }
       if (typeof elementType === 'object' && elementType !== null) {
         switch (elementType.$$typeof) {
+          case REACT_FORWARD_REF_TYPE: {
+            const element: ReactElement = ((nextChild: any): ReactElement);
+            const nextChildren = toArray(
+              elementType.render(element.props, element.ref),
+            );
+            const frame: Frame = {
+              type: null,
+              domNamespace: parentNamespace,
+              children: nextChildren,
+              childIndex: 0,
+              context: context,
+              footer: '',
+            };
+            if (__DEV__) {
+              ((frame: any): FrameDev).debugElementStack = [];
+            }
+            this.stack.push(frame);
+            return '';
+          }
           case REACT_PROVIDER_TYPE: {
             const provider: ReactProvider<any> = (nextChild: any);
             const nextProps = provider.props;
@@ -873,7 +885,7 @@ class ReactDOMServerRenderer {
           case REACT_CONTEXT_TYPE: {
             const consumer: ReactConsumer<any> = (nextChild: any);
             const nextProps: any = consumer.props;
-            const nextValue = consumer.type.currentValue;
+            const nextValue = consumer.type._currentValue;
 
             const nextChildren = toArray(nextProps.children(nextValue));
             const frame: Frame = {
@@ -943,8 +955,9 @@ class ReactDOMServerRenderer {
         // allow <SVG> or <mATH>.
         warning(
           tag === element.type,
-          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
-            'in React.',
+          '<%s /> is using incorrect casing. ' +
+            'Use PascalCase for React components, ' +
+            'or lowercase for HTML elements.',
           element.type,
         );
       }

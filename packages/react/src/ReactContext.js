@@ -33,10 +33,10 @@ export function createContext<T>(
 
   const context: ReactContext<T> = {
     $$typeof: REACT_CONTEXT_TYPE,
-    calculateChangedBits,
-    defaultValue,
-    currentValue: defaultValue,
-    changedBits: 0,
+    _calculateChangedBits: calculateChangedBits,
+    _defaultValue: defaultValue,
+    _currentValue: defaultValue,
+    _changedBits: 0,
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),
@@ -44,7 +44,7 @@ export function createContext<T>(
 
   context.Provider = {
     $$typeof: REACT_PROVIDER_TYPE,
-    context,
+    _context: context,
   };
   context.Consumer = context;
 

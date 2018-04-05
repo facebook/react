@@ -56,12 +56,19 @@ function generateMDTable(headers, body) {
  * @param {string[]} headers
  */
 function addPercent(change, includeEmoji) {
-  if (change > 0 && includeEmoji) {
-    return `:small_red_triangle:+${change}%`;
-  } else if (change > 0) {
-    return `+${change}%`;
+  if (!isFinite(change)) {
+    // When a new package is created
+    return 'n/a';
+  }
+  const formatted = (change * 100).toFixed(1);
+  if (/^-|^0(?:\.0+)$/.test(formatted)) {
+    return `${formatted}%`;
   } else {
-    return `${change}%`;
+    if (includeEmoji) {
+      return `:small_red_triangle:+${formatted}%`;
+    } else {
+      return `+${formatted}%`;
+    }
   }
 }
 
@@ -71,14 +78,6 @@ function setBoldness(row, isBold) {
   } else {
     return row;
   }
-}
-
-/**
- * Gets the commit that represents the merge between the current branch
- * and master.
- */
-function getMergeBase() {
-  return git('merge-base HEAD origin/master');
 }
 
 /**
@@ -100,7 +99,12 @@ function git(args) {
 (async function() {
   // Use git locally to grab the commit which represents the place
   // where the branches differ
-  const mergeBaseCommit = await getMergeBase();
+  const upstreamRepo = danger.github.pr.base.repo.full_name;
+  const upstreamRef = danger.github.pr.base.ref;
+  await git(`remote add upstream https://github.com/${upstreamRepo}.git`);
+  await git('fetch upstream');
+  const mergeBaseCommit = await git(`merge-base HEAD upstream/${upstreamRef}`);
+
   const commitURL = sha =>
     `http://react.zpao.com/builds/master/_commits/${sha}/results.json`;
   const response = await fetch(commitURL(mergeBaseCommit));

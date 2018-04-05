@@ -325,10 +325,13 @@ describe('ReactTypeScriptClass', function() {
       expect(() =>
         ReactDOM.render(React.createElement(Empty), container)
       ).toThrow()
-    ).toWarnDev(
+    ).toWarnDev([
+      // A failed component renders twice in DEV
       'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.'
-    );
+        'component instance: you may have forgotten to define `render`.',
+      'Warning: Empty(...): No `render` method found on the returned ' +
+        'component instance: you may have forgotten to define `render`.',
+    ]);
   });
 
   it('renders a simple stateless component with prop', function() {
@@ -367,10 +370,62 @@ describe('ReactTypeScriptClass', function() {
         };
       }
       render() {
-        return React.createElement('div', {className: `${this.state.foo} ${this.state.bar}`});
+        return React.createElement('div', {
+          className: `${this.state.foo} ${this.state.bar}`,
+        });
       }
     }
-    test(React.createElement(Foo, {foo: "foo"}), 'DIV', 'foo bar');
+    test(React.createElement(Foo, {foo: 'foo'}), 'DIV', 'foo bar');
+  });
+
+  it('warns if getDerivedStateFromProps is not static', function() {
+    class Foo extends React.Component {
+      getDerivedStateFromProps() {
+        return {};
+      }
+      render() {
+        return React.createElement('div', {});
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
+    }).toWarnDev(
+      'Foo: getDerivedStateFromProps() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.'
+    );
+  });
+
+  it('warns if getDerivedStateFromCatch is not static', function() {
+    class Foo extends React.Component {
+      getDerivedStateFromCatch() {
+        return {};
+      }
+      render() {
+        return React.createElement('div');
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
+    }).toWarnDev(
+      'Foo: getDerivedStateFromCatch() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.'
+    );
+  });
+
+  it('warns if getSnapshotBeforeUpdate is static', function() {
+    class Foo extends React.Component {
+      static getSnapshotBeforeUpdate() {
+      }
+      render() {
+        return React.createElement('div', {});
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
+    }).toWarnDev(
+      'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
+        'and will be ignored. Instead, declare it as an instance method.'
+    );
   });
 
   it('warns if state not initialized before static getDerivedStateFromProps', function() {
@@ -382,11 +437,13 @@ describe('ReactTypeScriptClass', function() {
         };
       }
       render() {
-        return React.createElement('div', {className: `${this.state.foo} ${this.state.bar}`});
+        return React.createElement('div', {
+          className: `${this.state.foo} ${this.state.bar}`,
+        });
       }
     }
     expect(function() {
-      ReactDOM.render(React.createElement(Foo, {foo: "foo"}), container);
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
     }).toWarnDev(
       'Foo: Did not properly initialize state during construction. ' +
         'Expected state to be an object, but it was undefined.'
@@ -405,7 +462,9 @@ describe('ReactTypeScriptClass', function() {
         };
       }
       render() {
-        return React.createElement('div', {className: `${this.state.foo} ${this.state.bar}`});
+        return React.createElement('div', {
+          className: `${this.state.foo} ${this.state.bar}`,
+        });
       }
     }
     test(React.createElement(Foo), 'DIV', 'not-foo bar');
@@ -428,8 +487,8 @@ describe('ReactTypeScriptClass', function() {
         return React.createElement('div', {className: this.state.value});
       }
     }
-    test(React.createElement(Foo, {update:false}), 'DIV', 'initial');
-    test(React.createElement(Foo, {update:true}), 'DIV', 'updated');
+    test(React.createElement(Foo, {update: false}), 'DIV', 'initial');
+    test(React.createElement(Foo, {update: true}), 'DIV', 'updated');
   });
 
   it('renders based on context in the constructor', function() {

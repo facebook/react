@@ -602,11 +602,13 @@ describe('ReactDOMServer', () => {
         </div>,
       ),
     ).toWarnDev([
-      'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
-        'HTML tags in React.',
+      'Warning: <inPUT /> is using incorrect casing. ' +
+        'Use PascalCase for React components, ' +
+        'or lowercase for HTML elements.',
       // linearGradient doesn't warn
-      'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
-        'HTML tags in React.',
+      'Warning: <iFrame /> is using incorrect casing. ' +
+        'Use PascalCase for React components, ' +
+        'or lowercase for HTML elements.',
     ]);
   });
 

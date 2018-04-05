@@ -25,6 +25,7 @@ import {
   HostPortal,
   CallComponent,
   ReturnComponent,
+  ForwardRef,
   Fragment,
   Mode,
   ContextProvider,
@@ -35,6 +36,7 @@ import getComponentName from 'shared/getComponentName';
 import {NoWork} from './ReactFiberExpirationTime';
 import {NoContext, AsyncMode, StrictMode} from './ReactTypeOfMode';
 import {
+  REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
   REACT_CALL_TYPE,
@@ -122,7 +124,7 @@ export type Fiber = {|
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the AsyncMode flag indicates whether the subtree should be async-by-
   // default. When a fiber is created, it inherits the mode of its
-  // parent. Additional flags can be set at creation time, but after than the
+  // parent. Additional flags can be set at creation time, but after that the
   // value should remain unchanged throughout the fiber's lifetime, particularly
   // before its child fibers are created.
   mode: TypeOfMode,
@@ -357,6 +359,9 @@ export function createFiberFromElement(
               // This is a consumer
               fiberTag = ContextConsumer;
               break;
+            case REACT_FORWARD_REF_TYPE:
+              fiberTag = ForwardRef;
+              break;
             default:
               if (typeof type.tag === 'number') {
                 // Currently assumed to be a continuation and therefore is a
@@ -465,4 +470,48 @@ export function createFiberFromPortal(
     implementation: portal.implementation,
   };
   return fiber;
+}
+
+// Used for stashing WIP properties to replay failed work in DEV.
+export function assignFiberPropertiesInDEV(
+  target: Fiber | null,
+  source: Fiber,
+): Fiber {
+  if (target === null) {
+    // This Fiber's initial properties will always be overwritten.
+    // We only use a Fiber to ensure the same hidden class so DEV isn't slow.
+    target = createFiber(IndeterminateComponent, null, null, NoContext);
+  }
+
+  // This is intentionally written as a list of all properties.
+  // We tried to use Object.assign() instead but this is called in
+  // the hottest path, and Object.assign() was too slow:
+  // https://github.com/facebook/react/issues/12502
+  // This code is DEV-only so size is not a concern.
+
+  target.tag = source.tag;
+  target.key = source.key;
+  target.type = source.type;
+  target.stateNode = source.stateNode;
+  target.return = source.return;
+  target.child = source.child;
+  target.sibling = source.sibling;
+  target.index = source.index;
+  target.ref = source.ref;
+  target.pendingProps = source.pendingProps;
+  target.memoizedProps = source.memoizedProps;
+  target.updateQueue = source.updateQueue;
+  target.memoizedState = source.memoizedState;
+  target.mode = source.mode;
+  target.effectTag = source.effectTag;
+  target.nextEffect = source.nextEffect;
+  target.firstEffect = source.firstEffect;
+  target.lastEffect = source.lastEffect;
+  target.expirationTime = source.expirationTime;
+  target.alternate = source.alternate;
+  target._debugID = source._debugID;
+  target._debugSource = source._debugSource;
+  target._debugOwner = source._debugOwner;
+  target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
+  return target;
 }

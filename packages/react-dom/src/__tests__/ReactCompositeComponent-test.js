@@ -225,6 +225,54 @@ describe('ReactCompositeComponent', () => {
     expect(inputProps.prop).not.toBeDefined();
   });
 
+  it('should warn about `forceUpdate` on not-yet-mounted components', () => {
+    class MyComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.forceUpdate();
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => ReactDOM.render(<MyComponent />, container)).toWarnDev(
+      "Warning: Can't call forceUpdate on a component that is not yet mounted. " +
+        'This is a no-op, but it might indicate a bug in your application. ' +
+        'Instead, assign to `this.state` directly or define a `state = {};` ' +
+        'class property with the desired state in the MyComponent component.',
+    );
+
+    // No additional warning should be recorded
+    const container2 = document.createElement('div');
+    ReactDOM.render(<MyComponent />, container2);
+  });
+
+  it('should warn about `setState` on not-yet-mounted components', () => {
+    class MyComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.setState();
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => ReactDOM.render(<MyComponent />, container)).toWarnDev(
+      "Warning: Can't call setState on a component that is not yet mounted. " +
+        'This is a no-op, but it might indicate a bug in your application. ' +
+        'Instead, assign to `this.state` directly or define a `state = {};` ' +
+        'class property with the desired state in the MyComponent component.',
+    );
+
+    // No additional warning should be recorded
+    const container2 = document.createElement('div');
+    ReactDOM.render(<MyComponent />, container2);
+  });
+
   it('should warn about `forceUpdate` on unmounted components', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -244,10 +292,11 @@ describe('ReactCompositeComponent', () => {
     ReactDOM.unmountComponentAtNode(container);
 
     expect(() => instance.forceUpdate()).toWarnDev(
-      'Can only update a mounted or mounting component. This usually means ' +
-        'you called setState, replaceState, or forceUpdate on an unmounted ' +
-        'component. This is a no-op.\n\nPlease check the code for the ' +
-        'Component component.',
+      "Warning: Can't call setState (or forceUpdate) on an unmounted " +
+        'component. This is a no-op, but it indicates a memory leak in your ' +
+        'application. To fix, cancel all subscriptions and asynchronous ' +
+        'tasks in the componentWillUnmount method.\n' +
+        '    in Component (at **)',
     );
 
     // No additional warning should be recorded
@@ -269,10 +318,15 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    let instance = <Component />;
-    expect(instance.setState).not.toBeDefined();
-
-    instance = ReactDOM.render(instance, container);
+    let instance;
+    ReactDOM.render(
+      <div>
+        <span>
+          <Component ref={c => (instance = c || instance)} />
+        </span>
+      </div>,
+      container,
+    );
 
     expect(renders).toBe(1);
 
@@ -280,15 +334,17 @@ describe('ReactCompositeComponent', () => {
 
     expect(renders).toBe(2);
 
-    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<div />, container);
 
     expect(() => {
       instance.setState({value: 2});
     }).toWarnDev(
-      'Can only update a mounted or mounting component. This usually means ' +
-        'you called setState, replaceState, or forceUpdate on an unmounted ' +
-        'component. This is a no-op.\n\nPlease check the code for the ' +
-        'Component component.',
+      "Warning: Can't call setState (or forceUpdate) on an unmounted " +
+        'component. This is a no-op, but it indicates a memory leak in your ' +
+        'application. To fix, cancel all subscriptions and asynchronous ' +
+        'tasks in the componentWillUnmount method.\n' +
+        '    in Component (at **)\n' +
+        '    in span',
     );
 
     expect(renders).toBe(2);

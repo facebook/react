@@ -125,9 +125,49 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<Component foo={2} />)).toWarnDev(
-      'Defines both componentWillReceiveProps() and static getDerivedStateFromProps()',
-    );
+    shallowRenderer.render(<Component />);
+  });
+
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+    class Component extends React.Component {
+      getSnapshotBeforeUpdate() {
+        return null;
+      }
+      componentWillMount() {
+        throw Error('unexpected');
+      }
+      componentWillReceiveProps() {
+        throw Error('unexpected');
+      }
+      componentWillUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component value={1} />);
+    shallowRenderer.render(<Component value={2} />);
+  });
+
+  it('should not call getSnapshotBeforeUpdate or componentDidUpdate when updating since refs wont exist', () => {
+    class Component extends React.Component {
+      getSnapshotBeforeUpdate() {
+        throw Error('unexpected');
+      }
+      componentDidUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component value={1} />);
+    shallowRenderer.render(<Component value={2} />);
   });
 
   it('should only render 1 level deep', () => {
@@ -160,6 +200,28 @@ describe('ReactShallowRenderer', () => {
 
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SomeComponent />);
+
+    expect(result.type).toBe('div');
+    expect(result.props.children).toEqual([
+      <span className="child1" />,
+      <span className="child2" />,
+    ]);
+  });
+
+  it('should handle ForwardRef', () => {
+    const testRef = React.createRef();
+    const SomeComponent = React.forwardRef((props, ref) => {
+      expect(ref).toEqual(testRef);
+      return (
+        <div>
+          <span className="child1" />
+          <span className="child2" />
+        </div>
+      );
+    });
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent ref={testRef} />);
 
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
@@ -334,6 +396,34 @@ describe('ReactShallowRenderer', () => {
       <span key="b" />,
       <SomeComponent />,
     ]);
+  });
+
+  it('should shallow render a React.fragment', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return <div />;
+      }
+    }
+    class Fragment extends React.Component {
+      render() {
+        return (
+          <React.Fragment>
+            <div />
+            <span />
+            <SomeComponent />
+          </React.Fragment>
+        );
+      }
+    }
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<Fragment />);
+    expect(result).toEqual(
+      <React.Fragment>
+        <div />
+        <span />
+        <SomeComponent />
+      </React.Fragment>,
+    );
   });
 
   it('should throw for invalid elements', () => {
@@ -1172,68 +1262,6 @@ describe('ReactShallowRenderer', () => {
     shallowRenderer.render(<SomeComponent />);
 
     expect(shallowRenderer.getMountedInstance().state).toBeNull();
-  });
-
-  it('should warn if both componentWillReceiveProps and static getDerivedStateFromProps exist', () => {
-    class ComponentWithWarnings extends React.Component {
-      state = {};
-      static getDerivedStateFromProps(props, prevState) {
-        return null;
-      }
-      UNSAFE_componentWillReceiveProps(nextProps) {}
-      render() {
-        return null;
-      }
-    }
-
-    const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev(
-      'ComponentWithWarnings: Defines both componentWillReceiveProps() and static ' +
-        'getDerivedStateFromProps() methods. We recommend using ' +
-        'only getDerivedStateFromProps().',
-    );
-
-    // Should not log duplicate warning
-    shallowRenderer.render(<ComponentWithWarnings />);
-  });
-
-  it('should warn if getDerivedStateFromProps returns undefined', () => {
-    class Component extends React.Component {
-      state = {};
-      static getDerivedStateFromProps() {}
-      render() {
-        return null;
-      }
-    }
-
-    const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<Component />)).toWarnDev(
-      'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
-        'be returned. You have returned undefined.',
-    );
-
-    // De-duped
-    shallowRenderer.render(<Component />);
-  });
-
-  it('should warn if state not initialized before getDerivedStateFromProps', () => {
-    class Component extends React.Component {
-      static getDerivedStateFromProps() {
-        return null;
-      }
-      render() {
-        return null;
-      }
-    }
-
-    const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<Component />)).toWarnDev(
-      'Component: Did not properly initialize state during construction. ' +
-        'Expected state to be an object, but it was undefined.',
-    );
-
-    // De-duped
-    shallowRenderer.render(<Component />);
   });
 
   it('should invoke both deprecated and new lifecycles if both are present', () => {

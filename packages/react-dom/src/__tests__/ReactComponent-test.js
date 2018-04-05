@@ -235,8 +235,8 @@ describe('ReactComponent', () => {
       }
 
       componentDidMount() {
-        expect(this.innerRef.value.getObject()).toEqual(innerObj);
-        expect(this.outerRef.value.getObject()).toEqual(outerObj);
+        expect(this.innerRef.current.getObject()).toEqual(innerObj);
+        expect(this.outerRef.current.getObject()).toEqual(outerObj);
         mounted = true;
       }
     }

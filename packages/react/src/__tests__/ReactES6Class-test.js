@@ -59,10 +59,13 @@ describe('ReactES6Class', () => {
     class Foo extends React.Component {}
     expect(() =>
       expect(() => ReactDOM.render(<Foo />, container)).toThrow(),
-    ).toWarnDev(
+    ).toWarnDev([
+      // A failed component renders twice in DEV
       'Warning: Foo(...): No `render` method found on the returned component ' +
         'instance: you may have forgotten to define `render`.',
-    );
+      'Warning: Foo(...): No `render` method found on the returned component ' +
+        'instance: you may have forgotten to define `render`.',
+    ]);
   });
 
   it('renders a simple stateless component with prop', () => {
@@ -123,6 +126,49 @@ describe('ReactES6Class', () => {
       }
     }
     test(<Foo foo="foo" />, 'DIV', 'foo bar');
+  });
+
+  it('warns if getDerivedStateFromProps is not static', () => {
+    class Foo extends React.Component {
+      getDerivedStateFromProps() {
+        return {};
+      }
+      render() {
+        return <div />;
+      }
+    }
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+      'Foo: getDerivedStateFromProps() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
+  it('warns if getDerivedStateFromCatch is not static', () => {
+    class Foo extends React.Component {
+      getDerivedStateFromCatch() {
+        return {};
+      }
+      render() {
+        return <div />;
+      }
+    }
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+      'Foo: getDerivedStateFromCatch() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+    );
+  });
+
+  it('warns if getSnapshotBeforeUpdate is static', () => {
+    class Foo extends React.Component {
+      static getSnapshotBeforeUpdate() {}
+      render() {
+        return <div />;
+      }
+    }
+    expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
+      'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
+        'and will be ignored. Instead, declare it as an instance method.',
+    );
   });
 
   it('warns if state not initialized before static getDerivedStateFromProps', () => {

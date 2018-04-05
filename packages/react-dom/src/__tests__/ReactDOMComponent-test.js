@@ -1000,7 +1000,11 @@ describe('ReactDOMComponent', () => {
 
       expect(() => {
         returnedValue = ReactDOMServer.renderToString(<Container />);
-      }).toWarnDev('<BR /> is using uppercase HTML.');
+      }).toWarnDev(
+        '<BR /> is using incorrect casing. ' +
+          'Use PascalCase for React components, ' +
+          'or lowercase for HTML elements.',
+      );
       expect(returnedValue).not.toContain('</BR>');
     });
 
@@ -1012,7 +1016,11 @@ describe('ReactDOMComponent', () => {
 
       expect(() =>
         ReactTestUtils.renderIntoDocument(React.createElement('IMG')),
-      ).toWarnDev('<IMG /> is using uppercase HTML.');
+      ).toWarnDev(
+        '<IMG /> is using incorrect casing. ' +
+          'Use PascalCase for React components, ' +
+          'or lowercase for HTML elements.',
+      );
     });
 
     it('should warn on props reserved for future use', () => {
@@ -1059,7 +1067,9 @@ describe('ReactDOMComponent', () => {
         expect(() =>
           ReactTestUtils.renderIntoDocument(<hasOwnProperty />),
         ).toWarnDev([
-          '<hasOwnProperty /> is using uppercase HTML',
+          '<hasOwnProperty /> is using incorrect casing. ' +
+            'Use PascalCase for React components, ' +
+            'or lowercase for HTML elements.',
           'The tag <hasOwnProperty> is unrecognized in this browser',
         ]);
       } finally {

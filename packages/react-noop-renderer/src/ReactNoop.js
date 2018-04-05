@@ -130,6 +130,12 @@ let SharedHostConfig = {
     oldProps: Props,
     newProps: Props,
   ): null | {} {
+    if (oldProps === null) {
+      throw new Error('Should have old props');
+    }
+    if (newProps === null) {
+      throw new Error('Should have old props');
+    }
     return UPDATE_SIGNAL;
   },
 
@@ -196,6 +202,9 @@ const NoopRenderer = ReactFiberReconciler({
       oldProps: Props,
       newProps: Props,
     ): void {
+      if (oldProps === null) {
+        throw new Error('Should have old props');
+      }
       instance.prop = newProps.prop;
     },
 
@@ -287,7 +296,6 @@ function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
   while (!didStop && scheduledCallback !== null) {
     let cb = scheduledCallback;
     scheduledCallback = null;
-    yieldedValues = null;
     unitsRemaining = n;
     cb({
       timeRemaining() {
@@ -300,6 +308,10 @@ function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
         didStop = true;
         return 0;
       },
+      // React's scheduler has its own way of keeping track of expired
+      // work and doesn't read this, so don't bother setting it to the
+      // correct value.
+      didTimeout: false,
     });
 
     if (yieldedValues !== null) {
@@ -418,7 +430,8 @@ const ReactNoop = {
   },
 
   flushUnitsOfWork(n: number): Array<mixed> {
-    let values = [];
+    let values = yieldedValues || [];
+    yieldedValues = null;
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const value of flushUnitsOfWork(n)) {
       values.push(...value);
@@ -454,6 +467,12 @@ const ReactNoop = {
     } else {
       yieldedValues.push(value);
     }
+  },
+
+  clearYields() {
+    const values = yieldedValues;
+    yieldedValues = null;
+    return values;
   },
 
   hasScheduledCallback() {
