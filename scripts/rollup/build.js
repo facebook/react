@@ -82,6 +82,14 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
   switch (bundleType) {
     case FB_DEV:
     case FB_PROD:
+      return Object.assign({}, options, {
+        plugins: options.plugins.concat([
+          // Minify invariant messages
+          require('../error-codes/replace-invariant-error-codes'),
+          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
+          require('../babel/wrap-warning-with-env-check'),
+        ]),
+      });
     case RN_DEV:
     case RN_PROD:
       return Object.assign({}, options, {
@@ -197,7 +205,7 @@ function getPlugins(
   return [
     // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
-      transform(source) {
+      transform(source, opts) {
         findAndRecordErrorCodes(source);
         return source;
       },

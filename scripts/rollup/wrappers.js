@@ -94,6 +94,7 @@ ${license}
  *
  * @noflow
  * @preventMunge
+ * @preserve-invariant-messages
  */
 
 'use strict';
@@ -112,6 +113,7 @@ ${license}
  *
  * @noflow
  * @preventMunge
+ * @preserve-invariant-messages
  */
 
 ${source}`;
