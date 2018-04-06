@@ -14,8 +14,49 @@ import type {
 
 import invariant from 'fbjs/lib/invariant';
 
+// Event configs
+export const customBubblingEventTypes = {};
+export const customDirectEventTypes = {};
+export const eventTypes = {};
+
 const viewConfigCallbacks = new Map();
 const viewConfigs = new Map();
+
+function processEventTypes(
+  viewConfig: ReactNativeBaseComponentViewConfig,
+): void {
+  const {bubblingEventTypes, directEventTypes} = viewConfig;
+
+  if (__DEV__) {
+    if (bubblingEventTypes != null && directEventTypes != null) {
+      for (const topLevelType in directEventTypes) {
+        invariant(
+          bubblingEventTypes[topLevelType] == null,
+          'Event cannot be both direct and bubbling: %s',
+          topLevelType,
+        );
+      }
+    }
+  }
+
+  if (bubblingEventTypes != null) {
+    for (const topLevelType in bubblingEventTypes) {
+      if (customBubblingEventTypes[topLevelType] == null) {
+        eventTypes[topLevelType] = customBubblingEventTypes[topLevelType] =
+          bubblingEventTypes[topLevelType];
+      }
+    }
+  }
+
+  if (directEventTypes != null) {
+    for (const topLevelType in directEventTypes) {
+      if (customDirectEventTypes[topLevelType] == null) {
+        eventTypes[topLevelType] = customDirectEventTypes[topLevelType] =
+          directEventTypes[topLevelType];
+      }
+    }
+  }
+}
 
 /**
  * Registers a native view/component by name.
@@ -49,6 +90,7 @@ export function get(name: string): ReactNativeBaseComponentViewConfig {
     );
     viewConfigCallbacks.set(name, null);
     viewConfig = callback();
+    processEventTypes(viewConfig);
     viewConfigs.set(name, viewConfig);
   } else {
     viewConfig = viewConfigs.get(name);
