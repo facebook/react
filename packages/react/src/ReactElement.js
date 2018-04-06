@@ -294,7 +294,7 @@ export function cloneAndReplaceKey(oldElement, newKey) {
 export function cloneElement(element, config, children) {
   invariant(
     !(element === null || element === undefined),
-    'Cannot clone a null or undefined element.'
+    'Cannot clone a null or undefined element.',
   );
 
   let propName;
