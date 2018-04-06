@@ -94,7 +94,7 @@ function findNodeHandle(componentOrHandle: any): any {
 
   const component = componentOrHandle;
 
-  // TODO (balpert): Wrap iOS native components in a composite wrapper, then
+  // TODO (sophiebits): Wrap iOS native components in a composite wrapper, then
   // ReactInstanceMap.get here will always succeed for mounted components
   const internalInstance: Fiber = ReactInstanceMap.get(component);
   if (internalInstance) {
