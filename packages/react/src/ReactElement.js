@@ -10,9 +10,9 @@ import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
+import invariant from 'fbjs/lib/invariant';
 
-const invariant = require('fbjs/lib/invariant');
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 const RESERVED_PROPS = {
   key: true,
