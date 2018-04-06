@@ -294,7 +294,8 @@ export function cloneAndReplaceKey(oldElement, newKey) {
 export function cloneElement(element, config, children) {
   invariant(
     !(element === null || element === undefined),
-    'Cannot clone a null or undefined element.',
+    'React.cloneElement(...): The argument must be a React element, but you passed %s.',
+    element,
   );
 
   let propName;
