@@ -355,8 +355,9 @@ export function createElement(
       // allow <SVG> or <mATH>.
       warning(
         isCustomComponentTag || type === type.toLowerCase(),
-        '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
-          'in React.',
+        '<%s /> is using incorrect casing. ' +
+          'Use PascalCase for React components, ' +
+          'or lowercase for HTML elements.',
         type,
       );
     }
