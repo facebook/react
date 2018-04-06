@@ -222,8 +222,8 @@ function getPlugins(
     },
     // Turn __DEV__ and process.env checks into constants.
     replace({
-      __DEV__: isProduction ? 'false' : 'true',
-      'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
+      __DEV__: !isProduction ? 'false' : 'true',
+      'process.env.NODE_ENV': !isProduction ? "'production'" : "'development'",
     }),
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
