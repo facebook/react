@@ -128,6 +128,7 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'ReactNativeViewConfigRegistry',
     ],
   },
 
@@ -150,6 +151,7 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'ReactNativeViewConfigRegistry',
     ],
   },
 

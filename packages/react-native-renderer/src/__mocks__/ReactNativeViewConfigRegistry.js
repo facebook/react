@@ -6,18 +6,23 @@
  *
  * @flow
  */
+'use strict';
 
 import type {
   ReactNativeBaseComponentViewConfig,
   ViewConfigGetter,
 } from './ReactNativeTypes';
 
-import invariant from 'fbjs/lib/invariant';
+const invariant = require('fbjs/lib/invariant');
 
 // Event configs
-export const customBubblingEventTypes = {};
-export const customDirectEventTypes = {};
-export const eventTypes = {};
+const customBubblingEventTypes = {};
+const customDirectEventTypes = {};
+const eventTypes = {};
+
+exports.customBubblingEventTypes = customBubblingEventTypes;
+exports.customDirectEventTypes = customDirectEventTypes;
+exports.eventTypes = eventTypes;
 
 const viewConfigCallbacks = new Map();
 const viewConfigs = new Map();
@@ -64,7 +69,7 @@ function processEventTypes(
  * The callback is deferred until the view is actually rendered.
  * This is done to avoid causing Prepack deopts.
  */
-export function register(name: string, callback: ViewConfigGetter): string {
+exports.register = function(name: string, callback: ViewConfigGetter): string {
   invariant(
     !viewConfigCallbacks.has(name),
     'Tried to register two views with the same name %s',
@@ -72,14 +77,14 @@ export function register(name: string, callback: ViewConfigGetter): string {
   );
   viewConfigCallbacks.set(name, callback);
   return name;
-}
+};
 
 /**
  * Retrieves a config for the specified view.
  * If this is the first time the view has been used,
  * This configuration will be lazy-loaded from UIManager.
  */
-export function get(name: string): ReactNativeBaseComponentViewConfig {
+exports.get = function(name: string): ReactNativeBaseComponentViewConfig {
   let viewConfig;
   if (!viewConfigs.has(name)) {
     const callback = viewConfigCallbacks.get(name);
@@ -97,4 +102,4 @@ export function get(name: string): ReactNativeBaseComponentViewConfig {
   }
   invariant(viewConfig, 'View config not found for name %s', name);
   return viewConfig;
-}
+};

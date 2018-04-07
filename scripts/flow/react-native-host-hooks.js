@@ -9,6 +9,11 @@
 
 /* eslint-disable */
 
+import type {
+  ReactNativeBaseComponentViewConfig,
+  ViewConfigGetter,
+} from 'react-native-renderer/src/ReactNativeTypes';
+
 declare module 'deepDiffer' {
   declare module.exports: (one: any, two: any) => boolean;
 }
@@ -142,11 +147,11 @@ declare module 'BatchedBridge' {
   declare function registerCallableModule(name: string, module: Object): void;
 }
 
-declare module 'CSComponent' {
-  declare type Element = any;
-  declare type Options<Instance> = any;
-}
+declare module 'ReactNativeViewConfigRegistry' {
+  declare var customBubblingEventTypes: Object;
+  declare var customDirectEventTypes: Object;
+  declare var eventTypes: Object;
 
-declare module 'CSStatefulComponent' {
-  declare function CSStatefulComponent(spec: any): any;
+  declare function register(name: string, callback: ViewConfigGetter): string;
+  declare function get(name: string): ReactNativeBaseComponentViewConfig;
 }

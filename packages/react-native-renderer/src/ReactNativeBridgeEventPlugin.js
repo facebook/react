@@ -12,7 +12,7 @@ import {
   accumulateTwoPhaseDispatches,
   accumulateDirectDispatches,
 } from 'events/EventPropagators';
-import * as ReactNativeViewConfigRegistry from './ReactNativeViewConfigRegistry';
+import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'fbjs/lib/invariant';
 

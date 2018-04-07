@@ -18,7 +18,7 @@ import type {
 import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
 import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
-import * as ReactNativeViewConfigRegistry from './ReactNativeViewConfigRegistry';
+import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 import ReactFiberReconciler from 'react-reconciler';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';

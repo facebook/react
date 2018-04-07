@@ -9,7 +9,7 @@
 
 import type {ViewConfigGetter} from './ReactNativeTypes';
 
-import {register} from './ReactNativeViewConfigRegistry';
+import {register} from 'ReactNativeViewConfigRegistry';
 
 /**
  * Creates a renderable ReactNative host component.
