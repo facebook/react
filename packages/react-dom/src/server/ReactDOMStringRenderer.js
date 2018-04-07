@@ -13,7 +13,7 @@ import ReactPartialRenderer from './ReactPartialRenderer';
  * See https://reactjs.org/docs/react-dom-server.html#rendertostring
  */
 export function renderToString(element) {
-  const renderer = new ReactPartialRenderer(element, false);
+  const renderer = new ReactPartialRenderer(element, false, false);
   const markup = renderer.read(Infinity);
   return markup;
 }
@@ -24,7 +24,29 @@ export function renderToString(element) {
  * See https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup
  */
 export function renderToStaticMarkup(element) {
-  const renderer = new ReactPartialRenderer(element, true);
+  const renderer = new ReactPartialRenderer(element, true, false);
+  const markup = renderer.read(Infinity);
+  return markup;
+}
+
+/**
+ * Render a ReactElement to its initial non-standard HTML. This should only be
+ * used on the server.
+ * See https://reactjs.org/docs/react-dom-server.html#rendertostring
+ */
+export function renderToStringNonStandard(element) {
+  const renderer = new ReactPartialRenderer(element, false, true);
+  const markup = renderer.read(Infinity);
+  return markup;
+}
+
+/**
+ * Similar to renderToStringNonStandard, except this doesn't create extra DOM
+ * attributes such as data-react-id that React uses internally.
+ * See https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup
+ */
+export function renderToStaticMarkupNonStandard(element) {
+  const renderer = new ReactPartialRenderer(element, true, true);
   const markup = renderer.read(Infinity);
   return markup;
 }

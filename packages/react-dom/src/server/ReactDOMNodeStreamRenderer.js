@@ -11,11 +11,15 @@ import ReactPartialRenderer from './ReactPartialRenderer';
 
 // This is a Readable Node.js stream which wraps the ReactDOMPartialRenderer.
 class ReactMarkupReadableStream extends Readable {
-  constructor(element, makeStaticMarkup) {
+  constructor(element, makeStaticMarkup, allowNonStandard) {
     // Calls the stream.Readable(options) constructor. Consider exposing built-in
     // features like highWaterMark in the future.
     super({});
-    this.partialRenderer = new ReactPartialRenderer(element, makeStaticMarkup);
+    this.partialRenderer = new ReactPartialRenderer(
+      element,
+      makeStaticMarkup,
+      allowNonStandard,
+    );
   }
 
   _read(size) {
@@ -32,7 +36,7 @@ class ReactMarkupReadableStream extends Readable {
  * See https://reactjs.org/docs/react-dom-stream.html#rendertonodestream
  */
 export function renderToNodeStream(element) {
-  return new ReactMarkupReadableStream(element, false);
+  return new ReactMarkupReadableStream(element, false, false);
 }
 
 /**
@@ -41,5 +45,23 @@ export function renderToNodeStream(element) {
  * See https://reactjs.org/docs/react-dom-stream.html#rendertostaticnodestream
  */
 export function renderToStaticNodeStream(element) {
-  return new ReactMarkupReadableStream(element, true);
+  return new ReactMarkupReadableStream(element, true, false);
+}
+
+/**
+ * Render a ReactElement to its initial non-standard HTML. This should only be
+ * used on the server.
+ * See https://reactjs.org/docs/react-dom-stream.html#rendertonodestream
+ */
+export function renderToNodeStreamNonStandard(element) {
+  return new ReactMarkupReadableStream(element, false, true);
+}
+
+/**
+ * Similar to renderToNodeStreamNonStandard, except this doesn't create extra
+ * DOM attributes such as data-react-id that React uses internally.
+ * See https://reactjs.org/docs/react-dom-stream.html#rendertostaticnodestream
+ */
+export function renderToStaticNodeStreamNonStandard(element) {
+  return new ReactMarkupReadableStream(element, true, true);
 }

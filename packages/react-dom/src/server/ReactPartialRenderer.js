@@ -324,6 +324,7 @@ function createOpenTagMarkup(
   namespace: string,
   makeStaticMarkup: boolean,
   isRootElement: boolean,
+  allowNonStandard: boolean,
 ): string {
   let ret = '<' + tagVerbatim;
 
@@ -341,7 +342,11 @@ function createOpenTagMarkup(
     let markup = null;
     if (isCustomComponent(tagLowercase, props)) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-        markup = createMarkupForCustomAttribute(propKey, propValue);
+        markup = createMarkupForCustomAttribute(
+          propKey,
+          propValue,
+          allowNonStandard,
+        );
       }
     } else {
       markup = createMarkupForProperty(propKey, propValue);
@@ -645,7 +650,11 @@ class ReactDOMServerRenderer {
   providerStack: Array<?ReactProvider<any>>;
   providerIndex: number;
 
-  constructor(children: mixed, makeStaticMarkup: boolean) {
+  constructor(
+    children: mixed,
+    makeStaticMarkup: boolean,
+    allowNonStandard: boolean,
+  ) {
     const flatChildren = flattenTopLevelChildren(children);
 
     const topFrame: Frame = {
@@ -666,6 +675,7 @@ class ReactDOMServerRenderer {
     this.currentSelectValue = null;
     this.previousWasTextNode = false;
     this.makeStaticMarkup = makeStaticMarkup;
+    this.allowNonStandard = allowNonStandard;
 
     // Context (new API)
     this.providerStack = []; // Stack of provider objects
@@ -1190,6 +1200,7 @@ class ReactDOMServerRenderer {
       namespace,
       this.makeStaticMarkup,
       this.stack.length === 1,
+      this.allowNonStandard,
     );
     let footer = '';
     if (omittedCloseTags.hasOwnProperty(tag)) {

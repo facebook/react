@@ -75,8 +75,9 @@ export function createMarkupForProperty(name: string, value: mixed): string {
 export function createMarkupForCustomAttribute(
   name: string,
   value: mixed,
+  allowNonStandard: boolean,
 ): string {
-  if (!isAttributeNameSafe(name) || value == null) {
+  if ((!allowNonStandard && !isAttributeNameSafe(name)) || value == null) {
     return '';
   }
   return name + '=' + quoteAttributeValueForBrowser(value);
