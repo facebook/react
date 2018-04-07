@@ -84,12 +84,23 @@ module.exports = function(initModules) {
     }, errorCount);
   }
 
-  async function renderIntoString(reactElement, errorCount = 0) {
+  async function renderIntoString(
+    reactElement,
+    errorCount = 0,
+    allowNonStandard,
+  ) {
     return await expectErrors(
       () =>
-        new Promise(resolve =>
-          resolve(ReactDOMServer.renderToString(reactElement)),
-        ),
+        new Promise(resolve => {
+          let result;
+          if (allowNonStandard) {
+            result = ReactDOMServer.renderToStringNonStandard(reactElement);
+          } else {
+            result = ReactDOMServer.renderToString(reactElement);
+          }
+
+          resolve(result);
+        }),
       errorCount,
     );
   }
@@ -98,7 +109,17 @@ module.exports = function(initModules) {
   // element that corresponds with the reactElement.
   // Does not render on client or perform client-side revival.
   async function serverRender(reactElement, errorCount = 0) {
-    const markup = await renderIntoString(reactElement, errorCount);
+    const markup = await renderIntoString(reactElement, errorCount, false);
+    const domElement = document.createElement('div');
+    domElement.innerHTML = markup;
+    return domElement.firstChild;
+  }
+
+  // Renders text using SSR and then stuffs it into a DOM node; returns the DOM
+  // element that corresponds with the reactElement.
+  // Does not render on client or perform client-side revival.
+  async function serverRenderNonStandard(reactElement, errorCount = 0) {
+    const markup = await renderIntoString(reactElement, errorCount, true);
     const domElement = document.createElement('div');
     domElement.innerHTML = markup;
     return domElement.firstChild;
@@ -118,12 +139,26 @@ module.exports = function(initModules) {
     }
   }
 
-  async function renderIntoStream(reactElement, errorCount = 0) {
+  async function renderIntoStream(
+    reactElement,
+    errorCount = 0,
+    allowNonStandard,
+  ) {
     return await expectErrors(
       () =>
         new Promise(resolve => {
           let writable = new DrainWritable();
-          ReactDOMServer.renderToNodeStream(reactElement).pipe(writable);
+
+          let nodeStream;
+          if (allowNonStandard) {
+            nodeStream = ReactDOMServer.renderToNodeStreamNonStandard(
+              reactElement,
+            );
+          } else {
+            nodeStream = ReactDOMServer.renderToNodeStream(reactElement);
+          }
+
+          nodeStream.pipe(writable);
           writable.on('finish', () => resolve(writable.buffer));
         }),
       errorCount,
@@ -134,7 +169,17 @@ module.exports = function(initModules) {
   // returns the DOM element that corresponds with the reactElement.
   // Does not render on client or perform client-side revival.
   async function streamRender(reactElement, errorCount = 0) {
-    const markup = await renderIntoStream(reactElement, errorCount);
+    const markup = await renderIntoStream(reactElement, errorCount, false);
+    const domElement = document.createElement('div');
+    domElement.innerHTML = markup;
+    return domElement.firstChild;
+  }
+
+  // Renders non-standard text using node stream SSR and then stuffs it into a
+  // DOM node; returns the DOM element that corresponds with the reactElement.
+  // Does not render on client or perform client-side revival.
+  async function streamRenderNonStandard(reactElement, errorCount = 0) {
+    const markup = await renderIntoStream(reactElement, errorCount, true);
     const domElement = document.createElement('div');
     domElement.innerHTML = markup;
     return domElement.firstChild;
@@ -219,6 +264,23 @@ module.exports = function(initModules) {
     it(`renders ${desc} with server string render`, () => testFn(serverRender));
     it(`renders ${desc} with server stream render`, () => testFn(streamRender));
     itClientRenders(desc, testFn);
+  }
+
+  // Runs a DOM rendering test for rendering to a non-standard string on server.
+  // Non-standard strings cannot render on client without errors.
+  //
+  // testFn is a test that has one arg, which is a render function. the render
+  // function takes in a ReactElement and an optional expected error count and
+  // returns a promise of a DOM Element.
+  //
+  // You should only perform tests that examine the DOM of the results of
+  // render; you should not depend on the interactivity of the returned DOM element,
+  // as that will not work in the server string scenario.
+  function itRendersNonStandard(desc, testFn) {
+    it(`renders ${desc} with server non-standard string render`, () =>
+      testFn(serverRenderNonStandard));
+    it(`renders ${desc} with server non-standard stream render`, () =>
+      testFn(streamRenderNonStandard));
   }
 
   // run testFn in three different rendering scenarios:
@@ -319,6 +381,7 @@ module.exports = function(initModules) {
     expectMarkupMismatch,
     expectMarkupMatch,
     itRenders,
+    itRendersNonStandard,
     itClientRenders,
     itThrowsWhenRendering,
     asyncReactDOMRender,

@@ -52,6 +52,40 @@ describe('ReactServerRenderingBrowser', () => {
     );
   });
 
+  it('returns the same non-standard results as react-dom/server', () => {
+    class NiceNonStandard extends React.Component {
+      render() {
+        return (
+          <greeting-answer {...{'[type]': 'nice'}}>
+            I am feeling very good today, thanks, how are you?
+          </greeting-answer>
+        );
+      }
+    }
+    function GreetingNonStandard() {
+      return (
+        <div>
+          <greeting-question {...{'[type]': 'inquisitive'}}>
+            How are you?
+          </greeting-question>
+          <NiceNonStandard />
+        </div>
+      );
+    }
+    expect(
+      ReactDOMServerBrowser.renderToStringNonStandard(<GreetingNonStandard />),
+    ).toEqual(
+      ReactDOMServer.renderToStringNonStandard(<GreetingNonStandard />),
+    );
+    expect(
+      ReactDOMServerBrowser.renderToStaticMarkupNonStandard(
+        <GreetingNonStandard />,
+      ),
+    ).toEqual(
+      ReactDOMServer.renderToStaticMarkupNonStandard(<GreetingNonStandard />),
+    );
+  });
+
   it('throws meaningfully for server-only APIs', () => {
     expect(() => ReactDOMServerBrowser.renderToNodeStream(<div />)).toThrow(
       'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
@@ -62,6 +96,18 @@ describe('ReactServerRenderingBrowser', () => {
     ).toThrow(
       'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
         'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
+    );
+    expect(() =>
+      ReactDOMServerBrowser.renderToNodeStreamNonStandard(<div />),
+    ).toThrow(
+      'ReactDOMServer.renderToNodeStreamNonStandard(): The streaming API is not available ' +
+        'in the browser. Use ReactDOMServer.renderToStringNonStandard() instead.',
+    );
+    expect(() =>
+      ReactDOMServerBrowser.renderToStaticNodeStreamNonStandard(<div />),
+    ).toThrow(
+      'ReactDOMServer.renderToStaticNodeStreamNonStandard(): The streaming API is not available ' +
+        'in the browser. Use ReactDOMServer.renderToStaticMarkupNonStandard() instead.',
     );
   });
 });

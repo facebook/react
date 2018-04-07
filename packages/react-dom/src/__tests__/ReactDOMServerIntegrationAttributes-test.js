@@ -32,6 +32,7 @@ function initModules() {
 const {
   resetModules,
   itRenders,
+  itRendersNonStandard,
   clientCleanRender,
 } = ReactDOMServerIntegrationUtils(initModules);
 
@@ -603,6 +604,16 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<nonstandard foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
       });
+
+      itRendersNonStandard(
+        'non-standard attributes for non-standard elements',
+        async render => {
+          const e = await render(
+            <non-standard {...{'[non-standard]': 'test'}} />,
+          );
+          expect(e.getAttribute('[non-standard]')).toBe('test');
+        },
+      );
 
       itRenders('SVG tags with dashes in them', async render => {
         const e = await render(
