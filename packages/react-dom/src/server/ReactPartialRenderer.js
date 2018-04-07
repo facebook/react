@@ -646,6 +646,7 @@ class ReactDOMServerRenderer {
   currentSelectValue: any;
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
+  allowNonStandard: boolean;
 
   providerStack: Array<?ReactProvider<any>>;
   providerIndex: number;
