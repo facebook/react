@@ -77,8 +77,6 @@ const ReactFabric: ReactNativeType = {
 
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
-  flushSync: ReactFabricRenderer.flushSync,
-
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin,
