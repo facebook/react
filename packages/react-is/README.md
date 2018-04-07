@@ -4,12 +4,14 @@ This package allows you to test arbitrary values and see if they're a particular
 
 ## Installation
 
+For now, you'll want to install the `react-is@next` version of the package, since the `react-is` 1.0.0 version was just a placeholder.
+
 ```sh
 # Yarn
-yarn add react-is
+yarn add react-is@next
 
 # NPM
-npm install react-is --save
+npm install react-is@next --save
 ```
 
 ## Usage
