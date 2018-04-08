@@ -24,11 +24,11 @@ import ReactFabricRenderer from './ReactFabricRenderer';
 import ReactNativePropRegistry from './ReactNativePropRegistry';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import createReactNativeComponentClass from './createReactNativeComponentClass';
-import {injectFindHostInstanceFabric} from './findNodeHandle';
+import {injectFindHostInstance} from './findNodeHandle';
 import findNumericNodeHandle from './findNumericNodeHandle';
 import takeSnapshot from './takeSnapshot';
 
-injectFindHostInstanceFabric(ReactFabricRenderer.findHostInstance);
+injectFindHostInstance(ReactFabricRenderer.findHostInstance);
 
 ReactGenericBatching.injection.injectRenderer(ReactFabricRenderer);
 

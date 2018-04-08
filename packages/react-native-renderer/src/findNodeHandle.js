@@ -15,23 +15,12 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-// TODO: Share this module between Fabric and React Native renderers
-// so that both can be used in the same tree.
-
 let findHostInstance = function(fiber: Fiber): any {
-  return null;
-};
-
-let findHostInstanceFabric = function(fiber: Fiber): any {
   return null;
 };
 
 export function injectFindHostInstance(impl: (fiber: Fiber) => any) {
   findHostInstance = impl;
-}
-
-export function injectFindHostInstanceFabric(impl: (fiber: Fiber) => any) {
-  findHostInstanceFabric = impl;
 }
 
 /**
@@ -98,24 +87,11 @@ function findNodeHandle(componentOrHandle: any): any {
   // ReactInstanceMap.get here will always succeed for mounted components
   const internalInstance: Fiber = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return (
-      findHostInstance(internalInstance) ||
-      findHostInstanceFabric(internalInstance)
-    );
+    return findHostInstance(internalInstance);
   } else {
     if (component) {
       return component;
     } else {
-      invariant(
-        // Native
-        (typeof component === 'object' && '_nativeTag' in component) ||
-          // Composite
-          (component.render != null && typeof component.render === 'function'),
-        'findNodeHandle(...): Argument is not a component ' +
-          '(type: %s, keys: %s)',
-        typeof component,
-        Object.keys(component),
-      );
       invariant(
         false,
         'findNodeHandle(...): Unable to find node handle for unmounted ' +
