@@ -28,8 +28,8 @@ describe('ReactFabric', () => {
     ReactFabric = require('react-native-renderer/fabric');
     FabricUIManager = require('FabricUIManager');
     UIManager = require('UIManager');
-    createReactNativeComponentClass = require('../createReactNativeComponentClass')
-      .default;
+    createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
+      .register;
   });
 
   it('should be able to create and render a native component', () => {

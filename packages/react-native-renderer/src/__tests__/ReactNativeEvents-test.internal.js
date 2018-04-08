@@ -69,8 +69,8 @@ beforeEach(() => {
   ReactNative = require('react-native-renderer');
   ResponderEventPlugin = require('events/ResponderEventPlugin').default;
   UIManager = require('UIManager');
-  createReactNativeComponentClass = require('../createReactNativeComponentClass')
-    .default;
+  createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
+    .register;
 });
 
 it('fails if unknown/unsupported event types are dispatched', () => {

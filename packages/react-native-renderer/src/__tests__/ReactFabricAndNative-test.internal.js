@@ -26,8 +26,8 @@ describe('ReactFabric', () => {
 
     React = require('react');
     ReactFabric = require('react-native-renderer/fabric');
-    createReactNativeComponentClass = require('../createReactNativeComponentClass')
-      .default;
+    createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
+      .register;
   });
 
   it('find Fabric nodes with the RN renderer', () => {

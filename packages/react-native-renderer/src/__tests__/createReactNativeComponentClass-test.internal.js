@@ -18,8 +18,8 @@ describe('createReactNativeComponentClass', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    createReactNativeComponentClass = require('../createReactNativeComponentClass')
-      .default;
+    createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
+      .register;
     React = require('react');
     ReactNative = require('react-native-renderer');
   });

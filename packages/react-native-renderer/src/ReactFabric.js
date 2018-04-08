@@ -21,7 +21,6 @@ import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import ReactFabricRenderer from './ReactFabricRenderer';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
-import createReactNativeComponentClass from './createReactNativeComponentClass';
 import {injectFindHostInstance} from './findNodeHandle';
 import findNumericNodeHandle from './findNumericNodeHandle';
 
@@ -73,7 +72,6 @@ const ReactFabric: ReactFabricType = {
     NativeMethodsMixin,
     // Used by react-native-github/Libraries/ components
     ReactNativeComponentTree, // ScrollResponder
-    createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART
   },
 };
 

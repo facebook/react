@@ -71,10 +71,6 @@ export type NativeMethodsMixinType = {
 
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
-  createReactNativeComponentClass(
-    name: string,
-    callback: ViewConfigGetter,
-  ): any,
   ReactNativeComponentTree: any,
   // TODO (bvaughn) Decide which additional types to expose here?
   // And how much information to fill in for the above types.
