@@ -27,10 +27,7 @@ import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import getComponentName from 'shared/getComponentName';
-import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 const findHostInstance = ReactNativeFiberRenderer.findHostInstance;
@@ -65,11 +62,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
     return componentOrHandle.canonical._nativeTag;
   }
-  const internalInstance: Fiber = ReactInstanceMap.get(componentOrHandle);
-  if (!internalInstance) {
-    return null;
-  }
-  const hostInstance = findHostInstance(internalInstance);
+  const hostInstance = findHostInstance(componentOrHandle);
   if (hostInstance == null) {
     return hostInstance;
   }

@@ -26,7 +26,6 @@ import {
   throwOnStylesProp,
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
-import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 
 export default function(
   findNodeHandle: any => ?number,
@@ -129,17 +128,12 @@ export default function(
       // We want the instance/wrapper (not the native tag).
       let maybeInstance;
 
-      const fiber = ReactInstanceMap.get(this);
-      if (!fiber) {
-        return;
-      }
-
       // Fiber errors if findNodeHandle is called for an umounted component.
       // Tests using ReactTestRenderer will trigger this case indirectly.
       // Mimicking stack behavior, we should silently ignore this case.
       // TODO Fix ReactTestRenderer so we can remove this try/catch.
       try {
-        maybeInstance = findHostInstance(fiber);
+        maybeInstance = findHostInstance(this);
       } catch (error) {}
 
       // If there is no host component beneath this we should fail silently.
