@@ -96,4 +96,3 @@ export function isStrictMode(object: any) {
 export function isStatelessFunctionComponent(object: any) {
   return !object.type.prototype.hasOwnProperty('render');
 }
-

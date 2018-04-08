@@ -155,10 +155,17 @@ describe('ReactIs', () => {
 
     const StatelessComponent = () => React.createElement('div');
 
-    expect(ReactIs.isStatelessFunctionComponent(React.createElement(Component))).toBe(false);
-    expect(ReactIs.isStatelessFunctionComponent(React.createElement(StatelessComponent))).toBe(true);
+    expect(
+      ReactIs.isStatelessFunctionComponent(React.createElement(Component)),
+    ).toBe(false);
+    expect(
+      ReactIs.isStatelessFunctionComponent(
+        React.createElement(StatelessComponent),
+      ),
+    ).toBe(true);
     expect(ReactIs.isStatelessFunctionComponent(<Component />)).toBe(false);
-    expect(ReactIs.isStatelessFunctionComponent(<StatelessComponent />)).toBe(true);
-
+    expect(ReactIs.isStatelessFunctionComponent(<StatelessComponent />)).toBe(
+      true,
+    );
   });
 });
