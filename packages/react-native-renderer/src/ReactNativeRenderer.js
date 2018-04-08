@@ -30,7 +30,6 @@ import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import createReactNativeComponentClass from './createReactNativeComponentClass';
 import {injectFindHostInstance} from './findNodeHandle';
 import findNumericNodeHandle from './findNumericNodeHandle';
-import takeSnapshot from './takeSnapshot';
 
 injectFindHostInstance(ReactNativeFiberRenderer.findHostInstance);
 
@@ -104,7 +103,6 @@ const ReactNativeRenderer: ReactNativeType = {
     ReactNativeComponentTree, // ScrollResponder
     ReactNativePropRegistry, // flattenStyle, Stylesheet
     createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART
-    takeSnapshot, // react-native-implementation
     computeComponentStackForErrorReporting,
   },
 };

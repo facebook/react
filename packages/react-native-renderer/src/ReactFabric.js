@@ -26,7 +26,6 @@ import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import createReactNativeComponentClass from './createReactNativeComponentClass';
 import {injectFindHostInstance} from './findNodeHandle';
 import findNumericNodeHandle from './findNumericNodeHandle';
-import takeSnapshot from './takeSnapshot';
 
 injectFindHostInstance(ReactFabricRenderer.findHostInstance);
 
@@ -85,7 +84,6 @@ const ReactFabric: ReactNativeType = {
     ReactNativeComponentTree, // ScrollResponder
     ReactNativePropRegistry, // flattenStyle, Stylesheet
     createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART
-    takeSnapshot, // react-native-implementation
   },
 };
 
