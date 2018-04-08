@@ -145,4 +145,27 @@ describe('ReactIs', () => {
     expect(ReactIs.isStrictMode(<React.unstable_AsyncMode />)).toBe(false);
     expect(ReactIs.isStrictMode(<div />)).toBe(false);
   });
+
+  it('should identify if the React component is stateless or not', () => {
+    class Component extends React.Component {
+      render() {
+        return React.createElement('div');
+      }
+    }
+
+    const StatelessComponent = () => React.createElement('div');
+
+    expect(
+      ReactIs.isStatelessFunctionComponent(React.createElement(Component)),
+    ).toBe(false);
+    expect(
+      ReactIs.isStatelessFunctionComponent(
+        React.createElement(StatelessComponent),
+      ),
+    ).toBe(true);
+    expect(ReactIs.isStatelessFunctionComponent(<Component />)).toBe(false);
+    expect(ReactIs.isStatelessFunctionComponent(<StatelessComponent />)).toBe(
+      true,
+    );
+  });
 });

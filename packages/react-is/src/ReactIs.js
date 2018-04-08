@@ -93,3 +93,6 @@ export function isPortal(object: any) {
 export function isStrictMode(object: any) {
   return typeOf(object) === REACT_STRICT_MODE_TYPE;
 }
+export function isStatelessFunctionComponent(object: any) {
+  return !object.type.prototype.hasOwnProperty('render');
+}
