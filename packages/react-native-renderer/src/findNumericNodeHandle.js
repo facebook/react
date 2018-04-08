@@ -21,5 +21,8 @@ export default function findNumericNodeHandleFiber(
   if (instance == null || typeof instance === 'number') {
     return instance;
   }
+  if (instance.canonical) {
+    return instance.canonical._nativeTag;
+  }
   return instance._nativeTag;
 }
