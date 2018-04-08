@@ -88,7 +88,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function markUpdate(workInProgress: Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
-    // an PlacementAndUpdate.
+    // a PlacementAndUpdate.
     workInProgress.effectTag |= Update;
   }
 
