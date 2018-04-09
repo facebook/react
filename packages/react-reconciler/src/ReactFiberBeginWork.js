@@ -859,8 +859,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     const newProps = workInProgress.pendingProps;
     const oldProps = workInProgress.memoizedProps;
+    let canBailOnProps = true;
 
     if (hasLegacyContextChanged()) {
+      canBailOnProps = false;
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
     } else if (oldProps === newProps) {
@@ -891,9 +893,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Initial render
       changedBits = MAX_SIGNED_31_BIT_INT;
     } else {
+      const canBailOnChildren =
+        canBailOnProps && oldProps.children === newProps.children;
       if (oldProps.value === newProps.value) {
         // No change. Bailout early if children are the same.
-        if (oldProps.children === newProps.children) {
+        if (canBailOnChildren) {
           workInProgress.stateNode = 0;
           pushProvider(workInProgress);
           return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -910,7 +914,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
         ) {
           // No change. Bailout early if children are the same.
-          if (oldProps.children === newProps.children) {
+          if (canBailOnChildren) {
             workInProgress.stateNode = 0;
             pushProvider(workInProgress);
             return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -933,7 +937,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
           if (changedBits === 0) {
             // No change. Bailout early if children are the same.
-            if (oldProps.children === newProps.children) {
+            if (canBailOnChildren) {
               workInProgress.stateNode = 0;
               pushProvider(workInProgress);
               return bailoutOnAlreadyFinishedWork(current, workInProgress);

@@ -847,6 +847,72 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Child')]);
   });
 
+  it('provider does not bail out if legacy context changed above', () => {
+    const Context = React.createContext(0);
+
+    function Child() {
+      ReactNoop.yield('Child');
+      return <span prop="Child" />;
+    }
+
+    const children = <Child />;
+
+    class LegacyProvider extends React.Component {
+      static childContextTypes = {
+        legacyValue: () => {},
+      };
+      state = {legacyValue: 1};
+      getChildContext() {
+        return {legacyValue: this.state.legacyValue};
+      }
+      render() {
+        ReactNoop.yield('LegacyProvider');
+        return this.props.children;
+      }
+    }
+
+    class App extends React.Component {
+      state = {value: 1};
+      render() {
+        ReactNoop.yield('App');
+        return (
+          <Context.Provider value={this.state.value}>
+            {this.props.children}
+          </Context.Provider>
+        );
+      }
+    }
+
+    const legacyProviderRef = React.createRef();
+    const appRef = React.createRef();
+
+    // Initial mount
+    ReactNoop.render(
+      <LegacyProvider ref={legacyProviderRef}>
+        <App ref={appRef} value={1}>
+          {children}
+        </App>
+      </LegacyProvider>,
+    );
+    expect(ReactNoop.flush()).toEqual(['LegacyProvider', 'App', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update App with same value (should bail out)
+    appRef.current.setState({value: 1});
+    expect(ReactNoop.flush()).toEqual(['App']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update LegacyProvider (should not bail out)
+    legacyProviderRef.current.setState({value: 1});
+    expect(ReactNoop.flush()).toEqual(['LegacyProvider', 'App', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update App with same value (should bail out)
+    appRef.current.setState({value: 1});
+    expect(ReactNoop.flush()).toEqual(['App']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+  });
+
   it('consumer bails out if value is unchanged and something above bailed out', () => {
     const Context = React.createContext(0);
 
