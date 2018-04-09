@@ -205,7 +205,7 @@ function getPlugins(
   return [
     // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
-      transform(source, opts) {
+      transform(source) {
         findAndRecordErrorCodes(source);
         return source;
       },
