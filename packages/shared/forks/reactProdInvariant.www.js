@@ -7,12 +7,8 @@
  * @flow
  */
 
-/**
- * WARNING: DO NOT manually require this module.
- * This is a replacement for `invariant(...)` used by the error code system
- * and will _only_ be required by the corresponding babel pass.
- * It always throws.
- */
+const invariant = require('invariant');
+
 function reactProdInvariant(code: string): void {
   const argCount = arguments.length - 1;
 
@@ -31,14 +27,12 @@ function reactProdInvariant(code: string): void {
     ' for the full message or use the non-minified dev environment' +
     ' for full errors and additional helpful warnings.';
 
-  // Note: if you update the code above, don't forget
-  // to update the www fork in forks/reactProdInvariant.www.js.
-
-  const error: Error & {framesToPop?: number} = new Error(message);
-  error.name = 'Invariant Violation';
-  error.framesToPop = 1; // we don't care about reactProdInvariant's own frame
-
-  throw error;
+  // www doesn't strip this because we mark the React bundle
+  // with @preserve-invariant-messages docblock.
+  const i = invariant;
+  // However, we call it with a different name to avoid
+  // transforming this file itself as part of React's own build.
+  i(false, message);
 }
 
 export default reactProdInvariant;
