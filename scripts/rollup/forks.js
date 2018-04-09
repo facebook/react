@@ -84,17 +84,6 @@ const forks = Object.freeze({
     }
   },
 
-  // Route production invariants on www through the www invariant module.
-  'shared/reactProdInvariant': (bundleType, entry) => {
-    switch (bundleType) {
-      case FB_DEV:
-      case FB_PROD:
-        return 'shared/forks/reactProdInvariant.www.js';
-      default:
-        return null;
-    }
-  },
-
   // Different dialogs for caught errors.
   'react-reconciler/src/ReactFiberErrorDialog': (bundleType, entry) => {
     switch (bundleType) {

@@ -7,6 +7,10 @@
  * @flow
  */
 
+// Relying on the `invariant()` implementation lets us
+// have preserve the format and params in the www builds.
+import invariant from 'fbjs/lib/invariant';
+
 /**
  * WARNING: DO NOT manually require this module.
  * This is a replacement for `invariant(...)` used by the error code system
@@ -15,30 +19,25 @@
  */
 function reactProdInvariant(code: string): void {
   const argCount = arguments.length - 1;
-
-  let message =
-    'Minified React error #' +
-    code +
-    '; visit ' +
-    'http://reactjs.org/docs/error-decoder.html?invariant=' +
-    code;
-
+  let url = 'http://reactjs.org/docs/error-decoder.html?invariant=' + code;
   for (let argIdx = 0; argIdx < argCount; argIdx++) {
-    message += '&args[]=' + encodeURIComponent(arguments[argIdx + 1]);
+    url += '&args[]=' + encodeURIComponent(arguments[argIdx + 1]);
   }
-
-  message +=
-    ' for the full message or use the non-minified dev environment' +
-    ' for full errors and additional helpful warnings.';
-
-  // Note: if you update the code above, don't forget
-  // to update the www fork in forks/reactProdInvariant.www.js.
-
-  const error: Error & {framesToPop?: number} = new Error(message);
-  error.name = 'Invariant Violation';
-  error.framesToPop = 1; // we don't care about reactProdInvariant's own frame
-
-  throw error;
+  // Rename it so that our build transform doesn't atttempt
+  // to replace this invariant() call with reactProdInvariant().
+  const i = invariant;
+  i(
+    false,
+    // The error code is intentionally part of the message (and
+    // not the format argument) so that we could deduplicate
+    // different errors in logs based on the code.
+    'Minified React error #' +
+      code +
+      '; visit %s ' +
+      'for the full message or use the non-minified dev environment ' +
+      'for full errors and additional helpful warnings. ',
+    url,
+  );
 }
 
 export default reactProdInvariant;
