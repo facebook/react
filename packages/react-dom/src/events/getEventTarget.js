@@ -18,7 +18,7 @@ function getEventTarget(nativeEvent) {
   let target = nativeEvent.target || window;
 
   // If composed / inside open shadow-dom use first item of composed path #9242
-  if (nativeEvent.composed) {
+  if (nativeEvent.composed && typeof nativeEvent.composedPath === "function") {
     const path = nativeEvent.composedPath();
     target = path[0];
   }
