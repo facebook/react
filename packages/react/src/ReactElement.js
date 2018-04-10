@@ -5,12 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
-
-import invariant from 'fbjs/lib/invariant';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
