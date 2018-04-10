@@ -28,6 +28,7 @@
     "README.md",
     "index.js",
     "shallow.js",
-    "cjs/"
+    "cjs/",
+    "umd/"
   ]
 }
