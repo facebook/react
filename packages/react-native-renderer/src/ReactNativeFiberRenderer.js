@@ -16,7 +16,7 @@ import invariant from 'fbjs/lib/invariant';
 import UIManager from 'UIManager';
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 
-import * as ReactNativeViewConfigRegistry from './ReactNativeViewConfigRegistry';
+import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
 import {
   precacheFiberNode,

@@ -124,10 +124,10 @@ const bundles = [
       'RCTEventEmitter',
       'TextInputState',
       'UIManager',
-      'View',
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'ReactNativeViewConfigRegistry',
     ],
   },
 
@@ -146,10 +146,10 @@ const bundles = [
       'TextInputState',
       'UIManager',
       'FabricUIManager',
-      'View',
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'ReactNativeViewConfigRegistry',
     ],
   },
 

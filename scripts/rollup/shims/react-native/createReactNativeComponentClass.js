@@ -10,9 +10,23 @@
 
 'use strict';
 
-const {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('ReactNative');
+import type {ViewConfigGetter} from './ReactNativeTypes';
 
-module.exports =
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.createReactNativeComponentClass;
+const {register} = require('ReactNativeViewConfigRegistry');
+
+/**
+ * Creates a renderable ReactNative host component.
+ * Use this method for view configs that are loaded from UIManager.
+ * Use createReactNativeComponentClass() for view configs defined within JavaScript.
+ *
+ * @param {string} config iOS View configuration.
+ * @private
+ */
+const createReactNativeComponentClass = function(
+  name: string,
+  callback: ViewConfigGetter,
+): string {
+  return register(name, callback);
+};
+
+export default createReactNativeComponentClass;
