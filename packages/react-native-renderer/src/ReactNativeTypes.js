@@ -81,7 +81,6 @@ type SecretInternalsType = {
   ): any,
   ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
   ReactNativeComponentTree: any,
-  ReactNativePropRegistry: any,
   // TODO (bvaughn) Decide which additional types to expose here?
   // And how much information to fill in for the above types.
 };

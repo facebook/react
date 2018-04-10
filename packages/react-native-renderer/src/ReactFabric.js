@@ -21,7 +21,6 @@ import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import ReactFabricRenderer from './ReactFabricRenderer';
-import ReactNativePropRegistry from './ReactNativePropRegistry';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import createReactNativeComponentClass from './createReactNativeComponentClass';
 import {injectFindHostInstance} from './findNodeHandle';
@@ -82,7 +81,6 @@ const ReactFabric: ReactNativeType = {
     // Used by react-native-github/Libraries/ components
     ReactNativeBridgeEventPlugin, // requireNativeComponent
     ReactNativeComponentTree, // ScrollResponder
-    ReactNativePropRegistry, // flattenStyle, Stylesheet
     createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART
   },
 };
