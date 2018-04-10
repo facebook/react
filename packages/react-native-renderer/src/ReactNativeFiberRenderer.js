@@ -25,7 +25,6 @@ import {
 } from './ReactNativeComponentTree';
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
-import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 type Container = number;
 export type Instance = {
@@ -35,6 +34,19 @@ export type Instance = {
 };
 type Props = Object;
 type TextInstance = number;
+
+// Counter for uniquely identifying views.
+// % 10 === 1 means it is a rootTag.
+// % 2 === 0 means it is a Fabric tag.
+let nextReactTag = 3;
+function allocateTag() {
+  let tag = nextReactTag;
+  if (tag % 10 === 1) {
+    tag += 2;
+  }
+  nextReactTag = tag + 2;
+  return tag;
+}
 
 function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
   if (typeof node === 'number') {
@@ -62,7 +74,7 @@ const NativeRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): Instance {
-    const tag = ReactNativeTagHandles.allocateTag();
+    const tag = allocateTag();
     const viewConfig = ReactNativeViewConfigRegistry.get(type);
 
     if (__DEV__) {
@@ -101,7 +113,7 @@ const NativeRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): TextInstance {
-    const tag = ReactNativeTagHandles.allocateTag();
+    const tag = allocateTag();
 
     UIManager.createView(
       tag, // reactTag

@@ -13,7 +13,6 @@ import {batchedUpdates} from 'events/ReactGenericBatching';
 import warning from 'fbjs/lib/warning';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
-import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 
@@ -166,7 +165,7 @@ export function receiveTouches(
     let rootNodeID = null;
     const target = nativeEvent.target;
     if (target !== null && target !== undefined) {
-      if (target < ReactNativeTagHandles.tagsStartAt) {
+      if (target < 1) {
         if (__DEV__) {
           warning(
             false,

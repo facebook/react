@@ -57,7 +57,7 @@ describe('ReactNative', () => {
     expect(UIManager.createView.mock.calls.length).toBe(1);
     expect(UIManager.setChildren.mock.calls.length).toBe(1);
     expect(UIManager.manageChildren).not.toBeCalled();
-    expect(UIManager.updateView).toBeCalledWith(2, 'View', {foo: 'bar'});
+    expect(UIManager.updateView).toBeCalledWith(3, 'View', {foo: 'bar'});
   });
 
   it('should not call UIManager.updateView after render for properties that have not changed', () => {
