@@ -29,4 +29,4 @@ const createReactNativeComponentClass = function(
   return register(name, callback);
 };
 
-export default createReactNativeComponentClass;
+module.exports = createReactNativeComponentClass;
