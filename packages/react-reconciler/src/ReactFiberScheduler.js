@@ -26,12 +26,11 @@ import {
   PlacementAndUpdate,
   Deletion,
   ContentReset,
-  Callback,
-  DidCapture,
+  UpdateQueue as UpdateQueueEffect,
+  ShouldCapture,
   Ref,
   Incomplete,
   HostEffectMask,
-  ErrLog,
 } from 'shared/ReactTypeOfSideEffect';
 import {
   HostRoot,
@@ -89,10 +88,10 @@ import {
 import {AsyncMode} from './ReactTypeOfMode';
 import ReactFiberLegacyContext from './ReactFiberContext';
 import ReactFiberNewContext from './ReactFiberNewContext';
-import {
-  getUpdateExpirationTime,
-  insertUpdateIntoFiber,
-} from './ReactFiberUpdateQueue';
+import ReactUpdateQueue, {
+  createCatchUpdate,
+  enqueueUpdate,
+} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import ReactFiberStack from './ReactFiberStack';
 
@@ -202,6 +201,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     scheduleWork,
     isAlreadyFailedLegacyErrorBoundary,
   );
+  const updateQueueMethods = ReactUpdateQueue(
+    config,
+    markLegacyErrorBoundaryAsFailed,
+    onUncaughtError,
+  );
   const {
     commitBeforeMutationLifeCycles,
     commitResetTextContent,
@@ -209,11 +213,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     commitDeletion,
     commitWork,
     commitLifeCycles,
-    commitErrorLogging,
     commitAttachRef,
     commitDetachRef,
   } = ReactFiberCommitWork(
     config,
+    updateQueueMethods,
     onCommitPhaseError,
     scheduleWork,
     computeExpirationForFiber,
@@ -435,7 +439,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     while (nextEffect !== null) {
       const effectTag = nextEffect.effectTag;
 
-      if (effectTag & (Update | Callback)) {
+      if (effectTag & (Update | UpdateQueueEffect)) {
         recordEffect();
         const current = nextEffect.alternate;
         commitLifeCycles(
@@ -445,10 +449,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           currentTime,
           committedExpirationTime,
         );
-      }
-
-      if (effectTag & ErrLog) {
-        commitErrorLogging(nextEffect, onUncaughtError);
       }
 
       if (effectTag & Ref) {
@@ -681,7 +681,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     // Check for pending updates.
-    let newExpirationTime = getUpdateExpirationTime(workInProgress);
+    let newExpirationTime = NoWork;
+    switch (workInProgress.tag) {
+      case HostRoot:
+      case ClassComponent: {
+        const updateQueue = workInProgress.updateQueue;
+        if (updateQueue !== null) {
+          newExpirationTime = updateQueue.expirationTime;
+        }
+      }
+    }
 
     // TODO: Calls need to visit stateNode
 
@@ -799,7 +808,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // capture values if possible.
         const next = unwindWork(workInProgress);
         // Because this fiber did not complete, don't reset its expiration time.
-        if (workInProgress.effectTag & DidCapture) {
+        if (workInProgress.effectTag & ShouldCapture) {
           // Restarting an error boundary
           stopFailedWorkTimer(workInProgress);
         } else {
@@ -974,7 +983,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           onUncaughtError(thrownValue);
           break;
         }
-        throwException(returnFiber, sourceFiber, thrownValue);
+        throwException(
+          returnFiber,
+          sourceFiber,
+          thrownValue,
+          nextRenderExpirationTime,
+        );
         nextUnitOfWork = completeUnitOfWork(sourceFiber);
       }
       break;
@@ -1023,18 +1037,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function scheduleCapture(sourceFiber, boundaryFiber, value, expirationTime) {
-    // TODO: We only support dispatching errors.
     const capturedValue = createCapturedValue(value, sourceFiber);
-    const update = {
-      expirationTime,
-      partialState: null,
-      callback: null,
-      isReplace: false,
-      isForced: false,
-      capturedValue,
-      next: null,
-    };
-    insertUpdateIntoFiber(boundaryFiber, update);
+    const update = createCatchUpdate(capturedValue, expirationTime);
+    enqueueUpdate(boundaryFiber, update, expirationTime);
     scheduleWork(boundaryFiber, expirationTime);
   }
 

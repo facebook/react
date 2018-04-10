@@ -298,7 +298,7 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
   ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 2 Total)
-  ⚛ (Calling Lifecycle Methods: 0 Total)
+  ⚛ (Calling Lifecycle Methods: 1 Total)
 
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Boundary [update]
@@ -324,7 +324,7 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
-  ⚛ (Calling Lifecycle Methods: 0 Total)
+  ⚛ (Calling Lifecycle Methods: 1 Total)
 
 ⚛ (Waiting for async callback... will force flush in 5230 ms)
 
@@ -406,8 +406,8 @@ exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] =
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 1 Total)
-  ⚛ (Calling Lifecycle Methods: 1 Total)
+  ⚛ (Committing Host Effects: 0 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;
 

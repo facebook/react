@@ -19,14 +19,14 @@ export const Update = /*                */ 0b000000000100;
 export const PlacementAndUpdate = /*    */ 0b000000000110;
 export const Deletion = /*              */ 0b000000001000;
 export const ContentReset = /*          */ 0b000000010000;
-export const Callback = /*              */ 0b000000100000;
+export const UpdateQueue = /*           */ 0b000000100000;
 export const DidCapture = /*            */ 0b000001000000;
 export const Ref = /*                   */ 0b000010000000;
-export const ErrLog = /*                */ 0b000100000000;
-export const Snapshot = /*              */ 0b100000000000;
+export const Snapshot = /*              */ 0b000100000000;
+export const ForceUpdate = /*           */ 0b001000000000;
 
 // Union of all host effects
-export const HostEffectMask = /*        */ 0b100111111111;
+export const HostEffectMask = /*        */ 0b001111111111;
 
-export const Incomplete = /*            */ 0b001000000000;
-export const ShouldCapture = /*         */ 0b010000000000;
+export const Incomplete = /*            */ 0b010000000000;
+export const ShouldCapture = /*         */ 0b100000000000;

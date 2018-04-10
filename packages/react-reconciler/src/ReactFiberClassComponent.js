@@ -10,11 +10,9 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {LegacyContext} from './ReactFiberContext';
-import type {CapturedValue} from './ReactCapturedValue';
 
-import {Update, Snapshot} from 'shared/ReactTypeOfSideEffect';
+import {Update, Snapshot, ForceUpdate} from 'shared/ReactTypeOfSideEffect';
 import {
-  enableGetDerivedStateFromCatch,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
@@ -31,15 +29,20 @@ import warning from 'fbjs/lib/warning';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {StrictMode} from './ReactTypeOfMode';
 import {
-  insertUpdateIntoFiber,
-  processUpdateQueue,
-} from './ReactFiberUpdateQueue';
+  enqueueUpdate,
+  enqueueRenderPhaseUpdate,
+  processClassUpdateQueue,
+  createStateUpdate,
+  createStateReplace,
+  createCallbackEffect,
+  createDeriveStateFromPropsUpdate,
+  createForceUpdate,
+} from './ReactUpdateQueue';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
 let didWarnAboutStateAssignmentForComponent;
-let didWarnAboutUndefinedDerivedState;
 let didWarnAboutUninitializedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 let didWarnAboutLegacyLifecyclesAndDerivedState;
@@ -47,7 +50,6 @@ let warnOnInvalidCallback;
 
 if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = new Set();
-  didWarnAboutUndefinedDerivedState = new Set();
   didWarnAboutUninitializedState = new Set();
   didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
   didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
@@ -92,17 +94,16 @@ if (__DEV__) {
   });
   Object.freeze(fakeInternalInstance);
 }
-function callGetDerivedStateFromCatch(ctor: any, capturedValues: Array<mixed>) {
-  const resultState = {};
-  for (let i = 0; i < capturedValues.length; i++) {
-    const capturedValue: CapturedValue<mixed> = (capturedValues[i]: any);
-    const error = capturedValue.value;
-    const partialState = ctor.getDerivedStateFromCatch.call(null, error);
-    if (partialState !== null && partialState !== undefined) {
-      Object.assign(resultState, partialState);
-    }
+
+function enqueueDerivedStateFromProps(
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+): void {
+  const getDerivedStateFromProps = workInProgress.type.getDerivedStateFromProps;
+  if (typeof getDerivedStateFromProps === 'function') {
+    const update = createDeriveStateFromPropsUpdate(renderExpirationTime);
+    enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
   }
-  return resultState;
 }
 
 export default function(
@@ -120,64 +121,57 @@ export default function(
     hasContextChanged,
   } = legacyContext;
 
-  // Class component state updater
-  const updater = {
+  const classComponentUpdater = {
     isMounted,
-    enqueueSetState(instance, partialState, callback) {
+    enqueueSetState(instance, payload, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      callback = callback === undefined ? null : callback;
-      if (__DEV__) {
-        warnOnInvalidCallback(callback, 'setState');
-      }
       const expirationTime = computeExpirationForFiber(fiber);
-      const update = {
-        expirationTime,
-        partialState,
-        callback,
-        isReplace: false,
-        isForced: false,
-        capturedValue: null,
-        next: null,
-      };
-      insertUpdateIntoFiber(fiber, update);
+
+      const update = createStateUpdate(payload, expirationTime);
+      enqueueUpdate(fiber, update, expirationTime);
+
+      if (callback !== undefined && callback !== null) {
+        if (__DEV__) {
+          warnOnInvalidCallback(callback, 'setState');
+        }
+        const callbackUpdate = createCallbackEffect(callback, expirationTime);
+        enqueueUpdate(fiber, callbackUpdate, expirationTime);
+      }
+
       scheduleWork(fiber, expirationTime);
     },
-    enqueueReplaceState(instance, state, callback) {
+    enqueueReplaceState(instance, payload, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      callback = callback === undefined ? null : callback;
-      if (__DEV__) {
-        warnOnInvalidCallback(callback, 'replaceState');
-      }
       const expirationTime = computeExpirationForFiber(fiber);
-      const update = {
-        expirationTime,
-        partialState: state,
-        callback,
-        isReplace: true,
-        isForced: false,
-        capturedValue: null,
-        next: null,
-      };
-      insertUpdateIntoFiber(fiber, update);
+
+      const update = createStateReplace(payload, expirationTime);
+      enqueueUpdate(fiber, update, expirationTime);
+
+      if (callback !== undefined && callback !== null) {
+        if (__DEV__) {
+          warnOnInvalidCallback(callback, 'setState');
+        }
+        const callbackUpdate = createCallbackEffect(callback, expirationTime);
+        enqueueUpdate(fiber, callbackUpdate, expirationTime);
+      }
+
       scheduleWork(fiber, expirationTime);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      callback = callback === undefined ? null : callback;
-      if (__DEV__) {
-        warnOnInvalidCallback(callback, 'forceUpdate');
-      }
       const expirationTime = computeExpirationForFiber(fiber);
-      const update = {
-        expirationTime,
-        partialState: null,
-        callback,
-        isReplace: false,
-        isForced: true,
-        capturedValue: null,
-        next: null,
-      };
-      insertUpdateIntoFiber(fiber, update);
+
+      const update = createForceUpdate(expirationTime);
+      enqueueUpdate(fiber, update, expirationTime);
+
+      if (callback !== undefined && callback !== null) {
+        if (__DEV__) {
+          warnOnInvalidCallback(callback, 'setState');
+        }
+        const callbackUpdate = createCallbackEffect(callback, expirationTime);
+        enqueueUpdate(fiber, callbackUpdate, expirationTime);
+      }
+
       scheduleWork(fiber, expirationTime);
     },
   };
@@ -190,11 +184,7 @@ export default function(
     newState,
     newContext,
   ) {
-    if (
-      oldProps === null ||
-      (workInProgress.updateQueue !== null &&
-        workInProgress.updateQueue.hasForceUpdate)
-    ) {
+    if (workInProgress.effectTag & ForceUpdate) {
       // If the workInProgress already has an Update effect, return true
       return true;
     }
@@ -420,13 +410,8 @@ export default function(
     }
   }
 
-  function resetInputPointers(workInProgress: Fiber, instance: any) {
-    instance.props = workInProgress.memoizedProps;
-    instance.state = workInProgress.memoizedState;
-  }
-
   function adoptClassInstance(workInProgress: Fiber, instance: any): void {
-    instance.updater = updater;
+    instance.updater = classComponentUpdater;
     workInProgress.stateNode = instance;
     // The instance needs access to the fiber so that it can schedule updates
     ReactInstanceMap.set(instance, workInProgress);
@@ -435,7 +420,11 @@ export default function(
     }
   }
 
-  function constructClassInstance(workInProgress: Fiber, props: any): any {
+  function constructClassInstance(
+    workInProgress: Fiber,
+    props: any,
+    renderExpirationTime: ExpirationTime,
+  ): any {
     const ctor = workInProgress.type;
     const unmaskedContext = getUnmaskedContext(workInProgress);
     const needsContext = isContextConsumer(workInProgress);
@@ -453,10 +442,10 @@ export default function(
     }
 
     const instance = new ctor(props, context);
-    const state =
+    const state = (workInProgress.memoizedState =
       instance.state !== null && instance.state !== undefined
         ? instance.state
-        : null;
+        : null);
     adoptClassInstance(workInProgress, instance);
 
     if (__DEV__) {
@@ -545,26 +534,6 @@ export default function(
       }
     }
 
-    workInProgress.memoizedState = state;
-
-    const partialState = callGetDerivedStateFromProps(
-      workInProgress,
-      instance,
-      props,
-      state,
-    );
-
-    if (partialState !== null && partialState !== undefined) {
-      // Render-phase updates (like this) should not be added to the update queue,
-      // So that multiple render passes do not enqueue multiple updates.
-      // Instead, just synchronously merge the returned state into the instance.
-      workInProgress.memoizedState = Object.assign(
-        {},
-        workInProgress.memoizedState,
-        partialState,
-      );
-    }
-
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
     // ReactFiberContext usually updates this cache but can't for newly-created instances.
     if (needsContext) {
@@ -597,7 +566,7 @@ export default function(
           getComponentName(workInProgress) || 'Component',
         );
       }
-      updater.enqueueReplaceState(instance, instance.state, null);
+      classComponentUpdater.enqueueReplaceState(instance, instance.state, null);
     }
   }
 
@@ -631,50 +600,7 @@ export default function(
           );
         }
       }
-      updater.enqueueReplaceState(instance, instance.state, null);
-    }
-  }
-
-  function callGetDerivedStateFromProps(
-    workInProgress: Fiber,
-    instance: any,
-    nextProps: any,
-    prevState: any,
-  ) {
-    const {type} = workInProgress;
-
-    if (typeof type.getDerivedStateFromProps === 'function') {
-      if (
-        debugRenderPhaseSideEffects ||
-        (debugRenderPhaseSideEffectsForStrictMode &&
-          workInProgress.mode & StrictMode)
-      ) {
-        // Invoke method an extra time to help detect side-effects.
-        type.getDerivedStateFromProps.call(null, nextProps, prevState);
-      }
-
-      const partialState = type.getDerivedStateFromProps.call(
-        null,
-        nextProps,
-        prevState,
-      );
-
-      if (__DEV__) {
-        if (partialState === undefined) {
-          const componentName = getComponentName(workInProgress) || 'Component';
-          if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
-            didWarnAboutUndefinedDerivedState.add(componentName);
-            warning(
-              false,
-              '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
-                'You have returned undefined.',
-              componentName,
-            );
-          }
-        }
-      }
-
-      return partialState;
+      classComponentUpdater.enqueueReplaceState(instance, instance.state, null);
     }
   }
 
@@ -684,7 +610,6 @@ export default function(
     renderExpirationTime: ExpirationTime,
   ): void {
     const ctor = workInProgress.type;
-    const current = workInProgress.alternate;
 
     if (__DEV__) {
       checkClassInstance(workInProgress);
@@ -715,6 +640,17 @@ export default function(
       }
     }
 
+    enqueueDerivedStateFromProps(workInProgress, renderExpirationTime);
+    let updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null) {
+      processClassUpdateQueue(
+        workInProgress,
+        updateQueue,
+        renderExpirationTime,
+      );
+      instance.state = workInProgress.memoizedState;
+    }
+
     // In order to support react-lifecycles-compat polyfilled components,
     // Unsafe lifecycles should not be invoked for components using the new APIs.
     if (
@@ -726,18 +662,17 @@ export default function(
       callComponentWillMount(workInProgress, instance);
       // If we had additional state updates during this life-cycle, let's
       // process them now.
-      const updateQueue = workInProgress.updateQueue;
+      updateQueue = workInProgress.updateQueue;
       if (updateQueue !== null) {
-        instance.state = processUpdateQueue(
-          current,
+        processClassUpdateQueue(
           workInProgress,
           updateQueue,
-          instance,
-          props,
           renderExpirationTime,
         );
+        instance.state = workInProgress.memoizedState;
       }
     }
+
     if (typeof instance.componentDidMount === 'function') {
       workInProgress.effectTag |= Update;
     }
@@ -749,10 +684,11 @@ export default function(
   ): boolean {
     const ctor = workInProgress.type;
     const instance = workInProgress.stateNode;
-    resetInputPointers(workInProgress, instance);
 
     const oldProps = workInProgress.memoizedProps;
     const newProps = workInProgress.pendingProps;
+    instance.props = oldProps;
+
     const oldContext = instance.context;
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
@@ -782,103 +718,28 @@ export default function(
       }
     }
 
-    // Compute the next state using the memoized state and the update queue.
+    // Only call getDerivedStateFromProps if the props have changed
+    if (oldProps !== newProps) {
+      enqueueDerivedStateFromProps(workInProgress, renderExpirationTime);
+    }
+
     const oldState = workInProgress.memoizedState;
-    // TODO: Previous state can be null.
-    let newState;
-    let derivedStateFromCatch;
-    if (workInProgress.updateQueue !== null) {
-      newState = processUpdateQueue(
-        null,
+    let newState = (instance.state = oldState);
+    let updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null) {
+      processClassUpdateQueue(
         workInProgress,
-        workInProgress.updateQueue,
-        instance,
-        newProps,
+        updateQueue,
         renderExpirationTime,
       );
-
-      let updateQueue = workInProgress.updateQueue;
-      if (
-        updateQueue !== null &&
-        updateQueue.capturedValues !== null &&
-        (enableGetDerivedStateFromCatch &&
-          typeof ctor.getDerivedStateFromCatch === 'function')
-      ) {
-        const capturedValues = updateQueue.capturedValues;
-        // Don't remove these from the update queue yet. We need them in
-        // finishClassComponent. Do the reset there.
-        // TODO: This is awkward. Refactor class components.
-        // updateQueue.capturedValues = null;
-        derivedStateFromCatch = callGetDerivedStateFromCatch(
-          ctor,
-          capturedValues,
-        );
-      }
-    } else {
-      newState = oldState;
-    }
-
-    let derivedStateFromProps;
-    if (oldProps !== newProps) {
-      // The prevState parameter should be the partially updated state.
-      // Otherwise, spreading state in return values could override updates.
-      derivedStateFromProps = callGetDerivedStateFromProps(
-        workInProgress,
-        instance,
-        newProps,
-        newState,
-      );
-    }
-
-    if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
-      // Render-phase updates (like this) should not be added to the update queue,
-      // So that multiple render passes do not enqueue multiple updates.
-      // Instead, just synchronously merge the returned state into the instance.
-      newState =
-        newState === null || newState === undefined
-          ? derivedStateFromProps
-          : Object.assign({}, newState, derivedStateFromProps);
-
-      // Update the base state of the update queue.
-      // FIXME: This is getting ridiculous. Refactor plz!
-      const updateQueue = workInProgress.updateQueue;
-      if (updateQueue !== null) {
-        updateQueue.baseState = Object.assign(
-          {},
-          updateQueue.baseState,
-          derivedStateFromProps,
-        );
-      }
-    }
-    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
-      // Render-phase updates (like this) should not be added to the update queue,
-      // So that multiple render passes do not enqueue multiple updates.
-      // Instead, just synchronously merge the returned state into the instance.
-      newState =
-        newState === null || newState === undefined
-          ? derivedStateFromCatch
-          : Object.assign({}, newState, derivedStateFromCatch);
-
-      // Update the base state of the update queue.
-      // FIXME: This is getting ridiculous. Refactor plz!
-      const updateQueue = workInProgress.updateQueue;
-      if (updateQueue !== null) {
-        updateQueue.baseState = Object.assign(
-          {},
-          updateQueue.baseState,
-          derivedStateFromCatch,
-        );
-      }
+      newState = workInProgress.memoizedState;
     }
 
     if (
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !(
-        workInProgress.updateQueue !== null &&
-        workInProgress.updateQueue.hasForceUpdate
-      )
+      !(workInProgress.effectTag & ForceUpdate)
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -925,9 +786,9 @@ export default function(
       }
 
       // If shouldComponentUpdate returned false, we should still update the
-      // memoized props/state to indicate that this work can be reused.
-      memoizeProps(workInProgress, newProps);
-      memoizeState(workInProgress, newState);
+      // memoized state to indicate that this work can be reused.
+      workInProgress.memoizedProps = newProps;
+      workInProgress.memoizedState = newState;
     }
 
     // Update the existing instance's state, props, and context pointers even
@@ -947,10 +808,11 @@ export default function(
   ): boolean {
     const ctor = workInProgress.type;
     const instance = workInProgress.stateNode;
-    resetInputPointers(workInProgress, instance);
 
     const oldProps = workInProgress.memoizedProps;
     const newProps = workInProgress.pendingProps;
+    instance.props = oldProps;
+
     const oldContext = instance.context;
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
@@ -980,104 +842,28 @@ export default function(
       }
     }
 
-    // Compute the next state using the memoized state and the update queue.
-    const oldState = workInProgress.memoizedState;
-    // TODO: Previous state can be null.
-    let newState;
-    let derivedStateFromCatch;
+    // Only call getDerivedStateFromProps if the props have changed
+    if (oldProps !== newProps) {
+      enqueueDerivedStateFromProps(workInProgress, renderExpirationTime);
+    }
 
-    if (workInProgress.updateQueue !== null) {
-      newState = processUpdateQueue(
-        current,
+    const oldState = workInProgress.memoizedState;
+    let newState = (instance.state = oldState);
+    let updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null) {
+      processClassUpdateQueue(
         workInProgress,
-        workInProgress.updateQueue,
-        instance,
-        newProps,
+        updateQueue,
         renderExpirationTime,
       );
-
-      let updateQueue = workInProgress.updateQueue;
-      if (
-        updateQueue !== null &&
-        updateQueue.capturedValues !== null &&
-        (enableGetDerivedStateFromCatch &&
-          typeof ctor.getDerivedStateFromCatch === 'function')
-      ) {
-        const capturedValues = updateQueue.capturedValues;
-        // Don't remove these from the update queue yet. We need them in
-        // finishClassComponent. Do the reset there.
-        // TODO: This is awkward. Refactor class components.
-        // updateQueue.capturedValues = null;
-        derivedStateFromCatch = callGetDerivedStateFromCatch(
-          ctor,
-          capturedValues,
-        );
-      }
-    } else {
-      newState = oldState;
-    }
-
-    let derivedStateFromProps;
-    if (oldProps !== newProps) {
-      // The prevState parameter should be the partially updated state.
-      // Otherwise, spreading state in return values could override updates.
-      derivedStateFromProps = callGetDerivedStateFromProps(
-        workInProgress,
-        instance,
-        newProps,
-        newState,
-      );
-    }
-
-    if (derivedStateFromProps !== null && derivedStateFromProps !== undefined) {
-      // Render-phase updates (like this) should not be added to the update queue,
-      // So that multiple render passes do not enqueue multiple updates.
-      // Instead, just synchronously merge the returned state into the instance.
-      newState =
-        newState === null || newState === undefined
-          ? derivedStateFromProps
-          : Object.assign({}, newState, derivedStateFromProps);
-
-      // Update the base state of the update queue.
-      // FIXME: This is getting ridiculous. Refactor plz!
-      const updateQueue = workInProgress.updateQueue;
-      if (updateQueue !== null) {
-        updateQueue.baseState = Object.assign(
-          {},
-          updateQueue.baseState,
-          derivedStateFromProps,
-        );
-      }
-    }
-    if (derivedStateFromCatch !== null && derivedStateFromCatch !== undefined) {
-      // Render-phase updates (like this) should not be added to the update queue,
-      // So that multiple render passes do not enqueue multiple updates.
-      // Instead, just synchronously merge the returned state into the instance.
-      newState =
-        newState === null || newState === undefined
-          ? derivedStateFromCatch
-          : Object.assign({}, newState, derivedStateFromCatch);
-
-      // Update the base state of the update queue.
-      // FIXME: This is getting ridiculous. Refactor plz!
-      const updateQueue = workInProgress.updateQueue;
-      if (updateQueue !== null) {
-        updateQueue.baseState = Object.assign(
-          {},
-          updateQueue.baseState,
-          derivedStateFromCatch,
-        );
-      }
+      newState = workInProgress.memoizedState;
     }
 
     if (
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !(
-        workInProgress.updateQueue !== null &&
-        workInProgress.updateQueue.hasForceUpdate
-      )
+      !(workInProgress.effectTag & ForceUpdate)
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -1154,8 +940,8 @@ export default function(
 
       // If shouldComponentUpdate returned false, we should still update the
       // memoized props/state to indicate that this work can be reused.
-      memoizeProps(workInProgress, newProps);
-      memoizeState(workInProgress, newState);
+      workInProgress.memoizedProps = newProps;
+      workInProgress.memoizedState = newState;
     }
 
     // Update the existing instance's state, props, and context pointers even
@@ -1169,7 +955,6 @@ export default function(
 
   return {
     adoptClassInstance,
-    callGetDerivedStateFromProps,
     constructClassInstance,
     mountClassInstance,
     resumeMountClassInstance,

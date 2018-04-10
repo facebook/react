@@ -26,7 +26,11 @@ import warning from 'fbjs/lib/warning';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import ReactFiberScheduler from './ReactFiberScheduler';
-import {insertUpdateIntoFiber} from './ReactFiberUpdateQueue';
+import {
+  createStateReplace,
+  createCallbackEffect,
+  enqueueUpdate,
+} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 
@@ -339,28 +343,24 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
 
+    const update = createStateReplace(element, expirationTime);
+    enqueueUpdate(current, update, expirationTime);
+
     callback = callback === undefined ? null : callback;
-    if (__DEV__) {
-      warning(
-        callback === null || typeof callback === 'function',
-        'render(...): Expected the last optional `callback` argument to be a ' +
-          'function. Instead received: %s.',
-        callback,
-      );
+    if (callback !== undefined && callback !== null) {
+      if (__DEV__) {
+        warning(
+          callback === null || typeof callback === 'function',
+          'render(...): Expected the last optional `callback` argument to be a ' +
+            'function. Instead received: %s.',
+          callback,
+        );
+      }
+      const callbackUpdate = createCallbackEffect(callback, expirationTime);
+      enqueueUpdate(current, callbackUpdate, expirationTime);
     }
 
-    const update = {
-      expirationTime,
-      partialState: {element},
-      callback,
-      isReplace: false,
-      isForced: false,
-      capturedValue: null,
-      next: null,
-    };
-    insertUpdateIntoFiber(current, update);
     scheduleWork(current, expirationTime);
-
     return expirationTime;
   }
 

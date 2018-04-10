@@ -12,10 +12,9 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
 import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
-import type {UpdateQueue} from './ReactFiberUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
-import {ensureUpdateQueues} from './ReactFiberUpdateQueue';
+import {enqueueRenderPhaseUpdate, createCatchUpdate} from './ReactUpdateQueue';
 
 import {
   ClassComponent,
@@ -55,6 +54,7 @@ export default function<C, CX>(
     returnFiber: Fiber,
     sourceFiber: Fiber,
     rawValue: mixed,
+    renderExpirationTime: ExpirationTime,
   ) {
     // The source fiber did not complete.
     sourceFiber.effectTag |= Incomplete;
@@ -69,16 +69,18 @@ export default function<C, CX>(
         case HostRoot: {
           // Uncaught error
           const errorInfo = value;
-          ensureUpdateQueues(workInProgress);
-          const updateQueue: UpdateQueue<
-            any,
-          > = (workInProgress.updateQueue: any);
-          updateQueue.capturedValues = [errorInfo];
           workInProgress.effectTag |= ShouldCapture;
+          const update = createCatchUpdate(errorInfo, renderExpirationTime);
+          enqueueRenderPhaseUpdate(
+            workInProgress,
+            update,
+            renderExpirationTime,
+          );
           return;
         }
         case ClassComponent:
           // Capture and retry
+          const errorInfo = value;
           const ctor = workInProgress.type;
           const instance = workInProgress.stateNode;
           if (
@@ -89,17 +91,15 @@ export default function<C, CX>(
                 typeof instance.componentDidCatch === 'function' &&
                 !isAlreadyFailedLegacyErrorBoundary(instance)))
           ) {
-            ensureUpdateQueues(workInProgress);
-            const updateQueue: UpdateQueue<
-              any,
-            > = (workInProgress.updateQueue: any);
-            const capturedValues = updateQueue.capturedValues;
-            if (capturedValues === null) {
-              updateQueue.capturedValues = [value];
-            } else {
-              capturedValues.push(value);
-            }
             workInProgress.effectTag |= ShouldCapture;
+
+            // Schedule the error boundary to re-render using updated state
+            const update = createCatchUpdate(errorInfo, renderExpirationTime);
+            enqueueRenderPhaseUpdate(
+              workInProgress,
+              update,
+              renderExpirationTime,
+            );
             return;
           }
           break;
@@ -116,7 +116,6 @@ export default function<C, CX>(
         popLegacyContextProvider(workInProgress);
         const effectTag = workInProgress.effectTag;
         if (effectTag & ShouldCapture) {
-          workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
           return workInProgress;
         }
         return null;

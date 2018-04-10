@@ -11,7 +11,7 @@ import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {CapturedValue, CapturedError} from './ReactCapturedValue';
+import type {UpdateQueueMethods} from './ReactUpdateQueue';
 
 import {
   enableMutatingReconciler,
@@ -36,10 +36,8 @@ import {
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import {commitCallbacks} from './ReactFiberUpdateQueue';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {logCapturedError} from './ReactFiberErrorLogger';
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 
@@ -54,44 +52,9 @@ if (__DEV__) {
   didWarnAboutUndefinedSnapshotBeforeUpdate = new Set();
 }
 
-function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
-  const source = errorInfo.source;
-  let stack = errorInfo.stack;
-  if (stack === null) {
-    stack = getStackAddendumByWorkInProgressFiber(source);
-  }
-
-  const capturedError: CapturedError = {
-    componentName: source !== null ? getComponentName(source) : null,
-    componentStack: stack !== null ? stack : '',
-    error: errorInfo.value,
-    errorBoundary: null,
-    errorBoundaryName: null,
-    errorBoundaryFound: false,
-    willRetry: false,
-  };
-
-  if (boundary !== null && boundary.tag === ClassComponent) {
-    capturedError.errorBoundary = boundary.stateNode;
-    capturedError.errorBoundaryName = getComponentName(boundary);
-    capturedError.errorBoundaryFound = true;
-    capturedError.willRetry = true;
-  }
-
-  try {
-    logCapturedError(capturedError);
-  } catch (e) {
-    // Prevent cycle if logCapturedError() throws.
-    // A cycle may still occur if logCapturedError renders a component that throws.
-    const suppressLogging = e && e.suppressReactErrorLogging;
-    if (!suppressLogging) {
-      console.error(e);
-    }
-  }
-}
-
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
+  updateQueueMethods: UpdateQueueMethods,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
   scheduleWork: (
     fiber: Fiber,
@@ -106,6 +69,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {getPublicInstance, mutation, persistence} = config;
+
+  const {commitClassUpdateQueue, commitRootUpdateQueue} = updateQueueMethods;
 
   const callComponentWillUnmountWithTimer = function(current, instance) {
     startPhaseTimer(current, 'componentWillUnmount');
@@ -251,25 +216,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          commitCallbacks(updateQueue, instance);
+          commitClassUpdateQueue(
+            finishedWork,
+            updateQueue,
+            committedExpirationTime,
+          );
         }
         return;
       }
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          let instance = null;
-          if (finishedWork.child !== null) {
-            switch (finishedWork.child.tag) {
-              case HostComponent:
-                instance = getPublicInstance(finishedWork.child.stateNode);
-                break;
-              case ClassComponent:
-                instance = finishedWork.child.stateNode;
-                break;
-            }
-          }
-          commitCallbacks(updateQueue, instance);
+          commitRootUpdateQueue(
+            finishedWork,
+            updateQueue,
+            committedExpirationTime,
+          );
         }
         return;
       }
@@ -303,73 +265,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             'likely caused by a bug in React. Please file an issue.',
         );
       }
-    }
-  }
-
-  function commitErrorLogging(
-    finishedWork: Fiber,
-    onUncaughtError: (error: Error) => void,
-  ) {
-    switch (finishedWork.tag) {
-      case ClassComponent:
-        {
-          const ctor = finishedWork.type;
-          const instance = finishedWork.stateNode;
-          const updateQueue = finishedWork.updateQueue;
-          invariant(
-            updateQueue !== null && updateQueue.capturedValues !== null,
-            'An error logging effect should not have been scheduled if no errors ' +
-              'were captured. This error is likely caused by a bug in React. ' +
-              'Please file an issue.',
-          );
-          const capturedErrors = updateQueue.capturedValues;
-          updateQueue.capturedValues = null;
-
-          if (typeof ctor.getDerivedStateFromCatch !== 'function') {
-            // To preserve the preexisting retry behavior of error boundaries,
-            // we keep track of which ones already failed during this batch.
-            // This gets reset before we yield back to the browser.
-            // TODO: Warn in strict mode if getDerivedStateFromCatch is
-            // not defined.
-            markLegacyErrorBoundaryAsFailed(instance);
-          }
-
-          instance.props = finishedWork.memoizedProps;
-          instance.state = finishedWork.memoizedState;
-          for (let i = 0; i < capturedErrors.length; i++) {
-            const errorInfo = capturedErrors[i];
-            const error = errorInfo.value;
-            const stack = errorInfo.stack;
-            logError(finishedWork, errorInfo);
-            instance.componentDidCatch(error, {
-              componentStack: stack !== null ? stack : '',
-            });
-          }
-        }
-        break;
-      case HostRoot: {
-        const updateQueue = finishedWork.updateQueue;
-        invariant(
-          updateQueue !== null && updateQueue.capturedValues !== null,
-          'An error logging effect should not have been scheduled if no errors ' +
-            'were captured. This error is likely caused by a bug in React. ' +
-            'Please file an issue.',
-        );
-        const capturedErrors = updateQueue.capturedValues;
-        updateQueue.capturedValues = null;
-        for (let i = 0; i < capturedErrors.length; i++) {
-          const errorInfo = capturedErrors[i];
-          logError(finishedWork, errorInfo);
-          onUncaughtError(errorInfo.value);
-        }
-        break;
-      }
-      default:
-        invariant(
-          false,
-          'This unit of work tag cannot capture errors.  This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
     }
   }
 
@@ -564,7 +459,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         },
         commitLifeCycles,
         commitBeforeMutationLifeCycles,
-        commitErrorLogging,
         commitAttachRef,
         commitDetachRef,
       };
@@ -892,7 +786,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       commitDeletion,
       commitWork,
       commitLifeCycles,
-      commitErrorLogging,
       commitAttachRef,
       commitDetachRef,
     };
