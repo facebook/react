@@ -27,7 +27,7 @@ if (__DEV__) {
       if (
         !props[propName] ||
         hasReadOnlyValue[props.type] ||
-        props.onChange ||
+        props.hasOwnProperty('onChange') ||
         props.readOnly ||
         props.disabled
       ) {
@@ -43,7 +43,7 @@ if (__DEV__) {
     checked: function(props, propName, componentName) {
       if (
         !props[propName] ||
-        props.onChange ||
+        props.hasOwnProperty('onChange') ||
         props.readOnly ||
         props.disabled
       ) {
