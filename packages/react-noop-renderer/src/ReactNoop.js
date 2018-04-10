@@ -133,7 +133,7 @@ let SharedHostConfig = {
       throw new Error('Should have old props');
     }
     if (newProps === null) {
-      throw new Error('Should have old props');
+      throw new Error('Should have new props');
     }
     return UPDATE_SIGNAL;
   },
