@@ -521,7 +521,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       return ReactFiberDevToolsHook.injectInternals({
         ...devToolsConfig,
         findHostInstanceByFiber(fiber: Fiber): I | TI | null {
-          return findHostInstance(fiber);
+          const hostFiber = findCurrentHostFiber(fiber);
+          if (hostFiber === null) {
+            return null;
+          }
+          return hostFiber.stateNode;
         },
         findFiberByHostInstance(instance: I | TI): Fiber | null {
           if (!findFiberByHostInstance) {
