@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNativeType} from './ReactNativeTypes';
+import type {ReactFabricType} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactFabricInjection';
@@ -32,7 +32,7 @@ ReactGenericBatching.injection.injectRenderer(ReactFabricRenderer);
 
 const roots = new Map();
 
-const ReactFabric: ReactNativeType = {
+const ReactFabric: ReactFabricType = {
   NativeComponent: ReactNativeComponent,
 
   findNodeHandle: findNumericNodeHandle,
@@ -61,10 +61,6 @@ const ReactFabric: ReactNativeType = {
     }
   },
 
-  unmountComponentAtNodeAndRemoveContainer(containerTag: number) {
-    ReactFabric.unmountComponentAtNode(containerTag);
-  },
-
   createPortal(
     children: ReactNodeList,
     containerTag: number,
@@ -72,8 +68,6 @@ const ReactFabric: ReactNativeType = {
   ) {
     return ReactPortal.createPortal(children, containerTag, null, key);
   },
-
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components

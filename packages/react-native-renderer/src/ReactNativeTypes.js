@@ -103,3 +103,16 @@ export type ReactNativeType = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
 };
+
+export type ReactFabricType = {
+  NativeComponent: any,
+  findNodeHandle(componentOrHandle: any): ?number,
+  render(
+    element: React$Element<any>,
+    containerTag: any,
+    callback: ?Function,
+  ): any,
+  unmountComponentAtNode(containerTag: number): any,
+
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
+};
