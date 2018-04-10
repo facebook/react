@@ -363,14 +363,14 @@ describe('ReactElementClone', () => {
   it('throws an error if passed null', () => {
     const element = null;
     expect(() => React.cloneElement(element)).toThrow(
-        'React.cloneElement(...): The argument must be a React element, but you passed null.'
+      'React.cloneElement(...): The argument must be a React element, but you passed null.',
     );
   });
 
   it('throws an error if passed undefined', () => {
     let element;
     expect(() => React.cloneElement(element)).toThrow(
-        'React.cloneElement(...): The argument must be a React element, but you passed undefined.'
+      'React.cloneElement(...): The argument must be a React element, but you passed undefined.',
     );
   });
 });
