@@ -20,7 +20,6 @@ import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
 import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
 import * as ReactNativeViewConfigRegistry from './ReactNativeViewConfigRegistry';
 import ReactFiberReconciler from 'react-reconciler';
-import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -29,6 +28,12 @@ import emptyObject from 'fbjs/lib/emptyObject';
 import TextInputState from 'TextInputState';
 import FabricUIManager from 'FabricUIManager';
 import UIManager from 'UIManager';
+
+// Counter for uniquely identifying views.
+// % 10 === 1 means it is a rootTag.
+// % 2 === 0 means it is a Fabric tag.
+// This means that they never overlap.
+let nextReactTag = 2;
 
 /**
  * This is used for refs on host components.
@@ -133,7 +138,9 @@ const ReactFabricRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): Instance {
-    const tag = ReactNativeTagHandles.allocateTag();
+    const tag = nextReactTag;
+    nextReactTag += 2;
+
     const viewConfig = ReactNativeViewConfigRegistry.get(type);
 
     if (__DEV__) {
@@ -171,7 +178,8 @@ const ReactFabricRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): TextInstance {
-    const tag = ReactNativeTagHandles.allocateTag();
+    const tag = nextReactTag;
+    nextReactTag += 2;
 
     const node = FabricUIManager.createNode(
       tag, // reactTag
