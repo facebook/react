@@ -1147,20 +1147,7 @@ const ReactDOM: Object = {
       return (componentOrElement: any);
     }
 
-    const inst = ReactInstanceMap.get(componentOrElement);
-    if (inst) {
-      return DOMRenderer.findHostInstance(inst);
-    }
-
-    if (typeof componentOrElement.render === 'function') {
-      invariant(false, 'Unable to find node on an unmounted component.');
-    } else {
-      invariant(
-        false,
-        'Element appears to be neither ReactComponent nor DOMNode. Keys: %s',
-        Object.keys(componentOrElement),
-      );
-    }
+    return DOMRenderer.findHostInstance(componentOrElement);
   },
 
   hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {

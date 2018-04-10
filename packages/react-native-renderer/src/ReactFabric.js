@@ -21,19 +21,62 @@ import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import ReactFabricRenderer from './ReactFabricRenderer';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
-import {injectFindHostInstance} from './findNodeHandle';
-import findNumericNodeHandle from './findNumericNodeHandle';
 
-injectFindHostInstance(ReactFabricRenderer.findHostInstance);
+import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import getComponentName from 'shared/getComponentName';
+import warning from 'fbjs/lib/warning';
+
+const findHostInstance = ReactFabricRenderer.findHostInstance;
+
+function findNodeHandle(componentOrHandle: any): ?number {
+  if (__DEV__) {
+    const owner = ReactCurrentOwner.current;
+    if (owner !== null && owner.stateNode !== null) {
+      warning(
+        owner.stateNode._warnedAboutRefsInRender,
+        '%s is accessing findNodeHandle inside its render(). ' +
+          'render() should be a pure function of props and state. It should ' +
+          'never access something that requires stale data from the previous ' +
+          'render, such as refs. Move this logic to componentDidMount and ' +
+          'componentDidUpdate instead.',
+        getComponentName(owner) || 'A component',
+      );
+
+      owner.stateNode._warnedAboutRefsInRender = true;
+    }
+  }
+  if (componentOrHandle == null) {
+    return null;
+  }
+  if (typeof componentOrHandle === 'number') {
+    // Already a node handle
+    return componentOrHandle;
+  }
+  if (componentOrHandle._nativeTag) {
+    return componentOrHandle._nativeTag;
+  }
+  if (componentOrHandle.canonical && componentOrHandle.canonical._nativeTag) {
+    return componentOrHandle.canonical._nativeTag;
+  }
+  const hostInstance = findHostInstance(componentOrHandle);
+  if (hostInstance == null) {
+    return hostInstance;
+  }
+  if (hostInstance.canonical) {
+    // Fabric
+    return hostInstance.canonical._nativeTag;
+  }
+  return hostInstance._nativeTag;
+}
 
 ReactGenericBatching.injection.injectRenderer(ReactFabricRenderer);
 
 const roots = new Map();
 
 const ReactFabric: ReactFabricType = {
-  NativeComponent: ReactNativeComponent,
+  NativeComponent: ReactNativeComponent(findNodeHandle, findHostInstance),
 
-  findNodeHandle: findNumericNodeHandle,
+  findNodeHandle,
 
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
@@ -69,7 +112,7 @@ const ReactFabric: ReactFabricType = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
-    NativeMethodsMixin,
+    NativeMethodsMixin: NativeMethodsMixin(findNodeHandle, findHostInstance),
     // Used by react-native-github/Libraries/ components
     ReactNativeComponentTree, // ScrollResponder
   },
