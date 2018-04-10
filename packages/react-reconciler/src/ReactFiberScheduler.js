@@ -1094,8 +1094,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function computeInteractiveExpiration(currentTime: ExpirationTime) {
-    // Should complete within ~500ms. 600ms max.
-    const expirationMs = 500;
+    let expirationMs;
+    if (__DEV__) {
+      // Should complete within ~500ms. 600ms max.
+      expirationMs = 500;
+    } else {
+      // In production things should be more responsive, 150ms max.
+      expirationMs = 150;
+    }
     const bucketSizeMs = 100;
     return computeExpirationBucket(currentTime, expirationMs, bucketSizeMs);
   }
