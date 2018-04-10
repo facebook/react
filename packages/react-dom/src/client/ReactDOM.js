@@ -150,12 +150,8 @@ ReactControlledComponent.injection.injectFiberControlledHostComponent(
 );
 
 type DOMContainer =
-  | (Element & {
-      _reactRootContainer: ?Root,
-    })
-  | (Document & {
-      _reactRootContainer: ?Root,
-    });
+  | (Element & {_reactRootContainer: ?Root})
+  | (Document & {_reactRootContainer: ?Root});
 
 type Container = Element | Document;
 type Props = {
@@ -1054,43 +1050,20 @@ function legacyRenderSubtreeIntoContainer(
     topLevelUpdateWarnings(container);
   }
 
-  // TODO: Without `any` type, Flow says "Property cannot be accessed on any
-  // member of intersection type." Whyyyyyy.
-  let root: Root = (container._reactRootContainer: any);
-  if (!root) {
-    // Initial mount
-    root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
-      container,
-      forceHydrate,
-    );
-    if (typeof callback === 'function') {
-      const originalCallback = callback;
-      callback = function() {
+  let root: Root;
+
+  function wrapCallback(cb: ?Function): ?Function {
+    if (typeof cb === 'function') {
+      const originalCallback = cb;
+      return function() {
         const instance = DOMRenderer.getPublicRootInstance(root._internalRoot);
         originalCallback.call(instance);
       };
     }
-    // Initial mount should not be batched.
-    DOMRenderer.unbatchedUpdates(() => {
-      if (parentComponent != null) {
-        root.legacy_renderSubtreeIntoContainer(
-          parentComponent,
-          children,
-          callback,
-        );
-      } else {
-        root.render(children, callback);
-      }
-    });
-  } else {
-    if (typeof callback === 'function') {
-      const originalCallback = callback;
-      callback = function() {
-        const instance = DOMRenderer.getPublicRootInstance(root._internalRoot);
-        originalCallback.call(instance);
-      };
-    }
-    // Update
+    return cb;
+  }
+
+  function beginLegacyRender() {
     if (parentComponent != null) {
       root.legacy_renderSubtreeIntoContainer(
         parentComponent,
@@ -1100,6 +1073,22 @@ function legacyRenderSubtreeIntoContainer(
     } else {
       root.render(children, callback);
     }
+  }
+
+  if (!container._reactRootContainer) {
+    // Initial mount
+    root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
+      container,
+      forceHydrate,
+    );
+    callback = wrapCallback(callback);
+    // Initial mount should not be batched.
+    DOMRenderer.unbatchedUpdates(beginLegacyRender);
+  } else {
+    root = container._reactRootContainer;
+    callback = wrapCallback(callback);
+    // Update
+    beginLegacyRender();
   }
   return DOMRenderer.getPublicRootInstance(root._internalRoot);
 }
