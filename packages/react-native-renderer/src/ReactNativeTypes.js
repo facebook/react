@@ -69,17 +69,12 @@ export type NativeMethodsMixinType = {
   setNativeProps(nativeProps: Object): void,
 };
 
-type ReactNativeBridgeEventPlugin = {
-  processEventTypes(viewConfig: ReactNativeBaseComponentViewConfig): void,
-};
-
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
   createReactNativeComponentClass(
     name: string,
     callback: ViewConfigGetter,
   ): any,
-  ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
   ReactNativeComponentTree: any,
   // TODO (bvaughn) Decide which additional types to expose here?
   // And how much information to fill in for the above types.

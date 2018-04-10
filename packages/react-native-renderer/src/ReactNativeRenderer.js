@@ -21,7 +21,6 @@ import UIManager from 'UIManager';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 
 import NativeMethodsMixin from './NativeMethodsMixin';
-import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
@@ -98,7 +97,6 @@ const ReactNativeRenderer: ReactNativeType = {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin,
     // Used by react-native-github/Libraries/ components
-    ReactNativeBridgeEventPlugin, // requireNativeComponent
     ReactNativeComponentTree, // ScrollResponder
     createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART
     computeComponentStackForErrorReporting,

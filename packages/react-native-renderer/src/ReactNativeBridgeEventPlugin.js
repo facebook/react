@@ -7,20 +7,23 @@
  * @flow
  */
 
-import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {
   accumulateTwoPhaseDispatches,
   accumulateDirectDispatches,
 } from 'events/EventPropagators';
+import * as ReactNativeViewConfigRegistry from './ReactNativeViewConfigRegistry';
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'fbjs/lib/invariant';
 
-const customBubblingEventTypes = {};
-const customDirectEventTypes = {};
+const {
+  customBubblingEventTypes,
+  customDirectEventTypes,
+  eventTypes,
+} = ReactNativeViewConfigRegistry;
 
 const ReactNativeBridgeEventPlugin = {
-  eventTypes: {},
+  eventTypes: eventTypes,
 
   /**
    * @see {EventPluginHub.extractEvents}
@@ -56,46 +59,6 @@ const ReactNativeBridgeEventPlugin = {
       return null;
     }
     return event;
-  },
-
-  processEventTypes: function(
-    viewConfig: ReactNativeBaseComponentViewConfig,
-  ): void {
-    const {bubblingEventTypes, directEventTypes} = viewConfig;
-
-    if (__DEV__) {
-      if (bubblingEventTypes != null && directEventTypes != null) {
-        for (const topLevelType in directEventTypes) {
-          invariant(
-            bubblingEventTypes[topLevelType] == null,
-            'Event cannot be both direct and bubbling: %s',
-            topLevelType,
-          );
-        }
-      }
-    }
-
-    if (bubblingEventTypes != null) {
-      for (const topLevelType in bubblingEventTypes) {
-        if (customBubblingEventTypes[topLevelType] == null) {
-          ReactNativeBridgeEventPlugin.eventTypes[
-            topLevelType
-          ] = customBubblingEventTypes[topLevelType] =
-            bubblingEventTypes[topLevelType];
-        }
-      }
-    }
-
-    if (directEventTypes != null) {
-      for (const topLevelType in directEventTypes) {
-        if (customDirectEventTypes[topLevelType] == null) {
-          ReactNativeBridgeEventPlugin.eventTypes[
-            topLevelType
-          ] = customDirectEventTypes[topLevelType] =
-            directEventTypes[topLevelType];
-        }
-      }
-    }
   },
 };
 

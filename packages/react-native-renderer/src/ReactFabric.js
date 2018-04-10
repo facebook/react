@@ -17,7 +17,6 @@ import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
 import NativeMethodsMixin from './NativeMethodsMixin';
-import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import ReactFabricRenderer from './ReactFabricRenderer';
@@ -73,7 +72,6 @@ const ReactFabric: ReactFabricType = {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin,
     // Used by react-native-github/Libraries/ components
-    ReactNativeBridgeEventPlugin, // requireNativeComponent
     ReactNativeComponentTree, // ScrollResponder
     createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART
   },
