@@ -1052,15 +1052,14 @@ function legacyRenderSubtreeIntoContainer(
 
   let root: Root;
 
-  function wrapCallback(cb: ?Function): ?Function {
-    if (typeof cb === 'function') {
-      const originalCallback = cb;
-      return function() {
+  function wrapCallback() {
+    if (typeof callback === 'function') {
+      const originalCallback = callback;
+      callback = function() {
         const instance = DOMRenderer.getPublicRootInstance(root._internalRoot);
         originalCallback.call(instance);
       };
     }
-    return cb;
   }
 
   function beginLegacyRender() {
@@ -1081,13 +1080,12 @@ function legacyRenderSubtreeIntoContainer(
       container,
       forceHydrate,
     );
-    callback = wrapCallback(callback);
+    wrapCallback();
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(beginLegacyRender);
   } else {
     root = container._reactRootContainer;
-    callback = wrapCallback(callback);
-    // Update
+    wrapCallback();
     beginLegacyRender();
   }
   return DOMRenderer.getPublicRootInstance(root._internalRoot);
