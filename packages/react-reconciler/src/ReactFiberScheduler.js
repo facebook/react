@@ -1095,6 +1095,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function computeInteractiveExpiration(currentTime: ExpirationTime) {
     let expirationMs;
+    // We intentionally set a higher expiration time for interactive updates in
+    // dev than in production.
+    // If the main thread is being blocked so long that you hit the expiration,
+    // it's a problem that could be solved with better scheduling.
+    // People will be more likely to notice this and fix it with the long
+    // expiration time in development.
+    // In production we opt for better UX at the risk of masking scheduling
+    // problems, by expiring fast.
     if (__DEV__) {
       // Should complete within ~500ms. 600ms max.
       expirationMs = 500;
