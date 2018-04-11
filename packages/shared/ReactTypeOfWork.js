@@ -23,7 +23,8 @@ export type TypeOfWork =
   | 12
   | 13
   | 14
-  | 15;
+  | 15
+  | 16;
 
 export const IndeterminateComponent = 0; // Before we know whether it is functional or class
 export const FunctionalComponent = 1;
@@ -41,3 +42,4 @@ export const ContextConsumer = 12;
 export const ContextProvider = 13;
 export const ForwardRef = 14;
 export const Profiler = 15;
+export const TimeoutComponent = 16;

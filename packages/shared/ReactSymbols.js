@@ -42,6 +42,9 @@ export const REACT_ASYNC_MODE_TYPE = hasSymbol
 export const REACT_FORWARD_REF_TYPE = hasSymbol
   ? Symbol.for('react.forward_ref')
   : 0xead0;
+export const REACT_TIMEOUT_TYPE = hasSymbol
+  ? Symbol.for('react.timeout')
+  : 0xead1;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

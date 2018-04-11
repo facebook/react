@@ -27,6 +27,7 @@ import {
   HostPortal,
   CallComponent,
   Profiler,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {
@@ -312,6 +313,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       case Profiler: {
         // We have no life-cycles associated with Profiler.
+        return;
+      }
+      case TimeoutComponent: {
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue !== null) {
+          commitUpdateQueue(
+            finishedWork,
+            updateQueue,
+            null,
+            committedExpirationTime,
+          );
+        }
         return;
       }
       default: {
@@ -834,6 +847,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           // By default, we append to this time to account for errors and pauses.
           finishedWork.stateNode.duration = 0;
         }
+        return;
+      }
+      case TimeoutComponent: {
         return;
       }
       default: {

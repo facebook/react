@@ -36,15 +36,16 @@ import {
   ContextProvider,
   ContextConsumer,
   Profiler,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
   NoEffect,
   PerformedWork,
   Placement,
   ContentReset,
-  Ref,
   DidCapture,
   Update,
+  Ref,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
@@ -67,7 +68,12 @@ import {
   reconcileChildFibers,
   cloneChildFibers,
 } from './ReactChildFiber';
-import {processUpdateQueue} from './ReactUpdateQueue';
+import {
+  createUpdate,
+  enqueueCapturedUpdate,
+  processUpdateQueue,
+  ReplaceState,
+} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
@@ -90,9 +96,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   legacyContext: LegacyContext,
   newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
-  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  scheduleWork: (
+    fiber: Fiber,
+    startTime: ExpirationTime,
+    expirationTime: ExpirationTime,
+  ) => void,
+  computeExpirationForFiber: (
+    startTime: ExpirationTime,
+    fiber: Fiber,
+  ) => ExpirationTime,
   profilerTimer: ProfilerTimer,
+  recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
@@ -132,6 +146,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     computeExpirationForFiber,
     memoizeProps,
     memoizeState,
+    recalculateCurrentTime,
   );
 
   // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
@@ -758,6 +773,52 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return workInProgress.stateNode;
   }
 
+  function updateTimeoutComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
+    const nextProps = workInProgress.pendingProps;
+    const prevProps = workInProgress.memoizedProps;
+
+    // Unless we already captured a promise during this render, reset the
+    // placeholder state back to false. We always attempt to render the real
+    // children before falling back to the placeholder.
+    if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+      const update = createUpdate(renderExpirationTime);
+      update.tag = ReplaceState;
+      update.payload = false;
+      enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
+    }
+
+    const prevState = workInProgress.memoizedState;
+    const updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null) {
+      processUpdateQueue(
+        workInProgress,
+        updateQueue,
+        null,
+        null,
+        renderExpirationTime,
+      );
+    }
+    const nextState = workInProgress.memoizedState;
+
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (nextProps === prevProps && nextState === prevState) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    const didTimeout = nextState;
+    const render = nextProps.children;
+    const nextChildren = render(didTimeout);
+    workInProgress.memoizedProps = nextProps;
+    reconcileChildren(current, workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
   function updatePortalComponent(
     current,
     workInProgress,
@@ -1209,6 +1270,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // A return component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
+      case TimeoutComponent:
+        return updateTimeoutComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case HostPortal:
         return updatePortalComponent(
           current,

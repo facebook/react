@@ -151,10 +151,18 @@ export function applyDerivedStateFromProps(
 
 export default function(
   legacyContext: LegacyContext,
-  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  scheduleWork: (
+    fiber: Fiber,
+    startTime: ExpirationTime,
+    expirationTime: ExpirationTime,
+  ) => void,
+  computeExpirationForFiber: (
+    currentTime: ExpirationTime,
+    fiber: Fiber,
+  ) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
+  recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {
     cacheContext,
@@ -168,7 +176,8 @@ export default function(
     isMounted,
     enqueueSetState(inst, payload, callback) {
       const fiber = ReactInstanceMap.get(inst);
-      const expirationTime = computeExpirationForFiber(fiber);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = computeExpirationForFiber(currentTime, fiber);
 
       const update = createUpdate(expirationTime);
       update.payload = payload;
@@ -180,11 +189,12 @@ export default function(
       }
 
       enqueueUpdate(fiber, update, expirationTime);
-      scheduleWork(fiber, expirationTime);
+      scheduleWork(fiber, currentTime, expirationTime);
     },
     enqueueReplaceState(inst, payload, callback) {
       const fiber = ReactInstanceMap.get(inst);
-      const expirationTime = computeExpirationForFiber(fiber);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = computeExpirationForFiber(currentTime, fiber);
 
       const update = createUpdate(expirationTime);
       update.tag = ReplaceState;
@@ -198,11 +208,12 @@ export default function(
       }
 
       enqueueUpdate(fiber, update, expirationTime);
-      scheduleWork(fiber, expirationTime);
+      scheduleWork(fiber, currentTime, expirationTime);
     },
     enqueueForceUpdate(inst, callback) {
       const fiber = ReactInstanceMap.get(inst);
-      const expirationTime = computeExpirationForFiber(fiber);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = computeExpirationForFiber(currentTime, fiber);
 
       const update = createUpdate(expirationTime);
       update.tag = ForceUpdate;
@@ -215,7 +226,7 @@ export default function(
       }
 
       enqueueUpdate(fiber, update, expirationTime);
-      scheduleWork(fiber, expirationTime);
+      scheduleWork(fiber, currentTime, expirationTime);
     },
   };
 
