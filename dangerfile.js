@@ -117,14 +117,12 @@ function git(args) {
     previousBuildResults
   );
 
-  const percentToWarrentShowing = 1;
   const packagesToShow = results
     .filter(
       r =>
-        Math.abs(r.prevFileSizeChange) >= percentToWarrentShowing ||
-        Math.abs(r.prevGzipSizeChange) >= percentToWarrentShowing
+        Math.abs(r.prevFileSizeAbsoluteChange) >= 300 || // bytes
+        Math.abs(r.prevGzipSizeAbsoluteChange) >= 100 // bytes
     )
-
     .map(r => r.packageName);
 
   if (packagesToShow.length) {

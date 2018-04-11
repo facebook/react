@@ -72,9 +72,11 @@ function generateResultsArray(current, prevResults) {
         prevSize: filesize(prevSize),
         prevFileSize: filesize(size),
         prevFileSizeChange: fractionalChange(prevSize, size),
+        prevFileSizeAbsoluteChange: size - prevSize,
         prevGzip: filesize(prevGzip),
         prevGzipSize: filesize(gzip),
         prevGzipSizeChange: fractionalChange(prevGzip, gzip),
+        prevGzipSizeAbsoluteChange: gzip - prevGzip,
       };
       // Strip any nulls
     })
