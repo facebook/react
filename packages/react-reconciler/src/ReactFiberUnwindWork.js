@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
 import type {LegacyContext} from './ReactFiberContext';
@@ -19,7 +20,9 @@ import {createCapturedValue} from './ReactCapturedValue';
 import {
   enqueueCapturedUpdate,
   createUpdate,
+  enqueueUpdate,
   CaptureUpdate,
+  ReplaceState,
 } from './ReactUpdateQueue';
 import {logError} from './ReactFiberCommitWork';
 
@@ -29,6 +32,7 @@ import {
   HostComponent,
   HostPortal,
   ContextProvider,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
   NoEffect,
@@ -37,7 +41,28 @@ import {
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
 
+import {Sync} from './ReactFiberExpirationTime';
+
 import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
+
+import invariant from 'fbjs/lib/invariant';
+
+function createRootExpirationError(sourceFiber, renderExpirationTime) {
+  try {
+    // TODO: Better error messages.
+    invariant(
+      renderExpirationTime !== Sync,
+      'A synchronous update was suspended, but no fallback UI was provided.',
+    );
+    invariant(
+      false,
+      'An update was suspended for longer than the timeout, but no fallback ' +
+        'UI was provided.',
+    );
+  } catch (error) {
+    return error;
+  }
+}
 
 export default function<C, CX>(
   hostContext: HostContext<C, CX>,
@@ -48,9 +73,21 @@ export default function<C, CX>(
     startTime: ExpirationTime,
     expirationTime: ExpirationTime,
   ) => void,
+  computeExpirationForFiber: (
+    startTime: ExpirationTime,
+    fiber: Fiber,
+  ) => ExpirationTime,
+  recalculateCurrentTime: () => ExpirationTime,
   markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
   onUncaughtError: (error: mixed) => void,
+  suspendRoot: (
+    root: FiberRoot,
+    thenable: {then: (() => mixed) => mixed},
+    timeoutMs: number,
+    suspendedTime: ExpirationTime,
+  ) => void,
+  retrySuspendedRoot: (root: FiberRoot, suspendedTime: ExpirationTime) => void,
 ) {
   const {popHostContainer, popHostContext} = hostContext;
   const {
@@ -121,10 +158,28 @@ export default function<C, CX>(
     return update;
   }
 
+  function waitForPromiseAndScheduleRecovery(finishedWork, thenable) {
+    // Await promise
+    thenable.then(() => {
+      // Once the promise resolves, we should try rendering the non-
+      // placeholder state again.
+      const startTime = recalculateCurrentTime();
+      const expirationTime = computeExpirationForFiber(startTime, finishedWork);
+      const recoveryUpdate = createUpdate(expirationTime);
+      enqueueUpdate(finishedWork, recoveryUpdate, expirationTime);
+      scheduleWork(finishedWork, startTime, expirationTime);
+    });
+  }
+
   function throwException(
+    root: FiberRoot,
     returnFiber: Fiber,
     sourceFiber: Fiber,
-    rawValue: mixed,
+    value: mixed,
+    renderIsExpired: boolean,
+    remainingTimeMs: number,
+    elapsedMs: number,
+    renderStartTime: number,
     renderExpirationTime: ExpirationTime,
   ) {
     // The source fiber did not complete.
@@ -132,8 +187,110 @@ export default function<C, CX>(
     // Its effect list is no longer valid.
     sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
-    const value = createCapturedValue(rawValue, sourceFiber);
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      typeof value.then === 'function'
+    ) {
+      // This is a thenable.
+      // Allow var because this is used in a closure.
+      // eslint-disable-next-line no-var
+      var thenable: {then: (() => mixed) => mixed} = (value: any);
 
+      // Find the earliest timeout of all the timeouts in the ancestor path.
+      // TODO: Alternatively, we could store the earliest timeout on the context
+      // stack, rather than searching on every suspend.
+      let workInProgress = returnFiber;
+      let earliestTimeoutMs = -1;
+      searchForEarliestTimeout: do {
+        switch (workInProgress.tag) {
+          case TimeoutComponent: {
+            const current = workInProgress.alternate;
+            if (current !== null && current.memoizedState === true) {
+              // A parent Timeout already committed in a placeholder state. We
+              // need to handle this promise immediately. In other words, we
+              // should never suspend inside a tree that already expired.
+              earliestTimeoutMs = 0;
+              break searchForEarliestTimeout;
+            }
+            let timeoutPropMs = workInProgress.pendingProps.ms;
+            if (typeof timeoutPropMs === 'number') {
+              if (timeoutPropMs <= 0) {
+                earliestTimeoutMs = 0;
+                break searchForEarliestTimeout;
+              } else if (
+                earliestTimeoutMs === -1 ||
+                timeoutPropMs < earliestTimeoutMs
+              ) {
+                earliestTimeoutMs = timeoutPropMs;
+              }
+            } else if (earliestTimeoutMs === -1) {
+              earliestTimeoutMs = remainingTimeMs;
+            }
+            break;
+          }
+        }
+        workInProgress = workInProgress.return;
+      } while (workInProgress !== null);
+
+      // Compute the remaining time until the timeout.
+      const msUntilTimeout = earliestTimeoutMs - elapsedMs;
+
+      if (msUntilTimeout > 0) {
+        // There's still time remaining.
+        suspendRoot(root, thenable, earliestTimeoutMs, renderExpirationTime);
+        thenable.then(() => {
+          retrySuspendedRoot(root, renderExpirationTime);
+        });
+        return;
+      } else {
+        // No time remaining. Need to fallback to palceholder.
+        // Find the nearest timeout that can be retried.
+        workInProgress = returnFiber;
+        do {
+          switch (workInProgress.tag) {
+            case HostRoot: {
+              // The root expired, but no fallback was provided. Throw a
+              // helpful error.
+              value = createRootExpirationError(
+                sourceFiber,
+                renderExpirationTime,
+              );
+              break;
+            }
+            case TimeoutComponent: {
+              if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+                workInProgress.effectTag |= ShouldCapture;
+                const update = createUpdate(renderExpirationTime);
+                update.tag = ReplaceState;
+                update.payload = true;
+                // Allow var because this is used in a closure.
+                // eslint-disable-next-line no-var
+                var finishedWork = workInProgress;
+                update.callback = () => {
+                  waitForPromiseAndScheduleRecovery(finishedWork, thenable);
+                };
+                enqueueCapturedUpdate(
+                  workInProgress,
+                  update,
+                  renderExpirationTime,
+                );
+                return;
+              }
+              // Already captured during this render. Continue to the next
+              // Timeout ancestor.
+              break;
+            }
+          }
+          workInProgress = workInProgress.return;
+        } while (workInProgress !== null);
+      }
+    }
+
+    // We didn't find a boundary that could handle this type of exception. Start
+    // over and traverse parent path again, this time treating the exception
+    // as an error.
+    value = createCapturedValue(value, sourceFiber);
     let workInProgress = returnFiber;
     do {
       switch (workInProgress.tag) {
@@ -179,7 +336,14 @@ export default function<C, CX>(
     } while (workInProgress !== null);
   }
 
-  function unwindWork(workInProgress: Fiber) {
+  function unwindWork(
+    workInProgress: Fiber,
+    elapsedMs: number,
+    renderIsExpired: boolean,
+    remainingTimeMs: number,
+    renderStartTime: ExpirationTime,
+    renderExpirationTime: ExpirationTime,
+  ) {
     switch (workInProgress.tag) {
       case ClassComponent: {
         popLegacyContextProvider(workInProgress);
@@ -202,6 +366,14 @@ export default function<C, CX>(
       }
       case HostComponent: {
         popHostContext(workInProgress);
+        return null;
+      }
+      case TimeoutComponent: {
+        const effectTag = workInProgress.effectTag;
+        if (effectTag & ShouldCapture) {
+          workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+          return workInProgress;
+        }
         return null;
       }
       case HostPortal:

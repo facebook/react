@@ -30,6 +30,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
@@ -44,6 +45,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_ASYNC_MODE_TYPE,
+  REACT_TIMEOUT_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -348,6 +350,9 @@ export function createFiberFromElement(
         break;
       case REACT_RETURN_TYPE:
         fiberTag = ReturnComponent;
+        break;
+      case REACT_TIMEOUT_TYPE:
+        fiberTag = TimeoutComponent;
         break;
       default: {
         if (typeof type === 'object' && type !== null) {
