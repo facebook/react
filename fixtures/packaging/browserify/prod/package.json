@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "name": "browserify-prod-fixture",
+  "dependencies": {
+    "browserify": "^13.3.0",
+    "react": "link:../../../../build/node_modules/react",
+    "react-dom": "link:../../../../build/node_modules/react-dom"
+  },
+  "scripts": {
+    "build": "rm -f output.js && browserify ./input.js -g [envify --NODE_ENV 'production'] -o output.js"
+  },
+  "devDependencies": {
+    "envify": "^4.0.0"
+  }
+}

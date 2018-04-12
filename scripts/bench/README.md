@@ -1,30 +1,41 @@
-Work-in-progress benchmarks.
+# React Benchmarking
 
-## Running the suite
+## Commands
 
-```
-$ ./measure.py react-a.min.js a.txt react-b.min.js b.txt
-$ ./analyze.py a.txt b.txt
-```
+In most cases, the only two commands you might want to use are:
 
-## Running one
-One thing you can do with them is benchmark initial render time for a realistic hierarchy:
+- `yarn start`
+- `yarn build core,dom-client --type=UMD_PROD && yarn start --skip-build`
 
-```
-$ which jsc
-/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Resources/jsc
-$ jsc react-0.14.0.min.js bench-pe-es5.js -e 'var START=Date.now(); React.renderToString(React.createElement(Benchmark)); var END=Date.now(); print(END-START);'
-45
-```
+The first command will run benchmarks with all the default settings. A local and remote build will occur on React and ReactDOM UMD bundles, both local and remote repos will be run against all benchmarks.
 
-Substitute `js` or `v8` for `jsc` to use SpiderMonkey or V8, respectively, if you've installed them.
+The second command will run all benchmarks but skip the build process. This is useful for when doing local performance tweaking and the remote repo has already had its bundles built. Both local and remote repos will be run against all benchmarks with this command too.
 
-## Creating one
+The other commands are as follows:
 
-To create one, copy `extract-component.js` to your clipboard and paste it into the Chrome console on facebook.com, perhaps after changing the root ID if you don't want the tree with ID `.0`.
+```bash
+# will compare local repo vs remote merge base repo
+yarn start
 
-Then to convert it to ES5:
+# will compare local repo vs remote merge base repo
+# this can significantly improve bench times due to no build
+yarn start --skip-build
 
-```
-babel --whitelist react,react.displayName --compact false bench-pe.js >bench-pe-es5.js
+# will only build and run local repo against benchmarks (no remote values will be shown)
+yarn start --local
+
+# will only build and run remote merge base repo against benchmarks (no local values will be shown)
+yarn start --remote
+
+# will only build and run remote master repo against benchmarks
+yarn start --remote=master
+
+# same as "yarn start"
+yarn start --remote --local
+
+# runs benchmarks with Chrome in headless mode
+yarn start --headless
+
+# runs only specific string matching benchmarks
+yarn start --benchmark=hacker
 ```

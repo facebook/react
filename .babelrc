@@ -4,7 +4,7 @@
   "plugins": [
     "transform-class-properties",
     "syntax-trailing-function-commas",
-    "transform-object-rest-spread",
+    ["transform-object-rest-spread", { "useBuiltIns": true }],
     "transform-es2015-template-literals",
     "transform-es2015-literals",
     "transform-es2015-arrow-functions",
@@ -18,11 +18,8 @@
     ["transform-es2015-spread", { "loose": true }],
     "transform-es2015-parameters",
     ["transform-es2015-destructuring", { "loose": true }],
-    "transform-es2015-block-scoping",
-    "transform-es2015-modules-commonjs",
+    ["transform-es2015-block-scoping", { "throwIfClosureRequired": true }],
     "transform-es3-member-expression-literals",
-    "transform-es3-property-literals",
-    "./scripts/babel/transform-object-assign-require",
-    "transform-react-jsx-source"
+    "transform-es3-property-literals"
   ]
 }
