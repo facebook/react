@@ -61,6 +61,18 @@ describe('ReactDOMInput', () => {
     document.body.removeChild(container);
   });
 
+  it('should not warn with value and onChange handler specified as undefined', () => {
+    ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" value="lion" onChange={undefined} />,
+    );
+  });
+
+  it('should not warn with value and onChange handler specified as null', () => {
+    ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" value="lion" onChange={null} />,
+    );
+  });
+
   it('should control a value in reentrant events', () => {
     class ControlledInputs extends React.Component {
       state = {value: 'lion'};
@@ -925,6 +937,18 @@ describe('ReactDOMInput', () => {
       'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler. ' +
         'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
         'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
+
+  it('should not warn with checked and onChange handler specified as undefined', () => {
+    ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" checked="false" onChange={undefined} />,
+    );
+  });
+
+  it('should not warn with checked and onChange handler specified as null', () => {
+    ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" checked="false" onChange={null} />,
     );
   });
 
