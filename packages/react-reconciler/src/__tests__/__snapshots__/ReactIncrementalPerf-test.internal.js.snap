@@ -182,9 +182,9 @@ exports[`ReactDebugFiberPerf measures and identifies StrictMode and AsyncMode co
 
 // Mount
 ⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ Unknown [mount]
+  ⚛ StrictMode [mount]
     ⚛ Parent [mount]
-      ⚛ Unknown [mount]
+      ⚛ AsyncMode [mount]
         ⚛ Child [mount]
 
 ⚛ (Committing Changes)
@@ -199,7 +199,7 @@ exports[`ReactDebugFiberPerf measures and identifies a forwardRef component corr
 
 // Mount
 ⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ Unknown [mount]
+  ⚛ ForwardRef [mount]
     ⚛ Child [mount]
 
 ⚛ (Committing Changes)
