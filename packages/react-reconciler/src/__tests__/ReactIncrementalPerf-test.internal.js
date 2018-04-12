@@ -161,7 +161,7 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('measures and identifies a forwardRef component correctly', () => {
+  it('does not include forwardRef component in measurements', () => {
     const ForwardRef = React.forwardRef(function refForwarder(props, ref) {
       return <Child {...props} ref={ref} />;
     });
@@ -173,7 +173,7 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('measures and identifies StrictMode and AsyncMode components correctly', () => {
+  it('does not include StrictMode or AsyncMode components in measurements', () => {
     ReactNoop.render(
       <React.StrictMode>
         <Parent>
@@ -182,6 +182,22 @@ describe('ReactDebugFiberPerf', () => {
           </React.unstable_AsyncMode>
         </Parent>
       </React.StrictMode>,
+    );
+    addComment('Mount');
+    ReactNoop.flush();
+
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('does not include context provider or consumer in measurements', () => {
+    const {Consumer, Provider} = React.createContext(true);
+
+    ReactNoop.render(
+      <Provider value={false}>
+        <Parent>
+          <Consumer>{value => <Child value={value} />}</Consumer>
+        </Parent>
+      </Provider>,
     );
     addComment('Mount');
     ReactNoop.flush();
