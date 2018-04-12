@@ -161,7 +161,7 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('does not include forwardRef component in measurements', () => {
+  it('properly displays the forwardRef component in measurements', () => {
     const ForwardRef = React.forwardRef(function refForwarder(props, ref) {
       return <Child {...props} ref={ref} />;
     });

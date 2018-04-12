@@ -22,7 +22,6 @@ import {
   ContextProvider,
   ContextConsumer,
   Mode,
-  ForwardRef,
 } from 'shared/ReactTypeOfWork';
 
 type MeasurementPhase =
@@ -178,7 +177,6 @@ const shouldIgnoreFiber = (fiber: Fiber): boolean => {
     case ContextProvider:
     case ContextConsumer:
     case Mode:
-    case ForwardRef:
       return true;
     default:
       return false;
