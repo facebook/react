@@ -266,8 +266,13 @@ exports[`ReactDebugFiberPerf properly displays the forwardRef component in measu
 
 // Mount
 ⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ ForwardRef [mount]
-    ⚛ Child [mount]
+  ⚛ Parent [mount]
+    ⚛ ForwardRef [mount]
+      ⚛ Child [mount]
+    ⚛ ForwardRef(refForwarder) [mount]
+      ⚛ Child [mount]
+    ⚛ ForwardRef(OverriddenName) [mount]
+      ⚛ Child [mount]
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)

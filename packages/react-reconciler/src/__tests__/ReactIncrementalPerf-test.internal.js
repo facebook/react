@@ -162,11 +162,25 @@ describe('ReactDebugFiberPerf', () => {
   });
 
   it('properly displays the forwardRef component in measurements', () => {
-    const ForwardRef = React.forwardRef(function refForwarder(props, ref) {
+    const AnonymousForwardRef = React.forwardRef((props, ref) => (
+      <Child {...props} ref={ref} />
+    ));
+    const NamedForwardRef = React.forwardRef(function refForwarder(props, ref) {
       return <Child {...props} ref={ref} />;
     });
+    function notImportant(props, ref) {
+      return <Child {...props} ref={ref} />;
+    }
+    notImportant.displayName = 'OverriddenName';
+    const DisplayNamedForwardRef = React.forwardRef(notImportant);
 
-    ReactNoop.render(<ForwardRef />);
+    ReactNoop.render(
+      <Parent>
+        <AnonymousForwardRef />
+        <NamedForwardRef />
+        <DisplayNamedForwardRef />
+      </Parent>,
+    );
     addComment('Mount');
     ReactNoop.flush();
 
