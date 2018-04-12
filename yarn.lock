@@ -2561,8 +2561,8 @@ glogg@^1.0.0:
     sparkles "^1.0.0"
 
 google-closure-compiler-js@>20170000:
-  version "20170910.0.1"
-  resolved "https://registry.yarnpkg.com/@gaearon/google-closure-compiler-js/-/google-closure-compiler-js-20170910.0.1.tgz#b0cf7ef408219a19c390375a76bf0a82ccf65eea"
+  version "20171203.0"
+  resolved "https://registry.yarnpkg.com/google-closure-compiler-js/-/google-closure-compiler-js-20171203.0.0.tgz#2abb18b890386b8dae0b49d218663d1f1df1becd"
   dependencies:
     minimist "^1.2.0"
     vinyl "^2.0.1"
