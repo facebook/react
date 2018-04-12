@@ -38,8 +38,7 @@ function getComponentName(fiber: Fiber): string | null {
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE:
-        const functionName =
-          type.render.displayName || type.render.name || '';
+        const functionName = type.render.displayName || type.render.name || '';
         return functionName !== ''
           ? `ForwardRef(${functionName})`
           : 'ForwardRef';
