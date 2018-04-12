@@ -161,6 +161,34 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
+  it('measures and identifies a forwardRef component correctly', () => {
+    const ForwardRef = React.forwardRef(function refForwarder(props, ref) {
+      return <Child {...props} ref={ref} />;
+    });
+
+    ReactNoop.render(<ForwardRef />);
+    addComment('Mount');
+    ReactNoop.flush();
+
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('measures and identifies StrictMode and AsyncMode components correctly', () => {
+    ReactNoop.render(
+      <React.StrictMode>
+        <Parent>
+          <React.unstable_AsyncMode>
+            <Child />
+          </React.unstable_AsyncMode>
+        </Parent>
+      </React.StrictMode>,
+    );
+    addComment('Mount');
+    ReactNoop.flush();
+
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
   it('skips parents during setState', () => {
     class A extends React.Component {
       render() {
