@@ -91,6 +91,36 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
 "
 `;
 
+exports[`ReactDebugFiberPerf does not include StrictMode or AsyncMode components in measurements 1`] = `
+"⚛ (Waiting for async callback... will force flush in 5230 ms)
+
+// Mount
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⚛ Child [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf does not include context provider or consumer in measurements 1`] = `
+"⚛ (Waiting for async callback... will force flush in 5230 ms)
+
+// Mount
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⚛ Child [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
 exports[`ReactDebugFiberPerf does not schedule an extra callback if setState is called during a synchronous commit phase 1`] = `
 "⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Component [mount]
@@ -228,6 +258,26 @@ exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
   ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 3 Total)
   ⚛ (Calling Lifecycle Methods: 2 Total)
+"
+`;
+
+exports[`ReactDebugFiberPerf properly displays the forwardRef component in measurements 1`] = `
+"⚛ (Waiting for async callback... will force flush in 5230 ms)
+
+// Mount
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⚛ ForwardRef [mount]
+      ⚛ Child [mount]
+    ⚛ ForwardRef(refForwarder) [mount]
+      ⚛ Child [mount]
+    ⚛ ForwardRef(OverriddenName) [mount]
+      ⚛ Child [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;
 

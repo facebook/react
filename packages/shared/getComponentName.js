@@ -14,6 +14,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_FORWARD_REF_TYPE,
 } from 'shared/ReactSymbols';
 
 function getComponentName(fiber: Fiber): string | null {
@@ -33,6 +34,15 @@ function getComponentName(fiber: Fiber): string | null {
       return 'ReactCall';
     case REACT_RETURN_TYPE:
       return 'ReactReturn';
+  }
+  if (typeof type === 'object' && type !== null) {
+    switch (type.$$typeof) {
+      case REACT_FORWARD_REF_TYPE:
+        const functionName = type.render.displayName || type.render.name || '';
+        return functionName !== ''
+          ? `ForwardRef(${functionName})`
+          : 'ForwardRef';
+    }
   }
   return null;
 }

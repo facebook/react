@@ -21,6 +21,7 @@ import {
   Fragment,
   ContextProvider,
   ContextConsumer,
+  Mode,
 } from 'shared/ReactTypeOfWork';
 
 type MeasurementPhase =
@@ -175,6 +176,7 @@ const shouldIgnoreFiber = (fiber: Fiber): boolean => {
     case Fragment:
     case ContextProvider:
     case ContextConsumer:
+    case Mode:
       return true;
     default:
       return false;

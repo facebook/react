@@ -161,6 +161,64 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
+  it('properly displays the forwardRef component in measurements', () => {
+    const AnonymousForwardRef = React.forwardRef((props, ref) => (
+      <Child {...props} ref={ref} />
+    ));
+    const NamedForwardRef = React.forwardRef(function refForwarder(props, ref) {
+      return <Child {...props} ref={ref} />;
+    });
+    function notImportant(props, ref) {
+      return <Child {...props} ref={ref} />;
+    }
+    notImportant.displayName = 'OverriddenName';
+    const DisplayNamedForwardRef = React.forwardRef(notImportant);
+
+    ReactNoop.render(
+      <Parent>
+        <AnonymousForwardRef />
+        <NamedForwardRef />
+        <DisplayNamedForwardRef />
+      </Parent>,
+    );
+    addComment('Mount');
+    ReactNoop.flush();
+
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('does not include StrictMode or AsyncMode components in measurements', () => {
+    ReactNoop.render(
+      <React.StrictMode>
+        <Parent>
+          <React.unstable_AsyncMode>
+            <Child />
+          </React.unstable_AsyncMode>
+        </Parent>
+      </React.StrictMode>,
+    );
+    addComment('Mount');
+    ReactNoop.flush();
+
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('does not include context provider or consumer in measurements', () => {
+    const {Consumer, Provider} = React.createContext(true);
+
+    ReactNoop.render(
+      <Provider value={false}>
+        <Parent>
+          <Consumer>{value => <Child value={value} />}</Consumer>
+        </Parent>
+      </Provider>,
+    );
+    addComment('Mount');
+    ReactNoop.flush();
+
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
   it('skips parents during setState', () => {
     class A extends React.Component {
       render() {
