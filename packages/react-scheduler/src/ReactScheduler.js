@@ -7,6 +7,21 @@
  * @flow
  */
 
+'use strict';
+
+/**
+ * A scheduling library to allow scheduling work with more granular priority and
+ * control than requestAnimationFrame and requestIdleCallback.
+ * Current TODO items:
+ * X- Pull out the rIC polyfill built into React
+ * - Initial test coverage
+ * - Support for multiple callbacks
+ * - Support for two priorities; serial and deferred
+ * - Better test coverage
+ * - Better docblock
+ * - Polish documentation, API
+ */
+
 // This is a built-in polyfill for requestIdleCallback. It works by scheduling
 // a requestAnimationFrame, storing the time for the start of the frame, then
 // scheduling a postMessage which gets scheduled after paint. Within the

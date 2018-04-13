@@ -7,7 +7,7 @@
 
 import React from 'react';
 import ReactFiberReconciler from 'react-reconciler';
-import * as ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
+import * as ReactScheduler from 'react-scheduler';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';
 import Transform from 'art/core/transform';
@@ -468,7 +468,7 @@ const ARTRenderer = ReactFiberReconciler({
     return emptyObject;
   },
 
-  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
+  scheduleDeferredCallback: ReactScheduler.rIC,
 
   shouldSetTextContent(type, props) {
     return (
@@ -476,7 +476,7 @@ const ARTRenderer = ReactFiberReconciler({
     );
   },
 
-  now: ReactDOMFrameScheduling.now,
+  now: ReactScheduler.now,
 
   mutation: {
     appendChild(parentInstance, child) {
