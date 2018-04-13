@@ -47,7 +47,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren('c')).toEqual([span('c:1')]);
   });
 
-  it('schedules top-level updates in order of priority', () => {
+  it('schedules top-level updates in order of scheduled', () => {
     // Initial render.
     ReactNoop.render(<span prop={1} />);
     ReactNoop.flush();
