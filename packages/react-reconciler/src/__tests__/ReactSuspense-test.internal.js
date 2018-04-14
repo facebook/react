@@ -305,6 +305,82 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
   });
 
+  it('switches to an inner fallback even if it expires later', async () => {
+    ReactNoop.render(
+      <Fragment>
+        <Text text="Sync" />
+        <Fallback timeout={1000} placeholder={<Text text="Loading outer..." />}>
+          <AsyncText text="Outer content" ms={2000} />
+          <Fallback
+            timeout={3000}
+            placeholder={<Text text="Loading inner..." />}>
+            <AsyncText text="Inner content" ms={4000} />
+          </Fallback>
+        </Fallback>
+      </Fragment>,
+    );
+
+    expect(ReactNoop.flush()).toEqual([
+      'Sync',
+      // The async content suspends
+      'Suspend! [Outer content]',
+      'Suspend! [Inner content]',
+    ]);
+    // The update hasn't expired yet, so we commit nothing.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Expire the outer timeout, but don't expire the inner one.
+    // We should see the outer loading placeholder.
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(ReactNoop.flush()).toEqual([
+      'Sync',
+      // Still suspended.
+      'Suspend! [Outer content]',
+      'Suspend! [Inner content]',
+      // We attempt to fallback to the inner placeholder
+      'Loading inner...',
+      // But the outer content is still suspended, so we need to fallback to
+      // the outer placeholder.
+      'Loading outer...',
+    ]);
+
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Sync'),
+      span('Loading outer...'),
+    ]);
+
+    // Resolve the outer content's promise
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(ReactNoop.flush()).toEqual([
+      'Promise resolved [Outer content]',
+      'Outer content',
+      // Inner content still hasn't loaded
+      'Suspend! [Inner content]',
+      'Loading inner...',
+    ]);
+    // We should now see the inner fallback UI.
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Sync'),
+      span('Outer content'),
+      span('Loading inner...'),
+    ]);
+
+    // Finally, flush the inner promise. We should see the complete screen.
+    ReactNoop.expire(3000);
+    await advanceTimers(3000);
+    expect(ReactNoop.flush()).toEqual([
+      'Promise resolved [Inner content]',
+      'Inner content',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Sync'),
+      span('Outer content'),
+      span('Inner content'),
+    ]);
+  });
+
   it('renders an expiration boundary synchronously', async () => {
     // Synchronously render a tree that suspends
     ReactNoop.flushSync(() =>
