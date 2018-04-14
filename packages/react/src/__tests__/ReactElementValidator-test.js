@@ -88,7 +88,7 @@ describe('ReactElementValidator', () => {
   });
 
   it('warns for explicit invalid keys by rendering array', () => {
-    const divs = [<div key={'quack'} />, <div key={undefined} />];
+    const divs = [<div key="quack" />, <div key={undefined} />];
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
