@@ -118,6 +118,27 @@ describe 'ReactCoffeeScriptClass', ->
     test React.createElement(Foo, foo: 'foo'), 'DIV', 'foo bar'
     undefined
 
+  it 'can access other class methods and properties from getDerivedStateFromProps', ->
+    class Foo extends React.Component
+      constructor: (props) ->
+        super props
+        @state =
+          foo: null
+          bar: null
+      render: ->
+        div
+          className: "#{@state.foo} #{@state.bar}"
+    Foo.foo = 'foo'
+    Foo.getBar = () ->
+      'bar'
+    Foo.getDerivedStateFromProps = () ->
+      {
+        foo: this.foo
+        bar: this.getBar()
+      }
+    test React.createElement(Foo, foo: 'foo'), 'DIV', 'foo bar'
+    undefined
+
   it 'warns if getDerivedStateFromProps is not static', ->
     class Foo extends React.Component
       render: ->

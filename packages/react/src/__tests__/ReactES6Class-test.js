@@ -128,6 +128,26 @@ describe('ReactES6Class', () => {
     test(<Foo foo="foo" />, 'DIV', 'foo bar');
   });
 
+  it('can access other class methods and properties from getDerivedStateFromProps', () => {
+    class Foo extends React.Component {
+      state = {};
+      static foo = 'foo';
+      static getBar() {
+        return 'bar';
+      }
+      static getDerivedStateFromProps() {
+        return {
+          foo: this.foo,
+          bar: this.getBar(),
+        };
+      }
+      render() {
+        return <div className={`${this.state.foo} ${this.state.bar}`} />;
+      }
+    }
+    test(<Foo foo="foo" />, 'DIV', 'foo bar');
+  });
+
   it('warns if getDerivedStateFromProps is not static', () => {
     class Foo extends React.Component {
       getDerivedStateFromProps() {

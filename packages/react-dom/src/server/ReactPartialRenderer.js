@@ -445,8 +445,7 @@ function resolve(
           }
         }
 
-        let partialState = Component.getDerivedStateFromProps.call(
-          null,
+        let partialState = Component.getDerivedStateFromProps(
           element.props,
           inst.state,
         );
