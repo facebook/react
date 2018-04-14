@@ -32,6 +32,7 @@ import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 let currentlyValidatingElement;
 let propTypesMisspellWarningShown;
+let currentKeysWarningMessage;
 
 let getDisplayName = () => {};
 let getStackAddendum = () => {};
@@ -40,7 +41,6 @@ let VALID_FRAGMENT_PROPS;
 
 if (__DEV__) {
   currentlyValidatingElement = null;
-
   propTypesMisspellWarningShown = false;
 
   getDisplayName = function(element): string {
@@ -71,6 +71,8 @@ if (__DEV__) {
     stack += ReactDebugCurrentFrame.getStackAddendum() || '';
     return stack;
   };
+
+  currentKeysWarningMessage = () => '';
 
   VALID_FRAGMENT_PROPS = new Map([['children', true], ['key', true]]);
 }
@@ -165,7 +167,7 @@ function validateExplicitKey(element, parentType) {
       false,
       'Each child in an array or iterator should have a unique "key" prop.' +
         '%s%s%s See https://fb.me/react-warning-keys for more information.%s',
-      invalidExplicitKeyPropTypeWarn,
+      currentKeysWarningMessage(),
       currentComponentErrorInfo,
       childOwner,
       getStackAddendum(),
@@ -254,7 +256,6 @@ function validatePropTypes(element) {
   }
 }
 
-let invalidExplicitKeyPropTypeWarn = '';
 /**
  * Given an invalid key prop type value (i.e neither a number nor a string) within the props object,
  * the key warning eventually will be added to the tracing.
@@ -263,7 +264,7 @@ let invalidExplicitKeyPropTypeWarn = '';
  *
  * @param {*} props
  */
-function imposeInvalidExplicitKeyPropType(props) {
+function setupExplicitKeyProp(props) {
   let config = {key: ''};
   if (props != null) {
     if ('child' in props) {
@@ -277,12 +278,14 @@ function imposeInvalidExplicitKeyPropType(props) {
 
   const key = config.key;
 
-  if (typeof key !== 'number' && typeof key !== 'string') {
-    invalidExplicitKeyPropTypeWarn =
-      '\nOne of the passed keys was `' +
-      (key !== null ? typeof key : 'null') +
-      '` which is not a valid value for a key.';
-  }
+  return !currentKeysWarningMessage() &&
+    typeof key !== 'number' &&
+    typeof key !== 'string'
+    ? () =>
+        '\nOne of the passed keys was `' +
+        (key !== null ? typeof key : 'null') +
+        '` which is not a valid value for a key.'
+    : currentKeysWarningMessage;
 }
 
 /**
@@ -388,7 +391,7 @@ export function createElementWithValidation(type, props, children) {
   // (Rendering will throw with a helpful message and as soon as the type is
   // fixed, the key warnings will appear.)
   if (validType) {
-    imposeInvalidExplicitKeyPropType(props);
+    currentKeysWarningMessage = setupExplicitKeyProp(props).bind(this);
 
     for (let i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], type);
