@@ -650,14 +650,10 @@ export default function(
           workInProgress.mode & StrictMode)
       ) {
         // Invoke method an extra time to help detect side-effects.
-        type.getDerivedStateFromProps.call(null, nextProps, prevState);
+        type.getDerivedStateFromProps(nextProps, prevState);
       }
 
-      const partialState = type.getDerivedStateFromProps.call(
-        null,
-        nextProps,
-        prevState,
-      );
+      const partialState = type.getDerivedStateFromProps(nextProps, prevState);
 
       if (__DEV__) {
         if (partialState === undefined) {

@@ -378,6 +378,31 @@ describe('ReactTypeScriptClass', function() {
     test(React.createElement(Foo, {foo: 'foo'}), 'DIV', 'foo bar');
   });
 
+  it('can access other class methods and properties from getDerivedStateFromProps', () => {
+    class Foo extends React.Component {
+      state = {
+        foo: null,
+        bar: null,
+      };
+      static foo = 'foo';
+      static getBar() {
+        return 'bar';
+      }
+      static getDerivedStateFromProps() {
+        return {
+          foo: this.foo,
+          bar: this.getBar()
+        };
+      }
+      render() {
+        return React.createElement('div', {
+          className: `${this.state.foo} ${this.state.bar}`,
+        });
+      }
+    }
+    test(React.createElement(Foo, {foo: 'foo'}), 'DIV', 'foo bar');
+  });
+
   it('warns if getDerivedStateFromProps is not static', function() {
     class Foo extends React.Component {
       getDerivedStateFromProps() {
