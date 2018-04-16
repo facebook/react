@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "16.3.1",
+  "version": "16.3.2",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
