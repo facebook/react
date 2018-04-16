@@ -96,3 +96,7 @@ export const mediaEventTypes: Map<TopLevelTypes, string> = new Map([
   [TopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumechange'],
   [TopLevelEventTypes.TOP_WAITING, 'waiting'],
 ]);
+
+export function getRawEventName(topLevelType: TopLevelTypes): ?string {
+ return topLevelTypes.get(topLevelType) || mediaEventTypes.get(topLevelType);
+}

@@ -14,6 +14,7 @@ import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
+import {getRawEventName} from './BrowserEventConstants';
 
 const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 
@@ -112,14 +113,13 @@ export function isEnabled() {
 /**
  * Traps top-level events by using event bubbling.
  *
- * @param {string} topLevelType Record from `BrowserEventConstants`.
- * @param {string} handlerBaseName Event name (e.g. "click").
+ * @param {number} topLevelType Number from `TopLevelEventTypes`.
  * @param {object} element Element on which to attach listener.
  * @return {?object} An object with a remove function which will forcefully
  *                  remove the listener.
  * @internal
  */
-export function trapBubbledEvent(topLevelType, handlerBaseName, element) {
+export function trapBubbledEvent(topLevelType, element) {
   if (!element) {
     return null;
   }
@@ -129,7 +129,7 @@ export function trapBubbledEvent(topLevelType, handlerBaseName, element) {
 
   addEventBubbleListener(
     element,
-    handlerBaseName,
+    getRawEventName(topLevelType),
     // Check if interactive and wrap in interactiveUpdates
     dispatch.bind(null, topLevelType),
   );
@@ -138,14 +138,13 @@ export function trapBubbledEvent(topLevelType, handlerBaseName, element) {
 /**
  * Traps a top-level event by using event capturing.
  *
- * @param {string} topLevelType Record from `BrowserEventConstants`.
- * @param {string} handlerBaseName Event name (e.g. "click").
+ * @param {number} topLevelType Number from `TopLevelEventTypes`.
  * @param {object} element Element on which to attach listener.
  * @return {?object} An object with a remove function which will forcefully
  *                  remove the listener.
  * @internal
  */
-export function trapCapturedEvent(topLevelType, handlerBaseName, element) {
+export function trapCapturedEvent(topLevelType, element) {
   if (!element) {
     return null;
   }
@@ -155,7 +154,7 @@ export function trapCapturedEvent(topLevelType, handlerBaseName, element) {
 
   addEventCaptureListener(
     element,
-    handlerBaseName,
+    getRawEventName(topLevelType),
     // Check if interactive and wrap in interactiveUpdates
     dispatch.bind(null, topLevelType),
   );
