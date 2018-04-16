@@ -18,6 +18,8 @@ const {
   FB_PROD,
   RN_DEV,
   RN_PROD,
+  XPLAT_DEV,
+  XPLAT_PROD,
 } = Bundles.bundleTypes;
 
 function getPackageName(name) {
@@ -46,6 +48,14 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
       switch (packageName) {
         case 'react-native-renderer':
           return [`build/react-native/${filename}`];
+        default:
+          throw new Error('Unknown RN package.');
+      }
+    case XPLAT_DEV:
+    case XPLAT_PROD:
+      switch (packageName) {
+        case 'react-native-renderer':
+          return [`build/react-native-xplat/${filename}`];
         default:
           throw new Error('Unknown RN package.');
       }

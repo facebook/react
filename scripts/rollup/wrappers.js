@@ -11,6 +11,8 @@ const FB_DEV = Bundles.bundleTypes.FB_DEV;
 const FB_PROD = Bundles.bundleTypes.FB_PROD;
 const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
+const XPLAT_DEV = Bundles.bundleTypes.XPLAT_DEV;
+const XPLAT_PROD = Bundles.bundleTypes.XPLAT_PROD;
 
 const RECONCILER = Bundles.moduleTypes.RECONCILER;
 
@@ -138,8 +140,40 @@ ${source}
 }`;
   },
 
-  /****************** RN_DEV ******************/
+  /****************** RN_PROD ******************/
   [RN_PROD](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @providesModule ${globalName}-prod
+ * @preventMunge
+ */
+
+${source}`;
+  },
+
+  /****************** XPLAT_DEV ******************/
+  [XPLAT_DEV](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @providesModule ${globalName}-dev
+ * @preventMunge
+ */
+
+'use strict';
+
+if (__DEV__) {
+  (function() {
+${source}
+  })();
+}`;
+  },
+
+  /****************** XPLAT_PROD ******************/
+  [XPLAT_PROD](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *

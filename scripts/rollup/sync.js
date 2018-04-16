@@ -7,6 +7,7 @@ const resolvePath = require('./utils').resolvePath;
 const DEFAULT_FB_SOURCE_PATH = '~/fbsource/';
 const DEFAULT_WWW_PATH = '~/www/';
 const RELATIVE_RN_PATH = 'xplat/js/react-native-github/Libraries/Renderer/';
+// TODO Add XPLAT bundle path
 const RELATIVE_WWW_PATH = 'html/shared/react/';
 
 async function doSync(buildPath, destPath) {

@@ -8,6 +8,8 @@ const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
 const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
+const XPLAT_DEV = bundleTypes.XPLAT_DEV;
+const XPLAT_PROD = bundleTypes.XPLAT_PROD;
 
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
@@ -34,17 +36,17 @@ const forks = Object.freeze({
     switch (entry) {
       case 'react-native-renderer':
         switch (bundleType) {
-          case FB_DEV:
-          case FB_PROD:
-            return 'shared/forks/ReactFeatureFlags.native-fb.js';
+          case XPLAT_DEV:
+          case XPLAT_PROD:
+            return 'shared/forks/ReactFeatureFlags.native-xplat.js';
           default:
             return 'shared/forks/ReactFeatureFlags.native-oss.js';
         }
       case 'react-native-renderer/fabric':
         switch (bundleType) {
-          case FB_DEV:
-          case FB_PROD:
-            return 'shared/forks/ReactFeatureFlags.native-fabric-fb.js';
+          case XPLAT_DEV:
+          case XPLAT_PROD:
+            return 'shared/forks/ReactFeatureFlags.native-fabric-xplat.js';
           default:
             return 'shared/forks/ReactFeatureFlags.native-fabric-oss.js';
         }
@@ -105,6 +107,8 @@ const forks = Object.freeze({
         return 'react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
       case RN_DEV:
       case RN_PROD:
+      case XPLAT_DEV:
+      case XPLAT_PROD:
         switch (entry) {
           case 'react-native-renderer':
             // Use the RN fork which plays well with redbox.

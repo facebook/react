@@ -43,6 +43,8 @@ const {
   FB_PROD,
   RN_DEV,
   RN_PROD,
+  XPLAT_DEV,
+  XPLAT_PROD,
 } = Bundles.bundleTypes;
 
 const requestedBundleTypes = (argv.type || '')
@@ -93,6 +95,8 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
       });
     case RN_DEV:
     case RN_PROD:
+    case XPLAT_DEV:
+    case XPLAT_PROD:
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
@@ -143,6 +147,8 @@ function getFormat(bundleType) {
     case FB_PROD:
     case RN_DEV:
     case RN_PROD:
+    case XPLAT_DEV:
+    case XPLAT_PROD:
       return `cjs`;
   }
 }
@@ -161,9 +167,11 @@ function getFilename(name, globalName, bundleType) {
       return `${name}.production.min.js`;
     case FB_DEV:
     case RN_DEV:
+    case XPLAT_DEV:
       return `${globalName}-dev.js`;
     case FB_PROD:
     case RN_PROD:
+    case XPLAT_PROD:
       return `${globalName}-prod.js`;
   }
 }
@@ -174,11 +182,13 @@ function isProductionBundleType(bundleType) {
     case NODE_DEV:
     case FB_DEV:
     case RN_DEV:
+    case XPLAT_DEV:
       return false;
     case UMD_PROD:
     case NODE_PROD:
     case FB_PROD:
     case RN_PROD:
+    case XPLAT_PROD:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -201,7 +211,11 @@ function getPlugins(
   const isProduction = isProductionBundleType(bundleType);
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_DEV || bundleType === FB_PROD;
-  const isRNBundle = bundleType === RN_DEV || bundleType === RN_PROD;
+  const isRNBundle =
+    bundleType === RN_DEV ||
+    bundleType === RN_PROD ||
+    bundleType === XPLAT_DEV ||
+    bundleType === XPLAT_PROD;
   const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
   return [
     // Extract error codes from invariant() messages into a file.
@@ -482,6 +496,8 @@ async function buildEverything() {
     await createBundle(bundle, FB_PROD);
     await createBundle(bundle, RN_DEV);
     await createBundle(bundle, RN_PROD);
+    await createBundle(bundle, XPLAT_DEV);
+    await createBundle(bundle, XPLAT_PROD);
   }
 
   await Packaging.copyAllShims();
