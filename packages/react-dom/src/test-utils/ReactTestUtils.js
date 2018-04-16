@@ -18,8 +18,6 @@ import {
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'fbjs/lib/invariant';
 
-import {topLevelTypes, mediaEventTypes} from '../events/BrowserEventConstants';
-
 const {findDOMNode} = ReactDOM;
 const {
   EventPluginHub,
@@ -457,22 +455,82 @@ function makeNativeSimulator(eventType) {
   };
 }
 
-const eventKeys = [].concat(
-  Object.keys(topLevelTypes),
-  Object.keys(mediaEventTypes),
-);
-
-eventKeys.forEach(function(eventType) {
-  // Event type is stored as 'topClick' - we transform that to 'click'
-  const convenienceName =
-    eventType.indexOf('top') === 0
-      ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
-      : eventType;
+[
+  'animationEnd',
+  'animationIteration',
+  'animationStart',
+  'blur',
+  'cancel',
+  'change',
+  'click',
+  'close',
+  'compositionEnd',
+  'compositionStart',
+  'compositionUpdate',
+  'contextMenu',
+  'copy',
+  'cut',
+  'doubleClick',
+  'drag',
+  'dragEnd',
+  'dragEnter',
+  'dragExit',
+  'dragLeave',
+  'dragOver',
+  'dragStart',
+  'drop',
+  'focus',
+  'input',
+  'keyDown',
+  'keyPress',
+  'keyUp',
+  'load',
+  'loadStart',
+  'mouseDown',
+  'mouseMove',
+  'mouseOut',
+  'mouseOver',
+  'mouseUp',
+  'paste',
+  'scroll',
+  'selectionChange',
+  'textInput',
+  'toggle',
+  'touchCancel',
+  'touchEnd',
+  'touchMove',
+  'touchStart',
+  'transitionEnd',
+  'wheel',
+  'abort',
+  'canPlay',
+  'canPlayThrough',
+  'durationChange',
+  'emptied',
+  'encrypted',
+  'ended',
+  'error',
+  'loadedData',
+  'loadedMetadata',
+  'loadStart',
+  'pause',
+  'play',
+  'playing',
+  'progress',
+  'rateChange',
+  'seeked',
+  'seeking',
+  'stalled',
+  'suspend',
+  'timeUpdate',
+  'VolumeChange',
+  'waiting',
+].forEach(function(eventType) {
   /**
    * @param {!Element|ReactDOMComponent} domComponentOrNode
    * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
    */
-  ReactTestUtils.SimulateNative[convenienceName] = makeNativeSimulator(
+  ReactTestUtils.SimulateNative[eventType] = makeNativeSimulator(
     eventType,
   );
 });
