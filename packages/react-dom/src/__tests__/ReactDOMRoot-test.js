@@ -59,11 +59,6 @@ describe('ReactDOMRoot', () => {
     expire = function(ms) {
       now += ms;
     };
-    global.performance = {
-      now() {
-        return now;
-      },
-    };
 
     jest.resetModules();
     React = require('react');
