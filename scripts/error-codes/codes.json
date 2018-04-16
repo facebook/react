@@ -265,5 +265,7 @@
   "263": "dispatch: Cannot dispatch during the render phase.",
   "264": "An error logging effect should not have been scheduled if no errors were captured. This error is likely caused by a bug in React. Please file an issue.",
   "265": "This unit of work tag cannot capture errors.  This error is likely caused by a bug in React. Please file an issue.",
-  "266": "A subscription must return an unsubscribe function."
+  "266": "A subscription must return an unsubscribe function.",
+  "267": "React.cloneElement(...): The argument must be a React element, but you passed %s.",
+  "268": "Argument appears to not be a ReactComponent. Keys: %s"
 }
