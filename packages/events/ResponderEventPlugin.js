@@ -23,6 +23,11 @@ import {
 } from './EventPropagators';
 import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
+import {
+  TOP_SCROLL,
+  TOP_SELECTION_CHANGE,
+  TOP_TOUCH_CANCEL,
+} from './TopLevelEventTypes';
 import accumulate from './accumulate';
 
 /**
@@ -322,7 +327,7 @@ function setResponderAndExtractTransfer(
     ? eventTypes.startShouldSetResponder
     : isMoveish(topLevelType)
       ? eventTypes.moveShouldSetResponder
-      : topLevelType === 'topSelectionChange'
+      : topLevelType === TOP_SELECTION_CHANGE
         ? eventTypes.selectionChangeShouldSetResponder
         : eventTypes.scrollShouldSetResponder;
 
@@ -418,7 +423,7 @@ function setResponderAndExtractTransfer(
  * element to claim responder status. Any start event could trigger a transfer
  * of responderInst. Any move event could trigger a transfer.
  *
- * @param {string} topLevelType Record from `BrowserEventConstants`.
+ * @param {number} topLevelType Number from `TopLevelEventTypes`.
  * @return {boolean} True if a transfer of responder could possibly occur.
  */
 function canTriggerTransfer(topLevelType, topLevelInst, nativeEvent) {
@@ -427,8 +432,8 @@ function canTriggerTransfer(topLevelType, topLevelInst, nativeEvent) {
     // responderIgnoreScroll: We are trying to migrate away from specifically
     // tracking native scroll events here and responderIgnoreScroll indicates we
     // will send topTouchCancel to handle canceling touch events instead
-    ((topLevelType === 'topScroll' && !nativeEvent.responderIgnoreScroll) ||
-      (trackedTouchCount > 0 && topLevelType === 'topSelectionChange') ||
+    ((topLevelType === TOP_SCROLL && !nativeEvent.responderIgnoreScroll) ||
+      (trackedTouchCount > 0 && topLevelType === TOP_SELECTION_CHANGE) ||
       isStartish(topLevelType) ||
       isMoveish(topLevelType))
   );
@@ -534,7 +539,7 @@ const ResponderEventPlugin = {
     }
 
     const isResponderTerminate =
-      responderInst && topLevelType === 'topTouchCancel';
+      responderInst && topLevelType === TOP_TOUCH_CANCEL;
     const isResponderRelease =
       responderInst &&
       !isResponderTerminate &&
