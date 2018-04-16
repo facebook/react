@@ -18,8 +18,8 @@ import {
   TOP_TOUCH_END,
   TOP_TOUCH_MOVE,
   TOP_TOUCH_START,
-} from './TopLevelEventTypes';
-import type {TopLevelTypes} from './TopLevelEventTypes';
+} from 'events/TopLevelEventTypes';
+import type {TopLevelTypes} from 'events/TopLevelEventTypes';
 
 import SyntheticUIEvent from './SyntheticUIEvent';
 

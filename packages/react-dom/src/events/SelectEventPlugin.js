@@ -17,7 +17,7 @@ import {
   TOP_MOUSE_DOWN,
   TOP_MOUSE_UP,
   TOP_SELECTION_CHANGE,
-} from './TopLevelEventTypes';
+} from 'events/TopLevelEventTypes';
 import isTextInputElement from 'shared/isTextInputElement';
 import getActiveElement from 'fbjs/lib/getActiveElement';
 import shallowEqual from 'fbjs/lib/shallowEqual';

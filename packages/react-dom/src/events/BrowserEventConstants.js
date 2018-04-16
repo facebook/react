@@ -7,9 +7,10 @@
  * @flow
  */
 
-import * as TopLevelEventTypes from './TopLevelEventTypes';
+import * as TopLevelEventTypes from 'events/TopLevelEventTypes';
+import type {TopLevelTypes} from 'events/TopLevelEventTypes';
+
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
-import type {TopLevelTypes} from './TopLevelEventTypes';
 
 /**
  * Types of raw signals from the browser caught at the top level.

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {TopLevelTypes} from './TopLevelEventTypes';
+import type {TopLevelTypes} from 'events/TopLevelEventTypes';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
@@ -18,7 +18,7 @@ import type {EventTypes, PluginModule} from 'events/PluginModuleType';
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import SyntheticEvent from 'events/SyntheticEvent';
 
-import * as TopLevelEventTypes from './TopLevelEventTypes';
+import * as TopLevelEventTypes from 'events/TopLevelEventTypes';
 import warning from 'fbjs/lib/warning';
 
 import SyntheticAnimationEvent from './SyntheticAnimationEvent';

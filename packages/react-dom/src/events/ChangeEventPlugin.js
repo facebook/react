@@ -19,7 +19,7 @@ import {
   TOP_KEY_DOWN,
   TOP_KEY_UP,
   TOP_SELECTION_CHANGE,
-} from './TopLevelEventTypes';
+} from 'events/TopLevelEventTypes';
 import isTextInputElement from 'shared/isTextInputElement';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 

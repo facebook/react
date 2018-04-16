@@ -6,7 +6,7 @@
  */
 
 import {accumulateEnterLeaveDispatches} from 'events/EventPropagators';
-import {TOP_MOUSE_OUT, TOP_MOUSE_OVER} from './TopLevelEventTypes';
+import {TOP_MOUSE_OUT, TOP_MOUSE_OVER} from 'events/TopLevelEventTypes';
 
 import SyntheticMouseEvent from './SyntheticMouseEvent';
 import {

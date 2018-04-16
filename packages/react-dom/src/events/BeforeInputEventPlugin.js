@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type {TopLevelTypes} from './TopLevelEventTypes';
+import type {TopLevelTypes} from 'events/TopLevelEventTypes';
 
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import {
@@ -19,7 +19,7 @@ import {
   TOP_MOUSE_DOWN,
   TOP_TEXT_INPUT,
   TOP_PASTE,
-} from './TopLevelEventTypes';
+} from 'events/TopLevelEventTypes';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
 import * as FallbackCompositionState from './FallbackCompositionState';

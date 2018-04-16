@@ -17,7 +17,7 @@ import {
   TOP_RESET,
   TOP_SUBMIT,
   TOP_TOGGLE,
-} from '../events/TopLevelEventTypes';
+} from 'events/TopLevelEventTypes';
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
 

@@ -12,7 +12,7 @@ import {
   TOP_CLOSE,
   TOP_FOCUS,
   TOP_SCROLL,
-} from './TopLevelEventTypes';
+} from 'events/TopLevelEventTypes';
 import {
   setEnabled,
   isEnabled,
