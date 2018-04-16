@@ -98,7 +98,7 @@ export const mediaEventTypes: Map<TopLevelTypes, string> = new Map([
 ]);
 
 const nonTopEventTypes: Map<TopLevelTypes, string> = new Map([
-  // [TopLevelEventTypes.TOP_INPUT, 'abort'],
+  // [TopLevelEventTypes.TOP_INPUT, 'input'],
   [TopLevelEventTypes.TOP_INVALID, 'invalid'],
   [TopLevelEventTypes.TOP_RESET, 'reset'],
   [TopLevelEventTypes.TOP_SUBMIT, 'submit'],
