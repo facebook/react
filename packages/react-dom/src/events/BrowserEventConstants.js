@@ -97,6 +97,20 @@ export const mediaEventTypes: Map<TopLevelTypes, string> = new Map([
   [TopLevelEventTypes.TOP_WAITING, 'waiting'],
 ]);
 
+const nonTopEventTypes: Map<TopLevelTypes, string> = new Map([
+  // [TopLevelEventTypes.TOP_INPUT, 'abort'],
+  [TopLevelEventTypes.TOP_INVALID, 'invalid'],
+  [TopLevelEventTypes.TOP_RESET, 'reset'],
+  [TopLevelEventTypes.TOP_SUBMIT, 'submit'],
+]);
+
 export function getRawEventName(topLevelType: TopLevelTypes): ?string {
- return topLevelTypes.get(topLevelType) || mediaEventTypes.get(topLevelType);
+ const eventName: ?string = topLevelTypes.get(topLevelType)
+   || mediaEventTypes.get(topLevelType)
+   || nonTopEventTypes.get(topLevelType);
+
+  if (!eventName) {
+    throw new Error(`Not handling ${topLevelType}`);
+  }
+  return null;
 }
