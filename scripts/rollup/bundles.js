@@ -113,7 +113,7 @@ const bundles = [
   /******* React Native *******/
   {
     label: 'native',
-    bundleTypes: [RN_DEV, RN_PROD],
+    bundleTypes: [RN_DEV, RN_PROD, FB_DEV, FB_PROD],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -134,7 +134,7 @@ const bundles = [
   /******* React Native Fabric *******/
   {
     label: 'native-fabric',
-    bundleTypes: [RN_DEV, RN_PROD],
+    bundleTypes: [RN_DEV, RN_PROD, FB_DEV, FB_PROD],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',

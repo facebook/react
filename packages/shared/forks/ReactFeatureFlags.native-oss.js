@@ -10,23 +10,18 @@
 import invariant from 'fbjs/lib/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native';
+import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-oss';
 
-// Re-export dynamic flags from the fbsource version.
-export const {
-  enableGetDerivedStateFromCatch,
-  debugRenderPhaseSideEffects,
-  debugRenderPhaseSideEffectsForStrictMode,
-  warnAboutDeprecatedLifecycles,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
-} = require('ReactFeatureFlags');
-
-// The rest of the flags are static for better dead code elimination.
-export const enableUserTimingAPI = __DEV__;
+export const alwaysUseRequestIdleCallbackPolyfill = false;
+export const debugRenderPhaseSideEffects = false;
+export const debugRenderPhaseSideEffectsForStrictMode = false;
+export const enableGetDerivedStateFromCatch = false;
 export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
 export const enablePersistentReconciler = false;
-export const alwaysUseRequestIdleCallbackPolyfill = false;
+export const enableUserTimingAPI = __DEV__;
+export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
+export const warnAboutDeprecatedLifecycles = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

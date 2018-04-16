@@ -33,9 +33,21 @@ const forks = Object.freeze({
   'shared/ReactFeatureFlags': (bundleType, entry) => {
     switch (entry) {
       case 'react-native-renderer':
-        return 'shared/forks/ReactFeatureFlags.native.js';
+        switch (bundleType) {
+          case FB_DEV:
+          case FB_PROD:
+            return 'shared/forks/ReactFeatureFlags.native-fb.js';
+          default:
+            return 'shared/forks/ReactFeatureFlags.native-oss.js';
+        }
       case 'react-native-renderer/fabric':
-        return 'shared/forks/ReactFeatureFlags.native-fabric.js';
+        switch (bundleType) {
+          case FB_DEV:
+          case FB_PROD:
+            return 'shared/forks/ReactFeatureFlags.native-fabric-fb.js';
+          default:
+            return 'shared/forks/ReactFeatureFlags.native-fabric-oss.js';
+        }
       case 'react-reconciler/persistent':
         return 'shared/forks/ReactFeatureFlags.persistent.js';
       case 'react-test-renderer':
