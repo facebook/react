@@ -22,7 +22,7 @@ export type PluginName = string;
 export type PluginModule<NativeEvent> = {
   eventTypes: EventTypes,
   extractEvents: (
-    topLevelType: string,
+    topLevelType: number,
     targetInst: Fiber,
     nativeTarget: NativeEvent,
     nativeEventTarget: EventTarget,
