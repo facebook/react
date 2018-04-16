@@ -377,6 +377,26 @@ describe('ReactDOM', () => {
     }
   });
 
+  it('should not crash calling findDOMNode inside a functional component', () => {
+    const container = document.createElement('div');
+
+    class Component extends React.Component {
+      render() {
+        return <div />;
+      }
+    }
+
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const App = () => {
+      ReactDOM.findDOMNode(instance);
+      return <div />;
+    };
+
+    if (__DEV__) {
+      ReactDOM.render(<App />, container);
+    }
+  });
+
   it('throws in DEV if jsdom is destroyed by the time setState() is called', () => {
     class App extends React.Component {
       state = {x: 1};
