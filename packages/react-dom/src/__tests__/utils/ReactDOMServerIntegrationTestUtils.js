@@ -53,9 +53,7 @@ module.exports = function(initModules) {
       console.error.calls.count() !== 0
     ) {
       console.log(
-        `We expected ${
-          count
-        } warning(s), but saw ${console.error.calls.count()} warning(s).`,
+        `We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`,
       );
       if (console.error.calls.count() > 0) {
         console.log(`We saw these warnings:`);
@@ -237,9 +235,7 @@ module.exports = function(initModules) {
       testFn(clientCleanRender));
     it(`renders ${desc} with client render on top of good server markup`, () =>
       testFn(clientRenderOnServerString));
-    it(`renders ${
-      desc
-    } with client render on top of bad server markup`, async () => {
+    it(`renders ${desc} with client render on top of bad server markup`, async () => {
       try {
         await testFn(clientRenderOnBadMarkup);
       } catch (x) {

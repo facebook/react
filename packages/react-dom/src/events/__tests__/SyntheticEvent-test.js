@@ -147,9 +147,7 @@ describe('SyntheticEvent', () => {
 
     const getExpectedWarning = property =>
       'Warning: This synthetic event is reused for performance reasons. If ' +
-      `you're seeing this, you're accessing the property \`${
-        property
-      }\` on a ` +
+      `you're seeing this, you're accessing the property \`${property}\` on a ` +
       'released/nullified synthetic event. This is set to null. If you must ' +
       'keep the original synthetic event around, use event.persist(). ' +
       'See https://fb.me/react-event-pooling for more information.';
