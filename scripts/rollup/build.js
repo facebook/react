@@ -68,6 +68,7 @@ const closureOptions = {
   applyInputSourceMaps: false,
   useTypesForOptimization: false,
   processCommonJsModules: false,
+  rewritePolyfills: false,
 };
 
 function getBabelConfig(updateBabelOptions, bundleType, filename) {
