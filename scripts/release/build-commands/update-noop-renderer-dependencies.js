@@ -5,7 +5,7 @@
 const {readJson, writeJson} = require('fs-extra');
 const {join} = require('path');
 const semver = require('semver');
-const {execUnlessDry, logPromise} = require('../utils');
+const {execRead, execUnlessDry, logPromise} = require('../utils');
 
 const getReactReconcilerVersion = async cwd => {
   const path = join(cwd, 'packages', 'react-reconciler', 'package.json');
@@ -33,10 +33,13 @@ const update = async ({cwd, dry}) => {
 
   await writeJson(path, json, {spaces: 2});
 
-  await execUnlessDry(
-    `git commit -am "Updating dependencies for react-noop-renderer"`,
-    {cwd, dry}
-  );
+  const status = await execRead('git status -s', {cwd});
+  if (status) {
+    await execUnlessDry(
+      `git commit -am "Updating dependencies for react-noop-renderer"`,
+      {cwd, dry}
+    );
+  }
 };
 
 module.exports = async params => {
