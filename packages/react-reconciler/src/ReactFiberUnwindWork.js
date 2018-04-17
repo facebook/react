@@ -47,6 +47,7 @@ import {
 import {
   enableGetDerivedStateFromCatch,
   enableProfilerTimer,
+  enableSuspense,
 } from 'shared/ReactFeatureFlags';
 
 import {Sync} from './ReactFiberExpirationTime';
@@ -200,6 +201,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
     if (
+      enableSuspense &&
       value !== null &&
       typeof value === 'object' &&
       typeof value.then === 'function'
