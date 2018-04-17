@@ -15,7 +15,7 @@ function NumberInputs() {
         `}
         affectedBrowsers="IE Edge, IE 11">
         <TestCase.Steps>
-          <li>Type any string (not an actual password</li>
+          <li>Type any string (not an actual password)</li>
         </TestCase.Steps>
 
         <TestCase.ExpectedResult>
