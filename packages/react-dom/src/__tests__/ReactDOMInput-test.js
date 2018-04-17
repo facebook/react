@@ -11,7 +11,7 @@
 
 const emptyFunction = require('fbjs/lib/emptyFunction');
 
-const { TOP_INPUT } = require('events/TopLevelEventTypes');
+const {TOP_INPUT} = require('events/TopLevelEventTypes');
 
 describe('ReactDOMInput', () => {
   let React;

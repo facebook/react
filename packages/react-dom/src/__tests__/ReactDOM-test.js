@@ -13,7 +13,7 @@ let React = require('react');
 let ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 
-const { TOP_CLICK } = require('events/TopLevelEventTypes');
+const {TOP_CLICK} = require('events/TopLevelEventTypes');
 
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which

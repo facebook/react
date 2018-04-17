@@ -14,7 +14,11 @@ const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 const PropTypes = require('prop-types');
 
-const { TOP_CLICK, TOP_MOUSE_OUT, TOP_MOUSE_OVER } = require('events/TopLevelEventTypes');
+const {
+  TOP_CLICK,
+  TOP_MOUSE_OUT,
+  TOP_MOUSE_OVER,
+} = require('events/TopLevelEventTypes');
 
 describe('ReactDOMFiber', () => {
   let container;

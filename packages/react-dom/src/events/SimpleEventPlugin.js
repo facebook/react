@@ -33,7 +33,6 @@ import SyntheticUIEvent from './SyntheticUIEvent';
 import SyntheticWheelEvent from './SyntheticWheelEvent';
 import getEventCharCode from './getEventCharCode';
 
-
 /**
  * Turns
  * ['abort', ...]
@@ -124,9 +123,15 @@ const nonInteractiveEventTypeNames: Array<EventTuple> = [
 ];
 
 const eventTypes: EventTypes = {};
-const topLevelEventsToDispatchConfig: Map<TopLevelTypes, DispatchConfig> = new Map();
+const topLevelEventsToDispatchConfig: Map<
+  TopLevelTypes,
+  DispatchConfig,
+> = new Map();
 
-function addEventTypeNameToConfig(eventTuple: EventTuple, isInteractive: boolean) {
+function addEventTypeNameToConfig(
+  eventTuple: EventTuple,
+  isInteractive: boolean,
+) {
   const topEvent = eventTuple[0];
   const event = eventTuple[1];
   const capitalizedEvent = event[0].toUpperCase() + event.slice(1);

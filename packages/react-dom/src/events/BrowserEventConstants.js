@@ -21,9 +21,18 @@ import getVendorPrefixedEventName from './getVendorPrefixedEventName';
  * at `document` would cause duplicate events so we don't include them here.
  */
 export const topLevelTypes: Map<TopLevelTypes, string> = new Map([
-  [TopLevelEventTypes.TOP_ANIMATION_END, getVendorPrefixedEventName('animationend')],
-  [TopLevelEventTypes.TOP_ANIMATION_ITERATION, getVendorPrefixedEventName('animationiteration')],
-  [TopLevelEventTypes.TOP_ANIMATION_START, getVendorPrefixedEventName('animationstart')],
+  [
+    TopLevelEventTypes.TOP_ANIMATION_END,
+    getVendorPrefixedEventName('animationend'),
+  ],
+  [
+    TopLevelEventTypes.TOP_ANIMATION_ITERATION,
+    getVendorPrefixedEventName('animationiteration'),
+  ],
+  [
+    TopLevelEventTypes.TOP_ANIMATION_START,
+    getVendorPrefixedEventName('animationstart'),
+  ],
   [TopLevelEventTypes.TOP_BLUR, 'blur'],
   [TopLevelEventTypes.TOP_CANCEL, 'cancel'],
   [TopLevelEventTypes.TOP_CHANGE, 'change'],
@@ -64,7 +73,10 @@ export const topLevelTypes: Map<TopLevelTypes, string> = new Map([
   [TopLevelEventTypes.TOP_TOUCH_END, 'touchend'],
   [TopLevelEventTypes.TOP_TOUCH_MOVE, 'touchmove'],
   [TopLevelEventTypes.TOP_TOUCH_START, 'touchstart'],
-  [TopLevelEventTypes.TOP_TRANSITION_END, getVendorPrefixedEventName('transitionend')],
+  [
+    TopLevelEventTypes.TOP_TRANSITION_END,
+    getVendorPrefixedEventName('transitionend'),
+  ],
   [TopLevelEventTypes.TOP_WHEEL, 'wheel'],
 ]);
 
@@ -106,10 +118,11 @@ const nonTopEventTypes: Map<TopLevelTypes, string> = new Map([
   [TopLevelEventTypes.TOP_SUBMIT, 'submit'],
 ]);
 
-export function getRawEventName(topLevelType: TopLevelTypes): ?string {
-  const eventName: ?string = topLevelTypes.get(topLevelType)
-    || mediaEventTypes.get(topLevelType)
-    || nonTopEventTypes.get(topLevelType);
+export function getRawEventName(topLevelType: TopLevelTypes): string {
+  const eventName =
+    topLevelTypes.get(topLevelType) ||
+    mediaEventTypes.get(topLevelType) ||
+    nonTopEventTypes.get(topLevelType);
 
   invariant(
     eventName,

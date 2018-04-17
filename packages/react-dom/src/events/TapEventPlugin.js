@@ -91,11 +91,7 @@ const touchEvents = [
   TOP_TOUCH_MOVE,
 ];
 
-const dependencies = [
-  TOP_MOUSE_DOWN,
-  TOP_MOUSE_MOVE,
-  TOP_MOUSE_UP,
-].concat(
+const dependencies = [TOP_MOUSE_DOWN, TOP_MOUSE_MOVE, TOP_MOUSE_UP].concat(
   touchEvents,
 );
 
