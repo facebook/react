@@ -14,6 +14,8 @@ const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 const PropTypes = require('prop-types');
 
+const { TOP_CLICK, TOP_MOUSE_OUT, TOP_MOUSE_OVER } = require('events/TopLevelEventTypes');
+
 describe('ReactDOMFiber', () => {
   let container;
 
@@ -840,7 +842,7 @@ describe('ReactDOMFiber', () => {
 
     const fakeNativeEvent = {};
     ReactTestUtils.simulateNativeEventOnNode(
-      'topClick',
+      TOP_CLICK,
       portal,
       fakeNativeEvent,
     );
@@ -858,13 +860,13 @@ describe('ReactDOMFiber', () => {
 
     function simulateMouseMove(from, to) {
       if (from) {
-        ReactTestUtils.simulateNativeEventOnNode('topMouseOut', from, {
+        ReactTestUtils.simulateNativeEventOnNode(TOP_MOUSE_OUT, from, {
           target: from,
           relatedTarget: to,
         });
       }
       if (to) {
-        ReactTestUtils.simulateNativeEventOnNode('topMouseOver', to, {
+        ReactTestUtils.simulateNativeEventOnNode(TOP_MOUSE_OVER, to, {
           target: to,
           relatedTarget: from,
         });
@@ -985,7 +987,7 @@ describe('ReactDOMFiber', () => {
     function click(target) {
       const fakeNativeEvent = {};
       ReactTestUtils.simulateNativeEventOnNode(
-        'topClick',
+        TOP_CLICK,
         target,
         fakeNativeEvent,
       );

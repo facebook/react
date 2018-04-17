@@ -17,6 +17,7 @@ let ReactNative;
 let ResponderEventPlugin;
 let UIManager;
 let createReactNativeComponentClass;
+let TopLevelEventTypes;
 
 // Parallels requireNativeComponent() in that it lazily constructs a view config,
 // And registers view manager event types with ReactNativeViewConfigRegistry.
@@ -71,6 +72,7 @@ beforeEach(() => {
   UIManager = require('UIManager');
   createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
     .register;
+  TopLevelEventTypes = require('events/TopLevelEventTypes');
 });
 
 it('fails if unknown/unsupported event types are dispatched', () => {
@@ -128,12 +130,12 @@ it('handles events', () => {
   )[0];
 
   EventEmitter.receiveTouches(
-    'topTouchStart',
+    TopLevelEventTypes.TOP_TOUCH_START,
     [{target: innerTag, identifier: 17}],
     [0],
   );
   EventEmitter.receiveTouches(
-    'topTouchEnd',
+    TopLevelEventTypes.TOP_TOUCH_END,
     [{target: innerTag, identifier: 17}],
     [0],
   );
@@ -200,23 +202,23 @@ it('handles events on text nodes', () => {
   )[0];
 
   EventEmitter.receiveTouches(
-    'topTouchStart',
+    TopLevelEventTypes.TOP_TOUCH_START,
     [{target: innerTagString, identifier: 17}],
     [0],
   );
   EventEmitter.receiveTouches(
-    'topTouchEnd',
+    TopLevelEventTypes.TOP_TOUCH_END,
     [{target: innerTagString, identifier: 17}],
     [0],
   );
 
   EventEmitter.receiveTouches(
-    'topTouchStart',
+    TopLevelEventTypes.TOP_TOUCH_START,
     [{target: innerTagNumber, identifier: 18}],
     [0],
   );
   EventEmitter.receiveTouches(
-    'topTouchEnd',
+    TopLevelEventTypes.TOP_TOUCH_END,
     [{target: innerTagNumber, identifier: 18}],
     [0],
   );
@@ -276,7 +278,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
   );
 
   EventEmitter.receiveTouches(
-    'topTouchStart',
+    TopLevelEventTypes.TOP_TOUCH_START,
     [{target: getViewById('one'), identifier: 17}],
     [0],
   );
@@ -304,7 +306,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
   // log.splice(0);
 
   EventEmitter.receiveTouches(
-    'topTouchEnd',
+    TopLevelEventTypes.TOP_TOUCH_END,
     [{target: getViewById('two'), identifier: 17}],
     [0],
   );
@@ -313,7 +315,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
   expect(log).toEqual([]);
 
   EventEmitter.receiveTouches(
-    'topTouchStart',
+    TopLevelEventTypes.TOP_TOUCH_START,
     [{target: getViewById('two'), identifier: 17}],
     [0],
   );
@@ -373,7 +375,7 @@ it('handles events without target', () => {
   render(true);
 
   EventEmitter.receiveTouches(
-    'topTouchStart',
+    TopLevelEventTypes.TOP_TOUCH_START,
     [{target: getViewById('one'), identifier: 17}],
     [0],
   );
@@ -382,7 +384,7 @@ it('handles events without target', () => {
   render(false);
 
   EventEmitter.receiveTouches(
-    'topTouchEnd',
+    TopLevelEventTypes.TOP_TOUCH_END,
     [{target: getViewById('one'), identifier: 17}],
     [0],
   );
@@ -390,7 +392,7 @@ it('handles events without target', () => {
   expect(getResponderId()).toBe(null);
 
   EventEmitter.receiveTouches(
-    'topTouchStart',
+    TopLevelEventTypes.TOP_TOUCH_START,
     [{target: getViewById('two'), identifier: 18}],
     [0],
   );
@@ -398,7 +400,7 @@ it('handles events without target', () => {
   expect(getResponderId()).toBe('two');
 
   EventEmitter.receiveTouches(
-    'topTouchEnd',
+    TopLevelEventTypes.TOP_TOUCH_END,
     [{target: getViewById('two'), identifier: 18}],
     [0],
   );

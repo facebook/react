@@ -44,13 +44,13 @@ import getEventCharCode from './getEventCharCode';
  *       bubbled: 'onAbort',
  *       captured: 'onAbortCapture',
  *     },
- *     dependencies: ['topAbort'],
+ *     dependencies: [TOP_ABORT],
  *   },
  *   ...
  * };
- * topLevelEventsToDispatchConfig = {
- *   'topAbort': { sameConfig }
- * };
+ * topLevelEventsToDispatchConfig = new Map([
+ *   [TOP_ABORT, { sameConfig }],
+ * ]);
  */
 type EventTuple = [TopLevelTypes, string];
 const interactiveEventTypeNames: Array<EventTuple> = [

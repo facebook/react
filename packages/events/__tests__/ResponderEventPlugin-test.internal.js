@@ -11,6 +11,14 @@
 
 const {HostComponent} = require('shared/ReactTypeOfWork');
 
+const {
+  TOP_SCROLL,
+  TOP_TOUCH_CANCEL,
+  TOP_TOUCH_END,
+  TOP_TOUCH_MOVE,
+  TOP_TOUCH_START,
+} = require('../TopLevelEventTypes');
+
 let EventPluginHub;
 let ResponderEventPlugin;
 
@@ -66,13 +74,13 @@ const _touchConfig = function(
   const allTouchObjects = allTouchHandles.map(touch);
   const changedTouchObjects = subsequence(allTouchObjects, changedIndices);
   const activeTouchObjects =
-    topType === 'topTouchStart'
+    topType === TOP_TOUCH_START
       ? allTouchObjects
-      : topType === 'topTouchMove'
+      : topType === TOP_TOUCH_MOVE
         ? allTouchObjects
-        : topType === 'topTouchEnd'
+        : topType === TOP_TOUCH_END
           ? antiSubsequence(allTouchObjects, changedIndices)
-          : topType === 'topTouchCancel'
+          : topType === TOP_TOUCH_CANCEL
             ? antiSubsequence(allTouchObjects, changedIndices)
             : null;
 
@@ -107,7 +115,7 @@ const _touchConfig = function(
  */
 const startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
-    'topTouchStart',
+    TOP_TOUCH_START,
     nodeHandle,
     allTouchHandles,
     changedIndices,
@@ -120,7 +128,7 @@ const startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
  */
 const moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
-    'topTouchMove',
+    TOP_TOUCH_MOVE,
     nodeHandle,
     allTouchHandles,
     changedIndices,
@@ -133,7 +141,7 @@ const moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
  */
 const endConfig = function(nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
-    'topTouchEnd',
+    TOP_TOUCH_END,
     nodeHandle,
     allTouchHandles,
     changedIndices,
@@ -1292,7 +1300,7 @@ describe('ResponderEventPlugin', () => {
     config.responderReject.parent = {order: 5};
 
     run(config, three, {
-      topLevelType: 'topScroll',
+      topLevelType: TOP_SCROLL,
       targetInst: getInstanceFromNode(three.parent),
       nativeEvent: {},
     });
@@ -1319,7 +1327,7 @@ describe('ResponderEventPlugin', () => {
     config.responderTerminate.child = {order: 5};
 
     run(config, three, {
-      topLevelType: 'topScroll',
+      topLevelType: TOP_SCROLL,
       targetInst: getInstanceFromNode(three.parent),
       nativeEvent: {},
     });
@@ -1357,7 +1365,7 @@ describe('ResponderEventPlugin', () => {
     config.responderTerminate.child = {order: 1};
 
     const nativeEvent = _touchConfig(
-      'topTouchCancel',
+      TOP_TOUCH_CANCEL,
       three.child,
       [three.child],
       [0],

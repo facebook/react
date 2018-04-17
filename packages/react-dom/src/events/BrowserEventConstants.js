@@ -9,6 +9,7 @@
 
 import * as TopLevelEventTypes from 'events/TopLevelEventTypes';
 import type {TopLevelTypes} from 'events/TopLevelEventTypes';
+import invariant from 'fbjs/lib/invariant';
 
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
@@ -106,12 +107,13 @@ const nonTopEventTypes: Map<TopLevelTypes, string> = new Map([
 ]);
 
 export function getRawEventName(topLevelType: TopLevelTypes): ?string {
- const eventName: ?string = topLevelTypes.get(topLevelType)
-   || mediaEventTypes.get(topLevelType)
-   || nonTopEventTypes.get(topLevelType);
+  const eventName: ?string = topLevelTypes.get(topLevelType)
+    || mediaEventTypes.get(topLevelType)
+    || nonTopEventTypes.get(topLevelType);
 
-  if (!eventName) {
-    throw new Error(`Not handling ${topLevelType}`);
-  }
-  return null;
+  invariant(
+    eventName,
+    'BrowserEventConstants: Could not look up raw event name of topLevelType.',
+  );
+  return eventName;
 }

@@ -91,7 +91,7 @@ function getListeningForDocument(mountAt) {
   // directly.
   if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
     mountAt[topListenersIDKey] = reactTopListenersCounter++;
-    alreadyListeningTo[mountAt[topListenersIDKey]] = {};
+    alreadyListeningTo[mountAt[topListenersIDKey]] = new Map();
   }
   return alreadyListeningTo[mountAt[topListenersIDKey]];
 }
@@ -124,7 +124,7 @@ export function listenTo(registrationName, contentDocumentHandle) {
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
+    if (!isListening.get(dependency)) {
       if (dependency === TOP_SCROLL) {
         trapCapturedEvent(TOP_SCROLL, mountAt);
       } else if (dependency === TOP_FOCUS || dependency === TOP_BLUR) {
@@ -132,23 +132,23 @@ export function listenTo(registrationName, contentDocumentHandle) {
         trapCapturedEvent(TOP_BLUR, mountAt);
 
         // to make sure blur and focus event listeners are only attached once
-        isListening.topBlur = true;
-        isListening.topFocus = true;
+        isListening.set(TOP_BLUR, true);
+        isListening.set(TOP_FOCUS, true);
       } else if (dependency === TOP_CANCEL) {
         if (isEventSupported('cancel', true)) {
           trapCapturedEvent(TOP_CANCEL, mountAt);
         }
-        isListening.topCancel = true;
+        isListening.set(TOP_CANCEL, true);
       } else if (dependency === TOP_CLOSE) {
         if (isEventSupported('close', true)) {
           trapCapturedEvent(TOP_CLOSE, mountAt);
         }
-        isListening.topClose = true;
+        isListening.set(TOP_CLOSE, true);
       } else if (getRawEventName(dependency)) {
         trapBubbledEvent(dependency, mountAt);
       }
 
-      isListening[dependency] = true;
+      isListening.set(dependency, true);
     }
   }
 }
@@ -158,7 +158,7 @@ export function isListeningToAllDependencies(registrationName, mountAt) {
   const dependencies = registrationNameDependencies[registrationName];
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
+    if (!isListening.get(dependency)) {
       return false;
     }
   }

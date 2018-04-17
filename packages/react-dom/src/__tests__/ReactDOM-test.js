@@ -13,6 +13,8 @@ let React = require('react');
 let ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 
+const { TOP_CLICK } = require('events/TopLevelEventTypes');
+
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which
   // supports real submit events.
@@ -313,7 +315,7 @@ describe('ReactDOM', () => {
       fakeNativeEvent.target = node;
       fakeNativeEvent.path = [node, container];
       ReactTestUtils.simulateNativeEventOnNode(
-        'topClick',
+        TOP_CLICK,
         node,
         fakeNativeEvent,
       );

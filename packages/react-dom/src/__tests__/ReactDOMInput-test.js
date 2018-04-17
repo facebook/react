@@ -11,6 +11,8 @@
 
 const emptyFunction = require('fbjs/lib/emptyFunction');
 
+const { TOP_INPUT } = require('events/TopLevelEventTypes');
+
 describe('ReactDOMInput', () => {
   let React;
   let ReactDOM;
@@ -697,7 +699,7 @@ describe('ReactDOMInput', () => {
     const fakeNativeEvent = function() {};
     fakeNativeEvent.target = node;
     fakeNativeEvent.path = [node, container];
-    ReactTestUtils.simulateNativeEventOnNode('topInput', node, fakeNativeEvent);
+    ReactTestUtils.simulateNativeEventOnNode(TOP_INPUT, node, fakeNativeEvent);
 
     expect(handled).toBe(true);
   });

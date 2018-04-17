@@ -318,7 +318,7 @@ function getNativeBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
  * For browsers that do not provide the `textInput` event, extract the
  * appropriate string to use for SyntheticInputEvent.
  *
- * @param {string} topLevelType Record from `BrowserEventConstants`.
+ * @param {number} topLevelType Number from `TopLevelEventTypes`.
  * @param {object} nativeEvent Native browser event.
  * @return {?string} The fallback string for this `beforeInput` event.
  */

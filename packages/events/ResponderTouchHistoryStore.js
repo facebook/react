@@ -177,7 +177,7 @@ function printTouchBank(): string {
 }
 
 const ResponderTouchHistoryStore = {
-  recordTouchTrack(topLevelType: string, nativeEvent: TouchEvent): void {
+  recordTouchTrack(topLevelType: number, nativeEvent: TouchEvent): void {
     if (isMoveish(topLevelType)) {
       nativeEvent.changedTouches.forEach(recordTouchMove);
     } else if (isStartish(topLevelType)) {

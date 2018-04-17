@@ -454,7 +454,7 @@ export function setInitialProperties(
     case 'video':
     case 'audio':
       // Create listener for each media event
-      mediaEventTypes.forEach(topEventName => {
+      mediaEventTypes.forEach((_value, topEventName) => {
         trapBubbledEvent(topEventName, domElement);
       });
       props = rawProps;
@@ -840,7 +840,7 @@ export function diffHydratedProperties(
     case 'video':
     case 'audio':
       // Create listener for each media event
-      mediaEventTypes.forEach(topEventName => {
+      mediaEventTypes.forEach((_value, topEventName) => {
         trapBubbledEvent(topEventName, domElement);
       });
       break;

@@ -16,6 +16,7 @@ import {
   HostText,
 } from 'shared/ReactTypeOfWork';
 import SyntheticEvent from 'events/SyntheticEvent';
+import * as TopLevelEventTypes from 'events/TopLevelEventTypes';
 import invariant from 'fbjs/lib/invariant';
 
 const {findDOMNode} = ReactDOM;
@@ -292,7 +293,7 @@ const ReactTestUtils = {
   /**
    * Simulates a top level event being dispatched from a raw event that occurred
    * on an `Element` node.
-   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`
+   * @param {number} topLevelType A number from `TopLevelEventTypes`
    * @param {!Element} node The dom to simulate an event occurring on.
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
@@ -434,20 +435,20 @@ buildSimulators();
  * to dispatch synthetic events.
  */
 
-function makeNativeSimulator(eventType) {
+function makeNativeSimulator(eventType, topLevelType) {
   return function(domComponentOrNode, nativeEventData) {
     const fakeNativeEvent = new Event(eventType);
     Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
-        eventType,
+        topLevelType,
         domComponentOrNode,
         fakeNativeEvent,
       );
     } else if (domComponentOrNode.tagName) {
       // Will allow on actual dom nodes.
       ReactTestUtils.simulateNativeEventOnNode(
-        eventType,
+        topLevelType,
         domComponentOrNode,
         fakeNativeEvent,
       );
@@ -456,82 +457,86 @@ function makeNativeSimulator(eventType) {
 }
 
 [
-  'animationEnd',
-  'animationIteration',
-  'animationStart',
-  'blur',
-  'cancel',
-  'change',
-  'click',
-  'close',
-  'compositionEnd',
-  'compositionStart',
-  'compositionUpdate',
-  'contextMenu',
-  'copy',
-  'cut',
-  'doubleClick',
-  'drag',
-  'dragEnd',
-  'dragEnter',
-  'dragExit',
-  'dragLeave',
-  'dragOver',
-  'dragStart',
-  'drop',
-  'focus',
-  'input',
-  'keyDown',
-  'keyPress',
-  'keyUp',
-  'load',
-  'loadStart',
-  'mouseDown',
-  'mouseMove',
-  'mouseOut',
-  'mouseOver',
-  'mouseUp',
-  'paste',
-  'scroll',
-  'selectionChange',
-  'textInput',
-  'toggle',
-  'touchCancel',
-  'touchEnd',
-  'touchMove',
-  'touchStart',
-  'transitionEnd',
-  'wheel',
-  'abort',
-  'canPlay',
-  'canPlayThrough',
-  'durationChange',
-  'emptied',
-  'encrypted',
-  'ended',
-  'error',
-  'loadedData',
-  'loadedMetadata',
-  'loadStart',
-  'pause',
-  'play',
-  'playing',
-  'progress',
-  'rateChange',
-  'seeked',
-  'seeking',
-  'stalled',
-  'suspend',
-  'timeUpdate',
-  'VolumeChange',
-  'waiting',
-].forEach(function(eventType) {
+  [TopLevelEventTypes.TOP_ANIMATION_END, 'animationEnd'],
+  [TopLevelEventTypes.TOP_ANIMATION_ITERATION, 'animationIteration'],
+  [TopLevelEventTypes.TOP_ANIMATION_START, 'animationStart'],
+  [TopLevelEventTypes.TOP_BLUR, 'blur'],
+  [TopLevelEventTypes.TOP_CANCEL, 'cancel'],
+  [TopLevelEventTypes.TOP_CHANGE, 'change'],
+  [TopLevelEventTypes.TOP_CLICK, 'click'],
+  [TopLevelEventTypes.TOP_CLOSE, 'close'],
+  [TopLevelEventTypes.TOP_COMPOSITION_END, 'compositionEnd'],
+  [TopLevelEventTypes.TOP_COMPOSITION_START, 'compositionStart'],
+  [TopLevelEventTypes.TOP_COMPOSITION_UPDATE, 'compositionUpdate'],
+  [TopLevelEventTypes.TOP_CONTEXT_MENU, 'contextMenu'],
+  [TopLevelEventTypes.TOP_COPY, 'copy'],
+  [TopLevelEventTypes.TOP_CUT, 'cut'],
+  [TopLevelEventTypes.TOP_DOUBLE_CLICK, 'doubleClick'],
+  [TopLevelEventTypes.TOP_DRAG, 'drag'],
+  [TopLevelEventTypes.TOP_DRAG_END, 'dragEnd'],
+  [TopLevelEventTypes.TOP_DRAG_ENTER, 'dragEnter'],
+  [TopLevelEventTypes.TOP_DRAG_EXIT, 'dragExit'],
+  [TopLevelEventTypes.TOP_DRAG_LEAVE, 'dragLeave'],
+  [TopLevelEventTypes.TOP_DRAG_OVER, 'dragOver'],
+  [TopLevelEventTypes.TOP_DRAG_START, 'dragStart'],
+  [TopLevelEventTypes.TOP_DROP, 'drop'],
+  [TopLevelEventTypes.TOP_FOCUS, 'focus'],
+  [TopLevelEventTypes.TOP_INPUT, 'input'],
+  [TopLevelEventTypes.TOP_KEY_DOWN, 'keyDown'],
+  [TopLevelEventTypes.TOP_KEY_PRESS, 'keyPress'],
+  [TopLevelEventTypes.TOP_KEY_UP, 'keyUp'],
+  [TopLevelEventTypes.TOP_LOAD, 'load'],
+  [TopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
+  [TopLevelEventTypes.TOP_MOUSE_DOWN, 'mouseDown'],
+  [TopLevelEventTypes.TOP_MOUSE_MOVE, 'mouseMove'],
+  [TopLevelEventTypes.TOP_MOUSE_OUT, 'mouseOut'],
+  [TopLevelEventTypes.TOP_MOUSE_OVER, 'mouseOver'],
+  [TopLevelEventTypes.TOP_MOUSE_UP, 'mouseUp'],
+  [TopLevelEventTypes.TOP_PASTE, 'paste'],
+  [TopLevelEventTypes.TOP_SCROLL, 'scroll'],
+  [TopLevelEventTypes.TOP_SELECTION_CHANGE, 'selectionChange'],
+  [TopLevelEventTypes.TOP_TEXT_INPUT, 'textInput'],
+  [TopLevelEventTypes.TOP_TOGGLE, 'toggle'],
+  [TopLevelEventTypes.TOP_TOUCH_CANCEL, 'touchCancel'],
+  [TopLevelEventTypes.TOP_TOUCH_END, 'touchEnd'],
+  [TopLevelEventTypes.TOP_TOUCH_MOVE, 'touchMove'],
+  [TopLevelEventTypes.TOP_TOUCH_START, 'touchStart'],
+  [TopLevelEventTypes.TOP_TRANSITION_END, 'transitionEnd'],
+  [TopLevelEventTypes.TOP_WHEEL, 'wheel'],
+  [TopLevelEventTypes.TOP_ABORT, 'abort'],
+  [TopLevelEventTypes.TOP_CAN_PLAY, 'canPlay'],
+  [TopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canPlayThrough'],
+  [TopLevelEventTypes.TOP_DURATION_CHANGE, 'durationChange'],
+  [TopLevelEventTypes.TOP_EMPTIED, 'emptied'],
+  [TopLevelEventTypes.TOP_ENCRYPTED, 'encrypted'],
+  [TopLevelEventTypes.TOP_ENDED, 'ended'],
+  [TopLevelEventTypes.TOP_ERROR, 'error'],
+  [TopLevelEventTypes.TOP_LOADED_DATA, 'loadedData'],
+  [TopLevelEventTypes.TOP_LOADED_METADATA, 'loadedMetadata'],
+  [TopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
+  [TopLevelEventTypes.TOP_PAUSE, 'pause'],
+  [TopLevelEventTypes.TOP_PLAY, 'play'],
+  [TopLevelEventTypes.TOP_PLAYING, 'playing'],
+  [TopLevelEventTypes.TOP_PROGRESS, 'progress'],
+  [TopLevelEventTypes.TOP_RATE_CHANGE, 'rateChange'],
+  [TopLevelEventTypes.TOP_SEEKED, 'seeked'],
+  [TopLevelEventTypes.TOP_SEEKING, 'seeking'],
+  [TopLevelEventTypes.TOP_STALLED, 'stalled'],
+  [TopLevelEventTypes.TOP_SUSPEND, 'suspend'],
+  [TopLevelEventTypes.TOP_TIME_UPDATE, 'timeUpdate'],
+  [TopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumeChange'],
+  [TopLevelEventTypes.TOP_WAITING, 'waiting'],
+].forEach(function(tuple) {
+  const topLevelType = tuple[0];
+  const eventType = tuple[1];
+
   /**
    * @param {!Element|ReactDOMComponent} domComponentOrNode
    * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
    */
   ReactTestUtils.SimulateNative[eventType] = makeNativeSimulator(
     eventType,
+    topLevelType,
   );
 });
 
