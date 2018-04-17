@@ -12,6 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {SuspenseThenable} from 'shared/SuspenseThenable';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
@@ -1350,7 +1351,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function suspendRoot(
     root: FiberRoot,
-    thenable: {then: (() => mixed) => mixed},
+    thenable: SuspenseThenable,
     timeoutMs: number,
     suspendedTime: ExpirationTime,
   ) {
