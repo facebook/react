@@ -54,7 +54,7 @@ describe('ReactDOMInput', () => {
 
   it('should warn of no event listener with a value of "0" (truthy value that == false)', () => {
     expect(() => {
-      ReactTestUtils.renderIntoDocument(<input type="text" value="" />);
+      ReactTestUtils.renderIntoDocument(<input type="text" value="0" />);
     }).toWarnDev(
       'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
     );
