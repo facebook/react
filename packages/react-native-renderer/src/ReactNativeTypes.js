@@ -77,6 +77,11 @@ type SecretInternalsType = {
   // And how much information to fill in for the above types.
 };
 
+type SecretInternalsFabricType = {
+  NativeMethodsMixin: NativeMethodsMixinType,
+  ReactNativeComponentTree: any,
+};
+
 /**
  * Flat ReactNative renderer bundles are too big for Flow to parse efficiently.
  * Provide minimal Flow typing for the high-level RN API and call it a day.
@@ -106,5 +111,5 @@ export type ReactFabricType = {
   ): any,
   unmountComponentAtNode(containerTag: number): any,
 
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
 };
