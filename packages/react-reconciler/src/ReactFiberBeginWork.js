@@ -47,6 +47,7 @@ import {
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
   enableGetDerivedStateFromCatch,
+  enableSuspense,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
 } from 'shared/ReactFeatureFlags';
@@ -745,45 +746,49 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress,
     renderExpirationTime,
   ) {
-    const nextProps = workInProgress.pendingProps;
-    const prevProps = workInProgress.memoizedProps;
+    if (enableSuspense) {
+      const nextProps = workInProgress.pendingProps;
+      const prevProps = workInProgress.memoizedProps;
 
-    // Unless we already captured a promise during this render, reset the
-    // placeholder state back to false. We always attempt to render the real
-    // children before falling back to the placeholder.
-    if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-      const update = createUpdate(renderExpirationTime);
-      update.tag = ReplaceState;
-      update.payload = false;
-      enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
+      // Unless we already captured a promise during this render, reset the
+      // placeholder state back to false. We always attempt to render the real
+      // children before falling back to the placeholder.
+      if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+        const update = createUpdate(renderExpirationTime);
+        update.tag = ReplaceState;
+        update.payload = false;
+        enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
+      }
+
+      const prevState = workInProgress.memoizedState;
+      const updateQueue = workInProgress.updateQueue;
+      if (updateQueue !== null) {
+        processUpdateQueue(
+          workInProgress,
+          updateQueue,
+          null,
+          null,
+          renderExpirationTime,
+        );
+      }
+      const nextState = workInProgress.memoizedState;
+
+      if (hasLegacyContextChanged()) {
+        // Normally we can bail out on props equality but if context has changed
+        // we don't do the bailout and we have to reuse existing props instead.
+      } else if (nextProps === prevProps && nextState === prevState) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+
+      const didTimeout = nextState;
+      const render = nextProps.children;
+      const nextChildren = render(didTimeout);
+      workInProgress.memoizedProps = nextProps;
+      reconcileChildren(current, workInProgress, nextChildren);
+      return workInProgress.child;
+    } else {
+      return null;
     }
-
-    const prevState = workInProgress.memoizedState;
-    const updateQueue = workInProgress.updateQueue;
-    if (updateQueue !== null) {
-      processUpdateQueue(
-        workInProgress,
-        updateQueue,
-        null,
-        null,
-        renderExpirationTime,
-      );
-    }
-    const nextState = workInProgress.memoizedState;
-
-    if (hasLegacyContextChanged()) {
-      // Normally we can bail out on props equality but if context has changed
-      // we don't do the bailout and we have to reuse existing props instead.
-    } else if (nextProps === prevProps && nextState === prevState) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
-    }
-
-    const didTimeout = nextState;
-    const render = nextProps.children;
-    const nextChildren = render(didTimeout);
-    workInProgress.memoizedProps = nextProps;
-    reconcileChildren(current, workInProgress, nextChildren);
-    return workInProgress.child;
   }
 
   function updatePortalComponent(

@@ -44,7 +44,10 @@ import {
 
 import {Sync} from './ReactFiberExpirationTime';
 
-import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
+import {
+  enableGetDerivedStateFromCatch,
+  enableSuspense,
+} from 'shared/ReactFeatureFlags';
 
 import invariant from 'fbjs/lib/invariant';
 
@@ -190,6 +193,7 @@ export default function<C, CX>(
     sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
     if (
+      enableSuspense &&
       value !== null &&
       typeof value === 'object' &&
       typeof value.then === 'function'
