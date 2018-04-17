@@ -1178,7 +1178,10 @@ describe('ReactDOMInput', () => {
     const container = document.createElement('div');
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(<input type="checkbox" checked={true} />, container),
+      ReactDOM.render(
+        <input type="checkbox" checked={true} onChange={emptyFunction} />,
+        container,
+      ),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type checkbox to be controlled. ' +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
@@ -1189,11 +1192,16 @@ describe('ReactDOMInput', () => {
   });
 
   it('should warn if uncontrolled checkbox (checked is null) switches to controlled', () => {
-    const stub = <input type="checkbox" checked={null} />;
+    const stub = (
+      <input type="checkbox" checked={null} onChange={emptyFunction} />
+    );
     const container = document.createElement('div');
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(<input type="checkbox" checked={true} />, container),
+      ReactDOM.render(
+        <input type="checkbox" checked={true} onChange={emptyFunction} />,
+        container,
+      ),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type checkbox to be controlled. ' +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
@@ -1221,7 +1229,10 @@ describe('ReactDOMInput', () => {
     const container = document.createElement('div');
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(<input type="radio" checked={null} />, container),
+      ReactDOM.render(
+        <input type="radio" checked={null} onChange={emptyFunction} />,
+        container,
+      ),
     ).toWarnDev(
       'Warning: A component is changing a controlled input of type radio to be uncontrolled. ' +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
@@ -1262,11 +1273,14 @@ describe('ReactDOMInput', () => {
   });
 
   it('should warn if uncontrolled radio (checked is null) switches to controlled', () => {
-    const stub = <input type="radio" checked={null} />;
+    const stub = <input type="radio" checked={null} onChange={emptyFunction} />;
     const container = document.createElement('div');
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(<input type="radio" checked={true} />, container),
+      ReactDOM.render(
+        <input type="radio" checked={true} onChange={emptyFunction} />,
+        container,
+      ),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type radio to be controlled. ' +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
