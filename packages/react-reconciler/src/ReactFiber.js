@@ -353,6 +353,9 @@ export function createFiberFromElement(
         break;
       case REACT_TIMEOUT_TYPE:
         fiberTag = TimeoutComponent;
+        // Suspense does not require async, but its children should be strict
+        // mode compatible.
+        mode |= StrictMode;
         break;
       default: {
         if (typeof type === 'object' && type !== null) {
