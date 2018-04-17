@@ -504,9 +504,7 @@ async function buildEverything() {
   await Packaging.prepareNpmPackages();
 
   if (syncFBSourcePath) {
-    await Sync.syncReactNative('build/react-native', syncFBSourcePath);
-    await Sync.syncReactNativeRT('build/react-rt', syncFBSourcePath);
-    await Sync.syncReactNativeCS('build/react-cs', syncFBSourcePath);
+    await Sync.syncReactNative(syncFBSourcePath);
   } else if (syncWWWPath) {
     await Sync.syncReactDom('build/facebook-www', syncWWWPath);
   }

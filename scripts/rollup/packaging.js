@@ -47,7 +47,7 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
     case RN_PROD:
       switch (packageName) {
         case 'react-native-renderer':
-          return [`build/react-native/${filename}`];
+          return [`build/react-native/oss/${filename}`];
         default:
           throw new Error('Unknown RN package.');
       }
