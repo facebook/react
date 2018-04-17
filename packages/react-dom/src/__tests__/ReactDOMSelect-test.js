@@ -9,6 +9,8 @@
 
 'use strict';
 
+const emptyFunction = require('fbjs/lib/emptyFunction');
+
 describe('ReactDOMSelect', () => {
   let React;
   let ReactDOM;
@@ -534,7 +536,7 @@ describe('ReactDOMSelect', () => {
   it('should warn if value is null', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(
-        <select value={null}>
+        <select value={null} onChange={emptyFunction}>
           <option value="test" />
         </select>,
       ),
@@ -545,7 +547,7 @@ describe('ReactDOMSelect', () => {
     );
 
     ReactTestUtils.renderIntoDocument(
-      <select value={null}>
+      <select value={null} onChange={emptyFunction}>
         <option value="test" />
       </select>,
     );
@@ -575,7 +577,7 @@ describe('ReactDOMSelect', () => {
   it('should warn if value is null and multiple is true', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(
-        <select value={null} multiple={true}>
+        <select value={null} multiple={true} onChange={emptyFunction}>
           <option value="test" />
         </select>,
       ),
@@ -587,7 +589,7 @@ describe('ReactDOMSelect', () => {
     );
 
     ReactTestUtils.renderIntoDocument(
-      <select value={null} multiple={true}>
+      <select value={null} multiple={true}  onChange={emptyFunction}>
         <option value="test" />
       </select>,
     );

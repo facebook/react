@@ -97,7 +97,7 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should display `value` of number 0', () => {
-    const stub = <textarea value={0} />;
+    const stub = <textarea value={0} onChange={emptyFunction} />;
     const node = renderTextarea(stub);
 
     expect(node.value).toBe('0');
@@ -373,7 +373,7 @@ describe('ReactDOMTextarea', () => {
 
   it('should warn if value is null', () => {
     expect(() =>
-      ReactTestUtils.renderIntoDocument(<textarea value={null} />),
+      ReactTestUtils.renderIntoDocument(<textarea value={null} onChange={emptyFunction} />),
     ).toWarnDev(
       '`value` prop on `textarea` should not be null. ' +
         'Consider using an empty string to clear the component or `undefined` ' +
@@ -381,7 +381,7 @@ describe('ReactDOMTextarea', () => {
     );
 
     // No additional warnings are expected
-    ReactTestUtils.renderIntoDocument(<textarea value={null} />);
+    ReactTestUtils.renderIntoDocument(<textarea value={null} onChange={emptyFunction} />);
   });
 
   it('should warn if value and defaultValue are specified', () => {
