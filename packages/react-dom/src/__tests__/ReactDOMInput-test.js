@@ -37,30 +37,24 @@ describe('ReactDOMInput', () => {
   });
 
   it('should warn of no event listener with a falsey value of 0', () => {
-    const container = document.createElement('div');
-
     expect(() => {
-      ReactDOM.render(<input type="text" value={0} />, container);
+      ReactTestUtils.renderIntoDocument(<input type="text" value={0} />);
     }).toWarnDev(
       'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
     );
   });
 
   it('should warn of no event listener with a falsey value of ""', () => {
-    const container = document.createElement('div');
-
     expect(() => {
-      ReactDOM.render(<input type="text" value="" />, container);
+      ReactTestUtils.renderIntoDocument(<input type="text" value="" />);
     }).toWarnDev(
       'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
     );
   });
 
   it('should warn of no event listener with a value of "0" (truthy value that == false)', () => {
-    const container = document.createElement('div');
-
     expect(() => {
-      ReactDOM.render(<input type="text" value="" />, container);
+      ReactTestUtils.renderIntoDocument(<input type="text" value="" />);
     }).toWarnDev(
       'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
     );
