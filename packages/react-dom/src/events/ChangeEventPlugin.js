@@ -122,9 +122,8 @@ if (ExecutionEnvironment.canUseDOM) {
  * and override the value property so that we can distinguish user events from
  * value changes in JS.
  */
-function startWatchingForValueChange(target, targetInst) {
+function startWatchingForValueChange(target) {
   activeElement = target;
-  activeElementInst = targetInst;
   activeElement.attachEvent('onpropertychange', handlePropertyChange);
 }
 
@@ -154,7 +153,7 @@ function handlePropertyChange(nativeEvent) {
   }
 }
 
-function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {
+function handleEventsForInputEventPolyfill(topLevelType, target) {
   if (topLevelType === 'topFocus') {
     // In IE9, propertychange fires for most input events but is buggy and
     // doesn't fire when text is deleted, but conveniently, selectionchange
@@ -167,7 +166,7 @@ function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {
     // stopWatching() should be a noop here but we call it just in case we
     // missed a blur event somehow.
     stopWatchingForValueChange();
-    startWatchingForValueChange(target, targetInst);
+    startWatchingForValueChange(target);
   } else if (topLevelType === 'topBlur') {
     stopWatchingForValueChange();
   }
@@ -288,7 +287,7 @@ const ChangeEventPlugin = {
     }
 
     if (handleEventFunc) {
-      handleEventFunc(topLevelType, targetNode, targetInst);
+      handleEventFunc(topLevelType, targetNode);
     }
 
     // When blurring, set the value attribute for number inputs
