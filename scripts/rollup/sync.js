@@ -45,8 +45,16 @@ async function syncReactNativeHelper(
 }
 
 async function syncReactNative(fbSourcePath) {
-  await syncReactNativeHelper('build/react-native', fbSourcePath, RELATIVE_RN_OSS_PATH);
-  await syncReactNativeHelper('build/react-native-xplat', fbSourcePath, RELATIVE_RN_XPLAT_PATH);
+  await syncReactNativeHelper(
+    'build/react-native',
+    fbSourcePath,
+    RELATIVE_RN_OSS_PATH
+  );
+  await syncReactNativeHelper(
+    'build/react-native-xplat',
+    fbSourcePath,
+    RELATIVE_RN_XPLAT_PATH
+  );
 }
 
 module.exports = {
