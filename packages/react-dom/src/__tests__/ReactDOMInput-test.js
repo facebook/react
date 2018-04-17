@@ -966,6 +966,16 @@ describe('ReactDOMInput', () => {
     ReactTestUtils.Simulate.change(instance);
   });
 
+  it('should warn of no event listener with a falsey checked prop', () => {
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(
+        <input type="checkbox" checked="false" />,
+      ),
+    ).toWarnDev(
+      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler.',
+    );
+  });
+
   it('should warn with checked and no onChange handler with readOnly specified', () => {
     ReactTestUtils.renderIntoDocument(
       <input type="checkbox" checked="false" readOnly={true} />,
