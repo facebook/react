@@ -625,8 +625,14 @@ describe('ReactDOMInput', () => {
   it('should properly transition from an empty value to 0', function() {
     const container = document.createElement('div');
 
-    ReactDOM.render(<input type="text" value="" onChange={emptyFunction} />, container);
-    ReactDOM.render(<input type="text" value={0} onChange={emptyFunction} />, container);
+    ReactDOM.render(
+      <input type="text" value="" onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="text" value={0} onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -637,8 +643,14 @@ describe('ReactDOMInput', () => {
   it('should properly transition from 0 to an empty value', function() {
     const container = document.createElement('div');
 
-    ReactDOM.render(<input type="text" value={0} onChange={emptyFunction} />, container);
-    ReactDOM.render(<input type="text" value="" onChange={emptyFunction} />, container);
+    ReactDOM.render(
+      <input type="text" value={0} onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="text" value="" onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -649,8 +661,14 @@ describe('ReactDOMInput', () => {
   it('should properly transition a text input from 0 to an empty 0.0', function() {
     const container = document.createElement('div');
 
-    ReactDOM.render(<input type="text" value={0} onChange={emptyFunction} />, container);
-    ReactDOM.render(<input type="text" value="0.0" onChange={emptyFunction} />, container);
+    ReactDOM.render(
+      <input type="text" value={0} onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="text" value="0.0" onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -661,8 +679,14 @@ describe('ReactDOMInput', () => {
   it('should properly transition a number input from "" to 0', function() {
     const container = document.createElement('div');
 
-    ReactDOM.render(<input type="number" value="" onChange={emptyFunction} />, container);
-    ReactDOM.render(<input type="number" value={0} onChange={emptyFunction} />, container);
+    ReactDOM.render(
+      <input type="number" value="" onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="number" value={0} onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -673,8 +697,14 @@ describe('ReactDOMInput', () => {
   it('should properly transition a number input from "" to "0"', function() {
     const container = document.createElement('div');
 
-    ReactDOM.render(<input type="number" value="" onChange={emptyFunction} />, container);
-    ReactDOM.render(<input type="number" value="0" onChange={emptyFunction} />, container);
+    ReactDOM.render(
+      <input type="number" value="" onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="number" value="0" onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -937,14 +967,18 @@ describe('ReactDOMInput', () => {
 
   it('should warn if value is null', () => {
     expect(() =>
-      ReactTestUtils.renderIntoDocument(<input type="text" value={null} onChange={emptyFunction} />),
+      ReactTestUtils.renderIntoDocument(
+        <input type="text" value={null} onChange={emptyFunction} />,
+      ),
     ).toWarnDev(
       '`value` prop on `input` should not be null. ' +
         'Consider using an empty string to clear the component or `undefined` ' +
         'for uncontrolled components.',
     );
 
-    ReactTestUtils.renderIntoDocument(<input type="text" value={null} onChange={emptyFunction} />);
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" value={null} onChange={emptyFunction} />,
+    );
   });
 
   it('should warn if checked and defaultChecked props are specified', () => {
@@ -1054,7 +1088,10 @@ describe('ReactDOMInput', () => {
     const container = document.createElement('div');
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(<input type="text" value="controlled" onChange={emptyFunction} />, container),
+      ReactDOM.render(
+        <input type="text" value="controlled" onChange={emptyFunction} />,
+        container,
+      ),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type text to be controlled. ' +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +

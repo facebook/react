@@ -589,7 +589,7 @@ describe('ReactDOMSelect', () => {
     );
 
     ReactTestUtils.renderIntoDocument(
-      <select value={null} multiple={true}  onChange={emptyFunction}>
+      <select value={null} multiple={true} onChange={emptyFunction}>
         <option value="test" />
       </select>,
     );
