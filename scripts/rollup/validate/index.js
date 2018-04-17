@@ -60,7 +60,7 @@ const bundles = [
   },
   {
     format: 'rn',
-    filePatterns: [`./build/{react-cs,react-native,react-rt}/*.js`],
+    filePatterns: [`./build/{react-native,react-native-xplat}/*.js`],
   },
   {
     format: 'umd',
