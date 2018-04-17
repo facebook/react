@@ -42,7 +42,7 @@ if (__DEV__) {
     },
     checked: function(props, propName, componentName) {
       if (
-        !props[propName] ||
+        !(propName in props) ||
         props.onChange ||
         props.readOnly ||
         props.disabled
