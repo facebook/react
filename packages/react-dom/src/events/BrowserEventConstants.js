@@ -14,13 +14,25 @@ import invariant from 'fbjs/lib/invariant';
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
 /**
+ * Small helper function to create a map using the Map constructor arguments.
+ * This is needed because IE11 does not implement that constructor.
+ */
+function makeMap<K, V>(values: Array<[K, V]>): Map<K, V> {
+  const map: Map<K, V> = new Map();
+  values.forEach(([k, v]) => {
+    map.set(k, v);
+  });
+  return map;
+}
+
+/**
  * Types of raw signals from the browser caught at the top level.
  *
  * For events like 'submit' or audio/video events which don't consistently
  * bubble (which we trap at a lower node than `document`), binding
  * at `document` would cause duplicate events so we don't include them here.
  */
-export const topLevelTypes: Map<TopLevelTypes, string> = new Map([
+export const topLevelTypes: Map<TopLevelTypes, string> = makeMap([
   [
     TopLevelEventTypes.TOP_ANIMATION_END,
     getVendorPrefixedEventName('animationend'),
@@ -85,7 +97,7 @@ export const topLevelTypes: Map<TopLevelTypes, string> = new Map([
 // "top-level" since they don't bubble. We should come up
 // with a better naming convention if we come to refactoring
 // the event system.
-export const mediaEventTypes: Map<TopLevelTypes, string> = new Map([
+export const mediaEventTypes: Map<TopLevelTypes, string> = makeMap([
   [TopLevelEventTypes.TOP_ABORT, 'abort'],
   [TopLevelEventTypes.TOP_CAN_PLAY, 'canplay'],
   [TopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canplaythrough'],
@@ -111,7 +123,7 @@ export const mediaEventTypes: Map<TopLevelTypes, string> = new Map([
   [TopLevelEventTypes.TOP_WAITING, 'waiting'],
 ]);
 
-const nonTopEventTypes: Map<TopLevelTypes, string> = new Map([
+const nonTopEventTypes: Map<TopLevelTypes, string> = makeMap([
   [TopLevelEventTypes.TOP_INPUT, 'input'],
   [TopLevelEventTypes.TOP_INVALID, 'invalid'],
   [TopLevelEventTypes.TOP_RESET, 'reset'],
