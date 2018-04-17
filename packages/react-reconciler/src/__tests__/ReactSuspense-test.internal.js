@@ -7,6 +7,7 @@ let Timeout;
 
 let cache;
 let TextResource;
+let textResourceShouldFail;
 
 describe('ReactSuspense', () => {
   beforeEach(() => {
@@ -19,15 +20,24 @@ describe('ReactSuspense', () => {
     SimpleCacheProvider = require('simple-cache-provider');
     Timeout = React.Timeout;
 
-    cache = SimpleCacheProvider.createCache();
+    function invalidateCache() {
+      cache = SimpleCacheProvider.createCache(invalidateCache);
+    }
+    invalidateCache();
     TextResource = SimpleCacheProvider.createResource(([text, ms = 0]) => {
-      return new Promise(resolve =>
+      return new Promise((resolve, reject) =>
         setTimeout(() => {
-          ReactNoop.yield(`Promise resolved [${text}]`);
-          resolve(text);
+          if (textResourceShouldFail) {
+            ReactNoop.yield(`Promise rejected [${text}]`);
+            reject(new Error('Failed to load: ' + text));
+          } else {
+            ReactNoop.yield(`Promise resolved [${text}]`);
+            resolve(text);
+          }
         }, ms),
       );
     }, ([text, ms]) => text);
+    textResourceShouldFail = false;
   });
 
   // function div(...children) {
@@ -64,7 +74,11 @@ describe('ReactSuspense', () => {
       ReactNoop.yield(text);
       return <span prop={text} />;
     } catch (promise) {
-      ReactNoop.yield(`Suspend! [${text}]`);
+      if (typeof promise.then === 'function') {
+        ReactNoop.yield(`Suspend! [${text}]`);
+      } else {
+        ReactNoop.yield(`Error! [${text}]`);
+      }
       throw promise;
     }
   }
@@ -154,6 +168,125 @@ describe('ReactSuspense', () => {
       span('C'),
       span('D'),
     ]);
+  });
+
+  it('retries on error', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        this.setState({error});
+      }
+      reset() {
+        this.setState({error: null});
+      }
+      render() {
+        if (this.state.error !== null) {
+          return <Text text={'Caught error: ' + this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    const errorBoundary = React.createRef();
+    function App() {
+      return (
+        <Fallback>
+          <ErrorBoundary ref={errorBoundary}>
+            <AsyncText text="Result" ms={100} />
+          </ErrorBoundary>
+        </Fallback>
+      );
+    }
+
+    ReactNoop.render(<App />);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    textResourceShouldFail = true;
+    ReactNoop.expire(100);
+    await advanceTimers(100);
+    textResourceShouldFail = false;
+
+    expect(ReactNoop.flush()).toEqual([
+      'Promise rejected [Result]',
+      'Error! [Result]',
+      'Caught error: Failed to load: Result',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Caught error: Failed to load: Result'),
+    ]);
+
+    // Reset the error boundary and cache, and try again.
+    errorBoundary.current.reset();
+    cache.invalidate();
+
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    ReactNoop.expire(100);
+    await advanceTimers(100);
+    expect(ReactNoop.flush()).toEqual(['Promise resolved [Result]', 'Result']);
+    expect(ReactNoop.getChildren()).toEqual([span('Result')]);
+  });
+
+  it('retries on error after falling back to a placeholder', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        this.setState({error});
+      }
+      reset() {
+        this.setState({error: null});
+      }
+      render() {
+        if (this.state.error !== null) {
+          return <Text text={'Caught error: ' + this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    const errorBoundary = React.createRef();
+    function App() {
+      return (
+        <Fallback timeout={50} placeholder={<Text text="Loading..." />}>
+          <ErrorBoundary ref={errorBoundary}>
+            <AsyncText text="Result" ms={100} />
+          </ErrorBoundary>
+        </Fallback>
+      );
+    }
+
+    ReactNoop.render(<App />);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    ReactNoop.expire(50);
+    await advanceTimers(50);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+    textResourceShouldFail = true;
+    ReactNoop.expire(50);
+    await advanceTimers(50);
+    textResourceShouldFail = false;
+
+    expect(ReactNoop.flush()).toEqual([
+      'Promise rejected [Result]',
+      'Error! [Result]',
+      'Caught error: Failed to load: Result',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Caught error: Failed to load: Result'),
+    ]);
+
+    // Reset the error boundary and cache, and try again.
+    errorBoundary.current.reset();
+    cache.invalidate();
+
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    ReactNoop.expire(100);
+    await advanceTimers(100);
+    expect(ReactNoop.flush()).toEqual(['Promise resolved [Result]', 'Result']);
+    expect(ReactNoop.getChildren()).toEqual([span('Result')]);
   });
 
   it('can update at a higher priority while in a suspended state', async () => {
