@@ -1123,9 +1123,7 @@ describe('ReactNewContext', () => {
             expectedValues[key] = value;
           } else if (value !== expectedValue) {
             throw new Error(
-              `Inconsistent value! Expected: ${key}:${expectedValue}. Actual: ${
-                text
-              }`,
+              `Inconsistent value! Expected: ${key}:${expectedValue}. Actual: ${text}`,
             );
           }
         });

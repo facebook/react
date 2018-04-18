@@ -105,11 +105,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
           `1. Using the ${chalk.bold('.toWarnDev()')} / ${chalk.bold(
             '.toLowPriorityWarnDev()'
           )} matchers, or...\n` +
-          `2. Mock it out using ${chalk.bold('spyOnDev')}(console, '${
-            methodName
-          }') or ${chalk.bold('spyOnProd')}(console, '${
-            methodName
-          }'), and test that the warning occurs.`;
+          `2. Mock it out using ${chalk.bold(
+            'spyOnDev'
+          )}(console, '${methodName}') or ${chalk.bold(
+            'spyOnProd'
+          )}(console, '${methodName}'), and test that the warning occurs.`;
 
         throw new Error(`${message}\n\n${messages.join('\n\n')}`);
       }

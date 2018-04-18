@@ -72,8 +72,14 @@ export type NativeMethodsMixinType = {
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
   ReactNativeComponentTree: any,
+  computeComponentStackForErrorReporting(tag: number): string,
   // TODO (bvaughn) Decide which additional types to expose here?
   // And how much information to fill in for the above types.
+};
+
+type SecretInternalsFabricType = {
+  NativeMethodsMixin: NativeMethodsMixinType,
+  ReactNativeComponentTree: any,
 };
 
 /**
@@ -105,5 +111,5 @@ export type ReactFabricType = {
   ): any,
   unmountComponentAtNode(containerTag: number): any,
 
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
 };
