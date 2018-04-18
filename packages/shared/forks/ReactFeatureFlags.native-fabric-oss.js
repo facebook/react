@@ -10,7 +10,7 @@
 import invariant from 'fbjs/lib/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as FabricFeatureFlagsType from './ReactFeatureFlags.native-fabric';
+import typeof * as FabricFeatureFlagsType from './ReactFeatureFlags.native-fabric-oss';
 
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;

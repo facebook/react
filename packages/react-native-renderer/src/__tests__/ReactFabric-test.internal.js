@@ -17,7 +17,7 @@ let UIManager;
 let FabricUIManager;
 
 jest.mock('shared/ReactFeatureFlags', () =>
-  require('shared/forks/ReactFeatureFlags.native-fabric'),
+  require('shared/forks/ReactFeatureFlags.native-fabric-oss'),
 );
 
 describe('ReactFabric', () => {
