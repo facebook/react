@@ -249,4 +249,25 @@ describe('forwardRef', () => {
       'forwardRef requires a render function but was given undefined.',
     );
   });
+
+  it('should warn if the render function provided has propTypes or defaultProps attributes', () => {
+    function renderWithPropTypes() {
+      return null;
+    }
+    renderWithPropTypes.propTypes = {};
+
+    function renderWithDefaultProps() {
+      return null;
+    }
+    renderWithDefaultProps.defaultProps = {};
+
+    expect(() => React.forwardRef(renderWithPropTypes)).toWarnDev(
+      'forwardRef render functions do not support propTypes or defaultProps. ' +
+        'Did you accidentally pass a React component?',
+    );
+    expect(() => React.forwardRef(renderWithDefaultProps)).toWarnDev(
+      'forwardRef render functions do not support propTypes or defaultProps. ' +
+        'Did you accidentally pass a React component?',
+    );
+  });
 });
