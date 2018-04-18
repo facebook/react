@@ -122,7 +122,6 @@ export function updateValueIfChanged(node: ElementWithValueTracker) {
   if (!tracker) {
     return true;
   }
-
   const lastValue = tracker.getValue();
   const nextValue = getValueFromNode(node);
   if (nextValue !== lastValue) {

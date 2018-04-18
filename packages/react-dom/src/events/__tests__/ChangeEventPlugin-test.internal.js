@@ -79,13 +79,7 @@ describe('ChangeEventPlugin', () => {
       container,
     );
 
-    // Secretly, set `checked` to false, so that dispatching the `click` will
-    // make it `true` again. Thus, at the time of the event, React should not
-    // consider it a change from the initial `true` value.
-    setUntrackedChecked.call(node, false);
-    node.dispatchEvent(
-      new MouseEvent('click', {bubbles: true, cancelable: true}),
-    );
+    node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
     // There should be no React change events because the value stayed the same.
     expect(called).toBe(0);
   });
@@ -103,13 +97,7 @@ describe('ChangeEventPlugin', () => {
       container,
     );
 
-    // Secretly, set `checked` to true, so that dispatching the `click` will
-    // make it `false` again. Thus, at the time of the event, React should not
-    // consider it a change from the initial `false` value.
-    setUntrackedChecked.call(node, true);
-    node.dispatchEvent(
-      new MouseEvent('click', {bubbles: true, cancelable: true}),
-    );
+    node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
     // There should be no React change events because the value stayed the same.
     expect(called).toBe(0);
   });
@@ -128,18 +116,15 @@ describe('ChangeEventPlugin', () => {
     );
 
     expect(node.checked).toBe(false);
-    node.dispatchEvent(
-      new MouseEvent('click', {bubbles: true, cancelable: true}),
-    );
-    // Note: unlike with text input events, dispatching `click` actually
-    // toggles the checkbox and updates its `checked` value.
+    setUntrackedChecked.call(node, true);
+    node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
+
     expect(node.checked).toBe(true);
     expect(called).toBe(1);
 
     expect(node.checked).toBe(true);
-    node.dispatchEvent(
-      new MouseEvent('click', {bubbles: true, cancelable: true}),
-    );
+    setUntrackedChecked.call(node, false);
+    node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
     expect(node.checked).toBe(false);
     expect(called).toBe(2);
   });
@@ -218,22 +203,29 @@ describe('ChangeEventPlugin', () => {
       container,
     );
 
-    // Set the value, updating the "current" value that React tracks to true.
+    // Set it programmatically.
     input.checked = true;
-    // Under the hood, uncheck the box so that the click will "check" it again.
-    setUntrackedChecked.call(input, false);
-    input.dispatchEvent(
-      new MouseEvent('click', {bubbles: true, cancelable: true}),
-    );
+
+    // Even if a DOM  event fires, React sees that the real input value now
+    // ('bar') is the same as the "current" one we already recorded.
+    input.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
     expect(input.checked).toBe(true);
-    // We don't expect a React event because at the time of the click, the real
-    // checked value (true) was the same as the last recorded "current" value
-    // (also true).
+    // In this case we don't expect to get a React event.
     expect(called).toBe(0);
 
-    // However, simulating a normal click should fire a React event because the
-    // real value (false) would have changed from the last tracked value (true).
-    input.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));
+    // However, we can simulate user toggling the checkbox by calling
+    // the underlying setter.
+    setUntrackedChecked.call(input, false);
+
+    // Now, when the event fires, the real input value (false) differs from the
+    // "current" one we previously recorded (false).
+    input.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+    expect(input.checked).toBe(false);
+    // In this case React should fire an event for it.
+    expect(called).toBe(1);
+
+    // Verify again that extra events without real changes are ignored.
+    input.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
     expect(called).toBe(1);
   });
 
@@ -257,8 +249,8 @@ describe('ChangeEventPlugin', () => {
     );
 
     setUntrackedChecked.call(input, true);
-    input.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));
-    input.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));
+    input.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
+    input.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
     expect(called).toBe(1);
   });
 
@@ -287,23 +279,26 @@ describe('ChangeEventPlugin', () => {
     const option2 = div.childNodes[1];
 
     // Select first option.
+    setUntrackedChecked.call(option1, true);
     option1.dispatchEvent(
-      new Event('click', {bubbles: true, cancelable: true}),
+      new Event('change', {bubbles: true, cancelable: true}),
     );
     expect(called1).toBe(1);
     expect(called2).toBe(0);
 
     // Select second option.
+    setUntrackedChecked.call(option2, true);
     option2.dispatchEvent(
-      new Event('click', {bubbles: true, cancelable: true}),
+      new Event('change', {bubbles: true, cancelable: true}),
     );
     expect(called1).toBe(1);
     expect(called2).toBe(1);
 
     // Select the first option.
     // It should receive the React change event again.
+    setUntrackedChecked.call(option1, true);
     option1.dispatchEvent(
-      new Event('click', {bubbles: true, cancelable: true}),
+      new Event('change', {bubbles: true, cancelable: true}),
     );
     expect(called1).toBe(2);
     expect(called2).toBe(1);

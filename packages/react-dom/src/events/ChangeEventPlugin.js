@@ -197,22 +197,13 @@ function getTargetInstForInputEventPolyfill(topLevelType, targetInst) {
 /**
  * SECTION: handle `click` event
  */
-function shouldUseClickEvent(elem) {
-  // Use the `click` event to detect changes to checkbox and radio inputs.
-  // This approach works across all browsers, whereas `change` does not fire
-  // until `blur` in IE8.
+function isCheckableInput(elem) {
   const nodeName = elem.nodeName;
   return (
     nodeName &&
     nodeName.toLowerCase() === 'input' &&
     (elem.type === 'checkbox' || elem.type === 'radio')
   );
-}
-
-function getTargetInstForClickEvent(topLevelType, targetInst) {
-  if (topLevelType === 'topClick') {
-    return getInstIfValueChanged(targetInst);
-  }
 }
 
 function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
@@ -271,12 +262,13 @@ const ChangeEventPlugin = {
         getTargetInstFunc = getTargetInstForInputEventPolyfill;
         handleEventFunc = handleEventsForInputEventPolyfill;
       }
-    } else if (shouldUseClickEvent(targetNode)) {
-      getTargetInstFunc = getTargetInstForClickEvent;
+    } else if (isCheckableInput(targetNode)) {
+      getTargetInstFunc = getTargetInstForInputOrChangeEvent;
     }
 
     if (getTargetInstFunc) {
       const inst = getTargetInstFunc(topLevelType, targetInst);
+
       if (inst) {
         const event = createAndAccumulateChangeEvent(
           inst,
