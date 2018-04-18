@@ -7,8 +7,8 @@ const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
 const NODE_DEV = Bundles.bundleTypes.NODE_DEV;
 const NODE_PROD = Bundles.bundleTypes.NODE_PROD;
-const FB_DEV = Bundles.bundleTypes.FB_DEV;
-const FB_PROD = Bundles.bundleTypes.FB_PROD;
+const FB_WWW_DEV = Bundles.bundleTypes.FB_WWW_DEV;
+const FB_WWW_PROD = Bundles.bundleTypes.FB_WWW_PROD;
 const RN_OSS_DEV = Bundles.bundleTypes.RN_OSS_DEV;
 const RN_OSS_PROD = Bundles.bundleTypes.RN_OSS_PROD;
 const RN_FB_DEV = Bundles.bundleTypes.RN_FB_DEV;
@@ -89,8 +89,8 @@ ${
 ${source}`;
   },
 
-  /****************** FB_DEV ******************/
-  [FB_DEV](source, globalName, filename, moduleType) {
+  /****************** FB_WWW_DEV ******************/
+  [FB_WWW_DEV](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *
@@ -108,8 +108,8 @@ ${source}
 }`;
   },
 
-  /****************** FB_PROD ******************/
-  [FB_PROD](source, globalName, filename, moduleType) {
+  /****************** FB_WWW_PROD ******************/
+  [FB_WWW_PROD](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *

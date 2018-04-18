@@ -14,8 +14,8 @@ const {
   UMD_PROD,
   NODE_DEV,
   NODE_PROD,
-  FB_DEV,
-  FB_PROD,
+  FB_WWW_DEV,
+  FB_WWW_PROD,
   RN_OSS_DEV,
   RN_OSS_PROD,
   RN_FB_DEV,
@@ -40,8 +40,8 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
         `build/node_modules/${packageName}/umd/${filename}`,
         `build/dist/${filename}`,
       ];
-    case FB_DEV:
-    case FB_PROD:
+    case FB_WWW_DEV:
+    case FB_WWW_PROD:
       return [`build/facebook-www/${filename}`];
     case RN_OSS_DEV:
     case RN_OSS_PROD:

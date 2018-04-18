@@ -5,8 +5,8 @@ const bundleTypes = {
   UMD_PROD: 'UMD_PROD',
   NODE_DEV: 'NODE_DEV',
   NODE_PROD: 'NODE_PROD',
-  FB_DEV: 'FB_DEV',
-  FB_PROD: 'FB_PROD',
+  FB_WWW_DEV: 'FB_WWW_DEV',
+  FB_WWW_PROD: 'FB_WWW_PROD',
   RN_OSS_DEV: 'RN_OSS_DEV',
   RN_OSS_PROD: 'RN_OSS_PROD',
   RN_FB_DEV: 'RN_FB_DEV',
@@ -17,8 +17,8 @@ const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
 const NODE_DEV = bundleTypes.NODE_DEV;
 const NODE_PROD = bundleTypes.NODE_PROD;
-const FB_DEV = bundleTypes.FB_DEV;
-const FB_PROD = bundleTypes.FB_PROD;
+const FB_WWW_DEV = bundleTypes.FB_WWW_DEV;
+const FB_WWW_PROD = bundleTypes.FB_WWW_PROD;
 const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
 const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
 const RN_FB_DEV = bundleTypes.RN_FB_DEV;
@@ -44,7 +44,14 @@ const bundles = [
   /******* Isomorphic *******/
   {
     label: 'core',
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'react',
     global: 'React',
@@ -54,7 +61,14 @@ const bundles = [
   /******* React DOM *******/
   {
     label: 'dom-client',
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: RENDERER,
     entry: 'react-dom',
     global: 'ReactDOM',
@@ -65,7 +79,7 @@ const bundles = [
   {
     label: 'dom-test-utils',
     moduleType: RENDERER_UTILS,
-    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     externals: ['react', 'react-dom'],
@@ -74,7 +88,14 @@ const bundles = [
   /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
   {
     label: 'dom-unstable-native-dependencies',
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: RENDERER_UTILS,
     entry: 'react-dom/unstable-native-dependencies',
     global: 'ReactDOMUnstableNativeDependencies',
@@ -84,7 +105,14 @@ const bundles = [
   /******* React DOM Server *******/
   {
     label: 'dom-server-browser',
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: RENDERER,
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
@@ -102,7 +130,14 @@ const bundles = [
   /******* React ART *******/
   {
     label: 'art',
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: RENDERER,
     entry: 'react-art',
     global: 'ReactART',
@@ -201,7 +236,7 @@ const bundles = [
   /******* React Test Renderer *******/
   {
     label: 'test',
-    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
@@ -210,7 +245,7 @@ const bundles = [
 
   {
     label: 'test-shallow',
-    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
     entry: 'react-test-renderer/shallow',
     global: 'ReactShallowRenderer',
@@ -283,7 +318,14 @@ const bundles = [
   /******* React Is *******/
   {
     label: 'react-is',
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_DEV, FB_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      UMD_DEV,
+      UMD_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'react-is',
     global: 'ReactIs',

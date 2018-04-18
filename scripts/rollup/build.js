@@ -39,8 +39,8 @@ const {
   UMD_PROD,
   NODE_DEV,
   NODE_PROD,
-  FB_DEV,
-  FB_PROD,
+  FB_WWW_DEV,
+  FB_WWW_PROD,
   RN_OSS_DEV,
   RN_OSS_PROD,
   RN_FB_DEV,
@@ -83,8 +83,8 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
     options = updateBabelOptions(options);
   }
   switch (bundleType) {
-    case FB_DEV:
-    case FB_PROD:
+    case FB_WWW_DEV:
+    case FB_WWW_PROD:
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Minify invariant messages
@@ -143,8 +143,8 @@ function getFormat(bundleType) {
       return `umd`;
     case NODE_DEV:
     case NODE_PROD:
-    case FB_DEV:
-    case FB_PROD:
+    case FB_WWW_DEV:
+    case FB_WWW_PROD:
     case RN_OSS_DEV:
     case RN_OSS_PROD:
     case RN_FB_DEV:
@@ -165,11 +165,11 @@ function getFilename(name, globalName, bundleType) {
       return `${name}.development.js`;
     case NODE_PROD:
       return `${name}.production.min.js`;
-    case FB_DEV:
+    case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return `${globalName}-dev.js`;
-    case FB_PROD:
+    case FB_WWW_PROD:
     case RN_OSS_PROD:
     case RN_FB_PROD:
       return `${globalName}-prod.js`;
@@ -180,13 +180,13 @@ function isProductionBundleType(bundleType) {
   switch (bundleType) {
     case UMD_DEV:
     case NODE_DEV:
-    case FB_DEV:
+    case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return false;
     case UMD_PROD:
     case NODE_PROD:
-    case FB_PROD:
+    case FB_WWW_PROD:
     case RN_OSS_PROD:
     case RN_FB_PROD:
       return true;
@@ -210,7 +210,7 @@ function getPlugins(
   const forks = Modules.getForks(bundleType, entry);
   const isProduction = isProductionBundleType(bundleType);
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
-  const isFBBundle = bundleType === FB_DEV || bundleType === FB_PROD;
+  const isFBBundle = bundleType === FB_WWW_DEV || bundleType === FB_WWW_PROD;
   const isRNBundle =
     bundleType === RN_OSS_DEV ||
     bundleType === RN_OSS_PROD ||
@@ -343,7 +343,7 @@ async function createBundle(bundle, bundleType) {
   const packageName = Packaging.getPackageName(bundle.entry);
 
   let resolvedEntry = require.resolve(bundle.entry);
-  if (bundleType === FB_DEV || bundleType === FB_PROD) {
+  if (bundleType === FB_WWW_DEV || bundleType === FB_WWW_PROD) {
     const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
     if (fs.existsSync(resolvedFBEntry)) {
       resolvedEntry = resolvedFBEntry;
@@ -393,7 +393,7 @@ async function createBundle(bundle, bundleType) {
       bundle.modulesToStub
     ),
     // We can't use getters in www.
-    legacy: bundleType === FB_DEV || bundleType === FB_PROD,
+    legacy: bundleType === FB_WWW_DEV || bundleType === FB_WWW_PROD,
   };
   const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
     bundleType,
@@ -492,8 +492,8 @@ async function buildEverything() {
     await createBundle(bundle, UMD_PROD);
     await createBundle(bundle, NODE_DEV);
     await createBundle(bundle, NODE_PROD);
-    await createBundle(bundle, FB_DEV);
-    await createBundle(bundle, FB_PROD);
+    await createBundle(bundle, FB_WWW_DEV);
+    await createBundle(bundle, FB_WWW_PROD);
     await createBundle(bundle, RN_OSS_DEV);
     await createBundle(bundle, RN_OSS_PROD);
     await createBundle(bundle, RN_FB_DEV);
