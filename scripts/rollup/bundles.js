@@ -7,10 +7,10 @@ const bundleTypes = {
   NODE_PROD: 'NODE_PROD',
   FB_DEV: 'FB_DEV',
   FB_PROD: 'FB_PROD',
-  RN_DEV: 'RN_DEV',
-  RN_PROD: 'RN_PROD',
-  XPLAT_DEV: 'XPLAT_DEV',
-  XPLAT_PROD: 'XPLAT_PROD',
+  RN_OSS_DEV: 'RN_OSS_DEV',
+  RN_OSS_PROD: 'RN_OSS_PROD',
+  RN_FB_DEV: 'RN_FB_DEV',
+  RN_FB_PROD: 'RN_FB_PROD',
 };
 
 const UMD_DEV = bundleTypes.UMD_DEV;
@@ -19,10 +19,10 @@ const NODE_DEV = bundleTypes.NODE_DEV;
 const NODE_PROD = bundleTypes.NODE_PROD;
 const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
-const RN_DEV = bundleTypes.RN_DEV;
-const RN_PROD = bundleTypes.RN_PROD;
-const XPLAT_DEV = bundleTypes.XPLAT_DEV;
-const XPLAT_PROD = bundleTypes.XPLAT_PROD;
+const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
+const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
+const RN_FB_DEV = bundleTypes.RN_FB_DEV;
+const RN_FB_PROD = bundleTypes.RN_FB_PROD;
 
 const moduleTypes = {
   ISOMORPHIC: 'ISOMORPHIC',
@@ -116,8 +116,8 @@ const bundles = [
 
   /******* React Native *******/
   {
-    label: 'native-xplat',
-    bundleTypes: [XPLAT_DEV, XPLAT_PROD],
+    label: 'native-fb',
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -137,7 +137,7 @@ const bundles = [
 
   {
     label: 'native',
-    bundleTypes: [RN_DEV, RN_PROD],
+    bundleTypes: [RN_OSS_DEV, RN_OSS_PROD],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -157,8 +157,8 @@ const bundles = [
 
   /******* React Native Fabric *******/
   {
-    label: 'native-fabric-xplat',
-    bundleTypes: [XPLAT_DEV, XPLAT_PROD],
+    label: 'native-fabric-fb',
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
@@ -179,7 +179,7 @@ const bundles = [
 
   {
     label: 'native-fabric',
-    bundleTypes: [RN_DEV, RN_PROD],
+    bundleTypes: [RN_OSS_DEV, RN_OSS_PROD],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',

@@ -7,8 +7,6 @@ const resolvePath = require('./utils').resolvePath;
 const DEFAULT_FB_SOURCE_PATH = '~/fbsource/';
 const DEFAULT_WWW_PATH = '~/www/';
 const RELATIVE_RN_OSS_PATH = 'xplat/js/react-native-github/Libraries/Renderer/';
-const RELATIVE_RN_XPLAT_PATH =
-  'xplat/js/RKJSModules/Libraries/ReactNativeRenderer/';
 const RELATIVE_WWW_PATH = 'html/shared/react/';
 
 async function doSync(buildPath, destPath) {
@@ -50,11 +48,6 @@ async function syncReactNative(fbSourcePath) {
     'build/react-native',
     fbSourcePath,
     RELATIVE_RN_OSS_PATH
-  );
-  await syncReactNativeHelper(
-    'build/react-native-xplat',
-    fbSourcePath,
-    RELATIVE_RN_XPLAT_PATH
   );
 }
 

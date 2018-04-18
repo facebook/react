@@ -16,10 +16,10 @@ const {
   NODE_PROD,
   FB_DEV,
   FB_PROD,
-  RN_DEV,
-  RN_PROD,
-  XPLAT_DEV,
-  XPLAT_PROD,
+  RN_OSS_DEV,
+  RN_OSS_PROD,
+  RN_FB_DEV,
+  RN_FB_PROD,
 } = Bundles.bundleTypes;
 
 function getPackageName(name) {
@@ -43,19 +43,19 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
     case FB_DEV:
     case FB_PROD:
       return [`build/facebook-www/${filename}`];
-    case RN_DEV:
-    case RN_PROD:
+    case RN_OSS_DEV:
+    case RN_OSS_PROD:
       switch (packageName) {
         case 'react-native-renderer':
           return [`build/react-native/oss/${filename}`];
         default:
           throw new Error('Unknown RN package.');
       }
-    case XPLAT_DEV:
-    case XPLAT_PROD:
+    case RN_FB_DEV:
+    case RN_FB_PROD:
       switch (packageName) {
         case 'react-native-renderer':
-          return [`build/react-native-xplat/${filename}`];
+          return [`build/react-native/fb/${filename}`];
         default:
           throw new Error('Unknown RN package.');
       }
@@ -83,6 +83,7 @@ async function copyRNShims() {
       require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
       'build/react-native/shims/ReactNativeTypes.js'
     ),
+    asyncCopyTo(`${__dirname}/shims/react-native-fb`, 'build/react-native/fb'),
   ]);
 }
 

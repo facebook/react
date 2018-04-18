@@ -6,10 +6,10 @@ const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
 const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
-const RN_DEV = bundleTypes.RN_DEV;
-const RN_PROD = bundleTypes.RN_PROD;
-const XPLAT_DEV = bundleTypes.XPLAT_DEV;
-const XPLAT_PROD = bundleTypes.XPLAT_PROD;
+const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
+const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
+const RN_FB_DEV = bundleTypes.RN_FB_DEV;
+const RN_FB_PROD = bundleTypes.RN_FB_PROD;
 
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
@@ -36,17 +36,17 @@ const forks = Object.freeze({
     switch (entry) {
       case 'react-native-renderer':
         switch (bundleType) {
-          case XPLAT_DEV:
-          case XPLAT_PROD:
-            return 'shared/forks/ReactFeatureFlags.native-xplat.js';
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+            return 'shared/forks/ReactFeatureFlags.native-fb.js';
           default:
             return 'shared/forks/ReactFeatureFlags.native-oss.js';
         }
       case 'react-native-renderer/fabric':
         switch (bundleType) {
-          case XPLAT_DEV:
-          case XPLAT_PROD:
-            return 'shared/forks/ReactFeatureFlags.native-fabric-xplat.js';
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+            return 'shared/forks/ReactFeatureFlags.native-fabric-fb.js';
           default:
             return 'shared/forks/ReactFeatureFlags.native-fabric-oss.js';
         }
@@ -105,10 +105,10 @@ const forks = Object.freeze({
       case FB_PROD:
         // Use the www fork which shows an error dialog.
         return 'react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
-      case RN_DEV:
-      case RN_PROD:
-      case XPLAT_DEV:
-      case XPLAT_PROD:
+      case RN_OSS_DEV:
+      case RN_OSS_PROD:
+      case RN_FB_DEV:
+      case RN_FB_PROD:
         switch (entry) {
           case 'react-native-renderer':
             // Use the RN fork which plays well with redbox.

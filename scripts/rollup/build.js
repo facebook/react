@@ -41,10 +41,10 @@ const {
   NODE_PROD,
   FB_DEV,
   FB_PROD,
-  RN_DEV,
-  RN_PROD,
-  XPLAT_DEV,
-  XPLAT_PROD,
+  RN_OSS_DEV,
+  RN_OSS_PROD,
+  RN_FB_DEV,
+  RN_FB_PROD,
 } = Bundles.bundleTypes;
 
 const requestedBundleTypes = (argv.type || '')
@@ -93,10 +93,10 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
           require('../babel/wrap-warning-with-env-check'),
         ]),
       });
-    case RN_DEV:
-    case RN_PROD:
-    case XPLAT_DEV:
-    case XPLAT_PROD:
+    case RN_OSS_DEV:
+    case RN_OSS_PROD:
+    case RN_FB_DEV:
+    case RN_FB_PROD:
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
@@ -145,10 +145,10 @@ function getFormat(bundleType) {
     case NODE_PROD:
     case FB_DEV:
     case FB_PROD:
-    case RN_DEV:
-    case RN_PROD:
-    case XPLAT_DEV:
-    case XPLAT_PROD:
+    case RN_OSS_DEV:
+    case RN_OSS_PROD:
+    case RN_FB_DEV:
+    case RN_FB_PROD:
       return `cjs`;
   }
 }
@@ -166,12 +166,12 @@ function getFilename(name, globalName, bundleType) {
     case NODE_PROD:
       return `${name}.production.min.js`;
     case FB_DEV:
-    case RN_DEV:
-    case XPLAT_DEV:
+    case RN_OSS_DEV:
+    case RN_FB_DEV:
       return `${globalName}-dev.js`;
     case FB_PROD:
-    case RN_PROD:
-    case XPLAT_PROD:
+    case RN_OSS_PROD:
+    case RN_FB_PROD:
       return `${globalName}-prod.js`;
   }
 }
@@ -181,14 +181,14 @@ function isProductionBundleType(bundleType) {
     case UMD_DEV:
     case NODE_DEV:
     case FB_DEV:
-    case RN_DEV:
-    case XPLAT_DEV:
+    case RN_OSS_DEV:
+    case RN_FB_DEV:
       return false;
     case UMD_PROD:
     case NODE_PROD:
     case FB_PROD:
-    case RN_PROD:
-    case XPLAT_PROD:
+    case RN_OSS_PROD:
+    case RN_FB_PROD:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -212,10 +212,10 @@ function getPlugins(
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_DEV || bundleType === FB_PROD;
   const isRNBundle =
-    bundleType === RN_DEV ||
-    bundleType === RN_PROD ||
-    bundleType === XPLAT_DEV ||
-    bundleType === XPLAT_PROD;
+    bundleType === RN_OSS_DEV ||
+    bundleType === RN_OSS_PROD ||
+    bundleType === RN_FB_DEV ||
+    bundleType === RN_FB_PROD;
   const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
   return [
     // Extract error codes from invariant() messages into a file.
@@ -494,10 +494,10 @@ async function buildEverything() {
     await createBundle(bundle, NODE_PROD);
     await createBundle(bundle, FB_DEV);
     await createBundle(bundle, FB_PROD);
-    await createBundle(bundle, RN_DEV);
-    await createBundle(bundle, RN_PROD);
-    await createBundle(bundle, XPLAT_DEV);
-    await createBundle(bundle, XPLAT_PROD);
+    await createBundle(bundle, RN_OSS_DEV);
+    await createBundle(bundle, RN_OSS_PROD);
+    await createBundle(bundle, RN_FB_DEV);
+    await createBundle(bundle, RN_FB_PROD);
   }
 
   await Packaging.copyAllShims();

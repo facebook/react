@@ -10,19 +10,22 @@
 import invariant from 'fbjs/lib/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as FabricFeatureFlagsType from './ReactFeatureFlags.native-fabric-xplat';
+import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
 
-export const debugRenderPhaseSideEffects = false;
-export const debugRenderPhaseSideEffectsForStrictMode = false;
+// Re-export dynamic flags from the fbsource version.
+export const {
+  enableGetDerivedStateFromCatch,
+  debugRenderPhaseSideEffects,
+  debugRenderPhaseSideEffectsForStrictMode,
+  warnAboutDeprecatedLifecycles,
+  replayFailedUnitOfWorkWithInvokeGuardedCallback,
+} = require('ReactFeatureFlags');
+
+// The rest of the flags are static for better dead code elimination.
 export const enableUserTimingAPI = __DEV__;
-export const enableGetDerivedStateFromCatch = false;
-export const warnAboutDeprecatedLifecycles = false;
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-
-// React Fabric uses persistent reconciler.
-export const enableMutatingReconciler = false;
+export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
-export const enablePersistentReconciler = true;
+export const enablePersistentReconciler = false;
 export const alwaysUseRequestIdleCallbackPolyfill = false;
 
 // Only used in www builds.
@@ -34,4 +37,4 @@ export function addUserTimingListener() {
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;
 // eslint-disable-next-line no-unused-expressions
-(null: Check<FabricFeatureFlagsType, FeatureFlagsType>);
+(null: Check<FeatureFlagsShimType, FeatureFlagsType>);
