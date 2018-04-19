@@ -108,7 +108,7 @@ describe('ReactDOMServerIntegration', () => {
     itRenders('stateless child without context', async render => {
       function StatelessChildWithoutContext(props, context) {
         // this should render blank; context isn't passed to this component.
-        return <div>{context.text}</div>;
+        return <div>{context === undefined ? null : context.text}</div>;
       }
 
       const e = await render(

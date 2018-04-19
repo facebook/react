@@ -47,6 +47,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
+import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
@@ -235,10 +236,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
       ReactDebugCurrentFiber.setCurrentPhase('render');
-      nextChildren = fn(nextProps, context);
+      if (context === emptyObject) {
+        nextChildren = fn(nextProps);
+      } else {
+        nextChildren = fn(nextProps, context);
+      }
       ReactDebugCurrentFiber.setCurrentPhase(null);
     } else {
-      nextChildren = fn(nextProps, context);
+      if (context === emptyObject) {
+        nextChildren = fn(nextProps);
+      } else {
+        nextChildren = fn(nextProps, context);
+      }
     }
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
@@ -586,9 +595,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
       }
       ReactCurrentOwner.current = workInProgress;
-      value = fn(props, context);
+      if (context === emptyObject) {
+        value = fn(props);
+      } else {
+        value = fn(props, context);
+      }
     } else {
-      value = fn(props, context);
+      if (context === emptyObject) {
+        value = fn(props);
+      } else {
+        value = fn(props, context);
+      }
     }
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
