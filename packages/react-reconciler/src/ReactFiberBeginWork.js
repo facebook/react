@@ -47,6 +47,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
+import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
@@ -66,11 +67,39 @@ import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
 let didWarnAboutStatelessRefs;
+let emptyContextThatWarnsOnAccess;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
   didWarnAboutGetDerivedStateOnFunctionalComponent = {};
   didWarnAboutStatelessRefs = {};
+
+  emptyContextThatWarnsOnAccess =
+    typeof Proxy === 'function'
+      ? new Proxy(emptyObject, {
+          get(target, name) {
+            const owner = ReactCurrentOwner.current;
+            let info = '';
+            if (owner !== null) {
+              const componentName = getComponentName(owner);
+              if (componentName != null) {
+                info = ` Check the definition of ${componentName}.\n`;
+              }
+            }
+            warning(
+              false,
+              'Missing contextTypes: Attempted to read the context ' +
+                "property '%s', but contextTypes was not defined.%s\n" +
+                'In future versions, React will not pass any context (nor an ' +
+                'empty object) to functional components unless contextTypes ' +
+                'is defined.',
+              name,
+              info,
+            );
+            return target[name];
+          },
+        })
+      : emptyObject;
 }
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
@@ -235,7 +264,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
       ReactDebugCurrentFiber.setCurrentPhase('render');
-      nextChildren = fn(nextProps, context);
+      if (context === emptyObject) {
+        nextChildren = fn(nextProps, emptyContextThatWarnsOnAccess);
+      } else {
+        nextChildren = fn(nextProps, context);
+      }
       ReactDebugCurrentFiber.setCurrentPhase(null);
     } else {
       nextChildren = fn(nextProps, context);
@@ -586,7 +619,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
       }
       ReactCurrentOwner.current = workInProgress;
-      value = fn(props, context);
+      if (context === emptyObject) {
+        value = fn(props, emptyContextThatWarnsOnAccess);
+      } else {
+        value = fn(props, context);
+      }
     } else {
       value = fn(props, context);
     }

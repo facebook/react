@@ -2098,7 +2098,14 @@ describe('ReactIncremental', () => {
         </IndirectionFn>
       </Intl>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Missing contextTypes: Attempted to read the context property ' +
+        "'toJSON', but contextTypes was not defined. Check the definition " +
+        'of IndirectionFn.\n\n' +
+        'In future versions, React will not pass any context ' +
+        '(nor an empty object) to functional components unless contextTypes ' +
+        'is defined.',
+    );
     expect(ops).toEqual([
       'Intl:read {}',
       'Intl:provide {"locale":"fr"}',
@@ -2186,7 +2193,14 @@ describe('ReactIncremental', () => {
         </IndirectionFn>
       </Stateful>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Missing contextTypes: Attempted to read the context property ' +
+        "'toJSON', but contextTypes was not defined. Check the definition " +
+        'of IndirectionFn.\n\n' +
+        'In future versions, React will not pass any context ' +
+        '(nor an empty object) to functional components unless contextTypes ' +
+        'is defined.',
+    );
     expect(ops).toEqual([
       'Intl:read {}',
       'Intl:provide {"locale":"fr"}',
@@ -2198,7 +2212,14 @@ describe('ReactIncremental', () => {
 
     ops.length = 0;
     statefulInst.setState({locale: 'gr'});
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Missing contextTypes: Attempted to read the context property ' +
+        "'toJSON', but contextTypes was not defined. Check the definition " +
+        'of IndirectionFn.\n\n' +
+        'In future versions, React will not pass any context ' +
+        '(nor an empty object) to functional components unless contextTypes ' +
+        'is defined.',
+    );
     expect(ops).toEqual([
       // Intl is below setState() so it might have been
       // affected by it. Therefore we re-render and recompute

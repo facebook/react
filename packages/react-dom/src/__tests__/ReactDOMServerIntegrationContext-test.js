@@ -105,17 +105,19 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.textContent).toBe('');
     });
 
-    itRenders('stateless child without context', async render => {
+    it('stateless child without context', () => {
       function StatelessChildWithoutContext(props, context) {
         // this should render blank; context isn't passed to this component.
         return <div>{context.text}</div>;
       }
-
-      const e = await render(
+      const html = ReactDOMServer.renderToString(
         <PurpleContext>
           <StatelessChildWithoutContext />
         </PurpleContext>,
       );
+      const domElement = document.createElement('div');
+      domElement.innerHTML = html;
+      const e = domElement.firstChild;
       expect(e.textContent).toBe('');
     });
 
