@@ -226,9 +226,6 @@ if (!ExecutionEnvironment.canUseDOM) {
     isIdleScheduled = false;
     timeoutTime = -1;
   };
-} else {
-  rIC = window.requestIdleCallback;
-  cIC = window.cancelIdleCallback;
 }
 
 export {now, rIC, cIC};
