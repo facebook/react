@@ -29,7 +29,7 @@ import * as EventPluginRegistry from 'events/EventPluginRegistry';
 import * as EventPropagators from 'events/EventPropagators';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import ReactVersion from 'shared/ReactVersion';
-import * as ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
+import * as ReactScheduler from 'react-scheduler';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
@@ -688,7 +688,7 @@ const DOMRenderer = ReactFiberReconciler({
     return textNode;
   },
 
-  now: ReactDOMFrameScheduling.now,
+  now: ReactScheduler.now,
 
   mutation: {
     commitMount(
@@ -984,8 +984,8 @@ const DOMRenderer = ReactFiberReconciler({
     },
   },
 
-  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
-  cancelDeferredCallback: ReactDOMFrameScheduling.cIC,
+  scheduleDeferredCallback: ReactScheduler.rIC,
+  cancelDeferredCallback: ReactScheduler.cIC,
 });
 
 ReactGenericBatching.injection.injectRenderer(DOMRenderer);

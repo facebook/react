@@ -351,6 +351,16 @@ const bundles = [
     global: 'createSubscription',
     externals: ['react'],
   },
+
+  /******* React Scheduler (experimental) *******/
+  {
+    label: 'react-scheduler',
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-scheduler',
+    global: 'ReactScheduler',
+    externals: [],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)
