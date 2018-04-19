@@ -962,7 +962,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
 
         const sourceFiber: Fiber = nextUnitOfWork;
-        let returnFiber = sourceFiber.return;
+        let returnFiber = sourceFiber ? sourceFiber.return : null;
         if (returnFiber === null) {
           // This is the root. The root could capture its own errors. However,
           // we don't know if it errors before or after we pushed the host
