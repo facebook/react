@@ -82,7 +82,7 @@
     "prettier": "1.11.1",
     "prop-types": "^15.6.0",
     "random-seed": "^0.3.0",
-    "react-lifecycles-compat": "^1.0.2",
+    "react-lifecycles-compat": "^3.0.2",
     "rimraf": "^2.6.1",
     "rollup": "^0.52.1",
     "rollup-plugin-babel": "^3.0.1",
