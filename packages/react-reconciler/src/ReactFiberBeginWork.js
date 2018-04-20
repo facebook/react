@@ -886,7 +886,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newValue = newProps.value;
     workInProgress.memoizedProps = newProps;
 
-    if (__DEV__ && workInProgress.type) {
+    if (__DEV__) {
       checkPropTypes(
         workInProgress.type.propTypes,
         newProps,
