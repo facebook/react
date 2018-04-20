@@ -16,7 +16,7 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
-import {enqueueRenderPhaseUpdate, createUpdate} from './ReactUpdateQueue';
+import {enqueueCapturedUpdate, createUpdate} from './ReactUpdateQueue';
 import {logError} from './ReactFiberCommitWork';
 
 import {
@@ -165,11 +165,7 @@ export default function<C, CX>(
           const errorInfo = value;
           workInProgress.effectTag |= ShouldCapture;
           const update = createRootErrorUpdate(errorInfo, renderExpirationTime);
-          enqueueRenderPhaseUpdate(
-            workInProgress,
-            update,
-            renderExpirationTime,
-          );
+          enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
           return;
         }
         case ClassComponent:
@@ -193,11 +189,7 @@ export default function<C, CX>(
               errorInfo,
               renderExpirationTime,
             );
-            enqueueRenderPhaseUpdate(
-              workInProgress,
-              update,
-              renderExpirationTime,
-            );
+            enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
             return;
           }
           break;
