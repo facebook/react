@@ -226,15 +226,15 @@ describe('ReactContextValidator', () => {
   });
 
   it('warns of incorrect prop types on context provider', () => {
-    const MyContext = React.createContext();
+    const TestContext = React.createContext();
 
-    MyContext.Provider.propTypes = {
+    TestContext.Provider.propTypes = {
       value: PropTypes.string.isRequired,
     };
 
-    ReactTestUtils.renderIntoDocument(<MyContext.Provider value="val" />);
+    ReactTestUtils.renderIntoDocument(<TestContext.Provider value="val" />);
 
-    expect(() => ReactTestUtils.renderIntoDocument(<MyContext.Provider />)).toWarnDev(
+    expect(() => ReactTestUtils.renderIntoDocument(<TestContext.Provider />)).toWarnDev(
       'Warning: Failed prop type: The prop `value` is marked as required in ' +
         '`ReactProvider`, but its value is `undefined`.',
     );
