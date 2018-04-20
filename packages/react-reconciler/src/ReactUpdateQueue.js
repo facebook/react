@@ -108,7 +108,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {UpdateQueue as UpdateQueueEffect} from 'shared/ReactTypeOfSideEffect';
+import {Callback} from 'shared/ReactTypeOfSideEffect';
 import {ClassComponent} from 'shared/ReactTypeOfWork';
 
 import warning from 'fbjs/lib/warning';
@@ -422,7 +422,7 @@ function processSingleUpdate<State>(
   const commit = update.commit;
   const process = update.process;
   if (commit !== null) {
-    workInProgress.effectTag |= UpdateQueueEffect;
+    workInProgress.effectTag |= Callback;
     addToEffectList(queue, update);
   }
   if (process !== null) {
@@ -590,12 +590,12 @@ export function processUpdateQueue<State>(
   if (newFirstRenderPhaseUpdate === null) {
     queue.lastRenderPhaseUpdate = null;
   } else {
-    workInProgress.effectTag |= UpdateQueueEffect;
+    workInProgress.effectTag |= Callback;
   }
   if (newFirstCapturedUpdate === null) {
     queue.lastCapturedUpdate = null;
   } else {
-    workInProgress.effectTag |= UpdateQueueEffect;
+    workInProgress.effectTag |= Callback;
   }
   if (
     newFirstUpdate === null &&

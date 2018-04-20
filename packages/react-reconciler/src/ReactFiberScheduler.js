@@ -26,7 +26,7 @@ import {
   PlacementAndUpdate,
   Deletion,
   ContentReset,
-  UpdateQueue as UpdateQueueEffect,
+  Callback,
   ShouldCapture,
   Ref,
   Incomplete,
@@ -434,7 +434,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     while (nextEffect !== null) {
       const effectTag = nextEffect.effectTag;
 
-      if (effectTag & (Update | UpdateQueueEffect)) {
+      if (effectTag & (Update | Callback)) {
         recordEffect();
         const current = nextEffect.alternate;
         commitLifeCycles(
