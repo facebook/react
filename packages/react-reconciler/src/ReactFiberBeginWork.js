@@ -890,7 +890,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       checkPropTypes(
         workInProgress.types.propTypes,
         newProps,
-        'context',
+        'prop',
         'ReactContext',
       );
     }
