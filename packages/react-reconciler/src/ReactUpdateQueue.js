@@ -122,7 +122,10 @@ export type UpdateQueue<State> = {
   firstEffect: Update<State> | null,
   lastEffect: Update<State> | null,
 
-  // TODO: Workaround for lack of tuples. Could global state instead.
+  firstCapturedEffect: Update<State> | null,
+  lastCapturedEffect: Update<State> | null,
+
+  // TODO: Workaround for lack of tuples. Could use global state instead.
   hasForceUpdate: boolean,
 
   // DEV-only
@@ -144,6 +147,8 @@ export function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     lastCapturedUpdate: null,
     firstEffect: null,
     lastEffect: null,
+    firstCapturedEffect: null,
+    lastCapturedEffect: null,
     hasForceUpdate: false,
   };
   if (__DEV__) {
@@ -170,6 +175,9 @@ function cloneUpdateQueue<State>(
 
     firstEffect: null,
     lastEffect: null,
+
+    firstCapturedEffect: null,
+    lastCapturedEffect: null,
   };
   if (__DEV__) {
     queue.isProcessing = false;
@@ -330,39 +338,6 @@ export function enqueueCapturedUpdate<State>(
   }
 }
 
-function addToEffectList<State>(
-  queue: UpdateQueue<State>,
-  update: Update<State>,
-) {
-  // Set this to null, in case it was mutated during an aborted render.
-  update.nextEffect = null;
-  if (queue.lastEffect === null) {
-    queue.firstEffect = queue.lastEffect = update;
-  } else {
-    queue.lastEffect.nextEffect = update;
-    queue.lastEffect = update;
-  }
-}
-
-function processSingleUpdate<State>(
-  workInProgress: Fiber,
-  queue: UpdateQueue<State>,
-  update: Update<State>,
-  prevState: State,
-): State {
-  const commit = update.commit;
-  const process = update.process;
-  if (commit !== null) {
-    workInProgress.effectTag |= Callback;
-    addToEffectList(queue, update);
-  }
-  if (process !== null) {
-    return process(workInProgress, prevState, queue);
-  } else {
-    return prevState;
-  }
-}
-
 function ensureWorkInProgressQueueIsAClone<State>(
   workInProgress: Fiber,
   queue: UpdateQueue<State>,
@@ -428,12 +403,22 @@ export function processUpdateQueue<State>(
     } else {
       // This update does have sufficient priority. Process it and compute
       // a new result.
-      resultState = processSingleUpdate(
-        workInProgress,
-        queue,
-        update,
-        resultState,
-      );
+      const commit = update.commit;
+      const process = update.process;
+      if (process !== null) {
+        resultState = process(workInProgress, resultState, queue);
+      }
+      if (commit !== null) {
+        workInProgress.effectTag |= Callback;
+        // Set this to null, in case it was mutated during an aborted render.
+        update.nextEffect = null;
+        if (queue.lastEffect === null) {
+          queue.firstEffect = queue.lastEffect = update;
+        } else {
+          queue.lastEffect.nextEffect = update;
+          queue.lastEffect = update;
+        }
+      }
     }
     // Continue to the next update.
     update = update.next;
@@ -467,12 +452,22 @@ export function processUpdateQueue<State>(
     } else {
       // This update does have sufficient priority. Process it and compute
       // a new result.
-      resultState = processSingleUpdate(
-        workInProgress,
-        queue,
-        update,
-        resultState,
-      );
+      const commit = update.commit;
+      const process = update.process;
+      if (process !== null) {
+        resultState = process(workInProgress, resultState, queue);
+      }
+      if (commit !== null) {
+        workInProgress.effectTag |= Callback;
+        // Set this to null, in case it was mutated during an aborted render.
+        update.nextEffect = null;
+        if (queue.lastCapturedEffect === null) {
+          queue.firstCapturedEffect = queue.lastCapturedEffect = update;
+        } else {
+          queue.lastCapturedEffect.nextEffect = update;
+          queue.lastCapturedEffect = update;
+        }
+      }
     }
     update = update.next;
   }
@@ -525,6 +520,17 @@ export function commitUpdateQueue<State>(
   // Commit the effects
   let effect = finishedQueue.firstEffect;
   finishedQueue.firstEffect = finishedQueue.lastEffect = null;
+  while (effect !== null) {
+    const commit = effect.commit;
+    if (commit !== null) {
+      effect.commit = null;
+      commit(finishedWork);
+    }
+    effect = effect.nextEffect;
+  }
+
+  effect = finishedQueue.firstCapturedEffect;
+  finishedQueue.firstCapturedEffect = finishedQueue.lastCapturedEffect = null;
   while (effect !== null) {
     const commit = effect.commit;
     if (commit !== null) {
