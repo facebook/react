@@ -17,7 +17,7 @@ import {
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {HostComponent} from 'shared/ReactTypeOfWork';
+import {ClassComponent, HostComponent} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
@@ -26,11 +26,7 @@ import warning from 'fbjs/lib/warning';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import ReactFiberScheduler from './ReactFiberScheduler';
-import {
-  createStateReplace,
-  createCallbackEffect,
-  enqueueUpdate,
-} from './ReactUpdateQueue';
+import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 
@@ -343,22 +339,40 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
 
-    const update = createStateReplace(element, expirationTime);
-    enqueueUpdate(current, update, expirationTime);
+    const update = createUpdate(expirationTime);
+
+    update.process = () => element;
 
     callback = callback === undefined ? null : callback;
-    if (callback !== undefined && callback !== null) {
-      if (__DEV__) {
-        warning(
-          callback === null || typeof callback === 'function',
-          'render(...): Expected the last optional `callback` argument to be a ' +
-            'function. Instead received: %s.',
+    if (callback !== null) {
+      warning(
+        typeof callback === 'function',
+        'render(...): Expected the last optional `callback` argument to be a ' +
+          'function. Instead received: %s.',
+        callback,
+      );
+      update.commit = finishedWork => {
+        let instance = null;
+        if (finishedWork.child !== null) {
+          switch (finishedWork.child.tag) {
+            case HostComponent:
+              instance = getPublicInstance(finishedWork.child.stateNode);
+              break;
+            case ClassComponent:
+              instance = finishedWork.child.stateNode;
+              break;
+          }
+        }
+        invariant(
+          typeof callback === 'function',
+          'Invalid argument passed as callback. Expected a function. Instead ' +
+            'received: %s',
           callback,
         );
-      }
-      const callbackUpdate = createCallbackEffect(callback, expirationTime);
-      enqueueUpdate(current, callbackUpdate, expirationTime);
+        callback.call(instance);
+      };
     }
+    enqueueUpdate(current, update, expirationTime);
 
     scheduleWork(current, expirationTime);
     return expirationTime;

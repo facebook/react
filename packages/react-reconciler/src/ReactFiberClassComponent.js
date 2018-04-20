@@ -31,12 +31,8 @@ import {StrictMode} from './ReactTypeOfMode';
 import {
   enqueueUpdate,
   enqueueRenderPhaseUpdate,
-  processClassUpdateQueue,
-  createStateUpdate,
-  createStateReplace,
-  createCallbackEffect,
-  createDeriveStateFromPropsUpdate,
-  createForceUpdate,
+  processUpdateQueue,
+  createUpdate,
 } from './ReactUpdateQueue';
 
 const fakeInternalInstance = {};
@@ -46,6 +42,8 @@ let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
 let didWarnAboutLegacyLifecyclesAndDerivedState;
+let didWarnAboutUndefinedDerivedState;
+let warnOnUndefinedDerivedState;
 let warnOnInvalidCallback;
 
 if (__DEV__) {
@@ -53,6 +51,7 @@ if (__DEV__) {
   didWarnAboutUninitializedState = new Set();
   didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
   didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
+  didWarnAboutUndefinedDerivedState = new Set();
 
   const didWarnOnInvalidCallback = new Set();
 
@@ -70,6 +69,21 @@ if (__DEV__) {
         callerName,
         callback,
       );
+    }
+  };
+
+  warnOnUndefinedDerivedState = function(workInProgress, partialState) {
+    if (partialState === undefined) {
+      const componentName = getComponentName(workInProgress) || 'Component';
+      if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
+        didWarnAboutUndefinedDerivedState.add(componentName);
+        warning(
+          false,
+          '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
+            'You have returned undefined.',
+          componentName,
+        );
+      }
     }
   };
 
@@ -95,15 +109,32 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-function enqueueDerivedStateFromProps(
-  workInProgress: Fiber,
+export function createGetDerivedStateFromPropsUpdate(
+  getDerivedStateFromProps: (props: any, state: any) => any,
   renderExpirationTime: ExpirationTime,
-): void {
-  const getDerivedStateFromProps = workInProgress.type.getDerivedStateFromProps;
-  if (typeof getDerivedStateFromProps === 'function') {
-    const update = createDeriveStateFromPropsUpdate(renderExpirationTime);
-    enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
-  }
+) {
+  const update = createUpdate(renderExpirationTime);
+  update.process = (nextWorkInProgress, prevState) => {
+    const nextProps = nextWorkInProgress.pendingProps;
+
+    if (
+      debugRenderPhaseSideEffects ||
+      (debugRenderPhaseSideEffectsForStrictMode &&
+        nextWorkInProgress.mode & StrictMode)
+    ) {
+      // Invoke the function an extra time to help detect side-effects.
+      getDerivedStateFromProps(nextProps, prevState);
+    }
+
+    const partialState = getDerivedStateFromProps(nextProps, prevState);
+
+    if (__DEV__) {
+      warnOnUndefinedDerivedState(nextWorkInProgress, partialState);
+    }
+    // Merge the partial state and the previous state.
+    return Object.assign({}, prevState, partialState);
+  };
+  return update;
 }
 
 export default function(
@@ -121,57 +152,125 @@ export default function(
     hasContextChanged,
   } = legacyContext;
 
+  function callCallback(callback, context) {
+    invariant(
+      typeof callback === 'function',
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: %s',
+      callback,
+    );
+    callback.call(context);
+  }
+
   const classComponentUpdater = {
     isMounted,
-    enqueueSetState(instance, payload, callback) {
-      const fiber = ReactInstanceMap.get(instance);
+    enqueueSetState(inst, payload, callback) {
+      const fiber = ReactInstanceMap.get(inst);
       const expirationTime = computeExpirationForFiber(fiber);
 
-      const update = createStateUpdate(payload, expirationTime);
-      enqueueUpdate(fiber, update, expirationTime);
+      const update = createUpdate(expirationTime);
+      update.process = (workInProgress, prevState) => {
+        let partialState;
+        if (typeof payload === 'function') {
+          // Updater function
+          const instance = workInProgress.stateNode;
+          const nextProps = workInProgress.pendingProps;
+
+          if (
+            debugRenderPhaseSideEffects ||
+            (debugRenderPhaseSideEffectsForStrictMode &&
+              workInProgress.mode & StrictMode)
+          ) {
+            // Invoke the updater an extra time to help detect side-effects.
+            payload.call(instance, prevState, nextProps);
+          }
+
+          partialState = payload.call(instance, prevState, nextProps);
+        } else {
+          // Partial state object
+          partialState = payload;
+        }
+        if (partialState === null || partialState === undefined) {
+          // Null and undefined are treated as no-ops.
+          return prevState;
+        }
+        // Merge the partial state and the previous state.
+        return Object.assign({}, prevState, partialState);
+      };
 
       if (callback !== undefined && callback !== null) {
         if (__DEV__) {
           warnOnInvalidCallback(callback, 'setState');
         }
-        const callbackUpdate = createCallbackEffect(callback, expirationTime);
-        enqueueUpdate(fiber, callbackUpdate, expirationTime);
+        update.commit = finishedWork => {
+          const instance = finishedWork.stateNode;
+          callCallback(callback, instance);
+        };
       }
 
+      enqueueUpdate(fiber, update, expirationTime);
       scheduleWork(fiber, expirationTime);
     },
-    enqueueReplaceState(instance, payload, callback) {
-      const fiber = ReactInstanceMap.get(instance);
+    enqueueReplaceState(inst, payload, callback) {
+      const fiber = ReactInstanceMap.get(inst);
       const expirationTime = computeExpirationForFiber(fiber);
 
-      const update = createStateReplace(payload, expirationTime);
-      enqueueUpdate(fiber, update, expirationTime);
+      const update = createUpdate(expirationTime);
+      update.process = (workInProgress, prevState) => {
+        if (typeof payload === 'function') {
+          // Updater function
+          const instance = workInProgress.stateNode;
+          const nextProps = workInProgress.pendingProps;
+
+          if (
+            debugRenderPhaseSideEffects ||
+            (debugRenderPhaseSideEffectsForStrictMode &&
+              workInProgress.mode & StrictMode)
+          ) {
+            // Invoke the updater an extra time to help detect side-effects.
+            payload.call(instance, prevState, nextProps);
+          }
+
+          return payload.call(instance, prevState, nextProps);
+        }
+        // State object
+        return payload;
+      };
 
       if (callback !== undefined && callback !== null) {
         if (__DEV__) {
           warnOnInvalidCallback(callback, 'setState');
         }
-        const callbackUpdate = createCallbackEffect(callback, expirationTime);
-        enqueueUpdate(fiber, callbackUpdate, expirationTime);
+        update.commit = finishedWork => {
+          const instance = finishedWork.stateNode;
+          callCallback(callback, instance);
+        };
       }
 
+      enqueueUpdate(fiber, update, expirationTime);
       scheduleWork(fiber, expirationTime);
     },
-    enqueueForceUpdate(instance, callback) {
-      const fiber = ReactInstanceMap.get(instance);
+    enqueueForceUpdate(inst, callback) {
+      const fiber = ReactInstanceMap.get(inst);
       const expirationTime = computeExpirationForFiber(fiber);
 
-      const update = createForceUpdate(expirationTime);
-      enqueueUpdate(fiber, update, expirationTime);
+      const update = createUpdate(expirationTime);
+      update.process = (workInProgress, prevState) => {
+        workInProgress.effectTag |= ForceUpdate;
+        return prevState;
+      };
 
       if (callback !== undefined && callback !== null) {
         if (__DEV__) {
           warnOnInvalidCallback(callback, 'setState');
         }
-        const callbackUpdate = createCallbackEffect(callback, expirationTime);
-        enqueueUpdate(fiber, callbackUpdate, expirationTime);
+        update.commit = finishedWork => {
+          const instance = finishedWork.stateNode;
+          callCallback(callback, instance);
+        };
       }
 
+      enqueueUpdate(fiber, update, expirationTime);
       scheduleWork(fiber, expirationTime);
     },
   };
@@ -640,14 +739,19 @@ export default function(
       }
     }
 
-    enqueueDerivedStateFromProps(workInProgress, renderExpirationTime);
-    let updateQueue = workInProgress.updateQueue;
-    if (updateQueue !== null) {
-      processClassUpdateQueue(
-        workInProgress,
-        updateQueue,
+    const getDerivedStateFromProps =
+      workInProgress.type.getDerivedStateFromProps;
+    if (typeof getDerivedStateFromProps === 'function') {
+      const update = createGetDerivedStateFromPropsUpdate(
+        getDerivedStateFromProps,
         renderExpirationTime,
       );
+      enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
+    }
+
+    let updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null) {
+      processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
       instance.state = workInProgress.memoizedState;
     }
 
@@ -664,11 +768,7 @@ export default function(
       // process them now.
       updateQueue = workInProgress.updateQueue;
       if (updateQueue !== null) {
-        processClassUpdateQueue(
-          workInProgress,
-          updateQueue,
-          renderExpirationTime,
-        );
+        processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
         instance.state = workInProgress.memoizedState;
       }
     }
@@ -720,18 +820,22 @@ export default function(
 
     // Only call getDerivedStateFromProps if the props have changed
     if (oldProps !== newProps) {
-      enqueueDerivedStateFromProps(workInProgress, renderExpirationTime);
+      const getDerivedStateFromProps =
+        workInProgress.type.getDerivedStateFromProps;
+      if (typeof getDerivedStateFromProps === 'function') {
+        const update = createGetDerivedStateFromPropsUpdate(
+          getDerivedStateFromProps,
+          renderExpirationTime,
+        );
+        enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
+      }
     }
 
     const oldState = workInProgress.memoizedState;
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
-      processClassUpdateQueue(
-        workInProgress,
-        updateQueue,
-        renderExpirationTime,
-      );
+      processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
       newState = workInProgress.memoizedState;
     }
 
@@ -844,18 +948,22 @@ export default function(
 
     // Only call getDerivedStateFromProps if the props have changed
     if (oldProps !== newProps) {
-      enqueueDerivedStateFromProps(workInProgress, renderExpirationTime);
+      const getDerivedStateFromProps =
+        workInProgress.type.getDerivedStateFromProps;
+      if (typeof getDerivedStateFromProps === 'function') {
+        const update = createGetDerivedStateFromPropsUpdate(
+          getDerivedStateFromProps,
+          renderExpirationTime,
+        );
+        enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
+      }
     }
 
     const oldState = workInProgress.memoizedState;
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
-      processClassUpdateQueue(
-        workInProgress,
-        updateQueue,
-        renderExpirationTime,
-      );
+      processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
       newState = workInProgress.memoizedState;
     }
 

@@ -54,18 +54,15 @@ import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
-import ReactFiberClassComponent from './ReactFiberClassComponent';
+import ReactFiberClassComponent, {
+  createGetDerivedStateFromPropsUpdate,
+} from './ReactFiberClassComponent';
 import {
   mountChildFibers,
   reconcileChildFibers,
   cloneChildFibers,
 } from './ReactChildFiber';
-import {
-  createDeriveStateFromPropsUpdate,
-  enqueueRenderPhaseUpdate,
-  processClassUpdateQueue,
-  processRootUpdateQueue,
-} from './ReactUpdateQueue';
+import {enqueueRenderPhaseUpdate, processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
@@ -415,7 +412,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevChildren = workInProgress.memoizedState;
-      processRootUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
+      processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
       const nextChildren = workInProgress.memoizedState;
 
       if (nextChildren === prevChildren) {
@@ -595,15 +592,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
       const getDerivedStateFromProps = Component.getDerivedStateFromProps;
       if (typeof getDerivedStateFromProps === 'function') {
-        const update = createDeriveStateFromPropsUpdate(renderExpirationTime);
+        const update = createGetDerivedStateFromPropsUpdate(
+          getDerivedStateFromProps,
+          renderExpirationTime,
+        );
         enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
         const updateQueue = workInProgress.updateQueue;
         if (updateQueue !== null) {
-          processClassUpdateQueue(
-            workInProgress,
-            updateQueue,
-            renderExpirationTime,
-          );
+          processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
         }
       }
 
@@ -1080,7 +1076,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function memoizeState(workInProgress: Fiber, nextState: any) {
     workInProgress.memoizedState = nextState;
     // Don't reset the updateQueue, in case there are pending updates. Resetting
-    // is handled by processClassUpdateQueue.
+    // is handled by processUpdateQueue.
   }
 
   function beginWork(

@@ -88,10 +88,7 @@ import {
 import {AsyncMode} from './ReactTypeOfMode';
 import ReactFiberLegacyContext from './ReactFiberContext';
 import ReactFiberNewContext from './ReactFiberNewContext';
-import ReactUpdateQueue, {
-  createCatchUpdate,
-  enqueueUpdate,
-} from './ReactUpdateQueue';
+import {enqueueUpdate} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import ReactFiberStack from './ReactFiberStack';
 
@@ -194,16 +191,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     throwException,
     unwindWork,
     unwindInterruptedWork,
+    createRootErrorUpdate,
+    createClassErrorUpdate,
   } = ReactFiberUnwindWork(
     hostContext,
     legacyContext,
     newContext,
     scheduleWork,
-    isAlreadyFailedLegacyErrorBoundary,
-  );
-  const updateQueueMethods = ReactUpdateQueue(
-    config,
     markLegacyErrorBoundaryAsFailed,
+    isAlreadyFailedLegacyErrorBoundary,
     onUncaughtError,
   );
   const {
@@ -217,7 +213,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     commitDetachRef,
   } = ReactFiberCommitWork(
     config,
-    updateQueueMethods,
     onCommitPhaseError,
     scheduleWork,
     computeExpirationForFiber,
@@ -1036,13 +1031,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function scheduleCapture(sourceFiber, boundaryFiber, value, expirationTime) {
-    const capturedValue = createCapturedValue(value, sourceFiber);
-    const update = createCatchUpdate(capturedValue, expirationTime);
-    enqueueUpdate(boundaryFiber, update, expirationTime);
-    scheduleWork(boundaryFiber, expirationTime);
-  }
-
   function dispatch(
     sourceFiber: Fiber,
     value: mixed,
@@ -1052,8 +1040,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       !isWorking || isCommitting,
       'dispatch: Cannot dispatch during the render phase.',
     );
-
-    // TODO: Handle arrays
 
     let fiber = sourceFiber.return;
     while (fiber !== null) {
@@ -1066,14 +1052,24 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             (typeof instance.componentDidCatch === 'function' &&
               !isAlreadyFailedLegacyErrorBoundary(instance))
           ) {
-            scheduleCapture(sourceFiber, fiber, value, expirationTime);
+            const errorInfo = createCapturedValue(value, sourceFiber);
+            const update = createClassErrorUpdate(
+              fiber,
+              errorInfo,
+              expirationTime,
+            );
+            enqueueUpdate(fiber, update, expirationTime);
+            scheduleWork(fiber, expirationTime);
             return;
           }
           break;
-        // TODO: Handle async boundaries
-        case HostRoot:
-          scheduleCapture(sourceFiber, fiber, value, expirationTime);
+        case HostRoot: {
+          const errorInfo = createCapturedValue(value, sourceFiber);
+          const update = createRootErrorUpdate(errorInfo, expirationTime);
+          enqueueUpdate(fiber, update, expirationTime);
+          scheduleWork(fiber, expirationTime);
           return;
+        }
       }
       fiber = fiber.return;
     }
@@ -1081,7 +1077,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (sourceFiber.tag === HostRoot) {
       // Error was thrown at the root. There is no parent, so the root
       // itself should capture it.
-      scheduleCapture(sourceFiber, sourceFiber, value, expirationTime);
+      const rootFiber = sourceFiber;
+      const errorInfo = createCapturedValue(value, rootFiber);
+      const update = createRootErrorUpdate(errorInfo, expirationTime);
+      enqueueUpdate(rootFiber, update, expirationTime);
+      scheduleWork(rootFiber, expirationTime);
     }
   }
 

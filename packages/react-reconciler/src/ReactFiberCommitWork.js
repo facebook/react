@@ -11,7 +11,7 @@ import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {UpdateQueueMethods} from './ReactUpdateQueue';
+import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
 import {
   enableMutatingReconciler,
@@ -33,6 +33,7 @@ import {
   ContentReset,
   Snapshot,
 } from 'shared/ReactTypeOfSideEffect';
+import {commitUpdateQueue} from './ReactUpdateQueue';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
@@ -40,6 +41,7 @@ import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
+import {logCapturedError} from './ReactFiberErrorLogger';
 
 const {
   invokeGuardedCallback,
@@ -52,9 +54,44 @@ if (__DEV__) {
   didWarnAboutUndefinedSnapshotBeforeUpdate = new Set();
 }
 
+export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
+  const source = errorInfo.source;
+  let stack = errorInfo.stack;
+  if (stack === null) {
+    stack = getStackAddendumByWorkInProgressFiber(source);
+  }
+
+  const capturedError: CapturedError = {
+    componentName: source !== null ? getComponentName(source) : null,
+    componentStack: stack !== null ? stack : '',
+    error: errorInfo.value,
+    errorBoundary: null,
+    errorBoundaryName: null,
+    errorBoundaryFound: false,
+    willRetry: false,
+  };
+
+  if (boundary !== null && boundary.tag === ClassComponent) {
+    capturedError.errorBoundary = boundary.stateNode;
+    capturedError.errorBoundaryName = getComponentName(boundary);
+    capturedError.errorBoundaryFound = true;
+    capturedError.willRetry = true;
+  }
+
+  try {
+    logCapturedError(capturedError);
+  } catch (e) {
+    // Prevent cycle if logCapturedError() throws.
+    // A cycle may still occur if logCapturedError renders a component that throws.
+    const suppressLogging = e && e.suppressReactErrorLogging;
+    if (!suppressLogging) {
+      console.error(e);
+    }
+  }
+}
+
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-  updateQueueMethods: UpdateQueueMethods,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
   scheduleWork: (
     fiber: Fiber,
@@ -69,8 +106,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {getPublicInstance, mutation, persistence} = config;
-
-  const {commitClassUpdateQueue, commitRootUpdateQueue} = updateQueueMethods;
 
   const callComponentWillUnmountWithTimer = function(current, instance) {
     startPhaseTimer(current, 'componentWillUnmount');
@@ -216,22 +251,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          commitClassUpdateQueue(
-            finishedWork,
-            updateQueue,
-            committedExpirationTime,
-          );
+          commitUpdateQueue(finishedWork, updateQueue, committedExpirationTime);
         }
         return;
       }
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          commitRootUpdateQueue(
-            finishedWork,
-            updateQueue,
-            committedExpirationTime,
-          );
+          commitUpdateQueue(finishedWork, updateQueue, committedExpirationTime);
         }
         return;
       }

@@ -526,23 +526,15 @@ const ReactNoop = {
 
     function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
       log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
-      const firstUpdate = updateQueue.first;
+      const firstUpdate = updateQueue.firstUpdate;
       if (!firstUpdate) {
         return;
       }
 
-      log(
-        '  '.repeat(depth + 1) + '~',
-        firstUpdate && firstUpdate.partialState,
-        firstUpdate.callback ? 'with callback' : '',
-        '[' + firstUpdate.expirationTime + ']',
-      );
-      let next;
-      while ((next = firstUpdate.next)) {
+      log('  '.repeat(depth + 1) + '~', '[' + firstUpdate.expirationTime + ']');
+      while (firstUpdate.next) {
         log(
           '  '.repeat(depth + 1) + '~',
-          next.partialState,
-          next.callback ? 'with callback' : '',
           '[' + firstUpdate.expirationTime + ']',
         );
       }

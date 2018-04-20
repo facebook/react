@@ -12,9 +12,12 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
 import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
+import type {CapturedValue} from './ReactCapturedValue';
+import type {Update} from './ReactUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
-import {enqueueRenderPhaseUpdate, createCatchUpdate} from './ReactUpdateQueue';
+import {enqueueRenderPhaseUpdate, createUpdate} from './ReactUpdateQueue';
+import {logError} from './ReactFiberCommitWork';
 
 import {
   ClassComponent,
@@ -29,8 +32,13 @@ import {
   Incomplete,
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
+import {StrictMode} from './ReactTypeOfMode';
 
-import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
+import {
+  enableGetDerivedStateFromCatch,
+  debugRenderPhaseSideEffects,
+  debugRenderPhaseSideEffectsForStrictMode,
+} from 'shared/ReactFeatureFlags';
 
 export default function<C, CX>(
   hostContext: HostContext<C, CX>,
@@ -41,7 +49,9 @@ export default function<C, CX>(
     startTime: ExpirationTime,
     expirationTime: ExpirationTime,
   ) => void,
+  markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
+  onUncaughtError: (error: mixed) => void,
 ) {
   const {popHostContainer, popHostContext} = hostContext;
   const {
@@ -49,6 +59,91 @@ export default function<C, CX>(
     popTopLevelContextObject: popTopLevelLegacyContextObject,
   } = legacyContext;
   const {popProvider} = newContext;
+
+  function createRootErrorUpdate(
+    errorInfo: CapturedValue<mixed>,
+    expirationTime: ExpirationTime,
+  ): Update<null> {
+    const update = createUpdate(expirationTime);
+    update.process = nextWorkInProgress => {
+      // Unmount the root by rendering null.
+      return null;
+    };
+    update.commit = finishedWork => {
+      const error = errorInfo.value;
+      onUncaughtError(error);
+      logError(finishedWork, errorInfo);
+    };
+    return update;
+  }
+
+  function createClassErrorUpdate(
+    fiber: Fiber,
+    errorInfo: CapturedValue<mixed>,
+    expirationTime: ExpirationTime,
+  ): Update<mixed> {
+    const update = createUpdate(expirationTime);
+    update.process = (workInProgress, prevState) => {
+      const getDerivedStateFromCatch =
+        workInProgress.type.getDerivedStateFromCatch;
+
+      workInProgress.effectTag =
+        (workInProgress.effectTag & ~ShouldCapture) | DidCapture;
+
+      if (
+        enableGetDerivedStateFromCatch &&
+        typeof getDerivedStateFromCatch === 'function'
+      ) {
+        const error = errorInfo.value;
+        if (
+          debugRenderPhaseSideEffects ||
+          (debugRenderPhaseSideEffectsForStrictMode &&
+            workInProgress.mode & StrictMode)
+        ) {
+          // Invoke the function an extra time to help detect side-effects.
+          getDerivedStateFromCatch(error);
+        }
+
+        // TODO: Pass prevState as second argument?
+        const partialState = getDerivedStateFromCatch(error);
+
+        // Merge the partial state and the previous state.
+        return Object.assign({}, prevState, partialState);
+      } else {
+        return prevState;
+      }
+    };
+
+    const inst = fiber.stateNode;
+    if (inst !== null && typeof inst.componentDidCatch === 'function') {
+      update.commit = finishedWork => {
+        const instance = finishedWork.stateNode;
+        const ctor = finishedWork.type;
+
+        if (
+          !enableGetDerivedStateFromCatch ||
+          typeof ctor.getDerivedStateFromCatch !== 'function'
+        ) {
+          // To preserve the preexisting retry behavior of error boundaries,
+          // we keep track of which ones already failed during this batch.
+          // This gets reset before we yield back to the browser.
+          // TODO: Warn in strict mode if getDerivedStateFromCatch is
+          // not defined.
+          markLegacyErrorBoundaryAsFailed(instance);
+        }
+
+        instance.props = finishedWork.memoizedProps;
+        instance.state = finishedWork.memoizedState;
+        const error = errorInfo.value;
+        const stack = errorInfo.stack;
+        logError(finishedWork, errorInfo);
+        instance.componentDidCatch(error, {
+          componentStack: stack !== null ? stack : '',
+        });
+      };
+    }
+    return update;
+  }
 
   function throwException(
     returnFiber: Fiber,
@@ -67,10 +162,9 @@ export default function<C, CX>(
     do {
       switch (workInProgress.tag) {
         case HostRoot: {
-          // Uncaught error
           const errorInfo = value;
           workInProgress.effectTag |= ShouldCapture;
-          const update = createCatchUpdate(errorInfo, renderExpirationTime);
+          const update = createRootErrorUpdate(errorInfo, renderExpirationTime);
           enqueueRenderPhaseUpdate(
             workInProgress,
             update,
@@ -94,7 +188,11 @@ export default function<C, CX>(
             workInProgress.effectTag |= ShouldCapture;
 
             // Schedule the error boundary to re-render using updated state
-            const update = createCatchUpdate(errorInfo, renderExpirationTime);
+            const update = createClassErrorUpdate(
+              workInProgress,
+              errorInfo,
+              renderExpirationTime,
+            );
             enqueueRenderPhaseUpdate(
               workInProgress,
               update,
@@ -175,5 +273,7 @@ export default function<C, CX>(
     throwException,
     unwindWork,
     unwindInterruptedWork,
+    createRootErrorUpdate,
+    createClassErrorUpdate,
   };
 }
