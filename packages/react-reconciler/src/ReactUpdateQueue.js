@@ -116,7 +116,13 @@ import warning from 'fbjs/lib/warning';
 export type Update<State> = {
   expirationTime: ExpirationTime,
 
-  process: ((workInProgress: Fiber, prevState: State) => State) | null,
+  process:
+    | ((
+        workInProgress: Fiber,
+        prevState: State,
+        queue: UpdateQueue<State>,
+      ) => State)
+    | null,
   commit: ((finishedWork: Fiber) => mixed) | null,
 
   next: Update<State> | null,
@@ -139,6 +145,9 @@ export type UpdateQueue<State> = {
   firstEffect: Update<State> | null,
   lastEffect: Update<State> | null,
 
+  // TODO: Workaround for lack of tuples. Could global state instead.
+  hasForceUpdate: boolean,
+
   // DEV-only
   isProcessing?: boolean,
 };
@@ -160,6 +169,7 @@ function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     lastCapturedUpdate: null,
     firstEffect: null,
     lastEffect: null,
+    hasForceUpdate: false,
   };
   if (__DEV__) {
     queue.isProcessing = false;
@@ -184,6 +194,8 @@ function cloneUpdateQueue<State>(
     // keep these effects.
     firstCapturedUpdate: null,
     lastCapturedUpdate: null,
+
+    hasForceUpdate: false,
 
     firstEffect: null,
     lastEffect: null,
@@ -414,7 +426,7 @@ function processSingleUpdate<State>(
     addToEffectList(queue, update);
   }
   if (process !== null) {
-    return process(workInProgress, prevState);
+    return process(workInProgress, prevState, queue);
   } else {
     return prevState;
   }

@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {LegacyContext} from './ReactFiberContext';
 
-import {Update, Snapshot, ForceUpdate} from 'shared/ReactTypeOfSideEffect';
+import {Update, Snapshot} from 'shared/ReactTypeOfSideEffect';
 import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
@@ -255,8 +255,8 @@ export default function(
       const expirationTime = computeExpirationForFiber(fiber);
 
       const update = createUpdate(expirationTime);
-      update.process = (workInProgress, prevState) => {
-        workInProgress.effectTag |= ForceUpdate;
+      update.process = (workInProgress, prevState, queue) => {
+        queue.hasForceUpdate = true;
         return prevState;
       };
 
@@ -283,8 +283,11 @@ export default function(
     newState,
     newContext,
   ) {
-    if (workInProgress.effectTag & ForceUpdate) {
-      // If the workInProgress already has an Update effect, return true
+    if (
+      workInProgress.updateQueue !== null &&
+      workInProgress.updateQueue.hasForceUpdate
+    ) {
+      // If forceUpdate was called, disregard sCU.
       return true;
     }
 
@@ -843,7 +846,10 @@ export default function(
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !(workInProgress.effectTag & ForceUpdate)
+      !(
+        workInProgress.updateQueue !== null &&
+        workInProgress.updateQueue.hasForceUpdate
+      )
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -971,7 +977,10 @@ export default function(
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !(workInProgress.effectTag & ForceUpdate)
+      !(
+        workInProgress.updateQueue !== null &&
+        workInProgress.updateQueue.hasForceUpdate
+      )
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
