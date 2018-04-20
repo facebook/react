@@ -16,6 +16,7 @@ import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
   IndeterminateComponent,
@@ -884,6 +885,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     const newValue = newProps.value;
     workInProgress.memoizedProps = newProps;
+
+    if (__DEV__ && workInProgress.types) {
+      checkPropTypes(
+        workInProgress.types.propTypes,
+        newProps,
+        'context',
+        'ReactContext',
+      );
+    }
 
     let changedBits: number;
     if (oldProps === null) {
