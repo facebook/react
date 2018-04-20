@@ -33,6 +33,31 @@ describe('SimpleEventPlugin', function() {
   }
 
   beforeEach(function() {
+    // TODO pull this into helper method, reduce repetition.
+    // mock the browser APIs which are used in react-scheduler:
+    // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
+    // - calling 'window.postMessage' should actually fire postmessage handlers
+    global.requestAnimationFrame = function(cb) {
+      return setTimeout(() => {
+        cb(Date.now());
+      });
+    };
+    const originalAddEventListener = global.addEventListener;
+    let postMessageCallback;
+    global.addEventListener = function(eventName, callback, useCapture) {
+      if (eventName === 'message') {
+        postMessageCallback = callback;
+      } else {
+        originalAddEventListener(eventName, callback, useCapture);
+      }
+    };
+    global.postMessage = function(messageKey, targetOrigin) {
+      const postMessageEvent = {source: window, data: messageKey};
+      if (postMessageCallback) {
+        postMessageCallback(postMessageEvent);
+      }
+    };
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
