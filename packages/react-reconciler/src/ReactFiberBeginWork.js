@@ -16,6 +16,7 @@ import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import emptyFunction from 'fbjs/lib/emptyFunction';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
@@ -64,14 +65,18 @@ import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
+const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
+
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
 let didWarnAboutStatelessRefs;
+let getStack = emptyFunction.thatReturns('');
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
   didWarnAboutGetDerivedStateOnFunctionalComponent = {};
   didWarnAboutStatelessRefs = {};
+  getStack = getCurrentFiberStackAddendum;
 }
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
@@ -886,12 +891,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newValue = newProps.value;
     workInProgress.memoizedProps = newProps;
 
-    if (__DEV__) {
+    const providerPropTypes = workInProgress.type.propTypes;
+
+    if (__DEV__ && providerPropTypes) {
       checkPropTypes(
-        workInProgress.type.propTypes,
+        providerPropTypes,
         newProps,
         'prop',
         'Context.Provider',
+        getStack,
       );
     }
 
