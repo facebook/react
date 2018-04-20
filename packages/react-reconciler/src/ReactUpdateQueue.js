@@ -83,26 +83,6 @@
 // updates when preceding updates are skipped, the final result is deterministic
 // regardless of priority. Intermediate state may vary according to system
 // resources, but the final state is always the same.
-//
-// Render phase updates
-// --------------------
-//
-// A render phase update is one triggered during the render phase, while working
-// on a work-in-progress tree. Our typical strategy of adding the update to both
-// queues won't work, because if the work-in-progress is thrown out and
-// restarted, we'll get duplicate updates. Instead, we only add render phase
-// updates to the work-in-progress queue.
-//
-// Because normal updates are added to a persistent list that is shared between
-// both queues, render phase updates go in a special list that only belongs to
-// a single queue. This an artifact of structural sharing. If we instead
-// implemented each queue as separate lists, we would append render phase
-// updates to the end of the work-in-progress list.
-//
-// Examples of render phase updates:
-// - getDerivedStateFromProps
-// - getDerivedStateFromCatch
-// - [future] loading state
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -136,9 +116,6 @@ export type UpdateQueue<State> = {
   firstUpdate: Update<State> | null,
   lastUpdate: Update<State> | null,
 
-  firstRenderPhaseUpdate: Update<State> | null,
-  lastRenderPhaseUpdate: Update<State> | null,
-
   firstCapturedUpdate: Update<State> | null,
   lastCapturedUpdate: Update<State> | null,
 
@@ -157,14 +134,12 @@ if (__DEV__) {
   didWarnUpdateInsideUpdate = false;
 }
 
-function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
+export function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
   const queue: UpdateQueue<State> = {
     expirationTime: NoWork,
     baseState,
     firstUpdate: null,
     lastUpdate: null,
-    firstRenderPhaseUpdate: null,
-    lastRenderPhaseUpdate: null,
     firstCapturedUpdate: null,
     lastCapturedUpdate: null,
     firstEffect: null,
@@ -185,10 +160,6 @@ function cloneUpdateQueue<State>(
     baseState: currentQueue.baseState,
     firstUpdate: currentQueue.firstUpdate,
     lastUpdate: currentQueue.lastUpdate,
-
-    // These are only valid for the lifetime of a single work-in-progress.
-    firstRenderPhaseUpdate: null,
-    lastRenderPhaseUpdate: null,
 
     // TODO: With resuming, if we bail out and resuse the child tree, we should
     // keep these effects.
@@ -316,46 +287,6 @@ export function enqueueUpdate<State>(
       );
       didWarnUpdateInsideUpdate = true;
     }
-  }
-}
-
-export function enqueueRenderPhaseUpdate<State>(
-  workInProgress: Fiber,
-  update: Update<State>,
-  renderExpirationTime: ExpirationTime,
-) {
-  // Render phase updates go into a separate list, and only on the work-in-
-  // progress queue.
-  let workInProgressQueue = workInProgress.updateQueue;
-  if (workInProgressQueue === null) {
-    workInProgressQueue = workInProgress.updateQueue = createUpdateQueue(
-      workInProgress.memoizedState,
-    );
-  } else {
-    // TODO: I put this here rather than createWorkInProgress so that we don't
-    // clone the queue unnecessarily. There's probably a better way to
-    // structure this.
-    workInProgressQueue = ensureWorkInProgressQueueIsAClone(
-      workInProgress,
-      workInProgressQueue,
-    );
-  }
-
-  // Append the update to the end of the list.
-  if (workInProgressQueue.lastRenderPhaseUpdate === null) {
-    // This is the first render phase update
-    workInProgressQueue.firstRenderPhaseUpdate = workInProgressQueue.lastRenderPhaseUpdate = update;
-  } else {
-    workInProgressQueue.lastRenderPhaseUpdate.next = update;
-    workInProgressQueue.lastRenderPhaseUpdate = update;
-  }
-  if (
-    workInProgressQueue.expirationTime === NoWork ||
-    workInProgressQueue.expirationTime > renderExpirationTime
-  ) {
-    // The incoming update has the earliest expiration of any update in the
-    // queue. Update the queue's expiration time.
-    workInProgressQueue.expirationTime = renderExpirationTime;
   }
 }
 
@@ -508,44 +439,6 @@ export function processUpdateQueue<State>(
     update = update.next;
   }
 
-  // Separately, iterate though the list of render phase updates.
-  let newFirstRenderPhaseUpdate = null;
-  update = queue.firstRenderPhaseUpdate;
-  while (update !== null) {
-    const updateExpirationTime = update.expirationTime;
-    if (updateExpirationTime > renderExpirationTime) {
-      // This update does not have sufficient priority. Skip it.
-      if (newFirstRenderPhaseUpdate === null) {
-        // This is the first skipped render phase update. It will be the first
-        // update in the new list.
-        newFirstRenderPhaseUpdate = update;
-        // If this is the first update that was skipped (including the non-
-        // render phase updates!), the current result is the new base state.
-        if (newFirstUpdate === null) {
-          newBaseState = resultState;
-        }
-      }
-      // Since this update will remain in the list, update the remaining
-      // expiration time.
-      if (
-        newExpirationTime === NoWork ||
-        newExpirationTime > updateExpirationTime
-      ) {
-        newExpirationTime = updateExpirationTime;
-      }
-    } else {
-      // This update does have sufficient priority. Process it and compute
-      // a new result.
-      resultState = processSingleUpdate(
-        workInProgress,
-        queue,
-        update,
-        resultState,
-      );
-    }
-    update = update.next;
-  }
-
   // Separately, iterate though the list of captured updates.
   let newFirstCapturedUpdate = null;
   update = queue.firstCapturedUpdate;
@@ -559,7 +452,7 @@ export function processUpdateQueue<State>(
         newFirstCapturedUpdate = update;
         // If this is the first update that was skipped, the current result is
         // the new base state.
-        if (newFirstUpdate === null && newFirstRenderPhaseUpdate === null) {
+        if (newFirstUpdate === null) {
           newBaseState = resultState;
         }
       }
@@ -587,21 +480,12 @@ export function processUpdateQueue<State>(
   if (newFirstUpdate === null) {
     queue.lastUpdate = null;
   }
-  if (newFirstRenderPhaseUpdate === null) {
-    queue.lastRenderPhaseUpdate = null;
-  } else {
-    workInProgress.effectTag |= Callback;
-  }
   if (newFirstCapturedUpdate === null) {
     queue.lastCapturedUpdate = null;
   } else {
     workInProgress.effectTag |= Callback;
   }
-  if (
-    newFirstUpdate === null &&
-    newFirstRenderPhaseUpdate === null &&
-    newFirstCapturedUpdate === null
-  ) {
+  if (newFirstUpdate === null && newFirstCapturedUpdate === null) {
     // We processed every update, without skipping. That means the new base
     // state is the same as the result state.
     newBaseState = resultState;
@@ -609,7 +493,6 @@ export function processUpdateQueue<State>(
 
   queue.baseState = newBaseState;
   queue.firstUpdate = newFirstUpdate;
-  queue.firstRenderPhaseUpdate = newFirstRenderPhaseUpdate;
   queue.firstCapturedUpdate = newFirstCapturedUpdate;
   queue.expirationTime = newExpirationTime;
 
@@ -625,28 +508,17 @@ export function commitUpdateQueue<State>(
   finishedQueue: UpdateQueue<State>,
   renderExpirationTime: ExpirationTime,
 ): void {
-  // If the finished render included render phase updates, and there are still
-  // lower priority updates left over, we need to keep the render phase updates
+  // If the finished render included captured updates, and there are still
+  // lower priority updates left over, we need to keep the captured updates
   // in the queue so that they are rebased and not dropped once we process the
   // queue again at the lower priority.
-  if (finishedQueue.firstRenderPhaseUpdate !== null) {
-    // Join the render phase update list to the end of the normal list.
-    if (finishedQueue.lastUpdate !== null) {
-      finishedQueue.lastUpdate.next = finishedQueue.firstRenderPhaseUpdate;
-      finishedQueue.lastUpdate = finishedQueue.lastRenderPhaseUpdate;
-    }
-    // Clear the list of render phase updates.
-    finishedQueue.firstRenderPhaseUpdate = finishedQueue.lastRenderPhaseUpdate = null;
-  }
-
-  // Same with captured updates
   if (finishedQueue.firstCapturedUpdate !== null) {
-    // Join the render phase update list to the end of the normal list.
+    // Join the captured update list to the end of the normal list.
     if (finishedQueue.lastUpdate !== null) {
       finishedQueue.lastUpdate.next = finishedQueue.firstCapturedUpdate;
       finishedQueue.lastUpdate = finishedQueue.lastCapturedUpdate;
     }
-    // Clear the list of render phase updates.
+    // Clear the list of captured updates.
     finishedQueue.firstCapturedUpdate = finishedQueue.lastCapturedUpdate = null;
   }
 

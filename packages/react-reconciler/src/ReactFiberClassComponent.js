@@ -30,10 +30,10 @@ import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {StrictMode} from './ReactTypeOfMode';
 import {
   enqueueUpdate,
-  enqueueRenderPhaseUpdate,
   processUpdateQueue,
   createUpdate,
 } from './ReactUpdateQueue';
+import {NoWork} from './ReactFiberExpirationTime';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -109,32 +109,40 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-export function createGetDerivedStateFromPropsUpdate(
+export function applyDerivedStateFromProps(
+  workInProgress: Fiber,
   getDerivedStateFromProps: (props: any, state: any) => any,
-  renderExpirationTime: ExpirationTime,
+  nextProps: any,
 ) {
-  const update = createUpdate(renderExpirationTime);
-  update.process = (nextWorkInProgress, prevState) => {
-    const nextProps = nextWorkInProgress.pendingProps;
+  const prevState = workInProgress.memoizedState;
 
-    if (
-      debugRenderPhaseSideEffects ||
-      (debugRenderPhaseSideEffectsForStrictMode &&
-        nextWorkInProgress.mode & StrictMode)
-    ) {
-      // Invoke the function an extra time to help detect side-effects.
-      getDerivedStateFromProps(nextProps, prevState);
-    }
+  if (
+    debugRenderPhaseSideEffects ||
+    (debugRenderPhaseSideEffectsForStrictMode &&
+      workInProgress.mode & StrictMode)
+  ) {
+    // Invoke the function an extra time to help detect side-effects.
+    getDerivedStateFromProps(nextProps, prevState);
+  }
 
-    const partialState = getDerivedStateFromProps(nextProps, prevState);
+  const partialState = getDerivedStateFromProps(nextProps, prevState);
 
-    if (__DEV__) {
-      warnOnUndefinedDerivedState(nextWorkInProgress, partialState);
-    }
-    // Merge the partial state and the previous state.
-    return Object.assign({}, prevState, partialState);
-  };
-  return update;
+  if (__DEV__) {
+    warnOnUndefinedDerivedState(workInProgress, partialState);
+  }
+  // Merge the partial state and the previous state.
+  const memoizedState =
+    partialState === null || partialState === undefined
+      ? prevState
+      : Object.assign({}, prevState, partialState);
+  workInProgress.memoizedState = memoizedState;
+
+  // Once the update queue is empty, persist the derived state onto the
+  // base state.
+  const updateQueue = workInProgress.updateQueue;
+  if (updateQueue !== null && updateQueue.expirationTime === NoWork) {
+    updateQueue.baseState = memoizedState;
+  }
 }
 
 export default function(
@@ -742,19 +750,20 @@ export default function(
       }
     }
 
-    const getDerivedStateFromProps =
-      workInProgress.type.getDerivedStateFromProps;
-    if (typeof getDerivedStateFromProps === 'function') {
-      const update = createGetDerivedStateFromPropsUpdate(
-        getDerivedStateFromProps,
-        renderExpirationTime,
-      );
-      enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
-    }
-
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
+      instance.state = workInProgress.memoizedState;
+    }
+
+    const getDerivedStateFromProps =
+      workInProgress.type.getDerivedStateFromProps;
+    if (typeof getDerivedStateFromProps === 'function') {
+      applyDerivedStateFromProps(
+        workInProgress,
+        getDerivedStateFromProps,
+        props,
+      );
       instance.state = workInProgress.memoizedState;
     }
 
@@ -796,8 +805,9 @@ export default function(
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
+    const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
     const hasNewLifecycles =
-      typeof ctor.getDerivedStateFromProps === 'function' ||
+      typeof getDerivedStateFromProps === 'function' ||
       typeof instance.getSnapshotBeforeUpdate === 'function';
 
     // Note: During these life-cycles, instance.props/instance.state are what
@@ -821,24 +831,20 @@ export default function(
       }
     }
 
-    // Only call getDerivedStateFromProps if the props have changed
-    if (oldProps !== newProps) {
-      const getDerivedStateFromProps =
-        workInProgress.type.getDerivedStateFromProps;
-      if (typeof getDerivedStateFromProps === 'function') {
-        const update = createGetDerivedStateFromPropsUpdate(
-          getDerivedStateFromProps,
-          renderExpirationTime,
-        );
-        enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
-      }
-    }
-
     const oldState = workInProgress.memoizedState;
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
+      newState = workInProgress.memoizedState;
+    }
+
+    if (typeof getDerivedStateFromProps === 'function') {
+      applyDerivedStateFromProps(
+        workInProgress,
+        getDerivedStateFromProps,
+        newProps,
+      );
       newState = workInProgress.memoizedState;
     }
 
@@ -927,8 +933,9 @@ export default function(
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
+    const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
     const hasNewLifecycles =
-      typeof ctor.getDerivedStateFromProps === 'function' ||
+      typeof getDerivedStateFromProps === 'function' ||
       typeof instance.getSnapshotBeforeUpdate === 'function';
 
     // Note: During these life-cycles, instance.props/instance.state are what
@@ -952,24 +959,20 @@ export default function(
       }
     }
 
-    // Only call getDerivedStateFromProps if the props have changed
-    if (oldProps !== newProps) {
-      const getDerivedStateFromProps =
-        workInProgress.type.getDerivedStateFromProps;
-      if (typeof getDerivedStateFromProps === 'function') {
-        const update = createGetDerivedStateFromPropsUpdate(
-          getDerivedStateFromProps,
-          renderExpirationTime,
-        );
-        enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
-      }
-    }
-
     const oldState = workInProgress.memoizedState;
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
+      newState = workInProgress.memoizedState;
+    }
+
+    if (typeof getDerivedStateFromProps === 'function') {
+      applyDerivedStateFromProps(
+        workInProgress,
+        getDerivedStateFromProps,
+        newProps,
+      );
       newState = workInProgress.memoizedState;
     }
 

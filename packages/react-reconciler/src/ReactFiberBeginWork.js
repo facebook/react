@@ -55,14 +55,14 @@ import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import ReactFiberClassComponent, {
-  createGetDerivedStateFromPropsUpdate,
+  applyDerivedStateFromProps,
 } from './ReactFiberClassComponent';
 import {
   mountChildFibers,
   reconcileChildFibers,
   cloneChildFibers,
 } from './ReactChildFiber';
-import {enqueueRenderPhaseUpdate, processUpdateQueue} from './ReactUpdateQueue';
+import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
@@ -592,15 +592,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
       const getDerivedStateFromProps = Component.getDerivedStateFromProps;
       if (typeof getDerivedStateFromProps === 'function') {
-        const update = createGetDerivedStateFromPropsUpdate(
+        applyDerivedStateFromProps(
+          workInProgress,
           getDerivedStateFromProps,
-          renderExpirationTime,
+          props,
         );
-        enqueueRenderPhaseUpdate(workInProgress, update, renderExpirationTime);
-        const updateQueue = workInProgress.updateQueue;
-        if (updateQueue !== null) {
-          processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
-        }
       }
 
       // Push context providers early to prevent context stack mismatches.

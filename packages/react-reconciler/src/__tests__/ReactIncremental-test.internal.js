@@ -1422,7 +1422,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('does not call static getDerivedStateFromProps for state-only updates', () => {
+  it('calls getDerivedStateFromProps even for state-only updates', () => {
     let ops = [];
     let instance;
 
@@ -1456,8 +1456,12 @@ describe('ReactIncremental', () => {
     instance.changeState();
     ReactNoop.flush();
 
-    expect(ops).toEqual(['render', 'componentDidUpdate']);
-    expect(instance.state).toEqual({foo: 'bar'});
+    expect(ops).toEqual([
+      'getDerivedStateFromProps',
+      'render',
+      'componentDidUpdate',
+    ]);
+    expect(instance.state).toEqual({foo: 'foo'});
   });
 
   xit('does not call componentWillReceiveProps for state-only updates', () => {
