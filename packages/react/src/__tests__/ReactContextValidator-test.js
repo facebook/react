@@ -225,6 +225,24 @@ describe('ReactContextValidator', () => {
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 'foo'}} />);
   });
 
+  it('warns of incorrect prop types on context provider', () => {
+    class TestContext extends React.Component {
+      render() {
+        return <MyContext.Provider />;
+      }
+    }
+    const MyContext = React.createContext();
+
+    MyContext.Provider.propTypes = {
+      value: PropTypes.string.isRequired,
+    };
+
+    expect(() => ReactTestUtils.renderIntoDocument(<TestContext />)).toWarnDev(
+      'Warning: Failed prop type: The prop `value` is marked as required in ' +
+        '`ReactContext`, but its value is `undefined`.',
+    );
+  });
+
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   it('should warn (but not error) if getChildContext method is missing', () => {
