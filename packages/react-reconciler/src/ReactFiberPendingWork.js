@@ -27,7 +27,6 @@ export type PendingWork = {
   expirationTime: ExpirationTime,
   isSuspended: boolean,
   shouldTryResuming: boolean,
-  isRenderPhaseWork: boolean,
   next: PendingWork | null,
 };
 
@@ -50,7 +49,8 @@ export function addPendingWork(
   let insertBefore = root.firstPendingWork;
   while (insertBefore !== null) {
     if (insertBefore.expirationTime >= expirationTime) {
-      // Retry anything with an equal or lower expiration time
+      // Retry anything with an equal or lower expiration time, since it may
+      // be unblocked by the new work.
       insertBefore.shouldTryResuming = true;
     }
     if (insertBefore.expirationTime === expirationTime) {
@@ -74,44 +74,10 @@ export function addPendingWork(
       expirationTime,
       isSuspended: false,
       shouldTryResuming: false,
-      isRenderPhaseWork: false,
       next: null,
     };
     insertPendingWorkAtPosition(root, work, insertAfter, insertBefore);
   }
-}
-export function addRenderPhasePendingWork(
-  root: FiberRoot,
-  startTime: ExpirationTime,
-  expirationTime: ExpirationTime,
-): void {
-  // Render-phase updates are treated differently because, while they
-  // could potentially unblock earlier pending work, we assume that they won't.
-  // They are also coalesced differently (see findNextExpirationTimeToWorkOn).
-  let insertAfter = null;
-  let insertBefore = root.firstPendingWork;
-  while (insertBefore !== null) {
-    if (insertBefore.expirationTime === expirationTime) {
-      // Found a matching bucket
-      return;
-    }
-    if (insertBefore.expirationTime > expirationTime) {
-      // Found the insertion position
-      break;
-    }
-    insertAfter = insertBefore;
-    insertBefore = insertBefore.next;
-  }
-  // No matching level found. Create a new one.
-  const work: PendingWork = {
-    startTime,
-    expirationTime,
-    isSuspended: false,
-    shouldTryResuming: false,
-    isRenderPhaseWork: true,
-    next: null,
-  };
-  insertPendingWorkAtPosition(root, work, insertAfter, insertBefore);
 }
 
 export function flushPendingWork(
@@ -135,14 +101,14 @@ export function flushPendingWork(
   if (firstUnflushedWork === null) {
     if (remainingExpirationTime !== NoWork) {
       // There was an update during the render phase that wasn't flushed.
-      addRenderPhasePendingWork(root, currentTime, remainingExpirationTime);
+      addPendingWork(root, currentTime, remainingExpirationTime);
     }
   } else if (
     remainingExpirationTime !== NoWork &&
     firstUnflushedWork.expirationTime > remainingExpirationTime
   ) {
     // There was an update during the render phase that wasn't flushed.
-    addRenderPhasePendingWork(root, currentTime, remainingExpirationTime);
+    addPendingWork(root, currentTime, remainingExpirationTime);
   }
 }
 
@@ -168,7 +134,8 @@ export function resumePendingWork(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ): void {
-  // Called when a promise resolves
+  // Called when a promise resolves. This "pings" React to retry the previously
+  // suspended render.
   let work = root.firstPendingWork;
   while (work !== null) {
     if (work.expirationTime === expirationTime) {
@@ -184,19 +151,12 @@ export function resumePendingWork(
 export function findNextExpirationTimeToWorkOn(
   root: FiberRoot,
 ): ExpirationTime {
-  // If there's a non-suspended interactive expiration time, return the first
-  // one. If everything is suspended, return the last retry time that's either
-  //   a) a render phase update
-  //   b) later or equal to the last suspended time
+  // Return the earliest time that either isn't suspended or has been pinged.
   let lastSuspendedTime = NoWork;
-  let lastRenderPhaseTime = NoWork;
   let lastRetryTime = NoWork;
   let work = root.firstPendingWork;
   while (work !== null) {
-    if (
-      !work.isSuspended &&
-      (!work.isRenderPhaseWork || lastSuspendedTime === NoWork)
-    ) {
+    if (!work.isSuspended) {
       return work.expirationTime;
     }
     if (
@@ -208,13 +168,6 @@ export function findNextExpirationTimeToWorkOn(
     if (work.shouldTryResuming) {
       if (lastRetryTime === NoWork || lastRetryTime < work.expirationTime) {
         lastRetryTime = work.expirationTime;
-      }
-      if (
-        work.isRenderPhaseWork &&
-        (lastRenderPhaseTime === NoWork ||
-          lastRenderPhaseTime < work.expirationTime)
-      ) {
-        lastRenderPhaseTime = work.expirationTime;
       }
     }
     work = work.next;
@@ -228,7 +181,7 @@ export function findNextExpirationTimeToWorkOn(
   if (lastRetryTime >= lastSuspendedTime) {
     return lastRetryTime;
   }
-  return lastRenderPhaseTime;
+  return NoWork;
 }
 
 export function findStartTime(root: FiberRoot, expirationTime: ExpirationTime) {

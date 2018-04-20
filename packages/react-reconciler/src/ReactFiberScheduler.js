@@ -59,7 +59,6 @@ import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {
   addPendingWork,
-  addRenderPhasePendingWork,
   flushPendingWork,
   findStartTime,
   findNextExpirationTimeToWorkOn,
@@ -1353,12 +1352,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             interruptedBy = fiber;
             resetStack();
           }
-          if (!isWorking || isCommitting) {
-            addPendingWork(root, startTime, expirationTime);
-          } else {
-            // We're in the render phase.
-            addRenderPhasePendingWork(root, startTime, expirationTime);
-          }
+          addPendingWork(root, startTime, expirationTime);
           if (
             // If we're in the render phase, we don't need to schedule this root
             // for an update, because we'll do it before we exit...
