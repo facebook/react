@@ -886,9 +886,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newValue = newProps.value;
     workInProgress.memoizedProps = newProps;
 
-    if (__DEV__ && workInProgress.types) {
+    if (__DEV__ && workInProgress.type) {
       checkPropTypes(
-        workInProgress.types.propTypes,
+        workInProgress.type.propTypes,
         newProps,
         'prop',
         'ReactContext',
