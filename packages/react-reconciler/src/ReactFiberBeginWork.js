@@ -891,7 +891,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress.type.propTypes,
         newProps,
         'prop',
-        'ReactContext',
+        'ReactProvider',
       );
     }
 
