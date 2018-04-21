@@ -14,12 +14,6 @@ const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 const PropTypes = require('prop-types');
 
-const {
-  TOP_CLICK,
-  TOP_MOUSE_OUT,
-  TOP_MOUSE_OVER,
-} = require('../events/DOMTopLevelEventTypes');
-
 describe('ReactDOMFiber', () => {
   let container;
 
@@ -844,12 +838,7 @@ describe('ReactDOMFiber', () => {
 
     expect(portal.tagName).toBe('DIV');
 
-    const fakeNativeEvent = {};
-    ReactTestUtils.simulateNativeEventOnNode(
-      TOP_CLICK,
-      portal,
-      fakeNativeEvent,
-    );
+    ReactTestUtils.Simulate.click(portal);
 
     expect(ops).toEqual(['portal clicked', 'parent clicked']);
   });
@@ -864,14 +853,12 @@ describe('ReactDOMFiber', () => {
 
     function simulateMouseMove(from, to) {
       if (from) {
-        ReactTestUtils.simulateNativeEventOnNode(TOP_MOUSE_OUT, from, {
-          target: from,
+        ReactTestUtils.SimulateNative.mouseOut(from, {
           relatedTarget: to,
         });
       }
       if (to) {
-        ReactTestUtils.simulateNativeEventOnNode(TOP_MOUSE_OVER, to, {
-          target: to,
+        ReactTestUtils.SimulateNative.mouseOver(to, {
           relatedTarget: from,
         });
       }
@@ -989,12 +976,7 @@ describe('ReactDOMFiber', () => {
     expect(node.tagName).toEqual('DIV');
 
     function click(target) {
-      const fakeNativeEvent = {};
-      ReactTestUtils.simulateNativeEventOnNode(
-        TOP_CLICK,
-        target,
-        fakeNativeEvent,
-      );
+      ReactTestUtils.Simulate.click(target);
     }
 
     click(node);

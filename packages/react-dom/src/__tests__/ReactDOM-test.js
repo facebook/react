@@ -13,8 +13,6 @@ let React = require('react');
 let ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 
-const {TOP_CLICK} = require('../events/DOMTopLevelEventTypes');
-
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which
   // supports real submit events.
@@ -311,14 +309,9 @@ describe('ReactDOM', () => {
     const actual = [];
 
     function click(node) {
-      const fakeNativeEvent = function() {};
-      fakeNativeEvent.target = node;
-      fakeNativeEvent.path = [node, container];
-      ReactTestUtils.simulateNativeEventOnNode(
-        TOP_CLICK,
-        node,
-        fakeNativeEvent,
-      );
+      ReactTestUtils.Simulate.click(node, {
+        path: [node, container],
+      });
     }
 
     class Wrapper extends React.Component {

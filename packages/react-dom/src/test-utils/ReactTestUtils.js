@@ -36,6 +36,33 @@ function Event(suffix) {}
  * @class ReactTestUtils
  */
 
+/**
+ * Simulates a top level event being dispatched from a raw event that occurred
+ * on an `Element` node.
+ * @param {number} topLevelType A number from `TopLevelEventTypes`
+ * @param {!Element} node The dom to simulate an event occurring on.
+ * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
+ */
+function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
+  fakeNativeEvent.target = node;
+  ReactDOMEventListener.dispatchEvent(topLevelType, fakeNativeEvent);
+}
+
+/**
+ * Simulates a top level event being dispatched from a raw event that occurred
+ * on the `ReactDOMComponent` `comp`.
+ * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`.
+ * @param {!ReactDOMComponent} comp
+ * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
+ */
+function simulateNativeEventOnDOMComponent(
+  topLevelType,
+  comp,
+  fakeNativeEvent,
+) {
+  simulateNativeEventOnNode(topLevelType, findDOMNode(comp), fakeNativeEvent);
+}
+
 function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
     return [];
@@ -291,37 +318,6 @@ const ReactTestUtils = {
     return this;
   },
 
-  /**
-   * Simulates a top level event being dispatched from a raw event that occurred
-   * on an `Element` node.
-   * @param {number} topLevelType A number from `TopLevelEventTypes`
-   * @param {!Element} node The dom to simulate an event occurring on.
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
-   */
-  simulateNativeEventOnNode: function(topLevelType, node, fakeNativeEvent) {
-    fakeNativeEvent.target = node;
-    ReactDOMEventListener.dispatchEvent(topLevelType, fakeNativeEvent);
-  },
-
-  /**
-   * Simulates a top level event being dispatched from a raw event that occurred
-   * on the `ReactDOMComponent` `comp`.
-   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`.
-   * @param {!ReactDOMComponent} comp
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
-   */
-  simulateNativeEventOnDOMComponent: function(
-    topLevelType,
-    comp,
-    fakeNativeEvent,
-  ) {
-    ReactTestUtils.simulateNativeEventOnNode(
-      topLevelType,
-      findDOMNode(comp),
-      fakeNativeEvent,
-    );
-  },
-
   nativeTouchData: function(x, y) {
     return {
       touches: [{pageX: x, pageY: y}],
@@ -441,14 +437,14 @@ function makeNativeSimulator(eventType, topLevelType) {
     const fakeNativeEvent = new Event(eventType);
     Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
-      ReactTestUtils.simulateNativeEventOnDOMComponent(
+      simulateNativeEventOnDOMComponent(
         topLevelType,
         domComponentOrNode,
         fakeNativeEvent,
       );
     } else if (domComponentOrNode.tagName) {
       // Will allow on actual dom nodes.
-      ReactTestUtils.simulateNativeEventOnNode(
+      simulateNativeEventOnNode(
         topLevelType,
         domComponentOrNode,
         fakeNativeEvent,
