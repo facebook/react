@@ -23,7 +23,6 @@ import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
 import accumulate from './accumulate';
 
-
 function isStartish(topLevelType) {
   return (
     topLevelType === ResponderEventPlugin.TopLevelTypes.topMouseDown ||

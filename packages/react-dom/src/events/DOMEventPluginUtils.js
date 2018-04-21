@@ -16,16 +16,16 @@ import {
 } from './DOMTopLevelEventTypes';
 
 export function isEndish(topLevelType) {
-return (
-  topLevelType === TOP_MOUSE_UP ||
-  topLevelType === TOP_TOUCH_END ||
-  topLevelType === TOP_TOUCH_CANCEL
-);
+  return (
+    topLevelType === TOP_MOUSE_UP ||
+    topLevelType === TOP_TOUCH_END ||
+    topLevelType === TOP_TOUCH_CANCEL
+  );
 }
 
 export function isMoveish(topLevelType) {
-return topLevelType === TOP_MOUSE_MOVE || topLevelType === TOP_TOUCH_MOVE;
+  return topLevelType === TOP_MOUSE_MOVE || topLevelType === TOP_TOUCH_MOVE;
 }
 export function isStartish(topLevelType) {
-return topLevelType === TOP_MOUSE_DOWN || topLevelType === TOP_TOUCH_START;
+  return topLevelType === TOP_MOUSE_DOWN || topLevelType === TOP_TOUCH_START;
 }

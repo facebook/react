@@ -180,7 +180,7 @@ type EventUtils = {
   isStartish: (topLevelType: TopLevelType) => boolean,
   isMoveish: (topLevelType: TopLevelType) => boolean,
   isEndish: (topLevelType: TopLevelType) => boolean,
-}
+};
 
 const ResponderTouchHistoryStore = {
   recordTouchTrack(topLevelType: TopLevelType, nativeEvent: TouchEvent): void {
@@ -188,7 +188,11 @@ const ResponderTouchHistoryStore = {
       ResponderTouchHistoryStore.EventUtils,
       'ResponderTouchHistoryStore requires EventUtils to be injected first.',
     );
-    const {isStartish, isMoveish, isEndish} = ResponderTouchHistoryStore.EventUtils
+    const {
+      isStartish,
+      isMoveish,
+      isEndish,
+    } = ResponderTouchHistoryStore.EventUtils;
 
     if (isMoveish(topLevelType)) {
       nativeEvent.changedTouches.forEach(recordTouchMove);

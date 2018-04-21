@@ -17,7 +17,7 @@ import {
   TOP_TOUCH_END,
   TOP_TOUCH_MOVE,
   TOP_TOUCH_START,
- } from './DOMTopLevelEventTypes';
+} from './DOMTopLevelEventTypes';
 
 const endDependencies = [TOP_TOUCH_CANCEL, TOP_TOUCH_END, TOP_MOUSE_UP];
 const moveDependencies = [TOP_TOUCH_MOVE, TOP_MOUSE_MOVE];
@@ -32,8 +32,12 @@ ResponderEventPlugin.eventTypes.responderGrant.dependencies = [];
 ResponderEventPlugin.eventTypes.responderReject.dependencies = [];
 ResponderEventPlugin.eventTypes.responderTerminate.dependencies = [];
 ResponderEventPlugin.eventTypes.moveShouldSetResponder.dependencies = moveDependencies;
-ResponderEventPlugin.eventTypes.selectionChangeShouldSetResponder.dependencies = [TOP_SELECTION_CHANGE];
-ResponderEventPlugin.eventTypes.scrollShouldSetResponder.dependencies = [TOP_SCROLL];
+ResponderEventPlugin.eventTypes.selectionChangeShouldSetResponder.dependencies = [
+  TOP_SELECTION_CHANGE,
+];
+ResponderEventPlugin.eventTypes.scrollShouldSetResponder.dependencies = [
+  TOP_SCROLL,
+];
 ResponderEventPlugin.eventTypes.startShouldSetResponder.dependencies = startDependencies;
 
 ResponderEventPlugin.injection.injectTopLevelTypes({
