@@ -31,10 +31,7 @@ function initModules() {
   };
 }
 
-const {
-  resetModules,
-  itRenders,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
