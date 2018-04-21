@@ -11,7 +11,6 @@
 
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
 
-let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMServer;
@@ -19,7 +18,6 @@ let ReactDOMServer;
 function initModules() {
   // Reset warning cache.
   jest.resetModuleRegistry();
-  PropTypes = require('prop-types');
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
