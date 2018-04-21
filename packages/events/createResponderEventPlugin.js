@@ -6,7 +6,6 @@
  */
 
 import {getLowestCommonAncestor, isAncestor} from 'shared/ReactTreeTraversal';
-import invariant from 'fbjs/lib/invariant';
 
 import {
   executeDirectDispatch,
