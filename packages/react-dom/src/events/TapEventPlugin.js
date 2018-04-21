@@ -19,7 +19,7 @@ import {
   TOP_TOUCH_MOVE,
   TOP_TOUCH_START,
 } from 'events/TopLevelEventTypes';
-import type {TopLevelTypes} from 'events/TopLevelEventTypes';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
 
 import SyntheticUIEvent from './SyntheticUIEvent';
 
@@ -115,7 +115,7 @@ const TapEventPlugin = {
   eventTypes: eventTypes,
 
   extractEvents: function(
-    topLevelType: TopLevelTypes,
+    topLevelType: TopLevelType,
     targetInst: mixed,
     nativeEvent: _Touch,
     nativeEventTarget: EventTarget,

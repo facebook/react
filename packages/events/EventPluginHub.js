@@ -25,7 +25,7 @@ import type {PluginModule} from './PluginModuleType';
 import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {AnyNativeEvent} from './PluginModuleType';
-import type {TopLevelTypes} from './TopLevelEventTypes';
+import type {TopLevelType} from './TopLevelEventTypes';
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
@@ -166,7 +166,7 @@ export function getListener(inst: Fiber, registrationName: string) {
  * @internal
  */
 function extractEvents(
-  topLevelType: TopLevelTypes,
+  topLevelType: TopLevelType,
   targetInst: Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
@@ -228,7 +228,7 @@ export function runEventsInBatch(
 }
 
 export function runExtractedEventsInBatch(
-  topLevelType: TopLevelTypes,
+  topLevelType: TopLevelType,
   targetInst: Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,

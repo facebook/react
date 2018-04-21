@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {TopLevelTypes} from 'events/TopLevelEventTypes';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
@@ -51,7 +51,7 @@ import getEventCharCode from './getEventCharCode';
  *   [TOP_ABORT, { sameConfig }],
  * ]);
  */
-type EventTuple = [TopLevelTypes, string];
+type EventTuple = [TopLevelType, string];
 const interactiveEventTypeNames: Array<EventTuple> = [
   [TopLevelEventTypes.TOP_BLUR, 'blur'],
   [TopLevelEventTypes.TOP_CANCEL, 'cancel'],
@@ -124,7 +124,7 @@ const nonInteractiveEventTypeNames: Array<EventTuple> = [
 
 const eventTypes: EventTypes = {};
 const topLevelEventsToDispatchConfig: Map<
-  TopLevelTypes,
+  TopLevelType,
   DispatchConfig,
 > = new Map();
 
@@ -157,7 +157,7 @@ nonInteractiveEventTypeNames.forEach(eventTuple => {
 });
 
 // Only used in DEV for exhaustiveness validation.
-const knownHTMLTopLevelTypes: Array<TopLevelTypes> = [
+const knownHTMLTopLevelTypes: Array<TopLevelType> = [
   TopLevelEventTypes.TOP_ABORT,
   TopLevelEventTypes.TOP_CANCEL,
   TopLevelEventTypes.TOP_CAN_PLAY,
@@ -194,13 +194,13 @@ const knownHTMLTopLevelTypes: Array<TopLevelTypes> = [
 const SimpleEventPlugin: PluginModule<MouseEvent> = {
   eventTypes: eventTypes,
 
-  isInteractiveTopLevelEventType(topLevelType: TopLevelTypes): boolean {
+  isInteractiveTopLevelEventType(topLevelType: TopLevelType): boolean {
     const config = topLevelEventsToDispatchConfig.get(topLevelType);
     return config !== undefined && config.isInteractive === true;
   },
 
   extractEvents: function(
-    topLevelType: TopLevelTypes,
+    topLevelType: TopLevelType,
     targetInst: Fiber,
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,

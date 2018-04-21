@@ -15,7 +15,6 @@ import warning from 'fbjs/lib/warning';
 import {getInstanceFromNode} from './ReactNativeComponentTree';
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
-import type {TopLevelTypes} from 'events/TopLevelEventTypes';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -89,7 +88,7 @@ const removeTouchesAtIndices = function(
  */
 export function _receiveRootNodeIDEvent(
   rootNodeID: number,
-  topLevelType: TopLevelTypes,
+  topLevelType: string,
   nativeEventParam: ?AnyNativeEvent,
 ) {
   const nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
@@ -115,7 +114,7 @@ export function _receiveRootNodeIDEvent(
  */
 export function receiveEvent(
   rootNodeID: number,
-  topLevelType: TopLevelTypes,
+  topLevelType: string,
   nativeEventParam: AnyNativeEvent,
 ) {
   _receiveRootNodeIDEvent(rootNodeID, topLevelType, nativeEventParam);

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type {TopLevelTypes} from 'events/TopLevelEventTypes';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
 
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import {
@@ -264,11 +264,11 @@ function extractCompositionEvent(
 }
 
 /**
- * @param {TopLevelTypes} topLevelType Number from `TopLevelTypes`.
+ * @param {TopLevelType} topLevelType Number from `TopLevelType`.
  * @param {object} nativeEvent Native browser event.
  * @return {?string} The string corresponding to this `beforeInput` event.
  */
-function getNativeBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
+function getNativeBeforeInputChars(topLevelType: TopLevelType, nativeEvent) {
   switch (topLevelType) {
     case TOP_COMPOSITION_END:
       return getDataFromCustomEvent(nativeEvent);
@@ -322,7 +322,7 @@ function getNativeBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
  * @param {object} nativeEvent Native browser event.
  * @return {?string} The fallback string for this `beforeInput` event.
  */
-function getFallbackBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
+function getFallbackBeforeInputChars(topLevelType: TopLevelType, nativeEvent) {
   // If we are currently composing (IME) and using a fallback to do so,
   // try to extract the composed characters from the fallback object.
   // If composition event is available, we extract a string only at

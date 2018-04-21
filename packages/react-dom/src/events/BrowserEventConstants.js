@@ -8,7 +8,7 @@
  */
 
 import * as TopLevelEventTypes from 'events/TopLevelEventTypes';
-import type {TopLevelTypes} from 'events/TopLevelEventTypes';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
 import invariant from 'fbjs/lib/invariant';
 
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
@@ -32,7 +32,7 @@ function makeMap<K, V>(values: Array<[K, V]>): Map<K, V> {
  * bubble (which we trap at a lower node than `document`), binding
  * at `document` would cause duplicate events so we don't include them here.
  */
-export const topLevelTypes: Map<TopLevelTypes, string> = makeMap([
+export const topLevelTypes: Map<TopLevelType, string> = makeMap([
   [
     TopLevelEventTypes.TOP_ANIMATION_END,
     getVendorPrefixedEventName('animationend'),
@@ -97,7 +97,7 @@ export const topLevelTypes: Map<TopLevelTypes, string> = makeMap([
 // "top-level" since they don't bubble. We should come up
 // with a better naming convention if we come to refactoring
 // the event system.
-export const mediaEventTypes: Map<TopLevelTypes, string> = makeMap([
+export const mediaEventTypes: Map<TopLevelType, string> = makeMap([
   [TopLevelEventTypes.TOP_ABORT, 'abort'],
   [TopLevelEventTypes.TOP_CAN_PLAY, 'canplay'],
   [TopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canplaythrough'],
@@ -123,14 +123,14 @@ export const mediaEventTypes: Map<TopLevelTypes, string> = makeMap([
   [TopLevelEventTypes.TOP_WAITING, 'waiting'],
 ]);
 
-const nonTopEventTypes: Map<TopLevelTypes, string> = makeMap([
+const nonTopEventTypes: Map<TopLevelType, string> = makeMap([
   [TopLevelEventTypes.TOP_INPUT, 'input'],
   [TopLevelEventTypes.TOP_INVALID, 'invalid'],
   [TopLevelEventTypes.TOP_RESET, 'reset'],
   [TopLevelEventTypes.TOP_SUBMIT, 'submit'],
 ]);
 
-export function getRawEventName(topLevelType: TopLevelTypes): string {
+export function getRawEventName(topLevelType: TopLevelType): string {
   const eventName =
     topLevelTypes.get(topLevelType) ||
     mediaEventTypes.get(topLevelType) ||

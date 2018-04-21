@@ -79,4 +79,4 @@ export const TOP_VOLUME_CHANGE = 68;
 export const TOP_WAITING = 69;
 export const TOP_WHEEL = 70;
 
-export type TopLevelTypes = number;
+export type TopLevelType = number | string;

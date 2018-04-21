@@ -12,7 +12,7 @@ import {
   accumulateTwoPhaseDispatches,
   accumulateDirectDispatches,
 } from 'events/EventPropagators';
-import type {TopLevelTypes} from 'events/TopLevelEventTypes';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
 import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'fbjs/lib/invariant';
@@ -30,7 +30,7 @@ const ReactNativeBridgeEventPlugin = {
    * @see {EventPluginHub.extractEvents}
    */
   extractEvents: function(
-    topLevelType: TopLevelTypes,
+    topLevelType: TopLevelType,
     targetInst: Object,
     nativeEvent: AnyNativeEvent,
     nativeEventTarget: Object,
