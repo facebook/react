@@ -891,16 +891,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newValue = newProps.value;
     workInProgress.memoizedProps = newProps;
 
-    const providerPropTypes = workInProgress.type.propTypes;
-
-    if (__DEV__ && providerPropTypes) {
-      checkPropTypes(
-        providerPropTypes,
-        newProps,
-        'prop',
-        'Context.Provider',
-        getStack,
-      );
+    if (__DEV__) {
+      const providerPropTypes = workInProgress.type.propTypes;
+      if (providerPropTypes) {
+        checkPropTypes(
+          providerPropTypes,
+          newProps,
+          'prop',
+          'Context.Provider',
+          getStack,
+        );
+      }
     }
 
     let changedBits: number;
