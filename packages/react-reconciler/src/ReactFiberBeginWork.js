@@ -69,12 +69,7 @@ import {
   reconcileChildFibers,
   cloneChildFibers,
 } from './ReactChildFiber';
-import {
-  createUpdate,
-  enqueueCapturedUpdate,
-  processUpdateQueue,
-  ReplaceState,
-} from './ReactUpdateQueue';
+import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
@@ -783,17 +778,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const nextProps = workInProgress.pendingProps;
       const prevProps = workInProgress.memoizedProps;
 
-      // Unless we already captured a promise during this render, reset the
-      // placeholder state back to false. We always attempt to render the real
-      // children before falling back to the placeholder.
-      if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-        const update = createUpdate(renderExpirationTime);
-        update.tag = ReplaceState;
-        update.payload = false;
-        enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
-      }
+      const prevDidTimeout = workInProgress.memoizedState;
 
-      const prevState = workInProgress.memoizedState;
+      // The update queue is only used to store expired promises, and to
+      // schedule a re-render once an expired promise resolves. It does not
+      // determine whether we should show the placeholder state, because we
+      // always attempt to show the placeholder state on every render.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue !== null) {
         processUpdateQueue(
@@ -804,19 +794,24 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           renderExpirationTime,
         );
       }
-      const nextState = workInProgress.memoizedState;
+
+      // Check if we already attempted to render the normal state. If we did,
+      // and we timed out, render the placeholder state.
+      const alreadyCaptured =
+        (workInProgress.effectTag & DidCapture) === NoEffect;
+      const nextDidTimeout = !alreadyCaptured;
 
       if (hasLegacyContextChanged()) {
         // Normally we can bail out on props equality but if context has changed
         // we don't do the bailout and we have to reuse existing props instead.
-      } else if (nextProps === prevProps && nextState === prevState) {
+      } else if (nextProps === prevProps && nextDidTimeout === prevDidTimeout) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
 
-      const didTimeout = nextState;
       const render = nextProps.children;
-      const nextChildren = render(didTimeout);
+      const nextChildren = render(nextDidTimeout);
       workInProgress.memoizedProps = nextProps;
+      workInProgress.memoizedState = nextDidTimeout;
       reconcileChildren(current, workInProgress, nextChildren);
       return workInProgress.child;
     } else {

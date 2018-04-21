@@ -25,7 +25,6 @@ import {
   createUpdate,
   enqueueUpdate,
   CaptureUpdate,
-  ReplaceState,
 } from './ReactUpdateQueue';
 import {logError} from './ReactFiberCommitWork';
 
@@ -277,8 +276,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               if ((workInProgress.effectTag & DidCapture) === NoEffect) {
                 workInProgress.effectTag |= ShouldCapture;
                 const update = createUpdate(renderExpirationTime);
-                update.tag = ReplaceState;
-                update.payload = true;
                 // Allow var because this is used in a closure.
                 // eslint-disable-next-line no-var
                 var finishedWork = workInProgress;
