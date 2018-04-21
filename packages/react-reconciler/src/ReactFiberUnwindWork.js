@@ -16,7 +16,11 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
-import {enqueueCapturedUpdate, createUpdate} from './ReactUpdateQueue';
+import {
+  enqueueCapturedUpdate,
+  createUpdate,
+  CaptureUpdate,
+} from './ReactUpdateQueue';
 import {logError} from './ReactFiberCommitWork';
 
 import {
@@ -32,13 +36,8 @@ import {
   Incomplete,
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
-import {StrictMode} from './ReactTypeOfMode';
 
-import {
-  enableGetDerivedStateFromCatch,
-  debugRenderPhaseSideEffects,
-  debugRenderPhaseSideEffectsForStrictMode,
-} from 'shared/ReactFeatureFlags';
+import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
 
 export default function<C, CX>(
   hostContext: HostContext<C, CX>,
@@ -61,18 +60,18 @@ export default function<C, CX>(
   const {popProvider} = newContext;
 
   function createRootErrorUpdate(
+    fiber: Fiber,
     errorInfo: CapturedValue<mixed>,
     expirationTime: ExpirationTime,
   ): Update<null> {
     const update = createUpdate(expirationTime);
-    update.process = nextWorkInProgress => {
-      // Unmount the root by rendering null.
-      return null;
-    };
-    update.commit = finishedWork => {
-      const error = errorInfo.value;
+    // Unmount the root by rendering null.
+    update.tag = CaptureUpdate;
+    update.payload = {children: null};
+    const error = errorInfo.value;
+    update.callback = () => {
       onUncaughtError(error);
-      logError(finishedWork, errorInfo);
+      logError(fiber, errorInfo);
     };
     return update;
   }
@@ -83,61 +82,36 @@ export default function<C, CX>(
     expirationTime: ExpirationTime,
   ): Update<mixed> {
     const update = createUpdate(expirationTime);
-    update.process = (workInProgress, prevState) => {
-      const getDerivedStateFromCatch =
-        workInProgress.type.getDerivedStateFromCatch;
-
-      workInProgress.effectTag =
-        (workInProgress.effectTag & ~ShouldCapture) | DidCapture;
-
-      if (
-        enableGetDerivedStateFromCatch &&
-        typeof getDerivedStateFromCatch === 'function'
-      ) {
-        const error = errorInfo.value;
-        if (
-          debugRenderPhaseSideEffects ||
-          (debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode)
-        ) {
-          // Invoke the function an extra time to help detect side-effects.
-          getDerivedStateFromCatch(error);
-        }
-
-        // TODO: Pass prevState as second argument?
-        const partialState = getDerivedStateFromCatch(error);
-
-        // Merge the partial state and the previous state.
-        return Object.assign({}, prevState, partialState);
-      } else {
-        return prevState;
-      }
-    };
+    update.tag = CaptureUpdate;
+    const getDerivedStateFromCatch = fiber.type.getDerivedStateFromCatch;
+    if (
+      enableGetDerivedStateFromCatch &&
+      typeof getDerivedStateFromCatch === 'function'
+    ) {
+      const error = errorInfo.value;
+      update.payload = () => {
+        return getDerivedStateFromCatch(error);
+      };
+    }
 
     const inst = fiber.stateNode;
     if (inst !== null && typeof inst.componentDidCatch === 'function') {
-      update.commit = finishedWork => {
-        const instance = finishedWork.stateNode;
-        const ctor = finishedWork.type;
-
+      update.callback = function callback() {
         if (
           !enableGetDerivedStateFromCatch ||
-          typeof ctor.getDerivedStateFromCatch !== 'function'
+          getDerivedStateFromCatch !== 'function'
         ) {
           // To preserve the preexisting retry behavior of error boundaries,
           // we keep track of which ones already failed during this batch.
           // This gets reset before we yield back to the browser.
           // TODO: Warn in strict mode if getDerivedStateFromCatch is
           // not defined.
-          markLegacyErrorBoundaryAsFailed(instance);
+          markLegacyErrorBoundaryAsFailed(this);
         }
-
-        instance.props = finishedWork.memoizedProps;
-        instance.state = finishedWork.memoizedState;
         const error = errorInfo.value;
         const stack = errorInfo.stack;
-        logError(finishedWork, errorInfo);
-        instance.componentDidCatch(error, {
+        logError(fiber, errorInfo);
+        this.componentDidCatch(error, {
           componentStack: stack !== null ? stack : '',
         });
       };
@@ -164,7 +138,11 @@ export default function<C, CX>(
         case HostRoot: {
           const errorInfo = value;
           workInProgress.effectTag |= ShouldCapture;
-          const update = createRootErrorUpdate(errorInfo, renderExpirationTime);
+          const update = createRootErrorUpdate(
+            workInProgress,
+            errorInfo,
+            renderExpirationTime,
+          );
           enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
           return;
         }
@@ -182,7 +160,6 @@ export default function<C, CX>(
                 !isAlreadyFailedLegacyErrorBoundary(instance)))
           ) {
             workInProgress.effectTag |= ShouldCapture;
-
             // Schedule the error boundary to re-render using updated state
             const update = createClassErrorUpdate(
               workInProgress,
@@ -206,6 +183,7 @@ export default function<C, CX>(
         popLegacyContextProvider(workInProgress);
         const effectTag = workInProgress.effectTag;
         if (effectTag & ShouldCapture) {
+          workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
           return workInProgress;
         }
         return null;

@@ -251,14 +251,37 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          commitUpdateQueue(finishedWork, updateQueue, committedExpirationTime);
+          instance.props = finishedWork.memoizedProps;
+          instance.state = finishedWork.memoizedState;
+          commitUpdateQueue(
+            finishedWork,
+            updateQueue,
+            instance,
+            committedExpirationTime,
+          );
         }
         return;
       }
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          commitUpdateQueue(finishedWork, updateQueue, committedExpirationTime);
+          let instance = null;
+          if (finishedWork.child !== null) {
+            switch (finishedWork.child.tag) {
+              case HostComponent:
+                instance = getPublicInstance(finishedWork.child.stateNode);
+                break;
+              case ClassComponent:
+                instance = finishedWork.child.stateNode;
+                break;
+            }
+          }
+          commitUpdateQueue(
+            finishedWork,
+            updateQueue,
+            instance,
+            committedExpirationTime,
+          );
         }
         return;
       }

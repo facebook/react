@@ -17,7 +17,7 @@ import {
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {ClassComponent, HostComponent} from 'shared/ReactTypeOfWork';
+import {HostComponent} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
@@ -340,8 +340,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     const update = createUpdate(expirationTime);
-
-    update.process = () => element;
+    update.payload = {children: element};
 
     callback = callback === undefined ? null : callback;
     if (callback !== null) {
@@ -351,26 +350,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           'function. Instead received: %s.',
         callback,
       );
-      update.commit = finishedWork => {
-        let instance = null;
-        if (finishedWork.child !== null) {
-          switch (finishedWork.child.tag) {
-            case HostComponent:
-              instance = getPublicInstance(finishedWork.child.stateNode);
-              break;
-            case ClassComponent:
-              instance = finishedWork.child.stateNode;
-              break;
-          }
-        }
-        invariant(
-          typeof callback === 'function',
-          'Invalid argument passed as callback. Expected a function. Instead ' +
-            'received: %s',
-          callback,
-        );
-        callback.call(instance);
-      };
+      update.callback = callback;
     }
     enqueueUpdate(current, update, expirationTime);
 

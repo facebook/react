@@ -32,6 +32,8 @@ import {
   enqueueUpdate,
   processUpdateQueue,
   createUpdate,
+  ReplaceState,
+  ForceUpdate,
 } from './ReactUpdateQueue';
 import {NoWork} from './ReactFiberExpirationTime';
 
@@ -160,16 +162,6 @@ export default function(
     hasContextChanged,
   } = legacyContext;
 
-  function callCallback(callback, context) {
-    invariant(
-      typeof callback === 'function',
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: %s',
-      callback,
-    );
-    callback.call(context);
-  }
-
   const classComponentUpdater = {
     isMounted,
     enqueueSetState(inst, payload, callback) {
@@ -177,43 +169,12 @@ export default function(
       const expirationTime = computeExpirationForFiber(fiber);
 
       const update = createUpdate(expirationTime);
-      update.process = (workInProgress, prevState) => {
-        let partialState;
-        if (typeof payload === 'function') {
-          // Updater function
-          const instance = workInProgress.stateNode;
-          const nextProps = workInProgress.pendingProps;
-
-          if (
-            debugRenderPhaseSideEffects ||
-            (debugRenderPhaseSideEffectsForStrictMode &&
-              workInProgress.mode & StrictMode)
-          ) {
-            // Invoke the updater an extra time to help detect side-effects.
-            payload.call(instance, prevState, nextProps);
-          }
-
-          partialState = payload.call(instance, prevState, nextProps);
-        } else {
-          // Partial state object
-          partialState = payload;
-        }
-        if (partialState === null || partialState === undefined) {
-          // Null and undefined are treated as no-ops.
-          return prevState;
-        }
-        // Merge the partial state and the previous state.
-        return Object.assign({}, prevState, partialState);
-      };
-
+      update.payload = payload;
       if (callback !== undefined && callback !== null) {
         if (__DEV__) {
           warnOnInvalidCallback(callback, 'setState');
         }
-        update.commit = finishedWork => {
-          const instance = finishedWork.stateNode;
-          callCallback(callback, instance);
-        };
+        update.callback = callback;
       }
 
       enqueueUpdate(fiber, update, expirationTime);
@@ -224,35 +185,14 @@ export default function(
       const expirationTime = computeExpirationForFiber(fiber);
 
       const update = createUpdate(expirationTime);
-      update.process = (workInProgress, prevState) => {
-        if (typeof payload === 'function') {
-          // Updater function
-          const instance = workInProgress.stateNode;
-          const nextProps = workInProgress.pendingProps;
-
-          if (
-            debugRenderPhaseSideEffects ||
-            (debugRenderPhaseSideEffectsForStrictMode &&
-              workInProgress.mode & StrictMode)
-          ) {
-            // Invoke the updater an extra time to help detect side-effects.
-            payload.call(instance, prevState, nextProps);
-          }
-
-          return payload.call(instance, prevState, nextProps);
-        }
-        // State object
-        return payload;
-      };
+      update.tag = ReplaceState;
+      update.payload = payload;
 
       if (callback !== undefined && callback !== null) {
         if (__DEV__) {
-          warnOnInvalidCallback(callback, 'setState');
+          warnOnInvalidCallback(callback, 'replaceState');
         }
-        update.commit = finishedWork => {
-          const instance = finishedWork.stateNode;
-          callCallback(callback, instance);
-        };
+        update.callback = callback;
       }
 
       enqueueUpdate(fiber, update, expirationTime);
@@ -263,19 +203,13 @@ export default function(
       const expirationTime = computeExpirationForFiber(fiber);
 
       const update = createUpdate(expirationTime);
-      update.process = (workInProgress, prevState, queue) => {
-        queue.hasForceUpdate = true;
-        return prevState;
-      };
+      update.tag = ForceUpdate;
 
       if (callback !== undefined && callback !== null) {
         if (__DEV__) {
-          warnOnInvalidCallback(callback, 'setState');
+          warnOnInvalidCallback(callback, 'forceUpdate');
         }
-        update.commit = finishedWork => {
-          const instance = finishedWork.stateNode;
-          callCallback(callback, instance);
-        };
+        update.callback = callback;
       }
 
       enqueueUpdate(fiber, update, expirationTime);
@@ -752,7 +686,13 @@ export default function(
 
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
-      processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
+      processUpdateQueue(
+        workInProgress,
+        updateQueue,
+        props,
+        instance,
+        renderExpirationTime,
+      );
       instance.state = workInProgress.memoizedState;
     }
 
@@ -780,7 +720,13 @@ export default function(
       // process them now.
       updateQueue = workInProgress.updateQueue;
       if (updateQueue !== null) {
-        processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
+        processUpdateQueue(
+          workInProgress,
+          updateQueue,
+          props,
+          instance,
+          renderExpirationTime,
+        );
         instance.state = workInProgress.memoizedState;
       }
     }
@@ -835,7 +781,13 @@ export default function(
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
-      processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
+      processUpdateQueue(
+        workInProgress,
+        updateQueue,
+        newProps,
+        instance,
+        renderExpirationTime,
+      );
       newState = workInProgress.memoizedState;
     }
 
@@ -963,7 +915,13 @@ export default function(
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
-      processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
+      processUpdateQueue(
+        workInProgress,
+        updateQueue,
+        newProps,
+        instance,
+        renderExpirationTime,
+      );
       newState = workInProgress.memoizedState;
     }
 

@@ -27,7 +27,7 @@ import {
   Deletion,
   ContentReset,
   Callback,
-  ShouldCapture,
+  DidCapture,
   Ref,
   Incomplete,
   HostEffectMask,
@@ -803,7 +803,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // capture values if possible.
         const next = unwindWork(workInProgress);
         // Because this fiber did not complete, don't reset its expiration time.
-        if (workInProgress.effectTag & ShouldCapture) {
+        if (workInProgress.effectTag & DidCapture) {
           // Restarting an error boundary
           stopFailedWorkTimer(workInProgress);
         } else {
@@ -1065,7 +1065,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           break;
         case HostRoot: {
           const errorInfo = createCapturedValue(value, sourceFiber);
-          const update = createRootErrorUpdate(errorInfo, expirationTime);
+          const update = createRootErrorUpdate(
+            fiber,
+            errorInfo,
+            expirationTime,
+          );
           enqueueUpdate(fiber, update, expirationTime);
           scheduleWork(fiber, expirationTime);
           return;
@@ -1079,7 +1083,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // itself should capture it.
       const rootFiber = sourceFiber;
       const errorInfo = createCapturedValue(value, rootFiber);
-      const update = createRootErrorUpdate(errorInfo, expirationTime);
+      const update = createRootErrorUpdate(
+        rootFiber,
+        errorInfo,
+        expirationTime,
+      );
       enqueueUpdate(rootFiber, update, expirationTime);
       scheduleWork(rootFiber, expirationTime);
     }

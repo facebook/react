@@ -88,22 +88,29 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {Callback} from 'shared/ReactTypeOfSideEffect';
+import {
+  Callback,
+  ShouldCapture,
+  DidCapture,
+} from 'shared/ReactTypeOfSideEffect';
 import {ClassComponent} from 'shared/ReactTypeOfWork';
 
+import {
+  debugRenderPhaseSideEffects,
+  debugRenderPhaseSideEffectsForStrictMode,
+} from 'shared/ReactFeatureFlags';
+
+import {StrictMode} from './ReactTypeOfMode';
+
+import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 export type Update<State> = {
   expirationTime: ExpirationTime,
 
-  process:
-    | ((
-        workInProgress: Fiber,
-        prevState: State,
-        queue: UpdateQueue<State>,
-      ) => State)
-    | null,
-  commit: ((finishedWork: Fiber) => mixed) | null,
+  tag: 0 | 1 | 2 | 3,
+  payload: any,
+  callback: (() => mixed) | null,
 
   next: Update<State> | null,
   nextEffect: Update<State> | null,
@@ -131,6 +138,11 @@ export type UpdateQueue<State> = {
   // DEV-only
   isProcessing?: boolean,
 };
+
+export const UpdateState = 0;
+export const ReplaceState = 1;
+export const ForceUpdate = 2;
+export const CaptureUpdate = 3;
 
 let didWarnUpdateInsideUpdate;
 if (__DEV__) {
@@ -189,8 +201,9 @@ export function createUpdate(expirationTime: ExpirationTime): Update<*> {
   return {
     expirationTime: expirationTime,
 
-    process: null,
-    commit: null,
+    tag: UpdateState,
+    payload: null,
+    callback: null,
 
     next: null,
     nextEffect: null,
@@ -353,9 +366,74 @@ function ensureWorkInProgressQueueIsAClone<State>(
   return queue;
 }
 
+function getStateFromUpdate<State>(
+  workInProgress: Fiber,
+  queue: UpdateQueue<State>,
+  update: Update<State>,
+  prevState: State,
+  nextProps: any,
+  instance: any,
+): any {
+  switch (update.tag) {
+    case ReplaceState: {
+      const payload = update.payload;
+      if (typeof payload === 'function') {
+        // Updater function
+        if (
+          debugRenderPhaseSideEffects ||
+          (debugRenderPhaseSideEffectsForStrictMode &&
+            workInProgress.mode & StrictMode)
+        ) {
+          payload.call(instance, prevState, nextProps);
+        }
+
+        return payload.call(instance, prevState, nextProps);
+      }
+      // State object
+      return payload;
+    }
+    case CaptureUpdate: {
+      workInProgress.effectTag =
+        (workInProgress.effectTag & ~ShouldCapture) | DidCapture;
+    }
+    // Intentional fallthrough
+    case UpdateState: {
+      const payload = update.payload;
+      let partialState;
+      if (typeof payload === 'function') {
+        // Updater function
+        if (
+          debugRenderPhaseSideEffects ||
+          (debugRenderPhaseSideEffectsForStrictMode &&
+            workInProgress.mode & StrictMode)
+        ) {
+          payload.call(instance, prevState, nextProps);
+        }
+        partialState = payload.call(instance, prevState, nextProps);
+      } else {
+        // Partial state object
+        partialState = payload;
+      }
+      if (partialState === null || partialState === undefined) {
+        // Null and undefined are treated as no-ops.
+        return prevState;
+      }
+      // Merge the partial state and the previous state.
+      return Object.assign({}, prevState, partialState);
+    }
+    case ForceUpdate: {
+      queue.hasForceUpdate = true;
+      return prevState;
+    }
+  }
+  return prevState;
+}
+
 export function processUpdateQueue<State>(
   workInProgress: Fiber,
   queue: UpdateQueue<State>,
+  props: any,
+  instance: any,
   renderExpirationTime: ExpirationTime,
 ): void {
   if (
@@ -403,12 +481,16 @@ export function processUpdateQueue<State>(
     } else {
       // This update does have sufficient priority. Process it and compute
       // a new result.
-      const commit = update.commit;
-      const process = update.process;
-      if (process !== null) {
-        resultState = process(workInProgress, resultState, queue);
-      }
-      if (commit !== null) {
+      resultState = getStateFromUpdate(
+        workInProgress,
+        queue,
+        update,
+        resultState,
+        props,
+        instance,
+      );
+      const callback = update.callback;
+      if (callback !== null) {
         workInProgress.effectTag |= Callback;
         // Set this to null, in case it was mutated during an aborted render.
         update.nextEffect = null;
@@ -452,12 +534,16 @@ export function processUpdateQueue<State>(
     } else {
       // This update does have sufficient priority. Process it and compute
       // a new result.
-      const commit = update.commit;
-      const process = update.process;
-      if (process !== null) {
-        resultState = process(workInProgress, resultState, queue);
-      }
-      if (commit !== null) {
+      resultState = getStateFromUpdate(
+        workInProgress,
+        queue,
+        update,
+        resultState,
+        props,
+        instance,
+      );
+      const callback = update.callback;
+      if (callback !== null) {
         workInProgress.effectTag |= Callback;
         // Set this to null, in case it was mutated during an aborted render.
         update.nextEffect = null;
@@ -498,9 +584,20 @@ export function processUpdateQueue<State>(
   }
 }
 
+function callCallback(callback, context) {
+  invariant(
+    typeof callback === 'function',
+    'Invalid argument passed as callback. Expected a function. Instead ' +
+      'received: %s',
+    callback,
+  );
+  callback.call(context);
+}
+
 export function commitUpdateQueue<State>(
   finishedWork: Fiber,
   finishedQueue: UpdateQueue<State>,
+  instance: any,
   renderExpirationTime: ExpirationTime,
 ): void {
   // If the finished render included captured updates, and there are still
@@ -521,10 +618,10 @@ export function commitUpdateQueue<State>(
   let effect = finishedQueue.firstEffect;
   finishedQueue.firstEffect = finishedQueue.lastEffect = null;
   while (effect !== null) {
-    const commit = effect.commit;
-    if (commit !== null) {
-      effect.commit = null;
-      commit(finishedWork);
+    const callback = effect.callback;
+    if (callback !== null) {
+      effect.callback = null;
+      callCallback(callback, instance);
     }
     effect = effect.nextEffect;
   }
@@ -532,10 +629,10 @@ export function commitUpdateQueue<State>(
   effect = finishedQueue.firstCapturedEffect;
   finishedQueue.firstCapturedEffect = finishedQueue.lastCapturedEffect = null;
   while (effect !== null) {
-    const commit = effect.commit;
-    if (commit !== null) {
-      effect.commit = null;
-      commit(finishedWork);
+    const callback = effect.callback;
+    if (callback !== null) {
+      effect.callback = null;
+      callCallback(callback, instance);
     }
     effect = effect.nextEffect;
   }

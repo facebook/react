@@ -411,9 +411,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     pushHostRootContext(workInProgress);
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
-      const prevChildren = workInProgress.memoizedState;
-      processUpdateQueue(workInProgress, updateQueue, renderExpirationTime);
-      const nextChildren = workInProgress.memoizedState;
+      const nextProps = workInProgress.pendingProps;
+      const prevState = workInProgress.memoizedState;
+      const prevChildren = prevState !== null ? prevState.children : null;
+      processUpdateQueue(
+        workInProgress,
+        updateQueue,
+        nextProps,
+        null,
+        renderExpirationTime,
+      );
+      const nextState = workInProgress.memoizedState;
+      const nextChildren = nextState.children;
 
       if (nextChildren === prevChildren) {
         // If the state is the same as before, that's a bailout because we had
