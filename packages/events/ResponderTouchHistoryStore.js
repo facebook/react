@@ -10,7 +10,7 @@
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import {isEndish, isMoveish, isStartish} from './EventPluginUtils';
+import type {TopLevelType} from './TopLevelEventTypes';
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We
@@ -176,8 +176,20 @@ function printTouchBank(): string {
   return printed;
 }
 
+type EventUtils = {
+  isStartish: (topLevelType: TopLevelType) => boolean,
+  isMoveish: (topLevelType: TopLevelType) => boolean,
+  isEndish: (topLevelType: TopLevelType) => boolean,
+}
+
 const ResponderTouchHistoryStore = {
-  recordTouchTrack(topLevelType: number, nativeEvent: TouchEvent): void {
+  recordTouchTrack(topLevelType: TopLevelType, nativeEvent: TouchEvent): void {
+    invariant(
+      ResponderTouchHistoryStore.EventUtils,
+      'ResponderTouchHistoryStore requires EventUtils to be injected first.',
+    );
+    const {isStartish, isMoveish, isEndish} = ResponderTouchHistoryStore.EventUtils
+
     if (isMoveish(topLevelType)) {
       nativeEvent.changedTouches.forEach(recordTouchMove);
     } else if (isStartish(topLevelType)) {
@@ -210,6 +222,19 @@ const ResponderTouchHistoryStore = {
   },
 
   touchHistory,
+
+  EventUtils: (null: ?EventUtils),
+
+  injection: {
+    /**
+     * @param {isMoveish: Function, isStartish: Function, isEndish: Function} GlobalResponderHandler
+     * Object that handles any change in responder. Use this to inject
+     * integration with an existing touch handling system etc.
+     */
+    injectEventUtils: function(_EventUtils: EventUtils) {
+      ResponderTouchHistoryStore.EventUtils = _EventUtils;
+    },
+  },
 };
 
 export default ResponderTouchHistoryStore;

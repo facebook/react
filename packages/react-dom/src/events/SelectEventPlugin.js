@@ -8,6 +8,10 @@
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import SyntheticEvent from 'events/SyntheticEvent';
+import isTextInputElement from 'shared/isTextInputElement';
+import getActiveElement from 'fbjs/lib/getActiveElement';
+import shallowEqual from 'fbjs/lib/shallowEqual';
+
 import {
   TOP_BLUR,
   TOP_CONTEXT_MENU,
@@ -17,11 +21,7 @@ import {
   TOP_MOUSE_DOWN,
   TOP_MOUSE_UP,
   TOP_SELECTION_CHANGE,
-} from 'events/TopLevelEventTypes';
-import isTextInputElement from 'shared/isTextInputElement';
-import getActiveElement from 'fbjs/lib/getActiveElement';
-import shallowEqual from 'fbjs/lib/shallowEqual';
-
+} from './DOMTopLevelEventTypes';
 import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as ReactInputSelection from '../client/ReactInputSelection';

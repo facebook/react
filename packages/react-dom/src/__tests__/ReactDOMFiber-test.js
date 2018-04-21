@@ -18,7 +18,7 @@ const {
   TOP_CLICK,
   TOP_MOUSE_OUT,
   TOP_MOUSE_OVER,
-} = require('events/TopLevelEventTypes');
+} = require('../events/DOMTopLevelEventTypes');
 
 describe('ReactDOMFiber', () => {
   let container;

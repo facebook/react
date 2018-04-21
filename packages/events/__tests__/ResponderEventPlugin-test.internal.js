@@ -11,13 +11,16 @@
 
 const {HostComponent} = require('shared/ReactTypeOfWork');
 
+// To test this module against public API, we'll use the DOM version of
+// ResponderEventPlugin for these tests. This version will require the
+// DOM specific top event IDs.
 const {
   TOP_SCROLL,
   TOP_TOUCH_CANCEL,
   TOP_TOUCH_END,
   TOP_TOUCH_MOVE,
   TOP_TOUCH_START,
-} = require('../TopLevelEventTypes');
+} = require('react-dom/src/events/DOMTopLevelEventTypes');
 
 let EventPluginHub;
 let ResponderEventPlugin;
@@ -409,7 +412,7 @@ describe('ResponderEventPlugin', () => {
     const injectComponentTree =
       ReactDOMUnstableNativeDependencies.injectComponentTree;
     ResponderEventPlugin =
-      ReactDOMUnstableNativeDependencies.ResponderEventPlugin;
+      ReactDOMUnstableNativeDependencies.DOMResponderEventPlugin;
 
     deleteAllListeners(GRANDPARENT_INST);
     deleteAllListeners(PARENT_INST);

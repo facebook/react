@@ -6,8 +6,8 @@
  */
 
 import {accumulateEnterLeaveDispatches} from 'events/EventPropagators';
-import {TOP_MOUSE_OUT, TOP_MOUSE_OVER} from 'events/TopLevelEventTypes';
 
+import {TOP_MOUSE_OUT, TOP_MOUSE_OVER} from './DOMTopLevelEventTypes';
 import SyntheticMouseEvent from './SyntheticMouseEvent';
 import {
   getClosestInstanceFromNode,

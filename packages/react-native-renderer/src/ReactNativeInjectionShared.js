@@ -18,9 +18,9 @@ import 'InitializeCore';
 
 import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginUtils from 'events/EventPluginUtils';
-import ResponderEventPlugin from 'events/ResponderEventPlugin';
 
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
+import ReactNativeResponderEventPlugin from './ReactNativeResponderEventPlugin';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import ReactNativeEventPluginOrder from './ReactNativeEventPluginOrder';
 import ReactNativeGlobalResponderHandler from './ReactNativeGlobalResponderHandler';
@@ -31,7 +31,7 @@ import ReactNativeGlobalResponderHandler from './ReactNativeGlobalResponderHandl
 EventPluginHub.injection.injectEventPluginOrder(ReactNativeEventPluginOrder);
 EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
 
-ResponderEventPlugin.injection.injectGlobalResponderHandler(
+ReactNativeResponderEventPlugin.injection.injectGlobalResponderHandler(
   ReactNativeGlobalResponderHandler,
 );
 
@@ -40,6 +40,6 @@ ResponderEventPlugin.injection.injectGlobalResponderHandler(
  * them).
  */
 EventPluginHub.injection.injectEventPluginsByName({
-  ResponderEventPlugin: ResponderEventPlugin,
+  ReactNativeResponderEventPlugin: ReactNativeResponderEventPlugin,
   ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
 });

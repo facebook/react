@@ -7,9 +7,10 @@
  * @flow
  */
 
-import {isStartish, isEndish} from 'events/EventPluginUtils';
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import TouchEventUtils from 'fbjs/lib/TouchEventUtils';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
+
 import {
   TOP_MOUSE_DOWN,
   TOP_MOUSE_MOVE,
@@ -18,9 +19,8 @@ import {
   TOP_TOUCH_END,
   TOP_TOUCH_MOVE,
   TOP_TOUCH_START,
-} from 'events/TopLevelEventTypes';
-import type {TopLevelType} from 'events/TopLevelEventTypes';
-
+} from './DOMTopLevelEventTypes';
+import {isStartish, isEndish} from './DOMEventPluginUtils';
 import SyntheticUIEvent from './SyntheticUIEvent';
 
 /**

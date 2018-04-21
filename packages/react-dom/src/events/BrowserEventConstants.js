@@ -7,10 +7,10 @@
  * @flow
  */
 
-import * as TopLevelEventTypes from 'events/TopLevelEventTypes';
 import type {TopLevelType} from 'events/TopLevelEventTypes';
 import invariant from 'fbjs/lib/invariant';
 
+import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
 /**
@@ -34,62 +34,62 @@ function makeMap<K, V>(values: Array<[K, V]>): Map<K, V> {
  */
 export const topLevelTypes: Map<TopLevelType, string> = makeMap([
   [
-    TopLevelEventTypes.TOP_ANIMATION_END,
+    DOMTopLevelEventTypes.TOP_ANIMATION_END,
     getVendorPrefixedEventName('animationend'),
   ],
   [
-    TopLevelEventTypes.TOP_ANIMATION_ITERATION,
+    DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION,
     getVendorPrefixedEventName('animationiteration'),
   ],
   [
-    TopLevelEventTypes.TOP_ANIMATION_START,
+    DOMTopLevelEventTypes.TOP_ANIMATION_START,
     getVendorPrefixedEventName('animationstart'),
   ],
-  [TopLevelEventTypes.TOP_BLUR, 'blur'],
-  [TopLevelEventTypes.TOP_CANCEL, 'cancel'],
-  [TopLevelEventTypes.TOP_CHANGE, 'change'],
-  [TopLevelEventTypes.TOP_CLICK, 'click'],
-  [TopLevelEventTypes.TOP_CLOSE, 'close'],
-  [TopLevelEventTypes.TOP_COMPOSITION_END, 'compositionend'],
-  [TopLevelEventTypes.TOP_COMPOSITION_START, 'compositionstart'],
-  [TopLevelEventTypes.TOP_COMPOSITION_UPDATE, 'compositionupdate'],
-  [TopLevelEventTypes.TOP_CONTEXT_MENU, 'contextmenu'],
-  [TopLevelEventTypes.TOP_COPY, 'copy'],
-  [TopLevelEventTypes.TOP_CUT, 'cut'],
-  [TopLevelEventTypes.TOP_DOUBLE_CLICK, 'dblclick'],
-  [TopLevelEventTypes.TOP_DRAG, 'drag'],
-  [TopLevelEventTypes.TOP_DRAG_END, 'dragend'],
-  [TopLevelEventTypes.TOP_DRAG_ENTER, 'dragenter'],
-  [TopLevelEventTypes.TOP_DRAG_EXIT, 'dragexit'],
-  [TopLevelEventTypes.TOP_DRAG_LEAVE, 'dragleave'],
-  [TopLevelEventTypes.TOP_DRAG_OVER, 'dragover'],
-  [TopLevelEventTypes.TOP_DRAG_START, 'dragstart'],
-  [TopLevelEventTypes.TOP_DROP, 'drop'],
-  [TopLevelEventTypes.TOP_FOCUS, 'focus'],
-  [TopLevelEventTypes.TOP_KEY_DOWN, 'keydown'],
-  [TopLevelEventTypes.TOP_KEY_PRESS, 'keypress'],
-  [TopLevelEventTypes.TOP_KEY_UP, 'keyup'],
-  [TopLevelEventTypes.TOP_LOAD, 'load'],
-  [TopLevelEventTypes.TOP_LOAD_START, 'loadstart'],
-  [TopLevelEventTypes.TOP_MOUSE_DOWN, 'mousedown'],
-  [TopLevelEventTypes.TOP_MOUSE_MOVE, 'mousemove'],
-  [TopLevelEventTypes.TOP_MOUSE_OUT, 'mouseout'],
-  [TopLevelEventTypes.TOP_MOUSE_OVER, 'mouseover'],
-  [TopLevelEventTypes.TOP_MOUSE_UP, 'mouseup'],
-  [TopLevelEventTypes.TOP_PASTE, 'paste'],
-  [TopLevelEventTypes.TOP_SCROLL, 'scroll'],
-  [TopLevelEventTypes.TOP_SELECTION_CHANGE, 'selectionchange'],
-  [TopLevelEventTypes.TOP_TEXT_INPUT, 'textInput'],
-  [TopLevelEventTypes.TOP_TOGGLE, 'toggle'],
-  [TopLevelEventTypes.TOP_TOUCH_CANCEL, 'touchcancel'],
-  [TopLevelEventTypes.TOP_TOUCH_END, 'touchend'],
-  [TopLevelEventTypes.TOP_TOUCH_MOVE, 'touchmove'],
-  [TopLevelEventTypes.TOP_TOUCH_START, 'touchstart'],
+  [DOMTopLevelEventTypes.TOP_BLUR, 'blur'],
+  [DOMTopLevelEventTypes.TOP_CANCEL, 'cancel'],
+  [DOMTopLevelEventTypes.TOP_CHANGE, 'change'],
+  [DOMTopLevelEventTypes.TOP_CLICK, 'click'],
+  [DOMTopLevelEventTypes.TOP_CLOSE, 'close'],
+  [DOMTopLevelEventTypes.TOP_COMPOSITION_END, 'compositionend'],
+  [DOMTopLevelEventTypes.TOP_COMPOSITION_START, 'compositionstart'],
+  [DOMTopLevelEventTypes.TOP_COMPOSITION_UPDATE, 'compositionupdate'],
+  [DOMTopLevelEventTypes.TOP_CONTEXT_MENU, 'contextmenu'],
+  [DOMTopLevelEventTypes.TOP_COPY, 'copy'],
+  [DOMTopLevelEventTypes.TOP_CUT, 'cut'],
+  [DOMTopLevelEventTypes.TOP_DOUBLE_CLICK, 'dblclick'],
+  [DOMTopLevelEventTypes.TOP_DRAG, 'drag'],
+  [DOMTopLevelEventTypes.TOP_DRAG_END, 'dragend'],
+  [DOMTopLevelEventTypes.TOP_DRAG_ENTER, 'dragenter'],
+  [DOMTopLevelEventTypes.TOP_DRAG_EXIT, 'dragexit'],
+  [DOMTopLevelEventTypes.TOP_DRAG_LEAVE, 'dragleave'],
+  [DOMTopLevelEventTypes.TOP_DRAG_OVER, 'dragover'],
+  [DOMTopLevelEventTypes.TOP_DRAG_START, 'dragstart'],
+  [DOMTopLevelEventTypes.TOP_DROP, 'drop'],
+  [DOMTopLevelEventTypes.TOP_FOCUS, 'focus'],
+  [DOMTopLevelEventTypes.TOP_KEY_DOWN, 'keydown'],
+  [DOMTopLevelEventTypes.TOP_KEY_PRESS, 'keypress'],
+  [DOMTopLevelEventTypes.TOP_KEY_UP, 'keyup'],
+  [DOMTopLevelEventTypes.TOP_LOAD, 'load'],
+  [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadstart'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_DOWN, 'mousedown'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_MOVE, 'mousemove'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_OUT, 'mouseout'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_OVER, 'mouseover'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_UP, 'mouseup'],
+  [DOMTopLevelEventTypes.TOP_PASTE, 'paste'],
+  [DOMTopLevelEventTypes.TOP_SCROLL, 'scroll'],
+  [DOMTopLevelEventTypes.TOP_SELECTION_CHANGE, 'selectionchange'],
+  [DOMTopLevelEventTypes.TOP_TEXT_INPUT, 'textInput'],
+  [DOMTopLevelEventTypes.TOP_TOGGLE, 'toggle'],
+  [DOMTopLevelEventTypes.TOP_TOUCH_CANCEL, 'touchcancel'],
+  [DOMTopLevelEventTypes.TOP_TOUCH_END, 'touchend'],
+  [DOMTopLevelEventTypes.TOP_TOUCH_MOVE, 'touchmove'],
+  [DOMTopLevelEventTypes.TOP_TOUCH_START, 'touchstart'],
   [
-    TopLevelEventTypes.TOP_TRANSITION_END,
+    DOMTopLevelEventTypes.TOP_TRANSITION_END,
     getVendorPrefixedEventName('transitionend'),
   ],
-  [TopLevelEventTypes.TOP_WHEEL, 'wheel'],
+  [DOMTopLevelEventTypes.TOP_WHEEL, 'wheel'],
 ]);
 
 // There are so many media events, it makes sense to just
@@ -98,36 +98,36 @@ export const topLevelTypes: Map<TopLevelType, string> = makeMap([
 // with a better naming convention if we come to refactoring
 // the event system.
 export const mediaEventTypes: Map<TopLevelType, string> = makeMap([
-  [TopLevelEventTypes.TOP_ABORT, 'abort'],
-  [TopLevelEventTypes.TOP_CAN_PLAY, 'canplay'],
-  [TopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canplaythrough'],
-  [TopLevelEventTypes.TOP_DURATION_CHANGE, 'durationchange'],
-  [TopLevelEventTypes.TOP_EMPTIED, 'emptied'],
-  [TopLevelEventTypes.TOP_ENCRYPTED, 'encrypted'],
-  [TopLevelEventTypes.TOP_ENDED, 'ended'],
-  [TopLevelEventTypes.TOP_ERROR, 'error'],
-  [TopLevelEventTypes.TOP_LOADED_DATA, 'loadeddata'],
-  [TopLevelEventTypes.TOP_LOADED_METADATA, 'loadedmetadata'],
-  [TopLevelEventTypes.TOP_LOAD_START, 'loadstart'],
-  [TopLevelEventTypes.TOP_PAUSE, 'pause'],
-  [TopLevelEventTypes.TOP_PLAY, 'play'],
-  [TopLevelEventTypes.TOP_PLAYING, 'playing'],
-  [TopLevelEventTypes.TOP_PROGRESS, 'progress'],
-  [TopLevelEventTypes.TOP_RATE_CHANGE, 'ratechange'],
-  [TopLevelEventTypes.TOP_SEEKED, 'seeked'],
-  [TopLevelEventTypes.TOP_SEEKING, 'seeking'],
-  [TopLevelEventTypes.TOP_STALLED, 'stalled'],
-  [TopLevelEventTypes.TOP_SUSPEND, 'suspend'],
-  [TopLevelEventTypes.TOP_TIME_UPDATE, 'timeupdate'],
-  [TopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumechange'],
-  [TopLevelEventTypes.TOP_WAITING, 'waiting'],
+  [DOMTopLevelEventTypes.TOP_ABORT, 'abort'],
+  [DOMTopLevelEventTypes.TOP_CAN_PLAY, 'canplay'],
+  [DOMTopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canplaythrough'],
+  [DOMTopLevelEventTypes.TOP_DURATION_CHANGE, 'durationchange'],
+  [DOMTopLevelEventTypes.TOP_EMPTIED, 'emptied'],
+  [DOMTopLevelEventTypes.TOP_ENCRYPTED, 'encrypted'],
+  [DOMTopLevelEventTypes.TOP_ENDED, 'ended'],
+  [DOMTopLevelEventTypes.TOP_ERROR, 'error'],
+  [DOMTopLevelEventTypes.TOP_LOADED_DATA, 'loadeddata'],
+  [DOMTopLevelEventTypes.TOP_LOADED_METADATA, 'loadedmetadata'],
+  [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadstart'],
+  [DOMTopLevelEventTypes.TOP_PAUSE, 'pause'],
+  [DOMTopLevelEventTypes.TOP_PLAY, 'play'],
+  [DOMTopLevelEventTypes.TOP_PLAYING, 'playing'],
+  [DOMTopLevelEventTypes.TOP_PROGRESS, 'progress'],
+  [DOMTopLevelEventTypes.TOP_RATE_CHANGE, 'ratechange'],
+  [DOMTopLevelEventTypes.TOP_SEEKED, 'seeked'],
+  [DOMTopLevelEventTypes.TOP_SEEKING, 'seeking'],
+  [DOMTopLevelEventTypes.TOP_STALLED, 'stalled'],
+  [DOMTopLevelEventTypes.TOP_SUSPEND, 'suspend'],
+  [DOMTopLevelEventTypes.TOP_TIME_UPDATE, 'timeupdate'],
+  [DOMTopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumechange'],
+  [DOMTopLevelEventTypes.TOP_WAITING, 'waiting'],
 ]);
 
 const nonTopEventTypes: Map<TopLevelType, string> = makeMap([
-  [TopLevelEventTypes.TOP_INPUT, 'input'],
-  [TopLevelEventTypes.TOP_INVALID, 'invalid'],
-  [TopLevelEventTypes.TOP_RESET, 'reset'],
-  [TopLevelEventTypes.TOP_SUBMIT, 'submit'],
+  [DOMTopLevelEventTypes.TOP_INPUT, 'input'],
+  [DOMTopLevelEventTypes.TOP_INVALID, 'invalid'],
+  [DOMTopLevelEventTypes.TOP_RESET, 'reset'],
+  [DOMTopLevelEventTypes.TOP_SUBMIT, 'submit'],
 ]);
 
 export function getRawEventName(topLevelType: TopLevelType): string {
@@ -138,7 +138,8 @@ export function getRawEventName(topLevelType: TopLevelType): string {
 
   invariant(
     eventName,
-    'BrowserEventConstants: Could not look up raw event name of topLevelType.',
+    'BrowserEventConstants: Could not look up raw event name of topLevelType: %s.',
+    topLevelType,
   );
   return eventName;
 }

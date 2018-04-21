@@ -6,11 +6,9 @@
  */
 
 import {getLowestCommonAncestor, isAncestor} from 'shared/ReactTreeTraversal';
+import invariant from 'fbjs/lib/invariant';
 
 import {
-  isStartish,
-  isMoveish,
-  isEndish,
   executeDirectDispatch,
   hasDispatches,
   executeDispatchesInOrderStopAtTrue,
@@ -23,12 +21,36 @@ import {
 } from './EventPropagators';
 import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
-import {
-  TOP_SCROLL,
-  TOP_SELECTION_CHANGE,
-  TOP_TOUCH_CANCEL,
-} from './TopLevelEventTypes';
 import accumulate from './accumulate';
+
+
+function isStartish(topLevelType) {
+  return (
+    topLevelType === ResponderEventPlugin.TopLevelTypes.topMouseDown ||
+    topLevelType === ResponderEventPlugin.TopLevelTypes.topTouchStart
+  );
+}
+
+function isMoveish(topLevelType) {
+  return (
+    topLevelType === ResponderEventPlugin.TopLevelTypes.topMouseMove ||
+    topLevelType === ResponderEventPlugin.TopLevelTypes.topTouchMove
+  );
+}
+
+function isEndish(topLevelType) {
+  return (
+    topLevelType === ResponderEventPlugin.TopLevelTypes.topMouseUp ||
+    topLevelType === ResponderEventPlugin.TopLevelTypes.topTouchEnd ||
+    topLevelType === ResponderEventPlugin.TopLevelTypes.topTouchCancel
+  );
+}
+
+ResponderTouchHistoryStore.injection.injectEventUtils({
+  isStartish,
+  isMoveish,
+  isEndish,
+});
 
 /**
  * Instance of element that should respond to touch/move types of interactions,
@@ -327,7 +349,7 @@ function setResponderAndExtractTransfer(
     ? eventTypes.startShouldSetResponder
     : isMoveish(topLevelType)
       ? eventTypes.moveShouldSetResponder
-      : topLevelType === TOP_SELECTION_CHANGE
+      : topLevelType === ResponderEventPlugin.TopLevelTypes.topSelectionChange
         ? eventTypes.selectionChangeShouldSetResponder
         : eventTypes.scrollShouldSetResponder;
 
@@ -432,8 +454,11 @@ function canTriggerTransfer(topLevelType, topLevelInst, nativeEvent) {
     // responderIgnoreScroll: We are trying to migrate away from specifically
     // tracking native scroll events here and responderIgnoreScroll indicates we
     // will send topTouchCancel to handle canceling touch events instead
-    ((topLevelType === TOP_SCROLL && !nativeEvent.responderIgnoreScroll) ||
-      (trackedTouchCount > 0 && topLevelType === TOP_SELECTION_CHANGE) ||
+    ((topLevelType === ResponderEventPlugin.TopLevelTypes.topScroll &&
+      !nativeEvent.responderIgnoreScroll) ||
+      (trackedTouchCount > 0 &&
+        topLevelType ===
+          ResponderEventPlugin.TopLevelTypes.topSelectionChange) ||
       isStartish(topLevelType) ||
       isMoveish(topLevelType))
   );
@@ -484,6 +509,11 @@ const ResponderEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
+    invariant(
+      ResponderEventPlugin.TopLevelTypes,
+      'ResponderEventPlugin requires TopLevelTypes to be injected first.',
+    );
+
     if (isStartish(topLevelType)) {
       trackedTouchCount += 1;
     } else if (isEndish(topLevelType)) {
@@ -539,7 +569,8 @@ const ResponderEventPlugin = {
     }
 
     const isResponderTerminate =
-      responderInst && topLevelType === TOP_TOUCH_CANCEL;
+      responderInst &&
+      topLevelType === ResponderEventPlugin.TopLevelTypes.topTouchCancel;
     const isResponderRelease =
       responderInst &&
       !isResponderTerminate &&
@@ -578,6 +609,7 @@ const ResponderEventPlugin = {
 
   GlobalResponderHandler: null,
   GlobalInteractionHandler: null,
+  TopLevelTypes: null,
 
   injection: {
     /**
@@ -595,6 +627,14 @@ const ResponderEventPlugin = {
      */
     injectGlobalInteractionHandler: function(GlobalInteractionHandler) {
       ResponderEventPlugin.GlobalInteractionHandler = GlobalInteractionHandler;
+    },
+
+    /**
+     * @param Object TopLevelTypes
+     * Object that maps top level types to the ID used in the react system.
+     */
+    injectTopLevelTypes: function(TopLevelTypes) {
+      ResponderEventPlugin.TopLevelTypes = TopLevelTypes;
     },
   },
 };

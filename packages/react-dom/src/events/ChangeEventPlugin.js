@@ -10,6 +10,9 @@ import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import {enqueueStateRestore} from 'events/ReactControlledComponent';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import SyntheticEvent from 'events/SyntheticEvent';
+import isTextInputElement from 'shared/isTextInputElement';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+
 import {
   TOP_BLUR,
   TOP_CHANGE,
@@ -19,10 +22,7 @@ import {
   TOP_KEY_DOWN,
   TOP_KEY_UP,
   TOP_SELECTION_CHANGE,
-} from 'events/TopLevelEventTypes';
-import isTextInputElement from 'shared/isTextInputElement';
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
-
+} from './DOMTopLevelEventTypes';
 import getEventTarget from './getEventTarget';
 import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';

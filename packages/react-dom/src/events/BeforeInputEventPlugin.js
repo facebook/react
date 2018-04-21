@@ -8,6 +8,8 @@
 import type {TopLevelType} from 'events/TopLevelEventTypes';
 
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+
 import {
   TOP_BLUR,
   TOP_COMPOSITION_START,
@@ -19,9 +21,7 @@ import {
   TOP_MOUSE_DOWN,
   TOP_TEXT_INPUT,
   TOP_PASTE,
-} from 'events/TopLevelEventTypes';
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
-
+} from './DOMTopLevelEventTypes';
 import * as FallbackCompositionState from './FallbackCompositionState';
 import SyntheticCompositionEvent from './SyntheticCompositionEvent';
 import SyntheticInputEvent from './SyntheticInputEvent';

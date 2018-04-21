@@ -10,14 +10,6 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
-import {
-  TOP_ERROR,
-  TOP_INVALID,
-  TOP_LOAD,
-  TOP_RESET,
-  TOP_SUBMIT,
-  TOP_TOGGLE,
-} from 'events/TopLevelEventTypes';
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
 
@@ -29,6 +21,14 @@ import * as ReactDOMFiberTextarea from './ReactDOMFiberTextarea';
 import * as inputValueTracking from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
+import {
+  TOP_ERROR,
+  TOP_INVALID,
+  TOP_LOAD,
+  TOP_RESET,
+  TOP_SUBMIT,
+  TOP_TOGGLE,
+} from '../events/DOMTopLevelEventTypes';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
 import {mediaEventTypes} from '../events/BrowserEventConstants';
 import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
