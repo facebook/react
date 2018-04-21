@@ -5,9 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ResponderEventPlugin from 'events/ResponderEventPlugin';
+import createResponderTouchHistoryStore from 'events/createResponderTouchHistoryStore';
+import createResponderEventPlugin from 'events/createResponderEventPlugin';
 
-ResponderEventPlugin.injection.injectTopLevelTypes({
+const TopLevelTypes = {
   topMouseDown: 'topMouseDown',
   topMouseMove: 'topMouseMove',
   topMouseUp: 'topMouseUp',
@@ -17,6 +18,14 @@ ResponderEventPlugin.injection.injectTopLevelTypes({
   topTouchEnd: 'topTouchEnd',
   topTouchMove: 'topTouchMove',
   topTouchStart: 'topTouchStart',
-});
+};
 
-export default ResponderEventPlugin;
+const ResponderTouchHistoryStore = createResponderTouchHistoryStore(
+  TopLevelTypes,
+);
+const DOMResponderEventPlugin = createResponderEventPlugin(
+  TopLevelTypes,
+  ResponderTouchHistoryStore,
+);
+
+export default DOMResponderEventPlugin;

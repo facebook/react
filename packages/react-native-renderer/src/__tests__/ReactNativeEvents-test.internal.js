@@ -14,7 +14,7 @@ let PropTypes;
 let RCTEventEmitter;
 let React;
 let ReactNative;
-let ResponderEventPlugin;
+let ReactNativeResponderEventPlugin;
 let UIManager;
 let createReactNativeComponentClass;
 
@@ -67,7 +67,8 @@ beforeEach(() => {
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('react');
   ReactNative = require('react-native-renderer');
-  ResponderEventPlugin = require('events/ResponderEventPlugin').default;
+  ReactNativeResponderEventPlugin = require('../ReactNativeResponderEventPlugin')
+    .default;
   UIManager = require('UIManager');
   createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
     .register;
@@ -244,7 +245,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
   }
 
   function getResponderId() {
-    const responder = ResponderEventPlugin._getResponder();
+    const responder = ReactNativeResponderEventPlugin._getResponder();
     if (responder === null) {
       return null;
     }
@@ -334,7 +335,7 @@ it('handles events without target', () => {
   }
 
   function getResponderId() {
-    const responder = ResponderEventPlugin._getResponder();
+    const responder = ReactNativeResponderEventPlugin._getResponder();
     if (responder === null) {
       return null;
     }

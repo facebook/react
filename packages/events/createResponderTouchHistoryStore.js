@@ -176,69 +176,80 @@ function printTouchBank(): string {
   return printed;
 }
 
-type EventUtils = {
-  isStartish: (topLevelType: TopLevelType) => boolean,
-  isMoveish: (topLevelType: TopLevelType) => boolean,
-  isEndish: (topLevelType: TopLevelType) => boolean,
+type RequiredTopLevelTypes = {
+  topMouseDown: TopLevelType,
+  topTouchStart: TopLevelType,
+  topMouseMove: TopLevelType,
+  topTouchMove: TopLevelType,
+  topMouseUp: TopLevelType,
+  topTouchEnd: TopLevelType,
+  topTouchCancel: TopLevelType,
 };
 
-const ResponderTouchHistoryStore = {
-  recordTouchTrack(topLevelType: TopLevelType, nativeEvent: TouchEvent): void {
-    invariant(
-      ResponderTouchHistoryStore.EventUtils,
-      'ResponderTouchHistoryStore requires EventUtils to be injected first.',
+export default function createResponderTouchHistoryStore(
+  TopLevelTypes: RequiredTopLevelTypes,
+) {
+  function isStartish(topLevelType) {
+    return (
+      topLevelType === TopLevelTypes.topMouseDown ||
+      topLevelType === TopLevelTypes.topTouchStart
     );
-    const {
-      isStartish,
-      isMoveish,
-      isEndish,
-    } = ResponderTouchHistoryStore.EventUtils;
+  }
 
-    if (isMoveish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordTouchMove);
-    } else if (isStartish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordTouchStart);
-      touchHistory.numberActiveTouches = nativeEvent.touches.length;
-      if (touchHistory.numberActiveTouches === 1) {
-        touchHistory.indexOfSingleActiveTouch =
-          nativeEvent.touches[0].identifier;
-      }
-    } else if (isEndish(topLevelType)) {
-      nativeEvent.changedTouches.forEach(recordTouchEnd);
-      touchHistory.numberActiveTouches = nativeEvent.touches.length;
-      if (touchHistory.numberActiveTouches === 1) {
-        for (let i = 0; i < touchBank.length; i++) {
-          const touchTrackToCheck = touchBank[i];
-          if (touchTrackToCheck != null && touchTrackToCheck.touchActive) {
-            touchHistory.indexOfSingleActiveTouch = i;
-            break;
+  function isMoveish(topLevelType) {
+    return (
+      topLevelType === TopLevelTypes.topMouseMove ||
+      topLevelType === TopLevelTypes.topTouchMove
+    );
+  }
+
+  function isEndish(topLevelType) {
+    return (
+      topLevelType === TopLevelTypes.topMouseUp ||
+      topLevelType === TopLevelTypes.topTouchEnd ||
+      topLevelType === TopLevelTypes.topTouchCancel
+    );
+  }
+
+  const ResponderTouchHistoryStore = {
+    recordTouchTrack(
+      topLevelType: TopLevelType,
+      nativeEvent: TouchEvent,
+    ): void {
+      if (isMoveish(topLevelType)) {
+        nativeEvent.changedTouches.forEach(recordTouchMove);
+      } else if (isStartish(topLevelType)) {
+        nativeEvent.changedTouches.forEach(recordTouchStart);
+        touchHistory.numberActiveTouches = nativeEvent.touches.length;
+        if (touchHistory.numberActiveTouches === 1) {
+          touchHistory.indexOfSingleActiveTouch =
+            nativeEvent.touches[0].identifier;
+        }
+      } else if (isEndish(topLevelType)) {
+        nativeEvent.changedTouches.forEach(recordTouchEnd);
+        touchHistory.numberActiveTouches = nativeEvent.touches.length;
+        if (touchHistory.numberActiveTouches === 1) {
+          for (let i = 0; i < touchBank.length; i++) {
+            const touchTrackToCheck = touchBank[i];
+            if (touchTrackToCheck != null && touchTrackToCheck.touchActive) {
+              touchHistory.indexOfSingleActiveTouch = i;
+              break;
+            }
+          }
+          if (__DEV__) {
+            const activeRecord =
+              touchBank[touchHistory.indexOfSingleActiveTouch];
+            warning(
+              activeRecord != null && activeRecord.touchActive,
+              'Cannot find single active touch.',
+            );
           }
         }
-        if (__DEV__) {
-          const activeRecord = touchBank[touchHistory.indexOfSingleActiveTouch];
-          warning(
-            activeRecord != null && activeRecord.touchActive,
-            'Cannot find single active touch.',
-          );
-        }
       }
-    }
-  },
-
-  touchHistory,
-
-  EventUtils: (null: ?EventUtils),
-
-  injection: {
-    /**
-     * @param {isMoveish: Function, isStartish: Function, isEndish: Function} GlobalResponderHandler
-     * Object that handles any change in responder. Use this to inject
-     * integration with an existing touch handling system etc.
-     */
-    injectEventUtils: function(_EventUtils: EventUtils) {
-      ResponderTouchHistoryStore.EventUtils = _EventUtils;
     },
-  },
-};
 
-export default ResponderTouchHistoryStore;
+    touchHistory,
+  };
+
+  return ResponderTouchHistoryStore;
+}

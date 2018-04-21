@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ResponderEventPlugin from 'events/ResponderEventPlugin';
+import createResponderTouchHistoryStore from 'events/createResponderTouchHistoryStore';
+import createResponderEventPlugin from 'events/createResponderEventPlugin';
 
 import {
   TOP_MOUSE_DOWN,
@@ -19,28 +20,7 @@ import {
   TOP_TOUCH_START,
 } from './DOMTopLevelEventTypes';
 
-const endDependencies = [TOP_TOUCH_CANCEL, TOP_TOUCH_END, TOP_MOUSE_UP];
-const moveDependencies = [TOP_TOUCH_MOVE, TOP_MOUSE_MOVE];
-const startDependencies = [TOP_TOUCH_START, TOP_MOUSE_DOWN];
-
-ResponderEventPlugin.eventTypes.responderMove.dependencies = moveDependencies;
-ResponderEventPlugin.eventTypes.responderEnd.dependencies = endDependencies;
-ResponderEventPlugin.eventTypes.responderStart.dependencies = startDependencies;
-ResponderEventPlugin.eventTypes.responderRelease.dependencies = endDependencies;
-ResponderEventPlugin.eventTypes.responderTerminationRequest.dependencies = [];
-ResponderEventPlugin.eventTypes.responderGrant.dependencies = [];
-ResponderEventPlugin.eventTypes.responderReject.dependencies = [];
-ResponderEventPlugin.eventTypes.responderTerminate.dependencies = [];
-ResponderEventPlugin.eventTypes.moveShouldSetResponder.dependencies = moveDependencies;
-ResponderEventPlugin.eventTypes.selectionChangeShouldSetResponder.dependencies = [
-  TOP_SELECTION_CHANGE,
-];
-ResponderEventPlugin.eventTypes.scrollShouldSetResponder.dependencies = [
-  TOP_SCROLL,
-];
-ResponderEventPlugin.eventTypes.startShouldSetResponder.dependencies = startDependencies;
-
-ResponderEventPlugin.injection.injectTopLevelTypes({
+const TopLevelTypes = {
   topMouseDown: TOP_MOUSE_DOWN,
   topMouseMove: TOP_MOUSE_MOVE,
   topMouseUp: TOP_MOUSE_UP,
@@ -50,6 +30,35 @@ ResponderEventPlugin.injection.injectTopLevelTypes({
   topTouchEnd: TOP_TOUCH_END,
   topTouchMove: TOP_TOUCH_MOVE,
   topTouchStart: TOP_TOUCH_START,
-});
+};
 
-export default ResponderEventPlugin;
+export const ResponderTouchHistoryStore = createResponderTouchHistoryStore(
+  TopLevelTypes,
+);
+const DOMResponderEventPlugin = createResponderEventPlugin(
+  TopLevelTypes,
+  ResponderTouchHistoryStore,
+);
+
+const endDependencies = [TOP_TOUCH_CANCEL, TOP_TOUCH_END, TOP_MOUSE_UP];
+const moveDependencies = [TOP_TOUCH_MOVE, TOP_MOUSE_MOVE];
+const startDependencies = [TOP_TOUCH_START, TOP_MOUSE_DOWN];
+
+DOMResponderEventPlugin.eventTypes.responderMove.dependencies = moveDependencies;
+DOMResponderEventPlugin.eventTypes.responderEnd.dependencies = endDependencies;
+DOMResponderEventPlugin.eventTypes.responderStart.dependencies = startDependencies;
+DOMResponderEventPlugin.eventTypes.responderRelease.dependencies = endDependencies;
+DOMResponderEventPlugin.eventTypes.responderTerminationRequest.dependencies = [];
+DOMResponderEventPlugin.eventTypes.responderGrant.dependencies = [];
+DOMResponderEventPlugin.eventTypes.responderReject.dependencies = [];
+DOMResponderEventPlugin.eventTypes.responderTerminate.dependencies = [];
+DOMResponderEventPlugin.eventTypes.moveShouldSetResponder.dependencies = moveDependencies;
+DOMResponderEventPlugin.eventTypes.selectionChangeShouldSetResponder.dependencies = [
+  TOP_SELECTION_CHANGE,
+];
+DOMResponderEventPlugin.eventTypes.scrollShouldSetResponder.dependencies = [
+  TOP_SCROLL,
+];
+DOMResponderEventPlugin.eventTypes.startShouldSetResponder.dependencies = startDependencies;
+
+export default DOMResponderEventPlugin;
