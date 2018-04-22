@@ -16,7 +16,6 @@ import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import emptyFunction from 'fbjs/lib/emptyFunction';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
