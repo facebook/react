@@ -65,18 +65,14 @@ import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
-const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
-
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
 let didWarnAboutStatelessRefs;
-let getStack = emptyFunction.thatReturns('');
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
   didWarnAboutGetDerivedStateOnFunctionalComponent = {};
   didWarnAboutStatelessRefs = {};
-  getStack = getCurrentFiberStackAddendum;
 }
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
@@ -893,13 +889,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (__DEV__) {
       const providerPropTypes = workInProgress.type.propTypes;
+      const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
       if (providerPropTypes) {
         checkPropTypes(
           providerPropTypes,
           newProps,
           'prop',
           'Context.Provider',
-          getStack,
+          getCurrentFiberStackAddendum,
         );
       }
     }
