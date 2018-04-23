@@ -26,7 +26,6 @@ import createResponderTouchHistoryStore from './createResponderTouchHistoryStore
 
 import type {TopLevelType} from './TopLevelEventTypes';
 import type {AnyNativeEvent} from './PluginModuleType';
-import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 /**
