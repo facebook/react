@@ -28,13 +28,13 @@ export function getClosestInstanceFromNode(node) {
   }
 
   while (!node[internalInstanceKey]) {
-    if (node.parentNode) {
-      node = node.parentNode;
-    } else {
+    if (!node.parentNode) {
       // Top of the tree. This node must not be part of a React tree (or is
       // unmounted, potentially).
-      return null;
+      return null;	  
     }
+
+    node = node.parentNode;
   }
 
   let inst = node[internalInstanceKey];
