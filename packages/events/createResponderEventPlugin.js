@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import {getLowestCommonAncestor, isAncestor} from 'shared/ReactTreeTraversal';
@@ -21,6 +23,11 @@ import {
 import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import accumulate from './accumulate';
 import createResponderTouchHistoryStore from './createResponderTouchHistoryStore';
+
+import type {TopLevelType} from './TopLevelEventTypes';
+import type {AnyNativeEvent} from './PluginModuleType';
+import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 /**
  *
@@ -211,7 +218,26 @@ to return true:wantsResponderID|                            |
  * - `touchStart`              (`EventPluginHub` dispatches as usual)
  * - `responderGrant/Reject`   (`EventPluginHub` dispatches as usual)
  */
-export default function createResponderEventPlugin(TopLevelTypes) {
+
+type GlobalResponderHandlerType = {
+  onChange: (from: any, to: any, blockNativeResponder: any) => void,
+};
+
+type GlobalInteractionHandlerType = {
+  onChange: (numberActiveTouches: number) => void,
+};
+
+export default function createResponderEventPlugin(TopLevelTypes: {
+  topMouseDown: TopLevelType,
+  topMouseMove: TopLevelType,
+  topMouseUp: TopLevelType,
+  topScroll: TopLevelType,
+  topSelectionChange: TopLevelType,
+  topTouchCancel: TopLevelType,
+  topTouchEnd: TopLevelType,
+  topTouchMove: TopLevelType,
+  topTouchStart: TopLevelType,
+}) {
   function isStartish(topLevelType) {
     return (
       topLevelType === TopLevelTypes.topMouseDown ||
@@ -270,17 +296,17 @@ export default function createResponderEventPlugin(TopLevelTypes) {
   };
 
   const startDependencies = [
-    TopLevelTypes.TOP_TOUCH_START,
-    TopLevelTypes.TOP_MOUSE_DOWN,
+    TopLevelTypes.topTouchStart,
+    TopLevelTypes.topMouseDown,
   ];
   const moveDependencies = [
-    TopLevelTypes.TOP_TOUCH_MOVE,
-    TopLevelTypes.TOP_MOUSE_MOVE,
+    TopLevelTypes.topTouchMove,
+    TopLevelTypes.topMouseMove,
   ];
   const endDependencies = [
-    TopLevelTypes.TOP_TOUCH_CANCEL,
-    TopLevelTypes.TOP_TOUCH_END,
-    TopLevelTypes.TOP_MOUSE_UP,
+    TopLevelTypes.topTouchCancel,
+    TopLevelTypes.topTouchEnd,
+    TopLevelTypes.topMouseUp,
   ];
 
   const eventTypes = {
@@ -310,7 +336,7 @@ export default function createResponderEventPlugin(TopLevelTypes) {
         bubbled: 'onScrollShouldSetResponder',
         captured: 'onScrollShouldSetResponderCapture',
       },
-      dependencies: [TopLevelTypes.TOP_SCROLL],
+      dependencies: [TopLevelTypes.topScroll],
     },
 
     /**
@@ -325,7 +351,7 @@ export default function createResponderEventPlugin(TopLevelTypes) {
         bubbled: 'onSelectionChangeShouldSetResponder',
         captured: 'onSelectionChangeShouldSetResponderCapture',
       },
-      dependencies: [TopLevelTypes.TOP_SELECTION_CHANGE],
+      dependencies: [TopLevelTypes.topSelectionChange],
     },
 
     /**
@@ -355,7 +381,10 @@ export default function createResponderEventPlugin(TopLevelTypes) {
       registrationName: 'onResponderEnd',
       dependencies: endDependencies,
     },
-    responderRelease: {registrationName: 'onResponderRelease'},
+    responderRelease: {
+      registrationName: 'onResponderRelease',
+      dependencies: [],
+    },
     responderTerminationRequest: {
       registrationName: 'onResponderTerminationRequest',
       dependencies: [],
@@ -369,10 +398,10 @@ export default function createResponderEventPlugin(TopLevelTypes) {
   };
 
   function setResponderAndExtractTransfer(
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
+    topLevelType: TopLevelType,
+    targetInst: Fiber,
+    nativeEvent: AnyNativeEvent,
+    nativeEventTarget: EventTarget,
   ) {
     const shouldSetEventType = isStartish(topLevelType)
       ? eventTypes.startShouldSetResponder
@@ -501,7 +530,7 @@ export default function createResponderEventPlugin(TopLevelTypes) {
    * @param {NativeEvent} nativeEvent Native touch end event.
    * @return {boolean} Whether or not this touch end event ends the responder.
    */
-  function noResponderTouches(nativeEvent) {
+  function noResponderTouches(nativeEvent: any) {
     const touches = nativeEvent.touches;
     if (!touches || touches.length === 0) {
       return true;
@@ -534,11 +563,11 @@ export default function createResponderEventPlugin(TopLevelTypes) {
      * assumed control and the original touch targets are destroyed.
      */
     extractEvents: function(
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-    ) {
+      topLevelType: TopLevelType,
+      targetInst: Fiber,
+      nativeEvent: AnyNativeEvent,
+      nativeEventTarget: EventTarget,
+    ): any {
       if (isStartish(topLevelType)) {
         trackedTouchCount += 1;
       } else if (isEndish(topLevelType)) {
@@ -552,7 +581,10 @@ export default function createResponderEventPlugin(TopLevelTypes) {
         }
       }
 
-      ResponderTouchHistoryStore.recordTouchTrack(topLevelType, nativeEvent);
+      ResponderTouchHistoryStore.recordTouchTrack(
+        topLevelType,
+        (nativeEvent: any),
+      );
 
       let extracted = canTriggerTransfer(topLevelType, targetInst, nativeEvent)
         ? setResponderAndExtractTransfer(
@@ -631,8 +663,8 @@ export default function createResponderEventPlugin(TopLevelTypes) {
       return extracted;
     },
 
-    GlobalResponderHandler: null,
-    GlobalInteractionHandler: null,
+    GlobalResponderHandler: (null: null | GlobalResponderHandlerType),
+    GlobalInteractionHandler: (null: null | GlobalInteractionHandlerType),
 
     injection: {
       /**
@@ -640,7 +672,9 @@ export default function createResponderEventPlugin(TopLevelTypes) {
        * Object that handles any change in responder. Use this to inject
        * integration with an existing touch handling system etc.
        */
-      injectGlobalResponderHandler: function(GlobalResponderHandler) {
+      injectGlobalResponderHandler: function(
+        GlobalResponderHandler: GlobalResponderHandlerType,
+      ) {
         ResponderEventPlugin.GlobalResponderHandler = GlobalResponderHandler;
       },
 
@@ -648,7 +682,9 @@ export default function createResponderEventPlugin(TopLevelTypes) {
        * @param {{onChange: (numberActiveTouches) => void} GlobalInteractionHandler
        * Object that handles any change in the number of active touches.
        */
-      injectGlobalInteractionHandler: function(GlobalInteractionHandler) {
+      injectGlobalInteractionHandler: function(
+        GlobalInteractionHandler: GlobalInteractionHandlerType,
+      ) {
         ResponderEventPlugin.GlobalInteractionHandler = GlobalInteractionHandler;
       },
     },
