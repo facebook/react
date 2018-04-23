@@ -134,9 +134,6 @@ export type UpdateQueue<State> = {
 
   // TODO: Workaround for lack of tuples. Could use global state instead.
   hasForceUpdate: boolean,
-
-  // DEV-only
-  isProcessing?: boolean,
 };
 
 export const UpdateState = 0;
@@ -145,8 +142,14 @@ export const ForceUpdate = 2;
 export const CaptureUpdate = 3;
 
 let didWarnUpdateInsideUpdate;
+let currentlyProcessingQueue;
+export let resetCurrentlyProcessingQueue;
 if (__DEV__) {
   didWarnUpdateInsideUpdate = false;
+  currentlyProcessingQueue = null;
+  resetCurrentlyProcessingQueue = () => {
+    currentlyProcessingQueue = null;
+  };
 }
 
 export function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
@@ -163,9 +166,6 @@ export function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     lastCapturedEffect: null,
     hasForceUpdate: false,
   };
-  if (__DEV__) {
-    queue.isProcessing = false;
-  }
   return queue;
 }
 
@@ -191,9 +191,6 @@ function cloneUpdateQueue<State>(
     firstCapturedEffect: null,
     lastCapturedEffect: null,
   };
-  if (__DEV__) {
-    queue.isProcessing = false;
-  }
   return queue;
 }
 
@@ -296,7 +293,8 @@ export function enqueueUpdate<State>(
   if (__DEV__) {
     if (
       fiber.tag === ClassComponent &&
-      (queue1.isProcessing || (queue2 !== null && queue2.isProcessing)) &&
+      (currentlyProcessingQueue === queue1 ||
+        (queue2 !== null && currentlyProcessingQueue === queue2)) &&
       !didWarnUpdateInsideUpdate
     ) {
       warning(
@@ -450,7 +448,7 @@ export function processUpdateQueue<State>(
   queue = ensureWorkInProgressQueueIsAClone(workInProgress, queue);
 
   if (__DEV__) {
-    queue.isProcessing = true;
+    currentlyProcessingQueue = queue;
   }
 
   // These values may change as we process the queue.
@@ -583,7 +581,7 @@ export function processUpdateQueue<State>(
   workInProgress.memoizedState = resultState;
 
   if (__DEV__) {
-    queue.isProcessing = false;
+    currentlyProcessingQueue = null;
   }
 }
 

@@ -88,7 +88,7 @@ import {
 import {AsyncMode} from './ReactTypeOfMode';
 import ReactFiberLegacyContext from './ReactFiberContext';
 import ReactFiberNewContext from './ReactFiberNewContext';
-import {enqueueUpdate} from './ReactUpdateQueue';
+import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import ReactFiberStack from './ReactFiberStack';
 
@@ -958,6 +958,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           didFatal = true;
           onUncaughtError(thrownValue);
           break;
+        }
+
+        if (__DEV__) {
+          // Reset global debug state
+          // We assume this is defined in DEV
+          (resetCurrentlyProcessingQueue: any)();
         }
 
         if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
