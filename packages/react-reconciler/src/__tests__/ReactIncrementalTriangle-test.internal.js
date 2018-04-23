@@ -427,6 +427,8 @@ describe('ReactIncrementalTriangle', () => {
 
     function simulate(...actions) {
       const gen = simulateAndYield();
+      // Call this once to prepare the generator
+      gen.next();
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (let action of actions) {
         gen.next(action);

@@ -26,7 +26,7 @@ import warning from 'fbjs/lib/warning';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import ReactFiberScheduler from './ReactFiberScheduler';
-import {insertUpdateIntoFiber} from './ReactFiberUpdateQueue';
+import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 
@@ -339,28 +339,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
 
+    const update = createUpdate(expirationTime);
+    update.payload = {children: element};
+
     callback = callback === undefined ? null : callback;
-    if (__DEV__) {
+    if (callback !== null) {
       warning(
-        callback === null || typeof callback === 'function',
+        typeof callback === 'function',
         'render(...): Expected the last optional `callback` argument to be a ' +
           'function. Instead received: %s.',
         callback,
       );
+      update.callback = callback;
     }
+    enqueueUpdate(current, update, expirationTime);
 
-    const update = {
-      expirationTime,
-      partialState: {element},
-      callback,
-      isReplace: false,
-      isForced: false,
-      capturedValue: null,
-      next: null,
-    };
-    insertUpdateIntoFiber(current, update);
     scheduleWork(current, expirationTime);
-
     return expirationTime;
   }
 

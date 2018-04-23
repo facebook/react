@@ -12,10 +12,16 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
 import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
-import type {UpdateQueue} from './ReactFiberUpdateQueue';
+import type {CapturedValue} from './ReactCapturedValue';
+import type {Update} from './ReactUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
-import {ensureUpdateQueues} from './ReactFiberUpdateQueue';
+import {
+  enqueueCapturedUpdate,
+  createUpdate,
+  CaptureUpdate,
+} from './ReactUpdateQueue';
+import {logError} from './ReactFiberCommitWork';
 
 import {
   ClassComponent,
@@ -42,7 +48,9 @@ export default function<C, CX>(
     startTime: ExpirationTime,
     expirationTime: ExpirationTime,
   ) => void,
+  markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
+  onUncaughtError: (error: mixed) => void,
 ) {
   const {popHostContainer, popHostContext} = hostContext;
   const {
@@ -51,10 +59,71 @@ export default function<C, CX>(
   } = legacyContext;
   const {popProvider} = newContext;
 
+  function createRootErrorUpdate(
+    fiber: Fiber,
+    errorInfo: CapturedValue<mixed>,
+    expirationTime: ExpirationTime,
+  ): Update<null> {
+    const update = createUpdate(expirationTime);
+    // Unmount the root by rendering null.
+    update.tag = CaptureUpdate;
+    update.payload = {children: null};
+    const error = errorInfo.value;
+    update.callback = () => {
+      onUncaughtError(error);
+      logError(fiber, errorInfo);
+    };
+    return update;
+  }
+
+  function createClassErrorUpdate(
+    fiber: Fiber,
+    errorInfo: CapturedValue<mixed>,
+    expirationTime: ExpirationTime,
+  ): Update<mixed> {
+    const update = createUpdate(expirationTime);
+    update.tag = CaptureUpdate;
+    const getDerivedStateFromCatch = fiber.type.getDerivedStateFromCatch;
+    if (
+      enableGetDerivedStateFromCatch &&
+      typeof getDerivedStateFromCatch === 'function'
+    ) {
+      const error = errorInfo.value;
+      update.payload = () => {
+        return getDerivedStateFromCatch(error);
+      };
+    }
+
+    const inst = fiber.stateNode;
+    if (inst !== null && typeof inst.componentDidCatch === 'function') {
+      update.callback = function callback() {
+        if (
+          !enableGetDerivedStateFromCatch ||
+          getDerivedStateFromCatch !== 'function'
+        ) {
+          // To preserve the preexisting retry behavior of error boundaries,
+          // we keep track of which ones already failed during this batch.
+          // This gets reset before we yield back to the browser.
+          // TODO: Warn in strict mode if getDerivedStateFromCatch is
+          // not defined.
+          markLegacyErrorBoundaryAsFailed(this);
+        }
+        const error = errorInfo.value;
+        const stack = errorInfo.stack;
+        logError(fiber, errorInfo);
+        this.componentDidCatch(error, {
+          componentStack: stack !== null ? stack : '',
+        });
+      };
+    }
+    return update;
+  }
+
   function throwException(
     returnFiber: Fiber,
     sourceFiber: Fiber,
     rawValue: mixed,
+    renderExpirationTime: ExpirationTime,
   ) {
     // The source fiber did not complete.
     sourceFiber.effectTag |= Incomplete;
@@ -67,18 +136,19 @@ export default function<C, CX>(
     do {
       switch (workInProgress.tag) {
         case HostRoot: {
-          // Uncaught error
           const errorInfo = value;
-          ensureUpdateQueues(workInProgress);
-          const updateQueue: UpdateQueue<
-            any,
-          > = (workInProgress.updateQueue: any);
-          updateQueue.capturedValues = [errorInfo];
           workInProgress.effectTag |= ShouldCapture;
+          const update = createRootErrorUpdate(
+            workInProgress,
+            errorInfo,
+            renderExpirationTime,
+          );
+          enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
           return;
         }
         case ClassComponent:
           // Capture and retry
+          const errorInfo = value;
           const ctor = workInProgress.type;
           const instance = workInProgress.stateNode;
           if (
@@ -89,17 +159,14 @@ export default function<C, CX>(
                 typeof instance.componentDidCatch === 'function' &&
                 !isAlreadyFailedLegacyErrorBoundary(instance)))
           ) {
-            ensureUpdateQueues(workInProgress);
-            const updateQueue: UpdateQueue<
-              any,
-            > = (workInProgress.updateQueue: any);
-            const capturedValues = updateQueue.capturedValues;
-            if (capturedValues === null) {
-              updateQueue.capturedValues = [value];
-            } else {
-              capturedValues.push(value);
-            }
             workInProgress.effectTag |= ShouldCapture;
+            // Schedule the error boundary to re-render using updated state
+            const update = createClassErrorUpdate(
+              workInProgress,
+              errorInfo,
+              renderExpirationTime,
+            );
+            enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
             return;
           }
           break;
@@ -176,5 +243,7 @@ export default function<C, CX>(
     throwException,
     unwindWork,
     unwindInterruptedWork,
+    createRootErrorUpdate,
+    createClassErrorUpdate,
   };
 }

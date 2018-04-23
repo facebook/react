@@ -31,7 +31,6 @@ import {
   Ref,
   Incomplete,
   HostEffectMask,
-  ErrLog,
 } from 'shared/ReactTypeOfSideEffect';
 import {
   HostRoot,
@@ -89,10 +88,7 @@ import {
 import {AsyncMode} from './ReactTypeOfMode';
 import ReactFiberLegacyContext from './ReactFiberContext';
 import ReactFiberNewContext from './ReactFiberNewContext';
-import {
-  getUpdateExpirationTime,
-  insertUpdateIntoFiber,
-} from './ReactFiberUpdateQueue';
+import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import ReactFiberStack from './ReactFiberStack';
 
@@ -195,12 +191,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     throwException,
     unwindWork,
     unwindInterruptedWork,
+    createRootErrorUpdate,
+    createClassErrorUpdate,
   } = ReactFiberUnwindWork(
     hostContext,
     legacyContext,
     newContext,
     scheduleWork,
+    markLegacyErrorBoundaryAsFailed,
     isAlreadyFailedLegacyErrorBoundary,
+    onUncaughtError,
   );
   const {
     commitBeforeMutationLifeCycles,
@@ -209,7 +209,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     commitDeletion,
     commitWork,
     commitLifeCycles,
-    commitErrorLogging,
     commitAttachRef,
     commitDetachRef,
   } = ReactFiberCommitWork(
@@ -447,10 +446,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         );
       }
 
-      if (effectTag & ErrLog) {
-        commitErrorLogging(nextEffect, onUncaughtError);
-      }
-
       if (effectTag & Ref) {
         recordEffect();
         commitAttachRef(nextEffect);
@@ -681,7 +676,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     // Check for pending updates.
-    let newExpirationTime = getUpdateExpirationTime(workInProgress);
+    let newExpirationTime = NoWork;
+    switch (workInProgress.tag) {
+      case HostRoot:
+      case ClassComponent: {
+        const updateQueue = workInProgress.updateQueue;
+        if (updateQueue !== null) {
+          newExpirationTime = updateQueue.expirationTime;
+        }
+      }
+    }
 
     // TODO: Calls need to visit stateNode
 
@@ -956,6 +960,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           break;
         }
 
+        if (__DEV__) {
+          // Reset global debug state
+          // We assume this is defined in DEV
+          (resetCurrentlyProcessingQueue: any)();
+        }
+
         if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
           const failedUnitOfWork = nextUnitOfWork;
           replayUnitOfWork(failedUnitOfWork, thrownValue, isAsync);
@@ -974,7 +984,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           onUncaughtError(thrownValue);
           break;
         }
-        throwException(returnFiber, sourceFiber, thrownValue);
+        throwException(
+          returnFiber,
+          sourceFiber,
+          thrownValue,
+          nextRenderExpirationTime,
+        );
         nextUnitOfWork = completeUnitOfWork(sourceFiber);
       }
       break;
@@ -1022,22 +1037,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function scheduleCapture(sourceFiber, boundaryFiber, value, expirationTime) {
-    // TODO: We only support dispatching errors.
-    const capturedValue = createCapturedValue(value, sourceFiber);
-    const update = {
-      expirationTime,
-      partialState: null,
-      callback: null,
-      isReplace: false,
-      isForced: false,
-      capturedValue,
-      next: null,
-    };
-    insertUpdateIntoFiber(boundaryFiber, update);
-    scheduleWork(boundaryFiber, expirationTime);
-  }
-
   function dispatch(
     sourceFiber: Fiber,
     value: mixed,
@@ -1047,8 +1046,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       !isWorking || isCommitting,
       'dispatch: Cannot dispatch during the render phase.',
     );
-
-    // TODO: Handle arrays
 
     let fiber = sourceFiber.return;
     while (fiber !== null) {
@@ -1061,14 +1058,28 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             (typeof instance.componentDidCatch === 'function' &&
               !isAlreadyFailedLegacyErrorBoundary(instance))
           ) {
-            scheduleCapture(sourceFiber, fiber, value, expirationTime);
+            const errorInfo = createCapturedValue(value, sourceFiber);
+            const update = createClassErrorUpdate(
+              fiber,
+              errorInfo,
+              expirationTime,
+            );
+            enqueueUpdate(fiber, update, expirationTime);
+            scheduleWork(fiber, expirationTime);
             return;
           }
           break;
-        // TODO: Handle async boundaries
-        case HostRoot:
-          scheduleCapture(sourceFiber, fiber, value, expirationTime);
+        case HostRoot: {
+          const errorInfo = createCapturedValue(value, sourceFiber);
+          const update = createRootErrorUpdate(
+            fiber,
+            errorInfo,
+            expirationTime,
+          );
+          enqueueUpdate(fiber, update, expirationTime);
+          scheduleWork(fiber, expirationTime);
           return;
+        }
       }
       fiber = fiber.return;
     }
@@ -1076,7 +1087,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (sourceFiber.tag === HostRoot) {
       // Error was thrown at the root. There is no parent, so the root
       // itself should capture it.
-      scheduleCapture(sourceFiber, sourceFiber, value, expirationTime);
+      const rootFiber = sourceFiber;
+      const errorInfo = createCapturedValue(value, rootFiber);
+      const update = createRootErrorUpdate(
+        rootFiber,
+        errorInfo,
+        expirationTime,
+      );
+      enqueueUpdate(rootFiber, update, expirationTime);
+      scheduleWork(rootFiber, expirationTime);
     }
   }
 
