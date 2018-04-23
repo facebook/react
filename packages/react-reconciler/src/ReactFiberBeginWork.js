@@ -346,13 +346,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
         ReactDebugCurrentFiber.setCurrentPhase(null);
       } else {
-        if (
-          debugRenderPhaseSideEffects ||
-          (debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode)
-        ) {
-          instance.render();
-        }
         nextChildren = instance.render();
       }
     }

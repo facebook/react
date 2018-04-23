@@ -118,13 +118,15 @@ export function applyDerivedStateFromProps(
 ) {
   const prevState = workInProgress.memoizedState;
 
-  if (
-    debugRenderPhaseSideEffects ||
-    (debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictMode)
-  ) {
-    // Invoke the function an extra time to help detect side-effects.
-    getDerivedStateFromProps(nextProps, prevState);
+  if (__DEV__) {
+    if (
+      debugRenderPhaseSideEffects ||
+      (debugRenderPhaseSideEffectsForStrictMode &&
+        workInProgress.mode & StrictMode)
+    ) {
+      // Invoke the function an extra time to help detect side-effects.
+      getDerivedStateFromProps(nextProps, prevState);
+    }
   }
 
   const partialState = getDerivedStateFromProps(nextProps, prevState);
@@ -477,12 +479,14 @@ export default function(
       : emptyObject;
 
     // Instantiate twice to help detect side-effects.
-    if (
-      debugRenderPhaseSideEffects ||
-      (debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictMode)
-    ) {
-      new ctor(props, context); // eslint-disable-line no-new
+    if (__DEV__) {
+      if (
+        debugRenderPhaseSideEffects ||
+        (debugRenderPhaseSideEffectsForStrictMode &&
+          workInProgress.mode & StrictMode)
+      ) {
+        new ctor(props, context); // eslint-disable-line no-new
+      }
     }
 
     const instance = new ctor(props, context);

@@ -379,14 +379,15 @@ function getStateFromUpdate<State>(
       const payload = update.payload;
       if (typeof payload === 'function') {
         // Updater function
-        if (
-          debugRenderPhaseSideEffects ||
-          (debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode)
-        ) {
-          payload.call(instance, prevState, nextProps);
+        if (__DEV__) {
+          if (
+            debugRenderPhaseSideEffects ||
+            (debugRenderPhaseSideEffectsForStrictMode &&
+              workInProgress.mode & StrictMode)
+          ) {
+            payload.call(instance, prevState, nextProps);
+          }
         }
-
         return payload.call(instance, prevState, nextProps);
       }
       // State object
@@ -402,12 +403,14 @@ function getStateFromUpdate<State>(
       let partialState;
       if (typeof payload === 'function') {
         // Updater function
-        if (
-          debugRenderPhaseSideEffects ||
-          (debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode)
-        ) {
-          payload.call(instance, prevState, nextProps);
+        if (__DEV__) {
+          if (
+            debugRenderPhaseSideEffects ||
+            (debugRenderPhaseSideEffectsForStrictMode &&
+              workInProgress.mode & StrictMode)
+          ) {
+            payload.call(instance, prevState, nextProps);
+          }
         }
         partialState = payload.call(instance, prevState, nextProps);
       } else {
