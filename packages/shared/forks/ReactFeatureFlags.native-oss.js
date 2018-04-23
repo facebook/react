@@ -12,7 +12,6 @@ import invariant from 'fbjs/lib/invariant';
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-oss';
 
-export const alwaysUseRequestIdleCallbackPolyfill = false;
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableGetDerivedStateFromCatch = false;

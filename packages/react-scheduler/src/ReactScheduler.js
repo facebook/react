@@ -32,7 +32,6 @@
 
 import type {Deadline} from 'react-reconciler';
 
-import {alwaysUseRequestIdleCallbackPolyfill} from 'shared/ReactFeatureFlags';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import warning from 'fbjs/lib/warning';
 
@@ -85,12 +84,8 @@ if (!ExecutionEnvironment.canUseDOM) {
   cIC = function(timeoutID: number) {
     clearTimeout(timeoutID);
   };
-} else if (
-  alwaysUseRequestIdleCallbackPolyfill ||
-  typeof requestIdleCallback !== 'function' ||
-  typeof cancelIdleCallback !== 'function'
-) {
-  // Polyfill requestIdleCallback and cancelIdleCallback
+} else {
+  // Always polyfill requestIdleCallback and cancelIdleCallback
 
   let scheduledRICCallback = null;
   let isIdleScheduled = false;
@@ -175,6 +170,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   window.addEventListener('message', idleTick, false);
 
   const animationTick = function(rafTime) {
+    console.log('animationTick called and rafTime is ', rafTime);
     isAnimationFrameScheduled = false;
     let nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
@@ -231,9 +227,6 @@ if (!ExecutionEnvironment.canUseDOM) {
     isIdleScheduled = false;
     timeoutTime = -1;
   };
-} else {
-  rIC = window.requestIdleCallback;
-  cIC = window.cancelIdleCallback;
 }
 
 export {now, rIC, cIC};
