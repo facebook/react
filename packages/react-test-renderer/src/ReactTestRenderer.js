@@ -736,6 +736,7 @@ const ReactTestRendererFiber = {
         }
         return TestRenderer.getPublicRootInstance(root);
       },
+      unstable_flushSync: TestRenderer.flushSync,
     };
 
     Object.defineProperty(
