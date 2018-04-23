@@ -176,41 +176,11 @@ function printTouchBank(): string {
   return printed;
 }
 
-type RequiredTopLevelTypes = {
-  topMouseDown: TopLevelType,
-  topTouchStart: TopLevelType,
-  topMouseMove: TopLevelType,
-  topTouchMove: TopLevelType,
-  topMouseUp: TopLevelType,
-  topTouchEnd: TopLevelType,
-  topTouchCancel: TopLevelType,
-};
-
 export default function createResponderTouchHistoryStore(
-  TopLevelTypes: RequiredTopLevelTypes,
+  isStartish: (topLevelType: TopLevelType) => boolean,
+  isMoveish: (topLevelType: TopLevelType) => boolean,
+  isEndish: (topLevelType: TopLevelType) => boolean,
 ) {
-  function isStartish(topLevelType) {
-    return (
-      topLevelType === TopLevelTypes.topMouseDown ||
-      topLevelType === TopLevelTypes.topTouchStart
-    );
-  }
-
-  function isMoveish(topLevelType) {
-    return (
-      topLevelType === TopLevelTypes.topMouseMove ||
-      topLevelType === TopLevelTypes.topTouchMove
-    );
-  }
-
-  function isEndish(topLevelType) {
-    return (
-      topLevelType === TopLevelTypes.topMouseUp ||
-      topLevelType === TopLevelTypes.topTouchEnd ||
-      topLevelType === TopLevelTypes.topTouchCancel
-    );
-  }
-
   const ResponderTouchHistoryStore = {
     recordTouchTrack(
       topLevelType: TopLevelType,

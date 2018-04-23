@@ -8,7 +8,7 @@
  */
 
 const ReactNativeEventPluginOrder = [
-  'ReactNativeResponderEventPlugin',
+  'ResponderEventPlugin',
   'ReactNativeBridgeEventPlugin',
 ];
 

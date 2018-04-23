@@ -40,6 +40,6 @@ ReactNativeResponderEventPlugin.injection.injectGlobalResponderHandler(
  * them).
  */
 EventPluginHub.injection.injectEventPluginsByName({
-  ReactNativeResponderEventPlugin: ReactNativeResponderEventPlugin,
+  ResponderEventPlugin: ReactNativeResponderEventPlugin,
   ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
 });

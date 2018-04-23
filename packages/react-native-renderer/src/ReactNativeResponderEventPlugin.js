@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import createResponderTouchHistoryStore from 'events/createResponderTouchHistoryStore';
 import createResponderEventPlugin from 'events/createResponderEventPlugin';
 
 const TopLevelTypes = {
@@ -20,12 +19,6 @@ const TopLevelTypes = {
   topTouchStart: 'topTouchStart',
 };
 
-const ResponderTouchHistoryStore = createResponderTouchHistoryStore(
-  TopLevelTypes,
-);
-const DOMResponderEventPlugin = createResponderEventPlugin(
-  TopLevelTypes,
-  ResponderTouchHistoryStore,
-);
+const {ResponderEventPlugin} = createResponderEventPlugin(TopLevelTypes);
 
-export default DOMResponderEventPlugin;
+export default ResponderEventPlugin;

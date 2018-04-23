@@ -20,6 +20,7 @@ import {
 } from './EventPropagators';
 import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import accumulate from './accumulate';
+import createResponderTouchHistoryStore from './createResponderTouchHistoryStore';
 
 /**
  *
@@ -210,10 +211,7 @@ to return true:wantsResponderID|                            |
  * - `touchStart`              (`EventPluginHub` dispatches as usual)
  * - `responderGrant/Reject`   (`EventPluginHub` dispatches as usual)
  */
-export default function createResponderEventPlugin(
-  TopLevelTypes,
-  ResponderTouchHistoryStore,
-) {
+export default function createResponderEventPlugin(TopLevelTypes) {
   function isStartish(topLevelType) {
     return (
       topLevelType === TopLevelTypes.topMouseDown ||
@@ -235,6 +233,12 @@ export default function createResponderEventPlugin(
       topLevelType === TopLevelTypes.topTouchCancel
     );
   }
+
+  const ResponderTouchHistoryStore = createResponderTouchHistoryStore(
+    isStartish,
+    isMoveish,
+    isEndish,
+  );
 
   /**
    * Instance of element that should respond to touch/move types of interactions,
@@ -265,6 +269,20 @@ export default function createResponderEventPlugin(
     }
   };
 
+  const startDependencies = [
+    TopLevelTypes.TOP_TOUCH_START,
+    TopLevelTypes.TOP_MOUSE_DOWN,
+  ];
+  const moveDependencies = [
+    TopLevelTypes.TOP_TOUCH_MOVE,
+    TopLevelTypes.TOP_MOUSE_MOVE,
+  ];
+  const endDependencies = [
+    TopLevelTypes.TOP_TOUCH_CANCEL,
+    TopLevelTypes.TOP_TOUCH_END,
+    TopLevelTypes.TOP_MOUSE_UP,
+  ];
+
   const eventTypes = {
     /**
      * On a `touchStart`/`mouseDown`, is it desired that this element become the
@@ -275,6 +293,7 @@ export default function createResponderEventPlugin(
         bubbled: 'onStartShouldSetResponder',
         captured: 'onStartShouldSetResponderCapture',
       },
+      dependencies: startDependencies,
     },
 
     /**
@@ -291,6 +310,7 @@ export default function createResponderEventPlugin(
         bubbled: 'onScrollShouldSetResponder',
         captured: 'onScrollShouldSetResponderCapture',
       },
+      dependencies: [TopLevelTypes.TOP_SCROLL],
     },
 
     /**
@@ -305,6 +325,7 @@ export default function createResponderEventPlugin(
         bubbled: 'onSelectionChangeShouldSetResponder',
         captured: 'onSelectionChangeShouldSetResponderCapture',
       },
+      dependencies: [TopLevelTypes.TOP_SELECTION_CHANGE],
     },
 
     /**
@@ -316,21 +337,35 @@ export default function createResponderEventPlugin(
         bubbled: 'onMoveShouldSetResponder',
         captured: 'onMoveShouldSetResponderCapture',
       },
+      dependencies: moveDependencies,
     },
 
     /**
      * Direct responder events dispatched directly to responder. Do not bubble.
      */
-    responderStart: {registrationName: 'onResponderStart'},
-    responderMove: {registrationName: 'onResponderMove'},
-    responderEnd: {registrationName: 'onResponderEnd'},
+    responderStart: {
+      registrationName: 'onResponderStart',
+      dependencies: startDependencies,
+    },
+    responderMove: {
+      registrationName: 'onResponderMove',
+      dependencies: moveDependencies,
+    },
+    responderEnd: {
+      registrationName: 'onResponderEnd',
+      dependencies: endDependencies,
+    },
     responderRelease: {registrationName: 'onResponderRelease'},
     responderTerminationRequest: {
       registrationName: 'onResponderTerminationRequest',
+      dependencies: [],
     },
-    responderGrant: {registrationName: 'onResponderGrant'},
-    responderReject: {registrationName: 'onResponderReject'},
-    responderTerminate: {registrationName: 'onResponderTerminate'},
+    responderGrant: {registrationName: 'onResponderGrant', dependencies: []},
+    responderReject: {registrationName: 'onResponderReject', dependencies: []},
+    responderTerminate: {
+      registrationName: 'onResponderTerminate',
+      dependencies: [],
+    },
   };
 
   function setResponderAndExtractTransfer(
@@ -618,5 +653,9 @@ export default function createResponderEventPlugin(
       },
     },
   };
-  return ResponderEventPlugin;
+
+  return {
+    ResponderEventPlugin,
+    ResponderTouchHistoryStore,
+  };
 }

@@ -412,7 +412,7 @@ describe('ResponderEventPlugin', () => {
     const injectComponentTree =
       ReactDOMUnstableNativeDependencies.injectComponentTree;
     ResponderEventPlugin =
-      ReactDOMUnstableNativeDependencies.DOMResponderEventPlugin;
+      ReactDOMUnstableNativeDependencies.ResponderEventPlugin;
 
     deleteAllListeners(GRANDPARENT_INST);
     deleteAllListeners(PARENT_INST);
