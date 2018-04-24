@@ -7,5 +7,16 @@
  * @flow
  */
 
-// eslint-disable-next-line no-undef
-export opaque type TopLevelType = string;
+import type {DOMTopLevelEventType} from 'react-dom/src/events/DOMTopLevelEventTypes';
+
+export type TopLevelType =
+  | DOMTopLevelEventType
+  | 'topMouseDown'
+  | 'topMouseMove'
+  | 'topMouseUp'
+  | 'topScroll'
+  | 'topSelectionChange'
+  | 'topTouchCancel'
+  | 'topTouchEnd'
+  | 'topTouchMove'
+  | 'topTouchStart'

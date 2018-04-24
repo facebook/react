@@ -9,18 +9,16 @@
 
 import createResponderEventPlugin from 'events/createResponderEventPlugin';
 
-import type {TopLevelType} from 'events/TopLevelEventTypes';
-
 const TopLevelTypes = {
-  topMouseDown: (('topMouseDown': any): TopLevelType),
-  topMouseMove: (('topMouseMove': any): TopLevelType),
-  topMouseUp: (('topMouseUp': any): TopLevelType),
-  topScroll: (('topScroll': any): TopLevelType),
-  topSelectionChange: (('topSelectionChange': any): TopLevelType),
-  topTouchCancel: (('topTouchCancel': any): TopLevelType),
-  topTouchEnd: (('topTouchEnd': any): TopLevelType),
-  topTouchMove: (('topTouchMove': any): TopLevelType),
-  topTouchStart: (('topTouchStart': any): TopLevelType),
+  topMouseDown: 'topMouseDown',
+  topMouseMove: 'topMouseMove',
+  topMouseUp: 'topMouseUp',
+  topScroll: 'topScroll',
+  topSelectionChange: 'topSelectionChange',
+  topTouchCancel: 'topTouchCancel',
+  topTouchEnd: 'topTouchEnd',
+  topTouchMove: 'topTouchMove',
+  topTouchStart: 'topTouchStart',
 };
 
 const {ResponderEventPlugin} = createResponderEventPlugin(TopLevelTypes);
