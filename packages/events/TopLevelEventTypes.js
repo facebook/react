@@ -19,4 +19,4 @@ export type TopLevelType =
   | 'topTouchCancel'
   | 'topTouchEnd'
   | 'topTouchMove'
-  | 'topTouchStart'
+  | 'topTouchStart';
