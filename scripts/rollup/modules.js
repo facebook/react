@@ -24,6 +24,7 @@ const importSideEffects = Object.freeze({
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
+  'react-scheduler': 'ReactScheduler',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
