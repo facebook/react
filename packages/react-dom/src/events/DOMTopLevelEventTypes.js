@@ -7,76 +7,115 @@
  * @flow
  */
 
-import type { TopLevelType } from 'events/TopLevelEventTypes';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
+import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
-export const TOP_ABORT = ((0: any): TopLevelType);
-export const TOP_ANIMATION_END = ((1: any): TopLevelType);
-export const TOP_ANIMATION_ITERATION = ((2: any): TopLevelType);
-export const TOP_ANIMATION_START = ((3: any): TopLevelType);
-export const TOP_BLUR = ((4: any): TopLevelType);
-export const TOP_CANCEL = ((5: any): TopLevelType);
-export const TOP_CAN_PLAY = ((6: any): TopLevelType);
-export const TOP_CAN_PLAY_THROUGH = ((7: any): TopLevelType);
-export const TOP_CHANGE = ((8: any): TopLevelType);
-export const TOP_CLICK = ((9: any): TopLevelType);
-export const TOP_CLOSE = ((10: any): TopLevelType);
-export const TOP_COMPOSITION_END = ((11: any): TopLevelType);
-export const TOP_COMPOSITION_START = ((12: any): TopLevelType);
-export const TOP_COMPOSITION_UPDATE = ((13: any): TopLevelType);
-export const TOP_CONTEXT_MENU = ((14: any): TopLevelType);
-export const TOP_COPY = ((15: any): TopLevelType);
-export const TOP_CUT = ((16: any): TopLevelType);
-export const TOP_DOUBLE_CLICK = ((17: any): TopLevelType);
-export const TOP_DRAG = ((18: any): TopLevelType);
-export const TOP_DRAG_END = ((19: any): TopLevelType);
-export const TOP_DRAG_ENTER = ((20: any): TopLevelType);
-export const TOP_DRAG_EXIT = ((21: any): TopLevelType);
-export const TOP_DRAG_LEAVE = ((22: any): TopLevelType);
-export const TOP_DRAG_OVER = ((23: any): TopLevelType);
-export const TOP_DRAG_START = ((24: any): TopLevelType);
-export const TOP_DROP = ((25: any): TopLevelType);
-export const TOP_DURATION_CHANGE = ((26: any): TopLevelType);
-export const TOP_EMPTIED = ((27: any): TopLevelType);
-export const TOP_ENCRYPTED = ((28: any): TopLevelType);
-export const TOP_ENDED = ((29: any): TopLevelType);
-export const TOP_ERROR = ((30: any): TopLevelType);
-export const TOP_FOCUS = ((31: any): TopLevelType);
-export const TOP_INPUT = ((32: any): TopLevelType);
-export const TOP_INVALID = ((33: any): TopLevelType);
-export const TOP_KEY_DOWN = ((34: any): TopLevelType);
-export const TOP_KEY_PRESS = ((35: any): TopLevelType);
-export const TOP_KEY_UP = ((36: any): TopLevelType);
-export const TOP_LOADED_DATA = ((37: any): TopLevelType);
-export const TOP_LOAD = ((38: any): TopLevelType);
-export const TOP_LOADED_METADATA = ((39: any): TopLevelType);
-export const TOP_LOAD_START = ((40: any): TopLevelType);
-export const TOP_MOUSE_DOWN = ((41: any): TopLevelType);
-export const TOP_MOUSE_MOVE = ((42: any): TopLevelType);
-export const TOP_MOUSE_OUT = ((43: any): TopLevelType);
-export const TOP_MOUSE_OVER = ((44: any): TopLevelType);
-export const TOP_MOUSE_UP = ((45: any): TopLevelType);
-export const TOP_PASTE = ((46: any): TopLevelType);
-export const TOP_PAUSE = ((47: any): TopLevelType);
-export const TOP_PLAY = ((48: any): TopLevelType);
-export const TOP_PLAYING = ((49: any): TopLevelType);
-export const TOP_PROGRESS = ((50: any): TopLevelType);
-export const TOP_RATE_CHANGE = ((51: any): TopLevelType);
-export const TOP_RESET = ((52: any): TopLevelType);
-export const TOP_SCROLL = ((53: any): TopLevelType);
-export const TOP_SEEKED = ((54: any): TopLevelType);
-export const TOP_SEEKING = ((55: any): TopLevelType);
-export const TOP_SELECTION_CHANGE = ((56: any): TopLevelType);
-export const TOP_STALLED = ((57: any): TopLevelType);
-export const TOP_SUBMIT = ((58: any): TopLevelType);
-export const TOP_SUSPEND = ((59: any): TopLevelType);
-export const TOP_TEXT_INPUT = ((60: any): TopLevelType);
-export const TOP_TIME_UPDATE = ((61: any): TopLevelType);
-export const TOP_TOGGLE = ((62: any): TopLevelType);
-export const TOP_TOUCH_CANCEL = ((63: any): TopLevelType);
-export const TOP_TOUCH_END = ((64: any): TopLevelType);
-export const TOP_TOUCH_MOVE = ((65: any): TopLevelType);
-export const TOP_TOUCH_START = ((66: any): TopLevelType);
-export const TOP_TRANSITION_END = ((67: any): TopLevelType);
-export const TOP_VOLUME_CHANGE = ((68: any): TopLevelType);
-export const TOP_WAITING = ((69: any): TopLevelType);
-export const TOP_WHEEL = ((70: any): TopLevelType);
+export const TOP_ABORT = (('abort': any): TopLevelType);
+export const TOP_ANIMATION_END = ((getVendorPrefixedEventName(
+  'animationend',
+): any): TopLevelType);
+export const TOP_ANIMATION_ITERATION = ((getVendorPrefixedEventName(
+  'animationiteration',
+): any): TopLevelType);
+export const TOP_ANIMATION_START = ((getVendorPrefixedEventName(
+  'animationstart',
+): any): TopLevelType);
+export const TOP_BLUR = (('blur': any): TopLevelType);
+export const TOP_CAN_PLAY = (('canplay': any): TopLevelType);
+export const TOP_CAN_PLAY_THROUGH = (('canplaythrough': any): TopLevelType);
+export const TOP_CANCEL = (('cancel': any): TopLevelType);
+export const TOP_CHANGE = (('change': any): TopLevelType);
+export const TOP_CLICK = (('click': any): TopLevelType);
+export const TOP_CLOSE = (('close': any): TopLevelType);
+export const TOP_COMPOSITION_END = (('compositionend': any): TopLevelType);
+export const TOP_COMPOSITION_START = (('compositionstart': any): TopLevelType);
+export const TOP_COMPOSITION_UPDATE = (('compositionupdate': any): TopLevelType);
+export const TOP_CONTEXT_MENU = (('contextmenu': any): TopLevelType);
+export const TOP_COPY = (('copy': any): TopLevelType);
+export const TOP_CUT = (('cut': any): TopLevelType);
+export const TOP_DOUBLE_CLICK = (('dblclick': any): TopLevelType);
+export const TOP_DRAG = (('drag': any): TopLevelType);
+export const TOP_DRAG_END = (('dragend': any): TopLevelType);
+export const TOP_DRAG_ENTER = (('dragenter': any): TopLevelType);
+export const TOP_DRAG_EXIT = (('dragexit': any): TopLevelType);
+export const TOP_DRAG_LEAVE = (('dragleave': any): TopLevelType);
+export const TOP_DRAG_OVER = (('dragover': any): TopLevelType);
+export const TOP_DRAG_START = (('dragstart': any): TopLevelType);
+export const TOP_DROP = (('drop': any): TopLevelType);
+export const TOP_DURATION_CHANGE = (('durationchange': any): TopLevelType);
+export const TOP_EMPTIED = (('emptied': any): TopLevelType);
+export const TOP_ENCRYPTED = (('encrypted': any): TopLevelType);
+export const TOP_ENDED = (('ended': any): TopLevelType);
+export const TOP_ERROR = (('error': any): TopLevelType);
+export const TOP_FOCUS = (('focus': any): TopLevelType);
+export const TOP_INPUT = (('input': any): TopLevelType);
+export const TOP_INVALID = (('invalid': any): TopLevelType);
+export const TOP_KEY_DOWN = (('keydown': any): TopLevelType);
+export const TOP_KEY_PRESS = (('keypress': any): TopLevelType);
+export const TOP_KEY_UP = (('keyup': any): TopLevelType);
+export const TOP_LOAD = (('load': any): TopLevelType);
+export const TOP_LOAD_START = (('loadstart': any): TopLevelType);
+export const TOP_LOADED_DATA = (('loadeddata': any): TopLevelType);
+export const TOP_LOADED_METADATA = (('loadedmetadata': any): TopLevelType);
+export const TOP_MOUSE_DOWN = (('mousedown': any): TopLevelType);
+export const TOP_MOUSE_MOVE = (('mousemove': any): TopLevelType);
+export const TOP_MOUSE_OUT = (('mouseout': any): TopLevelType);
+export const TOP_MOUSE_OVER = (('mouseover': any): TopLevelType);
+export const TOP_MOUSE_UP = (('mouseup': any): TopLevelType);
+export const TOP_PASTE = (('paste': any): TopLevelType);
+export const TOP_PAUSE = (('pause': any): TopLevelType);
+export const TOP_PLAY = (('play': any): TopLevelType);
+export const TOP_PLAYING = (('playing': any): TopLevelType);
+export const TOP_PROGRESS = (('progress': any): TopLevelType);
+export const TOP_RATE_CHANGE = (('ratechange': any): TopLevelType);
+export const TOP_RESET = (('reset': any): TopLevelType);
+export const TOP_SCROLL = (('scroll': any): TopLevelType);
+export const TOP_SEEKED = (('seeked': any): TopLevelType);
+export const TOP_SEEKING = (('seeking': any): TopLevelType);
+export const TOP_SELECTION_CHANGE = (('selectionchange': any): TopLevelType);
+export const TOP_STALLED = (('stalled': any): TopLevelType);
+export const TOP_SUBMIT = (('submit': any): TopLevelType);
+export const TOP_SUSPEND = (('suspend': any): TopLevelType);
+export const TOP_TEXT_INPUT = (('textInput': any): TopLevelType);
+export const TOP_TIME_UPDATE = (('timeupdate': any): TopLevelType);
+export const TOP_TOGGLE = (('toggle': any): TopLevelType);
+export const TOP_TOUCH_CANCEL = (('touchcancel': any): TopLevelType);
+export const TOP_TOUCH_END = (('touchend': any): TopLevelType);
+export const TOP_TOUCH_MOVE = (('touchmove': any): TopLevelType);
+export const TOP_TOUCH_START = (('touchstart': any): TopLevelType);
+export const TOP_TRANSITION_END = ((getVendorPrefixedEventName(
+  'transitionend',
+): any): TopLevelType);
+export const TOP_VOLUME_CHANGE = (('volumechange': any): TopLevelType);
+export const TOP_WAITING = (('waiting': any): TopLevelType);
+export const TOP_WHEEL = (('wheel': any): TopLevelType);
+
+export const mediaEventTypes = [
+  TOP_ABORT,
+  TOP_CAN_PLAY,
+  TOP_CAN_PLAY_THROUGH,
+  TOP_DURATION_CHANGE,
+  TOP_EMPTIED,
+  TOP_ENCRYPTED,
+  TOP_ENDED,
+  TOP_ERROR,
+  TOP_LOADED_DATA,
+  TOP_LOADED_METADATA,
+  TOP_LOAD_START,
+  TOP_PAUSE,
+  TOP_PLAY,
+  TOP_PLAYING,
+  TOP_PROGRESS,
+  TOP_RATE_CHANGE,
+  TOP_SEEKED,
+  TOP_SEEKING,
+  TOP_STALLED,
+  TOP_SUSPEND,
+  TOP_TIME_UPDATE,
+  TOP_VOLUME_CHANGE,
+  TOP_WAITING,
+];
+
+export function getRawEventName(topLevelType: TopLevelType): string {
+  return (topLevelType: any);
+}

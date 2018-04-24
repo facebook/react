@@ -30,7 +30,7 @@ import {
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
-import {mediaEventTypes} from '../events/BrowserEventConstants';
+import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {

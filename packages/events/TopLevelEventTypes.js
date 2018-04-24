@@ -8,4 +8,4 @@
  */
 
 // eslint-disable-next-line no-undef
-export opaque type TopLevelType = number | string;
+export opaque type TopLevelType = string;

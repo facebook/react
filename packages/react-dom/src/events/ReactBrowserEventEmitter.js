@@ -20,7 +20,7 @@ import {
   trapCapturedEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
-import {getRawEventName} from './BrowserEventConstants';
+import {getRawEventName} from './DOMTopLevelEventTypes';
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:

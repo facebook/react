@@ -14,7 +14,7 @@ import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
-import {getRawEventName} from './BrowserEventConstants';
+import {getRawEventName} from './DOMTopLevelEventTypes';
 
 const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 

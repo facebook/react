@@ -9,7 +9,7 @@
 
 import createResponderEventPlugin from 'events/createResponderEventPlugin';
 
-import type { TopLevelType } from 'events/TopLevelEventTypes';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
 
 const TopLevelTypes = {
   topMouseDown: (('topMouseDown': any): TopLevelType),
