@@ -7,4 +7,5 @@
  * @flow
  */
 
-export type TopLevelType = number | string;
+// eslint-disable-next-line no-undef
+export opaque type TopLevelType = number | string;
