@@ -13,7 +13,6 @@ let ReactScheduler;
 
 describe('ReactScheduler', () => {
   beforeEach(() => {
-    // TODO pull this into helper method, reduce repetition.
     // mock the browser APIs which are used in react-scheduler:
     // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
     // - calling 'window.postMessage' should actually fire postmessage handlers
