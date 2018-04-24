@@ -12,6 +12,8 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {NoWork} from './ReactFiberExpirationTime';
 
+import {enableSuspense} from 'shared/ReactFeatureFlags';
+
 // Because we don't have a global queue of updates, we use this module to keep
 // track of the pending levels of work that have yet to be flushed. You can
 // think of a PendingWork object as representing a batch of work that will
@@ -31,11 +33,13 @@ export type PendingWork = {
 };
 
 function insertPendingWorkAtPosition(root, work, insertAfter, insertBefore) {
-  work.next = insertBefore;
-  if (insertAfter === null) {
-    root.firstPendingWork = work;
-  } else {
-    insertAfter.next = work;
+  if (enableSuspense) {
+    work.next = insertBefore;
+    if (insertAfter === null) {
+      root.firstPendingWork = work;
+    } else {
+      insertAfter.next = work;
+    }
   }
 }
 
@@ -44,39 +48,41 @@ export function addPendingWork(
   startTime: ExpirationTime,
   expirationTime: ExpirationTime,
 ): void {
-  let match = null;
-  let insertAfter = null;
-  let insertBefore = root.firstPendingWork;
-  while (insertBefore !== null) {
-    if (insertBefore.expirationTime >= expirationTime) {
-      // Retry anything with an equal or lower expiration time, since it may
-      // be unblocked by the new work.
-      insertBefore.shouldTryResuming = true;
+  if (enableSuspense) {
+    let match = null;
+    let insertAfter = null;
+    let insertBefore = root.firstPendingWork;
+    while (insertBefore !== null) {
+      if (insertBefore.expirationTime >= expirationTime) {
+        // Retry anything with an equal or lower expiration time, since it may
+        // be unblocked by the new work.
+        insertBefore.shouldTryResuming = true;
+      }
+      if (insertBefore.expirationTime === expirationTime) {
+        // Found a matching bucket. But we'll keep iterating so we can set
+        // `shouldTryResuming` as needed.
+        match = insertBefore;
+        // Update the start time. We always measure from the most recently
+        // added update.
+        match.startTime = startTime;
+      }
+      if (match === null && insertBefore.expirationTime > expirationTime) {
+        // Found the insertion position
+        break;
+      }
+      insertAfter = insertBefore;
+      insertBefore = insertBefore.next;
     }
-    if (insertBefore.expirationTime === expirationTime) {
-      // Found a matching bucket. But we'll keep iterating so we can set
-      // `shouldTryResuming` as needed.
-      match = insertBefore;
-      // Update the start time. We always measure from the most recently
-      // added update.
-      match.startTime = startTime;
+    if (match === null) {
+      const work: PendingWork = {
+        startTime,
+        expirationTime,
+        isSuspended: false,
+        shouldTryResuming: false,
+        next: null,
+      };
+      insertPendingWorkAtPosition(root, work, insertAfter, insertBefore);
     }
-    if (match === null && insertBefore.expirationTime > expirationTime) {
-      // Found the insertion position
-      break;
-    }
-    insertAfter = insertBefore;
-    insertBefore = insertBefore.next;
-  }
-  if (match === null) {
-    const work: PendingWork = {
-      startTime,
-      expirationTime,
-      isSuspended: false,
-      shouldTryResuming: false,
-      next: null,
-    };
-    insertPendingWorkAtPosition(root, work, insertAfter, insertBefore);
   }
 }
 
@@ -85,30 +91,32 @@ export function flushPendingWork(
   currentTime: ExpirationTime,
   remainingExpirationTime: ExpirationTime,
 ) {
-  // Pop all work that has higher priority than the remaining priority.
-  let firstUnflushedWork = root.firstPendingWork;
-  while (firstUnflushedWork !== null) {
-    if (
-      remainingExpirationTime !== NoWork &&
-      firstUnflushedWork.expirationTime >= remainingExpirationTime
-    ) {
-      break;
+  if (enableSuspense) {
+    // Pop all work that has higher priority than the remaining priority.
+    let firstUnflushedWork = root.firstPendingWork;
+    while (firstUnflushedWork !== null) {
+      if (
+        remainingExpirationTime !== NoWork &&
+        firstUnflushedWork.expirationTime >= remainingExpirationTime
+      ) {
+        break;
+      }
+      firstUnflushedWork = firstUnflushedWork.next;
     }
-    firstUnflushedWork = firstUnflushedWork.next;
-  }
-  root.firstPendingWork = firstUnflushedWork;
+    root.firstPendingWork = firstUnflushedWork;
 
-  if (firstUnflushedWork === null) {
-    if (remainingExpirationTime !== NoWork) {
+    if (firstUnflushedWork === null) {
+      if (remainingExpirationTime !== NoWork) {
+        // There was an update during the render phase that wasn't flushed.
+        addPendingWork(root, currentTime, remainingExpirationTime);
+      }
+    } else if (
+      remainingExpirationTime !== NoWork &&
+      firstUnflushedWork.expirationTime > remainingExpirationTime
+    ) {
       // There was an update during the render phase that wasn't flushed.
       addPendingWork(root, currentTime, remainingExpirationTime);
     }
-  } else if (
-    remainingExpirationTime !== NoWork &&
-    firstUnflushedWork.expirationTime > remainingExpirationTime
-  ) {
-    // There was an update during the render phase that wasn't flushed.
-    addPendingWork(root, currentTime, remainingExpirationTime);
   }
 }
 
@@ -116,17 +124,19 @@ export function suspendPendingWork(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ): void {
-  let work = root.firstPendingWork;
-  while (work !== null) {
-    if (work.expirationTime === expirationTime) {
-      work.isSuspended = true;
-      work.shouldTryResuming = false;
-      return;
+  if (enableSuspense) {
+    let work = root.firstPendingWork;
+    while (work !== null) {
+      if (work.expirationTime === expirationTime) {
+        work.isSuspended = true;
+        work.shouldTryResuming = false;
+        return;
+      }
+      if (work.expirationTime > expirationTime) {
+        return;
+      }
+      work = work.next;
     }
-    if (work.expirationTime > expirationTime) {
-      return;
-    }
-    work = work.next;
   }
 }
 
@@ -134,63 +144,73 @@ export function resumePendingWork(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ): void {
-  // Called when a promise resolves. This "pings" React to retry the previously
-  // suspended render.
-  let work = root.firstPendingWork;
-  while (work !== null) {
-    if (work.expirationTime === expirationTime) {
-      work.shouldTryResuming = true;
+  if (enableSuspense) {
+    // Called when a promise resolves. This "pings" React to retry the previously
+    // suspended render.
+    let work = root.firstPendingWork;
+    while (work !== null) {
+      if (work.expirationTime === expirationTime) {
+        work.shouldTryResuming = true;
+      }
+      if (work.expirationTime > expirationTime) {
+        return;
+      }
+      work = work.next;
     }
-    if (work.expirationTime > expirationTime) {
-      return;
-    }
-    work = work.next;
   }
 }
 
 export function findNextExpirationTimeToWorkOn(
   root: FiberRoot,
 ): ExpirationTime {
-  // Return the earliest time that either isn't suspended or has been pinged.
-  let lastSuspendedTime = NoWork;
-  let lastRetryTime = NoWork;
-  let work = root.firstPendingWork;
-  while (work !== null) {
-    if (!work.isSuspended) {
-      return work.expirationTime;
-    }
-    if (
-      lastSuspendedTime === NoWork ||
-      lastSuspendedTime < work.expirationTime
-    ) {
-      lastSuspendedTime = work.expirationTime;
-    }
-    if (work.shouldTryResuming) {
-      if (lastRetryTime === NoWork || lastRetryTime < work.expirationTime) {
-        lastRetryTime = work.expirationTime;
+  if (enableSuspense) {
+    // Return the earliest time that either isn't suspended or has been pinged.
+    let lastSuspendedTime = NoWork;
+    let lastRetryTime = NoWork;
+    let work = root.firstPendingWork;
+    while (work !== null) {
+      if (!work.isSuspended) {
+        return work.expirationTime;
       }
+      if (
+        lastSuspendedTime === NoWork ||
+        lastSuspendedTime < work.expirationTime
+      ) {
+        lastSuspendedTime = work.expirationTime;
+      }
+      if (work.shouldTryResuming) {
+        if (lastRetryTime === NoWork || lastRetryTime < work.expirationTime) {
+          lastRetryTime = work.expirationTime;
+        }
+      }
+      work = work.next;
     }
-    work = work.next;
+    // This has the effect of coalescing all async updates that occur while we're
+    // in a suspended state. This prevents us from rendering an intermediate state
+    // that is no longer valid. An example is a tab switching interface: if
+    // switching to a new tab is suspended, we should only switch to the last
+    // tab that was clicked. If the user switches to tab A and then tab B, we
+    // should continue suspending until B is ready.
+    if (lastRetryTime >= lastSuspendedTime) {
+      return lastRetryTime;
+    }
+    return NoWork;
+  } else {
+    return root.current.expirationTime;
   }
-  // This has the effect of coalescing all async updates that occur while we're
-  // in a suspended state. This prevents us from rendering an intermediate state
-  // that is no longer valid. An example is a tab switching interface: if
-  // switching to a new tab is suspended, we should only switch to the last
-  // tab that was clicked. If the user switches to tab A and then tab B, we
-  // should continue suspending until B is ready.
-  if (lastRetryTime >= lastSuspendedTime) {
-    return lastRetryTime;
-  }
-  return NoWork;
 }
 
 export function findStartTime(root: FiberRoot, expirationTime: ExpirationTime) {
-  let match = root.firstPendingWork;
-  while (match !== null) {
-    if (match.expirationTime === expirationTime) {
-      return match.startTime;
+  if (enableSuspense) {
+    let match = root.firstPendingWork;
+    while (match !== null) {
+      if (match.expirationTime === expirationTime) {
+        return match.startTime;
+      }
+      match = match.next;
     }
-    match = match.next;
+    return NoWork;
+  } else {
+    return NoWork;
   }
-  return NoWork;
 }
