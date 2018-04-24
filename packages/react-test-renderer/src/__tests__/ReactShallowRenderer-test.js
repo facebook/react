@@ -94,7 +94,7 @@ describe('ReactShallowRenderer', () => {
     const instance = shallowRenderer.getMountedInstance();
     instance.setState({});
 
-    expect(logs).toEqual(['shouldComponentUpdate']);
+    expect(logs).toEqual(['getDerivedStateFromProps', 'shouldComponentUpdate']);
 
     logs.splice(0);
 
