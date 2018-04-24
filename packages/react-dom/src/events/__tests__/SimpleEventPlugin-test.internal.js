@@ -218,7 +218,45 @@ describe('SimpleEventPlugin', function() {
   });
 
   describe('interactive events, in async mode', () => {
+    let scheduledCallback;
+    let flush;
+    let now;
+
     beforeEach(() => {
+      flush = function(units = Infinity) {
+        if (scheduledCallback !== null) {
+          let didStop = false;
+          while (scheduledCallback !== null && !didStop) {
+            const cb = scheduledCallback;
+            scheduledCallback = null;
+            cb({
+              timeRemaining() {
+                if (units > 0) {
+                  return 999;
+                }
+                didStop = true;
+                return 0;
+              },
+            });
+            units--;
+          }
+        }
+      };
+      now = 0;
+
+      jest.mock('react-scheduler', () => {
+        return {
+          now() {
+            return now;
+          },
+          rIC(cb) {
+            scheduledCallback = cb;
+          },
+          cIC() {
+            scheduledCallback = null;
+          },
+        };
+      });
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.enableAsyncSubtreeAPI = true;
@@ -262,7 +300,7 @@ describe('SimpleEventPlugin', function() {
       expect(ops).toEqual([]);
       expect(button).toBe(undefined);
       // Flush async work
-      jest.runAllTimers();
+      flush();
       expect(ops).toEqual(['render button: enabled']);
 
       ops = [];
@@ -302,7 +340,7 @@ describe('SimpleEventPlugin', function() {
       click();
       click();
       click();
-      jest.runAllTimers();
+      flush();
       expect(ops).toEqual([]);
     });
 
@@ -333,7 +371,7 @@ describe('SimpleEventPlugin', function() {
       // Should not have flushed yet because it's async
       expect(button).toBe(undefined);
       // Flush async work
-      jest.runAllTimers();
+      flush();
       expect(button.textContent).toEqual('Count: 0');
 
       function click() {
@@ -356,7 +394,7 @@ describe('SimpleEventPlugin', function() {
       click();
 
       // Flush the remaining work
-      jest.runAllTimers();
+      flush();
       // The counter should equal the total number of clicks
       expect(button.textContent).toEqual('Count: 7');
     });
@@ -425,7 +463,7 @@ describe('SimpleEventPlugin', function() {
       click();
 
       // Flush the remaining work
-      jest.runAllTimers();
+      flush();
       // Both counters should equal the total number of clicks
       expect(button.textContent).toEqual('High-pri count: 7, Low-pri count: 7');
     });

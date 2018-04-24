@@ -24,7 +24,6 @@ describe('ReactDOMRoot', () => {
 
   beforeEach(() => {
     container = document.createElement('div');
-    // Override requestIdleCallback
     scheduledCallback = null;
     flush = function(units = Infinity) {
       if (scheduledCallback !== null) {
@@ -45,20 +44,25 @@ describe('ReactDOMRoot', () => {
         }
       }
     }
-    global.performance = {
-      now() {
-        return now;
-      },
-    };
-    global.requestIdleCallback = function(cb) {
-      scheduledCallback = cb;
-    };
 
     now = 0;
     expire = function(ms) {
       now += ms;
     };
 
+    jest.mock('react-scheduler', () => {
+      return {
+        now() {
+          return now;
+        },
+        rIC(cb) {
+          scheduledCallback = cb;
+        },
+        cIC() {
+          scheduledCallback = null;
+        },
+      };
+    });
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
