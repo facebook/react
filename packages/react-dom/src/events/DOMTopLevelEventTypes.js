@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type { TopLevelType } from 'events/TopLevelEventTypes'
+import type { TopLevelType } from 'events/TopLevelEventTypes';
 
 export const TOP_ABORT = ((0: any): TopLevelType);
 export const TOP_ANIMATION_END = ((1: any): TopLevelType);
