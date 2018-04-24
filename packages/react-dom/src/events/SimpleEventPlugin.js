@@ -123,17 +123,14 @@ const nonInteractiveEventTypeNames: Array<EventTuple> = [
 ];
 
 const eventTypes: EventTypes = {};
-const topLevelEventsToDispatchConfig: Map<
-  TopLevelType,
-  DispatchConfig,
-> = new Map();
+const topLevelEventsToDispatchConfig: {
+  [key: TopLevelTypes]: DispatchConfig,
+} = {};
 
 function addEventTypeNameToConfig(
-  eventTuple: EventTuple,
+  [topEvent, event]: EventTuple,
   isInteractive: boolean,
 ) {
-  const topEvent = eventTuple[0];
-  const event = eventTuple[1];
   const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
   const onEvent = 'on' + capitalizedEvent;
 
@@ -146,7 +143,7 @@ function addEventTypeNameToConfig(
     isInteractive,
   };
   eventTypes[event] = type;
-  topLevelEventsToDispatchConfig.set(topEvent, type);
+  topLevelEventsToDispatchConfig[topEvent] = type;
 }
 
 interactiveEventTypeNames.forEach(eventTuple => {
@@ -195,7 +192,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
   eventTypes: eventTypes,
 
   isInteractiveTopLevelEventType(topLevelType: TopLevelType): boolean {
-    const config = topLevelEventsToDispatchConfig.get(topLevelType);
+    const config = topLevelEventsToDispatchConfig[topLevelType];
     return config !== undefined && config.isInteractive === true;
   },
 
@@ -205,7 +202,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> = {
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
   ): null | ReactSyntheticEvent {
-    const dispatchConfig = topLevelEventsToDispatchConfig.get(topLevelType);
+    const dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {
       return null;
     }
