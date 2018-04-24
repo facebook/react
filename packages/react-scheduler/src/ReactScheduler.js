@@ -170,7 +170,6 @@ if (!ExecutionEnvironment.canUseDOM) {
   window.addEventListener('message', idleTick, false);
 
   const animationTick = function(rafTime) {
-    console.log('animationTick called and rafTime is ', rafTime);
     isAnimationFrameScheduled = false;
     let nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
