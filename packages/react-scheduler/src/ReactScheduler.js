@@ -100,27 +100,13 @@ if (!ExecutionEnvironment.canUseDOM) {
   let previousFrameTime = 33;
   let activeFrameTime = 33;
 
-  let frameDeadlineObject;
-  if (hasNativePerformanceNow) {
-    frameDeadlineObject = {
-      didTimeout: false,
-      timeRemaining() {
-        // We assume that if we have a performance timer that the rAF callback
-        // gets a performance timer value. Not sure if this is always true.
-        const remaining = frameDeadline - performance.now();
-        return remaining > 0 ? remaining : 0;
-      },
-    };
-  } else {
-    frameDeadlineObject = {
-      didTimeout: false,
-      timeRemaining() {
-        // Fallback to Date.now()
-        const remaining = frameDeadline - Date.now();
-        return remaining > 0 ? remaining : 0;
-      },
-    };
-  }
+  const frameDeadlineObject = {
+    didTimeout: false,
+    timeRemaining() {
+      const remaining = frameDeadline - now();
+      return remaining > 0 ? remaining : 0;
+    },
+  };
 
   // We use the postMessage trick to defer idle work until after the repaint.
   const messageKey =
