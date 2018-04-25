@@ -18,32 +18,46 @@ const AsyncMode = React.unstable_AsyncMode;
 
 describe('ReactDOMFiberAsync', () => {
   let container;
+  let scheduledCallback;
+  let flush;
+  let now;
 
   beforeEach(() => {
-    // TODO pull this into helper method, reduce repetition.
-    // mock the browser APIs which are used in react-scheduler:
-    // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
-    // - calling 'window.postMessage' should actually fire postmessage handlers
-    global.requestAnimationFrame = function(cb) {
-      return setTimeout(() => {
-        cb(Date.now());
-      });
-    };
-    const originalAddEventListener = global.addEventListener;
-    let postMessageCallback;
-    global.addEventListener = function(eventName, callback, useCapture) {
-      if (eventName === 'message') {
-        postMessageCallback = callback;
-      } else {
-        originalAddEventListener(eventName, callback, useCapture);
+    scheduledCallback = null;
+    flush = function(units = Infinity) {
+      if (scheduledCallback !== null) {
+        let didStop = false;
+        while (scheduledCallback !== null && !didStop) {
+          const cb = scheduledCallback;
+          scheduledCallback = null;
+          cb({
+            timeRemaining() {
+              if (units > 0) {
+                return 999;
+              }
+              didStop = true;
+              return 0;
+            },
+          });
+          units--;
+        }
       }
     };
-    global.postMessage = function(messageKey, targetOrigin) {
-      const postMessageEvent = {source: window, data: messageKey};
-      if (postMessageCallback) {
-        postMessageCallback(postMessageEvent);
-      }
-    };
+    now = 0;
+
+    jest.mock('react-scheduler', () => {
+      return {
+        now() {
+          return now;
+        },
+        rIC(cb) {
+          scheduledCallback = cb;
+        },
+        cIC() {
+          scheduledCallback = null;
+        },
+      };
+    });
     jest.resetModules();
     container = document.createElement('div');
     ReactDOM = require('react-dom');
@@ -100,12 +114,12 @@ describe('ReactDOMFiberAsync', () => {
       const root = ReactDOM.unstable_createRoot(container);
       root.render(<div>Hi</div>);
       expect(container.textContent).toEqual('');
-      jest.runAllTimers();
+      flush();
       expect(container.textContent).toEqual('Hi');
 
       root.render(<div>Bye</div>);
       expect(container.textContent).toEqual('Hi');
-      jest.runAllTimers();
+      flush();
       expect(container.textContent).toEqual('Bye');
     });
 
@@ -122,12 +136,12 @@ describe('ReactDOMFiberAsync', () => {
       const root = ReactDOM.unstable_createRoot(container);
       root.render(<Component />);
       expect(container.textContent).toEqual('');
-      jest.runAllTimers();
+      flush();
       expect(container.textContent).toEqual('0');
 
       instance.setState({step: 1});
       expect(container.textContent).toEqual('0');
-      jest.runAllTimers();
+      flush();
       expect(container.textContent).toEqual('1');
     });
 
@@ -147,11 +161,11 @@ describe('ReactDOMFiberAsync', () => {
         </AsyncMode>,
         container,
       );
-      jest.runAllTimers();
+      flush();
 
       instance.setState({step: 1});
       expect(container.textContent).toEqual('0');
-      jest.runAllTimers();
+      flush();
       expect(container.textContent).toEqual('1');
     });
 
@@ -173,11 +187,11 @@ describe('ReactDOMFiberAsync', () => {
         </div>,
         container,
       );
-      jest.runAllTimers();
+      flush();
 
       instance.setState({step: 1});
       expect(container.textContent).toEqual('0');
-      jest.runAllTimers();
+      flush();
       expect(container.textContent).toEqual('1');
     });
 
@@ -303,7 +317,7 @@ describe('ReactDOMFiberAsync', () => {
         </AsyncMode>,
         container,
       );
-      jest.runAllTimers();
+      flush();
 
       // Updates are async by default
       instance.push('A');
@@ -326,7 +340,7 @@ describe('ReactDOMFiberAsync', () => {
       expect(ops).toEqual(['BC']);
 
       // Flush the async updates
-      jest.runAllTimers();
+      flush();
       expect(container.textContent).toEqual('ABCD');
       expect(ops).toEqual(['BC', 'ABCD']);
     });
@@ -353,7 +367,7 @@ describe('ReactDOMFiberAsync', () => {
       // Test that a normal update is async
       inst.increment();
       expect(container.textContent).toEqual('0');
-      jest.runAllTimers();
+      flush();
       expect(container.textContent).toEqual('1');
 
       let ops = [];

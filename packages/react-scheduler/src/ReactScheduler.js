@@ -14,10 +14,13 @@
  * control than requestAnimationFrame and requestIdleCallback.
  * Current TODO items:
  * X- Pull out the rIC polyfill built into React
- * - Initial test coverage
- * - Support for multiple callbacks
+ * X- Initial test coverage
+ * X- Support for multiple callbacks
  * - Support for two priorities; serial and deferred
  * - Better test coverage
+ *   - Mock out the react-scheduler module, not the browser APIs, in renderer
+ *   tests
+ *   - Add headless browser test of react-scheduler
  * - Better docblock
  * - Polish documentation, API
  */
@@ -100,12 +103,20 @@ if (!ExecutionEnvironment.canUseDOM) {
   let previousFrameTime = 33;
   let activeFrameTime = 33;
 
-  const frameDeadlineObject = {
-    didTimeout: false,
-    timeRemaining() {
-      const remaining = frameDeadline - now();
-      return remaining > 0 ? remaining : 0;
-    },
+  const buildFrameDeadlineObject = function(didTimeout: boolean) {
+    return {
+      didTimeout,
+      timeRemaining() {
+        const remaining = frameDeadline - now();
+        return remaining > 0 ? remaining : 0;
+      },
+    };
+  };
+
+  // define a helper for this because they should usually happen together
+  const clearTimeoutTimeAndScheduledCallback = function() {
+    timeoutTime = -1;
+    scheduledRICCallback = null;
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
@@ -122,13 +133,14 @@ if (!ExecutionEnvironment.canUseDOM) {
     isIdleScheduled = false;
 
     const currentTime = now();
+    let didTimeout = false;
     if (frameDeadline - currentTime <= 0) {
       // There's no time left in this idle period. Check if the callback has
       // a timeout and whether it's been exceeded.
       if (timeoutTime !== -1 && timeoutTime <= currentTime) {
         // Exceeded the timeout. Invoke the callback even though there's no
         // time left.
-        frameDeadlineObject.didTimeout = true;
+        didTimeout = true;
       } else {
         // No timeout.
         if (!isAnimationFrameScheduled) {
@@ -141,14 +153,13 @@ if (!ExecutionEnvironment.canUseDOM) {
       }
     } else {
       // There's still time left in this idle period.
-      frameDeadlineObject.didTimeout = false;
+      didTimeout = false;
     }
 
-    timeoutTime = -1;
     const callback = scheduledRICCallback;
-    scheduledRICCallback = null;
+    clearTimeoutTimeAndScheduledCallback();
     if (callback !== null) {
-      callback(frameDeadlineObject);
+      callback(buildFrameDeadlineObject(didTimeout));
     }
   };
   // Assumes that we have addEventListener in this environment. Might need
@@ -190,11 +201,19 @@ if (!ExecutionEnvironment.canUseDOM) {
     callback: (deadline: Deadline) => void,
     options?: {timeout: number},
   ): number {
-    // This assumes that we only schedule one callback at a time because that's
-    // how Fiber uses it.
+    if (scheduledRICCallback !== null) {
+      // Handling multiple callbacks:
+      // For now we implement the behavior expected when the callbacks are
+      // serial updates, such that each update relies on the previous ones
+      // having been called before it runs.
+      const didTimeout = (timeoutTime !== -1) && (timeoutTime <= now());
+      scheduledRICCallback(buildFrameDeadlineObject(didTimeout));
+    }
     scheduledRICCallback = callback;
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
+    } else {
+      timeoutTime = -1;
     }
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
@@ -208,9 +227,8 @@ if (!ExecutionEnvironment.canUseDOM) {
   };
 
   cIC = function() {
-    scheduledRICCallback = null;
     isIdleScheduled = false;
-    timeoutTime = -1;
+    clearTimeoutTimeAndScheduledCallback();
   };
 }
 

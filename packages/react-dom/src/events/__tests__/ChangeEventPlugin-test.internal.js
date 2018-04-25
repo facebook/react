@@ -30,33 +30,7 @@ const setUntrackedTextareaValue = Object.getOwnPropertyDescriptor(
 
 describe('ChangeEventPlugin', () => {
   let container;
-
   beforeEach(() => {
-    // TODO pull this into helper method, reduce repetition.
-    // mock the browser APIs which are used in react-scheduler:
-    // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
-    // - calling 'window.postMessage' should actually fire postmessage handlers
-    global.requestAnimationFrame = function(cb) {
-      return setTimeout(() => {
-        cb(Date.now());
-      });
-    };
-    const originalAddEventListener = global.addEventListener;
-    let postMessageCallback;
-    global.addEventListener = function(eventName, callback, useCapture) {
-      if (eventName === 'message') {
-        postMessageCallback = callback;
-      } else {
-        originalAddEventListener(eventName, callback, useCapture);
-      }
-    };
-    global.postMessage = function(messageKey, targetOrigin) {
-      const postMessageEvent = {source: window, data: messageKey};
-      if (postMessageCallback) {
-        postMessageCallback(postMessageEvent);
-      }
-    };
-    jest.resetModules();
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -472,7 +446,46 @@ describe('ChangeEventPlugin', () => {
   });
 
   describe('async mode', () => {
+    let flush;
+    let scheduledCallback;
+    let now;
+
     beforeEach(() => {
+      scheduledCallback = null;
+      flush = function(units = Infinity) {
+        if (scheduledCallback !== null) {
+          let didStop = false;
+          while (scheduledCallback !== null && !didStop) {
+            const cb = scheduledCallback;
+            scheduledCallback = null;
+            cb({
+              timeRemaining() {
+                if (units > 0) {
+                  return 999;
+                }
+                didStop = true;
+                return 0;
+              },
+            });
+            units--;
+          }
+        }
+      };
+      now = 0;
+
+      jest.mock('react-scheduler', () => {
+        return {
+          now() {
+            return now;
+          },
+          rIC(cb) {
+            scheduledCallback = cb;
+          },
+          cIC() {
+            scheduledCallback = null;
+          },
+        };
+      });
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.enableAsyncSubtreeAPI = true;
@@ -510,7 +523,7 @@ describe('ChangeEventPlugin', () => {
       expect(ops).toEqual([]);
       expect(input).toBe(undefined);
       // Flush callbacks.
-      jest.runAllTimers();
+      flush();
       expect(ops).toEqual(['render: initial']);
       expect(input.value).toBe('initial');
 
@@ -560,7 +573,7 @@ describe('ChangeEventPlugin', () => {
       expect(ops).toEqual([]);
       expect(input).toBe(undefined);
       // Flush callbacks.
-      jest.runAllTimers();
+      flush();
       expect(ops).toEqual(['render: false']);
       expect(input.checked).toBe(false);
 
@@ -576,7 +589,7 @@ describe('ChangeEventPlugin', () => {
 
       // Now let's make sure we're using the controlled value.
       root.render(<ControlledInput reverse={true} />);
-      jest.runAllTimers();
+      flush();
 
       ops = [];
 
@@ -619,7 +632,7 @@ describe('ChangeEventPlugin', () => {
       expect(ops).toEqual([]);
       expect(textarea).toBe(undefined);
       // Flush callbacks.
-      jest.runAllTimers();
+      flush();
       expect(ops).toEqual(['render: initial']);
       expect(textarea.value).toBe('initial');
 
@@ -670,7 +683,7 @@ describe('ChangeEventPlugin', () => {
       expect(ops).toEqual([]);
       expect(input).toBe(undefined);
       // Flush callbacks.
-      jest.runAllTimers();
+      flush();
       expect(ops).toEqual(['render: initial']);
       expect(input.value).toBe('initial');
 
@@ -721,7 +734,7 @@ describe('ChangeEventPlugin', () => {
       expect(ops).toEqual([]);
       expect(input).toBe(undefined);
       // Flush callbacks.
-      jest.runAllTimers();
+      flush();
       expect(ops).toEqual(['render: initial']);
       expect(input.value).toBe('initial');
 
@@ -736,7 +749,7 @@ describe('ChangeEventPlugin', () => {
       expect(input.value).toBe('initial');
 
       // Flush callbacks.
-      jest.runAllTimers();
+      flush();
       // Now the click update has flushed.
       expect(ops).toEqual(['render: ']);
       expect(input.value).toBe('');

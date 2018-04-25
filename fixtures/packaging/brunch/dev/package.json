@@ -5,7 +5,8 @@
     "brunch": "^2.9.1",
     "javascript-brunch": "^2.0.0",
     "react": "link:../../../../build/node_modules/react",
-    "react-dom": "link:../../../../build/node_modules/react-dom"
+    "react-dom": "link:../../../../build/node_modules/react-dom",
+    "react-scheduler": "link:../../../../build/node_modules/react-scheduler"
   },
   "scripts": {
     "build": "rm -rf public && brunch build"

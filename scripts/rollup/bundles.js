@@ -72,7 +72,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom',
     global: 'ReactDOM',
-    externals: ['react'],
+    externals: ['react', 'react-scheduler'],
   },
 
   //******* Test Utils *******/
@@ -141,7 +141,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-art',
     global: 'ReactART',
-    externals: ['react'],
+    externals: ['react', 'react-scheduler'],
     babel: opts =>
       Object.assign({}, opts, {
         // Include JSX

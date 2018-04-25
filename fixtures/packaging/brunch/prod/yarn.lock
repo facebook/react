@@ -1708,6 +1708,10 @@ rc@^1.1.7:
   version "0.0.0"
   uid ""
 
+"react-scheduler@link:../../../../build/node_modules/react-scheduler":
+  version "0.0.0"
+  uid ""
+
 "react@link:../../../../build/node_modules/react":
   version "0.0.0"
   uid ""
