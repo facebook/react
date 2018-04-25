@@ -20,7 +20,7 @@
  * - Better test coverage
  *   - Mock out the react-scheduler module, not the browser APIs, in renderer
  *   tests
- *   - Add headless browser test of react-scheduler
+ *   - Add fixture test of react-scheduler
  * - Better docblock
  * - Polish documentation, API
  */
@@ -90,9 +90,12 @@ if (!ExecutionEnvironment.canUseDOM) {
 } else {
   // Always polyfill requestIdleCallback and cancelIdleCallback
 
-  let scheduledRICCallback = null;
+  let scheduledCallback = null;
   let isIdleScheduled = false;
   let timeoutTime = -1;
+  let isCurrentlyRunningCallback = false;
+  // We may need to keep a queue of pending callbacks
+  let pendingCallbacks = [];
 
   let isAnimationFrameScheduled = false;
 
@@ -109,12 +112,6 @@ if (!ExecutionEnvironment.canUseDOM) {
       const remaining = frameDeadline - now();
       return remaining > 0 ? remaining : 0;
     },
-  };
-
-  // define a helper for this because they should usually happen together
-  const resetScheduledCallback = function() {
-    timeoutTime = -1;
-    scheduledRICCallback = null;
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
@@ -154,11 +151,14 @@ if (!ExecutionEnvironment.canUseDOM) {
       didTimeout = false;
     }
 
-    const callback = scheduledRICCallback;
-    resetScheduledCallback();
+    const callback = scheduledCallback;
+    timeoutTime = -1;
+    scheduledCallback = null;
     if (callback !== null) {
       frameDeadlineObject.didTimeout = didTimeout;
+      isCurrentlyRunningCallback = true;
       callback(frameDeadlineObject);
+      isCurrentlyRunningCallback = false;
     }
   };
   // Assumes that we have addEventListener in this environment. Might need
@@ -200,35 +200,78 @@ if (!ExecutionEnvironment.canUseDOM) {
     callback: (deadline: Deadline) => void,
     options?: {timeout: number},
   ): number {
-    if (scheduledRICCallback !== null) {
-      // Handling multiple callbacks:
-      // For now we implement the behavior expected when the callbacks are
-      // serial updates, such that each update relies on the previous ones
-      // having been called before it runs.
-      frameDeadlineObject.didTimeout =
-        (timeoutTime !== -1) && (timeoutTime <= now());
-      scheduledRICCallback(frameDeadlineObject);
+    // Handling multiple callbacks:
+    // For now we implement the behavior expected when the callbacks are
+    // serial updates, such that each update relies on the previous ones
+    // having been called before it runs.
+    // So we call anything in the queue before the latest callback
+
+    let previousCallback;
+    let timeoutTimeFromPreviousCallback;
+    if (scheduledCallback !== null) {
+      // If we have previous callback, save it and handle it below
+      timeoutTimeFromPreviousCallback = timeoutTime;
+      previousCallback = scheduledCallback;
     }
-    scheduledRICCallback = callback;
+    // Then set up the next callback, and update timeoutTime
+    scheduledCallback = callback;
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
     } else {
       timeoutTime = -1;
     }
+    // If we have previousCallback, call it. This may trigger recursion.
+    if (
+      previousCallback &&
+      typeof timeoutTimeFromPreviousCallback === 'number'
+    ) {
+      const prevCallbackTimeout: number = timeoutTimeFromPreviousCallback;
+      if (isCurrentlyRunningCallback) {
+        // we are inside a recursive call to rIC
+        // add this callback to a pending queue and run after we exit
+        pendingCallbacks.push({
+          pendingCallback: previousCallback,
+          pendingCallbackTimeout: prevCallbackTimeout,
+        });
+      } else {
+        frameDeadlineObject.didTimeout =
+          timeoutTimeFromPreviousCallback !== -1 &&
+          timeoutTimeFromPreviousCallback <= now();
+        isCurrentlyRunningCallback = true;
+        previousCallback(frameDeadlineObject);
+        isCurrentlyRunningCallback = false;
+        while (pendingCallbacks.length) {
+          // the callback recursively called rIC and new callbacks are pending
+          const {
+            pendingCallback,
+            pendingCallbackTimeout,
+          } = pendingCallbacks.shift();
+          // TODO: pull this into helper method
+          frameDeadlineObject.didTimeout =
+            pendingCallbackTimeout !== -1 && pendingCallbackTimeout <= now();
+          isCurrentlyRunningCallback = true;
+          pendingCallback(frameDeadlineObject);
+          isCurrentlyRunningCallback = false;
+        }
+      }
+    }
+
+    // finally, after clearing previous callbacks, schedule the latest one
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
       // might want to still have setTimeout trigger rIC as a backup to ensure
       // that we keep performing work.
       isAnimationFrameScheduled = true;
-      requestAnimationFrame(animationTick);
+      return requestAnimationFrame(animationTick);
     }
     return 0;
   };
 
   cIC = function() {
     isIdleScheduled = false;
-    resetScheduledCallback();
+    scheduledCallback = null;
+    timeoutTime = -1;
   };
 }
 
