@@ -54,19 +54,21 @@ describe('ReactScheduler', () => {
 
   it('rIC with multiple callbacks flushes previous cb when new one is passed', () => {
     const {rIC} = ReactScheduler;
-    const callbackA = jest.fn();
-    const callbackB = jest.fn();
+    const callbackLog = [];
+    const callbackA = jest.fn(() => callbackLog.push('A'));
+    const callbackB = jest.fn(() => callbackLog.push('B'));
     rIC(callbackA);
     // initially waits to call the callback
-    expect(callbackA.mock.calls.length).toBe(0);
+    expect(callbackLog.length).toBe(0);
     // when second callback is passed, flushes first one
     rIC(callbackB);
-    expect(callbackA.mock.calls.length).toBe(1);
-    expect(callbackB.mock.calls.length).toBe(0);
+    expect(callbackLog.length).toBe(1);
+    expect(callbackLog[0]).toBe('A');
     // after a delay, calls the latest callback passed
     jest.runAllTimers();
-    expect(callbackA.mock.calls.length).toBe(1);
-    expect(callbackB.mock.calls.length).toBe(1);
+    expect(callbackLog.length).toBe(2);
+    expect(callbackLog[0]).toBe('A');
+    expect(callbackLog[1]).toBe('B');
     // callbackA should not have timed out and should include a timeRemaining method
     expect(callbackA.mock.calls[0][0].didTimeout).toBe(false);
     expect(typeof callbackA.mock.calls[0][0].timeRemaining()).toBe('number');
