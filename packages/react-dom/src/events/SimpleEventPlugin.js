@@ -124,7 +124,7 @@ const nonInteractiveEventTypeNames: Array<EventTuple> = [
 
 const eventTypes: EventTypes = {};
 const topLevelEventsToDispatchConfig: {
-  [key: TopLevelTypes]: DispatchConfig,
+  [key: TopLevelType]: DispatchConfig,
 } = {};
 
 function addEventTypeNameToConfig(
