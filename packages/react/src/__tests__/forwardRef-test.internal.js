@@ -232,6 +232,39 @@ describe('forwardRef', () => {
     expect(ref.current).toBe(null);
   });
 
+  it('should not re-run the render callback on a deep setState', () => {
+    let inst;
+
+    class Inner extends React.Component {
+      render() {
+        ReactNoop.yield('Inner');
+        inst = this;
+        return <div ref={this.props.forwardedRef} />;
+      }
+    }
+
+    function Middle(props) {
+      ReactNoop.yield('Middle');
+      return <Inner {...props} />;
+    }
+
+    const Forward = React.forwardRef((props, ref) => {
+      ReactNoop.yield('Forward');
+      return <Middle {...props} forwardedRef={ref} />;
+    });
+
+    function App() {
+      ReactNoop.yield('App');
+      return <Forward />;
+    }
+
+    ReactNoop.render(<App />);
+    expect(ReactNoop.flush()).toEqual(['App', 'Forward', 'Middle', 'Inner']);
+
+    inst.setState({});
+    expect(ReactNoop.flush()).toEqual(['Inner']);
+  });
+
   it('should warn if not provided a callback during creation', () => {
     expect(() => React.forwardRef(undefined)).toWarnDev(
       'forwardRef requires a render function but was given undefined.',
