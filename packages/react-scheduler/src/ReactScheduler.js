@@ -112,7 +112,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   };
 
   // define a helper for this because they should usually happen together
-  const clearTimeoutTimeAndScheduledCallback = function() {
+  const resetScheduledCallback = function() {
     timeoutTime = -1;
     scheduledRICCallback = null;
   };
@@ -155,7 +155,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
 
     const callback = scheduledRICCallback;
-    clearTimeoutTimeAndScheduledCallback();
+    resetScheduledCallback();
     if (callback !== null) {
       frameDeadlineObject.didTimeout = didTimeout;
       callback(frameDeadlineObject);
@@ -228,7 +228,7 @@ if (!ExecutionEnvironment.canUseDOM) {
 
   cIC = function() {
     isIdleScheduled = false;
-    clearTimeoutTimeAndScheduledCallback();
+    resetScheduledCallback();
   };
 }
 
