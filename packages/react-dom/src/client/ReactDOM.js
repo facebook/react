@@ -984,7 +984,7 @@ const DOMRenderer = ReactFiberReconciler({
     },
   },
 
-  scheduleDeferredCallback: ReactScheduler.rIC,
+  scheduleDeferredCallback: ReactScheduler.scheduleSerialCallback,
   cancelDeferredCallback: ReactScheduler.cIC,
 });
 
