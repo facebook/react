@@ -103,14 +103,12 @@ if (!ExecutionEnvironment.canUseDOM) {
   let previousFrameTime = 33;
   let activeFrameTime = 33;
 
-  const buildFrameDeadlineObject = function(didTimeout: boolean) {
-    return {
-      didTimeout,
-      timeRemaining() {
-        const remaining = frameDeadline - now();
-        return remaining > 0 ? remaining : 0;
-      },
-    };
+  const frameDeadlineObject = {
+    didTimeout: false,
+    timeRemaining() {
+      const remaining = frameDeadline - now();
+      return remaining > 0 ? remaining : 0;
+    },
   };
 
   // define a helper for this because they should usually happen together
@@ -159,7 +157,8 @@ if (!ExecutionEnvironment.canUseDOM) {
     const callback = scheduledRICCallback;
     clearTimeoutTimeAndScheduledCallback();
     if (callback !== null) {
-      callback(buildFrameDeadlineObject(didTimeout));
+      frameDeadlineObject.didTimeout = didTimeout;
+      callback(frameDeadlineObject);
     }
   };
   // Assumes that we have addEventListener in this environment. Might need
@@ -206,8 +205,9 @@ if (!ExecutionEnvironment.canUseDOM) {
       // For now we implement the behavior expected when the callbacks are
       // serial updates, such that each update relies on the previous ones
       // having been called before it runs.
-      const didTimeout = (timeoutTime !== -1) && (timeoutTime <= now());
-      scheduledRICCallback(buildFrameDeadlineObject(didTimeout));
+      frameDeadlineObject.didTimeout =
+        (timeoutTime !== -1) && (timeoutTime <= now());
+      scheduledRICCallback(frameDeadlineObject);
     }
     scheduledRICCallback = callback;
     if (options != null && typeof options.timeout === 'number') {
