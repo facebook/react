@@ -9,8 +9,7 @@
 
 import type {DOMTopLevelEventType} from 'react-dom/src/events/DOMTopLevelEventTypes';
 
-export type TopLevelType =
-  | DOMTopLevelEventType
+type RNTopLevelEventType =
   | 'topMouseDown'
   | 'topMouseMove'
   | 'topMouseUp'
@@ -20,3 +19,5 @@ export type TopLevelType =
   | 'topTouchEnd'
   | 'topTouchMove'
   | 'topTouchStart';
+
+export type TopLevelType = DOMTopLevelEventType | RNTopLevelEventType;
