@@ -10,6 +10,16 @@
 import type {TopLevelType} from 'events/TopLevelEventTypes';
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
+/**
+ * To identify top level events in react-dom, we use constants defined by this
+ * module. Those are completely opaque to every other module but we rely on them
+ * being the raw DOM event names inside this module. This allows us to build a
+ * very efficient mapping from top level identifiers to the raw event type.
+ *
+ * The use of an `opaque` flow type makes sure that we can only access the value
+ * of a constant in this module.
+ */
+
 // eslint-disable-next-line no-undef
 export opaque type DOMTopLevelEventType =
   | 'abort'
