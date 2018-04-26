@@ -893,11 +893,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Initial render
       changedBits = MAX_SIGNED_31_BIT_INT;
     } else {
-      const canBailOnChildren =
-        canBailOnProps && oldProps.children === newProps.children;
       if (oldProps.value === newProps.value) {
         // No change. Bailout early if children are the same.
-        if (canBailOnChildren) {
+        if (oldProps.children === newProps.children && canBailOnProps) {
           workInProgress.stateNode = 0;
           pushProvider(workInProgress);
           return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -914,7 +912,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
         ) {
           // No change. Bailout early if children are the same.
-          if (canBailOnChildren) {
+          if (oldProps.children === newProps.children && canBailOnProps) {
             workInProgress.stateNode = 0;
             pushProvider(workInProgress);
             return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -937,7 +935,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
           if (changedBits === 0) {
             // No change. Bailout early if children are the same.
-            if (canBailOnChildren) {
+            if (oldProps.children === newProps.children && canBailOnProps) {
               workInProgress.stateNode = 0;
               pushProvider(workInProgress);
               return bailoutOnAlreadyFinishedWork(current, workInProgress);
