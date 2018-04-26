@@ -246,7 +246,6 @@ describe('SimpleEventPlugin', function() {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.enableAsyncSubtreeAPI = true;
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactDOM = require('react-dom');
     });
