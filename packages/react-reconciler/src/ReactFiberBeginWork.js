@@ -170,13 +170,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function updateForwardRef(current, workInProgress) {
     const render = workInProgress.type.render;
     const nextProps = workInProgress.pendingProps;
+    const ref = workInProgress.ref;
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
     } else if (workInProgress.memoizedProps === nextProps) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      const currentRef = current !== null ? current.ref : null;
+      if (ref === currentRef) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
     }
-    const nextChildren = render(nextProps, workInProgress.ref);
+    const nextChildren = render(nextProps, ref);
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
