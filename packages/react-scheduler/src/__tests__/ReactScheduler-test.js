@@ -41,7 +41,7 @@ describe('ReactScheduler', () => {
     ReactScheduler = require('react-scheduler');
   });
 
-  it('scheduleSerialCallback calls the callback within the frame when not blocked', () => {
+  it('calls the callback within the frame when not blocked', () => {
     const {scheduleSerialCallback} = ReactScheduler;
     const cb = jest.fn();
     scheduleSerialCallback(cb);
@@ -212,5 +212,33 @@ describe('ReactScheduler', () => {
     });
   });
 
-  // TODO: test cIC and now
+  describe('cancelSerialCallback', () => {
+    it('cancels the scheduled callback', () => {
+      const {scheduleSerialCallback, cancelSerialCallback} = ReactScheduler;
+      const cb = jest.fn();
+      scheduleSerialCallback(cb);
+      expect(cb.mock.calls.length).toBe(0);
+      cancelSerialCallback();
+      jest.runAllTimers();
+      expect(cb.mock.calls.length).toBe(0);
+    });
+
+    it('when one callback cancels the next one', () => {
+      const {scheduleSerialCallback, cancelSerialCallback} = ReactScheduler;
+      const cbA = jest.fn(() => {
+        cancelSerialCallback();
+      });
+      const cbB = jest.fn();
+      scheduleSerialCallback(cbA);
+      expect(cbA.mock.calls.length).toBe(0);
+      scheduleSerialCallback(cbB);
+      expect(cbA.mock.calls.length).toBe(1);
+      expect(cbB.mock.calls.length).toBe(0);
+      jest.runAllTimers();
+      // B should not get called because A cancelled B
+      expect(cbB.mock.calls.length).toBe(0);
+    });
+  });
+
+  // TODO: test schedule.now
 });

@@ -69,7 +69,7 @@ if (hasNativePerformanceNow) {
 let scheduleSerialCallback: (
   callback: (deadline: Deadline, options?: {timeout: number}) => void,
 ) => number;
-let cIC: (callbackID: number) => void;
+let cancelSerialCallback: (callbackID: number) => void;
 
 if (!ExecutionEnvironment.canUseDOM) {
   scheduleSerialCallback = function(
@@ -84,7 +84,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       });
     });
   };
-  cIC = function(timeoutID: number) {
+  cancelSerialCallback = function(timeoutID: number) {
     clearTimeout(timeoutID);
   };
 } else {
@@ -276,11 +276,11 @@ if (!ExecutionEnvironment.canUseDOM) {
     return 0;
   };
 
-  cIC = function() {
+  cancelSerialCallback = function() {
     isIdleScheduled = false;
     scheduledCallback = null;
     timeoutTime = -1;
   };
 }
 
-export {now, scheduleSerialCallback, cIC};
+export {now, scheduleSerialCallback, cancelSerialCallback};
