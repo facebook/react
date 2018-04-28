@@ -1055,6 +1055,82 @@ describe('ReactNewContext', () => {
     ReactNoop.flush();
   });
 
+  // This is a regression case for https://github.com/facebook/react/issues/12686
+  it('does not skip some siblings', () => {
+    const Context = React.createContext(0);
+
+    class App extends React.Component {
+      state = {
+        step: 0,
+      };
+
+      render() {
+        ReactNoop.yield('App');
+        return (
+          <Context.Provider value={this.state.step}>
+            <StaticContent />
+            {this.state.step > 0 && <Indirection />}
+          </Context.Provider>
+        );
+      }
+    }
+
+    class StaticContent extends React.PureComponent {
+      render() {
+        return (
+          <React.Fragment>
+            <React.Fragment>
+              <span prop="static 1" />
+              <span prop="static 2" />
+            </React.Fragment>
+          </React.Fragment>
+        );
+      }
+    }
+
+    class Indirection extends React.PureComponent {
+      render() {
+        return <Consumer />;
+      }
+    }
+
+    function Consumer() {
+      return (
+        <Context.Consumer>
+          {value => {
+            ReactNoop.yield('Consumer');
+            return <span prop={value} />;
+          }}
+        </Context.Consumer>
+      );
+    }
+
+    // Initial mount
+    let inst;
+    ReactNoop.render(<App ref={ref => (inst = ref)} />);
+    expect(ReactNoop.flush()).toEqual(['App']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('static 1'),
+      span('static 2'),
+    ]);
+    // Update the first time
+    inst.setState({step: 1});
+    expect(ReactNoop.flush()).toEqual(['App', 'Consumer']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('static 1'),
+      span('static 2'),
+      span(1),
+    ]);
+    // Update the second time
+    inst.setState({step: 2});
+    expect(ReactNoop.flush()).toEqual(['App', 'Consumer']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('static 1'),
+      span('static 2'),
+      span(2),
+    ]);
+  });
+
   describe('fuzz test', () => {
     const Fragment = React.Fragment;
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];

@@ -838,6 +838,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
           let sibling = nextFiber.sibling;
           if (sibling !== null) {
+            // Set the return pointer of the sibling to the work-in-progress fiber.
+            sibling.return = nextFiber.return;
             nextFiber = sibling;
             break;
           }
