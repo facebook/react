@@ -326,6 +326,7 @@ function createOpenTagMarkup(
   isRootElement: boolean,
 ): string {
   let ret = '<' + tagVerbatim;
+  const isPasswordInput = tagLowercase === 'input' && props.type === 'password';
 
   for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
@@ -333,6 +334,13 @@ function createOpenTagMarkup(
     }
     let propValue = props[propKey];
     if (propValue == null) {
+      continue;
+    }
+    // Do not render values for password inputs
+    if (
+      isPasswordInput &&
+      (propKey === 'value' || propKey === 'defaultValue')
+    ) {
       continue;
     }
     if (propKey === STYLE) {

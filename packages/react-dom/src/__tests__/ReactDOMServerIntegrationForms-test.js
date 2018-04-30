@@ -96,6 +96,50 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.getAttribute('defaultValue')).toBe(null);
         },
       );
+
+      itClientRenders(
+        'a password input hydrates client-side with the value prop',
+        async render => {
+          const e = await render(
+            <input type="password" value="foo" readOnly={true} />,
+            0,
+          );
+
+          expect(e.value).toBe('foo');
+          expect(e.hasAttribute('value')).toBe(false);
+        },
+      );
+
+      itClientRenders(
+        'a password input hydrates client-side with the defaultValue prop',
+        async render => {
+          const e = await render(
+            <input type="password" defaultValue="foo" readOnly={true} />,
+            0,
+          );
+
+          expect(e.value).toBe('foo');
+          expect(e.hasAttribute('value')).toBe(false);
+        },
+      );
+
+      it('will not render the value prop server-side', async () => {
+        const e = await serverRender(
+          <input type="password" value="foo" readOnly={true} />,
+        );
+
+        expect(e.value).toBe('');
+        expect(e.hasAttribute('value')).toBe(false);
+      });
+
+      it('will not render the defaultValue prop server-side', async () => {
+        const e = await serverRender(
+          <input type="password" defaultValue="foo" readOnly={true} />,
+        );
+
+        expect(e.value).toBe('');
+        expect(e.hasAttribute('value')).toBe(false);
+      });
     });
 
     describe('checkboxes', function() {
@@ -538,6 +582,20 @@ describe('ReactDOMServerIntegration', () => {
         it('should not blow away user-entered text on successful reconnect to an uncontrolled input', () =>
           testUserInteractionBeforeClientRender(
             <input defaultValue="Hello" />,
+          ));
+
+        it('should not blow away user-entered text on successful reconnect to an uncontrolled password input', () =>
+          testUserInteractionBeforeClientRender(
+            <input type="password" defaultValue="Hello" />,
+            '',
+            'Hello',
+          ));
+
+        it('should not blow away user-entered text on successful reconnect to an controlled password input', () =>
+          testUserInteractionBeforeClientRender(
+            <input type="password" value="Hello" readOnly={true} />,
+            '',
+            'Hello',
           ));
 
         it('should not blow away user-entered text on successful reconnect to a controlled input', async () => {
