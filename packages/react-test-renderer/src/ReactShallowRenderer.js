@@ -186,9 +186,8 @@ class ReactShallowRenderer {
           this._instance.UNSAFE_componentWillReceiveProps(props, context);
         }
       }
-
-      this._updateStateFromStaticLifecycle(props);
     }
+    this._updateStateFromStaticLifecycle(props);
 
     // Read state after cWRP in case it calls setState
     const state = this._newState || oldState;
