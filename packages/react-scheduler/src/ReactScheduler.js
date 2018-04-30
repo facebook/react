@@ -94,7 +94,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   let isIdleScheduled = false;
   let timeoutTime = -1;
   let isCurrentlyRunningCallback = false;
-  // We may need to keep a queue of pending callbacks
+  // We keep a queue of pending callbacks
   let pendingCallbacks = [];
 
   let isAnimationFrameScheduled = false;
