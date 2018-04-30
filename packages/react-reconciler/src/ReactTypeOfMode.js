@@ -12,3 +12,4 @@ export type TypeOfMode = number;
 export const NoContext = 0b00;
 export const AsyncMode = 0b01;
 export const StrictMode = 0b10;
+export const ProfileMode = 0b11;

@@ -1,4 +1,5 @@
 /**
+export const enableProfileModeMetrics = false;
  * Copyright (c) 2013-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
@@ -18,6 +19,7 @@ export const enableUserTimingAPI = __DEV__;
 export const enableGetDerivedStateFromCatch = false;
 export const warnAboutDeprecatedLifecycles = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
+export const enableProfileModeMetrics = false;
 
 // React Fabric uses persistent reconciler.
 export const enableMutatingReconciler = false;

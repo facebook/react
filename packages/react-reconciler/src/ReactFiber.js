@@ -34,13 +34,14 @@ import {
 import getComponentName from 'shared/getComponentName';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {NoContext, AsyncMode, StrictMode} from './ReactTypeOfMode';
+import {NoContext, AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
   REACT_CALL_TYPE,
   REACT_STRICT_MODE_TYPE,
+  REACT_PROFILE_MODE_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_ASYNC_MODE_TYPE,
@@ -342,6 +343,10 @@ export function createFiberFromElement(
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         mode |= StrictMode;
+        break;
+      case REACT_PROFILE_MODE_TYPE:
+        fiberTag = Mode;
+        mode |= ProfileMode;
         break;
       case REACT_CALL_TYPE:
         fiberTag = CallComponent;
