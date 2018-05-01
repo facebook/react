@@ -37,6 +37,7 @@ describe('ReactTestRendererTraversal', () => {
               <View void="void" />
               <View void="void" />
             </ExampleNull>
+            <ExampleForwardRef qux="qux" />
           </View>
         </View>
       );
@@ -48,13 +49,17 @@ describe('ReactTestRendererTraversal', () => {
   const ExampleFn = props => <View baz="baz" />;
   const ExampleNull = props => null;
 
+  const ExampleForwardRef = React.forwardRef((props, ref) => (
+    <View {...props} ref={ref} />
+  ));
+
   it('initializes', () => {
     const render = ReactTestRenderer.create(<Example />);
     const hasFooProp = node => node.props.hasOwnProperty('foo');
 
     // assert .props, .type and .parent attributes
     const foo = render.root.find(hasFooProp);
-    expect(foo.props.children).toHaveLength(7);
+    expect(foo.props.children).toHaveLength(8);
     expect(foo.type).toBe(View);
     expect(render.root.parent).toBe(null);
     expect(foo.children[0].parent).toBe(foo);
@@ -116,14 +121,16 @@ describe('ReactTestRendererTraversal', () => {
 
     expect(() => render.root.findByType(ExampleFn)).not.toThrow(); // 1 match
     expect(() => render.root.findByType(View)).not.toThrow(); // 1 match
+    expect(() => render.root.findByType(ExampleForwardRef)).not.toThrow(); // 1 match
     // note: there are clearly multiple <View /> in general, but there
     //       is only one being rendered at root node level
     expect(() => render.root.findByType(ExampleNull)).toThrow(); // 2 matches
 
     expect(render.root.findAllByType(ExampleFn)).toHaveLength(1);
     expect(render.root.findAllByType(View, {deep: false})).toHaveLength(1);
-    expect(render.root.findAllByType(View)).toHaveLength(7);
+    expect(render.root.findAllByType(View)).toHaveLength(8);
     expect(render.root.findAllByType(ExampleNull)).toHaveLength(2);
+    expect(render.root.findAllByType(ExampleForwardRef)).toHaveLength(1);
 
     const nulls = render.root.findAllByType(ExampleNull);
     expect(nulls[0].findAllByType(View)).toHaveLength(0);
@@ -138,17 +145,21 @@ describe('ReactTestRendererTraversal', () => {
     const foo = 'foo';
     const bar = 'bar';
     const baz = 'baz';
+    const qux = 'qux';
 
     expect(() => render.root.findByProps({foo})).not.toThrow(); // 1 match
     expect(() => render.root.findByProps({bar})).toThrow(); // >1 matches
     expect(() => render.root.findByProps({baz})).toThrow(); // >1 matches
+    expect(() => render.root.findByProps({qux})).not.toThrow(); // 1 match
 
     expect(render.root.findAllByProps({foo}, {deep: false})).toHaveLength(1);
     expect(render.root.findAllByProps({bar}, {deep: false})).toHaveLength(5);
     expect(render.root.findAllByProps({baz}, {deep: false})).toHaveLength(2);
+    expect(render.root.findAllByProps({qux}, {deep: false})).toHaveLength(1);
 
     expect(render.root.findAllByProps({foo})).toHaveLength(2);
     expect(render.root.findAllByProps({bar})).toHaveLength(9);
     expect(render.root.findAllByProps({baz})).toHaveLength(4);
+    expect(render.root.findAllByProps({qux})).toHaveLength(3);
   });
 });
