@@ -34,6 +34,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  PlaceholderComponent,
   TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
@@ -736,7 +737,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return workInProgress.stateNode;
   }
 
-  function updateTimeoutComponent(
+  function updatePlaceholderComponent(
     current,
     workInProgress,
     renderExpirationTime,
@@ -784,6 +785,24 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } else {
       return null;
     }
+  }
+
+  function updateTimeoutComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
+    const nextProps = workInProgress.pendingProps;
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (workInProgress.memoizedProps === nextProps) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    const nextChildren = nextProps.children;
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextProps);
+    return workInProgress.child;
   }
 
   function updatePortalComponent(
@@ -1220,6 +1239,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // A return component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
+      case PlaceholderComponent:
+        return updatePlaceholderComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case TimeoutComponent:
         return updateTimeoutComponent(
           current,

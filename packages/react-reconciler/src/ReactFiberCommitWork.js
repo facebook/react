@@ -25,6 +25,7 @@ import {
   HostText,
   HostPortal,
   CallComponent,
+  PlaceholderComponent,
   TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
@@ -309,7 +310,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // We have no life-cycles associated with portals.
         return;
       }
-      case TimeoutComponent: {
+      case PlaceholderComponent: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
           commitUpdateQueue(
@@ -319,6 +320,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             committedExpirationTime,
           );
         }
+        return;
+      }
+      case TimeoutComponent: {
+        // We have no life-cycles associated with Timeouts.
         return;
       }
       default: {
@@ -827,7 +832,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case HostRoot: {
         return;
       }
-      case TimeoutComponent: {
+      case PlaceholderComponent: {
         return;
       }
       default: {

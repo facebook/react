@@ -3,6 +3,7 @@ let ReactFeatureFlags;
 let Fragment;
 let ReactNoop;
 let SimpleCacheProvider;
+let Placeholder;
 let Timeout;
 
 let cache;
@@ -19,6 +20,7 @@ describe('ReactSuspense', () => {
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
     SimpleCacheProvider = require('simple-cache-provider');
+    Placeholder = React.Placeholder;
     Timeout = React.Timeout;
 
     function invalidateCache() {
@@ -87,7 +89,9 @@ describe('ReactSuspense', () => {
   function Fallback(props) {
     return (
       <Timeout ms={props.timeout}>
-        {didExpire => (didExpire ? props.placeholder : props.children)}
+        <Placeholder>
+          {didExpire => (didExpire ? props.placeholder : props.children)}
+        </Placeholder>
       </Timeout>
     );
   }
@@ -609,7 +613,9 @@ describe('ReactSuspense', () => {
   it('throws a helpful error when a synchronous update is suspended', () => {
     expect(() => {
       ReactNoop.flushSync(() =>
-        ReactNoop.render(<Timeout>{() => <AsyncText text="Async" />}</Timeout>),
+        ReactNoop.render(
+          <Placeholder>{() => <AsyncText text="Async" />}</Placeholder>,
+        ),
       );
     }).toThrow(
       'A synchronous update was suspended, but no fallback UI was provided.',
@@ -618,7 +624,7 @@ describe('ReactSuspense', () => {
 
   it('throws a helpful error when an expired update is suspended', async () => {
     ReactNoop.render(
-      <Timeout>{() => <AsyncText text="Async" ms={20000} />}</Timeout>,
+      <Placeholder>{() => <AsyncText text="Async" ms={20000} />}</Placeholder>,
     );
     expect(ReactNoop.flush()).toEqual(['Suspend! [Async]']);
     await advanceTimers(10000);
@@ -791,14 +797,16 @@ describe('ReactSuspense', () => {
     function Delay({ms}) {
       return (
         <Timeout ms={ms}>
-          {didTimeout => {
-            if (didTimeout) {
-              // Once ms has elapsed, render null. This allows the rest of the
-              // tree to resume rendering.
-              return null;
-            }
-            return <Never />;
-          }}
+          <Placeholder>
+            {didTimeout => {
+              if (didTimeout) {
+                // Once ms has elapsed, render null. This allows the rest of the
+                // tree to resume rendering.
+                return null;
+              }
+              return <Never />;
+            }}
+          </Placeholder>
         </Timeout>
       );
     }

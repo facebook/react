@@ -30,6 +30,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  PlaceholderComponent,
   TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
@@ -46,6 +47,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_ASYNC_MODE_TYPE,
   REACT_TIMEOUT_TYPE,
+  REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -351,11 +353,14 @@ export function createFiberFromElement(
       case REACT_RETURN_TYPE:
         fiberTag = ReturnComponent;
         break;
-      case REACT_TIMEOUT_TYPE:
-        fiberTag = TimeoutComponent;
+      case REACT_PLACEHOLDER_TYPE:
+        fiberTag = PlaceholderComponent;
         // Suspense does not require async, but its children should be strict
         // mode compatible.
         mode |= StrictMode;
+        break;
+      case REACT_TIMEOUT_TYPE:
+        fiberTag = TimeoutComponent;
         break;
       default: {
         if (typeof type === 'object' && type !== null) {

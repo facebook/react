@@ -12,6 +12,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_ASYNC_MODE_TYPE,
   REACT_TIMEOUT_TYPE,
+  REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
 import {enableSuspense} from 'shared/ReactFeatureFlags';
 
@@ -69,6 +70,7 @@ const React = {
 };
 
 if (enableSuspense) {
+  React.Placeholder = REACT_PLACEHOLDER_TYPE;
   React.Timeout = REACT_TIMEOUT_TYPE;
 }
 

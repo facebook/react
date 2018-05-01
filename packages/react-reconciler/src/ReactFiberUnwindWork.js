@@ -32,6 +32,7 @@ import {
   HostComponent,
   HostPortal,
   ContextProvider,
+  PlaceholderComponent,
   TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
@@ -209,15 +210,21 @@ export default function<C, CX>(
       let earliestTimeoutMs = -1;
       searchForEarliestTimeout: do {
         switch (workInProgress.tag) {
-          case TimeoutComponent: {
+          case PlaceholderComponent: {
             const current = workInProgress.alternate;
             if (current !== null && current.memoizedState === true) {
-              // A parent Timeout already committed in a placeholder state. We
-              // need to handle this promise immediately. In other words, we
+              // A parent Placeholder already committed in a placeholder state.
+              // We need to handle this promise immediately. In other words, we
               // should never suspend inside a tree that already expired.
               earliestTimeoutMs = 0;
               break searchForEarliestTimeout;
             }
+            if (earliestTimeoutMs === -1) {
+              earliestTimeoutMs = remainingTimeMs;
+            }
+            break;
+          }
+          case TimeoutComponent: {
             let timeoutPropMs = workInProgress.pendingProps.ms;
             if (typeof timeoutPropMs === 'number') {
               if (timeoutPropMs <= 0) {
@@ -229,8 +236,6 @@ export default function<C, CX>(
               ) {
                 earliestTimeoutMs = timeoutPropMs;
               }
-            } else if (earliestTimeoutMs === -1) {
-              earliestTimeoutMs = remainingTimeMs;
             }
             break;
           }
@@ -250,7 +255,7 @@ export default function<C, CX>(
         thenable.then(onResolveOrReject, onResolveOrReject);
         return;
       } else {
-        // No time remaining. Need to fallback to palceholder.
+        // No time remaining. Need to fallback to placeholder.
         // Find the nearest timeout that can be retried.
         workInProgress = returnFiber;
         do {
@@ -264,7 +269,7 @@ export default function<C, CX>(
               );
               break;
             }
-            case TimeoutComponent: {
+            case PlaceholderComponent: {
               if ((workInProgress.effectTag & DidCapture) === NoEffect) {
                 workInProgress.effectTag |= ShouldCapture;
                 const update = createUpdate(renderExpirationTime);
@@ -372,7 +377,7 @@ export default function<C, CX>(
         popHostContext(workInProgress);
         return null;
       }
-      case TimeoutComponent: {
+      case PlaceholderComponent: {
         const effectTag = workInProgress.effectTag;
         if (effectTag & ShouldCapture) {
           workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
