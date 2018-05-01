@@ -20,6 +20,7 @@ import {
   enableMutatingReconciler,
   enablePersistentReconciler,
   enableNoopReconciler,
+  enableProfileModeMetrics,
 } from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
@@ -187,6 +188,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       node.sibling.return = node.return;
       node = node.sibling;
+    }
+  }
+
+  function updateProfileRoot(workInProgress: Fiber) {
+    if (enableProfileModeMetrics) {
+      // TODO (bvaughn) (actual) Stop render timer here; store on stateNode
+      // TODO (bvaughn) (base) Sum child base times and store on Fiber
     }
   }
 
@@ -593,6 +601,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case Mode:
         return null;
       case ProfileRoot:
+        updateProfileRoot(workInProgress);
         return null;
       case HostPortal:
         popHostContainer(workInProgress);

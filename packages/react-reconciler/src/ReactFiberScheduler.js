@@ -359,6 +359,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
       }
 
+      // TODO (bvaughn) Move this somewhere else? It isn't a hose effect.
       if (effectTag & CommitProfile) {
         commitProfileWork(nextEffect);
       }
@@ -881,7 +882,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
       );
     }
+
+    // TODO (bvaughn) (base) Start "base" time here
     let next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    // TODO (bvaughn) (base) Stop "base" time here; store on Fiber
+
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();
       if (isReplayingFailedUnitOfWork) {

@@ -68,7 +68,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
+import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -222,8 +222,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (enableProfileModeMetrics) {
       workInProgress.effectTag |= CommitProfile;
 
-      // TODO (bvaughn) (render) Stop/resume timer for "actual" time
-      // TODO (bvaughn) (actual) Calculate sum of children's "base" time
+      // TODO (bvaughn) (actual) Start render timer here
     }
 
     // Don't bail out early for ProfileMode,
@@ -250,11 +249,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const fn = workInProgress.type;
     const nextProps = workInProgress.pendingProps;
 
-    if (enableProfileModeMetrics) {
-      if (workInProgress.mode & ProfileMode) {
-        // TODO (bvaughn) Start tracking "base" time
-      }
-    }
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
@@ -284,12 +278,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
 
-    if (enableProfileModeMetrics) {
-      if (workInProgress.mode & ProfileMode) {
-        // TODO (bvaughn) Stop and record "base" time
-      }
-    }
-
     return workInProgress.child;
   }
 
@@ -298,12 +286,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ) {
-    if (enableProfileModeMetrics) {
-      if (workInProgress.mode & ProfileMode) {
-        // TODO (bvaughn) Start tracking "base" time
-      }
-    }
-
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
@@ -333,12 +315,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         renderExpirationTime,
       );
-    }
-
-    if (enableProfileModeMetrics) {
-      if (workInProgress.mode & ProfileMode) {
-        // TODO (bvaughn) Pass base start-time to finishClassComponent()
-      }
     }
 
     return finishClassComponent(
@@ -403,12 +379,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         ReactDebugCurrentFiber.setCurrentPhase(null);
       } else {
         nextChildren = instance.render();
-      }
-    }
-
-    if (enableProfileModeMetrics) {
-      if (workInProgress.mode & ProfileMode) {
-        // TODO (bvaughn) (base) Update "base" time
       }
     }
 
@@ -619,12 +589,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     let value;
 
-    if (enableProfileModeMetrics) {
-      if (workInProgress.mode & ProfileMode) {
-        // TODO (bvaughn) (base) Start tracking "base" time
-      }
-    }
-
     if (__DEV__) {
       if (fn.prototype && typeof fn.prototype.render === 'function') {
         const componentName = getComponentName(workInProgress) || 'Unknown';
@@ -677,12 +641,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const hasContext = pushLegacyContextProvider(workInProgress);
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, renderExpirationTime);
-
-      if (enableProfileModeMetrics) {
-        if (workInProgress.mode & ProfileMode) {
-          // TODO (bvaughn) Pass base start-time to finishClassComponent()
-        }
-      }
 
       return finishClassComponent(
         current,
@@ -747,12 +705,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       reconcileChildren(current, workInProgress, value);
       memoizeProps(workInProgress, props);
-
-      if (enableProfileModeMetrics) {
-        if (workInProgress.mode & ProfileMode) {
-          // TODO (bvaughn) (base) Stop and update "base" time?
-        }
-      }
 
       return workInProgress.child;
     }
