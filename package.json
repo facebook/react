@@ -103,6 +103,9 @@
   "devEngines": {
     "node": "8.x || 9.x"
   },
+  "jest": {
+    "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
+  },
   "scripts": {
     "build": "npm run version-check && node ./scripts/rollup/build.js",
     "flow-coverage": "flow-coverage-report --config ./.flowcoverage",
