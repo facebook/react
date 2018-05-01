@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should render children 1`] = `
+<div>
+  Hi
+  <span>
+    there
+  </span>
+  <span>
+    ProfileMode
+  </span>
+</div>
+`;
+
+exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support an empty mode 1`] = `null`;
+
+exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support an empty mode 2`] = `<div />`;
+
+exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support nested ProfileModes 1`] = `
+Array [
+  <div>
+    Hi, 
+    Brian
+  </div>,
+  <block>
+    Hi, 
+    Brian
+  </block>,
+  <span>
+    Now with extra profile strength!
+  </span>,
+]
+`;
+
+exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should render children 1`] = `
+<div>
+  Hi
+  <span>
+    there
+  </span>
+  <span>
+    ProfileMode
+  </span>
+</div>
+`;
+
+exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support an empty mode 1`] = `null`;
+
+exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support an empty mode 2`] = `<div />`;
+
+exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support nested ProfileModes 1`] = `
+Array [
+  <div>
+    Hi, 
+    Brian
+  </div>,
+  <block>
+    Hi, 
+    Brian
+  </block>,
+  <span>
+    Now with extra profile strength!
+  </span>,
+]
+`;

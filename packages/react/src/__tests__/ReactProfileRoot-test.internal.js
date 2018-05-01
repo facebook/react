@@ -13,7 +13,7 @@ let React;
 let ReactFeatureFlags;
 let ReactTestRenderer;
 
-describe('ReactProfileMode', () => {
+describe('ProfileRoot', () => {
   [true, false].forEach(enabled => {
     describe(`enableProfileModeMetrics feature flag ${
       enabled ? 'enabled' : 'disabled'
@@ -32,7 +32,7 @@ describe('ReactProfileMode', () => {
       if (__DEV__) {
         it('should warn about invalid mode', () => {
           expect(() => {
-            ReactTestRenderer.create(<React.ProfileMode />);
+            ReactTestRenderer.create(<React.unstable_ProfileRoot />);
           }).toThrow(
             'ProfileMode must specify a label string and callback function',
           );
@@ -42,13 +42,13 @@ describe('ReactProfileMode', () => {
       it('should support an empty mode', () => {
         expect(
           ReactTestRenderer.create(
-            <React.ProfileMode label="label" callback={() => {}} />,
+            <React.unstable_ProfileRoot label="label" callback={() => {}} />,
           ).toJSON(),
         ).toMatchSnapshot();
         expect(
           ReactTestRenderer.create(
             <div>
-              <React.ProfileMode label="label" callback={() => {}} />
+              <React.unstable_ProfileRoot label="label" callback={() => {}} />
             </div>,
           ).toJSON(),
         ).toMatchSnapshot();
@@ -59,10 +59,10 @@ describe('ReactProfileMode', () => {
         const renderer = ReactTestRenderer.create(
           <div>
             Hi
-            <React.ProfileMode label="label" callback={() => {}}>
+            <React.unstable_ProfileRoot label="label" callback={() => {}}>
               <span>there</span>
               <ProfiledComponent name="ProfileMode" />
-            </React.ProfileMode>
+            </React.unstable_ProfileRoot>
           </div>,
         );
         expect(renderer.toJSON()).toMatchSnapshot();
@@ -76,13 +76,13 @@ describe('ReactProfileMode', () => {
           }
         }
         const renderer = ReactTestRenderer.create(
-          <React.ProfileMode label="outer" callback={() => {}}>
+          <React.unstable_ProfileRoot label="outer" callback={() => {}}>
             <ProfiledComponent name="Brian" />
-            <React.ProfileMode label="inner" callback={() => {}}>
+            <React.unstable_ProfileRoot label="inner" callback={() => {}}>
               <ExtraProfiledComponent name="Brian" />
               <span>Now with extra profile strength!</span>
-            </React.ProfileMode>
-          </React.ProfileMode>,
+            </React.unstable_ProfileRoot>
+          </React.unstable_ProfileRoot>,
         );
         expect(renderer.toJSON()).toMatchSnapshot();
       });
@@ -117,17 +117,17 @@ describe('ReactProfileMode', () => {
       const renderer = ReactTestRenderer.create(
         <React.Fragment>
           <Yield value="first" />
-          <React.ProfileMode label="outer" callback={callback}>
+          <React.unstable_ProfileRoot label="outer" callback={callback}>
             <div>
-              <React.ProfileMode label="middle" callback={callback}>
+              <React.unstable_ProfileRoot label="middle" callback={callback}>
                 <FunctionalComponent>
-                  <React.ProfileMode label="inner" callback={callback}>
+                  <React.unstable_ProfileRoot label="inner" callback={callback}>
                     <ClassComponent />
-                  </React.ProfileMode>
+                  </React.unstable_ProfileRoot>
                 </FunctionalComponent>
-              </React.ProfileMode>
+              </React.unstable_ProfileRoot>
             </div>
-          </React.ProfileMode>
+          </React.unstable_ProfileRoot>
           <Yield value="last" />
         </React.Fragment>,
         {
@@ -167,17 +167,17 @@ describe('ReactProfileMode', () => {
       renderer.update(
         <React.Fragment>
           <Yield value="first" />
-          <React.ProfileMode label="outer" callback={callback}>
+          <React.unstable_ProfileRoot label="outer" callback={callback}>
             <div>
-              <React.ProfileMode label="middle" callback={callback}>
+              <React.unstable_ProfileRoot label="middle" callback={callback}>
                 <FunctionalComponent>
-                  <React.ProfileMode label="inner" callback={callback}>
+                  <React.unstable_ProfileRoot label="inner" callback={callback}>
                     <ClassComponent />
-                  </React.ProfileMode>
+                  </React.unstable_ProfileRoot>
                 </FunctionalComponent>
-              </React.ProfileMode>
+              </React.unstable_ProfileRoot>
             </div>
-          </React.ProfileMode>
+          </React.unstable_ProfileRoot>
           <Yield value="last" />
         </React.Fragment>,
       );
@@ -208,21 +208,23 @@ describe('ReactProfileMode', () => {
       }
 
       const renderer = ReactTestRenderer.create(
-        <React.ProfileMode label="outer" callback={callback}>
+        <React.unstable_ProfileRoot label="outer" callback={callback}>
           <div>
-            <React.ProfileMode label="middle" callback={callback}>
+            <React.unstable_ProfileRoot label="middle" callback={callback}>
               <Updater>
-                <React.ProfileMode label="inner" callback={callback}>
+                <React.unstable_ProfileRoot label="inner" callback={callback}>
                   <Pure>
-                    <React.ProfileMode label="blocked" callback={callback}>
+                    <React.unstable_ProfileRoot
+                      label="blocked"
+                      callback={callback}>
                       <div />
-                    </React.ProfileMode>
+                    </React.unstable_ProfileRoot>
                   </Pure>
-                </React.ProfileMode>
+                </React.unstable_ProfileRoot>
               </Updater>
-            </React.ProfileMode>
+            </React.unstable_ProfileRoot>
           </div>
-        </React.ProfileMode>,
+        </React.unstable_ProfileRoot>,
       );
 
       // All profile callbacks are called for initial render

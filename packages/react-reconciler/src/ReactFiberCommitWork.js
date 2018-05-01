@@ -775,8 +775,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             null,
             finishedWork.pendingProps.label,
             'mount',
-            1, // TODO (bvaughn) Use actual times
-            1, // TODO (bvaughn) Use actual times
+            1, // TODO (bvaughn) Use real "actual" times
+            1, // TODO (bvaughn) Use real "base" times
           );
         }
         break;
