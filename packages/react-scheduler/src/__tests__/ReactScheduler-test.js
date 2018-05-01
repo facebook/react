@@ -248,33 +248,35 @@ describe('ReactScheduler', () => {
   });
 
   describe('cIC', () => {
-    // TODO: return an id from rIC and use in cIC
-    // and test this.
     it('cancels the scheduled callback', () => {
       const {rIC, cIC} = ReactScheduler;
       const cb = jest.fn();
-      rIC(cb);
+      const callbackId = rIC(cb);
       expect(cb.mock.calls.length).toBe(0);
-      cIC();
+      cIC(callbackId);
       jest.runAllTimers();
       expect(cb.mock.calls.length).toBe(0);
     });
 
+    // TODO: this test will be easier to implement once we support deferred
+    /**
     it('when one callback cancels the next one', () => {
       const {rIC, cIC} = ReactScheduler;
       const cbA = jest.fn(() => {
+        // How to get the callback id?
         cIC();
       });
       const cbB = jest.fn();
       rIC(cbA);
       expect(cbA.mock.calls.length).toBe(0);
-      rIC(cbB);
+      callbackBId = rIC(cbB);
       expect(cbA.mock.calls.length).toBe(1);
       expect(cbB.mock.calls.length).toBe(0);
       jest.runAllTimers();
       // B should not get called because A cancelled B
       expect(cbB.mock.calls.length).toBe(0);
     });
+    */
   });
 
   // TODO: test 'now'

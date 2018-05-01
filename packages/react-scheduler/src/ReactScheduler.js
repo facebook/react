@@ -35,9 +35,9 @@
 
 import type {Deadline} from 'react-reconciler';
 type CallbackConfigType = {|
-  scheduledCallback: (Deadline) => void,
+  scheduledCallback: Deadline => void,
   timeoutTime: number,
-  // id: string, // used for cancelling
+  callbackId: number, // used for cancelling
 |};
 
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
@@ -95,14 +95,14 @@ if (!ExecutionEnvironment.canUseDOM) {
 } else {
   // Always polyfill requestIdleCallback and cancelIdleCallback
 
+  // Number.MAX_SAFE_INTEGER is not supported in IE
+  const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
+  let callbackIdCounter = 1;
   let scheduledCallbackConfig: CallbackConfigType | null = null;
-  const getCallbackId = function(): string {
-    const callbackId =
-      '__scheduledCallbackId$' +
-      Math.random()
-        .toString(36)
-        .slice(2);
-    return callbackId;
+  const getCallbackId = function(): number {
+    callbackIdCounter =
+      callbackIdCounter >= MAX_SAFE_INTEGER ? 1 : callbackIdCounter + 1;
+    return callbackIdCounter;
   };
   let isIdleScheduled = false;
   let isCurrentlyRunningCallback = false;
@@ -124,7 +124,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   // unregistered by removing the id from this object.
   // Then we skip calling any callback which is not registered.
   // This means cancelling is an O(1) time complexity instead of O(n).
-  const registeredCallbackIds: { [number]: boolean } = {};
+  const registeredCallbackIds: {[number]: boolean} = {};
 
   const frameDeadlineObject: Deadline = {
     didTimeout: false,
@@ -134,12 +134,18 @@ if (!ExecutionEnvironment.canUseDOM) {
     },
   };
 
-  const safelyCallScheduledCallback = function(callback) {
+  const safelyCallScheduledCallback = function(callback, callbackId) {
+    if (!registeredCallbackIds[callbackId]) {
+      // ignore cancelled callbacks
+      return;
+    }
     isCurrentlyRunningCallback = true;
     try {
       callback(frameDeadlineObject);
+      delete registeredCallbackIds[callbackId];
       isCurrentlyRunningCallback = false;
     } catch (e) {
+      delete registeredCallbackIds[callbackId];
       isCurrentlyRunningCallback = false;
       // Still throw it, but not in this frame.
       setTimeout(() => {
@@ -190,11 +196,12 @@ if (!ExecutionEnvironment.canUseDOM) {
       didTimeout = false;
     }
 
-    const callback = scheduledCallbackConfig.scheduledCallback;
+    const scheduledCallback = scheduledCallbackConfig.scheduledCallback;
+    const scheduledCallbackId = scheduledCallbackConfig.callbackId;
     scheduledCallbackConfig = null;
-    if (callback !== null) {
+    if (scheduledCallback !== null && typeof scheduledCallbackId === 'number') {
       frameDeadlineObject.didTimeout = didTimeout;
-      safelyCallScheduledCallback(callback);
+      safelyCallScheduledCallback(scheduledCallback, scheduledCallbackId);
     }
   };
   // Assumes that we have addEventListener in this environment. Might need
@@ -252,10 +259,13 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
     }
+    const latestCallbackId = getCallbackId();
     scheduledCallbackConfig = {
       scheduledCallback: callback,
       timeoutTime,
+      callbackId: latestCallbackId,
     };
+    registeredCallbackIds[latestCallbackId] = true;
     // If we have previousCallback, call it. This may trigger recursion.
     if (
       previouslyScheduledCallbackConfig &&
@@ -271,10 +281,10 @@ if (!ExecutionEnvironment.canUseDOM) {
         // add this callback to a pending queue and run after we exit
         pendingCallbacks.push(previouslyScheduledCallbackConfig);
       } else {
+        const prevCallbackId = previouslyScheduledCallbackConfig.callbackId;
         frameDeadlineObject.didTimeout =
-          previousCallbackTimeout !== -1 &&
-          previousCallbackTimeout <= now();
-        safelyCallScheduledCallback(previousCallback);
+          previousCallbackTimeout !== -1 && previousCallbackTimeout <= now();
+        safelyCallScheduledCallback(previousCallback, prevCallbackId);
         while (pendingCallbacks.length) {
           // the callback recursively called rIC and new callbacks are pending
           const callbackConfig = pendingCallbacks.shift();
@@ -282,7 +292,10 @@ if (!ExecutionEnvironment.canUseDOM) {
           const pendingCallbackTimeout = callbackConfig.timeoutTime;
           frameDeadlineObject.didTimeout =
             pendingCallbackTimeout !== -1 && pendingCallbackTimeout <= now();
-          safelyCallScheduledCallback(pendingCallback);
+          safelyCallScheduledCallback(
+            pendingCallback,
+            callbackConfig.callbackId,
+          );
         }
       }
     }
@@ -296,12 +309,11 @@ if (!ExecutionEnvironment.canUseDOM) {
       isAnimationFrameScheduled = true;
       requestAnimationFrame(animationTick);
     }
-    return 0;
+    return latestCallbackId;
   };
 
-  cIC = function() {
-    isIdleScheduled = false;
-    scheduledCallbackConfig = null;
+  cIC = function(callbackId: number) {
+    delete registeredCallbackIds[callbackId];
   };
 }
 
