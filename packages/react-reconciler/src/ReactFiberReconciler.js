@@ -340,7 +340,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     const update = createUpdate(expirationTime);
-    update.payload = {children: element};
+    // Caution: React DevTools currently depends on this property
+    // being called "element".
+    update.payload = {element};
 
     callback = callback === undefined ? null : callback;
     if (callback !== null) {
