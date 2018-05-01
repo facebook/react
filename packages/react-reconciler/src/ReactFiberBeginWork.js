@@ -42,12 +42,15 @@ import {
   ContentReset,
   Ref,
   DidCapture,
+  CommitProfile,
 } from 'shared/ReactTypeOfSideEffect';
+import {REACT_PROFILE_MODE_TYPE} from 'shared/ReactSymbols';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
   enableGetDerivedStateFromCatch,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
+  enableProfileModeMetrics,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -65,7 +68,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {AsyncMode, StrictMode} from './ReactTypeOfMode';
+import {AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -200,10 +203,23 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateMode(current, workInProgress) {
+    if (enableProfileModeMetrics) {
+      if (workInProgress.type === ProfileMode) {
+        // TODO (bvaughn) (actual) Start/resume timer for "actual" time
+      }
+    }
     const nextChildren = workInProgress.pendingProps.children;
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
+    } else if (workInProgress.type === REACT_PROFILE_MODE_TYPE) {
+      // Don't bail out early for ProfileMode,
+      // Because we always want to re-measure the subtree.
+      if (enableProfileModeMetrics) {
+        // TODO (bvaughn) (render) Stop timer for "actual" time
+        // TODO (bvaughn) (actual) Calculate sum of children's "base" time
+        workInProgress.effectTag |= CommitProfile;
+      }
     } else if (
       nextChildren === null ||
       workInProgress.memoizedProps === nextChildren
@@ -230,6 +246,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const fn = workInProgress.type;
     const nextProps = workInProgress.pendingProps;
 
+    if (enableProfileModeMetrics) {
+      if (workInProgress.mode & ProfileMode) {
+        // TODO (bvaughn) Start tracking "base" time
+      }
+    }
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
@@ -258,6 +279,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
+
+    if (enableProfileModeMetrics) {
+      if (workInProgress.mode & ProfileMode) {
+        // TODO (bvaughn) Stop and record "base" time
+      }
+    }
+
     return workInProgress.child;
   }
 
@@ -266,6 +294,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ) {
+    if (enableProfileModeMetrics) {
+      if (workInProgress.mode & ProfileMode) {
+        // TODO (bvaughn) Start tracking "base" time
+      }
+    }
+
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
@@ -296,6 +330,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         renderExpirationTime,
       );
     }
+
+    if (enableProfileModeMetrics) {
+      if (workInProgress.mode & ProfileMode) {
+        // TODO (bvaughn) Pass base start-time to finishClassComponent()
+      }
+    }
+
     return finishClassComponent(
       current,
       workInProgress,
@@ -358,6 +399,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         ReactDebugCurrentFiber.setCurrentPhase(null);
       } else {
         nextChildren = instance.render();
+      }
+    }
+
+    if (enableProfileModeMetrics) {
+      if (workInProgress.mode & ProfileMode) {
+        // TODO (bvaughn) (base) Update "base" time
       }
     }
 
@@ -568,6 +615,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     let value;
 
+    if (enableProfileModeMetrics) {
+      if (workInProgress.mode & ProfileMode) {
+        // TODO (bvaughn) (base) Start tracking "base" time
+      }
+    }
+
     if (__DEV__) {
       if (fn.prototype && typeof fn.prototype.render === 'function') {
         const componentName = getComponentName(workInProgress) || 'Unknown';
@@ -620,6 +673,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const hasContext = pushLegacyContextProvider(workInProgress);
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, renderExpirationTime);
+
+      if (enableProfileModeMetrics) {
+        if (workInProgress.mode & ProfileMode) {
+          // TODO (bvaughn) Pass base start-time to finishClassComponent()
+        }
+      }
+
       return finishClassComponent(
         current,
         workInProgress,
@@ -683,6 +743,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       reconcileChildren(current, workInProgress, value);
       memoizeProps(workInProgress, props);
+
+      if (enableProfileModeMetrics) {
+        if (workInProgress.mode & ProfileMode) {
+          // TODO (bvaughn) (base) Stop and update "base" time?
+        }
+      }
+
       return workInProgress.child;
     }
   }

@@ -17,6 +17,7 @@ import {
   enableMutatingReconciler,
   enableNoopReconciler,
   enablePersistentReconciler,
+  enableProfileModeMetrics,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
@@ -25,14 +26,16 @@ import {
   HostText,
   HostPortal,
   CallComponent,
+  Mode,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {
-  Placement,
-  Update,
   ContentReset,
+  Placement,
   Snapshot,
+  Update,
 } from 'shared/ReactTypeOfSideEffect';
+import {REACT_PROFILE_MODE_TYPE} from 'shared/ReactSymbols';
 import {commitUpdateQueue} from './ReactUpdateQueue';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -511,6 +514,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         commitBeforeMutationLifeCycles,
         commitAttachRef,
         commitDetachRef,
+        commitProfileWork,
       };
     } else if (persistence) {
       invariant(false, 'Persistent reconciler is disabled.');
@@ -764,6 +768,39 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     detachFiber(current);
   }
 
+  function commitProfileWork(finishedWork: Fiber): void {
+    switch (finishedWork.tag) {
+      case Mode: {
+        // TODO (bvaughn) This feels like the wrong type check approach
+        if (finishedWork.type === REACT_PROFILE_MODE_TYPE) {
+          if (enableProfileModeMetrics) {
+            finishedWork.pendingProps.callback.call(
+              null,
+              finishedWork.pendingProps.label,
+              'mount',
+              1, // TODO (bvaughn) Use actual times
+              1, // TODO (bvaughn) Use actual times
+            );
+          }
+        } else {
+          invariant(
+            false,
+            'This unit of work tag should not have side-effects. This error is ' +
+              'likely caused by a bug in React. Please file an issue.',
+          );
+        }
+        break;
+      }
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+      }
+    }
+  }
+
   function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
@@ -838,6 +875,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       commitLifeCycles,
       commitAttachRef,
       commitDetachRef,
+      commitProfileWork,
     };
   } else {
     invariant(false, 'Mutating reconciler is disabled.');

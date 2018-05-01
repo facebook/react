@@ -31,6 +31,7 @@ import {
   Ref,
   Incomplete,
   HostEffectMask,
+  CommitProfile,
 } from 'shared/ReactTypeOfSideEffect';
 import {
   HostRoot,
@@ -211,6 +212,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     commitLifeCycles,
     commitAttachRef,
     commitDetachRef,
+    commitProfileWork,
   } = ReactFiberCommitWork(
     config,
     onCommitPhaseError,
@@ -355,6 +357,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         if (current !== null) {
           commitDetachRef(current);
         }
+      }
+
+      if (effectTag & CommitProfile) {
+        commitProfileWork(nextEffect);
       }
 
       // The following switch statement is only concerned about placement,

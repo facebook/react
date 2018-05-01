@@ -15,6 +15,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 
 import invariant from 'fbjs/lib/invariant';
+import {enableProfileModeMetrics} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactTypeOfSideEffect';
 import {
   IndeterminateComponent,
@@ -151,6 +152,10 @@ export type Fiber = {|
   // memory if we need to.
   alternate: Fiber | null,
 
+  // Profiling metrics
+  selfBaseTime: number | null,
+  descendantsBaseTime: number | null,
+
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
@@ -190,6 +195,7 @@ function FiberNode(
   this.pendingProps = pendingProps;
   this.memoizedProps = null;
   this.updateQueue = null;
+
   this.memoizedState = null;
 
   this.mode = mode;
@@ -204,6 +210,11 @@ function FiberNode(
   this.expirationTime = NoWork;
 
   this.alternate = null;
+
+  if (enableProfileModeMetrics) {
+    this.selfBaseTime = null;
+    this.descendantsBaseTime = null;
+  }
 
   if (__DEV__) {
     this._debugID = debugCounter++;
@@ -345,6 +356,17 @@ export function createFiberFromElement(
         mode |= StrictMode;
         break;
       case REACT_PROFILE_MODE_TYPE:
+        if (__DEV__) {
+          if (
+            typeof element.props.label !== 'string' ||
+            typeof element.props.callback !== 'function'
+          ) {
+            invariant(
+              false,
+              'ProfileMode must specify a label string and callback function',
+            );
+          }
+        }
         fiberTag = Mode;
         mode |= ProfileMode;
         break;
