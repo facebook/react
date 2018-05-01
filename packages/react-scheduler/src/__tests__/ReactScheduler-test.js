@@ -210,6 +210,41 @@ describe('ReactScheduler', () => {
       expect(callbackLog[1]).toBe('B');
       expect(callbackLog[2]).toBe('A1');
     });
+
+    describe('handling errors', () => {
+      it('flushes scheduled callbacks even if one throws error', () => {
+        const {rIC} = ReactScheduler;
+        const callbackLog = [];
+        const callbackA = jest.fn(() => {
+          callbackLog.push('A');
+          rIC(callbackC);
+          throw new Error('dummy error A');
+        });
+        const callbackB = jest.fn(() => {
+          callbackLog.push('B');
+        });
+        const callbackC = jest.fn(() => {
+          callbackLog.push('C');
+        });
+
+        rIC(callbackA);
+        // initially waits to call the callback
+        expect(callbackLog.length).toBe(0);
+        // when second callback is passed, flushes first one
+        // callbackA scheduled callbackC, which flushes callbackB
+        // even when callbackA throws an error, we successfully call callbackB
+        rIC(callbackB);
+        expect(callbackLog.length).toBe(2);
+        expect(callbackLog[0]).toBe('A');
+        expect(callbackLog[1]).toBe('B');
+        // after a delay, throws the error and calls the latest callback passed
+        expect(() => jest.runAllTimers()).toThrowError('dummy error A');
+        expect(callbackLog.length).toBe(3);
+        expect(callbackLog[0]).toBe('A');
+        expect(callbackLog[1]).toBe('B');
+        expect(callbackLog[2]).toBe('C');
+      });
+    });
   });
 
   // TODO: test cIC and now

@@ -114,6 +114,18 @@ if (!ExecutionEnvironment.canUseDOM) {
     },
   };
 
+  const safelyCallScheduledCallback = function(callback) {
+    isCurrentlyRunningCallback = true;
+    try {
+      callback(frameDeadlineObject);
+      isCurrentlyRunningCallback = false;
+    } catch (e) {
+      isCurrentlyRunningCallback = false;
+      // Still throw it, but not in this frame.
+      setTimeout(() => {throw e;});
+    }
+  };
+
   // We use the postMessage trick to defer idle work until after the repaint.
   const messageKey =
     '__reactIdleCallback$' +
@@ -156,9 +168,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     scheduledCallback = null;
     if (callback !== null) {
       frameDeadlineObject.didTimeout = didTimeout;
-      isCurrentlyRunningCallback = true;
-      callback(frameDeadlineObject);
-      isCurrentlyRunningCallback = false;
+      safelyCallScheduledCallback(callback);
     }
   };
   // Assumes that we have addEventListener in this environment. Might need
@@ -237,9 +247,7 @@ if (!ExecutionEnvironment.canUseDOM) {
         frameDeadlineObject.didTimeout =
           timeoutTimeFromPreviousCallback !== -1 &&
           timeoutTimeFromPreviousCallback <= now();
-        isCurrentlyRunningCallback = true;
-        previousCallback(frameDeadlineObject);
-        isCurrentlyRunningCallback = false;
+        safelyCallScheduledCallback(previousCallback);
         while (pendingCallbacks.length) {
           // the callback recursively called rIC and new callbacks are pending
           const callbackConfig = pendingCallbacks.shift();
@@ -248,9 +256,7 @@ if (!ExecutionEnvironment.canUseDOM) {
           // TODO: pull this into helper method
           frameDeadlineObject.didTimeout =
             pendingCallbackTimeout !== -1 && pendingCallbackTimeout <= now();
-          isCurrentlyRunningCallback = true;
-          pendingCallback(frameDeadlineObject);
-          isCurrentlyRunningCallback = false;
+          safelyCallScheduledCallback(pendingCallback);
         }
       }
     }
