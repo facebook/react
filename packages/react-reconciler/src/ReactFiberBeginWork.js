@@ -181,6 +181,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
     const nextChildren = render(nextProps, ref);
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
@@ -1023,6 +1025,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     const newChildren = render(newValue);
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, newChildren);
     return workInProgress.child;
   }
