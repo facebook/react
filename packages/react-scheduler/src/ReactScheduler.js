@@ -242,10 +242,9 @@ if (!ExecutionEnvironment.canUseDOM) {
         isCurrentlyRunningCallback = false;
         while (pendingCallbacks.length) {
           // the callback recursively called rIC and new callbacks are pending
-          const {
-            pendingCallback,
-            pendingCallbackTimeout,
-          } = pendingCallbacks.shift();
+          const callbackConfig = pendingCallbacks.shift();
+          const pendingCallback = callbackConfig.pendingCallback;
+          const pendingCallbackTimeout = callbackConfig.pendingCallbackTimeout;
           // TODO: pull this into helper method
           frameDeadlineObject.didTimeout =
             pendingCallbackTimeout !== -1 && pendingCallbackTimeout <= now();
