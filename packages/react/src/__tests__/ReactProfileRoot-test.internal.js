@@ -95,6 +95,7 @@ describe('ProfileRoot', () => {
 
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.enableProfileModeMetrics = true;
+      ReactFeatureFlags.enableSuspense = true;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
     });
@@ -189,7 +190,7 @@ describe('ProfileRoot', () => {
       expect(callback).toHaveBeenCalledTimes(3);
     });
 
-    it('does not log times if sCU prevents a re-render', () => {
+    it('does not log update times for descendents of sCU false', () => {
       const callback = jest.fn();
 
       let instance;
@@ -209,26 +210,20 @@ describe('ProfileRoot', () => {
 
       const renderer = ReactTestRenderer.create(
         <React.unstable_ProfileRoot label="outer" callback={callback}>
-          <div>
+          <Updater>
             <React.unstable_ProfileRoot label="middle" callback={callback}>
-              <Updater>
+              <Pure>
                 <React.unstable_ProfileRoot label="inner" callback={callback}>
-                  <Pure>
-                    <React.unstable_ProfileRoot
-                      label="blocked"
-                      callback={callback}>
-                      <div />
-                    </React.unstable_ProfileRoot>
-                  </Pure>
+                  <div />
                 </React.unstable_ProfileRoot>
-              </Updater>
+              </Pure>
             </React.unstable_ProfileRoot>
-          </div>
+          </Updater>
         </React.unstable_ProfileRoot>,
       );
 
       // All profile callbacks are called for initial render
-      expect(callback).toHaveBeenCalledTimes(4);
+      expect(callback).toHaveBeenCalledTimes(3);
 
       callback.mockReset();
 
@@ -239,15 +234,153 @@ describe('ProfileRoot', () => {
       });
 
       // Only call profile updates for paths that have re-rendered
-      // Since "blocked" is beneath a pure compoent, it isn't called
-      expect(callback).toHaveBeenCalledTimes(3);
-      expect(callback.mock.calls[0][0]).toBe('inner');
-      expect(callback.mock.calls[1][0]).toBe('middle');
-      expect(callback.mock.calls[2][0]).toBe('outer');
+      // Since "inner" is beneath a pure compoent, it isn't called
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback.mock.calls[0][0]).toBe('middle');
+      expect(callback.mock.calls[1][0]).toBe('outer');
     });
 
-    // TODO (bvaughn) Test updates only callback for committed modes
+    it('includes render times of nested ProfileRoots in their parent times', () => {
+      const callback = jest.fn();
 
-    // TODO (bvaughn) Test nested updates work (outer update is greater value than inner)
+      ReactTestRenderer.create(
+        <React.unstable_ProfileRoot label="parent" callback={callback}>
+          <div>
+            <React.unstable_ProfileRoot label="child" callback={callback}>
+              <div />
+            </React.unstable_ProfileRoot>
+          </div>
+        </React.unstable_ProfileRoot>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(2);
+
+      // Callbacks bubble (reverse order).
+      const [childCall, parentCall] = callback.mock.calls;
+      expect(childCall[0]).toBe('child');
+      expect(parentCall[0]).toBe('parent');
+
+      // Parent times should include child times
+      expect(parentCall[2]).toBeGreaterThan(childCall[2]); // "actual" time
+      expect(parentCall[3]).toBeGreaterThan(childCall[3]); // "base" time
+    });
+
+    it('record a decrease in "actual" time and no change in "base" time when sCU memoization is used', () => {
+      const callback = jest.fn();
+
+      class Pure extends React.PureComponent {
+        render() {
+          return this.props.children;
+        }
+      }
+
+      const renderer = ReactTestRenderer.create(
+        <React.unstable_ProfileRoot label="test" callback={callback}>
+          <Pure>
+            <div />
+          </Pure>
+        </React.unstable_ProfileRoot>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      renderer.update(
+        <React.unstable_ProfileRoot label="test" callback={callback}>
+          <Pure>
+            <div />
+          </Pure>
+        </React.unstable_ProfileRoot>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback.mock.calls[0][2]).toBeLessThan(callback.mock.calls[0][2]); // "actual" time
+      expect(callback.mock.calls[0][3]).toEqual(callback.mock.calls[0][3]); // "base" time
+    });
+
+    // TODO (bvaughn) Revisit these tests and maybe rewrite them better
+    describe('interruptions', () => {
+      let dateNow, setMaxElapsedTime;
+      beforeEach(() => {
+        dateNow = Date.now;
+        global.Date.now = () => Math.min(dateNow(), maxDateNow);
+        let maxDateNow = 0;
+        setMaxElapsedTime = function(duration) {
+          maxDateNow = dateNow() + duration;
+        };
+      });
+      afterEach(() => {
+        global.Date.now = dateNow;
+      });
+
+      it('should resume/accumulate "actual" time after a scheduling interruptions', () => {
+        const callback = jest.fn();
+
+        const Yield = ({value}) => {
+          renderer.unstable_yield(value);
+          return null;
+        };
+
+        setMaxElapsedTime(2);
+
+        // Render partially, but run out of time before completing.
+        const renderer = ReactTestRenderer.create(
+          <React.unstable_ProfileRoot label="test" callback={callback}>
+            <Yield value="first" />
+            <Yield value="second" />
+          </React.unstable_ProfileRoot>,
+          {unstable_isAsync: true},
+        );
+        renderer.unstable_flushThrough(['first']);
+
+        expect(callback).toHaveBeenCalledTimes(0);
+        setMaxElapsedTime(1);
+
+        // Resume/restart render.
+        renderer.unstable_flushAll();
+
+        // Verify that logged times include both durations above.
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback.mock.calls[0][2]).toBeGreaterThan(1); // "actual" time
+        expect(callback.mock.calls[0][3]).toBeGreaterThan(1); // "base" time
+      });
+
+      it('should resume/accumulate "actual" time after a higher priority interruption', () => {
+        const callback = jest.fn();
+
+        const Yield = ({value}) => {
+          renderer.unstable_yield(value);
+          return null;
+        };
+
+        setMaxElapsedTime(2);
+
+        // Render partially, but don't complete
+        const renderer = ReactTestRenderer.create(
+          <React.unstable_ProfileRoot label="test" callback={callback}>
+            <Yield value="first" />
+            <Yield value="second" />
+          </React.unstable_ProfileRoot>,
+          {unstable_isAsync: true},
+        );
+        renderer.unstable_flushThrough(['first']);
+
+        expect(callback).toHaveBeenCalledTimes(0);
+        setMaxElapsedTime(1);
+
+        // Interrupt with higher priority work
+        renderer.unstable_flushSync(() => {
+          renderer.update(
+            <React.unstable_ProfileRoot label="test" callback={callback}>
+              <Yield value="third" />
+            </React.unstable_ProfileRoot>,
+          );
+        });
+
+        // Verify that logged times include both durations above.
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback.mock.calls[0][2]).toBeGreaterThan(1); // "actual" time
+        expect(callback.mock.calls[0][3]).toBeGreaterThan(1); // "base" time
+      });
+    });
   });
 });
