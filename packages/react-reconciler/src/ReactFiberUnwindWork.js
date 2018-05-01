@@ -67,7 +67,9 @@ export default function<C, CX>(
     const update = createUpdate(expirationTime);
     // Unmount the root by rendering null.
     update.tag = CaptureUpdate;
-    update.payload = {children: null};
+    // Caution: React DevTools currently depends on this property
+    // being called "element".
+    update.payload = {element: null};
     const error = errorInfo.value;
     update.callback = () => {
       onUncaughtError(error);

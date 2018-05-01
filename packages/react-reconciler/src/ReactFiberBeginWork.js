@@ -417,7 +417,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (updateQueue !== null) {
       const nextProps = workInProgress.pendingProps;
       const prevState = workInProgress.memoizedState;
-      const prevChildren = prevState !== null ? prevState.children : null;
+      const prevChildren = prevState !== null ? prevState.element : null;
       processUpdateQueue(
         workInProgress,
         updateQueue,
@@ -426,7 +426,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         renderExpirationTime,
       );
       const nextState = workInProgress.memoizedState;
-      const nextChildren = nextState.children;
+      // Caution: React DevTools currently depends on this property
+      // being called "element".
+      const nextChildren = nextState.element;
 
       if (nextChildren === prevChildren) {
         // If the state is the same as before, that's a bailout because we had
