@@ -247,5 +247,35 @@ describe('ReactScheduler', () => {
     });
   });
 
-  // TODO: test cIC and now
+  describe('cIC', () => {
+    // TODO: return an id from rIC and use in cIC
+    // and test this.
+    it('cancels the scheduled callback', () => {
+      const {rIC, cIC} = ReactScheduler;
+      const cb = jest.fn();
+      rIC(cb);
+      expect(cb.mock.calls.length).toBe(0);
+      cIC();
+      jest.runAllTimers();
+      expect(cb.mock.calls.length).toBe(0);
+    });
+
+    it('when one callback cancels the next one', () => {
+      const {rIC, cIC} = ReactScheduler;
+      const cbA = jest.fn(() => {
+        cIC();
+      });
+      const cbB = jest.fn();
+      rIC(cbA);
+      expect(cbA.mock.calls.length).toBe(0);
+      rIC(cbB);
+      expect(cbA.mock.calls.length).toBe(1);
+      expect(cbB.mock.calls.length).toBe(0);
+      jest.runAllTimers();
+      // B should not get called because A cancelled B
+      expect(cbB.mock.calls.length).toBe(0);
+    });
+  });
+
+  // TODO: test 'now'
 });
