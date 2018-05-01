@@ -26,7 +26,7 @@ import {
   HostText,
   HostPortal,
   CallComponent,
-  Mode,
+  ProfileRoot,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {
@@ -35,7 +35,6 @@ import {
   Snapshot,
   Update,
 } from 'shared/ReactTypeOfSideEffect';
-import {REACT_PROFILE_MODE_TYPE} from 'shared/ReactSymbols';
 import {commitUpdateQueue} from './ReactUpdateQueue';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -770,23 +769,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function commitProfileWork(finishedWork: Fiber): void {
     switch (finishedWork.tag) {
-      case Mode: {
-        // TODO (bvaughn) This feels like the wrong type check approach
-        if (finishedWork.type === REACT_PROFILE_MODE_TYPE) {
-          if (enableProfileModeMetrics) {
-            finishedWork.pendingProps.callback.call(
-              null,
-              finishedWork.pendingProps.label,
-              'mount',
-              1, // TODO (bvaughn) Use actual times
-              1, // TODO (bvaughn) Use actual times
-            );
-          }
-        } else {
-          invariant(
-            false,
-            'This unit of work tag should not have side-effects. This error is ' +
-              'likely caused by a bug in React. Please file an issue.',
+      case ProfileRoot: {
+        if (enableProfileModeMetrics) {
+          finishedWork.pendingProps.callback.call(
+            null,
+            finishedWork.pendingProps.label,
+            'mount',
+            1, // TODO (bvaughn) Use actual times
+            1, // TODO (bvaughn) Use actual times
           );
         }
         break;

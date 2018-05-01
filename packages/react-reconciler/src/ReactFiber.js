@@ -31,6 +31,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  ProfileRoot,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
@@ -367,7 +368,7 @@ export function createFiberFromElement(
             );
           }
         }
-        fiberTag = Mode;
+        fiberTag = ProfileRoot;
         mode |= ProfileMode;
         break;
       case REACT_CALL_TYPE:

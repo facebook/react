@@ -34,6 +34,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  ProfileRoot,
 } from 'shared/ReactTypeOfWork';
 import {
   NoEffect,
@@ -44,7 +45,6 @@ import {
   DidCapture,
   CommitProfile,
 } from 'shared/ReactTypeOfSideEffect';
-import {REACT_PROFILE_MODE_TYPE} from 'shared/ReactSymbols';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
   enableGetDerivedStateFromCatch,
@@ -203,29 +203,33 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateMode(current, workInProgress) {
-    if (enableProfileModeMetrics) {
-      if (workInProgress.type === ProfileMode) {
-        // TODO (bvaughn) (actual) Start/resume timer for "actual" time
-      }
-    }
     const nextChildren = workInProgress.pendingProps.children;
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-    } else if (workInProgress.type === REACT_PROFILE_MODE_TYPE) {
-      // Don't bail out early for ProfileMode,
-      // Because we always want to re-measure the subtree.
-      if (enableProfileModeMetrics) {
-        // TODO (bvaughn) (render) Stop timer for "actual" time
-        // TODO (bvaughn) (actual) Calculate sum of children's "base" time
-        workInProgress.effectTag |= CommitProfile;
-      }
     } else if (
       nextChildren === null ||
       workInProgress.memoizedProps === nextChildren
     ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
+  function updateProfileRoot(current, workInProgress) {
+    if (enableProfileModeMetrics) {
+      workInProgress.effectTag |= CommitProfile;
+
+      // TODO (bvaughn) (render) Stop/resume timer for "actual" time
+      // TODO (bvaughn) (actual) Calculate sum of children's "base" time
+    }
+
+    // Don't bail out early for ProfileMode,
+    // Because we always want to re-measure the subtree
+
+    const nextChildren = workInProgress.pendingProps.children;
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextChildren);
     return workInProgress.child;
@@ -1240,6 +1244,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return updateFragment(current, workInProgress);
       case Mode:
         return updateMode(current, workInProgress);
+      case ProfileRoot:
+        return updateProfileRoot(current, workInProgress);
       case ContextProvider:
         return updateContextProvider(
           current,
