@@ -47,9 +47,9 @@ import {
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import {
-  isBaseTimerRunning,
-  startBaseTimer,
-  stopBaseTimer,
+  isBaseRenderTimerRunning,
+  startBaseRenderTimer,
+  stopBaseRenderTimer,
 } from './ReactProfileTimer';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
@@ -165,14 +165,6 @@ if (__DEV__) {
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
-  const {
-    now,
-    scheduleDeferredCallback,
-    cancelDeferredCallback,
-    prepareForCommit,
-    resetAfterCommit,
-  } = config;
-
   const stack = ReactFiberStack();
   const hostContext = ReactFiberHostContext(config, stack);
   const legacyContext = ReactFiberLegacyContext(stack);
@@ -235,6 +227,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     markLegacyErrorBoundaryAsFailed,
     recalculateCurrentTime,
   );
+  const {
+    now,
+    scheduleDeferredCallback,
+    cancelDeferredCallback,
+    prepareForCommit,
+    resetAfterCommit,
+  } = config;
 
   // Represents the current time in ms.
   const originalStartTimeMs = now();
@@ -892,11 +891,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     let next;
     if (enableProfileModeMetrics) {
-      startBaseTimer();
+      startBaseRenderTimer();
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
-      if (isBaseTimerRunning()) {
-        workInProgress.selfBaseTime = stopBaseTimer();
-      } else {
+      if (isBaseRenderTimerRunning()) {
+        // Update "base" time if the render wasn't bailed out on.
+        workInProgress.selfBaseTime = stopBaseRenderTimer();
       }
     } else {
       next = beginWork(current, workInProgress, nextRenderExpirationTime);

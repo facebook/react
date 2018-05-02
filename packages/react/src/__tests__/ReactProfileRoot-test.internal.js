@@ -329,7 +329,6 @@ describe('ProfileRoot', () => {
       expect(updateCall[3]).toEqual(mountCall[3]); // "base" time
     });
 
-    // TODO (bvaughn) Revisit these tests and maybe rewrite them better
     describe('interrupted render timings', () => {
       it('should resume/accumulate "actual" time after a scheduling interruptions', () => {
         const callback = jest.fn();

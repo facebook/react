@@ -26,24 +26,27 @@ if (hasNativePerformanceNow) {
   };
 }
 
+/**
+ * The "actual" render time is total time required to render the descendants of a ProfileRoot component.
+ * This time is stored as a stack, since ProfileRoots can be nested.
+ * This time is started during the "begin" phase and stopped during the "complete" phase.
+ * It is paused (and accumulated) in the event of an interruption or an aborted render.
+ */
+
 const {createCursor, push, pop} = ReactFiberStack();
 
 let renderTimeStackCursor: StackCursor<number> = createCursor(0);
 
-export function startRenderTimer(fiber: Fiber): void {
+export function startActualRenderTimer(fiber: Fiber): void {
   push(renderTimeStackCursor, now(), fiber);
 }
 
-export function stopRenderTimer(fiber: Fiber): number | null {
-  const maybeStartTime = renderTimeStackCursor.current;
+export function stopActualRenderTimer(fiber: Fiber): number {
+  const startTime = renderTimeStackCursor.current;
 
   pop(renderTimeStackCursor, fiber);
 
-  if (maybeStartTime === null) {
-    return null;
-  } else {
-    return now() - maybeStartTime;
-  }
+  return now() - startTime;
 }
 
 /**
@@ -55,18 +58,18 @@ export function stopRenderTimer(fiber: Fiber): number | null {
 
 let baseStartTime: number | null = null;
 
-export function cancelBaseTimer(): void {
+export function cancelBaseRenderTimer(): void {
   baseStartTime = null;
 }
 
-export function isBaseTimerRunning(): boolean {
+export function isBaseRenderTimerRunning(): boolean {
   return baseStartTime !== null;
 }
 
-export function startBaseTimer(): void {
+export function startBaseRenderTimer(): void {
   baseStartTime = now();
 }
 
-export function stopBaseTimer(): number | null {
+export function stopBaseRenderTimer(): number | null {
   return baseStartTime === null ? null : now() - baseStartTime;
 }

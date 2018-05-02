@@ -69,7 +69,10 @@ import {
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
-import {cancelBaseTimer, startRenderTimer} from './ReactProfileTimer';
+import {
+  cancelBaseRenderTimer,
+  startActualRenderTimer,
+} from './ReactProfileTimer';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -222,14 +225,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function updateProfileRoot(current, workInProgress) {
     if (enableProfileModeMetrics) {
       // Start render timer here and push start time onto queue
-      startRenderTimer(workInProgress);
+      startActualRenderTimer(workInProgress);
 
-      // Let the "complete" phase know to stop the timer
+      // Let the "complete" phase know to stop the timer,
+      // And the scheduler to record the measured time.
       workInProgress.effectTag |= CommitProfile;
     }
 
-    // Don't bail out early for ProfileMode,
-    // Because we always want to re-measure the subtree
+    // Never bail out early for ProfileRoots.
+    // We always want to re-measure the subtree.
 
     const nextChildren = workInProgress.pendingProps.children;
     reconcileChildren(current, workInProgress, nextChildren);
@@ -1082,7 +1086,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (enableProfileModeMetrics) {
       // Don't update "base" render times for bailouts.
-      cancelBaseTimer();
+      cancelBaseRenderTimer();
     }
 
     // TODO: We should ideally be able to bail out early if the children have no
