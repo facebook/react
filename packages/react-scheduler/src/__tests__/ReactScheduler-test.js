@@ -60,16 +60,13 @@ describe('ReactScheduler', () => {
       const callbackB = jest.fn(() => callbackLog.push('B'));
       rIC(callbackA);
       // initially waits to call the callback
-      expect(callbackLog.length).toBe(0);
+      expect(callbackLog).toEqual([]);
       // when second callback is passed, flushes first one
       rIC(callbackB);
-      expect(callbackLog.length).toBe(1);
-      expect(callbackLog[0]).toBe('A');
+      expect(callbackLog).toEqual(['A']);
       // after a delay, calls the latest callback passed
       jest.runAllTimers();
-      expect(callbackLog.length).toBe(2);
-      expect(callbackLog[0]).toBe('A');
-      expect(callbackLog[1]).toBe('B');
+      expect(callbackLog).toEqual(['A', 'B']);
       // callbackA should not have timed out and should include a timeRemaining method
       expect(callbackA.mock.calls[0][0].didTimeout).toBe(false);
       expect(typeof callbackA.mock.calls[0][0].timeRemaining()).toBe('number');
@@ -98,15 +95,10 @@ describe('ReactScheduler', () => {
       // when second callback is passed, flushes first one
       // callbackA scheduled callbackC, which flushes callbackB
       rIC(callbackB);
-      expect(callbackLog.length).toBe(2);
-      expect(callbackLog[0]).toBe('A');
-      expect(callbackLog[1]).toBe('B');
+      expect(callbackLog).toEqual(['A', 'B']);
       // after a delay, calls the latest callback passed
       jest.runAllTimers();
-      expect(callbackLog.length).toBe(3);
-      expect(callbackLog[0]).toBe('A');
-      expect(callbackLog[1]).toBe('B');
-      expect(callbackLog[2]).toBe('C');
+      expect(callbackLog).toEqual(['A', 'B', 'C']);
     });
 
     it('schedules callbacks in correct order when callbacks have many nested rIC calls', () => {
@@ -141,16 +133,10 @@ describe('ReactScheduler', () => {
       // when second callback is passed, flushes first one
       // callbackA scheduled callbackC, which flushes callbackB
       rIC(callbackB);
-      expect(callbackLog.length).toBe(5);
-      expect(callbackLog[0]).toBe('A');
-      expect(callbackLog[1]).toBe('B');
-      expect(callbackLog[2]).toBe('C');
-      expect(callbackLog[3]).toBe('D');
-      expect(callbackLog[4]).toBe('E');
+      expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E']);
       // after a delay, calls the latest callback passed
       jest.runAllTimers();
-      expect(callbackLog.length).toBe(6);
-      expect(callbackLog[5]).toBe('F');
+      expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
     });
 
     it('allows each callback finish running before flushing others', () => {
@@ -170,15 +156,10 @@ describe('ReactScheduler', () => {
       // when second callback is passed, flushes first one
       // callbackA scheduled callbackC, which flushes callbackB
       rIC(callbackB);
-      expect(callbackLog.length).toBe(2);
-      expect(callbackLog[0]).toBe('A');
-      expect(callbackLog[1]).toBe('B');
+      expect(callbackLog).toEqual(['A', 'B']);
       // after a delay, calls the latest callback passed
       jest.runAllTimers();
-      expect(callbackLog.length).toBe(3);
-      expect(callbackLog[0]).toBe('A');
-      expect(callbackLog[1]).toBe('B');
-      expect(callbackLog[2]).toBe('C');
+      expect(callbackLog).toEqual(['A', 'B', 'C']);
     });
 
     it('schedules callbacks in correct order when they use rIC to schedule themselves', () => {
@@ -200,15 +181,10 @@ describe('ReactScheduler', () => {
       // when second callback is passed, flushes first one
       // callbackA scheduled callbackA again, which flushes callbackB
       rIC(callbackB);
-      expect(callbackLog.length).toBe(2);
-      expect(callbackLog[0]).toBe('A0');
-      expect(callbackLog[1]).toBe('B');
+      expect(callbackLog).toEqual(['A0', 'B']);
       // after a delay, calls the latest callback passed
       jest.runAllTimers();
-      expect(callbackLog.length).toBe(3);
-      expect(callbackLog[0]).toBe('A0');
-      expect(callbackLog[1]).toBe('B');
-      expect(callbackLog[2]).toBe('A1');
+      expect(callbackLog).toEqual(['A0', 'B', 'A1']);
     });
 
     describe('handling errors', () => {
@@ -234,15 +210,10 @@ describe('ReactScheduler', () => {
         // callbackA scheduled callbackC, which flushes callbackB
         // even when callbackA throws an error, we successfully call callbackB
         rIC(callbackB);
-        expect(callbackLog.length).toBe(2);
-        expect(callbackLog[0]).toBe('A');
-        expect(callbackLog[1]).toBe('B');
+        expect(callbackLog).toEqual(['A', 'B']);
         // after a delay, throws the error and calls the latest callback passed
         expect(() => jest.runAllTimers()).toThrowError('dummy error A');
-        expect(callbackLog.length).toBe(3);
-        expect(callbackLog[0]).toBe('A');
-        expect(callbackLog[1]).toBe('B');
-        expect(callbackLog[2]).toBe('C');
+        expect(callbackLog).toEqual(['A', 'B', 'C']);
       });
     });
   });
