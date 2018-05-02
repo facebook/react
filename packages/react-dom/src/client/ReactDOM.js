@@ -73,6 +73,7 @@ let SUPPRESS_HYDRATION_WARNING;
 let topLevelUpdateWarnings;
 let warnOnInvalidCallback;
 let didWarnAboutUnstableCreatePortal = false;
+let didWarnAboutUnstableRenderSubtree = false;
 
 if (__DEV__) {
   SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
@@ -1181,6 +1182,16 @@ const ReactDOM: Object = {
     containerNode: DOMContainer,
     callback: ?Function,
   ) {
+    if (!didWarnAboutUnstableRenderSubtree) {
+      didWarnAboutUnstableRenderSubtree = true;
+      lowPriorityWarning(
+        false,
+        'ReactDOM.unstable_renderSubtreeIntoContainer() has been deprecated, ' +
+          'and will be removed in React 17+. Update your code to use ' +
+          'ReactDOM.createPortal() instead.',
+      );
+    }
+
     invariant(
       parentComponent != null && ReactInstanceMap.has(parentComponent),
       'parentComponent must be a valid React Component',

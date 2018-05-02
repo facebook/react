@@ -17,6 +17,27 @@ const renderSubtreeIntoContainer = require('react-dom')
   .unstable_renderSubtreeIntoContainer;
 
 describe('renderSubtreeIntoContainer', () => {
+  it('should warn about future deprecation of the API', () => {
+    const portal = document.createElement('div');
+
+    class Parent extends React.Component {
+      render() {
+        return null;
+      }
+
+      componentDidMount() {
+        expect(() =>
+          renderSubtreeIntoContainer(this, <div />, portal),
+        ).toLowPriorityWarnDev(
+          'ReactDOM.unstable_renderSubtreeIntoContainer() has been deprecated, ' +
+            'and will be removed in React 17+. Update your code to use ' +
+            'ReactDOM.createPortal() instead.',
+        );
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Parent />);
+  });
   it('should pass context when rendering subtree elsewhere', () => {
     const portal = document.createElement('div');
 
