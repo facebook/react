@@ -41,10 +41,12 @@ import {
   HostPortal,
 } from 'shared/ReactTypeOfWork';
 import {
+  enableProfileModeMetrics,
   enableUserTimingAPI,
-  warnAboutDeprecatedLifecycles,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
+  warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
+import {startRenderTimer, stopRenderTimer} from './ReactProfileTimer';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -159,6 +161,14 @@ if (__DEV__) {
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
+  const {
+    now,
+    scheduleDeferredCallback,
+    cancelDeferredCallback,
+    prepareForCommit,
+    resetAfterCommit,
+  } = config;
+
   const stack = ReactFiberStack();
   const hostContext = ReactFiberHostContext(config, stack);
   const legacyContext = ReactFiberLegacyContext(stack);
@@ -221,13 +231,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     markLegacyErrorBoundaryAsFailed,
     recalculateCurrentTime,
   );
-  const {
-    now,
-    scheduleDeferredCallback,
-    cancelDeferredCallback,
-    prepareForCommit,
-    resetAfterCommit,
-  } = config;
 
   // Represents the current time in ms.
   const originalStartTimeMs = now();
@@ -883,9 +886,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
 
-    // TODO (bvaughn) (base) Start "base" time here
-    let next = beginWork(current, workInProgress, nextRenderExpirationTime);
-    // TODO (bvaughn) (base) Stop "base" time here; store on Fiber
+    let next;
+    if (enableProfileModeMetrics) {
+      startRenderTimer(workInProgress);
+      next = beginWork(current, workInProgress, nextRenderExpirationTime);
+      workInProgress.selfBaseTime = stopRenderTimer(workInProgress);
+    } else {
+      next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    }
 
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();

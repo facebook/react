@@ -40,7 +40,14 @@ import {
   Mode,
   ProfileRoot,
 } from 'shared/ReactTypeOfWork';
-import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
+import {ProfileMode} from './ReactTypeOfMode';
+import {
+  CommitProfile,
+  Placement,
+  Ref,
+  Update,
+} from 'shared/ReactTypeOfSideEffect';
+import {stopRenderTimer} from './ReactProfileTimer';
 import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
@@ -193,8 +200,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateProfileRoot(workInProgress: Fiber) {
     if (enableProfileModeMetrics) {
-      // TODO (bvaughn) (actual) Stop render timer here; store on stateNode
-      // TODO (bvaughn) (base) Sum child base times and store on Fiber
+      if (workInProgress.effectTag & CommitProfile) {
+        // Stop render timer and store the elapsed time as stateNode.
+        // Commit work will read from this value and pass it along to the callback.
+        workInProgress.stateNode = stopRenderTimer(workInProgress);
+      }
     }
   }
 
@@ -413,6 +423,20 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     renderExpirationTime: ExpirationTime,
   ): Fiber | null {
     const newProps = workInProgress.pendingProps;
+
+    if (enableProfileModeMetrics) {
+      if (workInProgress.mode & ProfileMode) {
+        // Bubble up "base" render times if we're within a ProfileRoot
+        let treeBaseTime = workInProgress.selfBaseTime;
+        let child = workInProgress.child;
+        while (child !== null) {
+          treeBaseTime += child.treeBaseTime;
+          child = child.sibling;
+        }
+        workInProgress.treeBaseTime = treeBaseTime;
+      }
+    }
+
     switch (workInProgress.tag) {
       case FunctionalComponent:
         return null;

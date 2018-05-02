@@ -69,6 +69,7 @@ import {
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
+import {startRenderTimer} from './ReactProfileTimer';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -220,9 +221,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateProfileRoot(current, workInProgress) {
     if (enableProfileModeMetrics) {
-      workInProgress.effectTag |= CommitProfile;
+      // Start render timer here and push start time onto queue
+      startRenderTimer(workInProgress);
 
-      // TODO (bvaughn) (actual) Start render timer here
+      // Let the "complete" phase know to stop the timer
+      workInProgress.effectTag |= CommitProfile;
     }
 
     // Don't bail out early for ProfileMode,

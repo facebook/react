@@ -774,9 +774,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           finishedWork.pendingProps.callback.call(
             null,
             finishedWork.pendingProps.label,
-            'mount',
-            1, // TODO (bvaughn) Use real "actual" times (from stateNode)
-            1, // TODO (bvaughn) Use real "base" times (from fiber)
+            finishedWork.alternate === null ? 'mount' : 'update',
+            finishedWork.stateNode,
+            finishedWork.treeBaseTime,
           );
         }
         break;

@@ -155,7 +155,7 @@ export type Fiber = {|
 
   // Profiling metrics
   selfBaseTime: number | null,
-  descendantsBaseTime: number | null,
+  treeBaseTime: number | null,
 
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
@@ -214,7 +214,7 @@ function FiberNode(
 
   if (enableProfileModeMetrics) {
     this.selfBaseTime = null;
-    this.descendantsBaseTime = null;
+    this.treeBaseTime = null;
   }
 
   if (__DEV__) {
@@ -310,6 +310,11 @@ export function createWorkInProgress(
   workInProgress.sibling = current.sibling;
   workInProgress.index = current.index;
   workInProgress.ref = current.ref;
+
+  if (enableProfileModeMetrics) {
+    workInProgress.selfBaseTime = current.selfBaseTime;
+    workInProgress.treeBaseTime = current.treeBaseTime;
+  }
 
   return workInProgress;
 }
@@ -537,6 +542,10 @@ export function assignFiberPropertiesInDEV(
   target.lastEffect = source.lastEffect;
   target.expirationTime = source.expirationTime;
   target.alternate = source.alternate;
+  if (enableProfileModeMetrics) {
+    target.selfBaseTime = source.selfBaseTime;
+    target.treeBaseTime = source.treeBaseTime;
+  }
   target._debugID = source._debugID;
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
