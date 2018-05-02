@@ -249,29 +249,37 @@ if (!ExecutionEnvironment.canUseDOM) {
     // having been called before it runs.
     // So we call anything in the queue before the latest callback
 
-    let previouslyScheduledCallbackConfig;
-    if (scheduledCallbackConfig !== null) {
-      // If we have previous callback config, save it and handle it below
-      previouslyScheduledCallbackConfig = scheduledCallbackConfig;
-    }
-    // Then set up the next callback config
-    let timeoutTime = -1;
-    if (options != null && typeof options.timeout === 'number') {
-      timeoutTime = now() + options.timeout;
-    }
     const latestCallbackId = getCallbackId();
-    scheduledCallbackConfig = {
-      scheduledCallback: callback,
-      timeoutTime,
-      callbackId: latestCallbackId,
-    };
-    registeredCallbackIds.set(latestCallbackId, true);
-    // If we have previousCallback, call it. This may trigger recursion.
-    if (
-      previouslyScheduledCallbackConfig &&
-      // make flow happy
-      typeof previouslyScheduledCallbackConfig.timeoutTime === 'number'
-    ) {
+    if (scheduledCallbackConfig === null) {
+      // Set up the next callback config
+      let timeoutTime = -1;
+      if (options != null && typeof options.timeout === 'number') {
+        timeoutTime = now() + options.timeout;
+      }
+      scheduledCallbackConfig = {
+        scheduledCallback: callback,
+        timeoutTime,
+        callbackId: latestCallbackId,
+      };
+      registeredCallbackIds.set(latestCallbackId, true);
+    } else {
+      // If we have a previous callback config, we call that and then schedule
+      // the latest callback.
+      const previouslyScheduledCallbackConfig = scheduledCallbackConfig;
+
+      // Then set up the next callback config
+      let timeoutTime = -1;
+      if (options != null && typeof options.timeout === 'number') {
+        timeoutTime = now() + options.timeout;
+      }
+      scheduledCallbackConfig = {
+        scheduledCallback: callback,
+        timeoutTime,
+        callbackId: latestCallbackId,
+      };
+      registeredCallbackIds.set(latestCallbackId, true);
+
+      // If we have previousCallback, call it. This may trigger recursion.
       const previousCallbackTimeout: number =
         previouslyScheduledCallbackConfig.timeoutTime;
       const previousCallback =
