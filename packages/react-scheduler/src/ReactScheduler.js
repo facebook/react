@@ -14,10 +14,13 @@
  * control than requestAnimationFrame and requestIdleCallback.
  * Current TODO items:
  * X- Pull out the rIC polyfill built into React
- * - Initial test coverage
- * - Support for multiple callbacks
- * - Support for two priorities; serial and deferred
+ * X- Initial test coverage
+ * X- Support for multiple callbacks
+ * X- Support for two priorities; serial and deferred
  * - Better test coverage
+ *   - Mock out the react-scheduler module, not the browser APIs, in renderer
+ *   tests
+ *   - Add fixture test of react-scheduler
  * - Better docblock
  * - Polish documentation, API
  */
@@ -63,13 +66,17 @@ if (hasNativePerformanceNow) {
 }
 
 // TODO: There's no way to cancel, because Fiber doesn't atm.
-let rIC: (
+let scheduleSerialCallback: (
   callback: (deadline: Deadline, options?: {timeout: number}) => void,
 ) => number;
-let cIC: (callbackID: number) => void;
+let scheduleDeferredCallback: (
+  callback: (deadline: Deadline, options?: {timeout: number}) => void,
+) => number;
+let cancelSerialCallback: (callbackID: number) => void;
+let cancelDeferredCallback: (callback: Function) => void;
 
 if (!ExecutionEnvironment.canUseDOM) {
-  rIC = function(
+  scheduleSerialCallback = function(
     frameCallback: (deadline: Deadline, options?: {timeout: number}) => void,
   ): number {
     return setTimeout(() => {
@@ -81,15 +88,19 @@ if (!ExecutionEnvironment.canUseDOM) {
       });
     });
   };
-  cIC = function(timeoutID: number) {
+  cancelSerialCallback = function(timeoutID: number) {
     clearTimeout(timeoutID);
   };
 } else {
   // Always polyfill requestIdleCallback and cancelIdleCallback
 
-  let scheduledRICCallback = null;
+  let scheduledSerialCallback = null;
   let isIdleScheduled = false;
   let timeoutTime = -1;
+  let isCurrentlyRunningCallback = false;
+  // We may need to keep queues of pending callbacks
+  let pendingSerialCallbacks = [];
+  let pendingDeferredCallbacks = [];
 
   let isAnimationFrameScheduled = false;
 
@@ -108,6 +119,59 @@ if (!ExecutionEnvironment.canUseDOM) {
     },
   };
 
+  /**
+   * Checks for timed out callbacks, runs them, and then checks again to see if
+   * any more have timed out.
+   * Keeps doing this until there are none which have currently timed out.
+   */
+  const callTimedOutCallbacks = function() {
+    // TODO: this would be more efficient if deferred callbacks are stored in
+    // min heap.
+    let foundTimedOutCallback = false;
+
+    // keep checking until we don't find any more timed out callbacks
+    do {
+      const currentTime = now();
+      foundTimedOutCallback = false;
+      // run serial callback if it has timed out
+      if (scheduledSerialCallback !== null) {
+        if (timeoutTime !== -1 && timeoutTime <= currentTime) {
+          foundTimedOutCallback = true;
+          const currentCallback = scheduledSerialCallback;
+          timeoutTime = -1;
+          scheduledSerialCallback = null;
+          frameDeadlineObject.didTimeout = true;
+          isCurrentlyRunningCallback = true;
+          currentCallback(frameDeadlineObject);
+          isCurrentlyRunningCallback = false;
+        }
+      }
+      if (pendingDeferredCallbacks.length > 0) {
+        // check if any have timed out, and if so
+        // run them and remove from pendingDeferredCallbacks
+        for (let i = 0, len = pendingDeferredCallbacks.length; i < len; i++) {
+          const {
+            deferredCallback,
+            deferredCallbackTimeoutTime,
+          } = pendingDeferredCallbacks[i];
+          if (
+            deferredCallbackTimeoutTime !== -1 &&
+            deferredCallbackTimeoutTime <= currentTime
+          ) {
+            foundTimedOutCallback = true;
+            pendingDeferredCallbacks.splice(i, 1); // remove this callback
+            i--;
+            len--; // compensate for mutating array we are traversing
+            frameDeadlineObject.didTimeout = true;
+            isCurrentlyRunningCallback = true;
+            deferredCallback(frameDeadlineObject);
+            isCurrentlyRunningCallback = false;
+          }
+        }
+      }
+    } while (foundTimedOutCallback);
+  };
+
   // We use the postMessage trick to defer idle work until after the repaint.
   const messageKey =
     '__reactIdleCallback$' +
@@ -121,36 +185,45 @@ if (!ExecutionEnvironment.canUseDOM) {
 
     isIdleScheduled = false;
 
-    const currentTime = now();
-    if (frameDeadline - currentTime <= 0) {
-      // There's no time left in this idle period. Check if the callback has
-      // a timeout and whether it's been exceeded.
-      if (timeoutTime !== -1 && timeoutTime <= currentTime) {
-        // Exceeded the timeout. Invoke the callback even though there's no
-        // time left.
-        frameDeadlineObject.didTimeout = true;
-      } else {
-        // No timeout.
-        if (!isAnimationFrameScheduled) {
-          // Schedule another animation callback so we retry later.
-          isAnimationFrameScheduled = true;
-          requestAnimationFrame(animationTick);
-        }
-        // Exit without invoking the callback.
-        return;
-      }
-    } else {
-      // There's still time left in this idle period.
-      frameDeadlineObject.didTimeout = false;
-    }
+    let keepRunningCallbacks = true;
 
-    timeoutTime = -1;
-    const callback = scheduledRICCallback;
-    scheduledRICCallback = null;
-    if (callback !== null) {
-      callback(frameDeadlineObject);
+    while (keepRunningCallbacks) {
+      // call any timed out callbacks, until none left have timed out.
+      callTimedOutCallbacks();
+
+      // check if we have any idle time, and if so call some callbacks
+      const currentTime = now();
+      const idleTimeLeft = frameDeadline - currentTime > 0;
+      if (idleTimeLeft) {
+        // call the serial callback first if there is one
+        let nextCallback = scheduledSerialCallback;
+        timeoutTime = -1;
+        scheduledSerialCallback = null;
+        if (nextCallback === null) {
+          // if no serial callback was scheduled, run a deferred callback
+          nextCallback = pendingDeferredCallbacks.pop();
+        }
+        if (nextCallback) {
+          frameDeadlineObject.didTimeout = false;
+          isCurrentlyRunningCallback = true;
+          nextCallback(frameDeadlineObject);
+          isCurrentlyRunningCallback = false;
+        } else {
+          // There are no more scheduled callbacks.
+          // Our work here is done.
+          keepRunningCallbacks = false;
+        }
+      } else {
+        // No idle time left in this frame.
+        // Schedule another animation callback so we retry later.
+        isAnimationFrameScheduled = true;
+        requestAnimationFrame(animationTick);
+
+        keepRunningCallbacks = false;
+      }
     }
   };
+
   // Assumes that we have addEventListener in this environment. Might need
   // something better for old IE.
   window.addEventListener('message', idleTick, false);
@@ -186,32 +259,113 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
   };
 
-  rIC = function(
+  /**
+   * This method is similar to requestIdleCallback. 'Deferred' callbacks will
+   * be called after the 'serial' priority callbacks have been cleared, with
+   * additional priority given to callbacks which are past their timeout.
+   */
+  scheduleDeferredCallback = function(
     callback: (deadline: Deadline) => void,
     options?: {timeout: number},
   ): number {
-    // This assumes that we only schedule one callback at a time because that's
-    // how Fiber uses it.
-    scheduledRICCallback = callback;
+    const deferredCallbackTimeoutTime =
+      options && typeof options.timeout === 'number' ? options.timeout : -1;
+    pendingDeferredCallbacks.push({
+      deferredCallback: callback,
+      deferredCallbackTimeoutTime,
+    });
+  };
+
+  /**
+   * 'Serial' callbacks are distinct from regular callbacks because they rely on
+   * all previous 'serial' callbacks having been evaluated.
+   * For example: If I click 'submit' and then quickly click 'submit' again. The
+   * first click should disable the 'submit' button, and we can't process the
+   * second click until that first click has been processed.
+   */
+  scheduleSerialCallback = function(
+    callback: (deadline: Deadline) => void,
+    options?: {timeout: number},
+  ): number {
+    let previousCallback;
+    let timeoutTimeFromPreviousCallback;
+    if (scheduledSerialCallback !== null) {
+      // If we have previous callback, save it and handle it below
+      timeoutTimeFromPreviousCallback = timeoutTime;
+      previousCallback = scheduledSerialCallback;
+    }
+    // Then set up the next callback, and update timeoutTime
+    scheduledSerialCallback = callback;
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
+    } else {
+      timeoutTime = -1;
     }
+    // If we have previousCallback, call it. This may trigger recursion.
+    if (
+      previousCallback &&
+      typeof timeoutTimeFromPreviousCallback === 'number'
+    ) {
+      const prevCallbackTimeout: number = timeoutTimeFromPreviousCallback;
+      if (isCurrentlyRunningCallback) {
+        // we are inside a recursive call to scheduleSerialCallback
+        // add this callback to a pending queue and run after we exit
+        pendingSerialCallbacks.push({
+          pendingCallback: previousCallback,
+          pendingCallbackTimeout: prevCallbackTimeout,
+        });
+      } else {
+        frameDeadlineObject.didTimeout =
+          timeoutTimeFromPreviousCallback !== -1 &&
+          timeoutTimeFromPreviousCallback <= now();
+        isCurrentlyRunningCallback = true;
+        previousCallback(frameDeadlineObject);
+        isCurrentlyRunningCallback = false;
+        while (pendingSerialCallbacks.length) {
+          // the callback recursively called scheduleSerialCallback
+          // and new callbacks are pending
+          const {
+            pendingCallback,
+            pendingCallbackTimeout,
+          } = pendingSerialCallbacks.shift();
+          // TODO: pull this into helper method
+          frameDeadlineObject.didTimeout =
+            pendingCallbackTimeout !== -1 && pendingCallbackTimeout <= now();
+          isCurrentlyRunningCallback = true;
+          pendingCallback(frameDeadlineObject);
+          isCurrentlyRunningCallback = false;
+        }
+      }
+    }
+
+    // finally, after clearing previous callbacks, schedule the latest one
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
-      // might want to still have setTimeout trigger rIC as a backup to ensure
-      // that we keep performing work.
+      // might want to still have setTimeout trigger scheduleSerialCallback as a
+      // backup to ensure that we keep performing work.
       isAnimationFrameScheduled = true;
-      requestAnimationFrame(animationTick);
+      return requestAnimationFrame(animationTick);
     }
     return 0;
   };
 
-  cIC = function() {
-    scheduledRICCallback = null;
+  cancelSerialCallback = function() {
     isIdleScheduled = false;
+    scheduledSerialCallback = null;
     timeoutTime = -1;
+  };
+
+  cancelDeferredCallback = function(callback) {
+    const index = pendingDeferredCallbacks.indexOf(callback);
+    pendingDeferredCallbacks.splice(index, 1);
   };
 }
 
-export {now, rIC, cIC};
+export {
+  now,
+  scheduleSerialCallback,
+  cancelSerialCallback,
+  scheduleDeferredCallback,
+  cancelDeferredCallback,
+};
