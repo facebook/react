@@ -124,7 +124,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   // unregistered by removing the id from this object.
   // Then we skip calling any callback which is not registered.
   // This means cancelling is an O(1) time complexity instead of O(n).
-  const registeredCallbackIds: {[number]: boolean} = {};
+  const registeredCallbackIds: Map<number, boolean> = new Map();
 
   const frameDeadlineObject: Deadline = {
     didTimeout: false,
@@ -135,17 +135,17 @@ if (!ExecutionEnvironment.canUseDOM) {
   };
 
   const safelyCallScheduledCallback = function(callback, callbackId) {
-    if (!registeredCallbackIds[callbackId]) {
+    if (!registeredCallbackIds.get(callbackId)) {
       // ignore cancelled callbacks
       return;
     }
     isCurrentlyRunningCallback = true;
     try {
       callback(frameDeadlineObject);
-      delete registeredCallbackIds[callbackId];
+      registeredCallbackIds.delete(callbackId);
       isCurrentlyRunningCallback = false;
     } catch (e) {
-      delete registeredCallbackIds[callbackId];
+      registeredCallbackIds.delete(callbackId);
       isCurrentlyRunningCallback = false;
       // Still throw it, but not in this frame.
       setTimeout(() => {
@@ -265,7 +265,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       timeoutTime,
       callbackId: latestCallbackId,
     };
-    registeredCallbackIds[latestCallbackId] = true;
+    registeredCallbackIds.set(latestCallbackId, true);
     // If we have previousCallback, call it. This may trigger recursion.
     if (
       previouslyScheduledCallbackConfig &&
@@ -313,7 +313,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   };
 
   cIC = function(callbackId: number) {
-    delete registeredCallbackIds[callbackId];
+    registeredCallbackIds.delete(callbackId);
   };
 }
 
