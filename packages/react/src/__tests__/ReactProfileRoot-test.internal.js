@@ -297,15 +297,13 @@ describe('ProfileRoot', () => {
       expect(parentCall[3]).toBeGreaterThan(childCall[3]); // "base" time
     });
 
-    it('record a decrease in "actual" time and no change in "base" time when sCU memoization is used', () => {
+    it('records a decrease in "actual" time and no change in "base" time when sCU memoization is used', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
         <React.unstable_ProfileRoot label="test" callback={callback}>
           <AdvanceTime>
-            <AdvanceTime shouldComponentUpdate={false}>
-              <AdvanceTime />
-            </AdvanceTime>
+            <AdvanceTime shouldComponentUpdate={false} />
           </AdvanceTime>
         </React.unstable_ProfileRoot>,
       );
@@ -315,16 +313,20 @@ describe('ProfileRoot', () => {
       renderer.update(
         <React.unstable_ProfileRoot label="test" callback={callback}>
           <AdvanceTime>
-            <AdvanceTime shouldComponentUpdate={false}>
-              <AdvanceTime />
-            </AdvanceTime>
+            <AdvanceTime shouldComponentUpdate={false} />
           </AdvanceTime>
         </React.unstable_ProfileRoot>,
       );
 
       expect(callback).toHaveBeenCalledTimes(2);
-      expect(callback.mock.calls[0][2]).toBeLessThan(callback.mock.calls[0][2]); // "actual" time
-      expect(callback.mock.calls[0][3]).toEqual(callback.mock.calls[0][3]); // "base" time
+
+      const [mountCall, updateCall] = callback.mock.calls;
+
+      expect(mountCall[1]).toBe('mount');
+      expect(updateCall[1]).toBe('update');
+
+      expect(updateCall[2]).toBeLessThan(mountCall[2]); // "actual" time
+      expect(updateCall[3]).toEqual(mountCall[3]); // "base" time
     });
 
     // TODO (bvaughn) Revisit these tests and maybe rewrite them better
@@ -362,8 +364,8 @@ describe('ProfileRoot', () => {
       it('should resume/accumulate "actual" time after a higher priority interruption', () => {
         const callback = jest.fn();
 
-        const Yield = ({value}) => {
-          advanceTimeBy(10);
+        const Yield = ({renderTime, value}) => {
+          advanceTimeBy(renderTime);
           renderer.unstable_yield(value);
           return null;
         };
@@ -371,8 +373,8 @@ describe('ProfileRoot', () => {
         // Render partially, but don't complete
         const renderer = ReactTestRenderer.create(
           <React.unstable_ProfileRoot label="test" callback={callback}>
-            <Yield value="first" />
-            <Yield value="second" />
+            <Yield value="first" renderTime={10} />
+            <Yield value="second" renderTime={20} />
           </React.unstable_ProfileRoot>,
           {unstable_isAsync: true},
         );
@@ -384,15 +386,15 @@ describe('ProfileRoot', () => {
         renderer.unstable_flushSync(() => {
           renderer.update(
             <React.unstable_ProfileRoot label="test" callback={callback}>
-              <Yield value="third" />
+              <Yield value="third" renderTime={5} />
             </React.unstable_ProfileRoot>,
           );
         });
 
         // Verify that logged times include both durations above.
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(callback.mock.calls[0][2]).toBeGreaterThan(3); // "actual" time
-        expect(callback.mock.calls[0][3]).toBeGreaterThan(3); // "base" time
+        expect(callback.mock.calls[0][2]).toBe(15); // "actual" time
+        expect(callback.mock.calls[0][3]).toBe(15); // "base" time
       });
     });
   });

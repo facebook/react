@@ -46,7 +46,11 @@ import {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
-import {startRenderTimer, stopRenderTimer} from './ReactProfileTimer';
+import {
+  isBaseTimerRunning,
+  startBaseTimer,
+  stopBaseTimer,
+} from './ReactProfileTimer';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -888,9 +892,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     let next;
     if (enableProfileModeMetrics) {
-      startRenderTimer(workInProgress);
+      startBaseTimer();
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
-      workInProgress.selfBaseTime = stopRenderTimer(workInProgress);
+      if (isBaseTimerRunning()) {
+        workInProgress.selfBaseTime = stopBaseTimer();
+      } else {
+      }
     } else {
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
     }

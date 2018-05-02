@@ -69,7 +69,7 @@ import {
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
-import {startRenderTimer} from './ReactProfileTimer';
+import {cancelBaseTimer, startRenderTimer} from './ReactProfileTimer';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -1079,6 +1079,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
   ): Fiber | null {
     cancelWorkTimer(workInProgress);
+
+    if (enableProfileModeMetrics) {
+      // Don't update "base" render times for bailouts.
+      cancelBaseTimer();
+    }
 
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
