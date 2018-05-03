@@ -213,8 +213,8 @@ function FiberNode(
   this.alternate = null;
 
   if (enableProfileModeMetrics) {
-    this.selfBaseTime = null;
-    this.treeBaseTime = null;
+    this.selfBaseTime = 0;
+    this.treeBaseTime = 0;
   }
 
   if (__DEV__) {
@@ -362,20 +362,12 @@ export function createFiberFromElement(
         mode |= StrictMode;
         break;
       case REACT_PROFILE_MODE_TYPE:
-        if (__DEV__) {
-          if (
-            typeof element.props.label !== 'string' ||
-            typeof element.props.callback !== 'function'
-          ) {
-            invariant(
-              false,
-              'ProfileMode must specify a label string and callback function',
-            );
-          }
-        }
-        fiberTag = ProfileRoot;
-        mode |= ProfileMode;
-        break;
+        return createFiberFromProfileMode(
+          pendingProps,
+          mode,
+          expirationTime,
+          key,
+        );
       case REACT_CALL_TYPE:
         fiberTag = CallComponent;
         break;
@@ -470,6 +462,32 @@ export function createFiberFromFragment(
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
   fiber.expirationTime = expirationTime;
+  return fiber;
+}
+
+export function createFiberFromProfileMode(
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+  key: null | string,
+): Fiber {
+  if (__DEV__) {
+    if (
+      typeof pendingProps.label !== 'string' ||
+      typeof pendingProps.callback !== 'function'
+    ) {
+      invariant(
+        false,
+        'ProfileMode must specify a label string and callback function',
+      );
+    }
+  }
+
+  const fiber = createFiber(ProfileRoot, pendingProps, key, mode | ProfileMode);
+  fiber.type = REACT_PROFILE_MODE_TYPE;
+  fiber.expirationTime = expirationTime;
+  fiber.stateNode = 0;
+
   return fiber;
 }
 

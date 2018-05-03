@@ -31,13 +31,17 @@ import {
   ContextProvider,
 } from 'shared/ReactTypeOfWork';
 import {
-  NoEffect,
   DidCapture,
   Incomplete,
+  NoEffect,
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
+import {ProfileMode} from './ReactTypeOfMode';
 
-import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
+import {
+  enableGetDerivedStateFromCatch,
+  enableProfileModeMetrics,
+} from 'shared/ReactFeatureFlags';
 
 export default function<C, CX>(
   hostContext: HostContext<C, CX>,
@@ -180,6 +184,23 @@ export default function<C, CX>(
   }
 
   function unwindWork(workInProgress: Fiber) {
+    if (enableProfileModeMetrics) {
+      if (workInProgress.mode & ProfileMode) {
+        // Bubble up "base" render times if we're within a ProfileRoot
+        let treeBaseTime = workInProgress.selfBaseTime;
+        let child = workInProgress.child;
+        while (child !== null) {
+          treeBaseTime += child.treeBaseTime;
+          child = child.sibling;
+        }
+        workInProgress.treeBaseTime = treeBaseTime;
+      }
+
+      if (workInProgress.mode & ProfileMode) {
+        // TODO (bvaughn) Maybe store info on ProfileMode stateNodes about unwind time?
+      }
+    }
+
     switch (workInProgress.tag) {
       case ClassComponent: {
         popLegacyContextProvider(workInProgress);

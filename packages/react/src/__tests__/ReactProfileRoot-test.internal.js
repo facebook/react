@@ -109,11 +109,13 @@ describe('ProfileRoot', () => {
       // Import after polyfill
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.enableProfileModeMetrics = true;
+      ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
 
       AdvanceTime = class extends React.Component {
         static defaultProps = {
+          byAmount: 10,
           shouldComponentUpdate: true,
         };
         shouldComponentUpdate(nextProps) {
@@ -121,7 +123,7 @@ describe('ProfileRoot', () => {
         }
         render() {
           // Simulate time passing when this component is rendered
-          advanceTimeBy(this.props.amount || 10);
+          advanceTimeBy(this.props.byAmount);
           return this.props.children || null;
         }
       };
@@ -398,6 +400,62 @@ describe('ProfileRoot', () => {
         // Verify no more unexpected callbacks from low priority work
         renderer.unstable_flushAll();
         expect(callback).toHaveBeenCalledTimes(1);
+      });
+
+      it('should resume/accumulate "actual" time after an ErrorBoundary re-render', () => {
+        const callback = jest.fn();
+
+        const ThrowsError = () => {
+          advanceTimeBy(10);
+          throw Error('expected error');
+        };
+
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
+          }
+          render() {
+            advanceTimeBy(2);
+            return this.state.error === null ? (
+              this.props.children
+            ) : (
+              <AdvanceTime byAmount={20} />
+            );
+          }
+        }
+
+        ReactTestRenderer.create(
+          <React.unstable_ProfileRoot label="test" callback={callback}>
+            <ErrorBoundary>
+              <AdvanceTime byAmount={5} />
+              <ThrowsError />
+            </ErrorBoundary>
+          </React.unstable_ProfileRoot>,
+        );
+
+        expect(callback).toHaveBeenCalledTimes(2);
+
+        // Callbacks bubble (reverse order).
+        let [mountCall, updateCall] = callback.mock.calls;
+
+        // TODO (bvaughn) Maybe add test with replayFailedUnitOfWorkWithInvokeGuardedCallback enabled.
+        // It would add 10ms to the first "actual" time below.
+
+        // The initial mount only includes the ErrorBoundary (which takes 2ms)
+        // But it spends time rendering all of the failed subtree also.
+        expect(mountCall[1]).toBe('mount');
+        // "actual" time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
+        expect(mountCall[2]).toBe(17);
+        // "base" time includes: 2 (ErrorBoundary)
+        expect(mountCall[3]).toBe(2);
+
+        // The update includes the ErrorBoundary and its fallback child
+        expect(updateCall[1]).toBe('update');
+        // "actual" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+        expect(updateCall[2]).toBe(22);
+        // "base" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+        expect(updateCall[3]).toBe(22);
       });
     });
   });

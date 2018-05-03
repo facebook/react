@@ -779,6 +779,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             finishedWork.treeBaseTime,
           );
         }
+        // Reset actualTime after successful commit.
+        // By default, we append to this time to account for errors and pauses.
+        finishedWork.stateNode = 0;
         break;
       }
       default: {

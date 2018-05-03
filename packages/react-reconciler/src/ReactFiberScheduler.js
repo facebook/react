@@ -283,12 +283,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       error: mixed,
       isAsync: boolean,
     ) => {
-      if (enableProfileModeMetrics) {
-        // Stop "base" render timer in the event of an error.
-        // It will be restarted when we replay the failed work.
-        stopBaseRenderTimer();
-      }
-
       // Restore the original state of the work-in-progress
       assignFiberPropertiesInDEV(
         failedUnitOfWork,
@@ -320,6 +314,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       originalReplayError = null;
       if (hasCaughtError()) {
         clearCaughtError();
+
+        if (enableProfileModeMetrics) {
+          // Update "base" time if the render wasn't bailed out on.
+          failedUnitOfWork.selfBaseTime = failedUnitOfWork.treeBaseTime = getElapsedBaseRenderTime();
+          // Stop "base" render timer again (after the re-thrown error).
+          stopBaseRenderTimer();
+        }
       } else {
         // If the begin phase did not fail the second time, set this pointer
         // back to the original value.
@@ -900,6 +901,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (enableProfileModeMetrics) {
       startBaseRenderTimer();
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
+
+      // TODO (bvaughn) Why do we begin and complete work again for <ErrorBoundary> even though we don't render it?
+      // This second begin/complete is overriding our base times to 0.
+      // Can we detect this case and not update or rerun the timer?
+      // Can we stop the time inside (like we do for bailouts)?
+
       if (isBaseRenderTimerRunning()) {
         // Update "base" time if the render wasn't bailed out on.
         workInProgress.selfBaseTime = getElapsedBaseRenderTime();
@@ -986,6 +993,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       try {
         workLoop(isAsync);
       } catch (thrownValue) {
+        if (enableProfileModeMetrics) {
+          // Stop "base" render timer in the event of an error.
+          // It will be restarted when we replay the failed work.
+          stopBaseRenderTimer();
+        }
+
         if (nextUnitOfWork === null) {
           // This is a fatal error.
           didFatal = true;

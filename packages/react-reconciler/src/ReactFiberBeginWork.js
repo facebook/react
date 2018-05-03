@@ -369,6 +369,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // the new API.
       // TODO: Warn in a future release.
       nextChildren = null;
+
+      if (enableProfileModeMetrics) {
+        // Stop "base" render timer in this case to avoid overriding the actual times.
+        stopBaseRenderTimer();
+      }
     } else {
       if (__DEV__) {
         ReactDebugCurrentFiber.setCurrentPhase('render');
