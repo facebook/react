@@ -1032,9 +1032,12 @@ function legacyCreateRootFromDOMContainer(
       );
     }
   }
-  // Legacy roots are not async by default.
-  const isAsync = false;
-  return new ReactRoot(container, isAsync, shouldHydrate);
+
+  return new ReactRoot(
+    container,
+    false, // Legacy roots are not async by default.
+    shouldHydrate,
+  );
 }
 
 function legacyRenderSubtreeIntoContainer(
