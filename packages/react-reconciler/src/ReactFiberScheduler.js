@@ -47,6 +47,7 @@ import {
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import {
+  getElapsedBaseRenderTime,
   isBaseRenderTimerRunning,
   startBaseRenderTimer,
   stopBaseRenderTimer,
@@ -282,6 +283,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       error: mixed,
       isAsync: boolean,
     ) => {
+      if (enableProfileModeMetrics) {
+        // Stop "base" render timer in the event of an error.
+        // It will be restarted when we replay the failed work.
+        stopBaseRenderTimer();
+      }
+
       // Restore the original state of the work-in-progress
       assignFiberPropertiesInDEV(
         failedUnitOfWork,
@@ -895,7 +902,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
       if (isBaseRenderTimerRunning()) {
         // Update "base" time if the render wasn't bailed out on.
-        workInProgress.selfBaseTime = stopBaseRenderTimer();
+        workInProgress.selfBaseTime = getElapsedBaseRenderTime();
+        stopBaseRenderTimer();
       }
     } else {
       next = beginWork(current, workInProgress, nextRenderExpirationTime);

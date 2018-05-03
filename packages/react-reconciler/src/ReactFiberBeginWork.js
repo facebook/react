@@ -69,10 +69,7 @@ import {
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
-import {
-  cancelBaseRenderTimer,
-  startActualRenderTimer,
-} from './ReactProfileTimer';
+import {stopBaseRenderTimer, startActualRenderTimer} from './ReactProfileTimer';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -1086,7 +1083,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (enableProfileModeMetrics) {
       // Don't update "base" render times for bailouts.
-      cancelBaseRenderTimer();
+      stopBaseRenderTimer();
     }
 
     // TODO: We should ideally be able to bail out early if the children have no
@@ -1109,6 +1106,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function bailoutOnLowPriority(current, workInProgress) {
     cancelWorkTimer(workInProgress);
+
+    if (enableProfileModeMetrics) {
+      // Don't update "base" render times for bailouts.
+      stopBaseRenderTimer();
+    }
 
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
     // See PR 8590 discussion for context

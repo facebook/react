@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 
+import warning from 'fbjs/lib/warning';
 import ReactFiberStack from './ReactFiberStack';
 
 const hasNativePerformanceNow =
@@ -58,8 +59,19 @@ export function stopActualRenderTimer(fiber: Fiber): number {
 
 let baseStartTime: number | null = null;
 
-export function cancelBaseRenderTimer(): void {
-  baseStartTime = null;
+export function getElapsedBaseRenderTime(): number {
+  if (__DEV__) {
+    if (baseStartTime === null) {
+      warning(
+        false,
+        'Cannot read elapsed time when base timer is not running. ' +
+          'This error is likely caused by a bug in React. ' +
+          'Please file an issue.',
+      );
+    }
+  }
+
+  return baseStartTime === null ? 0 : now() - baseStartTime;
 }
 
 export function isBaseRenderTimerRunning(): boolean {
@@ -67,9 +79,31 @@ export function isBaseRenderTimerRunning(): boolean {
 }
 
 export function startBaseRenderTimer(): void {
+  if (__DEV__) {
+    if (baseStartTime !== null) {
+      warning(
+        false,
+        'Cannot start base timer that is already running. ' +
+          'This error is likely caused by a bug in React. ' +
+          'Please file an issue.',
+      );
+    }
+  }
+
   baseStartTime = now();
 }
 
-export function stopBaseRenderTimer(): number | null {
-  return baseStartTime === null ? null : now() - baseStartTime;
+export function stopBaseRenderTimer(): void {
+  if (__DEV__) {
+    if (baseStartTime === null) {
+      warning(
+        false,
+        'Cannot stop a base timer is not running. ' +
+          'This error is likely caused by a bug in React. ' +
+          'Please file an issue.',
+      );
+    }
+  }
+
+  baseStartTime = null;
 }
