@@ -316,15 +316,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return;
       }
       case TimeoutComponent: {
-        const updateQueue = finishedWork.updateQueue;
-        if (updateQueue !== null) {
-          commitUpdateQueue(
-            finishedWork,
-            updateQueue,
-            null,
-            committedExpirationTime,
-          );
-        }
+        // We have no life-cycles associated with Timeouts.
         return;
       }
       default: {

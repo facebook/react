@@ -780,21 +780,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
       const prevDidTimeout = workInProgress.memoizedState;
 
-      // The update queue is only used to store expired promises, and to
-      // schedule a re-render once an expired promise resolves. It does not
-      // determine whether we should show the placeholder state, because we
-      // always attempt to show the placeholder state on every render.
-      const updateQueue = workInProgress.updateQueue;
-      if (updateQueue !== null) {
-        processUpdateQueue(
-          workInProgress,
-          updateQueue,
-          null,
-          null,
-          renderExpirationTime,
-        );
-      }
-
       // Check if we already attempted to render the normal state. If we did,
       // and we timed out, render the placeholder state.
       const alreadyCaptured =

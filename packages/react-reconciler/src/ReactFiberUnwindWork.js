@@ -169,18 +169,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return update;
   }
 
-  function waitForPromiseAndScheduleRecovery(finishedWork, thenable) {
-    // Await promise
-    const onResolveOrReject = () => {
-      // Once the promise resolves, we should try rendering the non-
-      // placeholder state again.
-      const startTime = recalculateCurrentTime();
-      const expirationTime = computeExpirationForFiber(startTime, finishedWork);
-      const recoveryUpdate = createUpdate(expirationTime);
-      enqueueUpdate(finishedWork, recoveryUpdate, expirationTime);
-      scheduleWork(finishedWork, startTime, expirationTime);
-    };
-    thenable.then(onResolveOrReject, onResolveOrReject);
+  function schedulePing(finishedWork) {
+    // Once the promise resolves, we should try rendering the non-
+    // placeholder state again.
+    const startTime = recalculateCurrentTime();
+    const expirationTime = computeExpirationForFiber(startTime, finishedWork);
+    const recoveryUpdate = createUpdate(expirationTime);
+    enqueueUpdate(finishedWork, recoveryUpdate, expirationTime);
+    scheduleWork(finishedWork, startTime, expirationTime);
   }
 
   function throwException(
@@ -206,9 +202,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       typeof value.then === 'function'
     ) {
       // This is a thenable.
-      // Allow var because this is used in a closure.
-      // eslint-disable-next-line no-var
-      var thenable: SuspenseThenable = (value: any);
+      const thenable: SuspenseThenable = (value: any);
 
       // Find the earliest timeout of all the timeouts in the ancestor path.
       // TODO: Alternatively, we could store the earliest timeout on the context
@@ -275,18 +269,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             case TimeoutComponent: {
               if ((workInProgress.effectTag & DidCapture) === NoEffect) {
                 workInProgress.effectTag |= ShouldCapture;
-                const update = createUpdate(renderExpirationTime);
-                // Allow var because this is used in a closure.
-                // eslint-disable-next-line no-var
-                var finishedWork = workInProgress;
-                update.callback = () => {
-                  waitForPromiseAndScheduleRecovery(finishedWork, thenable);
-                };
-                enqueueCapturedUpdate(
+                const onResolveOrReject = schedulePing.bind(
+                  null,
                   workInProgress,
-                  update,
-                  renderExpirationTime,
                 );
+                thenable.then(onResolveOrReject, onResolveOrReject);
                 return;
               }
               // Already captured during this render. Continue to the next
