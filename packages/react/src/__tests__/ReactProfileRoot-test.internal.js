@@ -29,79 +29,84 @@ function loadModules({
 }
 
 describe('ProfileRoot', () => {
-  [true, false].forEach(enableProfileModeMetrics => {
-    describe(`enableProfileModeMetrics feature flag ${
-      enableProfileModeMetrics ? 'enabled' : 'disabled'
-    }`, () => {
-      beforeEach(() => {
-        jest.resetModules();
+  describe('works in profiling and non-profiling bundles', () => {
+    [true, false].forEach(enableProfileModeMetrics => {
+      describe(`enableProfileModeMetrics ${
+        enableProfileModeMetrics ? 'enabled' : 'disabled'
+      }`, () => {
+        beforeEach(() => {
+          jest.resetModules();
 
-        loadModules({enableProfileModeMetrics});
-      });
-
-      // This will throw in production too,
-      // But the test is only interested in verifying the DEV error message.
-      if (__DEV__) {
-        it('should warn if required params are missing', () => {
-          expect(() => {
-            ReactTestRenderer.create(<React.unstable_ProfileRoot />);
-          }).toThrow(
-            'ProfileMode must specify a label string and callback function',
-          );
+          loadModules({enableProfileModeMetrics});
         });
-      }
 
-      it('should support an empty ProfileRoot (with no children)', () => {
-        expect(
-          ReactTestRenderer.create(
-            <React.unstable_ProfileRoot label="label" callback={() => {}} />,
-          ).toJSON(),
-        ).toMatchSnapshot();
-        expect(
-          ReactTestRenderer.create(
-            <div>
-              <React.unstable_ProfileRoot label="label" callback={() => {}} />
-            </div>,
-          ).toJSON(),
-        ).toMatchSnapshot();
-      });
-
-      it('should render children', () => {
-        const ProfiledComponent = ({name}) => <span>{name}</span>;
-        const renderer = ReactTestRenderer.create(
-          <div>
-            Hi
-            <React.unstable_ProfileRoot label="label" callback={() => {}}>
-              <span>there</span>
-              <ProfiledComponent name="ProfileMode" />
-            </React.unstable_ProfileRoot>
-          </div>,
-        );
-        expect(renderer.toJSON()).toMatchSnapshot();
-      });
-
-      it('should support nested ProfileModes', () => {
-        const ProfiledComponent = ({name}) => <div>Hi, {name}</div>;
-        class ExtraProfiledComponent extends React.Component {
-          render() {
-            return <block>Hi, {this.props.name}</block>;
-          }
+        // This will throw in production too,
+        // But the test is only interested in verifying the DEV error message.
+        if (__DEV__) {
+          it('should warn if required params are missing', () => {
+            expect(() => {
+              ReactTestRenderer.create(<React.unstable_ProfileRoot />);
+            }).toThrow(
+              'ProfileMode must specify a label string and callback function',
+            );
+          });
         }
-        const renderer = ReactTestRenderer.create(
-          <React.unstable_ProfileRoot label="outer" callback={() => {}}>
-            <ProfiledComponent name="Brian" />
-            <React.unstable_ProfileRoot label="inner" callback={() => {}}>
-              <ExtraProfiledComponent name="Brian" />
-              <span>Now with extra profile strength!</span>
-            </React.unstable_ProfileRoot>
-          </React.unstable_ProfileRoot>,
-        );
-        expect(renderer.toJSON()).toMatchSnapshot();
+
+        it('should support an empty ProfileRoot (with no children)', () => {
+          // As root
+          expect(
+            ReactTestRenderer.create(
+              <React.unstable_ProfileRoot label="label" callback={() => {}} />,
+            ).toJSON(),
+          ).toMatchSnapshot();
+
+          // As non-root
+          expect(
+            ReactTestRenderer.create(
+              <div>
+                <React.unstable_ProfileRoot label="label" callback={() => {}} />
+              </div>,
+            ).toJSON(),
+          ).toMatchSnapshot();
+        });
+
+        it('should render children', () => {
+          const FunctionalComponent = ({label}) => <span>{label}</span>;
+          const renderer = ReactTestRenderer.create(
+            <div>
+              <span>outside span</span>
+              <React.unstable_ProfileRoot label="label" callback={() => {}}>
+                <span>inside span</span>
+                <FunctionalComponent label="functional component" />
+              </React.unstable_ProfileRoot>
+            </div>,
+          );
+          expect(renderer.toJSON()).toMatchSnapshot();
+        });
+
+        it('should support nested ProfileModes', () => {
+          const FunctionalComponent = ({label}) => <div>{label}</div>;
+          class ClassComponent extends React.Component {
+            render() {
+              return <block>{this.props.label}</block>;
+            }
+          }
+          const renderer = ReactTestRenderer.create(
+            <React.unstable_ProfileRoot label="outer" callback={() => {}}>
+              <FunctionalComponent label="outer functional component" />
+              <React.unstable_ProfileRoot label="inner" callback={() => {}}>
+                <ClassComponent label="inner class component" />
+                <span>inner span</span>
+              </React.unstable_ProfileRoot>
+            </React.unstable_ProfileRoot>,
+          );
+          expect(renderer.toJSON()).toMatchSnapshot();
+        });
       });
     });
   });
 
-  describe('render timings', () => {
+  describe('records meaningful timing information', () => {
     let AdvanceTime;
     let advanceTimeBy;
 
@@ -364,7 +369,7 @@ describe('ProfileRoot', () => {
       expect(updateCall[3]).toBe(20); // "base" time
     });
 
-    describe('interruptions', () => {
+    describe('handles interruptions', () => {
       it('should accumulate "actual" time after a scheduling interruptions', () => {
         const callback = jest.fn();
 

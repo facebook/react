@@ -1,65 +1,65 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should render children 1`] = `
+exports[`ProfileRoot works in profiling and non-profiling bundles enableProfileModeMetrics disabled should render children 1`] = `
 <div>
-  Hi
   <span>
-    there
+    outside span
   </span>
   <span>
-    ProfileMode
+    inside span
+  </span>
+  <span>
+    functional component
   </span>
 </div>
 `;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support an empty ProfileRoot (with no children) 1`] = `null`;
+exports[`ProfileRoot works in profiling and non-profiling bundles enableProfileModeMetrics disabled should support an empty ProfileRoot (with no children) 1`] = `null`;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support an empty ProfileRoot (with no children) 2`] = `<div />`;
+exports[`ProfileRoot works in profiling and non-profiling bundles enableProfileModeMetrics disabled should support an empty ProfileRoot (with no children) 2`] = `<div />`;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support nested ProfileModes 1`] = `
+exports[`ProfileRoot works in profiling and non-profiling bundles enableProfileModeMetrics disabled should support nested ProfileModes 1`] = `
 Array [
   <div>
-    Hi, 
-    Brian
+    outer functional component
   </div>,
   <block>
-    Hi, 
-    Brian
+    inner class component
   </block>,
   <span>
-    Now with extra profile strength!
+    inner span
   </span>,
 ]
 `;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should render children 1`] = `
+exports[`ProfileRoot works in profiling and non-profiling bundles enableProfileModeMetrics enabled should render children 1`] = `
 <div>
-  Hi
   <span>
-    there
+    outside span
   </span>
   <span>
-    ProfileMode
+    inside span
+  </span>
+  <span>
+    functional component
   </span>
 </div>
 `;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support an empty ProfileRoot (with no children) 1`] = `null`;
+exports[`ProfileRoot works in profiling and non-profiling bundles enableProfileModeMetrics enabled should support an empty ProfileRoot (with no children) 1`] = `null`;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support an empty ProfileRoot (with no children) 2`] = `<div />`;
+exports[`ProfileRoot works in profiling and non-profiling bundles enableProfileModeMetrics enabled should support an empty ProfileRoot (with no children) 2`] = `<div />`;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support nested ProfileModes 1`] = `
+exports[`ProfileRoot works in profiling and non-profiling bundles enableProfileModeMetrics enabled should support nested ProfileModes 1`] = `
 Array [
   <div>
-    Hi, 
-    Brian
+    outer functional component
   </div>,
   <block>
-    Hi, 
-    Brian
+    inner class component
   </block>,
   <span>
-    Now with extra profile strength!
+    inner span
   </span>,
 ]
 `;
