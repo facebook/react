@@ -783,7 +783,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // Reset actualTime after successful commit.
         // By default, we append to this time to account for errors and pauses.
         finishedWork.stateNode.duration = 0;
-        finishedWork.stateNode.startTime = 0;
         break;
       }
       default: {

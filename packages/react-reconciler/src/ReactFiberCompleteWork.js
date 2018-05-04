@@ -47,7 +47,7 @@ import {
   Ref,
   Update,
 } from 'shared/ReactTypeOfSideEffect';
-import {recordActualRenderTime} from './ReactProfileTimer';
+import {recordElapsedActualRenderTime} from './ReactProfileTimer';
 import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
@@ -201,7 +201,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function updateProfileRoot(workInProgress: Fiber) {
     if (enableProfileModeMetrics) {
       if (workInProgress.effectTag & CommitProfile) {
-        recordActualRenderTime(workInProgress);
+        recordElapsedActualRenderTime(workInProgress);
       }
     }
   }

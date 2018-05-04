@@ -49,14 +49,12 @@ export function checkActualRenderTimeStackEmpty(): void {
 export function markActualRenderTimeStarted(fiber: Fiber): void {
   fiber.stateNode.startTime = now() - totalElapsedPauseTime;
 
-  push(stackCursor, fiber, fiber);
+  push(stackCursor, fiber.stateNode, fiber);
 }
 
-export function recordActualRenderTime(fiber: Fiber): void {
+export function recordElapsedActualRenderTime(fiber: Fiber): void {
   pop(stackCursor, fiber);
 
-  // Stop render timer and store the elapsed time as stateNode.
-  // The "commit" phase reads this value and passes it along to the callback.
   fiber.stateNode.duration +=
     now() - fiber.stateNode.startTime - totalElapsedPauseTime;
 }

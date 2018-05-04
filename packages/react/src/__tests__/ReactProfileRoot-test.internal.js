@@ -495,6 +495,8 @@ describe('ProfileRoot', () => {
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
+      // TODO (bvaughn, timing) Add test with getDerivedStateFromCatch()
+
       [true, false].forEach(flagEnabled => {
         describe(`replayFailedUnitOfWorkWithInvokeGuardedCallback ${
           flagEnabled ? 'enabled' : 'disabled'

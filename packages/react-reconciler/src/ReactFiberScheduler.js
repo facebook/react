@@ -319,8 +319,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         clearCaughtError();
 
         if (enableProfileModeMetrics) {
-          // Update "base" time if the render wasn't bailed out on.
-          failedUnitOfWork.selfBaseTime = failedUnitOfWork.treeBaseTime = getElapsedBaseRenderTime();
           // Stop "base" render timer again (after the re-thrown error).
           stopBaseRenderTimer();
         }
@@ -470,8 +468,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         commitAttachRef(nextEffect);
       }
 
-      if (effectTag & CommitProfile) {
-        commitProfileWork(nextEffect);
+      if (enableProfileModeMetrics) {
+        if (effectTag & CommitProfile) {
+          commitProfileWork(nextEffect);
+        }
       }
 
       const next = nextEffect.nextEffect;
@@ -910,8 +910,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       startBaseRenderTimer();
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
+      // Update "base" time if the render wasn't bailed out on.
       if (isBaseRenderTimerRunning()) {
-        // Update "base" time if the render wasn't bailed out on.
         workInProgress.selfBaseTime = getElapsedBaseRenderTime();
         stopBaseRenderTimer();
       }
@@ -1006,7 +1006,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       } catch (thrownValue) {
         if (enableProfileModeMetrics) {
           // Stop "base" render timer in the event of an error.
-          // It will be restarted when we replay the failed work.
           stopBaseRenderTimer();
         }
 
@@ -1776,7 +1775,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // during a timeout. This path is only hit for non-expired work.
       return false;
     }
-
     deadlineDidExpire = true;
     return true;
   }

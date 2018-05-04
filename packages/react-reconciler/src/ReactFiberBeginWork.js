@@ -284,7 +284,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
-
     return workInProgress.child;
   }
 
@@ -323,7 +322,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         renderExpirationTime,
       );
     }
-
     return finishClassComponent(
       current,
       workInProgress,
@@ -374,7 +372,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       nextChildren = null;
 
       if (enableProfileModeMetrics) {
-        // Stop "base" render timer in this case to avoid overriding the actual times.
         stopBaseRenderTimer();
       }
     } else {
@@ -653,7 +650,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const hasContext = pushLegacyContextProvider(workInProgress);
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, renderExpirationTime);
-
       return finishClassComponent(
         current,
         workInProgress,
@@ -717,7 +713,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       reconcileChildren(current, workInProgress, value);
       memoizeProps(workInProgress, props);
-
       return workInProgress.child;
     }
   }

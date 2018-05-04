@@ -196,7 +196,6 @@ function FiberNode(
   this.pendingProps = pendingProps;
   this.memoizedProps = null;
   this.updateQueue = null;
-
   this.memoizedState = null;
 
   this.mode = mode;

@@ -187,7 +187,7 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('does not include AsyncMode, StrictMode or ProfileMode components in measurements', () => {
+  it('does not include AsyncMode, StrictMode, or ProfileMode components in measurements', () => {
     ReactNoop.render(
       <React.ProfileMode>
         <React.StrictMode>

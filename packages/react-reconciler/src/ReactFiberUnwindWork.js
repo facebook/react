@@ -37,7 +37,7 @@ import {
   NoEffect,
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
-import {recordActualRenderTime} from './ReactProfileTimer';
+import {recordElapsedActualRenderTime} from './ReactProfileTimer';
 import {
   enableGetDerivedStateFromCatch,
   enableProfileModeMetrics,
@@ -222,7 +222,7 @@ export default function<C, CX>(
   function unwindInterruptedWork(interruptedWork: Fiber) {
     if (enableProfileModeMetrics) {
       if (interruptedWork.effectTag & CommitProfile) {
-        recordActualRenderTime(interruptedWork);
+        recordElapsedActualRenderTime(interruptedWork);
       }
     }
 
