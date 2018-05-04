@@ -12,9 +12,9 @@ exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should rende
 </div>
 `;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support an empty mode 1`] = `null`;
+exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support an empty ProfileRoot (with no children) 1`] = `null`;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support an empty mode 2`] = `<div />`;
+exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support an empty ProfileRoot (with no children) 2`] = `<div />`;
 
 exports[`ProfileRoot enableProfileModeMetrics feature flag disabled should support nested ProfileModes 1`] = `
 Array [
@@ -44,9 +44,9 @@ exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should render
 </div>
 `;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support an empty mode 1`] = `null`;
+exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support an empty ProfileRoot (with no children) 1`] = `null`;
 
-exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support an empty mode 2`] = `<div />`;
+exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support an empty ProfileRoot (with no children) 2`] = `<div />`;
 
 exports[`ProfileRoot enableProfileModeMetrics feature flag enabled should support nested ProfileModes 1`] = `
 Array [

@@ -42,7 +42,7 @@ describe('ProfileRoot', () => {
       // This will throw in production too,
       // But the test is only interested in verifying the DEV error message.
       if (__DEV__) {
-        it('should warn about invalid mode', () => {
+        it('should warn if required params are missing', () => {
           expect(() => {
             ReactTestRenderer.create(<React.unstable_ProfileRoot />);
           }).toThrow(
@@ -51,7 +51,7 @@ describe('ProfileRoot', () => {
         });
       }
 
-      it('should support an empty mode', () => {
+      it('should support an empty ProfileRoot (with no children)', () => {
         expect(
           ReactTestRenderer.create(
             <React.unstable_ProfileRoot label="label" callback={() => {}} />,
@@ -140,7 +140,7 @@ describe('ProfileRoot', () => {
       delete global.performance;
     });
 
-    it('does not log render times until commit', () => {
+    it('does not invoke the callback until the commit phase', () => {
       const callback = jest.fn();
 
       const Yield = ({value}) => {
@@ -165,7 +165,7 @@ describe('ProfileRoot', () => {
       expect(callback).toHaveBeenCalledTimes(1);
     });
 
-    it('logs render times for mount and update', () => {
+    it('logs render times for both mount and update', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
@@ -280,7 +280,7 @@ describe('ProfileRoot', () => {
       expect(call[3]).toBe(5); // "base" time
     });
 
-    it('does not call callbacks for descendents of sCU false', () => {
+    it('does not call callbacks after update for descendents of sCU false', () => {
       const callback = jest.fn();
 
       let instance;
@@ -330,7 +330,7 @@ describe('ProfileRoot', () => {
       expect(callback.mock.calls[1][0]).toBe('outer');
     });
 
-    it('records a decrease in "actual" time and no change in "base" time when sCU memoization is used', () => {
+    it('decreases "actual" time but not "base" time when sCU prevents an update', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
@@ -364,8 +364,8 @@ describe('ProfileRoot', () => {
       expect(updateCall[3]).toBe(20); // "base" time
     });
 
-    describe('interrupted render timings', () => {
-      it('should resume/accumulate "actual" time after a scheduling interruptions', () => {
+    describe('interruptions', () => {
+      it('should accumulate "actual" time after a scheduling interruptions', () => {
         const callback = jest.fn();
 
         const Yield = ({value}) => {
@@ -397,7 +397,7 @@ describe('ProfileRoot', () => {
         expect(callback.mock.calls[0][3]).toBe(20); // "base" time
       });
 
-      it('should resume/accumulate "actual" time after a higher priority interruption', () => {
+      it('should accumulate "actual" time after a higher priority interruption', () => {
         const callback = jest.fn();
 
         const Yield = ({renderTime, value}) => {
@@ -449,7 +449,7 @@ describe('ProfileRoot', () => {
             loadModules({replayFailedUnitOfWorkWithInvokeGuardedCallback});
           });
 
-          it('should resume/accumulate "actual" time after an ErrorBoundary re-render', () => {
+          it('should accumulate "actual" time after an ErrorBoundary re-render', () => {
             const callback = jest.fn();
 
             const ThrowsError = () => {
