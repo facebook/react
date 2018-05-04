@@ -368,6 +368,50 @@ describe('ProfileRoot', () => {
       expect(updateCall[3]).toBe(20); // "base" time
     });
 
+    it('includes time spent in render phase lifecycles', () => {
+      class WithLifecycles extends React.Component {
+        state = {};
+        static getDerivedStateFromProps() {
+          advanceTimeBy(3);
+          return null;
+        }
+        shouldComponentUpdate() {
+          advanceTimeBy(7);
+          return true;
+        }
+        render() {
+          advanceTimeBy(5);
+          return null;
+        }
+      }
+
+      const callback = jest.fn();
+
+      const renderer = ReactTestRenderer.create(
+        <React.unstable_ProfileRoot id="test" callback={callback}>
+          <WithLifecycles />
+        </React.unstable_ProfileRoot>,
+      );
+
+      renderer.update(
+        <React.unstable_ProfileRoot id="test" callback={callback}>
+          <WithLifecycles />
+        </React.unstable_ProfileRoot>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(2);
+
+      const [mountCall, updateCall] = callback.mock.calls;
+
+      expect(mountCall[1]).toBe('mount');
+      expect(mountCall[2]).toBe(8); // "actual" time
+      expect(mountCall[3]).toBe(8); // "base" time
+
+      expect(updateCall[1]).toBe('update');
+      expect(updateCall[2]).toBe(15); // "actual" time
+      expect(updateCall[3]).toBe(15); // "base" time
+    });
+
     describe('handles interruptions', () => {
       it('should accumulate "actual" time after a scheduling interruptions', () => {
         const callback = jest.fn();
