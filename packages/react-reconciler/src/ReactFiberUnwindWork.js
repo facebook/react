@@ -29,9 +29,9 @@ import {
   HostComponent,
   HostPortal,
   ContextProvider,
+  Profiler,
 } from 'shared/ReactTypeOfWork';
 import {
-  CommitProfile,
   DidCapture,
   Incomplete,
   NoEffect,
@@ -220,12 +220,6 @@ export default function<C, CX>(
   }
 
   function unwindInterruptedWork(interruptedWork: Fiber) {
-    if (enableProfileModeMetrics) {
-      if (interruptedWork.effectTag & CommitProfile) {
-        recordElapsedActualRenderTime(interruptedWork);
-      }
-    }
-
     switch (interruptedWork.tag) {
       case ClassComponent: {
         popLegacyContextProvider(interruptedWork);
@@ -245,6 +239,11 @@ export default function<C, CX>(
         break;
       case ContextProvider:
         popProvider(interruptedWork);
+        break;
+      case Profiler:
+        if (enableProfileModeMetrics) {
+          recordElapsedActualRenderTime(interruptedWork);
+        }
         break;
       default:
         break;

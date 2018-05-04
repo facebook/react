@@ -40,12 +40,7 @@ import {
   Mode,
   Profiler,
 } from 'shared/ReactTypeOfWork';
-import {
-  CommitProfile,
-  Placement,
-  Ref,
-  Update,
-} from 'shared/ReactTypeOfSideEffect';
+import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import {recordElapsedActualRenderTime} from './ReactProfileTimer';
 import invariant from 'fbjs/lib/invariant';
 
@@ -199,9 +194,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateProfiler(workInProgress: Fiber) {
     if (enableProfileModeMetrics) {
-      if (workInProgress.effectTag & CommitProfile) {
-        recordElapsedActualRenderTime(workInProgress);
-      }
+      recordElapsedActualRenderTime(workInProgress);
     }
   }
 

@@ -31,7 +31,6 @@ import {
   Ref,
   Incomplete,
   HostEffectMask,
-  CommitProfile,
 } from 'shared/ReactTypeOfSideEffect';
 import {
   HostRoot,
@@ -222,7 +221,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     commitLifeCycles,
     commitAttachRef,
     commitDetachRef,
-    commitProfileWork,
   } = ReactFiberCommitWork(
     config,
     onCommitPhaseError,
@@ -466,12 +464,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (effectTag & Ref) {
         recordEffect();
         commitAttachRef(nextEffect);
-      }
-
-      if (enableProfileModeMetrics) {
-        if (effectTag & CommitProfile) {
-          commitProfileWork(nextEffect);
-        }
       }
 
       const next = nextEffect.nextEffect;

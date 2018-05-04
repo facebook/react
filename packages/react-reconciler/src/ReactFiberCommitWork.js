@@ -310,6 +310,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // We have no life-cycles associated with portals.
         return;
       }
+      case Profiler: {
+        // We have no life-cycles associated with Profiler.
+        return;
+      }
       default: {
         invariant(
           false,
@@ -513,7 +517,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         commitBeforeMutationLifeCycles,
         commitAttachRef,
         commitDetachRef,
-        commitProfileWork,
       };
     } else if (persistence) {
       invariant(false, 'Persistent reconciler is disabled.');
@@ -767,34 +770,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     detachFiber(current);
   }
 
-  function commitProfileWork(finishedWork: Fiber): void {
-    switch (finishedWork.tag) {
-      case Profiler: {
-        if (enableProfileModeMetrics) {
-          finishedWork.pendingProps.onRender.call(
-            null,
-            finishedWork.pendingProps.id,
-            finishedWork.alternate === null ? 'mount' : 'update',
-            finishedWork.stateNode,
-            finishedWork.treeBaseTime,
-          );
-        }
-
-        // Reset actualTime after successful commit.
-        // By default, we append to this time to account for errors and pauses.
-        finishedWork.stateNode = 0;
-        break;
-      }
-      default: {
-        invariant(
-          false,
-          'This unit of work tag should not have side-effects. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
-      }
-    }
-  }
-
   function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
@@ -845,6 +820,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case HostRoot: {
         return;
       }
+      case Profiler: {
+        if (enableProfileModeMetrics) {
+          finishedWork.pendingProps.onRender.call(
+            null,
+            finishedWork.pendingProps.id,
+            finishedWork.alternate === null ? 'mount' : 'update',
+            finishedWork.stateNode,
+            finishedWork.treeBaseTime,
+          );
+
+          // Reset actualTime after successful commit.
+          // By default, we append to this time to account for errors and pauses.
+          finishedWork.stateNode = 0;
+        }
+        return;
+      }
       default: {
         invariant(
           false,
@@ -869,7 +860,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       commitLifeCycles,
       commitAttachRef,
       commitDetachRef,
-      commitProfileWork,
     };
   } else {
     invariant(false, 'Mutating reconciler is disabled.');

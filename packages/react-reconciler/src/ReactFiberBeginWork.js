@@ -43,7 +43,7 @@ import {
   ContentReset,
   Ref,
   DidCapture,
-  CommitProfile,
+  Update,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
@@ -229,7 +229,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
       // Let the "complete" phase know to stop the timer,
       // And the scheduler to record the measured time.
-      workInProgress.effectTag |= CommitProfile;
+      workInProgress.effectTag |= Update;
     }
 
     // Never bail out early for Profilers.
@@ -1132,6 +1132,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
       case ContextProvider:
         pushProvider(workInProgress);
+        break;
+      case Profiler:
+        markActualRenderTimeStarted(workInProgress);
         break;
     }
     // TODO: What if this is currently in progress?
