@@ -10,6 +10,7 @@
 'use strict';
 
 let ReactScheduler;
+let ReactFeatureFlags;
 
 describe('ReactScheduler', () => {
   beforeEach(() => {
@@ -54,6 +55,15 @@ describe('ReactScheduler', () => {
     });
 
     describe('with multiple callbacks', () => {
+      beforeEach(() => {
+        jest.resetModules();
+
+        ReactFeatureFlags = require('shared/ReactFeatureFlags');
+        ReactFeatureFlags.scheduleModuleSupportsMultipleCallbacks = true;
+
+        ReactScheduler = require('react-scheduler');
+      });
+
       it('accepts multiple callbacks and calls within frame when not blocked', () => {
         const {rIC} = ReactScheduler;
         const callbackLog = [];
@@ -181,23 +191,34 @@ describe('ReactScheduler', () => {
       expect(cb.mock.calls.length).toBe(0);
     });
 
-    it('when one callback cancels the next one', () => {
-      const {rIC, cIC} = ReactScheduler;
-      const callbackLog = [];
-      let callbackBId;
-      const callbackA = jest.fn(() => {
-        callbackLog.push('A');
-        cIC(callbackBId);
+    describe('with multiple callbacks', () => {
+      beforeEach(() => {
+        jest.resetModules();
+
+        ReactFeatureFlags = require('shared/ReactFeatureFlags');
+        ReactFeatureFlags.scheduleModuleSupportsMultipleCallbacks = true;
+
+        ReactScheduler = require('react-scheduler');
       });
-      const callbackB = jest.fn(() => callbackLog.push('B'));
-      rIC(callbackA);
-      callbackBId = rIC(callbackB);
-      // Initially doesn't call anything
-      expect(callbackLog).toEqual([]);
-      jest.runAllTimers();
-      // B should not get called because A cancelled B
-      expect(callbackLog).toEqual(['A']);
-      expect(callbackB.mock.calls.length).toBe(0);
+
+      it('when one callback cancels the next one', () => {
+        const {rIC, cIC} = ReactScheduler;
+        const callbackLog = [];
+        let callbackBId;
+        const callbackA = jest.fn(() => {
+          callbackLog.push('A');
+          cIC(callbackBId);
+        });
+        const callbackB = jest.fn(() => callbackLog.push('B'));
+        rIC(callbackA);
+        callbackBId = rIC(callbackB);
+        // Initially doesn't call anything
+        expect(callbackLog).toEqual([]);
+        jest.runAllTimers();
+        // B should not get called because A cancelled B
+        expect(callbackLog).toEqual(['A']);
+        expect(callbackB.mock.calls.length).toBe(0);
+      });
     });
   });
 

@@ -30,6 +30,7 @@
 // layout, paint and other browser work is counted against the available time.
 // The frame rate is dynamically adjusted.
 
+import {scheduleModuleSupportsMultipleCallbacks} from 'shared/ReactFeatureFlags';
 import type {Deadline} from 'react-reconciler';
 type CallbackConfigType = {|
   scheduledCallback: Deadline => void,
@@ -287,9 +288,12 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
     }
-    if (timeoutTime > nextSoonestTimeoutTime) {
-      nextSoonestTimeoutTime = timeoutTime;
+    if (scheduleModuleSupportsMultipleCallbacks) {
+      if (timeoutTime > nextSoonestTimeoutTime) {
+        nextSoonestTimeoutTime = timeoutTime;
+      }
     }
+
     // This assumes that we only schedule one callback at a time because that's
     // how Fiber uses it.
     const latestCallbackId = getCallbackId();
@@ -298,7 +302,12 @@ if (!ExecutionEnvironment.canUseDOM) {
       callbackId: latestCallbackId,
       timeoutTime,
     };
-    pendingCallbacks.push(scheduledCallbackConfig);
+    if (scheduleModuleSupportsMultipleCallbacks) {
+      pendingCallbacks.push(scheduledCallbackConfig);
+    } else {
+      pendingCallbacks[0] = scheduledCallbackConfig;
+    }
+
     registeredCallbackIds[latestCallbackId] = true;
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
