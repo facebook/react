@@ -47,10 +47,12 @@ import {
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import {
+  checkActualRenderTimeStackEmpty,
   getElapsedBaseRenderTime,
+  isActualRenderTimerPaused,
   isBaseRenderTimerRunning,
   pauseActualRenderTimer,
-  startActualRenderTimer,
+  resumeActualRenderTimer,
   startBaseRenderTimer,
   stopBaseRenderTimer,
 } from './ReactProfileTimer';
@@ -667,6 +669,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
 
+    if (__DEV__) {
+      if (enableProfileModeMetrics) {
+        checkActualRenderTimeStackEmpty();
+      }
+    }
+
     isCommitting = false;
     isWorking = false;
     stopCommitLifeCyclesTimer();
@@ -946,6 +954,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Flush asynchronous work until the deadline runs out of time.
       while (nextUnitOfWork !== null && !shouldYield()) {
         nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      }
+
+      if (enableProfileModeMetrics) {
+        // If we didn't finish, pause the "actual" render timer.
+        // We'll restart it when we resume work.
+        if (nextUnitOfWork !== null) {
+          pauseActualRenderTimer();
+        }
       }
     }
   }
@@ -1555,7 +1571,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     deadline = dl;
 
     if (enableProfileModeMetrics) {
-      startActualRenderTimer();
+      if (isActualRenderTimerPaused()) {
+        resumeActualRenderTimer();
+      }
     }
 
     // Keep working on roots until there's no more work, or until the we reach
@@ -1707,6 +1725,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             // There's no time left. Mark this root as complete. We'll come
             // back and commit it later.
             root.finishedWork = finishedWork;
+
+            if (enableProfileModeMetrics) {
+              // If we didn't finish, pause the "actual" render timer.
+              // We'll restart it when we resume work.
+              if (nextUnitOfWork !== null) {
+                pauseActualRenderTimer();
+              }
+            }
           }
         }
       }
@@ -1752,10 +1778,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Disregard deadline.didTimeout. Only expired work should be flushed
       // during a timeout. This path is only hit for non-expired work.
       return false;
-    }
-
-    if (enableProfileModeMetrics) {
-      pauseActualRenderTimer();
     }
 
     deadlineDidExpire = true;

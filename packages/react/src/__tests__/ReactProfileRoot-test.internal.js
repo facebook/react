@@ -432,7 +432,7 @@ describe('ProfileRoot', () => {
         // Which should take an additional 10ms of simulated time.
         renderer.unstable_flushAll();
 
-        // Verify that the "actual" time includes both durations above,
+        // Verify that the "actual" time includes all work times,
         // But not the time that elapsed between frames.
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback.mock.calls[0][2]).toBe(15); // "actual" time

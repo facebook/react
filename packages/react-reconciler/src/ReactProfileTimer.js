@@ -34,40 +34,49 @@ if (hasNativePerformanceNow) {
  * It is paused (and accumulated) in the event of an interruption or an aborted render.
  */
 
-const {createCursor, push, pop} = ReactFiberStack();
+const {checkThatStackIsEmpty, createCursor, push, pop} = ReactFiberStack();
 
-let renderTimeStackCursor: StackCursor<Fiber> = createCursor(null);
+let stackCursor: StackCursor<Fiber> = createCursor(null);
+let timerPausedAt: number = 0;
+
+export function checkActualRenderTimeStackEmpty(): void {
+  if (__DEV__) {
+    checkThatStackIsEmpty();
+  }
+}
 
 export function markActualRenderTimeStarted(fiber: Fiber): void {
   fiber.stateNode.startTime = now();
 
-  push(renderTimeStackCursor, fiber, fiber);
+  push(stackCursor, fiber, fiber);
+}
+
+export function isActualRenderTimerPaused(): boolean {
+  return timerPausedAt > 0;
 }
 
 export function recordActualRenderTime(fiber: Fiber): void {
-  pop(renderTimeStackCursor, fiber);
+  pop(stackCursor, fiber);
 
   // Stop render timer and store the elapsed time as stateNode.
   // The "commit" phase reads this value and passes it along to the callback.
   fiber.stateNode.duration = now() - fiber.stateNode.startTime;
 }
 
-let timerPausedAt: number = 0;
-
-export function startActualRenderTimer(): void {
+export function resumeActualRenderTimer(): void {
   if (timerPausedAt > 0) {
     const elapsed = now() - timerPausedAt;
 
     let stateNodes: Array<Fiber> = [];
-    while (renderTimeStackCursor.current !== null) {
-      const fiber = renderTimeStackCursor.current;
+    while (stackCursor.current !== null) {
+      const fiber = stackCursor.current;
       stateNodes.push(fiber);
-      pop(renderTimeStackCursor, fiber);
+      pop(stackCursor, fiber);
     }
     while (stateNodes.length > 0) {
       const fiber = stateNodes.pop();
       fiber.stateNode.startTime += elapsed;
-      push(renderTimeStackCursor, fiber, fiber);
+      push(stackCursor, fiber, fiber);
     }
 
     timerPausedAt = 0;

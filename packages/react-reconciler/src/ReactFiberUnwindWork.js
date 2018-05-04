@@ -36,7 +36,6 @@ import {
   NoEffect,
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
-import {ProfileMode} from './ReactTypeOfMode';
 
 import {
   enableGetDerivedStateFromCatch,
@@ -184,21 +183,6 @@ export default function<C, CX>(
   }
 
   function unwindWork(workInProgress: Fiber) {
-    if (enableProfileModeMetrics) {
-      if (workInProgress.mode & ProfileMode) {
-        // Bubble up "base" render times if we're within a ProfileRoot
-        let treeBaseTime = workInProgress.selfBaseTime;
-        let child = workInProgress.child;
-        while (child !== null) {
-          treeBaseTime += child.treeBaseTime;
-          child = child.sibling;
-        }
-        workInProgress.treeBaseTime = treeBaseTime;
-      }
-
-      // TODO (bvaughn, timing) Do we need to pause and store any info here?
-    }
-
     switch (workInProgress.tag) {
       case ClassComponent: {
         popLegacyContextProvider(workInProgress);
@@ -235,6 +219,10 @@ export default function<C, CX>(
   }
 
   function unwindInterruptedWork(interruptedWork: Fiber) {
+    if (enableProfileModeMetrics) {
+      // TODO (bvaughn, timing) Do we need to pause and store any info here?
+    }
+
     switch (interruptedWork.tag) {
       case ClassComponent: {
         popLegacyContextProvider(interruptedWork);
