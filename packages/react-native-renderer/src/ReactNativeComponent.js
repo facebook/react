@@ -22,7 +22,6 @@ import TextInputState from 'TextInputState';
 import UIManager from 'UIManager';
 
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
-import {mountSafeCallback} from './NativeMethodsMixinUtils';
 
 export default function(
   findNodeHandle: any => ?number,
@@ -37,12 +36,16 @@ export default function(
    * components that are not directly backed by a native view. For more
    * information, see [Direct Manipulation](docs/direct-manipulation.html).
    *
+   * Subclasses must set the `ref` on the root element to `this.nativeRef`.
+   *
    * @abstract
    */
   class ReactNativeComponent<Props, State = void> extends React.Component<
     Props,
     State,
   > {
+    _nativeTag: ?number;
+
     /**
      * Due to bugs in Flow's handling of React.createClass, some fields already
      * declared in the base class need to be redeclared below.
@@ -51,22 +54,30 @@ export default function(
     state: State;
 
     /**
+     * Subclasses should set the `ref` prop on the root element to this.
+     */
+    nativeRef = (nativeElementRef: ?any): void => {
+      this._nativeTag =
+        nativeElementRef != null ? nativeElementRef._nativeTag : null;
+    };
+
+    /**
      * Removes focus. This is the opposite of `focus()`.
      */
     blur(): void {
-      TextInputState.blurTextInput(findNodeHandle(this));
+      TextInputState.blurTextInput(this._nativeTag);
     }
 
     /**
      * Requests focus. The exact behavior depends on the platform and view.
      */
     focus(): void {
-      TextInputState.focusTextInput(findNodeHandle(this));
+      TextInputState.focusTextInput(this._nativeTag);
     }
 
     /**
-     * Measures the on-screen location and dimensions. If successful, the callback
-     * will be called asynchronously with the following arguments:
+     * Measures the on-screen location and dimensions. If successful, the
+     * callback will be called asynchronously with the following arguments:
      *
      *  - x
      *  - y
@@ -81,8 +92,9 @@ export default function(
      */
     measure(callback: MeasureOnSuccessCallback): void {
       UIManager.measure(
-        findNodeHandle(this),
-        mountSafeCallback(this, callback),
+        this._nativeTag,
+        (...args) =>
+          this._nativeTag != null ? callback.apply(this, args) : undefined,
       );
     }
 
@@ -101,8 +113,9 @@ export default function(
      */
     measureInWindow(callback: MeasureInWindowOnSuccessCallback): void {
       UIManager.measureInWindow(
-        findNodeHandle(this),
-        mountSafeCallback(this, callback),
+        this._nativeTag,
+        (...args) =>
+          this._nativeTag != null ? callback.apply(this, args) : undefined,
       );
     }
 
@@ -118,10 +131,12 @@ export default function(
       onFail: () => void /* currently unused */,
     ): void {
       UIManager.measureLayout(
-        findNodeHandle(this),
+        this._nativeTag,
         relativeToNativeNode,
-        mountSafeCallback(this, onFail),
-        mountSafeCallback(this, onSuccess),
+        (...args) =>
+          this._nativeTag != null ? onFail.apply(this, args) : undefined,
+        (...args) =>
+          this._nativeTag != null ? onSuccess.apply(this, args) : undefined,
       );
     }
 
