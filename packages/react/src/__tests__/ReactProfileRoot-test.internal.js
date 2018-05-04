@@ -14,14 +14,12 @@ let ReactFeatureFlags;
 let ReactTestRenderer;
 
 function loadModules({
-  debugRenderPhaseSideEffects = false,
-  debugRenderPhaseSideEffectsForStrictMode = false,
   enableProfileModeMetrics = true,
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffects = debugRenderPhaseSideEffects;
-  ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = debugRenderPhaseSideEffectsForStrictMode;
+  ReactFeatureFlags.debugRenderPhaseSideEffects = false;
+  ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableProfileModeMetrics = enableProfileModeMetrics;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
   React = require('react');
@@ -30,14 +28,14 @@ function loadModules({
 
 describe('ProfileRoot', () => {
   describe('works in profiling and non-profiling bundles', () => {
-    [true, false].forEach(enableProfileModeMetrics => {
+    [true, false].forEach(flagEnabled => {
       describe(`enableProfileModeMetrics ${
-        enableProfileModeMetrics ? 'enabled' : 'disabled'
+        flagEnabled ? 'enabled' : 'disabled'
       }`, () => {
         beforeEach(() => {
           jest.resetModules();
 
-          loadModules({enableProfileModeMetrics});
+          loadModules({enableProfileModeMetrics: flagEnabled});
         });
 
         // This will throw in production too,
@@ -497,16 +495,16 @@ describe('ProfileRoot', () => {
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
-      [true, false].forEach(replayFailedUnitOfWorkWithInvokeGuardedCallback => {
+      [true, false].forEach(flagEnabled => {
         describe(`replayFailedUnitOfWorkWithInvokeGuardedCallback ${
-          replayFailedUnitOfWorkWithInvokeGuardedCallback
-            ? 'enabled'
-            : 'disabled'
+          flagEnabled ? 'enabled' : 'disabled'
         }`, () => {
           beforeEach(() => {
             jest.resetModules();
 
-            loadModules({replayFailedUnitOfWorkWithInvokeGuardedCallback});
+            loadModules({
+              replayFailedUnitOfWorkWithInvokeGuardedCallback: flagEnabled,
+            });
           });
 
           it('should accumulate "actual" time after an ErrorBoundary re-render', () => {
@@ -551,9 +549,7 @@ describe('ProfileRoot', () => {
             expect(mountCall[1]).toBe('mount');
             // "actual" time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
             // If replayFailedUnitOfWorkWithInvokeGuardedCallback is enbaled, ThrowsError is replayed.
-            expect(mountCall[2]).toBe(
-              replayFailedUnitOfWorkWithInvokeGuardedCallback ? 27 : 17,
-            );
+            expect(mountCall[2]).toBe(flagEnabled ? 27 : 17);
             // "base" time includes: 2 (ErrorBoundary)
             expect(mountCall[3]).toBe(2);
 
