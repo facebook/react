@@ -594,7 +594,7 @@ describe('ProfileRoot', () => {
             expect(mountCall[1]).toBe('mount');
             // "actual" time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
             // If replayFailedUnitOfWorkWithInvokeGuardedCallback is enbaled, ThrowsError is replayed.
-            expect(mountCall[2]).toBe(flagEnabled ? 27 : 17);
+            expect(mountCall[2]).toBe(flagEnabled && __DEV__ ? 27 : 17);
             // "base" time includes: 2 (ErrorBoundary)
             expect(mountCall[3]).toBe(2);
 
@@ -649,7 +649,7 @@ describe('ProfileRoot', () => {
             // "actual" time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
             // Then the re-render: 2 (ErrorBoundary) + 20 (AdvanceTime)
             // If replayFailedUnitOfWorkWithInvokeGuardedCallback is enbaled, ThrowsError is replayed.
-            expect(mountCall[2]).toBe(flagEnabled ? 49 : 39);
+            expect(mountCall[2]).toBe(flagEnabled && __DEV__ ? 49 : 39);
             // "base" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
             expect(mountCall[3]).toBe(22);
           });
