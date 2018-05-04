@@ -234,7 +234,7 @@ describe('ReactShallowRenderer', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
-          <React.unstable_ProfileRoot label="test" callback={() => {}}>
+          <React.unstable_ProfileRoot id="test" callback={jest.fn()}>
             <div>
               <span className="child1" />
               <span className="child2" />

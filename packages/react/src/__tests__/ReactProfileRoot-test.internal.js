@@ -55,7 +55,7 @@ describe('ProfileRoot', () => {
           // As root
           expect(
             ReactTestRenderer.create(
-              <React.unstable_ProfileRoot id="label" callback={() => {}} />,
+              <React.unstable_ProfileRoot id="label" callback={jest.fn()} />,
             ).toJSON(),
           ).toMatchSnapshot();
 
@@ -63,7 +63,7 @@ describe('ProfileRoot', () => {
           expect(
             ReactTestRenderer.create(
               <div>
-                <React.unstable_ProfileRoot id="label" callback={() => {}} />
+                <React.unstable_ProfileRoot id="label" callback={jest.fn()} />
               </div>,
             ).toJSON(),
           ).toMatchSnapshot();
@@ -74,7 +74,7 @@ describe('ProfileRoot', () => {
           const renderer = ReactTestRenderer.create(
             <div>
               <span>outside span</span>
-              <React.unstable_ProfileRoot id="label" callback={() => {}}>
+              <React.unstable_ProfileRoot id="label" callback={jest.fn()}>
                 <span>inside span</span>
                 <FunctionalComponent label="functional component" />
               </React.unstable_ProfileRoot>
@@ -91,9 +91,9 @@ describe('ProfileRoot', () => {
             }
           }
           const renderer = ReactTestRenderer.create(
-            <React.unstable_ProfileRoot id="outer" callback={() => {}}>
+            <React.unstable_ProfileRoot id="outer" callback={jest.fn()}>
               <FunctionalComponent label="outer functional component" />
-              <React.unstable_ProfileRoot id="inner" callback={() => {}}>
+              <React.unstable_ProfileRoot id="inner" callback={jest.fn()}>
                 <ClassComponent label="inner class component" />
                 <span>inner span</span>
               </React.unstable_ProfileRoot>
