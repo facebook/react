@@ -89,7 +89,6 @@ if (!ExecutionEnvironment.canUseDOM) {
 
   const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
   let callbackIdCounter = 1;
-  let scheduledCallbackConfig: CallbackConfigType | null = null;
   const getCallbackId = function(): number {
     callbackIdCounter =
       callbackIdCounter >= MAX_SAFE_INTEGER ? 1 : callbackIdCounter + 1;
