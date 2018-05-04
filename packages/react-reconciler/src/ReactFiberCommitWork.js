@@ -773,7 +773,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         if (enableProfileModeMetrics) {
           finishedWork.pendingProps.callback.call(
             null,
-            finishedWork.pendingProps.label,
+            finishedWork.pendingProps.id,
             finishedWork.alternate === null ? 'mount' : 'update',
             finishedWork.stateNode.duration,
             finishedWork.treeBaseTime,

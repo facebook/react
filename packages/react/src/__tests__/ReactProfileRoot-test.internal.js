@@ -46,7 +46,7 @@ describe('ProfileRoot', () => {
             expect(() => {
               ReactTestRenderer.create(<React.unstable_ProfileRoot />);
             }).toThrow(
-              'ProfileMode must specify a label string and callback function',
+              'ProfileMode must specify an "id" string and "callback" function as props',
             );
           });
         }
@@ -55,7 +55,7 @@ describe('ProfileRoot', () => {
           // As root
           expect(
             ReactTestRenderer.create(
-              <React.unstable_ProfileRoot label="label" callback={() => {}} />,
+              <React.unstable_ProfileRoot id="label" callback={() => {}} />,
             ).toJSON(),
           ).toMatchSnapshot();
 
@@ -63,7 +63,7 @@ describe('ProfileRoot', () => {
           expect(
             ReactTestRenderer.create(
               <div>
-                <React.unstable_ProfileRoot label="label" callback={() => {}} />
+                <React.unstable_ProfileRoot id="label" callback={() => {}} />
               </div>,
             ).toJSON(),
           ).toMatchSnapshot();
@@ -74,7 +74,7 @@ describe('ProfileRoot', () => {
           const renderer = ReactTestRenderer.create(
             <div>
               <span>outside span</span>
-              <React.unstable_ProfileRoot label="label" callback={() => {}}>
+              <React.unstable_ProfileRoot id="label" callback={() => {}}>
                 <span>inside span</span>
                 <FunctionalComponent label="functional component" />
               </React.unstable_ProfileRoot>
@@ -91,9 +91,9 @@ describe('ProfileRoot', () => {
             }
           }
           const renderer = ReactTestRenderer.create(
-            <React.unstable_ProfileRoot label="outer" callback={() => {}}>
+            <React.unstable_ProfileRoot id="outer" callback={() => {}}>
               <FunctionalComponent label="outer functional component" />
-              <React.unstable_ProfileRoot label="inner" callback={() => {}}>
+              <React.unstable_ProfileRoot id="inner" callback={() => {}}>
                 <ClassComponent label="inner class component" />
                 <span>inner span</span>
               </React.unstable_ProfileRoot>
@@ -153,7 +153,7 @@ describe('ProfileRoot', () => {
       };
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_ProfileRoot label="test" callback={callback}>
+        <React.unstable_ProfileRoot id="test" callback={callback}>
           <Yield value="first" />
           <Yield value="last" />
         </React.unstable_ProfileRoot>,
@@ -173,7 +173,7 @@ describe('ProfileRoot', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_ProfileRoot label="test" callback={callback}>
+        <React.unstable_ProfileRoot id="test" callback={callback}>
           <AdvanceTime />
         </React.unstable_ProfileRoot>,
       );
@@ -191,7 +191,7 @@ describe('ProfileRoot', () => {
       callback.mockReset();
 
       renderer.update(
-        <React.unstable_ProfileRoot label="test" callback={callback}>
+        <React.unstable_ProfileRoot id="test" callback={callback}>
           <AdvanceTime />
         </React.unstable_ProfileRoot>,
       );
@@ -212,9 +212,9 @@ describe('ProfileRoot', () => {
 
       ReactTestRenderer.create(
         <React.Fragment>
-          <React.unstable_ProfileRoot label="parent" callback={callback}>
+          <React.unstable_ProfileRoot id="parent" callback={callback}>
             <AdvanceTime byAmount={10}>
-              <React.unstable_ProfileRoot label="child" callback={callback}>
+              <React.unstable_ProfileRoot id="child" callback={callback}>
                 <AdvanceTime byAmount={20} />
               </React.unstable_ProfileRoot>
             </AdvanceTime>
@@ -241,10 +241,10 @@ describe('ProfileRoot', () => {
 
       ReactTestRenderer.create(
         <React.Fragment>
-          <React.unstable_ProfileRoot label="first" callback={callback}>
+          <React.unstable_ProfileRoot id="first" callback={callback}>
             <AdvanceTime byAmount={20} />
           </React.unstable_ProfileRoot>
-          <React.unstable_ProfileRoot label="second" callback={callback}>
+          <React.unstable_ProfileRoot id="second" callback={callback}>
             <AdvanceTime byAmount={5} />
           </React.unstable_ProfileRoot>
         </React.Fragment>,
@@ -269,7 +269,7 @@ describe('ProfileRoot', () => {
       ReactTestRenderer.create(
         <React.Fragment>
           <AdvanceTime byAmount={20} />
-          <React.unstable_ProfileRoot label="test" callback={callback}>
+          <React.unstable_ProfileRoot id="test" callback={callback}>
             <AdvanceTime byAmount={5} />
           </React.unstable_ProfileRoot>
           <AdvanceTime byAmount={20} />
@@ -303,11 +303,11 @@ describe('ProfileRoot', () => {
       }
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_ProfileRoot label="outer" callback={callback}>
+        <React.unstable_ProfileRoot id="outer" callback={callback}>
           <Updater>
-            <React.unstable_ProfileRoot label="middle" callback={callback}>
+            <React.unstable_ProfileRoot id="middle" callback={callback}>
               <Pure>
-                <React.unstable_ProfileRoot label="inner" callback={callback}>
+                <React.unstable_ProfileRoot id="inner" callback={callback}>
                   <div />
                 </React.unstable_ProfileRoot>
               </Pure>
@@ -338,7 +338,7 @@ describe('ProfileRoot', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_ProfileRoot label="test" callback={callback}>
+        <React.unstable_ProfileRoot id="test" callback={callback}>
           <AdvanceTime>
             <AdvanceTime shouldComponentUpdate={false} />
           </AdvanceTime>
@@ -348,7 +348,7 @@ describe('ProfileRoot', () => {
       expect(callback).toHaveBeenCalledTimes(1);
 
       renderer.update(
-        <React.unstable_ProfileRoot label="test" callback={callback}>
+        <React.unstable_ProfileRoot id="test" callback={callback}>
           <AdvanceTime>
             <AdvanceTime shouldComponentUpdate={false} />
           </AdvanceTime>
@@ -380,7 +380,7 @@ describe('ProfileRoot', () => {
 
         // Render partially, but run out of time before completing.
         const renderer = ReactTestRenderer.create(
-          <React.unstable_ProfileRoot label="test" callback={callback}>
+          <React.unstable_ProfileRoot id="test" callback={callback}>
             <Yield value="first" />
             <Yield value="second" />
           </React.unstable_ProfileRoot>,
@@ -411,10 +411,10 @@ describe('ProfileRoot', () => {
         };
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_ProfileRoot label="outer" callback={callback}>
+          <React.unstable_ProfileRoot id="outer" callback={callback}>
             <Yield value="first" renderTime={5} />
             <Yield value="second" renderTime={10} />
-            <React.unstable_ProfileRoot label="inner" callback={callback}>
+            <React.unstable_ProfileRoot id="inner" callback={callback}>
               <Yield value="third" renderTime={20} />
             </React.unstable_ProfileRoot>
           </React.unstable_ProfileRoot>,
@@ -458,7 +458,7 @@ describe('ProfileRoot', () => {
         };
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_ProfileRoot label="test" callback={callback}>
+          <React.unstable_ProfileRoot id="test" callback={callback}>
             <Yield value="first" renderTime={10} />
             <Yield value="second" renderTime={20} />
           </React.unstable_ProfileRoot>,
@@ -478,7 +478,7 @@ describe('ProfileRoot', () => {
         // The interrupted work simulates an additional 5ms of time.
         renderer.unstable_flushSync(() => {
           renderer.update(
-            <React.unstable_ProfileRoot label="test" callback={callback}>
+            <React.unstable_ProfileRoot id="test" callback={callback}>
               <Yield value="third" renderTime={5} />
             </React.unstable_ProfileRoot>,
           );
@@ -532,7 +532,7 @@ describe('ProfileRoot', () => {
             }
 
             ReactTestRenderer.create(
-              <React.unstable_ProfileRoot label="test" callback={callback}>
+              <React.unstable_ProfileRoot id="test" callback={callback}>
                 <ErrorBoundary>
                   <AdvanceTime byAmount={5} />
                   <ThrowsError />
@@ -586,7 +586,7 @@ describe('ProfileRoot', () => {
             }
 
             ReactTestRenderer.create(
-              <React.unstable_ProfileRoot label="test" callback={callback}>
+              <React.unstable_ProfileRoot id="test" callback={callback}>
                 <ErrorBoundary>
                   <AdvanceTime byAmount={5} />
                   <ThrowsError />

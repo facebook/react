@@ -472,12 +472,12 @@ export function createFiberFromProfileMode(
 ): Fiber {
   if (__DEV__) {
     if (
-      typeof pendingProps.label !== 'string' ||
+      typeof pendingProps.id !== 'string' ||
       typeof pendingProps.callback !== 'function'
     ) {
       invariant(
         false,
-        'ProfileMode must specify a label string and callback function',
+        'ProfileMode must specify an "id" string and "callback" function as props',
       );
     }
   }
