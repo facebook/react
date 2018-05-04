@@ -41,16 +41,19 @@ describe('ReactScheduler', () => {
     ReactScheduler = require('react-scheduler');
   });
 
-  it('rIC calls the callback within the frame when not blocked', () => {
-    const {rIC} = ReactScheduler;
-    const cb = jest.fn();
-    rIC(cb);
-    jest.runAllTimers();
-    expect(cb.mock.calls.length).toBe(1);
-    // should have ... TODO details on what we expect
-    expect(cb.mock.calls[0][0].didTimeout).toBe(false);
-    expect(typeof cb.mock.calls[0][0].timeRemaining()).toBe('number');
+  describe('rIC', () => {
+    it('calls the callback within the frame when not blocked', () => {
+      const {rIC} = ReactScheduler;
+      const cb = jest.fn();
+      rIC(cb);
+      jest.runAllTimers();
+      expect(cb.mock.calls.length).toBe(1);
+      // should not have timed out and should include a timeRemaining method
+      expect(cb.mock.calls[0][0].didTimeout).toBe(false);
+      expect(typeof cb.mock.calls[0][0].timeRemaining()).toBe('number');
+    });
   });
+
 
   describe('cIC', () => {
     it('cancels the scheduled callback', () => {
