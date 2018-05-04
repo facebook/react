@@ -63,13 +63,13 @@ if (hasNativePerformanceNow) {
 }
 
 // TODO: There's no way to cancel, because Fiber doesn't atm.
-let rIC: (
+let scheduleSerialCallback: (
   callback: (deadline: Deadline, options?: {timeout: number}) => void,
 ) => number;
-let cIC: (callbackID: number) => void;
+let cancelScheduledCallback: (callbackID: number) => void;
 
 if (!ExecutionEnvironment.canUseDOM) {
-  rIC = function(
+  scheduleSerialCallback = function(
     frameCallback: (deadline: Deadline, options?: {timeout: number}) => void,
   ): number {
     return setTimeout(() => {
@@ -81,7 +81,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       });
     });
   };
-  cIC = function(timeoutID: number) {
+  cancelScheduledCallback = function(timeoutID: number) {
     clearTimeout(timeoutID);
   };
 } else {
@@ -186,7 +186,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
   };
 
-  rIC = function(
+  scheduleSerialCallback = function(
     callback: (deadline: Deadline) => void,
     options?: {timeout: number},
   ): number {
@@ -199,19 +199,19 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
-      // might want to still have setTimeout trigger rIC as a backup to ensure
-      // that we keep performing work.
+      // might want to still have setTimeout trigger scheduleSerialCallback as a
+      // backup to ensure that we keep performing work.
       isAnimationFrameScheduled = true;
       requestAnimationFrame(animationTick);
     }
     return 0;
   };
 
-  cIC = function() {
+  cancelScheduledCallback = function() {
     scheduledRICCallback = null;
     isIdleScheduled = false;
     timeoutTime = -1;
   };
 }
 
-export {now, rIC, cIC};
+export {now, scheduleSerialCallback, cancelScheduledCallback};

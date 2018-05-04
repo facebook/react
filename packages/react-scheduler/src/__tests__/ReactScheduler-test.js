@@ -41,10 +41,10 @@ describe('ReactScheduler', () => {
     ReactScheduler = require('react-scheduler');
   });
 
-  it('rIC calls the callback within the frame when not blocked', () => {
-    const {rIC} = ReactScheduler;
+  it('scheduleSerialCallback calls the callback within the frame when not blocked', () => {
+    const {scheduleSerialCallback} = ReactScheduler;
     const cb = jest.fn();
-    rIC(cb);
+    scheduleSerialCallback(cb);
     jest.runAllTimers();
     expect(cb.mock.calls.length).toBe(1);
     // should have ... TODO details on what we expect
