@@ -412,9 +412,12 @@ describe('ProfileRoot', () => {
         };
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_ProfileRoot label="test" callback={callback}>
+          <React.unstable_ProfileRoot label="outer" callback={callback}>
             <Yield value="first" renderTime={5} />
             <Yield value="second" renderTime={10} />
+            <React.unstable_ProfileRoot label="inner" callback={callback}>
+              <Yield value="third" renderTime={20} />
+            </React.unstable_ProfileRoot>
           </React.unstable_ProfileRoot>,
           {unstable_isAsync: true},
         );
@@ -426,17 +429,24 @@ describe('ProfileRoot', () => {
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
-        advanceTimeBy(20);
+        advanceTimeBy(50);
 
         // Flush the remaninig work,
         // Which should take an additional 10ms of simulated time.
         renderer.unstable_flushAll();
 
+        expect(callback).toHaveBeenCalledTimes(2);
+
+        const [innerCall, outerCall] = callback.mock.calls;
+
         // Verify that the "actual" time includes all work times,
         // But not the time that elapsed between frames.
-        expect(callback).toHaveBeenCalledTimes(1);
-        expect(callback.mock.calls[0][2]).toBe(15); // "actual" time
-        expect(callback.mock.calls[0][3]).toBe(15); // "base" time
+        expect(innerCall[0]).toBe('inner');
+        expect(innerCall[2]).toBe(20); // "actual" time
+        expect(innerCall[3]).toBe(20); // "base" time
+        expect(outerCall[0]).toBe('outer');
+        expect(outerCall[2]).toBe(35); // "actual" time
+        expect(outerCall[3]).toBe(35); // "base" time
       });
 
       it('should accumulate "actual" time after a higher priority interruption', () => {
@@ -462,6 +472,9 @@ describe('ProfileRoot', () => {
 
         expect(callback).toHaveBeenCalledTimes(0);
 
+        // Simulate time moving forward while frame is paused.
+        advanceTimeBy(30);
+
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 5ms of time.
         renderer.unstable_flushSync(() => {
@@ -481,8 +494,6 @@ describe('ProfileRoot', () => {
         // Verify no more unexpected callbacks from low priority work
         renderer.unstable_flushAll();
         expect(callback).toHaveBeenCalledTimes(1);
-
-        // TODO (bvaughn, timing) Add check the queue is empty
       });
 
       [true, false].forEach(replayFailedUnitOfWorkWithInvokeGuardedCallback => {
