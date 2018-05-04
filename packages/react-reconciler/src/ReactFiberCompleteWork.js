@@ -47,7 +47,7 @@ import {
   Ref,
   Update,
 } from 'shared/ReactTypeOfSideEffect';
-import {stopActualRenderTimer} from './ReactProfileTimer';
+import {recordActualRenderTime} from './ReactProfileTimer';
 import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
@@ -201,9 +201,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function updateProfileRoot(workInProgress: Fiber) {
     if (enableProfileModeMetrics) {
       if (workInProgress.effectTag & CommitProfile) {
-        // Stop render timer and store the elapsed time as stateNode.
-        // The "commit" phase reads this value and passes it along to the callback.
-        workInProgress.stateNode = stopActualRenderTimer(workInProgress);
+        recordActualRenderTime(workInProgress);
       }
     }
   }

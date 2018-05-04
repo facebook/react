@@ -69,7 +69,10 @@ import {
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
-import {stopBaseRenderTimer, startActualRenderTimer} from './ReactProfileTimer';
+import {
+  stopBaseRenderTimer,
+  markActualRenderTimeStarted,
+} from './ReactProfileTimer';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -222,7 +225,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function updateProfileRoot(current, workInProgress) {
     if (enableProfileModeMetrics) {
       // Start render timer here and push start time onto queue
-      startActualRenderTimer(workInProgress);
+      markActualRenderTimeStarted(workInProgress);
 
       // Let the "complete" phase know to stop the timer,
       // And the scheduler to record the measured time.

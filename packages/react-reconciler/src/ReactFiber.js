@@ -486,7 +486,10 @@ export function createFiberFromProfileMode(
   const fiber = createFiber(ProfileRoot, pendingProps, key, mode | ProfileMode);
   fiber.type = REACT_PROFILE_MODE_TYPE;
   fiber.expirationTime = expirationTime;
-  fiber.stateNode = 0;
+  fiber.stateNode = {
+    duration: 0,
+    startTime: 0,
+  };
 
   return fiber;
 }

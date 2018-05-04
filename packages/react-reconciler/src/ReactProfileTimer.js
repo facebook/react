@@ -36,21 +36,47 @@ if (hasNativePerformanceNow) {
 
 const {createCursor, push, pop} = ReactFiberStack();
 
-let renderTimeStackCursor: StackCursor<number> = createCursor(0);
+let renderTimeStackCursor: StackCursor<Fiber> = createCursor(null);
 
-export function startActualRenderTimer(fiber: Fiber): void {
-  push(renderTimeStackCursor, now(), fiber);
+export function markActualRenderTimeStarted(fiber: Fiber): void {
+  fiber.stateNode.startTime = now();
+
+  push(renderTimeStackCursor, fiber, fiber);
 }
 
-export function stopActualRenderTimer(fiber: Fiber): number {
-  const startTime = renderTimeStackCursor.current;
-
+export function recordActualRenderTime(fiber: Fiber): void {
   pop(renderTimeStackCursor, fiber);
 
-  return now() - startTime;
+  // Stop render timer and store the elapsed time as stateNode.
+  // The "commit" phase reads this value and passes it along to the callback.
+  fiber.stateNode.duration = now() - fiber.stateNode.startTime;
 }
 
-// TODO (bvaughn) Pause actual timer
+let timerPausedAt: number = 0;
+
+export function startActualRenderTimer(): void {
+  if (timerPausedAt > 0) {
+    const elapsed = now() - timerPausedAt;
+
+    let stateNodes: Array<Fiber> = [];
+    while (renderTimeStackCursor.current !== null) {
+      const fiber = renderTimeStackCursor.current;
+      stateNodes.push(fiber);
+      pop(renderTimeStackCursor, fiber);
+    }
+    while (stateNodes.length > 0) {
+      const fiber = stateNodes.pop();
+      fiber.stateNode.startTime += elapsed;
+      push(renderTimeStackCursor, fiber, fiber);
+    }
+
+    timerPausedAt = 0;
+  }
+}
+
+export function pauseActualRenderTimer(): void {
+  timerPausedAt = now();
+}
 
 /**
  * The "base" render time is the duration of the “begin” phase of work for a particular fiber.

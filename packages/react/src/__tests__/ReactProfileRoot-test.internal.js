@@ -402,6 +402,43 @@ describe('ProfileRoot', () => {
         expect(callback.mock.calls[0][3]).toBe(20); // "base" time
       });
 
+      it('should not include time between frames', () => {
+        const callback = jest.fn();
+
+        const Yield = ({renderTime, value}) => {
+          advanceTimeBy(renderTime);
+          renderer.unstable_yield(value);
+          return null;
+        };
+
+        const renderer = ReactTestRenderer.create(
+          <React.unstable_ProfileRoot label="test" callback={callback}>
+            <Yield value="first" renderTime={5} />
+            <Yield value="second" renderTime={10} />
+          </React.unstable_ProfileRoot>,
+          {unstable_isAsync: true},
+        );
+
+        // Render partially, but don't finish.
+        // This partial render should take 5ms of simulated time.
+        renderer.unstable_flushThrough(['first']);
+
+        expect(callback).toHaveBeenCalledTimes(0);
+
+        // Simulate time moving forward while frame is paused.
+        advanceTimeBy(20);
+
+        // Flush the remaninig work,
+        // Which should take an additional 10ms of simulated time.
+        renderer.unstable_flushAll();
+
+        // Verify that the "actual" time includes both durations above,
+        // But not the time that elapsed between frames.
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback.mock.calls[0][2]).toBe(15); // "actual" time
+        expect(callback.mock.calls[0][3]).toBe(15); // "base" time
+      });
+
       it('should accumulate "actual" time after a higher priority interruption', () => {
         const callback = jest.fn();
 
@@ -411,7 +448,6 @@ describe('ProfileRoot', () => {
           return null;
         };
 
-        // Render partially, but don't complete
         const renderer = ReactTestRenderer.create(
           <React.unstable_ProfileRoot label="test" callback={callback}>
             <Yield value="first" renderTime={10} />
@@ -419,11 +455,15 @@ describe('ProfileRoot', () => {
           </React.unstable_ProfileRoot>,
           {unstable_isAsync: true},
         );
+
+        // Render partially, but don't finish.
+        // This partial render should take 10ms of simulated time.
         renderer.unstable_flushThrough(['first']);
 
         expect(callback).toHaveBeenCalledTimes(0);
 
-        // Interrupt with higher priority work
+        // Interrupt with higher priority work.
+        // The interrupted work simulates an additional 5ms of time.
         renderer.unstable_flushSync(() => {
           renderer.update(
             <React.unstable_ProfileRoot label="test" callback={callback}>
@@ -432,14 +472,17 @@ describe('ProfileRoot', () => {
           );
         });
 
-        // Verify that logged times include both durations above.
+        // Verify that the "actual" time includes both durations above,
+        // And the "base" time includes only the final rendered tree times.
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback.mock.calls[0][2]).toBe(15); // "actual" time
-        expect(callback.mock.calls[0][3]).toBe(15); // "base" time
+        expect(callback.mock.calls[0][3]).toBe(5); // "base" time
 
         // Verify no more unexpected callbacks from low priority work
         renderer.unstable_flushAll();
         expect(callback).toHaveBeenCalledTimes(1);
+
+        // TODO (bvaughn, timing) Add check the queue is empty
       });
 
       [true, false].forEach(replayFailedUnitOfWorkWithInvokeGuardedCallback => {
@@ -490,9 +533,6 @@ describe('ProfileRoot', () => {
 
             // Callbacks bubble (reverse order).
             let [mountCall, updateCall] = callback.mock.calls;
-
-            // TODO (bvaughn) Maybe add test with replayFailedUnitOfWorkWithInvokeGuardedCallback enabled.
-            // It would add 10ms to the first "actual" time below.
 
             // The initial mount only includes the ErrorBoundary (which takes 2ms)
             // But it spends time rendering all of the failed subtree also.

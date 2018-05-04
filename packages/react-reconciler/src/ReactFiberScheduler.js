@@ -49,6 +49,8 @@ import {
 import {
   getElapsedBaseRenderTime,
   isBaseRenderTimerRunning,
+  pauseActualRenderTimer,
+  startActualRenderTimer,
   startBaseRenderTimer,
   stopBaseRenderTimer,
 } from './ReactProfileTimer';
@@ -373,11 +375,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
       }
 
-      // TODO (bvaughn) Move this somewhere else? It isn't a host effect.
-      if (effectTag & CommitProfile) {
-        commitProfileWork(nextEffect);
-      }
-
       // The following switch statement is only concerned about placement,
       // updates, and deletions. To avoid needing to add a case for every
       // possible bitmap value, we remove the secondary effects from the
@@ -470,6 +467,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (effectTag & Ref) {
         recordEffect();
         commitAttachRef(nextEffect);
+      }
+
+      if (effectTag & CommitProfile) {
+        commitProfileWork(nextEffect);
       }
 
       const next = nextEffect.nextEffect;
@@ -1553,6 +1554,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ) {
     deadline = dl;
 
+    if (enableProfileModeMetrics) {
+      startActualRenderTimer();
+    }
+
     // Keep working on roots until there's no more work, or until the we reach
     // the deadline.
     findHighestPriorityRoot();
@@ -1748,6 +1753,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // during a timeout. This path is only hit for non-expired work.
       return false;
     }
+
+    if (enableProfileModeMetrics) {
+      pauseActualRenderTimer();
+    }
+
     deadlineDidExpire = true;
     return true;
   }

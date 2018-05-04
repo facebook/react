@@ -775,13 +775,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             null,
             finishedWork.pendingProps.label,
             finishedWork.alternate === null ? 'mount' : 'update',
-            finishedWork.stateNode,
+            finishedWork.stateNode.duration,
             finishedWork.treeBaseTime,
           );
         }
+
         // Reset actualTime after successful commit.
         // By default, we append to this time to account for errors and pauses.
-        finishedWork.stateNode = 0;
+        finishedWork.stateNode.duration = 0;
+        finishedWork.stateNode.startTime = 0;
         break;
       }
       default: {

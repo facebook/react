@@ -196,9 +196,7 @@ export default function<C, CX>(
         workInProgress.treeBaseTime = treeBaseTime;
       }
 
-      if (workInProgress.mode & ProfileMode) {
-        // TODO (bvaughn) Maybe store info on ProfileMode stateNodes about unwind time?
-      }
+      // TODO (bvaughn, timing) Do we need to pause and store any info here?
     }
 
     switch (workInProgress.tag) {
