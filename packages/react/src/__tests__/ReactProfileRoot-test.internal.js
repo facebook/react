@@ -108,6 +108,8 @@ describe('ProfileRoot', () => {
 
       // Import after polyfill
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.debugRenderPhaseSideEffects = false;
+      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactFeatureFlags.enableProfileModeMetrics = true;
       ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
       React = require('react');
@@ -132,31 +134,19 @@ describe('ProfileRoot', () => {
       delete global.performance;
     });
 
-    it('logs render times for mount and update', () => {
+    it('does not log render times until commit', () => {
       const callback = jest.fn();
 
       const Yield = ({value}) => {
-        advanceTimeBy(10);
         renderer.unstable_yield(value);
         return null;
       };
 
       const renderer = ReactTestRenderer.create(
-        <React.Fragment>
+        <React.unstable_ProfileRoot label="test" callback={callback}>
           <Yield value="first" />
-          <React.unstable_ProfileRoot label="outer" callback={callback}>
-            <AdvanceTime>
-              <React.unstable_ProfileRoot label="middle" callback={callback}>
-                <AdvanceTime>
-                  <React.unstable_ProfileRoot label="inner" callback={callback}>
-                    <AdvanceTime />
-                  </React.unstable_ProfileRoot>
-                </AdvanceTime>
-              </React.unstable_ProfileRoot>
-            </AdvanceTime>
-          </React.unstable_ProfileRoot>
           <Yield value="last" />
-        </React.Fragment>,
+        </React.unstable_ProfileRoot>,
         {
           unstable_isAsync: true,
         },
@@ -166,65 +156,125 @@ describe('ProfileRoot', () => {
       renderer.unstable_flushThrough(['first']);
       expect(callback).toHaveBeenCalledTimes(0);
       expect(renderer.unstable_flushAll()).toEqual(['last']);
-      expect(callback).toHaveBeenCalledTimes(3);
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
 
-      // Callbacks bubble (reverse order).
-      let [innerCall, middleCall, outerCall] = callback.mock.calls;
+    it('logs render times for mount and update', () => {
+      const callback = jest.fn();
 
-      expect(innerCall).toHaveLength(4);
-      expect(innerCall[0]).toBe('inner');
-      expect(innerCall[1]).toBe('mount');
-      expect(innerCall[2]).toBeGreaterThan(0); // "actual" time
-      expect(innerCall[3]).toBeGreaterThan(0); // "base" time
+      const renderer = ReactTestRenderer.create(
+        <React.unstable_ProfileRoot label="test" callback={callback}>
+          <AdvanceTime />
+        </React.unstable_ProfileRoot>,
+      );
 
-      expect(middleCall).toHaveLength(4);
-      expect(middleCall[0]).toBe('middle');
-      expect(middleCall[1]).toBe('mount');
-      expect(middleCall[2]).toBeGreaterThan(0); // "actual" time
-      expect(middleCall[3]).toBeGreaterThan(0); // "base" time
+      expect(callback).toHaveBeenCalledTimes(1);
 
-      expect(outerCall).toHaveLength(4);
-      expect(outerCall[0]).toBe('outer');
-      expect(outerCall[1]).toBe('mount');
-      expect(outerCall[2]).toBeGreaterThan(0); // "actual" time
-      expect(outerCall[3]).toBeGreaterThan(0); // "base" time
+      let [call] = callback.mock.calls;
+
+      expect(call).toHaveLength(4);
+      expect(call[0]).toBe('test');
+      expect(call[1]).toBe('mount');
+      expect(call[2]).toBe(10); // "actual" time
+      expect(call[3]).toBe(10); // "base" time
 
       callback.mockReset();
 
       renderer.update(
+        <React.unstable_ProfileRoot label="test" callback={callback}>
+          <AdvanceTime />
+        </React.unstable_ProfileRoot>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      [call] = callback.mock.calls;
+
+      expect(call).toHaveLength(4);
+      expect(call[0]).toBe('test');
+      expect(call[1]).toBe('update');
+      expect(call[2]).toBe(10); // "actual" time
+      expect(call[3]).toBe(10); // "base" time
+    });
+
+    it('includes render times of nested ProfileRoots in their parent times', () => {
+      const callback = jest.fn();
+
+      ReactTestRenderer.create(
         <React.Fragment>
-          <Yield value="first" />
-          <React.unstable_ProfileRoot label="outer" callback={callback}>
-            <AdvanceTime>
-              <React.unstable_ProfileRoot label="middle" callback={callback}>
-                <AdvanceTime>
-                  <React.unstable_ProfileRoot label="inner" callback={callback}>
-                    <AdvanceTime />
-                  </React.unstable_ProfileRoot>
-                </AdvanceTime>
+          <React.unstable_ProfileRoot label="parent" callback={callback}>
+            <AdvanceTime byAmount={10}>
+              <React.unstable_ProfileRoot label="child" callback={callback}>
+                <AdvanceTime byAmount={20} />
               </React.unstable_ProfileRoot>
             </AdvanceTime>
           </React.unstable_ProfileRoot>
-          <Yield value="last" />
         </React.Fragment>,
       );
 
-      // Times are logged until a render is committed.
-      renderer.unstable_flushThrough(['first']);
-      expect(callback).toHaveBeenCalledTimes(0);
-      expect(renderer.unstable_flushAll()).toEqual(['last']);
-      expect(callback).toHaveBeenCalledTimes(3);
-      [innerCall, middleCall, outerCall] = callback.mock.calls;
-      expect(innerCall).toHaveLength(4);
-      expect(innerCall[0]).toBe('inner');
-      expect(innerCall[1]).toBe('update');
-      expect(middleCall[0]).toBe('middle');
-      expect(middleCall[1]).toBe('update');
-      expect(outerCall[0]).toBe('outer');
-      expect(outerCall[1]).toBe('update');
+      expect(callback).toHaveBeenCalledTimes(2);
+
+      // Callbacks bubble (reverse order).
+      const [childCall, parentCall] = callback.mock.calls;
+      expect(childCall[0]).toBe('child');
+      expect(parentCall[0]).toBe('parent');
+
+      // Parent times should include child times
+      expect(childCall[2]).toBe(20); // "actual" time
+      expect(childCall[3]).toBe(20); // "base" time
+      expect(parentCall[2]).toBe(30); // "actual" time
+      expect(parentCall[3]).toBe(30); // "base" time
     });
 
-    it('does not log update times for descendents of sCU false', () => {
+    it('tracks sibling ProfileRoots separately', () => {
+      const callback = jest.fn();
+
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <React.unstable_ProfileRoot label="first" callback={callback}>
+            <AdvanceTime byAmount={20} />
+          </React.unstable_ProfileRoot>
+          <React.unstable_ProfileRoot label="second" callback={callback}>
+            <AdvanceTime byAmount={5} />
+          </React.unstable_ProfileRoot>
+        </React.Fragment>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(2);
+
+      const [firstCall, secondCall] = callback.mock.calls;
+      expect(firstCall[0]).toBe('first');
+      expect(secondCall[0]).toBe('second');
+
+      // Parent times should include child times
+      expect(firstCall[2]).toBe(20); // "actual" time
+      expect(firstCall[3]).toBe(20); // "base" time
+      expect(secondCall[2]).toBe(5); // "actual" time
+      expect(secondCall[3]).toBe(5); // "base" time
+    });
+
+    it('does not include time spent outside of profile root', () => {
+      const callback = jest.fn();
+
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <AdvanceTime byAmount={20} />
+          <React.unstable_ProfileRoot label="test" callback={callback}>
+            <AdvanceTime byAmount={5} />
+          </React.unstable_ProfileRoot>
+          <AdvanceTime byAmount={20} />
+        </React.Fragment>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      const [call] = callback.mock.calls;
+      expect(call[0]).toBe('test');
+      expect(call[2]).toBe(5); // "actual" time
+      expect(call[3]).toBe(5); // "base" time
+    });
+
+    it('does not call callbacks for descendents of sCU false', () => {
       const callback = jest.fn();
 
       let instance;
@@ -274,31 +324,6 @@ describe('ProfileRoot', () => {
       expect(callback.mock.calls[1][0]).toBe('outer');
     });
 
-    it('includes render times of nested ProfileRoots in their parent times', () => {
-      const callback = jest.fn();
-
-      ReactTestRenderer.create(
-        <React.unstable_ProfileRoot label="parent" callback={callback}>
-          <AdvanceTime>
-            <React.unstable_ProfileRoot label="child" callback={callback}>
-              <AdvanceTime />
-            </React.unstable_ProfileRoot>
-          </AdvanceTime>
-        </React.unstable_ProfileRoot>,
-      );
-
-      expect(callback).toHaveBeenCalledTimes(2);
-
-      // Callbacks bubble (reverse order).
-      const [childCall, parentCall] = callback.mock.calls;
-      expect(childCall[0]).toBe('child');
-      expect(parentCall[0]).toBe('parent');
-
-      // Parent times should include child times
-      expect(parentCall[2]).toBeGreaterThan(childCall[2]); // "actual" time
-      expect(parentCall[3]).toBeGreaterThan(childCall[3]); // "base" time
-    });
-
     it('records a decrease in "actual" time and no change in "base" time when sCU memoization is used', () => {
       const callback = jest.fn();
 
@@ -325,10 +350,12 @@ describe('ProfileRoot', () => {
       const [mountCall, updateCall] = callback.mock.calls;
 
       expect(mountCall[1]).toBe('mount');
-      expect(updateCall[1]).toBe('update');
+      expect(mountCall[2]).toBe(20); // "actual" time
+      expect(mountCall[3]).toBe(20); // "base" time
 
-      expect(updateCall[2]).toBeLessThan(mountCall[2]); // "actual" time
-      expect(updateCall[3]).toEqual(mountCall[3]); // "base" time
+      expect(updateCall[1]).toBe('update');
+      expect(updateCall[2]).toBe(10); // "actual" time
+      expect(updateCall[3]).toBe(20); // "base" time
     });
 
     describe('interrupted render timings', () => {
@@ -349,17 +376,19 @@ describe('ProfileRoot', () => {
           </React.unstable_ProfileRoot>,
           {unstable_isAsync: true},
         );
+
+        // Simulate only enough time to render the first Yield
         renderer.unstable_flushThrough(['first']);
 
         expect(callback).toHaveBeenCalledTimes(0);
 
-        // Resume/restart render.
+        // Resume render for remaining children.
         renderer.unstable_flushAll();
 
         // Verify that logged times include both durations above.
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(callback.mock.calls[0][2]).toBeGreaterThan(4); // "actual" time
-        expect(callback.mock.calls[0][3]).toBeGreaterThan(4); // "base" time
+        expect(callback.mock.calls[0][2]).toBe(20); // "actual" time
+        expect(callback.mock.calls[0][3]).toBe(20); // "base" time
       });
 
       it('should resume/accumulate "actual" time after a higher priority interruption', () => {
