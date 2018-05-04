@@ -102,7 +102,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   // unregistered by removing the id from this object.
   // Then we skip calling any callback which is not registered.
   // This means cancelling is an O(1) time complexity instead of O(n).
-  const registeredCallbackIds: { [number]: boolean } = {};
+  const registeredCallbackIds: {[number]: boolean} = {};
 
   let latestCallbackId = -1;
   let scheduledRICCallback = null;

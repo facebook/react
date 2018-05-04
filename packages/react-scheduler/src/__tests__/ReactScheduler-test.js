@@ -66,6 +66,5 @@ describe('ReactScheduler', () => {
     // TODO: this test when one callback cancels another in the queue
   });
 
-
   // TODO: test now
 });
