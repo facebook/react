@@ -147,14 +147,10 @@ describe('ReactIs', () => {
   });
 
   it('should identify profile root', () => {
-    expect(ReactIs.typeOf(<React.unstable_ProfileRoot />)).toBe(
-      ReactIs.ProfileRoot,
-    );
-    expect(ReactIs.isProfileRoot(<React.unstable_ProfileRoot />)).toBe(true);
-    expect(ReactIs.isProfileRoot({type: ReactIs.unstable_ProfileRoot})).toBe(
-      false,
-    );
-    expect(ReactIs.isProfileRoot(<React.unstable_AsyncMode />)).toBe(false);
-    expect(ReactIs.isProfileRoot(<div />)).toBe(false);
+    expect(ReactIs.typeOf(<React.unstable_Profiler />)).toBe(ReactIs.Profiler);
+    expect(ReactIs.isProfiler(<React.unstable_Profiler />)).toBe(true);
+    expect(ReactIs.isProfiler({type: ReactIs.unstable_Profiler})).toBe(false);
+    expect(ReactIs.isProfiler(<React.unstable_AsyncMode />)).toBe(false);
+    expect(ReactIs.isProfiler(<div />)).toBe(false);
   });
 });

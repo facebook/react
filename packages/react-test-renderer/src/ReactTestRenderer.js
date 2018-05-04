@@ -27,7 +27,7 @@ import {
   ContextProvider,
   Mode,
   ForwardRef,
-  ProfileRoot,
+  Profiler,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 
@@ -384,7 +384,7 @@ function toTree(node: ?Fiber) {
     case ContextProvider:
     case ContextConsumer:
     case Mode:
-    case ProfileRoot:
+    case Profiler:
     case ForwardRef:
       return childrenToTree(node.child);
     default:
@@ -488,7 +488,7 @@ class ReactTestInstance {
         case ContextProvider:
         case ContextConsumer:
         case Mode:
-        case ProfileRoot:
+        case Profiler:
           descend = true;
           break;
         default:

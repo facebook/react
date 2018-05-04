@@ -230,16 +230,16 @@ describe('ReactShallowRenderer', () => {
     ]);
   });
 
-  it('should handle ProfileRoot', () => {
+  it('should handle Profiler', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
-          <React.unstable_ProfileRoot id="test" callback={jest.fn()}>
+          <React.unstable_Profiler id="test" callback={jest.fn()}>
             <div>
               <span className="child1" />
               <span className="child2" />
             </div>
-          </React.unstable_ProfileRoot>
+          </React.unstable_Profiler>
         );
       }
     }
@@ -247,7 +247,7 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SomeComponent />);
 
-    expect(result.type).toBe(React.unstable_ProfileRoot);
+    expect(result.type).toBe(React.unstable_Profiler);
     expect(result.props.children).toEqual(
       <div>
         <span className="child1" />

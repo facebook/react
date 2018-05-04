@@ -37,9 +37,9 @@ describe('ReactTestRendererTraversal', () => {
               <View void="void" />
               <View void="void" />
             </ExampleNull>
-            <React.unstable_ProfileRoot id="test" callback={() => {}}>
+            <React.unstable_Profiler id="test" callback={() => {}}>
               <ExampleForwardRef qux="qux" />
-            </React.unstable_ProfileRoot>
+            </React.unstable_Profiler>
           </View>
         </View>
       );

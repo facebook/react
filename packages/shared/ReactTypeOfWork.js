@@ -40,4 +40,4 @@ export const Mode = 11;
 export const ContextConsumer = 12;
 export const ContextProvider = 13;
 export const ForwardRef = 14;
-export const ProfileRoot = 15;
+export const Profiler = 15;

@@ -38,7 +38,7 @@ import {
   ForwardRef,
   Fragment,
   Mode,
-  ProfileRoot,
+  Profiler,
 } from 'shared/ReactTypeOfWork';
 import {ProfileMode} from './ReactTypeOfMode';
 import {
@@ -198,7 +198,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function updateProfileRoot(workInProgress: Fiber) {
+  function updateProfiler(workInProgress: Fiber) {
     if (enableProfileModeMetrics) {
       if (workInProgress.effectTag & CommitProfile) {
         recordElapsedActualRenderTime(workInProgress);
@@ -424,7 +424,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (enableProfileModeMetrics) {
       if (workInProgress.mode & ProfileMode) {
-        // Bubble up "base" render times if we're within a ProfileRoot
+        // Bubble up "base" render times if we're within a Profiler
         let treeBaseTime = workInProgress.selfBaseTime;
         let child = workInProgress.child;
         while (child !== null) {
@@ -622,8 +622,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return null;
       case Mode:
         return null;
-      case ProfileRoot:
-        updateProfileRoot(workInProgress);
+      case Profiler:
+        updateProfiler(workInProgress);
         return null;
       case HostPortal:
         popHostContainer(workInProgress);

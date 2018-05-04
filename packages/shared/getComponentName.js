@@ -16,7 +16,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_RETURN_TYPE,
   REACT_PORTAL_TYPE,
-  REACT_PROFILE_ROOT_TYPE,
+  REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -37,7 +37,7 @@ function getComponentName(fiber: Fiber): string | null {
       return 'ReactFragment';
     case REACT_PORTAL_TYPE:
       return 'ReactPortal';
-    case REACT_PROFILE_ROOT_TYPE:
+    case REACT_PROFILER_TYPE:
       return `ProfileMode(${fiber.pendingProps.id})`;
     case REACT_RETURN_TYPE:
       return 'ReactReturn';

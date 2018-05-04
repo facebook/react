@@ -26,7 +26,7 @@ import {
   HostText,
   HostPortal,
   CallComponent,
-  ProfileRoot,
+  Profiler,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {
@@ -769,7 +769,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function commitProfileWork(finishedWork: Fiber): void {
     switch (finishedWork.tag) {
-      case ProfileRoot: {
+      case Profiler: {
         if (enableProfileModeMetrics) {
           finishedWork.pendingProps.callback.call(
             null,

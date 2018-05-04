@@ -34,7 +34,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
-  ProfileRoot,
+  Profiler,
 } from 'shared/ReactTypeOfWork';
 import {
   NoEffect,
@@ -222,7 +222,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return workInProgress.child;
   }
 
-  function updateProfileRoot(current, workInProgress) {
+  function updateProfiler(current, workInProgress) {
     if (enableProfileModeMetrics) {
       // Start render timer here and push start time onto queue
       markActualRenderTimeStarted(workInProgress);
@@ -232,7 +232,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       workInProgress.effectTag |= CommitProfile;
     }
 
-    // Never bail out early for ProfileRoots.
+    // Never bail out early for Profilers.
     // We always want to re-measure the subtree.
 
     const nextChildren = workInProgress.pendingProps.children;
@@ -1213,8 +1213,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return updateFragment(current, workInProgress);
       case Mode:
         return updateMode(current, workInProgress);
-      case ProfileRoot:
-        return updateProfileRoot(current, workInProgress);
+      case Profiler:
+        return updateProfiler(current, workInProgress);
       case ContextProvider:
         return updateContextProvider(
           current,

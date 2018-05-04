@@ -27,7 +27,7 @@ function loadModules({
   ReactTestRenderer = require('react-test-renderer');
 }
 
-describe('ProfileRoot', () => {
+describe('Profiler', () => {
   describe('works in profiling and non-profiling bundles', () => {
     [true, false].forEach(flagEnabled => {
       describe(`enableProfileModeMetrics ${
@@ -44,18 +44,18 @@ describe('ProfileRoot', () => {
         if (__DEV__) {
           it('should warn if required params are missing', () => {
             expect(() => {
-              ReactTestRenderer.create(<React.unstable_ProfileRoot />);
+              ReactTestRenderer.create(<React.unstable_Profiler />);
             }).toThrow(
               'ProfileMode must specify an "id" string and "callback" function as props',
             );
           });
         }
 
-        it('should support an empty ProfileRoot (with no children)', () => {
+        it('should support an empty Profiler (with no children)', () => {
           // As root
           expect(
             ReactTestRenderer.create(
-              <React.unstable_ProfileRoot id="label" callback={jest.fn()} />,
+              <React.unstable_Profiler id="label" callback={jest.fn()} />,
             ).toJSON(),
           ).toMatchSnapshot();
 
@@ -63,7 +63,7 @@ describe('ProfileRoot', () => {
           expect(
             ReactTestRenderer.create(
               <div>
-                <React.unstable_ProfileRoot id="label" callback={jest.fn()} />
+                <React.unstable_Profiler id="label" callback={jest.fn()} />
               </div>,
             ).toJSON(),
           ).toMatchSnapshot();
@@ -74,10 +74,10 @@ describe('ProfileRoot', () => {
           const renderer = ReactTestRenderer.create(
             <div>
               <span>outside span</span>
-              <React.unstable_ProfileRoot id="label" callback={jest.fn()}>
+              <React.unstable_Profiler id="label" callback={jest.fn()}>
                 <span>inside span</span>
                 <FunctionalComponent label="functional component" />
-              </React.unstable_ProfileRoot>
+              </React.unstable_Profiler>
             </div>,
           );
           expect(renderer.toJSON()).toMatchSnapshot();
@@ -91,13 +91,13 @@ describe('ProfileRoot', () => {
             }
           }
           const renderer = ReactTestRenderer.create(
-            <React.unstable_ProfileRoot id="outer" callback={jest.fn()}>
+            <React.unstable_Profiler id="outer" callback={jest.fn()}>
               <FunctionalComponent label="outer functional component" />
-              <React.unstable_ProfileRoot id="inner" callback={jest.fn()}>
+              <React.unstable_Profiler id="inner" callback={jest.fn()}>
                 <ClassComponent label="inner class component" />
                 <span>inner span</span>
-              </React.unstable_ProfileRoot>
-            </React.unstable_ProfileRoot>,
+              </React.unstable_Profiler>
+            </React.unstable_Profiler>,
           );
           expect(renderer.toJSON()).toMatchSnapshot();
         });
@@ -153,10 +153,10 @@ describe('ProfileRoot', () => {
       };
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_ProfileRoot id="test" callback={callback}>
+        <React.unstable_Profiler id="test" callback={callback}>
           <Yield value="first" />
           <Yield value="last" />
-        </React.unstable_ProfileRoot>,
+        </React.unstable_Profiler>,
         {
           unstable_isAsync: true,
         },
@@ -173,9 +173,9 @@ describe('ProfileRoot', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_ProfileRoot id="test" callback={callback}>
+        <React.unstable_Profiler id="test" callback={callback}>
           <AdvanceTime />
-        </React.unstable_ProfileRoot>,
+        </React.unstable_Profiler>,
       );
 
       expect(callback).toHaveBeenCalledTimes(1);
@@ -191,9 +191,9 @@ describe('ProfileRoot', () => {
       callback.mockReset();
 
       renderer.update(
-        <React.unstable_ProfileRoot id="test" callback={callback}>
+        <React.unstable_Profiler id="test" callback={callback}>
           <AdvanceTime />
-        </React.unstable_ProfileRoot>,
+        </React.unstable_Profiler>,
       );
 
       expect(callback).toHaveBeenCalledTimes(1);
@@ -207,18 +207,18 @@ describe('ProfileRoot', () => {
       expect(call[3]).toBe(10); // "base" time
     });
 
-    it('includes render times of nested ProfileRoots in their parent times', () => {
+    it('includes render times of nested Profilers in their parent times', () => {
       const callback = jest.fn();
 
       ReactTestRenderer.create(
         <React.Fragment>
-          <React.unstable_ProfileRoot id="parent" callback={callback}>
+          <React.unstable_Profiler id="parent" callback={callback}>
             <AdvanceTime byAmount={10}>
-              <React.unstable_ProfileRoot id="child" callback={callback}>
+              <React.unstable_Profiler id="child" callback={callback}>
                 <AdvanceTime byAmount={20} />
-              </React.unstable_ProfileRoot>
+              </React.unstable_Profiler>
             </AdvanceTime>
-          </React.unstable_ProfileRoot>
+          </React.unstable_Profiler>
         </React.Fragment>,
       );
 
@@ -236,17 +236,17 @@ describe('ProfileRoot', () => {
       expect(parentCall[3]).toBe(30); // "base" time
     });
 
-    it('tracks sibling ProfileRoots separately', () => {
+    it('tracks sibling Profilers separately', () => {
       const callback = jest.fn();
 
       ReactTestRenderer.create(
         <React.Fragment>
-          <React.unstable_ProfileRoot id="first" callback={callback}>
+          <React.unstable_Profiler id="first" callback={callback}>
             <AdvanceTime byAmount={20} />
-          </React.unstable_ProfileRoot>
-          <React.unstable_ProfileRoot id="second" callback={callback}>
+          </React.unstable_Profiler>
+          <React.unstable_Profiler id="second" callback={callback}>
             <AdvanceTime byAmount={5} />
-          </React.unstable_ProfileRoot>
+          </React.unstable_Profiler>
         </React.Fragment>,
       );
 
@@ -269,9 +269,9 @@ describe('ProfileRoot', () => {
       ReactTestRenderer.create(
         <React.Fragment>
           <AdvanceTime byAmount={20} />
-          <React.unstable_ProfileRoot id="test" callback={callback}>
+          <React.unstable_Profiler id="test" callback={callback}>
             <AdvanceTime byAmount={5} />
-          </React.unstable_ProfileRoot>
+          </React.unstable_Profiler>
           <AdvanceTime byAmount={20} />
         </React.Fragment>,
       );
@@ -303,17 +303,17 @@ describe('ProfileRoot', () => {
       }
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_ProfileRoot id="outer" callback={callback}>
+        <React.unstable_Profiler id="outer" callback={callback}>
           <Updater>
-            <React.unstable_ProfileRoot id="middle" callback={callback}>
+            <React.unstable_Profiler id="middle" callback={callback}>
               <Pure>
-                <React.unstable_ProfileRoot id="inner" callback={callback}>
+                <React.unstable_Profiler id="inner" callback={callback}>
                   <div />
-                </React.unstable_ProfileRoot>
+                </React.unstable_Profiler>
               </Pure>
-            </React.unstable_ProfileRoot>
+            </React.unstable_Profiler>
           </Updater>
-        </React.unstable_ProfileRoot>,
+        </React.unstable_Profiler>,
       );
 
       // All profile callbacks are called for initial render
@@ -338,21 +338,21 @@ describe('ProfileRoot', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_ProfileRoot id="test" callback={callback}>
+        <React.unstable_Profiler id="test" callback={callback}>
           <AdvanceTime>
             <AdvanceTime shouldComponentUpdate={false} />
           </AdvanceTime>
-        </React.unstable_ProfileRoot>,
+        </React.unstable_Profiler>,
       );
 
       expect(callback).toHaveBeenCalledTimes(1);
 
       renderer.update(
-        <React.unstable_ProfileRoot id="test" callback={callback}>
+        <React.unstable_Profiler id="test" callback={callback}>
           <AdvanceTime>
             <AdvanceTime shouldComponentUpdate={false} />
           </AdvanceTime>
-        </React.unstable_ProfileRoot>,
+        </React.unstable_Profiler>,
       );
 
       expect(callback).toHaveBeenCalledTimes(2);
@@ -388,15 +388,15 @@ describe('ProfileRoot', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_ProfileRoot id="test" callback={callback}>
+        <React.unstable_Profiler id="test" callback={callback}>
           <WithLifecycles />
-        </React.unstable_ProfileRoot>,
+        </React.unstable_Profiler>,
       );
 
       renderer.update(
-        <React.unstable_ProfileRoot id="test" callback={callback}>
+        <React.unstable_Profiler id="test" callback={callback}>
           <WithLifecycles />
-        </React.unstable_ProfileRoot>,
+        </React.unstable_Profiler>,
       );
 
       expect(callback).toHaveBeenCalledTimes(2);
@@ -424,10 +424,10 @@ describe('ProfileRoot', () => {
 
         // Render partially, but run out of time before completing.
         const renderer = ReactTestRenderer.create(
-          <React.unstable_ProfileRoot id="test" callback={callback}>
+          <React.unstable_Profiler id="test" callback={callback}>
             <Yield value="first" />
             <Yield value="second" />
-          </React.unstable_ProfileRoot>,
+          </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
 
@@ -455,13 +455,13 @@ describe('ProfileRoot', () => {
         };
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_ProfileRoot id="outer" callback={callback}>
+          <React.unstable_Profiler id="outer" callback={callback}>
             <Yield value="first" renderTime={5} />
             <Yield value="second" renderTime={10} />
-            <React.unstable_ProfileRoot id="inner" callback={callback}>
+            <React.unstable_Profiler id="inner" callback={callback}>
               <Yield value="third" renderTime={20} />
-            </React.unstable_ProfileRoot>
-          </React.unstable_ProfileRoot>,
+            </React.unstable_Profiler>
+          </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
 
@@ -502,10 +502,10 @@ describe('ProfileRoot', () => {
         };
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_ProfileRoot id="test" callback={callback}>
+          <React.unstable_Profiler id="test" callback={callback}>
             <Yield value="first" renderTime={10} />
             <Yield value="second" renderTime={20} />
-          </React.unstable_ProfileRoot>,
+          </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
 
@@ -522,9 +522,9 @@ describe('ProfileRoot', () => {
         // The interrupted work simulates an additional 5ms of time.
         renderer.unstable_flushSync(() => {
           renderer.update(
-            <React.unstable_ProfileRoot id="test" callback={callback}>
+            <React.unstable_Profiler id="test" callback={callback}>
               <Yield value="third" renderTime={5} />
-            </React.unstable_ProfileRoot>,
+            </React.unstable_Profiler>,
           );
         });
 
@@ -576,12 +576,12 @@ describe('ProfileRoot', () => {
             }
 
             ReactTestRenderer.create(
-              <React.unstable_ProfileRoot id="test" callback={callback}>
+              <React.unstable_Profiler id="test" callback={callback}>
                 <ErrorBoundary>
                   <AdvanceTime byAmount={5} />
                   <ThrowsError />
                 </ErrorBoundary>
-              </React.unstable_ProfileRoot>,
+              </React.unstable_Profiler>,
             );
 
             expect(callback).toHaveBeenCalledTimes(2);
@@ -630,12 +630,12 @@ describe('ProfileRoot', () => {
             }
 
             ReactTestRenderer.create(
-              <React.unstable_ProfileRoot id="test" callback={callback}>
+              <React.unstable_Profiler id="test" callback={callback}>
                 <ErrorBoundary>
                   <AdvanceTime byAmount={5} />
                   <ThrowsError />
                 </ErrorBoundary>
-              </React.unstable_ProfileRoot>,
+              </React.unstable_Profiler>,
             );
 
             expect(callback).toHaveBeenCalledTimes(1);

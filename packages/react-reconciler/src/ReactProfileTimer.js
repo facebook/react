@@ -28,8 +28,8 @@ if (hasNativePerformanceNow) {
 }
 
 /**
- * The "actual" render time is total time required to render the descendants of a ProfileRoot component.
- * This time is stored as a stack, since ProfileRoots can be nested.
+ * The "actual" render time is total time required to render the descendants of a Profiler component.
+ * This time is stored as a stack, since Profilers can be nested.
  * This time is started during the "begin" phase and stopped during the "complete" phase.
  * It is paused (and accumulated) in the event of an interruption or an aborted render.
  */
