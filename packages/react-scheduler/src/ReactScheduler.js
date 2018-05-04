@@ -90,7 +90,11 @@ if (!ExecutionEnvironment.canUseDOM) {
     clearTimeout(timeoutID);
   };
 } else {
-  let scheduledCallbackConfig: CallbackConfigType | null = null;
+  // We keep callbacks in a queue.
+  // Calling rIC will push in a new callback at the end of the queue.
+  // When we get idle time, callbacks are removed from the front of the queue
+  // and called.
+  const pendingCallbacks: Array<CallbackConfigType> = [];
 
   // Number.MAX_SAFE_INTEGER is not supported in IE
   const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
@@ -141,6 +145,61 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
   };
 
+  /**
+   * Checks for timed out callbacks, runs them, and then checks again to see if
+   * any more have timed out.
+   * Keeps doing this until there are none which have currently timed out.
+   */
+  const callTimedOutCallbacks = function() {
+    if (pendingCallbacks.length === 0) {
+      return;
+    }
+
+    let currentTime = now();
+    // TODO: this would be more efficient if deferred callbacks are stored in
+    // min heap.
+    // Or in a linked list with links for both timeoutTime order and insertion
+    // order.
+    // For now an easy compromise is the current approach:
+    // Keep a pointer to the soonest timeoutTime, and check that first.
+    // If it has not expired, we can skip traversing the whole list.
+    // If it has expired, then we step through all the callbacks.
+    // TODO: implement this short cut.
+    /**
+    if (nextSoonestTimeoutTime === -1 || timeoutTime > currentTime) {
+      // We know that none of them have timed out yet.
+      return;
+    }
+    */
+    // keep checking until we don't find any more timed out callbacks
+    let foundTimedOutCallback = false;
+    frameDeadlineObject.didTimeout = true;
+    do {
+      currentTime = now();
+      foundTimedOutCallback = false;
+      for (let i = 0, len = pendingCallbacks.length; i < len; i++) {
+        const currentCallbackConfig = pendingCallbacks[i];
+        if (!currentCallbackConfig) {
+          // we might go off the end of the array
+          continue;
+        }
+        const timeoutTime = currentCallbackConfig.timeoutTime;
+        if (timeoutTime !== -1 && timeoutTime <= currentTime) {
+          // it has timed out!
+          foundTimedOutCallback = true;
+
+          // remove it from the pending callbacks array
+          pendingCallbacks.splice(i, 1);
+          i--;
+
+          // call it
+          const callback = currentCallbackConfig.scheduledCallback;
+          safelyCallScheduledCallback(callback, timeoutTime);
+        }
+      }
+    } while (foundTimedOutCallback && pendingCallbacks.length);
+  };
+
   // We use the postMessage trick to defer idle work until after the repaint.
   const messageKey =
     '__reactIdleCallback$' +
@@ -151,41 +210,32 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (event.source !== window || event.data !== messageKey) {
       return;
     }
-    if (scheduledCallbackConfig === null) {
+
+    if (pendingCallbacks.length === 0) {
       return;
     }
-
-    const callback = scheduledCallbackConfig.scheduledCallback;
-    const callbackId = scheduledCallbackConfig.callbackId;
-    const timeoutTime = scheduledCallbackConfig.timeoutTime;
-
     isIdleScheduled = false;
 
-    const currentTime = now();
-    if (frameDeadline - currentTime <= 0) {
-      // There's no time left in this idle period. Check if the callback has
-      // a timeout and whether it's been exceeded.
-      if (timeoutTime !== -1 && timeoutTime <= currentTime) {
-        // Exceeded the timeout. Invoke the callback even though there's no
-        // time left.
-        frameDeadlineObject.didTimeout = true;
-      } else {
-        // No timeout.
-        if (!isAnimationFrameScheduled) {
-          // Schedule another animation callback so we retry later.
-          isAnimationFrameScheduled = true;
-          requestAnimationFrame(animationTick);
-        }
-        // Exit without invoking the callback.
-        return;
-      }
-    } else {
-      // There's still time left in this idle period.
-      frameDeadlineObject.didTimeout = false;
-    }
+    // First call anything which has timed out, until we have caught up.
+    callTimedOutCallbacks();
 
-    scheduledCallbackConfig = null;
-    safelyCallScheduledCallback(callback, callbackId);
+    let currentTime = now();
+    // Next, as long as we have idle time, try calling more callbacks.
+    while (frameDeadline - currentTime > 0 && pendingCallbacks.length > 0) {
+      const latestCallbackConfig = pendingCallbacks.shift();
+      frameDeadlineObject.didTimeout = false;
+      const latestCallback = latestCallbackConfig.scheduledCallback;
+      const latestCallbackId = latestCallbackConfig.callbackId;
+      safelyCallScheduledCallback(latestCallback, latestCallbackId);
+      currentTime = now();
+    }
+    if (pendingCallbacks.length > 0) {
+      if (!isAnimationFrameScheduled) {
+        // Schedule another animation callback so we retry later.
+        isAnimationFrameScheduled = true;
+        requestAnimationFrame(animationTick);
+      }
+    }
   };
   // Assumes that we have addEventListener in this environment. Might need
   // something better for old IE.
@@ -233,11 +283,12 @@ if (!ExecutionEnvironment.canUseDOM) {
     // This assumes that we only schedule one callback at a time because that's
     // how Fiber uses it.
     const latestCallbackId = getCallbackId();
-    scheduledCallbackConfig = {
+    const scheduledCallbackConfig = {
       scheduledCallback: callback,
       callbackId: latestCallbackId,
       timeoutTime,
     };
+    pendingCallbacks.push(scheduledCallbackConfig);
     registeredCallbackIds[latestCallbackId] = true;
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
