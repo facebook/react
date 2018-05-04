@@ -113,6 +113,10 @@ if (!ExecutionEnvironment.canUseDOM) {
   // This means cancelling is an O(1) time complexity instead of O(n).
   const registeredCallbackIds: {[number]: boolean} = {};
 
+  // We track what the next soonest timeoutTime is, to be able to quickly tell
+  // if none of the scheduled callbacks have timed out.
+  let nextSoonestTimeoutTime = -1;
+
   let isIdleScheduled = false;
   let isAnimationFrameScheduled = false;
 
@@ -164,13 +168,12 @@ if (!ExecutionEnvironment.canUseDOM) {
     // Keep a pointer to the soonest timeoutTime, and check that first.
     // If it has not expired, we can skip traversing the whole list.
     // If it has expired, then we step through all the callbacks.
-    // TODO: implement this short cut.
-    /**
-    if (nextSoonestTimeoutTime === -1 || timeoutTime > currentTime) {
+    if (nextSoonestTimeoutTime === -1 || nextSoonestTimeoutTime > currentTime) {
       // We know that none of them have timed out yet.
       return;
     }
-    */
+    nextSoonestTimeoutTime = -1; // we will reset it below
+
     // keep checking until we don't find any more timed out callbacks
     let foundTimedOutCallback = false;
     frameDeadlineObject.didTimeout = true;
@@ -195,6 +198,10 @@ if (!ExecutionEnvironment.canUseDOM) {
           // call it
           const callback = currentCallbackConfig.scheduledCallback;
           safelyCallScheduledCallback(callback, timeoutTime);
+        } else {
+          if (timeoutTime > nextSoonestTimeoutTime) {
+            nextSoonestTimeoutTime = timeoutTime;
+          }
         }
       }
     } while (foundTimedOutCallback && pendingCallbacks.length);
@@ -279,6 +286,9 @@ if (!ExecutionEnvironment.canUseDOM) {
     let timeoutTime = -1;
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
+    }
+    if (timeoutTime > nextSoonestTimeoutTime) {
+      nextSoonestTimeoutTime = timeoutTime;
     }
     // This assumes that we only schedule one callback at a time because that's
     // how Fiber uses it.
