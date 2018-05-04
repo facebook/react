@@ -43,7 +43,7 @@ import {
   REACT_RETURN_TYPE,
   REACT_CALL_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_PROFILE_MODE_TYPE,
+  REACT_PROFILE_ROOT_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_ASYNC_MODE_TYPE,
@@ -361,7 +361,7 @@ export function createFiberFromElement(
         fiberTag = Mode;
         mode |= StrictMode;
         break;
-      case REACT_PROFILE_MODE_TYPE:
+      case REACT_PROFILE_ROOT_TYPE:
         return createFiberFromProfileMode(
           pendingProps,
           mode,
@@ -484,7 +484,7 @@ export function createFiberFromProfileMode(
   }
 
   const fiber = createFiber(ProfileRoot, pendingProps, key, mode | ProfileMode);
-  fiber.type = REACT_PROFILE_MODE_TYPE;
+  fiber.type = REACT_PROFILE_ROOT_TYPE;
   fiber.expirationTime = expirationTime;
   fiber.stateNode = {
     duration: 0,

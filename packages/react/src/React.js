@@ -10,7 +10,7 @@ import ReactVersion from 'shared/ReactVersion';
 import {
   REACT_ASYNC_MODE_TYPE,
   REACT_FRAGMENT_TYPE,
-  REACT_PROFILE_MODE_TYPE,
+  REACT_PROFILE_ROOT_TYPE,
   REACT_STRICT_MODE_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -52,7 +52,7 @@ const React = {
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   unstable_AsyncMode: REACT_ASYNC_MODE_TYPE,
-  unstable_ProfileRoot: REACT_PROFILE_MODE_TYPE,
+  unstable_ProfileRoot: REACT_PROFILE_ROOT_TYPE,
 
   createElement: __DEV__ ? createElementWithValidation : createElement,
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,

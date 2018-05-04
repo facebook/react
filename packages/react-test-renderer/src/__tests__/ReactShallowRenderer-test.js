@@ -230,6 +230,32 @@ describe('ReactShallowRenderer', () => {
     ]);
   });
 
+  it('should handle ProfileRoot', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return (
+          <React.unstable_ProfileRoot label="test" callback={() => {}}>
+            <div>
+              <span className="child1" />
+              <span className="child2" />
+            </div>
+          </React.unstable_ProfileRoot>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent />);
+
+    expect(result.type).toBe(React.unstable_ProfileRoot);
+    expect(result.props.children).toEqual(
+      <div>
+        <span className="child1" />
+        <span className="child2" />
+      </div>,
+    );
+  });
+
   it('should enable shouldComponentUpdate to prevent a re-render', () => {
     let renderCounter = 0;
     class SimpleComponent extends React.Component {

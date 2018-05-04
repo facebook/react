@@ -145,4 +145,16 @@ describe('ReactIs', () => {
     expect(ReactIs.isStrictMode(<React.unstable_AsyncMode />)).toBe(false);
     expect(ReactIs.isStrictMode(<div />)).toBe(false);
   });
+
+  it('should identify profile root', () => {
+    expect(ReactIs.typeOf(<React.unstable_ProfileRoot />)).toBe(
+      ReactIs.ProfileRoot,
+    );
+    expect(ReactIs.isProfileRoot(<React.unstable_ProfileRoot />)).toBe(true);
+    expect(ReactIs.isProfileRoot({type: ReactIs.unstable_ProfileRoot})).toBe(
+      false,
+    );
+    expect(ReactIs.isProfileRoot(<React.unstable_AsyncMode />)).toBe(false);
+    expect(ReactIs.isProfileRoot(<div />)).toBe(false);
+  });
 });
