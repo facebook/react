@@ -10,7 +10,7 @@
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import type {TopLevelType} from './TopLevelEventTypes';
+import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We
@@ -176,50 +176,40 @@ function printTouchBank(): string {
   return printed;
 }
 
-export default function createResponderTouchHistoryStore(
-  isStartish: (topLevelType: TopLevelType) => boolean,
-  isMoveish: (topLevelType: TopLevelType) => boolean,
-  isEndish: (topLevelType: TopLevelType) => boolean,
-) {
-  const ResponderTouchHistoryStore = {
-    recordTouchTrack(
-      topLevelType: TopLevelType,
-      nativeEvent: TouchEvent,
-    ): void {
-      if (isMoveish(topLevelType)) {
-        nativeEvent.changedTouches.forEach(recordTouchMove);
-      } else if (isStartish(topLevelType)) {
-        nativeEvent.changedTouches.forEach(recordTouchStart);
-        touchHistory.numberActiveTouches = nativeEvent.touches.length;
-        if (touchHistory.numberActiveTouches === 1) {
-          touchHistory.indexOfSingleActiveTouch =
-            nativeEvent.touches[0].identifier;
+const ResponderTouchHistoryStore = {
+  recordTouchTrack(topLevelType: string, nativeEvent: TouchEvent): void {
+    if (isMoveish(topLevelType)) {
+      nativeEvent.changedTouches.forEach(recordTouchMove);
+    } else if (isStartish(topLevelType)) {
+      nativeEvent.changedTouches.forEach(recordTouchStart);
+      touchHistory.numberActiveTouches = nativeEvent.touches.length;
+      if (touchHistory.numberActiveTouches === 1) {
+        touchHistory.indexOfSingleActiveTouch =
+          nativeEvent.touches[0].identifier;
+      }
+    } else if (isEndish(topLevelType)) {
+      nativeEvent.changedTouches.forEach(recordTouchEnd);
+      touchHistory.numberActiveTouches = nativeEvent.touches.length;
+      if (touchHistory.numberActiveTouches === 1) {
+        for (let i = 0; i < touchBank.length; i++) {
+          const touchTrackToCheck = touchBank[i];
+          if (touchTrackToCheck != null && touchTrackToCheck.touchActive) {
+            touchHistory.indexOfSingleActiveTouch = i;
+            break;
+          }
         }
-      } else if (isEndish(topLevelType)) {
-        nativeEvent.changedTouches.forEach(recordTouchEnd);
-        touchHistory.numberActiveTouches = nativeEvent.touches.length;
-        if (touchHistory.numberActiveTouches === 1) {
-          for (let i = 0; i < touchBank.length; i++) {
-            const touchTrackToCheck = touchBank[i];
-            if (touchTrackToCheck != null && touchTrackToCheck.touchActive) {
-              touchHistory.indexOfSingleActiveTouch = i;
-              break;
-            }
-          }
-          if (__DEV__) {
-            const activeRecord =
-              touchBank[touchHistory.indexOfSingleActiveTouch];
-            warning(
-              activeRecord != null && activeRecord.touchActive,
-              'Cannot find single active touch.',
-            );
-          }
+        if (__DEV__) {
+          const activeRecord = touchBank[touchHistory.indexOfSingleActiveTouch];
+          warning(
+            activeRecord != null && activeRecord.touchActive,
+            'Cannot find single active touch.',
+          );
         }
       }
-    },
+    }
+  },
 
-    touchHistory,
-  };
+  touchHistory,
+};
 
-  return ResponderTouchHistoryStore;
-}
+export default ResponderTouchHistoryStore;

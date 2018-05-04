@@ -7,10 +7,8 @@
 
 import ReactDOM from 'react-dom';
 import * as EventPluginUtils from 'events/EventPluginUtils';
-
-import ResponderEventPlugin, {
-  ResponderTouchHistoryStore,
-} from '../events/DOMResponderEventPlugin';
+import ResponderEventPlugin from 'events/ResponderEventPlugin';
+import ResponderTouchHistoryStore from 'events/ResponderTouchHistoryStore';
 
 // This is used by react-native-web.
 export const injectComponentTree =

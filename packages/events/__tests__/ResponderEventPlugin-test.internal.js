@@ -11,17 +11,6 @@
 
 const {HostComponent} = require('shared/ReactTypeOfWork');
 
-// To test this module against public API, we'll use the DOM version of
-// ResponderEventPlugin for these tests. This version will require the
-// DOM specific top event IDs.
-const {
-  TOP_SCROLL,
-  TOP_TOUCH_CANCEL,
-  TOP_TOUCH_END,
-  TOP_TOUCH_MOVE,
-  TOP_TOUCH_START,
-} = require('react-dom/src/events/DOMTopLevelEventTypes');
-
 let EventPluginHub;
 let ResponderEventPlugin;
 
@@ -77,13 +66,13 @@ const _touchConfig = function(
   const allTouchObjects = allTouchHandles.map(touch);
   const changedTouchObjects = subsequence(allTouchObjects, changedIndices);
   const activeTouchObjects =
-    topType === TOP_TOUCH_START
+    topType === 'topTouchStart'
       ? allTouchObjects
-      : topType === TOP_TOUCH_MOVE
+      : topType === 'topTouchMove'
         ? allTouchObjects
-        : topType === TOP_TOUCH_END
+        : topType === 'topTouchEnd'
           ? antiSubsequence(allTouchObjects, changedIndices)
-          : topType === TOP_TOUCH_CANCEL
+          : topType === 'topTouchCancel'
             ? antiSubsequence(allTouchObjects, changedIndices)
             : null;
 
@@ -118,7 +107,7 @@ const _touchConfig = function(
  */
 const startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
-    TOP_TOUCH_START,
+    'topTouchStart',
     nodeHandle,
     allTouchHandles,
     changedIndices,
@@ -131,7 +120,7 @@ const startConfig = function(nodeHandle, allTouchHandles, changedIndices) {
  */
 const moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
-    TOP_TOUCH_MOVE,
+    'topTouchMove',
     nodeHandle,
     allTouchHandles,
     changedIndices,
@@ -144,7 +133,7 @@ const moveConfig = function(nodeHandle, allTouchHandles, changedIndices) {
  */
 const endConfig = function(nodeHandle, allTouchHandles, changedIndices) {
   return _touchConfig(
-    TOP_TOUCH_END,
+    'topTouchEnd',
     nodeHandle,
     allTouchHandles,
     changedIndices,
@@ -1303,7 +1292,7 @@ describe('ResponderEventPlugin', () => {
     config.responderReject.parent = {order: 5};
 
     run(config, three, {
-      topLevelType: TOP_SCROLL,
+      topLevelType: 'topScroll',
       targetInst: getInstanceFromNode(three.parent),
       nativeEvent: {},
     });
@@ -1330,7 +1319,7 @@ describe('ResponderEventPlugin', () => {
     config.responderTerminate.child = {order: 5};
 
     run(config, three, {
-      topLevelType: TOP_SCROLL,
+      topLevelType: 'topScroll',
       targetInst: getInstanceFromNode(three.parent),
       nativeEvent: {},
     });
@@ -1368,7 +1357,7 @@ describe('ResponderEventPlugin', () => {
     config.responderTerminate.child = {order: 1};
 
     const nativeEvent = _touchConfig(
-      TOP_TOUCH_CANCEL,
+      'topTouchCancel',
       three.child,
       [three.child],
       [0],

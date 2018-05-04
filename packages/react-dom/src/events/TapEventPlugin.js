@@ -20,8 +20,19 @@ import {
   TOP_TOUCH_MOVE,
   TOP_TOUCH_START,
 } from './DOMTopLevelEventTypes';
-import {isStartish, isEndish} from './DOMEventPluginUtils';
 import SyntheticUIEvent from './SyntheticUIEvent';
+
+function isStartish(topLevelType) {
+  return topLevelType === TOP_MOUSE_DOWN || topLevelType === TOP_TOUCH_START;
+}
+
+function isEndish(topLevelType) {
+  return (
+    topLevelType === TOP_MOUSE_UP ||
+    topLevelType === TOP_TOUCH_END ||
+    topLevelType === TOP_TOUCH_CANCEL
+  );
+}
 
 /**
  * We are extending the Flow 'Touch' declaration to enable using bracket
