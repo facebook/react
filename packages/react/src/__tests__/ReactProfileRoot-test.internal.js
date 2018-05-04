@@ -21,6 +21,7 @@ function loadModules({
   ReactFeatureFlags.debugRenderPhaseSideEffects = false;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableProfileModeMetrics = enableProfileModeMetrics;
+  ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
   React = require('react');
   ReactTestRenderer = require('react-test-renderer');
@@ -495,8 +496,6 @@ describe('ProfileRoot', () => {
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
-      // TODO (bvaughn, timing) Add test with getDerivedStateFromCatch()
-
       [true, false].forEach(flagEnabled => {
         describe(`replayFailedUnitOfWorkWithInvokeGuardedCallback ${
           flagEnabled ? 'enabled' : 'disabled'
@@ -509,7 +508,7 @@ describe('ProfileRoot', () => {
             });
           });
 
-          it('should accumulate "actual" time after an ErrorBoundary re-render', () => {
+          it('should accumulate "actual" time after an error handled by componentDidCatch()', () => {
             const callback = jest.fn();
 
             const ThrowsError = () => {
@@ -561,6 +560,54 @@ describe('ProfileRoot', () => {
             expect(updateCall[2]).toBe(22);
             // "base" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
             expect(updateCall[3]).toBe(22);
+          });
+
+          it('should accumulate "actual" time after an error handled by getDerivedStateFromCatch()', () => {
+            const callback = jest.fn();
+
+            const ThrowsError = () => {
+              advanceTimeBy(10);
+              throw Error('expected error');
+            };
+
+            class ErrorBoundary extends React.Component {
+              state = {error: null};
+              static getDerivedStateFromCatch(error) {
+                return {error};
+              }
+              render() {
+                advanceTimeBy(2);
+                return this.state.error === null ? (
+                  this.props.children
+                ) : (
+                  <AdvanceTime byAmount={20} />
+                );
+              }
+            }
+
+            ReactTestRenderer.create(
+              <React.unstable_ProfileRoot label="test" callback={callback}>
+                <ErrorBoundary>
+                  <AdvanceTime byAmount={5} />
+                  <ThrowsError />
+                </ErrorBoundary>
+              </React.unstable_ProfileRoot>,
+            );
+
+            expect(callback).toHaveBeenCalledTimes(1);
+
+            // Callbacks bubble (reverse order).
+            let [mountCall] = callback.mock.calls;
+
+            // The initial mount includes the ErrorBoundary's error state,
+            // But i also spends "actual" time rendering UI that fails and isn't included.
+            expect(mountCall[1]).toBe('mount');
+            // "actual" time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
+            // Then the re-render: 2 (ErrorBoundary) + 20 (AdvanceTime)
+            // If replayFailedUnitOfWorkWithInvokeGuardedCallback is enbaled, ThrowsError is replayed.
+            expect(mountCall[2]).toBe(flagEnabled ? 49 : 39);
+            // "base" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+            expect(mountCall[3]).toBe(22);
           });
         });
       });
