@@ -189,7 +189,7 @@ describe('ReactDebugFiberPerf', () => {
 
   it('does not include AsyncMode, StrictMode, or ProfileMode components in measurements', () => {
     ReactNoop.render(
-      <React.unstable_Profiler id="test" callback={jest.fn()}>
+      <React.unstable_Profiler id="test" onRender={jest.fn()}>
         <React.StrictMode>
           <Parent>
             <React.unstable_AsyncMode>

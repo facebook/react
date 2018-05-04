@@ -147,8 +147,14 @@ describe('ReactIs', () => {
   });
 
   it('should identify profile root', () => {
-    expect(ReactIs.typeOf(<React.unstable_Profiler />)).toBe(ReactIs.Profiler);
-    expect(ReactIs.isProfiler(<React.unstable_Profiler />)).toBe(true);
+    expect(
+      ReactIs.typeOf(<React.unstable_Profiler id="foo" onRender={jest.fn()} />),
+    ).toBe(ReactIs.Profiler);
+    expect(
+      ReactIs.isProfiler(
+        <React.unstable_Profiler id="foo" onRender={jest.fn()} />,
+      ),
+    ).toBe(true);
     expect(ReactIs.isProfiler({type: ReactIs.unstable_Profiler})).toBe(false);
     expect(ReactIs.isProfiler(<React.unstable_AsyncMode />)).toBe(false);
     expect(ReactIs.isProfiler(<div />)).toBe(false);

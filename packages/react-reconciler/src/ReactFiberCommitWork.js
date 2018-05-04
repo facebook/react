@@ -771,7 +771,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     switch (finishedWork.tag) {
       case Profiler: {
         if (enableProfileModeMetrics) {
-          finishedWork.pendingProps.callback.call(
+          finishedWork.pendingProps.onRender.call(
             null,
             finishedWork.pendingProps.id,
             finishedWork.alternate === null ? 'mount' : 'update',

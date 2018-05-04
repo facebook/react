@@ -46,7 +46,7 @@ describe('Profiler', () => {
             expect(() => {
               ReactTestRenderer.create(<React.unstable_Profiler />);
             }).toThrow(
-              'ProfileMode must specify an "id" string and "callback" function as props',
+              'ProfileMode must specify an "id" string and "onRender" function as props',
             );
           });
         }
@@ -55,7 +55,7 @@ describe('Profiler', () => {
           // As root
           expect(
             ReactTestRenderer.create(
-              <React.unstable_Profiler id="label" callback={jest.fn()} />,
+              <React.unstable_Profiler id="label" onRender={jest.fn()} />,
             ).toJSON(),
           ).toMatchSnapshot();
 
@@ -63,7 +63,7 @@ describe('Profiler', () => {
           expect(
             ReactTestRenderer.create(
               <div>
-                <React.unstable_Profiler id="label" callback={jest.fn()} />
+                <React.unstable_Profiler id="label" onRender={jest.fn()} />
               </div>,
             ).toJSON(),
           ).toMatchSnapshot();
@@ -74,7 +74,7 @@ describe('Profiler', () => {
           const renderer = ReactTestRenderer.create(
             <div>
               <span>outside span</span>
-              <React.unstable_Profiler id="label" callback={jest.fn()}>
+              <React.unstable_Profiler id="label" onRender={jest.fn()}>
                 <span>inside span</span>
                 <FunctionalComponent label="functional component" />
               </React.unstable_Profiler>
@@ -91,9 +91,9 @@ describe('Profiler', () => {
             }
           }
           const renderer = ReactTestRenderer.create(
-            <React.unstable_Profiler id="outer" callback={jest.fn()}>
+            <React.unstable_Profiler id="outer" onRender={jest.fn()}>
               <FunctionalComponent label="outer functional component" />
-              <React.unstable_Profiler id="inner" callback={jest.fn()}>
+              <React.unstable_Profiler id="inner" onRender={jest.fn()}>
                 <ClassComponent label="inner class component" />
                 <span>inner span</span>
               </React.unstable_Profiler>
@@ -153,7 +153,7 @@ describe('Profiler', () => {
       };
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_Profiler id="test" callback={callback}>
+        <React.unstable_Profiler id="test" onRender={callback}>
           <Yield value="first" />
           <Yield value="last" />
         </React.unstable_Profiler>,
@@ -173,7 +173,7 @@ describe('Profiler', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_Profiler id="test" callback={callback}>
+        <React.unstable_Profiler id="test" onRender={callback}>
           <AdvanceTime />
         </React.unstable_Profiler>,
       );
@@ -191,7 +191,7 @@ describe('Profiler', () => {
       callback.mockReset();
 
       renderer.update(
-        <React.unstable_Profiler id="test" callback={callback}>
+        <React.unstable_Profiler id="test" onRender={callback}>
           <AdvanceTime />
         </React.unstable_Profiler>,
       );
@@ -212,9 +212,9 @@ describe('Profiler', () => {
 
       ReactTestRenderer.create(
         <React.Fragment>
-          <React.unstable_Profiler id="parent" callback={callback}>
+          <React.unstable_Profiler id="parent" onRender={callback}>
             <AdvanceTime byAmount={10}>
-              <React.unstable_Profiler id="child" callback={callback}>
+              <React.unstable_Profiler id="child" onRender={callback}>
                 <AdvanceTime byAmount={20} />
               </React.unstable_Profiler>
             </AdvanceTime>
@@ -241,10 +241,10 @@ describe('Profiler', () => {
 
       ReactTestRenderer.create(
         <React.Fragment>
-          <React.unstable_Profiler id="first" callback={callback}>
+          <React.unstable_Profiler id="first" onRender={callback}>
             <AdvanceTime byAmount={20} />
           </React.unstable_Profiler>
-          <React.unstable_Profiler id="second" callback={callback}>
+          <React.unstable_Profiler id="second" onRender={callback}>
             <AdvanceTime byAmount={5} />
           </React.unstable_Profiler>
         </React.Fragment>,
@@ -269,7 +269,7 @@ describe('Profiler', () => {
       ReactTestRenderer.create(
         <React.Fragment>
           <AdvanceTime byAmount={20} />
-          <React.unstable_Profiler id="test" callback={callback}>
+          <React.unstable_Profiler id="test" onRender={callback}>
             <AdvanceTime byAmount={5} />
           </React.unstable_Profiler>
           <AdvanceTime byAmount={20} />
@@ -303,11 +303,11 @@ describe('Profiler', () => {
       }
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_Profiler id="outer" callback={callback}>
+        <React.unstable_Profiler id="outer" onRender={callback}>
           <Updater>
-            <React.unstable_Profiler id="middle" callback={callback}>
+            <React.unstable_Profiler id="middle" onRender={callback}>
               <Pure>
-                <React.unstable_Profiler id="inner" callback={callback}>
+                <React.unstable_Profiler id="inner" onRender={callback}>
                   <div />
                 </React.unstable_Profiler>
               </Pure>
@@ -338,7 +338,7 @@ describe('Profiler', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_Profiler id="test" callback={callback}>
+        <React.unstable_Profiler id="test" onRender={callback}>
           <AdvanceTime>
             <AdvanceTime shouldComponentUpdate={false} />
           </AdvanceTime>
@@ -348,7 +348,7 @@ describe('Profiler', () => {
       expect(callback).toHaveBeenCalledTimes(1);
 
       renderer.update(
-        <React.unstable_Profiler id="test" callback={callback}>
+        <React.unstable_Profiler id="test" onRender={callback}>
           <AdvanceTime>
             <AdvanceTime shouldComponentUpdate={false} />
           </AdvanceTime>
@@ -388,13 +388,13 @@ describe('Profiler', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
-        <React.unstable_Profiler id="test" callback={callback}>
+        <React.unstable_Profiler id="test" onRender={callback}>
           <WithLifecycles />
         </React.unstable_Profiler>,
       );
 
       renderer.update(
-        <React.unstable_Profiler id="test" callback={callback}>
+        <React.unstable_Profiler id="test" onRender={callback}>
           <WithLifecycles />
         </React.unstable_Profiler>,
       );
@@ -424,7 +424,7 @@ describe('Profiler', () => {
 
         // Render partially, but run out of time before completing.
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" callback={callback}>
+          <React.unstable_Profiler id="test" onRender={callback}>
             <Yield value="first" />
             <Yield value="second" />
           </React.unstable_Profiler>,
@@ -455,10 +455,10 @@ describe('Profiler', () => {
         };
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="outer" callback={callback}>
+          <React.unstable_Profiler id="outer" onRender={callback}>
             <Yield value="first" renderTime={5} />
             <Yield value="second" renderTime={10} />
-            <React.unstable_Profiler id="inner" callback={callback}>
+            <React.unstable_Profiler id="inner" onRender={callback}>
               <Yield value="third" renderTime={20} />
             </React.unstable_Profiler>
           </React.unstable_Profiler>,
@@ -502,7 +502,7 @@ describe('Profiler', () => {
         };
 
         const renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test" callback={callback}>
+          <React.unstable_Profiler id="test" onRender={callback}>
             <Yield value="first" renderTime={10} />
             <Yield value="second" renderTime={20} />
           </React.unstable_Profiler>,
@@ -522,7 +522,7 @@ describe('Profiler', () => {
         // The interrupted work simulates an additional 5ms of time.
         renderer.unstable_flushSync(() => {
           renderer.update(
-            <React.unstable_Profiler id="test" callback={callback}>
+            <React.unstable_Profiler id="test" onRender={callback}>
               <Yield value="third" renderTime={5} />
             </React.unstable_Profiler>,
           );
@@ -576,7 +576,7 @@ describe('Profiler', () => {
             }
 
             ReactTestRenderer.create(
-              <React.unstable_Profiler id="test" callback={callback}>
+              <React.unstable_Profiler id="test" onRender={callback}>
                 <ErrorBoundary>
                   <AdvanceTime byAmount={5} />
                   <ThrowsError />
@@ -630,7 +630,7 @@ describe('Profiler', () => {
             }
 
             ReactTestRenderer.create(
-              <React.unstable_Profiler id="test" callback={callback}>
+              <React.unstable_Profiler id="test" onRender={callback}>
                 <ErrorBoundary>
                   <AdvanceTime byAmount={5} />
                   <ThrowsError />

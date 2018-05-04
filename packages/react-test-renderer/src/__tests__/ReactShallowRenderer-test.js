@@ -234,7 +234,7 @@ describe('ReactShallowRenderer', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
-          <React.unstable_Profiler id="test" callback={jest.fn()}>
+          <React.unstable_Profiler id="test" onRender={jest.fn()}>
             <div>
               <span className="child1" />
               <span className="child2" />

@@ -473,11 +473,11 @@ export function createFiberFromProfileMode(
   if (__DEV__) {
     if (
       typeof pendingProps.id !== 'string' ||
-      typeof pendingProps.callback !== 'function'
+      typeof pendingProps.onRender !== 'function'
     ) {
       invariant(
         false,
-        'ProfileMode must specify an "id" string and "callback" function as props',
+        'ProfileMode must specify an "id" string and "onRender" function as props',
       );
     }
   }
