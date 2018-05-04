@@ -31,12 +31,13 @@ import {
   ContextProvider,
 } from 'shared/ReactTypeOfWork';
 import {
+  CommitProfile,
   DidCapture,
   Incomplete,
   NoEffect,
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
-
+import {recordActualRenderTime} from './ReactProfileTimer';
 import {
   enableGetDerivedStateFromCatch,
   enableProfileModeMetrics,
@@ -220,7 +221,9 @@ export default function<C, CX>(
 
   function unwindInterruptedWork(interruptedWork: Fiber) {
     if (enableProfileModeMetrics) {
-      // TODO (bvaughn, timing) Do we need to pause and store any info here?
+      if (interruptedWork.effectTag & CommitProfile) {
+        recordActualRenderTime(interruptedWork);
+      }
     }
 
     switch (interruptedWork.tag) {

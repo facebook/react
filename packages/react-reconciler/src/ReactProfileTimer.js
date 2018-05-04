@@ -61,7 +61,7 @@ export function recordActualRenderTime(fiber: Fiber): void {
 
   // Stop render timer and store the elapsed time as stateNode.
   // The "commit" phase reads this value and passes it along to the callback.
-  fiber.stateNode.duration =
+  fiber.stateNode.duration +=
     now() - fiber.stateNode.startTime - totalElapsedPauseTime;
 }
 
