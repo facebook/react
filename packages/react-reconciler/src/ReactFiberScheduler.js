@@ -49,10 +49,9 @@ import {
 import {
   checkActualRenderTimeStackEmpty,
   getElapsedBaseRenderTime,
-  isActualRenderTimerPaused,
   isBaseRenderTimerRunning,
-  pauseActualRenderTimer,
-  resumeActualRenderTimer,
+  pauseActualRenderTimerIfRunning,
+  resumeActualRenderTimerIfPaused,
   startBaseRenderTimer,
   stopBaseRenderTimer,
 } from './ReactProfileTimer';
@@ -960,7 +959,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // If we didn't finish, pause the "actual" render timer.
         // We'll restart it when we resume work.
         if (nextUnitOfWork !== null) {
-          pauseActualRenderTimer();
+          pauseActualRenderTimerIfRunning();
         }
       }
     }
@@ -1571,9 +1570,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     deadline = dl;
 
     if (enableProfileModeMetrics) {
-      if (isActualRenderTimerPaused()) {
-        resumeActualRenderTimer();
-      }
+      resumeActualRenderTimerIfPaused();
     }
 
     // Keep working on roots until there's no more work, or until the we reach
@@ -1730,7 +1727,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               // If we didn't finish, pause the "actual" render timer.
               // We'll restart it when we resume work.
               if (nextUnitOfWork !== null) {
-                pauseActualRenderTimer();
+                pauseActualRenderTimerIfRunning();
               }
             }
           }
