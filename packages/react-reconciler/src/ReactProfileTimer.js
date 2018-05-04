@@ -131,30 +131,3 @@ export function stopBaseRenderTimer(): void {
 
   baseStartTime = null;
 }
-
-/* TODO For testing use only
-export function debugPrintStack(workInProgress: Fiber): void {
-  let current = workInProgress;
-  while (current.return !== null) {
-    current = current.return;
-  }
-  let string = '';
-
-  const recurse = (fiber: Fiber, depth: number) => {
-    let prefix = '    ';
-    for (let i = 0; i <= depth; i++) {
-      prefix += '  ';
-    }
-    string += '\n' + prefix + require('shared/getComponentName').default(fiber) +
-      ' {selfBaseTime: ' + fiber.selfBaseTime + ', treeBaseTime: ' + fiber.treeBaseTime + '}';
-    let innerCurrent = fiber.child;
-    while (innerCurrent !== null) {
-      recurse(innerCurrent, depth + 1);
-      innerCurrent = innerCurrent.sibling;
-    }
-  };
-
-  recurse(current, 0);
-  console.log('    debugPrintStack()' + string);
-}
-*/
