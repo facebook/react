@@ -203,8 +203,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (workInProgress.effectTag & CommitProfile) {
         // Stop render timer and store the elapsed time as stateNode.
         // The "commit" phase reads this value and passes it along to the callback.
-        // TODO (bvaughn) Do we need to do this? I don't think so? But we do need to handle frame resumes here.
-        workInProgress.stateNode += stopActualRenderTimer(workInProgress);
+        workInProgress.stateNode = stopActualRenderTimer(workInProgress);
       }
     }
   }

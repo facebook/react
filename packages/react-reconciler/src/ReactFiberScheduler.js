@@ -373,7 +373,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
       }
 
-      // TODO (bvaughn) Move this somewhere else? It isn't a hose effect.
+      // TODO (bvaughn) Move this somewhere else? It isn't a host effect.
       if (effectTag & CommitProfile) {
         commitProfileWork(nextEffect);
       }
@@ -901,11 +901,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (enableProfileModeMetrics) {
       startBaseRenderTimer();
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
-
-      // TODO (bvaughn) Why do we begin and complete work again for <ErrorBoundary> even though we don't render it?
-      // This second begin/complete is overriding our base times to 0.
-      // Can we detect this case and not update or rerun the timer?
-      // Can we stop the time inside (like we do for bailouts)?
 
       if (isBaseRenderTimerRunning()) {
         // Update "base" time if the render wasn't bailed out on.

@@ -13,18 +13,30 @@ let React;
 let ReactFeatureFlags;
 let ReactTestRenderer;
 
+function loadModules({
+  debugRenderPhaseSideEffects = false,
+  debugRenderPhaseSideEffectsForStrictMode = false,
+  enableProfileModeMetrics = true,
+  replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
+} = {}) {
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  ReactFeatureFlags.debugRenderPhaseSideEffects = debugRenderPhaseSideEffects;
+  ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = debugRenderPhaseSideEffectsForStrictMode;
+  ReactFeatureFlags.enableProfileModeMetrics = enableProfileModeMetrics;
+  ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
+  React = require('react');
+  ReactTestRenderer = require('react-test-renderer');
+}
+
 describe('ProfileRoot', () => {
-  [true, false].forEach(enabled => {
+  [true, false].forEach(enableProfileModeMetrics => {
     describe(`enableProfileModeMetrics feature flag ${
-      enabled ? 'enabled' : 'disabled'
+      enableProfileModeMetrics ? 'enabled' : 'disabled'
     }`, () => {
       beforeEach(() => {
         jest.resetModules();
 
-        ReactFeatureFlags = require('shared/ReactFeatureFlags');
-        ReactFeatureFlags.enableProfileModeMetrics = enabled;
-        React = require('react');
-        ReactTestRenderer = require('react-test-renderer');
+        loadModules({enableProfileModeMetrics});
       });
 
       // This will throw in production too,
@@ -107,13 +119,7 @@ describe('ProfileRoot', () => {
       };
 
       // Import after polyfill
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.debugRenderPhaseSideEffects = false;
-      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-      ReactFeatureFlags.enableProfileModeMetrics = true;
-      ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-      React = require('react');
-      ReactTestRenderer = require('react-test-renderer');
+      loadModules();
 
       AdvanceTime = class extends React.Component {
         static defaultProps = {
@@ -431,60 +437,77 @@ describe('ProfileRoot', () => {
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
-      it('should resume/accumulate "actual" time after an ErrorBoundary re-render', () => {
-        const callback = jest.fn();
+      [true, false].forEach(replayFailedUnitOfWorkWithInvokeGuardedCallback => {
+        describe(`replayFailedUnitOfWorkWithInvokeGuardedCallback ${
+          replayFailedUnitOfWorkWithInvokeGuardedCallback
+            ? 'enabled'
+            : 'disabled'
+        }`, () => {
+          beforeEach(() => {
+            jest.resetModules();
 
-        const ThrowsError = () => {
-          advanceTimeBy(10);
-          throw Error('expected error');
-        };
+            loadModules({replayFailedUnitOfWorkWithInvokeGuardedCallback});
+          });
 
-        class ErrorBoundary extends React.Component {
-          state = {error: null};
-          componentDidCatch(error) {
-            this.setState({error});
-          }
-          render() {
-            advanceTimeBy(2);
-            return this.state.error === null ? (
-              this.props.children
-            ) : (
-              <AdvanceTime byAmount={20} />
+          it('should resume/accumulate "actual" time after an ErrorBoundary re-render', () => {
+            const callback = jest.fn();
+
+            const ThrowsError = () => {
+              advanceTimeBy(10);
+              throw Error('expected error');
+            };
+
+            class ErrorBoundary extends React.Component {
+              state = {error: null};
+              componentDidCatch(error) {
+                this.setState({error});
+              }
+              render() {
+                advanceTimeBy(2);
+                return this.state.error === null ? (
+                  this.props.children
+                ) : (
+                  <AdvanceTime byAmount={20} />
+                );
+              }
+            }
+
+            ReactTestRenderer.create(
+              <React.unstable_ProfileRoot label="test" callback={callback}>
+                <ErrorBoundary>
+                  <AdvanceTime byAmount={5} />
+                  <ThrowsError />
+                </ErrorBoundary>
+              </React.unstable_ProfileRoot>,
             );
-          }
-        }
 
-        ReactTestRenderer.create(
-          <React.unstable_ProfileRoot label="test" callback={callback}>
-            <ErrorBoundary>
-              <AdvanceTime byAmount={5} />
-              <ThrowsError />
-            </ErrorBoundary>
-          </React.unstable_ProfileRoot>,
-        );
+            expect(callback).toHaveBeenCalledTimes(2);
 
-        expect(callback).toHaveBeenCalledTimes(2);
+            // Callbacks bubble (reverse order).
+            let [mountCall, updateCall] = callback.mock.calls;
 
-        // Callbacks bubble (reverse order).
-        let [mountCall, updateCall] = callback.mock.calls;
+            // TODO (bvaughn) Maybe add test with replayFailedUnitOfWorkWithInvokeGuardedCallback enabled.
+            // It would add 10ms to the first "actual" time below.
 
-        // TODO (bvaughn) Maybe add test with replayFailedUnitOfWorkWithInvokeGuardedCallback enabled.
-        // It would add 10ms to the first "actual" time below.
+            // The initial mount only includes the ErrorBoundary (which takes 2ms)
+            // But it spends time rendering all of the failed subtree also.
+            expect(mountCall[1]).toBe('mount');
+            // "actual" time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
+            // If replayFailedUnitOfWorkWithInvokeGuardedCallback is enbaled, ThrowsError is replayed.
+            expect(mountCall[2]).toBe(
+              replayFailedUnitOfWorkWithInvokeGuardedCallback ? 27 : 17,
+            );
+            // "base" time includes: 2 (ErrorBoundary)
+            expect(mountCall[3]).toBe(2);
 
-        // The initial mount only includes the ErrorBoundary (which takes 2ms)
-        // But it spends time rendering all of the failed subtree also.
-        expect(mountCall[1]).toBe('mount');
-        // "actual" time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
-        expect(mountCall[2]).toBe(17);
-        // "base" time includes: 2 (ErrorBoundary)
-        expect(mountCall[3]).toBe(2);
-
-        // The update includes the ErrorBoundary and its fallback child
-        expect(updateCall[1]).toBe('update');
-        // "actual" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
-        expect(updateCall[2]).toBe(22);
-        // "base" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
-        expect(updateCall[3]).toBe(22);
+            // The update includes the ErrorBoundary and its fallback child
+            expect(updateCall[1]).toBe('update');
+            // "actual" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+            expect(updateCall[2]).toBe(22);
+            // "base" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+            expect(updateCall[3]).toBe(22);
+          });
+        });
       });
     });
   });
