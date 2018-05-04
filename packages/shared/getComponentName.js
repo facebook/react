@@ -38,7 +38,7 @@ function getComponentName(fiber: Fiber): string | null {
     case REACT_PORTAL_TYPE:
       return 'ReactPortal';
     case REACT_PROFILE_MODE_TYPE:
-      return 'ProfileMode';
+      return `ProfileMode(${fiber.pendingProps.label})`;
     case REACT_RETURN_TYPE:
       return 'ReactReturn';
     case REACT_STRICT_MODE_TYPE:
