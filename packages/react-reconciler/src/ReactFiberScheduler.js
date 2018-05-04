@@ -96,7 +96,7 @@ import {
   expirationTimeToMs,
   computeExpirationBucket,
 } from './ReactFiberExpirationTime';
-import {AsyncMode} from './ReactTypeOfMode';
+import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import ReactFiberLegacyContext from './ReactFiberContext';
 import ReactFiberNewContext from './ReactFiberNewContext';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
@@ -731,6 +731,19 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       child = child.sibling;
     }
     workInProgress.expirationTime = newExpirationTime;
+
+    if (enableProfileModeMetrics) {
+      if (workInProgress.mode & ProfileMode) {
+        // Bubble up "base" render times if we're within a Profiler
+        let treeBaseTime = workInProgress.selfBaseTime;
+        child = workInProgress.child;
+        while (child !== null) {
+          treeBaseTime += child.treeBaseTime;
+          child = child.sibling;
+        }
+        workInProgress.treeBaseTime = treeBaseTime;
+      }
+    }
   }
 
   function completeUnitOfWork(workInProgress: Fiber): Fiber | null {

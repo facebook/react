@@ -40,7 +40,6 @@ import {
   Mode,
   Profiler,
 } from 'shared/ReactTypeOfWork';
-import {ProfileMode} from './ReactTypeOfMode';
 import {
   CommitProfile,
   Placement,
@@ -421,19 +420,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     renderExpirationTime: ExpirationTime,
   ): Fiber | null {
     const newProps = workInProgress.pendingProps;
-
-    if (enableProfileModeMetrics) {
-      if (workInProgress.mode & ProfileMode) {
-        // Bubble up "base" render times if we're within a Profiler
-        let treeBaseTime = workInProgress.selfBaseTime;
-        let child = workInProgress.child;
-        while (child !== null) {
-          treeBaseTime += child.treeBaseTime;
-          child = child.sibling;
-        }
-        workInProgress.treeBaseTime = treeBaseTime;
-      }
-    }
 
     switch (workInProgress.tag) {
       case FunctionalComponent:
