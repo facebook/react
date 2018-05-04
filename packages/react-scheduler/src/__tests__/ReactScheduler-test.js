@@ -52,5 +52,20 @@ describe('ReactScheduler', () => {
     expect(typeof cb.mock.calls[0][0].timeRemaining()).toBe('number');
   });
 
-  // TODO: test cIC and now
+  describe('cIC', () => {
+    it('cancels the scheduled callback', () => {
+      const {rIC, cIC} = ReactScheduler;
+      const cb = jest.fn();
+      const callbackId = rIC(cb);
+      expect(cb.mock.calls.length).toBe(0);
+      cIC(callbackId);
+      jest.runAllTimers();
+      expect(cb.mock.calls.length).toBe(0);
+    });
+
+    // TODO: this test when one callback cancels another in the queue
+  });
+
+
+  // TODO: test now
 });

@@ -85,8 +85,26 @@ if (!ExecutionEnvironment.canUseDOM) {
     clearTimeout(timeoutID);
   };
 } else {
-  // Always polyfill requestIdleCallback and cancelIdleCallback
+  // Number.MAX_SAFE_INTEGER is not supported in IE
 
+  const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
+  let callbackIdCounter = 1;
+  let scheduledCallbackConfig: CallbackConfigType | null = null;
+  const getCallbackId = function(): number {
+    callbackIdCounter =
+      callbackIdCounter >= MAX_SAFE_INTEGER ? 1 : callbackIdCounter + 1;
+    return callbackIdCounter;
+  };
+
+  // When a callback is scheduled, we register it by adding it's id to this
+  // object.
+  // If the user calls 'cIC' with the id of that callback, it will be
+  // unregistered by removing the id from this object.
+  // Then we skip calling any callback which is not registered.
+  // This means cancelling is an O(1) time complexity instead of O(n).
+  const registeredCallbackIds: { [number]: boolean } = {};
+
+  let latestCallbackId = -1;
   let scheduledRICCallback = null;
   let isIdleScheduled = false;
   let timeoutTime = -1;
@@ -116,6 +134,11 @@ if (!ExecutionEnvironment.canUseDOM) {
       .slice(2);
   const idleTick = function(event) {
     if (event.source !== window || event.data !== messageKey) {
+      return;
+    }
+
+    if (!registeredCallbackIds[latestCallbackId]) {
+      // ignore cancelled callbacks
       return;
     }
 
@@ -149,6 +172,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     scheduledRICCallback = null;
     if (callback !== null) {
       callback(frameDeadlineObject);
+      delete registeredCallbackIds[latestCallbackId];
     }
   };
   // Assumes that we have addEventListener in this environment. Might need
@@ -192,7 +216,9 @@ if (!ExecutionEnvironment.canUseDOM) {
   ): number {
     // This assumes that we only schedule one callback at a time because that's
     // how Fiber uses it.
+    latestCallbackId = getCallbackId();
     scheduledRICCallback = callback;
+    registeredCallbackIds[latestCallbackId] = true;
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
     }
@@ -204,13 +230,11 @@ if (!ExecutionEnvironment.canUseDOM) {
       isAnimationFrameScheduled = true;
       requestAnimationFrame(animationTick);
     }
-    return 0;
+    return latestCallbackId;
   };
 
-  cIC = function() {
-    scheduledRICCallback = null;
-    isIdleScheduled = false;
-    timeoutTime = -1;
+  cIC = function(callbackId: number) {
+    delete registeredCallbackIds[callbackId];
   };
 }
 
