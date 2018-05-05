@@ -822,9 +822,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       case Profiler: {
         if (enableProfileModeMetrics) {
-          finishedWork.pendingProps.onRender.call(
+          finishedWork.memoizedProps.onRender.call(
             null,
-            finishedWork.pendingProps.id,
+            finishedWork.memoizedProps.id,
             finishedWork.alternate === null ? 'mount' : 'update',
             finishedWork.stateNode,
             finishedWork.treeBaseTime,

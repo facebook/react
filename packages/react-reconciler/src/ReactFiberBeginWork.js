@@ -236,7 +236,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     const nextChildren = nextProps.children;
     reconcileChildren(current, workInProgress, nextChildren);
-    memoizeProps(workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
   }
 
