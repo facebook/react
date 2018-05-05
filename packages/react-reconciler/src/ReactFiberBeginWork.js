@@ -223,6 +223,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateProfiler(current, workInProgress) {
+    const nextProps = workInProgress.pendingProps;
     if (enableProfileModeMetrics) {
       // Start render timer here and push start time onto queue
       markActualRenderTimeStarted(workInProgress);
@@ -230,12 +231,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Let the "complete" phase know to stop the timer,
       // And the scheduler to record the measured time.
       workInProgress.effectTag |= Update;
+    } else if (workInProgress.memoizedProps === nextProps) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-
-    // Never bail out early for Profilers.
-    // We always want to re-measure the subtree.
-
-    const nextChildren = workInProgress.pendingProps.children;
+    const nextChildren = nextProps.children;
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextChildren);
     return workInProgress.child;
