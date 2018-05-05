@@ -822,8 +822,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       case Profiler: {
         if (enableProfileModeMetrics) {
-          finishedWork.memoizedProps.onRender.call(
-            null,
+          const onRender = finishedWork.memoizedProps.onRender;
+          onRender(
             finishedWork.memoizedProps.id,
             finishedWork.alternate === null ? 'mount' : 'update',
             finishedWork.stateNode,
