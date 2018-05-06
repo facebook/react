@@ -825,7 +825,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           const onRender = finishedWork.memoizedProps.onRender;
           onRender(
             finishedWork.memoizedProps.id,
-            finishedWork.alternate === null ? 'mount' : 'update',
+            current === null ? 'mount' : 'update',
             finishedWork.stateNode,
             finishedWork.treeBaseTime,
           );

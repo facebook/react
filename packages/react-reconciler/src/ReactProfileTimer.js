@@ -47,9 +47,11 @@ export function checkActualRenderTimeStackEmpty(): void {
 }
 
 export function markActualRenderTimeStarted(fiber: Fiber): void {
-  fiber.stateNode -= now() - totalElapsedPauseTime;
+  const startTime = fiber.stateNode - (now() - totalElapsedPauseTime);
 
-  push(stackCursor, fiber.stateNode, fiber);
+  fiber.stateNode = startTime;
+
+  push(stackCursor, startTime, fiber);
 }
 
 export function recordElapsedActualRenderTime(fiber: Fiber): void {
@@ -78,11 +80,11 @@ export function pauseActualRenderTimerIfRunning(): void {
  * If a fiber bails out (sCU false) then its "base" timer is cancelled and the fiber is not updated.
  */
 
-let baseStartTime: number | null = null;
+let baseStartTime: number = -1;
 
 export function getElapsedBaseRenderTime(): number {
   if (__DEV__) {
-    if (baseStartTime === null) {
+    if (baseStartTime === -1) {
       warning(
         false,
         'Cannot read elapsed time when base timer is not running. ' +
@@ -92,16 +94,16 @@ export function getElapsedBaseRenderTime(): number {
     }
   }
 
-  return baseStartTime === null ? 0 : now() - baseStartTime;
+  return baseStartTime === -1 ? 0 : now() - baseStartTime;
 }
 
 export function isBaseRenderTimerRunning(): boolean {
-  return baseStartTime !== null;
+  return baseStartTime !== -1;
 }
 
 export function startBaseRenderTimer(): void {
   if (__DEV__) {
-    if (baseStartTime !== null) {
+    if (baseStartTime !== -1) {
       warning(
         false,
         'Cannot start base timer that is already running. ' +
@@ -116,7 +118,7 @@ export function startBaseRenderTimer(): void {
 
 export function stopBaseRenderTimer(): void {
   if (__DEV__) {
-    if (baseStartTime === null) {
+    if (baseStartTime === -1) {
       warning(
         false,
         'Cannot stop a base timer is not running. ' +
@@ -126,5 +128,5 @@ export function stopBaseRenderTimer(): void {
     }
   }
 
-  baseStartTime = null;
+  baseStartTime = -1;
 }
