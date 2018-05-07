@@ -231,7 +231,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Let the "complete" phase know to stop the timer,
       // And the scheduler to record the measured time.
       workInProgress.effectTag |= Update;
-    } else if (workInProgress.memoizedProps === nextProps) {
+    }
+    if (workInProgress.memoizedProps === nextProps) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
     const nextChildren = nextProps.children;
