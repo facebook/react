@@ -712,31 +712,51 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // TODO: Calls need to visit stateNode
 
     // Bubble up the earliest expiration time.
-    let child = workInProgress.child;
-    while (child !== null) {
-      if (
-        child.expirationTime !== NoWork &&
-        (newExpirationTime === NoWork ||
-          newExpirationTime > child.expirationTime)
-      ) {
-        newExpirationTime = child.expirationTime;
-      }
-      child = child.sibling;
-    }
-    workInProgress.expirationTime = newExpirationTime;
-
+    // (And "base" render timers if that feature flag is enabled)
     if (enableProfileModeMetrics) {
       if (workInProgress.mode & ProfileMode) {
-        // Bubble up "base" render times if we're within a Profiler
         let treeBaseTime = workInProgress.selfBaseTime;
-        child = workInProgress.child;
+        let child = workInProgress.child;
         while (child !== null) {
           treeBaseTime += child.treeBaseTime;
+          if (
+            child.expirationTime !== NoWork &&
+            (newExpirationTime === NoWork ||
+              newExpirationTime > child.expirationTime)
+          ) {
+            newExpirationTime = child.expirationTime;
+          }
           child = child.sibling;
         }
         workInProgress.treeBaseTime = treeBaseTime;
+      } else {
+        let child = workInProgress.child;
+        while (child !== null) {
+          if (
+            child.expirationTime !== NoWork &&
+            (newExpirationTime === NoWork ||
+              newExpirationTime > child.expirationTime)
+          ) {
+            newExpirationTime = child.expirationTime;
+          }
+          child = child.sibling;
+        }
+      }
+    } else {
+      let child = workInProgress.child;
+      while (child !== null) {
+        if (
+          child.expirationTime !== NoWork &&
+          (newExpirationTime === NoWork ||
+            newExpirationTime > child.expirationTime)
+        ) {
+          newExpirationTime = child.expirationTime;
+        }
+        child = child.sibling;
       }
     }
+
+    workInProgress.expirationTime = newExpirationTime;
   }
 
   function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
