@@ -46,12 +46,11 @@ describe('getEventTarget', () => {
           bubbles: true,
           cancelable: true,
         });
-        
+
         expect(target).toEqual(null);
         container.firstChild.dispatchEvent(nativeEvent);
         expect(target).toEqual(container.firstChild);
       });
     });
-
   });
 });
