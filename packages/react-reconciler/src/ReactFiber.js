@@ -154,8 +154,8 @@ export type Fiber = {|
   alternate: Fiber | null,
 
   // Profiling metrics
-  selfBaseTime: number,
-  treeBaseTime: number,
+  selfBaseTime?: number,
+  treeBaseTime?: number,
 
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
