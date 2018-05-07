@@ -147,7 +147,7 @@ if (__DEV__) {
           'Cannot update during an existing state transition (such as within ' +
             "`render` or another component's constructor). Render methods should " +
             'be a pure function of props and state; constructor side-effects are ' +
-            'an anti-pattern, but can be moved to `componentWillMount`.',
+            'an anti-pattern and should be moved to `componentDidMount`',
         );
         didWarnAboutStateTransition = true;
         break;
