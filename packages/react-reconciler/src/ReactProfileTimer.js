@@ -42,22 +42,26 @@ export function markActualRenderTimeStarted(fiber: Fiber, now: Now): void {
   push(stackCursor, startTime, fiber);
 }
 
+export function pauseActualRenderTimerIfRunning(now: Now): void {
+  if (timerPausedAt === 0) {
+    timerPausedAt = now();
+  }
+}
+
 export function recordElapsedActualRenderTime(fiber: Fiber, now: Now): void {
   pop(stackCursor, fiber);
 
   fiber.stateNode += now() - totalElapsedPauseTime;
 }
 
+export function resetActualRenderTimer(): void {
+  totalElapsedPauseTime = 0;
+}
+
 export function resumeActualRenderTimerIfPaused(now: Now): void {
   if (timerPausedAt > 0) {
     totalElapsedPauseTime += now() - timerPausedAt;
     timerPausedAt = 0;
-  }
-}
-
-export function pauseActualRenderTimerIfRunning(now: Now): void {
-  if (timerPausedAt === 0) {
-    timerPausedAt = now();
   }
 }
 

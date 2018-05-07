@@ -49,6 +49,7 @@ import {
   checkActualRenderTimeStackEmpty,
   pauseActualRenderTimerIfRunning,
   recordElapsedBaseRenderTimeIfRunning,
+  resetActualRenderTimer,
   resumeActualRenderTimerIfPaused,
   startBaseRenderTimer,
   stopBaseRenderTimerIfRunning,
@@ -660,10 +661,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
 
-    if (__DEV__) {
-      if (enableProfileModeMetrics) {
+    if (enableProfileModeMetrics) {
+      if (__DEV__) {
         checkActualRenderTimeStackEmpty();
       }
+      resetActualRenderTimer();
     }
 
     isCommitting = false;
