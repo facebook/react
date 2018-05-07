@@ -1592,13 +1592,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ) {
     deadline = dl;
 
-    if (enableProfileModeMetrics) {
-      resumeActualRenderTimerIfPaused(now);
-    }
-
     // Keep working on roots until there's no more work, or until the we reach
     // the deadline.
     findHighestPriorityRoot();
+
+    if (enableProfileModeMetrics) {
+      resumeActualRenderTimerIfPaused(now);
+    }
 
     if (enableUserTimingAPI && deadline !== null) {
       const didExpire = nextFlushedExpirationTime < recalculateCurrentTime();
