@@ -246,6 +246,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
       case Profiler:
         if (enableProfileModeMetrics) {
+          ((actualRenderTimer: any): ActualRenderTimer).resumeActualRenderTimerIfPaused(
+            now,
+          );
           ((actualRenderTimer: any): ActualRenderTimer).recordElapsedActualRenderTime(
             interruptedWork,
             now,
