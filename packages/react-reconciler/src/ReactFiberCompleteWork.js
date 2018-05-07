@@ -194,15 +194,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function updateProfiler(workInProgress: Fiber) {
-    if (enableProfileModeMetrics) {
-      ((actualRenderTimer: any): ActualRenderTimer).recordElapsedActualRenderTime(
-        workInProgress,
-        now,
-      );
-    }
-  }
-
   let updateHostContainer;
   let updateHostComponent;
   let updateHostText;
@@ -418,7 +409,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     renderExpirationTime: ExpirationTime,
   ): Fiber | null {
     const newProps = workInProgress.pendingProps;
-
     switch (workInProgress.tag) {
       case FunctionalComponent:
         return null;
@@ -607,7 +597,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case Mode:
         return null;
       case Profiler:
-        updateProfiler(workInProgress);
+        if (enableProfileModeMetrics) {
+          ((actualRenderTimer: any): ActualRenderTimer).recordElapsedActualRenderTime(
+            workInProgress,
+            now,
+          );
+        }
         return null;
       case HostPortal:
         popHostContainer(workInProgress);

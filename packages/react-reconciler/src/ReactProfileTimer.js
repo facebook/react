@@ -45,9 +45,7 @@ export function createActualRenderTimer(stack: Stack): ActualRenderTimer {
 
   function markActualRenderTimeStarted(fiber: Fiber, now: Now): void {
     const startTime = fiber.stateNode - (now() - totalElapsedPauseTime);
-
     fiber.stateNode = startTime;
-
     push(stackCursor, startTime, fiber);
   }
 
@@ -59,7 +57,6 @@ export function createActualRenderTimer(stack: Stack): ActualRenderTimer {
 
   function recordElapsedActualRenderTime(fiber: Fiber, now: Now): void {
     pop(stackCursor, fiber);
-
     fiber.stateNode += now() - totalElapsedPauseTime;
   }
 
@@ -113,7 +110,6 @@ export function startBaseRenderTimer(now: Now): void {
       );
     }
   }
-
   baseStartTime = now();
 }
 
