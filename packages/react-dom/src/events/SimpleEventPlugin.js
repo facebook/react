@@ -188,7 +188,9 @@ const knownHTMLTopLevelTypes: Array<TopLevelType> = [
   DOMTopLevelEventTypes.TOP_WAITING,
 ];
 
-const SimpleEventPlugin: PluginModule<MouseEvent> = {
+const SimpleEventPlugin: PluginModule<MouseEvent> & {
+  isInteractiveTopLevelEventType: (topLevelType: TopLevelType) => boolean,
+} = {
   eventTypes: eventTypes,
 
   isInteractiveTopLevelEventType(topLevelType: TopLevelType): boolean {

@@ -3,12 +3,17 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
+import type {AnyNativeEvent} from 'events/PluginModuleType';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
@@ -41,7 +46,16 @@ function findRootContainerNode(inst) {
 }
 
 // Used to store ancestor hierarchy in top level callback
-function getTopLevelCallbackBookKeeping(topLevelType, nativeEvent, targetInst) {
+function getTopLevelCallbackBookKeeping(
+  topLevelType,
+  nativeEvent,
+  targetInst,
+): {
+  topLevelType: ?TopLevelType,
+  nativeEvent: ?AnyNativeEvent,
+  targetInst: Fiber,
+  ancestors: Array<Fiber>,
+} {
   if (callbackBookkeepingPool.length) {
     const instance = callbackBookkeepingPool.pop();
     instance.topLevelType = topLevelType;
@@ -102,7 +116,7 @@ function handleTopLevel(bookKeeping) {
 // TODO: can we stop exporting these?
 export let _enabled = true;
 
-export function setEnabled(enabled) {
+export function setEnabled(enabled: ?boolean) {
   _enabled = !!enabled;
 }
 
@@ -119,7 +133,10 @@ export function isEnabled() {
  *                  remove the listener.
  * @internal
  */
-export function trapBubbledEvent(topLevelType, element) {
+export function trapBubbledEvent(
+  topLevelType: TopLevelType,
+  element: Document | Element,
+) {
   if (!element) {
     return null;
   }
@@ -144,7 +161,10 @@ export function trapBubbledEvent(topLevelType, element) {
  *                  remove the listener.
  * @internal
  */
-export function trapCapturedEvent(topLevelType, element) {
+export function trapCapturedEvent(
+  topLevelType: TopLevelType,
+  element: Document | Element,
+) {
   if (!element) {
     return null;
   }
@@ -164,7 +184,10 @@ function dispatchInteractiveEvent(topLevelType, nativeEvent) {
   interactiveUpdates(dispatchEvent, topLevelType, nativeEvent);
 }
 
-export function dispatchEvent(topLevelType, nativeEvent) {
+export function dispatchEvent(
+  topLevelType: TopLevelType,
+  nativeEvent: AnyNativeEvent,
+) {
   if (!_enabled) {
     return;
   }

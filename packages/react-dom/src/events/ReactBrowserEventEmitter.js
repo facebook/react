@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
@@ -20,7 +22,6 @@ import {
   trapCapturedEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
-import {getRawEventName} from './DOMTopLevelEventTypes';
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -86,7 +87,7 @@ let reactTopListenersCounter = 0;
  */
 const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
 
-function getListeningForDocument(mountAt) {
+function getListeningForDocument(mountAt: any) {
   // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
   // directly.
   if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
@@ -115,10 +116,12 @@ function getListeningForDocument(mountAt) {
  * they bubble to document.
  *
  * @param {string} registrationName Name of listener (e.g. `onClick`).
- * @param {object} contentDocumentHandle Document which owns the container
+ * @param {object} mountAt Container where to mount the listener
  */
-export function listenTo(registrationName, contentDocumentHandle) {
-  const mountAt = contentDocumentHandle;
+export function listenTo(
+  registrationName: string,
+  mountAt: Document | Element,
+) {
   const isListening = getListeningForDocument(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
@@ -144,7 +147,7 @@ export function listenTo(registrationName, contentDocumentHandle) {
           trapCapturedEvent(TOP_CLOSE, mountAt);
         }
         isListening[TOP_CLOSE] = true;
-      } else if (getRawEventName(dependency)) {
+      } else {
         trapBubbledEvent(dependency, mountAt);
       }
 
@@ -153,7 +156,10 @@ export function listenTo(registrationName, contentDocumentHandle) {
   }
 }
 
-export function isListeningToAllDependencies(registrationName, mountAt) {
+export function isListeningToAllDependencies(
+  registrationName: string,
+  mountAt: Document | Element,
+) {
   const isListening = getListeningForDocument(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
   for (let i = 0; i < dependencies.length; i++) {
