@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
@@ -43,7 +44,8 @@ import {
   enableProfileModeMetrics,
 } from 'shared/ReactFeatureFlags';
 
-export default function<C, CX>(
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   legacyContext: LegacyContext,
   newContext: NewContext,
@@ -56,6 +58,7 @@ export default function<C, CX>(
   isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
   onUncaughtError: (error: mixed) => void,
 ) {
+  const {now} = config;
   const {popHostContainer, popHostContext} = hostContext;
   const {
     popContextProvider: popLegacyContextProvider,
@@ -242,7 +245,7 @@ export default function<C, CX>(
         break;
       case Profiler:
         if (enableProfileModeMetrics) {
-          recordElapsedActualRenderTime(interruptedWork);
+          recordElapsedActualRenderTime(interruptedWork, now);
         }
         break;
       default:

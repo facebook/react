@@ -204,6 +204,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     createRootErrorUpdate,
     createClassErrorUpdate,
   } = ReactFiberUnwindWork(
+    config,
     hostContext,
     legacyContext,
     newContext,
@@ -912,12 +913,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     let next;
     if (enableProfileModeMetrics) {
-      startBaseRenderTimer();
+      startBaseRenderTimer(now);
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
       // Update "base" time if the render wasn't bailed out on.
       if (isBaseRenderTimerRunning()) {
-        workInProgress.selfBaseTime = getElapsedBaseRenderTime();
+        workInProgress.selfBaseTime = getElapsedBaseRenderTime(now);
         stopBaseRenderTimer();
       }
     } else {
@@ -963,7 +964,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (enableProfileModeMetrics) {
         // If we didn't finish, pause the "actual" render timer.
         // We'll restart it when we resume work.
-        pauseActualRenderTimerIfRunning();
+        pauseActualRenderTimerIfRunning(now);
       }
     }
   }
@@ -1572,7 +1573,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     deadline = dl;
 
     if (enableProfileModeMetrics) {
-      resumeActualRenderTimerIfPaused();
+      resumeActualRenderTimerIfPaused(now);
     }
 
     // Keep working on roots until there's no more work, or until the we reach
@@ -1728,7 +1729,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             if (enableProfileModeMetrics) {
               // If we didn't finish, pause the "actual" render timer.
               // We'll restart it when we resume work.
-              pauseActualRenderTimerIfRunning();
+              pauseActualRenderTimerIfRunning(now);
             }
           }
         }

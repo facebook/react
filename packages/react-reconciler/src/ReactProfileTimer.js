@@ -13,19 +13,7 @@ import type {StackCursor} from './ReactFiberStack';
 import warning from 'fbjs/lib/warning';
 import ReactFiberStack from './ReactFiberStack';
 
-const hasNativePerformanceNow =
-  typeof performance === 'object' && typeof performance.now === 'function';
-
-let now;
-if (hasNativePerformanceNow) {
-  now = function() {
-    return performance.now();
-  };
-} else {
-  now = function() {
-    return Date.now();
-  };
-}
+type Now = () => number;
 
 /**
  * The "actual" render time is total time required to render the descendants of a Profiler component.
@@ -46,7 +34,7 @@ export function checkActualRenderTimeStackEmpty(): void {
   }
 }
 
-export function markActualRenderTimeStarted(fiber: Fiber): void {
+export function markActualRenderTimeStarted(fiber: Fiber, now: Now): void {
   const startTime = fiber.stateNode - (now() - totalElapsedPauseTime);
 
   fiber.stateNode = startTime;
@@ -54,20 +42,20 @@ export function markActualRenderTimeStarted(fiber: Fiber): void {
   push(stackCursor, startTime, fiber);
 }
 
-export function recordElapsedActualRenderTime(fiber: Fiber): void {
+export function recordElapsedActualRenderTime(fiber: Fiber, now: Now): void {
   pop(stackCursor, fiber);
 
   fiber.stateNode += now() - totalElapsedPauseTime;
 }
 
-export function resumeActualRenderTimerIfPaused(): void {
+export function resumeActualRenderTimerIfPaused(now: Now): void {
   if (timerPausedAt > 0) {
     totalElapsedPauseTime += now() - timerPausedAt;
     timerPausedAt = 0;
   }
 }
 
-export function pauseActualRenderTimerIfRunning(): void {
+export function pauseActualRenderTimerIfRunning(now: Now): void {
   if (timerPausedAt === 0) {
     timerPausedAt = now();
   }
@@ -82,7 +70,7 @@ export function pauseActualRenderTimerIfRunning(): void {
 
 let baseStartTime: number = -1;
 
-export function getElapsedBaseRenderTime(): number {
+export function getElapsedBaseRenderTime(now: Now): number {
   if (__DEV__) {
     if (baseStartTime === -1) {
       warning(
@@ -101,7 +89,7 @@ export function isBaseRenderTimerRunning(): boolean {
   return baseStartTime !== -1;
 }
 
-export function startBaseRenderTimer(): void {
+export function startBaseRenderTimer(now: Now): void {
   if (__DEV__) {
     if (baseStartTime !== -1) {
       warning(

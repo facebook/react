@@ -96,7 +96,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
 ) {
-  const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
+  const {now, shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
 
@@ -226,7 +226,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const nextProps = workInProgress.pendingProps;
     if (enableProfileModeMetrics) {
       // Start render timer here and push start time onto queue
-      markActualRenderTimeStarted(workInProgress);
+      markActualRenderTimeStarted(workInProgress, now);
 
       // Let the "complete" phase know to stop the timer,
       // And the scheduler to record the measured time.
@@ -1133,7 +1133,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         pushProvider(workInProgress);
         break;
       case Profiler:
-        markActualRenderTimeStarted(workInProgress);
+        markActualRenderTimeStarted(workInProgress, now);
         break;
     }
     // TODO: What if this is currently in progress?

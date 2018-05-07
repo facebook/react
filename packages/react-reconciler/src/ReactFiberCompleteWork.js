@@ -58,6 +58,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     createTextInstance,
     appendInitialChild,
     finalizeInitialChildren,
+    now,
     prepareUpdate,
     mutation,
     persistence,
@@ -194,7 +195,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateProfiler(workInProgress: Fiber) {
     if (enableProfileModeMetrics) {
-      recordElapsedActualRenderTime(workInProgress);
+      recordElapsedActualRenderTime(workInProgress, now);
     }
   }
 

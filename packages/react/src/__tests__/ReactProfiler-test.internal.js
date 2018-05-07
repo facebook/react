@@ -109,21 +109,19 @@ describe('Profiler', () => {
     let AdvanceTime;
     let advanceTimeBy;
 
-    beforeEach(() => {
-      jest.resetModules();
-
+    const mockNowForTests = () => {
       let currentTime = 0;
-      global.performance = {
-        now: () => {
-          return currentTime;
-        },
-      };
+      ReactTestRenderer.unstable_setNowImplementation(() => currentTime);
       advanceTimeBy = amount => {
         currentTime += amount;
       };
+    };
 
-      // Import after polyfill
+    beforeEach(() => {
+      jest.resetModules();
+
       loadModules();
+      mockNowForTests();
 
       AdvanceTime = class extends React.Component {
         static defaultProps = {
@@ -139,9 +137,6 @@ describe('Profiler', () => {
           return this.props.children || null;
         }
       };
-    });
-    afterEach(() => {
-      delete global.performance;
     });
 
     it('does not invoke the callback until the commit phase', () => {
@@ -550,6 +545,7 @@ describe('Profiler', () => {
             loadModules({
               replayFailedUnitOfWorkWithInvokeGuardedCallback: flagEnabled,
             });
+            mockNowForTests();
           });
 
           it('should accumulate "actual" time after an error handled by componentDidCatch()', () => {

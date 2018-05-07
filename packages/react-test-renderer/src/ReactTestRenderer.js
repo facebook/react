@@ -120,7 +120,7 @@ function removeChild(
 }
 
 // Current virtual time
-let currentTime: number = 0;
+let nowImplementation = () => 0;
 let scheduledCallback: ((deadline: Deadline) => mixed) | null = null;
 let yieldedValues: Array<mixed> | null = null;
 
@@ -222,9 +222,9 @@ const TestRenderer = ReactFiberReconciler({
 
   getPublicInstance,
 
-  now(): number {
-    return currentTime;
-  },
+  // This approach enables `now` to be mocked by tests,
+  // Even after the reconciler has initialized and read host config values.
+  now: () => nowImplementation(),
 
   mutation: {
     commitUpdate(
@@ -764,6 +764,10 @@ const ReactTestRendererFiber = {
   /* eslint-disable camelcase */
   unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
+
+  unstable_setNowImplementation(implementation: () => number): void {
+    nowImplementation = implementation;
+  },
 };
 
 export default ReactTestRendererFiber;
