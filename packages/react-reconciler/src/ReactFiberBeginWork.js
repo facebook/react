@@ -16,6 +16,7 @@ import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ActualRenderTimer} from './ReactProfileTimer';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
@@ -69,10 +70,7 @@ import {
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
-import {
-  stopBaseRenderTimerIfRunning,
-  markActualRenderTimeStarted,
-} from './ReactProfileTimer';
+import {stopBaseRenderTimerIfRunning} from './ReactProfileTimer';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -95,6 +93,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   hydrationContext: HydrationContext<C, CX>,
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  actualRenderTimer: ActualRenderTimer | null,
 ) {
   const {now, shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
@@ -226,7 +225,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const nextProps = workInProgress.pendingProps;
     if (enableProfileModeMetrics) {
       // Start render timer here and push start time onto queue
-      markActualRenderTimeStarted(workInProgress, now);
+      ((actualRenderTimer: any): ActualRenderTimer).markActualRenderTimeStarted(
+        workInProgress,
+        now,
+      );
 
       // Let the "complete" phase know to stop the timer,
       // And the scheduler to record the measured time.
@@ -1135,7 +1137,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
       case Profiler:
         if (enableProfileModeMetrics) {
-          markActualRenderTimeStarted(workInProgress, now);
+          ((actualRenderTimer: any): ActualRenderTimer).markActualRenderTimeStarted(
+            workInProgress,
+            now,
+          );
         }
         break;
     }

@@ -15,6 +15,7 @@ import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {ActualRenderTimer} from './ReactProfileTimer';
 
 import {
   enableMutatingReconciler,
@@ -41,7 +42,6 @@ import {
   Profiler,
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
-import {recordElapsedActualRenderTime} from './ReactProfileTimer';
 import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
@@ -52,6 +52,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   legacyContext: LegacyContext,
   newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
+  actualRenderTimer: ActualRenderTimer | null,
 ) {
   const {
     createInstance,
@@ -195,7 +196,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateProfiler(workInProgress: Fiber) {
     if (enableProfileModeMetrics) {
-      recordElapsedActualRenderTime(workInProgress, now);
+      ((actualRenderTimer: any): ActualRenderTimer).recordElapsedActualRenderTime(
+        workInProgress,
+        now,
+      );
     }
   }
 

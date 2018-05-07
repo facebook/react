@@ -14,6 +14,7 @@ import type {HostContext} from './ReactFiberHostContext';
 import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
 import type {CapturedValue} from './ReactCapturedValue';
+import type {ActualRenderTimer} from './ReactProfileTimer';
 import type {Update} from './ReactUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -38,7 +39,6 @@ import {
   NoEffect,
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
-import {recordElapsedActualRenderTime} from './ReactProfileTimer';
 import {
   enableGetDerivedStateFromCatch,
   enableProfileModeMetrics,
@@ -57,6 +57,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
   onUncaughtError: (error: mixed) => void,
+  actualRenderTimer: ActualRenderTimer | null,
 ) {
   const {now} = config;
   const {popHostContainer, popHostContext} = hostContext;
@@ -245,7 +246,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
       case Profiler:
         if (enableProfileModeMetrics) {
-          recordElapsedActualRenderTime(interruptedWork, now);
+          ((actualRenderTimer: any): ActualRenderTimer).recordElapsedActualRenderTime(
+            interruptedWork,
+            now,
+          );
         }
         break;
       default:

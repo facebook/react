@@ -8,10 +8,9 @@
  */
 
 import type {Fiber} from './ReactFiber';
-import type {StackCursor} from './ReactFiberStack';
+import type {StackCursor, Stack} from './ReactFiberStack';
 
 import warning from 'fbjs/lib/warning';
-import ReactFiberStack from './ReactFiberStack';
 
 type Now = () => number;
 
@@ -22,47 +21,67 @@ type Now = () => number;
  * It is paused (and accumulated) in the event of an interruption or an aborted render.
  */
 
-const {checkThatStackIsEmpty, createCursor, push, pop} = ReactFiberStack();
+export type ActualRenderTimer = {
+  checkActualRenderTimeStackEmpty(): void,
+  markActualRenderTimeStarted(fiber: Fiber, now: Now): void,
+  pauseActualRenderTimerIfRunning(now: Now): void,
+  recordElapsedActualRenderTime(fiber: Fiber, now: Now): void,
+  resetActualRenderTimer(): void,
+  resumeActualRenderTimerIfPaused(now: Now): void,
+};
 
-let stackCursor: StackCursor<number> = createCursor(0);
-let timerPausedAt: number = 0;
-let totalElapsedPauseTime: number = 0;
+export function createActualRenderTimer(stack: Stack): ActualRenderTimer {
+  const {checkThatStackIsEmpty, createCursor, push, pop} = stack;
 
-export function checkActualRenderTimeStackEmpty(): void {
-  if (__DEV__) {
-    checkThatStackIsEmpty();
+  let stackCursor: StackCursor<number> = createCursor(0);
+  let timerPausedAt: number = 0;
+  let totalElapsedPauseTime: number = 0;
+
+  function checkActualRenderTimeStackEmpty(): void {
+    if (__DEV__) {
+      checkThatStackIsEmpty();
+    }
   }
-}
 
-export function markActualRenderTimeStarted(fiber: Fiber, now: Now): void {
-  const startTime = fiber.stateNode - (now() - totalElapsedPauseTime);
+  function markActualRenderTimeStarted(fiber: Fiber, now: Now): void {
+    const startTime = fiber.stateNode - (now() - totalElapsedPauseTime);
 
-  fiber.stateNode = startTime;
+    fiber.stateNode = startTime;
 
-  push(stackCursor, startTime, fiber);
-}
-
-export function pauseActualRenderTimerIfRunning(now: Now): void {
-  if (timerPausedAt === 0) {
-    timerPausedAt = now();
+    push(stackCursor, startTime, fiber);
   }
-}
 
-export function recordElapsedActualRenderTime(fiber: Fiber, now: Now): void {
-  pop(stackCursor, fiber);
-
-  fiber.stateNode += now() - totalElapsedPauseTime;
-}
-
-export function resetActualRenderTimer(): void {
-  totalElapsedPauseTime = 0;
-}
-
-export function resumeActualRenderTimerIfPaused(now: Now): void {
-  if (timerPausedAt > 0) {
-    totalElapsedPauseTime += now() - timerPausedAt;
-    timerPausedAt = 0;
+  function pauseActualRenderTimerIfRunning(now: Now): void {
+    if (timerPausedAt === 0) {
+      timerPausedAt = now();
+    }
   }
+
+  function recordElapsedActualRenderTime(fiber: Fiber, now: Now): void {
+    pop(stackCursor, fiber);
+
+    fiber.stateNode += now() - totalElapsedPauseTime;
+  }
+
+  function resetActualRenderTimer(): void {
+    totalElapsedPauseTime = 0;
+  }
+
+  function resumeActualRenderTimerIfPaused(now: Now): void {
+    if (timerPausedAt > 0) {
+      totalElapsedPauseTime += now() - timerPausedAt;
+      timerPausedAt = 0;
+    }
+  }
+
+  return {
+    checkActualRenderTimeStackEmpty,
+    markActualRenderTimeStarted,
+    pauseActualRenderTimerIfRunning,
+    recordElapsedActualRenderTime,
+    resetActualRenderTimer,
+    resumeActualRenderTimerIfPaused,
+  };
 }
 
 /**

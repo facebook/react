@@ -12,6 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ActualRenderTimer} from './ReactProfileTimer';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
@@ -46,11 +47,8 @@ import {
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import {
-  checkActualRenderTimeStackEmpty,
-  pauseActualRenderTimerIfRunning,
+  createActualRenderTimer,
   recordElapsedBaseRenderTimeIfRunning,
-  resetActualRenderTimer,
-  resumeActualRenderTimerIfPaused,
   startBaseRenderTimer,
   stopBaseRenderTimerIfRunning,
 } from './ReactProfileTimer';
@@ -172,6 +170,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const hostContext = ReactFiberHostContext(config, stack);
   const legacyContext = ReactFiberLegacyContext(stack);
   const newContext = ReactFiberNewContext(stack);
+  const actualRenderTimer: ActualRenderTimer | null = enableProfileModeMetrics
+    ? createActualRenderTimer(stack)
+    : null;
   const {popHostContext, popHostContainer} = hostContext;
   const {
     popTopLevelContextObject: popTopLevelLegacyContextObject,
@@ -189,6 +190,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hydrationContext,
     scheduleWork,
     computeExpirationForFiber,
+    actualRenderTimer,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -196,6 +198,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     legacyContext,
     newContext,
     hydrationContext,
+    actualRenderTimer,
   );
   const {
     throwException,
@@ -212,6 +215,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     markLegacyErrorBoundaryAsFailed,
     isAlreadyFailedLegacyErrorBoundary,
     onUncaughtError,
+    actualRenderTimer,
   );
   const {
     commitBeforeMutationLifeCycles,
@@ -663,9 +667,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (enableProfileModeMetrics) {
       if (__DEV__) {
-        checkActualRenderTimeStackEmpty();
+        ((actualRenderTimer: any): ActualRenderTimer).checkActualRenderTimeStackEmpty();
       }
-      resetActualRenderTimer();
+      ((actualRenderTimer: any): ActualRenderTimer).resetActualRenderTimer();
     }
 
     isCommitting = false;
@@ -983,7 +987,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (enableProfileModeMetrics) {
         // If we didn't finish, pause the "actual" render timer.
         // We'll restart it when we resume work.
-        pauseActualRenderTimerIfRunning(now);
+        ((actualRenderTimer: any): ActualRenderTimer).pauseActualRenderTimerIfRunning(
+          now,
+        );
       }
     }
   }
@@ -1596,7 +1602,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     findHighestPriorityRoot();
 
     if (enableProfileModeMetrics) {
-      resumeActualRenderTimerIfPaused(now);
+      ((actualRenderTimer: any): ActualRenderTimer).resumeActualRenderTimerIfPaused(
+        now,
+      );
     }
 
     if (enableUserTimingAPI && deadline !== null) {
@@ -1748,7 +1756,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             if (enableProfileModeMetrics) {
               // If we didn't finish, pause the "actual" render timer.
               // We'll restart it when we resume work.
-              pauseActualRenderTimerIfRunning(now);
+              ((actualRenderTimer: any): ActualRenderTimer).pauseActualRenderTimerIfRunning(
+                now,
+              );
             }
           }
         }
