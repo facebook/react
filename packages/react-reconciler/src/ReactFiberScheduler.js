@@ -963,9 +963,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (enableProfileModeMetrics) {
         // If we didn't finish, pause the "actual" render timer.
         // We'll restart it when we resume work.
-        if (nextUnitOfWork !== null) {
-          pauseActualRenderTimerIfRunning();
-        }
+        pauseActualRenderTimerIfRunning();
       }
     }
   }
@@ -1730,9 +1728,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             if (enableProfileModeMetrics) {
               // If we didn't finish, pause the "actual" render timer.
               // We'll restart it when we resume work.
-              if (nextUnitOfWork !== null) {
-                pauseActualRenderTimerIfRunning();
-              }
+              pauseActualRenderTimerIfRunning();
             }
           }
         }
