@@ -30,6 +30,7 @@ export type FiberRoot = {
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
   firstPendingWork: PendingWork | null,
+  latestSuspendedTime: ExpirationTime,
   pendingCommitExpirationTime: ExpirationTime,
   // A finished work-in-progress HostRoot that's ready to be committed.
   // TODO: The reason this is separate from isReadyForCommit is because the
@@ -65,6 +66,7 @@ export function createFiberRoot(
     containerInfo: containerInfo,
     pendingChildren: null,
     pendingCommitExpirationTime: NoWork,
+    latestSuspendedTime: NoWork,
     firstPendingWork: null,
     finishedWork: null,
     context: null,

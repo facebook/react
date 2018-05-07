@@ -49,7 +49,7 @@ import {
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
 
-import {Sync} from './ReactFiberExpirationTime';
+import {Sync, expirationTimeToMs} from './ReactFiberExpirationTime';
 import invariant from 'fbjs/lib/invariant';
 
 function createRootExpirationError(sourceFiber, renderExpirationTime) {
@@ -74,11 +74,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   hostContext: HostContext<C, CX>,
   legacyContext: LegacyContext,
   newContext: NewContext,
-  scheduleWork: (
-    fiber: Fiber,
-    startTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-  ) => void,
+  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (
     startTime: ExpirationTime,
     fiber: Fiber,
@@ -172,11 +168,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function schedulePing(finishedWork) {
     // Once the promise resolves, we should try rendering the non-
     // placeholder state again.
-    const startTime = recalculateCurrentTime();
-    const expirationTime = computeExpirationForFiber(startTime, finishedWork);
+    const currentTime = recalculateCurrentTime();
+    const expirationTime = computeExpirationForFiber(currentTime, finishedWork);
     const recoveryUpdate = createUpdate(expirationTime);
     enqueueUpdate(finishedWork, recoveryUpdate, expirationTime);
-    scheduleWork(finishedWork, startTime, expirationTime);
+    scheduleWork(finishedWork, expirationTime);
   }
 
   function throwException(
@@ -185,10 +181,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     sourceFiber: Fiber,
     value: mixed,
     renderIsExpired: boolean,
-    remainingTimeMs: number,
-    elapsedMs: number,
-    renderStartTime: number,
     renderExpirationTime: ExpirationTime,
+    currentTimeMs: number,
   ) {
     // The source fiber did not complete.
     sourceFiber.effectTag |= Incomplete;
@@ -203,6 +197,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     ) {
       // This is a thenable.
       const thenable: SuspenseThenable = (value: any);
+
+      const expirationTimeMs = expirationTimeToMs(renderExpirationTime);
+      const startTimeMs = expirationTimeMs - 5000;
+      const elapsedMs = currentTimeMs - startTimeMs;
+      const remainingTimeMs = expirationTimeMs - currentTimeMs;
 
       // Find the earliest timeout of all the timeouts in the ancestor path.
       // TODO: Alternatively, we could store the earliest timeout on the context
@@ -245,7 +244,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
       if (msUntilTimeout > 0) {
         // There's still time remaining.
-        suspendRoot(root, thenable, earliestTimeoutMs, renderExpirationTime);
+        suspendRoot(root, thenable, msUntilTimeout, renderExpirationTime);
         const onResolveOrReject = () => {
           retrySuspendedRoot(root, renderExpirationTime);
         };
@@ -337,10 +336,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function unwindWork(
     workInProgress: Fiber,
-    elapsedMs: number,
     renderIsExpired: boolean,
-    remainingTimeMs: number,
-    renderStartTime: ExpirationTime,
     renderExpirationTime: ExpirationTime,
   ) {
     switch (workInProgress.tag) {

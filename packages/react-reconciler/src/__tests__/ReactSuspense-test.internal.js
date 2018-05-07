@@ -283,7 +283,7 @@ describe('ReactSuspense', () => {
     errorBoundary.current.reset();
     cache.invalidate();
 
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
     ReactNoop.expire(100);
     await advanceTimers(100);
     expect(ReactNoop.flush()).toEqual(['Promise resolved [Result]', 'Result']);
@@ -827,40 +827,5 @@ describe('ReactSuspense', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('A')]);
     });
-
-    it('uses the most recent update as its start time', async () => {
-      ReactNoop.render(<DebouncedText text="A" ms={1000} />);
-      ReactNoop.flush();
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      // Advance time by a little, but not by enough to move this into a new
-      // expiration bucket.
-      await advanceTimers(10);
-      ReactNoop.expire(10);
-      ReactNoop.flush();
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      // Schedule an update. It should have the same expiration as the first one.
-      ReactNoop.render(<DebouncedText text="B" ms={1000} />);
-
-      // Advance time by enough that it would have timed-out the first update,
-      // but not enough that it times out the second one.
-      await advanceTimers(999);
-      ReactNoop.expire(999);
-      ReactNoop.flush();
-      expect(ReactNoop.getChildren()).toEqual([]);
-
-      // Advance time by just a bit more to trigger the timeout.
-      await advanceTimers(1);
-      ReactNoop.expire(1);
-      ReactNoop.flush();
-      expect(ReactNoop.getChildren()).toEqual([span('B')]);
-    });
   });
-
-  // TODO:
-  // Timeout inside an async boundary
-  // Promise rejection
-  // Suspending inside an offscreen tree
-  // Timeout for CPU-bound work (if it makes sense to do this?)
 });

@@ -25,7 +25,6 @@ export type PendingWork = {
   // We use `expirationTime` to represent both a priority and a timeout. There's
   // no inherent reason why they need to be the same, and we may split them
   // in the future.
-  startTime: ExpirationTime,
   expirationTime: ExpirationTime,
   isSuspended: boolean,
   shouldTryResuming: boolean,
@@ -45,7 +44,6 @@ function insertPendingWorkAtPosition(root, work, insertAfter, insertBefore) {
 
 export function addPendingWork(
   root: FiberRoot,
-  startTime: ExpirationTime,
   expirationTime: ExpirationTime,
 ): void {
   if (enableSuspense) {
@@ -62,9 +60,6 @@ export function addPendingWork(
         // Found a matching bucket. But we'll keep iterating so we can set
         // `shouldTryResuming` as needed.
         match = insertBefore;
-        // Update the start time. We always measure from the most recently
-        // added update.
-        match.startTime = startTime;
       }
       if (match === null && insertBefore.expirationTime > expirationTime) {
         // Found the insertion position
@@ -75,7 +70,6 @@ export function addPendingWork(
     }
     if (match === null) {
       const work: PendingWork = {
-        startTime,
         expirationTime,
         isSuspended: false,
         shouldTryResuming: false,
@@ -90,7 +84,7 @@ export function flushPendingWork(
   root: FiberRoot,
   currentTime: ExpirationTime,
   remainingExpirationTime: ExpirationTime,
-) {
+): void {
   if (enableSuspense) {
     // Pop all work that has higher priority than the remaining priority.
     let firstUnflushedWork = root.firstPendingWork;
@@ -108,14 +102,14 @@ export function flushPendingWork(
     if (firstUnflushedWork === null) {
       if (remainingExpirationTime !== NoWork) {
         // There was an update during the render phase that wasn't flushed.
-        addPendingWork(root, currentTime, remainingExpirationTime);
+        addPendingWork(root, currentTime);
       }
     } else if (
       remainingExpirationTime !== NoWork &&
       firstUnflushedWork.expirationTime > remainingExpirationTime
     ) {
       // There was an update during the render phase that wasn't flushed.
-      addPendingWork(root, currentTime, remainingExpirationTime);
+      addPendingWork(root, currentTime);
     }
   }
 }
@@ -197,20 +191,5 @@ export function findNextExpirationTimeToWorkOn(
     return NoWork;
   } else {
     return root.current.expirationTime;
-  }
-}
-
-export function findStartTime(root: FiberRoot, expirationTime: ExpirationTime) {
-  if (enableSuspense) {
-    let match = root.firstPendingWork;
-    while (match !== null) {
-      if (match.expirationTime === expirationTime) {
-        return match.startTime;
-      }
-      match = match.next;
-    }
-    return NoWork;
-  } else {
-    return NoWork;
   }
 }

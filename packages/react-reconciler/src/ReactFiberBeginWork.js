@@ -92,11 +92,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   legacyContext: LegacyContext,
   newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
-  scheduleWork: (
-    fiber: Fiber,
-    startTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-  ) => void,
+  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (
     startTime: ExpirationTime,
     fiber: Fiber,

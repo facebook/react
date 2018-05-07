@@ -151,11 +151,7 @@ export function applyDerivedStateFromProps(
 
 export default function(
   legacyContext: LegacyContext,
-  scheduleWork: (
-    fiber: Fiber,
-    startTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-  ) => void,
+  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (
     currentTime: ExpirationTime,
     fiber: Fiber,
@@ -189,7 +185,7 @@ export default function(
       }
 
       enqueueUpdate(fiber, update, expirationTime);
-      scheduleWork(fiber, currentTime, expirationTime);
+      scheduleWork(fiber, expirationTime);
     },
     enqueueReplaceState(inst, payload, callback) {
       const fiber = ReactInstanceMap.get(inst);
@@ -208,7 +204,7 @@ export default function(
       }
 
       enqueueUpdate(fiber, update, expirationTime);
-      scheduleWork(fiber, currentTime, expirationTime);
+      scheduleWork(fiber, expirationTime);
     },
     enqueueForceUpdate(inst, callback) {
       const fiber = ReactInstanceMap.get(inst);
@@ -226,7 +222,7 @@ export default function(
       }
 
       enqueueUpdate(fiber, update, expirationTime);
-      scheduleWork(fiber, currentTime, expirationTime);
+      scheduleWork(fiber, expirationTime);
     },
   };
 

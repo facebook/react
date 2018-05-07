@@ -62,7 +62,6 @@ import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {
   addPendingWork,
   flushPendingWork,
-  findStartTime,
   findNextExpirationTimeToWorkOn,
   suspendPendingWork,
   resumePendingWork,
@@ -278,10 +277,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   let nextRoot: FiberRoot | null = null;
   // The time at which we're currently rendering work.
   let nextRenderExpirationTime: ExpirationTime = NoWork;
-  let nextStartTime: ExpirationTime = NoWork;
-  let nextStartTimeMs: number = -1;
-  let nextElapsedTimeMs: number = -1;
-  let nextRemainingTimeMs: number = -1;
   let nextEarliestTimeoutMs: number = -1;
   let nextRenderIsExpired: boolean = false;
 
@@ -385,10 +380,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     nextRoot = null;
     nextRenderExpirationTime = NoWork;
-    nextStartTime = NoWork;
-    nextStartTimeMs = -1;
-    nextElapsedTimeMs = -1;
-    nextRemainingTimeMs = -1;
     nextEarliestTimeoutMs = -1;
     nextRenderIsExpired = false;
     nextUnitOfWork = null;
@@ -889,10 +880,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // capture values if possible.
         const next = unwindWork(
           workInProgress,
-          nextElapsedTimeMs,
           nextRenderIsExpired,
-          nextRemainingTimeMs,
-          nextStartTime,
           nextRenderExpirationTime,
         );
         // Because this fiber did not complete, don't reset its expiration time.
@@ -1048,18 +1036,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       resetStack();
       nextRoot = root;
       nextRenderExpirationTime = expirationTime;
-      nextStartTime = findStartTime(nextRoot, nextRenderExpirationTime);
-      recalculateCurrentTime();
-      if (nextStartTime === NoWork) {
-        nextStartTime = mostRecentCurrentTime;
-        nextStartTimeMs = mostRecentCurrentTimeMs;
-      } else {
-        nextStartTimeMs = expirationTimeToMs(nextStartTime);
-      }
-      nextElapsedTimeMs = mostRecentCurrentTimeMs - nextStartTimeMs;
-      nextRemainingTimeMs =
-        expirationTimeToMs(nextRenderExpirationTime) - mostRecentCurrentTimeMs;
-      nextEarliestTimeoutMs = nextRemainingTimeMs;
+      nextEarliestTimeoutMs = -1;
       nextUnitOfWork = createWorkInProgress(
         nextRoot.current,
         null,
@@ -1121,10 +1098,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           sourceFiber,
           thrownValue,
           nextRenderIsExpired,
-          nextRemainingTimeMs,
-          nextElapsedTimeMs,
-          nextStartTime,
           nextRenderExpirationTime,
+          mostRecentCurrentTimeMs,
         );
         nextUnitOfWork = completeUnitOfWork(sourceFiber);
       }
@@ -1164,11 +1139,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             'by a bug in React. Please file an issue.',
         );
         if (nextEarliestTimeoutMs >= 0) {
-          const ms =
-            nextStartTimeMs + nextEarliestTimeoutMs - mostRecentCurrentTimeMs;
           setTimeout(() => {
             retrySuspendedRoot(root, expirationTime);
-          }, ms);
+          }, nextEarliestTimeoutMs);
         }
         const firstUnblockedExpirationTime = findNextExpirationTimeToWorkOn(
           root,
@@ -1188,7 +1161,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function dispatch(
     sourceFiber: Fiber,
     value: mixed,
-    startTime: ExpirationTime,
     expirationTime: ExpirationTime,
   ) {
     invariant(
@@ -1214,8 +1186,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
               expirationTime,
             );
             enqueueUpdate(fiber, update, expirationTime);
-            const currentTime = recalculateCurrentTime();
-            scheduleWork(fiber, currentTime, expirationTime);
+            scheduleWork(fiber, expirationTime);
             return;
           }
           break;
@@ -1227,8 +1198,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             expirationTime,
           );
           enqueueUpdate(fiber, update, expirationTime);
-          const currentTime = recalculateCurrentTime();
-          scheduleWork(fiber, currentTime, expirationTime);
+          scheduleWork(fiber, expirationTime);
           return;
         }
       }
@@ -1246,14 +1216,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         expirationTime,
       );
       enqueueUpdate(rootFiber, update, expirationTime);
-      const currentTime = recalculateCurrentTime();
-      scheduleWork(rootFiber, currentTime, expirationTime);
+      scheduleWork(rootFiber, expirationTime);
     }
   }
 
   function onCommitPhaseError(fiber: Fiber, error: mixed) {
-    const startTime = recalculateCurrentTime();
-    return dispatch(fiber, error, startTime, Sync);
+    return dispatch(fiber, error, Sync);
   }
 
   function computeAsyncExpiration(currentTime: ExpirationTime) {
@@ -1357,7 +1325,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Mark this root as suspended.
     suspendPendingWork(root, suspendedTime);
     // Schedule the timeout.
-    if (timeoutMs >= 0 && timeoutMs < nextEarliestTimeoutMs) {
+    if (
+      timeoutMs >= 0 &&
+      (nextEarliestTimeoutMs === -1 || timeoutMs < nextEarliestTimeoutMs)
+    ) {
       nextEarliestTimeoutMs = timeoutMs;
     }
   }
@@ -1370,24 +1341,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function scheduleWork(
-    fiber: Fiber,
-    startTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-  ) {
-    return scheduleWorkImpl(fiber, startTime, expirationTime, false);
-  }
-
-  function scheduleWorkImpl(
-    fiber: Fiber,
-    startTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-    isErrorRecovery: boolean,
-  ) {
+  function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
     recordScheduleUpdate();
 
     if (__DEV__) {
-      if (!isErrorRecovery && fiber.tag === ClassComponent) {
+      if (fiber.tag === ClassComponent) {
         const instance = fiber.stateNode;
         warnAboutInvalidUpdates(instance);
       }
@@ -1423,7 +1381,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             interruptedBy = fiber;
             resetStack();
           }
-          addPendingWork(root, startTime, expirationTime);
+          addPendingWork(root, expirationTime);
           if (
             // If we're in the render phase, we don't need to schedule this root
             // for an update, because we'll do it before we exit...
@@ -1445,7 +1403,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
         } else {
           if (__DEV__) {
-            if (!isErrorRecovery && fiber.tag === ClassComponent) {
+            if (fiber.tag === ClassComponent) {
               warnAboutUpdateOnUnmounted(fiber);
             }
           }
