@@ -1133,7 +1133,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         pushProvider(workInProgress);
         break;
       case Profiler:
-        markActualRenderTimeStarted(workInProgress, now);
+        if (enableProfileModeMetrics) {
+          markActualRenderTimeStarted(workInProgress, now);
+        }
         break;
     }
     // TODO: What if this is currently in progress?
