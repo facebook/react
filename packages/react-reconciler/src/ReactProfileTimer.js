@@ -70,23 +70,13 @@ export function pauseActualRenderTimerIfRunning(now: Now): void {
 
 let baseStartTime: number = -1;
 
-export function getElapsedBaseRenderTime(now: Now): number {
-  if (__DEV__) {
-    if (baseStartTime === -1) {
-      warning(
-        false,
-        'Cannot read elapsed time when base timer is not running. ' +
-          'This error is likely caused by a bug in React. ' +
-          'Please file an issue.',
-      );
-    }
+export function recordElapsedBaseRenderTimeIfRunning(
+  fiber: Fiber,
+  now: Now,
+): void {
+  if (baseStartTime !== -1) {
+    fiber.selfBaseTime = now() - baseStartTime;
   }
-
-  return baseStartTime === -1 ? 0 : now() - baseStartTime;
-}
-
-export function isBaseRenderTimerRunning(): boolean {
-  return baseStartTime !== -1;
 }
 
 export function startBaseRenderTimer(now: Now): void {
@@ -104,17 +94,6 @@ export function startBaseRenderTimer(now: Now): void {
   baseStartTime = now();
 }
 
-export function stopBaseRenderTimer(): void {
-  if (__DEV__) {
-    if (baseStartTime === -1) {
-      warning(
-        false,
-        'Cannot stop a base timer is not running. ' +
-          'This error is likely caused by a bug in React. ' +
-          'Please file an issue.',
-      );
-    }
-  }
-
+export function stopBaseRenderTimerIfRunning(): void {
   baseStartTime = -1;
 }

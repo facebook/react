@@ -47,12 +47,11 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {
   checkActualRenderTimeStackEmpty,
-  getElapsedBaseRenderTime,
-  isBaseRenderTimerRunning,
   pauseActualRenderTimerIfRunning,
+  recordElapsedBaseRenderTimeIfRunning,
   resumeActualRenderTimerIfPaused,
   startBaseRenderTimer,
-  stopBaseRenderTimer,
+  stopBaseRenderTimerIfRunning,
 } from './ReactProfileTimer';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
@@ -319,7 +318,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
         if (enableProfileModeMetrics) {
           // Stop "base" render timer again (after the re-thrown error).
-          stopBaseRenderTimer();
+          stopBaseRenderTimerIfRunning();
         }
       } else {
         // If the begin phase did not fail the second time, set this pointer
@@ -937,10 +936,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
       // Update "base" time if the render wasn't bailed out on.
-      if (isBaseRenderTimerRunning()) {
-        workInProgress.selfBaseTime = getElapsedBaseRenderTime(now);
-        stopBaseRenderTimer();
-      }
+      recordElapsedBaseRenderTimeIfRunning(workInProgress, now);
+      stopBaseRenderTimerIfRunning();
     } else {
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
     }
@@ -1030,7 +1027,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       } catch (thrownValue) {
         if (enableProfileModeMetrics) {
           // Stop "base" render timer in the event of an error.
-          stopBaseRenderTimer();
+          stopBaseRenderTimerIfRunning();
         }
 
         if (nextUnitOfWork === null) {
