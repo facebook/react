@@ -24,7 +24,7 @@ type Now = () => number;
 
 const {checkThatStackIsEmpty, createCursor, push, pop} = ReactFiberStack();
 
-let stackCursor: StackCursor<Fiber> = createCursor(null);
+let stackCursor: StackCursor<number> = createCursor(0);
 let timerPausedAt: number = 0;
 let totalElapsedPauseTime: number = 0;
 
