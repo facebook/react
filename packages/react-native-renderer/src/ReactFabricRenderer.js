@@ -29,7 +29,6 @@ import warning from 'fbjs/lib/warning';
 import TextInputState from 'TextInputState';
 import FabricUIManager from 'FabricUIManager';
 import UIManager from 'UIManager';
-import Platform from 'Platform';
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
@@ -157,8 +156,8 @@ const ReactFabricRenderer = ReactFiberReconciler({
       }
 
       warning(
-        !hostContext.isInAParentText || Platform.OS !== 'android',
-        'Nesting of <View> within <Text> is not supported on Android.',
+        type !== 'RCTView' || !hostContext.isInAParentText,
+        'Nesting of <View> within <Text> is not currently supported.',
       );
     }
 

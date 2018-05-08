@@ -15,7 +15,6 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 // Modules provided by RN:
 import UIManager from 'UIManager';
-import Platform from 'Platform';
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 
 import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
@@ -91,8 +90,8 @@ const NativeRenderer = ReactFiberReconciler({
       }
 
       warning(
-        !hostContext.isInAParentText || Platform.OS !== 'android',
-        'Nesting of <View> within <Text> is not supported on Android.',
+        type !== 'RCTView' || !hostContext.isInAParentText,
+        'Nesting of <View> within <Text> is not currently supported.',
       );
     }
 

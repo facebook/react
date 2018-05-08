@@ -273,40 +273,36 @@ describe('ReactFabric', () => {
     expect(snapshots).toMatchSnapshot();
   });
 
-  ['ios', 'android'].forEach(platform => {
-    it('should warn about <View> inside of a <Text> ancestor for Android', () => {
-      const Platform = require('Platform');
-      Platform.OS = platform;
+  it('should warn about <View> inside of a <Text> ancestor', () => {
+    const Image = createReactNativeComponentClass('RCTImage', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTImage',
+    }));
+    const Text = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTView',
+    }));
 
-      const Text = createReactNativeComponentClass('RCTText', () => ({
-        validAttributes: {},
-        uiViewClassName: 'RCTText',
-      }));
-      const View = createReactNativeComponentClass('RCTView', () => ({
-        validAttributes: {},
-        uiViewClassName: 'RCTView',
-      }));
+    expect(() =>
+      ReactFabric.render(
+        <Text>
+          <View />
+        </Text>,
+        11,
+      ),
+    ).toWarnDev('Nesting of <View> within <Text> is not supported on Android.');
 
-      if (platform === 'android') {
-        expect(() =>
-          ReactFabric.render(
-            <Text>
-              <View />
-            </Text>,
-            11,
-          ),
-        ).toWarnDev(
-          'Nesting of <View> within <Text> is not supported on Android.',
-        );
-      } else {
-        ReactFabric.render(
-          <Text>
-            <View />
-          </Text>,
-          11,
-        );
-      }
-    });
+    // Non-View things (e.g. Image) are fine
+    ReactFabric.render(
+      <Text>
+        <Image />
+      </Text>,
+      11,
+    );
   });
 
   it('should warn about text not inside of a <Text> ancestor', () => {
