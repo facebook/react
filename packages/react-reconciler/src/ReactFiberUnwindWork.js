@@ -65,6 +65,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     popTopLevelContextObject: popTopLevelLegacyContextObject,
   } = legacyContext;
   const {popProvider} = newContext;
+  const {
+    resumeActualRenderTimerIfPaused,
+    recordElapsedActualRenderTime,
+  } = profilerTimer;
 
   function createRootErrorUpdate(
     fiber: Fiber,
@@ -246,8 +250,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case Profiler:
         if (enableProfileModeMetrics) {
           // Resume in case we're picking up on work that was paused.
-          profilerTimer.resumeActualRenderTimerIfPaused();
-          profilerTimer.recordElapsedActualRenderTime(interruptedWork);
+          resumeActualRenderTimerIfPaused();
+          recordElapsedActualRenderTime(interruptedWork);
         }
         break;
       default:

@@ -71,6 +71,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     popHostContainer,
   } = hostContext;
 
+  const {recordElapsedActualRenderTime} = profilerTimer;
+
   const {
     popContextProvider: popLegacyContextProvider,
     popTopLevelContextObject: popTopLevelLegacyContextObject,
@@ -597,7 +599,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return null;
       case Profiler:
         if (enableProfileModeMetrics) {
-          profilerTimer.recordElapsedActualRenderTime(workInProgress);
+          recordElapsedActualRenderTime(workInProgress);
         }
         return null;
       case HostPortal:

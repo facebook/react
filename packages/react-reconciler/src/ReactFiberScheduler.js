@@ -234,6 +234,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     recalculateCurrentTime,
   );
 
+  const {
+    checkActualRenderTimeStackEmpty,
+    pauseActualRenderTimerIfRunning,
+    recordElapsedBaseRenderTimeIfRunning,
+    resetActualRenderTimer,
+    resumeActualRenderTimerIfPaused,
+    startBaseRenderTimer,
+    stopBaseRenderTimerIfRunning,
+  } = profilerTimer;
+
   // Represents the current time in ms.
   const originalStartTimeMs = now();
   let mostRecentCurrentTime: ExpirationTime = msToExpirationTime(0);
@@ -315,7 +325,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
         if (enableProfileModeMetrics) {
           // Stop "base" render timer again (after the re-thrown error).
-          profilerTimer.stopBaseRenderTimerIfRunning();
+          stopBaseRenderTimerIfRunning();
         }
       } else {
         // If the begin phase did not fail the second time, set this pointer
@@ -659,9 +669,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (enableProfileModeMetrics) {
       if (__DEV__) {
-        profilerTimer.checkActualRenderTimeStackEmpty();
+        checkActualRenderTimeStackEmpty();
       }
-      profilerTimer.resetActualRenderTimer();
+      resetActualRenderTimer();
     }
 
     isCommitting = false;
@@ -916,12 +926,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     let next;
     if (enableProfileModeMetrics) {
-      profilerTimer.startBaseRenderTimer();
+      startBaseRenderTimer();
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
       // Update "base" time if the render wasn't bailed out on.
-      profilerTimer.recordElapsedBaseRenderTimeIfRunning(workInProgress);
-      profilerTimer.stopBaseRenderTimerIfRunning();
+      recordElapsedBaseRenderTimeIfRunning(workInProgress);
+      stopBaseRenderTimerIfRunning();
     } else {
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
     }
@@ -965,7 +975,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (enableProfileModeMetrics) {
         // If we didn't finish, pause the "actual" render timer.
         // We'll restart it when we resume work.
-        profilerTimer.pauseActualRenderTimerIfRunning();
+        pauseActualRenderTimerIfRunning();
       }
     }
   }
@@ -1011,7 +1021,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       } catch (thrownValue) {
         if (enableProfileModeMetrics) {
           // Stop "base" render timer in the event of an error.
-          profilerTimer.stopBaseRenderTimerIfRunning();
+          stopBaseRenderTimerIfRunning();
         }
 
         if (nextUnitOfWork === null) {
@@ -1578,7 +1588,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     findHighestPriorityRoot();
 
     if (enableProfileModeMetrics) {
-      profilerTimer.resumeActualRenderTimerIfPaused();
+      resumeActualRenderTimerIfPaused();
     }
 
     if (enableUserTimingAPI && deadline !== null) {
@@ -1730,7 +1740,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             if (enableProfileModeMetrics) {
               // If we didn't finish, pause the "actual" render timer.
               // We'll restart it when we resume work.
-              profilerTimer.pauseActualRenderTimerIfRunning();
+              pauseActualRenderTimerIfRunning();
             }
           }
         }

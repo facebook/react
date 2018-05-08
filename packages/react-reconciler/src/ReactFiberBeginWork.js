@@ -101,6 +101,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const {pushProvider} = newContext;
 
   const {
+    markActualRenderTimeStarted,
+    stopBaseRenderTimerIfRunning,
+  } = profilerTimer;
+
+  const {
     getMaskedContext,
     getUnmaskedContext,
     hasContextChanged: hasLegacyContextChanged,
@@ -224,7 +229,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const nextProps = workInProgress.pendingProps;
     if (enableProfileModeMetrics) {
       // Start render timer here and push start time onto queue
-      profilerTimer.markActualRenderTimeStarted(workInProgress);
+      markActualRenderTimeStarted(workInProgress);
 
       // Let the "complete" phase know to stop the timer,
       // And the scheduler to record the measured time.
@@ -370,7 +375,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       nextChildren = null;
 
       if (enableProfileModeMetrics) {
-        profilerTimer.stopBaseRenderTimerIfRunning();
+        stopBaseRenderTimerIfRunning();
       }
     } else {
       if (__DEV__) {
@@ -1084,7 +1089,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (enableProfileModeMetrics) {
       // Don't update "base" render times for bailouts.
-      profilerTimer.stopBaseRenderTimerIfRunning();
+      stopBaseRenderTimerIfRunning();
     }
 
     // TODO: We should ideally be able to bail out early if the children have no
@@ -1110,7 +1115,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (enableProfileModeMetrics) {
       // Don't update "base" render times for bailouts.
-      profilerTimer.stopBaseRenderTimerIfRunning();
+      stopBaseRenderTimerIfRunning();
     }
 
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
@@ -1133,7 +1138,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
       case Profiler:
         if (enableProfileModeMetrics) {
-          profilerTimer.markActualRenderTimeStarted(workInProgress);
+          markActualRenderTimeStarted(workInProgress);
         }
         break;
     }
