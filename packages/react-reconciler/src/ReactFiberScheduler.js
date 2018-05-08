@@ -12,7 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {ActualRenderTimer} from './ReactProfileTimer';
+import type {ActualRenderTimer} from './ReactProfilerTimer';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
@@ -51,7 +51,7 @@ import {
   recordElapsedBaseRenderTimeIfRunning,
   startBaseRenderTimer,
   stopBaseRenderTimerIfRunning,
-} from './ReactProfileTimer';
+} from './ReactProfilerTimer';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';

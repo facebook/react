@@ -15,7 +15,7 @@ import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
-import type {ActualRenderTimer} from './ReactProfileTimer';
+import type {ActualRenderTimer} from './ReactProfilerTimer';
 
 import {
   enableMutatingReconciler,

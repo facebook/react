@@ -12,7 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
-import type {ActualRenderTimer} from './ReactProfileTimer';
+import type {ActualRenderTimer} from './ReactProfilerTimer';
 
 import {
   enableMutatingReconciler,

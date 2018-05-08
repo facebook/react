@@ -16,7 +16,7 @@ import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {ActualRenderTimer} from './ReactProfileTimer';
+import type {ActualRenderTimer} from './ReactProfilerTimer';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
@@ -70,7 +70,7 @@ import {
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
-import {stopBaseRenderTimerIfRunning} from './ReactProfileTimer';
+import {stopBaseRenderTimerIfRunning} from './ReactProfilerTimer';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;

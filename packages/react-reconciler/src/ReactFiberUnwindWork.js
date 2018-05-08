@@ -14,7 +14,7 @@ import type {HostContext} from './ReactFiberHostContext';
 import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
 import type {CapturedValue} from './ReactCapturedValue';
-import type {ActualRenderTimer} from './ReactProfileTimer';
+import type {ActualRenderTimer} from './ReactProfilerTimer';
 import type {Update} from './ReactUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -246,6 +246,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
       case Profiler:
         if (enableProfileModeMetrics) {
+          // Resume in case we're picking up on work that was paused.
           ((actualRenderTimer: any): ActualRenderTimer).resumeActualRenderTimerIfPaused(
             now,
           );
