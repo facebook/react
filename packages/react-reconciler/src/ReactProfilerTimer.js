@@ -8,11 +8,8 @@
  */
 
 import type {Fiber} from './ReactFiber';
-import type {StackCursor, Stack} from './ReactFiberStack';
 
 import warning from 'fbjs/lib/warning';
-
-type Now = () => number;
 
 /**
  * The "actual" render time is total time required to render the descendants of a Profiler component.
@@ -33,23 +30,31 @@ export type ProfilerTimer = {
   stopBaseRenderTimerIfRunning(): void,
 };
 
-export function createProfilerTimer(stack: Stack, now: Now): ProfilerTimer {
-  const {checkThatStackIsEmpty, createCursor, push, pop} = stack;
+export function createProfilerTimer(now: () => number): ProfilerTimer {
+  let fiberStack: Array<Fiber | null>;
 
-  let stackCursor: StackCursor<number> = createCursor(0);
+  if (__DEV__) {
+    fiberStack = [];
+  }
+
   let timerPausedAt: number = 0;
   let totalElapsedPauseTime: number = 0;
 
   function checkActualRenderTimeStackEmpty(): void {
     if (__DEV__) {
-      checkThatStackIsEmpty();
+      warning(
+        fiberStack.length === 0,
+        'Expected an empty stack. Something was not reset properly.',
+      );
     }
   }
 
   function markActualRenderTimeStarted(fiber: Fiber): void {
+    if (__DEV__) {
+      fiberStack.push(fiber);
+    }
     const startTime = fiber.stateNode - (now() - totalElapsedPauseTime);
     fiber.stateNode = startTime;
-    push(stackCursor, startTime, fiber);
   }
 
   function pauseActualRenderTimerIfRunning(): void {
@@ -59,7 +64,9 @@ export function createProfilerTimer(stack: Stack, now: Now): ProfilerTimer {
   }
 
   function recordElapsedActualRenderTime(fiber: Fiber): void {
-    pop(stackCursor, fiber);
+    if (__DEV__) {
+      warning(fiber === fiberStack.pop(), 'Unexpected Fiber popped.');
+    }
     fiber.stateNode += now() - totalElapsedPauseTime;
   }
 
