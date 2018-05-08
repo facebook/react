@@ -1305,4 +1305,32 @@ describe('ReactShallowRenderer', () => {
       'UNSAFE_componentWillUpdate',
     ]);
   });
+
+  it('should stop the upade when setState returns null or undefined', () => {
+    const log = [];
+    let instance;
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          count: 0,
+        };
+      }
+      render() {
+        log.push('render');
+        instance = this;
+        return null;
+      }
+    }
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component />);
+    log.length = 0;
+    instance.setState(() => null);
+    instance.setState(() => undefined);
+    instance.setState(null);
+    instance.setState(undefined);
+    expect(log).toEqual([]);
+    instance.setState(state => ({count: state.count + 1}));
+    expect(log).toEqual(['render']);
+  });
 });

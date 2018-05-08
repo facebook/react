@@ -301,6 +301,11 @@ class Updater {
       partialState = partialState(currentState, publicInstance.props);
     }
 
+    // Null and undefined are treated as no-ops.
+    if (partialState === null || partialState === undefined) {
+      return;
+    }
+
     this._renderer._newState = {
       ...currentState,
       ...partialState,
