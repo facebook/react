@@ -191,7 +191,7 @@ const ReactFabricRenderer = ReactFiberReconciler({
     if (__DEV__) {
       warning(
         hostContext.isInAParentText,
-        'Text strings must have a <Text> ancestor.',
+        'Text strings must be rendered within a <Text>.',
       );
     }
 
@@ -229,16 +229,16 @@ const ReactFabricRenderer = ReactFiberReconciler({
     type: string,
   ): HostContext {
     if (__DEV__) {
-      if (parentHostContext.isInAParentText) {
-        return parentHostContext;
-      } else if (
+      const prevIsInAParentText = parentHostContext.isInAParentText;
+      const isInAParentText =
         type === 'AndroidTextInput' ||
         type === 'RCTMultilineTextInputView' ||
         type === 'RCTText' ||
         type === 'RCTSinglelineTextInputView' ||
-        type === 'RCTVirtualText'
-      ) {
-        return {isInAParentText: true};
+        type === 'RCTVirtualText';
+
+      if (prevIsInAParentText !== isInAParentText) {
+        return {isInAParentText};
       } else {
         return parentHostContext;
       }

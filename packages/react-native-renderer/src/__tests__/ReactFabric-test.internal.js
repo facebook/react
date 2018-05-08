@@ -306,6 +306,14 @@ describe('ReactFabric', () => {
   });
 
   it('should warn about text not inside of a <Text> ancestor', () => {
+    const ScrollView = createReactNativeComponentClass('RCTScrollView', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTScrollView',
+    }));
+    const Text = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTView',
@@ -313,7 +321,16 @@ describe('ReactFabric', () => {
 
     expect(() =>
       ReactFabric.render(<View>this should warn</View>, 11),
-    ).toWarnDev('Text strings must have a <Text> ancestor.');
+    ).toWarnDev('Text strings must be rendered within a <Text>.');
+
+    expect(() =>
+      ReactFabric.render(
+        <Text>
+          <ScrollView>hi hello hi</ScrollView>
+        </Text>,
+        11,
+      ),
+    ).toWarnDev('Text strings must be rendered within a <Text>.');
   });
 
   it('should not warn warn about text inside of an indirect <Text> ancestor', () => {
