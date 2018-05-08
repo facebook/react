@@ -12,7 +12,6 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
-import type {ActualRenderTimer} from './ReactProfilerTimer';
 
 import {
   enableMutatingReconciler,
@@ -107,7 +106,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ) => ExpirationTime,
   markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   recalculateCurrentTime: () => ExpirationTime,
-  actualRenderTimer: ActualRenderTimer | null,
 ) {
   const {getPublicInstance, mutation, persistence} = config;
 

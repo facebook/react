@@ -21,16 +21,19 @@ type Now = () => number;
  * It is paused (and accumulated) in the event of an interruption or an aborted render.
  */
 
-export type ActualRenderTimer = {
+export type ProfilerTimer = {
   checkActualRenderTimeStackEmpty(): void,
-  markActualRenderTimeStarted(fiber: Fiber, now: Now): void,
-  pauseActualRenderTimerIfRunning(now: Now): void,
-  recordElapsedActualRenderTime(fiber: Fiber, now: Now): void,
+  markActualRenderTimeStarted(fiber: Fiber): void,
+  pauseActualRenderTimerIfRunning(): void,
+  recordElapsedActualRenderTime(fiber: Fiber): void,
   resetActualRenderTimer(): void,
-  resumeActualRenderTimerIfPaused(now: Now): void,
+  resumeActualRenderTimerIfPaused(): void,
+  recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void,
+  startBaseRenderTimer(): void,
+  stopBaseRenderTimerIfRunning(): void,
 };
 
-export function createActualRenderTimer(stack: Stack): ActualRenderTimer {
+export function createProfilerTimer(stack: Stack, now: Now): ProfilerTimer {
   const {checkThatStackIsEmpty, createCursor, push, pop} = stack;
 
   let stackCursor: StackCursor<number> = createCursor(0);
@@ -43,19 +46,19 @@ export function createActualRenderTimer(stack: Stack): ActualRenderTimer {
     }
   }
 
-  function markActualRenderTimeStarted(fiber: Fiber, now: Now): void {
+  function markActualRenderTimeStarted(fiber: Fiber): void {
     const startTime = fiber.stateNode - (now() - totalElapsedPauseTime);
     fiber.stateNode = startTime;
     push(stackCursor, startTime, fiber);
   }
 
-  function pauseActualRenderTimerIfRunning(now: Now): void {
+  function pauseActualRenderTimerIfRunning(): void {
     if (timerPausedAt === 0) {
       timerPausedAt = now();
     }
   }
 
-  function recordElapsedActualRenderTime(fiber: Fiber, now: Now): void {
+  function recordElapsedActualRenderTime(fiber: Fiber): void {
     pop(stackCursor, fiber);
     fiber.stateNode += now() - totalElapsedPauseTime;
   }
@@ -64,11 +67,44 @@ export function createActualRenderTimer(stack: Stack): ActualRenderTimer {
     totalElapsedPauseTime = 0;
   }
 
-  function resumeActualRenderTimerIfPaused(now: Now): void {
+  function resumeActualRenderTimerIfPaused(): void {
     if (timerPausedAt > 0) {
       totalElapsedPauseTime += now() - timerPausedAt;
       timerPausedAt = 0;
     }
+  }
+
+  /**
+   * The "base" render time is the duration of the “begin” phase of work for a particular fiber.
+   * This time is measured and stored on each fiber.
+   * The time for all sibling fibers are accumulated and stored on their parent during the "complete" phase.
+   * If a fiber bails out (sCU false) then its "base" timer is cancelled and the fiber is not updated.
+   */
+
+  let baseStartTime: number = -1;
+
+  function recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void {
+    if (baseStartTime !== -1) {
+      fiber.selfBaseTime = now() - baseStartTime;
+    }
+  }
+
+  function startBaseRenderTimer(): void {
+    if (__DEV__) {
+      if (baseStartTime !== -1) {
+        warning(
+          false,
+          'Cannot start base timer that is already running. ' +
+            'This error is likely caused by a bug in React. ' +
+            'Please file an issue.',
+        );
+      }
+    }
+    baseStartTime = now();
+  }
+
+  function stopBaseRenderTimerIfRunning(): void {
+    baseStartTime = -1;
   }
 
   return {
@@ -78,41 +114,8 @@ export function createActualRenderTimer(stack: Stack): ActualRenderTimer {
     recordElapsedActualRenderTime,
     resetActualRenderTimer,
     resumeActualRenderTimerIfPaused,
+    recordElapsedBaseRenderTimeIfRunning,
+    startBaseRenderTimer,
+    stopBaseRenderTimerIfRunning,
   };
-}
-
-/**
- * The "base" render time is the duration of the “begin” phase of work for a particular fiber.
- * This time is measured and stored on each fiber.
- * The time for all sibling fibers are accumulated and stored on their parent during the "complete" phase.
- * If a fiber bails out (sCU false) then its "base" timer is cancelled and the fiber is not updated.
- */
-
-let baseStartTime: number = -1;
-
-export function recordElapsedBaseRenderTimeIfRunning(
-  fiber: Fiber,
-  now: Now,
-): void {
-  if (baseStartTime !== -1) {
-    fiber.selfBaseTime = now() - baseStartTime;
-  }
-}
-
-export function startBaseRenderTimer(now: Now): void {
-  if (__DEV__) {
-    if (baseStartTime !== -1) {
-      warning(
-        false,
-        'Cannot start base timer that is already running. ' +
-          'This error is likely caused by a bug in React. ' +
-          'Please file an issue.',
-      );
-    }
-  }
-  baseStartTime = now();
-}
-
-export function stopBaseRenderTimerIfRunning(): void {
-  baseStartTime = -1;
 }

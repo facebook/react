@@ -15,7 +15,7 @@ import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
-import type {ActualRenderTimer} from './ReactProfilerTimer';
+import type {ProfilerTimer} from './ReactProfilerTimer';
 
 import {
   enableMutatingReconciler,
@@ -52,14 +52,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   legacyContext: LegacyContext,
   newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
-  actualRenderTimer: ActualRenderTimer | null,
+  profilerTimer: ProfilerTimer,
 ) {
   const {
     createInstance,
     createTextInstance,
     appendInitialChild,
     finalizeInitialChildren,
-    now,
     prepareUpdate,
     mutation,
     persistence,
@@ -598,10 +597,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return null;
       case Profiler:
         if (enableProfileModeMetrics) {
-          ((actualRenderTimer: any): ActualRenderTimer).recordElapsedActualRenderTime(
-            workInProgress,
-            now,
-          );
+          profilerTimer.recordElapsedActualRenderTime(workInProgress);
         }
         return null;
       case HostPortal:

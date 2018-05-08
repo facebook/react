@@ -14,7 +14,7 @@ import type {HostContext} from './ReactFiberHostContext';
 import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
 import type {CapturedValue} from './ReactCapturedValue';
-import type {ActualRenderTimer} from './ReactProfilerTimer';
+import type {ProfilerTimer} from './ReactProfilerTimer';
 import type {Update} from './ReactUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -57,9 +57,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
   onUncaughtError: (error: mixed) => void,
-  actualRenderTimer: ActualRenderTimer | null,
+  profilerTimer: ProfilerTimer,
 ) {
-  const {now} = config;
   const {popHostContainer, popHostContext} = hostContext;
   const {
     popContextProvider: popLegacyContextProvider,
@@ -247,13 +246,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case Profiler:
         if (enableProfileModeMetrics) {
           // Resume in case we're picking up on work that was paused.
-          ((actualRenderTimer: any): ActualRenderTimer).resumeActualRenderTimerIfPaused(
-            now,
-          );
-          ((actualRenderTimer: any): ActualRenderTimer).recordElapsedActualRenderTime(
-            interruptedWork,
-            now,
-          );
+          profilerTimer.resumeActualRenderTimerIfPaused();
+          profilerTimer.recordElapsedActualRenderTime(interruptedWork);
         }
         break;
       default:

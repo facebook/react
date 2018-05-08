@@ -12,7 +12,6 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {ActualRenderTimer} from './ReactProfilerTimer';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
@@ -46,12 +45,7 @@ import {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
-import {
-  createActualRenderTimer,
-  recordElapsedBaseRenderTimeIfRunning,
-  startBaseRenderTimer,
-  stopBaseRenderTimerIfRunning,
-} from './ReactProfilerTimer';
+import {createProfilerTimer} from './ReactProfilerTimer';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -166,13 +160,18 @@ if (__DEV__) {
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
+  const {
+    now,
+    scheduleDeferredCallback,
+    cancelDeferredCallback,
+    prepareForCommit,
+    resetAfterCommit,
+  } = config;
   const stack = ReactFiberStack();
   const hostContext = ReactFiberHostContext(config, stack);
   const legacyContext = ReactFiberLegacyContext(stack);
   const newContext = ReactFiberNewContext(stack);
-  const actualRenderTimer: ActualRenderTimer | null = enableProfileModeMetrics
-    ? createActualRenderTimer(stack)
-    : null;
+  const profilerTimer = createProfilerTimer(stack, now);
   const {popHostContext, popHostContainer} = hostContext;
   const {
     popTopLevelContextObject: popTopLevelLegacyContextObject,
@@ -190,7 +189,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hydrationContext,
     scheduleWork,
     computeExpirationForFiber,
-    actualRenderTimer,
+    profilerTimer,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -198,7 +197,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     legacyContext,
     newContext,
     hydrationContext,
-    actualRenderTimer,
+    profilerTimer,
   );
   const {
     throwException,
@@ -215,7 +214,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     markLegacyErrorBoundaryAsFailed,
     isAlreadyFailedLegacyErrorBoundary,
     onUncaughtError,
-    actualRenderTimer,
+    profilerTimer,
   );
   const {
     commitBeforeMutationLifeCycles,
@@ -234,13 +233,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     markLegacyErrorBoundaryAsFailed,
     recalculateCurrentTime,
   );
-  const {
-    now,
-    scheduleDeferredCallback,
-    cancelDeferredCallback,
-    prepareForCommit,
-    resetAfterCommit,
-  } = config;
 
   // Represents the current time in ms.
   const originalStartTimeMs = now();
@@ -323,7 +315,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
         if (enableProfileModeMetrics) {
           // Stop "base" render timer again (after the re-thrown error).
-          stopBaseRenderTimerIfRunning();
+          profilerTimer.stopBaseRenderTimerIfRunning();
         }
       } else {
         // If the begin phase did not fail the second time, set this pointer
@@ -667,9 +659,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (enableProfileModeMetrics) {
       if (__DEV__) {
-        ((actualRenderTimer: any): ActualRenderTimer).checkActualRenderTimeStackEmpty();
+        profilerTimer.checkActualRenderTimeStackEmpty();
       }
-      ((actualRenderTimer: any): ActualRenderTimer).resetActualRenderTimer();
+      profilerTimer.resetActualRenderTimer();
     }
 
     isCommitting = false;
@@ -938,12 +930,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     let next;
     if (enableProfileModeMetrics) {
-      startBaseRenderTimer(now);
+      profilerTimer.startBaseRenderTimer();
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
       // Update "base" time if the render wasn't bailed out on.
-      recordElapsedBaseRenderTimeIfRunning(workInProgress, now);
-      stopBaseRenderTimerIfRunning();
+      profilerTimer.recordElapsedBaseRenderTimeIfRunning(workInProgress);
+      profilerTimer.stopBaseRenderTimerIfRunning();
     } else {
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
     }
@@ -987,9 +979,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (enableProfileModeMetrics) {
         // If we didn't finish, pause the "actual" render timer.
         // We'll restart it when we resume work.
-        ((actualRenderTimer: any): ActualRenderTimer).pauseActualRenderTimerIfRunning(
-          now,
-        );
+        profilerTimer.pauseActualRenderTimerIfRunning();
       }
     }
   }
@@ -1035,7 +1025,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       } catch (thrownValue) {
         if (enableProfileModeMetrics) {
           // Stop "base" render timer in the event of an error.
-          stopBaseRenderTimerIfRunning();
+          profilerTimer.stopBaseRenderTimerIfRunning();
         }
 
         if (nextUnitOfWork === null) {
@@ -1602,9 +1592,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     findHighestPriorityRoot();
 
     if (enableProfileModeMetrics) {
-      ((actualRenderTimer: any): ActualRenderTimer).resumeActualRenderTimerIfPaused(
-        now,
-      );
+      profilerTimer.resumeActualRenderTimerIfPaused();
     }
 
     if (enableUserTimingAPI && deadline !== null) {
@@ -1756,9 +1744,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             if (enableProfileModeMetrics) {
               // If we didn't finish, pause the "actual" render timer.
               // We'll restart it when we resume work.
-              ((actualRenderTimer: any): ActualRenderTimer).pauseActualRenderTimerIfRunning(
-                now,
-              );
+              profilerTimer.pauseActualRenderTimerIfRunning();
             }
           }
         }
