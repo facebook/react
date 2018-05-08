@@ -12,8 +12,10 @@ import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 import ReactFiberReconciler from 'react-reconciler';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 // Modules provided by RN:
 import UIManager from 'UIManager';
+import Platform from 'Platform';
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 
 import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
@@ -34,6 +36,10 @@ export type Instance = {
 };
 type Props = Object;
 type TextInstance = number;
+
+type HostContext = {
+  type: string,
+};
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
@@ -71,7 +77,7 @@ const NativeRenderer = ReactFiberReconciler({
     type: string,
     props: Props,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
     internalInstanceHandle: Object,
   ): Instance {
     const tag = allocateTag();
@@ -83,6 +89,13 @@ const NativeRenderer = ReactFiberReconciler({
           deepFreezeAndThrowOnMutationInDev(props[key]);
         }
       }
+
+      const ancestorType = hostContext.type;
+      warning(
+        (ancestorType !== 'RCTText' && ancestorType !== 'RCTVirtualText') ||
+          Platform.OS !== 'android',
+        'Nesting of <View> within <Text> is not supported on Android.',
+      );
     }
 
     const updatePayload = ReactNativeAttributePayload.create(
@@ -110,10 +123,18 @@ const NativeRenderer = ReactFiberReconciler({
   createTextInstance(
     text: string,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
     internalInstanceHandle: Object,
   ): TextInstance {
     const tag = allocateTag();
+
+    if (__DEV__) {
+      const ancestorType = hostContext.type;
+      warning(
+        ancestorType === 'RCTText' || ancestorType === 'RCTVirtualText',
+        'Text strings must have a <Text> ancestor.',
+      );
+    }
 
     UIManager.createView(
       tag, // reactTag
@@ -155,12 +176,15 @@ const NativeRenderer = ReactFiberReconciler({
     return false;
   },
 
-  getRootHostContext(): {} {
-    return emptyObject;
+  getRootHostContext(rootContainerInstance: Container): HostContext {
+    return {type: 'root'};
   },
 
-  getChildHostContext(): {} {
-    return emptyObject;
+  getChildHostContext(
+    parentHostContext: HostContext,
+    type: string,
+  ): HostContext {
+    return {type};
   },
 
   getPublicInstance(instance) {
