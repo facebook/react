@@ -710,35 +710,21 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     // Bubble up the earliest expiration time.
     // (And "base" render timers if that feature flag is enabled)
-    if (enableProfileModeMetrics) {
-      if (workInProgress.mode & ProfileMode) {
-        let treeBaseTime = workInProgress.selfBaseTime;
-        let child = workInProgress.child;
-        while (child !== null) {
-          treeBaseTime += child.treeBaseTime;
-          if (
-            child.expirationTime !== NoWork &&
-            (newExpirationTime === NoWork ||
-              newExpirationTime > child.expirationTime)
-          ) {
-            newExpirationTime = child.expirationTime;
-          }
-          child = child.sibling;
+    if (enableProfileModeMetrics && workInProgress.mode & ProfileMode) {
+      let treeBaseTime = workInProgress.selfBaseTime;
+      let child = workInProgress.child;
+      while (child !== null) {
+        treeBaseTime += child.treeBaseTime;
+        if (
+          child.expirationTime !== NoWork &&
+          (newExpirationTime === NoWork ||
+            newExpirationTime > child.expirationTime)
+        ) {
+          newExpirationTime = child.expirationTime;
         }
-        workInProgress.treeBaseTime = treeBaseTime;
-      } else {
-        let child = workInProgress.child;
-        while (child !== null) {
-          if (
-            child.expirationTime !== NoWork &&
-            (newExpirationTime === NoWork ||
-              newExpirationTime > child.expirationTime)
-          ) {
-            newExpirationTime = child.expirationTime;
-          }
-          child = child.sibling;
-        }
+        child = child.sibling;
       }
+      workInProgress.treeBaseTime = treeBaseTime;
     } else {
       let child = workInProgress.child;
       while (child !== null) {
