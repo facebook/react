@@ -181,18 +181,16 @@ const NativeRenderer = ReactFiberReconciler({
     type: string,
   ): HostContext {
     if (__DEV__) {
-      const oldIsInAParentText = parentHostContext.isInAParentText;
-      const newIsInAParentText =
+      if (parentHostContext.isInAParentText) {
+        return parentHostContext;
+      } else if (
         type === 'AndroidTextInput' ||
         type === 'RCTMultilineTextInputView' ||
         type === 'RCTText' ||
         type === 'RCTSinglelineTextInputView' ||
-        type === 'RCTVirtualText';
-
-      if (oldIsInAParentText !== newIsInAParentText) {
-        return {
-          isInAParentText: newIsInAParentText,
-        };
+        type === 'RCTVirtualText'
+      ) {
+        return {isInAParentText: true};
       } else {
         return parentHostContext;
       }
