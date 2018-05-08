@@ -14,68 +14,29 @@ import {NoWork} from './ReactFiberExpirationTime';
 
 import {enableSuspense} from 'shared/ReactFeatureFlags';
 
-// Because we don't have a global queue of updates, we use this module to keep
-// track of the pending levels of work that have yet to be flushed. You can
-// think of a PendingWork object as representing a batch of work that will
-// all flush at the same time. The actual updates are spread throughout the
-// update queues of all the fibers in the tree, but those updates have
-// priorities that correspond to a PendingWork batch.
-
-export type PendingWork = {
-  // We use `expirationTime` to represent both a priority and a timeout. There's
-  // no inherent reason why they need to be the same, and we may split them
-  // in the future.
-  expirationTime: ExpirationTime,
-  isSuspended: boolean,
-  shouldTryResuming: boolean,
-  next: PendingWork | null,
-};
-
-function insertPendingWorkAtPosition(root, work, insertAfter, insertBefore) {
-  if (enableSuspense) {
-    work.next = insertBefore;
-    if (insertAfter === null) {
-      root.firstPendingWork = work;
-    } else {
-      insertAfter.next = work;
-    }
-  }
-}
+// TODO: Offscreen updates
 
 export function addPendingWork(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ): void {
   if (enableSuspense) {
-    let match = null;
-    let insertAfter = null;
-    let insertBefore = root.firstPendingWork;
-    while (insertBefore !== null) {
-      if (insertBefore.expirationTime >= expirationTime) {
-        // Retry anything with an equal or lower expiration time, since it may
-        // be unblocked by the new work.
-        insertBefore.shouldTryResuming = true;
+    // Update the latest and earliest pending times
+    const earliestPendingTime = root.earliestPendingTime;
+    if (earliestPendingTime === NoWork) {
+      // No other pending updates.
+      root.earliestPendingTime = root.latestPendingTime = expirationTime;
+    } else {
+      if (earliestPendingTime > expirationTime) {
+        // This is the earliest pending update.
+        root.earliestPendingTime = expirationTime;
+      } else {
+        const latestPendingTime = root.latestPendingTime;
+        if (latestPendingTime < expirationTime) {
+          // This is the latest pending update
+          root.latestPendingTime = expirationTime;
+        }
       }
-      if (insertBefore.expirationTime === expirationTime) {
-        // Found a matching bucket. But we'll keep iterating so we can set
-        // `shouldTryResuming` as needed.
-        match = insertBefore;
-      }
-      if (match === null && insertBefore.expirationTime > expirationTime) {
-        // Found the insertion position
-        break;
-      }
-      insertAfter = insertBefore;
-      insertBefore = insertBefore.next;
-    }
-    if (match === null) {
-      const work: PendingWork = {
-        expirationTime,
-        isSuspended: false,
-        shouldTryResuming: false,
-        next: null,
-      };
-      insertPendingWorkAtPosition(root, work, insertAfter, insertBefore);
     }
   }
 }
@@ -83,73 +44,145 @@ export function addPendingWork(
 export function flushPendingWork(
   root: FiberRoot,
   currentTime: ExpirationTime,
-  remainingExpirationTime: ExpirationTime,
+  earliestRemainingTime: ExpirationTime,
 ): void {
   if (enableSuspense) {
-    // Pop all work that has higher priority than the remaining priority.
-    let firstUnflushedWork = root.firstPendingWork;
-    while (firstUnflushedWork !== null) {
-      if (
-        remainingExpirationTime !== NoWork &&
-        firstUnflushedWork.expirationTime >= remainingExpirationTime
-      ) {
-        break;
-      }
-      firstUnflushedWork = firstUnflushedWork.next;
+    if (earliestRemainingTime === NoWork) {
+      // Fast path. There's no remaining work. Clear everything.
+      root.earliestPendingTime = NoWork;
+      root.latestPendingTime = NoWork;
+      root.earliestSuspendedTime = NoWork;
+      root.latestSuspendedTime = NoWork;
+      root.latestPingedTime = NoWork;
+      return;
     }
-    root.firstPendingWork = firstUnflushedWork;
 
-    if (firstUnflushedWork === null) {
-      if (remainingExpirationTime !== NoWork) {
-        // There was an update during the render phase that wasn't flushed.
-        addPendingWork(root, currentTime);
+    // Let's see if the previous latest known pending level was just flushed.
+    const latestPendingTime = root.latestPendingTime;
+    if (latestPendingTime !== NoWork) {
+      if (latestPendingTime < earliestRemainingTime) {
+        // We've flushed all the known pending levels.
+        root.earliestPendingTime = root.latestPendingTime = NoWork;
+      } else {
+        const earliestPendingTime = root.earliestPendingTime;
+        if (earliestPendingTime < earliestRemainingTime) {
+          // We've flushed the earliest known pending level. Set this to the
+          // latest pending time.
+          root.earliestPendingTime = root.latestPendingTime;
+        }
       }
-    } else if (
-      remainingExpirationTime !== NoWork &&
-      firstUnflushedWork.expirationTime > remainingExpirationTime
-    ) {
-      // There was an update during the render phase that wasn't flushed.
-      addPendingWork(root, currentTime);
     }
+
+    // Now let's handle the earliest remaining level in the whole tree. We need to
+    // decide whether to treat it as a pending level or as suspended. Check
+    // it falls within the range of known suspended levels.
+
+    const earliestSuspendedTime = root.earliestSuspendedTime;
+    if (earliestSuspendedTime === NoWork) {
+      // There's no suspended work. Treat the earliest remaining level as a
+      // pending level.
+      addPendingWork(root, earliestRemainingTime);
+      return;
+    }
+
+    const latestSuspendedTime = root.latestSuspendedTime;
+    if (earliestRemainingTime > latestSuspendedTime) {
+      // The earliest remaining level is later than all the suspended work. That
+      // means we've flushed all the suspended work.
+      root.earliestSuspendedTime = NoWork;
+      root.latestSuspendedTime = NoWork;
+      root.latestPingedTime = NoWork;
+
+      // There's no suspended work. Treat the earliest remaining level as a
+      // pending level.
+      addPendingWork(root, earliestRemainingTime);
+      return;
+    }
+
+    if (earliestRemainingTime < earliestSuspendedTime) {
+      // The earliest remaining time is earlier than all the suspended work.
+      // Treat it as a pending update.
+      addPendingWork(root, earliestRemainingTime);
+      return;
+    }
+
+    // The earliest remaining time falls within the range of known suspended
+    // levels. We should treat this as suspended work.
   }
 }
 
 export function suspendPendingWork(
   root: FiberRoot,
-  expirationTime: ExpirationTime,
+  suspendedTime: ExpirationTime,
 ): void {
   if (enableSuspense) {
-    let work = root.firstPendingWork;
-    while (work !== null) {
-      if (work.expirationTime === expirationTime) {
-        work.isSuspended = true;
-        work.shouldTryResuming = false;
-        return;
+    // First, check the known pending levels and update them if needed.
+    const earliestPendingTime = root.earliestPendingTime;
+    const latestPendingTime = root.latestPendingTime;
+    if (earliestPendingTime === suspendedTime) {
+      if (latestPendingTime === suspendedTime) {
+        // Both known pending levels were suspended. Clear them.
+        root.earliestPendingTime = root.latestPendingTime = NoWork;
+      } else {
+        // The earliest pending level was suspended. Clear by setting it to the
+        // latest pending level.
+        root.earliestPendingTime = latestPendingTime;
       }
-      if (work.expirationTime > expirationTime) {
-        return;
+    } else if (latestPendingTime === suspendedTime) {
+      // The latest pending level was suspended. Clear by setting it to the
+      // latest pending level.
+      root.latestPendingTime = earliestPendingTime;
+    }
+
+    // Next, if we're working on the lowest known suspended level, clear the ping.
+    const latestSuspendedTime = root.latestSuspendedTime;
+    if (latestSuspendedTime === suspendedTime) {
+      root.latestPingedTime = NoWork;
+    }
+
+    // Finally, update the known suspended levels.
+    const earliestSuspendedTime = root.earliestSuspendedTime;
+    if (earliestSuspendedTime === NoWork) {
+      // No other suspended levels.
+      root.earliestSuspendedTime = root.latestSuspendedTime = suspendedTime;
+    } else {
+      if (earliestSuspendedTime > suspendedTime) {
+        // This is the earliest suspended level.
+        root.earliestSuspendedTime = suspendedTime;
+      } else if (latestSuspendedTime < suspendedTime) {
+        // This is the latest suspended level
+        root.latestSuspendedTime = suspendedTime;
       }
-      work = work.next;
     }
   }
 }
 
 export function resumePendingWork(
   root: FiberRoot,
-  expirationTime: ExpirationTime,
+  pingedTime: ExpirationTime,
 ): void {
   if (enableSuspense) {
-    // Called when a promise resolves. This "pings" React to retry the previously
-    // suspended render.
-    let work = root.firstPendingWork;
-    while (work !== null) {
-      if (work.expirationTime === expirationTime) {
-        work.shouldTryResuming = true;
+    const latestSuspendedTime = root.latestSuspendedTime;
+    if (latestSuspendedTime !== NoWork && latestSuspendedTime <= pingedTime) {
+      const latestPingedTime = root.latestPingedTime;
+      if (latestPingedTime === NoWork || latestPingedTime < pingedTime) {
+        // TODO: At one point, we decided we'd always work on the lowest priority
+        // suspended level. Part of the reasoning was to avoid displaying
+        // intermediate suspended states, e.g. if you click on two tabs in quick
+        // succession, only the final tab should render. But we later realized
+        // that the correct solution to this problem is in user space, e.g. by
+        // using a setState updater for the lower priority update that refers
+        // to the most recent high priority value.
+        //
+        // The only reason we track the lowest suspended level is so we don't have
+        // to track *every* suspended level. It's good enough to work on the last
+        // one. But in case of a ping, we know exactly what level we received, so
+        // we can go ahead and work on that one.
+        //
+        // Consider using the commented-out line instead:
+        // root.latestPingedTime = pingedTime;
+        root.latestPingedTime = latestSuspendedTime;
       }
-      if (work.expirationTime > expirationTime) {
-        return;
-      }
-      work = work.next;
     }
   }
 }
@@ -158,37 +191,21 @@ export function findNextExpirationTimeToWorkOn(
   root: FiberRoot,
 ): ExpirationTime {
   if (enableSuspense) {
-    // Return the earliest time that either isn't suspended or has been pinged.
-    let lastSuspendedTime = NoWork;
-    let lastRetryTime = NoWork;
-    let work = root.firstPendingWork;
-    while (work !== null) {
-      if (!work.isSuspended) {
-        return work.expirationTime;
-      }
-      if (
-        lastSuspendedTime === NoWork ||
-        lastSuspendedTime < work.expirationTime
-      ) {
-        lastSuspendedTime = work.expirationTime;
-      }
-      if (work.shouldTryResuming) {
-        if (lastRetryTime === NoWork || lastRetryTime < work.expirationTime) {
-          lastRetryTime = work.expirationTime;
-        }
-      }
-      work = work.next;
+    const earliestSuspendedTime = root.earliestSuspendedTime;
+    const earliestPendingTime = root.earliestPendingTime;
+    if (earliestSuspendedTime === NoWork) {
+      // Fast path. There's no suspended work.
+      return earliestPendingTime;
     }
-    // This has the effect of coalescing all async updates that occur while we're
-    // in a suspended state. This prevents us from rendering an intermediate state
-    // that is no longer valid. An example is a tab switching interface: if
-    // switching to a new tab is suspended, we should only switch to the last
-    // tab that was clicked. If the user switches to tab A and then tab B, we
-    // should continue suspending until B is ready.
-    if (lastRetryTime >= lastSuspendedTime) {
-      return lastRetryTime;
+
+    // First, check if there's known pending work.
+    if (earliestPendingTime !== NoWork) {
+      return earliestPendingTime;
     }
-    return NoWork;
+
+    // Finally, if a suspended level was pinged, work on that. Otherwise there's
+    // nothing to work on.
+    return root.latestPingedTime;
   } else {
     return root.current.expirationTime;
   }

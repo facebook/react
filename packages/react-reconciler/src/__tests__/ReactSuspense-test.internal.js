@@ -329,7 +329,7 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.getChildren()).toEqual([span('B'), span('1')]);
   });
 
-  it('keeps working on lower priority work after being unblocked', async () => {
+  it('keeps working on lower priority work after being pinged', async () => {
     function App(props) {
       return (
         <Fallback>
@@ -352,6 +352,36 @@ describe('ReactSuspense', () => {
     await advanceTimers(0);
     expect(ReactNoop.flush()).toEqual(['Promise resolved [A]', 'A', 'B']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
+  });
+
+  it('tries rendering a lower priority pending update even if a higher priority one suspends', async () => {
+    function App(props) {
+      if (props.hide) {
+        return <Text text="(empty)" />;
+      }
+      return (
+        <Fallback>
+          <AsyncText ms={2000} text="Async" />
+        </Fallback>
+      );
+    }
+
+    // Schedule a high pri update and a low pri update, without rendering in
+    // between.
+    ReactNoop.interactiveUpdates(() => {
+      // High pri
+      ReactNoop.render(<App />);
+    });
+    // Low pri
+    ReactNoop.render(<App hide={true} />);
+
+    expect(ReactNoop.flush()).toEqual([
+      // The first update suspends
+      'Suspend! [Async]',
+      // but we have another pending update that we can work on
+      '(empty)',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
   });
 
   it('coalesces all async updates when in a suspended state', async () => {
@@ -675,6 +705,55 @@ describe('ReactSuspense', () => {
     // We can now resume rendering
     expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
     expect(ReactNoop.getChildren()).toEqual([span('Async')]);
+  });
+
+  it('starts working on an update even if its priority falls between two suspended levels', async () => {
+    function App(props) {
+      return (
+        <Fallback timeout={10000}>
+          {props.text === 'C' ? (
+            <Text text="C" />
+          ) : (
+            <AsyncText text={props.text} ms={10000} />
+          )}
+        </Fallback>
+      );
+    }
+
+    // Schedule an update
+    ReactNoop.render(<App text="A" />);
+    // The update should suspend.
+    expect(ReactNoop.flush()).toEqual(['Suspend! [A]']);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Advance time until right before it expires. This number may need to
+    // change if the default expiration for low priority updates is adjusted.
+    await advanceTimers(4999);
+    ReactNoop.expire(4999);
+    expect(ReactNoop.flush()).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Schedule another low priority update.
+    ReactNoop.render(<App text="B" />);
+    // This update should also suspend.
+    expect(ReactNoop.flush()).toEqual(['Suspend! [B]']);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Schedule a high priority update. Its expiration time will fall between
+    // the expiration times of the previous two updates.
+    ReactNoop.interactiveUpdates(() => {
+      ReactNoop.render(<App text="C" />);
+    });
+    expect(ReactNoop.flush()).toEqual(['C']);
+    expect(ReactNoop.getChildren()).toEqual([span('C')]);
+
+    await advanceTimers(10000);
+    // Flush the remaining work.
+    expect(ReactNoop.flush()).toEqual([
+      'Promise resolved [A]',
+      'Promise resolved [B]',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('C')]);
   });
 
   describe('splitting a high-pri update into high and low', () => {

@@ -1138,6 +1138,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           'Expired work should have completed. This error is likely caused ' +
             'by a bug in React. Please file an issue.',
         );
+        suspendPendingWork(root, expirationTime);
         if (nextEarliestTimeoutMs >= 0) {
           setTimeout(() => {
             retrySuspendedRoot(root, expirationTime);
@@ -1316,14 +1317,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return expirationTime;
   }
 
+  // TODO: Rename this to scheduleTimeout or something
   function suspendRoot(
     root: FiberRoot,
     thenable: SuspenseThenable,
     timeoutMs: number,
     suspendedTime: ExpirationTime,
   ) {
-    // Mark this root as suspended.
-    suspendPendingWork(root, suspendedTime);
     // Schedule the timeout.
     if (
       timeoutMs >= 0 &&
@@ -1382,6 +1382,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             resetStack();
           }
           addPendingWork(root, expirationTime);
+          const nextExpirationTimeToWorkOn = findNextExpirationTimeToWorkOn(
+            root,
+          );
           if (
             // If we're in the render phase, we don't need to schedule this root
             // for an update, because we'll do it before we exit...
@@ -1390,7 +1393,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             // ...unless this is a different root than the one we're rendering.
             nextRoot !== root
           ) {
-            requestWork(root, expirationTime);
+            requestWork(root, nextExpirationTimeToWorkOn);
           }
           if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
             invariant(
@@ -1686,6 +1689,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         (!deadlineDidExpire ||
           recalculateCurrentTime() >= nextFlushedExpirationTime)
       ) {
+        recalculateCurrentTime();
         performWorkOnRoot(
           nextFlushedRoot,
           nextFlushedExpirationTime,
