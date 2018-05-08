@@ -177,14 +177,14 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   getRootHostContext(rootContainerInstance: Container): HostContext {
-    return {type: 'root'};
+    return __DEV__ ? {type: 'root'} : emptyObject;
   },
 
   getChildHostContext(
     parentHostContext: HostContext,
     type: string,
   ): HostContext {
-    return {type};
+    return __DEV__ ? {type} : emptyObject;
   },
 
   getPublicInstance(instance) {
