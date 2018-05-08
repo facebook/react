@@ -826,13 +826,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           onRender(
             finishedWork.memoizedProps.id,
             current === null ? 'mount' : 'update',
-            finishedWork.stateNode,
+            finishedWork.stateNode.duration,
             finishedWork.treeBaseTime,
           );
 
           // Reset actualTime after successful commit.
           // By default, we append to this time to account for errors and pauses.
-          finishedWork.stateNode = 0;
+          finishedWork.stateNode.duration = 0;
         }
         return;
       }

@@ -53,8 +53,7 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
     if (__DEV__) {
       fiberStack.push(fiber);
     }
-    const startTime = fiber.stateNode - (now() - totalElapsedPauseTime);
-    fiber.stateNode = startTime;
+    fiber.stateNode.startTime = now() - totalElapsedPauseTime;
   }
 
   function pauseActualRenderTimerIfRunning(): void {
@@ -67,7 +66,8 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
     if (__DEV__) {
       warning(fiber === fiberStack.pop(), 'Unexpected Fiber popped.');
     }
-    fiber.stateNode += now() - totalElapsedPauseTime;
+    fiber.stateNode.duration +=
+      now() - fiber.stateNode.startTime - totalElapsedPauseTime;
   }
 
   function resetActualRenderTimer(): void {
