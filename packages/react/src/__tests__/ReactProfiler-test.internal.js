@@ -566,8 +566,8 @@ describe('Profiler', () => {
         // This partial render should take 10ms of simulated time.
         renderer.update(
           <React.unstable_Profiler id="test" onRender={callback}>
-            <Yield value="first" renderTime={10} />
-            <Yield value="second" renderTime={20} />
+            <Yield value="first" renderTime={8} />
+            <Yield value="second" renderTime={14} />
           </React.unstable_Profiler>,
         );
         renderer.unstable_flushThrough(['first']);
@@ -591,7 +591,7 @@ describe('Profiler', () => {
         // And the "base" time includes only the final rendered tree times.
         expect(callback).toHaveBeenCalledTimes(1);
         call = callback.mock.calls[0];
-        expect(call[2]).toBe(15); // "actual" time
+        expect(call[2]).toBe(13); // "actual" time
         expect(call[3]).toBe(5); // "base" time
 
         // Verify no more unexpected callbacks from low priority work
