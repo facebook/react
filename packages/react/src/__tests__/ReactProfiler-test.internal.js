@@ -105,7 +105,7 @@ describe('Profiler', () => {
     });
   });
 
-  describe('records meaningful timing information', () => {
+  describe('onRender callback', () => {
     let AdvanceTime;
     let advanceTimeBy;
 
@@ -139,7 +139,7 @@ describe('Profiler', () => {
       };
     });
 
-    it('does not invoke the callback until the commit phase', () => {
+    it('is not invoked until the commit phase', () => {
       const callback = jest.fn();
 
       const Yield = ({value}) => {
@@ -279,7 +279,7 @@ describe('Profiler', () => {
       expect(call[3]).toBe(5); // "base" time
     });
 
-    it('does not call callbacks after update for descendents of sCU false', () => {
+    it('is not called when blocked by sCU false', () => {
       const callback = jest.fn();
 
       let instance;
@@ -407,7 +407,7 @@ describe('Profiler', () => {
       expect(updateCall[3]).toBe(15); // "base" time
     });
 
-    describe('handles interruptions', () => {
+    describe('with regard to interruptions', () => {
       it('should accumulate "actual" time after a scheduling interruptions', () => {
         const callback = jest.fn();
 
@@ -715,6 +715,38 @@ describe('Profiler', () => {
           });
         });
       });
+    });
+
+    it('reflects the most recently rendered id value', () => {
+      const callback = jest.fn();
+
+      const renderer = ReactTestRenderer.create(
+        <React.unstable_Profiler id="one" onRender={callback}>
+          <AdvanceTime byAmount={2} />
+        </React.unstable_Profiler>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      renderer.update(
+        <React.unstable_Profiler id="two" onRender={callback}>
+          <AdvanceTime byAmount={1} />
+        </React.unstable_Profiler>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(2);
+
+      const [mountCall, updateCall] = callback.mock.calls;
+
+      expect(mountCall[0]).toBe('one');
+      expect(mountCall[1]).toBe('mount');
+      expect(mountCall[2]).toBe(2); // "actual" time
+      expect(mountCall[3]).toBe(2); // "base" time
+
+      expect(updateCall[0]).toBe('two');
+      expect(updateCall[1]).toBe('update');
+      expect(updateCall[2]).toBe(1); // "actual" time
+      expect(updateCall[3]).toBe(1); // "base" time
     });
   });
 });
