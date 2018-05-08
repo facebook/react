@@ -38,7 +38,7 @@ type Props = Object;
 type TextInstance = number;
 
 type HostContext = {
-  type: string,
+  isInAParentText: boolean,
 };
 
 // Counter for uniquely identifying views.
@@ -90,10 +90,8 @@ const NativeRenderer = ReactFiberReconciler({
         }
       }
 
-      const ancestorType = hostContext.type;
       warning(
-        (ancestorType !== 'RCTText' && ancestorType !== 'RCTVirtualText') ||
-          Platform.OS !== 'android',
+        !hostContext.isInAParentText || Platform.OS !== 'android',
         'Nesting of <View> within <Text> is not supported on Android.',
       );
     }
@@ -129,9 +127,8 @@ const NativeRenderer = ReactFiberReconciler({
     const tag = allocateTag();
 
     if (__DEV__) {
-      const ancestorType = hostContext.type;
       warning(
-        ancestorType === 'RCTText' || ancestorType === 'RCTVirtualText',
+        hostContext.isInAParentText,
         'Text strings must have a <Text> ancestor.',
       );
     }
@@ -177,14 +174,28 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   getRootHostContext(rootContainerInstance: Container): HostContext {
-    return __DEV__ ? {type: 'root'} : emptyObject;
+    return __DEV__ ? {isInAParentText: false} : emptyObject;
   },
 
   getChildHostContext(
     parentHostContext: HostContext,
     type: string,
   ): HostContext {
-    return __DEV__ ? {type} : emptyObject;
+    if (__DEV__) {
+      const oldIsInAParentText = parentHostContext.isInAParentText;
+      const newIsInAParentText =
+        type === 'RCTText' || type === 'RCTVirtualText';
+
+      if (oldIsInAParentText !== newIsInAParentText) {
+        return {
+          isInAParentText: newIsInAParentText,
+        };
+      } else {
+        return parentHostContext;
+      }
+    }
+
+    return emptyObject;
   },
 
   getPublicInstance(instance) {
