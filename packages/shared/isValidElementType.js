@@ -14,6 +14,8 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_FORWARD_REF_TYPE,
+  REACT_TIMEOUT_TYPE,
+  REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
 
 export default function isValidElementType(type: mixed) {
@@ -24,6 +26,8 @@ export default function isValidElementType(type: mixed) {
     type === REACT_FRAGMENT_TYPE ||
     type === REACT_ASYNC_MODE_TYPE ||
     type === REACT_STRICT_MODE_TYPE ||
+    type === REACT_PLACEHOLDER_TYPE ||
+    type === REACT_TIMEOUT_TYPE ||
     (typeof type === 'object' &&
       type !== null &&
       (type.$$typeof === REACT_PROVIDER_TYPE ||

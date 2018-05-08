@@ -37,6 +37,8 @@ import {
   ForwardRef,
   Fragment,
   Mode,
+  PlaceholderComponent,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
@@ -586,6 +588,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // Does nothing.
         return null;
       case ForwardRef:
+        return null;
+      case PlaceholderComponent:
+        return null;
+      case TimeoutComponent:
         return null;
       case Fragment:
         return null;
