@@ -204,7 +204,7 @@ describe('ReactNative', () => {
         </Text>,
         11,
       ),
-    ).toWarnDev('Nesting of <View> within <Text> is not supported on Android.');
+    ).toWarnDev('Nesting of <View> within <Text> is not currently supported.');
 
     // Non-View things (e.g. Image) are fine
     ReactNative.render(
