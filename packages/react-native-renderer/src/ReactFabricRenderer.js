@@ -232,7 +232,11 @@ const ReactFabricRenderer = ReactFiberReconciler({
     if (__DEV__) {
       const oldIsInAParentText = parentHostContext.isInAParentText;
       const newIsInAParentText =
-        type === 'RCTText' || type === 'RCTVirtualText';
+        type === 'AndroidTextInput' ||
+        type === 'RCTMultilineTextInputView' ||
+        type === 'RCTText' ||
+        type === 'RCTSinglelineTextInputView' ||
+        type === 'RCTVirtualText';
 
       if (oldIsInAParentText !== newIsInAParentText) {
         return {
