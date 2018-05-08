@@ -124,14 +124,14 @@ const NativeRenderer = ReactFiberReconciler({
     hostContext: HostContext,
     internalInstanceHandle: Object,
   ): TextInstance {
-    const tag = allocateTag();
-
     if (__DEV__) {
       warning(
         hostContext.isInAParentText,
         'Text strings must have a <Text> ancestor.',
       );
     }
+
+    const tag = allocateTag();
 
     UIManager.createView(
       tag, // reactTag

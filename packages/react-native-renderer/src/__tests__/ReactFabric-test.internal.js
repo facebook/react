@@ -33,9 +33,9 @@ describe('ReactFabric', () => {
   });
 
   it('should be able to create and render a native component', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     ReactFabric.render(<View foo="test" />, 1);
@@ -45,9 +45,9 @@ describe('ReactFabric', () => {
   });
 
   it('should be able to create and update a native component', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     const firstNode = {};
@@ -67,9 +67,9 @@ describe('ReactFabric', () => {
   });
 
   it('should not call FabricUIManager.cloneNode after render for properties that have not changed', () => {
-    const Text = createReactNativeComponentClass('Text', () => ({
+    const Text = createReactNativeComponentClass('RCTText', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'Text',
+      uiViewClassName: 'RCTText',
     }));
 
     ReactFabric.render(<Text foo="a">1</Text>, 11);
@@ -110,15 +110,15 @@ describe('ReactFabric', () => {
   });
 
   it('should only pass props diffs to FabricUIManager.cloneNode', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const Text = createReactNativeComponentClass('RCTText', () => ({
       validAttributes: {foo: true, bar: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTText',
     }));
 
     ReactFabric.render(
-      <View foo="a" bar="a">
+      <Text foo="a" bar="a">
         1
-      </View>,
+      </Text>,
       11,
     );
     expect(FabricUIManager.cloneNode).not.toBeCalled();
@@ -127,9 +127,9 @@ describe('ReactFabric', () => {
     expect(FabricUIManager.cloneNodeWithNewChildrenAndProps).not.toBeCalled();
 
     ReactFabric.render(
-      <View foo="a" bar="b">
+      <Text foo="a" bar="b">
         1
-      </View>,
+      </Text>,
       11,
     );
     expect(FabricUIManager.cloneNodeWithNewProps.mock.calls[0][1]).toEqual({
@@ -138,9 +138,9 @@ describe('ReactFabric', () => {
     expect(FabricUIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
 
     ReactFabric.render(
-      <View foo="b" bar="b">
+      <Text foo="b" bar="b">
         2
-      </View>,
+      </Text>,
       11,
     );
     expect(
@@ -152,9 +152,9 @@ describe('ReactFabric', () => {
   });
 
   it('should not call UIManager.updateView from setNativeProps for properties that have not changed', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     class Subclass extends ReactFabric.NativeComponent {
@@ -187,9 +187,9 @@ describe('ReactFabric', () => {
   });
 
   it('returns the correct instance and calls it in the callback', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     let a;
@@ -208,9 +208,9 @@ describe('ReactFabric', () => {
   });
 
   it('renders and reorders children', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     class Component extends React.Component {
@@ -249,9 +249,9 @@ describe('ReactFabric', () => {
   });
 
   it('should call complete after inserting children', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     const snapshots = [];
@@ -271,5 +271,68 @@ describe('ReactFabric', () => {
       22,
     );
     expect(snapshots).toMatchSnapshot();
+  });
+
+  ['ios', 'android'].forEach(platform => {
+    it('should warn about <View> inside of a <Text> ancestor for Android', () => {
+      const Platform = require('Platform');
+      Platform.OS = platform;
+
+      const Text = createReactNativeComponentClass('RCTText', () => ({
+        validAttributes: {},
+        uiViewClassName: 'RCTText',
+      }));
+      const View = createReactNativeComponentClass('RCTView', () => ({
+        validAttributes: {},
+        uiViewClassName: 'RCTView',
+      }));
+
+      if (platform === 'android') {
+        expect(() =>
+          ReactFabric.render(
+            <Text>
+              <View />
+            </Text>,
+            11,
+          ),
+        ).toWarnDev(
+          'Nesting of <View> within <Text> is not supported on Android.',
+        );
+      } else {
+        ReactFabric.render(
+          <Text>
+            <View />
+          </Text>,
+          11,
+        );
+      }
+    });
+  });
+
+  it('should warn about text not inside of a <Text> ancestor', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTView',
+    }));
+
+    expect(() =>
+      ReactFabric.render(<View>this should warn</View>, 11),
+    ).toWarnDev('Text strings must have a <Text> ancestor.');
+  });
+
+  it('should not warn warn about text inside of an indirect <Text> ancestor', () => {
+    const Text = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
+
+    const Indirection = () => 'Hi';
+
+    ReactFabric.render(
+      <Text>
+        <Indirection />
+      </Text>,
+      11,
+    );
   });
 });

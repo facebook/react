@@ -23,17 +23,23 @@ import ReactFiberReconciler from 'react-reconciler';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 import emptyObject from 'fbjs/lib/emptyObject';
+import warning from 'fbjs/lib/warning';
 
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
 import FabricUIManager from 'FabricUIManager';
 import UIManager from 'UIManager';
+import Platform from 'Platform';
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
+
+type HostContext = {
+  isInAParentText: boolean,
+};
 
 /**
  * This is used for refs on host components.
@@ -135,7 +141,7 @@ const ReactFabricRenderer = ReactFiberReconciler({
     type: string,
     props: Props,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
     internalInstanceHandle: Object,
   ): Instance {
     const tag = nextReactTag;
@@ -149,6 +155,11 @@ const ReactFabricRenderer = ReactFiberReconciler({
           deepFreezeAndThrowOnMutationInDev(props[key]);
         }
       }
+
+      warning(
+        !hostContext.isInAParentText || Platform.OS !== 'android',
+        'Nesting of <View> within <Text> is not supported on Android.',
+      );
     }
 
     const updatePayload = ReactNativeAttributePayload.create(
@@ -175,9 +186,16 @@ const ReactFabricRenderer = ReactFiberReconciler({
   createTextInstance(
     text: string,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
     internalInstanceHandle: Object,
   ): TextInstance {
+    if (__DEV__) {
+      warning(
+        hostContext.isInAParentText,
+        'Text strings must have a <Text> ancestor.',
+      );
+    }
+
     const tag = nextReactTag;
     nextReactTag += 2;
 
@@ -203,11 +221,28 @@ const ReactFabricRenderer = ReactFiberReconciler({
     return false;
   },
 
-  getRootHostContext(): {} {
-    return emptyObject;
+  getRootHostContext(rootContainerInstance: Container): HostContext {
+    return __DEV__ ? {isInAParentText: false} : emptyObject;
   },
 
-  getChildHostContext(): {} {
+  getChildHostContext(
+    parentHostContext: HostContext,
+    type: string,
+  ): HostContext {
+    if (__DEV__) {
+      const oldIsInAParentText = parentHostContext.isInAParentText;
+      const newIsInAParentText =
+        type === 'RCTText' || type === 'RCTVirtualText';
+
+      if (oldIsInAParentText !== newIsInAParentText) {
+        return {
+          isInAParentText: newIsInAParentText,
+        };
+      } else {
+        return parentHostContext;
+      }
+    }
+
     return emptyObject;
   },
 
