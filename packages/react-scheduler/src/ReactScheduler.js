@@ -31,6 +31,11 @@
 // The frame rate is dynamically adjusted.
 
 import type {Deadline} from 'react-reconciler';
+type CallbackConfigType = {|
+  scheduledCallback: Deadline => void,
+  timeoutTime: number,
+  callbackId: number, // used for cancelling
+|};
 
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import warning from 'fbjs/lib/warning';
@@ -85,12 +90,26 @@ if (!ExecutionEnvironment.canUseDOM) {
     clearTimeout(timeoutID);
   };
 } else {
-  // Always polyfill requestIdleCallback and cancelIdleCallback
+  let scheduledCallbackConfig: CallbackConfigType | null = null;
 
-  let scheduledRICCallback = null;
+  // Number.MAX_SAFE_INTEGER is not supported in IE
+  const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
+  let callbackIdCounter = 1;
+  const getCallbackId = function(): number {
+    callbackIdCounter =
+      callbackIdCounter >= MAX_SAFE_INTEGER ? 1 : callbackIdCounter + 1;
+    return callbackIdCounter;
+  };
+
+  // When a callback is scheduled, we register it by adding it's id to this
+  // object.
+  // If the user calls 'cIC' with the id of that callback, it will be
+  // unregistered by removing the id from this object.
+  // Then we skip calling any callback which is not registered.
+  // This means cancelling is an O(1) time complexity instead of O(n).
+  const registeredCallbackIds: {[number]: boolean} = {};
+
   let isIdleScheduled = false;
-  let timeoutTime = -1;
-
   let isAnimationFrameScheduled = false;
 
   let frameDeadline = 0;
@@ -100,12 +119,26 @@ if (!ExecutionEnvironment.canUseDOM) {
   let previousFrameTime = 33;
   let activeFrameTime = 33;
 
-  const frameDeadlineObject = {
+  const frameDeadlineObject: Deadline = {
     didTimeout: false,
     timeRemaining() {
       const remaining = frameDeadline - now();
       return remaining > 0 ? remaining : 0;
     },
+  };
+
+  const safelyCallScheduledCallback = function(callback, callbackId) {
+    if (!registeredCallbackIds[callbackId]) {
+      // ignore cancelled callbacks
+      return;
+    }
+    try {
+      callback(frameDeadlineObject);
+      // Avoid using 'catch' to keep errors easy to debug
+    } finally {
+      // always clean up the callbackId, even if the callback throws
+      delete registeredCallbackIds[callbackId];
+    }
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
@@ -118,6 +151,13 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (event.source !== window || event.data !== messageKey) {
       return;
     }
+    if (scheduledCallbackConfig === null) {
+      return;
+    }
+
+    const callback = scheduledCallbackConfig.scheduledCallback;
+    const callbackId = scheduledCallbackConfig.callbackId;
+    const timeoutTime = scheduledCallbackConfig.timeoutTime;
 
     isIdleScheduled = false;
 
@@ -144,12 +184,8 @@ if (!ExecutionEnvironment.canUseDOM) {
       frameDeadlineObject.didTimeout = false;
     }
 
-    timeoutTime = -1;
-    const callback = scheduledRICCallback;
-    scheduledRICCallback = null;
-    if (callback !== null) {
-      callback(frameDeadlineObject);
-    }
+    scheduledCallbackConfig = null;
+    safelyCallScheduledCallback(callback, callbackId);
   };
   // Assumes that we have addEventListener in this environment. Might need
   // something better for old IE.
@@ -190,12 +226,19 @@ if (!ExecutionEnvironment.canUseDOM) {
     callback: (deadline: Deadline) => void,
     options?: {timeout: number},
   ): number {
-    // This assumes that we only schedule one callback at a time because that's
-    // how Fiber uses it.
-    scheduledRICCallback = callback;
+    let timeoutTime = -1;
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
     }
+    // This assumes that we only schedule one callback at a time because that's
+    // how Fiber uses it.
+    const latestCallbackId = getCallbackId();
+    scheduledCallbackConfig = {
+      scheduledCallback: callback,
+      callbackId: latestCallbackId,
+      timeoutTime,
+    };
+    registeredCallbackIds[latestCallbackId] = true;
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
@@ -204,13 +247,11 @@ if (!ExecutionEnvironment.canUseDOM) {
       isAnimationFrameScheduled = true;
       requestAnimationFrame(animationTick);
     }
-    return 0;
+    return latestCallbackId;
   };
 
-  cIC = function() {
-    scheduledRICCallback = null;
-    isIdleScheduled = false;
-    timeoutTime = -1;
+  cIC = function(callbackId: number) {
+    delete registeredCallbackIds[callbackId];
   };
 }
 
