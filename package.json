@@ -101,7 +101,8 @@
     "yargs": "^6.3.0"
   },
   "devEngines": {
-    "node": "8.x || 9.x"
+    "node": ">=8",
+    "yarn": "^1.2.0"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
