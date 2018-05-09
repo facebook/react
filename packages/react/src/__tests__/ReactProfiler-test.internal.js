@@ -624,9 +624,7 @@ describe('Profiler', () => {
             first = this;
             advanceTimeBy(this.state.renderTime);
             renderer.unstable_yield('FirstComponent:' + this.state.renderTime);
-            return (
-              <Yield renderTime={4} />
-            );
+            return <Yield renderTime={4} />;
           }
         }
         let second;
@@ -636,9 +634,7 @@ describe('Profiler', () => {
             second = this;
             advanceTimeBy(this.state.renderTime);
             renderer.unstable_yield('SecondComponent:' + this.state.renderTime);
-            return (
-              <Yield renderTime={7} />
-            );
+            return <Yield renderTime={7} />;
           }
         }
 
@@ -653,7 +649,12 @@ describe('Profiler', () => {
         // Render everything initially.
         // This simulates a total of 14ms of "actual" render time.
         // The "base" render time is also 14ms for the initial render.
-        expect(renderer.unstable_flushAll()).toEqual(['FirstComponent:1', 'Yield:4', 'SecondComponent:2', 'Yield:7']);
+        expect(renderer.unstable_flushAll()).toEqual([
+          'FirstComponent:1',
+          'Yield:4',
+          'SecondComponent:2',
+          'Yield:7',
+        ]);
         expect(callback).toHaveBeenCalledTimes(1);
         let call = callback.mock.calls[0];
         expect(call[2]).toBe(14); // "actual" time
@@ -664,7 +665,9 @@ describe('Profiler', () => {
         // Render a partially update, but don't finish.
         // This partial render will take 10ms of "actual" render time.
         first.setState({renderTime: 10});
-        expect(renderer.unstable_flushThrough(['FirstComponent:10'])).toEqual(['FirstComponent:10']);
+        expect(renderer.unstable_flushThrough(['FirstComponent:10'])).toEqual([
+          'FirstComponent:10',
+        ]);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
@@ -672,9 +675,9 @@ describe('Profiler', () => {
 
         // Interrupt with higher priority work.
         // This simulates a total of 37ms of "actual" render time.
-        expect(renderer.unstable_flushSync(
-          () => second.setState({renderTime: 30})
-        )).toEqual(['SecondComponent:30', 'Yield:7']);
+        expect(
+          renderer.unstable_flushSync(() => second.setState({renderTime: 30})),
+        ).toEqual(['SecondComponent:30', 'Yield:7']);
 
         // Verify that the "actual" time includes time spent in the both renders so far (10ms and 37ms).
         // The "base" time should include the more recent times for the SecondComponent subtree,
@@ -691,8 +694,11 @@ describe('Profiler', () => {
         // And does not include the original (interrupted) 10ms.
         // The tree contains 42ms of "base" render time at this point,
         // Reflecting the most recent (longer) render durations.
-        // TODO: This "actual" time should change to 14ms once the scheduler supports resuming.
-        expect(renderer.unstable_flushAll()).toEqual(['FirstComponent:10', 'Yield:4']);
+        // TODO: This "actual" time should decrease by 10ms once the scheduler supports resuming.
+        expect(renderer.unstable_flushAll()).toEqual([
+          'FirstComponent:10',
+          'Yield:4',
+        ]);
         expect(callback).toHaveBeenCalledTimes(1);
         call = callback.mock.calls[0];
         expect(call[2]).toBe(14); // "actual" time

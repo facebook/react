@@ -740,7 +740,7 @@ const ReactTestRendererFiber = {
         }
         return TestRenderer.getPublicRootInstance(root);
       },
-      unstable_flushSync(fn) {
+      unstable_flushSync(fn: Function) {
         yieldedValues = [];
         TestRenderer.flushSync(fn);
         return yieldedValues;
