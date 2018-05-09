@@ -21,7 +21,6 @@ export const enablePersistentReconciler = false;
 export const enableUserTimingAPI = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
-export const scheduleModuleSupportsMultipleCallbacks = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

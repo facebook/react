@@ -16,7 +16,6 @@ export const {
   debugRenderPhaseSideEffectsForStrictMode,
   enableGetDerivedStateFromCatch,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  scheduleModuleSupportsMultipleCallbacks,
   warnAboutDeprecatedLifecycles,
 } = require('ReactFeatureFlags');
 

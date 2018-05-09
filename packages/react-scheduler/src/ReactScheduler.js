@@ -30,7 +30,6 @@
 // layout, paint and other browser work is counted against the available time.
 // The frame rate is dynamically adjusted.
 
-import {scheduleModuleSupportsMultipleCallbacks} from 'shared/ReactFeatureFlags';
 import type {Deadline} from 'react-reconciler';
 type CallbackConfigType = {|
   scheduledCallback: Deadline => void,
@@ -273,10 +272,8 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
     }
-    if (scheduleModuleSupportsMultipleCallbacks) {
-      if (timeoutTime > nextSoonestTimeoutTime) {
-        nextSoonestTimeoutTime = timeoutTime;
-      }
+    if (timeoutTime > nextSoonestTimeoutTime) {
+      nextSoonestTimeoutTime = timeoutTime;
     }
 
     const newCallbackId = getCallbackId();
@@ -285,11 +282,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       callbackId: newCallbackId,
       timeoutTime,
     };
-    if (scheduleModuleSupportsMultipleCallbacks) {
-      pendingCallbacks.push(scheduledCallbackConfig);
-    } else {
-      pendingCallbacks[0] = scheduledCallbackConfig;
-    }
+    pendingCallbacks.push(scheduledCallbackConfig);
 
     registeredCallbackIds[newCallbackId] = true;
     if (!isAnimationFrameScheduled) {
