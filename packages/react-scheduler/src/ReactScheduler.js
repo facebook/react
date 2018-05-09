@@ -97,12 +97,9 @@ if (!ExecutionEnvironment.canUseDOM) {
   // and called.
   const pendingCallbacks: Array<CallbackConfigType> = [];
 
-  // Number.MAX_SAFE_INTEGER is not supported in IE
-  const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
-  let callbackIdCounter = 1;
+  let callbackIdCounter = 0;
   const getCallbackId = function(): number {
-    callbackIdCounter =
-      callbackIdCounter >= MAX_SAFE_INTEGER ? 1 : callbackIdCounter + 1;
+    callbackIdCounter++;
     return callbackIdCounter;
   };
 
@@ -233,8 +230,8 @@ if (!ExecutionEnvironment.canUseDOM) {
       const latestCallbackConfig = pendingCallbacks.shift();
       frameDeadlineObject.didTimeout = false;
       const latestCallback = latestCallbackConfig.scheduledCallback;
-      const latestCallbackId = latestCallbackConfig.callbackId;
-      safelyCallScheduledCallback(latestCallback, latestCallbackId);
+      const newCallbackId = latestCallbackConfig.callbackId;
+      safelyCallScheduledCallback(latestCallback, newCallbackId);
       currentTime = now();
     }
     if (pendingCallbacks.length > 0) {
@@ -294,12 +291,10 @@ if (!ExecutionEnvironment.canUseDOM) {
       }
     }
 
-    // This assumes that we only schedule one callback at a time because that's
-    // how Fiber uses it.
-    const latestCallbackId = getCallbackId();
+    const newCallbackId = getCallbackId();
     const scheduledCallbackConfig = {
       scheduledCallback: callback,
-      callbackId: latestCallbackId,
+      callbackId: newCallbackId,
       timeoutTime,
     };
     if (scheduleModuleSupportsMultipleCallbacks) {
@@ -308,7 +303,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       pendingCallbacks[0] = scheduledCallbackConfig;
     }
 
-    registeredCallbackIds[latestCallbackId] = true;
+    registeredCallbackIds[newCallbackId] = true;
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
@@ -317,7 +312,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       isAnimationFrameScheduled = true;
       requestAnimationFrame(animationTick);
     }
-    return latestCallbackId;
+    return newCallbackId;
   };
 
   cIC = function(callbackId: number) {
