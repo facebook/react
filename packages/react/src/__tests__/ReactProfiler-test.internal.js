@@ -411,59 +411,58 @@ describe('Profiler', () => {
       it('should accumulate "actual" time after a scheduling interruptions', () => {
         const callback = jest.fn();
 
-        const Yield = ({value}) => {
-          advanceTimeBy(10);
-          renderer.unstable_yield(value);
+        const Yield = ({renderTime}) => {
+          advanceTimeBy(renderTime);
+          renderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
         // Render partially, but run out of time before completing.
         const renderer = ReactTestRenderer.create(
           <React.unstable_Profiler id="test" onRender={callback}>
-            <Yield value="first" />
-            <Yield value="second" />
+            <Yield renderTime={2} />
+            <Yield renderTime={3} />
           </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
-
-        // Simulate only enough time to render the first Yield
-        renderer.unstable_flushThrough(['first']);
-
+        expect(renderer.unstable_flushThrough(['Yield:2'])).toEqual([
+          'Yield:2',
+        ]);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Resume render for remaining children.
-        renderer.unstable_flushAll();
+        expect(renderer.unstable_flushAll()).toEqual(['Yield:3']);
 
         // Verify that logged times include both durations above.
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(callback.mock.calls[0][2]).toBe(20); // "actual" time
-        expect(callback.mock.calls[0][3]).toBe(20); // "base" time
+        expect(callback.mock.calls[0][2]).toBe(5); // "actual" time
+        expect(callback.mock.calls[0][3]).toBe(5); // "base" time
       });
 
       it('should not include time between frames', () => {
         const callback = jest.fn();
 
-        const Yield = ({renderTime, value}) => {
+        const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield(value);
+          renderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
+        // Render partially, but don't finish.
+        // This partial render should take 5ms of simulated time.
         const renderer = ReactTestRenderer.create(
           <React.unstable_Profiler id="outer" onRender={callback}>
-            <Yield value="first" renderTime={5} />
-            <Yield value="second" renderTime={10} />
+            <Yield renderTime={5} />
+            <Yield renderTime={10} />
             <React.unstable_Profiler id="inner" onRender={callback}>
-              <Yield value="third" renderTime={20} />
+              <Yield renderTime={17} />
             </React.unstable_Profiler>
           </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
-
-        // Render partially, but don't finish.
-        // This partial render should take 5ms of simulated time.
-        renderer.unstable_flushThrough(['first']);
-
+        expect(renderer.unstable_flushThrough(['Yield:5'])).toEqual([
+          'Yield:5',
+        ]);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
@@ -471,8 +470,7 @@ describe('Profiler', () => {
 
         // Flush the remaninig work,
         // Which should take an additional 10ms of simulated time.
-        renderer.unstable_flushAll();
-
+        expect(renderer.unstable_flushAll()).toEqual(['Yield:10', 'Yield:17']);
         expect(callback).toHaveBeenCalledTimes(2);
 
         const [innerCall, outerCall] = callback.mock.calls;
@@ -480,34 +478,32 @@ describe('Profiler', () => {
         // Verify that the "actual" time includes all work times,
         // But not the time that elapsed between frames.
         expect(innerCall[0]).toBe('inner');
-        expect(innerCall[2]).toBe(20); // "actual" time
-        expect(innerCall[3]).toBe(20); // "base" time
+        expect(innerCall[2]).toBe(17); // "actual" time
+        expect(innerCall[3]).toBe(17); // "base" time
         expect(outerCall[0]).toBe('outer');
-        expect(outerCall[2]).toBe(35); // "actual" time
-        expect(outerCall[3]).toBe(35); // "base" time
+        expect(outerCall[2]).toBe(32); // "actual" time
+        expect(outerCall[3]).toBe(32); // "base" time
       });
 
-      it('should accumulate "actual" time if initial render is interrupted with higher priority work', () => {
+      it('should report the expected times when a high-priority update replaces an in-progress initial render', () => {
         const callback = jest.fn();
 
-        const Yield = ({renderTime, value}) => {
+        const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield(value);
+          renderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
+        // Render a partially update, but don't finish.
+        // This partial render should take 10ms of simulated time.
         const renderer = ReactTestRenderer.create(
           <React.unstable_Profiler id="test" onRender={callback}>
-            <Yield value="first" renderTime={10} />
-            <Yield value="second" renderTime={20} />
+            <Yield renderTime={10} />
+            <Yield renderTime={20} />
           </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
-
-        // Render a partially update, but don't finish.
-        // This partial render should take 10ms of simulated time.
-        renderer.unstable_flushThrough(['first']);
-
+        expect(renderer.unstable_flushThrough(['first'])).toEqual(['Yield:10']);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
@@ -515,13 +511,15 @@ describe('Profiler', () => {
 
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 5ms of time.
-        renderer.unstable_flushSync(() => {
-          renderer.update(
-            <React.unstable_Profiler id="test" onRender={callback}>
-              <Yield value="third" renderTime={5} />
-            </React.unstable_Profiler>,
-          );
-        });
+        expect(
+          renderer.unstable_flushSync(() => {
+            renderer.update(
+              <React.unstable_Profiler id="test" onRender={callback}>
+                <Yield renderTime={5} />
+              </React.unstable_Profiler>,
+            );
+          }),
+        ).toEqual(['Yield:5']);
 
         // The initial work was thrown away in this case,
         // So the "actual" and "base" times should only include the final rendered tree times.
@@ -530,35 +528,37 @@ describe('Profiler', () => {
         expect(call[2]).toBe(5); // "actual" time
         expect(call[3]).toBe(5); // "base" time
 
+        callback.mockReset();
+
         // Verify no more unexpected callbacks from low priority work
-        renderer.unstable_flushAll();
-        expect(callback).toHaveBeenCalledTimes(1);
+        expect(renderer.unstable_flushAll()).toEqual([]);
+        expect(callback).toHaveBeenCalledTimes(0);
       });
 
       it('should report the expected times when a high-priority update replaces a low-priority update', () => {
         const callback = jest.fn();
 
-        const Yield = ({renderTime, value}) => {
+        const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield(value);
+          renderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
         const renderer = ReactTestRenderer.create(
           <React.unstable_Profiler id="test" onRender={callback}>
-            <Yield value="first" renderTime={10} />
-            <Yield value="second" renderTime={20} />
+            <Yield renderTime={6} />
+            <Yield renderTime={15} />
           </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
 
         // Render everything initially.
-        renderer.unstable_flushAll();
-
+        // This should take 21 seconds of "actual" and "base" time.
+        expect(renderer.unstable_flushAll()).toEqual(['Yield:6', 'Yield:15']);
         expect(callback).toHaveBeenCalledTimes(1);
         let call = callback.mock.calls[0];
-        expect(call[2]).toBe(30); // "actual" time
-        expect(call[3]).toBe(30); // "base" time
+        expect(call[2]).toBe(21); // "actual" time
+        expect(call[3]).toBe(21); // "base" time
 
         callback.mockReset();
 
@@ -566,21 +566,23 @@ describe('Profiler', () => {
         // This partial render should take 3ms of simulated time.
         renderer.update(
           <React.unstable_Profiler id="test" onRender={callback}>
-            <Yield value="first" renderTime={3} />
-            <Yield value="second" renderTime={5} />
-            <Yield value="third" renderTime={9} />
+            <Yield renderTime={3} />
+            <Yield renderTime={5} />
+            <Yield renderTime={9} />
           </React.unstable_Profiler>,
         );
-        renderer.unstable_flushThrough(['first']);
-
+        expect(renderer.unstable_flushThrough(['Yield:3'])).toEqual([
+          'Yield:3',
+        ]);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
         advanceTimeBy(100);
 
         // Render another 5ms of simulated time.
-        renderer.unstable_flushThrough(['second']);
-
+        expect(renderer.unstable_flushThrough(['Yield:5'])).toEqual([
+          'Yield:5',
+        ]);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
@@ -588,13 +590,15 @@ describe('Profiler', () => {
 
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 11ms of time.
-        renderer.unstable_flushSync(() => {
-          renderer.update(
-            <React.unstable_Profiler id="test" onRender={callback}>
-              <Yield value="fourth" renderTime={11} />
-            </React.unstable_Profiler>,
-          );
-        });
+        expect(
+          renderer.unstable_flushSync(() => {
+            renderer.update(
+              <React.unstable_Profiler id="test" onRender={callback}>
+                <Yield renderTime={11} />
+              </React.unstable_Profiler>,
+            );
+          }),
+        ).toEqual(['Yield:11']);
 
         // Verify that the "actual" time includes all three durations above.
         // And the "base" time includes only the final rendered tree times.
@@ -604,7 +608,7 @@ describe('Profiler', () => {
         expect(call[3]).toBe(11); // "base" time
 
         // Verify no more unexpected callbacks from low priority work
-        renderer.unstable_flushAll();
+        expect(renderer.unstable_flushAll()).toEqual([]);
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
