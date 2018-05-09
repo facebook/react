@@ -740,7 +740,11 @@ const ReactTestRendererFiber = {
         }
         return TestRenderer.getPublicRootInstance(root);
       },
-      unstable_flushSync: TestRenderer.flushSync,
+      unstable_flushSync(fn) {
+        yieldedValues = [];
+        TestRenderer.flushSync(fn);
+        return yieldedValues;
+      },
     };
 
     Object.defineProperty(
