@@ -14,8 +14,8 @@
  * control than requestAnimationFrame and requestIdleCallback.
  * Current TODO items:
  * X- Pull out the rIC polyfill built into React
- * - Initial test coverage
- * - Support for multiple callbacks
+ * X- Initial test coverage
+ * X- Support for multiple callbacks
  * - Support for two priorities; serial and deferred
  * - Better test coverage
  * - Better docblock
