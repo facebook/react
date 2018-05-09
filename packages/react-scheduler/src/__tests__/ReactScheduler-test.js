@@ -41,11 +41,11 @@ describe('ReactScheduler', () => {
     ReactScheduler = require('react-scheduler');
   });
 
-  describe('rIC', () => {
+  describe('scheduleCallback', () => {
     it('calls the callback within the frame when not blocked', () => {
-      const {rIC} = ReactScheduler;
+      const {scheduleCallback} = ReactScheduler;
       const cb = jest.fn();
-      rIC(cb);
+      scheduleCallback(cb);
       jest.runAllTimers();
       expect(cb.mock.calls.length).toBe(1);
       // should not have timed out and should include a timeRemaining method
@@ -55,15 +55,15 @@ describe('ReactScheduler', () => {
 
     describe('with multiple callbacks', () => {
       it('accepts multiple callbacks and calls within frame when not blocked', () => {
-        const {rIC} = ReactScheduler;
+        const {scheduleCallback} = ReactScheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => callbackLog.push('B'));
-        rIC(callbackA);
+        scheduleCallback(callbackA);
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
         // waits while second callback is passed
-        rIC(callbackB);
+        scheduleCallback(callbackB);
         expect(callbackLog).toEqual([]);
         // after a delay, calls as many callbacks as it has time for
         jest.runAllTimers();
@@ -84,11 +84,11 @@ describe('ReactScheduler', () => {
         'schedules callbacks in correct order and' +
           'keeps calling them if there is time',
         () => {
-          const {rIC} = ReactScheduler;
+          const {scheduleCallback} = ReactScheduler;
           const callbackLog = [];
           const callbackA = jest.fn(() => {
             callbackLog.push('A');
-            rIC(callbackC);
+            scheduleCallback(callbackC);
           });
           const callbackB = jest.fn(() => {
             callbackLog.push('B');
@@ -97,11 +97,11 @@ describe('ReactScheduler', () => {
             callbackLog.push('C');
           });
 
-          rIC(callbackA);
+          scheduleCallback(callbackA);
           // initially waits to call the callback
           expect(callbackLog).toEqual([]);
           // continues waiting while B is scheduled
-          rIC(callbackB);
+          scheduleCallback(callbackB);
           expect(callbackLog).toEqual([]);
           // after a delay, calls the scheduled callbacks,
           // and also calls new callbacks scheduled by current callbacks
@@ -110,18 +110,18 @@ describe('ReactScheduler', () => {
         },
       );
 
-      it('schedules callbacks in correct order when callbacks have many nested rIC calls', () => {
-        const {rIC} = ReactScheduler;
+      it('schedules callbacks in correct order when callbacks have many nested scheduleCallback calls', () => {
+        const {scheduleCallback} = ReactScheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
-          rIC(callbackC);
-          rIC(callbackD);
+          scheduleCallback(callbackC);
+          scheduleCallback(callbackD);
         });
         const callbackB = jest.fn(() => {
           callbackLog.push('B');
-          rIC(callbackE);
-          rIC(callbackF);
+          scheduleCallback(callbackE);
+          scheduleCallback(callbackF);
         });
         const callbackC = jest.fn(() => {
           callbackLog.push('C');
@@ -136,8 +136,8 @@ describe('ReactScheduler', () => {
           callbackLog.push('F');
         });
 
-        rIC(callbackA);
-        rIC(callbackB);
+        scheduleCallback(callbackA);
+        scheduleCallback(callbackB);
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
         // while flushing callbacks, calls as many as it has time for
@@ -145,23 +145,23 @@ describe('ReactScheduler', () => {
         expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
       });
 
-      it('schedules callbacks in correct order when they use rIC to schedule themselves', () => {
-        const {rIC} = ReactScheduler;
+      it('schedules callbacks in correct order when they use scheduleCallback to schedule themselves', () => {
+        const {scheduleCallback} = ReactScheduler;
         const callbackLog = [];
         let callbackAIterations = 0;
         const callbackA = jest.fn(() => {
           if (callbackAIterations < 1) {
-            rIC(callbackA);
+            scheduleCallback(callbackA);
           }
           callbackLog.push('A' + callbackAIterations);
           callbackAIterations++;
         });
         const callbackB = jest.fn(() => callbackLog.push('B'));
 
-        rIC(callbackA);
+        scheduleCallback(callbackA);
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
-        rIC(callbackB);
+        scheduleCallback(callbackB);
         expect(callbackLog).toEqual([]);
         // after a delay, calls the latest callback passed
         jest.runAllTimers();
@@ -170,29 +170,29 @@ describe('ReactScheduler', () => {
     });
   });
 
-  describe('cIC', () => {
+  describe('cancelScheduledCallback', () => {
     it('cancels the scheduled callback', () => {
-      const {rIC, cIC} = ReactScheduler;
+      const {scheduleCallback, cancelScheduledCallback} = ReactScheduler;
       const cb = jest.fn();
-      const callbackId = rIC(cb);
+      const callbackId = scheduleCallback(cb);
       expect(cb.mock.calls.length).toBe(0);
-      cIC(callbackId);
+      cancelScheduledCallback(callbackId);
       jest.runAllTimers();
       expect(cb.mock.calls.length).toBe(0);
     });
 
     describe('with multiple callbacks', () => {
       it('when one callback cancels the next one', () => {
-        const {rIC, cIC} = ReactScheduler;
+        const {scheduleCallback, cancelScheduledCallback} = ReactScheduler;
         const callbackLog = [];
         let callbackBId;
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
-          cIC(callbackBId);
+          cancelScheduledCallback(callbackBId);
         });
         const callbackB = jest.fn(() => callbackLog.push('B'));
-        rIC(callbackA);
-        callbackBId = rIC(callbackB);
+        scheduleCallback(callbackA);
+        callbackBId = scheduleCallback(callbackB);
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
         jest.runAllTimers();
