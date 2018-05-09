@@ -535,7 +535,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
-      it('should accumulate "actual" time if an update is interrupted with higher priority work', () => {
+      it('should report the expected times when a high-priority update replaces a low-priority update', () => {
         const callback = jest.fn();
 
         const Yield = ({renderTime, value}) => {
@@ -606,6 +606,97 @@ describe('Profiler', () => {
         // Verify no more unexpected callbacks from low priority work
         renderer.unstable_flushAll();
         expect(callback).toHaveBeenCalledTimes(1);
+      });
+
+      it('should report the expected times when a high-priority update interrupts a low-priority update', () => {
+        const callback = jest.fn();
+
+        const Yield = ({renderTime}) => {
+          advanceTimeBy(renderTime);
+          renderer.unstable_yield('Yield:' + renderTime);
+          return null;
+        };
+
+        let first;
+        class FirstComponent extends React.Component {
+          state = {renderTime: 1};
+          render() {
+            first = this;
+            advanceTimeBy(this.state.renderTime);
+            renderer.unstable_yield('FirstComponent:' + this.state.renderTime);
+            return (
+              <Yield renderTime={4} />
+            );
+          }
+        }
+        let second;
+        class SecondComponent extends React.Component {
+          state = {renderTime: 2};
+          render() {
+            second = this;
+            advanceTimeBy(this.state.renderTime);
+            renderer.unstable_yield('SecondComponent:' + this.state.renderTime);
+            return (
+              <Yield renderTime={7} />
+            );
+          }
+        }
+
+        const renderer = ReactTestRenderer.create(
+          <React.unstable_Profiler id="test" onRender={callback} foo="1">
+            <FirstComponent />
+            <SecondComponent />
+          </React.unstable_Profiler>,
+          {unstable_isAsync: true},
+        );
+
+        // Render everything initially.
+        // This simulates a total of 14ms of "actual" render time.
+        // The "base" render time is also 14ms for the initial render.
+        expect(renderer.unstable_flushAll()).toEqual(['FirstComponent:1', 'Yield:4', 'SecondComponent:2', 'Yield:7']);
+        expect(callback).toHaveBeenCalledTimes(1);
+        let call = callback.mock.calls[0];
+        expect(call[2]).toBe(14); // "actual" time
+        expect(call[3]).toBe(14); // "base" time
+
+        callback.mockClear();
+
+        // Render a partially update, but don't finish.
+        // This partial render will take 10ms of "actual" render time.
+        first.setState({renderTime: 10});
+        expect(renderer.unstable_flushThrough(['FirstComponent:10'])).toEqual(['FirstComponent:10']);
+        expect(callback).toHaveBeenCalledTimes(0);
+
+        // Simulate time moving forward while frame is paused.
+        advanceTimeBy(100);
+
+        // Interrupt with higher priority work.
+        // This simulates a total of 37ms of "actual" render time.
+        expect(renderer.unstable_flushSync(
+          () => second.setState({renderTime: 30})
+        )).toEqual(['SecondComponent:30', 'Yield:7']);
+
+        // Verify that the "actual" time includes time spent in the both renders so far (10ms and 37ms).
+        // The "base" time should include the more recent times for the SecondComponent subtree,
+        // As well as the original times for the FirstComponent subtree.
+        expect(callback).toHaveBeenCalledTimes(1);
+        call = callback.mock.calls[0];
+        expect(call[2]).toBe(47); // "actual" time
+        expect(call[3]).toBe(42); // "base" time
+
+        callback.mockClear();
+
+        // Resume the original low priority update, with rebased state.
+        // This simulates a total of 14ms of "actual" render time,
+        // And does not include the original (interrupted) 10ms.
+        // The tree contains 42ms of "base" render time at this point,
+        // Reflecting the most recent (longer) render durations.
+        // TODO: This "actual" time should change to 14ms once the scheduler supports resuming.
+        expect(renderer.unstable_flushAll()).toEqual(['FirstComponent:10', 'Yield:4']);
+        expect(callback).toHaveBeenCalledTimes(1);
+        call = callback.mock.calls[0];
+        expect(call[2]).toBe(14); // "actual" time
+        expect(call[3]).toBe(51); // "base" time
       });
 
       [true, false].forEach(flagEnabled => {
