@@ -65,7 +65,7 @@ import {
   findNextExpirationTimeToWorkOn,
   suspendPendingWork,
   resumePendingWork,
-} from './ReactFiberPendingWork';
+} from './ReactFiberPendingPriority';
 import {
   recordEffect,
   recordScheduleUpdate,
