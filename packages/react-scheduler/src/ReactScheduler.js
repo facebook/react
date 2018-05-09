@@ -157,7 +157,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       return;
     }
 
-    let currentTime = now();
+    const currentTime = now();
     // TODO: this would be more efficient if deferred callbacks are stored in
     // min heap.
     // Or in a linked list with links for both timeoutTime order and insertion
@@ -173,36 +173,24 @@ if (!ExecutionEnvironment.canUseDOM) {
     nextSoonestTimeoutTime = -1; // we will reset it below
 
     // keep checking until we don't find any more timed out callbacks
-    let foundTimedOutCallback = false;
     frameDeadlineObject.didTimeout = true;
-    do {
-      currentTime = now();
-      foundTimedOutCallback = false;
-      for (let i = 0, len = pendingCallbacks.length; i < len; i++) {
-        const currentCallbackConfig = pendingCallbacks[i];
-        if (!currentCallbackConfig) {
-          // we might go off the end of the array
-          continue;
-        }
-        const timeoutTime = currentCallbackConfig.timeoutTime;
-        if (timeoutTime !== -1 && timeoutTime <= currentTime) {
-          // it has timed out!
-          foundTimedOutCallback = true;
-
-          // remove it from the pending callbacks array
-          pendingCallbacks.splice(i, 1);
-          i--;
-
-          // call it
-          const callback = currentCallbackConfig.scheduledCallback;
-          safelyCallScheduledCallback(callback, timeoutTime);
-        } else {
-          if (timeoutTime > nextSoonestTimeoutTime) {
-            nextSoonestTimeoutTime = timeoutTime;
-          }
+    for (let i = 0, len = pendingCallbacks.length; i < len; i++) {
+      const currentCallbackConfig = pendingCallbacks[i];
+      const timeoutTime = currentCallbackConfig.timeoutTime;
+      if (timeoutTime !== -1 && timeoutTime <= currentTime) {
+        // it has timed out!
+        // call it
+        const callback = currentCallbackConfig.scheduledCallback;
+        safelyCallScheduledCallback(callback, timeoutTime);
+      } else {
+        if (
+          timeoutTime !== -1 &&
+          (nextSoonestTime === -1 || timeoutTime < nextSoonestTimeoutTime)
+        ) {
+          nextSoonestTimeoutTime = timeoutTime;
         }
       }
-    } while (foundTimedOutCallback && pendingCallbacks.length);
+    }
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.

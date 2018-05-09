@@ -54,7 +54,6 @@ describe('ReactScheduler', () => {
     });
   });
 
-
   describe('cIC', () => {
     it('cancels the scheduled callback', () => {
       const {rIC, cIC} = ReactScheduler;
