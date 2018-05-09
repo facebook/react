@@ -511,7 +511,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
-        advanceTimeBy(30);
+        advanceTimeBy(100);
 
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 5ms of time.
@@ -563,11 +563,12 @@ describe('Profiler', () => {
         callback.mockReset();
 
         // Render a partially update, but don't finish.
-        // This partial render should take 10ms of simulated time.
+        // This partial render should take 3ms of simulated time.
         renderer.update(
           <React.unstable_Profiler id="test" onRender={callback}>
-            <Yield value="first" renderTime={8} />
-            <Yield value="second" renderTime={14} />
+            <Yield value="first" renderTime={3} />
+            <Yield value="second" renderTime={5} />
+            <Yield value="third" renderTime={9} />
           </React.unstable_Profiler>,
         );
         renderer.unstable_flushThrough(['first']);
@@ -575,24 +576,32 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
-        advanceTimeBy(30);
+        advanceTimeBy(100);
+
+        // Render another 5ms of simulated time.
+        renderer.unstable_flushThrough(['second']);
+
+        expect(callback).toHaveBeenCalledTimes(0);
+
+        // Simulate time moving forward while frame is paused.
+        advanceTimeBy(100);
 
         // Interrupt with higher priority work.
-        // The interrupted work simulates an additional 5ms of time.
+        // The interrupted work simulates an additional 11ms of time.
         renderer.unstable_flushSync(() => {
           renderer.update(
             <React.unstable_Profiler id="test" onRender={callback}>
-              <Yield value="third" renderTime={5} />
+              <Yield value="fourth" renderTime={11} />
             </React.unstable_Profiler>,
           );
         });
 
-        // Verify that the "actual" time includes both durations above,
+        // Verify that the "actual" time includes all three durations above.
         // And the "base" time includes only the final rendered tree times.
         expect(callback).toHaveBeenCalledTimes(1);
         call = callback.mock.calls[0];
-        expect(call[2]).toBe(13); // "actual" time
-        expect(call[3]).toBe(5); // "base" time
+        expect(call[2]).toBe(19); // "actual" time
+        expect(call[3]).toBe(11); // "base" time
 
         // Verify no more unexpected callbacks from low priority work
         renderer.unstable_flushAll();
