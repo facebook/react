@@ -184,7 +184,8 @@ if (!ExecutionEnvironment.canUseDOM) {
       } else {
         if (
           timeoutTime !== -1 &&
-          (nextSoonestTime === -1 || timeoutTime < nextSoonestTimeoutTime)
+          (nextSoonestTimeoutTime === -1 ||
+            timeoutTime < nextSoonestTimeoutTime)
         ) {
           nextSoonestTimeoutTime = timeoutTime;
         }
