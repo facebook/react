@@ -16,7 +16,7 @@ import {enableSuspense} from 'shared/ReactFeatureFlags';
 
 // TODO: Offscreen updates
 
-export function addPendingWork(
+export function addPendingPriorityLevel(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ): void {
@@ -41,7 +41,7 @@ export function addPendingWork(
   }
 }
 
-export function flushPendingWork(
+export function flushPendingPriorityLevel(
   root: FiberRoot,
   currentTime: ExpirationTime,
   earliestRemainingTime: ExpirationTime,
@@ -81,7 +81,7 @@ export function flushPendingWork(
     if (earliestSuspendedTime === NoWork) {
       // There's no suspended work. Treat the earliest remaining level as a
       // pending level.
-      addPendingWork(root, earliestRemainingTime);
+      addPendingPriorityLevel(root, earliestRemainingTime);
       return;
     }
 
@@ -95,14 +95,14 @@ export function flushPendingWork(
 
       // There's no suspended work. Treat the earliest remaining level as a
       // pending level.
-      addPendingWork(root, earliestRemainingTime);
+      addPendingPriorityLevel(root, earliestRemainingTime);
       return;
     }
 
     if (earliestRemainingTime < earliestSuspendedTime) {
       // The earliest remaining time is earlier than all the suspended work.
       // Treat it as a pending update.
-      addPendingWork(root, earliestRemainingTime);
+      addPendingPriorityLevel(root, earliestRemainingTime);
       return;
     }
 
@@ -111,7 +111,7 @@ export function flushPendingWork(
   }
 }
 
-export function suspendPendingWork(
+export function suspendPriorityLevel(
   root: FiberRoot,
   suspendedTime: ExpirationTime,
 ): void {
@@ -157,7 +157,7 @@ export function suspendPendingWork(
   }
 }
 
-export function resumePendingWork(
+export function resumePriorityLevel(
   root: FiberRoot,
   pingedTime: ExpirationTime,
 ): void {
@@ -187,9 +187,7 @@ export function resumePendingWork(
   }
 }
 
-export function findNextExpirationTimeToWorkOn(
-  root: FiberRoot,
-): ExpirationTime {
+export function findNextPendingPriorityLevel(root: FiberRoot): ExpirationTime {
   if (enableSuspense) {
     const earliestSuspendedTime = root.earliestSuspendedTime;
     const earliestPendingTime = root.earliestPendingTime;
