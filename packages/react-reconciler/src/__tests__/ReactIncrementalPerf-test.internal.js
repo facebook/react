@@ -187,15 +187,17 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('does not include StrictMode or AsyncMode components in measurements', () => {
+  it('does not include AsyncMode, StrictMode, or Profiler components in measurements', () => {
     ReactNoop.render(
-      <React.StrictMode>
-        <Parent>
-          <React.unstable_AsyncMode>
-            <Child />
-          </React.unstable_AsyncMode>
-        </Parent>
-      </React.StrictMode>,
+      <React.unstable_Profiler id="test" onRender={jest.fn()}>
+        <React.StrictMode>
+          <Parent>
+            <React.unstable_AsyncMode>
+              <Child />
+            </React.unstable_AsyncMode>
+          </Parent>
+        </React.StrictMode>
+      </React.unstable_Profiler>,
     );
     addComment('Mount');
     ReactNoop.flush();

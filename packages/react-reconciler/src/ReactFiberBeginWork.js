@@ -16,6 +16,7 @@ import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ProfilerTimer} from './ReactProfilerTimer';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
@@ -34,6 +35,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
+  Profiler,
 } from 'shared/ReactTypeOfWork';
 import {
   NoEffect,
@@ -42,12 +44,14 @@ import {
   ContentReset,
   Ref,
   DidCapture,
+  Update,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
   enableGetDerivedStateFromCatch,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -88,12 +92,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   hydrationContext: HydrationContext<C, CX>,
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  profilerTimer: ProfilerTimer,
 ) {
   const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
 
   const {pushProvider} = newContext;
+
+  const {
+    markActualRenderTimeStarted,
+    stopBaseRenderTimerIfRunning,
+  } = profilerTimer;
 
   const {
     getMaskedContext,
@@ -212,6 +222,25 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
+  function updateProfiler(current, workInProgress) {
+    const nextProps = workInProgress.pendingProps;
+    if (enableProfilerTimer) {
+      // Start render timer here and push start time onto queue
+      markActualRenderTimeStarted(workInProgress);
+
+      // Let the "complete" phase know to stop the timer,
+      // And the scheduler to record the measured time.
+      workInProgress.effectTag |= Update;
+    }
+    if (workInProgress.memoizedProps === nextProps) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    const nextChildren = nextProps.children;
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
   }
 
@@ -344,6 +373,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // the new API.
       // TODO: Warn in a future release.
       nextChildren = null;
+
+      if (enableProfilerTimer) {
+        stopBaseRenderTimerIfRunning();
+      }
     } else {
       if (__DEV__) {
         ReactDebugCurrentFiber.setCurrentPhase('render');
@@ -1054,6 +1087,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ): Fiber | null {
     cancelWorkTimer(workInProgress);
 
+    if (enableProfilerTimer) {
+      // Don't update "base" render times for bailouts.
+      stopBaseRenderTimerIfRunning();
+    }
+
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
     // Fiber's priority and its children yet - we don't know without doing lots
@@ -1075,6 +1113,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function bailoutOnLowPriority(current, workInProgress) {
     cancelWorkTimer(workInProgress);
 
+    if (enableProfilerTimer) {
+      // Don't update "base" render times for bailouts.
+      stopBaseRenderTimerIfRunning();
+    }
+
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
     // See PR 8590 discussion for context
     switch (workInProgress.tag) {
@@ -1092,6 +1135,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
       case ContextProvider:
         pushProvider(workInProgress);
+        break;
+      case Profiler:
+        if (enableProfilerTimer) {
+          markActualRenderTimeStarted(workInProgress);
+        }
         break;
     }
     // TODO: What if this is currently in progress?
@@ -1173,6 +1221,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return updateFragment(current, workInProgress);
       case Mode:
         return updateMode(current, workInProgress);
+      case Profiler:
+        return updateProfiler(current, workInProgress);
       case ContextProvider:
         return updateContextProvider(
           current,

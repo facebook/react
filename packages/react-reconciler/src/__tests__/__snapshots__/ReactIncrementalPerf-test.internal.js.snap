@@ -91,13 +91,14 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
 "
 `;
 
-exports[`ReactDebugFiberPerf does not include StrictMode or AsyncMode components in measurements 1`] = `
+exports[`ReactDebugFiberPerf does not include AsyncMode, StrictMode, or Profiler components in measurements 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5230 ms)
 
 // Mount
 ⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ Parent [mount]
-    ⚛ Child [mount]
+  ⚛ Profiler(test) [mount]
+    ⚛ Parent [mount]
+      ⚛ Child [mount]
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)

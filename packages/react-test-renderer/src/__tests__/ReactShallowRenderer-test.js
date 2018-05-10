@@ -230,6 +230,32 @@ describe('ReactShallowRenderer', () => {
     ]);
   });
 
+  it('should handle Profiler', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return (
+          <React.unstable_Profiler id="test" onRender={jest.fn()}>
+            <div>
+              <span className="child1" />
+              <span className="child2" />
+            </div>
+          </React.unstable_Profiler>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent />);
+
+    expect(result.type).toBe(React.unstable_Profiler);
+    expect(result.props.children).toEqual(
+      <div>
+        <span className="child1" />
+        <span className="child2" />
+      </div>,
+    );
+  });
+
   it('should enable shouldComponentUpdate to prevent a re-render', () => {
     let renderCounter = 0;
     class SimpleComponent extends React.Component {

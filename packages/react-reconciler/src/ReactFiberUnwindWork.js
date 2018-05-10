@@ -7,12 +7,14 @@
  * @flow
  */
 
+import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
 import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
 import type {CapturedValue} from './ReactCapturedValue';
+import type {ProfilerTimer} from './ReactProfilerTimer';
 import type {Update} from './ReactUpdateQueue';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -29,17 +31,21 @@ import {
   HostComponent,
   HostPortal,
   ContextProvider,
+  Profiler,
 } from 'shared/ReactTypeOfWork';
 import {
-  NoEffect,
   DidCapture,
   Incomplete,
+  NoEffect,
   ShouldCapture,
 } from 'shared/ReactTypeOfSideEffect';
+import {
+  enableGetDerivedStateFromCatch,
+  enableProfilerTimer,
+} from 'shared/ReactFeatureFlags';
 
-import {enableGetDerivedStateFromCatch} from 'shared/ReactFeatureFlags';
-
-export default function<C, CX>(
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   legacyContext: LegacyContext,
   newContext: NewContext,
@@ -51,6 +57,7 @@ export default function<C, CX>(
   markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
   onUncaughtError: (error: mixed) => void,
+  profilerTimer: ProfilerTimer,
 ) {
   const {popHostContainer, popHostContext} = hostContext;
   const {
@@ -58,6 +65,10 @@ export default function<C, CX>(
     popTopLevelContextObject: popTopLevelLegacyContextObject,
   } = legacyContext;
   const {popProvider} = newContext;
+  const {
+    resumeActualRenderTimerIfPaused,
+    recordElapsedActualRenderTime,
+  } = profilerTimer;
 
   function createRootErrorUpdate(
     fiber: Fiber,
@@ -235,6 +246,13 @@ export default function<C, CX>(
         break;
       case ContextProvider:
         popProvider(interruptedWork);
+        break;
+      case Profiler:
+        if (enableProfilerTimer) {
+          // Resume in case we're picking up on work that was paused.
+          resumeActualRenderTimerIfPaused();
+          recordElapsedActualRenderTime(interruptedWork);
+        }
         break;
       default:
         break;

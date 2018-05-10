@@ -17,6 +17,7 @@ import {
   enableMutatingReconciler,
   enableNoopReconciler,
   enablePersistentReconciler,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
@@ -25,13 +26,14 @@ import {
   HostText,
   HostPortal,
   CallComponent,
+  Profiler,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {
-  Placement,
-  Update,
   ContentReset,
+  Placement,
   Snapshot,
+  Update,
 } from 'shared/ReactTypeOfSideEffect';
 import {commitUpdateQueue} from './ReactUpdateQueue';
 import invariant from 'fbjs/lib/invariant';
@@ -306,6 +308,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       case HostPortal: {
         // We have no life-cycles associated with portals.
+        return;
+      }
+      case Profiler: {
+        // We have no life-cycles associated with Profiler.
         return;
       }
       default: {
@@ -812,6 +818,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return;
       }
       case HostRoot: {
+        return;
+      }
+      case Profiler: {
+        if (enableProfilerTimer) {
+          const onRender = finishedWork.memoizedProps.onRender;
+          onRender(
+            finishedWork.memoizedProps.id,
+            current === null ? 'mount' : 'update',
+            finishedWork.stateNode.duration,
+            finishedWork.treeBaseTime,
+          );
+
+          // Reset actualTime after successful commit.
+          // By default, we append to this time to account for errors and pauses.
+          finishedWork.stateNode.duration = 0;
+        }
         return;
       }
       default: {
