@@ -50,24 +50,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {Sync, expirationTimeToMs} from './ReactFiberExpirationTime';
-import invariant from 'fbjs/lib/invariant';
-
-function createRootExpirationError(sourceFiber, renderExpirationTime) {
-  try {
-    // TODO: Better error messages.
-    invariant(
-      renderExpirationTime !== Sync,
-      'A synchronous update was suspended, but no fallback UI was provided.',
-    );
-    invariant(
-      false,
-      'An update was suspended for longer than the timeout, but no fallback ' +
-        'UI was provided.',
-    );
-  } catch (error) {
-    return error;
-  }
-}
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
@@ -209,31 +191,28 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       let workInProgress = returnFiber;
       let earliestTimeoutMs = -1;
       searchForEarliestTimeout: do {
-        switch (workInProgress.tag) {
-          case TimeoutComponent: {
-            const current = workInProgress.alternate;
-            if (current !== null && current.memoizedState === true) {
-              // A parent Timeout already committed in a placeholder state. We
-              // need to handle this promise immediately. In other words, we
-              // should never suspend inside a tree that already expired.
+        if (workInProgress.tag === TimeoutComponent) {
+          const current = workInProgress.alternate;
+          if (current !== null && current.memoizedState === true) {
+            // A parent Timeout already committed in a placeholder state. We
+            // need to handle this promise immediately. In other words, we
+            // should never suspend inside a tree that already expired.
+            earliestTimeoutMs = 0;
+            break searchForEarliestTimeout;
+          }
+          let timeoutPropMs = workInProgress.pendingProps.ms;
+          if (typeof timeoutPropMs === 'number') {
+            if (timeoutPropMs <= 0) {
               earliestTimeoutMs = 0;
               break searchForEarliestTimeout;
+            } else if (
+              earliestTimeoutMs === -1 ||
+              timeoutPropMs < earliestTimeoutMs
+            ) {
+              earliestTimeoutMs = timeoutPropMs;
             }
-            let timeoutPropMs = workInProgress.pendingProps.ms;
-            if (typeof timeoutPropMs === 'number') {
-              if (timeoutPropMs <= 0) {
-                earliestTimeoutMs = 0;
-                break searchForEarliestTimeout;
-              } else if (
-                earliestTimeoutMs === -1 ||
-                timeoutPropMs < earliestTimeoutMs
-              ) {
-                earliestTimeoutMs = timeoutPropMs;
-              }
-            } else if (earliestTimeoutMs === -1) {
-              earliestTimeoutMs = remainingTimeMs;
-            }
-            break;
+          } else if (earliestTimeoutMs === -1) {
+            earliestTimeoutMs = remainingTimeMs;
           }
         }
         workInProgress = workInProgress.return;
@@ -259,10 +238,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             case HostRoot: {
               // The root expired, but no fallback was provided. Throw a
               // helpful error.
-              value = createRootExpirationError(
-                sourceFiber,
-                renderExpirationTime,
-              );
+              const message =
+                renderExpirationTime === Sync
+                  ? 'A synchronous update was suspended, but no fallback UI ' +
+                    'was provided.'
+                  : 'An update was suspended for longer than the timeout, ' +
+                    'but no fallback UI was provided.';
+              value = new Error(message);
               break;
             }
             case TimeoutComponent: {
