@@ -12,7 +12,6 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {SuspenseThenable} from 'shared/SuspenseThenable';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
@@ -101,6 +100,10 @@ import ReactFiberNewContext from './ReactFiberNewContext';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import ReactFiberStack from './ReactFiberStack';
+
+export type Thenable = {
+  then(resolve: () => mixed, reject?: () => mixed): mixed,
+};
 
 const {
   invokeGuardedCallback,
@@ -1318,7 +1321,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   // TODO: Rename this to scheduleTimeout or something
   function suspendRoot(
     root: FiberRoot,
-    thenable: SuspenseThenable,
+    thenable: Thenable,
     timeoutMs: number,
     suspendedTime: ExpirationTime,
   ) {

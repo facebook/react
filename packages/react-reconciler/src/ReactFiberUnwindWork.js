@@ -17,7 +17,7 @@ import type {NewContext} from './ReactFiberNewContext';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {ProfilerTimer} from './ReactProfilerTimer';
 import type {Update} from './ReactUpdateQueue';
-import type {SuspenseThenable} from 'shared/SuspenseThenable';
+import type {Thenable} from './ReactFiberScheduler';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -86,7 +86,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   profilerTimer: ProfilerTimer,
   suspendRoot: (
     root: FiberRoot,
-    thenable: SuspenseThenable,
+    thenable: Thenable,
     timeoutMs: number,
     suspendedTime: ExpirationTime,
   ) => void,
@@ -196,7 +196,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       typeof value.then === 'function'
     ) {
       // This is a thenable.
-      const thenable: SuspenseThenable = (value: any);
+      const thenable: Thenable = (value: any);
 
       const expirationTimeMs = expirationTimeToMs(renderExpirationTime);
       const startTimeMs = expirationTimeMs - 5000;
