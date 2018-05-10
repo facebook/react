@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {enableProfileModeMetrics} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 import warning from 'fbjs/lib/warning';
 
@@ -116,7 +116,7 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
     baseStartTime = -1;
   }
 
-  if (enableProfileModeMetrics) {
+  if (enableProfilerTimer) {
     return {
       checkActualRenderTimeStackEmpty,
       markActualRenderTimeStarted,

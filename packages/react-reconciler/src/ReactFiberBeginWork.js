@@ -51,7 +51,7 @@ import {
   enableGetDerivedStateFromCatch,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
-  enableProfileModeMetrics,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -227,7 +227,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateProfiler(current, workInProgress) {
     const nextProps = workInProgress.pendingProps;
-    if (enableProfileModeMetrics) {
+    if (enableProfilerTimer) {
       // Start render timer here and push start time onto queue
       markActualRenderTimeStarted(workInProgress);
 
@@ -374,7 +374,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // TODO: Warn in a future release.
       nextChildren = null;
 
-      if (enableProfileModeMetrics) {
+      if (enableProfilerTimer) {
         stopBaseRenderTimerIfRunning();
       }
     } else {
@@ -1087,7 +1087,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ): Fiber | null {
     cancelWorkTimer(workInProgress);
 
-    if (enableProfileModeMetrics) {
+    if (enableProfilerTimer) {
       // Don't update "base" render times for bailouts.
       stopBaseRenderTimerIfRunning();
     }
@@ -1113,7 +1113,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function bailoutOnLowPriority(current, workInProgress) {
     cancelWorkTimer(workInProgress);
 
-    if (enableProfileModeMetrics) {
+    if (enableProfilerTimer) {
       // Don't update "base" render times for bailouts.
       stopBaseRenderTimerIfRunning();
     }
@@ -1137,7 +1137,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         pushProvider(workInProgress);
         break;
       case Profiler:
-        if (enableProfileModeMetrics) {
+        if (enableProfilerTimer) {
           markActualRenderTimeStarted(workInProgress);
         }
         break;

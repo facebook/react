@@ -17,7 +17,7 @@ import {
   enableMutatingReconciler,
   enableNoopReconciler,
   enablePersistentReconciler,
-  enableProfileModeMetrics,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
@@ -821,7 +821,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return;
       }
       case Profiler: {
-        if (enableProfileModeMetrics) {
+        if (enableProfilerTimer) {
           const onRender = finishedWork.memoizedProps.onRender;
           onRender(
             finishedWork.memoizedProps.id,

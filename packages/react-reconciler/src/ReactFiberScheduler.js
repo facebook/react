@@ -40,7 +40,7 @@ import {
   HostPortal,
 } from 'shared/ReactTypeOfWork';
 import {
-  enableProfileModeMetrics,
+  enableProfilerTimer,
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
@@ -323,7 +323,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (hasCaughtError()) {
         clearCaughtError();
 
-        if (enableProfileModeMetrics) {
+        if (enableProfilerTimer) {
           // Stop "base" render timer again (after the re-thrown error).
           stopBaseRenderTimerIfRunning();
         }
@@ -667,7 +667,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
 
-    if (enableProfileModeMetrics) {
+    if (enableProfilerTimer) {
       if (__DEV__) {
         checkActualRenderTimeStackEmpty();
       }
@@ -720,7 +720,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     // Bubble up the earliest expiration time.
     // (And "base" render timers if that feature flag is enabled)
-    if (enableProfileModeMetrics && workInProgress.mode & ProfileMode) {
+    if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
       let treeBaseTime = workInProgress.selfBaseTime;
       let child = workInProgress.child;
       while (child !== null) {
@@ -925,7 +925,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     let next;
-    if (enableProfileModeMetrics) {
+    if (enableProfilerTimer) {
       startBaseRenderTimer();
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
@@ -972,7 +972,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
       }
 
-      if (enableProfileModeMetrics) {
+      if (enableProfilerTimer) {
         // If we didn't finish, pause the "actual" render timer.
         // We'll restart it when we resume work.
         pauseActualRenderTimerIfRunning();
@@ -1019,7 +1019,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       try {
         workLoop(isAsync);
       } catch (thrownValue) {
-        if (enableProfileModeMetrics) {
+        if (enableProfilerTimer) {
           // Stop "base" render timer in the event of an error.
           stopBaseRenderTimerIfRunning();
         }
@@ -1587,7 +1587,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // the deadline.
     findHighestPriorityRoot();
 
-    if (enableProfileModeMetrics) {
+    if (enableProfilerTimer) {
       resumeActualRenderTimerIfPaused();
     }
 
@@ -1737,7 +1737,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             // back and commit it later.
             root.finishedWork = finishedWork;
 
-            if (enableProfileModeMetrics) {
+            if (enableProfilerTimer) {
               // If we didn't finish, pause the "actual" render timer.
               // We'll restart it when we resume work.
               pauseActualRenderTimerIfRunning();

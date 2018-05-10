@@ -21,7 +21,7 @@ import {
   enableMutatingReconciler,
   enablePersistentReconciler,
   enableNoopReconciler,
-  enableProfileModeMetrics,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
@@ -598,7 +598,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case Mode:
         return null;
       case Profiler:
-        if (enableProfileModeMetrics) {
+        if (enableProfilerTimer) {
           recordElapsedActualRenderTime(workInProgress);
         }
         return null;

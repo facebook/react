@@ -14,13 +14,13 @@ let ReactFeatureFlags;
 let ReactTestRenderer;
 
 function loadModules({
-  enableProfileModeMetrics = true,
+  enableProfilerTimer = true,
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.debugRenderPhaseSideEffects = false;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-  ReactFeatureFlags.enableProfileModeMetrics = enableProfileModeMetrics;
+  ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
   ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
   React = require('react');
@@ -30,13 +30,13 @@ function loadModules({
 describe('Profiler', () => {
   describe('works in profiling and non-profiling bundles', () => {
     [true, false].forEach(flagEnabled => {
-      describe(`enableProfileModeMetrics ${
+      describe(`enableProfilerTimer ${
         flagEnabled ? 'enabled' : 'disabled'
       }`, () => {
         beforeEach(() => {
           jest.resetModules();
 
-          loadModules({enableProfileModeMetrics: flagEnabled});
+          loadModules({enableProfilerTimer: flagEnabled});
         });
 
         // This will throw in production too,
@@ -46,7 +46,7 @@ describe('Profiler', () => {
             expect(() => {
               ReactTestRenderer.create(<React.unstable_Profiler />);
             }).toThrow(
-              'ProfileMode must specify an "id" string and "onRender" function as props',
+              'Profiler must specify an "id" string and "onRender" function as props',
             );
           });
         }
@@ -83,7 +83,7 @@ describe('Profiler', () => {
           expect(renderer.toJSON()).toMatchSnapshot();
         });
 
-        it('should support nested ProfileModes', () => {
+        it('should support nested Profilers', () => {
           const FunctionalComponent = ({label}) => <div>{label}</div>;
           class ClassComponent extends React.Component {
             render() {

@@ -41,7 +41,7 @@ import {
 } from 'shared/ReactTypeOfSideEffect';
 import {
   enableGetDerivedStateFromCatch,
-  enableProfileModeMetrics,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
@@ -248,7 +248,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         popProvider(interruptedWork);
         break;
       case Profiler:
-        if (enableProfileModeMetrics) {
+        if (enableProfilerTimer) {
           // Resume in case we're picking up on work that was paused.
           resumeActualRenderTimerIfPaused();
           recordElapsedActualRenderTime(interruptedWork);

@@ -17,7 +17,7 @@ export const {
   enableGetDerivedStateFromCatch,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
-  enableProfileModeMetrics,
+  enableProfilerTimer,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.

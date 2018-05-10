@@ -15,7 +15,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 
 import invariant from 'fbjs/lib/invariant';
-import {enableProfileModeMetrics} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactTypeOfSideEffect';
 import {
   IndeterminateComponent,
@@ -211,7 +211,7 @@ function FiberNode(
 
   this.alternate = null;
 
-  if (enableProfileModeMetrics) {
+  if (enableProfilerTimer) {
     this.selfBaseTime = 0;
     this.treeBaseTime = 0;
   }
@@ -310,7 +310,7 @@ export function createWorkInProgress(
   workInProgress.index = current.index;
   workInProgress.ref = current.ref;
 
-  if (enableProfileModeMetrics) {
+  if (enableProfilerTimer) {
     workInProgress.selfBaseTime = current.selfBaseTime;
     workInProgress.treeBaseTime = current.treeBaseTime;
   }
@@ -361,12 +361,7 @@ export function createFiberFromElement(
         mode |= StrictMode;
         break;
       case REACT_PROFILER_TYPE:
-        return createFiberFromProfileMode(
-          pendingProps,
-          mode,
-          expirationTime,
-          key,
-        );
+        return createFiberFromProfiler(pendingProps, mode, expirationTime, key);
       case REACT_CALL_TYPE:
         fiberTag = CallComponent;
         break;
@@ -464,7 +459,7 @@ export function createFiberFromFragment(
   return fiber;
 }
 
-export function createFiberFromProfileMode(
+export function createFiberFromProfiler(
   pendingProps: any,
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
@@ -477,7 +472,7 @@ export function createFiberFromProfileMode(
     ) {
       invariant(
         false,
-        'ProfileMode must specify an "id" string and "onRender" function as props',
+        'Profiler must specify an "id" string and "onRender" function as props',
       );
     }
   }
@@ -562,7 +557,7 @@ export function assignFiberPropertiesInDEV(
   target.lastEffect = source.lastEffect;
   target.expirationTime = source.expirationTime;
   target.alternate = source.alternate;
-  if (enableProfileModeMetrics) {
+  if (enableProfilerTimer) {
     target.selfBaseTime = source.selfBaseTime;
     target.treeBaseTime = source.treeBaseTime;
   }
