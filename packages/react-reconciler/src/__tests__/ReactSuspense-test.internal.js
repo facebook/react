@@ -41,10 +41,10 @@ describe('ReactSuspense', () => {
     textResourceShouldFail = false;
   });
 
-  // function div(...children) {
-  //   children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-  //   return {type: 'div', children, prop: undefined};
-  // }
+  function div(...children) {
+    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
+    return {type: 'div', children, prop: undefined};
+  }
 
   function span(prop) {
     return {type: 'span', children: [], prop};
@@ -754,6 +754,42 @@ describe('ReactSuspense', () => {
       'Promise resolved [B]',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('C')]);
+  });
+
+  it('can hide a tree to unblock its surroundings', async () => {
+    function App() {
+      return (
+        <Timeout ms={1000}>
+          {didTimeout => (
+            <Fragment>
+              <div hidden={didTimeout}>
+                <AsyncText text="Async" ms={2000} />
+              </div>
+              {didTimeout ? <Text text="Loading..." /> : null}
+            </Fragment>
+          )}
+        </Timeout>
+      );
+    }
+
+    ReactNoop.render(<App />);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Async]']);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+    expect(ReactNoop.flush()).toEqual([
+      'Suspend! [Async]',
+      'Loading...',
+      'Suspend! [Async]',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([div(), span('Loading...')]);
+
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+
+    expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
+    expect(ReactNoop.getChildren()).toEqual([div(span('Async'))]);
   });
 
   describe('splitting a high-pri update into high and low', () => {
