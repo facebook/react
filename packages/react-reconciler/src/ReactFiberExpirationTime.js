@@ -29,8 +29,8 @@ export function expirationTimeToMs(expirationTime: ExpirationTime): number {
   return (expirationTime - MAGIC_NUMBER_OFFSET) * UNIT_SIZE;
 }
 
-function round(num: number, precision: number): number {
-  return ((num / precision) | 0) * precision;
+function ceiling(num: number, precision: number): number {
+  return (((num / precision) | 0) + 1) * precision;
 }
 
 export function computeExpirationBucket(
@@ -40,7 +40,7 @@ export function computeExpirationBucket(
 ): ExpirationTime {
   return (
     MAGIC_NUMBER_OFFSET +
-    round(
+    ceiling(
       currentTime - MAGIC_NUMBER_OFFSET + expirationInMs / UNIT_SIZE,
       bucketSizeMs / UNIT_SIZE,
     )

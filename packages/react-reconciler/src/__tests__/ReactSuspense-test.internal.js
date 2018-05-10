@@ -193,7 +193,7 @@ describe('ReactSuspense', () => {
       return (
         <Fallback>
           <ErrorBoundary ref={errorBoundary}>
-            <AsyncText text="Result" ms={100} />
+            <AsyncText text="Result" ms={1000} />
           </ErrorBoundary>
         </Fallback>
       );
@@ -204,8 +204,8 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
 
     textResourceShouldFail = true;
-    ReactNoop.expire(100);
-    await advanceTimers(100);
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
     textResourceShouldFail = false;
 
     expect(ReactNoop.flush()).toEqual([
@@ -222,8 +222,8 @@ describe('ReactSuspense', () => {
     cache.invalidate();
 
     expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
-    ReactNoop.expire(100);
-    await advanceTimers(100);
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
     expect(ReactNoop.flush()).toEqual(['Promise resolved [Result]', 'Result']);
     expect(ReactNoop.getChildren()).toEqual([span('Result')]);
   });
@@ -248,9 +248,9 @@ describe('ReactSuspense', () => {
     const errorBoundary = React.createRef();
     function App() {
       return (
-        <Fallback timeout={50} placeholder={<Text text="Loading..." />}>
+        <Fallback timeout={1000} placeholder={<Text text="Loading..." />}>
           <ErrorBoundary ref={errorBoundary}>
-            <AsyncText text="Result" ms={100} />
+            <AsyncText text="Result" ms={3000} />
           </ErrorBoundary>
         </Fallback>
       );
@@ -260,14 +260,14 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    ReactNoop.expire(50);
-    await advanceTimers(50);
+    ReactNoop.expire(2000);
+    await advanceTimers(2000);
     expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
     textResourceShouldFail = true;
-    ReactNoop.expire(50);
-    await advanceTimers(50);
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
     textResourceShouldFail = false;
 
     expect(ReactNoop.flush()).toEqual([
@@ -283,9 +283,9 @@ describe('ReactSuspense', () => {
     errorBoundary.current.reset();
     cache.invalidate();
 
-    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
-    ReactNoop.expire(100);
-    await advanceTimers(100);
+    expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
+    ReactNoop.expire(3000);
+    await advanceTimers(3000);
     expect(ReactNoop.flush()).toEqual(['Promise resolved [Result]', 'Result']);
     expect(ReactNoop.getChildren()).toEqual([span('Result')]);
   });
@@ -495,8 +495,8 @@ describe('ReactSuspense', () => {
 
     // Expire the outer timeout, but don't expire the inner one.
     // We should see the outer loading placeholder.
-    ReactNoop.expire(1000);
-    await advanceTimers(1000);
+    ReactNoop.expire(1500);
+    await advanceTimers(1500);
     expect(ReactNoop.flush()).toEqual([
       'Sync',
       // Still suspended.
@@ -600,8 +600,8 @@ describe('ReactSuspense', () => {
   it('expires early with a `timeout` option', async () => {
     ReactNoop.render(
       <Fragment>
-        <Fallback timeout={100} placeholder={<Text text="Loading..." />}>
-          <AsyncText text="Async" ms={1000} />
+        <Fallback timeout={1000} placeholder={<Text text="Loading..." />}>
+          <AsyncText text="Async" ms={3000} />
         </Fallback>
         <Text text="Sync" />
       </Fragment>,
@@ -619,8 +619,8 @@ describe('ReactSuspense', () => {
     // Advance both React's virtual time and Jest's timers by enough to trigger
     // the timeout, but not by enough to flush the promise or reach the true
     // expiration time.
-    ReactNoop.expire(120);
-    await advanceTimers(120);
+    ReactNoop.expire(2000);
+    await advanceTimers(2000);
     expect(ReactNoop.flush()).toEqual([
       // Still suspended.
       'Suspend! [Async]',
@@ -763,7 +763,7 @@ describe('ReactSuspense', () => {
           {didTimeout => (
             <Fragment>
               <div hidden={didTimeout}>
-                <AsyncText text="Async" ms={2000} />
+                <AsyncText text="Async" ms={3000} />
               </div>
               {didTimeout ? <Text text="Loading..." /> : null}
             </Fragment>
@@ -776,8 +776,8 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.flush()).toEqual(['Suspend! [Async]']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    ReactNoop.expire(1000);
-    await advanceTimers(1000);
+    ReactNoop.expire(2000);
+    await advanceTimers(2000);
     expect(ReactNoop.flush()).toEqual([
       'Suspend! [Async]',
       'Loading...',
@@ -932,13 +932,13 @@ describe('ReactSuspense', () => {
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([]);
 
-      await advanceTimers(999);
-      ReactNoop.expire(999);
+      await advanceTimers(800);
+      ReactNoop.expire(800);
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([]);
 
-      await advanceTimers(1);
-      ReactNoop.expire(1);
+      await advanceTimers(1000);
+      ReactNoop.expire(1000);
       ReactNoop.flush();
       expect(ReactNoop.getChildren()).toEqual([span('A')]);
     });

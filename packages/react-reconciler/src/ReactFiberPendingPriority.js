@@ -167,22 +167,7 @@ export function markPingedPriorityLevel(
     if (latestSuspendedTime !== NoWork && latestSuspendedTime <= pingedTime) {
       const latestPingedTime = root.latestPingedTime;
       if (latestPingedTime === NoWork || latestPingedTime < pingedTime) {
-        // TODO: At one point, we decided we'd always work on the lowest priority
-        // suspended level. Part of the reasoning was to avoid displaying
-        // intermediate suspended states, e.g. if you click on two tabs in quick
-        // succession, only the final tab should render. But we later realized
-        // that the correct solution to this problem is in user space, e.g. by
-        // using a setState updater for the lower priority update that refers
-        // to the most recent high priority value.
-        //
-        // The only reason we track the lowest suspended level is so we don't have
-        // to track *every* suspended level. It's good enough to work on the last
-        // one. But in case of a ping, we know exactly what level we received, so
-        // we can go ahead and work on that one.
-        //
-        // Consider using the commented-out line instead:
-        // root.latestPingedTime = pingedTime;
-        root.latestPingedTime = latestSuspendedTime;
+        root.latestPingedTime = pingedTime;
       }
     }
   }

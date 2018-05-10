@@ -49,7 +49,7 @@ import {
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
 
-import {Sync, expirationTimeToMs} from './ReactFiberExpirationTime';
+import {Never, Sync, expirationTimeToMs} from './ReactFiberExpirationTime';
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
@@ -182,7 +182,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
       const expirationTimeMs = expirationTimeToMs(renderExpirationTime);
       const startTimeMs = expirationTimeMs - 5000;
-      const elapsedMs = currentTimeMs - startTimeMs;
+      let elapsedMs = currentTimeMs - startTimeMs;
+      if (elapsedMs < 0) {
+        elapsedMs = 0;
+      }
       const remainingTimeMs = expirationTimeMs - currentTimeMs;
 
       // Find the earliest timeout of all the timeouts in the ancestor path.
@@ -221,7 +224,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Compute the remaining time until the timeout.
       const msUntilTimeout = earliestTimeoutMs - elapsedMs;
 
-      if (msUntilTimeout > 0) {
+      if (renderExpirationTime === Never || msUntilTimeout > 0) {
         // There's still time remaining.
         suspendRoot(root, thenable, msUntilTimeout, renderExpirationTime);
         const onResolveOrReject = () => {
