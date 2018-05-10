@@ -23,7 +23,6 @@ import ReactFiberReconciler from 'react-reconciler';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 import emptyObject from 'fbjs/lib/emptyObject';
-import warning from 'fbjs/lib/warning';
 
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
@@ -155,10 +154,13 @@ const ReactFabricRenderer = ReactFiberReconciler({
         }
       }
 
-      warning(
-        type !== 'RCTView' || !hostContext.isInAParentText,
-        'Nesting of <View> within <Text> is not currently supported.',
-      );
+      if (type === 'RCTView' && hostContext.isInAParentText) {
+        // Intentional use of console.error() rather than fbjs warning(),
+        // So that React Native redbox is used (rather than yellow box).
+        console.error(
+          'Nesting of <View> within <Text> is not currently supported.',
+        );
+      }
     }
 
     const updatePayload = ReactNativeAttributePayload.create(
@@ -189,10 +191,13 @@ const ReactFabricRenderer = ReactFiberReconciler({
     internalInstanceHandle: Object,
   ): TextInstance {
     if (__DEV__) {
-      warning(
-        hostContext.isInAParentText,
-        'Text strings must be rendered within a <Text>.',
-      );
+      if (!hostContext.isInAParentText) {
+        // Intentional use of console.error() rather than fbjs warning(),
+        // So that React Native redbox is used (rather than yellow box).
+        console.error(
+          'Text strings must be rendered within a <Text> component.',
+        );
+      }
     }
 
     const tag = nextReactTag;
