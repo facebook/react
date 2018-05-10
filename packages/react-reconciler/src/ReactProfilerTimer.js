@@ -9,6 +9,8 @@
 
 import type {Fiber} from './ReactFiber';
 
+import {enableProfileModeMetrics} from 'shared/ReactFeatureFlags';
+
 import warning from 'fbjs/lib/warning';
 
 /**
@@ -114,15 +116,29 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
     baseStartTime = -1;
   }
 
-  return {
-    checkActualRenderTimeStackEmpty,
-    markActualRenderTimeStarted,
-    pauseActualRenderTimerIfRunning,
-    recordElapsedActualRenderTime,
-    resetActualRenderTimer,
-    resumeActualRenderTimerIfPaused,
-    recordElapsedBaseRenderTimeIfRunning,
-    startBaseRenderTimer,
-    stopBaseRenderTimerIfRunning,
-  };
+  if (enableProfileModeMetrics) {
+    return {
+      checkActualRenderTimeStackEmpty,
+      markActualRenderTimeStarted,
+      pauseActualRenderTimerIfRunning,
+      recordElapsedActualRenderTime,
+      resetActualRenderTimer,
+      resumeActualRenderTimerIfPaused,
+      recordElapsedBaseRenderTimeIfRunning,
+      startBaseRenderTimer,
+      stopBaseRenderTimerIfRunning,
+    };
+  } else {
+    return {
+      checkActualRenderTimeStackEmpty(): void {},
+      markActualRenderTimeStarted(fiber: Fiber): void {},
+      pauseActualRenderTimerIfRunning(): void {},
+      recordElapsedActualRenderTime(fiber: Fiber): void {},
+      resetActualRenderTimer(): void {},
+      resumeActualRenderTimerIfPaused(): void {},
+      recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void {},
+      startBaseRenderTimer(): void {},
+      stopBaseRenderTimerIfRunning(): void {},
+    };
+  }
 }
