@@ -180,7 +180,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
     }
-    const nextChildren = render(nextProps, ref);
+
+    let nextChildren;
+    if (__DEV__) {
+      ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.setCurrentPhase('render');
+      nextChildren = render(nextProps, ref);
+      ReactDebugCurrentFiber.setCurrentPhase(null);
+    } else {
+      nextChildren = render(nextProps, ref);
+    }
+
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
@@ -1022,7 +1032,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
 
-    const newChildren = render(newValue);
+    let newChildren;
+    if (__DEV__) {
+      ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.setCurrentPhase('render');
+      newChildren = render(newValue);
+      ReactDebugCurrentFiber.setCurrentPhase(null);
+    } else {
+      newChildren = render(newValue);
+    }
+
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, newChildren);
