@@ -233,7 +233,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         thenable.then(onResolveOrReject, onResolveOrReject);
         return;
       } else {
-        // No time remaining. Need to fallback to palceholder.
+        // No time remaining. Need to fallback to placeholder.
         // Find the nearest timeout that can be retried.
         workInProgress = returnFiber;
         do {
