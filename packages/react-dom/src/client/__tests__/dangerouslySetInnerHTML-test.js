@@ -91,4 +91,14 @@ describe('dangerouslySetInnerHTML', () => {
       expect(circle.tagName).toBe('circle');
     });
   });
+
+  it('when rendering an object with a toString method', () => {
+    const container = document.createElement('div');
+    const HelloObject = {toString: () => 'Hello'};
+    const node = ReactDOM.render(
+      <div dangerouslySetInnerHTML={{__html: HelloObject}} />,
+      container,
+    );
+    expect(node.textContent).toBe('Hello');
+  });
 });
