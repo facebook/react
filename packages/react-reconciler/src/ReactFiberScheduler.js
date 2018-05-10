@@ -59,11 +59,11 @@ import ReactFiberHydrationContext from './ReactFiberHydrationContext';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {
-  addPendingPriorityLevel,
-  flushPendingPriorityLevel,
+  markPendingPriorityLevel,
+  markCommittedPriorityLevels,
   findNextPendingPriorityLevel,
-  suspendPriorityLevel,
-  resumePriorityLevel,
+  markSuspendedPriorityLevel,
+  markPingedPriorityLevel,
 } from './ReactFiberPendingPriority';
 import {
   recordEffect,
@@ -716,7 +716,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
     }
 
-    flushPendingPriorityLevel(root, currentTime, root.current.expirationTime);
+    markCommittedPriorityLevels(root, currentTime, root.current.expirationTime);
     const remainingTime = findNextPendingPriorityLevel(root);
     if (remainingTime === NoWork) {
       // If there's no remaining work, we can clear the set of already failed
@@ -1141,7 +1141,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           'Expired work should have completed. This error is likely caused ' +
             'by a bug in React. Please file an issue.',
         );
-        suspendPriorityLevel(root, expirationTime);
+        markSuspendedPriorityLevel(root, expirationTime);
         if (nextLatestTimeoutMs >= 0) {
           setTimeout(() => {
             retrySuspendedRoot(root, expirationTime);
@@ -1332,7 +1332,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function retrySuspendedRoot(root, suspendedTime) {
-    resumePriorityLevel(root, suspendedTime);
+    markPingedPriorityLevel(root, suspendedTime);
     const retryTime = findNextPendingPriorityLevel(root);
     if (retryTime !== NoWork) {
       requestRetry(root, retryTime);
@@ -1379,7 +1379,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             interruptedBy = fiber;
             resetStack();
           }
-          addPendingPriorityLevel(root, expirationTime);
+          markPendingPriorityLevel(root, expirationTime);
           const nextExpirationTimeToWorkOn = findNextPendingPriorityLevel(root);
           if (
             // If we're in the render phase, we don't need to schedule this root

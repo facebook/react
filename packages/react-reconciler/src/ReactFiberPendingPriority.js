@@ -16,7 +16,7 @@ import {enableSuspense} from 'shared/ReactFeatureFlags';
 
 // TODO: Offscreen updates
 
-export function addPendingPriorityLevel(
+export function markPendingPriorityLevel(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ): void {
@@ -41,7 +41,7 @@ export function addPendingPriorityLevel(
   }
 }
 
-export function flushPendingPriorityLevel(
+export function markCommittedPriorityLevels(
   root: FiberRoot,
   currentTime: ExpirationTime,
   earliestRemainingTime: ExpirationTime,
@@ -81,7 +81,7 @@ export function flushPendingPriorityLevel(
     if (earliestSuspendedTime === NoWork) {
       // There's no suspended work. Treat the earliest remaining level as a
       // pending level.
-      addPendingPriorityLevel(root, earliestRemainingTime);
+      markPendingPriorityLevel(root, earliestRemainingTime);
       return;
     }
 
@@ -95,14 +95,14 @@ export function flushPendingPriorityLevel(
 
       // There's no suspended work. Treat the earliest remaining level as a
       // pending level.
-      addPendingPriorityLevel(root, earliestRemainingTime);
+      markPendingPriorityLevel(root, earliestRemainingTime);
       return;
     }
 
     if (earliestRemainingTime < earliestSuspendedTime) {
       // The earliest remaining time is earlier than all the suspended work.
       // Treat it as a pending update.
-      addPendingPriorityLevel(root, earliestRemainingTime);
+      markPendingPriorityLevel(root, earliestRemainingTime);
       return;
     }
 
@@ -111,7 +111,7 @@ export function flushPendingPriorityLevel(
   }
 }
 
-export function suspendPriorityLevel(
+export function markSuspendedPriorityLevel(
   root: FiberRoot,
   suspendedTime: ExpirationTime,
 ): void {
@@ -135,6 +135,7 @@ export function suspendPriorityLevel(
     }
 
     // Next, if we're working on the lowest known suspended level, clear the ping.
+    // TODO: What if a promise suspends and pings before the root completes?
     const latestSuspendedTime = root.latestSuspendedTime;
     if (latestSuspendedTime === suspendedTime) {
       root.latestPingedTime = NoWork;
@@ -157,7 +158,7 @@ export function suspendPriorityLevel(
   }
 }
 
-export function resumePriorityLevel(
+export function markPingedPriorityLevel(
   root: FiberRoot,
   pingedTime: ExpirationTime,
 ): void {
