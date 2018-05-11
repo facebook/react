@@ -91,6 +91,7 @@ export type ReactContext<T> = {
 
   // DEV only
   _currentRenderer?: Object | null,
+  _currentRenderer_secondary?: Object | null,
 };
 
 export type ReactPortal = {

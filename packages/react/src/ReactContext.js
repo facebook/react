@@ -57,6 +57,7 @@ export function createContext<T>(
 
   if (__DEV__) {
     context._currentRenderer = null;
+    context._currentRenderer_secondary = null;
   }
 
   return context;

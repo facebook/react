@@ -18,12 +18,20 @@ export type NewContext = {
   getContextChangedBits(context: ReactContext<any>): number,
 };
 
+import warning from 'fbjs/lib/warning';
+
 export default function(stack: Stack, isPrimaryRenderer: boolean) {
   const {createCursor, push, pop} = stack;
 
   const providerCursor: StackCursor<Fiber | null> = createCursor(null);
   const valueCursor: StackCursor<mixed> = createCursor(null);
   const changedBitsCursor: StackCursor<number> = createCursor(0);
+
+  let rendererSigil;
+  if (__DEV__) {
+    // Use this to detect multiple renderers using the same context
+    rendererSigil = {};
+  }
 
   function pushProvider(providerFiber: Fiber): void {
     const context: ReactContext<any> = providerFiber.type._context;
@@ -35,6 +43,15 @@ export default function(stack: Stack, isPrimaryRenderer: boolean) {
 
       context._currentValue = providerFiber.pendingProps.value;
       context._changedBits = providerFiber.stateNode;
+      if (__DEV__) {
+        warning(
+          context._currentRenderer === null ||
+            context._currentRenderer === rendererSigil,
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+        context._currentRenderer = rendererSigil;
+      }
     } else {
       push(changedBitsCursor, context._changedBits_secondary, providerFiber);
       push(valueCursor, context._currentValue_secondary, providerFiber);
@@ -42,6 +59,15 @@ export default function(stack: Stack, isPrimaryRenderer: boolean) {
 
       context._currentValue_secondary = providerFiber.pendingProps.value;
       context._changedBits_secondary = providerFiber.stateNode;
+      if (__DEV__) {
+        warning(
+          context._currentRenderer_secondary === null ||
+            context._currentRenderer_secondary === rendererSigil,
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+        context._currentRenderer_secondary = rendererSigil;
+      }
     }
   }
 
