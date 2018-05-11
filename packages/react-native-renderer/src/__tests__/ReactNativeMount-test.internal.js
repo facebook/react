@@ -183,7 +183,7 @@ describe('ReactNative', () => {
     expect(mockArgs.length).toEqual(0);
   });
 
-  it('should warn about <View> inside of a <Text> ancestor', () => {
+  it('should throw when <View> is used inside of a <Text> ancestor', () => {
     const Image = createReactNativeComponentClass('RCTImage', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTImage',
@@ -204,7 +204,7 @@ describe('ReactNative', () => {
         </Text>,
         11,
       ),
-    ).toWarnDev('Nesting of <View> within <Text> is not currently supported.');
+    ).toThrow('Nesting of <View> within <Text> is not currently supported.');
 
     // Non-View things (e.g. Image) are fine
     ReactNative.render(
@@ -215,7 +215,7 @@ describe('ReactNative', () => {
     );
   });
 
-  it('should warn about text not inside of a <Text> ancestor', () => {
+  it('should throw for text not inside of a <Text> ancestor', () => {
     const ScrollView = createReactNativeComponentClass('RCTScrollView', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTScrollView',
@@ -229,9 +229,9 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    expect(() =>
-      ReactNative.render(<View>this should warn</View>, 11),
-    ).toWarnDev('Text strings must be rendered within a <Text> component.');
+    expect(() => ReactNative.render(<View>this should warn</View>, 11)).toThrow(
+      'Text strings must be rendered within a <Text> component.',
+    );
 
     expect(() =>
       ReactNative.render(
@@ -240,10 +240,10 @@ describe('ReactNative', () => {
         </Text>,
         11,
       ),
-    ).toWarnDev('Text strings must be rendered within a <Text> component.');
+    ).toThrow('Text strings must be rendered within a <Text> component.');
   });
 
-  it('should not warn warn about text inside of an indirect <Text> ancestor', () => {
+  it('should not throw for text inside of an indirect <Text> ancestor', () => {
     const Text = createReactNativeComponentClass('RCTText', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTText',

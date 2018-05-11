@@ -88,15 +88,12 @@ const NativeRenderer = ReactFiberReconciler({
           deepFreezeAndThrowOnMutationInDev(props[key]);
         }
       }
-
-      if (type === 'RCTView' && hostContext.isInAParentText) {
-        // Intentional use of console.error() rather than fbjs warning(),
-        // So that React Native redbox is used (rather than yellow box).
-        console.error(
-          'Nesting of <View> within <Text> is not currently supported.',
-        );
-      }
     }
+
+    invariant(
+      type !== 'RCTView' || !hostContext.isInAParentText,
+      'Nesting of <View> within <Text> is not currently supported.',
+    );
 
     const updatePayload = ReactNativeAttributePayload.create(
       props,
@@ -126,15 +123,10 @@ const NativeRenderer = ReactFiberReconciler({
     hostContext: HostContext,
     internalInstanceHandle: Object,
   ): TextInstance {
-    if (__DEV__) {
-      if (!hostContext.isInAParentText) {
-        // Intentional use of console.error() rather than fbjs warning(),
-        // So that React Native redbox is used (rather than yellow box).
-        console.error(
-          'Text strings must be rendered within a <Text> component.',
-        );
-      }
-    }
+    invariant(
+      hostContext.isInAParentText,
+      'Text strings must be rendered within a <Text> component.',
+    );
 
     const tag = allocateTag();
 
@@ -179,30 +171,26 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   getRootHostContext(rootContainerInstance: Container): HostContext {
-    return __DEV__ ? {isInAParentText: false} : emptyObject;
+    return {isInAParentText: false};
   },
 
   getChildHostContext(
     parentHostContext: HostContext,
     type: string,
   ): HostContext {
-    if (__DEV__) {
-      const prevIsInAParentText = parentHostContext.isInAParentText;
-      const isInAParentText =
-        type === 'AndroidTextInput' ||
-        type === 'RCTMultilineTextInputView' ||
-        type === 'RCTText' ||
-        type === 'RCTSinglelineTextInputView' ||
-        type === 'RCTVirtualText';
+    const prevIsInAParentText = parentHostContext.isInAParentText;
+    const isInAParentText =
+      type === 'AndroidTextInput' ||
+      type === 'RCTMultilineTextInputView' ||
+      type === 'RCTText' ||
+      type === 'RCTSinglelineTextInputView' ||
+      type === 'RCTVirtualText';
 
-      if (prevIsInAParentText !== isInAParentText) {
-        return {isInAParentText};
-      } else {
-        return parentHostContext;
-      }
+    if (prevIsInAParentText !== isInAParentText) {
+      return {isInAParentText};
+    } else {
+      return parentHostContext;
     }
-
-    return emptyObject;
   },
 
   getPublicInstance(instance) {
