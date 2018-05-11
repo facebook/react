@@ -11,14 +11,16 @@ import type {Fiber} from './ReactFiber';
 import type {ReactContext} from 'shared/ReactTypes';
 import type {StackCursor, Stack} from './ReactFiberStack';
 
-import warning from 'fbjs/lib/warning';
-
 export type NewContext = {
   pushProvider(providerFiber: Fiber): void,
   popProvider(providerFiber: Fiber): void,
+  getContextCurrentValue(context: ReactContext<any>): any,
+  getContextChangedBits(context: ReactContext<any>): number,
 };
 
-export default function(stack: Stack) {
+import warning from 'fbjs/lib/warning';
+
+export default function(stack: Stack, isPrimaryRenderer: boolean) {
   const {createCursor, push, pop} = stack;
 
   const providerCursor: StackCursor<Fiber | null> = createCursor(null);
@@ -34,21 +36,38 @@ export default function(stack: Stack) {
   function pushProvider(providerFiber: Fiber): void {
     const context: ReactContext<any> = providerFiber.type._context;
 
-    push(changedBitsCursor, context._changedBits, providerFiber);
-    push(valueCursor, context._currentValue, providerFiber);
-    push(providerCursor, providerFiber, providerFiber);
+    if (isPrimaryRenderer) {
+      push(changedBitsCursor, context._changedBits, providerFiber);
+      push(valueCursor, context._currentValue, providerFiber);
+      push(providerCursor, providerFiber, providerFiber);
 
-    context._currentValue = providerFiber.pendingProps.value;
-    context._changedBits = providerFiber.stateNode;
+      context._currentValue = providerFiber.pendingProps.value;
+      context._changedBits = providerFiber.stateNode;
+      if (__DEV__) {
+        warning(
+          context._currentRenderer === null ||
+            context._currentRenderer === rendererSigil,
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+        context._currentRenderer = rendererSigil;
+      }
+    } else {
+      push(changedBitsCursor, context._changedBits2, providerFiber);
+      push(valueCursor, context._currentValue2, providerFiber);
+      push(providerCursor, providerFiber, providerFiber);
 
-    if (__DEV__) {
-      warning(
-        context._currentRenderer === null ||
-          context._currentRenderer === rendererSigil,
-        'Detected multiple renderers concurrently rendering the ' +
-          'same context provider. This is currently unsupported.',
-      );
-      context._currentRenderer = rendererSigil;
+      context._currentValue2 = providerFiber.pendingProps.value;
+      context._changedBits2 = providerFiber.stateNode;
+      if (__DEV__) {
+        warning(
+          context._currentRenderer2 === null ||
+            context._currentRenderer2 === rendererSigil,
+          'Detected multiple renderers concurrently rendering the ' +
+            'same context provider. This is currently unsupported.',
+        );
+        context._currentRenderer2 = rendererSigil;
+      }
     }
   }
 
@@ -61,12 +80,27 @@ export default function(stack: Stack) {
     pop(changedBitsCursor, providerFiber);
 
     const context: ReactContext<any> = providerFiber.type._context;
-    context._currentValue = currentValue;
-    context._changedBits = changedBits;
+    if (isPrimaryRenderer) {
+      context._currentValue = currentValue;
+      context._changedBits = changedBits;
+    } else {
+      context._currentValue2 = currentValue;
+      context._changedBits2 = changedBits;
+    }
+  }
+
+  function getContextCurrentValue(context: ReactContext<any>): any {
+    return isPrimaryRenderer ? context._currentValue : context._currentValue2;
+  }
+
+  function getContextChangedBits(context: ReactContext<any>): number {
+    return isPrimaryRenderer ? context._changedBits : context._changedBits2;
   }
 
   return {
     pushProvider,
     popProvider,
+    getContextCurrentValue,
+    getContextChangedBits,
   };
 }
