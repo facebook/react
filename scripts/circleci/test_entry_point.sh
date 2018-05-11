@@ -33,7 +33,8 @@ if [ $((2 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
 fi
 
 if [ $((3 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
- # COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
+  true
+  # COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
 fi
 
 RETURN_CODES=()
