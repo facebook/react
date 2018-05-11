@@ -298,7 +298,11 @@ class Updater {
     const currentState = this._renderer._newState || publicInstance.state;
 
     if (typeof partialState === 'function') {
-      partialState = partialState(currentState, publicInstance.props);
+      partialState = partialState.call(
+        publicInstance,
+        currentState,
+        publicInstance.props,
+      );
     }
 
     // Null and undefined are treated as no-ops.

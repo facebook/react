@@ -945,6 +945,27 @@ describe('ReactShallowRenderer', () => {
     expect(result.props.children).toEqual(2);
   });
 
+  it('can access component instance from setState updater function', done => {
+    let instance;
+
+    class SimpleComponent extends React.Component {
+      state = {};
+
+      render() {
+        instance = this;
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+
+    instance.setState(function updater(state, props) {
+      expect(this).toBe(instance);
+      done();
+    });
+  });
+
   it('can setState with a callback', () => {
     let instance;
 
