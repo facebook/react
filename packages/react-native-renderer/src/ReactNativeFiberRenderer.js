@@ -180,10 +180,10 @@ const NativeRenderer = ReactFiberReconciler({
   ): HostContext {
     const prevIsInAParentText = parentHostContext.isInAParentText;
     const isInAParentText =
-      type === 'AndroidTextInput' ||
-      type === 'RCTMultilineTextInputView' ||
+      type === 'AndroidTextInput' || // Android
+      type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSinglelineTextInputView' || // iOS
       type === 'RCTText' ||
-      type === 'RCTSinglelineTextInputView' ||
       type === 'RCTVirtualText';
 
     if (prevIsInAParentText !== isInAParentText) {
