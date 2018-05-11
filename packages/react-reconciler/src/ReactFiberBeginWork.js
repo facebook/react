@@ -36,19 +36,21 @@ import {
   ContextProvider,
   ContextConsumer,
   Profiler,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
   NoEffect,
   PerformedWork,
   Placement,
   ContentReset,
-  Ref,
   DidCapture,
   Update,
+  Ref,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
   enableGetDerivedStateFromCatch,
+  enableSuspense,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
@@ -91,8 +93,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  computeExpirationForFiber: (
+    startTime: ExpirationTime,
+    fiber: Fiber,
+  ) => ExpirationTime,
   profilerTimer: ProfilerTimer,
+  recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
@@ -132,6 +138,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     computeExpirationForFiber,
     memoizeProps,
     memoizeState,
+    recalculateCurrentTime,
   );
 
   // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
@@ -758,6 +765,41 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return workInProgress.stateNode;
   }
 
+  function updateTimeoutComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
+    if (enableSuspense) {
+      const nextProps = workInProgress.pendingProps;
+      const prevProps = workInProgress.memoizedProps;
+
+      const prevDidTimeout = workInProgress.memoizedState;
+
+      // Check if we already attempted to render the normal state. If we did,
+      // and we timed out, render the placeholder state.
+      const alreadyCaptured =
+        (workInProgress.effectTag & DidCapture) === NoEffect;
+      const nextDidTimeout = !alreadyCaptured;
+
+      if (hasLegacyContextChanged()) {
+        // Normally we can bail out on props equality but if context has changed
+        // we don't do the bailout and we have to reuse existing props instead.
+      } else if (nextProps === prevProps && nextDidTimeout === prevDidTimeout) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+
+      const render = nextProps.children;
+      const nextChildren = render(nextDidTimeout);
+      workInProgress.memoizedProps = nextProps;
+      workInProgress.memoizedState = nextDidTimeout;
+      reconcileChildren(current, workInProgress, nextChildren);
+      return workInProgress.child;
+    } else {
+      return null;
+    }
+  }
+
   function updatePortalComponent(
     current,
     workInProgress,
@@ -1209,6 +1251,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // A return component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
+      case TimeoutComponent:
+        return updateTimeoutComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case HostPortal:
         return updatePortalComponent(
           current,

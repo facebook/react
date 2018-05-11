@@ -38,8 +38,11 @@ export function computeExpirationBucket(
   expirationInMs: number,
   bucketSizeMs: number,
 ): ExpirationTime {
-  return ceiling(
-    currentTime + expirationInMs / UNIT_SIZE,
-    bucketSizeMs / UNIT_SIZE,
+  return (
+    MAGIC_NUMBER_OFFSET +
+    ceiling(
+      currentTime - MAGIC_NUMBER_OFFSET + expirationInMs / UNIT_SIZE,
+      bucketSizeMs / UNIT_SIZE,
+    )
   );
 }

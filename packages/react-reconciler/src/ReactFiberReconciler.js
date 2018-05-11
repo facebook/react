@@ -317,7 +317,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function scheduleRootUpdate(
     current: Fiber,
     element: ReactNodeList,
-    currentTime: ExpirationTime,
     expirationTime: ExpirationTime,
     callback: ?Function,
   ) {
@@ -364,7 +363,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
-    currentTime: ExpirationTime,
     expirationTime: ExpirationTime,
     callback: ?Function,
   ) {
@@ -390,13 +388,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       container.pendingContext = context;
     }
 
-    return scheduleRootUpdate(
-      current,
-      element,
-      currentTime,
-      expirationTime,
-      callback,
-    );
+    return scheduleRootUpdate(current, element, expirationTime, callback);
   }
 
   function findHostInstance(component: Object): PI | null {
@@ -436,12 +428,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     ): ExpirationTime {
       const current = container.current;
       const currentTime = recalculateCurrentTime();
-      const expirationTime = computeExpirationForFiber(current);
+      const expirationTime = computeExpirationForFiber(currentTime, current);
       return updateContainerAtExpirationTime(
         element,
         container,
         parentComponent,
-        currentTime,
         expirationTime,
         callback,
       );
@@ -454,12 +445,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       expirationTime,
       callback,
     ) {
-      const currentTime = recalculateCurrentTime();
       return updateContainerAtExpirationTime(
         element,
         container,
         parentComponent,
-        currentTime,
         expirationTime,
         callback,
       );
