@@ -53,20 +53,20 @@ export default function(stack: Stack, isPrimaryRenderer: boolean) {
         context._currentRenderer = rendererSigil;
       }
     } else {
-      push(changedBitsCursor, context._changedBits_secondary, providerFiber);
-      push(valueCursor, context._currentValue_secondary, providerFiber);
+      push(changedBitsCursor, context._changedBits2, providerFiber);
+      push(valueCursor, context._currentValue2, providerFiber);
       push(providerCursor, providerFiber, providerFiber);
 
-      context._currentValue_secondary = providerFiber.pendingProps.value;
-      context._changedBits_secondary = providerFiber.stateNode;
+      context._currentValue2 = providerFiber.pendingProps.value;
+      context._changedBits2 = providerFiber.stateNode;
       if (__DEV__) {
         warning(
-          context._currentRenderer_secondary === null ||
-            context._currentRenderer_secondary === rendererSigil,
+          context._currentRenderer2 === null ||
+            context._currentRenderer2 === rendererSigil,
           'Detected multiple renderers concurrently rendering the ' +
             'same context provider. This is currently unsupported.',
         );
-        context._currentRenderer_secondary = rendererSigil;
+        context._currentRenderer2 = rendererSigil;
       }
     }
   }
@@ -84,21 +84,17 @@ export default function(stack: Stack, isPrimaryRenderer: boolean) {
       context._currentValue = currentValue;
       context._changedBits = changedBits;
     } else {
-      context._currentValue_secondary = currentValue;
-      context._changedBits_secondary = changedBits;
+      context._currentValue2 = currentValue;
+      context._changedBits2 = changedBits;
     }
   }
 
   function getContextCurrentValue(context: ReactContext<any>): any {
-    return isPrimaryRenderer
-      ? context._currentValue
-      : context._currentValue_secondary;
+    return isPrimaryRenderer ? context._currentValue : context._currentValue2;
   }
 
   function getContextChangedBits(context: ReactContext<any>): number {
-    return isPrimaryRenderer
-      ? context._changedBits
-      : context._changedBits_secondary;
+    return isPrimaryRenderer ? context._changedBits : context._changedBits2;
   }
 
   return {

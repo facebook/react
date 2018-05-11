@@ -41,9 +41,9 @@ export function createContext<T>(
     // there to be two concurrent renderers at most: React Native (primary) and
     // Fabric (secondary); React DOM (primary) and React ART (secondary).
     // Secondary renderers store their context values on separate fields.
-    _currentValue_secondary: defaultValue,
+    _currentValue2: defaultValue,
     _changedBits: 0,
-    _changedBits_secondary: 0,
+    _changedBits2: 0,
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),
@@ -57,7 +57,7 @@ export function createContext<T>(
 
   if (__DEV__) {
     context._currentRenderer = null;
-    context._currentRenderer_secondary = null;
+    context._currentRenderer2 = null;
   }
 
   return context;
