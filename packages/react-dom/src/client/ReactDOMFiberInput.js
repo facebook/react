@@ -169,9 +169,10 @@ export function updateWrapper(element: Element, props: Object) {
   updateChecked(element, props);
 
   const value = getSafeValue(props.value);
+  const type = props.type;
 
   if (value != null) {
-    if (props.type === 'number') {
+    if (type === 'number') {
       if (
         (value === 0 && node.value === '') ||
         // eslint-disable-next-line
@@ -182,6 +183,11 @@ export function updateWrapper(element: Element, props: Object) {
     } else if (node.value !== '' + value) {
       node.value = '' + value;
     }
+  } else if (type === 'submit' || type === 'reset') {
+    // Submit/reset inputs need the attribute removed completely to avoid
+    // blank-text buttons.
+    node.removeAttribute('value');
+    return;
   }
 
   if (props.hasOwnProperty('value')) {
@@ -203,6 +209,15 @@ export function postMountWrapper(
   const node = ((element: any): InputWithWrapperState);
 
   if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
+    // Avoid setting value attribute on submit/reset inputs as it overrides the
+    // default value provided by the browser. See: #12872
+    if (
+      (props.type === 'submit' || props.type === 'reset') &&
+      (props.value === undefined || props.value === null)
+    ) {
+      return;
+    }
+
     const initialValue = '' + node._wrapperState.initialValue;
     const currentValue = node.value;
 

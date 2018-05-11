@@ -752,15 +752,86 @@ describe('ReactDOMInput', () => {
 
   it('should not set a value for submit buttons unnecessarily', () => {
     const stub = <input type="submit" />;
-    const node = ReactDOM.render(stub, container);
+    ReactDOM.render(stub, container);
+    const node = container.firstChild;
 
     // The value shouldn't be '', or else the button will have no text; it
     // should have the default "Submit" or "Submit Query" label. Most browsers
     // report this as not having a `value` attribute at all; IE reports it as
     // the actual label that the user sees.
-    expect(
-      !node.hasAttribute('value') || node.getAttribute('value').length > 0,
-    ).toBe(true);
+    expect(node.hasAttribute('value')).toBe(false);
+  });
+
+  it('should remove the value attribute on submit inputs when value is updated to undefined', () => {
+    const stub = <input type="submit" value="foo" onChange={emptyFunction} />;
+    ReactDOM.render(stub, container);
+
+    // Not really relevant to this particular test, but changing to undefined
+    // should nonetheless trigger a warning
+    expect(() =>
+      ReactDOM.render(
+        <input type="submit" value={undefined} onChange={emptyFunction} />,
+        container,
+      ),
+    ).toWarnDev(
+      'A component is changing a controlled input of type ' +
+        'submit to be uncontrolled.',
+    );
+
+    const node = container.firstChild;
+    expect(node.getAttribute('value')).toBe(null);
+  });
+
+  it('should remove the value attribute on reset inputs when value is updated to undefined', () => {
+    const stub = <input type="reset" value="foo" onChange={emptyFunction} />;
+    ReactDOM.render(stub, container);
+
+    // Not really relevant to this particular test, but changing to undefined
+    // should nonetheless trigger a warning
+    expect(() =>
+      ReactDOM.render(
+        <input type="reset" value={undefined} onChange={emptyFunction} />,
+        container,
+      ),
+    ).toWarnDev(
+      'A component is changing a controlled input of type ' +
+        'reset to be uncontrolled.',
+    );
+
+    const node = container.firstChild;
+    expect(node.getAttribute('value')).toBe(null);
+  });
+
+  it('should set a value on a submit input', () => {
+    let stub = <input type="submit" value="banana" />;
+    ReactDOM.render(stub, container);
+    const node = container.firstChild;
+
+    expect(node.getAttribute('value')).toBe('banana');
+  });
+
+  it('should set a value on a reset input', () => {
+    let stub = <input type="reset" value="banana" />;
+    ReactDOM.render(stub, container);
+    const node = container.firstChild;
+
+    expect(node.getAttribute('value')).toBe('banana');
+  });
+
+  it('should set an empty string value on a submit input', () => {
+    let stub = <input type="submit" value="" />;
+    ReactDOM.render(stub, container);
+    const node = container.firstChild;
+
+    expect(node.getAttribute('value')).toBe('');
+  });
+
+  it('should set an empty string value on a reset input', () => {
+    let stub = <input type="reset" value="" />;
+    ReactDOM.render(stub, container);
+    const node = container.firstChild;
+
+    expect(node.getAttribute('value')).toBe('');
   });
 
   it('should control radio buttons', () => {
