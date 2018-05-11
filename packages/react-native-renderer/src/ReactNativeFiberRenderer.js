@@ -36,9 +36,9 @@ export type Instance = {
 type Props = Object;
 type TextInstance = number;
 
-type HostContext = {
+type HostContext = $ReadOnly<{|
   isInAParentText: boolean,
-};
+|}>;
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
@@ -221,7 +221,7 @@ const NativeRenderer = ReactFiberReconciler({
     oldProps: Props,
     newProps: Props,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
   ): null | Object {
     return emptyObject;
   },

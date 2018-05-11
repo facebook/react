@@ -35,9 +35,9 @@ import UIManager from 'UIManager';
 // This means that they never overlap.
 let nextReactTag = 2;
 
-type HostContext = {
+type HostContext = $ReadOnly<{|
   isInAParentText: boolean,
-};
+|}>;
 
 /**
  * This is used for refs on host components.
@@ -268,7 +268,7 @@ const ReactFabricRenderer = ReactFiberReconciler({
     oldProps: Props,
     newProps: Props,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
   ): null | Object {
     const viewConfig = instance.canonical.viewConfig;
     const updatePayload = ReactNativeAttributePayload.diff(
