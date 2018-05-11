@@ -9,7 +9,6 @@
 
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
@@ -222,7 +221,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function commitLifeCycles(
-    finishedRoot: FiberRoot,
     current: Fiber | null,
     finishedWork: Fiber,
     currentTime: ExpirationTime,

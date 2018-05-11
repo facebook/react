@@ -473,7 +473,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function commitAllLifeCycles(
-    finishedRoot: FiberRoot,
     currentTime: ExpirationTime,
     committedExpirationTime: ExpirationTime,
   ) {
@@ -491,7 +490,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         recordEffect();
         const current = nextEffect.alternate;
         commitLifeCycles(
-          finishedRoot,
           current,
           nextEffect,
           currentTime,
@@ -668,7 +666,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         invokeGuardedCallback(
           null,
           commitAllLifeCycles,
-          null,
           root,
           currentTime,
           committedExpirationTime,
@@ -679,7 +676,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
       } else {
         try {
-          commitAllLifeCycles(root, currentTime, committedExpirationTime);
+          commitAllLifeCycles(currentTime, committedExpirationTime);
         } catch (e) {
           didError = true;
           error = e;
