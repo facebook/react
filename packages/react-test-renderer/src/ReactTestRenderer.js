@@ -226,6 +226,8 @@ const TestRenderer = ReactFiberReconciler({
   // Even after the reconciler has initialized and read host config values.
   now: () => nowImplementation(),
 
+  isPrimaryRenderer: true,
+
   mutation: {
     commitUpdate(
       instance: Instance,

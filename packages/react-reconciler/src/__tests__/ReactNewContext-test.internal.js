@@ -724,46 +724,6 @@ describe('ReactNewContext', () => {
     }
   });
 
-  it('warns if multiple renderers concurrently render the same context', () => {
-    spyOnDev(console, 'error');
-    const Context = React.createContext(0);
-
-    function Foo(props) {
-      ReactNoop.yield('Foo');
-      return null;
-    }
-
-    function App(props) {
-      return (
-        <Context.Provider value={props.value}>
-          <Foo />
-          <Foo />
-        </Context.Provider>
-      );
-    }
-
-    ReactNoop.render(<App value={1} />);
-    // Render past the Provider, but don't commit yet
-    ReactNoop.flushThrough(['Foo']);
-
-    // Get a new copy of ReactNoop
-    jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    React = require('react');
-    ReactNoop = require('react-noop-renderer');
-
-    // Render the provider again using a different renderer
-    ReactNoop.render(<App value={1} />);
-    ReactNoop.flush();
-
-    if (__DEV__) {
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Detected multiple renderers concurrently rendering the same ' +
-          'context provider. This is currently unsupported',
-      );
-    }
-  });
-
   it('warns if consumer child is not a function', () => {
     spyOnDev(console, 'error');
     const Context = React.createContext(0);

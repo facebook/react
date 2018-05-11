@@ -690,6 +690,8 @@ const DOMRenderer = ReactFiberReconciler({
 
   now: ReactScheduler.now,
 
+  isPrimaryRenderer: true,
+
   mutation: {
     commitMount(
       domElement: Instance,

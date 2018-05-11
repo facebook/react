@@ -185,6 +185,8 @@ let SharedHostConfig = {
   now(): number {
     return elapsedTimeInMs;
   },
+
+  isPrimaryRenderer: true,
 };
 
 const NoopRenderer = ReactFiberReconciler({

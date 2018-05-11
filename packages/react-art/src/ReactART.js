@@ -478,6 +478,9 @@ const ARTRenderer = ReactFiberReconciler({
 
   now: ReactScheduler.now,
 
+  // The ART renderer is secondary to the React DOM renderer.
+  isPrimaryRenderer: false,
+
   mutation: {
     appendChild(parentInstance, child) {
       if (child.parentNode === parentInstance) {

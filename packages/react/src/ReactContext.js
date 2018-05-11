@@ -36,7 +36,14 @@ export function createContext<T>(
     _calculateChangedBits: calculateChangedBits,
     _defaultValue: defaultValue,
     _currentValue: defaultValue,
+    // As a workaround to support multiple concurrent renderers, we categorize
+    // some renderers as primary and others as secondary. We only expect
+    // there to be two concurrent renderers at most: React Native (primary) and
+    // Fabric (secondary); React DOM (primary) and React ART (secondary).
+    // Secondary renderers store their context values on separate fields.
+    _currentValue_secondary: defaultValue,
     _changedBits: 0,
+    _changedBits_secondary: 0,
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),

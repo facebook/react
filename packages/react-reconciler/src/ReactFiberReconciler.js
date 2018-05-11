@@ -95,6 +95,11 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
 
   now(): number,
 
+  // Temporary workaround for scenario where multiple renderers concurrently
+  // render using the same context objects. E.g. React DOM and React ART on the
+  // same page. DOM is the primary renderer; ART is the secondary renderer.
+  isPrimaryRenderer: boolean,
+
   +hydration?: HydrationHostConfig<T, P, I, TI, HI, C, CX, PL>,
 
   +mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,

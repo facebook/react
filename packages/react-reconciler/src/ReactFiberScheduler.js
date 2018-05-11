@@ -181,7 +181,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const stack = ReactFiberStack();
   const hostContext = ReactFiberHostContext(config, stack);
   const legacyContext = ReactFiberLegacyContext(stack);
-  const newContext = ReactFiberNewContext(stack);
+  const newContext = ReactFiberNewContext(stack, config.isPrimaryRenderer);
   const profilerTimer = createProfilerTimer(now);
   const {popHostContext, popHostContainer} = hostContext;
   const {

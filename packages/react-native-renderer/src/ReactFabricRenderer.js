@@ -217,6 +217,9 @@ const ReactFabricRenderer = ReactFiberReconciler({
 
   now: ReactNativeFrameScheduling.now,
 
+  // The Fabric renderer is secondary to the existing React Native renderer.
+  isPrimaryRenderer: false,
+
   prepareForCommit(): void {
     // Noop
   },

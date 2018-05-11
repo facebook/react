@@ -104,7 +104,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   const {pushHostContext, pushHostContainer} = hostContext;
 
-  const {pushProvider} = newContext;
+  const {
+    pushProvider,
+    getContextCurrentValue,
+    getContextChangedBits,
+  } = newContext;
 
   const {
     markActualRenderTimeStarted,
@@ -1048,8 +1052,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newProps = workInProgress.pendingProps;
     const oldProps = workInProgress.memoizedProps;
 
-    const newValue = context._currentValue;
-    const changedBits = context._changedBits;
+    const newValue = getContextCurrentValue(context);
+    const changedBits = getContextChangedBits(context);
 
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed

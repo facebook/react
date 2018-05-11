@@ -169,6 +169,8 @@ const NativeRenderer = ReactFiberReconciler({
 
   now: ReactNativeFrameScheduling.now,
 
+  isPrimaryRenderer: true,
+
   prepareForCommit(): void {
     // Noop
   },
