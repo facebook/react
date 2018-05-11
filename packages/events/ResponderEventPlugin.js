@@ -131,7 +131,7 @@ const eventTypes = {
   },
   responderRelease: {
     registrationName: 'onResponderRelease',
-    dependencies: [],
+    dependencies: endDependencies,
   },
   responderTerminationRequest: {
     registrationName: 'onResponderTerminationRequest',
