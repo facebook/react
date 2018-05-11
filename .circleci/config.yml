@@ -9,7 +9,7 @@ jobs:
       TZ: /usr/share/zoneinfo/America/Los_Angeles
       TRAVIS_REPO_SLUG: facebook/react
 
-    parallelism: 4
+    parallelism: 1
 
     steps:
       - checkout
