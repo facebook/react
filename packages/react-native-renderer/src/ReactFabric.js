@@ -12,6 +12,8 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactFabricInjection';
 
+import ReactFabricRenderer from 'react-reconciler/inline';
+
 import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
@@ -19,7 +21,6 @@ import ReactVersion from 'shared/ReactVersion';
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
-import ReactFabricRenderer from './ReactFabricRenderer';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';

@@ -11,7 +11,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
-import ReactFiberReconciler from 'react-reconciler';
+import TestRenderer from 'react-reconciler/inline';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
@@ -53,8 +53,6 @@ type FindOptions = $Shape<{
 }>;
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
-
-const TestRenderer = ReactFiberReconciler(ReactTestHostConfig);
 
 const defaultTestOptions = {
   createNodeMock: function() {
