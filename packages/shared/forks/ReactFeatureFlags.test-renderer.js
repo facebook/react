@@ -23,6 +23,7 @@ export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
 export const enablePersistentReconciler = false;
 export const enableProfilerTimer = false;
+export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {
