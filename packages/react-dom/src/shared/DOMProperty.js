@@ -229,6 +229,7 @@ const properties = {};
 // This is a mapping from React prop names to the attribute names.
 [
   ['acceptCharset', 'accept-charset'],
+  ['charSet', 'charset'],
   ['className', 'class'],
   ['htmlFor', 'for'],
   ['httpEquiv', 'http-equiv'],
