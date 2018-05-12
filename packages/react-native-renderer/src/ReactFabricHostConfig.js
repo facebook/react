@@ -239,7 +239,7 @@ const ReacFabricHostConfig = {
     }
   },
 
-  getPublicInstance(instance) {
+  getPublicInstance(instance: Instance): * {
     return instance.canonical;
   },
 

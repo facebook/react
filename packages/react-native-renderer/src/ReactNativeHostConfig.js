@@ -9,7 +9,6 @@
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
-import ReactFiberReconciler from 'react-reconciler';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 
@@ -64,7 +63,7 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
   }
 }
 
-const NativeRenderer = ReactFiberReconciler({
+const ReactNativeHostConfig = {
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
@@ -193,7 +192,7 @@ const NativeRenderer = ReactFiberReconciler({
     }
   },
 
-  getPublicInstance(instance) {
+  getPublicInstance(instance: Instance): * {
     return instance;
   },
 
@@ -427,6 +426,6 @@ const NativeRenderer = ReactFiberReconciler({
       // Noop
     },
   },
-});
+};
 
-export default NativeRenderer;
+export default ReactNativeHostConfig;
