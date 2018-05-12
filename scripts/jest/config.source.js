@@ -1,3 +1,10 @@
 'use strict';
 
-module.exports = require('./config.base');
+const baseConfig = require('./config.base');
+
+module.exports = Object.assign({}, baseConfig, {
+  setupFiles: [
+    ...baseConfig.setupFiles,
+    require.resolve('./setupMocks.js')
+  ],
+});

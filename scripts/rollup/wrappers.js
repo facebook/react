@@ -200,14 +200,12 @@ ${license}
 'use strict';
 
 if (process.env.NODE_ENV !== "production") {
-  // This is a hacky way to ensure third party renderers don't share
-  // top-level module state inside the reconciler. Ideally we should
-  // remove this hack by putting all top-level state into the closures
-  // and then forbidding adding more of it in the reconciler.
-  var $$$reconciler;
-  module.exports = function(config) {
+  // TODO
+  module.exports = function $$$reconciler($$$hostConfig) {
 ${source}
-    return ($$$reconciler || ($$$reconciler = module.exports))(config);
+    var $$$renderer = module.exports;
+    module.exports = $$$reconciler;
+    return $$$renderer;
   };
 }`;
   },
@@ -219,10 +217,12 @@ ${source}
  *
 ${license}
  */
-var $$$reconciler;
-module.exports = function(config) {
+// TODO
+module.exports = function $$$reconciler($$$hostConfig) {
 ${source}
-  return ($$$reconciler || ($$$reconciler = module.exports))(config);
+    var $$$renderer = module.exports;
+    module.exports = $$$reconciler;
+    return $$$renderer;
 };`;
   },
 };

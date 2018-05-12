@@ -23,6 +23,9 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
+// TODO
+import ReactFiberHostConfig from './ReactFiberHostConfig';
+
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import ReactFiberScheduler from './ReactFiberScheduler';
@@ -276,9 +279,13 @@ export type Reconciler<C, I, TI> = {
   findHostInstanceWithNoPortals(component: Fiber): I | TI | null,
 };
 
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-): Reconciler<C, I, TI> {
+// export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  // TODO
+  // config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
+// ): Reconciler<C, I, TI> {
+  const config = ReactFiberHostConfig;
+  // TODO
+
   const {getPublicInstance} = config;
 
   const {
@@ -416,7 +423,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return hostFiber.stateNode;
   }
 
-  return {
+  // TODO
+  export default {
     createContainer(
       containerInfo: C,
       isAsync: boolean,
@@ -527,4 +535,4 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       });
     },
   };
-}
+// }
