@@ -25,6 +25,7 @@ export const enableProfilerTimer = false;
 export const enableMutatingReconciler = false;
 export const enableNoopReconciler = false;
 export const enablePersistentReconciler = true;
+export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {

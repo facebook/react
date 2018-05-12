@@ -20,6 +20,7 @@ export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = false;
+export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 // react-reconciler/persistent entry point
 // uses a persistent reconciler.

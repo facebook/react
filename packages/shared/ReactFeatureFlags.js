@@ -42,6 +42,9 @@ export const warnAboutDeprecatedLifecycles = false;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = false;
 
+// Fires getDerivedStateFromProps for state *or* props changes
+export const fireGetDerivedStateFromPropsOnStateUpdates = true;
+
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');

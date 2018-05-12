@@ -16,6 +16,7 @@ import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
+  fireGetDerivedStateFromPropsOnStateUpdates,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
@@ -937,12 +938,14 @@ export default function(
     }
 
     if (typeof getDerivedStateFromProps === 'function') {
-      applyDerivedStateFromProps(
-        workInProgress,
-        getDerivedStateFromProps,
-        newProps,
-      );
-      newState = workInProgress.memoizedState;
+      if (fireGetDerivedStateFromPropsOnStateUpdates || oldProps !== newProps) {
+        applyDerivedStateFromProps(
+          workInProgress,
+          getDerivedStateFromProps,
+          newProps,
+        );
+        newState = workInProgress.memoizedState;
+      }
     }
 
     if (
