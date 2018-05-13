@@ -321,10 +321,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
 
       // Restore the original state of the work-in-progress
-      assignFiberPropertiesInDEV(
-        failedUnitOfWork,
-        stashedWorkInProgressProperties,
-      );
+      if (stashedWorkInProgressProperties !== null) {
+        assignFiberPropertiesInDEV(
+          failedUnitOfWork,
+          stashedWorkInProgressProperties,
+        );
+      }
       switch (failedUnitOfWork.tag) {
         case HostRoot:
           popHostContainer(failedUnitOfWork);
@@ -1078,7 +1080,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
 
         if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-          const failedUnitOfWork = nextUnitOfWork;
+          const failedUnitOfWork: Fiber = nextUnitOfWork;
           replayUnitOfWork(failedUnitOfWork, thrownValue, isAsync);
         }
 

@@ -4,10 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
+ * @flow
  */
 
 import type {ReactElement, Source} from 'shared/ReactElementType';
-import type {ReactPortal, RefObject} from 'shared/ReactTypes';
+import type {ReactFragment, ReactPortal, RefObject} from 'shared/ReactTypes';
 import type {TypeOfWork} from 'shared/ReactTypeOfWork';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
@@ -320,7 +321,7 @@ export function createWorkInProgress(
   return workInProgress;
 }
 
-export function createHostRootFiber(isAsync): Fiber {
+export function createHostRootFiber(isAsync: boolean): Fiber {
   const mode = isAsync ? AsyncMode | StrictMode : NoContext;
   return createFiber(HostRoot, null, null, mode);
 }

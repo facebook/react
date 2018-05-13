@@ -107,7 +107,7 @@ if (__DEV__) {
     pendingUnsafeLifecycleWarnings = new Map();
   };
 
-  const getStrictRoot = (fiber: Fiber): Fiber => {
+  const getStrictRoot = (fiber: Fiber | null): Fiber | null => {
     let maybeStrictRoot = null;
 
     while (fiber !== null) {
@@ -226,6 +226,10 @@ if (__DEV__) {
     instance: any,
   ) => {
     const strictRoot = getStrictRoot(fiber);
+
+    if (strictRoot === null) {
+      return;
+    }
 
     // Dedup strategy: Warn once per component.
     // This is difficult to track any other way since component names
