@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import ARTRenderer from 'react-reconciler/inline';
+import * as ARTRenderer from 'react-reconciler/inline';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';

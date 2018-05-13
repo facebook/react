@@ -19,7 +19,7 @@ import type {Container} from './ReactDOMHostConfig';
 import '../shared/checkReact';
 import './ReactDOMClientInjection';
 
-import DOMRenderer from 'react-reconciler/inline';
+import * as DOMRenderer from 'react-reconciler/inline';
 import * as ReactPortal from 'shared/ReactPortal';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';

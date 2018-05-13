@@ -371,7 +371,7 @@ export type Reconciler<C, I, TI> = {
     return expirationTime;
   }
 
-  function updateContainerAtExpirationTime(
+  export function updateContainerAtExpirationTime(
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
@@ -424,16 +424,15 @@ export type Reconciler<C, I, TI> = {
   }
 
   // TODO
-  export default {
-    createContainer(
+    export function createContainer(
       containerInfo: C,
       isAsync: boolean,
       hydrate: boolean,
     ): OpaqueRoot {
       return createFiberRoot(containerInfo, isAsync, hydrate);
-    },
+    }
 
-    updateContainer(
+    export function updateContainer(
       element: ReactNodeList,
       container: OpaqueRoot,
       parentComponent: ?React$Component<any, any>,
@@ -449,47 +448,33 @@ export type Reconciler<C, I, TI> = {
         expirationTime,
         callback,
       );
-    },
+    }
 
-    updateContainerAtExpirationTime(
-      element,
-      container,
-      parentComponent,
-      expirationTime,
-      callback,
-    ) {
-      return updateContainerAtExpirationTime(
-        element,
-        container,
-        parentComponent,
-        expirationTime,
-        callback,
-      );
-    },
+    export {
+      flushRoot,
 
-    flushRoot,
+      requestWork,
 
-    requestWork,
+      computeUniqueAsyncExpiration,
 
-    computeUniqueAsyncExpiration,
+      batchedUpdates,
 
-    batchedUpdates,
+      unbatchedUpdates,
 
-    unbatchedUpdates,
+      deferredUpdates,
 
-    deferredUpdates,
+      syncUpdates,
 
-    syncUpdates,
+      interactiveUpdates,
 
-    interactiveUpdates,
+      flushInteractiveUpdates,
 
-    flushInteractiveUpdates,
+      flushControlled,
 
-    flushControlled,
+      flushSync
+    };
 
-    flushSync,
-
-    getPublicRootInstance(
+    export function getPublicRootInstance(
       container: OpaqueRoot,
     ): React$Component<any, any> | PI | null {
       const containerFiber = container.current;
@@ -502,19 +487,19 @@ export type Reconciler<C, I, TI> = {
         default:
           return containerFiber.child.stateNode;
       }
-    },
+    }
 
-    findHostInstance,
+    export { findHostInstance };
 
-    findHostInstanceWithNoPortals(fiber: Fiber): PI | null {
+    export function findHostInstanceWithNoPortals(fiber: Fiber): PI | null {
       const hostFiber = findCurrentHostFiberWithNoPortals(fiber);
       if (hostFiber === null) {
         return null;
       }
       return hostFiber.stateNode;
-    },
+    }
 
-    injectIntoDevTools(devToolsConfig: DevToolsConfig<I, TI>): boolean {
+    export function injectIntoDevTools(devToolsConfig: DevToolsConfig<I, TI>): boolean {
       const {findFiberByHostInstance} = devToolsConfig;
       return ReactFiberDevToolsHook.injectInternals({
         ...devToolsConfig,
@@ -533,6 +518,5 @@ export type Reconciler<C, I, TI> = {
           return findFiberByHostInstance(instance);
         },
       });
-    },
-  };
+    }
 // }
