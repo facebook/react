@@ -187,12 +187,16 @@ function createReactNoop(useMutation: boolean) {
     },
 
     isPrimaryRenderer: true,
+    supportsHydration: false,
   };
 
   const hostConfig = useMutation
     ? {
         ...sharedHostConfig,
-        mutation: {
+
+        supportsMutation: true,
+        supportsPersistence: false,
+
           commitMount(instance: Instance, type: string, newProps: Props): void {
             // Noop
           },
@@ -226,11 +230,12 @@ function createReactNoop(useMutation: boolean) {
           removeChildFromContainer: removeChild,
 
           resetTextContent(instance: Instance): void {},
-        },
       }
     : {
         ...sharedHostConfig,
-        persistence: {
+        supportsMutation: false,
+        supportsPersistence: true,
+
           cloneInstance(
             instance: Instance,
             updatePayload: null | Object,
@@ -278,7 +283,6 @@ function createReactNoop(useMutation: boolean) {
           ): void {
             container.children = newChildren;
           },
-        },
       };
 
   const NoopRenderer = ReactFiberReconciler(hostConfig);

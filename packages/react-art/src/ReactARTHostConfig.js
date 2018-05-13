@@ -234,8 +234,7 @@ function applyTextProps(instance, props, prevProps = {}) {
   }
 }
 
-const ReactARTHostConfig = {
-  appendInitialChild(parentInstance, child) {
+  export function appendInitialChild(parentInstance, child) {
     if (typeof child === 'string') {
       // Noop for string children of Text (eg <Text>{'foo'}{'bar'}</Text>)
       invariant(false, 'Text children should already be flattened.');
@@ -243,9 +242,9 @@ const ReactARTHostConfig = {
     }
 
     child.inject(parentInstance);
-  },
+  }
 
-  createInstance(type, props, internalInstanceHandle) {
+  export function createInstance(type, props, internalInstanceHandle) {
     let instance;
 
     switch (type) {
@@ -277,114 +276,113 @@ const ReactARTHostConfig = {
     instance._applyProps(instance, props);
 
     return instance;
-  },
+  }
 
-  createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
+  export function createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
     return text;
-  },
+  }
 
-  finalizeInitialChildren(domElement, type, props) {
+  export function finalizeInitialChildren(domElement, type, props) {
     return false;
-  },
+  }
 
-  getPublicInstance(instance) {
+  export function getPublicInstance(instance) {
     return instance;
-  },
+  }
 
-  prepareForCommit() {
+  export function prepareForCommit() {
     // Noop
-  },
+  }
 
-  prepareUpdate(domElement, type, oldProps, newProps) {
+  export function prepareUpdate(domElement, type, oldProps, newProps) {
     return UPDATE_SIGNAL;
-  },
+  }
 
-  resetAfterCommit() {
+  export function resetAfterCommit() {
     // Noop
-  },
+  }
 
-  resetTextContent(domElement) {
+  export function resetTextContent(domElement) {
     // Noop
-  },
+  }
 
-  shouldDeprioritizeSubtree(type, props) {
+  export function shouldDeprioritizeSubtree(type, props) {
     return false;
-  },
+  }
 
-  getRootHostContext() {
+  export function getRootHostContext() {
     return emptyObject;
-  },
+  }
 
-  getChildHostContext() {
+  export function getChildHostContext() {
     return emptyObject;
-  },
+  }
 
-  scheduleDeferredCallback: ReactScheduler.scheduleWork,
+  export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
 
-  shouldSetTextContent(type, props) {
+  export function shouldSetTextContent(type, props) {
     return (
       typeof props.children === 'string' || typeof props.children === 'number'
     );
-  },
+  }
 
-  now: ReactScheduler.now,
+  export const now = ReactScheduler.now;
 
   // The ART renderer is secondary to the React DOM renderer.
-  isPrimaryRenderer: false,
+  export const isPrimaryRenderer = false;
 
-  mutation: {
-    appendChild(parentInstance, child) {
+  export const supportsMutation = true;
+  export const supportsPersistence = false;
+  export const supportsHydration = false;
+
+    export function appendChild(parentInstance, child) {
       if (child.parentNode === parentInstance) {
         child.eject();
       }
       child.inject(parentInstance);
-    },
+    }
 
-    appendChildToContainer(parentInstance, child) {
+    export function appendChildToContainer(parentInstance, child) {
       if (child.parentNode === parentInstance) {
         child.eject();
       }
       child.inject(parentInstance);
-    },
+    }
 
-    insertBefore(parentInstance, child, beforeChild) {
+    export function insertBefore(parentInstance, child, beforeChild) {
       invariant(
         child !== beforeChild,
         'ReactART: Can not insert node before itself',
       );
       child.injectBefore(beforeChild);
-    },
+    }
 
-    insertInContainerBefore(parentInstance, child, beforeChild) {
+    export function insertInContainerBefore(parentInstance, child, beforeChild) {
       invariant(
         child !== beforeChild,
         'ReactART: Can not insert node before itself',
       );
       child.injectBefore(beforeChild);
-    },
+    }
 
-    removeChild(parentInstance, child) {
+    export function removeChild(parentInstance, child) {
       destroyEventListeners(child);
       child.eject();
-    },
+    }
 
-    removeChildFromContainer(parentInstance, child) {
+    export function removeChildFromContainer(parentInstance, child) {
       destroyEventListeners(child);
       child.eject();
-    },
+    }
 
-    commitTextUpdate(textInstance, oldText, newText) {
+    export function commitTextUpdate(textInstance, oldText, newText) {
       // Noop
-    },
+    }
 
-    commitMount(instance, type, newProps) {
+    export function commitMount(instance, type, newProps) {
       // Noop
-    },
+    }
 
-    commitUpdate(instance, updatePayload, type, oldProps, newProps) {
+    export function commitUpdate(instance, updatePayload, type, oldProps, newProps) {
       instance._applyProps(instance, newProps, oldProps);
-    },
-  },
-};
-
-export default ReactARTHostConfig;
+    }

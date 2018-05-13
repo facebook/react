@@ -24,7 +24,7 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 // TODO
-import ReactFiberHostConfig from './ReactFiberHostConfig';
+import * as ReactFiberHostConfig from './ReactFiberHostConfig';
 
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';

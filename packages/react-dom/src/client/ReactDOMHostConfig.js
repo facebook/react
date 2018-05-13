@@ -77,8 +77,7 @@ function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   return false;
 }
 
-const ReactDOMHostConfig = {
-  getRootHostContext(rootContainerInstance: Container): HostContext {
+export function getRootHostContext(rootContainerInstance: Container): HostContext {
     let type;
     let namespace;
     const nodeType = rootContainerInstance.nodeType;
@@ -107,9 +106,9 @@ const ReactDOMHostConfig = {
       return {namespace, ancestorInfo};
     }
     return namespace;
-  },
+  }
 
-  getChildHostContext(
+export function getChildHostContext(
     parentHostContext: HostContext,
     type: string,
   ): HostContext {
@@ -125,26 +124,26 @@ const ReactDOMHostConfig = {
     }
     const parentNamespace = ((parentHostContext: any): HostContextProd);
     return getChildNamespace(parentNamespace, type);
-  },
+  }
 
-  getPublicInstance(instance: Instance | TextInstance): * {
+export function  getPublicInstance(instance: Instance | TextInstance): * {
     return instance;
-  },
+  }
 
-  prepareForCommit(): void {
+export function  prepareForCommit(): void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
     selectionInformation = ReactInputSelection.getSelectionInformation();
     ReactBrowserEventEmitter.setEnabled(false);
-  },
+  }
 
-  resetAfterCommit(): void {
+export function resetAfterCommit(): void {
     ReactInputSelection.restoreSelection(selectionInformation);
     selectionInformation = null;
     ReactBrowserEventEmitter.setEnabled(eventsEnabled);
     eventsEnabled = null;
-  },
+  }
 
-  createInstance(
+export function createInstance(
     type: string,
     props: Props,
     rootContainerInstance: Container,
@@ -181,16 +180,16 @@ const ReactDOMHostConfig = {
     precacheFiberNode(internalInstanceHandle, domElement);
     updateFiberProps(domElement, props);
     return domElement;
-  },
+  }
 
-  appendInitialChild(
+export function appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
     parentInstance.appendChild(child);
-  },
+  }
 
-  finalizeInitialChildren(
+export function finalizeInitialChildren(
     domElement: Instance,
     type: string,
     props: Props,
@@ -198,9 +197,9 @@ const ReactDOMHostConfig = {
   ): boolean {
     setInitialProperties(domElement, type, props, rootContainerInstance);
     return shouldAutoFocusHostComponent(type, props);
-  },
+  }
 
-  prepareUpdate(
+export function prepareUpdate(
     domElement: Instance,
     type: string,
     oldProps: Props,
@@ -231,9 +230,9 @@ const ReactDOMHostConfig = {
       newProps,
       rootContainerInstance,
     );
-  },
+  }
 
-  shouldSetTextContent(type: string, props: Props): boolean {
+ export function shouldSetTextContent(type: string, props: Props): boolean {
     return (
       type === 'textarea' ||
       typeof props.children === 'string' ||
@@ -242,13 +241,13 @@ const ReactDOMHostConfig = {
         props.dangerouslySetInnerHTML !== null &&
         typeof props.dangerouslySetInnerHTML.__html === 'string')
     );
-  },
+  }
 
-  shouldDeprioritizeSubtree(type: string, props: Props): boolean {
+  export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
     return !!props.hidden;
-  },
+  }
 
-  createTextInstance(
+  export function createTextInstance(
     text: string,
     rootContainerInstance: Container,
     hostContext: HostContext,
@@ -261,14 +260,17 @@ const ReactDOMHostConfig = {
     const textNode: TextInstance = createTextNode(text, rootContainerInstance);
     precacheFiberNode(internalInstanceHandle, textNode);
     return textNode;
-  },
+  }
 
-  now: ReactScheduler.now,
+  export const now = ReactScheduler.now;
 
-  isPrimaryRenderer: true,
+  export const isPrimaryRenderer = true;
 
-  mutation: {
-    commitMount(
+  export const supportsMutation = true;
+  export const supportsPersistence = false;
+  export const supportsHydration = true;
+
+  export function commitMount(
       domElement: Instance,
       type: string,
       newProps: Props,
@@ -287,9 +289,9 @@ const ReactDOMHostConfig = {
           | HTMLSelectElement
           | HTMLTextAreaElement).focus();
       }
-    },
+    }
 
-    commitUpdate(
+    export function commitUpdate(
       domElement: Instance,
       updatePayload: Array<mixed>,
       type: string,
@@ -302,28 +304,28 @@ const ReactDOMHostConfig = {
       updateFiberProps(domElement, newProps);
       // Apply the diff to the DOM node.
       updateProperties(domElement, updatePayload, type, oldProps, newProps);
-    },
+    }
 
-    resetTextContent(domElement: Instance): void {
+    export function resetTextContent(domElement: Instance): void {
       setTextContent(domElement, '');
-    },
+    }
 
-    commitTextUpdate(
+    export function commitTextUpdate(
       textInstance: TextInstance,
       oldText: string,
       newText: string,
     ): void {
       textInstance.nodeValue = newText;
-    },
+    }
 
-    appendChild(
+    export function appendChild(
       parentInstance: Instance,
       child: Instance | TextInstance,
     ): void {
       parentInstance.appendChild(child);
-    },
+    }
 
-    appendChildToContainer(
+    export function appendChildToContainer(
       container: Container,
       child: Instance | TextInstance,
     ): void {
@@ -332,17 +334,17 @@ const ReactDOMHostConfig = {
       } else {
         container.appendChild(child);
       }
-    },
+    }
 
-    insertBefore(
+    export function insertBefore(
       parentInstance: Instance,
       child: Instance | TextInstance,
       beforeChild: Instance | TextInstance,
     ): void {
       parentInstance.insertBefore(child, beforeChild);
-    },
+    }
 
-    insertInContainerBefore(
+    export function insertInContainerBefore(
       container: Container,
       child: Instance | TextInstance,
       beforeChild: Instance | TextInstance,
@@ -352,16 +354,16 @@ const ReactDOMHostConfig = {
       } else {
         container.insertBefore(child, beforeChild);
       }
-    },
+    }
 
-    removeChild(
+    export function removeChild(
       parentInstance: Instance,
       child: Instance | TextInstance,
     ): void {
       parentInstance.removeChild(child);
-    },
+    }
 
-    removeChildFromContainer(
+    export function removeChildFromContainer(
       container: Container,
       child: Instance | TextInstance,
     ): void {
@@ -370,11 +372,10 @@ const ReactDOMHostConfig = {
       } else {
         container.removeChild(child);
       }
-    },
-  },
+    }
 
-  hydration: {
-    canHydrateInstance(
+
+    export function canHydrateInstance(
       instance: Instance | TextInstance,
       type: string,
       props: Props,
@@ -387,9 +388,9 @@ const ReactDOMHostConfig = {
       }
       // This has now been refined to an element node.
       return ((instance: any): Instance);
-    },
+    }
 
-    canHydrateTextInstance(
+    export function canHydrateTextInstance(
       instance: Instance | TextInstance,
       text: string,
     ): null | TextInstance {
@@ -399,9 +400,9 @@ const ReactDOMHostConfig = {
       }
       // This has now been refined to a text node.
       return ((instance: any): TextInstance);
-    },
+    }
 
-    getNextHydratableSibling(
+    export function getNextHydratableSibling(
       instance: Instance | TextInstance,
     ): null | Instance | TextInstance {
       let node = instance.nextSibling;
@@ -414,9 +415,9 @@ const ReactDOMHostConfig = {
         node = node.nextSibling;
       }
       return (node: any);
-    },
+    }
 
-    getFirstHydratableChild(
+    export function getFirstHydratableChild(
       parentInstance: Container | Instance,
     ): null | Instance | TextInstance {
       let next = parentInstance.firstChild;
@@ -429,9 +430,9 @@ const ReactDOMHostConfig = {
         next = next.nextSibling;
       }
       return (next: any);
-    },
+    }
 
-    hydrateInstance(
+    export function hydrateInstance(
       instance: Instance,
       type: string,
       props: Props,
@@ -457,18 +458,18 @@ const ReactDOMHostConfig = {
         parentNamespace,
         rootContainerInstance,
       );
-    },
+    }
 
-    hydrateTextInstance(
+    export function hydrateTextInstance(
       textInstance: TextInstance,
       text: string,
       internalInstanceHandle: Object,
     ): boolean {
       precacheFiberNode(internalInstanceHandle, textInstance);
       return diffHydratedText(textInstance, text);
-    },
+    }
 
-    didNotMatchHydratedContainerTextInstance(
+    export function didNotMatchHydratedContainerTextInstance(
       parentContainer: Container,
       textInstance: TextInstance,
       text: string,
@@ -476,9 +477,9 @@ const ReactDOMHostConfig = {
       if (__DEV__) {
         warnForUnmatchedText(textInstance, text);
       }
-    },
+    }
 
-    didNotMatchHydratedTextInstance(
+    export function didNotMatchHydratedTextInstance(
       parentType: string,
       parentProps: Props,
       parentInstance: Instance,
@@ -488,9 +489,9 @@ const ReactDOMHostConfig = {
       if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
         warnForUnmatchedText(textInstance, text);
       }
-    },
+    }
 
-    didNotHydrateContainerInstance(
+    export function didNotHydrateContainerInstance(
       parentContainer: Container,
       instance: Instance | TextInstance,
     ) {
@@ -501,9 +502,9 @@ const ReactDOMHostConfig = {
           warnForDeletedHydratableText(parentContainer, (instance: any));
         }
       }
-    },
+    }
 
-    didNotHydrateInstance(
+    export function didNotHydrateInstance(
       parentType: string,
       parentProps: Props,
       parentInstance: Instance,
@@ -516,9 +517,9 @@ const ReactDOMHostConfig = {
           warnForDeletedHydratableText(parentInstance, (instance: any));
         }
       }
-    },
+    }
 
-    didNotFindHydratableContainerInstance(
+    export function didNotFindHydratableContainerInstance(
       parentContainer: Container,
       type: string,
       props: Props,
@@ -526,18 +527,18 @@ const ReactDOMHostConfig = {
       if (__DEV__) {
         warnForInsertedHydratedElement(parentContainer, type, props);
       }
-    },
+    }
 
-    didNotFindHydratableContainerTextInstance(
+    export function didNotFindHydratableContainerTextInstance(
       parentContainer: Container,
       text: string,
     ) {
       if (__DEV__) {
         warnForInsertedHydratedText(parentContainer, text);
       }
-    },
+    }
 
-    didNotFindHydratableInstance(
+    export function didNotFindHydratableInstance(
       parentType: string,
       parentProps: Props,
       parentInstance: Instance,
@@ -547,9 +548,9 @@ const ReactDOMHostConfig = {
       if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
         warnForInsertedHydratedElement(parentInstance, type, props);
       }
-    },
+    }
 
-    didNotFindHydratableTextInstance(
+    export function didNotFindHydratableTextInstance(
       parentType: string,
       parentProps: Props,
       parentInstance: Instance,
@@ -558,11 +559,7 @@ const ReactDOMHostConfig = {
       if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
         warnForInsertedHydratedText(parentInstance, text);
       }
-    },
-  },
+    }
 
-  scheduleDeferredCallback: ReactScheduler.scheduleWork,
-  cancelDeferredCallback: ReactScheduler.cancelScheduledWork,
-};
-
-export default ReactDOMHostConfig;
+  export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
+  export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;

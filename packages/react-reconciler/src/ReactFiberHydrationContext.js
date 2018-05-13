@@ -32,10 +32,10 @@ export type HydrationContext<C, CX> = {
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): HydrationContext<C, CX> {
-  const {shouldSetTextContent, hydration} = config;
+  const {shouldSetTextContent, supportsHydration} = config;
 
   // If this doesn't have hydration mode.
-  if (!hydration) {
+  if (!supportsHydration) {
     return {
       enterHydrationState() {
         return false;
@@ -77,7 +77,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     didNotFindHydratableContainerTextInstance,
     didNotFindHydratableInstance,
     didNotFindHydratableTextInstance,
-  } = hydration;
+  } = config;
 
   // The deepest Fiber on the stack involved in a hydration context.
   // This may have been an insertion or a hydration.

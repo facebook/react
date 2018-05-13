@@ -107,7 +107,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   recalculateCurrentTime: () => ExpirationTime,
 ) {
-  const {getPublicInstance, mutation, persistence} = config;
+  const {getPublicInstance, supportsMutation, supportsPersistence} = config;
 
   const callComponentWillUnmountWithTimer = function(current, instance) {
     startPhaseTimer(current, 'componentWillUnmount');
@@ -396,9 +396,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // TODO: this is recursive.
         // We are also not using this parent because
         // the portal will get pushed immediately.
-        if (enableMutatingReconciler && mutation) {
+        if (enableMutatingReconciler && supportsMutation) {
           unmountHostComponents(current);
-        } else if (enablePersistentReconciler && persistence) {
+        } else if (enablePersistentReconciler && supportsPersistence) {
           emptyPortalContainer(current);
         }
         return;
@@ -421,7 +421,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         node.child !== null &&
         // If we use mutation we drill down into portals using commitUnmount above.
         // If we don't use mutation we drill down into portals here instead.
-        (!mutation || node.tag !== HostPortal)
+        (!supportsMutation || node.tag !== HostPortal)
       ) {
         node.child.return = node;
         node = node.child;
@@ -457,10 +457,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   let emptyPortalContainer;
 
-  if (!mutation) {
+  if (!supportsMutation) {
     let commitContainer;
-    if (persistence) {
-      const {replaceContainerChildren, createContainerChildSet} = persistence;
+    if (supportsPersistence) {
+      const {replaceContainerChildren, createContainerChildSet} = config;
       emptyPortalContainer = function(current: Fiber) {
         const portal: {containerInfo: C, pendingChildren: CC} =
           current.stateNode;
@@ -518,7 +518,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         commitAttachRef,
         commitDetachRef,
       };
-    } else if (persistence) {
+    } else if (supportsPersistence) {
       invariant(false, 'Persistent reconciler is disabled.');
     } else {
       invariant(false, 'Noop reconciler is disabled.');
@@ -535,7 +535,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     insertInContainerBefore,
     removeChild,
     removeChildFromContainer,
-  } = mutation;
+  } = config;
 
   function getHostParentFiber(fiber: Fiber): Fiber {
     let parent = fiber.return;

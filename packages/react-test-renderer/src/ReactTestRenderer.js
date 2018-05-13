@@ -30,7 +30,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 
-import ReactTestHostConfig from './ReactTestHostConfig';
+import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 type TestRendererOptions = {
