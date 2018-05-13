@@ -1,59 +1,32 @@
-const obj = {};
-jest.mock('fbjs/lib/emptyObject', () => obj);
+'use strict';
 
+const forkConfig = require('../rollup/forks');
+
+const shimHostConfigPath = 'react-reconciler/src/ReactFiberHostConfig';
 jest.mock('react-reconciler', () => {
   return (config) => {
-    jest.mock('react-reconciler/src/ReactFiberHostConfig', () => config);
+    jest.mock(shimHostConfigPath, () => config);
     return require.requireActual('react-reconciler');
   };
 });
-
-jest.mock('react-test-renderer', () => {
-  jest.mock('react-reconciler/inline', () => {
-    jest.mock('react-reconciler/src/ReactFiberHostConfig',
-      () => require.requireActual('react-test-renderer/src/ReactTestHostConfig')
-    );
-    return require.requireActual('react-reconciler');
+[
+  'react-dom',
+  'react-art',
+  'react-test-renderer',
+  'react-native-renderer',
+  'react-native-renderer/fabric',
+].forEach(entry => {
+  const actualHostConfigPath = forkConfig[shimHostConfigPath]('NODE_DEV', entry);
+  if (typeof actualHostConfigPath !== 'string') {
+    throw new Error('Could not find the host config for the renderer.');
+  }
+  jest.mock(entry, () => {
+    jest.mock('react-reconciler/inline', () => {
+      jest.mock(shimHostConfigPath,
+        () => require.requireActual(actualHostConfigPath)
+      );
+      return require.requireActual('react-reconciler');
+    });
+    return require.requireActual(entry);
   });
-  return require.requireActual('react-test-renderer');
-});
-
-jest.mock('react-dom', () => {
-  jest.mock('react-reconciler/inline', () => {
-    jest.mock('react-reconciler/src/ReactFiberHostConfig',
-      () => require.requireActual('react-dom/src/client/ReactDOMHostConfig')
-    );
-    return require.requireActual('react-reconciler');
-  });
-  return require.requireActual('react-dom');
-});
-
-jest.mock('react-art', () => {
-  jest.mock('react-reconciler/inline', () => {
-    jest.mock('react-reconciler/src/ReactFiberHostConfig',
-      () => require.requireActual('react-art/src/ReactARTHostConfig')
-    );
-    return require.requireActual('react-reconciler');
-  });
-  return require.requireActual('react-art');
-});
-
-jest.mock('react-native-renderer', () => {
-  jest.mock('react-reconciler/inline', () => {
-    jest.mock('react-reconciler/src/ReactFiberHostConfig',
-      () => require.requireActual('react-native-renderer/src/ReactNativeHostConfig')
-    );
-    return require.requireActual('react-reconciler');
-  });
-  return require.requireActual('react-native-renderer');
-});
-
-jest.mock('react-native-renderer/fabric', () => {
-  jest.mock('react-reconciler/inline', () => {
-    jest.mock('react-reconciler/src/ReactFiberHostConfig',
-      () => require.requireActual('react-native-renderer/src/ReactFabricHostConfig')
-    );
-    return require.requireActual('react-reconciler');
-  });
-  return require.requireActual('react-native-renderer/fabric');
 });

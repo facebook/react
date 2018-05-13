@@ -45,3 +45,7 @@ if (typeof window !== 'undefined') {
     }
   });
 }
+
+// TODO
+const obj = {};
+jest.mock('fbjs/lib/emptyObject', () => obj);
