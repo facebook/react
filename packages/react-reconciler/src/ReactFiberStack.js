@@ -26,7 +26,7 @@ export type Stack = {
   resetStackAfterFatalErrorInDev(): void,
 };
 
-export default function(): Stack {
+
   const valueStack: Array<any> = [];
 
   let fiberStack: Array<Fiber | null>;
@@ -103,7 +103,7 @@ export default function(): Stack {
     }
   }
 
-  return {
+  export {
     createCursor,
     isEmpty,
     pop,
@@ -111,4 +111,3 @@ export default function(): Stack {
     checkThatStackIsEmpty,
     resetStackAfterFatalErrorInDev,
   };
-}

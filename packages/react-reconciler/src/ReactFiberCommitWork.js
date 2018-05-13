@@ -44,6 +44,26 @@ import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {logCapturedError} from './ReactFiberErrorLogger';
+import {
+  getPublicInstance,
+  supportsMutation,
+  supportsPersistence,
+  commitMount,
+  commitUpdate,
+  resetTextContent,
+  commitTextUpdate,
+  appendChild,
+  appendChildToContainer,
+  insertBefore,
+  insertInContainerBefore,
+  removeChild,
+  removeChildFromContainer,
+  replaceContainerChildren,
+  createContainerChildSet,
+} from './ReactFiberHostConfig';
+import {
+  captureCommitPhaseError
+} from './ReactFiberScheduler';
 
 const {
   invokeGuardedCallback,
@@ -92,23 +112,6 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   }
 }
 
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-  captureError: (failedFiber: Fiber, error: mixed) => void,
-  scheduleWork: (
-    fiber: Fiber,
-    startTime: ExpirationTime,
-    expirationTime: ExpirationTime,
-  ) => void,
-  computeExpirationForFiber: (
-    startTime: ExpirationTime,
-    fiber: Fiber,
-  ) => ExpirationTime,
-  markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
-  recalculateCurrentTime: () => ExpirationTime,
-) {
-  const {getPublicInstance, supportsMutation, supportsPersistence} = config;
-
   const callComponentWillUnmountWithTimer = function(current, instance) {
     startPhaseTimer(current, 'componentWillUnmount');
     instance.props = current.memoizedProps;
@@ -129,13 +132,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
       if (hasCaughtError()) {
         const unmountError = clearCaughtError();
-        captureError(current, unmountError);
+        captureCommitPhaseError(current, unmountError);
       }
     } else {
       try {
         callComponentWillUnmountWithTimer(current, instance);
       } catch (unmountError) {
-        captureError(current, unmountError);
+        captureCommitPhaseError(current, unmountError);
       }
     }
   }
@@ -148,13 +151,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           invokeGuardedCallback(null, ref, null, null);
           if (hasCaughtError()) {
             const refError = clearCaughtError();
-            captureError(current, refError);
+            captureCommitPhaseError(current, refError);
           }
         } else {
           try {
             ref(null);
           } catch (refError) {
-            captureError(current, refError);
+            captureCommitPhaseError(current, refError);
           }
         }
       } else {
@@ -455,20 +458,21 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  let emptyPortalContainer;
 
-  if (!supportsMutation) {
-    let commitContainer;
-    if (supportsPersistence) {
-      const {replaceContainerChildren, createContainerChildSet} = config;
-      emptyPortalContainer = function(current: Fiber) {
+      function emptyPortalContainer(current: Fiber) {
+        if (!supportsPersistence || supportsMutation) {
+          return;
+        }
         const portal: {containerInfo: C, pendingChildren: CC} =
           current.stateNode;
         const {containerInfo} = portal;
         const emptyChildSet = createContainerChildSet(containerInfo);
         replaceContainerChildren(containerInfo, emptyChildSet);
       };
-      commitContainer = function(finishedWork: Fiber) {
+      function commitContainer(finishedWork: Fiber) {
+        if (!supportsPersistence || supportsMutation) {
+          return;
+        }
         switch (finishedWork.tag) {
           case ClassComponent: {
             return;
@@ -495,47 +499,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             );
           }
         }
-      };
-    } else {
-      commitContainer = function(finishedWork: Fiber) {
-        // Noop
-      };
-    }
-    if (enablePersistentReconciler || enableNoopReconciler) {
-      return {
-        commitResetTextContent(finishedWork: Fiber) {},
-        commitPlacement(finishedWork: Fiber) {},
-        commitDeletion(current: Fiber) {
-          // Detach refs and call componentWillUnmount() on the whole subtree.
-          commitNestedUnmounts(current);
-          detachFiber(current);
-        },
-        commitWork(current: Fiber | null, finishedWork: Fiber) {
-          commitContainer(finishedWork);
-        },
-        commitLifeCycles,
-        commitBeforeMutationLifeCycles,
-        commitAttachRef,
-        commitDetachRef,
-      };
-    } else if (supportsPersistence) {
-      invariant(false, 'Persistent reconciler is disabled.');
-    } else {
-      invariant(false, 'Noop reconciler is disabled.');
-    }
-  }
-  const {
-    commitMount,
-    commitUpdate,
-    resetTextContent,
-    commitTextUpdate,
-    appendChild,
-    appendChildToContainer,
-    insertBefore,
-    insertInContainerBefore,
-    removeChild,
-    removeChildFromContainer,
-  } = config;
+      }
 
   function getHostParentFiber(fiber: Fiber): Fiber {
     let parent = fiber.return;
@@ -603,6 +567,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function commitPlacement(finishedWork: Fiber): void {
+    if (enablePersistentReconciler || enableNoopReconciler) {
+      return;
+    }
+
     // Recursively insert all host nodes into the parent.
     const parentFiber = getHostParentFiber(finishedWork);
     let parent;
@@ -764,13 +732,23 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function commitDeletion(current: Fiber): void {
-    // Recursively delete all host nodes from the parent.
-    // Detach refs and call componentWillUnmount() on the whole subtree.
-    unmountHostComponents(current);
+    if (enablePersistentReconciler || enableNoopReconciler) {
+      // Detach refs and call componentWillUnmount() on the whole subtree.
+      commitNestedUnmounts(current);
+    } else {
+      // Recursively delete all host nodes from the parent.
+      // Detach refs and call componentWillUnmount() on the whole subtree.
+      unmountHostComponents(current);
+    }
     detachFiber(current);
   }
 
   function commitWork(current: Fiber | null, finishedWork: Fiber): void {
+    if (enablePersistentReconciler || enableNoopReconciler) {
+      commitContainer(finishedWork);
+      return;
+    }
+
     switch (finishedWork.tag) {
       case ClassComponent: {
         return;
@@ -850,21 +828,21 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function commitResetTextContent(current: Fiber) {
+    if (enablePersistentReconciler || enableNoopReconciler) {
+      return;
+    }
     resetTextContent(current.stateNode);
   }
 
-  if (enableMutatingReconciler) {
-    return {
-      commitBeforeMutationLifeCycles,
-      commitResetTextContent,
-      commitPlacement,
-      commitDeletion,
-      commitWork,
-      commitLifeCycles,
-      commitAttachRef,
-      commitDetachRef,
-    };
-  } else {
-    invariant(false, 'Mutating reconciler is disabled.');
-  }
-}
+  export {
+    commitBeforeMutationLifeCycles,
+    commitResetTextContent,
+    commitPlacement,
+    commitDeletion,
+    commitWork,
+    commitLifeCycles,
+    commitAttachRef,
+    commitDetachRef,
+    emptyPortalContainer,
+    commitContainer,
+  };

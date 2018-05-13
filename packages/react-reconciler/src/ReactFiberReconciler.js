@@ -23,12 +23,30 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-// TODO
-import * as ReactFiberHostConfig from './ReactFiberHostConfig';
-
+import {getPublicInstance} from './ReactFiberHostConfig';
+import {
+  findCurrentUnmaskedContext,
+  isContextProvider,
+  processChildContext,
+} from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
-import ReactFiberScheduler from './ReactFiberScheduler';
+import {
+  computeUniqueAsyncExpiration,
+  recalculateCurrentTime,
+  computeExpirationForFiber,
+  scheduleWork,
+  requestWork,
+  flushRoot,
+  batchedUpdates,
+  unbatchedUpdates,
+  flushSync,
+  flushControlled,
+  deferredUpdates,
+  syncUpdates,
+  interactiveUpdates,
+  flushInteractiveUpdates,
+} from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
@@ -279,38 +297,6 @@ export type Reconciler<C, I, TI> = {
   findHostInstanceWithNoPortals(component: Fiber): I | TI | null,
 };
 
-// export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  // TODO
-  // config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-// ): Reconciler<C, I, TI> {
-  const config = ReactFiberHostConfig;
-  // TODO
-
-  const {getPublicInstance} = config;
-
-  const {
-    computeUniqueAsyncExpiration,
-    recalculateCurrentTime,
-    computeExpirationForFiber,
-    scheduleWork,
-    requestWork,
-    flushRoot,
-    batchedUpdates,
-    unbatchedUpdates,
-    flushSync,
-    flushControlled,
-    deferredUpdates,
-    syncUpdates,
-    interactiveUpdates,
-    flushInteractiveUpdates,
-    legacyContext,
-  } = ReactFiberScheduler(config);
-
-  const {
-    findCurrentUnmaskedContext,
-    isContextProvider,
-    processChildContext,
-  } = legacyContext;
 
   function getContextForSubtree(
     parentComponent: ?React$Component<any, any>,

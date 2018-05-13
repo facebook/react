@@ -58,7 +58,7 @@ import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
-import ReactFiberClassComponent, {
+import {
   applyDerivedStateFromProps,
 } from './ReactFiberClassComponent';
 import {
@@ -69,6 +69,37 @@ import {
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
+import {shouldSetTextContent, shouldDeprioritizeSubtree} from './ReactFiberHostConfig';
+import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
+import {
+  pushProvider,
+  getContextCurrentValue,
+  getContextChangedBits,
+} from './ReactFiberNewContext';
+import {
+  markActualRenderTimeStarted,
+  stopBaseRenderTimerIfRunning,
+} from './ReactProfilerTimer';
+import {
+  getMaskedContext,
+  getUnmaskedContext,
+  hasContextChanged as hasLegacyContextChanged,
+  pushContextProvider as pushLegacyContextProvider,
+  pushTopLevelContextObject,
+  invalidateContextProvider,
+} from './ReactFiberContext';
+import {
+  enterHydrationState,
+  resetHydrationState,
+  tryToClaimNextHydratableInstance,
+} from './ReactFiberHydrationContext';
+import {
+  adoptClassInstance,
+  constructClassInstance,
+  mountClassInstance,
+  resumeMountClassInstance,
+  updateClassInstance,
+} from './ReactFiberClassComponent';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -82,65 +113,6 @@ if (__DEV__) {
   didWarnAboutGetDerivedStateOnFunctionalComponent = {};
   didWarnAboutStatelessRefs = {};
 }
-
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-  hostContext: HostContext<C, CX>,
-  legacyContext: LegacyContext,
-  newContext: NewContext,
-  hydrationContext: HydrationContext<C, CX>,
-  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  computeExpirationForFiber: (
-    startTime: ExpirationTime,
-    fiber: Fiber,
-  ) => ExpirationTime,
-  profilerTimer: ProfilerTimer,
-  recalculateCurrentTime: () => ExpirationTime,
-) {
-  const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
-
-  const {pushHostContext, pushHostContainer} = hostContext;
-
-  const {
-    pushProvider,
-    getContextCurrentValue,
-    getContextChangedBits,
-  } = newContext;
-
-  const {
-    markActualRenderTimeStarted,
-    stopBaseRenderTimerIfRunning,
-  } = profilerTimer;
-
-  const {
-    getMaskedContext,
-    getUnmaskedContext,
-    hasContextChanged: hasLegacyContextChanged,
-    pushContextProvider: pushLegacyContextProvider,
-    pushTopLevelContextObject,
-    invalidateContextProvider,
-  } = legacyContext;
-
-  const {
-    enterHydrationState,
-    resetHydrationState,
-    tryToClaimNextHydratableInstance,
-  } = hydrationContext;
-
-  const {
-    adoptClassInstance,
-    constructClassInstance,
-    mountClassInstance,
-    resumeMountClassInstance,
-    updateClassInstance,
-  } = ReactFiberClassComponent(
-    legacyContext,
-    scheduleWork,
-    computeExpirationForFiber,
-    memoizeProps,
-    memoizeState,
-    recalculateCurrentTime,
-  );
 
   // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
   function reconcileChildren(current, workInProgress, nextChildren) {
@@ -1260,7 +1232,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  return {
+  export {
     beginWork,
   };
-}
+

@@ -21,7 +21,6 @@ import UIManager from 'UIManager';
 
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 
-import * as ReactNativeHostConfig from './ReactNativeHostConfig';
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';

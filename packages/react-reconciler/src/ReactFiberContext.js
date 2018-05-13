@@ -20,6 +20,7 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
+import {createCursor, push, pop} from './ReactFiberStack';
 
 let warnedAboutMissingGetChildContext;
 
@@ -50,9 +51,6 @@ export type LegacyContext = {
   invalidateContextProvider(workInProgress: Fiber, didChange: boolean): void,
   findCurrentUnmaskedContext(fiber: Fiber): Object,
 };
-
-export default function(stack: Stack): LegacyContext {
-  const {createCursor, push, pop} = stack;
 
   // A cursor to the current merged context object on the stack.
   let contextStackCursor: StackCursor<Object> = createCursor(emptyObject);
@@ -316,7 +314,7 @@ export default function(stack: Stack): LegacyContext {
     return node.stateNode.context;
   }
 
-  return {
+  export {
     getUnmaskedContext,
     cacheContext,
     getMaskedContext,
@@ -331,4 +329,3 @@ export default function(stack: Stack): LegacyContext {
     invalidateContextProvider,
     findCurrentUnmaskedContext,
   };
-}

@@ -428,3 +428,80 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
     export function resetTextContent(instance: Instance): void {
       // Noop
     }
+
+export function cloneInstance() {
+  // not supported
+}
+
+export function createContainerChildSet() {
+  // not supported
+}
+
+export function appendChildToContainerChildSet() {
+  // not supported
+}
+
+export function finalizeContainerChildren() {
+  // not supported
+}
+
+export function replaceContainerChildren() {
+  // not supported
+}
+
+
+export function canHydrateInstance() {
+  // not supported
+}
+
+export function canHydrateTextInstance() {
+  // not supported
+}
+
+export function getNextHydratableSibling() {
+  // not supported
+}
+
+export function getFirstHydratableChild() {
+  // not supported
+}
+
+export function hydrateInstance() {
+  // not supported
+}
+
+export function hydrateTextInstance() {
+  // not supported
+}
+
+export function didNotMatchHydratedContainerTextInstance() {
+  // not supported
+}
+
+export function didNotMatchHydratedTextInstance() {
+  // not supported
+}
+
+export function didNotHydrateContainerInstance() {
+  // not supported
+}
+
+export function didNotHydrateInstance() {
+  // not supported
+}
+
+export function didNotFindHydratableContainerInstance() {
+  // not supported
+}
+
+export function didNotFindHydratableContainerTextInstance() {
+  // not supported
+}
+
+export function didNotFindHydratableInstance() {
+  // not supported
+}
+
+export function didNotFindHydratableTextInstance() {
+  // not supported
+}

@@ -561,5 +561,28 @@ export function prepareUpdate(
       }
     }
 
+
   export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
   export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
+
+
+export function cloneInstance() {
+  // not supported
+}
+
+export function createContainerChildSet() {
+  // not supported
+}
+
+export function appendChildToContainerChildSet() {
+  // not supported
+}
+
+export function finalizeContainerChildren() {
+  // not supported
+}
+
+export function replaceContainerChildren() {
+  // not supported
+}
+

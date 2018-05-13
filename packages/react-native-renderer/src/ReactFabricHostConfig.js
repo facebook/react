@@ -355,49 +355,124 @@ export function appendInitialChild(
       };
     }
 
-<<<<<<< HEAD
-    createContainerChildSet(container: Container): ChildSet {
-      return createChildSet(container);
-    },
-=======
     export function createContainerChildSet(container: Container): ChildSet {
-      return FabricUIManager.createChildSet(container);
+      return createChildSet(container);
     }
->>>>>>> ES modules for host configs
 
     export function appendChildToContainerChildSet(
       childSet: ChildSet,
       child: Instance | TextInstance,
     ): void {
-<<<<<<< HEAD
       appendChildToSet(childSet, child.node);
-    },
-=======
-      FabricUIManager.appendChildToSet(childSet, child.node);
     }
->>>>>>> ES modules for host configs
 
     export function finalizeContainerChildren(
       container: Container,
       newChildren: ChildSet,
     ): void {
-<<<<<<< HEAD
       completeRoot(container, newChildren);
-    },
-=======
-      FabricUIManager.completeRoot(container, newChildren);
     }
->>>>>>> ES modules for host configs
 
     export function replaceContainerChildren(
       container: Container,
       newChildren: ChildSet,
-<<<<<<< HEAD
-    ): void {},
-  },
-};
-
-export default ReactFabricHostConfig;
-=======
     ): void {}
->>>>>>> ES modules for host configs
+
+
+export function commitMount() {
+  // not supported
+}
+
+export function commitUpdate() {
+  // not supported
+}
+
+export function commitTextUpdate() {
+  // not supported
+}
+
+export function resetTextContent() {
+  // not supported
+}
+
+export function appendChild() {
+  // not supported
+}
+
+export function appendChildToContainer() {
+  // not supported
+}
+
+export function insertBefore() {
+  // not supported
+}
+
+export function insertInContainerBefore() {
+  // not supported
+}
+
+export function removeChild() {
+  // not supported
+}
+
+export function removeChildFromContainer() {
+  // not supported
+}
+
+
+
+export function canHydrateInstance() {
+  // not supported
+}
+
+export function canHydrateTextInstance() {
+  // not supported
+}
+
+export function getNextHydratableSibling() {
+  // not supported
+}
+
+export function getFirstHydratableChild() {
+  // not supported
+}
+
+export function hydrateInstance() {
+  // not supported
+}
+
+export function hydrateTextInstance() {
+  // not supported
+}
+
+export function didNotMatchHydratedContainerTextInstance() {
+  // not supported
+}
+
+export function didNotMatchHydratedTextInstance() {
+  // not supported
+}
+
+export function didNotHydrateContainerInstance() {
+  // not supported
+}
+
+export function didNotHydrateInstance() {
+  // not supported
+}
+
+export function didNotFindHydratableContainerInstance() {
+  // not supported
+}
+
+export function didNotFindHydratableContainerTextInstance() {
+  // not supported
+}
+
+export function didNotFindHydratableInstance() {
+  // not supported
+}
+
+export function didNotFindHydratableTextInstance() {
+  // not supported
+}

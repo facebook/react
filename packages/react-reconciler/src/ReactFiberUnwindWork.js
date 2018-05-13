@@ -19,15 +19,6 @@ import type {ProfilerTimer} from './ReactProfilerTimer';
 import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberScheduler';
 
-import {createCapturedValue} from './ReactCapturedValue';
-import {
-  enqueueCapturedUpdate,
-  createUpdate,
-  enqueueUpdate,
-  CaptureUpdate,
-} from './ReactUpdateQueue';
-import {logError} from './ReactFiberCommitWork';
-
 import {
   ClassComponent,
   HostRoot,
@@ -49,41 +40,35 @@ import {
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
 
+import {createCapturedValue} from './ReactCapturedValue';
+import {
+  enqueueCapturedUpdate,
+  createUpdate,
+  enqueueUpdate,
+  CaptureUpdate,
+} from './ReactUpdateQueue';
+import {logError} from './ReactFiberCommitWork';
 import {Never, Sync, expirationTimeToMs} from './ReactFiberExpirationTime';
-
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-  hostContext: HostContext<C, CX>,
-  legacyContext: LegacyContext,
-  newContext: NewContext,
-  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  computeExpirationForFiber: (
-    startTime: ExpirationTime,
-    fiber: Fiber,
-  ) => ExpirationTime,
-  recalculateCurrentTime: () => ExpirationTime,
-  markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
-  isAlreadyFailedLegacyErrorBoundary: (instance: mixed) => boolean,
-  onUncaughtError: (error: mixed) => void,
-  profilerTimer: ProfilerTimer,
-  suspendRoot: (
-    root: FiberRoot,
-    thenable: Thenable,
-    timeoutMs: number,
-    suspendedTime: ExpirationTime,
-  ) => void,
-  retrySuspendedRoot: (root: FiberRoot, suspendedTime: ExpirationTime) => void,
-) {
-  const {popHostContainer, popHostContext} = hostContext;
-  const {
-    popContextProvider: popLegacyContextProvider,
-    popTopLevelContextObject: popTopLevelLegacyContextObject,
-  } = legacyContext;
-  const {popProvider} = newContext;
-  const {
-    resumeActualRenderTimerIfPaused,
-    recordElapsedActualRenderTime,
-  } = profilerTimer;
+import {popHostContainer, popHostContext} from './ReactFiberHostContext';
+import {
+  popContextProvider as popLegacyContextProvider,
+  popTopLevelContextObject as popTopLevelLegacyContextObject,
+} from './ReactFiberContext';
+import {popProvider} from './ReactFiberNewContext';
+import {
+  resumeActualRenderTimerIfPaused,
+  recordElapsedActualRenderTime,
+} from './ReactProfilerTimer';
+import {
+  suspendRoot,
+  onUncaughtError,
+  markLegacyErrorBoundaryAsFailed,
+  isAlreadyFailedLegacyErrorBoundary,
+  recalculateCurrentTime,
+  computeExpirationForFiber,
+  scheduleWork,
+  retrySuspendedRoot,
+} from './ReactFiberScheduler';
 
   function createRootErrorUpdate(
     fiber: Fiber,
@@ -400,11 +385,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  return {
+  export {
     throwException,
     unwindWork,
     unwindInterruptedWork,
     createRootErrorUpdate,
     createClassErrorUpdate,
   };
-}

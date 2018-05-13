@@ -12,6 +12,9 @@ import type {Fiber} from './ReactFiber';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 import warning from 'fbjs/lib/warning';
+import {
+  now
+} from './ReactFiberHostConfig';
 
 /**
  * The "actual" render time is total time required to render the descendants of a Profiler component.
@@ -32,7 +35,6 @@ export type ProfilerTimer = {
   stopBaseRenderTimerIfRunning(): void,
 };
 
-export function createProfilerTimer(now: () => number): ProfilerTimer {
   let fiberStack: Array<Fiber | null>;
 
   if (__DEV__) {
@@ -43,6 +45,9 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
   let totalElapsedPauseTime: number = 0;
 
   function checkActualRenderTimeStackEmpty(): void {
+    if (!enableProfilerTimer) {
+      return;
+    }
     if (__DEV__) {
       warning(
         fiberStack.length === 0,
@@ -52,6 +57,9 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
   }
 
   function markActualRenderTimeStarted(fiber: Fiber): void {
+    if (!enableProfilerTimer) {
+      return;
+    }
     if (__DEV__) {
       fiberStack.push(fiber);
     }
@@ -59,12 +67,18 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
   }
 
   function pauseActualRenderTimerIfRunning(): void {
+    if (!enableProfilerTimer) {
+      return;
+    }
     if (timerPausedAt === 0) {
       timerPausedAt = now();
     }
   }
 
   function recordElapsedActualRenderTime(fiber: Fiber): void {
+    if (!enableProfilerTimer) {
+      return;
+    }
     if (__DEV__) {
       warning(fiber === fiberStack.pop(), 'Unexpected Fiber popped.');
     }
@@ -73,10 +87,16 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
   }
 
   function resetActualRenderTimer(): void {
+    if (!enableProfilerTimer) {
+      return;
+    }
     totalElapsedPauseTime = 0;
   }
 
   function resumeActualRenderTimerIfPaused(): void {
+    if (!enableProfilerTimer) {
+      return;
+    }
     if (timerPausedAt > 0) {
       totalElapsedPauseTime += now() - timerPausedAt;
       timerPausedAt = 0;
@@ -93,12 +113,18 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
   let baseStartTime: number = -1;
 
   function recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void {
+    if (!enableProfilerTimer) {
+      return;
+    }
     if (baseStartTime !== -1) {
       fiber.selfBaseTime = now() - baseStartTime;
     }
   }
 
   function startBaseRenderTimer(): void {
+    if (!enableProfilerTimer) {
+      return;
+    }
     if (__DEV__) {
       if (baseStartTime !== -1) {
         warning(
@@ -113,32 +139,20 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
   }
 
   function stopBaseRenderTimerIfRunning(): void {
+    if (!enableProfilerTimer) {
+      return;
+    }
     baseStartTime = -1;
   }
 
-  if (enableProfilerTimer) {
-    return {
-      checkActualRenderTimeStackEmpty,
-      markActualRenderTimeStarted,
-      pauseActualRenderTimerIfRunning,
-      recordElapsedActualRenderTime,
-      resetActualRenderTimer,
-      resumeActualRenderTimerIfPaused,
-      recordElapsedBaseRenderTimeIfRunning,
-      startBaseRenderTimer,
-      stopBaseRenderTimerIfRunning,
-    };
-  } else {
-    return {
-      checkActualRenderTimeStackEmpty(): void {},
-      markActualRenderTimeStarted(fiber: Fiber): void {},
-      pauseActualRenderTimerIfRunning(): void {},
-      recordElapsedActualRenderTime(fiber: Fiber): void {},
-      resetActualRenderTimer(): void {},
-      resumeActualRenderTimerIfPaused(): void {},
-      recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void {},
-      startBaseRenderTimer(): void {},
-      stopBaseRenderTimerIfRunning(): void {},
-    };
-  }
-}
+  export {
+    checkActualRenderTimeStackEmpty,
+    markActualRenderTimeStarted,
+    pauseActualRenderTimerIfRunning,
+    recordElapsedActualRenderTime,
+    resetActualRenderTimer,
+    resumeActualRenderTimerIfPaused,
+    recordElapsedBaseRenderTimeIfRunning,
+    startBaseRenderTimer,
+    stopBaseRenderTimerIfRunning,
+  };

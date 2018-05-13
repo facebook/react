@@ -45,19 +45,19 @@ import {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
-import {createProfilerTimer} from './ReactProfilerTimer';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import ReactFiberBeginWork from './ReactFiberBeginWork';
-import ReactFiberCompleteWork from './ReactFiberCompleteWork';
-import ReactFiberUnwindWork from './ReactFiberUnwindWork';
-import ReactFiberCommitWork from './ReactFiberCommitWork';
-import ReactFiberHostContext from './ReactFiberHostContext';
-import ReactFiberHydrationContext from './ReactFiberHydrationContext';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import {
+  now,
+  scheduleDeferredCallback,
+  cancelDeferredCallback,
+  prepareForCommit,
+  resetAfterCommit,
+} from './ReactFiberHostConfig';
 import {
   markPendingPriorityLevel,
   markCommittedPriorityLevels,
@@ -95,11 +95,48 @@ import {
   computeExpirationBucket,
 } from './ReactFiberExpirationTime';
 import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
-import ReactFiberLegacyContext from './ReactFiberContext';
-import ReactFiberNewContext from './ReactFiberNewContext';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
-import ReactFiberStack from './ReactFiberStack';
+import {
+  popTopLevelContextObject as popTopLevelLegacyContextObject,
+  popContextProvider as popLegacyContextProvider,
+} from './ReactFiberContext';
+import {
+  popProvider
+} from './ReactFiberNewContext';
+import {popHostContext, popHostContainer} from './ReactFiberHostContext';
+import {
+  checkActualRenderTimeStackEmpty,
+  pauseActualRenderTimerIfRunning,
+  recordElapsedBaseRenderTimeIfRunning,
+  resetActualRenderTimer,
+  resumeActualRenderTimerIfPaused,
+  startBaseRenderTimer,
+  stopBaseRenderTimerIfRunning,
+} from './ReactProfilerTimer';
+import {
+  checkThatStackIsEmpty,
+  resetStackAfterFatalErrorInDev
+} from './ReactFiberStack';
+import {beginWork} from './ReactFiberBeginWork';
+import {completeWork} from './ReactFiberCompleteWork';
+import {
+  throwException,
+  unwindWork,
+  unwindInterruptedWork,
+  createRootErrorUpdate,
+  createClassErrorUpdate,
+} from './ReactFiberUnwindWork';
+import {
+  commitBeforeMutationLifeCycles,
+  commitResetTextContent,
+  commitPlacement,
+  commitDeletion,
+  commitWork,
+  commitLifeCycles,
+  commitAttachRef,
+  commitDetachRef,
+} from './ReactFiberCommitWork';
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
@@ -167,98 +204,6 @@ if (__DEV__) {
     }
   };
 }
-
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-) {
-  const {
-    now,
-    scheduleDeferredCallback,
-    cancelDeferredCallback,
-    prepareForCommit,
-    resetAfterCommit,
-  } = config;
-  const stack = ReactFiberStack();
-  const hostContext = ReactFiberHostContext(config, stack);
-  const legacyContext = ReactFiberLegacyContext(stack);
-  const newContext = ReactFiberNewContext(stack, config.isPrimaryRenderer);
-  const profilerTimer = createProfilerTimer(now);
-  const {popHostContext, popHostContainer} = hostContext;
-  const {
-    popTopLevelContextObject: popTopLevelLegacyContextObject,
-    popContextProvider: popLegacyContextProvider,
-  } = legacyContext;
-  const {popProvider} = newContext;
-  const hydrationContext: HydrationContext<C, CX> = ReactFiberHydrationContext(
-    config,
-  );
-  const {beginWork} = ReactFiberBeginWork(
-    config,
-    hostContext,
-    legacyContext,
-    newContext,
-    hydrationContext,
-    scheduleWork,
-    computeExpirationForFiber,
-    profilerTimer,
-    recalculateCurrentTime,
-  );
-  const {completeWork} = ReactFiberCompleteWork(
-    config,
-    hostContext,
-    legacyContext,
-    newContext,
-    hydrationContext,
-    profilerTimer,
-  );
-  const {
-    throwException,
-    unwindWork,
-    unwindInterruptedWork,
-    createRootErrorUpdate,
-    createClassErrorUpdate,
-  } = ReactFiberUnwindWork(
-    config,
-    hostContext,
-    legacyContext,
-    newContext,
-    scheduleWork,
-    computeExpirationForFiber,
-    recalculateCurrentTime,
-    markLegacyErrorBoundaryAsFailed,
-    isAlreadyFailedLegacyErrorBoundary,
-    onUncaughtError,
-    profilerTimer,
-    suspendRoot,
-    retrySuspendedRoot,
-  );
-  const {
-    commitBeforeMutationLifeCycles,
-    commitResetTextContent,
-    commitPlacement,
-    commitDeletion,
-    commitWork,
-    commitLifeCycles,
-    commitAttachRef,
-    commitDetachRef,
-  } = ReactFiberCommitWork(
-    config,
-    onCommitPhaseError,
-    scheduleWork,
-    computeExpirationForFiber,
-    markLegacyErrorBoundaryAsFailed,
-    recalculateCurrentTime,
-  );
-
-  const {
-    checkActualRenderTimeStackEmpty,
-    pauseActualRenderTimerIfRunning,
-    recordElapsedBaseRenderTimeIfRunning,
-    resetActualRenderTimer,
-    resumeActualRenderTimerIfPaused,
-    startBaseRenderTimer,
-    stopBaseRenderTimerIfRunning,
-  } = profilerTimer;
 
   // Represents the current time in ms.
   const originalStartTimeMs = now();
@@ -388,7 +333,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     if (__DEV__) {
       ReactStrictModeWarnings.discardPendingWarnings();
-      stack.checkThatStackIsEmpty();
+      checkThatStackIsEmpty();
     }
 
     nextRoot = null;
@@ -611,7 +556,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           'Should have next effect. This error is likely caused by a bug ' +
             'in React. Please file an issue.',
         );
-        onCommitPhaseError(nextEffect, error);
+        captureCommitPhaseError(nextEffect, error);
         // Clean-up
         if (nextEffect !== null) {
           nextEffect = nextEffect.nextEffect;
@@ -648,7 +593,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           'Should have next effect. This error is likely caused by a bug ' +
             'in React. Please file an issue.',
         );
-        onCommitPhaseError(nextEffect, error);
+        captureCommitPhaseError(nextEffect, error);
         // Clean-up
         if (nextEffect !== null) {
           nextEffect = nextEffect.nextEffect;
@@ -701,7 +646,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           'Should have next effect. This error is likely caused by a bug ' +
             'in React. Please file an issue.',
         );
-        onCommitPhaseError(nextEffect, error);
+        captureCommitPhaseError(nextEffect, error);
         if (nextEffect !== null) {
           nextEffect = nextEffect.nextEffect;
         }
@@ -1143,7 +1088,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       interruptedBy = null;
       // There was a fatal error.
       if (__DEV__) {
-        stack.resetStackAfterFatalErrorInDev();
+        resetStackAfterFatalErrorInDev();
       }
       return null;
     } else if (nextUnitOfWork === null) {
@@ -1246,7 +1191,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function onCommitPhaseError(fiber: Fiber, error: mixed) {
+  function captureCommitPhaseError(fiber: Fiber, error: mixed) {
     return dispatch(fiber, error, Sync);
   }
 
@@ -2021,9 +1966,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  return {
+  export {
     recalculateCurrentTime,
     computeExpirationForFiber,
+    captureCommitPhaseError,
+    onUncaughtError,
+    suspendRoot,
+    retrySuspendedRoot,
+    markLegacyErrorBoundaryAsFailed,
+    isAlreadyFailedLegacyErrorBoundary,
     scheduleWork,
     requestWork,
     flushRoot,
@@ -2036,6 +1987,5 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     interactiveUpdates,
     flushInteractiveUpdates,
     computeUniqueAsyncExpiration,
-    legacyContext,
   };
-}
+

@@ -13,6 +13,9 @@ import type {StackCursor, Stack} from './ReactFiberStack';
 
 import invariant from 'fbjs/lib/invariant';
 
+import {getChildHostContext, getRootHostContext} from './ReactFiberHostConfig';
+import {createCursor, push, pop} from './ReactFiberStack';
+
 declare class NoContextT {}
 const NO_CONTEXT: NoContextT = ({}: any);
 
@@ -24,13 +27,6 @@ export type HostContext<C, CX> = {
   pushHostContainer(fiber: Fiber, container: C): void,
   pushHostContext(fiber: Fiber): void,
 };
-
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-  stack: Stack,
-): HostContext<C, CX> {
-  const {getChildHostContext, getRootHostContext} = config;
-  const {createCursor, push, pop} = stack;
 
   let contextStackCursor: StackCursor<CX | NoContextT> = createCursor(
     NO_CONTEXT,
@@ -114,7 +110,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     pop(contextFiberStackCursor, fiber);
   }
 
-  return {
+  export {
     getHostContext,
     getRootHostContainer,
     popHostContainer,
@@ -122,4 +118,3 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     pushHostContainer,
     pushHostContext,
   };
-}

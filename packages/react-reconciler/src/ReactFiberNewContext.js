@@ -19,9 +19,12 @@ export type NewContext = {
 };
 
 import warning from 'fbjs/lib/warning';
-
-export default function(stack: Stack, isPrimaryRenderer: boolean) {
-  const {createCursor, push, pop} = stack;
+import {
+  isPrimaryRenderer,
+} from './ReactFiberHostConfig';
+import {
+  createCursor, push, pop
+} from './ReactFiberStack';
 
   const providerCursor: StackCursor<Fiber | null> = createCursor(null);
   const valueCursor: StackCursor<mixed> = createCursor(null);
@@ -99,10 +102,9 @@ export default function(stack: Stack, isPrimaryRenderer: boolean) {
     return isPrimaryRenderer ? context._changedBits : context._changedBits2;
   }
 
-  return {
+  export {
     pushProvider,
     popProvider,
     getContextCurrentValue,
     getContextChangedBits,
   };
-}

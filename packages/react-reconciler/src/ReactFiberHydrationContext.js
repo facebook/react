@@ -15,6 +15,24 @@ import {Deletion, Placement} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 
 import {createFiberFromHostInstanceForDeletion} from './ReactFiber';
+import {
+  shouldSetTextContent,
+  supportsHydration,
+  canHydrateInstance,
+  canHydrateTextInstance,
+  getNextHydratableSibling,
+  getFirstHydratableChild,
+  hydrateInstance,
+  hydrateTextInstance,
+  didNotMatchHydratedContainerTextInstance,
+  didNotMatchHydratedTextInstance,
+  didNotHydrateContainerInstance,
+  didNotHydrateInstance,
+  didNotFindHydratableContainerInstance,
+  didNotFindHydratableContainerTextInstance,
+  didNotFindHydratableInstance,
+  didNotFindHydratableTextInstance,
+} from './ReactFiberHostConfig';
 
 export type HydrationContext<C, CX> = {
   enterHydrationState(fiber: Fiber): boolean,
@@ -29,56 +47,6 @@ export type HydrationContext<C, CX> = {
   popHydrationState(fiber: Fiber): boolean,
 };
 
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-): HydrationContext<C, CX> {
-  const {shouldSetTextContent, supportsHydration} = config;
-
-  // If this doesn't have hydration mode.
-  if (!supportsHydration) {
-    return {
-      enterHydrationState() {
-        return false;
-      },
-      resetHydrationState() {},
-      tryToClaimNextHydratableInstance() {},
-      prepareToHydrateHostInstance() {
-        invariant(
-          false,
-          'Expected prepareToHydrateHostInstance() to never be called. ' +
-            'This error is likely caused by a bug in React. Please file an issue.',
-        );
-      },
-      prepareToHydrateHostTextInstance() {
-        invariant(
-          false,
-          'Expected prepareToHydrateHostTextInstance() to never be called. ' +
-            'This error is likely caused by a bug in React. Please file an issue.',
-        );
-      },
-      popHydrationState(fiber: Fiber) {
-        return false;
-      },
-    };
-  }
-
-  const {
-    canHydrateInstance,
-    canHydrateTextInstance,
-    getNextHydratableSibling,
-    getFirstHydratableChild,
-    hydrateInstance,
-    hydrateTextInstance,
-    didNotMatchHydratedContainerTextInstance,
-    didNotMatchHydratedTextInstance,
-    didNotHydrateContainerInstance,
-    didNotHydrateInstance,
-    didNotFindHydratableContainerInstance,
-    didNotFindHydratableContainerTextInstance,
-    didNotFindHydratableInstance,
-    didNotFindHydratableTextInstance,
-  } = config;
-
   // The deepest Fiber on the stack involved in a hydration context.
   // This may have been an insertion or a hydration.
   let hydrationParentFiber: null | Fiber = null;
@@ -86,6 +54,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   let isHydrating: boolean = false;
 
   function enterHydrationState(fiber: Fiber) {
+    if (!supportsHydration) {
+      return false;
+    }
+
     const parentInstance = fiber.stateNode.containerInfo;
     nextHydratableInstance = getFirstHydratableChild(parentInstance);
     hydrationParentFiber = fiber;
@@ -256,6 +228,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     rootContainerInstance: C,
     hostContext: CX,
   ): boolean {
+    if (!supportsHydration) {
+      invariant(
+        false,
+        'Expected prepareToHydrateHostInstance() to never be called. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+    }
+
     const instance: I = fiber.stateNode;
     const updatePayload = hydrateInstance(
       instance,
@@ -276,6 +256,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
+    if (!supportsHydration) {
+      invariant(
+        false,
+        'Expected prepareToHydrateHostTextInstance() to never be called. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+    }
+
     const textInstance: TI = fiber.stateNode;
     const textContent: string = fiber.memoizedProps;
     const shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
@@ -328,6 +316,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function popHydrationState(fiber: Fiber): boolean {
+    if (!supportsHydration) {
+      return false;
+    }
     if (fiber !== hydrationParentFiber) {
       // We're deeper than the current hydration context, inside an inserted
       // tree.
@@ -370,12 +361,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function resetHydrationState() {
+    if (!supportsHydration) {
+      return;
+    }
+
     hydrationParentFiber = null;
     nextHydratableInstance = null;
     isHydrating = false;
   }
 
-  return {
+  export {
     enterHydrationState,
     resetHydrationState,
     tryToClaimNextHydratableInstance,
@@ -383,4 +378,3 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     prepareToHydrateHostTextInstance,
     popHydrationState,
   };
-}

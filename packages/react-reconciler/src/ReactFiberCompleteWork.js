@@ -42,45 +42,36 @@ import {
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-  hostContext: HostContext<C, CX>,
-  legacyContext: LegacyContext,
-  newContext: NewContext,
-  hydrationContext: HydrationContext<C, CX>,
-  profilerTimer: ProfilerTimer,
-) {
-  const {
-    createInstance,
-    createTextInstance,
-    appendInitialChild,
-    finalizeInitialChildren,
-    prepareUpdate,
-    supportsMutation,
-    supportsPersistence,
-  } = config;
-
-  const {
-    getRootHostContainer,
-    popHostContext,
-    getHostContext,
-    popHostContainer,
-  } = hostContext;
-
-  const {recordElapsedActualRenderTime} = profilerTimer;
-
-  const {
-    popContextProvider: popLegacyContextProvider,
-    popTopLevelContextObject: popTopLevelLegacyContextObject,
-  } = legacyContext;
-
-  const {popProvider} = newContext;
-
-  const {
-    prepareToHydrateHostInstance,
-    prepareToHydrateHostTextInstance,
-    popHydrationState,
-  } = hydrationContext;
+import {
+  createInstance,
+  createTextInstance,
+  appendInitialChild,
+  finalizeInitialChildren,
+  prepareUpdate,
+  supportsMutation,
+  supportsPersistence,
+  cloneInstance,
+  createContainerChildSet,
+  appendChildToContainerChildSet,
+  finalizeContainerChildren,
+} from './ReactFiberHostConfig';
+import {
+  getRootHostContainer,
+  popHostContext,
+  getHostContext,
+  popHostContainer,
+} from './ReactFiberHostContext';
+import {recordElapsedActualRenderTime} from './ReactProfilerTimer';
+import {
+  popContextProvider as popLegacyContextProvider,
+  popTopLevelContextObject as popTopLevelLegacyContextObject,
+} from './ReactFiberContext';
+import {popProvider} from './ReactFiberNewContext';
+import {
+  prepareToHydrateHostInstance,
+  prepareToHydrateHostTextInstance,
+  popHydrationState,
+} from './ReactFiberHydrationContext';
 
   function markUpdate(workInProgress: Fiber) {
     // Tag the fiber with an update effect. This turns a Placement into
@@ -128,6 +119,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   if (supportsMutation) {
     if (enableMutatingReconciler) {
       // Mutation mode
+
       updateHostContainer = function(workInProgress: Fiber) {
         // Noop
       };
@@ -166,12 +158,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   } else if (supportsPersistence) {
     if (enablePersistentReconciler) {
       // Persistent host tree mode
-      const {
-        cloneInstance,
-        createContainerChildSet,
-        appendChildToContainerChildSet,
-        finalizeContainerChildren,
-      } = config;
 
       // An unfortunate fork of appendAllChildren because we have two different parent types.
       const appendAllChildrenToContainer = function(
@@ -546,7 +532,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  return {
+  export {
     completeWork,
   };
-}
+
