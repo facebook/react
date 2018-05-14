@@ -20,7 +20,7 @@ function compile(flags) {
 
 module.exports = function closure(flags = {}) {
   return {
-    name: 'closure-compiler-js',
+    name: 'scripts/rollup/plugins/closure-plugin',
     async transformBundle(code) {
       const inputFile = tmp.fileSync();
       const tempPath = inputFile.name;
