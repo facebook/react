@@ -129,6 +129,7 @@ ${license}
  * @noflow
  * @providesModule ${globalName}-dev
  * @preventMunge
+ * @generated
  */
 
 'use strict';
@@ -148,6 +149,7 @@ ${license}
  * @noflow
  * @providesModule ${globalName}-prod
  * @preventMunge
+ * @generated
  */
 
 ${source}`;
@@ -160,6 +162,7 @@ ${license}
  *
  * @noflow
  * @preventMunge
+ * @generated
  */
 
 'use strict';
@@ -178,6 +181,7 @@ ${license}
  *
  * @noflow
  * @preventMunge
+ * @generated
  */
 
 ${source}`;
