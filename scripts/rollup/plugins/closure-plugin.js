@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 const ClosureCompiler = require('google-closure-compiler').compiler;
 const {promisify} = require('util');
