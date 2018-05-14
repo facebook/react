@@ -1353,7 +1353,7 @@ describe('ReactShallowRenderer', () => {
     ]);
   });
 
-  it('should stop the upade when setState returns null or undefined', () => {
+  it('should stop the update when setState returns null or undefined', () => {
     const log = [];
     let instance;
     class Component extends React.Component {
