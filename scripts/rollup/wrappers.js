@@ -129,7 +129,7 @@ ${license}
  * @noflow
  * @providesModule ${globalName}-dev
  * @preventMunge
- * @generated
+ * ${'@gen' + 'erated'}
  */
 
 'use strict';
@@ -149,7 +149,7 @@ ${license}
  * @noflow
  * @providesModule ${globalName}-prod
  * @preventMunge
- * @generated
+ * ${'@gen' + 'erated'}
  */
 
 ${source}`;
@@ -162,7 +162,7 @@ ${license}
  *
  * @noflow
  * @preventMunge
- * @generated
+ * ${'@gen' + 'erated'}
  */
 
 'use strict';
@@ -181,7 +181,7 @@ ${license}
  *
  * @noflow
  * @preventMunge
- * @generated
+ * ${'@gen' + 'erated'}
  */
 
 ${source}`;
