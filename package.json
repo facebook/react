@@ -31,8 +31,6 @@
     "babel-plugin-transform-es2015-shorthand-properties": "^6.5.0",
     "babel-plugin-transform-es2015-spread": "^6.5.2",
     "babel-plugin-transform-es2015-template-literals": "^6.5.2",
-    "babel-plugin-transform-es3-member-expression-literals": "^6.5.0",
-    "babel-plugin-transform-es3-property-literals": "^6.5.0",
     "babel-plugin-transform-object-rest-spread": "^6.6.5",
     "babel-plugin-transform-react-jsx-source": "^6.8.0",
     "babel-plugin-transform-regenerator": "^6.26.0",
