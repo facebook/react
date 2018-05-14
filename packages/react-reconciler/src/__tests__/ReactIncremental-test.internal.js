@@ -1464,6 +1464,39 @@ describe('ReactIncremental', () => {
     expect(instance.state).toEqual({foo: 'foo'});
   });
 
+  it('does not call getDerivedStateFromProps if neither state nor props have changed', () => {
+    class Parent extends React.Component {
+      state = {parentRenders: 0};
+      static getDerivedStateFromProps(props, prevState) {
+        ReactNoop.yield('getDerivedStateFromProps');
+        return prevState.parentRenders + 1;
+      }
+      render() {
+        ReactNoop.yield('Parent');
+        return <Child parentRenders={this.state.parentRenders} ref={child} />;
+      }
+    }
+
+    class Child extends React.Component {
+      render() {
+        ReactNoop.yield('Child');
+        return this.props.parentRenders;
+      }
+    }
+
+    const child = React.createRef(null);
+    ReactNoop.render(<Parent />);
+    expect(ReactNoop.flush()).toEqual([
+      'getDerivedStateFromProps',
+      'Parent',
+      'Child',
+    ]);
+
+    // Schedule an update on the child. The parent should not re-render.
+    child.current.setState({});
+    expect(ReactNoop.flush()).toEqual(['Child']);
+  });
+
   it('does not call getDerivedStateFromProps for state-only updates if feature flag is disabled', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');

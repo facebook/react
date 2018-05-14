@@ -802,16 +802,6 @@ export default function(
       );
       newState = workInProgress.memoizedState;
     }
-
-    if (typeof getDerivedStateFromProps === 'function') {
-      applyDerivedStateFromProps(
-        workInProgress,
-        getDerivedStateFromProps,
-        newProps,
-      );
-      newState = workInProgress.memoizedState;
-    }
-
     if (
       oldProps === newProps &&
       oldState === newState &&
@@ -827,6 +817,15 @@ export default function(
         workInProgress.effectTag |= Update;
       }
       return false;
+    }
+
+    if (typeof getDerivedStateFromProps === 'function') {
+      applyDerivedStateFromProps(
+        workInProgress,
+        getDerivedStateFromProps,
+        newProps,
+      );
+      newState = workInProgress.memoizedState;
     }
 
     const shouldUpdate = checkShouldComponentUpdate(
@@ -937,17 +936,6 @@ export default function(
       newState = workInProgress.memoizedState;
     }
 
-    if (typeof getDerivedStateFromProps === 'function') {
-      if (fireGetDerivedStateFromPropsOnStateUpdates || oldProps !== newProps) {
-        applyDerivedStateFromProps(
-          workInProgress,
-          getDerivedStateFromProps,
-          newProps,
-        );
-        newState = workInProgress.memoizedState;
-      }
-    }
-
     if (
       oldProps === newProps &&
       oldState === newState &&
@@ -976,6 +964,17 @@ export default function(
         }
       }
       return false;
+    }
+
+    if (typeof getDerivedStateFromProps === 'function') {
+      if (fireGetDerivedStateFromPropsOnStateUpdates || oldProps !== newProps) {
+        applyDerivedStateFromProps(
+          workInProgress,
+          getDerivedStateFromProps,
+          newProps,
+        );
+        newState = workInProgress.memoizedState;
+      }
     }
 
     const shouldUpdate = checkShouldComponentUpdate(
