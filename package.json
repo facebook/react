@@ -85,7 +85,6 @@
     "rimraf": "^2.6.1",
     "rollup": "^0.52.1",
     "rollup-plugin-babel": "^3.0.1",
-    "rollup-plugin-closure-compiler-js": "^1.0.6",
     "rollup-plugin-commonjs": "^8.2.6",
     "rollup-plugin-node-resolve": "^2.1.1",
     "rollup-plugin-prettier": "^0.3.0",
