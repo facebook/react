@@ -1,7 +1,8 @@
+'use strict'
+
 const ClosureCompiler = require('google-closure-compiler').compiler;
 const {promisify} = require('util');
 const fs = require('fs');
-const path = require('path');
 const tmp = require('tmp');
 const writeFileAsync = promisify(fs.writeFile);
 
