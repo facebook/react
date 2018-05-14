@@ -202,9 +202,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
 
+    ReactCurrentOwner.current = workInProgress;
     let nextChildren;
     if (__DEV__) {
-      ReactCurrentOwner.current = workInProgress;
       ReactDebugCurrentFiber.setCurrentPhase('render');
       nextChildren = render(nextProps, ref);
       ReactDebugCurrentFiber.setCurrentPhase(null);
@@ -294,10 +294,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const unmaskedContext = getUnmaskedContext(workInProgress);
     const context = getMaskedContext(workInProgress, unmaskedContext);
 
+    ReactCurrentOwner.current = workInProgress;
     let nextChildren;
-
     if (__DEV__) {
-      ReactCurrentOwner.current = workInProgress;
       ReactDebugCurrentFiber.setCurrentPhase('render');
       nextChildren = fn(nextProps, context);
       ReactDebugCurrentFiber.setCurrentPhase(null);
@@ -620,8 +619,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const unmaskedContext = getUnmaskedContext(workInProgress);
     const context = getMaskedContext(workInProgress, unmaskedContext);
 
+    ReactCurrentOwner.current = workInProgress;
     let value;
-
     if (__DEV__) {
       if (fn.prototype && typeof fn.prototype.render === 'function') {
         const componentName = getComponentName(workInProgress) || 'Unknown';
@@ -637,7 +636,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           didWarnAboutBadClass[componentName] = true;
         }
       }
-      ReactCurrentOwner.current = workInProgress;
       value = fn(props, context);
     } else {
       value = fn(props, context);
@@ -1111,9 +1109,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
 
+    ReactCurrentOwner.current = workInProgress;
     let newChildren;
     if (__DEV__) {
-      ReactCurrentOwner.current = workInProgress;
       ReactDebugCurrentFiber.setCurrentPhase('render');
       newChildren = render(newValue);
       ReactDebugCurrentFiber.setCurrentPhase(null);
