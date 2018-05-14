@@ -16,8 +16,8 @@
 
 import createReactNoop from './createReactNoop';
 
-const ReactNoop = createReactNoop(
-  true, // useMutation
+const ReactNoopPersistent = createReactNoop(
+  false, // useMutation
 );
 
-export default ReactNoop;
+export default ReactNoopPersistent;
