@@ -62,15 +62,15 @@ const errorCodeOpts = {
 };
 
 const closureOptions = {
-  compilationLevel: 'SIMPLE',
-  languageIn: 'ECMASCRIPT5_STRICT',
-  languageOut: 'ECMASCRIPT5_STRICT',
+  compilation_level: 'SIMPLE',
+  language_in: 'ECMASCRIPT5_STRICT',
+  language_out: 'ECMASCRIPT5_STRICT',
   env: 'CUSTOM',
-  warningLevel: 'QUIET',
-  applyInputSourceMaps: false,
-  useTypesForOptimization: false,
-  processCommonJsModules: false,
-  rewritePolyfills: false,
+  warning_level: 'QUIET',
+  apply_input_source_maps: false,
+  use_types_for_optimization: false,
+  process_common_js_modules: false,
+  rewrite_polyfills: false,
 };
 
 function getBabelConfig(updateBabelOptions, bundleType, filename) {
@@ -264,7 +264,7 @@ function getPlugins(
         Object.assign({}, closureOptions, {
           // Don't let it create global variables in the browser.
           // https://github.com/facebook/react/issues/10909
-          assumeFunctionWrapper: !isInGlobalScope,
+          assume_function_wrapper: !isInGlobalScope,
           // Works because `google-closure-compiler-js` is forked in Yarn lockfile.
           // We can remove this if GCC merges my PR:
           // https://github.com/google/closure-compiler/pull/2707

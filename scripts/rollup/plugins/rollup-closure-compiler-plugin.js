@@ -1,17 +1,33 @@
-const {fork} = require('child_process');
-// import logger from './logger';
+const ClosureCompiler = require('google-closure-compiler').compiler;
+const {promisify} = require('util');
+const fs = require('fs');
+const path = require('path');
+const writeFileAsync = promisify(fs.writeFile);
 
 function compile(flags) {
-  return new Promise((resolve, reject) => {
-    const child = fork(require.resolve('./closure-compiler.js'));
-    const command = { status: 'START', data: flags };
-    child.on('message', ({status, data}) => {
-      if (status === 'SUCCESS') {
-        child.kill('SIGINT');
-        resolve(data);
+  return new Promise((resolve, reject) => {    
+    const closureCompiler = new ClosureCompiler(flags);
+    
+    closureCompiler.run(function(exitCode, stdOut, stdErr) {
+      // not sure if this is 100% right for error checking,
+      // didn't get time to confirm
+      if (!stdErr) {
+        resolve(stdOut);
+      } else {
+        reject(stdErr);
       }
     });
-    child.send(command);
+  });
+}
+
+function deleteFile(filename) {
+  return new Promise((resolve, reject) => {
+    fs.unlink(filename, err => {
+      if (err) {
+        reject();
+      }
+      resolve();
+    });
   });
 }
 
@@ -19,19 +35,12 @@ module.exports = function closure(flags = {}) {
   return {
     name: 'closure-compiler-js',
     async transformBundle(code) {
-      flags = Object.assign({
-        createSourceMap: true,
-        processCommonJsModules: true,
-      }, flags);
-      flags.jsCode = [{
-          src: code,
-      }];
-
-      const output = await compile(flags);
-      // if (logger(flags, output)) {
-      //     throw new Error(`compilation error, ${output.errors.length} error${output.errors.length===0 || output.errors.length>1?'s':''}`);
-      // }
-      return {code: output.compiledCode, map: output.sourceMap};
+      const tempPath = path.resolve(__dirname, 'temp.js');
+      flags = Object.assign({}, flags, { js: tempPath });
+      await writeFileAsync(tempPath, code, 'utf8');
+      const compiledCode = await compile(flags);
+      await deleteFile(tempPath);
+      return {code: compiledCode };
     },
   };
 };
