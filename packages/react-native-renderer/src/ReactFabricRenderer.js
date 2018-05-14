@@ -22,7 +22,7 @@ import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 import ReactFiberReconciler from 'react-reconciler';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
-import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
 
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
@@ -34,6 +34,10 @@ import UIManager from 'UIManager';
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
+
+type HostContext = $ReadOnly<{|
+  isInAParentText: boolean,
+|}>;
 
 /**
  * This is used for refs on host components.
@@ -135,7 +139,7 @@ const ReactFabricRenderer = ReactFiberReconciler({
     type: string,
     props: Props,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
     internalInstanceHandle: Object,
   ): Instance {
     const tag = nextReactTag;
@@ -150,6 +154,11 @@ const ReactFabricRenderer = ReactFiberReconciler({
         }
       }
     }
+
+    invariant(
+      type !== 'RCTView' || !hostContext.isInAParentText,
+      'Nesting of <View> within <Text> is not currently supported.',
+    );
 
     const updatePayload = ReactNativeAttributePayload.create(
       props,
@@ -175,9 +184,14 @@ const ReactFabricRenderer = ReactFiberReconciler({
   createTextInstance(
     text: string,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
     internalInstanceHandle: Object,
   ): TextInstance {
+    invariant(
+      hostContext.isInAParentText,
+      'Text strings must be rendered within a <Text> component.',
+    );
+
     const tag = nextReactTag;
     nextReactTag += 2;
 
@@ -203,12 +217,27 @@ const ReactFabricRenderer = ReactFiberReconciler({
     return false;
   },
 
-  getRootHostContext(): {} {
-    return emptyObject;
+  getRootHostContext(rootContainerInstance: Container): HostContext {
+    return {isInAParentText: false};
   },
 
-  getChildHostContext(): {} {
-    return emptyObject;
+  getChildHostContext(
+    parentHostContext: HostContext,
+    type: string,
+  ): HostContext {
+    const prevIsInAParentText = parentHostContext.isInAParentText;
+    const isInAParentText =
+      type === 'AndroidTextInput' || // Android
+      type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSinglelineTextInputView' || // iOS
+      type === 'RCTText' ||
+      type === 'RCTVirtualText';
+
+    if (prevIsInAParentText !== isInAParentText) {
+      return {isInAParentText};
+    } else {
+      return parentHostContext;
+    }
   },
 
   getPublicInstance(instance) {
@@ -230,7 +259,7 @@ const ReactFabricRenderer = ReactFiberReconciler({
     oldProps: Props,
     newProps: Props,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
   ): null | Object {
     const viewConfig = instance.canonical.viewConfig;
     const updatePayload = ReactNativeAttributePayload.diff(
