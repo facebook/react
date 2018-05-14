@@ -5,9 +5,9 @@ const path = require('path');
 const writeFileAsync = promisify(fs.writeFile);
 
 function compile(flags) {
-  return new Promise((resolve, reject) => {    
+  return new Promise((resolve, reject) => {
     const closureCompiler = new ClosureCompiler(flags);
-    
+
     closureCompiler.run(function(exitCode, stdOut, stdErr) {
       // not sure if this is 100% right for error checking,
       // didn't get time to confirm
@@ -36,11 +36,11 @@ module.exports = function closure(flags = {}) {
     name: 'closure-compiler-js',
     async transformBundle(code) {
       const tempPath = path.resolve(__dirname, 'temp.js');
-      flags = Object.assign({}, flags, { js: tempPath });
+      flags = Object.assign({}, flags, {js: tempPath});
       await writeFileAsync(tempPath, code, 'utf8');
       const compiledCode = await compile(flags);
       await deleteFile(tempPath);
-      return {code: compiledCode };
+      return {code: compiledCode};
     },
   };
 };
