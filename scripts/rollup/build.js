@@ -460,9 +460,9 @@ function handleRollupError(error) {
   console.error(
     `\x1b[31m-- ${error.code}${error.plugin ? ` (${error.plugin})` : ''} --`
   );
-  console.error(error.message);
-  const {file, line, column} = error.loc;
-  if (file) {
+  console.error(error.stack);
+  if (error.loc && error.loc.file) {
+    const {file, line, column} = error.loc;
     // This looks like an error from Rollup, e.g. missing export.
     // We'll use the accurate line numbers provided by Rollup but
     // use Babel code frame because it looks nicer.
@@ -473,7 +473,7 @@ function handleRollupError(error) {
       highlightCode: true,
     });
     console.error(frame);
-  } else {
+  } else if (error.codeFrame) {
     // This looks like an error from a plugin (e.g. Babel).
     // In this case we'll resort to displaying the provided code frame
     // because we can't be sure the reported location is accurate.
