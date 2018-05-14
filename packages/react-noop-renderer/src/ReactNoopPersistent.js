@@ -14,9 +14,9 @@
  * environment.
  */
 
-import ReactNoopShared from './ReactNoopShared';
+import createReactNoop from './createReactNoop';
 
-const ReactNoopPersistent = ReactNoopShared(
+const ReactNoopPersistent = createReactNoop(
   false, // useMutation
 );
 

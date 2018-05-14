@@ -14,9 +14,9 @@
  * environment.
  */
 
-import ReactNoopShared from './ReactNoopShared';
+import createReactNoop from './createReactNoop';
 
-const ReactNoop = ReactNoopShared(
+const ReactNoop = createReactNoop(
   true, // useMutation
 );
 

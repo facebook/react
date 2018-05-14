@@ -33,7 +33,7 @@ type Instance = {|
 |};
 type TextInstance = {|text: string, id: number|};
 
-function ReactNoopShared(useMutation: boolean) {
+function createReactNoop(useMutation: boolean) {
   const UPDATE_SIGNAL = {};
   let scheduledCallback = null;
 
@@ -579,4 +579,4 @@ function ReactNoopShared(useMutation: boolean) {
   return ReactNoop;
 }
 
-export default ReactNoopShared;
+export default createReactNoop;
