@@ -24,8 +24,6 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  CallComponent,
-  ReturnComponent,
   ForwardRef,
   Fragment,
   Mode,
@@ -41,8 +39,6 @@ import {NoContext, AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
-  REACT_RETURN_TYPE,
-  REACT_CALL_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
@@ -364,12 +360,6 @@ export function createFiberFromElement(
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, expirationTime, key);
-      case REACT_CALL_TYPE:
-        fiberTag = CallComponent;
-        break;
-      case REACT_RETURN_TYPE:
-        fiberTag = ReturnComponent;
-        break;
       case REACT_TIMEOUT_TYPE:
         fiberTag = TimeoutComponent;
         // Suspense does not require async, but its children should be strict

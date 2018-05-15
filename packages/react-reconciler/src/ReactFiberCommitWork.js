@@ -25,7 +25,6 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  CallComponent,
   Profiler,
   TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
@@ -391,10 +390,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       case HostComponent: {
         safelyDetachRef(current);
-        return;
-      }
-      case CallComponent: {
-        commitNestedUnmounts(current.stateNode);
         return;
       }
       case HostPortal: {

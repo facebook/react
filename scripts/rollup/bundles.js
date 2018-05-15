@@ -328,16 +328,6 @@ const bundles = [
     externals: [],
   },
 
-  /******* React Call Return (experimental) *******/
-  {
-    label: 'react-call-return',
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: ISOMORPHIC,
-    entry: 'react-call-return',
-    global: 'ReactCallReturn',
-    externals: [],
-  },
-
   /******* React Is *******/
   {
     label: 'react-is',
