@@ -685,6 +685,20 @@
       "packageName": "react-scheduler",
       "size": 2068,
       "gzip": 1051
+    },
+    {
+      "filename": "SimpleCacheProvider-dev.js",
+      "bundleType": "FB_WWW_DEV",
+      "packageName": "simple-cache-provider",
+      "size": 6227,
+      "gzip": 1926
+    },
+    {
+      "filename": "SimpleCacheProvider-prod.js",
+      "bundleType": "FB_WWW_PROD",
+      "packageName": "simple-cache-provider",
+      "size": 2752,
+      "gzip": 854
     }
   ]
 }

@@ -348,7 +348,7 @@ const bundles = [
   /******* Simple Cache Provider (experimental) *******/
   {
     label: 'simple-cache-provider',
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'simple-cache-provider',
     global: 'SimpleCacheProvider',
