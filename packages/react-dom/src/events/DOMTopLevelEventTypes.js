@@ -16,15 +16,12 @@ import {
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
 /**
- * To identify top level events in react-dom, we use constants defined by this
- * module. Those are completely opaque to every other module but we rely on them
- * being the raw DOM event names inside this module. This allows us to build a
- * very efficient mapping from top level identifiers to the raw event type.
- *
- * The use of an `opaque` flow type makes sure that we can only access the value
- * of a constant in this module.
+ * To identify top level events in ReactDOM, we use constants defined by this
+ * module. This is the only module that uses the unsafe* methods to express
+ * that the constants actually correspond to the browser event names. This lets
+ * us save some bundle size by avoiding a top level type -> event name map.
+ * The rest of ReactDOM code should import top level types from this file.
  */
-
 export const TOP_ABORT = unsafeCastStringToDOMTopLevelType('abort');
 export const TOP_ANIMATION_END = unsafeCastStringToDOMTopLevelType(
   getVendorPrefixedEventName('animationend'),
