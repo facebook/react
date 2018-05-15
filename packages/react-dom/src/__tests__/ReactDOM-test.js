@@ -309,14 +309,9 @@ describe('ReactDOM', () => {
     const actual = [];
 
     function click(node) {
-      const fakeNativeEvent = function() {};
-      fakeNativeEvent.target = node;
-      fakeNativeEvent.path = [node, container];
-      ReactTestUtils.simulateNativeEventOnNode(
-        'topClick',
-        node,
-        fakeNativeEvent,
-      );
+      ReactTestUtils.Simulate.click(node, {
+        path: [node, container],
+      });
     }
 
     class Wrapper extends React.Component {

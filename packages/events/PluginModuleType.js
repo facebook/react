@@ -12,6 +12,7 @@ import type {
   DispatchConfig,
   ReactSyntheticEvent,
 } from './ReactSyntheticEventType';
+import type {TopLevelType} from './TopLevelEventTypes';
 
 export type EventTypes = {[key: string]: DispatchConfig};
 
@@ -22,7 +23,7 @@ export type PluginName = string;
 export type PluginModule<NativeEvent> = {
   eventTypes: EventTypes,
   extractEvents: (
-    topLevelType: string,
+    topLevelType: TopLevelType,
     targetInst: Fiber,
     nativeTarget: NativeEvent,
     nativeEventTarget: EventTarget,

@@ -36,7 +36,7 @@
     "babel-plugin-transform-regenerator": "^6.26.0",
     "babel-preset-react": "^6.5.0",
     "babel-traverse": "^6.9.0",
-    "babylon": "6.15.0",
+    "babylon": "6.18.0",
     "bundle-collapser": "^1.1.1",
     "chalk": "^1.1.3",
     "cli-table": "^0.3.1",

@@ -143,6 +143,14 @@ const forks = Object.freeze({
         return null;
     }
   },
+
+  // React DOM uses different top level event names and supports mouse events.
+  'events/ResponderTopLevelEventTypes': (bundleType, entry) => {
+    if (entry === 'react-dom' || entry.startsWith('react-dom/')) {
+      return 'events/forks/ResponderTopLevelEventTypes.dom.js';
+    }
+    return null;
+  },
 });
 
 module.exports = forks;

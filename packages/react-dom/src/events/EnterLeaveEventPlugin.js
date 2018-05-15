@@ -7,6 +7,7 @@
 
 import {accumulateEnterLeaveDispatches} from 'events/EventPropagators';
 
+import {TOP_MOUSE_OUT, TOP_MOUSE_OVER} from './DOMTopLevelEventTypes';
 import SyntheticMouseEvent from './SyntheticMouseEvent';
 import {
   getClosestInstanceFromNode,
@@ -16,11 +17,11 @@ import {
 const eventTypes = {
   mouseEnter: {
     registrationName: 'onMouseEnter',
-    dependencies: ['topMouseOut', 'topMouseOver'],
+    dependencies: [TOP_MOUSE_OUT, TOP_MOUSE_OVER],
   },
   mouseLeave: {
     registrationName: 'onMouseLeave',
-    dependencies: ['topMouseOut', 'topMouseOver'],
+    dependencies: [TOP_MOUSE_OUT, TOP_MOUSE_OVER],
   },
 };
 
@@ -41,12 +42,12 @@ const EnterLeaveEventPlugin = {
     nativeEventTarget,
   ) {
     if (
-      topLevelType === 'topMouseOver' &&
+      topLevelType === TOP_MOUSE_OVER &&
       (nativeEvent.relatedTarget || nativeEvent.fromElement)
     ) {
       return null;
     }
-    if (topLevelType !== 'topMouseOut' && topLevelType !== 'topMouseOver') {
+    if (topLevelType !== TOP_MOUSE_OUT && topLevelType !== TOP_MOUSE_OVER) {
       // Must not be a mouse in or mouse out - ignoring.
       return null;
     }
@@ -67,7 +68,7 @@ const EnterLeaveEventPlugin = {
 
     let from;
     let to;
-    if (topLevelType === 'topMouseOut') {
+    if (topLevelType === TOP_MOUSE_OUT) {
       from = targetInst;
       const related = nativeEvent.relatedTarget || nativeEvent.toElement;
       to = related ? getClosestInstanceFromNode(related) : null;

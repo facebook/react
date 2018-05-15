@@ -3,9 +3,18 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
+import {
+  TOP_BLUR,
+  TOP_CANCEL,
+  TOP_CLOSE,
+  TOP_FOCUS,
+  TOP_SCROLL,
+} from './DOMTopLevelEventTypes';
 import {
   setEnabled,
   isEnabled,
@@ -13,7 +22,6 @@ import {
   trapCapturedEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
-import {topLevelTypes} from './BrowserEventConstants';
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -79,7 +87,7 @@ let reactTopListenersCounter = 0;
  */
 const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
 
-function getListeningForDocument(mountAt) {
+function getListeningForDocument(mountAt: any) {
   // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
   // directly.
   if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
@@ -108,37 +116,39 @@ function getListeningForDocument(mountAt) {
  * they bubble to document.
  *
  * @param {string} registrationName Name of listener (e.g. `onClick`).
- * @param {object} contentDocumentHandle Document which owns the container
+ * @param {object} mountAt Container where to mount the listener
  */
-export function listenTo(registrationName, contentDocumentHandle) {
-  const mountAt = contentDocumentHandle;
+export function listenTo(
+  registrationName: string,
+  mountAt: Document | Element,
+) {
   const isListening = getListeningForDocument(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
-      if (dependency === 'topScroll') {
-        trapCapturedEvent('topScroll', 'scroll', mountAt);
-      } else if (dependency === 'topFocus' || dependency === 'topBlur') {
-        trapCapturedEvent('topFocus', 'focus', mountAt);
-        trapCapturedEvent('topBlur', 'blur', mountAt);
+      if (dependency === TOP_SCROLL) {
+        trapCapturedEvent(TOP_SCROLL, mountAt);
+      } else if (dependency === TOP_FOCUS || dependency === TOP_BLUR) {
+        trapCapturedEvent(TOP_FOCUS, mountAt);
+        trapCapturedEvent(TOP_BLUR, mountAt);
 
         // to make sure blur and focus event listeners are only attached once
-        isListening.topBlur = true;
-        isListening.topFocus = true;
-      } else if (dependency === 'topCancel') {
+        isListening[TOP_BLUR] = true;
+        isListening[TOP_FOCUS] = true;
+      } else if (dependency === TOP_CANCEL) {
         if (isEventSupported('cancel', true)) {
-          trapCapturedEvent('topCancel', 'cancel', mountAt);
+          trapCapturedEvent(TOP_CANCEL, mountAt);
         }
-        isListening.topCancel = true;
-      } else if (dependency === 'topClose') {
+        isListening[TOP_CANCEL] = true;
+      } else if (dependency === TOP_CLOSE) {
         if (isEventSupported('close', true)) {
-          trapCapturedEvent('topClose', 'close', mountAt);
+          trapCapturedEvent(TOP_CLOSE, mountAt);
         }
-        isListening.topClose = true;
-      } else if (topLevelTypes.hasOwnProperty(dependency)) {
-        trapBubbledEvent(dependency, topLevelTypes[dependency], mountAt);
+        isListening[TOP_CLOSE] = true;
+      } else {
+        trapBubbledEvent(dependency, mountAt);
       }
 
       isListening[dependency] = true;
@@ -146,7 +156,10 @@ export function listenTo(registrationName, contentDocumentHandle) {
   }
 }
 
-export function isListeningToAllDependencies(registrationName, mountAt) {
+export function isListeningToAllDependencies(
+  registrationName: string,
+  mountAt: Document | Element,
+) {
   const isListening = getListeningForDocument(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
   for (let i = 0; i < dependencies.length; i++) {
