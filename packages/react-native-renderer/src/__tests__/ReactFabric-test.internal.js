@@ -61,7 +61,11 @@ describe('ReactFabric', () => {
     ReactFabric.render(<View foo="bar" />, 11);
 
     expect(FabricUIManager.createNode.mock.calls.length).toBe(1);
-    expect(FabricUIManager.cloneNodeWithNewProps).toBeCalledWith(firstNode, {
+    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls.length).toBe(1);
+    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls[0][0]).toBe(
+      firstNode,
+    );
+    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls[0][1]).toEqual({
       foo: 'bar',
     });
   });

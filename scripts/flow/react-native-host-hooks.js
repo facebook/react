@@ -101,15 +101,20 @@ declare module 'FabricUIManager' {
     props: ?Object,
     instanceHandle: Object,
   ): Object;
-  declare function cloneNode(node: Object): Object;
-  declare function cloneNodeWithNewChildren(node: Object): Object;
+  declare function cloneNode(node: Object, instanceHandle: Object): Object;
+  declare function cloneNodeWithNewChildren(
+    node: Object,
+    instanceHandle: Object,
+  ): Object;
   declare function cloneNodeWithNewProps(
     node: Object,
     newProps: ?Object,
+    instanceHandle: Object,
   ): Object;
   declare function cloneNodeWithNewChildrenAndProps(
     node: Object,
     newProps: ?Object,
+    instanceHandle: Object,
   ): Object;
   declare function appendChild(node: Object, childNode: Object): void;
 
