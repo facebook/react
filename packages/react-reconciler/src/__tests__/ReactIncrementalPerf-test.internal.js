@@ -115,6 +115,7 @@ describe('ReactDebugFiberPerf', () => {
     global.performance = createUserTimingPolyfill();
 
     require('shared/ReactFeatureFlags').enableUserTimingAPI = true;
+    require('shared/ReactFeatureFlags').enableProfilerTimer = false;
     require('shared/ReactFeatureFlags').replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 
     // Import after the polyfill is set up:
