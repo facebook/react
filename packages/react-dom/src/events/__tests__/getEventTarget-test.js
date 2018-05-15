@@ -89,5 +89,28 @@ describe('getEventTarget', () => {
         expect(target).toEqual(useElement);
       });
     });
+
+    describe('when event dispatch by text node', () => {
+      it('get target as parent element object', () => {
+        let target = null;
+
+        class Comp extends React.Component {
+          render() {
+            return <div onClick={e => (target = e.target)}>textNode</div>;
+          }
+        }
+
+        ReactDOM.render(<Comp />, container);
+
+        const nativeEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+        });
+        const textNode = container.firstChild.firstChild;
+        expect(target).toEqual(null);
+        textNode.dispatchEvent(nativeEvent);
+        expect(target).toEqual(container.firstChild);
+      });
+    });
   });
 });
