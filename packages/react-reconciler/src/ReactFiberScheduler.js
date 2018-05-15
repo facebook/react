@@ -666,7 +666,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         invokeGuardedCallback(
           null,
           commitAllLifeCycles,
-          root,
+          null,
           currentTime,
           committedExpirationTime,
         );
