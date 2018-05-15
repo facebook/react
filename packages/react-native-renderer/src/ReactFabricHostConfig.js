@@ -25,7 +25,17 @@ import invariant from 'fbjs/lib/invariant';
 
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
-import FabricUIManager from 'FabricUIManager';
+import {
+  createNode,
+  cloneNode,
+  cloneNodeWithNewChildren,
+  cloneNodeWithNewChildrenAndProps,
+  cloneNodeWithNewProps,
+  createChildSet,
+  appendChild,
+  appendChildToSet,
+  completeRoot,
+} from 'FabricUIManager';
 import UIManager from 'UIManager';
 
 // Counter for uniquely identifying views.
@@ -126,12 +136,12 @@ type TextInstance = {
   node: Node,
 };
 
-const ReacFabricHostConfig = {
+const ReactFabricHostConfig = {
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
-    FabricUIManager.appendChild(parentInstance.node, child.node);
+    appendChild(parentInstance.node, child.node);
   },
 
   createInstance(
@@ -164,7 +174,7 @@ const ReacFabricHostConfig = {
       viewConfig.validAttributes,
     );
 
-    const node = FabricUIManager.createNode(
+    const node = createNode(
       tag, // reactTag
       viewConfig.uiViewClassName, // viewName
       rootContainerInstance, // rootTag
@@ -194,7 +204,7 @@ const ReacFabricHostConfig = {
     const tag = nextReactTag;
     nextReactTag += 2;
 
-    const node = FabricUIManager.createNode(
+    const node = createNode(
       tag, // reactTag
       'RCTRawText', // viewName
       rootContainerInstance, // rootTag
@@ -307,18 +317,23 @@ const ReacFabricHostConfig = {
       let clone;
       if (keepChildren) {
         if (updatePayload !== null) {
-          clone = FabricUIManager.cloneNodeWithNewProps(node, updatePayload);
+          clone = cloneNodeWithNewProps(
+            node,
+            updatePayload,
+            internalInstanceHandle,
+          );
         } else {
-          clone = FabricUIManager.cloneNode(node);
+          clone = cloneNode(node, internalInstanceHandle);
         }
       } else {
         if (updatePayload !== null) {
-          clone = FabricUIManager.cloneNodeWithNewChildrenAndProps(
+          clone = cloneNodeWithNewChildrenAndProps(
             node,
             updatePayload,
+            internalInstanceHandle,
           );
         } else {
-          clone = FabricUIManager.cloneNodeWithNewChildren(node);
+          clone = cloneNodeWithNewChildren(node, internalInstanceHandle);
         }
       }
       return {
@@ -328,21 +343,21 @@ const ReacFabricHostConfig = {
     },
 
     createContainerChildSet(container: Container): ChildSet {
-      return FabricUIManager.createChildSet(container);
+      return createChildSet(container);
     },
 
     appendChildToContainerChildSet(
       childSet: ChildSet,
       child: Instance | TextInstance,
     ): void {
-      FabricUIManager.appendChildToSet(childSet, child.node);
+      appendChildToSet(childSet, child.node);
     },
 
     finalizeContainerChildren(
       container: Container,
       newChildren: ChildSet,
     ): void {
-      FabricUIManager.completeRoot(container, newChildren);
+      completeRoot(container, newChildren);
     },
 
     replaceContainerChildren(
@@ -352,4 +367,4 @@ const ReacFabricHostConfig = {
   },
 };
 
-export default ReacFabricHostConfig;
+export default ReactFabricHostConfig;
