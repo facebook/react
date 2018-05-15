@@ -9,7 +9,7 @@
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {DOMTopLevelEventType} from 'react-dom/src/events/DOMTopLevelEventTypes';
+import type {DOMTopLevelEventType} from './DOMTopLevelEventTypes';
 
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import {runExtractedEventsInBatch} from 'events/EventPluginHub';
@@ -20,7 +20,7 @@ import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
-import {getRawEventName} from 'react-dom/src/events/DOMTopLevelEventTypes';
+import {getRawEventName} from './DOMTopLevelEventTypes';
 
 const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 

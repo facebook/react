@@ -12,7 +12,7 @@ import type {
   DispatchConfig,
   ReactSyntheticEvent,
 } from './ReactSyntheticEventType';
-import type {TopLevelType} from 'events/TopLevelEventTypes';
+import type {TopLevelType} from './TopLevelEventTypes';
 
 export type EventTypes = {[key: string]: DispatchConfig};
 
