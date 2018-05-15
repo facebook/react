@@ -9,7 +9,7 @@
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {DOMTopLevelEventType} from './DOMTopLevelEventTypes';
+import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import {runExtractedEventsInBatch} from 'events/EventPluginHub';

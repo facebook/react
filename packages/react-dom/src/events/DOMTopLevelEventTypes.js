@@ -7,6 +7,12 @@
  * @flow
  */
 
+import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
+
+import {
+  unsafeCastStringToDOMTopLevelType,
+  unsafeCastDOMTopLevelTypeToString,
+} from 'events/TopLevelEventTypes';
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
 /**
@@ -19,161 +25,107 @@ import getVendorPrefixedEventName from './getVendorPrefixedEventName';
  * of a constant in this module.
  */
 
-// eslint-disable-next-line no-undef
-export opaque type DOMTopLevelEventType =
-  | 'abort'
-  | 'animationend'
-  | 'animationiteration'
-  | 'animationstart'
-  | 'blur'
-  | 'canplay'
-  | 'canplaythrough'
-  | 'cancel'
-  | 'change'
-  | 'click'
-  | 'close'
-  | 'compositionend'
-  | 'compositionstart'
-  | 'compositionupdate'
-  | 'contextmenu'
-  | 'copy'
-  | 'cut'
-  | 'dblclick'
-  | 'drag'
-  | 'dragend'
-  | 'dragenter'
-  | 'dragexit'
-  | 'dragleave'
-  | 'dragover'
-  | 'dragstart'
-  | 'drop'
-  | 'durationchange'
-  | 'emptied'
-  | 'encrypted'
-  | 'ended'
-  | 'error'
-  | 'focus'
-  | 'input'
-  | 'invalid'
-  | 'keydown'
-  | 'keypress'
-  | 'keyup'
-  | 'load'
-  | 'loadstart'
-  | 'loadeddata'
-  | 'loadedmetadata'
-  | 'mousedown'
-  | 'mousemove'
-  | 'mouseout'
-  | 'mouseover'
-  | 'mouseup'
-  | 'paste'
-  | 'pause'
-  | 'play'
-  | 'playing'
-  | 'progress'
-  | 'ratechange'
-  | 'reset'
-  | 'scroll'
-  | 'seeked'
-  | 'seeking'
-  | 'selectionchange'
-  | 'stalled'
-  | 'submit'
-  | 'suspend'
-  | 'textInput'
-  | 'timeupdate'
-  | 'toggle'
-  | 'touchcancel'
-  | 'touchend'
-  | 'touchmove'
-  | 'touchstart'
-  | 'transitionend'
-  | 'volumechange'
-  | 'waiting'
-  | 'wheel';
+export const TOP_ABORT = unsafeCastStringToDOMTopLevelType('abort');
+export const TOP_ANIMATION_END = unsafeCastStringToDOMTopLevelType(
+  getVendorPrefixedEventName('animationend'),
+);
+export const TOP_ANIMATION_ITERATION = unsafeCastStringToDOMTopLevelType(
+  getVendorPrefixedEventName('animationiteration'),
+);
+export const TOP_ANIMATION_START = unsafeCastStringToDOMTopLevelType(
+  getVendorPrefixedEventName('animationstart'),
+);
+export const TOP_BLUR = unsafeCastStringToDOMTopLevelType('blur');
+export const TOP_CAN_PLAY = unsafeCastStringToDOMTopLevelType('canplay');
+export const TOP_CAN_PLAY_THROUGH = unsafeCastStringToDOMTopLevelType(
+  'canplaythrough',
+);
+export const TOP_CANCEL = unsafeCastStringToDOMTopLevelType('cancel');
+export const TOP_CHANGE = unsafeCastStringToDOMTopLevelType('change');
+export const TOP_CLICK = unsafeCastStringToDOMTopLevelType('click');
+export const TOP_CLOSE = unsafeCastStringToDOMTopLevelType('close');
+export const TOP_COMPOSITION_END = unsafeCastStringToDOMTopLevelType(
+  'compositionend',
+);
+export const TOP_COMPOSITION_START = unsafeCastStringToDOMTopLevelType(
+  'compositionstart',
+);
+export const TOP_COMPOSITION_UPDATE = unsafeCastStringToDOMTopLevelType(
+  'compositionupdate',
+);
+export const TOP_CONTEXT_MENU = unsafeCastStringToDOMTopLevelType(
+  'contextmenu',
+);
+export const TOP_COPY = unsafeCastStringToDOMTopLevelType('copy');
+export const TOP_CUT = unsafeCastStringToDOMTopLevelType('cut');
+export const TOP_DOUBLE_CLICK = unsafeCastStringToDOMTopLevelType('dblclick');
+export const TOP_DRAG = unsafeCastStringToDOMTopLevelType('drag');
+export const TOP_DRAG_END = unsafeCastStringToDOMTopLevelType('dragend');
+export const TOP_DRAG_ENTER = unsafeCastStringToDOMTopLevelType('dragenter');
+export const TOP_DRAG_EXIT = unsafeCastStringToDOMTopLevelType('dragexit');
+export const TOP_DRAG_LEAVE = unsafeCastStringToDOMTopLevelType('dragleave');
+export const TOP_DRAG_OVER = unsafeCastStringToDOMTopLevelType('dragover');
+export const TOP_DRAG_START = unsafeCastStringToDOMTopLevelType('dragstart');
+export const TOP_DROP = unsafeCastStringToDOMTopLevelType('drop');
+export const TOP_DURATION_CHANGE = unsafeCastStringToDOMTopLevelType(
+  'durationchange',
+);
+export const TOP_EMPTIED = unsafeCastStringToDOMTopLevelType('emptied');
+export const TOP_ENCRYPTED = unsafeCastStringToDOMTopLevelType('encrypted');
+export const TOP_ENDED = unsafeCastStringToDOMTopLevelType('ended');
+export const TOP_ERROR = unsafeCastStringToDOMTopLevelType('error');
+export const TOP_FOCUS = unsafeCastStringToDOMTopLevelType('focus');
+export const TOP_INPUT = unsafeCastStringToDOMTopLevelType('input');
+export const TOP_INVALID = unsafeCastStringToDOMTopLevelType('invalid');
+export const TOP_KEY_DOWN = unsafeCastStringToDOMTopLevelType('keydown');
+export const TOP_KEY_PRESS = unsafeCastStringToDOMTopLevelType('keypress');
+export const TOP_KEY_UP = unsafeCastStringToDOMTopLevelType('keyup');
+export const TOP_LOAD = unsafeCastStringToDOMTopLevelType('load');
+export const TOP_LOAD_START = unsafeCastStringToDOMTopLevelType('loadstart');
+export const TOP_LOADED_DATA = unsafeCastStringToDOMTopLevelType('loadeddata');
+export const TOP_LOADED_METADATA = unsafeCastStringToDOMTopLevelType(
+  'loadedmetadata',
+);
+export const TOP_MOUSE_DOWN = unsafeCastStringToDOMTopLevelType('mousedown');
+export const TOP_MOUSE_MOVE = unsafeCastStringToDOMTopLevelType('mousemove');
+export const TOP_MOUSE_OUT = unsafeCastStringToDOMTopLevelType('mouseout');
+export const TOP_MOUSE_OVER = unsafeCastStringToDOMTopLevelType('mouseover');
+export const TOP_MOUSE_UP = unsafeCastStringToDOMTopLevelType('mouseup');
+export const TOP_PASTE = unsafeCastStringToDOMTopLevelType('paste');
+export const TOP_PAUSE = unsafeCastStringToDOMTopLevelType('pause');
+export const TOP_PLAY = unsafeCastStringToDOMTopLevelType('play');
+export const TOP_PLAYING = unsafeCastStringToDOMTopLevelType('playing');
+export const TOP_PROGRESS = unsafeCastStringToDOMTopLevelType('progress');
+export const TOP_RATE_CHANGE = unsafeCastStringToDOMTopLevelType('ratechange');
+export const TOP_RESET = unsafeCastStringToDOMTopLevelType('reset');
+export const TOP_SCROLL = unsafeCastStringToDOMTopLevelType('scroll');
+export const TOP_SEEKED = unsafeCastStringToDOMTopLevelType('seeked');
+export const TOP_SEEKING = unsafeCastStringToDOMTopLevelType('seeking');
+export const TOP_SELECTION_CHANGE = unsafeCastStringToDOMTopLevelType(
+  'selectionchange',
+);
+export const TOP_STALLED = unsafeCastStringToDOMTopLevelType('stalled');
+export const TOP_SUBMIT = unsafeCastStringToDOMTopLevelType('submit');
+export const TOP_SUSPEND = unsafeCastStringToDOMTopLevelType('suspend');
+export const TOP_TEXT_INPUT = unsafeCastStringToDOMTopLevelType('textInput');
+export const TOP_TIME_UPDATE = unsafeCastStringToDOMTopLevelType('timeupdate');
+export const TOP_TOGGLE = unsafeCastStringToDOMTopLevelType('toggle');
+export const TOP_TOUCH_CANCEL = unsafeCastStringToDOMTopLevelType(
+  'touchcancel',
+);
+export const TOP_TOUCH_END = unsafeCastStringToDOMTopLevelType('touchend');
+export const TOP_TOUCH_MOVE = unsafeCastStringToDOMTopLevelType('touchmove');
+export const TOP_TOUCH_START = unsafeCastStringToDOMTopLevelType('touchstart');
+export const TOP_TRANSITION_END = unsafeCastStringToDOMTopLevelType(
+  getVendorPrefixedEventName('transitionend'),
+);
+export const TOP_VOLUME_CHANGE = unsafeCastStringToDOMTopLevelType(
+  'volumechange',
+);
+export const TOP_WAITING = unsafeCastStringToDOMTopLevelType('waiting');
+export const TOP_WHEEL = unsafeCastStringToDOMTopLevelType('wheel');
 
-export const TOP_ABORT: DOMTopLevelEventType = 'abort';
-export const TOP_ANIMATION_END: DOMTopLevelEventType = getVendorPrefixedEventName(
-  'animationend',
-);
-export const TOP_ANIMATION_ITERATION: DOMTopLevelEventType = getVendorPrefixedEventName(
-  'animationiteration',
-);
-export const TOP_ANIMATION_START: DOMTopLevelEventType = getVendorPrefixedEventName(
-  'animationstart',
-);
-export const TOP_BLUR: DOMTopLevelEventType = 'blur';
-export const TOP_CAN_PLAY: DOMTopLevelEventType = 'canplay';
-export const TOP_CAN_PLAY_THROUGH: DOMTopLevelEventType = 'canplaythrough';
-export const TOP_CANCEL: DOMTopLevelEventType = 'cancel';
-export const TOP_CHANGE: DOMTopLevelEventType = 'change';
-export const TOP_CLICK: DOMTopLevelEventType = 'click';
-export const TOP_CLOSE: DOMTopLevelEventType = 'close';
-export const TOP_COMPOSITION_END: DOMTopLevelEventType = 'compositionend';
-export const TOP_COMPOSITION_START: DOMTopLevelEventType = 'compositionstart';
-export const TOP_COMPOSITION_UPDATE: DOMTopLevelEventType = 'compositionupdate';
-export const TOP_CONTEXT_MENU: DOMTopLevelEventType = 'contextmenu';
-export const TOP_COPY: DOMTopLevelEventType = 'copy';
-export const TOP_CUT: DOMTopLevelEventType = 'cut';
-export const TOP_DOUBLE_CLICK: DOMTopLevelEventType = 'dblclick';
-export const TOP_DRAG: DOMTopLevelEventType = 'drag';
-export const TOP_DRAG_END: DOMTopLevelEventType = 'dragend';
-export const TOP_DRAG_ENTER: DOMTopLevelEventType = 'dragenter';
-export const TOP_DRAG_EXIT: DOMTopLevelEventType = 'dragexit';
-export const TOP_DRAG_LEAVE: DOMTopLevelEventType = 'dragleave';
-export const TOP_DRAG_OVER: DOMTopLevelEventType = 'dragover';
-export const TOP_DRAG_START: DOMTopLevelEventType = 'dragstart';
-export const TOP_DROP: DOMTopLevelEventType = 'drop';
-export const TOP_DURATION_CHANGE: DOMTopLevelEventType = 'durationchange';
-export const TOP_EMPTIED: DOMTopLevelEventType = 'emptied';
-export const TOP_ENCRYPTED: DOMTopLevelEventType = 'encrypted';
-export const TOP_ENDED: DOMTopLevelEventType = 'ended';
-export const TOP_ERROR: DOMTopLevelEventType = 'error';
-export const TOP_FOCUS: DOMTopLevelEventType = 'focus';
-export const TOP_INPUT: DOMTopLevelEventType = 'input';
-export const TOP_INVALID: DOMTopLevelEventType = 'invalid';
-export const TOP_KEY_DOWN: DOMTopLevelEventType = 'keydown';
-export const TOP_KEY_PRESS: DOMTopLevelEventType = 'keypress';
-export const TOP_KEY_UP: DOMTopLevelEventType = 'keyup';
-export const TOP_LOAD: DOMTopLevelEventType = 'load';
-export const TOP_LOAD_START: DOMTopLevelEventType = 'loadstart';
-export const TOP_LOADED_DATA: DOMTopLevelEventType = 'loadeddata';
-export const TOP_LOADED_METADATA: DOMTopLevelEventType = 'loadedmetadata';
-export const TOP_MOUSE_DOWN: DOMTopLevelEventType = 'mousedown';
-export const TOP_MOUSE_MOVE: DOMTopLevelEventType = 'mousemove';
-export const TOP_MOUSE_OUT: DOMTopLevelEventType = 'mouseout';
-export const TOP_MOUSE_OVER: DOMTopLevelEventType = 'mouseover';
-export const TOP_MOUSE_UP: DOMTopLevelEventType = 'mouseup';
-export const TOP_PASTE: DOMTopLevelEventType = 'paste';
-export const TOP_PAUSE: DOMTopLevelEventType = 'pause';
-export const TOP_PLAY: DOMTopLevelEventType = 'play';
-export const TOP_PLAYING: DOMTopLevelEventType = 'playing';
-export const TOP_PROGRESS: DOMTopLevelEventType = 'progress';
-export const TOP_RATE_CHANGE: DOMTopLevelEventType = 'ratechange';
-export const TOP_RESET: DOMTopLevelEventType = 'reset';
-export const TOP_SCROLL: DOMTopLevelEventType = 'scroll';
-export const TOP_SEEKED: DOMTopLevelEventType = 'seeked';
-export const TOP_SEEKING: DOMTopLevelEventType = 'seeking';
-export const TOP_SELECTION_CHANGE: DOMTopLevelEventType = 'selectionchange';
-export const TOP_STALLED: DOMTopLevelEventType = 'stalled';
-export const TOP_SUBMIT: DOMTopLevelEventType = 'submit';
-export const TOP_SUSPEND: DOMTopLevelEventType = 'suspend';
-export const TOP_TEXT_INPUT: DOMTopLevelEventType = 'textInput';
-export const TOP_TIME_UPDATE: DOMTopLevelEventType = 'timeupdate';
-export const TOP_TOGGLE: DOMTopLevelEventType = 'toggle';
-export const TOP_TOUCH_CANCEL: DOMTopLevelEventType = 'touchcancel';
-export const TOP_TOUCH_END: DOMTopLevelEventType = 'touchend';
-export const TOP_TOUCH_MOVE: DOMTopLevelEventType = 'touchmove';
-export const TOP_TOUCH_START: DOMTopLevelEventType = 'touchstart';
-export const TOP_TRANSITION_END: DOMTopLevelEventType = getVendorPrefixedEventName(
-  'transitionend',
-);
-export const TOP_VOLUME_CHANGE: DOMTopLevelEventType = 'volumechange';
-export const TOP_WAITING: DOMTopLevelEventType = 'waiting';
-export const TOP_WHEEL: DOMTopLevelEventType = 'wheel';
-
-export const mediaEventTypes: Array<DOMTopLevelEventType> = [
+export const mediaEventTypes = [
   TOP_ABORT,
   TOP_CAN_PLAY,
   TOP_CAN_PLAY_THROUGH,
@@ -200,5 +152,5 @@ export const mediaEventTypes: Array<DOMTopLevelEventType> = [
 ];
 
 export function getRawEventName(topLevelType: DOMTopLevelEventType): string {
-  return topLevelType;
+  return unsafeCastDOMTopLevelTypeToString(topLevelType);
 }

@@ -7,8 +7,10 @@
  * @flow
  */
 
-import type {TopLevelType} from 'events/TopLevelEventTypes';
-import type {DOMTopLevelEventType} from './DOMTopLevelEventTypes';
+import type {
+  TopLevelType,
+  DOMTopLevelEventType,
+} from 'events/TopLevelEventTypes';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
