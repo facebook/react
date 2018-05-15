@@ -35,7 +35,8 @@ type FrameCallbackType = Deadline => void;
 type CallbackConfigType = {|
   scheduledCallback: FrameCallbackType,
   timeoutTime: number,
-  callbackId: number, // used for cancelling
+  nextCallbackConfig: CallbackConfigType | null, // creating a linked list
+  previousCallbackConfig: CallbackConfigType | null, // creating a linked list
 |};
 
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
@@ -93,25 +94,8 @@ if (!ExecutionEnvironment.canUseDOM) {
     clearTimeout(timeoutID);
   };
 } else {
-  // We keep callbacks in a queue.
-  // Calling scheduleWork will push in a new callback at the end of the queue.
-  // When we get idle time, callbacks are removed from the front of the queue
-  // and called.
-  const pendingCallbacks: Array<CallbackConfigType> = [];
-
-  let callbackIdCounter = 0;
-  const getCallbackId = function(): number {
-    callbackIdCounter++;
-    return callbackIdCounter;
-  };
-
-  // When a callback is scheduled, we register it by adding it's id to this
-  // object.
-  // If the user calls 'cancelScheduledWork' with the id of that callback, it will be
-  // unregistered by removing the id from this object.
-  // Then we skip calling any callback which is not registered.
-  // This means cancelling is an O(1) time complexity instead of O(n).
-  const registeredCallbackIds: {[number]: boolean} = {};
+  let headOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
+  let tailOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
 
   // We track what the next soonest timeoutTime is, to be able to quickly tell
   // if none of the scheduled callbacks have timed out.
@@ -135,30 +119,13 @@ if (!ExecutionEnvironment.canUseDOM) {
     },
   };
 
-  const safelyCallScheduledCallback = function(
-    callback: FrameCallbackType,
-    callbackId: number,
-  ) {
-    if (!registeredCallbackIds[callbackId]) {
-      // ignore cancelled callbacks
-      return;
-    }
-    try {
-      callback(frameDeadlineObject);
-      // Avoid using 'catch' to keep errors easy to debug
-    } finally {
-      // always clean up the callbackId, even if the callback throws
-      delete registeredCallbackIds[callbackId];
-    }
-  };
-
   /**
    * Checks for timed out callbacks, runs them, and then checks again to see if
    * any more have timed out.
    * Keeps doing this until there are none which have currently timed out.
    */
   const callTimedOutCallbacks = function() {
-    if (pendingCallbacks.length === 0) {
+    if (headOfPendingCallbacksLinkedList === null) {
       return;
     }
 
@@ -179,14 +146,17 @@ if (!ExecutionEnvironment.canUseDOM) {
 
     // keep checking until we don't find any more timed out callbacks
     frameDeadlineObject.didTimeout = true;
-    for (let i = 0, len = pendingCallbacks.length; i < len; i++) {
-      const currentCallbackConfig = pendingCallbacks[i];
+    let currentCallbackConfig = headOfPendingCallbacksLinkedList;
+    while (currentCallbackConfig) {
       const timeoutTime = currentCallbackConfig.timeoutTime;
       if (timeoutTime !== -1 && timeoutTime <= currentTime) {
         // it has timed out!
         // call it
         const callback = currentCallbackConfig.scheduledCallback;
-        safelyCallScheduledCallback(callback, timeoutTime);
+        // TODO: error handling
+        callback(frameDeadlineObject);
+        // remove it from linked list
+        this.cancelScheduledWork(currentCallbackConfig);
       } else {
         if (
           timeoutTime !== -1 &&
@@ -196,6 +166,7 @@ if (!ExecutionEnvironment.canUseDOM) {
           nextSoonestTimeoutTime = timeoutTime;
         }
       }
+      currentCallbackConfig = currentCallbackConfig.nextCallbackConfig;
     }
   };
 
@@ -211,7 +182,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
     isIdleScheduled = false;
 
-    if (pendingCallbacks.length === 0) {
+    if (headOfPendingCallbacksLinkedList === null) {
       return;
     }
 
@@ -220,15 +191,24 @@ if (!ExecutionEnvironment.canUseDOM) {
 
     let currentTime = now();
     // Next, as long as we have idle time, try calling more callbacks.
-    while (frameDeadline - currentTime > 0 && pendingCallbacks.length > 0) {
-      const latestCallbackConfig = pendingCallbacks.shift();
+    while (
+      frameDeadline - currentTime > 0 &&
+      headOfPendingCallbacksLinkedList !== null
+    ) {
+      const latestCallbackConfig = headOfPendingCallbacksLinkedList;
+      // move head of list to next callback
+      headOfPendingCallbacksLinkedList =
+        latestCallbackConfig.nextCallbackConfig;
+      if (headOfPendingCallbacksLinkedList) {
+        headOfPendingCallbacksLinkedList.previousCallbackConfig = null;
+      }
       frameDeadlineObject.didTimeout = false;
       const latestCallback = latestCallbackConfig.scheduledCallback;
-      const newCallbackId = latestCallbackConfig.callbackId;
-      safelyCallScheduledCallback(latestCallback, newCallbackId);
+      // TODO: error handling
+      latestCallback(frameDeadlineObject);
       currentTime = now();
     }
-    if (pendingCallbacks.length > 0) {
+    if (headOfPendingCallbacksLinkedList !== null) {
       if (!isAnimationFrameScheduled) {
         // Schedule another animation callback so we retry later.
         isAnimationFrameScheduled = true;
@@ -283,15 +263,23 @@ if (!ExecutionEnvironment.canUseDOM) {
       nextSoonestTimeoutTime = timeoutTime;
     }
 
-    const newCallbackId = getCallbackId();
     const scheduledCallbackConfig = {
       scheduledCallback: callback,
-      callbackId: newCallbackId,
       timeoutTime,
+      previousCallbackConfig: null,
+      nextCallbackConfig: null,
     };
-    pendingCallbacks.push(scheduledCallbackConfig);
+    if (headOfPendingCallbacksLinkedList === null) {
+      // Make this callback the head and tail of our list
+      headOfPendingCallbacksLinkedList = scheduledCallbackConfig;
+      tailOfPendingCallbacksLinkedList = scheduledCallbackConfig;
+    } else {
+      // Add latest callback as the new tail of the list
+      scheduledCallbackConfig.previousCallbackConfig = tailOfPendingCallbacksLinkedList;
+      tailOfPendingCallbacksLinkedList.nextCallbackConfig = scheduledCallbackConfig;
+      tailOfPendingCallbacksLinkedList = scheduledCallbackConfig;
+    }
 
-    registeredCallbackIds[newCallbackId] = true;
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
@@ -300,11 +288,24 @@ if (!ExecutionEnvironment.canUseDOM) {
       isAnimationFrameScheduled = true;
       requestAnimationFrame(animationTick);
     }
-    return newCallbackId;
+    return scheduledCallbackConfig;
   };
 
-  cancelScheduledWork = function(callbackId: number) {
-    delete registeredCallbackIds[callbackId];
+  cancelScheduledWork = function(callbackConfig: CallbackConfigType) {
+    const previousCallbackConfig = callbackConfig.previousCallbackConfig;
+    const nextCallbackConfig = callbackConfig.nextCallbackConfig;
+    if (previousCallbackConfig) {
+      previousCallbackConfig.nextCallbackConfig = nextCallbackConfig;
+    }
+    if (nextCallbackConfig) {
+      nextCallbackConfig.previousCallbackConfig = previousCallbackConfig;
+    }
+    if (headOfPendingCallbacksLinkedList === callbackConfig) {
+      headOfPendingCallbacksLinkedList = nextCallbackConfig;
+    }
+    if (tailOfPendingCallbacksLinkedList === callbackConfig) {
+      tailOfPendingCallbacksLinkedList = previousCallbackConfig;
+    }
   };
 }
 

@@ -23,6 +23,7 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
+import {CallbackConfigType} from 'react-scheduler';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import ReactFiberScheduler from './ReactFiberScheduler';
@@ -87,8 +88,8 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
   scheduleDeferredCallback(
     callback: (deadline: Deadline) => void,
     options?: {timeout: number},
-  ): number,
-  cancelDeferredCallback(callbackID: number): void,
+  ): CallbackConfigType,
+  cancelDeferredCallback(callbackID: CallbackConfigType): void,
 
   prepareForCommit(containerInfo: C): void,
   resetAfterCommit(containerInfo: C): void,
