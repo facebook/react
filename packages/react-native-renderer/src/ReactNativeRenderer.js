@@ -147,28 +147,6 @@ const ReactNativeRenderer: ReactNativeType = {
   },
 };
 
-if (__DEV__) {
-  // $FlowFixMe
-  Object.assign(
-    ReactNativeRenderer.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-    {
-      // TODO: none of these work since Fiber. Remove these dependencies.
-      // Used by RCTRenderingPerf, Systrace:
-      ReactDebugTool: {
-        addHook() {},
-        removeHook() {},
-      },
-      // Used by ReactPerfStallHandler, RCTRenderingPerf:
-      ReactPerf: {
-        start() {},
-        stop() {},
-        printInclusive() {},
-        printWasted() {},
-      },
-    },
-  );
-}
-
 ReactNativeFiberRenderer.injectIntoDevTools({
   findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
   getInspectorDataForViewTag: getInspectorDataForViewTag,
