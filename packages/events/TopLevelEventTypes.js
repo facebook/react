@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {DOMTopLevelEventType} from '../react-dom/src/events/DOMTopLevelEventTypes';
+import type {DOMTopLevelEventType} from 'react-dom/src/events/DOMTopLevelEventTypes';
 
 type RNTopLevelEventType =
   | 'topMouseDown'

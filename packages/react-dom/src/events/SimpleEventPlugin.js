@@ -18,7 +18,7 @@ import type {EventTypes, PluginModule} from 'events/PluginModuleType';
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import SyntheticEvent from 'events/SyntheticEvent';
 
-import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
+import * as DOMTopLevelEventTypes from 'react-dom/src/events/DOMTopLevelEventTypes';
 import warning from 'fbjs/lib/warning';
 
 import SyntheticAnimationEvent from './SyntheticAnimationEvent';
