@@ -8,6 +8,7 @@
  */
 
 import type {Deadline} from 'react-reconciler/src/ReactFiberScheduler';
+import type {CallbackIdType} from 'react-scheduler';
 
 // Current virtual time
 export let nowImplementation = () => 0;
@@ -19,10 +20,11 @@ export function scheduleDeferredCallback(
   options?: {timeout: number},
 ): number {
   scheduledCallback = callback;
-  return 0;
+  const fakeCallbackId = (0: CallbackIdType);
+  return fakeCallbackId;
 }
 
-export function cancelDeferredCallback(timeoutID: number): void {
+export function cancelDeferredCallback(timeoutID: CallbackIdType): void {
   scheduledCallback = null;
 }
 
