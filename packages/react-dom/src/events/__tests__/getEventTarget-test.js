@@ -30,9 +30,10 @@ describe('getEventTarget', () => {
   });
 
   describe('when event is implemented in a browser', () => {
-    describe('when event is dispatch', () => {
+    describe('when event is dispatch by target element', () => {
       it('get target element object', () => {
         let target = null;
+
         class Comp extends React.Component {
           render() {
             return <input onKeyDown={e => (target = e.target)} />;
@@ -50,6 +51,42 @@ describe('getEventTarget', () => {
         expect(target).toEqual(null);
         container.firstChild.dispatchEvent(nativeEvent);
         expect(target).toEqual(container.firstChild);
+      });
+
+      // Normalize SVG <use> element events #4963
+      it('get target element object in case the target has correspondingUseElement property', () => {
+        let target = null;
+
+        class Comp extends React.Component {
+          render() {
+            return (
+              <svg>
+                <circle id="myCircle" cx="5" cy="5" r="4" />
+                <use
+                  href="#myCircle"
+                  x="10"
+                  fill="blue"
+                  onClick={e => (target = e.target)}
+                />
+              </svg>
+            );
+          }
+        }
+
+        ReactDOM.render(<Comp />, container);
+
+        const nativeEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+        });
+
+        const useElement = container.firstChild.children[1];
+        // Mock correspondingUseElement property on target element
+        useElement.correspondingUseElement = useElement;
+
+        expect(target).toEqual(null);
+        useElement.dispatchEvent(nativeEvent);
+        expect(target).toEqual(useElement);
       });
     });
   });
