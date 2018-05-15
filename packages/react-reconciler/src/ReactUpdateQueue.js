@@ -596,6 +596,10 @@ function callCallback(callback, context) {
   callback.call(context);
 }
 
+export function resetHasForceUpdateBeforeProcessing() {
+  hasForceUpdate = false;
+}
+
 export function checkHasForceUpdateAfterProcessing(): boolean {
   return hasForceUpdate;
 }

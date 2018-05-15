@@ -33,6 +33,7 @@ import {
   enqueueUpdate,
   processUpdateQueue,
   checkHasForceUpdateAfterProcessing,
+  resetHasForceUpdateBeforeProcessing,
   createUpdate,
   ReplaceState,
   ForceUpdate,
@@ -782,10 +783,11 @@ export default function(
       }
     }
 
+    resetHasForceUpdateBeforeProcessing();
+
     const oldState = workInProgress.memoizedState;
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
-    let hasForceUpdate = false;
     if (updateQueue !== null) {
       processUpdateQueue(
         workInProgress,
@@ -794,14 +796,13 @@ export default function(
         instance,
         renderExpirationTime,
       );
-      hasForceUpdate = hasForceUpdate || checkHasForceUpdateAfterProcessing();
       newState = workInProgress.memoizedState;
     }
     if (
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !hasForceUpdate
+      !checkHasForceUpdateAfterProcessing()
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -821,7 +822,7 @@ export default function(
     }
 
     const shouldUpdate =
-      hasForceUpdate ||
+      checkHasForceUpdateAfterProcessing() ||
       checkShouldComponentUpdate(
         workInProgress,
         oldProps,
@@ -916,10 +917,11 @@ export default function(
       }
     }
 
+    resetHasForceUpdateBeforeProcessing();
+
     const oldState = workInProgress.memoizedState;
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
-    let hasForceUpdate = false;
     if (updateQueue !== null) {
       processUpdateQueue(
         workInProgress,
@@ -928,7 +930,6 @@ export default function(
         instance,
         renderExpirationTime,
       );
-      hasForceUpdate = hasForceUpdate || checkHasForceUpdateAfterProcessing();
       newState = workInProgress.memoizedState;
     }
 
@@ -936,7 +937,7 @@ export default function(
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !hasForceUpdate
+      !checkHasForceUpdateAfterProcessing()
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -971,7 +972,7 @@ export default function(
     }
 
     const shouldUpdate =
-      hasForceUpdate ||
+      checkHasForceUpdateAfterProcessing() ||
       checkShouldComponentUpdate(
         workInProgress,
         oldProps,
