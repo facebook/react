@@ -131,15 +131,14 @@ export type UpdateQueue<State> = {
 
   firstCapturedEffect: Update<State> | null,
   lastCapturedEffect: Update<State> | null,
-
-  // TODO: Workaround for lack of tuples. Could use global state instead.
-  hasForceUpdate: boolean,
 };
 
 export const UpdateState = 0;
 export const ReplaceState = 1;
 export const ForceUpdate = 2;
 export const CaptureUpdate = 3;
+
+let _hasForceUpdate = false;
 
 let didWarnUpdateInsideUpdate;
 let currentlyProcessingQueue;
@@ -164,7 +163,6 @@ export function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     lastEffect: null,
     firstCapturedEffect: null,
     lastCapturedEffect: null,
-    hasForceUpdate: false,
   };
   return queue;
 }
@@ -182,8 +180,6 @@ function cloneUpdateQueue<State>(
     // keep these effects.
     firstCapturedUpdate: null,
     lastCapturedUpdate: null,
-
-    hasForceUpdate: false,
 
     firstEffect: null,
     lastEffect: null,
@@ -423,7 +419,7 @@ function getStateFromUpdate<State>(
       return Object.assign({}, prevState, partialState);
     }
     case ForceUpdate: {
-      queue.hasForceUpdate = true;
+      _hasForceUpdate = true;
       return prevState;
     }
   }
@@ -437,6 +433,8 @@ export function processUpdateQueue<State>(
   instance: any,
   renderExpirationTime: ExpirationTime,
 ): void {
+  _hasForceUpdate = false;
+
   if (
     queue.expirationTime === NoWork ||
     queue.expirationTime > renderExpirationTime
@@ -593,6 +591,10 @@ function callCallback(callback, context) {
     callback,
   );
   callback.call(context);
+}
+
+export function checkHasForceUpdateAfterProcessing(): boolean {
+  return _hasForceUpdate;
 }
 
 export function commitUpdateQueue<State>(
