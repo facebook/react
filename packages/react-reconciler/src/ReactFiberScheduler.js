@@ -962,12 +962,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     let next;
     if (enableProfilerTimer) {
-      startBaseRenderTimer();
+      if (workInProgress.mode & ProfileMode) {
+        startBaseRenderTimer();
+      }
+
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
-      // Update "base" time if the render wasn't bailed out on.
-      recordElapsedBaseRenderTimeIfRunning(workInProgress);
-      stopBaseRenderTimerIfRunning();
+      if (workInProgress.mode & ProfileMode) {
+        // Update "base" time if the render wasn't bailed out on.
+        recordElapsedBaseRenderTimeIfRunning(workInProgress);
+        stopBaseRenderTimerIfRunning();
+      }
     } else {
       next = beginWork(current, workInProgress, nextRenderExpirationTime);
     }
