@@ -9,12 +9,11 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
-import type {Deadline} from 'react-reconciler/src/ReactFiberReconciler';
+import type {Instance, TextInstance} from './ReactTestHostConfig';
 
 import ReactFiberReconciler from 'react-reconciler';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
-import emptyObject from 'fbjs/lib/emptyObject';
 import {
   Fragment,
   FunctionalComponent,
@@ -31,6 +30,9 @@ import {
 } from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 
+import ReactTestHostConfig from './ReactTestHostConfig';
+import * as TestRendererScheduling from './ReactTestRendererScheduling';
+
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isAsync: boolean,
@@ -44,26 +46,6 @@ type ReactTestRendererJSON = {|
 |};
 type ReactTestRendererNode = ReactTestRendererJSON | string;
 
-type Container = {|
-  children: Array<Instance | TextInstance>,
-  createNodeMock: Function,
-  tag: 'CONTAINER',
-|};
-
-type Props = Object;
-type Instance = {|
-  type: string,
-  props: Object,
-  children: Array<Instance | TextInstance>,
-  rootContainerInstance: Container,
-  tag: 'INSTANCE',
-|};
-
-type TextInstance = {|
-  text: string,
-  tag: 'TEXT',
-|};
-
 type FindOptions = $Shape<{
   // performs a "greedy" search: if a matching node is found, will continue
   // to search within the matching node's children. (default: true)
@@ -72,203 +54,7 @@ type FindOptions = $Shape<{
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
 
-const UPDATE_SIGNAL = {};
-
-function getPublicInstance(inst: Instance | TextInstance): * {
-  switch (inst.tag) {
-    case 'INSTANCE':
-      const createNodeMock = inst.rootContainerInstance.createNodeMock;
-      return createNodeMock({
-        type: inst.type,
-        props: inst.props,
-      });
-    default:
-      return inst;
-  }
-}
-
-function appendChild(
-  parentInstance: Instance | Container,
-  child: Instance | TextInstance,
-): void {
-  const index = parentInstance.children.indexOf(child);
-  if (index !== -1) {
-    parentInstance.children.splice(index, 1);
-  }
-  parentInstance.children.push(child);
-}
-
-function insertBefore(
-  parentInstance: Instance | Container,
-  child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance,
-): void {
-  const index = parentInstance.children.indexOf(child);
-  if (index !== -1) {
-    parentInstance.children.splice(index, 1);
-  }
-  const beforeIndex = parentInstance.children.indexOf(beforeChild);
-  parentInstance.children.splice(beforeIndex, 0, child);
-}
-
-function removeChild(
-  parentInstance: Instance | Container,
-  child: Instance | TextInstance,
-): void {
-  const index = parentInstance.children.indexOf(child);
-  parentInstance.children.splice(index, 1);
-}
-
-// Current virtual time
-let nowImplementation = () => 0;
-let scheduledCallback: ((deadline: Deadline) => mixed) | null = null;
-let yieldedValues: Array<mixed> | null = null;
-
-const TestRenderer = ReactFiberReconciler({
-  getRootHostContext() {
-    return emptyObject;
-  },
-
-  getChildHostContext() {
-    return emptyObject;
-  },
-
-  prepareForCommit(): void {
-    // noop
-  },
-
-  resetAfterCommit(): void {
-    // noop
-  },
-
-  createInstance(
-    type: string,
-    props: Props,
-    rootContainerInstance: Container,
-    hostContext: Object,
-    internalInstanceHandle: Object,
-  ): Instance {
-    return {
-      type,
-      props,
-      children: [],
-      rootContainerInstance,
-      tag: 'INSTANCE',
-    };
-  },
-
-  appendInitialChild(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-  ): void {
-    const index = parentInstance.children.indexOf(child);
-    if (index !== -1) {
-      parentInstance.children.splice(index, 1);
-    }
-    parentInstance.children.push(child);
-  },
-
-  finalizeInitialChildren(
-    testElement: Instance,
-    type: string,
-    props: Props,
-    rootContainerInstance: Container,
-  ): boolean {
-    return false;
-  },
-
-  prepareUpdate(
-    testElement: Instance,
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-    rootContainerInstance: Container,
-    hostContext: Object,
-  ): null | {} {
-    return UPDATE_SIGNAL;
-  },
-
-  shouldSetTextContent(type: string, props: Props): boolean {
-    return false;
-  },
-
-  shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-    return false;
-  },
-
-  createTextInstance(
-    text: string,
-    rootContainerInstance: Container,
-    hostContext: Object,
-    internalInstanceHandle: Object,
-  ): TextInstance {
-    return {
-      text,
-      tag: 'TEXT',
-    };
-  },
-
-  scheduleDeferredCallback(
-    callback: (deadline: Deadline) => mixed,
-    options?: {timeout: number},
-  ): number {
-    scheduledCallback = callback;
-    return 0;
-  },
-
-  cancelDeferredCallback(timeoutID: number): void {
-    scheduledCallback = null;
-  },
-
-  getPublicInstance,
-
-  // This approach enables `now` to be mocked by tests,
-  // Even after the reconciler has initialized and read host config values.
-  now: () => nowImplementation(),
-
-  isPrimaryRenderer: true,
-
-  mutation: {
-    commitUpdate(
-      instance: Instance,
-      updatePayload: {},
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-      internalInstanceHandle: Object,
-    ): void {
-      instance.type = type;
-      instance.props = newProps;
-    },
-
-    commitMount(
-      instance: Instance,
-      type: string,
-      newProps: Props,
-      internalInstanceHandle: Object,
-    ): void {
-      // noop
-    },
-
-    commitTextUpdate(
-      textInstance: TextInstance,
-      oldText: string,
-      newText: string,
-    ): void {
-      textInstance.text = newText;
-    },
-    resetTextContent(testElement: Instance): void {
-      // noop
-    },
-
-    appendChild: appendChild,
-    appendChildToContainer: appendChild,
-    insertBefore: insertBefore,
-    insertInContainerBefore: insertBefore,
-    removeChild: removeChild,
-    removeChildFromContainer: removeChild,
-  },
-});
+const TestRenderer = ReactFiberReconciler(ReactTestHostConfig);
 
 const defaultTestOptions = {
   createNodeMock: function() {
@@ -444,7 +230,7 @@ class ReactTestInstance {
 
   get instance() {
     if (this._fiber.tag === HostComponent) {
-      return getPublicInstance(this._fiber.stateNode);
+      return ReactTestHostConfig.getPublicInstance(this._fiber.stateNode);
     } else {
       return this._fiber.stateNode;
     }
@@ -676,77 +462,20 @@ const ReactTestRendererFiber = {
         container = null;
         root = null;
       },
-      unstable_flushAll(): Array<mixed> {
-        yieldedValues = null;
-        while (scheduledCallback !== null) {
-          const cb = scheduledCallback;
-          scheduledCallback = null;
-          cb({
-            timeRemaining() {
-              // Keep rendering until there's no more work
-              return 999;
-            },
-            // React's scheduler has its own way of keeping track of expired
-            // work and doesn't read this, so don't bother setting it to the
-            // correct value.
-            didTimeout: false,
-          });
-        }
-        if (yieldedValues === null) {
-          // Always return an array.
-          return [];
-        }
-        return yieldedValues;
-      },
-      unstable_flushThrough(expectedValues: Array<mixed>): Array<mixed> {
-        let didStop = false;
-        yieldedValues = null;
-        while (scheduledCallback !== null && !didStop) {
-          const cb = scheduledCallback;
-          scheduledCallback = null;
-          cb({
-            timeRemaining() {
-              if (
-                yieldedValues !== null &&
-                yieldedValues.length >= expectedValues.length
-              ) {
-                // We at least as many values as expected. Stop rendering.
-                didStop = true;
-                return 0;
-              }
-              // Keep rendering.
-              return 999;
-            },
-            // React's scheduler has its own way of keeping track of expired
-            // work and doesn't read this, so don't bother setting it to the
-            // correct value.
-            didTimeout: false,
-          });
-        }
-        if (yieldedValues === null) {
-          // Always return an array.
-          return [];
-        }
-        return yieldedValues;
-      },
-      unstable_yield(value: mixed): void {
-        if (yieldedValues === null) {
-          yieldedValues = [value];
-        } else {
-          yieldedValues.push(value);
-        }
-      },
       getInstance() {
         if (root == null || root.current == null) {
           return null;
         }
         return TestRenderer.getPublicRootInstance(root);
       },
+      unstable_flushAll: TestRendererScheduling.flushAll,
       unstable_flushSync(fn: Function) {
-        yieldedValues = [];
-        TestRenderer.flushSync(fn);
-        return yieldedValues;
+        return TestRendererScheduling.withCleanYields(() => {
+          TestRenderer.flushSync(fn);
+        });
       },
+      unstable_flushThrough: TestRendererScheduling.flushThrough,
+      unstable_yield: TestRendererScheduling.yieldValue,
     };
 
     Object.defineProperty(
@@ -771,9 +500,7 @@ const ReactTestRendererFiber = {
   unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
 
-  unstable_setNowImplementation(implementation: () => number): void {
-    nowImplementation = implementation;
-  },
+  unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,
 };
 
 export default ReactTestRendererFiber;
