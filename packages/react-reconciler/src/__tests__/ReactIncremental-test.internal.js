@@ -1115,6 +1115,29 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz', 'Bar', 'Baz']);
   });
 
+  it('should clear forceUpdate after update is flushed', () => {
+    let a = 0;
+
+    class Foo extends React.PureComponent {
+      render() {
+        const msg = `A: ${a}, B: ${this.props.b}`;
+        ReactNoop.yield(msg);
+        return msg;
+      }
+    }
+
+    const foo = React.createRef(null);
+    ReactNoop.render(<Foo ref={foo} b={0} />);
+    expect(ReactNoop.flush()).toEqual(['A: 0, B: 0']);
+
+    a = 1;
+    foo.current.forceUpdate();
+    expect(ReactNoop.flush()).toEqual(['A: 1, B: 0']);
+
+    ReactNoop.render(<Foo ref={foo} b={0} />);
+    expect(ReactNoop.flush()).toEqual([]);
+  });
+
   xit('can call sCU while resuming a partly mounted component', () => {
     let ops = [];
 

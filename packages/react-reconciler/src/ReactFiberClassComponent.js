@@ -32,6 +32,8 @@ import {StrictMode} from './ReactTypeOfMode';
 import {
   enqueueUpdate,
   processUpdateQueue,
+  checkHasForceUpdateAfterProcessing,
+  resetHasForceUpdateBeforeProcessing,
   createUpdate,
   ReplaceState,
   ForceUpdate,
@@ -235,14 +237,6 @@ export default function(
     newState,
     newContext,
   ) {
-    if (
-      workInProgress.updateQueue !== null &&
-      workInProgress.updateQueue.hasForceUpdate
-    ) {
-      // If forceUpdate was called, disregard sCU.
-      return true;
-    }
-
     const instance = workInProgress.stateNode;
     const ctor = workInProgress.type;
     if (typeof instance.shouldComponentUpdate === 'function') {
@@ -789,6 +783,8 @@ export default function(
       }
     }
 
+    resetHasForceUpdateBeforeProcessing();
+
     const oldState = workInProgress.memoizedState;
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
@@ -806,10 +802,7 @@ export default function(
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !(
-        workInProgress.updateQueue !== null &&
-        workInProgress.updateQueue.hasForceUpdate
-      )
+      !checkHasForceUpdateAfterProcessing()
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -828,14 +821,16 @@ export default function(
       newState = workInProgress.memoizedState;
     }
 
-    const shouldUpdate = checkShouldComponentUpdate(
-      workInProgress,
-      oldProps,
-      newProps,
-      oldState,
-      newState,
-      newContext,
-    );
+    const shouldUpdate =
+      checkHasForceUpdateAfterProcessing() ||
+      checkShouldComponentUpdate(
+        workInProgress,
+        oldProps,
+        newProps,
+        oldState,
+        newState,
+        newContext,
+      );
 
     if (shouldUpdate) {
       // In order to support react-lifecycles-compat polyfilled components,
@@ -922,6 +917,8 @@ export default function(
       }
     }
 
+    resetHasForceUpdateBeforeProcessing();
+
     const oldState = workInProgress.memoizedState;
     let newState = (instance.state = oldState);
     let updateQueue = workInProgress.updateQueue;
@@ -940,10 +937,7 @@ export default function(
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !(
-        workInProgress.updateQueue !== null &&
-        workInProgress.updateQueue.hasForceUpdate
-      )
+      !checkHasForceUpdateAfterProcessing()
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -977,14 +971,16 @@ export default function(
       }
     }
 
-    const shouldUpdate = checkShouldComponentUpdate(
-      workInProgress,
-      oldProps,
-      newProps,
-      oldState,
-      newState,
-      newContext,
-    );
+    const shouldUpdate =
+      checkHasForceUpdateAfterProcessing() ||
+      checkShouldComponentUpdate(
+        workInProgress,
+        oldProps,
+        newProps,
+        oldState,
+        newState,
+        newContext,
+      );
 
     if (shouldUpdate) {
       // In order to support react-lifecycles-compat polyfilled components,
