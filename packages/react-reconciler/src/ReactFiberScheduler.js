@@ -353,10 +353,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         clearCaughtError();
 
         if (enableProfilerTimer) {
-          if (failedUnitOfWork.mode & ProfileMode) {
-            // Stop "base" render timer again (after the re-thrown error).
-            stopBaseRenderTimerIfRunning();
-          }
+          // Stop "base" render timer again (after the re-thrown error).
+          stopBaseRenderTimerIfRunning();
         }
       } else {
         // If the begin phase did not fail the second time, set this pointer
@@ -1066,18 +1064,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       try {
         workLoop(isAsync);
       } catch (thrownValue) {
+        if (enableProfilerTimer) {
+          // Stop "base" render timer in the event of an error.
+          stopBaseRenderTimerIfRunning();
+        }
+
         if (nextUnitOfWork === null) {
           // This is a fatal error.
           didFatal = true;
           onUncaughtError(thrownValue);
           break;
-        } else {
-          if (enableProfilerTimer) {
-            if (nextUnitOfWork.mode & ProfileMode) {
-              // Stop "base" render timer in the event of an error.
-              stopBaseRenderTimerIfRunning();
-            }
-          }
         }
 
         if (__DEV__) {

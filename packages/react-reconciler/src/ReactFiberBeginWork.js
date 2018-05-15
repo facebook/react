@@ -71,7 +71,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
+import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
@@ -396,9 +396,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       nextChildren = null;
 
       if (enableProfilerTimer) {
-        if (workInProgress.mode & ProfileMode) {
-          stopBaseRenderTimerIfRunning();
-        }
+        stopBaseRenderTimerIfRunning();
       }
     } else {
       if (__DEV__) {
@@ -1155,10 +1153,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     cancelWorkTimer(workInProgress);
 
     if (enableProfilerTimer) {
-      if (workInProgress.mode & ProfileMode) {
-        // Don't update "base" render times for bailouts.
-        stopBaseRenderTimerIfRunning();
-      }
+      // Don't update "base" render times for bailouts.
+      stopBaseRenderTimerIfRunning();
     }
 
     // TODO: We should ideally be able to bail out early if the children have no
@@ -1183,10 +1179,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     cancelWorkTimer(workInProgress);
 
     if (enableProfilerTimer) {
-      if (workInProgress.mode & ProfileMode) {
-        // Don't update "base" render times for bailouts.
-        stopBaseRenderTimerIfRunning();
-      }
+      // Don't update "base" render times for bailouts.
+      stopBaseRenderTimerIfRunning();
     }
 
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
