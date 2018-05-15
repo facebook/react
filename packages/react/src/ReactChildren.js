@@ -361,7 +361,7 @@ function mapChildren(children, func, context) {
  * @param {?*} children Children tree container.
  * @return {number} The number of children.
  */
-function countChildren(children, context) {
+function countChildren(children) {
   return traverseAllChildren(children, emptyFunction.thatReturnsNull, null);
 }
 

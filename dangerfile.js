@@ -53,7 +53,8 @@ function generateMDTable(headers, body) {
 
 /**
  * Generates a user-readable string from a percentage change
- * @param {string[]} headers
+ * @param {number} change
+ * @param {boolean} includeEmoji
  */
 function addPercent(change, includeEmoji) {
   if (!isFinite(change)) {

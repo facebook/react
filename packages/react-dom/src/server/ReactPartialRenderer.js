@@ -34,6 +34,7 @@ import {
   REACT_CALL_TYPE,
   REACT_RETURN_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
@@ -811,6 +812,7 @@ class ReactDOMServerRenderer {
       switch (elementType) {
         case REACT_STRICT_MODE_TYPE:
         case REACT_ASYNC_MODE_TYPE:
+        case REACT_PROFILER_TYPE:
         case REACT_FRAGMENT_TYPE: {
           const nextChildren = toArray(
             ((nextChild: any): ReactElement).props.children,

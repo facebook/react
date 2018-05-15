@@ -94,4 +94,44 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.unstable_flushAll()).toEqual(['C:1']);
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
   });
+
+  it('supports high priority interruptions', () => {
+    function Child(props) {
+      renderer.unstable_yield(props.children);
+      return props.children;
+    }
+
+    class Example extends React.Component {
+      componentDidMount() {
+        expect(this.props.step).toEqual(2);
+      }
+      componentDidUpdate() {
+        throw Error('Unexpected update');
+      }
+      render() {
+        return (
+          <React.Fragment>
+            <Child>{'A:' + this.props.step}</Child>
+            <Child>{'B:' + this.props.step}</Child>
+          </React.Fragment>
+        );
+      }
+    }
+
+    const renderer = ReactTestRenderer.create(<Example step={1} />, {
+      unstable_isAsync: true,
+    });
+
+    // Flush the some of the changes, but don't commit
+    expect(renderer.unstable_flushThrough(['A:1'])).toEqual(['A:1']);
+    expect(renderer.toJSON()).toEqual(null);
+
+    // Interrupt with higher priority properties
+    renderer.unstable_flushSync(() => {
+      renderer.update(<Example step={2} />);
+    });
+
+    // Only the higher priority properties have been committed
+    expect(renderer.toJSON()).toEqual(['A:2', 'B:2']);
+  });
 });

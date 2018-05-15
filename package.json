@@ -31,8 +31,6 @@
     "babel-plugin-transform-es2015-shorthand-properties": "^6.5.0",
     "babel-plugin-transform-es2015-spread": "^6.5.2",
     "babel-plugin-transform-es2015-template-literals": "^6.5.2",
-    "babel-plugin-transform-es3-member-expression-literals": "^6.5.0",
-    "babel-plugin-transform-es3-property-literals": "^6.5.0",
     "babel-plugin-transform-object-rest-spread": "^6.6.5",
     "babel-plugin-transform-react-jsx-source": "^6.8.0",
     "babel-plugin-transform-regenerator": "^6.26.0",
@@ -67,6 +65,7 @@
     "git-branch": "^0.3.0",
     "glob": "^6.0.4",
     "glob-stream": "^6.1.0",
+    "google-closure-compiler": "20180506.0.0",
     "gzip-js": "~0.3.2",
     "gzip-size": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
@@ -86,7 +85,6 @@
     "rimraf": "^2.6.1",
     "rollup": "^0.52.1",
     "rollup-plugin-babel": "^3.0.1",
-    "rollup-plugin-closure-compiler-js": "^1.0.6",
     "rollup-plugin-commonjs": "^8.2.6",
     "rollup-plugin-node-resolve": "^2.1.1",
     "rollup-plugin-prettier": "^0.3.0",
@@ -102,6 +100,9 @@
   },
   "devEngines": {
     "node": "8.x || 9.x"
+  },
+  "jest": {
+    "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
   },
   "scripts": {
     "build": "npm run version-check && node ./scripts/rollup/build.js",

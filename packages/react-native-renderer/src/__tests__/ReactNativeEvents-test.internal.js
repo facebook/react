@@ -153,7 +153,7 @@ it('handles events', () => {
 it('handles events on text nodes', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  const Text = fakeRequireNativeComponent('Text', {});
+  const Text = fakeRequireNativeComponent('RCTText', {});
 
   class ContextHack extends React.Component {
     static childContextTypes = {isInAParentText: PropTypes.bool};

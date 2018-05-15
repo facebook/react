@@ -15,11 +15,13 @@ import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {ProfilerTimer} from './ReactProfilerTimer';
 
 import {
   enableMutatingReconciler,
   enablePersistentReconciler,
   enableNoopReconciler,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
@@ -37,14 +39,10 @@ import {
   ForwardRef,
   Fragment,
   Mode,
+  Profiler,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
-import {
-  Placement,
-  Ref,
-  Update,
-  ErrLog,
-  DidCapture,
-} from 'shared/ReactTypeOfSideEffect';
+import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
@@ -55,6 +53,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   legacyContext: LegacyContext,
   newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
+  profilerTimer: ProfilerTimer,
 ) {
   const {
     createInstance,
@@ -72,6 +71,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     getHostContext,
     popHostContainer,
   } = hostContext;
+
+  const {recordElapsedActualRenderTime} = profilerTimer;
 
   const {
     popContextProvider: popLegacyContextProvider,
@@ -416,20 +417,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
         popLegacyContextProvider(workInProgress);
-
-        // If this component caught an error, schedule an error log effect.
-        const instance = workInProgress.stateNode;
-        const updateQueue = workInProgress.updateQueue;
-        if (updateQueue !== null && updateQueue.capturedValues !== null) {
-          workInProgress.effectTag &= ~DidCapture;
-          if (typeof instance.componentDidCatch === 'function') {
-            workInProgress.effectTag |= ErrLog;
-          } else {
-            // Normally we clear this in the commit phase, but since we did not
-            // schedule an effect, we need to reset it here.
-            updateQueue.capturedValues = null;
-          }
-        }
         return null;
       }
       case HostRoot: {
@@ -449,11 +436,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           workInProgress.effectTag &= ~Placement;
         }
         updateHostContainer(workInProgress);
-
-        const updateQueue = workInProgress.updateQueue;
-        if (updateQueue !== null && updateQueue.capturedValues !== null) {
-          workInProgress.effectTag |= ErrLog;
-        }
         return null;
       }
       case HostComponent: {
@@ -612,9 +594,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return null;
       case ForwardRef:
         return null;
+      case TimeoutComponent:
+        return null;
       case Fragment:
         return null;
       case Mode:
+        return null;
+      case Profiler:
+        if (enableProfilerTimer) {
+          recordElapsedActualRenderTime(workInProgress);
+        }
         return null;
       case HostPortal:
         popHostContainer(workInProgress);

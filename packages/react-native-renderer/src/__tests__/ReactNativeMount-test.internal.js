@@ -27,9 +27,9 @@ describe('ReactNative', () => {
   });
 
   it('should be able to create and render a native component', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     ReactNative.render(<View foo="test" />, 1);
@@ -40,9 +40,9 @@ describe('ReactNative', () => {
   });
 
   it('should be able to create and update a native component', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     ReactNative.render(<View foo="foo" />, 11);
@@ -57,13 +57,13 @@ describe('ReactNative', () => {
     expect(UIManager.createView.mock.calls.length).toBe(1);
     expect(UIManager.setChildren.mock.calls.length).toBe(1);
     expect(UIManager.manageChildren).not.toBeCalled();
-    expect(UIManager.updateView).toBeCalledWith(3, 'View', {foo: 'bar'});
+    expect(UIManager.updateView).toBeCalledWith(3, 'RCTView', {foo: 'bar'});
   });
 
   it('should not call UIManager.updateView after render for properties that have not changed', () => {
-    const Text = createReactNativeComponentClass('Text', () => ({
+    const Text = createReactNativeComponentClass('RCTText', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'Text',
+      uiViewClassName: 'RCTText',
     }));
 
     ReactNative.render(<Text foo="a">1</Text>, 11);
@@ -87,9 +87,9 @@ describe('ReactNative', () => {
   });
 
   it('should not call UIManager.updateView from setNativeProps for properties that have not changed', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     class Subclass extends ReactNative.NativeComponent {
@@ -122,9 +122,9 @@ describe('ReactNative', () => {
   });
 
   it('returns the correct instance and calls it in the callback', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     let a;
@@ -143,9 +143,9 @@ describe('ReactNative', () => {
   });
 
   it('renders and reorders children', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     class Component extends React.Component {
@@ -181,5 +181,81 @@ describe('ReactNative', () => {
 
     ReactNative.render(<Component />, 11);
     expect(mockArgs.length).toEqual(0);
+  });
+
+  it('should throw when <View> is used inside of a <Text> ancestor', () => {
+    const Image = createReactNativeComponentClass('RCTImage', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTImage',
+    }));
+    const Text = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTView',
+    }));
+
+    expect(() =>
+      ReactNative.render(
+        <Text>
+          <View />
+        </Text>,
+        11,
+      ),
+    ).toThrow('Nesting of <View> within <Text> is not currently supported.');
+
+    // Non-View things (e.g. Image) are fine
+    ReactNative.render(
+      <Text>
+        <Image />
+      </Text>,
+      11,
+    );
+  });
+
+  it('should throw for text not inside of a <Text> ancestor', () => {
+    const ScrollView = createReactNativeComponentClass('RCTScrollView', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTScrollView',
+    }));
+    const Text = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTView',
+    }));
+
+    expect(() => ReactNative.render(<View>this should warn</View>, 11)).toThrow(
+      'Text strings must be rendered within a <Text> component.',
+    );
+
+    expect(() =>
+      ReactNative.render(
+        <Text>
+          <ScrollView>hi hello hi</ScrollView>
+        </Text>,
+        11,
+      ),
+    ).toThrow('Text strings must be rendered within a <Text> component.');
+  });
+
+  it('should not throw for text inside of an indirect <Text> ancestor', () => {
+    const Text = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
+
+    const Indirection = () => 'Hi';
+
+    ReactNative.render(
+      <Text>
+        <Indirection />
+      </Text>,
+      11,
+    );
   });
 });

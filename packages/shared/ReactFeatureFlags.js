@@ -21,6 +21,8 @@ export const enablePersistentReconciler = false;
 // Experimental error-boundary API that can recover from errors within a single
 // render phase
 export const enableGetDerivedStateFromCatch = false;
+// Suspense
+export const enableSuspense = false;
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 
@@ -37,7 +39,11 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
 export const warnAboutDeprecatedLifecycles = false;
 
-export const alwaysUseRequestIdleCallbackPolyfill = false;
+// Gather advanced timing metrics for Profiler subtrees.
+export const enableProfilerTimer = false;
+
+// Fires getDerivedStateFromProps for state *or* props changes
+export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {
