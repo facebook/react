@@ -138,7 +138,10 @@ export const ReplaceState = 1;
 export const ForceUpdate = 2;
 export const CaptureUpdate = 3;
 
-let _hasForceUpdate = false;
+// Global state that is reset at the beginning of calling `processUpdateQueue`.
+// It should only be read right after calling `processUpdateQueue`, via
+// `checkHasForceUpdateAfterProcessing`.
+let hasForceUpdate = false;
 
 let didWarnUpdateInsideUpdate;
 let currentlyProcessingQueue;
@@ -419,7 +422,7 @@ function getStateFromUpdate<State>(
       return Object.assign({}, prevState, partialState);
     }
     case ForceUpdate: {
-      _hasForceUpdate = true;
+      hasForceUpdate = true;
       return prevState;
     }
   }
@@ -433,7 +436,7 @@ export function processUpdateQueue<State>(
   instance: any,
   renderExpirationTime: ExpirationTime,
 ): void {
-  _hasForceUpdate = false;
+  hasForceUpdate = false;
 
   if (
     queue.expirationTime === NoWork ||
@@ -594,7 +597,7 @@ function callCallback(callback, context) {
 }
 
 export function checkHasForceUpdateAfterProcessing(): boolean {
-  return _hasForceUpdate;
+  return hasForceUpdate;
 }
 
 export function commitUpdateQueue<State>(
