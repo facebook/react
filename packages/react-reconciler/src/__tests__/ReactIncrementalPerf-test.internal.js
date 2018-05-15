@@ -12,7 +12,6 @@
 
 describe('ReactDebugFiberPerf', () => {
   let React;
-  let ReactCallReturn;
   let ReactNoop;
   let PropTypes;
 
@@ -121,7 +120,6 @@ describe('ReactDebugFiberPerf', () => {
     // Import after the polyfill is set up:
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    ReactCallReturn = require('react-call-return');
     PropTypes = require('prop-types');
   });
 
@@ -531,53 +529,6 @@ describe('ReactDebugFiberPerf', () => {
     );
     addComment("Because of deduplication, we don't know B was cascading,");
     addComment('but we should still see the warning for the commit phase.');
-    ReactNoop.flush();
-    expect(getFlameChart()).toMatchSnapshot();
-  });
-
-  it('supports returns', () => {
-    function Continuation({isSame}) {
-      return <span prop={isSame ? 'foo==bar' : 'foo!=bar'} />;
-    }
-
-    function CoChild({bar}) {
-      return ReactCallReturn.unstable_createReturn({
-        props: {
-          bar: bar,
-        },
-        continuation: Continuation,
-      });
-    }
-
-    function Indirection() {
-      return [<CoChild key="a" bar={true} />, <CoChild key="b" bar={false} />];
-    }
-
-    function HandleReturns(props, returns) {
-      return returns.map((y, i) => (
-        <y.continuation key={i} isSame={props.foo === y.props.bar} />
-      ));
-    }
-
-    function CoParent(props) {
-      return ReactCallReturn.unstable_createCall(
-        props.children,
-        HandleReturns,
-        props,
-      );
-    }
-
-    function App() {
-      return (
-        <div>
-          <CoParent foo={true}>
-            <Indirection />
-          </CoParent>
-        </div>
-      );
-    }
-
-    ReactNoop.render(<App />);
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
