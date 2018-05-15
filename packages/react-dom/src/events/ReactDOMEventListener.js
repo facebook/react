@@ -7,13 +7,14 @@
  * @flow
  */
 
+import type {AnyNativeEvent} from 'events/PluginModuleType';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {DOMTopLevelEventType} from './DOMTopLevelEventTypes';
+
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
-import type {AnyNativeEvent} from 'events/PluginModuleType';
-import type {TopLevelType} from 'events/TopLevelEventTypes';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
@@ -51,7 +52,7 @@ function getTopLevelCallbackBookKeeping(
   nativeEvent,
   targetInst,
 ): {
-  topLevelType: ?TopLevelType,
+  topLevelType: ?DOMTopLevelEventType,
   nativeEvent: ?AnyNativeEvent,
   targetInst: Fiber,
   ancestors: Array<Fiber>,
@@ -134,7 +135,7 @@ export function isEnabled() {
  * @internal
  */
 export function trapBubbledEvent(
-  topLevelType: TopLevelType,
+  topLevelType: DOMTopLevelEventType,
   element: Document | Element,
 ) {
   if (!element) {
@@ -162,7 +163,7 @@ export function trapBubbledEvent(
  * @internal
  */
 export function trapCapturedEvent(
-  topLevelType: TopLevelType,
+  topLevelType: DOMTopLevelEventType,
   element: Document | Element,
 ) {
   if (!element) {
@@ -185,7 +186,7 @@ function dispatchInteractiveEvent(topLevelType, nativeEvent) {
 }
 
 export function dispatchEvent(
-  topLevelType: TopLevelType,
+  topLevelType: DOMTopLevelEventType,
   nativeEvent: AnyNativeEvent,
 ) {
   if (!_enabled) {
