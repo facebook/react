@@ -8,7 +8,6 @@
  */
 
 import type {TopLevelType} from 'events/TopLevelEventTypes';
-import type {DOMTopLevelEventType} from './DOMTopLevelEventTypes';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
@@ -52,7 +51,7 @@ import getEventCharCode from './getEventCharCode';
  *   [TOP_ABORT, { sameConfig }],
  * ]);
  */
-type EventTuple = [DOMTopLevelEventType, string];
+type EventTuple = [TopLevelType, string];
 const interactiveEventTypeNames: Array<EventTuple> = [
   [DOMTopLevelEventTypes.TOP_BLUR, 'blur'],
   [DOMTopLevelEventTypes.TOP_CANCEL, 'cancel'],
@@ -155,7 +154,7 @@ nonInteractiveEventTypeNames.forEach(eventTuple => {
 });
 
 // Only used in DEV for exhaustiveness validation.
-const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
+const knownHTMLTopLevelTypes: Array<TopLevelType> = [
   DOMTopLevelEventTypes.TOP_ABORT,
   DOMTopLevelEventTypes.TOP_CANCEL,
   DOMTopLevelEventTypes.TOP_CAN_PLAY,
