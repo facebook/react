@@ -29,7 +29,8 @@ if (__DEV__) {
         hasReadOnlyValue[props.type] ||
         props.onChange ||
         props.readOnly ||
-        props.disabled
+        props.disabled ||
+        props.value === null
       ) {
         return null;
       }
@@ -45,7 +46,8 @@ if (__DEV__) {
         !(propName in props) ||
         props.onChange ||
         props.readOnly ||
-        props.disabled
+        props.disabled ||
+        props.value === null
       ) {
         return null;
       }
