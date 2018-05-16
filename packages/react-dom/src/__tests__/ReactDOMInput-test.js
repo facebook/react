@@ -748,10 +748,9 @@ describe('ReactDOMInput', () => {
 
     setUntrackedValue.call(node, 'giraffe');
 
-    const fakeNativeEvent = function() {};
-    fakeNativeEvent.target = node;
-    fakeNativeEvent.path = [node, container];
-    ReactTestUtils.simulateNativeEventOnNode('topInput', node, fakeNativeEvent);
+    ReactTestUtils.SimulateNative.input(node, {
+      path: [node, container],
+    });
 
     expect(handled).toBe(true);
   });

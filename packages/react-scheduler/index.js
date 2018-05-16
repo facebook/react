@@ -9,4 +9,4 @@
 
 'use strict';
 
-module.exports = require('./src/ReactCallReturn');
+export * from './src/ReactScheduler';

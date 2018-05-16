@@ -16,6 +16,8 @@ import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {ProfilerTimer} from './ReactProfilerTimer';
+import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
   IndeterminateComponent,
@@ -25,26 +27,30 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  CallComponent,
-  CallHandlerPhase,
-  ReturnComponent,
   ForwardRef,
   Fragment,
   Mode,
   ContextProvider,
   ContextConsumer,
+  Profiler,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
+  NoEffect,
   PerformedWork,
   Placement,
   ContentReset,
+  DidCapture,
+  Update,
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
   enableGetDerivedStateFromCatch,
+  enableSuspense,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -52,16 +58,20 @@ import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
-import ReactFiberClassComponent from './ReactFiberClassComponent';
+import ReactFiberClassComponent, {
+  applyDerivedStateFromProps,
+} from './ReactFiberClassComponent';
 import {
   mountChildFibers,
   reconcileChildFibers,
   cloneChildFibers,
 } from './ReactChildFiber';
-import {processUpdateQueue} from './ReactFiberUpdateQueue';
+import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
+
+const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
@@ -80,13 +90,27 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  computeExpirationForFiber: (
+    startTime: ExpirationTime,
+    fiber: Fiber,
+  ) => ExpirationTime,
+  profilerTimer: ProfilerTimer,
+  recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
 
-  const {pushProvider} = newContext;
+  const {
+    pushProvider,
+    getContextCurrentValue,
+    getContextChangedBits,
+  } = newContext;
+
+  const {
+    markActualRenderTimeStarted,
+    stopBaseRenderTimerIfRunning,
+  } = profilerTimer;
 
   const {
     getMaskedContext,
@@ -105,7 +129,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   const {
     adoptClassInstance,
-    callGetDerivedStateFromProps,
     constructClassInstance,
     mountClassInstance,
     resumeMountClassInstance,
@@ -116,6 +139,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     computeExpirationForFiber,
     memoizeProps,
     memoizeState,
+    recalculateCurrentTime,
   );
 
   // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
@@ -163,12 +187,30 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateForwardRef(current, workInProgress) {
     const render = workInProgress.type.render;
-    const nextChildren = render(
-      workInProgress.pendingProps,
-      workInProgress.ref,
-    );
+    const nextProps = workInProgress.pendingProps;
+    const ref = workInProgress.ref;
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (workInProgress.memoizedProps === nextProps) {
+      const currentRef = current !== null ? current.ref : null;
+      if (ref === currentRef) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+    }
+
+    let nextChildren;
+    if (__DEV__) {
+      ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.setCurrentPhase('render');
+      nextChildren = render(nextProps, ref);
+      ReactDebugCurrentFiber.setCurrentPhase(null);
+    } else {
+      nextChildren = render(nextProps, ref);
+    }
+
     reconcileChildren(current, workInProgress, nextChildren);
-    memoizeProps(workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
   }
 
@@ -198,6 +240,25 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
+  function updateProfiler(current, workInProgress) {
+    const nextProps = workInProgress.pendingProps;
+    if (enableProfilerTimer) {
+      // Start render timer here and push start time onto queue
+      markActualRenderTimeStarted(workInProgress);
+
+      // Let the "complete" phase know to stop the timer,
+      // And the scheduler to record the measured time.
+      workInProgress.effectTag |= Update;
+    }
+    if (workInProgress.memoizedProps === nextProps) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    const nextChildren = nextProps.children;
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
   }
 
@@ -260,7 +321,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (current === null) {
       if (workInProgress.stateNode === null) {
         // In the initial pass we might need to construct the instance.
-        constructClassInstance(workInProgress, workInProgress.pendingProps);
+        constructClassInstance(
+          workInProgress,
+          workInProgress.pendingProps,
+          renderExpirationTime,
+        );
         mountClassInstance(workInProgress, renderExpirationTime);
 
         shouldUpdate = true;
@@ -278,22 +343,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         renderExpirationTime,
       );
     }
-
-    // We processed the update queue inside updateClassInstance. It may have
-    // included some errors that were dispatched during the commit phase.
-    // TODO: Refactor class components so this is less awkward.
-    let didCaptureError = false;
-    const updateQueue = workInProgress.updateQueue;
-    if (updateQueue !== null && updateQueue.capturedValues !== null) {
-      shouldUpdate = true;
-      didCaptureError = true;
-    }
     return finishClassComponent(
       current,
       workInProgress,
       shouldUpdate,
       hasContext,
-      didCaptureError,
       renderExpirationTime,
     );
   }
@@ -303,11 +357,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     shouldUpdate: boolean,
     hasContext: boolean,
-    didCaptureError: boolean,
     renderExpirationTime: ExpirationTime,
   ) {
     // Refs should update even if shouldComponentUpdate returns false
     markRef(current, workInProgress);
+
+    const didCaptureError =
+      (workInProgress.effectTag & DidCapture) !== NoEffect;
 
     if (!shouldUpdate && !didCaptureError) {
       // Context providers should defer to sCU for rendering
@@ -335,6 +391,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // the new API.
       // TODO: Warn in a future release.
       nextChildren = null;
+
+      if (enableProfilerTimer) {
+        stopBaseRenderTimerIfRunning();
+      }
     } else {
       if (__DEV__) {
         ReactDebugCurrentFiber.setCurrentPhase('render');
@@ -348,13 +408,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
         ReactDebugCurrentFiber.setCurrentPhase(null);
       } else {
-        if (
-          debugRenderPhaseSideEffects ||
-          (debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode)
-        ) {
-          instance.render();
-        }
         nextChildren = instance.render();
       }
     }
@@ -413,29 +466,26 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     pushHostRootContext(workInProgress);
     let updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
+      const nextProps = workInProgress.pendingProps;
       const prevState = workInProgress.memoizedState;
-      const state = processUpdateQueue(
-        current,
+      const prevChildren = prevState !== null ? prevState.element : null;
+      processUpdateQueue(
         workInProgress,
         updateQueue,
-        null,
+        nextProps,
         null,
         renderExpirationTime,
       );
-      memoizeState(workInProgress, state);
-      updateQueue = workInProgress.updateQueue;
+      const nextState = workInProgress.memoizedState;
+      // Caution: React DevTools currently depends on this property
+      // being called "element".
+      const nextChildren = nextState.element;
 
-      let element;
-      if (updateQueue !== null && updateQueue.capturedValues !== null) {
-        // There's an uncaught error. Unmount the whole root.
-        element = null;
-      } else if (prevState === state) {
+      if (nextChildren === prevChildren) {
         // If the state is the same as before, that's a bailout because we had
         // no work that expires at this time.
         resetHydrationState();
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      } else {
-        element = state.element;
       }
       const root: FiberRoot = workInProgress.stateNode;
       if (
@@ -460,16 +510,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress.child = mountChildFibers(
           workInProgress,
           null,
-          element,
+          nextChildren,
           renderExpirationTime,
         );
       } else {
         // Otherwise reset hydration state in case we aborted and resumed another
         // root.
         resetHydrationState();
-        reconcileChildren(current, workInProgress, element);
+        reconcileChildren(current, workInProgress, nextChildren);
       }
-      memoizeState(workInProgress, state);
       return workInProgress.child;
     }
     resetHydrationState();
@@ -607,21 +656,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       workInProgress.memoizedState =
         value.state !== null && value.state !== undefined ? value.state : null;
 
-      if (typeof Component.getDerivedStateFromProps === 'function') {
-        const partialState = callGetDerivedStateFromProps(
+      const getDerivedStateFromProps = Component.getDerivedStateFromProps;
+      if (typeof getDerivedStateFromProps === 'function') {
+        applyDerivedStateFromProps(
           workInProgress,
-          value,
+          getDerivedStateFromProps,
           props,
-          workInProgress.memoizedState,
         );
-
-        if (partialState !== null && partialState !== undefined) {
-          workInProgress.memoizedState = Object.assign(
-            {},
-            workInProgress.memoizedState,
-            partialState,
-          );
-        }
       }
 
       // Push context providers early to prevent context stack mismatches.
@@ -635,7 +676,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
         true,
         hasContext,
-        false,
         renderExpirationTime,
       );
     } else {
@@ -698,42 +738,39 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function updateCallComponent(current, workInProgress, renderExpirationTime) {
-    let nextProps = workInProgress.pendingProps;
-    if (hasLegacyContextChanged()) {
-      // Normally we can bail out on props equality but if context has changed
-      // we don't do the bailout and we have to reuse existing props instead.
-    } else if (workInProgress.memoizedProps === nextProps) {
-      nextProps = workInProgress.memoizedProps;
-      // TODO: When bailing out, we might need to return the stateNode instead
-      // of the child. To check it for work.
-      // return bailoutOnAlreadyFinishedWork(current, workInProgress);
-    }
+  function updateTimeoutComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
+    if (enableSuspense) {
+      const nextProps = workInProgress.pendingProps;
+      const prevProps = workInProgress.memoizedProps;
 
-    const nextChildren = nextProps.children;
+      const prevDidTimeout = workInProgress.memoizedState;
 
-    // The following is a fork of reconcileChildrenAtExpirationTime but using
-    // stateNode to store the child.
-    if (current === null) {
-      workInProgress.stateNode = mountChildFibers(
-        workInProgress,
-        workInProgress.stateNode,
-        nextChildren,
-        renderExpirationTime,
-      );
+      // Check if we already attempted to render the normal state. If we did,
+      // and we timed out, render the placeholder state.
+      const alreadyCaptured =
+        (workInProgress.effectTag & DidCapture) === NoEffect;
+      const nextDidTimeout = !alreadyCaptured;
+
+      if (hasLegacyContextChanged()) {
+        // Normally we can bail out on props equality but if context has changed
+        // we don't do the bailout and we have to reuse existing props instead.
+      } else if (nextProps === prevProps && nextDidTimeout === prevDidTimeout) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+
+      const render = nextProps.children;
+      const nextChildren = render(nextDidTimeout);
+      workInProgress.memoizedProps = nextProps;
+      workInProgress.memoizedState = nextDidTimeout;
+      reconcileChildren(current, workInProgress, nextChildren);
+      return workInProgress.child;
     } else {
-      workInProgress.stateNode = reconcileChildFibers(
-        workInProgress,
-        current.stateNode,
-        nextChildren,
-        renderExpirationTime,
-      );
+      return null;
     }
-
-    memoizeProps(workInProgress, nextProps);
-    // This doesn't take arbitrary time so we could synchronously just begin
-    // eagerly do the work of workInProgress.child as an optimization.
-    return workInProgress.stateNode;
   }
 
   function updatePortalComponent(
@@ -851,6 +888,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
           let sibling = nextFiber.sibling;
           if (sibling !== null) {
+            // Set the return pointer of the sibling to the work-in-progress fiber.
+            sibling.return = nextFiber.return;
             nextFiber = sibling;
             break;
           }
@@ -872,8 +911,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     const newProps = workInProgress.pendingProps;
     const oldProps = workInProgress.memoizedProps;
+    let canBailOnProps = true;
 
     if (hasLegacyContextChanged()) {
+      canBailOnProps = false;
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
     } else if (oldProps === newProps) {
@@ -885,6 +926,20 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newValue = newProps.value;
     workInProgress.memoizedProps = newProps;
 
+    if (__DEV__) {
+      const providerPropTypes = workInProgress.type.propTypes;
+
+      if (providerPropTypes) {
+        checkPropTypes(
+          providerPropTypes,
+          newProps,
+          'prop',
+          'Context.Provider',
+          getCurrentFiberStackAddendum,
+        );
+      }
+    }
+
     let changedBits: number;
     if (oldProps === null) {
       // Initial render
@@ -892,7 +947,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } else {
       if (oldProps.value === newProps.value) {
         // No change. Bailout early if children are the same.
-        if (oldProps.children === newProps.children) {
+        if (oldProps.children === newProps.children && canBailOnProps) {
           workInProgress.stateNode = 0;
           pushProvider(workInProgress);
           return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -909,7 +964,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
         ) {
           // No change. Bailout early if children are the same.
-          if (oldProps.children === newProps.children) {
+          if (oldProps.children === newProps.children && canBailOnProps) {
             workInProgress.stateNode = 0;
             pushProvider(workInProgress);
             return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -932,7 +987,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
           if (changedBits === 0) {
             // No change. Bailout early if children are the same.
-            if (oldProps.children === newProps.children) {
+            if (oldProps.children === newProps.children && canBailOnProps) {
               workInProgress.stateNode = 0;
               pushProvider(workInProgress);
               return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -966,8 +1021,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newProps = workInProgress.pendingProps;
     const oldProps = workInProgress.memoizedProps;
 
-    const newValue = context._currentValue;
-    const changedBits = context._changedBits;
+    const newValue = getContextCurrentValue(context);
+    const changedBits = getContextChangedBits(context);
 
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
@@ -1015,7 +1070,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
 
-    const newChildren = render(newValue);
+    let newChildren;
+    if (__DEV__) {
+      ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.setCurrentPhase('render');
+      newChildren = render(newValue);
+      ReactDebugCurrentFiber.setCurrentPhase(null);
+    } else {
+      newChildren = render(newValue);
+    }
+
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, newChildren);
     return workInProgress.child;
   }
@@ -1045,6 +1111,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ): Fiber | null {
     cancelWorkTimer(workInProgress);
 
+    if (enableProfilerTimer) {
+      // Don't update "base" render times for bailouts.
+      stopBaseRenderTimerIfRunning();
+    }
+
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
     // Fiber's priority and its children yet - we don't know without doing lots
@@ -1066,6 +1137,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function bailoutOnLowPriority(current, workInProgress) {
     cancelWorkTimer(workInProgress);
 
+    if (enableProfilerTimer) {
+      // Don't update "base" render times for bailouts.
+      stopBaseRenderTimerIfRunning();
+    }
+
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
     // See PR 8590 discussion for context
     switch (workInProgress.tag) {
@@ -1083,6 +1159,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         break;
       case ContextProvider:
         pushProvider(workInProgress);
+        break;
+      case Profiler:
+        if (enableProfilerTimer) {
+          markActualRenderTimeStarted(workInProgress);
+        }
         break;
     }
     // TODO: What if this is currently in progress?
@@ -1138,20 +1219,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         );
       case HostText:
         return updateHostText(current, workInProgress);
-      case CallHandlerPhase:
-        // This is a restart. Reset the tag to the initial phase.
-        workInProgress.tag = CallComponent;
-      // Intentionally fall through since this is now the same.
-      case CallComponent:
-        return updateCallComponent(
+      case TimeoutComponent:
+        return updateTimeoutComponent(
           current,
           workInProgress,
           renderExpirationTime,
         );
-      case ReturnComponent:
-        // A return component is just a placeholder, we can just run through the
-        // next one immediately.
-        return null;
       case HostPortal:
         return updatePortalComponent(
           current,
@@ -1164,6 +1237,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return updateFragment(current, workInProgress);
       case Mode:
         return updateMode(current, workInProgress);
+      case Profiler:
+        return updateProfiler(current, workInProgress);
       case ContextProvider:
         return updateContextProvider(
           current,

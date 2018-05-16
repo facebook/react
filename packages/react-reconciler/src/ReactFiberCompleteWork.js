@@ -15,11 +15,13 @@ import type {LegacyContext} from './ReactFiberContext';
 import type {NewContext} from './ReactFiberNewContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {ProfilerTimer} from './ReactProfilerTimer';
 
 import {
   enableMutatingReconciler,
   enablePersistentReconciler,
   enableNoopReconciler,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
@@ -29,25 +31,16 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  CallComponent,
-  CallHandlerPhase,
-  ReturnComponent,
   ContextProvider,
   ContextConsumer,
   ForwardRef,
   Fragment,
   Mode,
+  Profiler,
+  TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
-import {
-  Placement,
-  Ref,
-  Update,
-  ErrLog,
-  DidCapture,
-} from 'shared/ReactTypeOfSideEffect';
+import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
-
-import {reconcileChildFibers} from './ReactChildFiber';
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
@@ -55,6 +48,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   legacyContext: LegacyContext,
   newContext: NewContext,
   hydrationContext: HydrationContext<C, CX>,
+  profilerTimer: ProfilerTimer,
 ) {
   const {
     createInstance,
@@ -72,6 +66,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     getHostContext,
     popHostContainer,
   } = hostContext;
+
+  const {recordElapsedActualRenderTime} = profilerTimer;
 
   const {
     popContextProvider: popLegacyContextProvider,
@@ -94,75 +90,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function markRef(workInProgress: Fiber) {
     workInProgress.effectTag |= Ref;
-  }
-
-  function appendAllReturns(returns: Array<mixed>, workInProgress: Fiber) {
-    let node = workInProgress.stateNode;
-    if (node) {
-      node.return = workInProgress;
-    }
-    while (node !== null) {
-      if (
-        node.tag === HostComponent ||
-        node.tag === HostText ||
-        node.tag === HostPortal
-      ) {
-        invariant(false, 'A call cannot have host component children.');
-      } else if (node.tag === ReturnComponent) {
-        returns.push(node.pendingProps.value);
-      } else if (node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-      while (node.sibling === null) {
-        if (node.return === null || node.return === workInProgress) {
-          return;
-        }
-        node = node.return;
-      }
-      node.sibling.return = node.return;
-      node = node.sibling;
-    }
-  }
-
-  function moveCallToHandlerPhase(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    renderExpirationTime: ExpirationTime,
-  ) {
-    const props = workInProgress.memoizedProps;
-    invariant(
-      props,
-      'Should be resolved by now. This error is likely caused by a bug in ' +
-        'React. Please file an issue.',
-    );
-
-    // First step of the call has completed. Now we need to do the second.
-    // TODO: It would be nice to have a multi stage call represented by a
-    // single component, or at least tail call optimize nested ones. Currently
-    // that requires additional fields that we don't want to add to the fiber.
-    // So this requires nested handlers.
-    // Note: This doesn't mutate the alternate node. I don't think it needs to
-    // since this stage is reset for every pass.
-    workInProgress.tag = CallHandlerPhase;
-
-    // Build up the returns.
-    // TODO: Compare this to a generator or opaque helpers like Children.
-    const returns: Array<mixed> = [];
-    appendAllReturns(returns, workInProgress);
-    const fn = props.handler;
-    const childProps = props.props;
-    const nextChildren = fn(childProps, returns);
-
-    const currentFirstChild = current !== null ? current.child : null;
-    workInProgress.child = reconcileChildFibers(
-      workInProgress,
-      currentFirstChild,
-      nextChildren,
-      renderExpirationTime,
-    );
-    return workInProgress.child;
   }
 
   function appendAllChildren(parent: I, workInProgress: Fiber) {
@@ -416,20 +343,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
         popLegacyContextProvider(workInProgress);
-
-        // If this component caught an error, schedule an error log effect.
-        const instance = workInProgress.stateNode;
-        const updateQueue = workInProgress.updateQueue;
-        if (updateQueue !== null && updateQueue.capturedValues !== null) {
-          workInProgress.effectTag &= ~DidCapture;
-          if (typeof instance.componentDidCatch === 'function') {
-            workInProgress.effectTag |= ErrLog;
-          } else {
-            // Normally we clear this in the commit phase, but since we did not
-            // schedule an effect, we need to reset it here.
-            updateQueue.capturedValues = null;
-          }
-        }
         return null;
       }
       case HostRoot: {
@@ -449,11 +362,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           workInProgress.effectTag &= ~Placement;
         }
         updateHostContainer(workInProgress);
-
-        const updateQueue = workInProgress.updateQueue;
-        if (updateQueue !== null && updateQueue.capturedValues !== null) {
-          workInProgress.effectTag |= ErrLog;
-        }
         return null;
       }
       case HostComponent: {
@@ -597,24 +505,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
         return null;
       }
-      case CallComponent:
-        return moveCallToHandlerPhase(
-          current,
-          workInProgress,
-          renderExpirationTime,
-        );
-      case CallHandlerPhase:
-        // Reset the tag to now be a first phase call.
-        workInProgress.tag = CallComponent;
-        return null;
-      case ReturnComponent:
-        // Does nothing.
-        return null;
       case ForwardRef:
+        return null;
+      case TimeoutComponent:
         return null;
       case Fragment:
         return null;
       case Mode:
+        return null;
+      case Profiler:
+        if (enableProfilerTimer) {
+          recordElapsedActualRenderTime(workInProgress);
+        }
         return null;
       case HostPortal:
         popHostContainer(workInProgress);

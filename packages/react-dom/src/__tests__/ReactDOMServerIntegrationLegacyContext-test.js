@@ -42,7 +42,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('context', function() {
+  describe('legacy context', function() {
     let PurpleContext, RedContext;
     beforeEach(() => {
       class Parent extends React.Component {

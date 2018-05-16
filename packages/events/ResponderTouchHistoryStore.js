@@ -10,7 +10,7 @@
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import {isEndish, isMoveish, isStartish} from './EventPluginUtils';
+import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We

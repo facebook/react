@@ -236,16 +236,6 @@ if (__DEV__) {
       return;
     }
 
-    // Don't warn about react-lifecycles-compat polyfilled components.
-    // Note that it is sufficient to check for the presence of a
-    // single lifecycle, componentWillMount, with the polyfill flag.
-    if (
-      typeof instance.componentWillMount === 'function' &&
-      instance.componentWillMount.__suppressDeprecationWarning === true
-    ) {
-      return;
-    }
-
     let warningsForRoot;
     if (!pendingUnsafeLifecycleWarnings.has(strictRoot)) {
       warningsForRoot = {
@@ -261,19 +251,23 @@ if (__DEV__) {
 
     const unsafeLifecycles = [];
     if (
-      typeof instance.componentWillMount === 'function' ||
+      (typeof instance.componentWillMount === 'function' &&
+        instance.componentWillMount.__suppressDeprecationWarning !== true) ||
       typeof instance.UNSAFE_componentWillMount === 'function'
     ) {
       unsafeLifecycles.push('UNSAFE_componentWillMount');
     }
     if (
-      typeof instance.componentWillReceiveProps === 'function' ||
+      (typeof instance.componentWillReceiveProps === 'function' &&
+        instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+          true) ||
       typeof instance.UNSAFE_componentWillReceiveProps === 'function'
     ) {
       unsafeLifecycles.push('UNSAFE_componentWillReceiveProps');
     }
     if (
-      typeof instance.componentWillUpdate === 'function' ||
+      (typeof instance.componentWillUpdate === 'function' &&
+        instance.componentWillUpdate.__suppressDeprecationWarning !== true) ||
       typeof instance.UNSAFE_componentWillUpdate === 'function'
     ) {
       unsafeLifecycles.push('UNSAFE_componentWillUpdate');

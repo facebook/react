@@ -12,6 +12,16 @@ import isTextInputElement from 'shared/isTextInputElement';
 import getActiveElement from 'fbjs/lib/getActiveElement';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 
+import {
+  TOP_BLUR,
+  TOP_CONTEXT_MENU,
+  TOP_FOCUS,
+  TOP_KEY_DOWN,
+  TOP_KEY_UP,
+  TOP_MOUSE_DOWN,
+  TOP_MOUSE_UP,
+  TOP_SELECTION_CHANGE,
+} from './DOMTopLevelEventTypes';
 import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as ReactInputSelection from '../client/ReactInputSelection';
@@ -29,14 +39,14 @@ const eventTypes = {
       captured: 'onSelectCapture',
     },
     dependencies: [
-      'topBlur',
-      'topContextMenu',
-      'topFocus',
-      'topKeyDown',
-      'topKeyUp',
-      'topMouseDown',
-      'topMouseUp',
-      'topSelectionChange',
+      TOP_BLUR,
+      TOP_CONTEXT_MENU,
+      TOP_FOCUS,
+      TOP_KEY_DOWN,
+      TOP_KEY_UP,
+      TOP_MOUSE_DOWN,
+      TOP_MOUSE_UP,
+      TOP_SELECTION_CHANGE,
     ],
   },
 };
@@ -156,7 +166,7 @@ const SelectEventPlugin = {
 
     switch (topLevelType) {
       // Track the input node that has focus.
-      case 'topFocus':
+      case TOP_FOCUS:
         if (
           isTextInputElement(targetNode) ||
           targetNode.contentEditable === 'true'
@@ -166,18 +176,18 @@ const SelectEventPlugin = {
           lastSelection = null;
         }
         break;
-      case 'topBlur':
+      case TOP_BLUR:
         activeElement = null;
         activeElementInst = null;
         lastSelection = null;
         break;
       // Don't fire the event while the user is dragging. This matches the
       // semantics of the native select event.
-      case 'topMouseDown':
+      case TOP_MOUSE_DOWN:
         mouseDown = true;
         break;
-      case 'topContextMenu':
-      case 'topMouseUp':
+      case TOP_CONTEXT_MENU:
+      case TOP_MOUSE_UP:
         mouseDown = false;
         return constructSelectEvent(nativeEvent, nativeEventTarget);
       // Chrome and IE fire non-standard event when selection is changed (and
@@ -189,13 +199,13 @@ const SelectEventPlugin = {
       // keyup, but we check on keydown as well in the case of holding down a
       // key, when multiple keydown events are fired but only one keyup is.
       // This is also our approach for IE handling, for the reason above.
-      case 'topSelectionChange':
+      case TOP_SELECTION_CHANGE:
         if (skipSelectionChangeEvent) {
           break;
         }
       // falls through
-      case 'topKeyDown':
-      case 'topKeyUp':
+      case TOP_KEY_DOWN:
+      case TOP_KEY_UP:
         return constructSelectEvent(nativeEvent, nativeEventTarget);
     }
 

@@ -14,10 +14,6 @@ const hasSymbol = typeof Symbol === 'function' && Symbol.for;
 export const REACT_ELEMENT_TYPE = hasSymbol
   ? Symbol.for('react.element')
   : 0xeac7;
-export const REACT_CALL_TYPE = hasSymbol ? Symbol.for('react.call') : 0xeac8;
-export const REACT_RETURN_TYPE = hasSymbol
-  ? Symbol.for('react.return')
-  : 0xeac9;
 export const REACT_PORTAL_TYPE = hasSymbol
   ? Symbol.for('react.portal')
   : 0xeaca;
@@ -26,6 +22,9 @@ export const REACT_FRAGMENT_TYPE = hasSymbol
   : 0xeacb;
 export const REACT_STRICT_MODE_TYPE = hasSymbol
   ? Symbol.for('react.strict_mode')
+  : 0xeacc;
+export const REACT_PROFILER_TYPE = hasSymbol
+  ? Symbol.for('react.profile_root')
   : 0xeacc;
 export const REACT_PROVIDER_TYPE = hasSymbol
   ? Symbol.for('react.provider')
@@ -39,6 +38,9 @@ export const REACT_ASYNC_MODE_TYPE = hasSymbol
 export const REACT_FORWARD_REF_TYPE = hasSymbol
   ? Symbol.for('react.forward_ref')
   : 0xead0;
+export const REACT_TIMEOUT_TYPE = hasSymbol
+  ? Symbol.for('react.timeout')
+  : 0xead1;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

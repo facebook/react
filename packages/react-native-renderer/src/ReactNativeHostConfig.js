@@ -9,9 +9,9 @@
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
-import ReactFiberReconciler from 'react-reconciler';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
+
 // Modules provided by RN:
 import UIManager from 'UIManager';
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
@@ -34,6 +34,10 @@ export type Instance = {
 };
 type Props = Object;
 type TextInstance = number;
+
+type HostContext = $ReadOnly<{|
+  isInAParentText: boolean,
+|}>;
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
@@ -59,7 +63,7 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
   }
 }
 
-const NativeRenderer = ReactFiberReconciler({
+const ReactNativeHostConfig = {
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
@@ -71,7 +75,7 @@ const NativeRenderer = ReactFiberReconciler({
     type: string,
     props: Props,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
     internalInstanceHandle: Object,
   ): Instance {
     const tag = allocateTag();
@@ -84,6 +88,11 @@ const NativeRenderer = ReactFiberReconciler({
         }
       }
     }
+
+    invariant(
+      type !== 'RCTView' || !hostContext.isInAParentText,
+      'Nesting of <View> within <Text> is not currently supported.',
+    );
 
     const updatePayload = ReactNativeAttributePayload.create(
       props,
@@ -110,9 +119,14 @@ const NativeRenderer = ReactFiberReconciler({
   createTextInstance(
     text: string,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
     internalInstanceHandle: Object,
   ): TextInstance {
+    invariant(
+      hostContext.isInAParentText,
+      'Text strings must be rendered within a <Text> component.',
+    );
+
     const tag = allocateTag();
 
     UIManager.createView(
@@ -155,19 +169,36 @@ const NativeRenderer = ReactFiberReconciler({
     return false;
   },
 
-  getRootHostContext(): {} {
-    return emptyObject;
+  getRootHostContext(rootContainerInstance: Container): HostContext {
+    return {isInAParentText: false};
   },
 
-  getChildHostContext(): {} {
-    return emptyObject;
+  getChildHostContext(
+    parentHostContext: HostContext,
+    type: string,
+  ): HostContext {
+    const prevIsInAParentText = parentHostContext.isInAParentText;
+    const isInAParentText =
+      type === 'AndroidTextInput' || // Android
+      type === 'RCTMultilineTextInputView' || // iOS
+      type === 'RCTSinglelineTextInputView' || // iOS
+      type === 'RCTText' ||
+      type === 'RCTVirtualText';
+
+    if (prevIsInAParentText !== isInAParentText) {
+      return {isInAParentText};
+    } else {
+      return parentHostContext;
+    }
   },
 
-  getPublicInstance(instance) {
+  getPublicInstance(instance: Instance): * {
     return instance;
   },
 
   now: ReactNativeFrameScheduling.now,
+
+  isPrimaryRenderer: true,
 
   prepareForCommit(): void {
     // Noop
@@ -179,7 +210,7 @@ const NativeRenderer = ReactFiberReconciler({
     oldProps: Props,
     newProps: Props,
     rootContainerInstance: Container,
-    hostContext: {},
+    hostContext: HostContext,
   ): null | Object {
     return emptyObject;
   },
@@ -395,6 +426,6 @@ const NativeRenderer = ReactFiberReconciler({
       // Noop
     },
   },
-});
+};
 
-export default NativeRenderer;
+export default ReactNativeHostConfig;

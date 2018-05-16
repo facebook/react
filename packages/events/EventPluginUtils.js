@@ -30,21 +30,6 @@ export const injection = {
   },
 };
 
-export function isEndish(topLevelType) {
-  return (
-    topLevelType === 'topMouseUp' ||
-    topLevelType === 'topTouchEnd' ||
-    topLevelType === 'topTouchCancel'
-  );
-}
-
-export function isMoveish(topLevelType) {
-  return topLevelType === 'topMouseMove' || topLevelType === 'topTouchMove';
-}
-export function isStartish(topLevelType) {
-  return topLevelType === 'topMouseDown' || topLevelType === 'topTouchStart';
-}
-
 let validateEventDispatches;
 if (__DEV__) {
   validateEventDispatches = function(event) {

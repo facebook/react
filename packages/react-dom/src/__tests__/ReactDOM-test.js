@@ -309,14 +309,9 @@ describe('ReactDOM', () => {
     const actual = [];
 
     function click(node) {
-      const fakeNativeEvent = function() {};
-      fakeNativeEvent.target = node;
-      fakeNativeEvent.path = [node, container];
-      ReactTestUtils.simulateNativeEventOnNode(
-        'topClick',
-        node,
-        fakeNativeEvent,
-      );
+      ReactTestUtils.Simulate.click(node, {
+        path: [node, container],
+      });
     }
 
     class Wrapper extends React.Component {
@@ -437,6 +432,41 @@ describe('ReactDOM', () => {
     } finally {
       // Don't break other tests.
       Object.defineProperty(global, 'document', documentDescriptor);
+    }
+  });
+
+  it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
+    const previousRAF = global.requestAnimationFrame;
+    try {
+      global.requestAnimationFrame = undefined;
+      jest.resetModules();
+      expect(() => require('react-dom')).toWarnDev(
+        'React depends on requestAnimationFrame.',
+      );
+    } finally {
+      global.requestAnimationFrame = previousRAF;
+    }
+  });
+
+  // We're just testing importing, not using it.
+  // It is important because even isomorphic components may import it.
+  it('can import findDOMNode in Node environment', () => {
+    const previousRAF = global.requestAnimationFrame;
+    const previousRIC = global.requestIdleCallback;
+    const prevWindow = global.window;
+    try {
+      global.requestAnimationFrame = undefined;
+      global.requestIdleCallback = undefined;
+      // Simulate the Node environment:
+      delete global.window;
+      jest.resetModules();
+      expect(() => {
+        require('react-dom');
+      }).not.toThrow();
+    } finally {
+      global.requestAnimationFrame = previousRAF;
+      global.requestIdleCallback = previousRIC;
+      global.window = prevWindow;
     }
   });
 });

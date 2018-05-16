@@ -31,7 +31,6 @@ import {
   Ref,
   Incomplete,
   HostEffectMask,
-  ErrLog,
 } from 'shared/ReactTypeOfSideEffect';
 import {
   HostRoot,
@@ -41,10 +40,12 @@ import {
   HostPortal,
 } from 'shared/ReactTypeOfWork';
 import {
+  enableProfilerTimer,
   enableUserTimingAPI,
-  warnAboutDeprecatedLifecycles,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
+  warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
+import {createProfilerTimer} from './ReactProfilerTimer';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -57,6 +58,13 @@ import ReactFiberHostContext from './ReactFiberHostContext';
 import ReactFiberHydrationContext from './ReactFiberHydrationContext';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import {
+  markPendingPriorityLevel,
+  markCommittedPriorityLevels,
+  findNextPendingPriorityLevel,
+  markSuspendedPriorityLevel,
+  markPingedPriorityLevel,
+} from './ReactFiberPendingPriority';
 import {
   recordEffect,
   recordScheduleUpdate,
@@ -86,15 +94,16 @@ import {
   expirationTimeToMs,
   computeExpirationBucket,
 } from './ReactFiberExpirationTime';
-import {AsyncMode} from './ReactTypeOfMode';
+import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import ReactFiberLegacyContext from './ReactFiberContext';
 import ReactFiberNewContext from './ReactFiberNewContext';
-import {
-  getUpdateExpirationTime,
-  insertUpdateIntoFiber,
-} from './ReactFiberUpdateQueue';
+import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import ReactFiberStack from './ReactFiberStack';
+
+export type Thenable = {
+  then(resolve: () => mixed, reject?: () => mixed): mixed,
+};
 
 const {
   invokeGuardedCallback,
@@ -162,10 +171,18 @@ if (__DEV__) {
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
+  const {
+    now,
+    scheduleDeferredCallback,
+    cancelDeferredCallback,
+    prepareForCommit,
+    resetAfterCommit,
+  } = config;
   const stack = ReactFiberStack();
   const hostContext = ReactFiberHostContext(config, stack);
   const legacyContext = ReactFiberLegacyContext(stack);
-  const newContext = ReactFiberNewContext(stack);
+  const newContext = ReactFiberNewContext(stack, config.isPrimaryRenderer);
+  const profilerTimer = createProfilerTimer(now);
   const {popHostContext, popHostContainer} = hostContext;
   const {
     popTopLevelContextObject: popTopLevelLegacyContextObject,
@@ -183,6 +200,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hydrationContext,
     scheduleWork,
     computeExpirationForFiber,
+    profilerTimer,
+    recalculateCurrentTime,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -190,17 +209,28 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     legacyContext,
     newContext,
     hydrationContext,
+    profilerTimer,
   );
   const {
     throwException,
     unwindWork,
     unwindInterruptedWork,
+    createRootErrorUpdate,
+    createClassErrorUpdate,
   } = ReactFiberUnwindWork(
+    config,
     hostContext,
     legacyContext,
     newContext,
     scheduleWork,
+    computeExpirationForFiber,
+    recalculateCurrentTime,
+    markLegacyErrorBoundaryAsFailed,
     isAlreadyFailedLegacyErrorBoundary,
+    onUncaughtError,
+    profilerTimer,
+    suspendRoot,
+    retrySuspendedRoot,
   );
   const {
     commitBeforeMutationLifeCycles,
@@ -209,7 +239,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     commitDeletion,
     commitWork,
     commitLifeCycles,
-    commitErrorLogging,
     commitAttachRef,
     commitDetachRef,
   } = ReactFiberCommitWork(
@@ -220,13 +249,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     markLegacyErrorBoundaryAsFailed,
     recalculateCurrentTime,
   );
+
   const {
-    now,
-    scheduleDeferredCallback,
-    cancelDeferredCallback,
-    prepareForCommit,
-    resetAfterCommit,
-  } = config;
+    checkActualRenderTimeStackEmpty,
+    pauseActualRenderTimerIfRunning,
+    recordElapsedBaseRenderTimeIfRunning,
+    resetActualRenderTimer,
+    resumeActualRenderTimerIfPaused,
+    startBaseRenderTimer,
+    stopBaseRenderTimerIfRunning,
+  } = profilerTimer;
 
   // Represents the current time in ms.
   const originalStartTimeMs = now();
@@ -248,6 +280,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   let nextRoot: FiberRoot | null = null;
   // The time at which we're currently rendering work.
   let nextRenderExpirationTime: ExpirationTime = NoWork;
+  let nextLatestTimeoutMs: number = -1;
+  let nextRenderIsExpired: boolean = false;
 
   // The next fiber with an effect that we're currently committing.
   let nextEffect: Fiber | null = null;
@@ -272,9 +306,20 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     originalReplayError = null;
     replayUnitOfWork = (
       failedUnitOfWork: Fiber,
-      error: mixed,
+      thrownValue: mixed,
       isAsync: boolean,
     ) => {
+      if (
+        thrownValue !== null &&
+        typeof thrownValue === 'object' &&
+        typeof thrownValue.then === 'function'
+      ) {
+        // Don't replay promises. Treat everything else like an error.
+        // TODO: Need to figure out a different strategy if/when we add
+        // support for catching other types.
+        return;
+      }
+
       // Restore the original state of the work-in-progress
       assignFiberPropertiesInDEV(
         failedUnitOfWork,
@@ -300,12 +345,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       // Replay the begin phase.
       isReplayingFailedUnitOfWork = true;
-      originalReplayError = error;
+      originalReplayError = thrownValue;
       invokeGuardedCallback(null, workLoop, null, isAsync);
       isReplayingFailedUnitOfWork = false;
       originalReplayError = null;
       if (hasCaughtError()) {
         clearCaughtError();
+
+        if (enableProfilerTimer) {
+          // Stop "base" render timer again (after the re-thrown error).
+          stopBaseRenderTimerIfRunning();
+        }
       } else {
         // If the begin phase did not fail the second time, set this pointer
         // back to the original value.
@@ -333,6 +383,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     nextRoot = null;
     nextRenderExpirationTime = NoWork;
+    nextLatestTimeoutMs = -1;
+    nextRenderIsExpired = false;
     nextUnitOfWork = null;
 
     isRootReadyForCommit = false;
@@ -445,10 +497,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           currentTime,
           committedExpirationTime,
         );
-      }
-
-      if (effectTag & ErrLog) {
-        commitErrorLogging(nextEffect, onUncaughtError);
       }
 
       if (effectTag & Ref) {
@@ -650,6 +698,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
 
+    if (enableProfilerTimer) {
+      if (__DEV__) {
+        checkActualRenderTimeStackEmpty();
+      }
+      resetActualRenderTimer();
+    }
+
     isCommitting = false;
     isWorking = false;
     stopCommitLifeCyclesTimer();
@@ -661,7 +716,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
     }
 
-    const remainingTime = root.current.expirationTime;
+    markCommittedPriorityLevels(root, currentTime, root.current.expirationTime);
+    const remainingTime = findNextPendingPriorityLevel(root);
     if (remainingTime === NoWork) {
       // If there's no remaining work, we can clear the set of already failed
       // error boundaries.
@@ -681,22 +737,50 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
 
     // Check for pending updates.
-    let newExpirationTime = getUpdateExpirationTime(workInProgress);
+    let newExpirationTime = NoWork;
+    switch (workInProgress.tag) {
+      case HostRoot:
+      case ClassComponent: {
+        const updateQueue = workInProgress.updateQueue;
+        if (updateQueue !== null) {
+          newExpirationTime = updateQueue.expirationTime;
+        }
+      }
+    }
 
     // TODO: Calls need to visit stateNode
 
     // Bubble up the earliest expiration time.
-    let child = workInProgress.child;
-    while (child !== null) {
-      if (
-        child.expirationTime !== NoWork &&
-        (newExpirationTime === NoWork ||
-          newExpirationTime > child.expirationTime)
-      ) {
-        newExpirationTime = child.expirationTime;
+    // (And "base" render timers if that feature flag is enabled)
+    if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+      let treeBaseTime = workInProgress.selfBaseTime;
+      let child = workInProgress.child;
+      while (child !== null) {
+        treeBaseTime += child.treeBaseTime;
+        if (
+          child.expirationTime !== NoWork &&
+          (newExpirationTime === NoWork ||
+            newExpirationTime > child.expirationTime)
+        ) {
+          newExpirationTime = child.expirationTime;
+        }
+        child = child.sibling;
       }
-      child = child.sibling;
+      workInProgress.treeBaseTime = treeBaseTime;
+    } else {
+      let child = workInProgress.child;
+      while (child !== null) {
+        if (
+          child.expirationTime !== NoWork &&
+          (newExpirationTime === NoWork ||
+            newExpirationTime > child.expirationTime)
+        ) {
+          newExpirationTime = child.expirationTime;
+        }
+        child = child.sibling;
+      }
     }
+
     workInProgress.expirationTime = newExpirationTime;
   }
 
@@ -797,7 +881,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // This fiber did not complete because something threw. Pop values off
         // the stack without entering the complete phase. If this is a boundary,
         // capture values if possible.
-        const next = unwindWork(workInProgress);
+        const next = unwindWork(
+          workInProgress,
+          nextRenderIsExpired,
+          nextRenderExpirationTime,
+        );
         // Because this fiber did not complete, don't reset its expiration time.
         if (workInProgress.effectTag & DidCapture) {
           // Restarting an error boundary
@@ -871,7 +959,24 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         workInProgress,
       );
     }
-    let next = beginWork(current, workInProgress, nextRenderExpirationTime);
+
+    let next;
+    if (enableProfilerTimer) {
+      if (workInProgress.mode & ProfileMode) {
+        startBaseRenderTimer();
+      }
+
+      next = beginWork(current, workInProgress, nextRenderExpirationTime);
+
+      if (workInProgress.mode & ProfileMode) {
+        // Update "base" time if the render wasn't bailed out on.
+        recordElapsedBaseRenderTimeIfRunning(workInProgress);
+        stopBaseRenderTimerIfRunning();
+      }
+    } else {
+      next = beginWork(current, workInProgress, nextRenderExpirationTime);
+    }
+
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();
       if (isReplayingFailedUnitOfWork) {
@@ -907,6 +1012,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       while (nextUnitOfWork !== null && !shouldYield()) {
         nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
       }
+
+      if (enableProfilerTimer) {
+        // If we didn't finish, pause the "actual" render timer.
+        // We'll restart it when we resume work.
+        pauseActualRenderTimerIfRunning();
+      }
     }
   }
 
@@ -933,6 +1044,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       resetStack();
       nextRoot = root;
       nextRenderExpirationTime = expirationTime;
+      nextLatestTimeoutMs = -1;
       nextUnitOfWork = createWorkInProgress(
         nextRoot.current,
         null,
@@ -943,17 +1055,31 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     let didFatal = false;
 
+    nextRenderIsExpired =
+      !isAsync || nextRenderExpirationTime <= mostRecentCurrentTime;
+
     startWorkLoopTimer(nextUnitOfWork);
 
     do {
       try {
         workLoop(isAsync);
       } catch (thrownValue) {
+        if (enableProfilerTimer) {
+          // Stop "base" render timer in the event of an error.
+          stopBaseRenderTimerIfRunning();
+        }
+
         if (nextUnitOfWork === null) {
           // This is a fatal error.
           didFatal = true;
           onUncaughtError(thrownValue);
           break;
+        }
+
+        if (__DEV__) {
+          // Reset global debug state
+          // We assume this is defined in DEV
+          (resetCurrentlyProcessingQueue: any)();
         }
 
         if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
@@ -974,7 +1100,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           onUncaughtError(thrownValue);
           break;
         }
-        throwException(returnFiber, sourceFiber, thrownValue);
+        throwException(
+          root,
+          returnFiber,
+          sourceFiber,
+          thrownValue,
+          nextRenderIsExpired,
+          nextRenderExpirationTime,
+          mostRecentCurrentTimeMs,
+        );
         nextUnitOfWork = completeUnitOfWork(sourceFiber);
       }
       break;
@@ -1008,10 +1142,19 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         stopWorkLoopTimer(interruptedBy, didCompleteRoot);
         interruptedBy = null;
         invariant(
-          false,
+          !nextRenderIsExpired,
           'Expired work should have completed. This error is likely caused ' +
             'by a bug in React. Please file an issue.',
         );
+        markSuspendedPriorityLevel(root, expirationTime);
+        if (nextLatestTimeoutMs >= 0) {
+          setTimeout(() => {
+            retrySuspendedRoot(root, expirationTime);
+          }, nextLatestTimeoutMs);
+        }
+        const firstUnblockedExpirationTime = findNextPendingPriorityLevel(root);
+        onBlock(firstUnblockedExpirationTime);
+        return null;
       }
     } else {
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
@@ -1020,22 +1163,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // the renderer.
       return null;
     }
-  }
-
-  function scheduleCapture(sourceFiber, boundaryFiber, value, expirationTime) {
-    // TODO: We only support dispatching errors.
-    const capturedValue = createCapturedValue(value, sourceFiber);
-    const update = {
-      expirationTime,
-      partialState: null,
-      callback: null,
-      isReplace: false,
-      isForced: false,
-      capturedValue,
-      next: null,
-    };
-    insertUpdateIntoFiber(boundaryFiber, update);
-    scheduleWork(boundaryFiber, expirationTime);
   }
 
   function dispatch(
@@ -1048,8 +1175,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       'dispatch: Cannot dispatch during the render phase.',
     );
 
-    // TODO: Handle arrays
-
     let fiber = sourceFiber.return;
     while (fiber !== null) {
       switch (fiber.tag) {
@@ -1061,14 +1186,28 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             (typeof instance.componentDidCatch === 'function' &&
               !isAlreadyFailedLegacyErrorBoundary(instance))
           ) {
-            scheduleCapture(sourceFiber, fiber, value, expirationTime);
+            const errorInfo = createCapturedValue(value, sourceFiber);
+            const update = createClassErrorUpdate(
+              fiber,
+              errorInfo,
+              expirationTime,
+            );
+            enqueueUpdate(fiber, update, expirationTime);
+            scheduleWork(fiber, expirationTime);
             return;
           }
           break;
-        // TODO: Handle async boundaries
-        case HostRoot:
-          scheduleCapture(sourceFiber, fiber, value, expirationTime);
+        case HostRoot: {
+          const errorInfo = createCapturedValue(value, sourceFiber);
+          const update = createRootErrorUpdate(
+            fiber,
+            errorInfo,
+            expirationTime,
+          );
+          enqueueUpdate(fiber, update, expirationTime);
+          scheduleWork(fiber, expirationTime);
           return;
+        }
       }
       fiber = fiber.return;
     }
@@ -1076,7 +1215,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (sourceFiber.tag === HostRoot) {
       // Error was thrown at the root. There is no parent, so the root
       // itself should capture it.
-      scheduleCapture(sourceFiber, sourceFiber, value, expirationTime);
+      const rootFiber = sourceFiber;
+      const errorInfo = createCapturedValue(value, rootFiber);
+      const update = createRootErrorUpdate(
+        rootFiber,
+        errorInfo,
+        expirationTime,
+      );
+      enqueueUpdate(rootFiber, update, expirationTime);
+      scheduleWork(rootFiber, expirationTime);
     }
   }
 
@@ -1128,7 +1275,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return lastUniqueAsyncExpiration;
   }
 
-  function computeExpirationForFiber(fiber: Fiber) {
+  function computeExpirationForFiber(
+    currentTime: ExpirationTime,
+    fiber: Fiber,
+  ) {
     let expirationTime;
     if (expirationContext !== NoWork) {
       // An explicit expiration context was set;
@@ -1149,11 +1299,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (fiber.mode & AsyncMode) {
         if (isBatchingInteractiveUpdates) {
           // This is an interactive update
-          const currentTime = recalculateCurrentTime();
           expirationTime = computeInteractiveExpiration(currentTime);
         } else {
           // This is an async update
-          const currentTime = recalculateCurrentTime();
           expirationTime = computeAsyncExpiration(currentTime);
         }
       } else {
@@ -1175,19 +1323,32 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return expirationTime;
   }
 
-  function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
-    return scheduleWorkImpl(fiber, expirationTime, false);
+  // TODO: Rename this to scheduleTimeout or something
+  function suspendRoot(
+    root: FiberRoot,
+    thenable: Thenable,
+    timeoutMs: number,
+    suspendedTime: ExpirationTime,
+  ) {
+    // Schedule the timeout.
+    if (timeoutMs >= 0 && nextLatestTimeoutMs < timeoutMs) {
+      nextLatestTimeoutMs = timeoutMs;
+    }
   }
 
-  function scheduleWorkImpl(
-    fiber: Fiber,
-    expirationTime: ExpirationTime,
-    isErrorRecovery: boolean,
-  ) {
+  function retrySuspendedRoot(root, suspendedTime) {
+    markPingedPriorityLevel(root, suspendedTime);
+    const retryTime = findNextPendingPriorityLevel(root);
+    if (retryTime !== NoWork) {
+      requestRetry(root, retryTime);
+    }
+  }
+
+  function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
     recordScheduleUpdate();
 
     if (__DEV__) {
-      if (!isErrorRecovery && fiber.tag === ClassComponent) {
+      if (fiber.tag === ClassComponent) {
         const instance = fiber.stateNode;
         warnAboutInvalidUpdates(instance);
       }
@@ -1223,6 +1384,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             interruptedBy = fiber;
             resetStack();
           }
+          markPendingPriorityLevel(root, expirationTime);
+          const nextExpirationTimeToWorkOn = findNextPendingPriorityLevel(root);
           if (
             // If we're in the render phase, we don't need to schedule this root
             // for an update, because we'll do it before we exit...
@@ -1231,8 +1394,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             // ...unless this is a different root than the one we're rendering.
             nextRoot !== root
           ) {
-            // Add this root to the root schedule.
-            requestWork(root, expirationTime);
+            requestWork(root, nextExpirationTimeToWorkOn);
           }
           if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
             invariant(
@@ -1245,7 +1407,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
         } else {
           if (__DEV__) {
-            if (!isErrorRecovery && fiber.tag === ClassComponent) {
+            if (fiber.tag === ClassComponent) {
               warnAboutUpdateOnUnmounted(fiber);
             }
           }
@@ -1342,6 +1504,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     callbackExpirationTime = expirationTime;
     callbackID = scheduleDeferredCallback(performAsyncWork, {timeout});
+  }
+
+  function requestRetry(root: FiberRoot, expirationTime: ExpirationTime) {
+    if (
+      root.remainingExpirationTime === NoWork ||
+      root.remainingExpirationTime < expirationTime
+    ) {
+      // For a retry, only update the remaining expiration time if it has a
+      // *lower priority* than the existing value. This is because, on a retry,
+      // we should attempt to coalesce as much as possible.
+      requestWork(root, expirationTime);
+    }
   }
 
   // requestWork is called by the scheduler whenever a root receives an update.
@@ -1497,6 +1671,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // the deadline.
     findHighestPriorityRoot();
 
+    if (enableProfilerTimer) {
+      resumeActualRenderTimerIfPaused();
+    }
+
     if (enableUserTimingAPI && deadline !== null) {
       const didExpire = nextFlushedExpirationTime < recalculateCurrentTime();
       const timeout = expirationTimeToMs(nextFlushedExpirationTime);
@@ -1512,6 +1690,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         (!deadlineDidExpire ||
           recalculateCurrentTime() >= nextFlushedExpirationTime)
       ) {
+        recalculateCurrentTime();
         performWorkOnRoot(
           nextFlushedRoot,
           nextFlushedExpirationTime,
@@ -1642,6 +1821,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             // There's no time left. Mark this root as complete. We'll come
             // back and commit it later.
             root.finishedWork = finishedWork;
+
+            if (enableProfilerTimer) {
+              // If we didn't finish, pause the "actual" render timer.
+              // We'll restart it when we resume work.
+              pauseActualRenderTimerIfRunning();
+            }
           }
         }
       }
@@ -1705,6 +1890,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       hasUnhandledError = true;
       unhandledError = error;
     }
+  }
+
+  function onBlock(remainingExpirationTime: ExpirationTime) {
+    invariant(
+      nextFlushedRoot !== null,
+      'Should be working on a root. This error is likely caused by a bug in ' +
+        'React. Please file an issue.',
+    );
+    // This root was blocked. Unschedule it until there's another update.
+    nextFlushedRoot.remainingExpirationTime = remainingExpirationTime;
   }
 
   // TODO: Batching should be implemented at the renderer level, not inside
