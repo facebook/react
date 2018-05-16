@@ -15,6 +15,10 @@ import {
   TOP_MOUSE_DOWN,
   TOP_MOUSE_MOVE,
   TOP_MOUSE_UP,
+  TOP_POINTER_CANCEL,
+  TOP_POINTER_DOWN,
+  TOP_POINTER_UP,
+  TOP_POINTER_MOVE,
   TOP_TOUCH_CANCEL,
   TOP_TOUCH_END,
   TOP_TOUCH_MOVE,
@@ -23,14 +27,20 @@ import {
 import SyntheticUIEvent from './SyntheticUIEvent';
 
 function isStartish(topLevelType) {
-  return topLevelType === TOP_MOUSE_DOWN || topLevelType === TOP_TOUCH_START;
+  return (
+    topLevelType === TOP_MOUSE_DOWN ||
+    topLevelType === TOP_TOUCH_START ||
+    topLevelType === TOP_POINTER_DOWN
+  );
 }
 
 function isEndish(topLevelType) {
   return (
     topLevelType === TOP_MOUSE_UP ||
-    topLevelType === TOP_TOUCH_END ||
-    topLevelType === TOP_TOUCH_CANCEL
+    topLevelType === TOP_POINTER_CANCEL ||
+    topLevelType === TOP_POINTER_UP ||
+    topLevelType === TOP_TOUCH_CANCEL ||
+    topLevelType === TOP_TOUCH_END
   );
 }
 
@@ -102,8 +112,16 @@ const touchEvents = [
   TOP_TOUCH_MOVE,
 ];
 
+const pointerEvents = [
+  TOP_POINTER_CANCEL,
+  TOP_POINTER_DOWN,
+  TOP_POINTER_MOVE,
+  TOP_POINTER_UP,
+];
+
 const dependencies = [TOP_MOUSE_DOWN, TOP_MOUSE_MOVE, TOP_MOUSE_UP].concat(
   touchEvents,
+  pointerEvents,
 );
 
 const eventTypes = {
