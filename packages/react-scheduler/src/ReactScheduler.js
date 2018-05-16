@@ -13,7 +13,7 @@
  * A scheduling library to allow scheduling work with more granular priority and
  * control than requestAnimationFrame and requestIdleCallback.
  * Current TODO items:
- * X- Pull out the rIC polyfill built into React
+ * X- Pull out the scheduleWork polyfill built into React
  * X- Initial test coverage
  * X- Support for multiple callbacks
  * - Support for two priorities; serial and deferred
@@ -68,13 +68,13 @@ if (hasNativePerformanceNow) {
 }
 
 // TODO: There's no way to cancel, because Fiber doesn't atm.
-let rIC: (
+let scheduleWork: (
   callback: (deadline: Deadline, options?: {timeout: number}) => void,
 ) => number;
-let cIC: (callbackID: number) => void;
+let cancelScheduledWork: (callbackID: number) => void;
 
 if (!ExecutionEnvironment.canUseDOM) {
-  rIC = function(
+  scheduleWork = function(
     frameCallback: (deadline: Deadline, options?: {timeout: number}) => void,
   ): number {
     return setTimeout(() => {
@@ -86,12 +86,12 @@ if (!ExecutionEnvironment.canUseDOM) {
       });
     });
   };
-  cIC = function(timeoutID: number) {
+  cancelScheduledWork = function(timeoutID: number) {
     clearTimeout(timeoutID);
   };
 } else {
   // We keep callbacks in a queue.
-  // Calling rIC will push in a new callback at the end of the queue.
+  // Calling scheduleWork will push in a new callback at the end of the queue.
   // When we get idle time, callbacks are removed from the front of the queue
   // and called.
   const pendingCallbacks: Array<CallbackConfigType> = [];
@@ -104,7 +104,7 @@ if (!ExecutionEnvironment.canUseDOM) {
 
   // When a callback is scheduled, we register it by adding it's id to this
   // object.
-  // If the user calls 'cIC' with the id of that callback, it will be
+  // If the user calls 'cancelScheduledWork' with the id of that callback, it will be
   // unregistered by removing the id from this object.
   // Then we skip calling any callback which is not registered.
   // This means cancelling is an O(1) time complexity instead of O(n).
@@ -265,7 +265,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
   };
 
-  rIC = function(
+  scheduleWork = function(
     callback: (deadline: Deadline) => void,
     options?: {timeout: number},
   ): number {
@@ -289,7 +289,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
-      // might want to still have setTimeout trigger rIC as a backup to ensure
+      // might want to still have setTimeout trigger scheduleWork as a backup to ensure
       // that we keep performing work.
       isAnimationFrameScheduled = true;
       requestAnimationFrame(animationTick);
@@ -297,9 +297,9 @@ if (!ExecutionEnvironment.canUseDOM) {
     return newCallbackId;
   };
 
-  cIC = function(callbackId: number) {
+  cancelScheduledWork = function(callbackId: number) {
     delete registeredCallbackIds[callbackId];
   };
 }
 
-export {now, rIC, cIC};
+export {now, scheduleWork, cancelScheduledWork};
