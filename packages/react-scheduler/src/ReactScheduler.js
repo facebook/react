@@ -209,11 +209,11 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (event.source !== window || event.data !== messageKey) {
       return;
     }
+    isIdleScheduled = false;
 
     if (pendingCallbacks.length === 0) {
       return;
     }
-    isIdleScheduled = false;
 
     // First call anything which has timed out, until we have caught up.
     callTimedOutCallbacks();
