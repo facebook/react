@@ -31,8 +31,9 @@
 // The frame rate is dynamically adjusted.
 
 import type {Deadline} from 'react-reconciler';
+type FrameCallbackType = Deadline => void;
 type CallbackConfigType = {|
-  scheduledCallback: Deadline => void,
+  scheduledCallback: FrameCallbackType,
   timeoutTime: number,
   callbackId: number, // used for cancelling
 |};
@@ -69,16 +70,18 @@ if (hasNativePerformanceNow) {
 
 // TODO: There's no way to cancel, because Fiber doesn't atm.
 let scheduleWork: (
-  callback: (deadline: Deadline, options?: {timeout: number}) => void,
+  callback: FrameCallbackType,
+  options?: {timeout: number},
 ) => number;
 let cancelScheduledWork: (callbackID: number) => void;
 
 if (!ExecutionEnvironment.canUseDOM) {
   scheduleWork = function(
-    frameCallback: (deadline: Deadline, options?: {timeout: number}) => void,
+    callback: FrameCallbackType,
+    options?: {timeout: number},
   ): number {
     return setTimeout(() => {
-      frameCallback({
+      callback({
         timeRemaining() {
           return Infinity;
         },
@@ -132,7 +135,10 @@ if (!ExecutionEnvironment.canUseDOM) {
     },
   };
 
-  const safelyCallScheduledCallback = function(callback, callbackId) {
+  const safelyCallScheduledCallback = function(
+    callback: FrameCallbackType,
+    callbackId: number,
+  ) {
     if (!registeredCallbackIds[callbackId]) {
       // ignore cancelled callbacks
       return;
@@ -266,7 +272,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   };
 
   scheduleWork = function(
-    callback: (deadline: Deadline) => void,
+    callback: FrameCallbackType,
     options?: {timeout: number},
   ): number {
     let timeoutTime = -1;
