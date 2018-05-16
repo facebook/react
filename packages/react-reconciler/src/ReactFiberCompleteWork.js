@@ -7,15 +7,10 @@
  * @flow
  */
 
-import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {HostContext} from './ReactFiberHostContext';
-import type {LegacyContext} from './ReactFiberContext';
-import type {NewContext} from './ReactFiberNewContext';
-import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
-import type {ProfilerTimer} from './ReactProfilerTimer';
+import type {Instance, Type, Props, UpdatePayload, Container, ChildSet, HostContext} from './ReactFiberHostConfig';
 
 import {
   enableMutatingReconciler,
@@ -83,7 +78,7 @@ import {
     workInProgress.effectTag |= Ref;
   }
 
-  function appendAllChildren(parent: I, workInProgress: Fiber) {
+  function appendAllChildren(parent: Instance, workInProgress: Fiber) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
@@ -126,12 +121,12 @@ import {
       updateHostComponent = function(
         current: Fiber,
         workInProgress: Fiber,
-        updatePayload: null | PL,
-        type: T,
-        oldProps: P,
-        newProps: P,
-        rootContainerInstance: C,
-        currentHostContext: CX,
+        updatePayload: null | UpdatePayload,
+        type: Type,
+        oldProps: Props,
+        newProps: Props,
+        rootContainerInstance: Container,
+        currentHostContext: HostContext,
       ) {
         // TODO: Type this specific to this type of component.
         workInProgress.updateQueue = (updatePayload: any);
@@ -161,7 +156,7 @@ import {
 
       // An unfortunate fork of appendAllChildren because we have two different parent types.
       const appendAllChildrenToContainer = function(
-        containerChildSet: CC,
+        containerChildSet: ChildSet,
         workInProgress: Fiber,
       ) {
         // We only have the top Fiber that was created but we need recurse down its
@@ -193,7 +188,7 @@ import {
         }
       };
       updateHostContainer = function(workInProgress: Fiber) {
-        const portalOrRoot: {containerInfo: C, pendingChildren: CC} =
+        const portalOrRoot: {containerInfo: Container, pendingChildren: ChildSet} =
           workInProgress.stateNode;
         const childrenUnchanged = workInProgress.firstEffect === null;
         if (childrenUnchanged) {
@@ -212,12 +207,12 @@ import {
       updateHostComponent = function(
         current: Fiber,
         workInProgress: Fiber,
-        updatePayload: null | PL,
-        type: T,
-        oldProps: P,
-        newProps: P,
-        rootContainerInstance: C,
-        currentHostContext: CX,
+        updatePayload: null | UpdatePayload,
+        type: Type,
+        oldProps: Props,
+        newProps: Props,
+        rootContainerInstance: Container,
+        currentHostContext: HostContext,
       ) {
         // If there are no effects associated with this node, then none of our children had any updates.
         // This guarantees that we can reuse all of them.
@@ -295,12 +290,12 @@ import {
       updateHostComponent = function(
         current: Fiber,
         workInProgress: Fiber,
-        updatePayload: null | PL,
-        type: T,
-        oldProps: P,
-        newProps: P,
-        rootContainerInstance: C,
-        currentHostContext: CX,
+        updatePayload: null | UpdatePayload,
+        type: Type,
+        oldProps: Props,
+        newProps: Props,
+        rootContainerInstance: Container,
+        currentHostContext: HostContext,
       ) {
         // Noop
       };
@@ -362,7 +357,7 @@ import {
           // have newProps so we'll have to reuse them.
           // TODO: Split the update API as separate for the props vs. children.
           // Even better would be if children weren't special cased at all tho.
-          const instance: I = workInProgress.stateNode;
+          const instance: Instance = workInProgress.stateNode;
           const currentHostContext = getHostContext();
           // TODO: Experiencing an error where oldProps is null. Suggests a host
           // component is hitting the resume path. Figure out why. Possibly

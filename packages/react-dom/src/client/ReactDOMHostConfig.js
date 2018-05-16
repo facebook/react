@@ -24,22 +24,26 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 
-export type Container = Element | Document;
-type Props = {
+export type Type = string;
+export type Props = {
   autoFocus?: boolean,
   children?: mixed,
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
 };
-type Instance = Element;
-type TextInstance = Text;
-
+export type Container = Element | Document;
+export type Instance = Element;
+export type TextInstance = Text;
+export type HydratableInstance = Element | Text;
+export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
 };
 type HostContextProd = string;
-type HostContext = HostContextDev | HostContextProd;
+export type HostContext = HostContextDev | HostContextProd;
+export type UpdatePayload = Array<mixed>;
+export type ChildSet = void; // Unused
 
 const {
   createElement,
@@ -77,6 +81,8 @@ function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   return false;
 }
 
+export * from 'shared/HostConfigWithNoPersistence';
+
 export function getRootHostContext(rootContainerInstance: Container): HostContext {
     let type;
     let namespace;
@@ -111,6 +117,7 @@ export function getRootHostContext(rootContainerInstance: Container): HostContex
 export function getChildHostContext(
     parentHostContext: HostContext,
     type: string,
+    rootContainerInstance: Container,
   ): HostContext {
     if (__DEV__) {
       const parentHostContextDev = ((parentHostContext: any): HostContextDev);
@@ -126,17 +133,17 @@ export function getChildHostContext(
     return getChildNamespace(parentNamespace, type);
   }
 
-export function  getPublicInstance(instance: Instance | TextInstance): * {
+export function  getPublicInstance(instance: Instance): * {
     return instance;
   }
 
-export function  prepareForCommit(): void {
+export function  prepareForCommit(containerInfo: Container): void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
     selectionInformation = ReactInputSelection.getSelectionInformation();
     ReactBrowserEventEmitter.setEnabled(false);
   }
 
-export function resetAfterCommit(): void {
+export function resetAfterCommit(containerInfo: Container): void {
     ReactInputSelection.restoreSelection(selectionInformation);
     selectionInformation = null;
     ReactBrowserEventEmitter.setEnabled(eventsEnabled);
@@ -194,6 +201,7 @@ export function finalizeInitialChildren(
     type: string,
     props: Props,
     rootContainerInstance: Container,
+    hostContext: HostContext,
   ): boolean {
     setInitialProperties(domElement, type, props, rootContainerInstance);
     return shouldAutoFocusHostComponent(type, props);
@@ -263,12 +271,15 @@ export function prepareUpdate(
   }
 
   export const now = ReactScheduler.now;
-
   export const isPrimaryRenderer = true;
+  export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
+  export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
+
+  // -------------------
+  //     Mutation
+  // -------------------
 
   export const supportsMutation = true;
-  export const supportsPersistence = false;
-  export const supportsHydration = true;
 
   export function commitMount(
       domElement: Instance,
@@ -374,6 +385,11 @@ export function prepareUpdate(
       }
     }
 
+  // -------------------
+  //     Hydration
+  // -------------------
+
+  export const supportsHydration = true;
 
     export function canHydrateInstance(
       instance: Instance | TextInstance,
@@ -560,29 +576,4 @@ export function prepareUpdate(
         warnForInsertedHydratedText(parentInstance, text);
       }
     }
-
-
-  export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
-  export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
-
-
-export function cloneInstance() {
-  // not supported
-}
-
-export function createContainerChildSet() {
-  // not supported
-}
-
-export function appendChildToContainerChildSet() {
-  // not supported
-}
-
-export function finalizeContainerChildren() {
-  // not supported
-}
-
-export function replaceContainerChildren() {
-  // not supported
-}
 

@@ -26,18 +26,22 @@ import {
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
 
-type Container = number;
+export type Type = string;
+export type Props = Object;
+export type Container = number;
 export type Instance = {
   _children: Array<Instance | number>,
   _nativeTag: number,
   viewConfig: ReactNativeBaseComponentViewConfig,
 };
-type Props = Object;
-type TextInstance = number;
-
-type HostContext = $ReadOnly<{|
+export type TextInstance = number;
+export type HydratableInstance = Instance | TextInstance;
+export type PublicInstance = Instance;
+export type HostContext = $ReadOnly<{|
   isInAParentText: boolean,
 |}>;
+export type UpdatePayload = Object; // Unused
+export type ChildSet = void; // Unused
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
@@ -63,6 +67,8 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
   }
 }
 
+export * from 'shared/HostConfigWithNoPersistence';
+export * from 'shared/HostConfigWithNoHydration';
 
   export function appendInitialChild(
     parentInstance: Instance,
@@ -146,6 +152,7 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
     type: string,
     props: Props,
     rootContainerInstance: Container,
+    hostContext: HostContext,
   ): boolean {
     // Don't send a no-op message over the bridge.
     if (parentInstance._children.length === 0) {
@@ -176,6 +183,7 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
   export function getChildHostContext(
     parentHostContext: HostContext,
     type: string,
+    rootContainerInstance: Container,
   ): HostContext {
     const prevIsInAParentText = parentHostContext.isInAParentText;
     const isInAParentText =
@@ -196,15 +204,7 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
     return instance;
   }
 
-  export const now = ReactNativeFrameScheduling.now;
-
-  export const isPrimaryRenderer = true;
-
-  export const supportsMutation = true;
-  export const supportsPersistence = false;
-  export const supportsHydration = false;
-
-  export function prepareForCommit(): void {
+  export function prepareForCommit(containerInfo: Container): void {
     // Noop
   }
 
@@ -219,10 +219,12 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
     return emptyObject;
   }
 
-  export function resetAfterCommit(): void {
+  export function resetAfterCommit(containerInfo: Container): void {
     // Noop
   }
 
+  export const now = ReactNativeFrameScheduling.now;
+  export const isPrimaryRenderer = true;
   export const scheduleDeferredCallback = ReactNativeFrameScheduling.scheduleDeferredCallback;
   export const cancelDeferredCallback = ReactNativeFrameScheduling.cancelDeferredCallback;
 
@@ -239,6 +241,12 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
     // More context @ github.com/facebook/react/pull/8560#discussion_r92111303
     return false;
   }
+
+  // -------------------
+  //     Mutation
+  // -------------------
+
+  export const supportsMutation = true;
 
     export function appendChild(
       parentInstance: Instance,
@@ -429,79 +437,3 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
       // Noop
     }
 
-export function cloneInstance() {
-  // not supported
-}
-
-export function createContainerChildSet() {
-  // not supported
-}
-
-export function appendChildToContainerChildSet() {
-  // not supported
-}
-
-export function finalizeContainerChildren() {
-  // not supported
-}
-
-export function replaceContainerChildren() {
-  // not supported
-}
-
-
-export function canHydrateInstance() {
-  // not supported
-}
-
-export function canHydrateTextInstance() {
-  // not supported
-}
-
-export function getNextHydratableSibling() {
-  // not supported
-}
-
-export function getFirstHydratableChild() {
-  // not supported
-}
-
-export function hydrateInstance() {
-  // not supported
-}
-
-export function hydrateTextInstance() {
-  // not supported
-}
-
-export function didNotMatchHydratedContainerTextInstance() {
-  // not supported
-}
-
-export function didNotMatchHydratedTextInstance() {
-  // not supported
-}
-
-export function didNotHydrateContainerInstance() {
-  // not supported
-}
-
-export function didNotHydrateInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableContainerInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableContainerTextInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableTextInstance() {
-  // not supported
-}

@@ -12,7 +12,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactFabricInjection';
 
-import * as ReactFabricRenderer from 'react-reconciler/inline';
+import * as ReactFabricRenderer from 'react-reconciler/inline.fabric';
 
 import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
@@ -65,7 +65,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
   }
   if (hostInstance.canonical) {
     // Fabric
-    return hostInstance.canonical._nativeTag;
+    return (hostInstance.canonical: any)._nativeTag;
   }
   return hostInstance._nativeTag;
 }

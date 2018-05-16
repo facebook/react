@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactFiber';
-import type {StackCursor, Stack} from './ReactFiberStack';
+import type {StackCursor} from './ReactFiberStack';
 
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
@@ -27,30 +27,6 @@ let warnedAboutMissingGetChildContext;
 if (__DEV__) {
   warnedAboutMissingGetChildContext = {};
 }
-
-export type LegacyContext = {
-  getUnmaskedContext(workInProgress: Fiber): Object,
-  cacheContext(
-    workInProgress: Fiber,
-    unmaskedContext: Object,
-    maskedContext: Object,
-  ): void,
-  getMaskedContext(workInProgress: Fiber, unmaskedContext: Object): Object,
-  hasContextChanged(): boolean,
-  isContextConsumer(fiber: Fiber): boolean,
-  isContextProvider(fiber: Fiber): boolean,
-  popContextProvider(fiber: Fiber): void,
-  popTopLevelContextObject(fiber: Fiber): void,
-  pushTopLevelContextObject(
-    fiber: Fiber,
-    context: Object,
-    didChange: boolean,
-  ): void,
-  processChildContext(fiber: Fiber, parentContext: Object): Object,
-  pushContextProvider(workInProgress: Fiber): boolean,
-  invalidateContextProvider(workInProgress: Fiber, didChange: boolean): void,
-  findCurrentUnmaskedContext(fiber: Fiber): Object,
-};
 
   // A cursor to the current merged context object on the stack.
   let contextStackCursor: StackCursor<Object> = createCursor(emptyObject);
@@ -77,13 +53,13 @@ export type LegacyContext = {
     workInProgress: Fiber,
     unmaskedContext: Object,
     maskedContext: Object,
-  ) {
+  ): void {
     const instance = workInProgress.stateNode;
     instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
     instance.__reactInternalMemoizedMaskedChildContext = maskedContext;
   }
 
-  function getMaskedContext(workInProgress: Fiber, unmaskedContext: Object) {
+  function getMaskedContext(workInProgress: Fiber, unmaskedContext: Object): Object {
     const type = workInProgress.type;
     const contextTypes = type.contextTypes;
     if (!contextTypes) {
@@ -147,7 +123,7 @@ export type LegacyContext = {
     pop(contextStackCursor, fiber);
   }
 
-  function popTopLevelContextObject(fiber: Fiber) {
+  function popTopLevelContextObject(fiber: Fiber): void {
     pop(didPerformWorkStackCursor, fiber);
     pop(contextStackCursor, fiber);
   }

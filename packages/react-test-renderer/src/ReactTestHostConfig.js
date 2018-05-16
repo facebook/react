@@ -11,6 +11,13 @@ import emptyObject from 'fbjs/lib/emptyObject';
 
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
+export type Type = string;
+export type Props = Object;
+export type Container = {|
+  children: Array<Instance | TextInstance>,
+  createNodeMock: Function,
+  tag: 'CONTAINER',
+|};
 export type Instance = {|
   type: string,
   props: Object,
@@ -18,21 +25,20 @@ export type Instance = {|
   rootContainerInstance: Container,
   tag: 'INSTANCE',
 |};
-
 export type TextInstance = {|
   text: string,
   tag: 'TEXT',
 |};
-
-type Container = {|
-  children: Array<Instance | TextInstance>,
-  createNodeMock: Function,
-  tag: 'CONTAINER',
-|};
-
-type Props = Object;
+export type HydratableInstance = Instance | TextInstance;
+export type PublicInstance = Instance | TextInstance;
+export type HostContext = Object;
+export type UpdatePayload = Object;
+export type ChildSet = void; // Unused
 
 const UPDATE_SIGNAL = {};
+
+export * from 'shared/HostConfigWithNoPersistence';
+export * from 'shared/HostConfigWithNoHydration';
 
 export function getPublicInstance(inst: Instance | TextInstance): * {
   switch (inst.tag) {
@@ -79,19 +85,25 @@ export function removeChild(
   parentInstance.children.splice(index, 1);
 }
 
-export function getRootHostContext() {
+export function getRootHostContext(
+  rootContainerInstance: Container
+): HostContext {
     return emptyObject;
   }
 
-  export function getChildHostContext() {
+  export function getChildHostContext(
+    parentHostContext: HostContext,
+    type: string,
+    rootContainerInstance: Container
+  ): HostContext {
     return emptyObject;
   }
 
-  export function prepareForCommit(): void {
+  export function prepareForCommit(containerInfo: Container): void {
     // noop
   }
 
-  export function resetAfterCommit(): void {
+  export function resetAfterCommit(containerInfo: Container): void {
     // noop
   }
 
@@ -127,6 +139,7 @@ export function getRootHostContext() {
     type: string,
     props: Props,
     rootContainerInstance: Container,
+    hostContext: Object,
   ): boolean {
     return false;
   }
@@ -162,16 +175,18 @@ export function getRootHostContext() {
     };
   }
 
-  export const scheduleDeferredCallback = TestRendererScheduling.scheduleDeferredCallback;
-  export const cancelDeferredCallback = TestRendererScheduling.cancelDeferredCallback;
+  export const isPrimaryRenderer = true;
   // This approach enables `now` to be mocked by tests,
   // Even after the reconciler has initialized and read host config values.
   export const now = () => TestRendererScheduling.nowImplementation();
+  export const scheduleDeferredCallback = TestRendererScheduling.scheduleDeferredCallback;
+  export const cancelDeferredCallback = TestRendererScheduling.cancelDeferredCallback;
 
-  export const isPrimaryRenderer = true;
+  // -------------------
+  //     Mutation
+  // -------------------
+
   export const supportsMutation = true;
-  export const supportsPersistence = false;
-  export const supportsHydration = false;
 
     export function commitUpdate(
       instance: Instance,
@@ -209,81 +224,3 @@ export function getRootHostContext() {
     export const appendChildToContainer = appendChild;
     export const insertInContainerBefore = insertBefore;
     export const removeChildFromContainer = removeChild;
-
-
-export function cloneInstance() {
-  // not supported
-}
-
-export function createContainerChildSet() {
-  // not supported
-}
-
-export function appendChildToContainerChildSet() {
-  // not supported
-}
-
-export function finalizeContainerChildren() {
-  // not supported
-}
-
-export function replaceContainerChildren() {
-  // not supported
-}
-
-
-export function canHydrateInstance() {
-  // not supported
-}
-
-export function canHydrateTextInstance() {
-  // not supported
-}
-
-export function getNextHydratableSibling() {
-  // not supported
-}
-
-export function getFirstHydratableChild() {
-  // not supported
-}
-
-export function hydrateInstance() {
-  // not supported
-}
-
-export function hydrateTextInstance() {
-  // not supported
-}
-
-export function didNotMatchHydratedContainerTextInstance() {
-  // not supported
-}
-
-export function didNotMatchHydratedTextInstance() {
-  // not supported
-}
-
-export function didNotHydrateContainerInstance() {
-  // not supported
-}
-
-export function didNotHydrateInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableContainerInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableContainerTextInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableTextInstance() {
-  // not supported
-}

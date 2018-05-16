@@ -15,18 +15,6 @@ export type StackCursor<T> = {
   current: T,
 };
 
-export type Stack = {
-  createCursor<T>(defaultValue: T): StackCursor<T>,
-  isEmpty(): boolean,
-  push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber): void,
-  pop<T>(cursor: StackCursor<T>, fiber: Fiber): void,
-
-  // DEV only
-  checkThatStackIsEmpty(): void,
-  resetStackAfterFatalErrorInDev(): void,
-};
-
-
   const valueStack: Array<any> = [];
 
   let fiberStack: Array<Fiber | null>;

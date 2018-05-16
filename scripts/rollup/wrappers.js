@@ -200,7 +200,6 @@ ${license}
 'use strict';
 
 if (process.env.NODE_ENV !== "production") {
-  // TODO
   module.exports = function $$$reconciler($$$hostConfig) {
 ${source}
     var $$$renderer = module.exports;
@@ -217,7 +216,6 @@ ${source}
  *
 ${license}
  */
-// TODO
 module.exports = function $$$reconciler($$$hostConfig) {
 ${source}
     var $$$renderer = module.exports;

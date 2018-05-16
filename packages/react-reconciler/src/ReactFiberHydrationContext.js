@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
+import type {Instance, TextInstance, HydratableInstance, Container, HostContext} from './ReactFiberHostConfig';
 
 import {HostComponent, HostText, HostRoot} from 'shared/ReactTypeOfWork';
 import {Deletion, Placement} from 'shared/ReactTypeOfSideEffect';
@@ -34,26 +34,13 @@ import {
   didNotFindHydratableTextInstance,
 } from './ReactFiberHostConfig';
 
-export type HydrationContext<C, CX> = {
-  enterHydrationState(fiber: Fiber): boolean,
-  resetHydrationState(): void,
-  tryToClaimNextHydratableInstance(fiber: Fiber): void,
-  prepareToHydrateHostInstance(
-    fiber: Fiber,
-    rootContainerInstance: C,
-    hostContext: CX,
-  ): boolean,
-  prepareToHydrateHostTextInstance(fiber: Fiber): boolean,
-  popHydrationState(fiber: Fiber): boolean,
-};
-
   // The deepest Fiber on the stack involved in a hydration context.
   // This may have been an insertion or a hydration.
   let hydrationParentFiber: null | Fiber = null;
-  let nextHydratableInstance: null | HI = null;
+  let nextHydratableInstance: null | HydratableInstance = null;
   let isHydrating: boolean = false;
 
-  function enterHydrationState(fiber: Fiber) {
+  function enterHydrationState(fiber: Fiber): boolean {
     if (!supportsHydration) {
       return false;
     }
@@ -65,7 +52,7 @@ export type HydrationContext<C, CX> = {
     return true;
   }
 
-  function deleteHydratableInstance(returnFiber: Fiber, instance: I | TI) {
+  function deleteHydratableInstance(returnFiber: Fiber, instance: any /* TODO !!!!!!!!!!!! Instance | TextInstance*/) {
     if (__DEV__) {
       switch (returnFiber.tag) {
         case HostRoot:
@@ -167,7 +154,7 @@ export type HydrationContext<C, CX> = {
         const props = fiber.pendingProps;
         const instance = canHydrateInstance(nextInstance, type, props);
         if (instance !== null) {
-          fiber.stateNode = (instance: I);
+          fiber.stateNode = (instance: Instance);
           return true;
         }
         return false;
@@ -176,7 +163,7 @@ export type HydrationContext<C, CX> = {
         const text = fiber.pendingProps;
         const textInstance = canHydrateTextInstance(nextInstance, text);
         if (textInstance !== null) {
-          fiber.stateNode = (textInstance: TI);
+          fiber.stateNode = (textInstance: TextInstance);
           return true;
         }
         return false;
@@ -186,7 +173,7 @@ export type HydrationContext<C, CX> = {
     }
   }
 
-  function tryToClaimNextHydratableInstance(fiber: Fiber) {
+  function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     if (!isHydrating) {
       return;
     }
@@ -220,13 +207,13 @@ export type HydrationContext<C, CX> = {
       );
     }
     hydrationParentFiber = fiber;
-    nextHydratableInstance = getFirstHydratableChild(nextInstance);
+    nextHydratableInstance = getFirstHydratableChild((nextInstance: any));
   }
 
   function prepareToHydrateHostInstance(
     fiber: Fiber,
-    rootContainerInstance: C,
-    hostContext: CX,
+    rootContainerInstance: Container,
+    hostContext: HostContext,
   ): boolean {
     if (!supportsHydration) {
       invariant(
@@ -236,7 +223,7 @@ export type HydrationContext<C, CX> = {
       );
     }
 
-    const instance: I = fiber.stateNode;
+    const instance: Instance = fiber.stateNode;
     const updatePayload = hydrateInstance(
       instance,
       fiber.type,
@@ -264,7 +251,7 @@ export type HydrationContext<C, CX> = {
       );
     }
 
-    const textInstance: TI = fiber.stateNode;
+    const textInstance: TextInstance = fiber.stateNode;
     const textContent: string = fiber.memoizedProps;
     const shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
     if (__DEV__) {
@@ -360,7 +347,7 @@ export type HydrationContext<C, CX> = {
     return true;
   }
 
-  function resetHydrationState() {
+  function resetHydrationState(): void {
     if (!supportsHydration) {
       return;
     }

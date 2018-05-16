@@ -33,9 +33,9 @@ import {
   cloneNodeWithNewChildren,
   cloneNodeWithNewChildrenAndProps,
   cloneNodeWithNewProps,
-  createChildSet,
-  appendChild,
-  appendChildToSet,
+  createChildSet as createChildNodeSet,
+  appendChild as appendChildNode,
+  appendChildToSet as appendChildNodeToSet,
   completeRoot,
   registerEventHandler,
 } from 'FabricUIManager';
@@ -47,9 +47,24 @@ import UIManager from 'UIManager';
 // This means that they never overlap.
 let nextReactTag = 2;
 
-type HostContext = $ReadOnly<{|
+type Node = Object;
+export type Type = string;
+export type Props = Object;
+export type Instance = {
+  node: Node,
+  canonical: ReactFabricHostComponent,
+};
+export type TextInstance = {
+  node: Node,
+};
+export type HydratableInstance = Instance | TextInstance;
+export type PublicInstance = ReactFabricHostComponent;
+export type Container = number;
+export type ChildSet = Object;
+export type HostContext = $ReadOnly<{|
   isInAParentText: boolean,
 |}>;
+export type UpdatePayload = Object;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
@@ -135,23 +150,14 @@ class ReactFabricHostComponent {
 // eslint-disable-next-line no-unused-expressions
 (ReactFabricHostComponent.prototype: NativeMethodsMixinType);
 
-type Node = Object;
-type ChildSet = Object;
-type Container = number;
-type Instance = {
-  node: Node,
-  canonical: ReactFabricHostComponent,
-};
-type Props = Object;
-type TextInstance = {
-  node: Node,
-};
+export * from 'shared/HostConfigWithNoMutation';
+export * from 'shared/HostConfigWithNoHydration';
 
 export function appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
-    appendChild(parentInstance.node, child.node);
+    appendChildNode(parentInstance.node, child.node);
   }
 
   export function createInstance(
@@ -232,6 +238,7 @@ export function appendInitialChild(
     type: string,
     props: Props,
     rootContainerInstance: Container,
+    hostContext: HostContext,
   ): boolean {
     return false;
   }
@@ -243,6 +250,7 @@ export function appendInitialChild(
   export function getChildHostContext(
     parentHostContext: HostContext,
     type: string,
+    rootContainerInstance: Container,
   ): HostContext {
     const prevIsInAParentText = parentHostContext.isInAParentText;
     const isInAParentText =
@@ -263,12 +271,7 @@ export function appendInitialChild(
     return instance.canonical;
   }
 
-  export const now = ReactNativeFrameScheduling.now;
-
-  // The Fabric renderer is secondary to the existing React Native renderer.
-  export const isPrimaryRenderer = false;
-
-  export function prepareForCommit(): void {
+  export function prepareForCommit(containerInfo: Container): void {
     // Noop
   }
 
@@ -291,12 +294,9 @@ export function appendInitialChild(
     return updatePayload;
   }
 
-  export function resetAfterCommit(): void {
+  export function resetAfterCommit(containerInfo: Container): void {
     // Noop
   }
-
-  export const scheduleDeferredCallback = ReactNativeFrameScheduling.scheduleDeferredCallback;
-  export const cancelDeferredCallback = ReactNativeFrameScheduling.cancelDeferredCallback;
 
   export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
     return false;
@@ -312,9 +312,17 @@ export function appendInitialChild(
     return false;
   }
 
-  export const supportsMutation = false;
+  // The Fabric renderer is secondary to the existing React Native renderer.
+  export const isPrimaryRenderer = false;
+  export const now = ReactNativeFrameScheduling.now;
+  export const scheduleDeferredCallback = ReactNativeFrameScheduling.scheduleDeferredCallback;
+  export const cancelDeferredCallback = ReactNativeFrameScheduling.cancelDeferredCallback;
+
+  // -------------------
+  //     Persistence
+  // -------------------
+
   export const supportsPersistence = true;
-  export const supportsHydration = false;
 
     export function cloneInstance(
       instance: Instance,
@@ -356,14 +364,14 @@ export function appendInitialChild(
     }
 
     export function createContainerChildSet(container: Container): ChildSet {
-      return createChildSet(container);
+      return createChildNodeSet(container);
     }
 
     export function appendChildToContainerChildSet(
       childSet: ChildSet,
       child: Instance | TextInstance,
     ): void {
-      appendChildToSet(childSet, child.node);
+      appendChildNodeToSet(childSet, child.node);
     }
 
     export function finalizeContainerChildren(
@@ -377,102 +385,3 @@ export function appendInitialChild(
       container: Container,
       newChildren: ChildSet,
     ): void {}
-
-
-export function commitMount() {
-  // not supported
-}
-
-export function commitUpdate() {
-  // not supported
-}
-
-export function commitTextUpdate() {
-  // not supported
-}
-
-export function resetTextContent() {
-  // not supported
-}
-
-export function appendChild() {
-  // not supported
-}
-
-export function appendChildToContainer() {
-  // not supported
-}
-
-export function insertBefore() {
-  // not supported
-}
-
-export function insertInContainerBefore() {
-  // not supported
-}
-
-export function removeChild() {
-  // not supported
-}
-
-export function removeChildFromContainer() {
-  // not supported
-}
-
-
-
-export function canHydrateInstance() {
-  // not supported
-}
-
-export function canHydrateTextInstance() {
-  // not supported
-}
-
-export function getNextHydratableSibling() {
-  // not supported
-}
-
-export function getFirstHydratableChild() {
-  // not supported
-}
-
-export function hydrateInstance() {
-  // not supported
-}
-
-export function hydrateTextInstance() {
-  // not supported
-}
-
-export function didNotMatchHydratedContainerTextInstance() {
-  // not supported
-}
-
-export function didNotMatchHydratedTextInstance() {
-  // not supported
-}
-
-export function didNotHydrateContainerInstance() {
-  // not supported
-}
-
-export function didNotHydrateInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableContainerInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableContainerTextInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableTextInstance() {
-  // not supported
-}

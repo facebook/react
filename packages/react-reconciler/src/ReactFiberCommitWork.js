@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {HostConfig} from 'react-reconciler';
+import type {Instance, TextInstance, Container, ChildSet, UpdatePayload} from './ReactFiberHostConfig';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -291,7 +291,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
         return;
       }
       case HostComponent: {
-        const instance: I = finishedWork.stateNode;
+        const instance: Instance = finishedWork.stateNode;
 
         // Renderers may schedule work to be done after host components are mounted
         // (eg DOM renderer may schedule auto-focus for inputs and form controls).
@@ -463,7 +463,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
         if (!supportsPersistence || supportsMutation) {
           return;
         }
-        const portal: {containerInfo: C, pendingChildren: CC} =
+        const portal: {containerInfo: Container, pendingChildren: ChildSet} =
           current.stateNode;
         const {containerInfo} = portal;
         const emptyChildSet = createContainerChildSet(containerInfo);
@@ -485,7 +485,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
           }
           case HostRoot:
           case HostPortal: {
-            const portalOrRoot: {containerInfo: C, pendingChildren: CC} =
+            const portalOrRoot: {containerInfo: Container, pendingChildren: ChildSet} =
               finishedWork.stateNode;
             const {containerInfo, pendingChildren} = portalOrRoot;
             replaceContainerChildren(containerInfo, pendingChildren);
@@ -524,7 +524,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
     );
   }
 
-  function getHostSibling(fiber: Fiber): ?I {
+  function getHostSibling(fiber: Fiber): ?Instance {
     // We're going to search forward into the tree until we find a sibling host
     // node. Unfortunately, if multiple insertions are done in a row we have to
     // search past them. This leads to exponential search for the next sibling.
@@ -754,7 +754,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
         return;
       }
       case HostComponent: {
-        const instance: I = finishedWork.stateNode;
+        const instance: Instance = finishedWork.stateNode;
         if (instance != null) {
           // Commit the work prepared earlier.
           const newProps = finishedWork.memoizedProps;
@@ -764,7 +764,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
           const oldProps = current !== null ? current.memoizedProps : newProps;
           const type = finishedWork.type;
           // TODO: Type the updateQueue to be specific to host components.
-          const updatePayload: null | PL = (finishedWork.updateQueue: any);
+          const updatePayload: null | UpdatePayload = (finishedWork.updateQueue: any);
           finishedWork.updateQueue = null;
           if (updatePayload !== null) {
             commitUpdate(
@@ -785,7 +785,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
           'This should have a text node initialized. This error is likely ' +
             'caused by a bug in React. Please file an issue.',
         );
-        const textInstance: TI = finishedWork.stateNode;
+        const textInstance: TextInstance = finishedWork.stateNode;
         const newText: string = finishedWork.memoizedProps;
         // For hydration we reuse the update path but we treat the oldProps
         // as the newProps. The updatePayload will contain the real change in

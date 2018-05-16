@@ -9,7 +9,6 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {LegacyContext} from './ReactFiberContext';
 
 import {Update, Snapshot} from 'shared/ReactTypeOfSideEffect';
 import {

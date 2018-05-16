@@ -30,7 +30,7 @@
 // layout, paint and other browser work is counted against the available time.
 // The frame rate is dynamically adjusted.
 
-import type {Deadline} from 'react-reconciler';
+import type {Deadline} from 'react-reconciler/src/ReactFiberScheduler';
 type FrameCallbackType = Deadline => void;
 type CallbackConfigType = {|
   scheduledCallback: FrameCallbackType,

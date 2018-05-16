@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
-import type {StackCursor, Stack} from './ReactFiberStack';
+import type {StackCursor} from './ReactFiberStack';
+import type {Container, HostContext} from './ReactFiberHostConfig';
 
 import invariant from 'fbjs/lib/invariant';
 
@@ -19,22 +19,13 @@ import {createCursor, push, pop} from './ReactFiberStack';
 declare class NoContextT {}
 const NO_CONTEXT: NoContextT = ({}: any);
 
-export type HostContext<C, CX> = {
-  getHostContext(): CX,
-  getRootHostContainer(): C,
-  popHostContainer(fiber: Fiber): void,
-  popHostContext(fiber: Fiber): void,
-  pushHostContainer(fiber: Fiber, container: C): void,
-  pushHostContext(fiber: Fiber): void,
-};
-
-  let contextStackCursor: StackCursor<CX | NoContextT> = createCursor(
+  let contextStackCursor: StackCursor<HostContext | NoContextT> = createCursor(
     NO_CONTEXT,
   );
   let contextFiberStackCursor: StackCursor<Fiber | NoContextT> = createCursor(
     NO_CONTEXT,
   );
-  let rootInstanceStackCursor: StackCursor<C | NoContextT> = createCursor(
+  let rootInstanceStackCursor: StackCursor<Container | NoContextT> = createCursor(
     NO_CONTEXT,
   );
 
@@ -47,12 +38,12 @@ export type HostContext<C, CX> = {
     return (c: any);
   }
 
-  function getRootHostContainer(): C {
+  function getRootHostContainer(): Container {
     const rootInstance = requiredContext(rootInstanceStackCursor.current);
     return rootInstance;
   }
 
-  function pushHostContainer(fiber: Fiber, nextRootInstance: C) {
+  function pushHostContainer(fiber: Fiber, nextRootInstance: Container) {
     // Push current root instance onto the stack;
     // This allows us to reset root when portals are popped.
     push(rootInstanceStackCursor, nextRootInstance, fiber);
@@ -78,14 +69,14 @@ export type HostContext<C, CX> = {
     pop(rootInstanceStackCursor, fiber);
   }
 
-  function getHostContext(): CX {
+  function getHostContext(): HostContext {
     const context = requiredContext(contextStackCursor.current);
     return context;
   }
 
   function pushHostContext(fiber: Fiber): void {
-    const rootInstance: C = requiredContext(rootInstanceStackCursor.current);
-    const context: CX = requiredContext(contextStackCursor.current);
+    const rootInstance: Container = requiredContext(rootInstanceStackCursor.current);
+    const context: HostContext = requiredContext(contextStackCursor.current);
     const nextContext = getChildHostContext(context, fiber.type, rootInstance);
 
     // Don't push this Fiber's context unless it's unique.

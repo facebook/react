@@ -7,10 +7,8 @@
  * @flow
  */
 
-import type {HostConfig, Deadline} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
-import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
@@ -137,6 +135,11 @@ import {
   commitAttachRef,
   commitDetachRef,
 } from './ReactFiberCommitWork';
+
+export type Deadline = {
+  timeRemaining: () => number,
+  didTimeout: boolean,
+};
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
@@ -1300,7 +1303,7 @@ if (__DEV__) {
     }
   }
 
-  function retrySuspendedRoot(root, suspendedTime) {
+  function retrySuspendedRoot(root: FiberRoot, suspendedTime: ExpirationTime) {
     markPingedPriorityLevel(root, suspendedTime);
     const retryTime = findNextPendingPriorityLevel(root);
     if (retryTime !== NoWork) {
@@ -1841,7 +1844,7 @@ if (__DEV__) {
     return true;
   }
 
-  function onUncaughtError(error) {
+  function onUncaughtError(error: mixed) {
     invariant(
       nextFlushedRoot !== null,
       'Should be working on a root. This error is likely caused by a bug in ' +

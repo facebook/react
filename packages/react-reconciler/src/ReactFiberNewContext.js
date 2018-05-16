@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ReactContext} from 'shared/ReactTypes';
-import type {StackCursor, Stack} from './ReactFiberStack';
+import type {StackCursor} from './ReactFiberStack';
 
 export type NewContext = {
   pushProvider(providerFiber: Fiber): void,

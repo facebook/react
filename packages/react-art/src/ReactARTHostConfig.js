@@ -234,6 +234,9 @@ function applyTextProps(instance, props, prevProps = {}) {
   }
 }
 
+export * from 'shared/HostConfigWithNoPersistence';
+export * from 'shared/HostConfigWithNoHydration';
+
   export function appendInitialChild(parentInstance, child) {
     if (typeof child === 'string') {
       // Noop for string children of Text (eg <Text>{'foo'}{'bar'}</Text>)
@@ -333,8 +336,6 @@ function applyTextProps(instance, props, prevProps = {}) {
   export const isPrimaryRenderer = false;
 
   export const supportsMutation = true;
-  export const supportsPersistence = false;
-  export const supportsHydration = false;
 
     export function appendChild(parentInstance, child) {
       if (child.parentNode === parentInstance) {
@@ -388,80 +389,3 @@ function applyTextProps(instance, props, prevProps = {}) {
       instance._applyProps(instance, newProps, oldProps);
     }
 
-
-export function cloneInstance() {
-  // not supported
-}
-
-export function createContainerChildSet() {
-  // not supported
-}
-
-export function appendChildToContainerChildSet() {
-  // not supported
-}
-
-export function finalizeContainerChildren() {
-  // not supported
-}
-
-export function replaceContainerChildren() {
-  // not supported
-}
-
-
-export function canHydrateInstance() {
-  // not supported
-}
-
-export function canHydrateTextInstance() {
-  // not supported
-}
-
-export function getNextHydratableSibling() {
-  // not supported
-}
-
-export function getFirstHydratableChild() {
-  // not supported
-}
-
-export function hydrateInstance() {
-  // not supported
-}
-
-export function hydrateTextInstance() {
-  // not supported
-}
-
-export function didNotMatchHydratedContainerTextInstance() {
-  // not supported
-}
-
-export function didNotMatchHydratedTextInstance() {
-  // not supported
-}
-
-export function didNotHydrateContainerInstance() {
-  // not supported
-}
-
-export function didNotHydrateInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableContainerInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableContainerTextInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableInstance() {
-  // not supported
-}
-
-export function didNotFindHydratableTextInstance() {
-  // not supported
-}

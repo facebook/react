@@ -7,16 +7,10 @@
  * @flow
  */
 
-import type {HostConfig} from 'react-reconciler';
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {HostContext} from './ReactFiberHostContext';
-import type {LegacyContext} from './ReactFiberContext';
-import type {NewContext} from './ReactFiberNewContext';
-import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {ProfilerTimer} from './ReactProfilerTimer';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {
