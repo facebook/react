@@ -45,6 +45,7 @@ export default function(stack: Stack, isPrimaryRenderer: boolean) {
       context._changedBits = providerFiber.stateNode;
       if (__DEV__) {
         warning(
+          context._currentRenderer === undefined ||
           context._currentRenderer === null ||
             context._currentRenderer === rendererSigil,
           'Detected multiple renderers concurrently rendering the ' +
@@ -61,6 +62,7 @@ export default function(stack: Stack, isPrimaryRenderer: boolean) {
       context._changedBits2 = providerFiber.stateNode;
       if (__DEV__) {
         warning(
+          context._currentRenderer2 === undefined ||
           context._currentRenderer2 === null ||
             context._currentRenderer2 === rendererSigil,
           'Detected multiple renderers concurrently rendering the ' +
