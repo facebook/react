@@ -72,6 +72,9 @@ export const TOP_ENCRYPTED = unsafeCastStringToDOMTopLevelType('encrypted');
 export const TOP_ENDED = unsafeCastStringToDOMTopLevelType('ended');
 export const TOP_ERROR = unsafeCastStringToDOMTopLevelType('error');
 export const TOP_FOCUS = unsafeCastStringToDOMTopLevelType('focus');
+export const TOP_GOT_POINTER_CAPTURE = unsafeCastStringToDOMTopLevelType(
+  'gotpointercapture',
+);
 export const TOP_INPUT = unsafeCastStringToDOMTopLevelType('input');
 export const TOP_INVALID = unsafeCastStringToDOMTopLevelType('invalid');
 export const TOP_KEY_DOWN = unsafeCastStringToDOMTopLevelType('keydown');
@@ -83,6 +86,9 @@ export const TOP_LOADED_DATA = unsafeCastStringToDOMTopLevelType('loadeddata');
 export const TOP_LOADED_METADATA = unsafeCastStringToDOMTopLevelType(
   'loadedmetadata',
 );
+export const TOP_LOST_POINTER_CAPTURE = unsafeCastStringToDOMTopLevelType(
+  'lostpointercapture',
+);
 export const TOP_MOUSE_DOWN = unsafeCastStringToDOMTopLevelType('mousedown');
 export const TOP_MOUSE_MOVE = unsafeCastStringToDOMTopLevelType('mousemove');
 export const TOP_MOUSE_OUT = unsafeCastStringToDOMTopLevelType('mouseout');
@@ -92,6 +98,26 @@ export const TOP_PASTE = unsafeCastStringToDOMTopLevelType('paste');
 export const TOP_PAUSE = unsafeCastStringToDOMTopLevelType('pause');
 export const TOP_PLAY = unsafeCastStringToDOMTopLevelType('play');
 export const TOP_PLAYING = unsafeCastStringToDOMTopLevelType('playing');
+export const TOP_POINTER_CANCEL = unsafeCastStringToDOMTopLevelType(
+  'pointercancel',
+);
+export const TOP_POINTER_DOWN = unsafeCastStringToDOMTopLevelType(
+  'pointerdown',
+);
+export const TOP_POINTER_ENTER = unsafeCastStringToDOMTopLevelType(
+  'pointerenter',
+);
+export const TOP_POINTER_LEAVE = unsafeCastStringToDOMTopLevelType(
+  'pointerleave',
+);
+export const TOP_POINTER_MOVE = unsafeCastStringToDOMTopLevelType(
+  'pointermove',
+);
+export const TOP_POINTER_OUT = unsafeCastStringToDOMTopLevelType('pointerout');
+export const TOP_POINTER_OVER = unsafeCastStringToDOMTopLevelType(
+  'pointerover',
+);
+export const TOP_POINTER_UP = unsafeCastStringToDOMTopLevelType('pointerup');
 export const TOP_PROGRESS = unsafeCastStringToDOMTopLevelType('progress');
 export const TOP_RATE_CHANGE = unsafeCastStringToDOMTopLevelType('ratechange');
 export const TOP_RESET = unsafeCastStringToDOMTopLevelType('reset');

@@ -29,6 +29,7 @@ import SyntheticClipboardEvent from './SyntheticClipboardEvent';
 import SyntheticFocusEvent from './SyntheticFocusEvent';
 import SyntheticKeyboardEvent from './SyntheticKeyboardEvent';
 import SyntheticMouseEvent from './SyntheticMouseEvent';
+import SyntheticPointerEvent from './SyntheticPointerEvent';
 import SyntheticDragEvent from './SyntheticDragEvent';
 import SyntheticTouchEvent from './SyntheticTouchEvent';
 import SyntheticTransitionEvent from './SyntheticTransitionEvent';
@@ -78,6 +79,9 @@ const interactiveEventTypeNames: Array<EventTuple> = [
   [DOMTopLevelEventTypes.TOP_PASTE, 'paste'],
   [DOMTopLevelEventTypes.TOP_PAUSE, 'pause'],
   [DOMTopLevelEventTypes.TOP_PLAY, 'play'],
+  [DOMTopLevelEventTypes.TOP_POINTER_CANCEL, 'pointerCancel'],
+  [DOMTopLevelEventTypes.TOP_POINTER_DOWN, 'pointerDown'],
+  [DOMTopLevelEventTypes.TOP_POINTER_UP, 'pointerUp'],
   [DOMTopLevelEventTypes.TOP_RATE_CHANGE, 'rateChange'],
   [DOMTopLevelEventTypes.TOP_RESET, 'reset'],
   [DOMTopLevelEventTypes.TOP_SEEKED, 'seeked'],
@@ -104,14 +108,19 @@ const nonInteractiveEventTypeNames: Array<EventTuple> = [
   [DOMTopLevelEventTypes.TOP_ENCRYPTED, 'encrypted'],
   [DOMTopLevelEventTypes.TOP_ENDED, 'ended'],
   [DOMTopLevelEventTypes.TOP_ERROR, 'error'],
+  [DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE, 'gotPointerCapture'],
   [DOMTopLevelEventTypes.TOP_LOAD, 'load'],
   [DOMTopLevelEventTypes.TOP_LOADED_DATA, 'loadedData'],
   [DOMTopLevelEventTypes.TOP_LOADED_METADATA, 'loadedMetadata'],
   [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
+  [DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE, 'lostPointerCapture'],
   [DOMTopLevelEventTypes.TOP_MOUSE_MOVE, 'mouseMove'],
   [DOMTopLevelEventTypes.TOP_MOUSE_OUT, 'mouseOut'],
   [DOMTopLevelEventTypes.TOP_MOUSE_OVER, 'mouseOver'],
   [DOMTopLevelEventTypes.TOP_PLAYING, 'playing'],
+  [DOMTopLevelEventTypes.TOP_POINTER_MOVE, 'pointerMove'],
+  [DOMTopLevelEventTypes.TOP_POINTER_OUT, 'pointerOut'],
+  [DOMTopLevelEventTypes.TOP_POINTER_OVER, 'pointerOver'],
   [DOMTopLevelEventTypes.TOP_PROGRESS, 'progress'],
   [DOMTopLevelEventTypes.TOP_SCROLL, 'scroll'],
   [DOMTopLevelEventTypes.TOP_SEEKING, 'seeking'],
@@ -281,6 +290,16 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
       case DOMTopLevelEventTypes.TOP_CUT:
       case DOMTopLevelEventTypes.TOP_PASTE:
         EventConstructor = SyntheticClipboardEvent;
+        break;
+      case DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE:
+      case DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE:
+      case DOMTopLevelEventTypes.TOP_POINTER_CANCEL:
+      case DOMTopLevelEventTypes.TOP_POINTER_DOWN:
+      case DOMTopLevelEventTypes.TOP_POINTER_MOVE:
+      case DOMTopLevelEventTypes.TOP_POINTER_OUT:
+      case DOMTopLevelEventTypes.TOP_POINTER_OVER:
+      case DOMTopLevelEventTypes.TOP_POINTER_UP:
+        EventConstructor = SyntheticPointerEvent;
         break;
       default:
         if (__DEV__) {
