@@ -211,6 +211,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     hydrationContext,
     profilerTimer,
   );
+  // Value that is thrown if mutable state is accessed during a render and there
+  // is lower priority work that is the result of that mutation.
+  const mutableStateAccessException = {};
   const {
     throwException,
     unwindWork,
@@ -231,6 +234,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     profilerTimer,
     suspendRoot,
     retrySuspendedRoot,
+    mutableStateAccessException,
   );
   const {
     commitBeforeMutationLifeCycles,
@@ -294,6 +298,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   // Used for performance tracking.
   let interruptedBy: Fiber | null = null;
+
+  // Indicates that a state source was mutated. Until this is cleared, we must
+  // assume that all updates depend on a state mutation, since there's no way
+  // safely assume they do not. We can set this is back to false once the event
+  // is over.
+  let didAccessMutableState: boolean = false;
+  let lowestPendingMutationExpirationTime: ExpirationTime = NoWork;
 
   let stashedWorkInProgressProperties;
   let replayUnitOfWork;
@@ -550,6 +561,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         'bug in React. Please file an issue.',
     );
     root.pendingCommitExpirationTime = NoWork;
+
+    const nextHighestPriorityWork = root.current.expirationTime;
+    if (
+      lowestPendingMutationExpirationTime !== NoWork &&
+      lowestPendingMutationExpirationTime < nextHighestPriorityWork
+    ) {
+      lowestPendingMutationExpirationTime = NoWork;
+    }
 
     const currentTime = recalculateCurrentTime();
 
@@ -1028,6 +1047,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     );
     isWorking = true;
 
+    // If this was true, the event that read from mutable state has now ended.
+    // Set it back to false.
+    // TODO: Maybe the API that is used when scheduling an update that depends
+    // on mutable state should accept a batch? Then we could reset this at
+    // the end of the batch, as opposed to here, at the beginning of the
+    // next render.
+    didAccessMutableState = false;
+
     // Check if we're starting from a fresh stack, or if we're resuming from
     // previously yielded work.
     if (
@@ -1136,11 +1163,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // The root did not complete.
         stopWorkLoopTimer(interruptedBy, didCompleteRoot);
         interruptedBy = null;
-        invariant(
-          !nextRenderIsExpired,
-          'Expired work should have completed. This error is likely caused ' +
-            'by a bug in React. Please file an issue.',
-        );
         markSuspendedPriorityLevel(root, expirationTime);
         if (nextLatestTimeoutMs >= 0) {
           setTimeout(() => {
@@ -1315,7 +1337,35 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         lowestPendingInteractiveExpirationTime = expirationTime;
       }
     }
+
+    if (didAccessMutableState) {
+      // This update depends on mutable state. Track the lowest pending
+      // expiration time that depends on mutable state.
+      if (
+        lowestPendingMutationExpirationTime === NoWork ||
+        expirationTime > lowestPendingMutationExpirationTime
+      ) {
+        lowestPendingMutationExpirationTime = expirationTime;
+      }
+    }
+
     return expirationTime;
+  }
+
+  function willAccessMutableState() {
+    if (isRendering) {
+      if (
+        nextRoot !== null &&
+        nextUnitOfWork !== null &&
+        lowestPendingMutationExpirationTime > nextRenderExpirationTime
+      ) {
+        // There's pending lower priority work that depends on a mutation.
+        // Suspend the current render.
+        throw mutableStateAccessException;
+      }
+    } else {
+      didAccessMutableState = true;
+    }
   }
 
   // TODO: Rename this to scheduleTimeout or something
@@ -2013,5 +2063,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     flushInteractiveUpdates,
     computeUniqueAsyncExpiration,
     legacyContext,
+    willAccessMutableState,
   };
 }

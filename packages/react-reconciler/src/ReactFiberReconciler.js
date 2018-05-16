@@ -264,6 +264,8 @@ export type Reconciler<C, I, TI> = {
   injectIntoDevTools(devToolsConfig: DevToolsConfig<I, TI>): boolean,
   computeUniqueAsyncExpiration(): ExpirationTime,
 
+  willAccessMutableState(): void,
+
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(
     container: OpaqueRoot,
@@ -297,6 +299,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     interactiveUpdates,
     flushInteractiveUpdates,
     legacyContext,
+    willAccessMutableState,
   } = ReactFiberScheduler(config);
 
   const {
@@ -480,6 +483,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     flushControlled,
 
     flushSync,
+
+    willAccessMutableState: willAccessMutableState,
 
     getPublicRootInstance(
       container: OpaqueRoot,

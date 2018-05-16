@@ -466,6 +466,8 @@ function createReactNoop(useMutation: boolean) {
 
     interactiveUpdates: NoopRenderer.interactiveUpdates,
 
+    willAccessMutableState: NoopRenderer.willAccessMutableState,
+
     flushSync(fn: () => mixed) {
       yieldedValues = [];
       NoopRenderer.flushSync(fn);
