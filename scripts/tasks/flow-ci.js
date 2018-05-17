@@ -15,6 +15,7 @@ const runFlow = require('../flow/runFlow');
 const {typedRenderers} = require('../flow/typedRenderers');
 
 async function checkAll() {
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (let renderer of typedRenderers) {
     await runFlow(renderer, ['check']);
   }
