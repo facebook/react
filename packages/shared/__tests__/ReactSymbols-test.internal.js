@@ -12,12 +12,14 @@ describe('ReactSymbols', () => {
   beforeEach(() => jest.resetModules());
 
   const expectToBeUnique = keyValuePair => {
-    const set = new Set();
+    const map = new Map();
     keyValuePair.forEach(([key, value]) => {
-      if (set.has(value)) {
-        throw Error(`Value ${value.toString()} for ${key} is not unique`);
+      if (map.has(value)) {
+        throw Error(
+          `${key} value ${value.toString()} is the same as ${map.get(value)}.`,
+        );
       }
-      set.add(value);
+      map.set(value, key);
     });
   };
 
