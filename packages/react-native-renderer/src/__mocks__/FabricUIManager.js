@@ -125,6 +125,8 @@ const RCTFabricUIManager = {
   completeRoot: jest.fn(function completeRoot(rootTag, newChildSet) {
     roots.set(rootTag, newChildSet);
   }),
+
+  registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
 };
 
 module.exports = RCTFabricUIManager;
