@@ -11,6 +11,7 @@ process.on('unhandledRejection', err => {
   throw err;
 });
 
+const chalk = require('chalk');
 const runFlow = require('../flow/runFlow');
 const {typedRenderers} = require('../flow/typedRenderers');
 
@@ -19,12 +20,27 @@ const {typedRenderers} = require('../flow/typedRenderers');
 
 const primaryRenderer = process.argv[2];
 if (typedRenderers.indexOf(primaryRenderer) === -1) {
-  console.error(
-    'You need to pass a primary renderer to yarn flow. For example:'
+  console.log(
+    'The ' +
+      chalk.red('yarn flow') +
+      ' command now requires you to pick a primary renderer:'
   );
+  console.log();
   typedRenderers.forEach(renderer => {
-    console.log('  * yarn flow ' + renderer);
+    console.log('  * ' + chalk.cyan('yarn flow ' + renderer));
   });
+  console.log();
+  console.log('If you are not sure, run ' + chalk.green('yarn flow dom') + '.');
+  console.log(
+    'This will still typecheck non-DOM packages, although less precisely.'
+  );
+  console.log();
+  console.log('Note that checks for all renderers will run on CI.');
+  console.log(
+    'You can also do this locally with ' +
+      chalk.cyan('yarn flow-ci') +
+      ' but it will be slow.'
+  );
   console.log();
   process.exit(1);
 }
