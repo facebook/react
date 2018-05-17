@@ -386,17 +386,10 @@ export function createFiberFromElement(
 }
 
 function getFiberTagFromObjectType(type, owner): TypeOfWork {
-  if (typeof type !== 'object' || type === null) {
-    invariant(
-      false,
-      'Element type is invalid: expected a string (for built-in ' +
-        'components) or a class/function (for composite components) ' +
-        'but got: %s.%s',
-      type == null ? type : typeof type,
-      getInvalidElementTypeErrorInfo(type, owner),
-    );
-  }
-  switch (type.$$typeof) {
+  const $$typeof =
+    typeof type === 'object' && type !== null ? type.$$typeof : null;
+
+  switch ($$typeof) {
     case REACT_PROVIDER_TYPE:
       return ContextProvider;
     case REACT_CONTEXT_TYPE:
@@ -404,38 +397,35 @@ function getFiberTagFromObjectType(type, owner): TypeOfWork {
       return ContextConsumer;
     case REACT_FORWARD_REF_TYPE:
       return ForwardRef;
-    default:
+    default: {
+      let info = '';
+      if (__DEV__) {
+        if (
+          type === undefined ||
+          (typeof type === 'object' &&
+            type !== null &&
+            Object.keys(type).length === 0)
+        ) {
+          info +=
+            ' You likely forgot to export your component from the file ' +
+            "it's defined in, or you might have mixed up default and " +
+            'named imports.';
+        }
+        const ownerName = owner ? getComponentName(owner) : null;
+        if (ownerName) {
+          info += '\n\nCheck the render method of `' + ownerName + '`.';
+        }
+      }
       invariant(
         false,
         'Element type is invalid: expected a string (for built-in ' +
           'components) or a class/function (for composite components) ' +
           'but got: %s.%s',
         type == null ? type : typeof type,
-        getInvalidElementTypeErrorInfo(type, owner),
+        info,
       );
-  }
-}
-
-function getInvalidElementTypeErrorInfo(type, owner): string {
-  let info = '';
-  if (__DEV__) {
-    if (
-      type === undefined ||
-      (typeof type === 'object' &&
-        type !== null &&
-        Object.keys(type).length === 0)
-    ) {
-      info +=
-        ' You likely forgot to export your component from the file ' +
-        "it's defined in, or you might have mixed up default and " +
-        'named imports.';
-    }
-    const ownerName = owner ? getComponentName(owner) : null;
-    if (ownerName) {
-      info += '\n\nCheck the render method of `' + ownerName + '`.';
     }
   }
-  return info;
 }
 
 export function createFiberFromFragment(
