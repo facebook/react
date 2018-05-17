@@ -63,28 +63,9 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   describe('react-lifecycles-compat', () => {
-    const polyfill = require('react-lifecycles-compat');
+    const {polyfill} = require('react-lifecycles-compat');
 
-    it('should not warn about deprecated cWM/cWRP for polyfilled components', () => {
-      class PolyfilledComponent extends React.Component {
-        state = {};
-        static getDerivedStateFromProps() {
-          return null;
-        }
-        render() {
-          return null;
-        }
-      }
-
-      polyfill(PolyfilledComponent);
-
-      const container = document.createElement('div');
-      ReactDOM.render(<PolyfilledComponent />, container);
-    });
-
-    it('should not warn about unsafe lifecycles within "strict" tree for polyfilled components', () => {
-      const {StrictMode} = React;
-
+    it('should not warn for components with polyfilled getDerivedStateFromProps', () => {
       class PolyfilledComponent extends React.Component {
         state = {};
         static getDerivedStateFromProps() {
@@ -99,9 +80,31 @@ describe('ReactComponentLifeCycle', () => {
 
       const container = document.createElement('div');
       ReactDOM.render(
-        <StrictMode>
+        <React.StrictMode>
           <PolyfilledComponent />
-        </StrictMode>,
+        </React.StrictMode>,
+        container,
+      );
+    });
+
+    it('should not warn for components with polyfilled getSnapshotBeforeUpdate', () => {
+      class PolyfilledComponent extends React.Component {
+        getSnapshotBeforeUpdate() {
+          return null;
+        }
+        componentDidUpdate() {}
+        render() {
+          return null;
+        }
+      }
+
+      polyfill(PolyfilledComponent);
+
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <React.StrictMode>
+          <PolyfilledComponent />
+        </React.StrictMode>,
         container,
       );
     });

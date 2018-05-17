@@ -14,13 +14,12 @@ let PropTypes;
 let RCTEventEmitter;
 let React;
 let ReactNative;
-let ReactNativeBridgeEventPlugin;
 let ResponderEventPlugin;
 let UIManager;
 let createReactNativeComponentClass;
 
 // Parallels requireNativeComponent() in that it lazily constructs a view config,
-// And registers view manager event types with ReactNativeBridgeEventPlugin.
+// And registers view manager event types with ReactNativeViewConfigRegistry.
 const fakeRequireNativeComponent = (uiViewClassName, validAttributes) => {
   const getViewConfig = () => {
     const viewConfig = {
@@ -55,8 +54,6 @@ const fakeRequireNativeComponent = (uiViewClassName, validAttributes) => {
       directEventTypes: {},
     };
 
-    ReactNativeBridgeEventPlugin.processEventTypes(viewConfig);
-
     return viewConfig;
   };
 
@@ -70,12 +67,10 @@ beforeEach(() => {
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('react');
   ReactNative = require('react-native-renderer');
-  ReactNativeBridgeEventPlugin = require('../ReactNativeBridgeEventPlugin')
-    .default;
   ResponderEventPlugin = require('events/ResponderEventPlugin').default;
   UIManager = require('UIManager');
-  createReactNativeComponentClass = require('../createReactNativeComponentClass')
-    .default;
+  createReactNativeComponentClass = require('ReactNativeViewConfigRegistry')
+    .register;
 });
 
 it('fails if unknown/unsupported event types are dispatched', () => {
@@ -158,7 +153,7 @@ it('handles events', () => {
 it('handles events on text nodes', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  const Text = fakeRequireNativeComponent('Text', {});
+  const Text = fakeRequireNativeComponent('RCTText', {});
 
   class ContextHack extends React.Component {
     static childContextTypes = {isInAParentText: PropTypes.bool};

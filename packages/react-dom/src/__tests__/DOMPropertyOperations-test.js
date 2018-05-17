@@ -155,5 +155,11 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.getAttribute('value')).toBe('foo');
       expect(container.firstChild.value).toBe('foo');
     });
+
+    it('should not remove attributes for custom component tag', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-icon size="5px" />, container);
+      expect(container.firstChild.getAttribute('size')).toBe('5px');
+    });
   });
 });

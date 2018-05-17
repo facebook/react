@@ -186,9 +186,8 @@ class ReactShallowRenderer {
           this._instance.UNSAFE_componentWillReceiveProps(props, context);
         }
       }
-
-      this._updateStateFromStaticLifecycle(props);
     }
+    this._updateStateFromStaticLifecycle(props);
 
     // Read state after cWRP in case it calls setState
     const state = this._newState || oldState;
@@ -299,7 +298,16 @@ class Updater {
     const currentState = this._renderer._newState || publicInstance.state;
 
     if (typeof partialState === 'function') {
-      partialState = partialState(currentState, publicInstance.props);
+      partialState = partialState.call(
+        publicInstance,
+        currentState,
+        publicInstance.props,
+      );
+    }
+
+    // Null and undefined are treated as no-ops.
+    if (partialState === null || partialState === undefined) {
+      return;
     }
 
     this._renderer._newState = {

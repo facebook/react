@@ -53,7 +53,8 @@ function generateMDTable(headers, body) {
 
 /**
  * Generates a user-readable string from a percentage change
- * @param {string[]} headers
+ * @param {number} change
+ * @param {boolean} includeEmoji
  */
 function addPercent(change, includeEmoji) {
   if (!isFinite(change)) {
@@ -117,14 +118,12 @@ function git(args) {
     previousBuildResults
   );
 
-  const percentToWarrentShowing = 1;
   const packagesToShow = results
     .filter(
       r =>
-        Math.abs(r.prevFileSizeChange) >= percentToWarrentShowing ||
-        Math.abs(r.prevGzipSizeChange) >= percentToWarrentShowing
+        Math.abs(r.prevFileSizeAbsoluteChange) >= 300 || // bytes
+        Math.abs(r.prevGzipSizeAbsoluteChange) >= 100 // bytes
     )
-
     .map(r => r.packageName);
 
   if (packagesToShow.length) {

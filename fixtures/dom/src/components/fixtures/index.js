@@ -11,6 +11,7 @@ import ErrorHandling from './error-handling';
 import EventPooling from './event-pooling';
 import CustomElementFixtures from './custom-elements';
 import MediaEventsFixtures from './media-events';
+import PointerEventsFixtures from './pointer-events';
 import SelectionEventsFixtures from './selection-events';
 
 const React = window.React;
@@ -47,6 +48,8 @@ function FixturesPage() {
       return <CustomElementFixtures />;
     case '/media-events':
       return <MediaEventsFixtures />;
+    case '/pointer-events':
+      return <PointerEventsFixtures />;
     case '/selection-events':
       return <SelectionEventsFixtures />;
     default:

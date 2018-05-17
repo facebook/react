@@ -838,12 +838,7 @@ describe('ReactDOMFiber', () => {
 
     expect(portal.tagName).toBe('DIV');
 
-    const fakeNativeEvent = {};
-    ReactTestUtils.simulateNativeEventOnNode(
-      'topClick',
-      portal,
-      fakeNativeEvent,
-    );
+    ReactTestUtils.Simulate.click(portal);
 
     expect(ops).toEqual(['portal clicked', 'parent clicked']);
   });
@@ -858,14 +853,12 @@ describe('ReactDOMFiber', () => {
 
     function simulateMouseMove(from, to) {
       if (from) {
-        ReactTestUtils.simulateNativeEventOnNode('topMouseOut', from, {
-          target: from,
+        ReactTestUtils.SimulateNative.mouseOut(from, {
           relatedTarget: to,
         });
       }
       if (to) {
-        ReactTestUtils.simulateNativeEventOnNode('topMouseOver', to, {
-          target: to,
+        ReactTestUtils.SimulateNative.mouseOver(to, {
           relatedTarget: from,
         });
       }
@@ -983,12 +976,7 @@ describe('ReactDOMFiber', () => {
     expect(node.tagName).toEqual('DIV');
 
     function click(target) {
-      const fakeNativeEvent = {};
-      ReactTestUtils.simulateNativeEventOnNode(
-        'topClick',
-        target,
-        fakeNativeEvent,
-      );
+      ReactTestUtils.Simulate.click(target);
     }
 
     click(node);

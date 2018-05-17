@@ -7,10 +7,12 @@ const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
 const NODE_DEV = Bundles.bundleTypes.NODE_DEV;
 const NODE_PROD = Bundles.bundleTypes.NODE_PROD;
-const FB_DEV = Bundles.bundleTypes.FB_DEV;
-const FB_PROD = Bundles.bundleTypes.FB_PROD;
-const RN_DEV = Bundles.bundleTypes.RN_DEV;
-const RN_PROD = Bundles.bundleTypes.RN_PROD;
+const FB_WWW_DEV = Bundles.bundleTypes.FB_WWW_DEV;
+const FB_WWW_PROD = Bundles.bundleTypes.FB_WWW_PROD;
+const RN_OSS_DEV = Bundles.bundleTypes.RN_OSS_DEV;
+const RN_OSS_PROD = Bundles.bundleTypes.RN_OSS_PROD;
+const RN_FB_DEV = Bundles.bundleTypes.RN_FB_DEV;
+const RN_FB_PROD = Bundles.bundleTypes.RN_FB_PROD;
 
 const RECONCILER = Bundles.moduleTypes.RECONCILER;
 
@@ -87,13 +89,14 @@ ${
 ${source}`;
   },
 
-  /****************** FB_DEV ******************/
-  [FB_DEV](source, globalName, filename, moduleType) {
+  /****************** FB_WWW_DEV ******************/
+  [FB_WWW_DEV](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *
  * @noflow
  * @preventMunge
+ * @preserve-invariant-messages
  */
 
 'use strict';
@@ -105,26 +108,28 @@ ${source}
 }`;
   },
 
-  /****************** FB_PROD ******************/
-  [FB_PROD](source, globalName, filename, moduleType) {
+  /****************** FB_WWW_PROD ******************/
+  [FB_WWW_PROD](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *
  * @noflow
  * @preventMunge
+ * @preserve-invariant-messages
  */
 
 ${source}`;
   },
 
-  /****************** RN_DEV ******************/
-  [RN_DEV](source, globalName, filename, moduleType) {
+  /****************** RN_OSS_DEV ******************/
+  [RN_OSS_DEV](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *
  * @noflow
  * @providesModule ${globalName}-dev
  * @preventMunge
+ * ${'@gen' + 'erated'}
  */
 
 'use strict';
@@ -136,14 +141,47 @@ ${source}
 }`;
   },
 
-  /****************** RN_DEV ******************/
-  [RN_PROD](source, globalName, filename, moduleType) {
+  /****************** RN_OSS_PROD ******************/
+  [RN_OSS_PROD](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *
  * @noflow
  * @providesModule ${globalName}-prod
  * @preventMunge
+ * ${'@gen' + 'erated'}
+ */
+
+${source}`;
+  },
+
+  /****************** RN_FB_DEV ******************/
+  [RN_FB_DEV](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @preventMunge
+ * ${'@gen' + 'erated'}
+ */
+
+'use strict';
+
+if (__DEV__) {
+  (function() {
+${source}
+  })();
+}`;
+  },
+
+  /****************** RN_FB_PROD ******************/
+  [RN_FB_PROD](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @preventMunge
+ * ${'@gen' + 'erated'}
  */
 
 ${source}`;

@@ -37,6 +37,7 @@ function useForks(forks) {
     );
   });
   return {
+    name: 'scripts/rollup/plugins/use-forks-plugin',
     resolveId(importee, importer) {
       if (!importer || !importee) {
         return null;

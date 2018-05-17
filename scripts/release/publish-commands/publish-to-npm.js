@@ -49,9 +49,7 @@ const push = async ({cwd, dry, packages, version, tag}) => {
         if (remoteVersion !== packageVersion) {
           throw Error(
             chalk`Published version {yellow.bold ${packageVersion}} for ` +
-              chalk`{bold ${project}} but NPM shows {yellow.bold ${
-                remoteVersion
-              }}`
+              chalk`{bold ${project}} but NPM shows {yellow.bold ${remoteVersion}}`
           );
         }
 

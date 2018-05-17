@@ -9,7 +9,6 @@
 
 // Mock of the Native Hooks
 
-const ReactNativeTagHandles = require('../ReactNativeTagHandles').default;
 const invariant = require('fbjs/lib/invariant');
 
 // Map of viewTag -> {children: [childTag], parent: ?parentTag}
@@ -18,7 +17,7 @@ let views = new Map();
 
 function autoCreateRoot(tag) {
   // Seriously, this is how we distinguish roots in RN.
-  if (!views.has(tag) && ReactNativeTagHandles.reactTagIsNativeTopRootID(tag)) {
+  if (!views.has(tag) && tag % 10 === 1) {
     roots.push(tag);
     views.set(tag, {
       children: [],

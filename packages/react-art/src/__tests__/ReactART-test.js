@@ -339,6 +339,60 @@ describe('ReactART', () => {
     doClick(instance);
     expect(onClick2).toBeCalled();
   });
+
+  it('can concurrently render with a "primary" renderer while sharing context', () => {
+    const CurrentRendererContext = React.createContext(null);
+
+    function Yield(props) {
+      testRenderer.unstable_yield(props.value);
+      return null;
+    }
+
+    let ops = [];
+    function LogCurrentRenderer() {
+      return (
+        <CurrentRendererContext.Consumer>
+          {currentRenderer => {
+            ops.push(currentRenderer);
+            return null;
+          }}
+        </CurrentRendererContext.Consumer>
+      );
+    }
+
+    // Using test renderer instead of the DOM renderer here because async
+    // testing APIs for the DOM renderer don't exist.
+    const testRenderer = renderer.create(
+      <CurrentRendererContext.Provider value="Test">
+        <Yield value="A" />
+        <Yield value="B" />
+        <LogCurrentRenderer />
+        <Yield value="C" />
+      </CurrentRendererContext.Provider>,
+      {
+        unstable_isAsync: true,
+      },
+    );
+
+    testRenderer.unstable_flushThrough(['A']);
+
+    ReactDOM.render(
+      <Surface>
+        <LogCurrentRenderer />
+        <CurrentRendererContext.Provider value="ART">
+          <LogCurrentRenderer />
+        </CurrentRendererContext.Provider>
+      </Surface>,
+      container,
+    );
+
+    expect(ops).toEqual([null, 'ART']);
+
+    ops = [];
+    expect(testRenderer.unstable_flushAll()).toEqual(['B', 'C']);
+
+    expect(ops).toEqual(['Test']);
+  });
 });
 
 describe('ReactARTComponents', () => {

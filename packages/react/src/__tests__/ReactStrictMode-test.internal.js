@@ -57,38 +57,64 @@ describe('ReactStrictMode', () => {
 
       const component = ReactTestRenderer.create(<ClassComponent />);
 
-      expect(log).toEqual([
-        'constructor',
-        'constructor',
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'render',
-        'render',
-        'componentDidMount',
-      ]);
+      if (__DEV__) {
+        expect(log).toEqual([
+          'constructor',
+          'constructor',
+          'getDerivedStateFromProps',
+          'getDerivedStateFromProps',
+          'render',
+          'render',
+          'componentDidMount',
+        ]);
+      } else {
+        expect(log).toEqual([
+          'constructor',
+          'getDerivedStateFromProps',
+          'render',
+          'componentDidMount',
+        ]);
+      }
 
       log = [];
       shouldComponentUpdate = true;
 
       component.update(<ClassComponent />);
-      expect(log).toEqual([
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'shouldComponentUpdate',
-        'render',
-        'render',
-        'componentDidUpdate',
-      ]);
+      if (__DEV__) {
+        expect(log).toEqual([
+          'getDerivedStateFromProps',
+          'getDerivedStateFromProps',
+          'shouldComponentUpdate',
+          'render',
+          'render',
+          'componentDidUpdate',
+        ]);
+      } else {
+        expect(log).toEqual([
+          'getDerivedStateFromProps',
+          'shouldComponentUpdate',
+          'render',
+          'componentDidUpdate',
+        ]);
+      }
 
       log = [];
       shouldComponentUpdate = false;
 
       component.update(<ClassComponent />);
-      expect(log).toEqual([
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'shouldComponentUpdate',
-      ]);
+
+      if (__DEV__) {
+        expect(log).toEqual([
+          'getDerivedStateFromProps',
+          'getDerivedStateFromProps',
+          'shouldComponentUpdate',
+        ]);
+      } else {
+        expect(log).toEqual([
+          'getDerivedStateFromProps',
+          'shouldComponentUpdate',
+        ]);
+      }
     });
 
     it('should invoke setState callbacks twice', () => {
@@ -112,8 +138,8 @@ describe('ReactStrictMode', () => {
         };
       });
 
-      // Callback should be invoked twice
-      expect(setStateCount).toBe(2);
+      // Callback should be invoked twice in DEV
+      expect(setStateCount).toBe(__DEV__ ? 2 : 1);
       // But each time `state` should be the previous value
       expect(instance.state.count).toBe(2);
     });
@@ -174,7 +200,7 @@ describe('ReactStrictMode', () => {
 
         const component = ReactTestRenderer.create(<Root />);
 
-        if (debugRenderPhaseSideEffectsForStrictMode) {
+        if (__DEV__ && debugRenderPhaseSideEffectsForStrictMode) {
           expect(log).toEqual([
             'constructor',
             'constructor',
@@ -197,7 +223,7 @@ describe('ReactStrictMode', () => {
         shouldComponentUpdate = true;
 
         component.update(<Root />);
-        if (debugRenderPhaseSideEffectsForStrictMode) {
+        if (__DEV__ && debugRenderPhaseSideEffectsForStrictMode) {
           expect(log).toEqual([
             'getDerivedStateFromProps',
             'getDerivedStateFromProps',
@@ -219,7 +245,7 @@ describe('ReactStrictMode', () => {
         shouldComponentUpdate = false;
 
         component.update(<Root />);
-        if (debugRenderPhaseSideEffectsForStrictMode) {
+        if (__DEV__ && debugRenderPhaseSideEffectsForStrictMode) {
           expect(log).toEqual([
             'getDerivedStateFromProps',
             'getDerivedStateFromProps',
@@ -263,7 +289,7 @@ describe('ReactStrictMode', () => {
 
         // Callback should be invoked twice (in DEV)
         expect(setStateCount).toBe(
-          debugRenderPhaseSideEffectsForStrictMode ? 2 : 1,
+          __DEV__ && debugRenderPhaseSideEffectsForStrictMode ? 2 : 1,
         );
         // But each time `state` should be the previous value
         expect(instance.state.count).toBe(2);

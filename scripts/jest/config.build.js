@@ -19,9 +19,9 @@ packages.forEach(name => {
   // Root entry point
   moduleNameMapper[`^${name}$`] = `<rootDir>/build/node_modules/${name}`;
   // Named entry points
-  moduleNameMapper[`^${name}/(.*)$`] = `<rootDir>/build/node_modules/${
-    name
-  }/$1`;
+  moduleNameMapper[
+    `^${name}/(.*)$`
+  ] = `<rootDir>/build/node_modules/${name}/$1`;
 });
 
 module.exports = Object.assign({}, sourceConfig, {
