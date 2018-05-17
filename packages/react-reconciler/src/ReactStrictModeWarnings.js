@@ -13,7 +13,6 @@ import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {StrictMode} from './ReactTypeOfMode';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 type LIFECYCLE =
@@ -108,7 +107,7 @@ if (__DEV__) {
     pendingUnsafeLifecycleWarnings = new Map();
   };
 
-  const getStrictRoot = (fiber: Fiber): Fiber => {
+  const findStrictRoot = (fiber: Fiber): Fiber | null => {
     let maybeStrictRoot = null;
 
     let node = fiber;
@@ -119,11 +118,6 @@ if (__DEV__) {
       node = node.return;
     }
 
-    invariant(
-      maybeStrictRoot !== null,
-      'Expected to find a StrictMode component in a strict mode tree. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
     return maybeStrictRoot;
   };
 
@@ -231,7 +225,15 @@ if (__DEV__) {
     fiber: Fiber,
     instance: any,
   ) => {
-    const strictRoot = getStrictRoot(fiber);
+    const strictRoot = findStrictRoot(fiber);
+    if (strictRoot === null) {
+      warning(
+        false,
+        'Expected to find a StrictMode component in a strict mode tree. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+      return;
+    }
 
     // Dedup strategy: Warn once per component.
     // This is difficult to track any other way since component names
