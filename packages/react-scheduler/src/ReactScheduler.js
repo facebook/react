@@ -38,7 +38,6 @@ type CallbackConfigType = {|
   callbackId: number, // used for cancelling
 |};
 
-
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import requestAnimationFrameForReact from 'shared/requestAnimationFrameForReact';
 
