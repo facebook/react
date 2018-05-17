@@ -54,7 +54,7 @@ function getTopLevelCallbackBookKeeping(
 ): {
   topLevelType: ?DOMTopLevelEventType,
   nativeEvent: ?AnyNativeEvent,
-  targetInst: Fiber,
+  targetInst: Fiber | null,
   ancestors: Array<Fiber>,
 } {
   if (callbackBookkeepingPool.length) {

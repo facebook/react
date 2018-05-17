@@ -4,10 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
+ * @flow
  */
 
 import type {ReactElement, Source} from 'shared/ReactElementType';
-import type {ReactPortal, RefObject} from 'shared/ReactTypes';
+import type {ReactFragment, ReactPortal, RefObject} from 'shared/ReactTypes';
 import type {TypeOfWork} from 'shared/ReactTypeOfWork';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
@@ -316,7 +317,7 @@ export function createWorkInProgress(
   return workInProgress;
 }
 
-export function createHostRootFiber(isAsync): Fiber {
+export function createHostRootFiber(isAsync: boolean): Fiber {
   const mode = isAsync ? AsyncMode | StrictMode : NoContext;
   return createFiber(HostRoot, null, null, mode);
 }
@@ -366,42 +367,9 @@ export function createFiberFromElement(
         // mode compatible.
         mode |= StrictMode;
         break;
-      default: {
-        if (typeof type === 'object' && type !== null) {
-          switch (type.$$typeof) {
-            case REACT_PROVIDER_TYPE:
-              fiberTag = ContextProvider;
-              break;
-            case REACT_CONTEXT_TYPE:
-              // This is a consumer
-              fiberTag = ContextConsumer;
-              break;
-            case REACT_FORWARD_REF_TYPE:
-              fiberTag = ForwardRef;
-              break;
-            default:
-              if (typeof type.tag === 'number') {
-                // Currently assumed to be a continuation and therefore is a
-                // fiber already.
-                // TODO: The yield system is currently broken for updates in
-                // some cases. The reified yield stores a fiber, but we don't
-                // know which fiber that is; the current or a workInProgress?
-                // When the continuation gets rendered here we don't know if we
-                // can reuse that fiber or if we need to clone it. There is
-                // probably a clever way to restructure this.
-                fiber = ((type: any): Fiber);
-                fiber.pendingProps = pendingProps;
-                fiber.expirationTime = expirationTime;
-                return fiber;
-              } else {
-                throwOnInvalidElementType(type, owner);
-              }
-              break;
-          }
-        } else {
-          throwOnInvalidElementType(type, owner);
-        }
-      }
+      default:
+        fiberTag = getFiberTagFromObjectType(type, owner);
+        break;
     }
   }
 
@@ -417,33 +385,47 @@ export function createFiberFromElement(
   return fiber;
 }
 
-function throwOnInvalidElementType(type, owner) {
-  let info = '';
-  if (__DEV__) {
-    if (
-      type === undefined ||
-      (typeof type === 'object' &&
-        type !== null &&
-        Object.keys(type).length === 0)
-    ) {
-      info +=
-        ' You likely forgot to export your component from the file ' +
-        "it's defined in, or you might have mixed up default and " +
-        'named imports.';
-    }
-    const ownerName = owner ? getComponentName(owner) : null;
-    if (ownerName) {
-      info += '\n\nCheck the render method of `' + ownerName + '`.';
+function getFiberTagFromObjectType(type, owner): TypeOfWork {
+  const $$typeof =
+    typeof type === 'object' && type !== null ? type.$$typeof : null;
+
+  switch ($$typeof) {
+    case REACT_PROVIDER_TYPE:
+      return ContextProvider;
+    case REACT_CONTEXT_TYPE:
+      // This is a consumer
+      return ContextConsumer;
+    case REACT_FORWARD_REF_TYPE:
+      return ForwardRef;
+    default: {
+      let info = '';
+      if (__DEV__) {
+        if (
+          type === undefined ||
+          (typeof type === 'object' &&
+            type !== null &&
+            Object.keys(type).length === 0)
+        ) {
+          info +=
+            ' You likely forgot to export your component from the file ' +
+            "it's defined in, or you might have mixed up default and " +
+            'named imports.';
+        }
+        const ownerName = owner ? getComponentName(owner) : null;
+        if (ownerName) {
+          info += '\n\nCheck the render method of `' + ownerName + '`.';
+        }
+      }
+      invariant(
+        false,
+        'Element type is invalid: expected a string (for built-in ' +
+          'components) or a class/function (for composite components) ' +
+          'but got: %s.%s',
+        type == null ? type : typeof type,
+        info,
+      );
     }
   }
-  invariant(
-    false,
-    'Element type is invalid: expected a string (for built-in ' +
-      'components) or a class/function (for composite components) ' +
-      'but got: %s.%s',
-    type == null ? type : typeof type,
-    info,
-  );
 }
 
 export function createFiberFromFragment(

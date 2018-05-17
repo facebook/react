@@ -321,10 +321,20 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
 
       // Restore the original state of the work-in-progress
+      if (stashedWorkInProgressProperties === null) {
+        // This should never happen. Don't throw because this code is DEV-only.
+        warning(
+          false,
+          'Could not replay rendering after an error. This is likely a bug in React. ' +
+            'Please file an issue.',
+        );
+        return;
+      }
       assignFiberPropertiesInDEV(
         failedUnitOfWork,
         stashedWorkInProgressProperties,
       );
+
       switch (failedUnitOfWork.tag) {
         case HostRoot:
           popHostContainer(failedUnitOfWork);
@@ -1073,43 +1083,52 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           // This is a fatal error.
           didFatal = true;
           onUncaughtError(thrownValue);
-          break;
-        }
+        } else {
+          if (__DEV__) {
+            // Reset global debug state
+            // We assume this is defined in DEV
+            (resetCurrentlyProcessingQueue: any)();
+          }
 
-        if (__DEV__) {
-          // Reset global debug state
-          // We assume this is defined in DEV
-          (resetCurrentlyProcessingQueue: any)();
-        }
+          const failedUnitOfWork: Fiber = nextUnitOfWork;
+          if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+            replayUnitOfWork(failedUnitOfWork, thrownValue, isAsync);
+          }
 
-        if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-          const failedUnitOfWork = nextUnitOfWork;
-          replayUnitOfWork(failedUnitOfWork, thrownValue, isAsync);
-        }
+          // TODO: we already know this isn't true in some cases.
+          // At least this shows a nicer error message until we figure out the cause.
+          // https://github.com/facebook/react/issues/12449#issuecomment-386727431
+          invariant(
+            nextUnitOfWork !== null,
+            'Failed to replay rendering after an error. This ' +
+              'is likely caused by a bug in React. Please file an issue ' +
+              'with a reproducing case to help us find it.',
+          );
 
-        const sourceFiber: Fiber = nextUnitOfWork;
-        let returnFiber = sourceFiber.return;
-        if (returnFiber === null) {
-          // This is the root. The root could capture its own errors. However,
-          // we don't know if it errors before or after we pushed the host
-          // context. This information is needed to avoid a stack mismatch.
-          // Because we're not sure, treat this as a fatal error. We could track
-          // which phase it fails in, but doesn't seem worth it. At least
-          // for now.
-          didFatal = true;
-          onUncaughtError(thrownValue);
-          break;
+          const sourceFiber: Fiber = nextUnitOfWork;
+          let returnFiber = sourceFiber.return;
+          if (returnFiber === null) {
+            // This is the root. The root could capture its own errors. However,
+            // we don't know if it errors before or after we pushed the host
+            // context. This information is needed to avoid a stack mismatch.
+            // Because we're not sure, treat this as a fatal error. We could track
+            // which phase it fails in, but doesn't seem worth it. At least
+            // for now.
+            didFatal = true;
+            onUncaughtError(thrownValue);
+            break;
+          }
+          throwException(
+            root,
+            returnFiber,
+            sourceFiber,
+            thrownValue,
+            nextRenderIsExpired,
+            nextRenderExpirationTime,
+            mostRecentCurrentTimeMs,
+          );
+          nextUnitOfWork = completeUnitOfWork(sourceFiber);
         }
-        throwException(
-          root,
-          returnFiber,
-          sourceFiber,
-          thrownValue,
-          nextRenderIsExpired,
-          nextRenderExpirationTime,
-          mostRecentCurrentTimeMs,
-        );
-        nextUnitOfWork = completeUnitOfWork(sourceFiber);
       }
       break;
     } while (true);
