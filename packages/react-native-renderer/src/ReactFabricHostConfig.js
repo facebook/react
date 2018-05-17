@@ -23,6 +23,8 @@ import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 import invariant from 'fbjs/lib/invariant';
 
+import {dispatchEvent} from './ReactFabricEventEmitter';
+
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
 import {
@@ -35,6 +37,7 @@ import {
   appendChild,
   appendChildToSet,
   completeRoot,
+  registerEventHandler,
 } from 'FabricUIManager';
 import UIManager from 'UIManager';
 
@@ -47,6 +50,14 @@ let nextReactTag = 2;
 type HostContext = $ReadOnly<{|
   isInAParentText: boolean,
 |}>;
+
+// TODO: Remove this conditional once all changes have propagated.
+if (registerEventHandler) {
+  /**
+   * Register the event emitter with the native bridge
+   */
+  registerEventHandler(dispatchEvent);
+}
 
 /**
  * This is used for refs on host components.

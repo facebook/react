@@ -13,6 +13,7 @@ import type {
   ReactNativeBaseComponentViewConfig,
   ViewConfigGetter,
 } from 'react-native-renderer/src/ReactNativeTypes';
+import type {RNTopLevelEventType} from 'events/TopLevelEventTypes';
 
 declare module 'deepDiffer' {
   declare module.exports: (one: any, two: any) => boolean;
@@ -121,6 +122,13 @@ declare module 'FabricUIManager' {
   declare function createChildSet(rootTag: number): Object;
   declare function appendChildToSet(childSet: Object, childNode: Object): void;
   declare function completeRoot(rootTag: number, childSet: Object): void;
+  declare function registerEventHandler(
+    callback: (
+      instanceHandle: Object,
+      type: RNTopLevelEventType,
+      payload: Object,
+    ) => void,
+  ): void;
 }
 
 declare module 'View' {
