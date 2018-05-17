@@ -74,6 +74,17 @@ const forks = Object.freeze({
     return null;
   },
 
+  // This logic is forked on www to use the 'acrossTransitions' version.
+  'shared/requestAnimationFrameForReact': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+        return 'shared/forks/requestAnimationFrameForReact.www.js';
+      default:
+        return null;
+    }
+  },
+
   // This logic is forked on www to blacklist warnings.
   'shared/lowPriorityWarning': (bundleType, entry) => {
     switch (bundleType) {

@@ -39,20 +39,7 @@ type CallbackConfigType = {|
 |};
 
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
-import warning from 'fbjs/lib/warning';
-
-if (__DEV__) {
-  if (
-    ExecutionEnvironment.canUseDOM &&
-    typeof requestAnimationFrame !== 'function'
-  ) {
-    warning(
-      false,
-      'React depends on requestAnimationFrame. Make sure that you load a ' +
-        'polyfill in older browsers. https://fb.me/react-polyfills',
-    );
-  }
-}
+import requestAnimationFrameForReact from 'shared/requestAnimationFrameForReact';
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
@@ -232,7 +219,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       if (!isAnimationFrameScheduled) {
         // Schedule another animation callback so we retry later.
         isAnimationFrameScheduled = true;
-        requestAnimationFrame(animationTick);
+        requestAnimationFrameForReact(animationTick);
       }
     }
   };
@@ -298,7 +285,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       // might want to still have setTimeout trigger scheduleWork as a backup to ensure
       // that we keep performing work.
       isAnimationFrameScheduled = true;
-      requestAnimationFrame(animationTick);
+      requestAnimationFrameForReact(animationTick);
     }
     return newCallbackId;
   };
