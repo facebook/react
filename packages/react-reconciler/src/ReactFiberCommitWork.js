@@ -9,7 +9,7 @@
 
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
@@ -64,7 +64,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   }
 
   const capturedError: CapturedError = {
-    componentName: source !== null ? getComponentName(source) : null,
+    componentName: getComponentName(source),
     componentStack: stack !== null ? stack : '',
     error: errorInfo.value,
     errorBoundary: null,
@@ -94,7 +94,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-  captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
+  captureError: (failedFiber: Fiber, error: mixed) => void,
   scheduleWork: (
     fiber: Fiber,
     startTime: ExpirationTime,
