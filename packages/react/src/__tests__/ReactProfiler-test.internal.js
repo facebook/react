@@ -198,8 +198,8 @@ describe('Profiler', () => {
       expect(call).toHaveLength(4);
       expect(call[0]).toBe('test');
       expect(call[1]).toBe('mount');
-      expect(call[2]).toBe(10); // "actual" time
-      expect(call[3]).toBe(10); // "base" time
+      expect(call[2]).toBe(10); // actual time
+      expect(call[3]).toBe(10); // base time
 
       callback.mockReset();
 
@@ -216,8 +216,8 @@ describe('Profiler', () => {
       expect(call).toHaveLength(4);
       expect(call[0]).toBe('test');
       expect(call[1]).toBe('update');
-      expect(call[2]).toBe(10); // "actual" time
-      expect(call[3]).toBe(10); // "base" time
+      expect(call[2]).toBe(10); // actual time
+      expect(call[3]).toBe(10); // base time
     });
 
     it('includes render times of nested Profilers in their parent times', () => {
@@ -243,10 +243,10 @@ describe('Profiler', () => {
       expect(parentCall[0]).toBe('parent');
 
       // Parent times should include child times
-      expect(childCall[2]).toBe(20); // "actual" time
-      expect(childCall[3]).toBe(20); // "base" time
-      expect(parentCall[2]).toBe(30); // "actual" time
-      expect(parentCall[3]).toBe(30); // "base" time
+      expect(childCall[2]).toBe(20); // actual time
+      expect(childCall[3]).toBe(20); // base time
+      expect(parentCall[2]).toBe(30); // actual time
+      expect(parentCall[3]).toBe(30); // base time
     });
 
     it('tracks sibling Profilers separately', () => {
@@ -270,10 +270,10 @@ describe('Profiler', () => {
       expect(secondCall[0]).toBe('second');
 
       // Parent times should include child times
-      expect(firstCall[2]).toBe(20); // "actual" time
-      expect(firstCall[3]).toBe(20); // "base" time
-      expect(secondCall[2]).toBe(5); // "actual" time
-      expect(secondCall[3]).toBe(5); // "base" time
+      expect(firstCall[2]).toBe(20); // actual time
+      expect(firstCall[3]).toBe(20); // base time
+      expect(secondCall[2]).toBe(5); // actual time
+      expect(secondCall[3]).toBe(5); // base time
     });
 
     it('does not include time spent outside of profile root', () => {
@@ -293,8 +293,8 @@ describe('Profiler', () => {
 
       const [call] = callback.mock.calls;
       expect(call[0]).toBe('test');
-      expect(call[2]).toBe(5); // "actual" time
-      expect(call[3]).toBe(5); // "base" time
+      expect(call[2]).toBe(5); // actual time
+      expect(call[3]).toBe(5); // base time
     });
 
     it('is not called when blocked by sCU false', () => {
@@ -347,7 +347,7 @@ describe('Profiler', () => {
       expect(callback.mock.calls[1][0]).toBe('outer');
     });
 
-    it('decreases "actual" time but not "base" time when sCU prevents an update', () => {
+    it('decreases actual time but not base time when sCU prevents an update', () => {
       const callback = jest.fn();
 
       const renderer = ReactTestRenderer.create(
@@ -373,12 +373,12 @@ describe('Profiler', () => {
       const [mountCall, updateCall] = callback.mock.calls;
 
       expect(mountCall[1]).toBe('mount');
-      expect(mountCall[2]).toBe(20); // "actual" time
-      expect(mountCall[3]).toBe(20); // "base" time
+      expect(mountCall[2]).toBe(20); // actual time
+      expect(mountCall[3]).toBe(20); // base time
 
       expect(updateCall[1]).toBe('update');
-      expect(updateCall[2]).toBe(10); // "actual" time
-      expect(updateCall[3]).toBe(20); // "base" time
+      expect(updateCall[2]).toBe(10); // actual time
+      expect(updateCall[3]).toBe(20); // base time
     });
 
     it('includes time spent in render phase lifecycles', () => {
@@ -417,16 +417,16 @@ describe('Profiler', () => {
       const [mountCall, updateCall] = callback.mock.calls;
 
       expect(mountCall[1]).toBe('mount');
-      expect(mountCall[2]).toBe(8); // "actual" time
-      expect(mountCall[3]).toBe(8); // "base" time
+      expect(mountCall[2]).toBe(8); // actual time
+      expect(mountCall[3]).toBe(8); // base time
 
       expect(updateCall[1]).toBe('update');
-      expect(updateCall[2]).toBe(15); // "actual" time
-      expect(updateCall[3]).toBe(15); // "base" time
+      expect(updateCall[2]).toBe(15); // actual time
+      expect(updateCall[3]).toBe(15); // base time
     });
 
     describe('with regard to interruptions', () => {
-      it('should accumulate "actual" time after a scheduling interruptions', () => {
+      it('should accumulate actual time after a scheduling interruptions', () => {
         const callback = jest.fn();
 
         const Yield = ({renderTime}) => {
@@ -453,8 +453,8 @@ describe('Profiler', () => {
 
         // Verify that logged times include both durations above.
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(callback.mock.calls[0][2]).toBe(5); // "actual" time
-        expect(callback.mock.calls[0][3]).toBe(5); // "base" time
+        expect(callback.mock.calls[0][2]).toBe(5); // actual time
+        expect(callback.mock.calls[0][3]).toBe(5); // base time
       });
 
       it('should not include time between frames', () => {
@@ -493,14 +493,14 @@ describe('Profiler', () => {
 
         const [innerCall, outerCall] = callback.mock.calls;
 
-        // Verify that the "actual" time includes all work times,
+        // Verify that the actual time includes all work times,
         // But not the time that elapsed between frames.
         expect(innerCall[0]).toBe('inner');
-        expect(innerCall[2]).toBe(17); // "actual" time
-        expect(innerCall[3]).toBe(17); // "base" time
+        expect(innerCall[2]).toBe(17); // actual time
+        expect(innerCall[3]).toBe(17); // base time
         expect(outerCall[0]).toBe('outer');
-        expect(outerCall[2]).toBe(32); // "actual" time
-        expect(outerCall[3]).toBe(32); // "base" time
+        expect(outerCall[2]).toBe(32); // actual time
+        expect(outerCall[3]).toBe(32); // base time
       });
 
       it('should report the expected times when a high-priority update replaces an in-progress initial render', () => {
@@ -540,11 +540,11 @@ describe('Profiler', () => {
         ).toEqual(['Yield:5']);
 
         // The initial work was thrown away in this case,
-        // So the "actual" and "base" times should only include the final rendered tree times.
+        // So the actual and base times should only include the final rendered tree times.
         expect(callback).toHaveBeenCalledTimes(1);
         let call = callback.mock.calls[0];
-        expect(call[2]).toBe(5); // "actual" time
-        expect(call[3]).toBe(5); // "base" time
+        expect(call[2]).toBe(5); // actual time
+        expect(call[3]).toBe(5); // base time
 
         callback.mockReset();
 
@@ -571,12 +571,12 @@ describe('Profiler', () => {
         );
 
         // Render everything initially.
-        // This should take 21 seconds of "actual" and "base" time.
+        // This should take 21 seconds of actual and base time.
         expect(renderer.unstable_flushAll()).toEqual(['Yield:6', 'Yield:15']);
         expect(callback).toHaveBeenCalledTimes(1);
         let call = callback.mock.calls[0];
-        expect(call[2]).toBe(21); // "actual" time
-        expect(call[3]).toBe(21); // "base" time
+        expect(call[2]).toBe(21); // actual time
+        expect(call[3]).toBe(21); // base time
 
         callback.mockReset();
 
@@ -618,12 +618,12 @@ describe('Profiler', () => {
           }),
         ).toEqual(['Yield:11']);
 
-        // Verify that the "actual" time includes all three durations above.
-        // And the "base" time includes only the final rendered tree times.
+        // Verify that the actual time includes all three durations above.
+        // And the base time includes only the final rendered tree times.
         expect(callback).toHaveBeenCalledTimes(1);
         call = callback.mock.calls[0];
-        expect(call[2]).toBe(19); // "actual" time
-        expect(call[3]).toBe(11); // "base" time
+        expect(call[2]).toBe(19); // actual time
+        expect(call[3]).toBe(11); // base time
 
         // Verify no more unexpected callbacks from low priority work
         expect(renderer.unstable_flushAll()).toEqual([]);
@@ -669,8 +669,8 @@ describe('Profiler', () => {
         );
 
         // Render everything initially.
-        // This simulates a total of 14ms of "actual" render time.
-        // The "base" render time is also 14ms for the initial render.
+        // This simulates a total of 14ms of actual render time.
+        // The base render time is also 14ms for the initial render.
         expect(renderer.unstable_flushAll()).toEqual([
           'FirstComponent:1',
           'Yield:4',
@@ -679,13 +679,13 @@ describe('Profiler', () => {
         ]);
         expect(callback).toHaveBeenCalledTimes(1);
         let call = callback.mock.calls[0];
-        expect(call[2]).toBe(14); // "actual" time
-        expect(call[3]).toBe(14); // "base" time
+        expect(call[2]).toBe(14); // actual time
+        expect(call[3]).toBe(14); // base time
 
         callback.mockClear();
 
         // Render a partially update, but don't finish.
-        // This partial render will take 10ms of "actual" render time.
+        // This partial render will take 10ms of actual render time.
         first.setState({renderTime: 10});
         expect(renderer.unstable_flushThrough(['FirstComponent:10'])).toEqual([
           'FirstComponent:10',
@@ -696,35 +696,35 @@ describe('Profiler', () => {
         advanceTimeBy(100);
 
         // Interrupt with higher priority work.
-        // This simulates a total of 37ms of "actual" render time.
+        // This simulates a total of 37ms of actual render time.
         expect(
           renderer.unstable_flushSync(() => second.setState({renderTime: 30})),
         ).toEqual(['SecondComponent:30', 'Yield:7']);
 
-        // Verify that the "actual" time includes time spent in the both renders so far (10ms and 37ms).
-        // The "base" time should include the more recent times for the SecondComponent subtree,
+        // Verify that the actual time includes time spent in the both renders so far (10ms and 37ms).
+        // The base time should include the more recent times for the SecondComponent subtree,
         // As well as the original times for the FirstComponent subtree.
         expect(callback).toHaveBeenCalledTimes(1);
         call = callback.mock.calls[0];
-        expect(call[2]).toBe(47); // "actual" time
-        expect(call[3]).toBe(42); // "base" time
+        expect(call[2]).toBe(47); // actual time
+        expect(call[3]).toBe(42); // base time
 
         callback.mockClear();
 
         // Resume the original low priority update, with rebased state.
-        // This simulates a total of 14ms of "actual" render time,
+        // This simulates a total of 14ms of actual render time,
         // And does not include the original (interrupted) 10ms.
-        // The tree contains 42ms of "base" render time at this point,
+        // The tree contains 42ms of base render time at this point,
         // Reflecting the most recent (longer) render durations.
-        // TODO: This "actual" time should decrease by 10ms once the scheduler supports resuming.
+        // TODO: This actual time should decrease by 10ms once the scheduler supports resuming.
         expect(renderer.unstable_flushAll()).toEqual([
           'FirstComponent:10',
           'Yield:4',
         ]);
         expect(callback).toHaveBeenCalledTimes(1);
         call = callback.mock.calls[0];
-        expect(call[2]).toBe(14); // "actual" time
-        expect(call[3]).toBe(51); // "base" time
+        expect(call[2]).toBe(14); // actual time
+        expect(call[3]).toBe(51); // base time
       });
 
       [true, false].forEach(flagEnabled => {
@@ -740,7 +740,7 @@ describe('Profiler', () => {
             mockNowForTests();
           });
 
-          it('should accumulate "actual" time after an error handled by componentDidCatch()', () => {
+          it('should accumulate actual time after an error handled by componentDidCatch()', () => {
             const callback = jest.fn();
 
             const ThrowsError = () => {
@@ -780,21 +780,21 @@ describe('Profiler', () => {
             // The initial mount only includes the ErrorBoundary (which takes 2ms)
             // But it spends time rendering all of the failed subtree also.
             expect(mountCall[1]).toBe('mount');
-            // "actual" time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
+            // actual time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
             // If replayFailedUnitOfWorkWithInvokeGuardedCallback is enbaled, ThrowsError is replayed.
             expect(mountCall[2]).toBe(flagEnabled && __DEV__ ? 27 : 17);
-            // "base" time includes: 2 (ErrorBoundary)
+            // base time includes: 2 (ErrorBoundary)
             expect(mountCall[3]).toBe(2);
 
             // The update includes the ErrorBoundary and its fallback child
             expect(updateCall[1]).toBe('update');
-            // "actual" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+            // actual time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
             expect(updateCall[2]).toBe(22);
-            // "base" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+            // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
             expect(updateCall[3]).toBe(22);
           });
 
-          it('should accumulate "actual" time after an error handled by getDerivedStateFromCatch()', () => {
+          it('should accumulate actual time after an error handled by getDerivedStateFromCatch()', () => {
             const callback = jest.fn();
 
             const ThrowsError = () => {
@@ -832,13 +832,13 @@ describe('Profiler', () => {
             let [mountCall] = callback.mock.calls;
 
             // The initial mount includes the ErrorBoundary's error state,
-            // But i also spends "actual" time rendering UI that fails and isn't included.
+            // But i also spends actual time rendering UI that fails and isn't included.
             expect(mountCall[1]).toBe('mount');
-            // "actual" time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
+            // actual time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
             // Then the re-render: 2 (ErrorBoundary) + 20 (AdvanceTime)
             // If replayFailedUnitOfWorkWithInvokeGuardedCallback is enbaled, ThrowsError is replayed.
             expect(mountCall[2]).toBe(flagEnabled && __DEV__ ? 49 : 39);
-            // "base" time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
+            // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
             expect(mountCall[3]).toBe(22);
           });
         });
@@ -868,13 +868,13 @@ describe('Profiler', () => {
 
       expect(mountCall[0]).toBe('one');
       expect(mountCall[1]).toBe('mount');
-      expect(mountCall[2]).toBe(2); // "actual" time
-      expect(mountCall[3]).toBe(2); // "base" time
+      expect(mountCall[2]).toBe(2); // actual time
+      expect(mountCall[3]).toBe(2); // base time
 
       expect(updateCall[0]).toBe('two');
       expect(updateCall[1]).toBe('update');
-      expect(updateCall[2]).toBe(1); // "actual" time
-      expect(updateCall[3]).toBe(1); // "base" time
+      expect(updateCall[2]).toBe(1); // actual time
+      expect(updateCall[3]).toBe(1); // base time
     });
   });
 });
