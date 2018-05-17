@@ -185,6 +185,8 @@ describe('Profiler', () => {
     it('logs render times for both mount and update', () => {
       const callback = jest.fn();
 
+      advanceTimeBy(5); // 0 -> 5
+
       const renderer = ReactTestRenderer.create(
         <React.unstable_Profiler id="test" onRender={callback}>
           <AdvanceTime />
@@ -195,13 +197,16 @@ describe('Profiler', () => {
 
       let [call] = callback.mock.calls;
 
-      expect(call).toHaveLength(4);
+      expect(call).toHaveLength(5);
       expect(call[0]).toBe('test');
       expect(call[1]).toBe('mount');
       expect(call[2]).toBe(10); // actual time
       expect(call[3]).toBe(10); // base time
+      expect(call[4]).toBe(5); // start time
 
       callback.mockReset();
+
+      advanceTimeBy(20); // 15 -> 35
 
       renderer.update(
         <React.unstable_Profiler id="test" onRender={callback}>
@@ -213,15 +218,18 @@ describe('Profiler', () => {
 
       [call] = callback.mock.calls;
 
-      expect(call).toHaveLength(4);
+      expect(call).toHaveLength(5);
       expect(call[0]).toBe('test');
       expect(call[1]).toBe('update');
       expect(call[2]).toBe(10); // actual time
       expect(call[3]).toBe(10); // base time
+      expect(call[4]).toBe(35); // start time
     });
 
     it('includes render times of nested Profilers in their parent times', () => {
       const callback = jest.fn();
+
+      advanceTimeBy(5); // 0 -> 5
 
       ReactTestRenderer.create(
         <React.Fragment>
@@ -245,12 +253,16 @@ describe('Profiler', () => {
       // Parent times should include child times
       expect(childCall[2]).toBe(20); // actual time
       expect(childCall[3]).toBe(20); // base time
+      expect(childCall[4]).toBe(15); // start time
       expect(parentCall[2]).toBe(30); // actual time
       expect(parentCall[3]).toBe(30); // base time
+      expect(parentCall[4]).toBe(5); // start time
     });
 
     it('tracks sibling Profilers separately', () => {
       const callback = jest.fn();
+
+      advanceTimeBy(5); // 0 -> 5
 
       ReactTestRenderer.create(
         <React.Fragment>
@@ -272,8 +284,10 @@ describe('Profiler', () => {
       // Parent times should include child times
       expect(firstCall[2]).toBe(20); // actual time
       expect(firstCall[3]).toBe(20); // base time
+      expect(firstCall[4]).toBe(5); // start time
       expect(secondCall[2]).toBe(5); // actual time
       expect(secondCall[3]).toBe(5); // base time
+      expect(secondCall[4]).toBe(25); // start time
     });
 
     it('does not include time spent outside of profile root', () => {
@@ -295,6 +309,7 @@ describe('Profiler', () => {
       expect(call[0]).toBe('test');
       expect(call[2]).toBe(5); // actual time
       expect(call[3]).toBe(5); // base time
+      expect(call[4]).toBe(20); // start time
     });
 
     it('is not called when blocked by sCU false', () => {
@@ -350,20 +365,24 @@ describe('Profiler', () => {
     it('decreases actual time but not base time when sCU prevents an update', () => {
       const callback = jest.fn();
 
+      advanceTimeBy(5); // 0 -> 5
+
       const renderer = ReactTestRenderer.create(
         <React.unstable_Profiler id="test" onRender={callback}>
-          <AdvanceTime>
-            <AdvanceTime shouldComponentUpdate={false} />
+          <AdvanceTime byAmount={10}>
+            <AdvanceTime byAmount={10} shouldComponentUpdate={false} />
           </AdvanceTime>
         </React.unstable_Profiler>,
       );
 
       expect(callback).toHaveBeenCalledTimes(1);
 
+      advanceTimeBy(30); // 25 -> 55
+
       renderer.update(
         <React.unstable_Profiler id="test" onRender={callback}>
-          <AdvanceTime>
-            <AdvanceTime shouldComponentUpdate={false} />
+          <AdvanceTime byAmount={10}>
+            <AdvanceTime byAmount={10} shouldComponentUpdate={false} />
           </AdvanceTime>
         </React.unstable_Profiler>,
       );
@@ -375,10 +394,12 @@ describe('Profiler', () => {
       expect(mountCall[1]).toBe('mount');
       expect(mountCall[2]).toBe(20); // actual time
       expect(mountCall[3]).toBe(20); // base time
+      expect(mountCall[4]).toBe(5); // start time
 
       expect(updateCall[1]).toBe('update');
       expect(updateCall[2]).toBe(10); // actual time
       expect(updateCall[3]).toBe(20); // base time
+      expect(updateCall[4]).toBe(55); // start time
     });
 
     it('includes time spent in render phase lifecycles', () => {
@@ -400,11 +421,15 @@ describe('Profiler', () => {
 
       const callback = jest.fn();
 
+      advanceTimeBy(5); // 0 -> 5
+
       const renderer = ReactTestRenderer.create(
         <React.unstable_Profiler id="test" onRender={callback}>
           <WithLifecycles />
         </React.unstable_Profiler>,
       );
+
+      advanceTimeBy(15); // 13 -> 28
 
       renderer.update(
         <React.unstable_Profiler id="test" onRender={callback}>
@@ -419,10 +444,12 @@ describe('Profiler', () => {
       expect(mountCall[1]).toBe('mount');
       expect(mountCall[2]).toBe(8); // actual time
       expect(mountCall[3]).toBe(8); // base time
+      expect(mountCall[4]).toBe(5); // start time
 
       expect(updateCall[1]).toBe('update');
       expect(updateCall[2]).toBe(15); // actual time
       expect(updateCall[3]).toBe(15); // base time
+      expect(updateCall[4]).toBe(28); // start time
     });
 
     describe('with regard to interruptions', () => {
@@ -434,6 +461,8 @@ describe('Profiler', () => {
           renderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
+
+        advanceTimeBy(5); // 0 -> 5
 
         // Render partially, but run out of time before completing.
         const renderer = ReactTestRenderer.create(
@@ -455,6 +484,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback.mock.calls[0][2]).toBe(5); // actual time
         expect(callback.mock.calls[0][3]).toBe(5); // base time
+        expect(callback.mock.calls[0][4]).toBe(5); // start time
       });
 
       it('should not include time between frames', () => {
@@ -465,6 +495,8 @@ describe('Profiler', () => {
           renderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
+
+        advanceTimeBy(5); // 0 -> 5
 
         // Render partially, but don't finish.
         // This partial render should take 5ms of simulated time.
@@ -484,7 +516,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
-        advanceTimeBy(50);
+        advanceTimeBy(50); // 10 -> 60
 
         // Flush the remaninig work,
         // Which should take an additional 10ms of simulated time.
@@ -498,9 +530,11 @@ describe('Profiler', () => {
         expect(innerCall[0]).toBe('inner');
         expect(innerCall[2]).toBe(17); // actual time
         expect(innerCall[3]).toBe(17); // base time
+        expect(innerCall[4]).toBe(70); // start time
         expect(outerCall[0]).toBe('outer');
         expect(outerCall[2]).toBe(32); // actual time
         expect(outerCall[3]).toBe(32); // base time
+        expect(outerCall[4]).toBe(5); // start time
       });
 
       it('should report the expected times when a high-priority update replaces an in-progress initial render', () => {
@@ -511,6 +545,8 @@ describe('Profiler', () => {
           renderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
+
+        advanceTimeBy(5); // 0 -> 5
 
         // Render a partially update, but don't finish.
         // This partial render should take 10ms of simulated time.
@@ -525,7 +561,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
-        advanceTimeBy(100);
+        advanceTimeBy(100); // 15 -> 115
 
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 5ms of time.
@@ -545,6 +581,7 @@ describe('Profiler', () => {
         let call = callback.mock.calls[0];
         expect(call[2]).toBe(5); // actual time
         expect(call[3]).toBe(5); // base time
+        expect(call[4]).toBe(115); // start time
 
         callback.mockReset();
 
@@ -562,6 +599,8 @@ describe('Profiler', () => {
           return null;
         };
 
+        advanceTimeBy(5); // 0 -> 5
+
         const renderer = ReactTestRenderer.create(
           <React.unstable_Profiler id="test" onRender={callback}>
             <Yield renderTime={6} />
@@ -577,8 +616,11 @@ describe('Profiler', () => {
         let call = callback.mock.calls[0];
         expect(call[2]).toBe(21); // actual time
         expect(call[3]).toBe(21); // base time
+        expect(call[4]).toBe(5); // start time
 
         callback.mockReset();
+
+        advanceTimeBy(30); // 26 -> 56
 
         // Render a partially update, but don't finish.
         // This partial render should take 3ms of simulated time.
@@ -595,7 +637,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
-        advanceTimeBy(100);
+        advanceTimeBy(100); // 59 -> 159
 
         // Render another 5ms of simulated time.
         expect(renderer.unstable_flushThrough(['Yield:5'])).toEqual([
@@ -604,7 +646,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
-        advanceTimeBy(100);
+        advanceTimeBy(100); // 164 -> 264
 
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 11ms of time.
@@ -624,6 +666,7 @@ describe('Profiler', () => {
         call = callback.mock.calls[0];
         expect(call[2]).toBe(19); // actual time
         expect(call[3]).toBe(11); // base time
+        expect(call[4]).toBe(264); // start time
 
         // Verify no more unexpected callbacks from low priority work
         expect(renderer.unstable_flushAll()).toEqual([]);
@@ -660,6 +703,8 @@ describe('Profiler', () => {
           }
         }
 
+        advanceTimeBy(5); // 0 -> 5
+
         const renderer = ReactTestRenderer.create(
           <React.unstable_Profiler id="test" onRender={callback} foo="1">
             <FirstComponent />
@@ -681,8 +726,11 @@ describe('Profiler', () => {
         let call = callback.mock.calls[0];
         expect(call[2]).toBe(14); // actual time
         expect(call[3]).toBe(14); // base time
+        expect(call[4]).toBe(5); // start time
 
         callback.mockClear();
+
+        advanceTimeBy(100); // 19 -> 119
 
         // Render a partially update, but don't finish.
         // This partial render will take 10ms of actual render time.
@@ -693,7 +741,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
-        advanceTimeBy(100);
+        advanceTimeBy(100); // 129 -> 229
 
         // Interrupt with higher priority work.
         // This simulates a total of 37ms of actual render time.
@@ -708,8 +756,12 @@ describe('Profiler', () => {
         call = callback.mock.calls[0];
         expect(call[2]).toBe(47); // actual time
         expect(call[3]).toBe(42); // base time
+        expect(call[4]).toBe(229); // start time
 
         callback.mockClear();
+
+        // Simulate time moving forward while frame is paused.
+        advanceTimeBy(100); // 266 -> 366
 
         // Resume the original low priority update, with rebased state.
         // This simulates a total of 14ms of actual render time,
@@ -725,6 +777,7 @@ describe('Profiler', () => {
         call = callback.mock.calls[0];
         expect(call[2]).toBe(14); // actual time
         expect(call[3]).toBe(51); // base time
+        expect(call[4]).toBe(366); // start time
       });
 
       [true, false].forEach(flagEnabled => {
@@ -763,6 +816,8 @@ describe('Profiler', () => {
               }
             }
 
+            advanceTimeBy(5); // 0 -> 5
+
             ReactTestRenderer.create(
               <React.unstable_Profiler id="test" onRender={callback}>
                 <ErrorBoundary>
@@ -785,6 +840,8 @@ describe('Profiler', () => {
             expect(mountCall[2]).toBe(flagEnabled && __DEV__ ? 27 : 17);
             // base time includes: 2 (ErrorBoundary)
             expect(mountCall[3]).toBe(2);
+            // start time
+            expect(mountCall[4]).toBe(5);
 
             // The update includes the ErrorBoundary and its fallback child
             expect(updateCall[1]).toBe('update');
@@ -792,6 +849,8 @@ describe('Profiler', () => {
             expect(updateCall[2]).toBe(22);
             // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
             expect(updateCall[3]).toBe(22);
+            // start time
+            expect(updateCall[4]).toBe(flagEnabled && __DEV__ ? 32 : 22);
           });
 
           it('should accumulate actual time after an error handled by getDerivedStateFromCatch()', () => {
@@ -817,6 +876,8 @@ describe('Profiler', () => {
               }
             }
 
+            advanceTimeBy(5); // 0 -> 5
+
             ReactTestRenderer.create(
               <React.unstable_Profiler id="test" onRender={callback}>
                 <ErrorBoundary>
@@ -840,6 +901,8 @@ describe('Profiler', () => {
             expect(mountCall[2]).toBe(flagEnabled && __DEV__ ? 49 : 39);
             // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
             expect(mountCall[3]).toBe(22);
+            // start time
+            expect(mountCall[4]).toBe(5);
           });
         });
       });
@@ -848,6 +911,8 @@ describe('Profiler', () => {
     it('reflects the most recently rendered id value', () => {
       const callback = jest.fn();
 
+      advanceTimeBy(5); // 0 -> 5
+
       const renderer = ReactTestRenderer.create(
         <React.unstable_Profiler id="one" onRender={callback}>
           <AdvanceTime byAmount={2} />
@@ -855,6 +920,8 @@ describe('Profiler', () => {
       );
 
       expect(callback).toHaveBeenCalledTimes(1);
+
+      advanceTimeBy(20); // 7 -> 27
 
       renderer.update(
         <React.unstable_Profiler id="two" onRender={callback}>
@@ -870,11 +937,13 @@ describe('Profiler', () => {
       expect(mountCall[1]).toBe('mount');
       expect(mountCall[2]).toBe(2); // actual time
       expect(mountCall[3]).toBe(2); // base time
+      expect(mountCall[4]).toBe(5); // start time
 
       expect(updateCall[0]).toBe('two');
       expect(updateCall[1]).toBe('update');
       expect(updateCall[2]).toBe(1); // actual time
       expect(updateCall[3]).toBe(1); // base time
+      expect(updateCall[4]).toBe(27); // start time
     });
   });
 });

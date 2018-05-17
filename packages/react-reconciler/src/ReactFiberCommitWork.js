@@ -828,6 +828,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             current === null ? 'mount' : 'update',
             finishedWork.stateNode.duration,
             finishedWork.treeBaseTime,
+            finishedWork.stateNode.startTime,
           );
 
           // Reset actualTime after successful commit.

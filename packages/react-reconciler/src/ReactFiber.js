@@ -461,6 +461,7 @@ export function createFiberFromProfiler(
   fiber.type = REACT_PROFILER_TYPE;
   fiber.expirationTime = expirationTime;
   fiber.stateNode = {
+    elapsedPauseTimeAtStart: 0,
     duration: 0,
     startTime: 0,
   };
