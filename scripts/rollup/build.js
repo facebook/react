@@ -352,10 +352,7 @@ async function createBundle(bundle, bundleType) {
 
   const shouldBundleDependencies =
     bundleType === UMD_DEV || bundleType === UMD_PROD;
-  const peerGlobals = Modules.getPeerGlobals(
-    bundle.externals,
-    bundle.moduleType
-  );
+  const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
   if (!shouldBundleDependencies) {
     const deps = Modules.getDependencies(bundleType, bundle.entry);
