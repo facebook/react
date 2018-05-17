@@ -105,6 +105,7 @@ if (__DEV__) {
 
 // TODO: Make this configurable per resource
 const MAX_SIZE = 500;
+const PAGE_SIZE = 50;
 
 function createRecord<K, V>(key: K): EmptyRecord<K, V> {
   return {
@@ -154,18 +155,21 @@ export function createCache(invalidator: () => mixed): Cache {
       record = createRecord(key);
       map.set(key, record);
       if (recordCache.size >= MAX_SIZE) {
-        // The cache is already at maximum capacity. Remove the least recently
-        // used record.
+        // The cache is already at maximum capacity. Remove PAGE_SIZE least
+        // recently used records.
         // TODO: We assume the max capcity is greater than zero. Otherwise warn.
         const tail = recordCache.tail;
         if (tail !== null) {
-          map.delete(tail.key);
-          const newTail = tail.previous;
+          let newTail = tail;
+          for (let i = 0; i < PAGE_SIZE && newTail !== null; i++) {
+            recordCache.size -= 1;
+            map.delete(newTail.key);
+            newTail = newTail.previous;
+          }
           recordCache.tail = newTail;
           if (newTail !== null) {
             newTail.next = null;
           }
-          recordCache.size -= 1;
         }
       }
     } else {
