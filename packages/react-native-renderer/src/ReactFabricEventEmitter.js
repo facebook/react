@@ -18,13 +18,6 @@ import type {TopLevelType} from 'events/TopLevelEventTypes';
 
 export {getListener, registrationNameModules as registrationNames};
 
-/**
- * Publicly exposed method on module for native objc to invoke when a top
- * level event is extracted.
- * @param {rootNodeID} rootNodeID React root node ID that event occurred on.
- * @param {TopLevelType} topLevelType Top level type of event.
- * @param {object} nativeEventParam Object passed from native.
- */
 export function dispatchEvent(
   target: Object,
   topLevelType: TopLevelType,
