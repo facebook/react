@@ -12,7 +12,6 @@ import type {Fiber} from './ReactFiber';
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {StrictMode} from './ReactTypeOfMode';
-import {ClassComponent} from 'shared/ReactTypeOfWork';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'fbjs/lib/warning';
 
@@ -299,8 +298,8 @@ if (__DEV__) {
 
     if (
       typeof instance.getChildContext === 'function' ||
-      (fiber.tag === ClassComponent && fiber.type.contextTypes != null) ||
-      (fiber.tag === ClassComponent && fiber.type.childContextTypes != null)
+      fiber.type.contextTypes != null ||
+      fiber.type.childContextTypes != null
     ) {
       pendingLegacyContextWarning.push(fiber);
     }
@@ -319,8 +318,9 @@ if (__DEV__) {
   
       lowPriorityWarning(
         false,
-        'Below are the components that are using legacy context APIs, ' +
-          'which are subjected to change in the future. Please switch to the new ones: %s' +
+        'Below are the components that are using legacy context API, ' +
+          'which are subjected to be removed in the future. Please switch to the new ones: ' +
+          '\n\n%s' +
           '\n\nLearn more about this warning here:' +
           '', // redirection link goes here
         sortedNames
