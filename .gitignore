@@ -1,5 +1,6 @@
 .DS_STORE
 node_modules
+.flowconfig
 *~
 *.pyc
 .grunt
