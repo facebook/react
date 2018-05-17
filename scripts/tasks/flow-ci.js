@@ -7,25 +7,17 @@
 
 'use strict';
 
-require('../flow/createFlowConfigs');
-
-const spawn = require('child_process').spawn;
-
-const extension = process.platform === 'win32' ? '.cmd' : '';
-
-// This script forces a complete check.
-// Use it for the CI.
-
-spawn('../../../node_modules/.bin/flow' + extension, ['check', '.'], {
-  // Allow colors to pass through
-  stdio: 'inherit',
-  cwd: process.cwd() + '/scripts/flow/dom/',
-}).on('close', function(code) {
-  if (code !== 0) {
-    console.error('Flow failed');
-  } else {
-    console.log('Flow passed');
-  }
-
-  process.exit(code);
+process.on('unhandledRejection', err => {
+  throw err;
 });
+
+const runFlow = require('../flow/runFlow');
+const {typedRenderers} = require('../flow/typedRenderers');
+
+async function checkAll() {
+  for (let renderer of typedRenderers) {
+    await runFlow(renderer, ['check']);
+  }
+}
+
+checkAll();

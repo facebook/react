@@ -7,25 +7,26 @@
 
 'use strict';
 
-require('../flow/createFlowConfigs');
+process.on('unhandledRejection', err => {
+  throw err;
+});
 
-const spawn = require('child_process').spawn;
-
-const extension = process.platform === 'win32' ? '.cmd' : '';
+const runFlow = require('../flow/runFlow');
+const {typedRenderers} = require('../flow/typedRenderers');
 
 // This script is using `flow status` for a quick check with a server.
 // Use it for local development.
 
-spawn('../../../node_modules/.bin/flow' + extension, ['status', '.'], {
-  // Allow colors to pass through
-  stdio: 'inherit',
-  cwd: process.cwd() + '/scripts/flow/dom/',
-}).on('close', function(code) {
-  if (code !== 0) {
-    console.error('Flow failed');
-  } else {
-    console.log('Flow passed');
-  }
+const primaryRenderer = process.argv[2];
+if (typedRenderers.indexOf(primaryRenderer) === -1) {
+  console.error(
+    'You need to pass a primary renderer to yarn flow. For example:'
+  );
+  typedRenderers.forEach(renderer => {
+    console.log('  * yarn flow ' + renderer);
+  });
+  console.log();
+  process.exit(1);
+}
 
-  process.exit(code);
-});
+runFlow(primaryRenderer, ['status']);
