@@ -7,7 +7,8 @@
 
 'use strict';
 
-const path = require('path');
+require('../flow/createFlowConfigs');
+
 const spawn = require('child_process').spawn;
 
 const extension = process.platform === 'win32' ? '.cmd' : '';
@@ -15,9 +16,10 @@ const extension = process.platform === 'win32' ? '.cmd' : '';
 // This script forces a complete check.
 // Use it for the CI.
 
-spawn(path.join('node_modules', '.bin', 'flow' + extension), ['check', '.'], {
+spawn('../../../node_modules/.bin/flow' + extension, ['check', '.'], {
   // Allow colors to pass through
   stdio: 'inherit',
+  cwd: process.cwd() + '/scripts/flow/dom/',
 }).on('close', function(code) {
   if (code !== 0) {
     console.error('Flow failed');
