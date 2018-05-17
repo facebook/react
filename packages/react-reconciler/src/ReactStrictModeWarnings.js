@@ -13,6 +13,7 @@ import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {StrictMode} from './ReactTypeOfMode';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
+import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 type LIFECYCLE =
@@ -110,14 +111,19 @@ if (__DEV__) {
   const getStrictRoot = (fiber: Fiber): Fiber => {
     let maybeStrictRoot = null;
 
-    while (fiber !== null) {
-      if (fiber.mode & StrictMode) {
-        maybeStrictRoot = fiber;
+    let node = fiber;
+    while (node !== null) {
+      if (node.mode & StrictMode) {
+        maybeStrictRoot = node;
       }
-
-      fiber = fiber.return;
+      node = node.return;
     }
 
+    invariant(
+      maybeStrictRoot !== null,
+      'Expected to find a StrictMode component in a strict mode tree. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
     return maybeStrictRoot;
   };
 
