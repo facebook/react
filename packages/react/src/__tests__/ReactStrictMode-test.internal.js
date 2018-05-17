@@ -12,6 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactTestRenderer;
+let PropTypes;
 
 describe('ReactStrictMode', () => {
   describe('debugRenderPhaseSideEffects', () => {
@@ -803,6 +804,71 @@ describe('ReactStrictMode', () => {
 
       // Dedup
       renderer.update(<OuterComponent />);
+    });
+  });
+
+  describe('context legacy', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      React = require('react');
+      ReactTestRenderer = require('react-test-renderer');
+      PropTypes = require('prop-types');
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.warnAboutLegacyContextAPIs = true;
+    });
+
+    it('should warn if the legacy context APIs have been used in strict mode', () => {
+      class LegacyContextProvider extends React.Component {
+        getChildContext() {
+          return { color: 'purple' };
+        }
+
+        render() {
+          return (
+            <LegacyContextConsumer />
+          );
+        }
+      }
+
+      LegacyContextProvider.childContextTypes = {
+        color: PropTypes.string,
+      };
+
+      class LegacyContextConsumer extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      const {StrictMode} = React;
+
+      class Root extends React.Component {
+        render() {
+          return (
+            <StrictMode>
+              <LegacyContextProvider />
+            </StrictMode>
+          );
+        }
+      }
+
+      LegacyContextConsumer.contextTypes = {
+        color: PropTypes.string,
+      };
+
+      let rendered;
+      
+      expect(() => {
+        rendered = ReactTestRenderer.create(<Root />);
+      }).toLowPriorityWarnDev(
+        'Warning: Below are the components that are using legacy context APIs, ' +
+          'which are subjected to change in the future. Please switch to the new ones: ' +
+          'LegacyContextConsumer, LegacyContextProvider'
+      );
+          
+      // Dedupe
+      rendered = ReactTestRenderer.create(<Root />);
+      rendered.update(<Root />);
     });
   });
 });

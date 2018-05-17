@@ -680,6 +680,11 @@ export default function(
           workInProgress,
           instance,
         );
+
+        ReactStrictModeWarnings.recordLegacyContextWarning(
+          workInProgress,
+          instance,
+        );
       }
 
       if (warnAboutDeprecatedLifecycles) {

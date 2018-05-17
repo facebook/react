@@ -44,6 +44,7 @@ import {
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
+  warnAboutLegacyContextAPIs,
 } from 'shared/ReactFeatureFlags';
 import {createProfilerTimer} from './ReactProfilerTimer';
 import getComponentName from 'shared/getComponentName';
@@ -482,6 +483,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
       if (warnAboutDeprecatedLifecycles) {
         ReactStrictModeWarnings.flushPendingDeprecationWarnings();
+      }
+
+      if (warnAboutLegacyContextAPIs) {
+        ReactStrictModeWarnings.flushLegacyContextWarning();
       }
     }
     while (nextEffect !== null) {

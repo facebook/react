@@ -12,6 +12,7 @@ import type {Fiber} from './ReactFiber';
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {StrictMode} from './ReactTypeOfMode';
+import {ClassComponent} from 'shared/ReactTypeOfWork';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'fbjs/lib/warning';
 
@@ -28,6 +29,8 @@ const ReactStrictModeWarnings = {
   flushPendingUnsafeLifecycleWarnings(): void {},
   recordDeprecationWarnings(fiber: Fiber, instance: any): void {},
   recordUnsafeLifecycleWarnings(fiber: Fiber, instance: any): void {},
+  recordLegacyContextWarning(fiber: Fiber, instance: any): void {},
+  flushLegacyContextWarning(): void {},
 };
 
 if (__DEV__) {
@@ -41,11 +44,13 @@ if (__DEV__) {
   let pendingComponentWillReceivePropsWarnings: Array<Fiber> = [];
   let pendingComponentWillUpdateWarnings: Array<Fiber> = [];
   let pendingUnsafeLifecycleWarnings: FiberToLifecycleMap = new Map();
+  let pendingLegacyContextWarning: Array<Fiber> = [];
 
   // Tracks components we have already warned about.
   const didWarnAboutDeprecatedLifecycles = new Set();
   const didWarnAboutUnsafeLifecycles = new Set();
-
+  const didWarnAboutLegacyContext = new Set();
+  
   const setToSortedString = set => {
     const array = [];
     set.forEach(value => {
@@ -59,6 +64,7 @@ if (__DEV__) {
     pendingComponentWillReceivePropsWarnings = [];
     pendingComponentWillUpdateWarnings = [];
     pendingUnsafeLifecycleWarnings = new Map();
+    pendingLegacyContextWarning = [];
   };
 
   ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings = () => {
@@ -279,6 +285,46 @@ if (__DEV__) {
           fiber,
         );
       });
+    }
+  };
+
+  ReactStrictModeWarnings.recordLegacyContextWarning = (
+    fiber: Fiber,
+    instance: any,
+  ) => {
+    // Dedup strategy: Warn once per component.
+    if (didWarnAboutLegacyContext.has(fiber.type)) {
+      return;
+    }
+
+    if (
+      typeof instance.getChildContext === 'function' ||
+      (fiber.tag === ClassComponent && fiber.type.contextTypes != null) ||
+      (fiber.tag === ClassComponent && fiber.type.childContextTypes != null)
+    ) {
+      pendingLegacyContextWarning.push(fiber);
+    }
+  };
+
+  ReactStrictModeWarnings.flushLegacyContextWarning = () => {
+    if (pendingLegacyContextWarning.length > 0) {
+      const uniqueNames = new Set();
+  
+      pendingLegacyContextWarning.forEach((fiber: Fiber) => {
+        didWarnAboutLegacyContext.add(fiber.type);
+        uniqueNames.add(getComponentName(fiber) || 'Component');
+      });
+  
+      const sortedNames = setToSortedString(uniqueNames);
+  
+      lowPriorityWarning(
+        false,
+        'Below are the components that are using legacy context APIs, ' +
+          'which are subjected to change in the future. Please switch to the new ones: %s' +
+          '\n\nLearn more about this warning here:' +
+          '', // redirection link goes here
+        sortedNames
+      );
     }
   };
 }
