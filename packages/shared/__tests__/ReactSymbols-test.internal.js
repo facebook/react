@@ -11,9 +11,9 @@
 describe('ReactSymbols', () => {
   beforeEach(() => jest.resetModules());
 
-  const expectToBeUnique = keyValuePair => {
+  const expectToBeUnique = keyValuePairs => {
     const map = new Map();
-    keyValuePair.forEach(([key, value]) => {
+    keyValuePairs.forEach(([key, value]) => {
       if (map.has(value)) {
         throw Error(
           `${key} value ${value.toString()} is the same as ${map.get(value)}.`,
