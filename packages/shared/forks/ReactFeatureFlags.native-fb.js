@@ -19,6 +19,7 @@ export const {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
+  warnAboutLegacyContextAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
   fireGetDerivedStateFromPropsOnStateUpdates,

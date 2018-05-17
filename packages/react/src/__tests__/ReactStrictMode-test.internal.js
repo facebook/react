@@ -814,19 +814,17 @@ describe('ReactStrictMode', () => {
       ReactTestRenderer = require('react-test-renderer');
       PropTypes = require('prop-types');
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.warnAboutLegacyContextAPIs = true;
+      ReactFeatureFlags.warnAboutLegacyContextAPI = true;
     });
 
-    it('should warn if the legacy context APIs have been used in strict mode', () => {
+    it('should warn if the legacy context API have been used in strict mode', () => {
       class LegacyContextProvider extends React.Component {
         getChildContext() {
-          return { color: 'purple' };
+          return {color: 'purple'};
         }
 
         render() {
-          return (
-            <LegacyContextConsumer />
-          );
+          return <LegacyContextConsumer />;
         }
       }
 
@@ -857,7 +855,7 @@ describe('ReactStrictMode', () => {
       };
 
       let rendered;
-      
+
       expect(() => {
         rendered = ReactTestRenderer.create(<Root />);
       }).toLowPriorityWarnDev(
@@ -865,9 +863,9 @@ describe('ReactStrictMode', () => {
           'which are subjected to be removed in the future. Please switch to the new ones: ' +
           '\n\nLegacyContextConsumer, LegacyContextProvider' +
           '\n\nLearn more about this warning here:' +
-          ''
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
-          
+
       // Dedupe
       rendered = ReactTestRenderer.create(<Root />);
       rendered.update(<Root />);

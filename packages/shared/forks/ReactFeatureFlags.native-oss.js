@@ -22,6 +22,7 @@ export const enablePersistentReconciler = false;
 export const enableUserTimingAPI = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
+export const warnAboutLegacyContextAPI = false;
 export const enableProfilerTimer = false;
 export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 

@@ -18,6 +18,7 @@ export const {
   enableGetDerivedStateFromCatch,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
+  warnAboutLegacyContextAPI,
   enableProfilerTimer,
   fireGetDerivedStateFromPropsOnStateUpdates,
 } = require('ReactFeatureFlags');

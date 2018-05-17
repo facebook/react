@@ -49,7 +49,7 @@ if (__DEV__) {
   const didWarnAboutDeprecatedLifecycles = new Set();
   const didWarnAboutUnsafeLifecycles = new Set();
   const didWarnAboutLegacyContext = new Set();
-  
+
   const setToSortedString = set => {
     const array = [];
     set.forEach(value => {
@@ -308,22 +308,22 @@ if (__DEV__) {
   ReactStrictModeWarnings.flushLegacyContextWarning = () => {
     if (pendingLegacyContextWarning.length > 0) {
       const uniqueNames = new Set();
-  
+
       pendingLegacyContextWarning.forEach((fiber: Fiber) => {
         didWarnAboutLegacyContext.add(fiber.type);
         uniqueNames.add(getComponentName(fiber) || 'Component');
       });
-  
+
       const sortedNames = setToSortedString(uniqueNames);
-  
+
       lowPriorityWarning(
         false,
         'Below are the components that are using legacy context API, ' +
           'which are subjected to be removed in the future. Please switch to the new ones: ' +
           '\n\n%s' +
           '\n\nLearn more about this warning here:' +
-          '', // redirection link goes here
-        sortedNames
+          '\nhttps://fb.me/react-strict-mode-warnings',
+        sortedNames,
       );
     }
   };

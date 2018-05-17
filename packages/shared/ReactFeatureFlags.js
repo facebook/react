@@ -39,8 +39,8 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
 export const warnAboutDeprecatedLifecycles = false;
 
-// Warn about legacy context APIs
-export const warnAboutLegacyContextAPIs = false;
+// Warn about legacy context API
+export const warnAboutLegacyContextAPI = false;
 
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = false;
