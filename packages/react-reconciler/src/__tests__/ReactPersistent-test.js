@@ -12,21 +12,30 @@
 
 let React;
 let ReactNoopPersistent;
-let ReactPortal;
 
 describe('ReactPersistent', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableMutableReconciler = false;
-    ReactFeatureFlags.enablePersistentReconciler = true;
-    ReactFeatureFlags.enableNoopReconciler = false;
-
     React = require('react');
     ReactNoopPersistent = require('react-noop-renderer/persistent');
-    ReactPortal = require('shared/ReactPortal');
   });
+
+  // Inlined from shared folder so we can run this test on a bundle.
+  function createPortal(
+    children,
+    containerInfo,
+    implementation,
+    key
+  ) {
+    return {
+      $$typeof: Symbol.for('react.portal'),
+      key: key == null ? null : '' + key,
+      children,
+      containerInfo,
+      implementation,
+    };
+  }
 
   function render(element) {
     ReactNoopPersistent.render(element);
@@ -162,7 +171,7 @@ describe('ReactPersistent', () => {
     const emptyPortalChildSet = portalContainer.children;
     render(
       <Parent>
-        {ReactPortal.createPortal(<Child />, portalContainer, null)}
+        {createPortal(<Child />, portalContainer, null)}
       </Parent>,
     );
     ReactNoopPersistent.flush();
@@ -176,7 +185,7 @@ describe('ReactPersistent', () => {
 
     render(
       <Parent>
-        {ReactPortal.createPortal(
+        {createPortal(
           <Child>Hello {'World'}</Child>,
           portalContainer,
           null,

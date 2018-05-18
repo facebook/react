@@ -24,11 +24,6 @@ export const {
 
 // The rest of the flags are static for better dead code elimination.
 
-// The www bundles only use the mutating reconciler.
-export const enableMutatingReconciler = true;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = false;
-
 // In www, we have experimental support for gathering data
 // from User Timing API calls in production. By default, we
 // only emit performance.mark/measure calls in __DEV__. But if

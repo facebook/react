@@ -18,7 +18,6 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import ReactFiberReconciler from 'react-reconciler';
 import * as ReactPortal from 'shared/ReactPortal';
 import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
@@ -33,7 +32,7 @@ type Instance = {|
 |};
 type TextInstance = {|text: string, id: number|};
 
-function createReactNoop(useMutation: boolean) {
+function createReactNoop(reconciler: Function, useMutation: boolean) {
   const UPDATE_SIGNAL = {};
   let scheduledCallback = null;
 
@@ -285,7 +284,7 @@ function createReactNoop(useMutation: boolean) {
         },
       };
 
-  const NoopRenderer = ReactFiberReconciler(hostConfig);
+  const NoopRenderer = reconciler(hostConfig);
 
   const rootContainers = new Map();
   const roots = new Map();

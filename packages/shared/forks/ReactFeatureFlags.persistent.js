@@ -22,12 +22,6 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = false;
 export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
-// react-reconciler/persistent entry point
-// uses a persistent reconciler.
-export const enableMutatingReconciler = false;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = true;
-
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');

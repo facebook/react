@@ -21,9 +21,6 @@ import type {
 } from './ReactFiberHostConfig';
 
 import {
-  enableMutatingReconciler,
-  enablePersistentReconciler,
-  enableNoopReconciler,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -120,7 +117,7 @@ let updateHostContainer;
 let updateHostComponent;
 let updateHostText;
 if (supportsMutation) {
-  if (enableMutatingReconciler) {
+
     // Mutation mode
 
     updateHostContainer = function(workInProgress: Fiber) {
@@ -155,11 +152,7 @@ if (supportsMutation) {
         markUpdate(workInProgress);
       }
     };
-  } else {
-    invariant(false, 'Mutating reconciler is disabled.');
-  }
 } else if (supportsPersistence) {
-  if (enablePersistentReconciler) {
     // Persistent host tree mode
 
     // An unfortunate fork of appendAllChildren because we have two different parent types.
@@ -289,11 +282,7 @@ if (supportsMutation) {
         markUpdate(workInProgress);
       }
     };
-  } else {
-    invariant(false, 'Persistent reconciler is disabled.');
-  }
 } else {
-  if (enableNoopReconciler) {
     // No host operations
     updateHostContainer = function(workInProgress: Fiber) {
       // Noop
@@ -318,9 +307,6 @@ if (supportsMutation) {
     ) {
       // Noop
     };
-  } else {
-    invariant(false, 'Noop reconciler is disabled.');
-  }
 }
 
 function completeWork(

@@ -56,7 +56,7 @@ ${license}
 'use strict';
 
 ${
-      globalName === 'ReactNoopRenderer'
+      (globalName === 'ReactNoopRenderer' || globalName === 'ReactNoopRendererPersistent')
         ? // React Noop needs regenerator runtime because it uses
           // generators but GCC doesn't handle them in the output.
           // So we use Babel for them.
@@ -79,7 +79,7 @@ ${source}
 ${license}
  */
 ${
-      globalName === 'ReactNoopRenderer'
+      (globalName === 'ReactNoopRenderer' || globalName === 'ReactNoopRendererPersistent')
         ? // React Noop needs regenerator runtime because it uses
           // generators but GCC doesn't handle them in the output.
           // So we use Babel for them.

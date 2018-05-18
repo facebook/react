@@ -11,6 +11,12 @@ jest.mock('react-reconciler', () => {
     return require.requireActual('react-reconciler');
   };
 });
+jest.mock('react-reconciler/persistent', () => {
+  return config => {
+    jest.mock(shimHostConfigPath, () => config);
+    return require.requireActual('react-reconciler/persistent');
+  };
+});
 
 // But for inlined host configs (such as React DOM, Native, etc), we
 // mock their named entry points to establish a host config mapping.

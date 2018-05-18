@@ -20,9 +20,6 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
 import {
-  enableMutatingReconciler,
-  enableNoopReconciler,
-  enablePersistentReconciler,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -400,9 +397,9 @@ function commitUnmount(current: Fiber): void {
       // TODO: this is recursive.
       // We are also not using this parent because
       // the portal will get pushed immediately.
-      if (enableMutatingReconciler && supportsMutation) {
+      if (supportsMutation) {
         unmountHostComponents(current);
-      } else if (enablePersistentReconciler && supportsPersistence) {
+      } else if (supportsPersistence) {
         emptyPortalContainer(current);
       }
       return;
@@ -460,19 +457,22 @@ function detachFiber(current: Fiber) {
 }
 
 function emptyPortalContainer(current: Fiber) {
-  if (!supportsPersistence || supportsMutation) {
+  if (!supportsPersistence) {
     return;
   }
+
   const portal: {containerInfo: Container, pendingChildren: ChildSet} =
     current.stateNode;
   const {containerInfo} = portal;
   const emptyChildSet = createContainerChildSet(containerInfo);
   replaceContainerChildren(containerInfo, emptyChildSet);
 }
+
 function commitContainer(finishedWork: Fiber) {
-  if (!supportsPersistence || supportsMutation) {
+  if (!supportsPersistence) {
     return;
   }
+
   switch (finishedWork.tag) {
     case ClassComponent: {
       return;
@@ -570,7 +570,7 @@ function getHostSibling(fiber: Fiber): ?Instance {
 }
 
 function commitPlacement(finishedWork: Fiber): void {
-  if (enablePersistentReconciler || enableNoopReconciler) {
+  if (!supportsMutation) {
     return;
   }
 
@@ -735,19 +735,19 @@ function unmountHostComponents(current): void {
 }
 
 function commitDeletion(current: Fiber): void {
-  if (enablePersistentReconciler || enableNoopReconciler) {
-    // Detach refs and call componentWillUnmount() on the whole subtree.
-    commitNestedUnmounts(current);
-  } else {
+  if (supportsMutation) {
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
     unmountHostComponents(current);
+  } else {
+    // Detach refs and call componentWillUnmount() on the whole subtree.
+    commitNestedUnmounts(current);
   }
   detachFiber(current);
 }
 
 function commitWork(current: Fiber | null, finishedWork: Fiber): void {
-  if (enablePersistentReconciler || enableNoopReconciler) {
+  if (!supportsMutation) {
     commitContainer(finishedWork);
     return;
   }
@@ -831,7 +831,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
 }
 
 function commitResetTextContent(current: Fiber) {
-  if (enablePersistentReconciler || enableNoopReconciler) {
+  if (!supportsMutation) {
     return;
   }
   resetTextContent(current.stateNode);
@@ -846,6 +846,4 @@ export {
   commitLifeCycles,
   commitAttachRef,
   commitDetachRef,
-  emptyPortalContainer,
-  commitContainer,
 };
