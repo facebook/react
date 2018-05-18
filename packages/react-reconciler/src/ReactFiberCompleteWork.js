@@ -20,9 +20,7 @@ import type {
   HostContext,
 } from './ReactFiberHostConfig';
 
-import {
-  enableProfilerTimer,
-} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
   FunctionalComponent,
@@ -117,196 +115,195 @@ let updateHostContainer;
 let updateHostComponent;
 let updateHostText;
 if (supportsMutation) {
+  // Mutation mode
 
-    // Mutation mode
-
-    updateHostContainer = function(workInProgress: Fiber) {
-      // Noop
-    };
-    updateHostComponent = function(
-      current: Fiber,
-      workInProgress: Fiber,
-      updatePayload: null | UpdatePayload,
-      type: Type,
-      oldProps: Props,
-      newProps: Props,
-      rootContainerInstance: Container,
-      currentHostContext: HostContext,
-    ) {
-      // TODO: Type this specific to this type of component.
-      workInProgress.updateQueue = (updatePayload: any);
-      // If the update payload indicates that there is a change or if there
-      // is a new ref we mark this as an update. All the work is done in commitWork.
-      if (updatePayload) {
-        markUpdate(workInProgress);
-      }
-    };
-    updateHostText = function(
-      current: Fiber,
-      workInProgress: Fiber,
-      oldText: string,
-      newText: string,
-    ) {
-      // If the text differs, mark it as an update. All the work in done in commitWork.
-      if (oldText !== newText) {
-        markUpdate(workInProgress);
-      }
-    };
+  updateHostContainer = function(workInProgress: Fiber) {
+    // Noop
+  };
+  updateHostComponent = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    updatePayload: null | UpdatePayload,
+    type: Type,
+    oldProps: Props,
+    newProps: Props,
+    rootContainerInstance: Container,
+    currentHostContext: HostContext,
+  ) {
+    // TODO: Type this specific to this type of component.
+    workInProgress.updateQueue = (updatePayload: any);
+    // If the update payload indicates that there is a change or if there
+    // is a new ref we mark this as an update. All the work is done in commitWork.
+    if (updatePayload) {
+      markUpdate(workInProgress);
+    }
+  };
+  updateHostText = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    oldText: string,
+    newText: string,
+  ) {
+    // If the text differs, mark it as an update. All the work in done in commitWork.
+    if (oldText !== newText) {
+      markUpdate(workInProgress);
+    }
+  };
 } else if (supportsPersistence) {
-    // Persistent host tree mode
+  // Persistent host tree mode
 
-    // An unfortunate fork of appendAllChildren because we have two different parent types.
-    const appendAllChildrenToContainer = function(
-      containerChildSet: ChildSet,
-      workInProgress: Fiber,
-    ) {
-      // We only have the top Fiber that was created but we need recurse down its
-      // children to find all the terminal nodes.
-      let node = workInProgress.child;
-      while (node !== null) {
-        if (node.tag === HostComponent || node.tag === HostText) {
-          appendChildToContainerChildSet(containerChildSet, node.stateNode);
-        } else if (node.tag === HostPortal) {
-          // If we have a portal child, then we don't want to traverse
-          // down its children. Instead, we'll get insertions from each child in
-          // the portal directly.
-        } else if (node.child !== null) {
-          node.child.return = node;
-          node = node.child;
-          continue;
-        }
-        if (node === workInProgress) {
+  // An unfortunate fork of appendAllChildren because we have two different parent types.
+  const appendAllChildrenToContainer = function(
+    containerChildSet: ChildSet,
+    workInProgress: Fiber,
+  ) {
+    // We only have the top Fiber that was created but we need recurse down its
+    // children to find all the terminal nodes.
+    let node = workInProgress.child;
+    while (node !== null) {
+      if (node.tag === HostComponent || node.tag === HostText) {
+        appendChildToContainerChildSet(containerChildSet, node.stateNode);
+      } else if (node.tag === HostPortal) {
+        // If we have a portal child, then we don't want to traverse
+        // down its children. Instead, we'll get insertions from each child in
+        // the portal directly.
+      } else if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === workInProgress) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === workInProgress) {
           return;
         }
-        while (node.sibling === null) {
-          if (node.return === null || node.return === workInProgress) {
-            return;
-          }
-          node = node.return;
-        }
-        node.sibling.return = node.return;
-        node = node.sibling;
+        node = node.return;
       }
-    };
-    updateHostContainer = function(workInProgress: Fiber) {
-      const portalOrRoot: {
-        containerInfo: Container,
-        pendingChildren: ChildSet,
-      } =
-        workInProgress.stateNode;
-      const childrenUnchanged = workInProgress.firstEffect === null;
-      if (childrenUnchanged) {
-        // No changes, just reuse the existing instance.
-      } else {
-        const container = portalOrRoot.containerInfo;
-        let newChildSet = createContainerChildSet(container);
-        // If children might have changed, we have to add them all to the set.
-        appendAllChildrenToContainer(newChildSet, workInProgress);
-        portalOrRoot.pendingChildren = newChildSet;
-        // Schedule an update on the container to swap out the container.
-        markUpdate(workInProgress);
-        finalizeContainerChildren(container, newChildSet);
-      }
-    };
-    updateHostComponent = function(
-      current: Fiber,
-      workInProgress: Fiber,
-      updatePayload: null | UpdatePayload,
-      type: Type,
-      oldProps: Props,
-      newProps: Props,
-      rootContainerInstance: Container,
-      currentHostContext: HostContext,
-    ) {
-      // If there are no effects associated with this node, then none of our children had any updates.
-      // This guarantees that we can reuse all of them.
-      const childrenUnchanged = workInProgress.firstEffect === null;
-      const currentInstance = current.stateNode;
-      if (childrenUnchanged && updatePayload === null) {
-        // No changes, just reuse the existing instance.
-        // Note that this might release a previous clone.
-        workInProgress.stateNode = currentInstance;
-      } else {
-        let recyclableInstance = workInProgress.stateNode;
-        let newInstance = cloneInstance(
-          currentInstance,
-          updatePayload,
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+  };
+  updateHostContainer = function(workInProgress: Fiber) {
+    const portalOrRoot: {
+      containerInfo: Container,
+      pendingChildren: ChildSet,
+    } =
+      workInProgress.stateNode;
+    const childrenUnchanged = workInProgress.firstEffect === null;
+    if (childrenUnchanged) {
+      // No changes, just reuse the existing instance.
+    } else {
+      const container = portalOrRoot.containerInfo;
+      let newChildSet = createContainerChildSet(container);
+      // If children might have changed, we have to add them all to the set.
+      appendAllChildrenToContainer(newChildSet, workInProgress);
+      portalOrRoot.pendingChildren = newChildSet;
+      // Schedule an update on the container to swap out the container.
+      markUpdate(workInProgress);
+      finalizeContainerChildren(container, newChildSet);
+    }
+  };
+  updateHostComponent = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    updatePayload: null | UpdatePayload,
+    type: Type,
+    oldProps: Props,
+    newProps: Props,
+    rootContainerInstance: Container,
+    currentHostContext: HostContext,
+  ) {
+    // If there are no effects associated with this node, then none of our children had any updates.
+    // This guarantees that we can reuse all of them.
+    const childrenUnchanged = workInProgress.firstEffect === null;
+    const currentInstance = current.stateNode;
+    if (childrenUnchanged && updatePayload === null) {
+      // No changes, just reuse the existing instance.
+      // Note that this might release a previous clone.
+      workInProgress.stateNode = currentInstance;
+    } else {
+      let recyclableInstance = workInProgress.stateNode;
+      let newInstance = cloneInstance(
+        currentInstance,
+        updatePayload,
+        type,
+        oldProps,
+        newProps,
+        workInProgress,
+        childrenUnchanged,
+        recyclableInstance,
+      );
+      if (
+        finalizeInitialChildren(
+          newInstance,
           type,
-          oldProps,
           newProps,
-          workInProgress,
-          childrenUnchanged,
-          recyclableInstance,
-        );
-        if (
-          finalizeInitialChildren(
-            newInstance,
-            type,
-            newProps,
-            rootContainerInstance,
-            currentHostContext,
-          )
-        ) {
-          markUpdate(workInProgress);
-        }
-        workInProgress.stateNode = newInstance;
-        if (childrenUnchanged) {
-          // If there are no other effects in this tree, we need to flag this node as having one.
-          // Even though we're not going to use it for anything.
-          // Otherwise parents won't know that there are new children to propagate upwards.
-          markUpdate(workInProgress);
-        } else {
-          // If children might have changed, we have to add them all to the set.
-          appendAllChildren(newInstance, workInProgress);
-        }
-      }
-    };
-    updateHostText = function(
-      current: Fiber,
-      workInProgress: Fiber,
-      oldText: string,
-      newText: string,
-    ) {
-      if (oldText !== newText) {
-        // If the text content differs, we'll create a new text instance for it.
-        const rootContainerInstance = getRootHostContainer();
-        const currentHostContext = getHostContext();
-        workInProgress.stateNode = createTextInstance(
-          newText,
           rootContainerInstance,
           currentHostContext,
-          workInProgress,
-        );
-        // We'll have to mark it as having an effect, even though we won't use the effect for anything.
-        // This lets the parents know that at least one of their children has changed.
+        )
+      ) {
         markUpdate(workInProgress);
       }
-    };
+      workInProgress.stateNode = newInstance;
+      if (childrenUnchanged) {
+        // If there are no other effects in this tree, we need to flag this node as having one.
+        // Even though we're not going to use it for anything.
+        // Otherwise parents won't know that there are new children to propagate upwards.
+        markUpdate(workInProgress);
+      } else {
+        // If children might have changed, we have to add them all to the set.
+        appendAllChildren(newInstance, workInProgress);
+      }
+    }
+  };
+  updateHostText = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    oldText: string,
+    newText: string,
+  ) {
+    if (oldText !== newText) {
+      // If the text content differs, we'll create a new text instance for it.
+      const rootContainerInstance = getRootHostContainer();
+      const currentHostContext = getHostContext();
+      workInProgress.stateNode = createTextInstance(
+        newText,
+        rootContainerInstance,
+        currentHostContext,
+        workInProgress,
+      );
+      // We'll have to mark it as having an effect, even though we won't use the effect for anything.
+      // This lets the parents know that at least one of their children has changed.
+      markUpdate(workInProgress);
+    }
+  };
 } else {
-    // No host operations
-    updateHostContainer = function(workInProgress: Fiber) {
-      // Noop
-    };
-    updateHostComponent = function(
-      current: Fiber,
-      workInProgress: Fiber,
-      updatePayload: null | UpdatePayload,
-      type: Type,
-      oldProps: Props,
-      newProps: Props,
-      rootContainerInstance: Container,
-      currentHostContext: HostContext,
-    ) {
-      // Noop
-    };
-    updateHostText = function(
-      current: Fiber,
-      workInProgress: Fiber,
-      oldText: string,
-      newText: string,
-    ) {
-      // Noop
-    };
+  // No host operations
+  updateHostContainer = function(workInProgress: Fiber) {
+    // Noop
+  };
+  updateHostComponent = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    updatePayload: null | UpdatePayload,
+    type: Type,
+    oldProps: Props,
+    newProps: Props,
+    rootContainerInstance: Container,
+    currentHostContext: HostContext,
+  ) {
+    // Noop
+  };
+  updateHostText = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    oldText: string,
+    newText: string,
+  ) {
+    // Noop
+  };
 }
 
 function completeWork(

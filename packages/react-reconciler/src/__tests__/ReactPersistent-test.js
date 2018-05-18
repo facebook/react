@@ -22,12 +22,7 @@ describe('ReactPersistent', () => {
   });
 
   // Inlined from shared folder so we can run this test on a bundle.
-  function createPortal(
-    children,
-    containerInfo,
-    implementation,
-    key
-  ) {
+  function createPortal(children, containerInfo, implementation, key) {
     return {
       $$typeof: Symbol.for('react.portal'),
       key: key == null ? null : '' + key,
@@ -169,11 +164,7 @@ describe('ReactPersistent', () => {
     }
     const portalContainer = {rootID: 'persistent-portal-test', children: []};
     const emptyPortalChildSet = portalContainer.children;
-    render(
-      <Parent>
-        {createPortal(<Child />, portalContainer, null)}
-      </Parent>,
-    );
+    render(<Parent>{createPortal(<Child />, portalContainer, null)}</Parent>);
     ReactNoopPersistent.flush();
 
     expect(emptyPortalChildSet).toEqual([]);
@@ -185,11 +176,7 @@ describe('ReactPersistent', () => {
 
     render(
       <Parent>
-        {createPortal(
-          <Child>Hello {'World'}</Child>,
-          portalContainer,
-          null,
-        )}
+        {createPortal(<Child>Hello {'World'}</Child>, portalContainer, null)}
       </Parent>,
     );
     ReactNoopPersistent.flush();
