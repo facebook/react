@@ -843,9 +843,11 @@ describe('ReactStrictMode', () => {
       class Root extends React.Component {
         render() {
           return (
-            <StrictMode>
-              <LegacyContextProvider />
-            </StrictMode>
+            <div>
+              <StrictMode>
+                <LegacyContextProvider />
+              </StrictMode>
+            </div>
           );
         }
       }
@@ -859,10 +861,12 @@ describe('ReactStrictMode', () => {
       expect(() => {
         rendered = ReactTestRenderer.create(<Root />);
       }).toWarnDev(
-        'Warning: Legacy context API has been detected within these components: ' + 
-        'LegacyContextConsumer, LegacyContextProvider' +
-        '\n\nLearn more about this warning here:' +
-        '\nhttps://fb.me/react-strict-mode-warnings'
+        'Warning: Legacy context API has been detected within a strict-mode tree: ' +
+          '\n    in div (at **)' +
+          '\n    in Root (at **)' +
+          '\n\nPlease update the following components: LegacyContextConsumer, LegacyContextProvider' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-strict-mode-warnings',
       );
 
       // Dedupe
