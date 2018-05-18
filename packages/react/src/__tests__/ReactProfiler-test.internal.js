@@ -177,9 +177,11 @@ describe('Profiler', () => {
         </div>,
       );
 
-      // Should only be called twice, for normal expiration time purposes.
+      // Should only be called three times:
+      // Twice for normal expiration time purposes,
+      // And once to capture the commit time.
       // No additional calls from ProfilerTimer are expected.
-      expect(mockNow).toHaveBeenCalledTimes(2);
+      expect(mockNow).toHaveBeenCalledTimes(3);
     });
 
     it('logs render times for both mount and update', () => {
@@ -197,12 +199,13 @@ describe('Profiler', () => {
 
       let [call] = callback.mock.calls;
 
-      expect(call).toHaveLength(5);
+      expect(call).toHaveLength(6);
       expect(call[0]).toBe('test');
       expect(call[1]).toBe('mount');
       expect(call[2]).toBe(10); // actual time
       expect(call[3]).toBe(10); // base time
       expect(call[4]).toBe(5); // start time
+      expect(call[5]).toBe(15); // commit time
 
       callback.mockReset();
 
@@ -218,12 +221,13 @@ describe('Profiler', () => {
 
       [call] = callback.mock.calls;
 
-      expect(call).toHaveLength(5);
+      expect(call).toHaveLength(6);
       expect(call[0]).toBe('test');
       expect(call[1]).toBe('update');
       expect(call[2]).toBe(10); // actual time
       expect(call[3]).toBe(10); // base time
       expect(call[4]).toBe(35); // start time
+      expect(call[5]).toBe(45); // commit time
     });
 
     it('includes render times of nested Profilers in their parent times', () => {
@@ -254,9 +258,11 @@ describe('Profiler', () => {
       expect(childCall[2]).toBe(20); // actual time
       expect(childCall[3]).toBe(20); // base time
       expect(childCall[4]).toBe(15); // start time
+      expect(childCall[5]).toBe(35); // commit time
       expect(parentCall[2]).toBe(30); // actual time
       expect(parentCall[3]).toBe(30); // base time
       expect(parentCall[4]).toBe(5); // start time
+      expect(parentCall[5]).toBe(35); // commit time
     });
 
     it('tracks sibling Profilers separately', () => {
@@ -285,13 +291,17 @@ describe('Profiler', () => {
       expect(firstCall[2]).toBe(20); // actual time
       expect(firstCall[3]).toBe(20); // base time
       expect(firstCall[4]).toBe(5); // start time
+      expect(firstCall[5]).toBe(30); // commit time
       expect(secondCall[2]).toBe(5); // actual time
       expect(secondCall[3]).toBe(5); // base time
       expect(secondCall[4]).toBe(25); // start time
+      expect(secondCall[5]).toBe(30); // commit time
     });
 
     it('does not include time spent outside of profile root', () => {
       const callback = jest.fn();
+
+      advanceTimeBy(5); // 0 -> 5
 
       ReactTestRenderer.create(
         <React.Fragment>
@@ -309,7 +319,8 @@ describe('Profiler', () => {
       expect(call[0]).toBe('test');
       expect(call[2]).toBe(5); // actual time
       expect(call[3]).toBe(5); // base time
-      expect(call[4]).toBe(20); // start time
+      expect(call[4]).toBe(25); // start time
+      expect(call[5]).toBe(50); // commit time
     });
 
     it('is not called when blocked by sCU false', () => {
@@ -395,11 +406,13 @@ describe('Profiler', () => {
       expect(mountCall[2]).toBe(20); // actual time
       expect(mountCall[3]).toBe(20); // base time
       expect(mountCall[4]).toBe(5); // start time
+      expect(mountCall[5]).toBe(25); // commit time
 
       expect(updateCall[1]).toBe('update');
       expect(updateCall[2]).toBe(10); // actual time
       expect(updateCall[3]).toBe(20); // base time
       expect(updateCall[4]).toBe(55); // start time
+      expect(updateCall[5]).toBe(65); // commit time
     });
 
     it('includes time spent in render phase lifecycles', () => {
@@ -445,11 +458,13 @@ describe('Profiler', () => {
       expect(mountCall[2]).toBe(8); // actual time
       expect(mountCall[3]).toBe(8); // base time
       expect(mountCall[4]).toBe(5); // start time
+      expect(mountCall[5]).toBe(13); // commit time
 
       expect(updateCall[1]).toBe('update');
       expect(updateCall[2]).toBe(15); // actual time
       expect(updateCall[3]).toBe(15); // base time
       expect(updateCall[4]).toBe(28); // start time
+      expect(updateCall[5]).toBe(43); // commit time
     });
 
     describe('with regard to interruptions', () => {
@@ -482,9 +497,11 @@ describe('Profiler', () => {
 
         // Verify that logged times include both durations above.
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(callback.mock.calls[0][2]).toBe(5); // actual time
-        expect(callback.mock.calls[0][3]).toBe(5); // base time
-        expect(callback.mock.calls[0][4]).toBe(5); // start time
+        const [call] = callback.mock.calls;
+        expect(call[2]).toBe(5); // actual time
+        expect(call[3]).toBe(5); // base time
+        expect(call[4]).toBe(5); // start time
+        expect(call[5]).toBe(10); // commit time
       });
 
       it('should not include time between frames', () => {
@@ -531,10 +548,12 @@ describe('Profiler', () => {
         expect(innerCall[2]).toBe(17); // actual time
         expect(innerCall[3]).toBe(17); // base time
         expect(innerCall[4]).toBe(70); // start time
+        expect(innerCall[5]).toBe(87); // commit time
         expect(outerCall[0]).toBe('outer');
         expect(outerCall[2]).toBe(32); // actual time
         expect(outerCall[3]).toBe(32); // base time
         expect(outerCall[4]).toBe(5); // start time
+        expect(outerCall[5]).toBe(87); // commit time
       });
 
       it('should report the expected times when a high-priority update replaces an in-progress initial render', () => {
@@ -582,6 +601,7 @@ describe('Profiler', () => {
         expect(call[2]).toBe(5); // actual time
         expect(call[3]).toBe(5); // base time
         expect(call[4]).toBe(115); // start time
+        expect(call[5]).toBe(120); // commit time
 
         callback.mockReset();
 
@@ -617,6 +637,7 @@ describe('Profiler', () => {
         expect(call[2]).toBe(21); // actual time
         expect(call[3]).toBe(21); // base time
         expect(call[4]).toBe(5); // start time
+        expect(call[5]).toBe(26); // commit time
 
         callback.mockReset();
 
@@ -667,6 +688,7 @@ describe('Profiler', () => {
         expect(call[2]).toBe(19); // actual time
         expect(call[3]).toBe(11); // base time
         expect(call[4]).toBe(264); // start time
+        expect(call[5]).toBe(275); // commit time
 
         // Verify no more unexpected callbacks from low priority work
         expect(renderer.unstable_flushAll()).toEqual([]);
@@ -727,6 +749,7 @@ describe('Profiler', () => {
         expect(call[2]).toBe(14); // actual time
         expect(call[3]).toBe(14); // base time
         expect(call[4]).toBe(5); // start time
+        expect(call[5]).toBe(19); // commit time
 
         callback.mockClear();
 
@@ -757,6 +780,7 @@ describe('Profiler', () => {
         expect(call[2]).toBe(47); // actual time
         expect(call[3]).toBe(42); // base time
         expect(call[4]).toBe(229); // start time
+        expect(call[5]).toBe(266); // commit time
 
         callback.mockClear();
 
@@ -778,6 +802,7 @@ describe('Profiler', () => {
         expect(call[2]).toBe(14); // actual time
         expect(call[3]).toBe(51); // base time
         expect(call[4]).toBe(366); // start time
+        expect(call[5]).toBe(380); // commit time
       });
 
       [true, false].forEach(flagEnabled => {
@@ -842,6 +867,8 @@ describe('Profiler', () => {
             expect(mountCall[3]).toBe(2);
             // start time
             expect(mountCall[4]).toBe(5);
+            // commit time
+            expect(mountCall[5]).toBe(flagEnabled && __DEV__ ? 32 : 22);
 
             // The update includes the ErrorBoundary and its fallback child
             expect(updateCall[1]).toBe('update');
@@ -851,6 +878,8 @@ describe('Profiler', () => {
             expect(updateCall[3]).toBe(22);
             // start time
             expect(updateCall[4]).toBe(flagEnabled && __DEV__ ? 32 : 22);
+            // commit time
+            expect(updateCall[5]).toBe(flagEnabled && __DEV__ ? 54 : 44);
           });
 
           it('should accumulate actual time after an error handled by getDerivedStateFromCatch()', () => {
@@ -903,6 +932,8 @@ describe('Profiler', () => {
             expect(mountCall[3]).toBe(22);
             // start time
             expect(mountCall[4]).toBe(5);
+            // commit time
+            expect(mountCall[5]).toBe(flagEnabled && __DEV__ ? 54 : 44);
           });
         });
       });

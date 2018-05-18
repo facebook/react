@@ -12,6 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
+import type {ProfilerTimer} from './ReactProfilerTimer';
 
 import {
   enableMutatingReconciler,
@@ -106,8 +107,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ) => ExpirationTime,
   markLegacyErrorBoundaryAsFailed: (instance: mixed) => void,
   recalculateCurrentTime: () => ExpirationTime,
+  profilerTimer: ProfilerTimer,
 ) {
   const {getPublicInstance, mutation, persistence} = config;
+  const {getCommitTime} = profilerTimer;
 
   const callComponentWillUnmountWithTimer = function(current, instance) {
     startPhaseTimer(current, 'componentWillUnmount');
@@ -829,6 +832,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             finishedWork.stateNode.duration,
             finishedWork.treeBaseTime,
             finishedWork.stateNode.startTime,
+            getCommitTime(),
           );
 
           // Reset actualTime after successful commit.

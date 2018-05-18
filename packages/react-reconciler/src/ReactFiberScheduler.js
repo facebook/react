@@ -248,11 +248,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     computeExpirationForFiber,
     markLegacyErrorBoundaryAsFailed,
     recalculateCurrentTime,
+    profilerTimer,
   );
 
   const {
     checkActualRenderTimeStackEmpty,
     pauseActualRenderTimerIfRunning,
+    recordCommitTime,
     recordElapsedBaseRenderTimeIfRunning,
     resetActualRenderTimer,
     resumeActualRenderTimerIfPaused,
@@ -418,6 +420,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         if (current !== null) {
           commitDetachRef(current);
         }
+      }
+
+      if (enableProfilerTimer) {
+        recordCommitTime();
       }
 
       // The following switch statement is only concerned about placement,

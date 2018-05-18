@@ -21,6 +21,8 @@ import warning from 'fbjs/lib/warning';
  */
 
 export type ProfilerTimer = {
+  getCommitTime(): number,
+  recordCommitTime(): void,
   checkActualRenderTimeStackEmpty(): void,
   markActualRenderTimeStarted(fiber: Fiber): void,
   pauseActualRenderTimerIfRunning(): void,
@@ -37,6 +39,16 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
 
   if (__DEV__) {
     fiberStack = [];
+  }
+
+  let commitTime: number = 0;
+
+  function getCommitTime(): number {
+    return commitTime;
+  }
+
+  function recordCommitTime(): void {
+    commitTime = now();
   }
 
   let timerPausedAt: number = 0;
@@ -123,6 +135,8 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
 
   if (enableProfilerTimer) {
     return {
+      getCommitTime,
+      recordCommitTime,
       checkActualRenderTimeStackEmpty,
       markActualRenderTimeStarted,
       pauseActualRenderTimerIfRunning,
@@ -135,6 +149,10 @@ export function createProfilerTimer(now: () => number): ProfilerTimer {
     };
   } else {
     return {
+      getCommitTime(): number {
+        return 0;
+      },
+      recordCommitTime(): void {},
       checkActualRenderTimeStackEmpty(): void {},
       markActualRenderTimeStarted(fiber: Fiber): void {},
       pauseActualRenderTimerIfRunning(): void {},
