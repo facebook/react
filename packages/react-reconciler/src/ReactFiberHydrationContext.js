@@ -52,7 +52,7 @@ import {
     return true;
   }
 
-  function deleteHydratableInstance(returnFiber: Fiber, instance: any /* TODO !!!!!!!!!!!! Instance | TextInstance*/) {
+  function deleteHydratableInstance(returnFiber: Fiber, instance: Instance | TextInstance) {
     if (__DEV__) {
       switch (returnFiber.tag) {
         case HostRoot:
@@ -185,11 +185,12 @@ import {
       hydrationParentFiber = fiber;
       return;
     }
+    const firstAttemptedInstance = nextInstance;
     if (!tryHydrate(fiber, nextInstance)) {
       // If we can't hydrate this instance let's try the next one.
       // We use this as a heuristic. It's based on intuition and not data so it
       // might be flawed or unnecessary.
-      nextInstance = getNextHydratableSibling(nextInstance);
+      nextInstance = getNextHydratableSibling(firstAttemptedInstance);
       if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
         // Nothing to hydrate. Make it an insertion.
         insertNonHydratedInstance((hydrationParentFiber: any), fiber);
@@ -203,7 +204,7 @@ import {
       // fiber associated with it.
       deleteHydratableInstance(
         (hydrationParentFiber: any),
-        nextHydratableInstance,
+        firstAttemptedInstance,
       );
     }
     hydrationParentFiber = fiber;
