@@ -18,7 +18,7 @@ describe('ReactScheduler', () => {
 
   function drainPostMessageQueue() {
     if (postMessageCallback) {
-      while(postMessageEvents.length){
+      while (postMessageEvents.length) {
         postMessageCallback(postMessageEvents.shift());
       }
     }
@@ -104,15 +104,17 @@ describe('ReactScheduler', () => {
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
         jest.runAllTimers();
-        // waits while second callback is passed
+        // this should schedule work *after* the requestAnimationFrame but before the message handler
         scheduleWork(callbackB);
         expect(callbackLog).toEqual([]);
-        // after a delay, calls as many callbacks as it has time for
+        // now it should drain the message queue and do all scheduled work
         drainPostMessageQueue();
         expect(callbackLog).toEqual(['A', 'B']);
 
+        // advances timers, now with an empty queue of work (to ensure they don't deadlock)
         advanceAll();
 
+        // see if more work can be done now.
         scheduleWork(callbackC);
         expect(callbackLog).toEqual(['A', 'B']);
         advanceAll();
