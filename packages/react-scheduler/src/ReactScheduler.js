@@ -173,7 +173,7 @@ if (!ExecutionEnvironment.canUseDOM) {
         // it has timed out!
         // call it
         const callback = currentCallbackConfig.scheduledCallback;
-        safelyCallScheduledCallback(callback, timeoutTime);
+        safelyCallScheduledCallback(callback, currentCallbackConfig.callbackId);
       } else {
         if (
           timeoutTime !== -1 &&
