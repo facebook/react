@@ -422,10 +422,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         }
       }
 
-      if (enableProfilerTimer) {
-        recordCommitTime();
-      }
-
       // The following switch statement is only concerned about placement,
       // updates, and deletions. To avoid needing to add a case for every
       // possible bitmap value, we remove the secondary effects from the
@@ -625,6 +621,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
     }
     stopCommitSnapshotEffectsTimer();
+
+    if (enableProfilerTimer) {
+      recordCommitTime();
+    }
 
     // Commit all the side-effects within a tree. We'll do this in two passes.
     // The first pass performs all the host insertions, updates, deletions and
