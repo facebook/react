@@ -154,234 +154,238 @@ export * from 'shared/HostConfigWithNoMutation';
 export * from 'shared/HostConfigWithNoHydration';
 
 export function appendInitialChild(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-  ): void {
-    appendChildNode(parentInstance.node, child.node);
-  }
+  parentInstance: Instance,
+  child: Instance | TextInstance,
+): void {
+  appendChildNode(parentInstance.node, child.node);
+}
 
-  export function createInstance(
-    type: string,
-    props: Props,
-    rootContainerInstance: Container,
-    hostContext: HostContext,
-    internalInstanceHandle: Object,
-  ): Instance {
-    const tag = nextReactTag;
-    nextReactTag += 2;
+export function createInstance(
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+  internalInstanceHandle: Object,
+): Instance {
+  const tag = nextReactTag;
+  nextReactTag += 2;
 
-    const viewConfig = ReactNativeViewConfigRegistry.get(type);
+  const viewConfig = ReactNativeViewConfigRegistry.get(type);
 
-    if (__DEV__) {
-      for (const key in viewConfig.validAttributes) {
-        if (props.hasOwnProperty(key)) {
-          deepFreezeAndThrowOnMutationInDev(props[key]);
-        }
+  if (__DEV__) {
+    for (const key in viewConfig.validAttributes) {
+      if (props.hasOwnProperty(key)) {
+        deepFreezeAndThrowOnMutationInDev(props[key]);
       }
     }
-
-    invariant(
-      type !== 'RCTView' || !hostContext.isInAParentText,
-      'Nesting of <View> within <Text> is not currently supported.',
-    );
-
-    const updatePayload = ReactNativeAttributePayload.create(
-      props,
-      viewConfig.validAttributes,
-    );
-
-    const node = createNode(
-      tag, // reactTag
-      viewConfig.uiViewClassName, // viewName
-      rootContainerInstance, // rootTag
-      updatePayload, // props
-      internalInstanceHandle, // internalInstanceHandle
-    );
-
-    const component = new ReactFabricHostComponent(tag, viewConfig, props);
-
-    return {
-      node: node,
-      canonical: component,
-    };
   }
 
-  export function createTextInstance(
-    text: string,
-    rootContainerInstance: Container,
-    hostContext: HostContext,
-    internalInstanceHandle: Object,
-  ): TextInstance {
-    invariant(
-      hostContext.isInAParentText,
-      'Text strings must be rendered within a <Text> component.',
-    );
+  invariant(
+    type !== 'RCTView' || !hostContext.isInAParentText,
+    'Nesting of <View> within <Text> is not currently supported.',
+  );
 
-    const tag = nextReactTag;
-    nextReactTag += 2;
+  const updatePayload = ReactNativeAttributePayload.create(
+    props,
+    viewConfig.validAttributes,
+  );
 
-    const node = createNode(
-      tag, // reactTag
-      'RCTRawText', // viewName
-      rootContainerInstance, // rootTag
-      {text: text}, // props
-      internalInstanceHandle, // instance handle
-    );
+  const node = createNode(
+    tag, // reactTag
+    viewConfig.uiViewClassName, // viewName
+    rootContainerInstance, // rootTag
+    updatePayload, // props
+    internalInstanceHandle, // internalInstanceHandle
+  );
 
-    return {
-      node: node,
-    };
+  const component = new ReactFabricHostComponent(tag, viewConfig, props);
+
+  return {
+    node: node,
+    canonical: component,
+  };
+}
+
+export function createTextInstance(
+  text: string,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+  internalInstanceHandle: Object,
+): TextInstance {
+  invariant(
+    hostContext.isInAParentText,
+    'Text strings must be rendered within a <Text> component.',
+  );
+
+  const tag = nextReactTag;
+  nextReactTag += 2;
+
+  const node = createNode(
+    tag, // reactTag
+    'RCTRawText', // viewName
+    rootContainerInstance, // rootTag
+    {text: text}, // props
+    internalInstanceHandle, // instance handle
+  );
+
+  return {
+    node: node,
+  };
+}
+
+export function finalizeInitialChildren(
+  parentInstance: Instance,
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+): boolean {
+  return false;
+}
+
+export function getRootHostContext(
+  rootContainerInstance: Container,
+): HostContext {
+  return {isInAParentText: false};
+}
+
+export function getChildHostContext(
+  parentHostContext: HostContext,
+  type: string,
+  rootContainerInstance: Container,
+): HostContext {
+  const prevIsInAParentText = parentHostContext.isInAParentText;
+  const isInAParentText =
+    type === 'AndroidTextInput' || // Android
+    type === 'RCTMultilineTextInputView' || // iOS
+    type === 'RCTSinglelineTextInputView' || // iOS
+    type === 'RCTText' ||
+    type === 'RCTVirtualText';
+
+  if (prevIsInAParentText !== isInAParentText) {
+    return {isInAParentText};
+  } else {
+    return parentHostContext;
   }
+}
 
-  export function finalizeInitialChildren(
-    parentInstance: Instance,
-    type: string,
-    props: Props,
-    rootContainerInstance: Container,
-    hostContext: HostContext,
-  ): boolean {
-    return false;
-  }
+export function getPublicInstance(instance: Instance): * {
+  return instance.canonical;
+}
 
-  export function getRootHostContext(rootContainerInstance: Container): HostContext {
-    return {isInAParentText: false};
-  }
+export function prepareForCommit(containerInfo: Container): void {
+  // Noop
+}
 
-  export function getChildHostContext(
-    parentHostContext: HostContext,
-    type: string,
-    rootContainerInstance: Container,
-  ): HostContext {
-    const prevIsInAParentText = parentHostContext.isInAParentText;
-    const isInAParentText =
-      type === 'AndroidTextInput' || // Android
-      type === 'RCTMultilineTextInputView' || // iOS
-      type === 'RCTSinglelineTextInputView' || // iOS
-      type === 'RCTText' ||
-      type === 'RCTVirtualText';
+export function prepareUpdate(
+  instance: Instance,
+  type: string,
+  oldProps: Props,
+  newProps: Props,
+  rootContainerInstance: Container,
+  hostContext: HostContext,
+): null | Object {
+  const viewConfig = instance.canonical.viewConfig;
+  const updatePayload = ReactNativeAttributePayload.diff(
+    oldProps,
+    newProps,
+    viewConfig.validAttributes,
+  );
+  // TODO: If the event handlers have changed, we need to update the current props
+  // in the commit phase but there is no host config hook to do it yet.
+  return updatePayload;
+}
 
-    if (prevIsInAParentText !== isInAParentText) {
-      return {isInAParentText};
+export function resetAfterCommit(containerInfo: Container): void {
+  // Noop
+}
+
+export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
+  return false;
+}
+
+export function shouldSetTextContent(type: string, props: Props): boolean {
+  // TODO (bvaughn) Revisit this decision.
+  // Always returning false simplifies the createInstance() implementation,
+  // But creates an additional child Fiber for raw text children.
+  // No additional native views are created though.
+  // It's not clear to me which is better so I'm deferring for now.
+  // More context @ github.com/facebook/react/pull/8560#discussion_r92111303
+  return false;
+}
+
+// The Fabric renderer is secondary to the existing React Native renderer.
+export const isPrimaryRenderer = false;
+export const now = ReactNativeFrameScheduling.now;
+export const scheduleDeferredCallback =
+  ReactNativeFrameScheduling.scheduleDeferredCallback;
+export const cancelDeferredCallback =
+  ReactNativeFrameScheduling.cancelDeferredCallback;
+
+// -------------------
+//     Persistence
+// -------------------
+
+export const supportsPersistence = true;
+
+export function cloneInstance(
+  instance: Instance,
+  updatePayload: null | Object,
+  type: string,
+  oldProps: Props,
+  newProps: Props,
+  internalInstanceHandle: Object,
+  keepChildren: boolean,
+  recyclableInstance: null | Instance,
+): Instance {
+  const node = instance.node;
+  let clone;
+  if (keepChildren) {
+    if (updatePayload !== null) {
+      clone = cloneNodeWithNewProps(
+        node,
+        updatePayload,
+        internalInstanceHandle,
+      );
     } else {
-      return parentHostContext;
+      clone = cloneNode(node, internalInstanceHandle);
+    }
+  } else {
+    if (updatePayload !== null) {
+      clone = cloneNodeWithNewChildrenAndProps(
+        node,
+        updatePayload,
+        internalInstanceHandle,
+      );
+    } else {
+      clone = cloneNodeWithNewChildren(node, internalInstanceHandle);
     }
   }
+  return {
+    node: clone,
+    canonical: instance.canonical,
+  };
+}
 
-  export function getPublicInstance(instance: Instance): * {
-    return instance.canonical;
-  }
+export function createContainerChildSet(container: Container): ChildSet {
+  return createChildNodeSet(container);
+}
 
-  export function prepareForCommit(containerInfo: Container): void {
-    // Noop
-  }
+export function appendChildToContainerChildSet(
+  childSet: ChildSet,
+  child: Instance | TextInstance,
+): void {
+  appendChildNodeToSet(childSet, child.node);
+}
 
-  export function prepareUpdate(
-    instance: Instance,
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-    rootContainerInstance: Container,
-    hostContext: HostContext,
-  ): null | Object {
-    const viewConfig = instance.canonical.viewConfig;
-    const updatePayload = ReactNativeAttributePayload.diff(
-      oldProps,
-      newProps,
-      viewConfig.validAttributes,
-    );
-    // TODO: If the event handlers have changed, we need to update the current props
-    // in the commit phase but there is no host config hook to do it yet.
-    return updatePayload;
-  }
+export function finalizeContainerChildren(
+  container: Container,
+  newChildren: ChildSet,
+): void {
+  completeRoot(container, newChildren);
+}
 
-  export function resetAfterCommit(containerInfo: Container): void {
-    // Noop
-  }
-
-  export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-    return false;
-  }
-
-  export function shouldSetTextContent(type: string, props: Props): boolean {
-    // TODO (bvaughn) Revisit this decision.
-    // Always returning false simplifies the createInstance() implementation,
-    // But creates an additional child Fiber for raw text children.
-    // No additional native views are created though.
-    // It's not clear to me which is better so I'm deferring for now.
-    // More context @ github.com/facebook/react/pull/8560#discussion_r92111303
-    return false;
-  }
-
-  // The Fabric renderer is secondary to the existing React Native renderer.
-  export const isPrimaryRenderer = false;
-  export const now = ReactNativeFrameScheduling.now;
-  export const scheduleDeferredCallback = ReactNativeFrameScheduling.scheduleDeferredCallback;
-  export const cancelDeferredCallback = ReactNativeFrameScheduling.cancelDeferredCallback;
-
-  // -------------------
-  //     Persistence
-  // -------------------
-
-  export const supportsPersistence = true;
-
-    export function cloneInstance(
-      instance: Instance,
-      updatePayload: null | Object,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-      internalInstanceHandle: Object,
-      keepChildren: boolean,
-      recyclableInstance: null | Instance,
-    ): Instance {
-      const node = instance.node;
-      let clone;
-      if (keepChildren) {
-        if (updatePayload !== null) {
-          clone = cloneNodeWithNewProps(
-            node,
-            updatePayload,
-            internalInstanceHandle,
-          );
-        } else {
-          clone = cloneNode(node, internalInstanceHandle);
-        }
-      } else {
-        if (updatePayload !== null) {
-          clone = cloneNodeWithNewChildrenAndProps(
-            node,
-            updatePayload,
-            internalInstanceHandle,
-          );
-        } else {
-          clone = cloneNodeWithNewChildren(node, internalInstanceHandle);
-        }
-      }
-      return {
-        node: clone,
-        canonical: instance.canonical,
-      };
-    }
-
-    export function createContainerChildSet(container: Container): ChildSet {
-      return createChildNodeSet(container);
-    }
-
-    export function appendChildToContainerChildSet(
-      childSet: ChildSet,
-      child: Instance | TextInstance,
-    ): void {
-      appendChildNodeToSet(childSet, child.node);
-    }
-
-    export function finalizeContainerChildren(
-      container: Container,
-      newChildren: ChildSet,
-    ): void {
-      completeRoot(container, newChildren);
-    }
-
-    export function replaceContainerChildren(
-      container: Container,
-      newChildren: ChildSet,
-    ): void {}
+export function replaceContainerChildren(
+  container: Container,
+  newChildren: ChildSet,
+): void {}

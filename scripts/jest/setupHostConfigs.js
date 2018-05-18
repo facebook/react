@@ -6,7 +6,7 @@ const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 // turn the export into a function, and use the argument as host config.
 const shimHostConfigPath = 'react-reconciler/src/ReactFiberHostConfig';
 jest.mock('react-reconciler', () => {
-  return (config) => {
+  return config => {
     jest.mock(shimHostConfigPath, () => config);
     return require.requireActual('react-reconciler');
   };
@@ -21,9 +21,11 @@ inlinedHostConfigs.forEach(rendererInfo => {
     return;
   }
   jest.mock(`react-reconciler/inline.${rendererInfo.shortName}`, () => {
-    jest.mock(shimHostConfigPath,
-      () => require.requireActual(
-        `react-reconciler/src/forks/ReactFiberHostConfig.${rendererInfo.shortName}.js`
+    jest.mock(shimHostConfigPath, () =>
+      require.requireActual(
+        `react-reconciler/src/forks/ReactFiberHostConfig.${
+          rendererInfo.shortName
+        }.js`
       )
     );
     return require.requireActual('react-reconciler');

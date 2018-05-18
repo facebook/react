@@ -86,141 +86,143 @@ export function removeChild(
 }
 
 export function getRootHostContext(
-  rootContainerInstance: Container
+  rootContainerInstance: Container,
 ): HostContext {
-    return emptyObject;
+  return emptyObject;
+}
+
+export function getChildHostContext(
+  parentHostContext: HostContext,
+  type: string,
+  rootContainerInstance: Container,
+): HostContext {
+  return emptyObject;
+}
+
+export function prepareForCommit(containerInfo: Container): void {
+  // noop
+}
+
+export function resetAfterCommit(containerInfo: Container): void {
+  // noop
+}
+
+export function createInstance(
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: Object,
+  internalInstanceHandle: Object,
+): Instance {
+  return {
+    type,
+    props,
+    children: [],
+    rootContainerInstance,
+    tag: 'INSTANCE',
+  };
+}
+
+export function appendInitialChild(
+  parentInstance: Instance,
+  child: Instance | TextInstance,
+): void {
+  const index = parentInstance.children.indexOf(child);
+  if (index !== -1) {
+    parentInstance.children.splice(index, 1);
   }
+  parentInstance.children.push(child);
+}
 
-  export function getChildHostContext(
-    parentHostContext: HostContext,
-    type: string,
-    rootContainerInstance: Container
-  ): HostContext {
-    return emptyObject;
-  }
+export function finalizeInitialChildren(
+  testElement: Instance,
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: Object,
+): boolean {
+  return false;
+}
 
-  export function prepareForCommit(containerInfo: Container): void {
-    // noop
-  }
+export function prepareUpdate(
+  testElement: Instance,
+  type: string,
+  oldProps: Props,
+  newProps: Props,
+  rootContainerInstance: Container,
+  hostContext: Object,
+): null | {} {
+  return UPDATE_SIGNAL;
+}
 
-  export function resetAfterCommit(containerInfo: Container): void {
-    // noop
-  }
+export function shouldSetTextContent(type: string, props: Props): boolean {
+  return false;
+}
 
-  export function createInstance(
-    type: string,
-    props: Props,
-    rootContainerInstance: Container,
-    hostContext: Object,
-    internalInstanceHandle: Object,
-  ): Instance {
-    return {
-      type,
-      props,
-      children: [],
-      rootContainerInstance,
-      tag: 'INSTANCE',
-    };
-  }
+export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
+  return false;
+}
 
-  export function appendInitialChild(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-  ): void {
-    const index = parentInstance.children.indexOf(child);
-    if (index !== -1) {
-      parentInstance.children.splice(index, 1);
-    }
-    parentInstance.children.push(child);
-  }
+export function createTextInstance(
+  text: string,
+  rootContainerInstance: Container,
+  hostContext: Object,
+  internalInstanceHandle: Object,
+): TextInstance {
+  return {
+    text,
+    tag: 'TEXT',
+  };
+}
 
-  export function finalizeInitialChildren(
-    testElement: Instance,
-    type: string,
-    props: Props,
-    rootContainerInstance: Container,
-    hostContext: Object,
-  ): boolean {
-    return false;
-  }
+export const isPrimaryRenderer = true;
+// This approach enables `now` to be mocked by tests,
+// Even after the reconciler has initialized and read host config values.
+export const now = () => TestRendererScheduling.nowImplementation();
+export const scheduleDeferredCallback =
+  TestRendererScheduling.scheduleDeferredCallback;
+export const cancelDeferredCallback =
+  TestRendererScheduling.cancelDeferredCallback;
 
-  export function prepareUpdate(
-    testElement: Instance,
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-    rootContainerInstance: Container,
-    hostContext: Object,
-  ): null | {} {
-    return UPDATE_SIGNAL;
-  }
+// -------------------
+//     Mutation
+// -------------------
 
-  export function shouldSetTextContent(type: string, props: Props): boolean {
-    return false;
-  }
+export const supportsMutation = true;
 
-  export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-    return false;
-  }
+export function commitUpdate(
+  instance: Instance,
+  updatePayload: {},
+  type: string,
+  oldProps: Props,
+  newProps: Props,
+  internalInstanceHandle: Object,
+): void {
+  instance.type = type;
+  instance.props = newProps;
+}
 
-  export function createTextInstance(
-    text: string,
-    rootContainerInstance: Container,
-    hostContext: Object,
-    internalInstanceHandle: Object,
-  ): TextInstance {
-    return {
-      text,
-      tag: 'TEXT',
-    };
-  }
+export function commitMount(
+  instance: Instance,
+  type: string,
+  newProps: Props,
+  internalInstanceHandle: Object,
+): void {
+  // noop
+}
 
-  export const isPrimaryRenderer = true;
-  // This approach enables `now` to be mocked by tests,
-  // Even after the reconciler has initialized and read host config values.
-  export const now = () => TestRendererScheduling.nowImplementation();
-  export const scheduleDeferredCallback = TestRendererScheduling.scheduleDeferredCallback;
-  export const cancelDeferredCallback = TestRendererScheduling.cancelDeferredCallback;
+export function commitTextUpdate(
+  textInstance: TextInstance,
+  oldText: string,
+  newText: string,
+): void {
+  textInstance.text = newText;
+}
 
-  // -------------------
-  //     Mutation
-  // -------------------
+export function resetTextContent(testElement: Instance): void {
+  // noop
+}
 
-  export const supportsMutation = true;
-
-    export function commitUpdate(
-      instance: Instance,
-      updatePayload: {},
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-      internalInstanceHandle: Object,
-    ): void {
-      instance.type = type;
-      instance.props = newProps;
-    }
-
-    export function commitMount(
-      instance: Instance,
-      type: string,
-      newProps: Props,
-      internalInstanceHandle: Object,
-    ): void {
-      // noop
-    }
-
-    export function commitTextUpdate(
-      textInstance: TextInstance,
-      oldText: string,
-      newText: string,
-    ): void {
-      textInstance.text = newText;
-    }
-
-    export function resetTextContent(testElement: Instance): void {
-      // noop
-    }
-
-    export const appendChildToContainer = appendChild;
-    export const insertInContainerBefore = insertBefore;
-    export const removeChildFromContainer = removeChild;
+export const appendChildToContainer = appendChild;
+export const insertInContainerBefore = insertBefore;
+export const removeChildFromContainer = removeChild;

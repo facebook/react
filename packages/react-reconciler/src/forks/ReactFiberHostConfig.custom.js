@@ -15,7 +15,7 @@
 // This file is a shim between two worlds.
 //
 // It works because the `react-reconciler` bundle is wrapped in something like:
-// 
+//
 // module.exports = function ($$$config) {
 //   /* reconciler code */
 // }
@@ -45,7 +45,8 @@ export const appendInitialChild = $$$hostConfig.appendInitialChild;
 export const finalizeInitialChildren = $$$hostConfig.finalizeInitialChildren;
 export const prepareUpdate = $$$hostConfig.prepareUpdate;
 export const shouldSetTextContent = $$$hostConfig.shouldSetTextContent;
-export const shouldDeprioritizeSubtree = $$$hostConfig.shouldDeprioritizeSubtree;
+export const shouldDeprioritizeSubtree =
+  $$$hostConfig.shouldDeprioritizeSubtree;
 export const createTextInstance = $$$hostConfig.createTextInstance;
 export const scheduleDeferredCallback = $$$hostConfig.scheduleDeferredCallback;
 export const cancelDeferredCallback = $$$hostConfig.cancelDeferredCallback;
@@ -76,8 +77,10 @@ export const resetTextContent = $$$hostConfig.resetTextContent;
 // -------------------
 export const cloneInstance = $$$hostConfig.cloneInstance;
 export const createContainerChildSet = $$$hostConfig.createContainerChildSet;
-export const appendChildToContainerChildSet = $$$hostConfig.appendChildToContainerChildSet;
-export const finalizeContainerChildren = $$$hostConfig.finalizeContainerChildren;
+export const appendChildToContainerChildSet =
+  $$$hostConfig.appendChildToContainerChildSet;
+export const finalizeContainerChildren =
+  $$$hostConfig.finalizeContainerChildren;
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
 
 // -------------------
@@ -90,11 +93,18 @@ export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$hostConfig.getFirstHydratableChild;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
 export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
-export const didNotMatchHydratedContainerTextInstance = $$$hostConfig.didNotMatchHydratedContainerTextInstance;
-export const didNotMatchHydratedTextInstance = $$$hostConfig.didNotMatchHydratedTextInstance;
-export const didNotHydrateContainerInstance = $$$hostConfig.didNotHydrateContainerInstance;
+export const didNotMatchHydratedContainerTextInstance =
+  $$$hostConfig.didNotMatchHydratedContainerTextInstance;
+export const didNotMatchHydratedTextInstance =
+  $$$hostConfig.didNotMatchHydratedTextInstance;
+export const didNotHydrateContainerInstance =
+  $$$hostConfig.didNotHydrateContainerInstance;
 export const didNotHydrateInstance = $$$hostConfig.didNotHydrateInstance;
-export const didNotFindHydratableContainerInstance = $$$hostConfig.didNotFindHydratableContainerInstance;
-export const didNotFindHydratableContainerTextInstance = $$$hostConfig.didNotFindHydratableContainerTextInstance;
-export const didNotFindHydratableInstance = $$$hostConfig.didNotFindHydratableInstance;
-export const didNotFindHydratableTextInstance = $$$hostConfig.didNotFindHydratableTextInstance;
+export const didNotFindHydratableContainerInstance =
+  $$$hostConfig.didNotFindHydratableContainerInstance;
+export const didNotFindHydratableContainerTextInstance =
+  $$$hostConfig.didNotFindHydratableContainerTextInstance;
+export const didNotFindHydratableInstance =
+  $$$hostConfig.didNotFindHydratableInstance;
+export const didNotFindHydratableTextInstance =
+  $$$hostConfig.didNotFindHydratableTextInstance;

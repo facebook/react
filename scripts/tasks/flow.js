@@ -18,8 +18,8 @@ const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 // This script is using `flow status` for a quick check with a server.
 // Use it for local development.
 
-const primaryRenderer = inlinedHostConfigs.find(info =>
-  info.isFlowTyped && info.shortName === process.argv[2]
+const primaryRenderer = inlinedHostConfigs.find(
+  info => info.isFlowTyped && info.shortName === process.argv[2]
 );
 if (!primaryRenderer) {
   console.log(

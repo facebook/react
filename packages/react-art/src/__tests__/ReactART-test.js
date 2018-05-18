@@ -409,7 +409,9 @@ describe('ReactARTComponents', () => {
 
   it('should warn if radius is missing on a Circle component', () => {
     expect(() =>
-      ReactTestRenderer.create(<Circle stroke="green" strokeWidth={3} fill="blue" />),
+      ReactTestRenderer.create(
+        <Circle stroke="green" strokeWidth={3} fill="blue" />,
+      ),
     ).toWarnDev(
       'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
         'but its value is `undefined`.' +

@@ -147,7 +147,12 @@ const forks = Object.freeze({
     }
   },
 
-  'react-reconciler/src/ReactFiberHostConfig': (bundleType, entry, dependencies, moduleType) => {
+  'react-reconciler/src/ReactFiberHostConfig': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType
+  ) => {
     if (dependencies.indexOf('react-reconciler') !== -1) {
       return null;
     }
@@ -157,13 +162,15 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        return `react-reconciler/src/forks/ReactFiberHostConfig.${rendererInfo.shortName}.js`;
+        return `react-reconciler/src/forks/ReactFiberHostConfig.${
+          rendererInfo.shortName
+        }.js`;
       }
     }
     throw new Error(
       'Expected ReactFiberHostConfig to always be replaced with a shim, but ' +
-      `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
-      'Did you mean to add it there to associate it with a specific renderer?'
+        `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
+        'Did you mean to add it there to associate it with a specific renderer?'
     );
   },
 

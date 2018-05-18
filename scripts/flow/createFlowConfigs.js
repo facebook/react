@@ -6,7 +6,7 @@
  *
  * @flow
  */
- 
+
 'use strict';
 
 const chalk = require('chalk');
@@ -14,7 +14,9 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
-const configTemplate = fs.readFileSync(__dirname + '/config/flowconfig').toString();
+const configTemplate = fs
+  .readFileSync(__dirname + '/config/flowconfig')
+  .toString();
 
 function writeConfig(renderer) {
   const folder = __dirname + '/' + renderer;
@@ -25,8 +27,8 @@ function writeConfig(renderer) {
     `
 module.name_mapper='react-reconciler/inline.${renderer}$$' -> 'react-reconciler/inline-typed'
 module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
-    `.trim()
-  )
+    `.trim(),
+  );
 
   const disclaimer = `
 # ---------------------------------------------------------------#

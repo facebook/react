@@ -197,92 +197,92 @@ function createReactNoop(useMutation: boolean) {
         supportsMutation: true,
         supportsPersistence: false,
 
-          commitMount(instance: Instance, type: string, newProps: Props): void {
-            // Noop
-          },
+        commitMount(instance: Instance, type: string, newProps: Props): void {
+          // Noop
+        },
 
-          commitUpdate(
-            instance: Instance,
-            updatePayload: Object,
-            type: string,
-            oldProps: Props,
-            newProps: Props,
-          ): void {
-            if (oldProps === null) {
-              throw new Error('Should have old props');
-            }
-            instance.prop = newProps.prop;
-          },
+        commitUpdate(
+          instance: Instance,
+          updatePayload: Object,
+          type: string,
+          oldProps: Props,
+          newProps: Props,
+        ): void {
+          if (oldProps === null) {
+            throw new Error('Should have old props');
+          }
+          instance.prop = newProps.prop;
+        },
 
-          commitTextUpdate(
-            textInstance: TextInstance,
-            oldText: string,
-            newText: string,
-          ): void {
-            textInstance.text = newText;
-          },
+        commitTextUpdate(
+          textInstance: TextInstance,
+          oldText: string,
+          newText: string,
+        ): void {
+          textInstance.text = newText;
+        },
 
-          appendChild: appendChild,
-          appendChildToContainer: appendChild,
-          insertBefore: insertBefore,
-          insertInContainerBefore: insertBefore,
-          removeChild: removeChild,
-          removeChildFromContainer: removeChild,
+        appendChild: appendChild,
+        appendChildToContainer: appendChild,
+        insertBefore: insertBefore,
+        insertInContainerBefore: insertBefore,
+        removeChild: removeChild,
+        removeChildFromContainer: removeChild,
 
-          resetTextContent(instance: Instance): void {},
+        resetTextContent(instance: Instance): void {},
       }
     : {
         ...sharedHostConfig,
         supportsMutation: false,
         supportsPersistence: true,
 
-          cloneInstance(
-            instance: Instance,
-            updatePayload: null | Object,
-            type: string,
-            oldProps: Props,
-            newProps: Props,
-            internalInstanceHandle: Object,
-            keepChildren: boolean,
-            recyclableInstance: null | Instance,
-          ): Instance {
-            const clone = {
-              id: instance.id,
-              type: type,
-              children: keepChildren ? instance.children : [],
-              prop: newProps.prop,
-            };
-            Object.defineProperty(clone, 'id', {
-              value: clone.id,
-              enumerable: false,
-            });
-            return clone;
-          },
+        cloneInstance(
+          instance: Instance,
+          updatePayload: null | Object,
+          type: string,
+          oldProps: Props,
+          newProps: Props,
+          internalInstanceHandle: Object,
+          keepChildren: boolean,
+          recyclableInstance: null | Instance,
+        ): Instance {
+          const clone = {
+            id: instance.id,
+            type: type,
+            children: keepChildren ? instance.children : [],
+            prop: newProps.prop,
+          };
+          Object.defineProperty(clone, 'id', {
+            value: clone.id,
+            enumerable: false,
+          });
+          return clone;
+        },
 
-          createContainerChildSet(
-            container: Container,
-          ): Array<Instance | TextInstance> {
-            return [];
-          },
+        createContainerChildSet(
+          container: Container,
+        ): Array<Instance | TextInstance> {
+          return [];
+        },
 
-          appendChildToContainerChildSet(
-            childSet: Array<Instance | TextInstance>,
-            child: Instance | TextInstance,
-          ): void {
-            childSet.push(child);
-          },
+        appendChildToContainerChildSet(
+          childSet: Array<Instance | TextInstance>,
+          child: Instance | TextInstance,
+        ): void {
+          childSet.push(child);
+        },
 
-          finalizeContainerChildren(
-            container: Container,
-            newChildren: Array<Instance | TextInstance>,
-          ): void {},
+        finalizeContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
+        ): void {},
 
-          replaceContainerChildren(
-            container: Container,
-            newChildren: Array<Instance | TextInstance>,
-          ): void {
-            container.children = newChildren;
-          },
+        replaceContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
+        ): void {
+          container.children = newChildren;
+        },
       };
 
   const NoopRenderer = ReactFiberReconciler(hostConfig);

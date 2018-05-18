@@ -16,8 +16,8 @@ function shim(...args: any) {
   invariant(
     false,
     'The current renderer does not support hyration. ' +
-    'This error is likely caused by a bug in React. ' +
-    'Please file an issue.'
+      'This error is likely caused by a bug in React. ' +
+      'Please file an issue.',
   );
 }
 
