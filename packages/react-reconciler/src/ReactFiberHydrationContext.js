@@ -60,7 +60,7 @@ function enterHydrationState(fiber: Fiber): boolean {
 
 function deleteHydratableInstance(
   returnFiber: Fiber,
-  instance: Instance | TextInstance,
+  instance: HydratableInstance,
 ) {
   if (__DEV__) {
     switch (returnFiber.tag) {
