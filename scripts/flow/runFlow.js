@@ -2,7 +2,6 @@
 
 const chalk = require('chalk');
 const spawn = require('child_process').spawn;
-const extension = process.platform === 'win32' ? '.cmd' : '';
 
 require('./createFlowConfigs');
 
@@ -11,7 +10,11 @@ async function runFlow(renderer, args) {
     console.log(
       'Running Flow for the ' + chalk.cyan(renderer) + ' renderer...',
     );
-    spawn('../../../node_modules/.bin/flow' + extension, args, {
+    let cmd = '../../../node_modules/.bin/flow';
+    if (process.platform === 'win32') {
+      cmd = cmd.replace(/\//g, '\\') + '.cmd';
+    }
+    spawn(cmd, args, {
       // Allow colors to pass through:
       stdio: 'inherit',
       // Use a specific renderer config:
