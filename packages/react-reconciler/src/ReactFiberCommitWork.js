@@ -221,7 +221,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function commitLifeCycles(
-    finishedRoot: FiberRoot,
     current: Fiber | null,
     finishedWork: Fiber,
     currentTime: ExpirationTime,
