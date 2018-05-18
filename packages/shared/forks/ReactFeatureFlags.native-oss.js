@@ -22,7 +22,8 @@ export const enablePersistentReconciler = false;
 export const enableUserTimingAPI = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
-export const enableProfilerTimer = false;
+export const enableProfilerTimer = __DEV__;
+export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {

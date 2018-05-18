@@ -11,7 +11,7 @@
 'use strict';
 
 let React;
-let ReactNoop;
+let ReactNoopPersistent;
 let ReactPortal;
 
 describe('ReactPersistent', () => {
@@ -24,14 +24,12 @@ describe('ReactPersistent', () => {
     ReactFeatureFlags.enableNoopReconciler = false;
 
     React = require('react');
-    ReactNoop = require('react-noop-renderer');
+    ReactNoopPersistent = require('react-noop-renderer/persistent');
     ReactPortal = require('shared/ReactPortal');
   });
 
-  const DEFAULT_ROOT_ID = 'persistent-test';
-
   function render(element) {
-    ReactNoop.renderToPersistentRootWithID(element, DEFAULT_ROOT_ID);
+    ReactNoopPersistent.render(element);
   }
 
   function div(...children) {
@@ -44,7 +42,7 @@ describe('ReactPersistent', () => {
   }
 
   function getChildren() {
-    return ReactNoop.getChildren(DEFAULT_ROOT_ID);
+    return ReactNoopPersistent.getChildren();
   }
 
   it('can update child nodes of a host instance', () => {
@@ -62,12 +60,12 @@ describe('ReactPersistent', () => {
     }
 
     render(<Foo text="Hello" />);
-    ReactNoop.flush();
+    ReactNoopPersistent.flush();
     const originalChildren = getChildren();
     expect(originalChildren).toEqual([div(span())]);
 
     render(<Foo text="World" />);
-    ReactNoop.flush();
+    ReactNoopPersistent.flush();
     const newChildren = getChildren();
     expect(newChildren).toEqual([div(span(), span())]);
 
@@ -96,12 +94,12 @@ describe('ReactPersistent', () => {
     }
 
     render(<Foo text="Hello" />);
-    ReactNoop.flush();
+    ReactNoopPersistent.flush();
     const originalChildren = getChildren();
     expect(originalChildren).toEqual([div(span('Hello'))]);
 
     render(<Foo text="World" />);
-    ReactNoop.flush();
+    ReactNoopPersistent.flush();
     const newChildren = getChildren();
     expect(newChildren).toEqual([div(span('Hello'), span('World'))]);
 
@@ -122,12 +120,12 @@ describe('ReactPersistent', () => {
     }
 
     render(<Foo text="Hello" />);
-    ReactNoop.flush();
+    ReactNoopPersistent.flush();
     const originalChildren = getChildren();
     expect(originalChildren).toEqual([div('Hello', span())]);
 
     render(<Foo text="World" />);
-    ReactNoop.flush();
+    ReactNoopPersistent.flush();
     const newChildren = getChildren();
     expect(newChildren).toEqual([div('World', span())]);
 
@@ -167,7 +165,7 @@ describe('ReactPersistent', () => {
         {ReactPortal.createPortal(<Child />, portalContainer, null)}
       </Parent>,
     );
-    ReactNoop.flush();
+    ReactNoopPersistent.flush();
 
     expect(emptyPortalChildSet).toEqual([]);
 
@@ -185,7 +183,7 @@ describe('ReactPersistent', () => {
         )}
       </Parent>,
     );
-    ReactNoop.flush();
+    ReactNoopPersistent.flush();
 
     const newChildren = getChildren();
     expect(newChildren).toEqual([div()]);
@@ -202,7 +200,7 @@ describe('ReactPersistent', () => {
 
     // Deleting the Portal, should clear its children
     render(<Parent />);
-    ReactNoop.flush();
+    ReactNoopPersistent.flush();
 
     const clearedPortalChildren = portalContainer.children;
     expect(clearedPortalChildren).toEqual([]);

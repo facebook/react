@@ -40,7 +40,10 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
 
 // Gather advanced timing metrics for Profiler subtrees.
-export const enableProfilerTimer = false;
+export const enableProfilerTimer = __DEV__;
+
+// Fires getDerivedStateFromProps for state *or* props changes
+export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {

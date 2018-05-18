@@ -27,9 +27,6 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  CallComponent,
-  CallHandlerPhase,
-  ReturnComponent,
   ForwardRef,
   Fragment,
   Mode,
@@ -201,7 +198,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
     }
-    const nextChildren = render(nextProps, ref);
+
+    let nextChildren;
+    if (__DEV__) {
+      ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.setCurrentPhase('render');
+      nextChildren = render(nextProps, ref);
+      ReactDebugCurrentFiber.setCurrentPhase(null);
+    } else {
+      nextChildren = render(nextProps, ref);
+    }
+
     reconcileChildren(current, workInProgress, nextChildren);
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
@@ -731,44 +738,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function updateCallComponent(current, workInProgress, renderExpirationTime) {
-    let nextProps = workInProgress.pendingProps;
-    if (hasLegacyContextChanged()) {
-      // Normally we can bail out on props equality but if context has changed
-      // we don't do the bailout and we have to reuse existing props instead.
-    } else if (workInProgress.memoizedProps === nextProps) {
-      nextProps = workInProgress.memoizedProps;
-      // TODO: When bailing out, we might need to return the stateNode instead
-      // of the child. To check it for work.
-      // return bailoutOnAlreadyFinishedWork(current, workInProgress);
-    }
-
-    const nextChildren = nextProps.children;
-
-    // The following is a fork of reconcileChildrenAtExpirationTime but using
-    // stateNode to store the child.
-    if (current === null) {
-      workInProgress.stateNode = mountChildFibers(
-        workInProgress,
-        workInProgress.stateNode,
-        nextChildren,
-        renderExpirationTime,
-      );
-    } else {
-      workInProgress.stateNode = reconcileChildFibers(
-        workInProgress,
-        current.stateNode,
-        nextChildren,
-        renderExpirationTime,
-      );
-    }
-
-    memoizeProps(workInProgress, nextProps);
-    // This doesn't take arbitrary time so we could synchronously just begin
-    // eagerly do the work of workInProgress.child as an optimization.
-    return workInProgress.stateNode;
-  }
-
   function updateTimeoutComponent(
     current,
     workInProgress,
@@ -1101,7 +1070,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
 
-    const newChildren = render(newValue);
+    let newChildren;
+    if (__DEV__) {
+      ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.setCurrentPhase('render');
+      newChildren = render(newValue);
+      ReactDebugCurrentFiber.setCurrentPhase(null);
+    } else {
+      newChildren = render(newValue);
+    }
+
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
     reconcileChildren(current, workInProgress, newChildren);
@@ -1241,20 +1219,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         );
       case HostText:
         return updateHostText(current, workInProgress);
-      case CallHandlerPhase:
-        // This is a restart. Reset the tag to the initial phase.
-        workInProgress.tag = CallComponent;
-      // Intentionally fall through since this is now the same.
-      case CallComponent:
-        return updateCallComponent(
-          current,
-          workInProgress,
-          renderExpirationTime,
-        );
-      case ReturnComponent:
-        // A return component is just a placeholder, we can just run through the
-        // next one immediately.
-        return null;
       case TimeoutComponent:
         return updateTimeoutComponent(
           current,

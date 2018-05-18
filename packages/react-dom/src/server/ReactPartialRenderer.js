@@ -31,8 +31,6 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_ASYNC_MODE_TYPE,
-  REACT_CALL_TYPE,
-  REACT_RETURN_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
@@ -831,13 +829,6 @@ class ReactDOMServerRenderer {
           this.stack.push(frame);
           return '';
         }
-        case REACT_CALL_TYPE:
-        case REACT_RETURN_TYPE:
-          invariant(
-            false,
-            'The experimental Call and Return types are not currently ' +
-              'supported by the server renderer.',
-          );
         // eslint-disable-next-line-no-fallthrough
         default:
           break;

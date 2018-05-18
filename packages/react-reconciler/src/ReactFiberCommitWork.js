@@ -9,6 +9,7 @@
 
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
@@ -24,7 +25,6 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  CallComponent,
   Profiler,
   TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
@@ -59,7 +59,7 @@ if (__DEV__) {
 export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   const source = errorInfo.source;
   let stack = errorInfo.stack;
-  if (stack === null) {
+  if (stack === null && source !== null) {
     stack = getStackAddendumByWorkInProgressFiber(source);
   }
 
@@ -94,7 +94,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-  captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
+  captureError: (failedFiber: Fiber, error: mixed) => void,
   scheduleWork: (
     fiber: Fiber,
     startTime: ExpirationTime,
@@ -389,10 +389,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       }
       case HostComponent: {
         safelyDetachRef(current);
-        return;
-      }
-      case CallComponent: {
-        commitNestedUnmounts(current.stateNode);
         return;
       }
       case HostPortal: {

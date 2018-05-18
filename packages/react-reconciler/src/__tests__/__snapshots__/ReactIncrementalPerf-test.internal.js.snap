@@ -370,25 +370,6 @@ exports[`ReactDebugFiberPerf supports portals 1`] = `
 "
 `;
 
-exports[`ReactDebugFiberPerf supports returns 1`] = `
-"⚛ (Waiting for async callback... will force flush in 5250 ms)
-
-⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ App [mount]
-    ⚛ CoParent [mount]
-      ⚛ Indirection [mount]
-        ⚛ CoChild [mount]
-        ⚛ CoChild [mount]
-      ⚛ Continuation [mount]
-      ⚛ Continuation [mount]
-
-⚛ (Committing Changes)
-  ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 3 Total)
-  ⚛ (Calling Lifecycle Methods: 0 Total)
-"
-`;
-
 exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5250 ms)
 

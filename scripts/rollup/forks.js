@@ -74,6 +74,17 @@ const forks = Object.freeze({
     return null;
   },
 
+  // This logic is forked on www to use the 'acrossTransitions' version.
+  'shared/requestAnimationFrameForReact': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+        return 'shared/forks/requestAnimationFrameForReact.www.js';
+      default:
+        return null;
+    }
+  },
+
   // This logic is forked on www to blacklist warnings.
   'shared/lowPriorityWarning': (bundleType, entry) => {
     switch (bundleType) {
@@ -121,6 +132,7 @@ const forks = Object.freeze({
       case RN_FB_PROD:
         switch (entry) {
           case 'react-native-renderer':
+          case 'react-native-renderer/fabric':
             // Use the RN fork which plays well with redbox.
             return 'react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
           default:
@@ -141,6 +153,14 @@ const forks = Object.freeze({
       default:
         return null;
     }
+  },
+
+  // React DOM uses different top level event names and supports mouse events.
+  'events/ResponderTopLevelEventTypes': (bundleType, entry) => {
+    if (entry === 'react-dom' || entry.startsWith('react-dom/')) {
+      return 'events/forks/ResponderTopLevelEventTypes.dom.js';
+    }
+    return null;
   },
 });
 

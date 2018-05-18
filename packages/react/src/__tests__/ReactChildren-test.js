@@ -69,57 +69,6 @@ describe('ReactChildren', () => {
     expect(mappedChildren[0]).toEqual(reactPortal);
   });
 
-  it('should support Call components', () => {
-    const context = {};
-    const callback = jasmine.createSpy().and.callFake(function(kid, index) {
-      expect(this).toBe(context);
-      return kid;
-    });
-    const ReactCallReturn = require('react-call-return');
-    const reactCall = ReactCallReturn.unstable_createCall(
-      <span key="simple" />,
-      () => {},
-    );
-
-    const parentInstance = <div>{reactCall}</div>;
-    React.Children.forEach(parentInstance.props.children, callback, context);
-    expect(callback).toHaveBeenCalledWith(reactCall, 0);
-    callback.calls.reset();
-    const mappedChildren = React.Children.map(
-      parentInstance.props.children,
-      callback,
-      context,
-    );
-    expect(callback).toHaveBeenCalledWith(reactCall, 0);
-    expect(mappedChildren[0].type).toEqual(reactCall.type);
-    expect(mappedChildren[0].props).toEqual(reactCall.props);
-  });
-
-  it('should support Return components', () => {
-    const context = {};
-    const callback = jasmine.createSpy().and.callFake(function(kid, index) {
-      expect(this).toBe(context);
-      return kid;
-    });
-    const ReactCallReturn = require('react-call-return');
-    const reactReturn = ReactCallReturn.unstable_createReturn(
-      <span key="simple" />,
-    );
-
-    const parentInstance = <div>{reactReturn}</div>;
-    React.Children.forEach(parentInstance.props.children, callback, context);
-    expect(callback).toHaveBeenCalledWith(reactReturn, 0);
-    callback.calls.reset();
-    const mappedChildren = React.Children.map(
-      parentInstance.props.children,
-      callback,
-      context,
-    );
-    expect(callback).toHaveBeenCalledWith(reactReturn, 0);
-    expect(mappedChildren[0].props).toEqual(reactReturn.props);
-    expect(mappedChildren[0].type).toEqual(reactReturn.type);
-  });
-
   it('should treat single arrayless child as being in array', () => {
     const context = {};
     const callback = jasmine.createSpy().and.callFake(function(kid, index) {

@@ -1115,6 +1115,29 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz', 'Bar', 'Baz']);
   });
 
+  it('should clear forceUpdate after update is flushed', () => {
+    let a = 0;
+
+    class Foo extends React.PureComponent {
+      render() {
+        const msg = `A: ${a}, B: ${this.props.b}`;
+        ReactNoop.yield(msg);
+        return msg;
+      }
+    }
+
+    const foo = React.createRef(null);
+    ReactNoop.render(<Foo ref={foo} b={0} />);
+    expect(ReactNoop.flush()).toEqual(['A: 0, B: 0']);
+
+    a = 1;
+    foo.current.forceUpdate();
+    expect(ReactNoop.flush()).toEqual(['A: 1, B: 0']);
+
+    ReactNoop.render(<Foo ref={foo} b={0} />);
+    expect(ReactNoop.flush()).toEqual([]);
+  });
+
   xit('can call sCU while resuming a partly mounted component', () => {
     let ops = [];
 
@@ -1462,6 +1485,84 @@ describe('ReactIncremental', () => {
       'componentDidUpdate',
     ]);
     expect(instance.state).toEqual({foo: 'foo'});
+  });
+
+  it('does not call getDerivedStateFromProps if neither state nor props have changed', () => {
+    class Parent extends React.Component {
+      state = {parentRenders: 0};
+      static getDerivedStateFromProps(props, prevState) {
+        ReactNoop.yield('getDerivedStateFromProps');
+        return prevState.parentRenders + 1;
+      }
+      render() {
+        ReactNoop.yield('Parent');
+        return <Child parentRenders={this.state.parentRenders} ref={child} />;
+      }
+    }
+
+    class Child extends React.Component {
+      render() {
+        ReactNoop.yield('Child');
+        return this.props.parentRenders;
+      }
+    }
+
+    const child = React.createRef(null);
+    ReactNoop.render(<Parent />);
+    expect(ReactNoop.flush()).toEqual([
+      'getDerivedStateFromProps',
+      'Parent',
+      'Child',
+    ]);
+
+    // Schedule an update on the child. The parent should not re-render.
+    child.current.setState({});
+    expect(ReactNoop.flush()).toEqual(['Child']);
+  });
+
+  it('does not call getDerivedStateFromProps for state-only updates if feature flag is disabled', () => {
+    jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.fireGetDerivedStateFromPropsOnStateUpdates = false;
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+
+    let ops = [];
+    let instance;
+
+    class LifeCycle extends React.Component {
+      state = {};
+      static getDerivedStateFromProps(props, prevState) {
+        ops.push('getDerivedStateFromProps');
+        return {foo: 'foo'};
+      }
+      changeState() {
+        this.setState({foo: 'bar'});
+      }
+      componentDidUpdate() {
+        ops.push('componentDidUpdate');
+      }
+      render() {
+        ops.push('render');
+        instance = this;
+        return null;
+      }
+    }
+
+    ReactNoop.render(<LifeCycle />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['getDerivedStateFromProps', 'render']);
+    expect(instance.state).toEqual({foo: 'foo'});
+
+    ops = [];
+
+    instance.changeState();
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['render', 'componentDidUpdate']);
+    expect(instance.state).toEqual({foo: 'bar'});
   });
 
   xit('does not call componentWillReceiveProps for state-only updates', () => {

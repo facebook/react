@@ -14,10 +14,6 @@ const hasSymbol = typeof Symbol === 'function' && Symbol.for;
 export const REACT_ELEMENT_TYPE = hasSymbol
   ? Symbol.for('react.element')
   : 0xeac7;
-export const REACT_CALL_TYPE = hasSymbol ? Symbol.for('react.call') : 0xeac8;
-export const REACT_RETURN_TYPE = hasSymbol
-  ? Symbol.for('react.return')
-  : 0xeac9;
 export const REACT_PORTAL_TYPE = hasSymbol
   ? Symbol.for('react.portal')
   : 0xeaca;
@@ -28,8 +24,8 @@ export const REACT_STRICT_MODE_TYPE = hasSymbol
   ? Symbol.for('react.strict_mode')
   : 0xeacc;
 export const REACT_PROFILER_TYPE = hasSymbol
-  ? Symbol.for('react.profile_root')
-  : 0xeacc;
+  ? Symbol.for('react.profiler')
+  : 0xead2;
 export const REACT_PROVIDER_TYPE = hasSymbol
   ? Symbol.for('react.provider')
   : 0xeacd;

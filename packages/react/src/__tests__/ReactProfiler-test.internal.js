@@ -108,10 +108,14 @@ describe('Profiler', () => {
   describe('onRender callback', () => {
     let AdvanceTime;
     let advanceTimeBy;
+    let mockNow;
 
     const mockNowForTests = () => {
       let currentTime = 0;
-      ReactTestRenderer.unstable_setNowImplementation(() => currentTime);
+
+      mockNow = jest.fn().mockImplementation(() => currentTime);
+
+      ReactTestRenderer.unstable_setNowImplementation(mockNow);
       advanceTimeBy = amount => {
         currentTime += amount;
       };
@@ -162,6 +166,20 @@ describe('Profiler', () => {
       expect(callback).toHaveBeenCalledTimes(0);
       expect(renderer.unstable_flushAll()).toEqual(['last']);
       expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not record times for components outside of Profiler tree', () => {
+      ReactTestRenderer.create(
+        <div>
+          <AdvanceTime />
+          <AdvanceTime />
+          <AdvanceTime />
+        </div>,
+      );
+
+      // Should only be called twice, for normal expiration time purposes.
+      // No additional calls from ProfilerTimer are expected.
+      expect(mockNow).toHaveBeenCalledTimes(2);
     });
 
     it('logs render times for both mount and update', () => {
