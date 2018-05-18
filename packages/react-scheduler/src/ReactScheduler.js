@@ -266,7 +266,10 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (options != null && typeof options.timeout === 'number') {
       timeoutTime = now() + options.timeout;
     }
-    if (timeoutTime > nextSoonestTimeoutTime) {
+    if (
+      nextSoonestTimeoutTime === -1 ||
+      (timeoutTime !== -1 && timeoutTime < nextSoonestTimeoutTime)
+    ) {
       nextSoonestTimeoutTime = timeoutTime;
     }
 
