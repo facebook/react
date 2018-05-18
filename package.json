@@ -93,6 +93,7 @@
     "run-sequence": "^1.1.4",
     "semver": "^5.5.0",
     "targz": "^1.0.1",
+    "semver": "^5.4.1",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
     "typescript": "~1.8.10",
@@ -106,11 +107,13 @@
   },
   "scripts": {
     "build": "npm run version-check && node ./scripts/rollup/build.js",
+    "check-dev-engines": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
+    "check-dev-env": "node ./scripts/tasks/check-development-environment.js",
     "flow-coverage": "flow-coverage-report --config ./.flowcoverage",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
-    "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
+    "postinstall": "yarn check-dev-engines && yarn check-dev-env",
     "debug-test": "cross-env NODE_ENV=development node --inspect-brk node_modules/.bin/jest --config ./scripts/jest/config.source.js --runInBand",
     "test": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source.js",
     "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",
@@ -121,6 +124,6 @@
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
-    "version-check": "node ./scripts/tasks/version-check.js"
+    "version-check": "node ./scripts/tasks/check-react-versions.js"
   }
 }
