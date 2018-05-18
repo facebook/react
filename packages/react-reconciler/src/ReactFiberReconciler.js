@@ -280,4 +280,3 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     },
   });
 }
-// }

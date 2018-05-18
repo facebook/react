@@ -96,6 +96,7 @@ export {
   isEmpty,
   pop,
   push,
+  // DEV only:
   checkThatStackIsEmpty,
   resetStackAfterFatalErrorInDev,
 };

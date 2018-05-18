@@ -4,29 +4,29 @@
       "filename": "react.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react",
-      "size": 58627,
-      "gzip": 16305
+      "size": 58796,
+      "gzip": 16346
     },
     {
       "filename": "react.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react",
-      "size": 7232,
-      "gzip": 3058
+      "size": 7279,
+      "gzip": 3082
     },
     {
       "filename": "react.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react",
-      "size": 49042,
-      "gzip": 13905
+      "size": 49211,
+      "gzip": 13949
     },
     {
       "filename": "react.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react",
-      "size": 5738,
-      "gzip": 2489
+      "size": 5781,
+      "gzip": 2502
     },
     {
       "filename": "React-dev.js",
@@ -46,29 +46,29 @@
       "filename": "react-dom.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 632848,
-      "gzip": 147651
+      "size": 657360,
+      "gzip": 151075
     },
     {
       "filename": "react-dom.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 96055,
-      "gzip": 31157
+      "size": 104902,
+      "gzip": 33416
     },
     {
       "filename": "react-dom.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 616839,
-      "gzip": 143376
+      "size": 641349,
+      "gzip": 146842
     },
     {
       "filename": "react-dom.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 94521,
-      "gzip": 30104
+      "size": 103269,
+      "gzip": 32503
     },
     {
       "filename": "ReactDOM-dev.js",
@@ -88,29 +88,29 @@
       "filename": "react-dom-test-utils.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 46122,
-      "gzip": 12662
+      "size": 41683,
+      "gzip": 11959
     },
     {
       "filename": "react-dom-test-utils.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 10668,
-      "gzip": 3929
+      "size": 10852,
+      "gzip": 4037
     },
     {
       "filename": "react-dom-test-utils.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 40859,
-      "gzip": 11203
+      "size": 36420,
+      "gzip": 10508
     },
     {
       "filename": "react-dom-test-utils.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 9927,
-      "gzip": 3707
+      "size": 10105,
+      "gzip": 3815
     },
     {
       "filename": "ReactTestUtils-dev.js",
@@ -123,29 +123,29 @@
       "filename": "react-dom-unstable-native-dependencies.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 62921,
-      "gzip": 16559
+      "size": 62645,
+      "gzip": 16407
     },
     {
       "filename": "react-dom-unstable-native-dependencies.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 11637,
-      "gzip": 4016
+      "size": 11592,
+      "gzip": 4008
     },
     {
       "filename": "react-dom-unstable-native-dependencies.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 58483,
-      "gzip": 15261
+      "size": 58207,
+      "gzip": 15121
     },
     {
       "filename": "react-dom-unstable-native-dependencies.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 10963,
-      "gzip": 3760
+      "size": 10915,
+      "gzip": 3762
     },
     {
       "filename": "ReactDOMUnstableNativeDependencies-dev.js",
@@ -165,29 +165,29 @@
       "filename": "react-dom-server.browser.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 104089,
-      "gzip": 27164
+      "size": 104020,
+      "gzip": 27181
     },
     {
       "filename": "react-dom-server.browser.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 15435,
-      "gzip": 5906
+      "size": 15593,
+      "gzip": 5959
     },
     {
       "filename": "react-dom-server.browser.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 93135,
-      "gzip": 24853
+      "size": 93064,
+      "gzip": 24867
     },
     {
       "filename": "react-dom-server.browser.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 14782,
-      "gzip": 5651
+      "size": 14939,
+      "gzip": 5692
     },
     {
       "filename": "ReactDOMServer-dev.js",
@@ -207,43 +207,43 @@
       "filename": "react-dom-server.node.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-dom",
-      "size": 95103,
-      "gzip": 25410
+      "size": 95032,
+      "gzip": 25427
     },
     {
       "filename": "react-dom-server.node.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-dom",
-      "size": 15606,
-      "gzip": 5950
+      "size": 15763,
+      "gzip": 5997
     },
     {
       "filename": "react-art.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-art",
-      "size": 409964,
-      "gzip": 91700
+      "size": 455628,
+      "gzip": 98884
     },
     {
       "filename": "react-art.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-art",
-      "size": 82798,
-      "gzip": 25582
+      "size": 94976,
+      "gzip": 28852
     },
     {
       "filename": "react-art.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-art",
-      "size": 334025,
-      "gzip": 72393
+      "size": 379675,
+      "gzip": 79763
     },
     {
       "filename": "react-art.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-art",
-      "size": 46387,
-      "gzip": 14494
+      "size": 58630,
+      "gzip": 17902
     },
     {
       "filename": "ReactART-dev.js",
@@ -291,29 +291,29 @@
       "filename": "react-test-renderer.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-test-renderer",
-      "size": 344044,
-      "gzip": 74543
+      "size": 385091,
+      "gzip": 80661
     },
     {
       "filename": "react-test-renderer.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-test-renderer",
-      "size": 46904,
-      "gzip": 14509
+      "size": 58378,
+      "gzip": 17695
     },
     {
       "filename": "react-test-renderer.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-test-renderer",
-      "size": 334655,
-      "gzip": 71707
+      "size": 375688,
+      "gzip": 77920
     },
     {
       "filename": "react-test-renderer.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-test-renderer",
-      "size": 46068,
-      "gzip": 14125
+      "size": 57578,
+      "gzip": 17367
     },
     {
       "filename": "ReactTestRenderer-dev.js",
@@ -326,29 +326,29 @@
       "filename": "react-test-renderer-shallow.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-test-renderer",
-      "size": 24831,
-      "gzip": 6633
+      "size": 24960,
+      "gzip": 6657
     },
     {
       "filename": "react-test-renderer-shallow.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-test-renderer",
-      "size": 7309,
-      "gzip": 2404
+      "size": 7384,
+      "gzip": 2418
     },
     {
       "filename": "react-test-renderer-shallow.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-test-renderer",
-      "size": 14637,
-      "gzip": 3666
+      "size": 14616,
+      "gzip": 3663
     },
     {
       "filename": "react-test-renderer-shallow.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-test-renderer",
-      "size": 7325,
-      "gzip": 2402
+      "size": 7321,
+      "gzip": 2401
     },
     {
       "filename": "ReactShallowRenderer-dev.js",
@@ -361,57 +361,57 @@
       "filename": "react-noop-renderer.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-noop-renderer",
-      "size": 18320,
-      "gzip": 4791
+      "size": 18791,
+      "gzip": 5222
     },
     {
       "filename": "react-noop-renderer.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-noop-renderer",
-      "size": 6840,
-      "gzip": 2638
+      "size": 6500,
+      "gzip": 2562
     },
     {
       "filename": "react-reconciler.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-reconciler",
-      "size": 332425,
-      "gzip": 70202
+      "size": 355226,
+      "gzip": 73207
     },
     {
       "filename": "react-reconciler.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-reconciler",
-      "size": 46586,
-      "gzip": 13804
+      "size": 50143,
+      "gzip": 15094
     },
     {
       "filename": "react-reconciler-persistent.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-reconciler",
-      "size": 330913,
-      "gzip": 69566
+      "size": 354412,
+      "gzip": 72892
     },
     {
       "filename": "react-reconciler-persistent.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-reconciler",
-      "size": 45139,
-      "gzip": 13517
+      "size": 49057,
+      "gzip": 14893
     },
     {
       "filename": "react-reconciler-reflection.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-reconciler",
-      "size": 11719,
-      "gzip": 3613
+      "size": 11698,
+      "gzip": 3601
     },
     {
       "filename": "react-reconciler-reflection.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-reconciler",
-      "size": 2311,
-      "gzip": 1026
+      "size": 2320,
+      "gzip": 1034
     },
     {
       "filename": "react-call-return.development.js",
@@ -431,29 +431,29 @@
       "filename": "react-is.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-is",
-      "size": 4785,
-      "gzip": 1323
+      "size": 4791,
+      "gzip": 1326
     },
     {
       "filename": "react-is.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-is",
-      "size": 1933,
-      "gzip": 787
+      "size": 1937,
+      "gzip": 786
     },
     {
       "filename": "react-is.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-is",
-      "size": 4596,
-      "gzip": 1264
+      "size": 4602,
+      "gzip": 1268
     },
     {
       "filename": "react-is.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-is",
-      "size": 1881,
-      "gzip": 720
+      "size": 1886,
+      "gzip": 721
     },
     {
       "filename": "ReactIs-dev.js",
@@ -494,197 +494,197 @@
       "filename": "create-subscription.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "create-subscription",
-      "size": 2590,
-      "gzip": 1232
+      "size": 2599,
+      "gzip": 1240
     },
     {
       "filename": "React-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react",
-      "size": 49149,
-      "gzip": 13510
+      "size": 49318,
+      "gzip": 13556
     },
     {
       "filename": "React-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react",
-      "size": 13734,
-      "gzip": 3850
+      "size": 13793,
+      "gzip": 3864
     },
     {
       "filename": "ReactDOM-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-dom",
-      "size": 639416,
-      "gzip": 146165
+      "size": 667163,
+      "gzip": 149794
     },
     {
       "filename": "ReactDOM-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react-dom",
-      "size": 279909,
-      "gzip": 52808
+      "size": 311309,
+      "gzip": 56436
     },
     {
       "filename": "ReactTestUtils-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-dom",
-      "size": 42280,
-      "gzip": 11404
+      "size": 37734,
+      "gzip": 10701
     },
     {
       "filename": "ReactDOMUnstableNativeDependencies-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-dom",
-      "size": 58699,
-      "gzip": 15042
+      "size": 58462,
+      "gzip": 14909
     },
     {
       "filename": "ReactDOMUnstableNativeDependencies-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react-dom",
-      "size": 26980,
-      "gzip": 5501
+      "size": 26971,
+      "gzip": 5503
     },
     {
       "filename": "ReactDOMServer-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-dom",
-      "size": 96894,
-      "gzip": 24678
+      "size": 96693,
+      "gzip": 24675
     },
     {
       "filename": "ReactDOMServer-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react-dom",
-      "size": 32174,
-      "gzip": 7914
+      "size": 32475,
+      "gzip": 7968
     },
     {
       "filename": "ReactART-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-art",
-      "size": 339185,
-      "gzip": 71736
+      "size": 388922,
+      "gzip": 79451
     },
     {
       "filename": "ReactART-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react-art",
-      "size": 150115,
-      "gzip": 26063
+      "size": 191156,
+      "gzip": 31368
     },
     {
       "filename": "ReactNativeRenderer-dev.js",
       "bundleType": "RN_FB_DEV",
       "packageName": "react-native-renderer",
-      "size": 464593,
-      "gzip": 101663
+      "size": 499080,
+      "gzip": 106402
     },
     {
       "filename": "ReactNativeRenderer-prod.js",
       "bundleType": "RN_FB_PROD",
       "packageName": "react-native-renderer",
-      "size": 210375,
-      "gzip": 36754
+      "size": 241853,
+      "gzip": 40274
     },
     {
       "filename": "ReactNativeRenderer-dev.js",
       "bundleType": "RN_OSS_DEV",
       "packageName": "react-native-renderer",
-      "size": 464246,
-      "gzip": 101571
+      "size": 498734,
+      "gzip": 106325
     },
     {
       "filename": "ReactNativeRenderer-prod.js",
       "bundleType": "RN_OSS_PROD",
       "packageName": "react-native-renderer",
-      "size": 198362,
-      "gzip": 34732
+      "size": 227735,
+      "gzip": 38044
     },
     {
       "filename": "ReactFabric-dev.js",
       "bundleType": "RN_FB_DEV",
       "packageName": "react-native-renderer",
-      "size": 455056,
-      "gzip": 99314
+      "size": 481057,
+      "gzip": 101898
     },
     {
       "filename": "ReactFabric-prod.js",
       "bundleType": "RN_FB_PROD",
       "packageName": "react-native-renderer",
-      "size": 190356,
-      "gzip": 33337
+      "size": 212992,
+      "gzip": 35357
     },
     {
       "filename": "ReactFabric-dev.js",
       "bundleType": "RN_OSS_DEV",
       "packageName": "react-native-renderer",
-      "size": 455092,
-      "gzip": 99328
+      "size": 481093,
+      "gzip": 101917
     },
     {
       "filename": "ReactFabric-prod.js",
       "bundleType": "RN_OSS_PROD",
       "packageName": "react-native-renderer",
-      "size": 190392,
-      "gzip": 33357
+      "size": 213028,
+      "gzip": 35376
     },
     {
       "filename": "ReactTestRenderer-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-test-renderer",
-      "size": 340307,
-      "gzip": 71287
+      "size": 385220,
+      "gzip": 77735
     },
     {
       "filename": "ReactShallowRenderer-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-test-renderer",
-      "size": 15393,
-      "gzip": 3792
+      "size": 15371,
+      "gzip": 3790
     },
     {
       "filename": "ReactIs-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-is",
-      "size": 4669,
-      "gzip": 1292
+      "size": 4674,
+      "gzip": 1294
     },
     {
       "filename": "ReactIs-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react-is",
-      "size": 3756,
-      "gzip": 999
+      "size": 3760,
+      "gzip": 998
     },
     {
       "filename": "react-scheduler.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-scheduler",
-      "size": 13668,
-      "gzip": 4586
+      "size": 13551,
+      "gzip": 4584
     },
     {
       "filename": "react-scheduler.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-scheduler",
-      "size": 2058,
-      "gzip": 1043
+      "size": 1979,
+      "gzip": 1032
     },
     {
       "filename": "react-scheduler.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-scheduler",
-      "size": 13472,
-      "gzip": 4536
+      "size": 13355,
+      "gzip": 4534
     },
     {
       "filename": "react-scheduler.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-scheduler",
-      "size": 2145,
-      "gzip": 1058
+      "size": 2068,
+      "gzip": 1051
     },
     {
       "filename": "SimpleCacheProvider-dev.js",
@@ -699,20 +699,6 @@
       "packageName": "simple-cache-provider",
       "size": 2752,
       "gzip": 854
-    },
-    {
-      "filename": "react-noop-renderer-persistent.development.js",
-      "bundleType": "NODE_DEV",
-      "packageName": "react-noop-renderer",
-      "size": 18360,
-      "gzip": 4783
-    },
-    {
-      "filename": "react-noop-renderer-persistent.production.min.js",
-      "bundleType": "NODE_PROD",
-      "packageName": "react-noop-renderer",
-      "size": 6793,
-      "gzip": 2625
     }
   ]
 }
