@@ -28,7 +28,12 @@ describe('ReactSymbols', () => {
   });
 
   it('numeric values should be unique', () => {
+    const originalSymbolFor = global.Symbol.for;
     global.Symbol.for = null;
-    expectToBeUnique(Object.entries(require('shared/ReactSymbols')));
+    try {
+      expectToBeUnique(Object.entries(require('shared/ReactSymbols')));
+    } finally {
+      global.Symbol.for = originalSymbolFor;
+    }
   });
 });
