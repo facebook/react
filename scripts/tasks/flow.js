@@ -7,23 +7,42 @@
 
 'use strict';
 
-const path = require('path');
-const spawn = require('child_process').spawn;
+process.on('unhandledRejection', err => {
+  throw err;
+});
 
-const extension = process.platform === 'win32' ? '.cmd' : '';
+const chalk = require('chalk');
+const runFlow = require('../flow/runFlow');
+const {typedRenderers} = require('../flow/typedRenderers');
 
 // This script is using `flow status` for a quick check with a server.
 // Use it for local development.
 
-spawn(path.join('node_modules', '.bin', 'flow' + extension), ['status', '.'], {
-  // Allow colors to pass through
-  stdio: 'inherit',
-}).on('close', function(code) {
-  if (code !== 0) {
-    console.error('Flow failed');
-  } else {
-    console.log('Flow passed');
-  }
+const primaryRenderer = process.argv[2];
+if (typedRenderers.indexOf(primaryRenderer) === -1) {
+  console.log(
+    'The ' +
+      chalk.red('yarn flow') +
+      ' command now requires you to pick a primary renderer:'
+  );
+  console.log();
+  typedRenderers.forEach(renderer => {
+    console.log('  * ' + chalk.cyan('yarn flow ' + renderer));
+  });
+  console.log();
+  console.log('If you are not sure, run ' + chalk.green('yarn flow dom') + '.');
+  console.log(
+    'This will still typecheck non-DOM packages, although less precisely.'
+  );
+  console.log();
+  console.log('Note that checks for all renderers will run on CI.');
+  console.log(
+    'You can also do this locally with ' +
+      chalk.cyan('yarn flow-ci') +
+      ' but it will be slow.'
+  );
+  console.log();
+  process.exit(1);
+}
 
-  process.exit(code);
-});
+runFlow(primaryRenderer, ['status']);
