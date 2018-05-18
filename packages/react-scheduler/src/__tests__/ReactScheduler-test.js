@@ -12,7 +12,6 @@
 let ReactScheduler;
 
 describe('ReactScheduler', () => {
-
   let postMessageCallback;
   let postMessageEvents = [];
 
@@ -94,7 +93,7 @@ describe('ReactScheduler', () => {
         );
       });
 
-      it('accepts callbacks betweeen animationFrame and postMessage and doesn\'t stall', () => {
+      it("accepts callbacks betweeen animationFrame and postMessage and doesn't stall", () => {
         const {scheduleWork} = ReactScheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
