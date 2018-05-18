@@ -248,7 +248,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
     hydrationParentFiber = fiber;
-    nextHydratableInstance = getFirstHydratableChild(nextInstance);
+    nextHydratableInstance =
+      fiber.tag !== HostText ? getFirstHydratableChild(nextInstance) : null;
   }
 
   function prepareToHydrateHostInstance(
