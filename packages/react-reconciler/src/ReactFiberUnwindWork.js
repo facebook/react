@@ -73,6 +73,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     suspendedTime: ExpirationTime,
   ) => void,
   retrySuspendedRoot: (root: FiberRoot, suspendedTime: ExpirationTime) => void,
+  mutableStateAccessException: mixed,
 ) {
   const {popHostContainer, popHostContext} = hostContext;
   const {
@@ -170,6 +171,15 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     sourceFiber.effectTag |= Incomplete;
     // Its effect list is no longer valid.
     sourceFiber.firstEffect = sourceFiber.lastEffect = null;
+
+    if (value === mutableStateAccessException) {
+      // Mutable state was accessed while lower priority updates that depend
+      // on a mutation are still pending. Suspend the current render; we'll
+      // restart at the lower priority. (The actual suspend is handled in
+      // the scheduler. Because there's no promise to wait for, or timeout to
+      // handle, we can exit here.)
+      return;
+    }
 
     if (
       enableSuspense &&
