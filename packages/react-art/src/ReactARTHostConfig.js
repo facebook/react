@@ -319,7 +319,7 @@ const ReactARTHostConfig = {
     return emptyObject;
   },
 
-  scheduleDeferredCallback: ReactScheduler.rIC,
+  scheduleDeferredCallback: ReactScheduler.scheduleWork,
 
   shouldSetTextContent(type, props) {
     return (

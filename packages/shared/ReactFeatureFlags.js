@@ -43,7 +43,7 @@ export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = false;
 
 // Gather advanced timing metrics for Profiler subtrees.
-export const enableProfilerTimer = false;
+export const enableProfilerTimer = __DEV__;
 
 // Fires getDerivedStateFromProps for state *or* props changes
 export const fireGetDerivedStateFromPropsOnStateUpdates = true;

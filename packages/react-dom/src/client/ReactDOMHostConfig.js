@@ -561,8 +561,8 @@ const ReactDOMHostConfig = {
     },
   },
 
-  scheduleDeferredCallback: ReactScheduler.rIC,
-  cancelDeferredCallback: ReactScheduler.cIC,
+  scheduleDeferredCallback: ReactScheduler.scheduleWork,
+  cancelDeferredCallback: ReactScheduler.cancelScheduledWork,
 };
 
 export default ReactDOMHostConfig;

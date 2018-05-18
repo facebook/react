@@ -112,15 +112,15 @@ if (__DEV__) {
     pendingUnsafeLifecycleWarnings = new Map();
   };
 
-  const getStrictRoot = (fiber: Fiber): Fiber => {
+  const findStrictRoot = (fiber: Fiber): Fiber | null => {
     let maybeStrictRoot = null;
 
-    while (fiber !== null) {
-      if (fiber.mode & StrictMode) {
-        maybeStrictRoot = fiber;
+    let node = fiber;
+    while (node !== null) {
+      if (node.mode & StrictMode) {
+        maybeStrictRoot = node;
       }
-
-      fiber = fiber.return;
+      node = node.return;
     }
 
     return maybeStrictRoot;
@@ -230,7 +230,15 @@ if (__DEV__) {
     fiber: Fiber,
     instance: any,
   ) => {
-    const strictRoot = getStrictRoot(fiber);
+    const strictRoot = findStrictRoot(fiber);
+    if (strictRoot === null) {
+      warning(
+        false,
+        'Expected to find a StrictMode component in a strict mode tree. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+      return;
+    }
 
     // Dedup strategy: Warn once per component.
     // This is difficult to track any other way since component names
@@ -316,11 +324,9 @@ if (__DEV__) {
 
       const sortedNames = setToSortedString(uniqueNames);
 
-      lowPriorityWarning(
+      warning(
         false,
-        'Below are the components that are using legacy context API, ' +
-          'which are subjected to be removed in the future. Please switch to the new ones: ' +
-          '\n\n%s' +
+        'Legacy context API has been detected within these components: %s' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-strict-mode-warnings',
         sortedNames,

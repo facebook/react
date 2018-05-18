@@ -858,12 +858,11 @@ describe('ReactStrictMode', () => {
 
       expect(() => {
         rendered = ReactTestRenderer.create(<Root />);
-      }).toLowPriorityWarnDev(
-        'Warning: Below are the components that are using legacy context API, ' +
-          'which are subjected to be removed in the future. Please switch to the new ones: ' +
-          '\n\nLegacyContextConsumer, LegacyContextProvider' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-strict-mode-warnings',
+      }).toWarnDev(
+        'Warning: Legacy context API has been detected within these components: ' + 
+        'LegacyContextConsumer, LegacyContextProvider' +
+        '\n\nLearn more about this warning here:' +
+        '\nhttps://fb.me/react-strict-mode-warnings'
       );
 
       // Dedupe
