@@ -12,6 +12,20 @@
 let ReactScheduler;
 
 describe('ReactScheduler', () => {
+  let postMessageCallback;
+  let postMessageEvents = [];
+
+  function drainPostMessageQueue() {
+    if (postMessageCallback) {
+      while (postMessageEvents.length) {
+        postMessageCallback(postMessageEvents.shift());
+      }
+    }
+  }
+  function advanceAll() {
+    jest.runAllTimers();
+    drainPostMessageQueue();
+  }
   beforeEach(() => {
     // TODO pull this into helper method, reduce repetition.
     // mock the browser APIs which are used in react-scheduler:
@@ -23,7 +37,8 @@ describe('ReactScheduler', () => {
       });
     };
     const originalAddEventListener = global.addEventListener;
-    let postMessageCallback;
+    postMessageCallback = null;
+    postMessageEvents = [];
     global.addEventListener = function(eventName, callback, useCapture) {
       if (eventName === 'message') {
         postMessageCallback = callback;
@@ -33,9 +48,7 @@ describe('ReactScheduler', () => {
     };
     global.postMessage = function(messageKey, targetOrigin) {
       const postMessageEvent = {source: window, data: messageKey};
-      if (postMessageCallback) {
-        postMessageCallback(postMessageEvent);
-      }
+      postMessageEvents.push(postMessageEvent);
     };
     jest.resetModules();
     ReactScheduler = require('react-scheduler');
@@ -46,7 +59,7 @@ describe('ReactScheduler', () => {
       const {scheduleWork} = ReactScheduler;
       const cb = jest.fn();
       scheduleWork(cb);
-      jest.runAllTimers();
+      advanceAll();
       expect(cb.mock.calls.length).toBe(1);
       // should not have timed out and should include a timeRemaining method
       expect(cb.mock.calls[0][0].didTimeout).toBe(false);
@@ -66,7 +79,7 @@ describe('ReactScheduler', () => {
         scheduleWork(callbackB);
         expect(callbackLog).toEqual([]);
         // after a delay, calls as many callbacks as it has time for
-        jest.runAllTimers();
+        advanceAll();
         expect(callbackLog).toEqual(['A', 'B']);
         // callbackA should not have timed out and should include a timeRemaining method
         expect(callbackA.mock.calls[0][0].didTimeout).toBe(false);
@@ -78,6 +91,33 @@ describe('ReactScheduler', () => {
         expect(typeof callbackB.mock.calls[0][0].timeRemaining()).toBe(
           'number',
         );
+      });
+
+      it("accepts callbacks betweeen animationFrame and postMessage and doesn't stall", () => {
+        const {scheduleWork} = ReactScheduler;
+        const callbackLog = [];
+        const callbackA = jest.fn(() => callbackLog.push('A'));
+        const callbackB = jest.fn(() => callbackLog.push('B'));
+        const callbackC = jest.fn(() => callbackLog.push('C'));
+        scheduleWork(callbackA);
+        // initially waits to call the callback
+        expect(callbackLog).toEqual([]);
+        jest.runAllTimers();
+        // this should schedule work *after* the requestAnimationFrame but before the message handler
+        scheduleWork(callbackB);
+        expect(callbackLog).toEqual([]);
+        // now it should drain the message queue and do all scheduled work
+        drainPostMessageQueue();
+        expect(callbackLog).toEqual(['A', 'B']);
+
+        // advances timers, now with an empty queue of work (to ensure they don't deadlock)
+        advanceAll();
+
+        // see if more work can be done now.
+        scheduleWork(callbackC);
+        expect(callbackLog).toEqual(['A', 'B']);
+        advanceAll();
+        expect(callbackLog).toEqual(['A', 'B', 'C']);
       });
 
       it(
@@ -105,7 +145,7 @@ describe('ReactScheduler', () => {
           expect(callbackLog).toEqual([]);
           // after a delay, calls the scheduled callbacks,
           // and also calls new callbacks scheduled by current callbacks
-          jest.runAllTimers();
+          advanceAll();
           expect(callbackLog).toEqual(['A', 'B', 'C']);
         },
       );
@@ -141,7 +181,7 @@ describe('ReactScheduler', () => {
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
         // while flushing callbacks, calls as many as it has time for
-        jest.runAllTimers();
+        advanceAll();
         expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
       });
 
@@ -164,7 +204,7 @@ describe('ReactScheduler', () => {
         scheduleWork(callbackB);
         expect(callbackLog).toEqual([]);
         // after a delay, calls the latest callback passed
-        jest.runAllTimers();
+        advanceAll();
         expect(callbackLog).toEqual(['A0', 'B', 'A1']);
       });
     });
@@ -177,7 +217,7 @@ describe('ReactScheduler', () => {
       const callbackId = scheduleWork(cb);
       expect(cb.mock.calls.length).toBe(0);
       cancelScheduledWork(callbackId);
-      jest.runAllTimers();
+      advanceAll();
       expect(cb.mock.calls.length).toBe(0);
     });
 
@@ -195,7 +235,7 @@ describe('ReactScheduler', () => {
         callbackBId = scheduleWork(callbackB);
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
-        jest.runAllTimers();
+        advanceAll();
         // B should not get called because A cancelled B
         expect(callbackLog).toEqual(['A']);
         expect(callbackB.mock.calls.length).toBe(0);

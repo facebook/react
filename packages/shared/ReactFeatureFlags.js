@@ -12,12 +12,6 @@ import invariant from 'fbjs/lib/invariant';
 // Exports ReactDOM.createRoot
 export const enableUserTimingAPI = __DEV__;
 
-// Mutating mode (React DOM, React ART, React Native):
-export const enableMutatingReconciler = true;
-// Experimental noop mode (currently unused):
-export const enableNoopReconciler = false;
-// Experimental persistent mode (Fabric):
-export const enablePersistentReconciler = false;
 // Experimental error-boundary API that can recover from errors within a single
 // render phase
 export const enableGetDerivedStateFromCatch = false;

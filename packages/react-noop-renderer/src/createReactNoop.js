@@ -18,7 +18,6 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import ReactFiberReconciler from 'react-reconciler';
 import * as ReactPortal from 'shared/ReactPortal';
 import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
@@ -33,7 +32,7 @@ type Instance = {|
 |};
 type TextInstance = {|text: string, id: number|};
 
-function createReactNoop(useMutation: boolean) {
+function createReactNoop(reconciler: Function, useMutation: boolean) {
   const UPDATE_SIGNAL = {};
   let scheduledCallback = null;
 
@@ -187,101 +186,105 @@ function createReactNoop(useMutation: boolean) {
     },
 
     isPrimaryRenderer: true,
+    supportsHydration: false,
   };
 
   const hostConfig = useMutation
     ? {
         ...sharedHostConfig,
-        mutation: {
-          commitMount(instance: Instance, type: string, newProps: Props): void {
-            // Noop
-          },
 
-          commitUpdate(
-            instance: Instance,
-            updatePayload: Object,
-            type: string,
-            oldProps: Props,
-            newProps: Props,
-          ): void {
-            if (oldProps === null) {
-              throw new Error('Should have old props');
-            }
-            instance.prop = newProps.prop;
-          },
+        supportsMutation: true,
+        supportsPersistence: false,
 
-          commitTextUpdate(
-            textInstance: TextInstance,
-            oldText: string,
-            newText: string,
-          ): void {
-            textInstance.text = newText;
-          },
-
-          appendChild: appendChild,
-          appendChildToContainer: appendChild,
-          insertBefore: insertBefore,
-          insertInContainerBefore: insertBefore,
-          removeChild: removeChild,
-          removeChildFromContainer: removeChild,
-
-          resetTextContent(instance: Instance): void {},
+        commitMount(instance: Instance, type: string, newProps: Props): void {
+          // Noop
         },
+
+        commitUpdate(
+          instance: Instance,
+          updatePayload: Object,
+          type: string,
+          oldProps: Props,
+          newProps: Props,
+        ): void {
+          if (oldProps === null) {
+            throw new Error('Should have old props');
+          }
+          instance.prop = newProps.prop;
+        },
+
+        commitTextUpdate(
+          textInstance: TextInstance,
+          oldText: string,
+          newText: string,
+        ): void {
+          textInstance.text = newText;
+        },
+
+        appendChild: appendChild,
+        appendChildToContainer: appendChild,
+        insertBefore: insertBefore,
+        insertInContainerBefore: insertBefore,
+        removeChild: removeChild,
+        removeChildFromContainer: removeChild,
+
+        resetTextContent(instance: Instance): void {},
       }
     : {
         ...sharedHostConfig,
-        persistence: {
-          cloneInstance(
-            instance: Instance,
-            updatePayload: null | Object,
-            type: string,
-            oldProps: Props,
-            newProps: Props,
-            internalInstanceHandle: Object,
-            keepChildren: boolean,
-            recyclableInstance: null | Instance,
-          ): Instance {
-            const clone = {
-              id: instance.id,
-              type: type,
-              children: keepChildren ? instance.children : [],
-              prop: newProps.prop,
-            };
-            Object.defineProperty(clone, 'id', {
-              value: clone.id,
-              enumerable: false,
-            });
-            return clone;
-          },
+        supportsMutation: false,
+        supportsPersistence: true,
 
-          createContainerChildSet(
-            container: Container,
-          ): Array<Instance | TextInstance> {
-            return [];
-          },
+        cloneInstance(
+          instance: Instance,
+          updatePayload: null | Object,
+          type: string,
+          oldProps: Props,
+          newProps: Props,
+          internalInstanceHandle: Object,
+          keepChildren: boolean,
+          recyclableInstance: null | Instance,
+        ): Instance {
+          const clone = {
+            id: instance.id,
+            type: type,
+            children: keepChildren ? instance.children : [],
+            prop: newProps.prop,
+          };
+          Object.defineProperty(clone, 'id', {
+            value: clone.id,
+            enumerable: false,
+          });
+          return clone;
+        },
 
-          appendChildToContainerChildSet(
-            childSet: Array<Instance | TextInstance>,
-            child: Instance | TextInstance,
-          ): void {
-            childSet.push(child);
-          },
+        createContainerChildSet(
+          container: Container,
+        ): Array<Instance | TextInstance> {
+          return [];
+        },
 
-          finalizeContainerChildren(
-            container: Container,
-            newChildren: Array<Instance | TextInstance>,
-          ): void {},
+        appendChildToContainerChildSet(
+          childSet: Array<Instance | TextInstance>,
+          child: Instance | TextInstance,
+        ): void {
+          childSet.push(child);
+        },
 
-          replaceContainerChildren(
-            container: Container,
-            newChildren: Array<Instance | TextInstance>,
-          ): void {
-            container.children = newChildren;
-          },
+        finalizeContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
+        ): void {},
+
+        replaceContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
+        ): void {
+          container.children = newChildren;
         },
       };
 
-  const NoopRenderer = ReactFiberReconciler(hostConfig);
+  const NoopRenderer = reconciler(hostConfig);
 
   const rootContainers = new Map();
   const roots = new Map();

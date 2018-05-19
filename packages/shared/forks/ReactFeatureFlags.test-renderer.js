@@ -20,9 +20,6 @@ export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-export const enableMutatingReconciler = true;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = false;
 export const enableProfilerTimer = false;
 export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 

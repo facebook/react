@@ -12,12 +12,15 @@ process.on('unhandledRejection', err => {
 });
 
 const runFlow = require('../flow/runFlow');
-const {typedRenderers} = require('../flow/typedRenderers');
+const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 async function checkAll() {
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (let renderer of typedRenderers) {
-    await runFlow(renderer, ['check']);
+  for (let rendererInfo of inlinedHostConfigs) {
+    if (rendererInfo.isFlowTyped) {
+      await runFlow(rendererInfo.shortName, ['check']);
+      console.log();
+    }
   }
 }
 

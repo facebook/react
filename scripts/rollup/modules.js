@@ -56,11 +56,16 @@ function getDependencies(bundleType, entry) {
 }
 
 // Hijacks some modules for optimization and integration reasons.
-function getForks(bundleType, entry) {
+function getForks(bundleType, entry, moduleType) {
   const forksForBundle = {};
   Object.keys(forks).forEach(srcModule => {
     const dependencies = getDependencies(bundleType, entry);
-    const targetModule = forks[srcModule](bundleType, entry, dependencies);
+    const targetModule = forks[srcModule](
+      bundleType,
+      entry,
+      dependencies,
+      moduleType
+    );
     if (targetModule === null) {
       return;
     }
