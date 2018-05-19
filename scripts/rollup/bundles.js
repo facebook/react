@@ -29,6 +29,7 @@ const moduleTypes = {
   RENDERER: 'RENDERER',
   RENDERER_UTILS: 'RENDERER_UTILS',
   RECONCILER: 'RECONCILER',
+  NON_FIBER_RENDERER: 'NON_FIBER_RENDERER',
 };
 
 // React
@@ -39,6 +40,8 @@ const RENDERER = moduleTypes.RENDERER;
 const RENDERER_UTILS = moduleTypes.RENDERER_UTILS;
 // Standalone reconciler for third-party renderers.
 const RECONCILER = moduleTypes.RECONCILER;
+// Non-Fiber implementations like SSR and Shallow renderers.
+const NON_FIBER_RENDERER = moduleTypes.NON_FIBER_RENDERER;
 
 const bundles = [
   /******* Isomorphic *******/
@@ -113,7 +116,7 @@ const bundles = [
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
-    moduleType: RENDERER,
+    moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
     externals: ['react'],
@@ -122,7 +125,7 @@ const bundles = [
   {
     label: 'dom-server-node',
     bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
+    moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.node',
     externals: ['react', 'stream'],
   },
@@ -246,7 +249,7 @@ const bundles = [
   {
     label: 'test-shallow',
     bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
-    moduleType: RENDERER,
+    moduleType: NON_FIBER_RENDERER,
     entry: 'react-test-renderer/shallow',
     global: 'ReactShallowRenderer',
     externals: ['react'],

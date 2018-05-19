@@ -1,14 +1,34 @@
+/**
+ * Copyright (c) 2015-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
+ */
+
 'use strict';
 
 const chalk = require('chalk');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
-const {typedRenderers} = require('./typedRenderers');
+const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
-const config = fs.readFileSync(__dirname + '/config/flowconfig');
+const configTemplate = fs
+  .readFileSync(__dirname + '/config/flowconfig')
+  .toString();
 
-function writeConfig(folder) {
+function writeConfig(renderer) {
+  const folder = __dirname + '/' + renderer;
   mkdirp.sync(folder);
+
+  const config = configTemplate.replace(
+    '%REACT_RENDERER_FLOW_OPTIONS%',
+    `
+module.name_mapper='react-reconciler/inline.${renderer}$$' -> 'react-reconciler/inline-typed'
+module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
+    `.trim(),
+  );
 
   const disclaimer = `
 # ---------------------------------------------------------------#
@@ -39,6 +59,8 @@ ${disclaimer}
 
 // Write multiple configs in different folders
 // so that we can run those checks in parallel if we want.
-typedRenderers.forEach(renderer => {
-  writeConfig(__dirname + '/' + renderer);
+inlinedHostConfigs.forEach(rendererInfo => {
+  if (rendererInfo.isFlowTyped) {
+    writeConfig(rendererInfo.shortName);
+  }
 });

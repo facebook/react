@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Deadline} from 'react-reconciler';
+import type {Deadline} from 'react-reconciler/src/ReactFiberScheduler';
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
@@ -43,7 +43,10 @@ function setTimeoutCallback() {
 // RN has a poor polyfill for requestIdleCallback so we aren't using it.
 // This implementation is only intended for short-term use anyway.
 // We also don't implement cancel functionality b'c Fiber doesn't currently need it.
-function scheduleDeferredCallback(callback: Callback): number {
+function scheduleDeferredCallback(
+  callback: Callback,
+  options?: {timeout: number},
+): number {
   // We assume only one callback is scheduled at a time b'c that's how Fiber works.
   scheduledCallback = callback;
   return setTimeout(setTimeoutCallback, 1);

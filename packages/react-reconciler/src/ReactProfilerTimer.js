@@ -12,6 +12,34 @@ import type {Fiber} from './ReactFiber';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 import warning from 'fbjs/lib/warning';
+import {now} from './ReactFiberHostConfig';
+
+export type ProfilerTimer = {
+  checkActualRenderTimeStackEmpty(): void,
+  getCommitTime(): number,
+  markActualRenderTimeStarted(fiber: Fiber): void,
+  pauseActualRenderTimerIfRunning(): void,
+  recordElapsedActualRenderTime(fiber: Fiber): void,
+  resetActualRenderTimer(): void,
+  resumeActualRenderTimerIfPaused(): void,
+  recordCommitTime(): void,
+  recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void,
+  startBaseRenderTimer(): void,
+  stopBaseRenderTimerIfRunning(): void,
+};
+
+let commitTime: number = 0;
+
+function getCommitTime(): number {
+  return commitTime;
+}
+
+function recordCommitTime(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  commitTime = now();
+}
 
 /**
  * The "actual" render time is total time required to render the descendants of a Profiler component.
@@ -20,148 +48,131 @@ import warning from 'fbjs/lib/warning';
  * It is paused (and accumulated) in the event of an interruption or an aborted render.
  */
 
-export type ProfilerTimer = {
-  getCommitTime(): number,
-  recordCommitTime(): void,
-  checkActualRenderTimeStackEmpty(): void,
-  markActualRenderTimeStarted(fiber: Fiber): void,
-  pauseActualRenderTimerIfRunning(): void,
-  recordElapsedActualRenderTime(fiber: Fiber): void,
-  resetActualRenderTimer(): void,
-  resumeActualRenderTimerIfPaused(): void,
-  recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void,
-  startBaseRenderTimer(): void,
-  stopBaseRenderTimerIfRunning(): void,
-};
+let fiberStack: Array<Fiber | null>;
 
-export function createProfilerTimer(now: () => number): ProfilerTimer {
-  let fiberStack: Array<Fiber | null>;
+if (__DEV__) {
+  fiberStack = [];
+}
 
+let timerPausedAt: number = 0;
+let totalElapsedPauseTime: number = 0;
+
+function checkActualRenderTimeStackEmpty(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
   if (__DEV__) {
-    fiberStack = [];
+    warning(
+      fiberStack.length === 0,
+      'Expected an empty stack. Something was not reset properly.',
+    );
   }
+}
 
-  let commitTime: number = 0;
-
-  function getCommitTime(): number {
-    return commitTime;
+function markActualRenderTimeStarted(fiber: Fiber): void {
+  if (!enableProfilerTimer) {
+    return;
   }
-
-  function recordCommitTime(): void {
-    commitTime = now();
+  if (__DEV__) {
+    fiberStack.push(fiber);
   }
+  const stateNode = fiber.stateNode;
+  stateNode.elapsedPauseTimeAtStart = totalElapsedPauseTime;
+  stateNode.startTime = now();
+}
 
-  let timerPausedAt: number = 0;
-  let totalElapsedPauseTime: number = 0;
+function pauseActualRenderTimerIfRunning(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  if (timerPausedAt === 0) {
+    timerPausedAt = now();
+  }
+}
 
-  function checkActualRenderTimeStackEmpty(): void {
-    if (__DEV__) {
+function recordElapsedActualRenderTime(fiber: Fiber): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  if (__DEV__) {
+    warning(fiber === fiberStack.pop(), 'Unexpected Fiber popped.');
+  }
+  const stateNode = fiber.stateNode;
+  stateNode.duration +=
+    now() -
+    (totalElapsedPauseTime - stateNode.elapsedPauseTimeAtStart) -
+    stateNode.startTime;
+}
+
+function resetActualRenderTimer(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  totalElapsedPauseTime = 0;
+}
+
+function resumeActualRenderTimerIfPaused(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  if (timerPausedAt > 0) {
+    totalElapsedPauseTime += now() - timerPausedAt;
+    timerPausedAt = 0;
+  }
+}
+
+/**
+ * The "base" render time is the duration of the “begin” phase of work for a particular fiber.
+ * This time is measured and stored on each fiber.
+ * The time for all sibling fibers are accumulated and stored on their parent during the "complete" phase.
+ * If a fiber bails out (sCU false) then its "base" timer is cancelled and the fiber is not updated.
+ */
+
+let baseStartTime: number = -1;
+
+function recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  if (baseStartTime !== -1) {
+    fiber.selfBaseTime = now() - baseStartTime;
+  }
+}
+
+function startBaseRenderTimer(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  if (__DEV__) {
+    if (baseStartTime !== -1) {
       warning(
-        fiberStack.length === 0,
-        'Expected an empty stack. Something was not reset properly.',
+        false,
+        'Cannot start base timer that is already running. ' +
+          'This error is likely caused by a bug in React. ' +
+          'Please file an issue.',
       );
     }
   }
-
-  function markActualRenderTimeStarted(fiber: Fiber): void {
-    if (__DEV__) {
-      fiberStack.push(fiber);
-    }
-    const stateNode = fiber.stateNode;
-    stateNode.elapsedPauseTimeAtStart = totalElapsedPauseTime;
-    stateNode.startTime = now();
-  }
-
-  function pauseActualRenderTimerIfRunning(): void {
-    if (timerPausedAt === 0) {
-      timerPausedAt = now();
-    }
-  }
-
-  function recordElapsedActualRenderTime(fiber: Fiber): void {
-    if (__DEV__) {
-      warning(fiber === fiberStack.pop(), 'Unexpected Fiber popped.');
-    }
-    const stateNode = fiber.stateNode;
-    stateNode.duration +=
-      now() -
-      (totalElapsedPauseTime - stateNode.elapsedPauseTimeAtStart) -
-      stateNode.startTime;
-  }
-
-  function resetActualRenderTimer(): void {
-    totalElapsedPauseTime = 0;
-  }
-
-  function resumeActualRenderTimerIfPaused(): void {
-    if (timerPausedAt > 0) {
-      totalElapsedPauseTime += now() - timerPausedAt;
-      timerPausedAt = 0;
-    }
-  }
-
-  /**
-   * The "base" render time is the duration of the “begin” phase of work for a particular fiber.
-   * This time is measured and stored on each fiber.
-   * The time for all sibling fibers are accumulated and stored on their parent during the "complete" phase.
-   * If a fiber bails out (sCU false) then its "base" timer is cancelled and the fiber is not updated.
-   */
-
-  let baseStartTime: number = -1;
-
-  function recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void {
-    if (baseStartTime !== -1) {
-      fiber.selfBaseTime = now() - baseStartTime;
-    }
-  }
-
-  function startBaseRenderTimer(): void {
-    if (__DEV__) {
-      if (baseStartTime !== -1) {
-        warning(
-          false,
-          'Cannot start base timer that is already running. ' +
-            'This error is likely caused by a bug in React. ' +
-            'Please file an issue.',
-        );
-      }
-    }
-    baseStartTime = now();
-  }
-
-  function stopBaseRenderTimerIfRunning(): void {
-    baseStartTime = -1;
-  }
-
-  if (enableProfilerTimer) {
-    return {
-      getCommitTime,
-      recordCommitTime,
-      checkActualRenderTimeStackEmpty,
-      markActualRenderTimeStarted,
-      pauseActualRenderTimerIfRunning,
-      recordElapsedActualRenderTime,
-      resetActualRenderTimer,
-      resumeActualRenderTimerIfPaused,
-      recordElapsedBaseRenderTimeIfRunning,
-      startBaseRenderTimer,
-      stopBaseRenderTimerIfRunning,
-    };
-  } else {
-    return {
-      getCommitTime(): number {
-        return 0;
-      },
-      recordCommitTime(): void {},
-      checkActualRenderTimeStackEmpty(): void {},
-      markActualRenderTimeStarted(fiber: Fiber): void {},
-      pauseActualRenderTimerIfRunning(): void {},
-      recordElapsedActualRenderTime(fiber: Fiber): void {},
-      resetActualRenderTimer(): void {},
-      resumeActualRenderTimerIfPaused(): void {},
-      recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void {},
-      startBaseRenderTimer(): void {},
-      stopBaseRenderTimerIfRunning(): void {},
-    };
-  }
+  baseStartTime = now();
 }
+
+function stopBaseRenderTimerIfRunning(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  baseStartTime = -1;
+}
+
+export {
+  checkActualRenderTimeStackEmpty,
+  getCommitTime,
+  markActualRenderTimeStarted,
+  pauseActualRenderTimerIfRunning,
+  recordCommitTime,
+  recordElapsedActualRenderTime,
+  resetActualRenderTimer,
+  resumeActualRenderTimerIfPaused,
+  recordElapsedBaseRenderTimeIfRunning,
+  startBaseRenderTimer,
+  stopBaseRenderTimerIfRunning,
+};

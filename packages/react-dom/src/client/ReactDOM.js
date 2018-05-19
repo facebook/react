@@ -19,7 +19,7 @@ import type {Container} from './ReactDOMHostConfig';
 import '../shared/checkReact';
 import './ReactDOMClientInjection';
 
-import ReactFiberReconciler from 'react-reconciler';
+import * as DOMRenderer from 'react-reconciler/inline.dom';
 import * as ReactPortal from 'shared/ReactPortal';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
@@ -35,7 +35,6 @@ import invariant from 'fbjs/lib/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'fbjs/lib/warning';
 
-import ReactDOMHostConfig from './ReactDOMHostConfig';
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
 import * as ReactDOMEventListener from '../events/ReactDOMEventListener';
@@ -446,8 +445,6 @@ function shouldHydrateDueToLegacyHeuristic(container) {
     rootElement.hasAttribute(ROOT_ATTRIBUTE_NAME)
   );
 }
-
-const DOMRenderer = ReactFiberReconciler(ReactDOMHostConfig);
 
 ReactGenericBatching.injection.injectRenderer(DOMRenderer);
 

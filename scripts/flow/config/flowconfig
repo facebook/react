@@ -30,6 +30,9 @@ esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 unsafe.enable_getters_and_setters=true
 
+# Substituted by createFlowConfig.js:
+%REACT_RENDERER_FLOW_OPTIONS%
+
 munge_underscores=false
 
 suppress_type=$FlowIssue

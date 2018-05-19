@@ -45,3 +45,9 @@ if (typeof window !== 'undefined') {
     }
   });
 }
+
+// Preserve the empty object identity across module resets.
+// This is needed for some tests that rely on string refs
+// but reset modules between loading different renderers.
+const obj = require.requireActual('fbjs/lib/emptyObject');
+jest.mock('fbjs/lib/emptyObject', () => obj);

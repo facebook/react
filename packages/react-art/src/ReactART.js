@@ -6,12 +6,11 @@
  */
 
 import React from 'react';
-import ReactFiberReconciler from 'react-reconciler';
+import * as ARTRenderer from 'react-reconciler/inline.art';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';
 
-import ReactARTHostConfig from './ReactARTHostConfig';
 import {TYPES, childrenAsString} from './ReactARTInternals';
 
 Mode.setCurrent(
@@ -131,10 +130,6 @@ class Text extends React.Component {
     );
   }
 }
-
-/** ART Renderer */
-
-const ARTRenderer = ReactFiberReconciler(ReactARTHostConfig);
 
 /** API */
 
