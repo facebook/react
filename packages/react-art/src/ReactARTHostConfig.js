@@ -234,157 +234,167 @@ function applyTextProps(instance, props, prevProps = {}) {
   }
 }
 
-const ReactARTHostConfig = {
-  appendInitialChild(parentInstance, child) {
-    if (typeof child === 'string') {
-      // Noop for string children of Text (eg <Text>{'foo'}{'bar'}</Text>)
-      invariant(false, 'Text children should already be flattened.');
-      return;
-    }
+export * from 'shared/HostConfigWithNoPersistence';
+export * from 'shared/HostConfigWithNoHydration';
 
-    child.inject(parentInstance);
-  },
+export function appendInitialChild(parentInstance, child) {
+  if (typeof child === 'string') {
+    // Noop for string children of Text (eg <Text>{'foo'}{'bar'}</Text>)
+    invariant(false, 'Text children should already be flattened.');
+    return;
+  }
 
-  createInstance(type, props, internalInstanceHandle) {
-    let instance;
+  child.inject(parentInstance);
+}
 
-    switch (type) {
-      case TYPES.CLIPPING_RECTANGLE:
-        instance = Mode.ClippingRectangle();
-        instance._applyProps = applyClippingRectangleProps;
-        break;
-      case TYPES.GROUP:
-        instance = Mode.Group();
-        instance._applyProps = applyGroupProps;
-        break;
-      case TYPES.SHAPE:
-        instance = Mode.Shape();
-        instance._applyProps = applyShapeProps;
-        break;
-      case TYPES.TEXT:
-        instance = Mode.Text(
-          props.children,
-          props.font,
-          props.alignment,
-          props.path,
-        );
-        instance._applyProps = applyTextProps;
-        break;
-    }
+export function createInstance(type, props, internalInstanceHandle) {
+  let instance;
 
-    invariant(instance, 'ReactART does not support the type "%s"', type);
-
-    instance._applyProps(instance, props);
-
-    return instance;
-  },
-
-  createTextInstance(text, rootContainerInstance, internalInstanceHandle) {
-    return text;
-  },
-
-  finalizeInitialChildren(domElement, type, props) {
-    return false;
-  },
-
-  getPublicInstance(instance) {
-    return instance;
-  },
-
-  prepareForCommit() {
-    // Noop
-  },
-
-  prepareUpdate(domElement, type, oldProps, newProps) {
-    return UPDATE_SIGNAL;
-  },
-
-  resetAfterCommit() {
-    // Noop
-  },
-
-  resetTextContent(domElement) {
-    // Noop
-  },
-
-  shouldDeprioritizeSubtree(type, props) {
-    return false;
-  },
-
-  getRootHostContext() {
-    return emptyObject;
-  },
-
-  getChildHostContext() {
-    return emptyObject;
-  },
-
-  scheduleDeferredCallback: ReactScheduler.scheduleWork,
-
-  shouldSetTextContent(type, props) {
-    return (
-      typeof props.children === 'string' || typeof props.children === 'number'
-    );
-  },
-
-  now: ReactScheduler.now,
-
-  // The ART renderer is secondary to the React DOM renderer.
-  isPrimaryRenderer: false,
-
-  mutation: {
-    appendChild(parentInstance, child) {
-      if (child.parentNode === parentInstance) {
-        child.eject();
-      }
-      child.inject(parentInstance);
-    },
-
-    appendChildToContainer(parentInstance, child) {
-      if (child.parentNode === parentInstance) {
-        child.eject();
-      }
-      child.inject(parentInstance);
-    },
-
-    insertBefore(parentInstance, child, beforeChild) {
-      invariant(
-        child !== beforeChild,
-        'ReactART: Can not insert node before itself',
+  switch (type) {
+    case TYPES.CLIPPING_RECTANGLE:
+      instance = Mode.ClippingRectangle();
+      instance._applyProps = applyClippingRectangleProps;
+      break;
+    case TYPES.GROUP:
+      instance = Mode.Group();
+      instance._applyProps = applyGroupProps;
+      break;
+    case TYPES.SHAPE:
+      instance = Mode.Shape();
+      instance._applyProps = applyShapeProps;
+      break;
+    case TYPES.TEXT:
+      instance = Mode.Text(
+        props.children,
+        props.font,
+        props.alignment,
+        props.path,
       );
-      child.injectBefore(beforeChild);
-    },
+      instance._applyProps = applyTextProps;
+      break;
+  }
 
-    insertInContainerBefore(parentInstance, child, beforeChild) {
-      invariant(
-        child !== beforeChild,
-        'ReactART: Can not insert node before itself',
-      );
-      child.injectBefore(beforeChild);
-    },
+  invariant(instance, 'ReactART does not support the type "%s"', type);
 
-    removeChild(parentInstance, child) {
-      destroyEventListeners(child);
-      child.eject();
-    },
+  instance._applyProps(instance, props);
 
-    removeChildFromContainer(parentInstance, child) {
-      destroyEventListeners(child);
-      child.eject();
-    },
+  return instance;
+}
 
-    commitTextUpdate(textInstance, oldText, newText) {
-      // Noop
-    },
+export function createTextInstance(
+  text,
+  rootContainerInstance,
+  internalInstanceHandle,
+) {
+  return text;
+}
 
-    commitMount(instance, type, newProps) {
-      // Noop
-    },
+export function finalizeInitialChildren(domElement, type, props) {
+  return false;
+}
 
-    commitUpdate(instance, updatePayload, type, oldProps, newProps) {
-      instance._applyProps(instance, newProps, oldProps);
-    },
-  },
-};
+export function getPublicInstance(instance) {
+  return instance;
+}
 
-export default ReactARTHostConfig;
+export function prepareForCommit() {
+  // Noop
+}
+
+export function prepareUpdate(domElement, type, oldProps, newProps) {
+  return UPDATE_SIGNAL;
+}
+
+export function resetAfterCommit() {
+  // Noop
+}
+
+export function resetTextContent(domElement) {
+  // Noop
+}
+
+export function shouldDeprioritizeSubtree(type, props) {
+  return false;
+}
+
+export function getRootHostContext() {
+  return emptyObject;
+}
+
+export function getChildHostContext() {
+  return emptyObject;
+}
+
+export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
+export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
+
+export function shouldSetTextContent(type, props) {
+  return (
+    typeof props.children === 'string' || typeof props.children === 'number'
+  );
+}
+
+export const now = ReactScheduler.now;
+
+// The ART renderer is secondary to the React DOM renderer.
+export const isPrimaryRenderer = false;
+
+export const supportsMutation = true;
+
+export function appendChild(parentInstance, child) {
+  if (child.parentNode === parentInstance) {
+    child.eject();
+  }
+  child.inject(parentInstance);
+}
+
+export function appendChildToContainer(parentInstance, child) {
+  if (child.parentNode === parentInstance) {
+    child.eject();
+  }
+  child.inject(parentInstance);
+}
+
+export function insertBefore(parentInstance, child, beforeChild) {
+  invariant(
+    child !== beforeChild,
+    'ReactART: Can not insert node before itself',
+  );
+  child.injectBefore(beforeChild);
+}
+
+export function insertInContainerBefore(parentInstance, child, beforeChild) {
+  invariant(
+    child !== beforeChild,
+    'ReactART: Can not insert node before itself',
+  );
+  child.injectBefore(beforeChild);
+}
+
+export function removeChild(parentInstance, child) {
+  destroyEventListeners(child);
+  child.eject();
+}
+
+export function removeChildFromContainer(parentInstance, child) {
+  destroyEventListeners(child);
+  child.eject();
+}
+
+export function commitTextUpdate(textInstance, oldText, newText) {
+  // Noop
+}
+
+export function commitMount(instance, type, newProps) {
+  // Noop
+}
+
+export function commitUpdate(
+  instance,
+  updatePayload,
+  type,
+  oldProps,
+  newProps,
+) {
+  instance._applyProps(instance, newProps, oldProps);
+}

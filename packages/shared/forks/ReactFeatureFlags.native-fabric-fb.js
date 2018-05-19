@@ -20,11 +20,6 @@ export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = __DEV__;
-
-// React Fabric uses persistent reconciler.
-export const enableMutatingReconciler = false;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = true;
 export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 // Only used in www builds.

@@ -13,21 +13,25 @@ process.on('unhandledRejection', err => {
 
 const chalk = require('chalk');
 const runFlow = require('../flow/runFlow');
-const {typedRenderers} = require('../flow/typedRenderers');
+const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 // This script is using `flow status` for a quick check with a server.
 // Use it for local development.
 
-const primaryRenderer = process.argv[2];
-if (typedRenderers.indexOf(primaryRenderer) === -1) {
+const primaryRenderer = inlinedHostConfigs.find(
+  info => info.isFlowTyped && info.shortName === process.argv[2]
+);
+if (!primaryRenderer) {
   console.log(
     'The ' +
       chalk.red('yarn flow') +
       ' command now requires you to pick a primary renderer:'
   );
   console.log();
-  typedRenderers.forEach(renderer => {
-    console.log('  * ' + chalk.cyan('yarn flow ' + renderer));
+  inlinedHostConfigs.forEach(rendererInfo => {
+    if (rendererInfo.isFlowTyped) {
+      console.log('  * ' + chalk.cyan('yarn flow ' + rendererInfo.shortName));
+    }
   });
   console.log();
   console.log('If you are not sure, run ' + chalk.green('yarn flow dom') + '.');
@@ -45,4 +49,4 @@ if (typedRenderers.indexOf(primaryRenderer) === -1) {
   process.exit(1);
 }
 
-runFlow(primaryRenderer, ['status']);
+runFlow(primaryRenderer.shortName, ['status']);

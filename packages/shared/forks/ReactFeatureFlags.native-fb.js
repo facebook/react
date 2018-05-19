@@ -26,9 +26,6 @@ export const {
 
 // The rest of the flags are static for better dead code elimination.
 export const enableUserTimingAPI = __DEV__;
-export const enableMutatingReconciler = true;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

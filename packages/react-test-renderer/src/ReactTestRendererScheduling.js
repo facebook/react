@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Deadline} from 'react-reconciler/src/ReactFiberReconciler';
+import type {Deadline} from 'react-reconciler/src/ReactFiberScheduler';
 
 // Current virtual time
 export let nowImplementation = () => 0;

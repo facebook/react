@@ -1,6 +1,8 @@
 'use strict';
 
 const bundleTypes = require('./bundles').bundleTypes;
+const moduleTypes = require('./bundles').moduleTypes;
+const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
@@ -10,6 +12,8 @@ const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
 const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
 const RN_FB_DEV = bundleTypes.RN_FB_DEV;
 const RN_FB_PROD = bundleTypes.RN_FB_PROD;
+const RENDERER = moduleTypes.RENDERER;
+const RECONCILER = moduleTypes.RECONCILER;
 
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
@@ -141,6 +145,33 @@ const forks = Object.freeze({
       default:
         return null;
     }
+  },
+
+  'react-reconciler/src/ReactFiberHostConfig': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType
+  ) => {
+    if (dependencies.indexOf('react-reconciler') !== -1) {
+      return null;
+    }
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let rendererInfo of inlinedHostConfigs) {
+      if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
+        return `react-reconciler/src/forks/ReactFiberHostConfig.${
+          rendererInfo.shortName
+        }.js`;
+      }
+    }
+    throw new Error(
+      'Expected ReactFiberHostConfig to always be replaced with a shim, but ' +
+        `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
+        'Did you mean to add it there to associate it with a specific renderer?'
+    );
   },
 
   // We wrap top-level listeners into guards on www.
