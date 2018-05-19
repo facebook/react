@@ -19,7 +19,7 @@ import invariant from 'fbjs/lib/invariant';
  */
 function reactProdInvariant(code: string): void {
   const argCount = arguments.length - 1;
-  let url = 'http://reactjs.org/docs/error-decoder.html?invariant=' + code;
+  let url = 'https://reactjs.org/docs/error-decoder.html?invariant=' + code;
   for (let argIdx = 0; argIdx < argCount; argIdx++) {
     url += '&args[]=' + encodeURIComponent(arguments[argIdx + 1]);
   }
