@@ -27,13 +27,32 @@ inlinedHostConfigs.forEach(rendererInfo => {
     return;
   }
   jest.mock(`react-reconciler/inline.${rendererInfo.shortName}`, () => {
-    jest.mock(shimHostConfigPath, () =>
-      require.requireActual(
+    let hasImportedShimmedConfig = false;
+
+    // We want the reconciler to pick up the host config for this renderer.
+    jest.mock(shimHostConfigPath, () => {
+      hasImportedShimmedConfig = true;
+      return require.requireActual(
         `react-reconciler/src/forks/ReactFiberHostConfig.${
           rendererInfo.shortName
         }.js`
-      )
-    );
-    return require.requireActual('react-reconciler');
+      );
+    });
+
+    const renderer = require.requireActual('react-reconciler');
+    // If the shimmed config factory function above has not run,
+    // it means this test file loads more than one renderer
+    // but doesn't reset modules between them. This won't work.
+    if (!hasImportedShimmedConfig) {
+      throw new Error(
+        `Could not import the "${rendererInfo.shortName}" renderer ` +
+          `in this suite because another renderer has already been ` +
+          `loaded earlier. Call jest.resetModules() before importing any ` +
+          `of the following entry points:\n\n` +
+          rendererInfo.entryPoints.map(entry => `  * ${entry}`)
+      );
+    }
+
+    return renderer;
   });
 });
