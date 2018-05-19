@@ -63,11 +63,9 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (hostInstance == null) {
     return hostInstance;
   }
-  // TODO: the code is right but the types here are wrong.
-  // https://github.com/facebook/react/pull/12863
   if ((hostInstance: any).canonical) {
     // Fabric
-    return (hostInstance: any).canonical._nativeTag;
+    return hostInstance.canonical._nativeTag;
   }
   return hostInstance._nativeTag;
 }

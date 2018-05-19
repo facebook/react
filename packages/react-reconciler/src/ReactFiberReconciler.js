@@ -173,7 +173,7 @@ export function updateContainerAtExpirationTime(
   return scheduleRootUpdate(current, element, expirationTime, callback);
 }
 
-function findHostInstance(component: Object): PublicInstance | null {
+function findHostInstance(component: Object): Instance | TextInstance | null {
   const fiber = ReactInstanceMap.get(component);
   if (fiber === undefined) {
     if (typeof component.render === 'function') {
@@ -252,7 +252,7 @@ export {findHostInstance};
 
 export function findHostInstanceWithNoPortals(
   fiber: Fiber,
-): PublicInstance | null {
+): Instance | TextInstance | null {
   const hostFiber = findCurrentHostFiberWithNoPortals(fiber);
   if (hostFiber === null) {
     return null;

@@ -9,6 +9,7 @@
 
 import type {ReactNativeType} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {Instance as FabricInstance} from './ReactFabricHostConfig';
 
 import './ReactNativeInjection';
 
@@ -68,7 +69,8 @@ function findNodeHandle(componentOrHandle: any): ?number {
   }
   if ((hostInstance: any).canonical) {
     // Fabric
-    return (hostInstance: any).canonical._nativeTag;
+    const fabricHostInstance = ((hostInstance: any): FabricInstance);
+    return fabricHostInstance.canonical._nativeTag;
   }
   return hostInstance._nativeTag;
 }
