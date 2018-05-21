@@ -23,7 +23,7 @@ import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
 
 type Container = {rootID: string, children: Array<Instance | TextInstance>};
-type Props = {prop: any, hidden?: boolean};
+type Props = {prop: any, hidden?: boolean, children?: mixed};
 type Instance = {|
   type: string,
   id: number,

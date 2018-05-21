@@ -30,6 +30,7 @@ export type Props = {
   children?: mixed,
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
+  dangerouslySetInnerHTML?: mixed,
 };
 export type Container = Element | Document;
 export type Instance = Element;

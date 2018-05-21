@@ -66,9 +66,9 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (hostInstance == null) {
     return hostInstance;
   }
-  if (hostInstance.canonical) {
+  if ((hostInstance: any).canonical) {
     // Fabric
-    return (hostInstance.canonical: any)._nativeTag;
+    return (hostInstance: any).canonical._nativeTag;
   }
   return hostInstance._nativeTag;
 }

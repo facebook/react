@@ -28,7 +28,6 @@ untyped-type-import=error
 [options]
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
-unsafe.enable_getters_and_setters=true
 
 # Substituted by createFlowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
@@ -46,4 +45,4 @@ suppress_comment=\\(.\\|\n\\)*\\$FlowFixedInNextDeploy
 suppress_comment=\\(.\\|\n\\)*\\$FlowExpectedError
 
 [version]
-^0.61.0
+^0.72.0

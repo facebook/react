@@ -63,20 +63,21 @@ function trackValueOnNode(node: any): ?ValueTracker {
   // (needed for certain tests that spyOn input values and Safari)
   if (
     node.hasOwnProperty(valueField) ||
+    typeof descriptor === 'undefined' ||
     typeof descriptor.get !== 'function' ||
     typeof descriptor.set !== 'function'
   ) {
     return;
   }
-
+  const {get, set} = descriptor;
   Object.defineProperty(node, valueField, {
     configurable: true,
     get: function() {
-      return descriptor.get.call(this);
+      return get.call(this);
     },
     set: function(value) {
       currentValue = '' + value;
-      descriptor.set.call(this, value);
+      set.call(this, value);
     },
   });
   // We could've passed this the first time

@@ -432,7 +432,11 @@ export function setInitialProperties(
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, rawProps);
-    if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+    if (
+      isCustomComponentTag &&
+      !didWarnShadyDOM &&
+      (domElement: any).shadyRoot
+    ) {
       warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
@@ -820,7 +824,11 @@ export function diffHydratedProperties(
     suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
     isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
-    if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+    if (
+      isCustomComponentTag &&
+      !didWarnShadyDOM &&
+      (domElement: any).shadyRoot
+    ) {
       warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
