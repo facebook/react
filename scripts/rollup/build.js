@@ -420,10 +420,6 @@ async function createBundle(bundle, bundleType) {
 }
 
 function handleRollupWarning(warning) {
-  if (warning.code === 'UNRESOLVED_IMPORT') {
-    console.error(warning.message);
-    process.exit(1);
-  }
   if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
     const match = warning.message.match(/external module '([^']+)'/);
     if (!match || typeof match[1] !== 'string') {
@@ -445,7 +441,20 @@ function handleRollupWarning(warning) {
     // Don't warn. We will remove side effectless require() in a later pass.
     return;
   }
-  console.warn(warning.message || warning);
+
+  if (typeof warning.code === 'string') {
+    // This is a warning coming from Rollup itself.
+    // These tend to be important (e.g. clashes in namespaced exports)
+    // so we'll fail the build on any of them.
+    console.error();
+    console.error(warning.message || warning);
+    console.error();
+    process.exit(1);
+  } else {
+    // The warning is from one of the plugins.
+    // Maybe it's not important, so just print it.
+    console.warn(warning.message || warning);
+  }
 }
 
 function handleRollupError(error) {
