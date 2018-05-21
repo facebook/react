@@ -151,6 +151,7 @@ function coerceRef(
       if (
         current !== null &&
         current.ref !== null &&
+        typeof current.ref === 'function' &&
         current.ref._stringRef === stringRef
       ) {
         return current.ref;
@@ -901,9 +902,9 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     if (__DEV__) {
       // Warn about using Maps as children
-      if (typeof newChildrenIterable.entries === 'function') {
-        const possibleMap = (newChildrenIterable: any);
-        if (possibleMap.entries === iteratorFn) {
+      const maybeMap = (newChildrenIterable: any);
+      if (typeof maybeMap.entries === 'function') {
+        if (maybeMap.entries === iteratorFn) {
           warning(
             didWarnAboutMaps,
             'Using Maps as children is unsupported and will likely yield ' +

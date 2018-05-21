@@ -60,7 +60,7 @@
     "fbjs": "^0.8.16",
     "fbjs-scripts": "^0.6.0",
     "filesize": "^3.5.6",
-    "flow-bin": "^0.61.0",
+    "flow-bin": "^0.72.0",
     "flow-coverage-report": "^0.4.0",
     "git-branch": "^0.3.0",
     "glob": "^6.0.4",

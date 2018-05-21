@@ -414,7 +414,7 @@ const ReactTestRendererFiber = {
     const entry = {
       root: undefined, // makes flow happy
       // we define a 'getter' for 'root' below using 'Object.defineProperty'
-      toJSON() {
+      toJSON(): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
         if (root == null || root.current == null || container == null) {
           return null;
         }

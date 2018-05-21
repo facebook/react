@@ -119,10 +119,11 @@ const pointerEvents = [
   TOP_POINTER_UP,
 ];
 
-const dependencies = [TOP_MOUSE_DOWN, TOP_MOUSE_MOVE, TOP_MOUSE_UP].concat(
-  touchEvents,
-  pointerEvents,
-);
+const dependencies: Array<TopLevelType> = [
+  TOP_MOUSE_DOWN,
+  TOP_MOUSE_MOVE,
+  TOP_MOUSE_UP,
+].concat(touchEvents, pointerEvents);
 
 const eventTypes = {
   touchTap: {

@@ -53,9 +53,11 @@ let didWarnAboutUnstableCreatePortal = false;
 if (__DEV__) {
   if (
     typeof Map !== 'function' ||
+    // $FlowIssue Flow incorrectly thinks Map has no prototype
     Map.prototype == null ||
     typeof Map.prototype.forEach !== 'function' ||
     typeof Set !== 'function' ||
+    // $FlowIssue Flow incorrectly thinks Set has no prototype
     Set.prototype == null ||
     typeof Set.prototype.clear !== 'function' ||
     typeof Set.prototype.forEach !== 'function'

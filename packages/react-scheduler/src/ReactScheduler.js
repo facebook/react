@@ -60,14 +60,20 @@ let scheduleWork: (
   callback: FrameCallbackType,
   options?: {timeout: number},
 ) => number;
-let cancelScheduledWork: (callbackID: number) => void;
+let cancelScheduledWork: (callbackId: number) => void;
 
 if (!ExecutionEnvironment.canUseDOM) {
+  let callbackIdCounter = 0;
+  // Timeouts are objects in Node.
+  // For consistency, we'll use numbers in the public API anyway.
+  const timeoutIds: {[number]: TimeoutID} = {};
+
   scheduleWork = function(
     callback: FrameCallbackType,
     options?: {timeout: number},
   ): number {
-    return setTimeout(() => {
+    const callbackId = callbackIdCounter++;
+    const timeoutId = setTimeout(() => {
       callback({
         timeRemaining() {
           return Infinity;
@@ -75,9 +81,13 @@ if (!ExecutionEnvironment.canUseDOM) {
         didTimeout: false,
       });
     });
+    timeoutIds[callbackId] = timeoutId;
+    return callbackId;
   };
-  cancelScheduledWork = function(timeoutID: number) {
-    clearTimeout(timeoutID);
+  cancelScheduledWork = function(callbackId: number) {
+    const timeoutId = timeoutIds[callbackId];
+    delete timeoutIds[callbackId];
+    clearTimeout(timeoutId);
   };
 } else {
   // We keep callbacks in a queue.

@@ -49,12 +49,13 @@ function scheduleDeferredCallback(
 ): number {
   // We assume only one callback is scheduled at a time b'c that's how Fiber works.
   scheduledCallback = callback;
-  return setTimeout(setTimeoutCallback, 1);
+  const timeoutId = setTimeout(setTimeoutCallback, 1);
+  return (timeoutId: any); // Timeouts are always numbers on RN
 }
 
 function cancelDeferredCallback(callbackID: number) {
   scheduledCallback = null;
-  clearTimeout(callbackID);
+  clearTimeout((callbackID: any)); // Timeouts are always numbers on RN
 }
 
 export {now, scheduleDeferredCallback, cancelDeferredCallback};
