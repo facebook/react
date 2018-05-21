@@ -50,13 +50,11 @@ describe('ReactFabric', () => {
     expect(handle).toBe(2);
   });
 
-  it('find Fabric text nodes with the RN renderer', () => {
+  it('does not find Fabric text nodes with the RN renderer', () => {
     const Text = createReactNativeComponentClass('RCTText', () => ({
-      validAttributes: {title: true},
+      validAttributes: {},
       uiViewClassName: 'RCTText',
     }));
-
-    let ref = React.createRef();
 
     class Component extends React.Component {
       render() {
@@ -64,6 +62,7 @@ describe('ReactFabric', () => {
       }
     }
 
+    let ref = React.createRef();
     ReactFabric.render(
       <Text>
         <Component ref={ref} />
@@ -72,6 +71,6 @@ describe('ReactFabric', () => {
     );
 
     let handle = ReactNative.findNodeHandle(ref.current);
-    expect(handle).toBe(2);
+    expect(handle).toBe(null);
   });
 });

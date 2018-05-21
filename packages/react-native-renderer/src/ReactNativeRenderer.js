@@ -9,7 +9,10 @@
 
 import type {ReactNativeType} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Instance as FabricInstance} from './ReactFabricHostConfig';
+import type {
+  Instance as FabricInstance,
+  TextInstance as FabricTextInstance,
+} from './ReactFabricHostConfig';
 
 import './ReactNativeInjection';
 
@@ -67,12 +70,33 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (hostInstance == null) {
     return hostInstance;
   }
-  if ((hostInstance: any).canonical) {
-    // Fabric
-    const fabricHostInstance = ((hostInstance: any): FabricInstance);
-    return fabricHostInstance.canonical._nativeTag;
+  if (typeof hostInstance === 'number') {
+    // Non-Fabric text node.
+    return null;
   }
-  return hostInstance._nativeTag;
+  if (
+    typeof hostInstance === 'object' &&
+    typeof (hostInstance: any).node !== 'undefined'
+  ) {
+    const fabricHostInstance = ((hostInstance: any):
+      | FabricInstance
+      | FabricTextInstance);
+    if (typeof fabricHostInstance.canonical !== 'undefined') {
+      // Fabric Instance
+      return fabricHostInstance.canonical._nativeTag;
+    } else {
+      // Fabric Text
+      return null;
+    }
+  }
+  const nonFabricInstance = hostInstance;
+  if (typeof nonFabricInstance === 'object') {
+    // Non-Fabric Instance
+    return nonFabricInstance._nativeTag;
+  } else {
+    // Non-Fabric Text
+    return null;
+  }
 }
 
 ReactGenericBatching.injection.injectRenderer(ReactNativeFiberRenderer);
