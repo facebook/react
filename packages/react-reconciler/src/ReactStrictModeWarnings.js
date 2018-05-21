@@ -232,15 +232,6 @@ if (__DEV__) {
     fiber: Fiber,
     instance: any,
   ) => {
-    // Dedup strategy: Warn once per component.
-    // This is difficult to track any other way since component names
-    // are often vague and are likely to collide between 3rd party libraries.
-    // An expand property is probably okay to use here since it's DEV-only,
-    // and will only be set in the event of serious warnings.
-    if (didWarnAboutUnsafeLifecycles.has(fiber.type)) {
-      return;
-    }
-
     const strictRoot = findStrictRoot(fiber);
     if (strictRoot === null) {
       warning(
@@ -248,6 +239,15 @@ if (__DEV__) {
         'Expected to find a StrictMode component in a strict mode tree. ' +
           'This error is likely caused by a bug in React. Please file an issue.',
       );
+      return;
+    }
+
+    // Dedup strategy: Warn once per component.
+    // This is difficult to track any other way since component names
+    // are often vague and are likely to collide between 3rd party libraries.
+    // An expand property is probably okay to use here since it's DEV-only,
+    // and will only be set in the event of serious warnings.
+    if (didWarnAboutUnsafeLifecycles.has(fiber.type)) {
       return;
     }
 
@@ -301,11 +301,6 @@ if (__DEV__) {
     fiber: Fiber,
     instance: any,
   ) => {
-    // Dedup strategy: Warn once per component.
-    if (didWarnAboutLegacyContext.has(fiber.type)) {
-      return;
-    }
-
     const strictRoot = findStrictRoot(fiber);
     if (strictRoot === null) {
       warning(
@@ -316,47 +311,49 @@ if (__DEV__) {
       return;
     }
 
-    let warningsForRoot = pendingLegacyContextWarning.get(strictRoot);
-    if (warningsForRoot === undefined) {
-      warningsForRoot = [];
-      pendingLegacyContextWarning.set(strictRoot, warningsForRoot);
+    // Dedup strategy: Warn once per component.
+    if (didWarnAboutLegacyContext.has(fiber.type)) {
+      return;
     }
+
+    let warningsForRoot = pendingLegacyContextWarning.get(strictRoot);
 
     if (
       typeof instance.getChildContext === 'function' ||
       fiber.type.contextTypes != null ||
       fiber.type.childContextTypes != null
     ) {
+      if (warningsForRoot === undefined) {
+        warningsForRoot = [];
+        pendingLegacyContextWarning.set(strictRoot, warningsForRoot);
+      }
       warningsForRoot.push(fiber);
-      pendingLegacyContextWarning.set(strictRoot, warningsForRoot);
     }
   };
 
   ReactStrictModeWarnings.flushLegacyContextWarning = () => {
     ((pendingLegacyContextWarning: any): FiberToFiberComponentsMap).forEach(
       (fiberArray: FiberArray, strictRoot) => {
-        if (fiberArray.length > 0) {
-          const uniqueNames = new Set();
-          fiberArray.forEach(fiber => {
-            uniqueNames.add(getComponentName(fiber) || 'Component');
-            didWarnAboutLegacyContext.add(fiber.type);
-          });
+        const uniqueNames = new Set();
+        fiberArray.forEach(fiber => {
+          uniqueNames.add(getComponentName(fiber) || 'Component');
+          didWarnAboutLegacyContext.add(fiber.type);
+        });
 
-          const sortedNames = setToSortedString(uniqueNames);
-          const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
-            strictRoot,
-          );
+        const sortedNames = setToSortedString(uniqueNames);
+        const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
+          strictRoot,
+        );
 
-          warning(
-            false,
-            'Legacy context API has been detected within a strict-mode tree: %s' +
-              '\n\nPlease update the following components: %s' +
-              '\n\nLearn more about this warning here:' +
-              '\nhttps://fb.me/react-strict-mode-warnings',
-            strictRootComponentStack,
-            sortedNames,
-          );
-        }
+        warning(
+          false,
+          'Legacy context API has been detected within a strict-mode tree: %s' +
+            '\n\nPlease update the following components: %s' +
+            '\n\nLearn more about this warning here:' +
+            '\nhttps://fb.me/react-strict-mode-warnings',
+          strictRootComponentStack,
+          sortedNames,
+        );
       },
     );
   };
