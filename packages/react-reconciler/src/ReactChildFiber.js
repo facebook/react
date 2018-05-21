@@ -902,18 +902,15 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     if (__DEV__) {
       // Warn about using Maps as children
-      const maybeMap = (newChildrenIterable: any);
-      if (typeof maybeMap.entries === 'function') {
-        if (maybeMap.entries === iteratorFn) {
-          warning(
-            didWarnAboutMaps,
-            'Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.%s',
-            getCurrentFiberStackAddendum(),
-          );
-          didWarnAboutMaps = true;
-        }
+      if ((newChildrenIterable: any).entries === iteratorFn) {
+        warning(
+          didWarnAboutMaps,
+          'Using Maps as children is unsupported and will likely yield ' +
+            'unexpected results. Convert it to a sequence/iterable of keyed ' +
+            'ReactElements instead.%s',
+          getCurrentFiberStackAddendum(),
+        );
+        didWarnAboutMaps = true;
       }
 
       // First, validate keys.
