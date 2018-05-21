@@ -20,6 +20,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {getCommitTime} from './ReactProfilerTimer';
 import {
   ClassComponent,
   HostRoot,
@@ -807,6 +808,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           current === null ? 'mount' : 'update',
           finishedWork.stateNode.duration,
           finishedWork.treeBaseTime,
+          finishedWork.stateNode.startTime,
+          getCommitTime(),
         );
 
         // Reset actualTime after successful commit.

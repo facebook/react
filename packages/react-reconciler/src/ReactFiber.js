@@ -460,10 +460,13 @@ export function createFiberFromProfiler(
   const fiber = createFiber(Profiler, pendingProps, key, mode | ProfileMode);
   fiber.type = REACT_PROFILER_TYPE;
   fiber.expirationTime = expirationTime;
-  fiber.stateNode = {
-    duration: 0,
-    startTime: 0,
-  };
+  if (enableProfilerTimer) {
+    fiber.stateNode = {
+      elapsedPauseTimeAtStart: 0,
+      duration: 0,
+      startTime: 0,
+    };
+  }
 
   return fiber;
 }
