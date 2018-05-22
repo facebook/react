@@ -14,6 +14,7 @@ const ReactFeatureFlags = {
   debugRenderPhaseSideEffects: false,
   debugRenderPhaseSideEffectsForStrictMode: false,
   warnAboutDeprecatedLifecycles: true,
+  warnAboutLegacyContextAPI: true,
 };
 
 module.exports = ReactFeatureFlags;

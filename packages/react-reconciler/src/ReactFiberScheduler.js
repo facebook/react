@@ -42,6 +42,7 @@ import {
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
+  warnAboutLegacyContextAPI,
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
@@ -439,6 +440,10 @@ function commitAllLifeCycles(
 
     if (warnAboutDeprecatedLifecycles) {
       ReactStrictModeWarnings.flushPendingDeprecationWarnings();
+    }
+
+    if (warnAboutLegacyContextAPI) {
+      ReactStrictModeWarnings.flushLegacyContextWarning();
     }
   }
   while (nextEffect !== null) {

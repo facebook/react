@@ -668,6 +668,11 @@ function mountClassInstance(
         workInProgress,
         instance,
       );
+
+      ReactStrictModeWarnings.recordLegacyContextWarning(
+        workInProgress,
+        instance,
+      );
     }
 
     if (warnAboutDeprecatedLifecycles) {
