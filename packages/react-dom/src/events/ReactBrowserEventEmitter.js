@@ -16,6 +16,7 @@ import {
   TOP_RESET,
   TOP_SCROLL,
   TOP_SUBMIT,
+  getRawEventName,
 } from './DOMTopLevelEventTypes';
 import {
   setEnabled,
@@ -144,13 +145,9 @@ export function listenTo(
           isListening[TOP_FOCUS] = true;
           break;
         case TOP_CANCEL:
-          if (isEventSupported('cancel', true)) {
-            trapCapturedEvent(TOP_CANCEL, mountAt);
-          }
-          break;
         case TOP_CLOSE:
-          if (isEventSupported('close', true)) {
-            trapCapturedEvent(TOP_CLOSE, mountAt);
+          if (isEventSupported(getRawEventName(dependency), true)) {
+            trapCapturedEvent(dependency, mountAt);
           }
           break;
         case TOP_SUBMIT:
