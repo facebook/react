@@ -304,4 +304,70 @@ describe('ReactDOMEventListener', () => {
 
     document.body.removeChild(container);
   });
+
+  it('should not attempt to listen to unnecessary events on the top level', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const videoRef = React.createRef();
+    const handleVideoPlay = jest.fn(); // We'll test this one.
+    const mediaEvents = {
+      onAbort() {},
+      onCanPlay() {},
+      onCanPlayThrough() {},
+      onDurationChange() {},
+      onEmptied() {},
+      onEncrypted() {},
+      onEnded() {},
+      onError() {},
+      onLoadedData() {},
+      onLoadedMetadata() {},
+      onLoadStart() {},
+      onPause() {},
+      onPlay() {},
+      onPlaying() {},
+      onProgress() {},
+      onRateChange() {},
+      onSeeked() {},
+      onSeeking() {},
+      onStalled() {},
+      onSuspend() {},
+      onTimeUpdate() {},
+      onVolumeChange() {},
+      onWaiting() {},
+    };
+
+    const originalAddEventListener = document.addEventListener;
+    document.addEventListener = function(type) {
+      throw new Error(
+        `Did not expect to add a top-level listener for the "${type}" event.`,
+      );
+    };
+
+    try {
+      // We expect that mounting this tree will
+      // *not* attach handlers for any top-level events.
+      ReactDOM.render(
+        <div>
+          <video ref={videoRef} {...mediaEvents} onPlay={handleVideoPlay} />
+          <audio {...mediaEvents}>
+            <source {...mediaEvents} />
+          </audio>
+          <form onReset={() => {}} onSubmit={() => {}} />
+        </div>,
+        container,
+      );
+
+      // Also verify dispatching one of them works
+      videoRef.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      expect(handleVideoPlay).toHaveBeenCalledTimes(1);
+    } finally {
+      document.addEventListener = originalAddEventListener;
+      document.body.removeChild(container);
+    }
+  });
 });
