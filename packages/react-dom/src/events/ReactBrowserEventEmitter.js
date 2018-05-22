@@ -130,29 +130,39 @@ export function listenTo(
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
-      if (dependency === TOP_SCROLL) {
-        trapCapturedEvent(TOP_SCROLL, mountAt);
-      } else if (dependency === TOP_FOCUS || dependency === TOP_BLUR) {
-        trapCapturedEvent(TOP_FOCUS, mountAt);
-        trapCapturedEvent(TOP_BLUR, mountAt);
-
-        // to make sure blur and focus event listeners are only attached once
-        isListening[TOP_BLUR] = true;
-        isListening[TOP_FOCUS] = true;
-      } else if (dependency === TOP_CANCEL) {
-        if (isEventSupported('cancel', true)) {
-          trapCapturedEvent(TOP_CANCEL, mountAt);
-        }
-        isListening[TOP_CANCEL] = true;
-      } else if (dependency === TOP_CLOSE) {
-        if (isEventSupported('close', true)) {
-          trapCapturedEvent(TOP_CLOSE, mountAt);
-        }
-        isListening[TOP_CLOSE] = true;
-      } else if (dependency !== TOP_SUBMIT && dependency !== TOP_RESET) {
-        trapBubbledEvent(dependency, mountAt);
+      switch (dependency) {
+        case TOP_SCROLL:
+          trapCapturedEvent(TOP_SCROLL, mountAt);
+          break;
+        case TOP_FOCUS:
+        case TOP_BLUR:
+          trapCapturedEvent(TOP_FOCUS, mountAt);
+          trapCapturedEvent(TOP_BLUR, mountAt);
+          // We set the flag for a single dependency later in this function,
+          // but this ensures we mark both as attached rather than just one.
+          isListening[TOP_BLUR] = true;
+          isListening[TOP_FOCUS] = true;
+          break;
+        case TOP_CANCEL:
+          if (isEventSupported('cancel', true)) {
+            trapCapturedEvent(TOP_CANCEL, mountAt);
+          }
+          isListening[TOP_CANCEL] = true;
+          break;
+        case TOP_CLOSE:
+          if (isEventSupported('close', true)) {
+            trapCapturedEvent(TOP_CLOSE, mountAt);
+          }
+          isListening[TOP_CLOSE] = true;
+          break;
+        case TOP_SUBMIT:
+        case TOP_RESET:
+          // No-op: we don't want them to fire twice.
+          break;
+        default:
+          trapBubbledEvent(dependency, mountAt);
+          break;
       }
-
       isListening[dependency] = true;
     }
   }
