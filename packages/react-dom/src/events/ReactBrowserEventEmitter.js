@@ -160,6 +160,7 @@ export function listenTo(
           break;
         default:
           // By default, listen on the top level to all non-media events.
+          // Media events don't bubble so adding the listener wouldn't do anything.
           const isMediaEvent = mediaEventTypes.indexOf(dependency) !== -1;
           if (!isMediaEvent) {
             trapBubbledEvent(dependency, mountAt);
