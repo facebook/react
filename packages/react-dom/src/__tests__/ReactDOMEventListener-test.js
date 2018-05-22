@@ -217,4 +217,49 @@ describe('ReactDOMEventListener', () => {
     expect(mouseOut.mock.calls[0][0]).toEqual(instance.getInner());
     document.body.removeChild(container);
   });
+
+  // Regression test for https://github.com/facebook/react/pull/12877
+  it('should not fire form events twice', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+
+    const handleInvalid = jest.fn();
+    const handleReset = jest.fn();
+    const handleSubmit = jest.fn();
+    ReactDOM.render(
+      <form ref={formRef} onReset={handleReset} onSubmit={handleSubmit}>
+        <input ref={inputRef} onInvalid={handleInvalid} />
+      </form>,
+      container,
+    );
+
+    inputRef.current.dispatchEvent(
+      new Event('invalid', {
+        // https://developer.mozilla.org/en-US/docs/Web/Events/invalid
+        bubbles: false,
+      }),
+    );
+    expect(handleInvalid).toHaveBeenCalledTimes(1);
+
+    formRef.current.dispatchEvent(
+      new Event('reset', {
+        // https://developer.mozilla.org/en-US/docs/Web/Events/reset
+        bubbles: true,
+      }),
+    );
+    expect(handleReset).toHaveBeenCalledTimes(1);
+
+    formRef.current.dispatchEvent(
+      new Event('submit', {
+        // https://developer.mozilla.org/en-US/docs/Web/Events/submit
+        bubbles: true,
+      }),
+    );
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+
+    document.body.removeChild(container);
+  });
 });
