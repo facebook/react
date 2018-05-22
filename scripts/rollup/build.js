@@ -129,6 +129,7 @@ function getRollupOutputOptions(outputPath, format, globals, globalName) {
       file: outputPath,
       format,
       globals,
+      freeze: false,
       interop: false,
       name: globalName,
       sourcemap: false,
