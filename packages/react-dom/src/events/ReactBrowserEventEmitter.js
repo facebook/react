@@ -147,13 +147,11 @@ export function listenTo(
           if (isEventSupported('cancel', true)) {
             trapCapturedEvent(TOP_CANCEL, mountAt);
           }
-          isListening[TOP_CANCEL] = true;
           break;
         case TOP_CLOSE:
           if (isEventSupported('close', true)) {
             trapCapturedEvent(TOP_CLOSE, mountAt);
           }
-          isListening[TOP_CLOSE] = true;
           break;
         case TOP_SUBMIT:
         case TOP_RESET:
