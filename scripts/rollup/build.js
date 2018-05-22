@@ -122,14 +122,22 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
   }
 }
 
-function getRollupOutputOptions(outputPath, format, globals, globalName) {
+function getRollupOutputOptions(
+  outputPath,
+  format,
+  globals,
+  globalName,
+  bundleType
+) {
+  const isProduction = isProductionBundleType(bundleType);
+
   return Object.assign(
     {},
     {
       file: outputPath,
       format,
       globals,
-      freeze: false,
+      freeze: !isProduction,
       interop: false,
       name: globalName,
       sourcemap: false,
@@ -402,7 +410,8 @@ async function createBundle(bundle, bundleType) {
     mainOutputPath,
     format,
     peerGlobals,
-    bundle.global
+    bundle.global,
+    bundleType
   );
 
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
