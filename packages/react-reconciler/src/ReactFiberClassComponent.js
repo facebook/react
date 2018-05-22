@@ -46,7 +46,7 @@ import {
   hasContextChanged,
 } from './ReactFiberContext';
 import {
-  recalculateCurrentTime,
+  getCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
 } from './ReactFiberScheduler';
@@ -167,7 +167,7 @@ const classComponentUpdater = {
   isMounted,
   enqueueSetState(inst, payload, callback) {
     const fiber = ReactInstanceMap.get(inst);
-    const currentTime = recalculateCurrentTime();
+    const currentTime = getCurrentTime();
     const expirationTime = computeExpirationForFiber(currentTime, fiber);
 
     const update = createUpdate(expirationTime);
@@ -184,7 +184,7 @@ const classComponentUpdater = {
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = ReactInstanceMap.get(inst);
-    const currentTime = recalculateCurrentTime();
+    const currentTime = getCurrentTime();
     const expirationTime = computeExpirationForFiber(currentTime, fiber);
 
     const update = createUpdate(expirationTime);
@@ -203,7 +203,7 @@ const classComponentUpdater = {
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = ReactInstanceMap.get(inst);
-    const currentTime = recalculateCurrentTime();
+    const currentTime = getCurrentTime();
     const expirationTime = computeExpirationForFiber(currentTime, fiber);
 
     const update = createUpdate(expirationTime);

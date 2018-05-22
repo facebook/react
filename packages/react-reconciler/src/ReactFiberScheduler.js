@@ -508,7 +508,7 @@ function commitRoot(finishedWork: Fiber): ExpirationTime {
   );
   root.pendingCommitExpirationTime = NoWork;
 
-  const currentTime = recalculateCurrentTime();
+  const currentTime = getCurrentTime();
 
   // Reset this to null before calling lifecycles
   ReactCurrentOwner.current = null;
@@ -1193,6 +1193,10 @@ function captureCommitPhaseError(fiber: Fiber, error: mixed) {
   return dispatch(fiber, error, Sync);
 }
 
+function getCurrentTime(): ExpirationTime {
+  return mostRecentCurrentTime;
+}
+
 function computeAsyncExpiration(currentTime: ExpirationTime) {
   // Given the current clock time, returns an expiration time. We use rounding
   // to batch like updates together.
@@ -1225,7 +1229,7 @@ function computeInteractiveExpiration(currentTime: ExpirationTime) {
 
 // Creates a unique async expiration time.
 function computeUniqueAsyncExpiration(): ExpirationTime {
-  const currentTime = recalculateCurrentTime();
+  const currentTime = getCurrentTime();
   let result = computeAsyncExpiration(currentTime);
   if (result <= lastUniqueAsyncExpiration) {
     // Since we assume the current time monotonically increases, we only hit
@@ -1262,6 +1266,11 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
       } else {
         // This is an async update
         expirationTime = computeAsyncExpiration(currentTime);
+      }
+      if (expirationTime === nextRenderExpirationTime) {
+        // if it has already started rendering,
+        // we should not batch another setState into this round of update
+        expirationTime += 1;
       }
     } else {
       // This is a sync update
@@ -1386,7 +1395,7 @@ function recalculateCurrentTime(): ExpirationTime {
 
 function deferredUpdates<A>(fn: () => A): A {
   const previousExpirationContext = expirationContext;
-  const currentTime = recalculateCurrentTime();
+  const currentTime = getCurrentTime();
   expirationContext = computeAsyncExpiration(currentTime);
   try {
     return fn();
@@ -1962,7 +1971,7 @@ function flushControlled(fn: () => mixed): void {
 }
 
 export {
-  recalculateCurrentTime,
+  getCurrentTime,
   computeExpirationForFiber,
   captureCommitPhaseError,
   onUncaughtError,

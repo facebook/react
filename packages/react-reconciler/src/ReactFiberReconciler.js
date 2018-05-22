@@ -39,7 +39,7 @@ import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import {
   computeUniqueAsyncExpiration,
-  recalculateCurrentTime,
+  getCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
   requestWork,
@@ -208,7 +208,7 @@ export function updateContainer(
   callback: ?Function,
 ): ExpirationTime {
   const current = container.current;
-  const currentTime = recalculateCurrentTime();
+  const currentTime = getCurrentTime();
   const expirationTime = computeExpirationForFiber(currentTime, current);
   return updateContainerAtExpirationTime(
     element,
