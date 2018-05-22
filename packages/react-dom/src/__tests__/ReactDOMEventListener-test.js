@@ -260,6 +260,14 @@ describe('ReactDOMEventListener', () => {
     );
     expect(handleSubmit).toHaveBeenCalledTimes(1);
 
+    formRef.current.dispatchEvent(
+      new Event('submit', {
+        // Might happen on older browsers.
+        bubbles: true,
+      }),
+    );
+    expect(handleSubmit).toHaveBeenCalledTimes(2); // It already fired in this test.
+
     document.body.removeChild(container);
   });
 
