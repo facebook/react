@@ -139,6 +139,53 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
+  it('suspends siblings and later recovers each independently', async () => {
+    // Render two sibling Timeout components
+    ReactNoop.render(
+      <Fragment>
+        <Fallback timeout={1000} placeholder={<Text text="Loading A..." />}>
+          <AsyncText text="A" ms={5000} />
+        </Fallback>
+        <Fallback timeout={3000} placeholder={<Text text="Loading B..." />}>
+          <AsyncText text="B" ms={6000} />
+        </Fallback>
+      </Fragment>,
+    );
+    expect(ReactNoop.flush()).toEqual(['Suspend! [A]', 'Suspend! [B]']);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Advance time by enough to timeout both components and commit their placeholders
+    ReactNoop.expire(4000);
+    await advanceTimers(4000);
+
+    expect(ReactNoop.flush()).toEqual([
+      'Suspend! [A]',
+      'Loading A...',
+      'Suspend! [B]',
+      'Loading B...',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Loading A...'),
+      span('Loading B...'),
+    ]);
+
+    // Advance time by enough that the first Timeout's promise resolves
+    // and switches back to the normal view. The second Timeout should still show the placeholder
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+
+    expect(ReactNoop.flush()).toEqual(['Promise resolved [A]', 'A']);
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading B...')]);
+
+    // Advance time by enough that the second Timeout's promise resolves
+    // and switches back to the normal view
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
+
+    expect(ReactNoop.flush()).toEqual(['Promise resolved [B]', 'B']);
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
+  });
+
   it('continues rendering siblings after suspending', async () => {
     ReactNoop.render(
       <Fallback>
