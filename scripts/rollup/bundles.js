@@ -5,10 +5,12 @@ const bundleTypes = {
   UMD_PROD: 'UMD_PROD',
   NODE_DEV: 'NODE_DEV',
   NODE_PROD: 'NODE_PROD',
+  NODE_PROFILING: 'NODE_PROFILING',
   FB_WWW_DEV: 'FB_WWW_DEV',
   FB_WWW_PROD: 'FB_WWW_PROD',
   RN_OSS_DEV: 'RN_OSS_DEV',
   RN_OSS_PROD: 'RN_OSS_PROD',
+  RN_OSS_PROFILING: 'RN_OSS_PROFILING',
   RN_FB_DEV: 'RN_FB_DEV',
   RN_FB_PROD: 'RN_FB_PROD',
 };
@@ -17,10 +19,12 @@ const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
 const NODE_DEV = bundleTypes.NODE_DEV;
 const NODE_PROD = bundleTypes.NODE_PROD;
+const NODE_PROFILING = bundleTypes.NODE_PROFILING;
 const FB_WWW_DEV = bundleTypes.FB_WWW_DEV;
 const FB_WWW_PROD = bundleTypes.FB_WWW_PROD;
 const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
 const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
+const RN_OSS_PROFILING = bundleTypes.RN_OSS_PROFILING;
 const RN_FB_DEV = bundleTypes.RN_FB_DEV;
 const RN_FB_PROD = bundleTypes.RN_FB_PROD;
 
@@ -69,6 +73,7 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      NODE_PROFILING,
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
@@ -175,7 +180,7 @@ const bundles = [
 
   {
     label: 'native',
-    bundleTypes: [RN_OSS_DEV, RN_OSS_PROD],
+    bundleTypes: [RN_OSS_DEV, RN_OSS_PROD, RN_OSS_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -217,7 +222,7 @@ const bundles = [
 
   {
     label: 'native-fabric',
-    bundleTypes: [RN_OSS_DEV, RN_OSS_PROD],
+    bundleTypes: [RN_OSS_DEV, RN_OSS_PROD, RN_OSS_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
