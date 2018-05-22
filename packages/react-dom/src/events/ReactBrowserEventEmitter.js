@@ -14,7 +14,6 @@ import {
   TOP_CLOSE,
   TOP_FOCUS,
   TOP_INVALID,
-  TOP_LOAD_START,
   TOP_RESET,
   TOP_SCROLL,
   TOP_SUBMIT,
@@ -158,11 +157,6 @@ export function listenTo(
         case TOP_RESET:
           // We listen to them on the target DOM elements.
           // Some of them bubble so we don't want them to fire twice.
-          break;
-        case TOP_LOAD_START:
-          // Even though it's a media event, it also exists on <img>.
-          // So we need to listen at top level, unlike other media events.
-          trapBubbledEvent(dependency, mountAt);
           break;
         default:
           // By default, listen on the top level to all non-media events.

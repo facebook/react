@@ -262,4 +262,46 @@ describe('ReactDOMEventListener', () => {
 
     document.body.removeChild(container);
   });
+
+  it('should dispatch loadstart only for media elements', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const imgRef = React.createRef();
+    const videoRef = React.createRef();
+
+    const handleImgLoadStart = jest.fn();
+    const handleVideoLoadStart = jest.fn();
+    ReactDOM.render(
+      <div>
+        <img ref={imgRef} onLoadStart={handleImgLoadStart} />
+        <video ref={videoRef} onLoadStart={handleVideoLoadStart} />
+      </div>,
+      container,
+    );
+
+    // Note for debugging: loadstart currently doesn't fire in Chrome.
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=458851
+    imgRef.current.dispatchEvent(
+      new ProgressEvent('loadstart', {
+        bubbles: false,
+      }),
+    );
+    // Historically, we happened to not support onLoadStart
+    // on <img>, and this test documents that lack of support.
+    // If we decide to support it in the future, we should change
+    // this line to expect 1 call. Note that fixing this would
+    // be simple but would require attaching a handler to each
+    // <img>. So far nobody asked us for it.
+    expect(handleImgLoadStart).toHaveBeenCalledTimes(0);
+
+    videoRef.current.dispatchEvent(
+      new ProgressEvent('loadstart', {
+        bubbles: false,
+      }),
+    );
+    expect(handleVideoLoadStart).toHaveBeenCalledTimes(1);
+
+    document.body.removeChild(container);
+  });
 });
