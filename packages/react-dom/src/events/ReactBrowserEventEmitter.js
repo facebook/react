@@ -13,7 +13,9 @@ import {
   TOP_CANCEL,
   TOP_CLOSE,
   TOP_FOCUS,
+  TOP_RESET,
   TOP_SCROLL,
+  TOP_SUBMIT,
 } from './DOMTopLevelEventTypes';
 import {
   setEnabled,
@@ -147,7 +149,7 @@ export function listenTo(
           trapCapturedEvent(TOP_CLOSE, mountAt);
         }
         isListening[TOP_CLOSE] = true;
-      } else {
+      } else if (dependency !== TOP_SUBMIT && dependency !== TOP_RESET) {
         trapBubbledEvent(dependency, mountAt);
       }
 
