@@ -319,9 +319,9 @@ if (__DEV__) {
     let warningsForRoot = pendingLegacyContextWarning.get(strictRoot);
 
     if (
-      typeof instance.getChildContext === 'function' ||
       fiber.type.contextTypes != null ||
-      fiber.type.childContextTypes != null
+      fiber.type.childContextTypes != null ||
+      (instance !== null && typeof instance.getChildContext === 'function')
     ) {
       if (warningsForRoot === undefined) {
         warningsForRoot = [];
