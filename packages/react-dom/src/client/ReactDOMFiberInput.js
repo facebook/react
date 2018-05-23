@@ -35,8 +35,21 @@ let didWarnControlledToUncontrolled = false;
 let didWarnUncontrolledToControlled = false;
 
 function isControlled(props) {
-  const usesChecked = props.type === 'checkbox' || props.type === 'radio';
-  return usesChecked ? props.checked != null : props.value != null;
+  if (props.type === 'checkbox' || props.type === 'radio') {
+    return props.checked != null;
+  } else if (props.type === 'submit' || props.type === 'reset') {
+    return props.hasOwnProperty('value');
+  } else {
+    return props.value != null;
+  }
+}
+
+function isEmptyValueButton(props) {
+  if (props.type !== 'submit' && props.type !== 'reset') {
+    return false;
+  }
+
+  return props.value === undefined || props.value === null;
 }
 
 /**
@@ -194,7 +207,9 @@ export function updateWrapper(element: Element, props: Object) {
     }
   }
 
-  if (props.hasOwnProperty('value')) {
+  if (isEmptyValueButton(props)) {
+    node.removeAttribute('value');
+  } else if (props.hasOwnProperty('value')) {
     setDefaultValue(node, props.type, value);
   } else if (props.hasOwnProperty('defaultValue')) {
     setDefaultValue(node, props.type, getSafeValue(props.defaultValue));
@@ -208,7 +223,10 @@ export function updateWrapper(element: Element, props: Object) {
 export function postMountWrapper(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
 
-  if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
+  if (
+    !isEmptyValueButton(props) &&
+    (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue'))
+  ) {
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
     if (node.value === '') {
