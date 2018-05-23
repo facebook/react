@@ -1700,4 +1700,32 @@ describe('ReactDOMInput', () => {
       expect(node.hasAttribute('value')).toBe(false);
     });
   });
+
+  describe('use empty value with input button', function() {
+    it('should not set a value when value is empty', () => {
+      let stub = <input type="submit" value={undefined} />;
+      stub = ReactTestUtils.renderIntoDocument(stub);
+      const node = ReactDOM.findDOMNode(stub);
+
+      expect(node.hasAttribute('value')).toBe(false);
+    });
+
+    it('should remove value when value is empty', () => {
+      class Input extends React.Component {
+        state = {type: 'submit', value: 'foo'};
+
+        render() {
+          const {value, type} = this.state;
+          return <input onChange={() => {}} type={type} value={value} />;
+        }
+      }
+
+      const input = ReactTestUtils.renderIntoDocument(<Input />);
+      const node = ReactDOM.findDOMNode(input);
+
+      expect(node.getAttribute('value')).toBe('foo');
+      input.setState({value: undefined});
+      expect(node.hasAttribute('value')).toBe(false);
+    });
+  });
 });
