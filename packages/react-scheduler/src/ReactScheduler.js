@@ -44,17 +44,25 @@ export type CallbackIdType = CallbackConfigType;
 import requestAnimationFrameForReact from 'shared/requestAnimationFrameForReact';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
+// We capture a local reference to any global, in case it gets polyfilled after
+// this module is initially evaluated.
+// We want to be using a consistent implementation.
+const localDate = Date;
+const localSetTimeout = setTimeout;
+const localClearTimeout = clearTimeout;
+
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
 
 let now;
 if (hasNativePerformanceNow) {
+  const localPerformance = performance;
   now = function() {
-    return performance.now();
+    return localPerformance.now();
   };
 } else {
   now = function() {
-    return Date.now();
+    return localDate.now();
   };
 }
 
