@@ -79,11 +79,22 @@ const forks = Object.freeze({
   },
 
   // This logic is forked on www to use the 'acrossTransitions' version.
+  // This will be removed soon, see internal task T29442940
   'shared/requestAnimationFrameForReact': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
         return 'shared/forks/requestAnimationFrameForReact.www.js';
+      default:
+        return null;
+    }
+  },
+
+  'shared/ReactScheduler': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+        return 'shared/forks/ReactScheduler.www.js';
       default:
         return null;
     }

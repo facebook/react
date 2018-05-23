@@ -7,7 +7,7 @@
  * @flow
  */
 
-import * as ReactScheduler from 'react-scheduler';
+import * as ReactScheduler from 'shared/ReactScheduler';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
