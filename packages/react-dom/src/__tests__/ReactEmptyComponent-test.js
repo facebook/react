@@ -24,7 +24,7 @@ describe('ReactEmptyComponent', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
 
-    log = jasmine.createSpy();
+    log = jest.fn();
 
     TogglingComponent = class extends React.Component {
       state = {component: this.props.firstComponent};
@@ -91,11 +91,17 @@ describe('ReactEmptyComponent', () => {
     ReactTestUtils.renderIntoDocument(instance1);
     ReactTestUtils.renderIntoDocument(instance2);
 
-    expect(log.calls.count()).toBe(4);
-    expect(log.calls.argsFor(0)[0]).toBe(null);
-    expect(log.calls.argsFor(1)[0].tagName).toBe('DIV');
-    expect(log.calls.argsFor(2)[0].tagName).toBe('DIV');
-    expect(log.calls.argsFor(3)[0]).toBe(null);
+    expect(log).toHaveBeenCalledTimes(4);
+    expect(log).toHaveBeenNthCalledWith(1, null);
+    expect(log).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({tagName: 'DIV'}),
+    );
+    expect(log).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({tagName: 'DIV'}),
+    );
+    expect(log).toHaveBeenNthCalledWith(4, null);
   });
 
   it('should be able to switch in a list of children', () => {
@@ -111,13 +117,22 @@ describe('ReactEmptyComponent', () => {
       </div>,
     );
 
-    expect(log.calls.count()).toBe(6);
-    expect(log.calls.argsFor(0)[0]).toBe(null);
-    expect(log.calls.argsFor(1)[0]).toBe(null);
-    expect(log.calls.argsFor(2)[0]).toBe(null);
-    expect(log.calls.argsFor(3)[0].tagName).toBe('DIV');
-    expect(log.calls.argsFor(4)[0].tagName).toBe('DIV');
-    expect(log.calls.argsFor(5)[0].tagName).toBe('DIV');
+    expect(log).toHaveBeenCalledTimes(6);
+    expect(log).toHaveBeenNthCalledWith(1, null);
+    expect(log).toHaveBeenNthCalledWith(2, null);
+    expect(log).toHaveBeenNthCalledWith(3, null);
+    expect(log).toHaveBeenNthCalledWith(
+      4,
+      expect.objectContaining({tagName: 'DIV'}),
+    );
+    expect(log).toHaveBeenNthCalledWith(
+      5,
+      expect.objectContaining({tagName: 'DIV'}),
+    );
+    expect(log).toHaveBeenNthCalledWith(
+      6,
+      expect.objectContaining({tagName: 'DIV'}),
+    );
   });
 
   it('should distinguish between a script placeholder and an actual script tag', () => {
@@ -135,11 +150,17 @@ describe('ReactEmptyComponent', () => {
       ReactTestUtils.renderIntoDocument(instance2);
     }).not.toThrow();
 
-    expect(log.calls.count()).toBe(4);
-    expect(log.calls.argsFor(0)[0]).toBe(null);
-    expect(log.calls.argsFor(1)[0].tagName).toBe('SCRIPT');
-    expect(log.calls.argsFor(2)[0].tagName).toBe('SCRIPT');
-    expect(log.calls.argsFor(3)[0]).toBe(null);
+    expect(log).toHaveBeenCalledTimes(4);
+    expect(log).toHaveBeenNthCalledWith(1, null);
+    expect(log).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({tagName: 'SCRIPT'}),
+    );
+    expect(log).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({tagName: 'SCRIPT'}),
+    );
+    expect(log).toHaveBeenNthCalledWith(4, null);
   });
 
   it(
@@ -172,11 +193,17 @@ describe('ReactEmptyComponent', () => {
         ReactTestUtils.renderIntoDocument(instance2);
       }).not.toThrow();
 
-      expect(log.calls.count()).toBe(4);
-      expect(log.calls.argsFor(0)[0].tagName).toBe('DIV');
-      expect(log.calls.argsFor(1)[0]).toBe(null);
-      expect(log.calls.argsFor(2)[0]).toBe(null);
-      expect(log.calls.argsFor(3)[0].tagName).toBe('DIV');
+      expect(log).toHaveBeenCalledTimes(4);
+      expect(log).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({tagName: 'DIV'}),
+      );
+      expect(log).toHaveBeenNthCalledWith(2, null);
+      expect(log).toHaveBeenNthCalledWith(3, null);
+      expect(log).toHaveBeenNthCalledWith(
+        4,
+        expect.objectContaining({tagName: 'DIV'}),
+      );
     },
   );
 

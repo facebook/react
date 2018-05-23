@@ -768,7 +768,7 @@ describe('ReactDOMComponent', () => {
 
       const node = container.firstChild;
 
-      const nodeValueSetter = jest.genMockFn();
+      const nodeValueSetter = jest.fn();
 
       const oldSetAttribute = node.setAttribute.bind(node);
       node.setAttribute = function(key, value) {
