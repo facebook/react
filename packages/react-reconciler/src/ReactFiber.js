@@ -153,6 +153,8 @@ export type Fiber = {|
   alternate: Fiber | null,
 
   // Profiling metrics
+  actualDuration?: number,
+  actualStartTime?: number,
   selfBaseTime?: number,
   treeBaseTime?: number,
 
@@ -211,6 +213,8 @@ function FiberNode(
   this.alternate = null;
 
   if (enableProfilerTimer) {
+    this.actualDuration = 0;
+    this.actualStartTime = 0;
     this.selfBaseTime = 0;
     this.treeBaseTime = 0;
   }
@@ -310,6 +314,9 @@ export function createWorkInProgress(
   workInProgress.ref = current.ref;
 
   if (enableProfilerTimer) {
+    // We intentionally do not copy actual duration or start times.
+    // This would interfere with time tracking during interruptions.
+
     workInProgress.selfBaseTime = current.selfBaseTime;
     workInProgress.treeBaseTime = current.treeBaseTime;
   }
@@ -460,13 +467,6 @@ export function createFiberFromProfiler(
   const fiber = createFiber(Profiler, pendingProps, key, mode | ProfileMode);
   fiber.type = REACT_PROFILER_TYPE;
   fiber.expirationTime = expirationTime;
-  if (enableProfilerTimer) {
-    fiber.stateNode = {
-      elapsedPauseTimeAtStart: 0,
-      duration: 0,
-      startTime: 0,
-    };
-  }
 
   return fiber;
 }
@@ -541,6 +541,8 @@ export function assignFiberPropertiesInDEV(
   target.expirationTime = source.expirationTime;
   target.alternate = source.alternate;
   if (enableProfilerTimer) {
+    target.actualDuration = source.actualDuration;
+    target.actualStartTime = source.actualStartTime;
     target.selfBaseTime = source.selfBaseTime;
     target.treeBaseTime = source.treeBaseTime;
   }

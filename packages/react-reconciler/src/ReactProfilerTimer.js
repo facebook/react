@@ -76,9 +76,10 @@ function markActualRenderTimeStarted(fiber: Fiber): void {
   if (__DEV__) {
     fiberStack.push(fiber);
   }
-  const stateNode = fiber.stateNode;
-  stateNode.elapsedPauseTimeAtStart = totalElapsedPauseTime;
-  stateNode.startTime = now();
+
+  fiber.actualDuration =
+    now() - ((fiber.actualDuration: any): number) - totalElapsedPauseTime;
+  fiber.actualStartTime = now();
 }
 
 function pauseActualRenderTimerIfRunning(): void {
@@ -97,11 +98,9 @@ function recordElapsedActualRenderTime(fiber: Fiber): void {
   if (__DEV__) {
     warning(fiber === fiberStack.pop(), 'Unexpected Fiber popped.');
   }
-  const stateNode = fiber.stateNode;
-  stateNode.duration +=
-    now() -
-    (totalElapsedPauseTime - stateNode.elapsedPauseTimeAtStart) -
-    stateNode.startTime;
+
+  fiber.actualDuration =
+    now() - totalElapsedPauseTime - ((fiber.actualDuration: any): number);
 }
 
 function resetActualRenderTimer(): void {
