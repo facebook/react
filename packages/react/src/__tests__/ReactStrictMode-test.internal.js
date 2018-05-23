@@ -824,8 +824,26 @@ describe('ReactStrictMode', () => {
         }
 
         render() {
-          return <LegacyContextConsumer />;
+          return (
+            <div>
+              <LegacyContextConsumer />
+              <FunctionalLegacyContextConsumer />
+              <FactoryLegacyContextConsumer />
+            </div>
+          );
         }
+      }
+
+      function FunctionalLegacyContextConsumer() {
+        return null;
+      }
+
+      function FactoryLegacyContextConsumer() {
+        return {
+          render() {
+            return null;
+          },
+        };
       }
 
       LegacyContextProvider.childContextTypes = {
@@ -856,6 +874,14 @@ describe('ReactStrictMode', () => {
         color: PropTypes.string,
       };
 
+      FunctionalLegacyContextConsumer.contextTypes = {
+        color: PropTypes.string,
+      };
+
+      FactoryLegacyContextConsumer.contextTypes = {
+        color: PropTypes.string,
+      };
+
       let rendered;
 
       expect(() => {
@@ -864,7 +890,8 @@ describe('ReactStrictMode', () => {
         'Warning: Legacy context API has been detected within a strict-mode tree: ' +
           '\n    in div (at **)' +
           '\n    in Root (at **)' +
-          '\n\nPlease update the following components: LegacyContextConsumer, LegacyContextProvider' +
+          '\n\nPlease update the following components: FactoryLegacyContextConsumer, ' +
+          'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-strict-mode-warnings',
       );

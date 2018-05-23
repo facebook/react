@@ -48,6 +48,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
@@ -600,6 +601,11 @@ function mountIndeterminateComponent(
         didWarnAboutBadClass[componentName] = true;
       }
     }
+
+    if (workInProgress.mode & StrictMode) {
+      ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, null);
+    }
+
     ReactCurrentOwner.current = workInProgress;
     value = fn(props, context);
   } else {
