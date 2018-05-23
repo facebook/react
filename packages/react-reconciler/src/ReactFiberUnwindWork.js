@@ -20,7 +20,6 @@ import {
   HostComponent,
   HostPortal,
   ContextProvider,
-  Profiler,
   TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {
@@ -34,6 +33,7 @@ import {
   enableProfilerTimer,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
+import {ProfileMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -301,6 +301,12 @@ function unwindWork(
   renderIsExpired: boolean,
   renderExpirationTime: ExpirationTime,
 ) {
+  if (enableProfilerTimer) {
+    if (workInProgress.mode & ProfileMode) {
+      recordElapsedActualRenderTime(workInProgress);
+    }
+  }
+
   switch (workInProgress.tag) {
     case ClassComponent: {
       popLegacyContextProvider(workInProgress);
@@ -345,6 +351,14 @@ function unwindWork(
 }
 
 function unwindInterruptedWork(interruptedWork: Fiber) {
+  if (enableProfilerTimer) {
+    if (interruptedWork.mode & ProfileMode) {
+      // Resume in case we're picking up on work that was paused.
+      resumeActualRenderTimerIfPaused();
+      recordElapsedActualRenderTime(interruptedWork);
+    }
+  }
+
   switch (interruptedWork.tag) {
     case ClassComponent: {
       popLegacyContextProvider(interruptedWork);
@@ -364,13 +378,6 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       break;
     case ContextProvider:
       popProvider(interruptedWork);
-      break;
-    case Profiler:
-      if (enableProfilerTimer) {
-        // Resume in case we're picking up on work that was paused.
-        resumeActualRenderTimerIfPaused();
-        recordElapsedActualRenderTime(interruptedWork);
-      }
       break;
     default:
       break;

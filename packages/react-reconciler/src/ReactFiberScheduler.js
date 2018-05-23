@@ -106,6 +106,7 @@ import {
   checkActualRenderTimeStackEmpty,
   pauseActualRenderTimerIfRunning,
   recordCommitTime,
+  recordElapsedActualRenderTime,
   recordElapsedBaseRenderTimeIfRunning,
   resetActualRenderTimer,
   resumeActualRenderTimerIfPaused,
@@ -311,6 +312,10 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       clearCaughtError();
 
       if (enableProfilerTimer) {
+        if (failedUnitOfWork.mode & ProfileMode) {
+          recordElapsedActualRenderTime(failedUnitOfWork);
+        }
+
         // Stop "base" render timer again (after the re-thrown error).
         stopBaseRenderTimerIfRunning();
       }

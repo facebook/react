@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
+import getComponentName from 'shared/getComponentName';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 import warning from 'fbjs/lib/warning';
@@ -96,7 +97,11 @@ function recordElapsedActualRenderTime(fiber: Fiber): void {
     return;
   }
   if (__DEV__) {
-    warning(fiber === fiberStack.pop(), 'Unexpected Fiber popped.');
+    warning(
+      fiber === fiberStack.pop(),
+      'Unexpected Fiber (%s) popped.',
+      getComponentName(fiber),
+    );
   }
 
   fiber.actualDuration =
