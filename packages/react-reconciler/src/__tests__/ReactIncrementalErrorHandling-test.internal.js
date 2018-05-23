@@ -1198,12 +1198,12 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops')]);
 
     if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'The above error occurred in the <BadRender> component:',
       );
     } else {
-      expect(console.error.calls.count()).toBe(1);
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toBe(notAnError);
     }
   });

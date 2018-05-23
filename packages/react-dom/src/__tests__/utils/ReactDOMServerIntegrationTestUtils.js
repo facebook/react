@@ -63,7 +63,7 @@ module.exports = function(initModules) {
       }
     }
     if (__DEV__) {
-      expect(console.error.calls.count()).toBe(count);
+      expect(console.error).toHaveBeenCalledTimes(count);
     }
     return result;
   }

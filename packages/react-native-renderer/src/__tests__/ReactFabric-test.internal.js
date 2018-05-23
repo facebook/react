@@ -56,12 +56,12 @@ describe('ReactFabric', () => {
 
     ReactFabric.render(<View foo="foo" />, 11);
 
-    expect(FabricUIManager.createNode.mock.calls.length).toBe(1);
+    expect(FabricUIManager.createNode).toHaveBeenCalledTimes(1);
 
     ReactFabric.render(<View foo="bar" />, 11);
 
-    expect(FabricUIManager.createNode.mock.calls.length).toBe(1);
-    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls.length).toBe(1);
+    expect(FabricUIManager.createNode).toHaveBeenCalledTimes(1);
+    expect(FabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledTimes(1);
     expect(FabricUIManager.cloneNodeWithNewProps.mock.calls[0][0]).toBe(
       firstNode,
     );
@@ -93,24 +93,24 @@ describe('ReactFabric', () => {
     ReactFabric.render(<Text foo="b">1</Text>, 11);
     expect(FabricUIManager.cloneNode).not.toBeCalled();
     expect(FabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
-    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls.length).toBe(1);
+    expect(FabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledTimes(1);
     expect(FabricUIManager.cloneNodeWithNewChildrenAndProps).not.toBeCalled();
 
     // Only call cloneNode for the changed text (and no other properties).
     ReactFabric.render(<Text foo="b">2</Text>, 11);
     expect(FabricUIManager.cloneNode).not.toBeCalled();
-    expect(FabricUIManager.cloneNodeWithNewChildren.mock.calls.length).toBe(1);
-    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls.length).toBe(1);
+    expect(FabricUIManager.cloneNodeWithNewChildren).toHaveBeenCalledTimes(1);
+    expect(FabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledTimes(1);
     expect(FabricUIManager.cloneNodeWithNewChildrenAndProps).not.toBeCalled();
 
     // Call cloneNode for both changed text and properties.
     ReactFabric.render(<Text foo="c">3</Text>, 11);
     expect(FabricUIManager.cloneNode).not.toBeCalled();
-    expect(FabricUIManager.cloneNodeWithNewChildren.mock.calls.length).toBe(1);
-    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls.length).toBe(1);
+    expect(FabricUIManager.cloneNodeWithNewChildren).toHaveBeenCalledTimes(1);
+    expect(FabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledTimes(1);
     expect(
-      FabricUIManager.cloneNodeWithNewChildrenAndProps.mock.calls.length,
-    ).toBe(1);
+      FabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).toHaveBeenCalledTimes(1);
   });
 
   it('should only pass props diffs to FabricUIManager.cloneNode', () => {
@@ -186,7 +186,7 @@ describe('ReactFabric', () => {
       expect(UIManager.updateView).not.toBeCalled();
 
       viewRef.setNativeProps({foo: 'baz'});
-      expect(UIManager.updateView.mock.calls.length).toBe(1);
+      expect(UIManager.updateView).toHaveBeenCalledTimes(1);
     });
   });
 

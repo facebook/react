@@ -229,10 +229,10 @@ describe('ReactDOMTextarea', () => {
     });
 
     ReactDOM.render(<textarea value="a" onChange={emptyFunction} />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(0);
+    expect(nodeValueSetter).toHaveBeenCalledTimes(0);
 
     ReactDOM.render(<textarea value="b" onChange={emptyFunction} />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(1);
+    expect(nodeValueSetter).toHaveBeenCalledTimes(1);
   });
 
   it('should properly control a value of number `0`', () => {

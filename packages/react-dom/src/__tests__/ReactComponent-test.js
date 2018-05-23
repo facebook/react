@@ -387,11 +387,11 @@ describe('ReactComponent', () => {
     const callback = jest.fn();
     const container = document.createElement('div');
     ReactDOM.render(<div />, container, callback);
-    expect(callback.mock.calls.length).toBe(1);
+    expect(callback).toHaveBeenCalledTimes(1);
     ReactDOM.render(<div className="foo" />, container, callback);
-    expect(callback.mock.calls.length).toBe(2);
+    expect(callback).toHaveBeenCalledTimes(2);
     ReactDOM.render(<span />, container, callback);
-    expect(callback.mock.calls.length).toBe(3);
+    expect(callback).toHaveBeenCalledTimes(3);
   });
 
   it('throws usefully when rendering badly-typed elements', () => {
