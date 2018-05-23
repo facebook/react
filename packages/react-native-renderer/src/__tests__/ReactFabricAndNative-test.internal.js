@@ -49,4 +49,28 @@ describe('ReactFabric', () => {
     let handle = ReactNative.findNodeHandle(ref.current);
     expect(handle).toBe(2);
   });
+
+  it('does not find Fabric text nodes with the RN renderer', () => {
+    const Text = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
+
+    class Component extends React.Component {
+      render() {
+        return 'hello';
+      }
+    }
+
+    let ref = React.createRef();
+    ReactFabric.render(
+      <Text>
+        <Component ref={ref} />
+      </Text>,
+      11,
+    );
+
+    let handle = ReactNative.findNodeHandle(ref.current);
+    expect(handle).toBe(null);
+  });
 });

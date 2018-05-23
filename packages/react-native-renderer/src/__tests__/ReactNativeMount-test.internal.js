@@ -258,4 +258,28 @@ describe('ReactNative', () => {
       11,
     );
   });
+
+  it('does not find text nodes with findNodeHandle()', () => {
+    const Text = createReactNativeComponentClass('RCTText', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTText',
+    }));
+
+    class Component extends React.Component {
+      render() {
+        return 'hello';
+      }
+    }
+
+    let ref = React.createRef();
+    ReactNative.render(
+      <Text>
+        <Component ref={ref} />
+      </Text>,
+      11,
+    );
+
+    let handle = ReactNative.findNodeHandle(ref.current);
+    expect(handle).toBe(null);
+  });
 });

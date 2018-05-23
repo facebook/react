@@ -50,13 +50,15 @@ let nextReactTag = 2;
 type Node = Object;
 export type Type = string;
 export type Props = Object;
-export type Instance = {
+export type Instance = {|
+  // Note: findNodeHandle() uses presence of `node` to detect Fabric instances.
   node: Node,
   canonical: ReactFabricHostComponent,
-};
-export type TextInstance = {
+|};
+export type TextInstance = {|
+  // Note: findNodeHandle() uses presence of `node` to detect Fabric instances.
   node: Node,
-};
+|};
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactFabricHostComponent;
 export type Container = number;

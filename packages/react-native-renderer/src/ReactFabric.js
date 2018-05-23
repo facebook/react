@@ -9,6 +9,10 @@
 
 import type {ReactFabricType} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {
+  Instance as NativeInstance,
+  TextInstance as NativeTextInstance,
+} from './ReactNativeHostConfig';
 
 import './ReactFabricInjection';
 
@@ -63,13 +67,29 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (hostInstance == null) {
     return hostInstance;
   }
-  // TODO: the code is right but the types here are wrong.
-  // https://github.com/facebook/react/pull/12863
-  if ((hostInstance: any).canonical) {
-    // Fabric
-    return (hostInstance: any).canonical._nativeTag;
+  if (
+    typeof hostInstance === 'object' &&
+    typeof hostInstance.node !== 'undefined'
+  ) {
+    const fabricHostInstance = hostInstance;
+    if (typeof fabricHostInstance.canonical !== 'undefined') {
+      // Fabric Instance
+      return fabricHostInstance.canonical._nativeTag;
+    } else {
+      // Fabric Text
+      return null;
+    }
   }
-  return hostInstance._nativeTag;
+  const nonFabricInstance = ((hostInstance: any):
+    | NativeInstance
+    | NativeTextInstance);
+  if (typeof nonFabricInstance === 'object') {
+    // Non-Fabric Instance
+    return nonFabricInstance._nativeTag;
+  } else {
+    // Non-Fabric Text
+    return null;
+  }
 }
 
 ReactGenericBatching.injection.injectRenderer(ReactFabricRenderer);
