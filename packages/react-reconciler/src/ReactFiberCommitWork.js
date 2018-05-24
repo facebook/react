@@ -753,7 +753,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
 
   switch (finishedWork.tag) {
     case ClassComponent: {
-      return;
+      break;
     }
     case HostComponent: {
       const instance: Instance = finishedWork.stateNode;
@@ -779,7 +779,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           );
         }
       }
-      return;
+      break;
     }
     case HostText: {
       invariant(
@@ -795,10 +795,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       const oldText: string =
         current !== null ? current.memoizedProps : newText;
       commitTextUpdate(textInstance, oldText, newText);
-      return;
+      break;
     }
     case HostRoot: {
-      return;
+      break;
     }
     case Profiler: {
       if (enableProfilerTimer) {
@@ -811,15 +811,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           finishedWork.actualStartTime,
           getCommitTime(),
         );
-
-        // Reset actualTime after successful commit.
-        // By default, we append to this time to account for errors and pauses.
-        finishedWork.actualDuration = 0;
       }
-      return;
+      break;
     }
     case TimeoutComponent: {
-      return;
+      break;
     }
     default: {
       invariant(
@@ -828,6 +824,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           'likely caused by a bug in React. Please file an issue.',
       );
     }
+  }
+
+  if (enableProfilerTimer) {
+    // Reset actualTime after successful commit.
+    // By default, we append to this time to account for errors and pauses.
+    finishedWork.actualDuration = 0;
   }
 }
 
