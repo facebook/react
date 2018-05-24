@@ -371,7 +371,14 @@ const bundles = [
   /******* React Scheduler (experimental) *******/
   {
     label: 'react-scheduler',
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'react-scheduler',
     global: 'ReactScheduler',
