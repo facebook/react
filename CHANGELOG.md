@@ -1,9 +1,4 @@
-## [Unreleased]
-<details>
-  <summary>
-    Changes that have landed in master but are not yet released.
-    Click to see more.
-  </summary>
+## 16.4.0 (May 23, 2018)
 
 ### React
 
@@ -41,8 +36,6 @@
 ### React Reconciler (Experimental)
 
 * The [new host config shape](https://github.com/facebook/react/blob/c601f7a64640290af85c9f0e33c78480656b46bc/packages/react-noop-renderer/src/createReactNoop.js#L82-L285) is flat and doesn't use nested objects. ([@gaearon](https://github.com/gaearon) in [#12792](https://github.com/facebook/react/pull/12792))
-
-</details>
 
 ## 16.3.2 (April 16, 2018)
 
