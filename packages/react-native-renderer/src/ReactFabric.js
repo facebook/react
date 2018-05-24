@@ -116,8 +116,6 @@ const ReactFabric: ReactFabricType = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin: NativeMethodsMixin(findNodeHandle, findHostInstance),
-    // Used by react-native-github/Libraries/ components
-    ReactNativeComponentTree, // ScrollResponder
   },
 };
 
