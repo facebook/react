@@ -10,15 +10,25 @@
 'use strict';
 
 let ReactScheduler;
+type FrameTimeoutConfigType = {
+  // should only specify one or the other
+  timeLeftInFrame: ?number,
+  timePastFrameDeadline: ?number,
+};
 
 describe('ReactScheduler', () => {
   let rAFCallbacks = [];
   let postMessageCallback;
   let postMessageEvents = [];
 
-  function drainPostMessageQueue() {
-    // default to this falling about 15 ms before next frame
-    currentTime = startOfLatestFrame + frameSize - 15;
+  function runPostMessageCallbacks(config: FrameTimeoutConfigType) {
+    let timeLeftInFrame = 0;
+    if (typeof config.timeLeftInFrame === 'number') {
+      timeLeftInFrame = config.timeLeftInFrame;
+    } else if (typeof config.timePastFrameDeadline === 'number') {
+      timeLeftInFrame = -1 * config.timePastFrameDeadline;
+    }
+    currentTime = startOfLatestFrame + frameSize - timeLeftInFrame;
     if (postMessageCallback) {
       while (postMessageEvents.length) {
         postMessageCallback(postMessageEvents.shift());
@@ -31,9 +41,9 @@ describe('ReactScheduler', () => {
     rAFCallbacks.forEach(cb => cb());
     rAFCallbacks = [];
   }
-  function advanceAll() {
+  function advanceOneFrame(config: FrameTimeoutConfigType = {}) {
     runRAFCallbacks();
-    drainPostMessageQueue();
+    runPostMessageCallbacks(config);
   }
 
   let frameSize = 33;
@@ -77,7 +87,7 @@ describe('ReactScheduler', () => {
       const {scheduleWork} = ReactScheduler;
       const cb = jest.fn();
       scheduleWork(cb);
-      advanceAll();
+      advanceOneFrame({timeLeftInFrame: 15});
       expect(cb.mock.calls.length).toBe(1);
       // should not have timed out and should include a timeRemaining method
       expect(cb.mock.calls[0][0].didTimeout).toBe(false);
@@ -97,7 +107,7 @@ describe('ReactScheduler', () => {
         scheduleWork(callbackB);
         expect(callbackLog).toEqual([]);
         // after a delay, calls as many callbacks as it has time for
-        advanceAll();
+        advanceOneFrame({timeLeftInFrame: 15});
         expect(callbackLog).toEqual(['A', 'B']);
         // callbackA should not have timed out and should include a timeRemaining method
         expect(callbackA.mock.calls[0][0].didTimeout).toBe(false);
@@ -125,16 +135,16 @@ describe('ReactScheduler', () => {
         scheduleWork(callbackB);
         expect(callbackLog).toEqual([]);
         // now it should drain the message queue and do all scheduled work
-        drainPostMessageQueue();
+        runPostMessageCallbacks({timeLeftInFrame: 15});
         expect(callbackLog).toEqual(['A', 'B']);
 
         // advances timers, now with an empty queue of work (to ensure they don't deadlock)
-        advanceAll();
+        advanceOneFrame({timeLeftInFrame: 15});
 
         // see if more work can be done now.
         scheduleWork(callbackC);
         expect(callbackLog).toEqual(['A', 'B']);
-        advanceAll();
+        advanceOneFrame({timeLeftInFrame: 15});
         expect(callbackLog).toEqual(['A', 'B', 'C']);
       });
 
@@ -163,7 +173,7 @@ describe('ReactScheduler', () => {
           expect(callbackLog).toEqual([]);
           // after a delay, calls the scheduled callbacks,
           // and also calls new callbacks scheduled by current callbacks
-          advanceAll();
+          advanceOneFrame({timeLeftInFrame: 15});
           expect(callbackLog).toEqual(['A', 'B', 'C']);
         },
       );
@@ -199,7 +209,7 @@ describe('ReactScheduler', () => {
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
         // while flushing callbacks, calls as many as it has time for
-        advanceAll();
+        advanceOneFrame({timeLeftInFrame: 15});
         expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
       });
 
@@ -222,7 +232,7 @@ describe('ReactScheduler', () => {
         scheduleWork(callbackB);
         expect(callbackLog).toEqual([]);
         // after a delay, calls the latest callback passed
-        advanceAll();
+        advanceOneFrame({timeLeftInFrame: 15});
         expect(callbackLog).toEqual(['A0', 'B', 'A1']);
       });
     });
@@ -248,24 +258,20 @@ describe('ReactScheduler', () => {
           scheduleWork(callbackB, {timeout: 100}); // times out later
           scheduleWork(callbackC, {timeout: 2}); // will time out fast
 
-          runRAFCallbacks(); // runs rAF callback
           // push time ahead a bit so that we have no idle time
-          startOfLatestFrame += 16;
-          drainPostMessageQueue(); // runs postMessage callback, idleTick
+          advanceOneFrame({timePastFrameDeadline: 16});
 
           // callbackC should have timed out
           expect(callbackLog).toEqual(['C']);
 
-          runRAFCallbacks(); // runs rAF callback
           // push time ahead a bit so that we have no idle time
-          startOfLatestFrame += 16;
-          drainPostMessageQueue(); // runs postMessage callback, idleTick
+          advanceOneFrame({timePastFrameDeadline: 16});
 
           // callbackB should have timed out
           expect(callbackLog).toEqual(['C', 'B']);
 
-          runRAFCallbacks(); // runs rAF callback
-          drainPostMessageQueue(); // runs postMessage callback, idleTick
+          // let's give ourselves some idle time now
+          advanceOneFrame({timeLeftInFrame: 16});
 
           // we should have run callbackA in the idle time
           expect(callbackLog).toEqual(['C', 'B', 'A']);
@@ -295,27 +301,25 @@ describe('ReactScheduler', () => {
           scheduleWork(callbackC, {timeout: 2}); // will time out fast
           scheduleWork(callbackD); // won't time out
 
-          advanceAll(); // runs rAF and postMessage callbacks
+          advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
 
           // callbackC should have timed out
           // we should have had time to call A also, then we run out of time
           expect(callbackLog).toEqual(['C', 'A']);
 
-          runRAFCallbacks(); // runs rAF callback
           // push time ahead a bit so that we have no idle time
-          startOfLatestFrame += 16;
-          drainPostMessageQueue(); // runs postMessage callback, idleTick
+          advanceOneFrame({timePastFrameDeadline: 16});
 
           // callbackB should have timed out
           // but we should not run callbackD because we have no idle time
           expect(callbackLog).toEqual(['C', 'A', 'B']);
 
-          advanceAll(); // runs rAF and postMessage callbacks
+          advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
 
           // we should have run callbackD in the idle time
           expect(callbackLog).toEqual(['C', 'A', 'B', 'D']);
 
-          advanceAll(); // runs rAF and postMessage callbacks
+          advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
 
           // we should not have run anything again, nothing is scheduled
           expect(callbackLog).toEqual(['C', 'A', 'B', 'D']);
@@ -331,7 +335,7 @@ describe('ReactScheduler', () => {
       const callbackId = scheduleWork(cb);
       expect(cb.mock.calls.length).toBe(0);
       cancelScheduledWork(callbackId);
-      advanceAll();
+      advanceOneFrame({timeLeftInFrame: 15});
       expect(cb.mock.calls.length).toBe(0);
     });
 
@@ -349,7 +353,7 @@ describe('ReactScheduler', () => {
         callbackBId = scheduleWork(callbackB);
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
-        advanceAll();
+        advanceOneFrame({timeLeftInFrame: 15});
         // B should not get called because A cancelled B
         expect(callbackLog).toEqual(['A']);
         expect(callbackB.mock.calls.length).toBe(0);
