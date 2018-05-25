@@ -80,7 +80,33 @@ export function flushThrough(expectedValues: Array<mixed>): Array<mixed> {
   }
   if (yieldedValues === null) {
     // Always return an array.
-    return [];
+    yieldedValues = [];
+  }
+  if (yieldedValues.length !== expectedValues.length) {
+    const error = new Error(
+      `flushThrough expected to yield ${
+        expectedValues.length
+      } values, but yielded ${yieldedValues.length}`,
+    );
+    // Attach expected and yielded arrays,
+    // So the caller could pretty print the diff (if desired).
+    (error: any).expectedValues = expectedValues;
+    (error: any).yieldedValues = yieldedValues;
+    throw error;
+  }
+  for (let i = 0; i < expectedValues.length; i++) {
+    if (yieldedValues[i] !== expectedValues[i]) {
+      const error = new Error(
+        `flushThrough expected to "${(expectedValues[
+          i
+        ]: any)}", but "${(yieldedValues[i]: any)}" was yielded`,
+      );
+      // Attach expected and yielded arrays,
+      // So the caller could pretty print the diff (if desired).
+      (error: any).expectedValues = expectedValues;
+      (error: any).yieldedValues = yieldedValues;
+      throw error;
+    }
   }
   return yieldedValues;
 }
