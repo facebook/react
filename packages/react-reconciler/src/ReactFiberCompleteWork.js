@@ -38,6 +38,7 @@ import {
   TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
+import {ProfileMode} from './ReactTypeOfMode';
 import invariant from 'fbjs/lib/invariant';
 
 import {
@@ -312,6 +313,13 @@ function completeWork(
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
+
+  if (enableProfilerTimer) {
+    if (workInProgress.mode & ProfileMode) {
+      recordElapsedActualRenderTime(workInProgress);
+    }
+  }
+
   switch (workInProgress.tag) {
     case FunctionalComponent:
       return null;
@@ -489,9 +497,6 @@ function completeWork(
     case Mode:
       return null;
     case Profiler:
-      if (enableProfilerTimer) {
-        recordElapsedActualRenderTime(workInProgress);
-      }
       return null;
     case HostPortal:
       popHostContainer(workInProgress);

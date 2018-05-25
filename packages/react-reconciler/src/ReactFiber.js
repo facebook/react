@@ -152,8 +152,30 @@ export type Fiber = {|
   // memory if we need to.
   alternate: Fiber | null,
 
-  // Profiling metrics
+  // Time spent rendering this Fiber and its descendants for the current update.
+  // This tells us how well the tree makes use of sCU for memoization.
+  // This field is only set when the enableProfilerTimer flag is enabled.
+  actualDuration?: number,
+
+  // If the Fiber is currently active in the "render" phase,
+  // This marks the time at which the work began.
+  // This field is only set when the enableProfilerTimer flag is enabled.
+  actualStartTime?: number,
+
+  // Batch ID groups profile timings for a given commit.
+  // This allows durations to acculate across interrupts or yields,
+  // And reset between commits.
+  // This field is only set when the enableProfilerTimer flag is enabled.
+  profilerCommitBatchId?: number,
+
+  // Duration of the most recent render time for this Fiber.
+  // This value is not updated when we bailout for memoization purposes.
+  // This field is only set when the enableProfilerTimer flag is enabled.
   selfBaseTime?: number,
+
+  // Sum of base times for all descedents of this Fiber.
+  // This value bubbles up during the "complete" phase.
+  // This field is only set when the enableProfilerTimer flag is enabled.
   treeBaseTime?: number,
 
   // Conceptual aliases
@@ -211,6 +233,9 @@ function FiberNode(
   this.alternate = null;
 
   if (enableProfilerTimer) {
+    this.actualDuration = 0;
+    this.actualStartTime = 0;
+    this.profilerCommitBatchId = 0;
     this.selfBaseTime = 0;
     this.treeBaseTime = 0;
   }
@@ -310,6 +335,10 @@ export function createWorkInProgress(
   workInProgress.ref = current.ref;
 
   if (enableProfilerTimer) {
+    // We intentionally do not copy the following attributes:
+    // actualDuration, actualStartTime, profilerCommitBatchId
+    // This would interfere with accumulating render times after interruptions.
+
     workInProgress.selfBaseTime = current.selfBaseTime;
     workInProgress.treeBaseTime = current.treeBaseTime;
   }
@@ -460,13 +489,6 @@ export function createFiberFromProfiler(
   const fiber = createFiber(Profiler, pendingProps, key, mode | ProfileMode);
   fiber.type = REACT_PROFILER_TYPE;
   fiber.expirationTime = expirationTime;
-  if (enableProfilerTimer) {
-    fiber.stateNode = {
-      elapsedPauseTimeAtStart: 0,
-      duration: 0,
-      startTime: 0,
-    };
-  }
 
   return fiber;
 }
@@ -541,6 +563,9 @@ export function assignFiberPropertiesInDEV(
   target.expirationTime = source.expirationTime;
   target.alternate = source.alternate;
   if (enableProfilerTimer) {
+    target.actualDuration = source.actualDuration;
+    target.actualStartTime = source.actualStartTime;
+    target.profilerCommitBatchId = source.profilerCommitBatchId;
     target.selfBaseTime = source.selfBaseTime;
     target.treeBaseTime = source.treeBaseTime;
   }

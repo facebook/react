@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
+import getComponentName from 'shared/getComponentName';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 import warning from 'fbjs/lib/warning';
@@ -17,6 +18,7 @@ import {now} from './ReactFiberHostConfig';
 export type ProfilerTimer = {
   checkActualRenderTimeStackEmpty(): void,
   getCommitTime(): number,
+  incrementCommitBatchId(): void,
   markActualRenderTimeStarted(fiber: Fiber): void,
   pauseActualRenderTimerIfRunning(): void,
   recordElapsedActualRenderTime(fiber: Fiber): void,
@@ -29,9 +31,14 @@ export type ProfilerTimer = {
 };
 
 let commitTime: number = 0;
+let commitBatchId: number = 0;
 
 function getCommitTime(): number {
   return commitTime;
+}
+
+function incrementCommitBatchId(): void {
+  commitBatchId++;
 }
 
 function recordCommitTime(): void {
@@ -76,9 +83,15 @@ function markActualRenderTimeStarted(fiber: Fiber): void {
   if (__DEV__) {
     fiberStack.push(fiber);
   }
-  const stateNode = fiber.stateNode;
-  stateNode.elapsedPauseTimeAtStart = totalElapsedPauseTime;
-  stateNode.startTime = now();
+
+  if (fiber.profilerCommitBatchId !== commitBatchId) {
+    fiber.profilerCommitBatchId = commitBatchId;
+    fiber.actualDuration = 0;
+  }
+
+  fiber.actualDuration =
+    now() - ((fiber.actualDuration: any): number) - totalElapsedPauseTime;
+  fiber.actualStartTime = now();
 }
 
 function pauseActualRenderTimerIfRunning(): void {
@@ -95,13 +108,15 @@ function recordElapsedActualRenderTime(fiber: Fiber): void {
     return;
   }
   if (__DEV__) {
-    warning(fiber === fiberStack.pop(), 'Unexpected Fiber popped.');
+    warning(
+      fiber === fiberStack.pop(),
+      'Unexpected Fiber (%s) popped.',
+      getComponentName(fiber),
+    );
   }
-  const stateNode = fiber.stateNode;
-  stateNode.duration +=
-    now() -
-    (totalElapsedPauseTime - stateNode.elapsedPauseTimeAtStart) -
-    stateNode.startTime;
+
+  fiber.actualDuration =
+    now() - totalElapsedPauseTime - ((fiber.actualDuration: any): number);
 }
 
 function resetActualRenderTimer(): void {
@@ -166,6 +181,7 @@ function stopBaseRenderTimerIfRunning(): void {
 export {
   checkActualRenderTimeStackEmpty,
   getCommitTime,
+  incrementCommitBatchId,
   markActualRenderTimeStarted,
   pauseActualRenderTimerIfRunning,
   recordCommitTime,

@@ -228,6 +228,28 @@ describe('Profiler', () => {
       expect(call[3]).toBe(10); // base time
       expect(call[4]).toBe(35); // start time
       expect(call[5]).toBe(45); // commit time
+
+      callback.mockReset();
+
+      advanceTimeBy(20); // 45 -> 65
+
+      renderer.update(
+        <React.unstable_Profiler id="test" onRender={callback}>
+          <AdvanceTime byAmount={4} />
+        </React.unstable_Profiler>,
+      );
+
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      [call] = callback.mock.calls;
+
+      expect(call).toHaveLength(6);
+      expect(call[0]).toBe('test');
+      expect(call[1]).toBe('update');
+      expect(call[2]).toBe(4); // actual time
+      expect(call[3]).toBe(4); // base time
+      expect(call[4]).toBe(65); // start time
+      expect(call[5]).toBe(69); // commit time
     });
 
     it('includes render times of nested Profilers in their parent times', () => {
@@ -576,7 +598,9 @@ describe('Profiler', () => {
           </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
-        expect(renderer.unstable_flushThrough(['first'])).toEqual(['Yield:10']);
+        expect(renderer.unstable_flushThrough(['Yield:10'])).toEqual([
+          'Yield:10',
+        ]);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.

@@ -104,8 +104,10 @@ import {popProvider} from './ReactFiberNewContext';
 import {popHostContext, popHostContainer} from './ReactFiberHostContext';
 import {
   checkActualRenderTimeStackEmpty,
+  incrementCommitBatchId,
   pauseActualRenderTimerIfRunning,
   recordCommitTime,
+  recordElapsedActualRenderTime,
   recordElapsedBaseRenderTimeIfRunning,
   resetActualRenderTimer,
   resumeActualRenderTimerIfPaused,
@@ -311,6 +313,10 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       clearCaughtError();
 
       if (enableProfilerTimer) {
+        if (failedUnitOfWork.mode & ProfileMode) {
+          recordElapsedActualRenderTime(failedUnitOfWork);
+        }
+
         // Stop "base" render timer again (after the re-thrown error).
         stopBaseRenderTimerIfRunning();
       }
@@ -573,6 +579,13 @@ function commitRoot(finishedWork: Fiber): ExpirationTime {
   stopCommitSnapshotEffectsTimer();
 
   if (enableProfilerTimer) {
+    // Batch ID groups profile timings for a given commit.
+    // This allows durations to acculate across interrupts or yields,
+    // And reset between commits.
+    incrementCommitBatchId();
+
+    // Mark the current commit time to be shared by all Profilers in this batch.
+    // This enables them to be grouped later.
     recordCommitTime();
   }
 
