@@ -10,11 +10,13 @@
 'use strict';
 
 describe('forwardRef', () => {
+  let PropTypes;
   let React;
   let ReactNoop;
 
   beforeEach(() => {
     jest.resetModules();
+    PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -68,6 +70,51 @@ describe('forwardRef', () => {
     );
     ReactNoop.flush();
     expect(ref.current).toBe(null);
+  });
+
+  it('should support propTypes and defaultProps', () => {
+    function FunctionalComponent({forwardedRef, optional, required}) {
+      return (
+        <div ref={forwardedRef}>
+          {optional}
+          {required}
+        </div>
+      );
+    }
+
+    const RefForwardingComponent = React.forwardRef(function NamedFunction(
+      props,
+      ref,
+    ) {
+      return <FunctionalComponent {...props} forwardedRef={ref} />;
+    });
+    RefForwardingComponent.propTypes = {
+      optional: PropTypes.string,
+      required: PropTypes.string.isRequired,
+    };
+    RefForwardingComponent.defaultProps = {
+      optional: 'default',
+    };
+
+    const ref = React.createRef();
+
+    ReactNoop.render(
+      <RefForwardingComponent ref={ref} optional="foo" required="bar" />,
+    );
+    ReactNoop.flush();
+    expect(ref.current.children).toEqual([{text: 'foo'}, {text: 'bar'}]);
+
+    ReactNoop.render(<RefForwardingComponent ref={ref} required="foo" />);
+    ReactNoop.flush();
+    expect(ref.current.children).toEqual([{text: 'default'}, {text: 'foo'}]);
+
+    expect(() =>
+      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
+    ).toWarnDev(
+      'Warning: Failed prop type: The prop `required` is marked as required in ' +
+        '`ForwardRef(NamedFunction)`, but its value is `undefined`.\n' +
+        '    in ForwardRef(NamedFunction) (at **)',
+    );
   });
 
   it('should warn if not provided a callback during creation', () => {
