@@ -128,8 +128,7 @@ const callTimedOutCallbacks = function() {
     } else {
       if (
         timeoutTime !== -1 &&
-        (nextSoonestTimeoutTime === -1 ||
-          timeoutTime < nextSoonestTimeoutTime)
+        (nextSoonestTimeoutTime === -1 || timeoutTime < nextSoonestTimeoutTime)
       ) {
         nextSoonestTimeoutTime = timeoutTime;
       }
@@ -165,8 +164,7 @@ const idleTick = function(event) {
   ) {
     const latestCallbackConfig = headOfPendingCallbacksLinkedList;
     // move head of list to next callback
-    headOfPendingCallbacksLinkedList =
-      latestCallbackConfig.nextCallbackConfig;
+    headOfPendingCallbacksLinkedList = latestCallbackConfig.nextCallbackConfig;
     if (headOfPendingCallbacksLinkedList !== null) {
       headOfPendingCallbacksLinkedList.previousCallbackConfig = null;
     } else {
@@ -196,10 +194,7 @@ window.addEventListener('message', idleTick, false);
 const animationTick = function(rafTime) {
   isAnimationFrameScheduled = false;
   let nextFrameTime = rafTime - frameDeadline + activeFrameTime;
-  if (
-    nextFrameTime < activeFrameTime &&
-    previousFrameTime < activeFrameTime
-  ) {
+  if (nextFrameTime < activeFrameTime && previousFrameTime < activeFrameTime) {
     if (nextFrameTime < 8) {
       // Defensive coding. We don't support higher frame rates than 120hz.
       // If we get lower than that, it is probably a bug.
@@ -300,7 +295,6 @@ cancelScheduledWork = function(
       previousCallbackConfig.nextCallbackConfig = nextCallbackConfig;
       nextCallbackConfig.previousCallbackConfig = previousCallbackConfig;
       return;
-
     } else {
       // there is a nextCallbackConfig but not a previous one;
       // callbackConfig is the head of a list of 2 or more other nodes.
