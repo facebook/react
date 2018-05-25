@@ -313,6 +313,15 @@ export function createWorkInProgress(
     workInProgress.nextEffect = null;
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
+
+    if (enableProfilerTimer) {
+      // We intentionally reset, rather than copy, actualDuration & actualStartTime.
+      // This prevents time from endlessly accumulating in new commits.
+      // This has the downside of resetting values for different priority renders,
+      // But works for yielding (the common case) and should support resuming.
+      workInProgress.actualDuration = 0;
+      workInProgress.actualStartTime = 0;
+    }
   }
 
   workInProgress.expirationTime = expirationTime;
@@ -328,11 +337,6 @@ export function createWorkInProgress(
   workInProgress.ref = current.ref;
 
   if (enableProfilerTimer) {
-    // We intentionally reset, rather than copy, actualDuration & actualStartTime.
-    // This prevents time from endlessly accumulating in new commits.
-    workInProgress.actualDuration = 0;
-    workInProgress.actualStartTime = 0;
-
     workInProgress.selfBaseTime = current.selfBaseTime;
     workInProgress.treeBaseTime = current.treeBaseTime;
   }
