@@ -18,7 +18,6 @@ import {now} from './ReactFiberHostConfig';
 export type ProfilerTimer = {
   checkActualRenderTimeStackEmpty(): void,
   getCommitTime(): number,
-  incrementCommitBatchId(): void,
   markActualRenderTimeStarted(fiber: Fiber): void,
   pauseActualRenderTimerIfRunning(): void,
   recordElapsedActualRenderTime(fiber: Fiber): void,
@@ -31,14 +30,9 @@ export type ProfilerTimer = {
 };
 
 let commitTime: number = 0;
-let commitBatchId: number = 0;
 
 function getCommitTime(): number {
   return commitTime;
-}
-
-function incrementCommitBatchId(): void {
-  commitBatchId++;
 }
 
 function recordCommitTime(): void {
@@ -82,11 +76,6 @@ function markActualRenderTimeStarted(fiber: Fiber): void {
   }
   if (__DEV__) {
     fiberStack.push(fiber);
-  }
-
-  if (fiber.profilerCommitBatchId !== commitBatchId) {
-    fiber.profilerCommitBatchId = commitBatchId;
-    fiber.actualDuration = 0;
   }
 
   fiber.actualDuration =
@@ -181,7 +170,6 @@ function stopBaseRenderTimerIfRunning(): void {
 export {
   checkActualRenderTimeStackEmpty,
   getCommitTime,
-  incrementCommitBatchId,
   markActualRenderTimeStarted,
   pauseActualRenderTimerIfRunning,
   recordCommitTime,

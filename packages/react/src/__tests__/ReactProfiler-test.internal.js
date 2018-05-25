@@ -705,11 +705,12 @@ describe('Profiler', () => {
           }),
         ).toEqual(['Yield:11']);
 
-        // Verify that the actual time includes all three durations above.
-        // And the base time includes only the final rendered tree times.
+        // The actual time should include only the most recent render,
+        // Because this lets us avoid a lot of commit phase reset complexity.
+        // The base time includes only the final rendered tree times.
         expect(callback).toHaveBeenCalledTimes(1);
         call = callback.mock.calls[0];
-        expect(call[2]).toBe(19); // actual time
+        expect(call[2]).toBe(11); // actual time
         expect(call[3]).toBe(11); // base time
         expect(call[4]).toBe(264); // start time
         expect(call[5]).toBe(275); // commit time
@@ -796,12 +797,13 @@ describe('Profiler', () => {
           renderer.unstable_flushSync(() => second.setState({renderTime: 30})),
         ).toEqual(['SecondComponent:30', 'Yield:7']);
 
-        // Verify that the actual time includes time spent in the both renders so far (10ms and 37ms).
+        // The actual time should include only the most recent render (37ms),
+        // Because this lets us avoid a lot of commit phase reset complexity.
         // The base time should include the more recent times for the SecondComponent subtree,
         // As well as the original times for the FirstComponent subtree.
         expect(callback).toHaveBeenCalledTimes(1);
         call = callback.mock.calls[0];
-        expect(call[2]).toBe(47); // actual time
+        expect(call[2]).toBe(37); // actual time
         expect(call[3]).toBe(42); // base time
         expect(call[4]).toBe(229); // start time
         expect(call[5]).toBe(266); // commit time

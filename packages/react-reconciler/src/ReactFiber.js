@@ -162,12 +162,6 @@ export type Fiber = {|
   // This field is only set when the enableProfilerTimer flag is enabled.
   actualStartTime?: number,
 
-  // Batch ID groups profile timings for a given commit.
-  // This allows durations to acculate across interrupts or yields,
-  // And reset between commits.
-  // This field is only set when the enableProfilerTimer flag is enabled.
-  profilerCommitBatchId?: number,
-
   // Duration of the most recent render time for this Fiber.
   // This value is not updated when we bailout for memoization purposes.
   // This field is only set when the enableProfilerTimer flag is enabled.
@@ -235,7 +229,6 @@ function FiberNode(
   if (enableProfilerTimer) {
     this.actualDuration = 0;
     this.actualStartTime = 0;
-    this.profilerCommitBatchId = 0;
     this.selfBaseTime = 0;
     this.treeBaseTime = 0;
   }
@@ -335,9 +328,10 @@ export function createWorkInProgress(
   workInProgress.ref = current.ref;
 
   if (enableProfilerTimer) {
-    // We intentionally do not copy the following attributes:
-    // actualDuration, actualStartTime, profilerCommitBatchId
-    // This would interfere with accumulating render times after interruptions.
+    // We intentionally reset, rather than copy, actualDuration & actualStartTime.
+    // This prevents time from endlessly accumulating in new commits.
+    workInProgress.actualDuration = 0;
+    workInProgress.actualStartTime = 0;
 
     workInProgress.selfBaseTime = current.selfBaseTime;
     workInProgress.treeBaseTime = current.treeBaseTime;
@@ -565,7 +559,6 @@ export function assignFiberPropertiesInDEV(
   if (enableProfilerTimer) {
     target.actualDuration = source.actualDuration;
     target.actualStartTime = source.actualStartTime;
-    target.profilerCommitBatchId = source.profilerCommitBatchId;
     target.selfBaseTime = source.selfBaseTime;
     target.treeBaseTime = source.treeBaseTime;
   }
