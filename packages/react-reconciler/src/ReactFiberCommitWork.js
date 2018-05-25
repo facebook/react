@@ -753,7 +753,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
 
   switch (finishedWork.tag) {
     case ClassComponent: {
-      break;
+      return;
     }
     case HostComponent: {
       const instance: Instance = finishedWork.stateNode;
@@ -779,7 +779,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           );
         }
       }
-      break;
+      return;
     }
     case HostText: {
       invariant(
@@ -795,10 +795,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       const oldText: string =
         current !== null ? current.memoizedProps : newText;
       commitTextUpdate(textInstance, oldText, newText);
-      break;
+      return;
     }
     case HostRoot: {
-      break;
+      return;
     }
     case Profiler: {
       if (enableProfilerTimer) {
@@ -812,10 +812,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           getCommitTime(),
         );
       }
-      break;
+      return;
     }
     case TimeoutComponent: {
-      break;
+      return;
     }
     default: {
       invariant(
