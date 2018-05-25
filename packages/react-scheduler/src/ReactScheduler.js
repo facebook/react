@@ -197,10 +197,12 @@ if (!ExecutionEnvironment.canUseDOM) {
       // move head of list to next callback
       headOfPendingCallbacksLinkedList =
         latestCallbackConfig.nextCallbackConfig;
-      if (headOfPendingCallbacksLinkedList) {
+      if (headOfPendingCallbacksLinkedList !== null) {
         headOfPendingCallbacksLinkedList.previousCallbackConfig = null;
-      }
-      if (tailOfPendingCallbacksLinkedList === latestCallbackConfig) {
+      } else {
+        // if headOfPendingCallbacksLinkedList is null,
+        // then the list must be empty.
+        // make sure we set the tail to null as well.
         tailOfPendingCallbacksLinkedList = null;
       }
       frameDeadlineObject.didTimeout = false;
@@ -318,10 +320,10 @@ if (!ExecutionEnvironment.canUseDOM) {
      */
     const previousCallbackConfig = callbackConfig.previousCallbackConfig;
     const nextCallbackConfig = callbackConfig.nextCallbackConfig;
-    if (previousCallbackConfig) {
+    if (previousCallbackConfig !== null) {
       previousCallbackConfig.nextCallbackConfig = nextCallbackConfig;
     }
-    if (nextCallbackConfig) {
+    if (nextCallbackConfig !== null) {
       nextCallbackConfig.previousCallbackConfig = previousCallbackConfig;
     }
     if (headOfPendingCallbacksLinkedList === callbackConfig) {
