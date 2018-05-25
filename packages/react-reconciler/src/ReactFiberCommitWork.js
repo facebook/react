@@ -825,12 +825,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       );
     }
   }
-
-  if (enableProfilerTimer) {
-    // Reset actualTime after successful commit.
-    // By default, we append to this time to account for errors and pauses.
-    finishedWork.actualDuration = 0;
-  }
 }
 
 function commitResetTextContent(current: Fiber) {
