@@ -288,36 +288,43 @@ cancelScheduledWork = function(
    *   In this case we point the Head.next to the Tail and the Tail.prev to
    *   the Head.
    */
+  if (callbackConfig.nextCallbackConfig !== null) {
+    // we have a nextCallbackConfig
+    const nextCallbackConfig = callbackConfig.nextCallbackConfig;
 
-  if (headOfPendingCallbacksLinkedList === callbackConfig) {
-    // this callbackConfig is at the head of the list.
-    if (tailOfPendingCallbacksLinkedList === callbackConfig) {
-      // callbackConfig is the only thing in the linked list,
-      // so both head and tail point to it.
-      headOfPendingCallbacksLinkedList = null;
-      tailOfPendingCallbacksLinkedList = null;
+    if (callbackConfig.previousCallbackConfig !== null) {
+      // we have a previousCallbackConfig
+      const previousCallbackConfig = callbackConfig.previousCallbackConfig;
+
+      // callbackConfig is somewhere in the middle of a list of 3 or more nodes.
+      previousCallbackConfig.nextCallbackConfig = nextCallbackConfig;
+      nextCallbackConfig.previousCallbackConfig = previousCallbackConfig;
       return;
+
     } else {
+      // there is a nextCallbackConfig but not a previous one;
       // callbackConfig is the head of a list of 2 or more other nodes.
-      const nextCallbackConfig = callbackConfig.nextCallbackConfig;
       nextCallbackConfig.previousCallbackConfig = null;
       headOfPendingCallbacksLinkedList = nextCallbackConfig;
       return;
     }
   } else {
-    // this callbackConfig is not at the head of the list.
-    if (tailOfPendingCallbacksLinkedList === callbackConfig) {
-      // callbackConfig is the tail of a list of 2 or more other nodes.
+    // there is no next callback config; this must the tail of the list
+
+    if (callbackConfig.previousCallbackConfig !== null) {
+      // we have a previousCallbackConfig
       const previousCallbackConfig = callbackConfig.previousCallbackConfig;
+
+      // callbackConfig is the tail of a list of 2 or more other nodes.
       previousCallbackConfig.nextCallbackConfig = null;
       tailOfPendingCallbacksLinkedList = previousCallbackConfig;
       return;
     } else {
-      // callbackConfig is somewhere in the middle of a list of 3 or more nodes.
-      const nextCallbackConfig = callbackConfig.nextCallbackConfig;
-      const previousCallbackConfig = callbackConfig.previousCallbackConfig;
-      previousCallbackConfig.nextCallbackConfig = nextCallbackConfig;
-      nextCallbackConfig.previousCallbackConfig = previousCallbackConfig;
+      // there is no previous callback config;
+      // callbackConfig is the only thing in the linked list,
+      // so both head and tail point to it.
+      headOfPendingCallbacksLinkedList = null;
+      tailOfPendingCallbacksLinkedList = null;
       return;
     }
   }
