@@ -93,7 +93,7 @@ export function flushThrough(expectedValues: Array<mixed>): Array<mixed> {
       // Attach expected and yielded arrays,
       // So the caller could pretty print the diff (if desired).
       (error: any).expectedValues = expectedValues;
-      (error: any).yieldedValues = yieldedValues;
+      (error: any).actualValues = yieldedValues;
       throw error;
     }
   }
