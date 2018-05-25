@@ -159,7 +159,7 @@ describe('ReactTestRendererAsync', () => {
     );
 
     expect(() => renderer.unstable_flushThrough(['foo', 'baz'])).toThrow(
-      'flushThrough expected to "baz", but "bar" was yielded',
+      'flushThrough expected to yield "baz", but "bar" was yielded',
     );
   });
 
@@ -179,7 +179,7 @@ describe('ReactTestRendererAsync', () => {
     );
 
     expect(() => renderer.unstable_flushThrough(['foo', 'bar'])).toThrow(
-      'flushThrough expected to yield 2 values, but yielded 1',
+      'flushThrough expected to yield "bar", but nothing was yielded',
     );
   });
 
@@ -189,7 +189,7 @@ describe('ReactTestRendererAsync', () => {
     });
 
     expect(() => renderer.unstable_flushThrough(['foo'])).toThrow(
-      'flushThrough expected to yield 1 values, but yielded 0',
+      'flushThrough expected to yield "foo", but nothing was yielded',
     );
   });
 });

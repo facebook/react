@@ -82,24 +82,13 @@ export function flushThrough(expectedValues: Array<mixed>): Array<mixed> {
     // Always return an array.
     yieldedValues = [];
   }
-  if (yieldedValues.length !== expectedValues.length) {
-    const error = new Error(
-      `flushThrough expected to yield ${
-        expectedValues.length
-      } values, but yielded ${yieldedValues.length}`,
-    );
-    // Attach expected and yielded arrays,
-    // So the caller could pretty print the diff (if desired).
-    (error: any).expectedValues = expectedValues;
-    (error: any).yieldedValues = yieldedValues;
-    throw error;
-  }
   for (let i = 0; i < expectedValues.length; i++) {
-    if (yieldedValues[i] !== expectedValues[i]) {
+    const expectedValue = `"${(expectedValues[i]: any)}"`;
+    const yieldedValue =
+      i < yieldedValues.length ? `"${(yieldedValues[i]: any)}"` : 'nothing';
+    if (yieldedValue !== expectedValue) {
       const error = new Error(
-        `flushThrough expected to "${(expectedValues[
-          i
-        ]: any)}", but "${(yieldedValues[i]: any)}" was yielded`,
+        `flushThrough expected to yield ${(expectedValue: any)}, but ${(yieldedValue: any)} was yielded`,
       );
       // Attach expected and yielded arrays,
       // So the caller could pretty print the diff (if desired).
