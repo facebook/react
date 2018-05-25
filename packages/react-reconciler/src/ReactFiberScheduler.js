@@ -10,7 +10,6 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {CallbackIdType} from 'react-scheduler';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
@@ -1431,7 +1430,7 @@ let firstScheduledRoot: FiberRoot | null = null;
 let lastScheduledRoot: FiberRoot | null = null;
 
 let callbackExpirationTime: ExpirationTime = NoWork;
-let callbackID: CallbackIdType | number | null = null;
+let callbackID: *;
 let isRendering: boolean = false;
 let nextFlushedRoot: FiberRoot | null = null;
 let nextFlushedExpirationTime: ExpirationTime = NoWork;
