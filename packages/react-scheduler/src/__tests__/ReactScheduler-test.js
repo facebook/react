@@ -20,6 +20,8 @@ describe('ReactScheduler', () => {
   let rAFCallbacks = [];
   let postMessageCallback;
   let postMessageEvents = [];
+  let postMessageErrors = [];
+  let catchPostMessageErrors = false;
 
   function runPostMessageCallbacks(config: FrameTimeoutConfigType) {
     let timeLeftInFrame = 0;
@@ -31,7 +33,17 @@ describe('ReactScheduler', () => {
     currentTime = startOfLatestFrame + frameSize - timeLeftInFrame;
     if (postMessageCallback) {
       while (postMessageEvents.length) {
-        postMessageCallback(postMessageEvents.shift());
+        if (catchPostMessageErrors) {
+          // catch errors for testing error handling
+          try {
+            postMessageCallback(postMessageEvents.shift());
+          } catch (e) {
+            postMessageErrors.push(e);
+          }
+        } else {
+          // we are not expecting errors
+          postMessageCallback(postMessageEvents.shift());
+        }
       }
     }
   }
@@ -64,6 +76,7 @@ describe('ReactScheduler', () => {
     const originalAddEventListener = global.addEventListener;
     postMessageCallback = null;
     postMessageEvents = [];
+    postMessageErrors = [];
     global.addEventListener = function(eventName, callback, useCapture) {
       if (eventName === 'message') {
         postMessageCallback = callback;
@@ -357,6 +370,57 @@ describe('ReactScheduler', () => {
         // B should not get called because A cancelled B
         expect(callbackLog).toEqual(['A']);
         expect(callbackB).toHaveBeenCalledTimes(0);
+      });
+    });
+  });
+
+  describe('when callbacks throw errors', () => {
+    describe('when some callbacks throw', () => {
+      it('still calls all callbacks within same frame', () => {
+        const {scheduleWork, cancelScheduledWork} = ReactScheduler;
+        const callbackLog = [];
+        const callbackA = jest.fn(() => callbackLog.push('A'));
+        const callbackB = jest.fn(() => {
+          callbackLog.push('B');
+          throw new Error('B error');
+        });
+        const callbackC = jest.fn(() => callbackLog.push('C'));
+        const callbackD = jest.fn(() => {
+          callbackLog.push('D');
+          throw new Error('D error');
+        });
+        const callbackE = jest.fn(() => callbackLog.push('E'));
+        scheduleWork(callbackA);
+        scheduleWork(callbackB);
+        scheduleWork(callbackC);
+        scheduleWork(callbackD);
+        scheduleWork(callbackE);
+        // Initially doesn't call anything
+        expect(callbackLog).toEqual([]);
+        catchPostMessageErrors = true;
+        advanceOneFrame({timeLeftInFrame: 15});
+        // calls all callbacks
+        expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E']);
+        // errors should still get thrown
+        expect(postMessageErrors.length).toBe(2);
+        expect(postMessageErrors[0].message).toBe('B error');
+        expect(postMessageErrors[1].message).toBe('D error');
+      });
+    });
+    describe('when all scheduled callbacks throw', () => {
+      it('still calls all callbacks within same frame', () => {
+        // TODO
+        // calls all callbacks
+        // does not catch errors
+        // errors happen at right time
+      });
+    });
+    describe('when callbacks throw over multiple frames', () => {
+      it('still calls all callbacks within same frame', () => {
+        // TODO
+        // calls all callbacks
+        // does not catch errors
+        // errors happen at right time
       });
     });
   });
