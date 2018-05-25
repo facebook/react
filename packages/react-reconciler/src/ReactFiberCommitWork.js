@@ -806,15 +806,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         onRender(
           finishedWork.memoizedProps.id,
           current === null ? 'mount' : 'update',
-          finishedWork.stateNode.duration,
+          finishedWork.actualDuration,
           finishedWork.treeBaseTime,
-          finishedWork.stateNode.startTime,
+          finishedWork.actualStartTime,
           getCommitTime(),
         );
-
-        // Reset actualTime after successful commit.
-        // By default, we append to this time to account for errors and pauses.
-        finishedWork.stateNode.duration = 0;
       }
       return;
     }

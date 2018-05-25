@@ -106,6 +106,7 @@ import {
   checkActualRenderTimeStackEmpty,
   pauseActualRenderTimerIfRunning,
   recordCommitTime,
+  recordElapsedActualRenderTime,
   recordElapsedBaseRenderTimeIfRunning,
   resetActualRenderTimer,
   resumeActualRenderTimerIfPaused,
@@ -311,6 +312,10 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       clearCaughtError();
 
       if (enableProfilerTimer) {
+        if (failedUnitOfWork.mode & ProfileMode) {
+          recordElapsedActualRenderTime(failedUnitOfWork);
+        }
+
         // Stop "base" render timer again (after the re-thrown error).
         stopBaseRenderTimerIfRunning();
       }
@@ -573,6 +578,8 @@ function commitRoot(finishedWork: Fiber): ExpirationTime {
   stopCommitSnapshotEffectsTimer();
 
   if (enableProfilerTimer) {
+    // Mark the current commit time to be shared by all Profilers in this batch.
+    // This enables them to be grouped later.
     recordCommitTime();
   }
 
