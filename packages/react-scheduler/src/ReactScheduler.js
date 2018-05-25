@@ -306,31 +306,50 @@ if (!ExecutionEnvironment.canUseDOM) {
   ) {
     /**
      * There are four possible cases:
-     * - Head -> nodeToRemove -> Tail
-     *   In this case we point the Head.next to the Tail and the Tail.prev to
-     *   the Head.
-     * - Head -> middle -> Tail/nodeToRemove
-     *   In this case we point the middle.next to null and put middle as the new
-     *   Tail.
-     * - Head/nodeToRemove -> middle -> Tail
-     *   In this case we point the middle.prev at null and move the Head to
-     *   middle.
      * - Head/nodeToRemove/Tail -> null
      *   In this case we set Head and Tail to null.
+     * - Head -> ... middle nodes... -> Tail/nodeToRemove
+     *   In this case we point the middle.next to null and put middle as the new
+     *   Tail.
+     * - Head/nodeToRemove -> ...middle nodes... -> Tail
+     *   In this case we point the middle.prev at null and move the Head to
+     *   middle.
+     * - Head -> ... ?some nodes ... -> nodeToRemove -> ... ?some nodes ... -> Tail
+     *   In this case we point the Head.next to the Tail and the Tail.prev to
+     *   the Head.
      */
-    const previousCallbackConfig = callbackConfig.previousCallbackConfig;
-    const nextCallbackConfig = callbackConfig.nextCallbackConfig;
-    if (previousCallbackConfig !== null) {
-      previousCallbackConfig.nextCallbackConfig = nextCallbackConfig;
-    }
-    if (nextCallbackConfig !== null) {
-      nextCallbackConfig.previousCallbackConfig = previousCallbackConfig;
-    }
+
     if (headOfPendingCallbacksLinkedList === callbackConfig) {
-      headOfPendingCallbacksLinkedList = nextCallbackConfig;
-    }
-    if (tailOfPendingCallbacksLinkedList === callbackConfig) {
-      tailOfPendingCallbacksLinkedList = previousCallbackConfig;
+      // this callbackConfig is at the head of the list.
+      if (tailOfPendingCallbacksLinkedList === callbackConfig) {
+        // callbackConfig is the only thing in the linked list,
+        // so both head and tail point to it.
+        headOfPendingCallbacksLinkedList = null;
+        tailOfPendingCallbacksLinkedList = null;
+        return;
+      } else {
+        // callbackConfig is the head of a list of 2 or more other nodes.
+        const nextCallbackConfig = callbackConfig.nextCallbackConfig;
+        nextCallbackConfig.previousCallbackConfig = null;
+        headOfPendingCallbacksLinkedList = nextCallbackConfig;
+        return;
+      }
+    } else {
+      // this callbackConfig is not at the head of the list.
+      if (tailOfPendingCallbacksLinkedList === callbackConfig) {
+        // callbackConfig is the tail of a list of 2 or more other nodes.
+        const previousCallbackConfig = callbackConfig.previousCallbackConfig;
+        previousCallbackConfig.nextCallbackConfig = null;
+        tailOfPendingCallbacksLinkedList = previousCallbackConfig;
+        return;
+      } else {
+        // callbackConfig is somewhere in the middle of a list of 3 or more nodes.
+        const nextCallbackConfig = callbackConfig.nextCallbackConfig;
+        const previousCallbackConfig = callbackConfig.previousCallbackConfig;
+        previousCallbackConfig.nextCallbackConfig = nextCallbackConfig;
+        nextCallbackConfig.previousCallbackConfig = previousCallbackConfig;
+        return;
+      }
     }
   };
 }
