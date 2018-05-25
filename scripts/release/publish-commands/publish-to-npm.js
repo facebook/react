@@ -8,7 +8,7 @@ const {join} = require('path');
 const semver = require('semver');
 const {execRead, execUnlessDry, logPromise} = require('../utils');
 
-const push = async ({cwd, dry, opt, packages, version, tag}) => {
+const push = async ({cwd, dry, otp, packages, version, tag}) => {
   const errors = [];
   const isPrerelease = semver.prerelease(version);
   if (tag === undefined) {
@@ -21,7 +21,7 @@ const push = async ({cwd, dry, opt, packages, version, tag}) => {
 
   // Pass two factor auth code if provided:
   // https://docs.npmjs.com/getting-started/using-two-factor-authentication
-  const twoFactorAuth = opt != null ? `--opt ${opt}` : '';
+  const twoFactorAuth = otp != null ? `--otp ${otp}` : '';
 
   const publishProject = async project => {
     try {

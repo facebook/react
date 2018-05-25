@@ -23,7 +23,7 @@ const run = async () => {
     await checkBuildStatus(params);
     await commitChangelog(params);
     await pushGitRemote(params);
-    params.opt = await getNpmTwoFactorAuth(params);
+    params.otp = await getNpmTwoFactorAuth(params);
     await publishToNpm(params);
     await printPostPublishSummary(params);
   } catch (error) {

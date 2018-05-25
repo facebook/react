@@ -8,8 +8,8 @@ const prompt = require('prompt-promise');
 
 module.exports = async params => {
   logUpdate(chalk`{green ✓} Npm two-factor auth code {gray (or blank)}: `);
-  const opt = await prompt('');
+  const otp = await prompt('');
   prompt.done();
   logUpdate.clear();
-  return opt.trim() || null;
+  return otp.trim() || null;
 };
