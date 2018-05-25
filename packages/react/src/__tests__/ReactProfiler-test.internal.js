@@ -598,7 +598,9 @@ describe('Profiler', () => {
           </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
-        expect(renderer.unstable_flushThrough(['first'])).toEqual(['Yield:10']);
+        expect(renderer.unstable_flushThrough(['Yield:10'])).toEqual([
+          'Yield:10',
+        ]);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
