@@ -86,7 +86,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       next: null,
       prev: null,
     };
-    const timeoutId = setTimeout(() => {
+    const timeoutId = localSetTimeout(() => {
       callback({
         timeRemaining() {
           return Infinity;
@@ -101,7 +101,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     const callback = callbackId.scheduledCallback;
     const timeoutId = timeoutIds.get(callback);
     timeoutIds.delete(callbackId);
-    clearTimeout(timeoutId);
+    localClearTimeout(timeoutId);
   };
 } else {
   let headOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
