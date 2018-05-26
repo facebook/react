@@ -199,8 +199,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     ) {
       const latestCallbackConfig = headOfPendingCallbacksLinkedList;
       // move head of list to next callback
-      headOfPendingCallbacksLinkedList =
-        latestCallbackConfig.next;
+      headOfPendingCallbacksLinkedList = latestCallbackConfig.next;
       if (headOfPendingCallbacksLinkedList !== null) {
         headOfPendingCallbacksLinkedList.prev = null;
       } else {
@@ -322,13 +321,13 @@ if (!ExecutionEnvironment.canUseDOM) {
      *   In this case we point the Head.next to the Tail and the Tail.prev to
      *   the Head.
      */
-    if (callbackConfig.next !== null) {
+    const next = callbackConfig.next;
+    const prev = callbackConfig.prev;
+    if (next !== null) {
       // we have a next
-      const next = callbackConfig.next;
 
-      if (callbackConfig.prev !== null) {
+      if (prev !== null) {
         // we have a prev
-        const prev = callbackConfig.prev;
 
         // callbackConfig is somewhere in the middle of a list of 3 or more nodes.
         prev.next = next;
@@ -344,9 +343,8 @@ if (!ExecutionEnvironment.canUseDOM) {
     } else {
       // there is no next callback config; this must the tail of the list
 
-      if (callbackConfig.prev !== null) {
+      if (prev !== null) {
         // we have a prev
-        const prev = callbackConfig.prev;
 
         // callbackConfig is the tail of a list of 2 or more other nodes.
         prev.next = null;
