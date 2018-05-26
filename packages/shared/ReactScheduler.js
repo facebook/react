@@ -8,6 +8,10 @@
  */
 
 'use strict';
-import {now, scheduleWork, cancelScheduledWork} from 'react-scheduler/src/ReactScheduler';
+import {
+  now,
+  scheduleWork,
+  cancelScheduledWork,
+} from 'react-scheduler/src/ReactScheduler';
 
 export {now, scheduleWork, cancelScheduledWork};
