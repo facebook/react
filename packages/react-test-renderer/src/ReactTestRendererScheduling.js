@@ -19,7 +19,8 @@ export function scheduleDeferredCallback(
   options?: {timeout: number},
 ): number {
   scheduledCallback = callback;
-  return 0;
+  const fakeCallbackId = 0;
+  return fakeCallbackId;
 }
 
 export function cancelDeferredCallback(timeoutID: number): void {
