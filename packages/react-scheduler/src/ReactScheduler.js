@@ -35,8 +35,8 @@ type FrameCallbackType = Deadline => void;
 type CallbackConfigType = {|
   scheduledCallback: FrameCallbackType,
   timeoutTime: number,
-  nextCallbackConfig: CallbackConfigType | null, // creating a linked list
-  previousCallbackConfig: CallbackConfigType | null, // creating a linked list
+  next: CallbackConfigType | null, // creating a linked list
+  prev: CallbackConfigType | null, // creating a linked list
 |};
 
 export type CallbackIdType = CallbackConfigType;
@@ -75,8 +75,8 @@ if (!ExecutionEnvironment.canUseDOM) {
     const callbackConfig = {
       scheduledCallback: callback,
       timeoutTime: 0,
-      nextCallbackConfig: null,
-      previousCallbackConfig: null,
+      next: null,
+      prev: null,
     };
     const timeoutId = setTimeout(() => {
       callback({
@@ -168,7 +168,7 @@ if (!ExecutionEnvironment.canUseDOM) {
           nextSoonestTimeoutTime = timeoutTime;
         }
       }
-      currentCallbackConfig = currentCallbackConfig.nextCallbackConfig;
+      currentCallbackConfig = currentCallbackConfig.next;
     }
   };
 
@@ -200,9 +200,9 @@ if (!ExecutionEnvironment.canUseDOM) {
       const latestCallbackConfig = headOfPendingCallbacksLinkedList;
       // move head of list to next callback
       headOfPendingCallbacksLinkedList =
-        latestCallbackConfig.nextCallbackConfig;
+        latestCallbackConfig.next;
       if (headOfPendingCallbacksLinkedList !== null) {
-        headOfPendingCallbacksLinkedList.previousCallbackConfig = null;
+        headOfPendingCallbacksLinkedList.prev = null;
       } else {
         // if headOfPendingCallbacksLinkedList is null,
         // then the list must be empty.
@@ -276,8 +276,8 @@ if (!ExecutionEnvironment.canUseDOM) {
     const scheduledCallbackConfig: CallbackConfigType = {
       scheduledCallback: callback,
       timeoutTime,
-      previousCallbackConfig: null,
-      nextCallbackConfig: null,
+      prev: null,
+      next: null,
     };
     if (headOfPendingCallbacksLinkedList === null) {
       // Make this callback the head and tail of our list
@@ -285,11 +285,11 @@ if (!ExecutionEnvironment.canUseDOM) {
       tailOfPendingCallbacksLinkedList = scheduledCallbackConfig;
     } else {
       // Add latest callback as the new tail of the list
-      scheduledCallbackConfig.previousCallbackConfig = tailOfPendingCallbacksLinkedList;
+      scheduledCallbackConfig.prev = tailOfPendingCallbacksLinkedList;
       // renaming for clarity
       const oldTailOfPendingCallbacksLinkedList = tailOfPendingCallbacksLinkedList;
       if (oldTailOfPendingCallbacksLinkedList !== null) {
-        oldTailOfPendingCallbacksLinkedList.nextCallbackConfig = scheduledCallbackConfig;
+        oldTailOfPendingCallbacksLinkedList.next = scheduledCallbackConfig;
       }
       tailOfPendingCallbacksLinkedList = scheduledCallbackConfig;
     }
@@ -322,35 +322,35 @@ if (!ExecutionEnvironment.canUseDOM) {
      *   In this case we point the Head.next to the Tail and the Tail.prev to
      *   the Head.
      */
-    if (callbackConfig.nextCallbackConfig !== null) {
-      // we have a nextCallbackConfig
-      const nextCallbackConfig = callbackConfig.nextCallbackConfig;
+    if (callbackConfig.next !== null) {
+      // we have a next
+      const next = callbackConfig.next;
 
-      if (callbackConfig.previousCallbackConfig !== null) {
-        // we have a previousCallbackConfig
-        const previousCallbackConfig = callbackConfig.previousCallbackConfig;
+      if (callbackConfig.prev !== null) {
+        // we have a prev
+        const prev = callbackConfig.prev;
 
         // callbackConfig is somewhere in the middle of a list of 3 or more nodes.
-        previousCallbackConfig.nextCallbackConfig = nextCallbackConfig;
-        nextCallbackConfig.previousCallbackConfig = previousCallbackConfig;
+        prev.next = next;
+        next.prev = prev;
         return;
       } else {
-        // there is a nextCallbackConfig but not a previous one;
+        // there is a next but not a previous one;
         // callbackConfig is the head of a list of 2 or more other nodes.
-        nextCallbackConfig.previousCallbackConfig = null;
-        headOfPendingCallbacksLinkedList = nextCallbackConfig;
+        next.prev = null;
+        headOfPendingCallbacksLinkedList = next;
         return;
       }
     } else {
       // there is no next callback config; this must the tail of the list
 
-      if (callbackConfig.previousCallbackConfig !== null) {
-        // we have a previousCallbackConfig
-        const previousCallbackConfig = callbackConfig.previousCallbackConfig;
+      if (callbackConfig.prev !== null) {
+        // we have a prev
+        const prev = callbackConfig.prev;
 
         // callbackConfig is the tail of a list of 2 or more other nodes.
-        previousCallbackConfig.nextCallbackConfig = null;
-        tailOfPendingCallbacksLinkedList = previousCallbackConfig;
+        prev.next = null;
+        tailOfPendingCallbacksLinkedList = prev;
         return;
       } else {
         // there is no previous callback config;
