@@ -966,26 +966,29 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should work error event on <source> element', () => {
-      spyOnDevAndProd(console, 'log');
+      const onError = jest.fn();
       const container = document.createElement('div');
       ReactDOM.render(
         <video>
           <source
             src="http://example.org/video"
             type="video/mp4"
-            onError={e => console.log('onError called')}
+            onError={onError}
           />
         </video>,
         container,
       );
 
-      const errorEvent = document.createEvent('Event');
-      errorEvent.initEvent('error', false, false);
-      container.getElementsByTagName('source')[0].dispatchEvent(errorEvent);
+      try {
+        document.body.appendChild(container);
 
-      if (__DEV__) {
-        expect(console.log).toHaveBeenCalledTimes(1);
-        expect(console.log.calls.argsFor(0)[0]).toContain('onError called');
+        const errorEvent = document.createEvent('Event');
+        errorEvent.initEvent('error', false, false);
+        container.getElementsByTagName('source')[0].dispatchEvent(errorEvent);
+
+        expect(onError).toHaveBeenCalledTimes(1);
+      } finally {
+        container.remove();
       }
     });
 

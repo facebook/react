@@ -16,7 +16,7 @@ import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
 
-import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
+import {addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
@@ -126,34 +126,6 @@ export function isEnabled() {
 }
 
 /**
- * Traps top-level events by using event bubbling.
- *
- * @param {number} topLevelType Number from `TopLevelEventTypes`.
- * @param {object} element Element on which to attach listener.
- * @return {?object} An object with a remove function which will forcefully
- *                  remove the listener.
- * @internal
- */
-export function trapBubbledEvent(
-  topLevelType: DOMTopLevelEventType,
-  element: Document | Element,
-) {
-  if (!element) {
-    return null;
-  }
-  const dispatch = isInteractiveTopLevelEventType(topLevelType)
-    ? dispatchInteractiveEvent
-    : dispatchEvent;
-
-  addEventBubbleListener(
-    element,
-    getRawEventName(topLevelType),
-    // Check if interactive and wrap in interactiveUpdates
-    dispatch.bind(null, topLevelType),
-  );
-}
-
-/**
  * Traps a top-level event by using event capturing.
  *
  * @param {number} topLevelType Number from `TopLevelEventTypes`.
@@ -162,7 +134,7 @@ export function trapBubbledEvent(
  *                  remove the listener.
  * @internal
  */
-export function trapCapturedEvent(
+export function trapEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element,
 ) {
