@@ -130,6 +130,26 @@ if (!ExecutionEnvironment.canUseDOM) {
   };
 
   /**
+   * Handles the case where a callback errors:
+   * - don't catch the error, because this changes debugging behavior
+   * - do start a new postMessage callback, to call any remaining callbacks,
+   * - but only if there is an error, so there is not extra overhead.
+   */
+  const callSafely = function(callback, arg) {
+    let finishedCalling = false;
+    try {
+      callback(arg);
+      finishedCalling = true;
+    } finally {
+      if (!finishedCalling) {
+        // an error must have been thrown
+        isIdleScheduled = true;
+        window.postMessage(messageKey, '*');
+      }
+    }
+  };
+
+  /**
    * Checks for timed out callbacks, runs them, and then checks again to see if
    * any more have timed out.
    * Keeps doing this until there are none which have currently timed out.
@@ -163,8 +183,7 @@ if (!ExecutionEnvironment.canUseDOM) {
         // it has timed out!
         // call it
         const callback = currentCallbackConfig.scheduledCallback;
-        // TODO: error handling
-        callback(frameDeadlineObject);
+        callSafely(callback, frameDeadlineObject);
         // remove it from linked list
         cancelScheduledWork(currentCallbackConfig);
       } else {
@@ -218,8 +237,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       }
       frameDeadlineObject.didTimeout = false;
       const latestCallback = latestCallbackConfig.scheduledCallback;
-      // TODO: before using this outside of React we need to add error handling
-      latestCallback(frameDeadlineObject);
+      callSafely(latestCallback, frameDeadlineObject);
       currentTime = now();
     }
     if (headOfPendingCallbacksLinkedList !== null) {
