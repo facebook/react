@@ -29,7 +29,7 @@ jobs:
 
       - run:
           name: Install Packages
-          command: yarn install
+          command: yarn install --frozen-lockfile
 
       - run:
           name: Test Packages
