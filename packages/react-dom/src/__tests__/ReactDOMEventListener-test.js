@@ -61,7 +61,7 @@ describe('ReactDOMEventListener', () => {
       childNode.dispatchEvent(nativeEvent);
 
       expect(mouseOut).toBeCalled();
-      expect(mouseOut.mock.calls.length).toBe(2);
+      expect(mouseOut).toHaveBeenCalledTimes(2);
       expect(mouseOut.mock.calls[0][0]).toEqual(childNode);
       expect(mouseOut.mock.calls[1][0]).toEqual(parentNode);
 
@@ -97,7 +97,7 @@ describe('ReactDOMEventListener', () => {
       childNode.dispatchEvent(nativeEvent);
 
       expect(mouseOut).toBeCalled();
-      expect(mouseOut.mock.calls.length).toBe(3);
+      expect(mouseOut).toHaveBeenCalledTimes(3);
       expect(mouseOut.mock.calls[0][0]).toEqual(childNode);
       expect(mouseOut.mock.calls[1][0]).toEqual(parentNode);
       expect(mouseOut.mock.calls[2][0]).toEqual(grandParentNode);
@@ -169,7 +169,7 @@ describe('ReactDOMEventListener', () => {
       childNode.dispatchEvent(nativeEvent);
 
       // Child and parent should both call from event handlers.
-      expect(mock.mock.calls.length).toBe(2);
+      expect(mock).toHaveBeenCalledTimes(2);
       // The first call schedules a render of '1' into the 'Child'.
       // However, we're batching so it isn't flushed yet.
       expect(mock.mock.calls[0][0]).toBe('Child');
@@ -213,7 +213,7 @@ describe('ReactDOMEventListener', () => {
     instance.getInner().dispatchEvent(nativeEvent);
 
     expect(mouseOut).toBeCalled();
-    expect(mouseOut.mock.calls.length).toBe(1);
+    expect(mouseOut).toHaveBeenCalledTimes(1);
     expect(mouseOut.mock.calls[0][0]).toEqual(instance.getInner());
     document.body.removeChild(container);
   });

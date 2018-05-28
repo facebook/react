@@ -88,7 +88,7 @@ describe('ReactScheduler', () => {
       const cb = jest.fn();
       scheduleWork(cb);
       advanceOneFrame({timeLeftInFrame: 15});
-      expect(cb.mock.calls.length).toBe(1);
+      expect(cb).toHaveBeenCalledTimes(1);
       // should not have timed out and should include a timeRemaining method
       expect(cb.mock.calls[0][0].didTimeout).toBe(false);
       expect(typeof cb.mock.calls[0][0].timeRemaining()).toBe('number');
@@ -333,10 +333,10 @@ describe('ReactScheduler', () => {
       const {scheduleWork, cancelScheduledWork} = ReactScheduler;
       const cb = jest.fn();
       const callbackId = scheduleWork(cb);
-      expect(cb.mock.calls.length).toBe(0);
+      expect(cb).toHaveBeenCalledTimes(0);
       cancelScheduledWork(callbackId);
       advanceOneFrame({timeLeftInFrame: 15});
-      expect(cb.mock.calls.length).toBe(0);
+      expect(cb).toHaveBeenCalledTimes(0);
     });
 
     describe('with multiple callbacks', () => {
@@ -356,7 +356,7 @@ describe('ReactScheduler', () => {
         advanceOneFrame({timeLeftInFrame: 15});
         // B should not get called because A cancelled B
         expect(callbackLog).toEqual(['A']);
-        expect(callbackB.mock.calls.length).toBe(0);
+        expect(callbackB).toHaveBeenCalledTimes(0);
       });
     });
   });

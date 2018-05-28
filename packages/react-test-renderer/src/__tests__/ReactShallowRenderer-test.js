@@ -1237,12 +1237,12 @@ describe('ReactShallowRenderer', () => {
 
     shallowRenderer.render(<Component />);
 
-    expect(mockFn.mock.calls.length).toBe(2);
+    expect(mockFn).toHaveBeenCalledTimes(2);
 
     // Ensure the callback queue is cleared after the callbacks are invoked
     const mountedInstance = shallowRenderer.getMountedInstance();
     mountedInstance.setState({foo: 'bar'}, () => mockFn());
-    expect(mockFn.mock.calls.length).toBe(3);
+    expect(mockFn).toHaveBeenCalledTimes(3);
   });
 
   it('should call the setState callback even if shouldComponentUpdate = false', done => {

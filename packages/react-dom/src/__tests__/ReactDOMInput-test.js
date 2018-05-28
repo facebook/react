@@ -535,7 +535,7 @@ describe('ReactDOMInput', () => {
 
     const node = container.firstChild;
     let nodeValue = 'a';
-    const nodeValueSetter = jest.genMockFn();
+    const nodeValueSetter = jest.fn();
     Object.defineProperty(node, 'value', {
       get: function() {
         return nodeValue;
@@ -546,10 +546,10 @@ describe('ReactDOMInput', () => {
     });
 
     ReactDOM.render(<input value="a" onChange={() => {}} />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(0);
+    expect(nodeValueSetter).toHaveBeenCalledTimes(0);
 
     ReactDOM.render(<input value="b" onChange={() => {}} />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(1);
+    expect(nodeValueSetter).toHaveBeenCalledTimes(1);
   });
 
   it('should not incur unnecessary DOM mutations for numeric type conversion', () => {
@@ -558,7 +558,7 @@ describe('ReactDOMInput', () => {
 
     const node = container.firstChild;
     let nodeValue = '0';
-    const nodeValueSetter = jest.genMockFn();
+    const nodeValueSetter = jest.fn();
     Object.defineProperty(node, 'value', {
       get: function() {
         return nodeValue;
@@ -569,7 +569,7 @@ describe('ReactDOMInput', () => {
     });
 
     ReactDOM.render(<input value={0} onChange={() => {}} />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(0);
+    expect(nodeValueSetter).toHaveBeenCalledTimes(0);
   });
 
   it('should not incur unnecessary DOM mutations for the boolean type conversion', () => {
@@ -578,7 +578,7 @@ describe('ReactDOMInput', () => {
 
     const node = container.firstChild;
     let nodeValue = 'true';
-    const nodeValueSetter = jest.genMockFn();
+    const nodeValueSetter = jest.fn();
     Object.defineProperty(node, 'value', {
       get: function() {
         return nodeValue;
@@ -589,7 +589,7 @@ describe('ReactDOMInput', () => {
     });
 
     ReactDOM.render(<input value={true} onChange={() => {}} />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(0);
+    expect(nodeValueSetter).toHaveBeenCalledTimes(0);
   });
 
   it('should properly control a value of number `0`', () => {

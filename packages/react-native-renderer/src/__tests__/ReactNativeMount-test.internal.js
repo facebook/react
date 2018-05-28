@@ -47,15 +47,15 @@ describe('ReactNative', () => {
 
     ReactNative.render(<View foo="foo" />, 11);
 
-    expect(UIManager.createView.mock.calls.length).toBe(1);
-    expect(UIManager.setChildren.mock.calls.length).toBe(1);
+    expect(UIManager.createView).toHaveBeenCalledTimes(1);
+    expect(UIManager.setChildren).toHaveBeenCalledTimes(1);
     expect(UIManager.manageChildren).not.toBeCalled();
     expect(UIManager.updateView).not.toBeCalled();
 
     ReactNative.render(<View foo="bar" />, 11);
 
-    expect(UIManager.createView.mock.calls.length).toBe(1);
-    expect(UIManager.setChildren.mock.calls.length).toBe(1);
+    expect(UIManager.createView).toHaveBeenCalledTimes(1);
+    expect(UIManager.setChildren).toHaveBeenCalledTimes(1);
     expect(UIManager.manageChildren).not.toBeCalled();
     expect(UIManager.updateView).toBeCalledWith(3, 'RCTView', {foo: 'bar'});
   });
@@ -75,15 +75,15 @@ describe('ReactNative', () => {
 
     // Only call updateView for the changed property (and not for text).
     ReactNative.render(<Text foo="b">1</Text>, 11);
-    expect(UIManager.updateView.mock.calls.length).toBe(1);
+    expect(UIManager.updateView).toHaveBeenCalledTimes(1);
 
     // Only call updateView for the changed text (and no other properties).
     ReactNative.render(<Text foo="b">2</Text>, 11);
-    expect(UIManager.updateView.mock.calls.length).toBe(2);
+    expect(UIManager.updateView).toHaveBeenCalledTimes(2);
 
     // Call updateView for both changed text and properties.
     ReactNative.render(<Text foo="c">3</Text>, 11);
-    expect(UIManager.updateView.mock.calls.length).toBe(4);
+    expect(UIManager.updateView).toHaveBeenCalledTimes(4);
   });
 
   it('should not call UIManager.updateView from setNativeProps for properties that have not changed', () => {
@@ -117,7 +117,7 @@ describe('ReactNative', () => {
       expect(UIManager.updateView).not.toBeCalled();
 
       viewRef.setNativeProps({foo: 'baz'});
-      expect(UIManager.updateView.mock.calls.length).toBe(1);
+      expect(UIManager.updateView).toHaveBeenCalledTimes(1);
     });
   });
 
