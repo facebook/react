@@ -293,8 +293,6 @@ describe('ReactScheduler', () => {
 
       describe('when there is some time left in the frame', () => {
         it('calls timed out callbacks and then any more pending callbacks, defers others if time runs out', () => {
-          // TODO first call timed out callbacks
-          // then any non-timed out callbacks if there is time
           const {scheduleWork} = ReactScheduler;
           startOfLatestFrame = 1000000000000;
           currentTime = startOfLatestFrame - 10;
@@ -376,8 +374,22 @@ describe('ReactScheduler', () => {
 
   describe('when callbacks throw errors', () => {
     describe('when some callbacks throw', () => {
+      /**
+       * +                                                             +
+       * |  rAF                        postMessage                     |
+       * |                                                             |
+       * |      +---------------------+                                |
+       * |      | paint/layout        |  cbA() cbB() cbC() cbD() cbE() |
+       * |      +---------------------+         ^           ^          |
+       * |                                      |           |          |
+       * +                                      |           |          +
+       *                                        +           +
+       *                                        throw errors
+       *
+       *
+       */
       it('still calls all callbacks within same frame', () => {
-        const {scheduleWork, cancelScheduledWork} = ReactScheduler;
+        const {scheduleWork} = ReactScheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => {
@@ -402,25 +414,202 @@ describe('ReactScheduler', () => {
         // calls all callbacks
         expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E']);
         // errors should still get thrown
-        expect(postMessageErrors.length).toBe(2);
-        expect(postMessageErrors[0].message).toBe('B error');
-        expect(postMessageErrors[1].message).toBe('D error');
+        const postMessageErrorMessages = postMessageErrors.map(e => e.message);
+        expect(postMessageErrorMessages).toEqual(['B error', 'D error']);
+        catchPostMessageErrors = false;
       });
     });
     describe('when all scheduled callbacks throw', () => {
+      /**
+       * +                                                             +
+       * |  rAF                        postMessage                     |
+       * |                                                             |
+       * |      +---------------------+                                |
+       * |      | paint/layout        |  cbA() cbB() cbC() cbD() cbE() |
+       * |      +---------------------+   ^     ^     ^     ^     ^    |
+       * |                                |     |     |     |     |    |
+       * +                                |     |     |     |     |    +
+       *                                  |     +     +     +     +
+       *                                  + all callbacks throw errors
+       *
+       *
+       */
       it('still calls all callbacks within same frame', () => {
-        // TODO
+        const {scheduleWork} = ReactScheduler;
+        const callbackLog = [];
+        const callbackA = jest.fn(() => {
+          callbackLog.push('A');
+          throw new Error('A error');
+        });
+        const callbackB = jest.fn(() => {
+          callbackLog.push('B');
+          throw new Error('B error');
+        });
+        const callbackC = jest.fn(() => {
+          callbackLog.push('C');
+          throw new Error('C error');
+        });
+        const callbackD = jest.fn(() => {
+          callbackLog.push('D');
+          throw new Error('D error');
+        });
+        const callbackE = jest.fn(() => {
+          callbackLog.push('E');
+          throw new Error('E error');
+        });
+        scheduleWork(callbackA);
+        scheduleWork(callbackB);
+        scheduleWork(callbackC);
+        scheduleWork(callbackD);
+        scheduleWork(callbackE);
+        // Initially doesn't call anything
+        expect(callbackLog).toEqual([]);
+        catchPostMessageErrors = true;
+        advanceOneFrame({timeLeftInFrame: 15});
         // calls all callbacks
-        // does not catch errors
-        // errors happen at right time
+        expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E']);
+        // errors should still get thrown
+        const postMessageErrorMessages = postMessageErrors.map(e => e.message);
+        expect(postMessageErrorMessages).toEqual([
+          'A error',
+          'B error',
+          'C error',
+          'D error',
+          'E error',
+        ]);
+        catchPostMessageErrors = false;
       });
     });
     describe('when callbacks throw over multiple frames', () => {
+      /**
+       *
+       * **Detail View of Frame 1**
+       *
+       * +                                            +
+       * |  rAF                        postMessage    |
+       * |                                            |
+       * |      +---------------------+               |
+       * |      | paint/layout        |  cbA() cbB()  |  ... Frame 2
+       * |      +---------------------+   ^     ^     |
+       * |                                |     |     |
+       * +                                +     |     +
+       *                              errors    |
+       *                                        +
+       *                                 takes long time
+       *                                 and pushes rest of
+       *                                 callbacks into
+       *                                 next frame ->
+       *
+       *
+       *
+       * **Overview of frames 1-4**
+       *
+       *
+       *  +            +            +            +            +
+       *  |            |            |            |            |
+       *  |  +--+      |  +--+      |  +--+      |  +--+      |
+       *  |  +--+  A,B+-> +--+  C,D+-> +--+  E,F+-> +--+  G   |
+       *  +        ^   +        ^   +        ^   +            +
+       *           |            |            |
+       *          error        error        error
+       *
+       *
+       */
       it('still calls all callbacks within same frame', () => {
-        // TODO
-        // calls all callbacks
-        // does not catch errors
-        // errors happen at right time
+        const {scheduleWork} = ReactScheduler;
+        startOfLatestFrame = 1000000000000;
+        currentTime = startOfLatestFrame - 10;
+        catchPostMessageErrors = true;
+        const callbackLog = [];
+        const callbackA = jest.fn(() => {
+          callbackLog.push('A');
+          throw new Error('A error');
+        });
+        const callbackB = jest.fn(() => {
+          callbackLog.push('B');
+          // time passes, causing us to run out of idle time
+          currentTime += 25;
+        });
+        const callbackC = jest.fn(() => {
+          callbackLog.push('C');
+          throw new Error('C error');
+        });
+        const callbackD = jest.fn(() => {
+          callbackLog.push('D');
+          // time passes, causing us to run out of idle time
+          currentTime += 25;
+        });
+        const callbackE = jest.fn(() => {
+          callbackLog.push('E');
+          throw new Error('E error');
+        });
+        const callbackF = jest.fn(() => {
+          callbackLog.push('F');
+          // time passes, causing us to run out of idle time
+          currentTime += 25;
+        });
+        const callbackG = jest.fn(() => callbackLog.push('G'));
+
+        scheduleWork(callbackA);
+        scheduleWork(callbackB);
+        scheduleWork(callbackC);
+        scheduleWork(callbackD);
+        scheduleWork(callbackE);
+        scheduleWork(callbackF);
+        scheduleWork(callbackG);
+
+        // does nothing initially
+        expect(callbackLog).toEqual([]);
+
+        // frame 1;
+        // callback A runs and throws, callback B takes up rest of frame
+        advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
+
+        // calls A and B
+        expect(callbackLog).toEqual(['A', 'B']);
+        // error was thrown from A
+        let postMessageErrorMessages = postMessageErrors.map(e => e.message);
+        expect(postMessageErrorMessages).toEqual(['A error']);
+
+        // frame 2;
+        // callback C runs and throws, callback D takes up rest of frame
+        advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
+
+        // calls C and D
+        expect(callbackLog).toEqual(['A', 'B', 'C', 'D']);
+        // error was thrown from A
+        postMessageErrorMessages = postMessageErrors.map(e => e.message);
+        expect(postMessageErrorMessages).toEqual(['A error', 'C error']);
+
+        // frame 3;
+        // callback E runs and throws, callback F takes up rest of frame
+        advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
+
+        // calls E and F
+        expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
+        // error was thrown from A
+        postMessageErrorMessages = postMessageErrors.map(e => e.message);
+        expect(postMessageErrorMessages).toEqual([
+          'A error',
+          'C error',
+          'E error',
+        ]);
+
+        // frame 4;
+        // callback G runs and it's the last one
+        advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
+
+        // calls G
+        expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+        // error was thrown from A
+        postMessageErrorMessages = postMessageErrors.map(e => e.message);
+        expect(postMessageErrorMessages).toEqual([
+          'A error',
+          'C error',
+          'E error',
+        ]);
+
+        catchPostMessageErrors = true;
       });
     });
   });
