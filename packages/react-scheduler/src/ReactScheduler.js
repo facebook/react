@@ -135,7 +135,7 @@ if (!ExecutionEnvironment.canUseDOM) {
    * - do start a new postMessage callback, to call any remaining callbacks,
    * - but only if there is an error, so there is not extra overhead.
    */
-  const callSafely = function(callback, arg) {
+  const callUnsafely = function(callback, arg) {
     let finishedCalling = false;
     try {
       callback(arg);
@@ -183,7 +183,7 @@ if (!ExecutionEnvironment.canUseDOM) {
         // it has timed out!
         // call it
         const callback = currentCallbackConfig.scheduledCallback;
-        callSafely(callback, frameDeadlineObject);
+        callUnsafely(callback, frameDeadlineObject);
         // remove it from linked list
         cancelScheduledWork(currentCallbackConfig);
       } else {
@@ -237,7 +237,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       }
       frameDeadlineObject.didTimeout = false;
       const latestCallback = latestCallbackConfig.scheduledCallback;
-      callSafely(latestCallback, frameDeadlineObject);
+      callUnsafely(latestCallback, frameDeadlineObject);
       currentTime = now();
     }
     if (headOfPendingCallbacksLinkedList !== null) {
