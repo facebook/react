@@ -12,6 +12,11 @@
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import warning from 'fbjs/lib/warning';
 
+// We capture a local reference to any global, in case it gets polyfilled after
+// this module is initially evaluated.
+// We want to be using a consistent implementation.
+const requestAnimationFrame = global.requestAnimationFrame;
+
 if (__DEV__) {
   if (
     ExecutionEnvironment.canUseDOM &&

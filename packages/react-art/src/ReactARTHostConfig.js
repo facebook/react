@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as ReactScheduler from 'react-scheduler';
+import * as ReactScheduler from 'shared/ReactScheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import invariant from 'fbjs/lib/invariant';

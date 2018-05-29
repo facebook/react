@@ -44,13 +44,21 @@ export type CallbackIdType = CallbackConfigType;
 import requestAnimationFrameForReact from 'shared/requestAnimationFrameForReact';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
+// We capture a local reference to any global, in case it gets polyfilled after
+// this module is initially evaluated.
+// We want to be using a consistent implementation.
+const Date = global.Date;
+const setTimeout = global.setTimeout;
+const clearTimeout = global.clearTimeout;
+
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
 
 let now;
 if (hasNativePerformanceNow) {
+  const Performance = performance;
   now = function() {
-    return performance.now();
+    return Performance.now();
   };
 } else {
   now = function() {
@@ -224,7 +232,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   };
   // Assumes that we have addEventListener in this environment. Might need
   // something better for old IE.
-  window.addEventListener('message', idleTick, false);
+  global.addEventListener('message', idleTick, false);
 
   const animationTick = function(rafTime) {
     isAnimationFrameScheduled = false;
