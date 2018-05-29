@@ -46,18 +46,20 @@ if (__DEV__) {
       return '#text';
     } else if (typeof element.type === 'string') {
       return element.type;
-    } else if (element.type === REACT_FRAGMENT_TYPE) {
+    }
+
+    const type = element.type;
+    if (type === REACT_FRAGMENT_TYPE) {
       return 'React.Fragment';
     } else if (
-      typeof element.type === 'object' &&
-      element.type !== null &&
-      element.type.$$typeof === REACT_FORWARD_REF_TYPE
+      typeof type === 'object' &&
+      type !== null &&
+      type.$$typeof === REACT_FORWARD_REF_TYPE
     ) {
-      const functionName =
-        element.type.render.displayName || element.type.render.name || '';
+      const functionName = type.render.displayName || type.render.name || '';
       return functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef';
     } else {
-      return element.type.displayName || element.type.name || 'Unknown';
+      return type.displayName || type.name || 'Unknown';
     }
   };
 
