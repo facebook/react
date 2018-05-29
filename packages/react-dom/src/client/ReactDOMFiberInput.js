@@ -218,7 +218,9 @@ export function postMountWrapper(element: Element, props: Object) {
     // value must be assigned before defaultValue. This fixes an issue where the
     // visually displayed value of date inputs disappears on mobile Safari and Chrome:
     // https://github.com/facebook/react/issues/7233
-    node.defaultValue = '' + node._wrapperState.initialValue;
+    if (props.type !== 'password') {
+      node.defaultValue = '' + node._wrapperState.initialValue;
+    }
   }
 
   // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
@@ -304,16 +306,24 @@ export function setDefaultValue(
   type: ?string,
   value: *,
 ) {
-  if (
-    // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
-    type !== 'number' ||
-    node.ownerDocument.activeElement !== node
-  ) {
-    if (value == null) {
-      node.defaultValue = '' + node._wrapperState.initialValue;
-    } else if (node.defaultValue !== '' + value) {
-      node.defaultValue = '' + value;
-    }
+  if (type === 'password') {
+    // Do not synchronize password inputs to prevent password from
+    // being exposed in markup
+    // https://github.com/facebook/react/issues/11896
+    return;
+  }
+
+  // Only assign the value attribute on number inputs when they are not selected
+  // This avoids edge cases in Chrome. Number inputs are synchronized on blur.
+  // See ChangeEventPlugin.js
+  if (type === 'number' && node.ownerDocument.activeElement === node) {
+    return;
+  }
+
+  if (value == null) {
+    node.defaultValue = '' + node._wrapperState.initialValue;
+  } else if (node.defaultValue !== '' + value) {
+    node.defaultValue = '' + value;
   }
 }
 

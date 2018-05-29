@@ -1432,6 +1432,40 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('2');
     });
 
+    it('does not set the value attribute on password inputs', () => {
+      const Input = getTestInput();
+      const stub = ReactTestUtils.renderIntoDocument(
+        <Input type="password" value="1" />,
+      );
+      const node = ReactDOM.findDOMNode(stub);
+
+      expect(node.hasAttribute('value')).toBe(false);
+      expect(node.value).toBe('1');
+    });
+
+    it('does not update the value attribute on password inputs', () => {
+      const Input = getTestInput();
+      const stub = ReactTestUtils.renderIntoDocument(
+        <Input type="password" value="1" />,
+      );
+      const node = ReactDOM.findDOMNode(stub);
+
+      ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
+
+      expect(node.hasAttribute('value')).toBe(false);
+      expect(node.value).toBe('2');
+    });
+
+    it('does not set the defaultValue attribute on password inputs', () => {
+      const stub = ReactTestUtils.renderIntoDocument(
+        <input type="password" defaultValue="1" />,
+      );
+      const node = ReactDOM.findDOMNode(stub);
+
+      expect(node.hasAttribute('value')).toBe(false);
+      expect(node.value).toBe('1');
+    });
+
     it('does not set the value attribute on number inputs if focused', () => {
       const Input = getTestInput();
       const stub = ReactTestUtils.renderIntoDocument(
