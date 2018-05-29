@@ -30,7 +30,7 @@ install:
 test_script:
   - node --version
   - yarn lint
-  - yarn flow-ci
+#  - yarn flow-ci
   - yarn build
   - yarn test
   - yarn prettier
