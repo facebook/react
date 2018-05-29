@@ -71,6 +71,9 @@ describe('ReactIs', () => {
     expect(ReactIs.typeOf(<React.unstable_AsyncMode />)).toBe(
       ReactIs.AsyncMode,
     );
+    expect(ReactIs.elementType(React.unstable_AsyncMode)).toBe(
+      ReactIs.AsyncMode,
+    );
     expect(ReactIs.isAsyncMode(<React.unstable_AsyncMode />)).toBe(true);
     expect(ReactIs.isAsyncMode({type: ReactIs.AsyncMode})).toBe(false);
     expect(ReactIs.isAsyncMode(<React.StrictMode />)).toBe(false);
@@ -80,6 +83,7 @@ describe('ReactIs', () => {
   it('should identify context consumers', () => {
     const Context = React.createContext(false);
     expect(ReactIs.typeOf(<Context.Consumer />)).toBe(ReactIs.ContextConsumer);
+    expect(ReactIs.elementType(Context.Consumer)).toBe(ReactIs.ContextConsumer);
     expect(ReactIs.isContextConsumer(<Context.Consumer />)).toBe(true);
     expect(ReactIs.isContextConsumer(<Context.Provider />)).toBe(false);
     expect(ReactIs.isContextConsumer(<div />)).toBe(false);
@@ -88,6 +92,7 @@ describe('ReactIs', () => {
   it('should identify context providers', () => {
     const Context = React.createContext(false);
     expect(ReactIs.typeOf(<Context.Provider />)).toBe(ReactIs.ContextProvider);
+    expect(ReactIs.elementType(Context.Provider)).toBe(ReactIs.ContextProvider);
     expect(ReactIs.isContextProvider(<Context.Provider />)).toBe(true);
     expect(ReactIs.isContextProvider(<Context.Consumer />)).toBe(false);
     expect(ReactIs.isContextProvider(<div />)).toBe(false);
@@ -95,6 +100,7 @@ describe('ReactIs', () => {
 
   it('should identify elements', () => {
     expect(ReactIs.typeOf(<div />)).toBe(ReactIs.Element);
+    expect(ReactIs.elementType('div')).toBe(ReactIs.Element);
     expect(ReactIs.isElement(<div />)).toBe(true);
     expect(ReactIs.isElement('div')).toBe(false);
     expect(ReactIs.isElement(true)).toBe(false);
@@ -115,6 +121,9 @@ describe('ReactIs', () => {
   it('should identify ref forwarding component', () => {
     const RefForwardingComponent = React.forwardRef((props, ref) => null);
     expect(ReactIs.typeOf(<RefForwardingComponent />)).toBe(ReactIs.ForwardRef);
+    expect(ReactIs.elementType(RefForwardingComponent)).toBe(
+      ReactIs.ForwardRef,
+    );
     expect(ReactIs.isForwardRef(<RefForwardingComponent />)).toBe(true);
     expect(ReactIs.isForwardRef({type: ReactIs.StrictMode})).toBe(false);
     expect(ReactIs.isForwardRef(<React.unstable_AsyncMode />)).toBe(false);
@@ -123,6 +132,7 @@ describe('ReactIs', () => {
 
   it('should identify fragments', () => {
     expect(ReactIs.typeOf(<React.Fragment />)).toBe(ReactIs.Fragment);
+    expect(ReactIs.elementType(React.Fragment)).toBe(ReactIs.Fragment);
     expect(ReactIs.isFragment(<React.Fragment />)).toBe(true);
     expect(ReactIs.isFragment({type: ReactIs.Fragment})).toBe(false);
     expect(ReactIs.isFragment('React.Fragment')).toBe(false);
@@ -140,6 +150,7 @@ describe('ReactIs', () => {
 
   it('should identify strict mode', () => {
     expect(ReactIs.typeOf(<React.StrictMode />)).toBe(ReactIs.StrictMode);
+    expect(ReactIs.elementType(React.StrictMode)).toBe(ReactIs.StrictMode);
     expect(ReactIs.isStrictMode(<React.StrictMode />)).toBe(true);
     expect(ReactIs.isStrictMode({type: ReactIs.StrictMode})).toBe(false);
     expect(ReactIs.isStrictMode(<React.unstable_AsyncMode />)).toBe(false);
@@ -150,6 +161,7 @@ describe('ReactIs', () => {
     expect(
       ReactIs.typeOf(<React.unstable_Profiler id="foo" onRender={jest.fn()} />),
     ).toBe(ReactIs.Profiler);
+    expect(ReactIs.elementType(React.unstable_Profiler)).toBe(ReactIs.Profiler);
     expect(
       ReactIs.isProfiler(
         <React.unstable_Profiler id="foo" onRender={jest.fn()} />,
