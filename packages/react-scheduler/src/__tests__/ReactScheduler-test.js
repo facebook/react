@@ -418,6 +418,52 @@ describe('ReactScheduler', () => {
         expect(postMessageErrorMessages).toEqual(['B error', 'D error']);
         catchPostMessageErrors = false;
       });
+
+      /**
+       *                                               timed out
+       *                                               +     +  +--+
+       *  +  rAF                        postMessage    |     |     |    +
+       *  |                                            |     |     |    |
+       *  |      +---------------------+               v     v     v    |
+       *  |      | paint/layout        |  cbA() cbB() cbC() cbD() cbE() |
+       *  |      +---------------------+   ^                 ^          |
+       *  |                                |                 |          |
+       *  +                                |                 |          +
+       *                                   +                 +
+       *                                   throw errors
+       *
+       *
+       */
+      it('and with some timed out callbacks, still calls all callbacks within same frame', () => {
+        const {scheduleWork} = ReactScheduler;
+        const callbackLog = [];
+        const callbackA = jest.fn(() => {
+          callbackLog.push('A');
+          throw new Error('A error');
+        });
+        const callbackB = jest.fn(() => callbackLog.push('B'));
+        const callbackC = jest.fn(() => callbackLog.push('C'));
+        const callbackD = jest.fn(() => {
+          callbackLog.push('D');
+          throw new Error('D error');
+        });
+        const callbackE = jest.fn(() => callbackLog.push('E'));
+        scheduleWork(callbackA);
+        scheduleWork(callbackB);
+        scheduleWork(callbackC, {timeout: 2}); // times out fast
+        scheduleWork(callbackD, {timeout: 2}); // times out fast
+        scheduleWork(callbackE, {timeout: 2}); // times out fast
+        // Initially doesn't call anything
+        expect(callbackLog).toEqual([]);
+        catchPostMessageErrors = true;
+        advanceOneFrame({timeLeftInFrame: 15});
+        // calls all callbacks; calls timed out ones first
+        expect(callbackLog).toEqual(['C', 'D', 'E', 'A', 'B']);
+        // errors should still get thrown
+        const postMessageErrorMessages = postMessageErrors.map(e => e.message);
+        expect(postMessageErrorMessages).toEqual(['D error', 'A error']);
+        catchPostMessageErrors = false;
+      });
     });
     describe('when all scheduled callbacks throw', () => {
       /**
@@ -462,6 +508,67 @@ describe('ReactScheduler', () => {
         scheduleWork(callbackC);
         scheduleWork(callbackD);
         scheduleWork(callbackE);
+        // Initially doesn't call anything
+        expect(callbackLog).toEqual([]);
+        catchPostMessageErrors = true;
+        advanceOneFrame({timeLeftInFrame: 15});
+        // calls all callbacks
+        expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E']);
+        // errors should still get thrown
+        const postMessageErrorMessages = postMessageErrors.map(e => e.message);
+        expect(postMessageErrorMessages).toEqual([
+          'A error',
+          'B error',
+          'C error',
+          'D error',
+          'E error',
+        ]);
+        catchPostMessageErrors = false;
+      });
+
+      /**
+       *                                  postMessage
+       *  +                                                             +
+       *  |  rAF                               all callbacks time out   |
+       *  |                                                             |
+       *  |      +---------------------+                                |
+       *  |      | paint/layout        |  cbA() cbB() cbC() cbD() cbE() |
+       *  |      +---------------------+   ^     ^     ^     ^     ^    |
+       *  |                                |     |     |     |     |    |
+       *  +                                |     |     |     |     |    +
+       *                                   |     +     +     +     +
+       *                                   + all callbacks throw errors
+       *
+       *
+       */
+      it('and with all timed out callbacks, still calls all callbacks within same frame', () => {
+        const {scheduleWork} = ReactScheduler;
+        const callbackLog = [];
+        const callbackA = jest.fn(() => {
+          callbackLog.push('A');
+          throw new Error('A error');
+        });
+        const callbackB = jest.fn(() => {
+          callbackLog.push('B');
+          throw new Error('B error');
+        });
+        const callbackC = jest.fn(() => {
+          callbackLog.push('C');
+          throw new Error('C error');
+        });
+        const callbackD = jest.fn(() => {
+          callbackLog.push('D');
+          throw new Error('D error');
+        });
+        const callbackE = jest.fn(() => {
+          callbackLog.push('E');
+          throw new Error('E error');
+        });
+        scheduleWork(callbackA, {timeout: 2}); // times out fast
+        scheduleWork(callbackB, {timeout: 2}); // times out fast
+        scheduleWork(callbackC, {timeout: 2}); // times out fast
+        scheduleWork(callbackD, {timeout: 2}); // times out fast
+        scheduleWork(callbackE, {timeout: 2}); // times out fast
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
         catchPostMessageErrors = true;
