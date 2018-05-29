@@ -15,12 +15,12 @@ import warning from 'fbjs/lib/warning';
 // We capture a local reference to any global, in case it gets polyfilled after
 // this module is initially evaluated.
 // We want to be using a consistent implementation.
-const requestAnimationFrame = global.requestAnimationFrame;
+const localRequestAnimationFrame = requestAnimationFrame;
 
 if (__DEV__) {
   if (
     ExecutionEnvironment.canUseDOM &&
-    typeof requestAnimationFrame !== 'function'
+    typeof localRequestAnimationFrame !== 'function'
   ) {
     warning(
       false,
@@ -30,4 +30,4 @@ if (__DEV__) {
   }
 }
 
-export default requestAnimationFrame;
+export default localRequestAnimationFrame;
