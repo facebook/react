@@ -293,7 +293,7 @@ function runTestFour() {
   updateTestResult(4, 'scheduled cbA');
   scheduleWork(cbB, {timeout: 100}); // times out later
   updateTestResult(4, 'scheduled cbB');
-  scheduleWork(cbC, {timeout: 2}); // will time out fast
+  scheduleWork(cbC, {timeout: 1}); // will time out fast
   updateTestResult(4, 'scheduled cbC');
   scheduleWork(cbD); // won't time out
   updateTestResult(4, 'scheduled cbD');
