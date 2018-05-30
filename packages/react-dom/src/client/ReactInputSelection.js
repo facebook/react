@@ -12,7 +12,100 @@ import * as ReactDOMSelection from './ReactDOMSelection';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 
 function isInDocument(node) {
-  return containsNode(document.documentElement, node);
+  return (
+    node &&
+    node.ownerDocument &&
+    containsNode(node.ownerDocument.documentElement, node)
+  );
+}
+
+function getActiveElementDeep() {
+  let win = window;
+  let element = getActiveElement();
+  while (element instanceof win.HTMLIFrameElement) {
+    try {
+      win = element.contentDocument.defaultView;
+    } catch (e) {
+      return element;
+    }
+    element = getActiveElement(win.document);
+  }
+  return element;
+}
+
+function getElementsWithSelections(acc, win) {
+  acc = acc || [];
+  win = win || window;
+  let doc;
+  try {
+    doc = win.document;
+    if (!doc) {
+      return acc;
+    }
+  } catch (e) {
+    return acc;
+  }
+  let element = getActiveElement(doc);
+  // Use getSelection if activeElement is the document body
+  if (element === doc.body) {
+    if (win.getSelection) {
+      const selection = win.getSelection();
+      if (selection) {
+        const startNode = selection.anchorNode;
+        const endNode = selection.focusNode;
+        const startOffset = selection.anchorOffset;
+        const endOffset = selection.focusOffset;
+        if (startNode && startNode.childNodes.length) {
+          if (
+            startNode.childNodes[startOffset] === endNode.childNodes[endOffset]
+          ) {
+            element = startNode.childNodes[startOffset];
+          }
+        } else {
+          element = startNode;
+        }
+      }
+    } else if (doc.selection) {
+      const range = doc.selection.createRange();
+      element = range.parentElement();
+    }
+  }
+
+  if (hasSelectionCapabilities(element)) {
+    acc = acc.concat({
+      element: element,
+      selectionRange: getSelection(element),
+    });
+  }
+
+  for (let i = 0; i < win.frames.length; i++) {
+    acc = getElementsWithSelections(acc, win.frames[i]);
+  }
+
+  return acc;
+}
+
+function focusNodePreservingScroll(element) {
+  // Focusing a node can change the scroll position, which is undesirable
+  const ancestors = [];
+  let ancestor = element;
+  while ((ancestor = ancestor.parentNode)) {
+    if (ancestor.nodeType === ELEMENT_NODE) {
+      ancestors.push({
+        element: ancestor,
+        left: ancestor.scrollLeft,
+        top: ancestor.scrollTop,
+      });
+    }
+  }
+
+  element.focus();
+
+  for (let i = 0; i < ancestors.length; i++) {
+    const info = ancestors[i];
+    info.element.scrollLeft = info.left;
+    info.element.scrollTop = info.top;
+  }
 }
 
 /**
@@ -21,24 +114,34 @@ function isInDocument(node) {
  * assume buttons have range selections allowed).
  * Input selection module for React.
  */
-
+const selectionCapableTypes = [
+  'date',
+  'datetime-local',
+  'email',
+  'month',
+  'number',
+  'password',
+  'search',
+  'tel',
+  'text',
+  'time',
+  'url',
+  'week',
+];
 export function hasSelectionCapabilities(elem) {
   const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName &&
-    ((nodeName === 'input' && elem.type === 'text') ||
+    ((nodeName === 'input' && selectionCapableTypes.includes(elem.type)) ||
       nodeName === 'textarea' ||
       elem.contentEditable === 'true')
   );
 }
 
 export function getSelectionInformation() {
-  const focusedElem = getActiveElement();
   return {
-    focusedElem: focusedElem,
-    selectionRange: hasSelectionCapabilities(focusedElem)
-      ? getSelection(focusedElem)
-      : null,
+    activeElement: getActiveElementDeep(),
+    elementSelections: getElementsWithSelections(),
   };
 }
 
@@ -48,34 +151,35 @@ export function getSelectionInformation() {
  * nodes and place them back in, resulting in focus being lost.
  */
 export function restoreSelection(priorSelectionInformation) {
-  const curFocusedElem = getActiveElement();
-  const priorFocusedElem = priorSelectionInformation.focusedElem;
-  const priorSelectionRange = priorSelectionInformation.selectionRange;
-  if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
-    if (hasSelectionCapabilities(priorFocusedElem)) {
-      setSelection(priorFocusedElem, priorSelectionRange);
-    }
-
-    // Focusing a node can change the scroll position, which is undesirable
-    const ancestors = [];
-    let ancestor = priorFocusedElem;
-    while ((ancestor = ancestor.parentNode)) {
-      if (ancestor.nodeType === ELEMENT_NODE) {
-        ancestors.push({
-          element: ancestor,
-          left: ancestor.scrollLeft,
-          top: ancestor.scrollTop,
-        });
+  const priorActiveElement = priorSelectionInformation.activeElement;
+  const elementSelections = priorSelectionInformation.elementSelections;
+  let curActiveElement = getActiveElementDeep();
+  const isActiveElementOnlySelection =
+    elementSelections.length === 1 &&
+    elementSelections[0] === priorActiveElement;
+  if (
+    !isInDocument(priorActiveElement) ||
+    priorActiveElement === priorActiveElement.ownerDocument.body ||
+    (isActiveElementOnlySelection && curActiveElement === priorActiveElement)
+  ) {
+    return;
+  }
+  elementSelections.forEach(function(selection) {
+    const element = selection.element;
+    if (
+      isInDocument(element) &&
+      getActiveElement(element.ownerDocument) !== element
+    ) {
+      setSelection(element, selection.selectionRange);
+      if (element !== priorActiveElement) {
+        focusNodePreservingScroll(element);
+        curActiveElement = element;
       }
     }
+  });
 
-    priorFocusedElem.focus();
-
-    for (let i = 0; i < ancestors.length; i++) {
-      const info = ancestors[i];
-      info.element.scrollLeft = info.left;
-      info.element.scrollTop = info.top;
-    }
+  if (curActiveElement !== priorActiveElement) {
+    focusNodePreservingScroll(priorActiveElement);
   }
 }
 
