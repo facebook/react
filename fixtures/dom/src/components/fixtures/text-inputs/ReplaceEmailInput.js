@@ -7,15 +7,19 @@ class ReplaceEmailInput extends React.Component {
     formSubmitted: false,
   };
 
+  onReset = () => {
+    this.setState({formSubmitted: false});
+  };
+
+  onSubmit = event => {
+    event.preventDefault();
+    this.setState({formSubmitted: true});
+  };
+
   render() {
     return (
       <Fixture>
-        <form
-          className="control-box"
-          onSubmit={event => {
-            event.preventDefault();
-            this.setState({formSubmitted: true});
-          }}>
+        <form className="control-box" onSubmit={this.onSubmit}>
           <fieldset>
             <legend>Email</legend>
             {!this.state.formSubmitted ? (
@@ -25,6 +29,9 @@ class ReplaceEmailInput extends React.Component {
             )}
           </fieldset>
         </form>
+        <button type="button" onClick={this.onReset}>
+          Reset
+        </button>
       </Fixture>
     );
   }
