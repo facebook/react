@@ -17,43 +17,60 @@ const Pending = 1;
 const Resolved = 2;
 const Rejected = 3;
 
-type EmptyRecord = {|
+type EmptyRecord<K, V> = {|
   status: 0,
   suspender: null,
+  key: K,
   value: null,
   error: null,
+  next: Record<K, V> | null,
+  previous: Record<K, V> | null,
 |};
 
-type PendingRecord<V> = {|
+type PendingRecord<K, V> = {|
   status: 1,
-  suspender: Promise<V>,
+  suspender: Promise<K, V>,
+  key: K,
   value: null,
   error: null,
+  next: Record<K, V> | null,
+  previous: Record<K, V> | null,
 |};
 
-type ResolvedRecord<V> = {|
+type ResolvedRecord<K, V> = {|
   status: 2,
   suspender: null,
+  key: K,
   value: V,
   error: null,
+  next: Record<K, V> | null,
+  previous: Record<K, V> | null,
 |};
 
-type RejectedRecord = {|
+type RejectedRecord<K, V> = {|
   status: 3,
   suspender: null,
+  key: K,
   value: null,
   error: Error,
+  next: Record<K, V> | null,
+  previous: Record<K, V> | null,
 |};
 
-type Record<V> =
-  | EmptyRecord
-  | PendingRecord<V>
-  | ResolvedRecord<V>
-  | RejectedRecord;
+type Record<K, V> =
+  | EmptyRecord<K, V>
+  | PendingRecord<K, V>
+  | ResolvedRecord<K, V>
+  | RejectedRecord<K, V>;
 
-type RecordCache<K, V> = Map<K, Record<V>>;
+type RecordCache<K, V> = {|
+  map: Map<K, Record<K, V>>,
+  head: Record<K, V> | null,
+  tail: Record<K, V> | null,
+|};
+
 // TODO: How do you express this type with Flow?
-type ResourceCache = Map<any, RecordCache<any, any>>;
+type ResourceMap = Map<any, RecordCache<any, any>>;
 type Cache = {
   invalidate(): void,
   read<K, V, A>(
@@ -86,10 +103,35 @@ if (__DEV__) {
     value.$$typeof === CACHE_TYPE;
 }
 
-export function createCache(invalidator: () => mixed): Cache {
-  const resourceCache: ResourceCache = new Map();
+// TODO: Make this configurable per resource
+const MAX_SIZE = 500;
+const PAGE_SIZE = 50;
 
-  function getRecord<K, V>(resourceType: any, key: K): Record<V> {
+function createRecord<K, V>(key: K): EmptyRecord<K, V> {
+  return {
+    status: Empty,
+    suspender: null,
+    key,
+    value: null,
+    error: null,
+    next: null,
+    previous: null,
+  };
+}
+
+function createRecordCache<K, V>(): RecordCache<K, V> {
+  return {
+    map: new Map(),
+    head: null,
+    tail: null,
+    size: 0,
+  };
+}
+
+export function createCache(invalidator: () => mixed): Cache {
+  const resourceMap: ResourceMap = new Map();
+
+  function accessRecord<K, V>(resourceType: any, key: K): Record<V> {
     if (__DEV__) {
       warning(
         typeof resourceType !== 'string' && typeof resourceType !== 'number',
@@ -100,25 +142,68 @@ export function createCache(invalidator: () => mixed): Cache {
       );
     }
 
-    let recordCache = resourceCache.get(resourceType);
-    if (recordCache !== undefined) {
-      const record = recordCache.get(key);
-      if (record !== undefined) {
-        return record;
+    let recordCache = resourceMap.get(resourceType);
+    if (recordCache === undefined) {
+      recordCache = createRecordCache();
+      resourceMap.set(resourceType, recordCache);
+    }
+    const map = recordCache.map;
+
+    let record = map.get(key);
+    if (record === undefined) {
+      // This record does not already exist. Create a new one.
+      record = createRecord(key);
+      map.set(key, record);
+      if (recordCache.size >= MAX_SIZE) {
+        // The cache is already at maximum capacity. Remove PAGE_SIZE least
+        // recently used records.
+        // TODO: We assume the max capcity is greater than zero. Otherwise warn.
+        const tail = recordCache.tail;
+        if (tail !== null) {
+          let newTail = tail;
+          for (let i = 0; i < PAGE_SIZE && newTail !== null; i++) {
+            recordCache.size -= 1;
+            map.delete(newTail.key);
+            newTail = newTail.previous;
+          }
+          recordCache.tail = newTail;
+          if (newTail !== null) {
+            newTail.next = null;
+          }
+        }
       }
     } else {
-      recordCache = new Map();
-      resourceCache.set(resourceType, recordCache);
+      // This record is already cached. Remove it from its current position in
+      // the list. We'll add it to the front below.
+      const previous = record.previous;
+      const next = record.next;
+      if (previous !== null) {
+        previous.next = next;
+      } else {
+        recordCache.head = next;
+      }
+      if (next !== null) {
+        next.previous = previous;
+      } else {
+        recordCache.tail = previous;
+      }
+      recordCache.size -= 1;
     }
 
-    const record = {
-      status: Empty,
-      suspender: null,
-      value: null,
-      error: null,
-    };
-    recordCache.set(key, record);
-    return record;
+    // Add the record to the front of the list.
+    const head = recordCache.head;
+    const newHead = record;
+    recordCache.head = newHead;
+    newHead.previous = null;
+    newHead.next = head;
+    if (head !== null) {
+      head.previous = newHead;
+    } else {
+      recordCache.tail = newHead;
+    }
+    recordCache.size += 1;
+
+    return newHead;
   }
 
   function load<V>(emptyRecord: EmptyRecord, suspender: Promise<V>) {
@@ -154,7 +239,7 @@ export function createCache(invalidator: () => mixed): Cache {
       miss: A => Promise<V>,
       missArg: A,
     ): void {
-      const record: Record<V> = getRecord(resourceType, key);
+      const record: Record<V> = accessRecord(resourceType, key);
       switch (record.status) {
         case Empty:
           // Warm the cache.
@@ -178,7 +263,7 @@ export function createCache(invalidator: () => mixed): Cache {
       miss: A => Promise<V>,
       missArg: A,
     ): V {
-      const record: Record<V> = getRecord(resourceType, key);
+      const record: Record<V> = accessRecord(resourceType, key);
       switch (record.status) {
         case Empty:
           // Load the requested resource.
