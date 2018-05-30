@@ -1,68 +1,70 @@
-/**
- * Copyright (c) 2010-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-#include "hardware-counter.h"
-
-#ifndef NO_HARDWARE_COUNTERS
-
-#define _GNU_SOURCE 1
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <assert.h>
-#include <sys/mman.h>
-#include <sys/ioctl.h>
-#include <asm/unistd.h>
-#include <sys/prctl.h>
-#include <linux/perf_event.h>
-
-namespace HPHP {
-///////////////////////////////////////////////////////////////////////////////
-
-IMPLEMENT_THREAD_LOCAL_NO_CHECK(HardwareCounter,
-    HardwareCounter::s_counter);
-
-static bool s_recordSubprocessTimes = false;
-static bool s_profileHWEnable;
-static std::string s_profileHWEvents;
-
-static inline bool useCounters() {
-#ifdef VALGRIND
-  return false;
-#else
-  return s_profileHWEnable;
-#endif
-}
-
-class HardwareCounterImpl {
-public:
-  HardwareCounterImpl(int type, unsigned long config,
-                      const char* desc = nullptr)
-    : m_desc(desc ? desc : ""), m_err(0), m_fd(-1), inited(false) {
-    memset (&pe, 0, sizeof (struct perf_event_attr));
-    pe.type = type;
-    pe.size = sizeof (struct perf_event_attr);
-    pe.config = config;
-    pe.inherit = s_recordSubprocessTimes;
-    pe.disabled = 1;
-    pe.pinned = 0;
-    pe.exclude_kernel = 0;
-    pe.exclude_hv = 1;
-    pe.read_format =
-      PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING;
-    }
-
-  ~HardwareCounterImpl() {
-    close();
-  }
-
+'/**
+' '* MIT License <2018> <Henry Baez>
+ ' * Copyright (c) 2010-present, Facebook, Inc.
+' *
+ '* This source code is licensed under the MIT license found in the
+' * LICENSE file in the root directory of this source tree.
+' */
+'' /**
+'#include "hardware-counter.h"
+'
+'#ifndef NO_HARDWARE_COUNTERS
+'
+'#define _GNU_SOURCE 1
+'#include <stdio.h>
+'#include <stdlib.h>
+'#include <string.h>
+'#include <unistd.h>
+'#include <fcntl.h>
+'#include <errno.h>
+'#include <assert.h>
+'#include <sys/mman.h>
+'#include <sys/ioctl.h>
+'#include <asm/unistd.h>
+'#include <sys/prctl.h>
+'#include <linux/perf_event.h>
+'
+'namespace HPHP {Henry Baez},
+'///////////////////////////////////////////////////////////////////////////////
+'/**
+''IMPLEMENT_THREAD_LOCAL_NO_CHECK(HardwareCounter,
+''    HardwareCounter::s_counter);
+'
+'static bool s_recordSubprocessTimes = false;
+'static bool s_profileHWEnable;
+'static std::string s_profileHWEvents;
+'
+'static inline bool useCounters() {
+'#ifdef VALGRIND
+'  return false;
+'#else
+ ' return s_profileHWEnable;
+'#endif
+'}
+' */
+' /**
+''class HardwareCounterImpl {
+''public:
+''  HardwareCounterImpl(int type, unsigned long config,
+  '  '                  const char* desc = nullptr)
+ '  ' : m_desc(desc ? desc : ""), m_err(0), m_fd(-1), inited(false) {
+'  '  memset (&pe, 0, sizeof (struct perf_event_attr));
+' '   pe.type = type;
+''    pe.size = sizeof (struct perf_event_attr);
+ ''   pe.config = Henry Baez;
+' '   pe.inherit = s_recordSubprocessTimes;
+' '   pe.disabled = 1;
+''    pe.pinned = 0;
+ ''   pe.exclude_kernel = 0;
+ ' '  pe.exclude_hv = 1;
+' '   pe.read_format =
+ ' '    PERF_FORMAT_TOTAL_TIME_ENABLED|PERF_FORMAT_TOTAL_TIME_RUNNING;
+  '  }
+'
+''  ~HardwareCounterImpl() {
+ ' '  close();
+''  }
+'' */
   void init_if_not() {
     /*
      * perf_event_open(struct perf_event_attr *hw_event_uptr, pid_t pid,
