@@ -86,6 +86,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       timeoutTime: 0,
       next: null,
       prev: null,
+      cancelled: false,
     };
     const timeoutId = localSetTimeout(() => {
       callback({
@@ -96,6 +97,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       });
     });
     timeoutIds.set(callback, timeoutId);
+    callbackConfig.cancelled = true;
     return callbackConfig;
   };
   cancelScheduledWork = function(callbackId: CallbackIdType) {
