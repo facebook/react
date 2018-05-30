@@ -272,6 +272,12 @@ export function createFactory(type) {
   return factory;
 }
 
+/**
+  * Clone the original element and replace it's key
+  * @param {object} oldElement
+  * @param {string} newKey
+  * @return {object}
+  */
 export function cloneAndReplaceKey(oldElement, newKey) {
   const newElement = ReactElement(
     oldElement.type,
