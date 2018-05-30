@@ -730,6 +730,8 @@ const ReactDOM: Object = {
 
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
+  unstable_interactiveUpdates: DOMRenderer.interactiveUpdates,
+
   flushSync: DOMRenderer.flushSync,
 
   unstable_flushControlled: DOMRenderer.flushControlled,
