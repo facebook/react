@@ -2,6 +2,7 @@ import Fixture from '../../Fixture';
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import InputTestCase from './InputTestCase';
+import ReplaceEmailInput from './ReplaceEmailInput';
 
 const React = window.React;
 
@@ -123,6 +124,21 @@ class TextInputFixtures extends React.Component {
           </TestCase.ExpectedResult>
 
           <InputTestCase type="url" defaultValue="" />
+        </TestCase>
+
+        <TestCase
+          title="Replacing email input with text disabled input"
+          relatedIssues="12062">
+          <TestCase.Steps>
+            <li>Type "test@test.com"</li>
+            <li>Press enter</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            There should be no selection-related error in the console.
+          </TestCase.ExpectedResult>
+
+          <ReplaceEmailInput />
         </TestCase>
 
         <TestCase title="All inputs" description="General test of all inputs">
