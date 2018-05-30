@@ -210,6 +210,10 @@ export function postMountWrapper(element: Element, props: Object) {
 
   if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
     const initialValue = '' + node._wrapperState.initialValue;
+
+    // With range inputs node.value may be a default value calculated from the
+    // min/max attributes. This ensures that node.value is set with the correct
+    // value coming from props.
     const currentValue = props.type === 'range' ? '' : node.value;
 
     // Do not assign value if it is already set. This prevents user text input
@@ -219,6 +223,8 @@ export function postMountWrapper(element: Element, props: Object) {
       // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
       // prematurely marking required inputs as invalid
       if (initialValue !== currentValue) {
+        node.value = initialValue;
+      } else if (props.type === 'range') {
         node.value = initialValue;
       }
     }
