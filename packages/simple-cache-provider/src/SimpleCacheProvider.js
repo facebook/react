@@ -17,7 +17,7 @@ const Pending = 1;
 const Resolved = 2;
 const Rejected = 3;
 
-type EmptyRecord<K, V> = {|
+type EmptyRecord<K> = {|
   status: 0,
   suspender: null,
   key: K,
@@ -62,7 +62,7 @@ type ResolvedRecord<K, V> = {|
    */
 |};
 
-type RejectedRecord<K, V> = {|
+type RejectedRecord<K> = {|
   status: 3,
   suspender: null,
   key: K,
@@ -78,10 +78,10 @@ type RejectedRecord<K, V> = {|
 |};
 
 type Record<K, V> =
-  | EmptyRecord<K, V>
+  | EmptyRecord<K>
   | PendingRecord<K, V>
   | ResolvedRecord<K, V>
-  | RejectedRecord<K, V>;
+  | RejectedRecord<K>;
 
 type RecordCache<K, V> = {|
   map: Map<K, Record<K, V>>,
@@ -128,7 +128,7 @@ if (__DEV__) {
 const MAX_SIZE = 500;
 const PAGE_SIZE = 50;
 
-function createRecord<K, V>(key: K): EmptyRecord<K, V> {
+function createRecord<K>(key: K): EmptyRecord<K> {
   return {
     status: Empty,
     suspender: null,
@@ -227,7 +227,7 @@ export function createCache(invalidator: () => mixed): Cache {
     return newHead;
   }
 
-  function load<K, V>(emptyRecord: EmptyRecord<K, V>, suspender: Promise<V>) {
+  function load<K, V>(emptyRecord: EmptyRecord<K>, suspender: Promise<V>) {
     const pendingRecord: PendingRecord<K, V> = (emptyRecord: any);
     pendingRecord.status = Pending;
     pendingRecord.suspender = suspender;
@@ -242,7 +242,7 @@ export function createCache(invalidator: () => mixed): Cache {
       error => {
         // Resource failed to load. Stash the error for later so we can throw it
         // the next time it's requested.
-        const rejectedRecord: RejectedRecord<K, V> = (pendingRecord: any);
+        const rejectedRecord: RejectedRecord<K> = (pendingRecord: any);
         rejectedRecord.status = Rejected;
         rejectedRecord.suspender = null;
         rejectedRecord.error = error;
