@@ -23,18 +23,28 @@ type EmptyRecord<K, V> = {|
   key: K,
   value: null,
   error: null,
-  next: Record<K, V> | null,
-  previous: Record<K, V> | null,
+  next: any, // TODO: (issue #12941)
+  previous: any, // TODO: (issue #12941)
+  /**
+   * Proper types would be something like this:
+   * next: Record<K, V> | null,
+   * previous: Record<K, V> | null,
+   */
 |};
 
 type PendingRecord<K, V> = {|
   status: 1,
-  suspender: Promise<K, V>,
+  suspender: Promise<V>,
   key: K,
   value: null,
   error: null,
-  next: Record<K, V> | null,
-  previous: Record<K, V> | null,
+  next: any, // TODO: (issue #12941)
+  previous: any, // TODO: (issue #12941)
+  /**
+   * Proper types would be something like this:
+   * next: Record<K, V> | null,
+   * previous: Record<K, V> | null,
+   */
 |};
 
 type ResolvedRecord<K, V> = {|
@@ -43,8 +53,13 @@ type ResolvedRecord<K, V> = {|
   key: K,
   value: V,
   error: null,
-  next: Record<K, V> | null,
-  previous: Record<K, V> | null,
+  next: any, // TODO: (issue #12941)
+  previous: any, // TODO: (issue #12941)
+  /**
+   * Proper types would be something like this:
+   * next: Record<K, V> | null,
+   * previous: Record<K, V> | null,
+   */
 |};
 
 type RejectedRecord<K, V> = {|
@@ -53,8 +68,13 @@ type RejectedRecord<K, V> = {|
   key: K,
   value: null,
   error: Error,
-  next: Record<K, V> | null,
-  previous: Record<K, V> | null,
+  next: any, // TODO: (issue #12941)
+  previous: any, // TODO: (issue #12941)
+  /**
+   * Proper types would be something like this:
+   * next: Record<K, V> | null,
+   * previous: Record<K, V> | null,
+   */
 |};
 
 type Record<K, V> =
@@ -67,6 +87,7 @@ type RecordCache<K, V> = {|
   map: Map<K, Record<K, V>>,
   head: Record<K, V> | null,
   tail: Record<K, V> | null,
+  size: number,
 |};
 
 // TODO: How do you express this type with Flow?
@@ -131,7 +152,7 @@ function createRecordCache<K, V>(): RecordCache<K, V> {
 export function createCache(invalidator: () => mixed): Cache {
   const resourceMap: ResourceMap = new Map();
 
-  function accessRecord<K, V>(resourceType: any, key: K): Record<V> {
+  function accessRecord<K, V>(resourceType: any, key: K): Record<K, V> {
     if (__DEV__) {
       warning(
         typeof resourceType !== 'string' && typeof resourceType !== 'number',
@@ -206,14 +227,14 @@ export function createCache(invalidator: () => mixed): Cache {
     return newHead;
   }
 
-  function load<V>(emptyRecord: EmptyRecord, suspender: Promise<V>) {
-    const pendingRecord: PendingRecord<V> = (emptyRecord: any);
+  function load<K, V>(emptyRecord: EmptyRecord<K, V>, suspender: Promise<V>) {
+    const pendingRecord: PendingRecord<K, V> = (emptyRecord: any);
     pendingRecord.status = Pending;
     pendingRecord.suspender = suspender;
     suspender.then(
       value => {
         // Resource loaded successfully.
-        const resolvedRecord: ResolvedRecord<V> = (pendingRecord: any);
+        const resolvedRecord: ResolvedRecord<K, V> = (pendingRecord: any);
         resolvedRecord.status = Resolved;
         resolvedRecord.suspender = null;
         resolvedRecord.value = value;
@@ -221,7 +242,7 @@ export function createCache(invalidator: () => mixed): Cache {
       error => {
         // Resource failed to load. Stash the error for later so we can throw it
         // the next time it's requested.
-        const rejectedRecord: RejectedRecord = (pendingRecord: any);
+        const rejectedRecord: RejectedRecord<K, V> = (pendingRecord: any);
         rejectedRecord.status = Rejected;
         rejectedRecord.suspender = null;
         rejectedRecord.error = error;
@@ -239,7 +260,7 @@ export function createCache(invalidator: () => mixed): Cache {
       miss: A => Promise<V>,
       missArg: A,
     ): void {
-      const record: Record<V> = accessRecord(resourceType, key);
+      const record: Record<K, V> = accessRecord(resourceType, key);
       switch (record.status) {
         case Empty:
           // Warm the cache.
@@ -263,7 +284,7 @@ export function createCache(invalidator: () => mixed): Cache {
       miss: A => Promise<V>,
       missArg: A,
     ): V {
-      const record: Record<V> = accessRecord(resourceType, key);
+      const record: Record<K, V> = accessRecord(resourceType, key);
       switch (record.status) {
         case Empty:
           // Load the requested resource.
