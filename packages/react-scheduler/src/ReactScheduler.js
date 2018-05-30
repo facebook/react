@@ -37,7 +37,6 @@ type CallbackConfigType = {|
   timeoutTime: number,
   next: CallbackConfigType | null, // creating a linked list
   prev: CallbackConfigType | null, // creating a linked list
-  cancelled: boolean,
 |};
 
 export type CallbackIdType = CallbackConfigType;
@@ -86,7 +85,6 @@ if (!ExecutionEnvironment.canUseDOM) {
       timeoutTime: 0,
       next: null,
       prev: null,
-      cancelled: false,
     };
     const timeoutId = localSetTimeout(() => {
       callback({
@@ -97,7 +95,6 @@ if (!ExecutionEnvironment.canUseDOM) {
       });
     });
     timeoutIds.set(callback, timeoutId);
-    callbackConfig.cancelled = true;
     return callbackConfig;
   };
   cancelScheduledWork = function(callbackId: CallbackIdType) {
@@ -314,7 +311,6 @@ if (!ExecutionEnvironment.canUseDOM) {
       timeoutTime,
       prev: null,
       next: null,
-      cancelled: false,
     };
     if (headOfPendingCallbacksLinkedList === null) {
       // Make this callback the head and tail of our list
@@ -345,12 +341,14 @@ if (!ExecutionEnvironment.canUseDOM) {
   cancelScheduledWork = function(
     callbackConfig: CallbackIdType /* CallbackConfigType */,
   ) {
-    if (callbackConfig.cancelled === true) {
+    if (
+      callbackConfig.prev === null &&
+      headOfPendingCallbacksLinkedList !== callbackConfig
+    ) {
+      // this callbackConfig has already been cancelled.
+      // cancelScheduledWork should be idempotent, a no-op after first call.
       return;
     }
-
-    // cancelScheduledWork should be idempotent, a no-op after first call.
-    callbackConfig.cancelled = true;
 
     /**
      * There are four possible cases:
@@ -368,6 +366,8 @@ if (!ExecutionEnvironment.canUseDOM) {
      */
     const next = callbackConfig.next;
     const prev = callbackConfig.prev;
+    callbackConfig.next = null;
+    callbackConfig.prev = null;
     if (next !== null) {
       // we have a next
 

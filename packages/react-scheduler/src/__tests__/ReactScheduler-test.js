@@ -351,6 +351,28 @@ describe('ReactScheduler', () => {
     });
 
     describe('with multiple callbacks', () => {
+      it('when called more than once', () => {
+        const {scheduleWork, cancelScheduledWork} = ReactScheduler;
+        const callbackLog = [];
+        let callbackBId;
+        const callbackA = jest.fn(() => callbackLog.push('A'));
+        const callbackB = jest.fn(() => callbackLog.push('B'));
+        const callbackC = jest.fn(() => callbackLog.push('C'));
+        scheduleWork(callbackA);
+        const callbackId = scheduleWork(callbackB);
+        scheduleWork(callbackC);
+        cancelScheduledWork(callbackId);
+        cancelScheduledWork(callbackId);
+        cancelScheduledWork(callbackId);
+        // Initially doesn't call anything
+        expect(callbackLog).toEqual([]);
+        advanceOneFrame({timeLeftInFrame: 15});
+
+        // Should still call A and C
+        expect(callbackLog).toEqual(['A', 'C']);
+        expect(callbackB).toHaveBeenCalledTimes(0);
+      });
+
       it('when one callback cancels the next one', () => {
         const {scheduleWork, cancelScheduledWork} = ReactScheduler;
         const callbackLog = [];
