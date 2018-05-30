@@ -138,7 +138,10 @@ if (!ExecutionEnvironment.canUseDOM) {
    * - do start a new postMessage callback, to call any remaining callbacks,
    * - but only if there is an error, so there is not extra overhead.
    */
-  const callUnsafely = function(callbackConfig: CallbackConfigType, arg: Deadline) {
+  const callUnsafely = function(
+    callbackConfig: CallbackConfigType,
+    arg: Deadline,
+  ) {
     const callback = callbackConfig.scheduledCallback;
     let finishedCalling = false;
     try {
