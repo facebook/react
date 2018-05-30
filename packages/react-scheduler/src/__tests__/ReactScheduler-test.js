@@ -354,7 +354,6 @@ describe('ReactScheduler', () => {
       it('when called more than once', () => {
         const {scheduleWork, cancelScheduledWork} = ReactScheduler;
         const callbackLog = [];
-        let callbackBId;
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => callbackLog.push('B'));
         const callbackC = jest.fn(() => callbackLog.push('C'));
