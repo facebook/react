@@ -47,9 +47,9 @@ import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 // We capture a local reference to any global, in case it gets polyfilled after
 // this module is initially evaluated.
 // We want to be using a consistent implementation.
-const Date = global.Date;
-const setTimeout = global.setTimeout;
-const clearTimeout = global.clearTimeout;
+const localDate = Date;
+const localSetTimeout = setTimeout;
+const localClearTimeout = clearTimeout;
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
@@ -62,7 +62,7 @@ if (hasNativePerformanceNow) {
   };
 } else {
   now = function() {
-    return Date.now();
+    return localDate.now();
   };
 }
 
@@ -86,7 +86,7 @@ if (!ExecutionEnvironment.canUseDOM) {
       next: null,
       prev: null,
     };
-    const timeoutId = setTimeout(() => {
+    const timeoutId = localSetTimeout(() => {
       callback({
         timeRemaining() {
           return Infinity;
@@ -101,7 +101,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     const callback = callbackId.scheduledCallback;
     const timeoutId = timeoutIds.get(callback);
     timeoutIds.delete(callbackId);
-    clearTimeout(timeoutId);
+    localClearTimeout(timeoutId);
   };
 } else {
   let headOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
@@ -232,7 +232,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   };
   // Assumes that we have addEventListener in this environment. Might need
   // something better for old IE.
-  global.addEventListener('message', idleTick, false);
+  window.addEventListener('message', idleTick, false);
 
   const animationTick = function(rafTime) {
     isAnimationFrameScheduled = false;
