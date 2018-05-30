@@ -69,6 +69,16 @@
         <div><b>Actual:</b></div>
         <div id="test-4"></div>
       </li>
+      <li>
+        <p>When some callbacks throw errors, still calls them all within the same frame</p>
+        <p><b>IMPORTANT:</b> Open the console when you run this! Inspect the logs there!</p>
+        <button onClick="runTestFive()">Run Test 5</button>
+      </li>
+      <li>
+        <p>When some callbacks throw errors <b> and some also time out</b>, still calls them all within the same frame</p>
+        <p><b>IMPORTANT:</b> Open the console when you run this! Inspect the logs there!</p>
+        <button onClick="runTestSix()">Run Test 6</button>
+      </li>
     </ol>
     <script src="../../build/dist/react-scheduler.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
@@ -134,6 +144,9 @@ const latestResults = [
   // test 4
   [
   ],
+  // test 5
+  [
+  ],
 ];
 
 const expectedResults = [
@@ -181,6 +194,10 @@ const expectedResults = [
     'cbB called with argument of {"didTimeout":false}',
     'cbD called with argument of {"didTimeout":false}',
     'frame 3 started... we stop counting now.',
+  ],
+  // test 5
+  [
+    // ... TODO
   ],
 ];
 function runTestOne() {
@@ -276,7 +293,7 @@ function runTestFour() {
   updateTestResult(4, 'scheduled cbA');
   scheduleWork(cbB, {timeout: 100}); // times out later
   updateTestResult(4, 'scheduled cbB');
-  scheduleWork(cbC, {timeout: 2}); // will time out fast
+  scheduleWork(cbC, {timeout: 1}); // will time out fast
   updateTestResult(4, 'scheduled cbC');
   scheduleWork(cbD); // won't time out
   updateTestResult(4, 'scheduled cbD');
@@ -287,6 +304,165 @@ function runTestFour() {
     displayTestResult(4);
     checkTestResult(4);
   });
+
+}
+
+// Error handling
+
+function runTestFive() {
+  // Test 5
+  // When some callbacks throw errors, still calls them all within the same frame
+  const cbA = (x) => {
+    console.log('cbA called with argument of ' + JSON.stringify(x));
+  }
+  const cbB = (x) => {
+    console.log('cbB called with argument of ' + JSON.stringify(x));
+    console.log('cbB is about to throw an error!');
+    throw new Error('error B');
+  }
+  const cbC = (x) => {
+    console.log('cbC called with argument of ' + JSON.stringify(x));
+  }
+  const cbD = (x) => {
+    console.log('cbD called with argument of ' + JSON.stringify(x));
+    console.log('cbD is about to throw an error!');
+    throw new Error('error D');
+  }
+  const cbE = (x) => {
+    console.log('cbE called with argument of ' + JSON.stringify(x));
+    console.log('This was the last callback! ------------------');
+  }
+
+  console.log('We are aiming to roughly emulate the way ' +
+  '`requestAnimationFrame` handles errors from callbacks.');
+
+  console.log('about to run the simulation of what it should look like...:');
+
+  requestAnimationFrame(() => {
+    console.log('frame 1 started');
+    requestAnimationFrame(() => {
+      console.log('frame 2 started');
+      requestAnimationFrame(() => {
+        console.log('frame 3 started... we stop counting now.');
+        console.log('about to wait a moment and start this again but ' +
+        'with the scheduler instead of requestAnimationFrame');
+        setTimeout(runSchedulerCode, 1000);
+      });
+    });
+  });
+  requestAnimationFrame(cbA);
+  console.log('scheduled cbA');
+  requestAnimationFrame(cbB); // will throw error
+  console.log('scheduled cbB');
+  requestAnimationFrame(cbC);
+  console.log('scheduled cbC');
+  requestAnimationFrame(cbD); // will throw error
+  console.log('scheduled cbD');
+  requestAnimationFrame(cbE);
+  console.log('scheduled cbE');
+
+
+  function runSchedulerCode() {
+    console.log('-------------------------------------------------------------');
+    console.log('now lets see what it looks like using the scheduler...:');
+    requestAnimationFrame(() => {
+      console.log('frame 1 started');
+      requestAnimationFrame(() => {
+        console.log('frame 2 started');
+        requestAnimationFrame(() => {
+          console.log('frame 3 started... we stop counting now.');
+        });
+      });
+    });
+    scheduleWork(cbA);
+    console.log('scheduled cbA');
+    scheduleWork(cbB); // will throw error
+    console.log('scheduled cbB');
+    scheduleWork(cbC);
+    console.log('scheduled cbC');
+    scheduleWork(cbD); // will throw error
+    console.log('scheduled cbD');
+    scheduleWork(cbE);
+    console.log('scheduled cbE');
+  };
+}
+
+function runTestSix() {
+  // Test 6
+  // When some callbacks throw errors, still calls them all within the same frame
+  const cbA = (x) => {
+    console.log('cbA called with argument of ' + JSON.stringify(x));
+    console.log('cbA is about to throw an error!');
+    throw new Error('error A');
+  }
+  const cbB = (x) => {
+    console.log('cbB called with argument of ' + JSON.stringify(x));
+  }
+  const cbC = (x) => {
+    console.log('cbC called with argument of ' + JSON.stringify(x));
+  }
+  const cbD = (x) => {
+    console.log('cbD called with argument of ' + JSON.stringify(x));
+    console.log('cbD is about to throw an error!');
+    throw new Error('error D');
+  }
+  const cbE = (x) => {
+    console.log('cbE called with argument of ' + JSON.stringify(x));
+    console.log('This was the last callback! ------------------');
+  }
+
+  console.log('We are aiming to roughly emulate the way ' +
+  '`requestAnimationFrame` handles errors from callbacks.');
+
+  console.log('about to run the simulation of what it should look like...:');
+
+  requestAnimationFrame(() => {
+    console.log('frame 1 started');
+    requestAnimationFrame(() => {
+      console.log('frame 2 started');
+      requestAnimationFrame(() => {
+        console.log('frame 3 started... we stop counting now.');
+        console.log('about to wait a moment and start this again but ' +
+        'with the scheduler instead of requestAnimationFrame');
+        setTimeout(runSchedulerCode, 1000);
+      });
+    });
+  });
+  requestAnimationFrame(cbC);
+  console.log('scheduled cbC first; simulating timing out');
+  requestAnimationFrame(cbD); // will throw error
+  console.log('scheduled cbD first; simulating timing out');
+  requestAnimationFrame(cbE);
+  console.log('scheduled cbE first; simulating timing out');
+  requestAnimationFrame(cbA);
+  console.log('scheduled cbA'); // will throw error
+  requestAnimationFrame(cbB);
+  console.log('scheduled cbB');
+
+
+  function runSchedulerCode() {
+    console.log('-------------------------------------------------------------');
+    console.log('now lets see what it looks like using the scheduler...:');
+    requestAnimationFrame(() => {
+      console.log('frame 1 started');
+      requestAnimationFrame(() => {
+        console.log('frame 2 started');
+        requestAnimationFrame(() => {
+          console.log('frame 3 started... we stop counting now.');
+        });
+      });
+    });
+    scheduleWork(cbA);
+    console.log('scheduled cbA');
+    scheduleWork(cbB); // will throw error
+    console.log('scheduled cbB');
+    scheduleWork(cbC, {timeout: 1});
+    console.log('scheduled cbC');
+    scheduleWork(cbD, {timeout: 1}); // will throw error
+    console.log('scheduled cbD');
+    scheduleWork(cbE, {timeout: 1});
+    console.log('scheduled cbE');
+  };
 }
     </script type="text/babel">
   </body>

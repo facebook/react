@@ -130,6 +130,33 @@ if (!ExecutionEnvironment.canUseDOM) {
   };
 
   /**
+   * Handles the case where a callback errors:
+   * - don't catch the error, because this changes debugging behavior
+   * - do start a new postMessage callback, to call any remaining callbacks,
+   * - but only if there is an error, so there is not extra overhead.
+   */
+  const callUnsafely = function(
+    callbackConfig: CallbackConfigType,
+    arg: Deadline,
+  ) {
+    const callback = callbackConfig.scheduledCallback;
+    let finishedCalling = false;
+    try {
+      callback(arg);
+      finishedCalling = true;
+    } finally {
+      // always remove it from linked list
+      cancelScheduledWork(callbackConfig);
+
+      if (!finishedCalling) {
+        // an error must have been thrown
+        isIdleScheduled = true;
+        window.postMessage(messageKey, '*');
+      }
+    }
+  };
+
+  /**
    * Checks for timed out callbacks, runs them, and then checks again to see if
    * any more have timed out.
    * Keeps doing this until there are none which have currently timed out.
@@ -152,32 +179,42 @@ if (!ExecutionEnvironment.canUseDOM) {
       // We know that none of them have timed out yet.
       return;
     }
-    nextSoonestTimeoutTime = -1; // we will reset it below
+    // NOTE: we intentionally wait to update the nextSoonestTimeoutTime until
+    // after successfully calling any timed out callbacks.
+    // If a timed out callback throws an error, we could get stuck in a state
+    // where the nextSoonestTimeoutTime was set wrong.
+    let updatedNextSoonestTimeoutTime = -1; // we will update nextSoonestTimeoutTime below
+    const timedOutCallbacks = [];
 
-    // keep checking until we don't find any more timed out callbacks
-    frameDeadlineObject.didTimeout = true;
+    // iterate once to find timed out callbacks and find nextSoonestTimeoutTime
     let currentCallbackConfig = headOfPendingCallbacksLinkedList;
     while (currentCallbackConfig !== null) {
       const timeoutTime = currentCallbackConfig.timeoutTime;
       if (timeoutTime !== -1 && timeoutTime <= currentTime) {
         // it has timed out!
-        // call it
-        const callback = currentCallbackConfig.scheduledCallback;
-        // TODO: error handling
-        callback(frameDeadlineObject);
-        // remove it from linked list
-        cancelScheduledWork(currentCallbackConfig);
+        timedOutCallbacks.push(currentCallbackConfig);
       } else {
         if (
           timeoutTime !== -1 &&
-          (nextSoonestTimeoutTime === -1 ||
-            timeoutTime < nextSoonestTimeoutTime)
+          (updatedNextSoonestTimeoutTime === -1 ||
+            timeoutTime < updatedNextSoonestTimeoutTime)
         ) {
-          nextSoonestTimeoutTime = timeoutTime;
+          updatedNextSoonestTimeoutTime = timeoutTime;
         }
       }
       currentCallbackConfig = currentCallbackConfig.next;
     }
+
+    if (timedOutCallbacks.length > 0) {
+      frameDeadlineObject.didTimeout = true;
+      for (let i = 0, len = timedOutCallbacks.length; i < len; i++) {
+        callUnsafely(timedOutCallbacks[i], frameDeadlineObject);
+      }
+    }
+
+    // NOTE: we intentionally wait to update the nextSoonestTimeoutTime until
+    // after successfully calling any timed out callbacks.
+    nextSoonestTimeoutTime = updatedNextSoonestTimeoutTime;
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
@@ -206,20 +243,9 @@ if (!ExecutionEnvironment.canUseDOM) {
       headOfPendingCallbacksLinkedList !== null
     ) {
       const latestCallbackConfig = headOfPendingCallbacksLinkedList;
-      // move head of list to next callback
-      headOfPendingCallbacksLinkedList = latestCallbackConfig.next;
-      if (headOfPendingCallbacksLinkedList !== null) {
-        headOfPendingCallbacksLinkedList.prev = null;
-      } else {
-        // if headOfPendingCallbacksLinkedList is null,
-        // then the list must be empty.
-        // make sure we set the tail to null as well.
-        tailOfPendingCallbacksLinkedList = null;
-      }
       frameDeadlineObject.didTimeout = false;
-      const latestCallback = latestCallbackConfig.scheduledCallback;
-      // TODO: before using this outside of React we need to add error handling
-      latestCallback(frameDeadlineObject);
+      // callUnsafely will remove it from the head of the linked list
+      callUnsafely(latestCallbackConfig, frameDeadlineObject);
       currentTime = now();
     }
     if (headOfPendingCallbacksLinkedList !== null) {
@@ -315,6 +341,15 @@ if (!ExecutionEnvironment.canUseDOM) {
   cancelScheduledWork = function(
     callbackConfig: CallbackIdType /* CallbackConfigType */,
   ) {
+    if (
+      callbackConfig.prev === null &&
+      headOfPendingCallbacksLinkedList !== callbackConfig
+    ) {
+      // this callbackConfig has already been cancelled.
+      // cancelScheduledWork should be idempotent, a no-op after first call.
+      return;
+    }
+
     /**
      * There are four possible cases:
      * - Head/nodeToRemove/Tail -> null
@@ -331,6 +366,8 @@ if (!ExecutionEnvironment.canUseDOM) {
      */
     const next = callbackConfig.next;
     const prev = callbackConfig.prev;
+    callbackConfig.next = null;
+    callbackConfig.prev = null;
     if (next !== null) {
       // we have a next
 
