@@ -530,7 +530,7 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
+      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, false);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
@@ -1077,7 +1077,7 @@ export function diffHydratedProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
+      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, true);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
