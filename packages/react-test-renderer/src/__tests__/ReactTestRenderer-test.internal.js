@@ -1001,3 +1001,22 @@ describe('ReactTestRenderer', () => {
     );
   });
 });
+
+describe('createTestInstance', () => {
+  it('should create a ReactTestInstance from class component', () => {
+    class App extends React.Component {
+      render() {
+        return 'hello';
+      }
+    }
+
+    const renderer = ReactTestRenderer.create(<App />);
+    const instance = renderer.root.instance;
+    const testInstance = ReactTestRenderer.createTestInstance(instance);
+    expect(testInstance).toEqual(renderer.root);
+  });
+
+  it('throws an exception when creating a ReactTestInstance from null', () => {
+    expect(() => ReactTestRenderer.createTestInstance(null)).toThrow();
+  });
+});

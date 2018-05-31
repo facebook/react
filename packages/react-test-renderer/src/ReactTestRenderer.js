@@ -14,6 +14,7 @@ import type {Instance, TextInstance} from './ReactTestHostConfig';
 import * as TestRenderer from 'react-reconciler/inline.test';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {
   Fragment,
   FunctionalComponent,
@@ -485,6 +486,15 @@ const ReactTestRendererFiber = {
   /* eslint-enable camelcase */
 
   unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,
+
+  createTestInstance(componentRef: React$Component<any>) {
+    invariant(
+      componentRef !== null && ReactInstanceMap.has(componentRef),
+      'Unable to create TestInstance. Ensure createTestInstance is ' +
+        'called with a reference to a React class component.',
+    );
+    return wrapFiber(ReactInstanceMap.get(componentRef));
+  },
 };
 
 export default ReactTestRendererFiber;
