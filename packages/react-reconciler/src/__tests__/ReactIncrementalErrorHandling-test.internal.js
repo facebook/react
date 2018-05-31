@@ -198,6 +198,37 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
   });
 
+  it("retries at a lower priority if there's additional pending work", () => {
+    function App(props) {
+      if (props.isBroken) {
+        ReactNoop.yield('error');
+        throw new Error('Oops!');
+      }
+      ReactNoop.yield('success');
+      return <span prop="Everything is fine." />;
+    }
+
+    function onCommit() {
+      ReactNoop.yield('commit');
+    }
+
+    ReactNoop.render(<App isBroken={true} />, onCommit);
+    ReactNoop.expire(2000);
+    ReactNoop.render(<App isBroken={false} />, onCommit);
+
+    expect(ReactNoop.flush()).toEqual([
+      // The first render fails. But because there's a lower priority pending
+      // update, it doesn't throw.
+      'error',
+      // Now we retry at the lower priority. This time it succeeds.
+      'success',
+      // Nothing commits until the second update completes.
+      'commit',
+      'commit',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
+  });
+
   it('calls componentDidCatch multiple times for multiple errors', () => {
     let id = 0;
     class BadMount extends React.Component {
