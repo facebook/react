@@ -63,7 +63,7 @@ export function getHostProps(element: Element, props: Object) {
   const hostProps = Object.assign({}, props, {
     defaultChecked: undefined,
     defaultValue: undefined,
-    value: undefined,
+    value: props.type === 'range' ? '' : undefined,
     checked: checked != null ? checked : node._wrapperState.initialChecked,
   });
 
