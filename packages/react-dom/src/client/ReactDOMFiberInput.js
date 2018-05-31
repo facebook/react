@@ -214,19 +214,11 @@ export function postMountWrapper(
 
   if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
     const initialValue = '' + node._wrapperState.initialValue;
-    let currentValue;
-    if (isHydrating) {
-      currentValue = node.value;
-    } else {
-      // With range inputs node.value may be a default value calculated from the
-      // min/max attributes. This ensures that node.value is set with the correct
-      // value coming from props.
-      currentValue = props.type === 'range' ? '' : node.value;
-    }
+    const currentValue = node.value;
 
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
-    if (!node.hasAttribute('value')) {
+    if (!isHydrating) {
       // Do not re-assign the value property if there is no change. This
       // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
       // prematurely marking required inputs as invalid
