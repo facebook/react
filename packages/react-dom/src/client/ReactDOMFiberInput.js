@@ -205,7 +205,11 @@ export function updateWrapper(element: Element, props: Object) {
   }
 }
 
-export function postMountWrapper(element: Element, props: Object) {
+export function postMountWrapper(
+  element: Element,
+  props: Object,
+  isHydrating: boolean,
+) {
   const node = ((element: any): InputWithWrapperState);
 
   if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
@@ -214,7 +218,7 @@ export function postMountWrapper(element: Element, props: Object) {
 
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
-    if (currentValue === '') {
+    if (!isHydrating) {
       // Do not re-assign the value property if there is no change. This
       // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
       // prematurely marking required inputs as invalid
