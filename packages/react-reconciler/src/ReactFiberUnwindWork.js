@@ -142,7 +142,6 @@ function throwException(
   returnFiber: Fiber,
   sourceFiber: Fiber,
   value: mixed,
-  renderIsExpired: boolean,
   renderExpirationTime: ExpirationTime,
   currentTimeMs: number,
 ) {
@@ -174,6 +173,7 @@ function throwException(
     // This is a thenable.
     const thenable: Thenable = (value: any);
 
+    // TODO: Should use the earliest known expiration time
     const expirationTimeMs = expirationTimeToMs(renderExpirationTime);
     const startTimeMs = expirationTimeMs - 5000;
     let elapsedMs = currentTimeMs - startTimeMs;
@@ -312,7 +312,6 @@ function throwException(
 
 function unwindWork(
   workInProgress: Fiber,
-  renderIsExpired: boolean,
   renderExpirationTime: ExpirationTime,
 ) {
   if (enableProfilerTimer) {
