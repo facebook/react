@@ -229,6 +229,56 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
   });
 
+  it('on error, retries at a lower priority using the expiration of higher priority', () => {
+    class Parent extends React.Component {
+      state = {hideChild: false};
+      componentDidUpdate() {
+        ReactNoop.yield('commit: ' + this.state.hideChild);
+      }
+      render() {
+        if (this.state.hideChild) {
+          ReactNoop.yield('(empty)');
+          return <span prop="(empty)" />;
+        }
+        return <Child isBroken={this.props.childIsBroken} />;
+      }
+    }
+
+    function Child(props) {
+      if (props.isBroken) {
+        ReactNoop.yield('Error!');
+        throw new Error('Error!');
+      }
+      ReactNoop.yield('Child');
+      return <span prop="Child" />;
+    }
+
+    // Initial mount
+    const parent = React.createRef(null);
+    ReactNoop.render(<Parent ref={parent} childIsBroken={false} />);
+    expect(ReactNoop.flush()).toEqual(['Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Schedule a low priority update to hide the child
+    parent.current.setState({hideChild: true});
+
+    // Before the low priority update is flushed, synchronsouly trigger an
+    // error in the child.
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Parent ref={parent} childIsBroken={true} />);
+    });
+    expect(ReactNoop.clearYields()).toEqual([
+      // First the sync update triggers an error
+      'Error!',
+      // Because there's a pending low priority update, we restart at the
+      // lower priority. This hides the children, suppressing the error.
+      '(empty)',
+      // Now the tree can commit.
+      'commit: true',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
+  });
+
   it('calls componentDidCatch multiple times for multiple errors', () => {
     let id = 0;
     class BadMount extends React.Component {
