@@ -171,6 +171,18 @@ describe('ReactDOMFiber', () => {
     expect(firstNode.tagName).toBe('DIV');
   });
 
+  it('renders an empty fragment', () => {
+    const EmptyFragment = () => <React.Fragment />;
+
+    let instance = null;
+    ReactDOM.render(<EmptyFragment />, container);
+
+    expect(container.childNodes.length).toBe(0);
+
+    const firstNode = ReactDOM.findDOMNode(instance);
+    expect(firstNode).toBe(null);
+  });
+
   let svgEls, htmlEls, mathEls;
   const expectSVG = {ref: el => svgEls.push(el)};
   const expectHTML = {ref: el => htmlEls.push(el)};
