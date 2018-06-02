@@ -172,15 +172,28 @@ describe('ReactDOMFiber', () => {
   });
 
   it('renders an empty fragment', () => {
+    const Div = () => <div />;
     const EmptyFragment = () => <React.Fragment />;
+    const NonEmptyFragment = () => (
+      <React.Fragment>
+        <Div />
+      </React.Fragment>
+    );
 
-    let instance = null;
     ReactDOM.render(<EmptyFragment />, container);
+    expect(container.firstChild).toBe(null);
 
-    expect(container.childNodes.length).toBe(0);
+    ReactDOM.render(<NonEmptyFragment />, container);
+    expect(container.firstChild.tagName).toBe('DIV');
 
-    const firstNode = ReactDOM.findDOMNode(instance);
-    expect(firstNode).toBe(null);
+    ReactDOM.render(<EmptyFragment />, container);
+    expect(container.firstChild).toBe(null);
+
+    ReactDOM.render(<Div />, container);
+    expect(container.firstChild.tagName).toBe('DIV');
+
+    ReactDOM.render(<EmptyFragment />, container);
+    expect(container.firstChild).toBe(null);
   });
 
   let svgEls, htmlEls, mathEls;
