@@ -1000,14 +1000,14 @@ describe('ReactDOMInput', () => {
 
   it('should warn if value is null', () => {
     expect(() =>
-        ReactTestUtils.renderIntoDocument(<input type="text" value={null} />),
+      ReactTestUtils.renderIntoDocument(<input type="text" value={null} />),
     ).toWarnDev(
       '`value` prop on `input` should not be null. ' +
         'Consider using an empty string to clear the component or `undefined` ' +
         'for uncontrolled components.',
     );
 
-      ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
+    ReactTestUtils.renderIntoDocument(<input type="text" value={null} />);
   });
 
   it('should warn if checked and defaultChecked props are specified', () => {
