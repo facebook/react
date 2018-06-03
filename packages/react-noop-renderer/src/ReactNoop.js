@@ -14,9 +14,11 @@
  * environment.
  */
 
+import ReactFiberReconciler from 'react-reconciler';
 import createReactNoop from './createReactNoop';
 
 const ReactNoop = createReactNoop(
+  ReactFiberReconciler, // reconciler
   true, // useMutation
 );
 

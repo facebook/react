@@ -151,6 +151,7 @@ function coerceRef(
       if (
         current !== null &&
         current.ref !== null &&
+        typeof current.ref === 'function' &&
         current.ref._stringRef === stringRef
       ) {
         return current.ref;
@@ -901,18 +902,15 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     if (__DEV__) {
       // Warn about using Maps as children
-      if (typeof newChildrenIterable.entries === 'function') {
-        const possibleMap = (newChildrenIterable: any);
-        if (possibleMap.entries === iteratorFn) {
-          warning(
-            didWarnAboutMaps,
-            'Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.%s',
-            getCurrentFiberStackAddendum(),
-          );
-          didWarnAboutMaps = true;
-        }
+      if ((newChildrenIterable: any).entries === iteratorFn) {
+        warning(
+          didWarnAboutMaps,
+          'Using Maps as children is unsupported and will likely yield ' +
+            'unexpected results. Convert it to a sequence/iterable of keyed ' +
+            'ReactElements instead.%s',
+          getCurrentFiberStackAddendum(),
+        );
+        didWarnAboutMaps = true;
       }
 
       // First, validate keys.

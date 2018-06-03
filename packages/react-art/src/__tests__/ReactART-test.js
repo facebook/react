@@ -15,21 +15,25 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 
+// Isolate test renderer.
+jest.resetModules();
+const ReactTestRenderer = require('react-test-renderer');
+
+// Isolate ART renderer.
+jest.resetModules();
+const ReactART = require('react-art');
+const ARTSVGMode = require('art/modes/svg');
+const ARTCurrentMode = require('art/modes/current');
+const Circle = require('react-art/Circle');
+const Rectangle = require('react-art/Rectangle');
+const Wedge = require('react-art/Wedge');
+
 let Group;
 let Shape;
 let Surface;
 let TestComponent;
 
 const Missing = {};
-
-const ReactART = require('react-art');
-const ARTSVGMode = require('art/modes/svg');
-const ARTCurrentMode = require('art/modes/current');
-
-const renderer = require('react-test-renderer');
-const Circle = require('react-art/Circle');
-const Rectangle = require('react-art/Rectangle');
-const Wedge = require('react-art/Wedge');
 
 function testDOMNodeStructure(domNode, expectedStructure) {
   expect(domNode).toBeDefined();
@@ -362,7 +366,7 @@ describe('ReactART', () => {
 
     // Using test renderer instead of the DOM renderer here because async
     // testing APIs for the DOM renderer don't exist.
-    const testRenderer = renderer.create(
+    const testRenderer = ReactTestRenderer.create(
       <CurrentRendererContext.Provider value="Test">
         <Yield value="A" />
         <Yield value="B" />
@@ -397,7 +401,7 @@ describe('ReactART', () => {
 
 describe('ReactARTComponents', () => {
   it('should generate a <Shape> with props for drawing the Circle', () => {
-    const circle = renderer.create(
+    const circle = ReactTestRenderer.create(
       <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
     );
     expect(circle.toJSON()).toMatchSnapshot();
@@ -405,7 +409,9 @@ describe('ReactARTComponents', () => {
 
   it('should warn if radius is missing on a Circle component', () => {
     expect(() =>
-      renderer.create(<Circle stroke="green" strokeWidth={3} fill="blue" />),
+      ReactTestRenderer.create(
+        <Circle stroke="green" strokeWidth={3} fill="blue" />,
+      ),
     ).toWarnDev(
       'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
         'but its value is `undefined`.' +
@@ -414,7 +420,7 @@ describe('ReactARTComponents', () => {
   });
 
   it('should generate a <Shape> with props for drawing the Rectangle', () => {
-    const rectangle = renderer.create(
+    const rectangle = ReactTestRenderer.create(
       <Rectangle width={50} height={50} stroke="green" fill="blue" />,
     );
     expect(rectangle.toJSON()).toMatchSnapshot();
@@ -422,7 +428,7 @@ describe('ReactARTComponents', () => {
 
   it('should warn if width/height is missing on a Rectangle component', () => {
     expect(() =>
-      renderer.create(<Rectangle stroke="green" fill="blue" />),
+      ReactTestRenderer.create(<Rectangle stroke="green" fill="blue" />),
     ).toWarnDev([
       'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, ' +
         'but its value is `undefined`.' +
@@ -434,21 +440,21 @@ describe('ReactARTComponents', () => {
   });
 
   it('should generate a <Shape> with props for drawing the Wedge', () => {
-    const wedge = renderer.create(
+    const wedge = ReactTestRenderer.create(
       <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
     );
     expect(wedge.toJSON()).toMatchSnapshot();
   });
 
   it('should return null if startAngle equals to endAngle on Wedge', () => {
-    const wedge = renderer.create(
+    const wedge = ReactTestRenderer.create(
       <Wedge outerRadius={50} startAngle={0} endAngle={0} fill="blue" />,
     );
     expect(wedge.toJSON()).toBeNull();
   });
 
   it('should warn if outerRadius/startAngle/endAngle is missing on a Wedge component', () => {
-    expect(() => renderer.create(<Wedge fill="blue" />)).toWarnDev([
+    expect(() => ReactTestRenderer.create(<Wedge fill="blue" />)).toWarnDev([
       'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, ' +
         'but its value is `undefined`.' +
         '\n    in Wedge (at **)',

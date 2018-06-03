@@ -11,7 +11,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
-import ReactFiberReconciler from 'react-reconciler';
+import * as TestRenderer from 'react-reconciler/inline.test';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
@@ -30,7 +30,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 
-import ReactTestHostConfig from './ReactTestHostConfig';
+import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 type TestRendererOptions = {
@@ -53,8 +53,6 @@ type FindOptions = $Shape<{
 }>;
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
-
-const TestRenderer = ReactFiberReconciler(ReactTestHostConfig);
 
 const defaultTestOptions = {
   createNodeMock: function() {
@@ -416,7 +414,7 @@ const ReactTestRendererFiber = {
     const entry = {
       root: undefined, // makes flow happy
       // we define a 'getter' for 'root' below using 'Object.defineProperty'
-      toJSON() {
+      toJSON(): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
         if (root == null || root.current == null || container == null) {
           return null;
         }

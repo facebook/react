@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Deadline} from 'react-reconciler/src/ReactFiberReconciler';
+import type {Deadline} from 'react-reconciler/src/ReactFiberScheduler';
 
 // Current virtual time
 export let nowImplementation = () => 0;
@@ -19,7 +19,8 @@ export function scheduleDeferredCallback(
   options?: {timeout: number},
 ): number {
   scheduledCallback = callback;
-  return 0;
+  const fakeCallbackId = 0;
+  return fakeCallbackId;
 }
 
 export function cancelDeferredCallback(timeoutID: number): void {
@@ -80,7 +81,22 @@ export function flushThrough(expectedValues: Array<mixed>): Array<mixed> {
   }
   if (yieldedValues === null) {
     // Always return an array.
-    return [];
+    yieldedValues = [];
+  }
+  for (let i = 0; i < expectedValues.length; i++) {
+    const expectedValue = `"${(expectedValues[i]: any)}"`;
+    const yieldedValue =
+      i < yieldedValues.length ? `"${(yieldedValues[i]: any)}"` : 'nothing';
+    if (yieldedValue !== expectedValue) {
+      const error = new Error(
+        `flushThrough expected to yield ${(expectedValue: any)}, but ${(yieldedValue: any)} was yielded`,
+      );
+      // Attach expected and yielded arrays,
+      // So the caller could pretty print the diff (if desired).
+      (error: any).expectedValues = expectedValues;
+      (error: any).actualValues = yieldedValues;
+      throw error;
+    }
   }
   return yieldedValues;
 }

@@ -91,25 +91,25 @@ describe('ReactMount', () => {
       }
     }
 
-    expect(mockMount.mock.calls.length).toBe(0);
-    expect(mockUnmount.mock.calls.length).toBe(0);
+    expect(mockMount).toHaveBeenCalledTimes(0);
+    expect(mockUnmount).toHaveBeenCalledTimes(0);
 
     ReactDOM.render(<Component text="orange" key="A" />, container);
     expect(container.firstChild.innerHTML).toBe('orange');
-    expect(mockMount.mock.calls.length).toBe(1);
-    expect(mockUnmount.mock.calls.length).toBe(0);
+    expect(mockMount).toHaveBeenCalledTimes(1);
+    expect(mockUnmount).toHaveBeenCalledTimes(0);
 
     // If we change the key, the component is unmounted and remounted
     ReactDOM.render(<Component text="green" key="B" />, container);
     expect(container.firstChild.innerHTML).toBe('green');
-    expect(mockMount.mock.calls.length).toBe(2);
-    expect(mockUnmount.mock.calls.length).toBe(1);
+    expect(mockMount).toHaveBeenCalledTimes(2);
+    expect(mockUnmount).toHaveBeenCalledTimes(1);
 
     // But if we don't change the key, the component instance is reused
     ReactDOM.render(<Component text="blue" key="B" />, container);
     expect(container.firstChild.innerHTML).toBe('blue');
-    expect(mockMount.mock.calls.length).toBe(2);
-    expect(mockUnmount.mock.calls.length).toBe(1);
+    expect(mockMount).toHaveBeenCalledTimes(2);
+    expect(mockUnmount).toHaveBeenCalledTimes(1);
   });
 
   it('should reuse markup if rendering to the same target twice', () => {

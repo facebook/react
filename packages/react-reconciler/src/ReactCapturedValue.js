@@ -29,7 +29,7 @@ export type CapturedError = {
 
 export function createCapturedValue<T>(
   value: T,
-  source: Fiber | null,
+  source: Fiber,
 ): CapturedValue<T> {
   // If the value is an error, call this function immediately after it is thrown
   // so the stack is accurate.

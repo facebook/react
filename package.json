@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "16.3.2",
+  "version": "16.4.0",
   "workspaces": [
     "packages/*"
   ],
@@ -11,7 +11,7 @@
     "babel-code-frame": "^6.26.0",
     "babel-core": "^6.0.0",
     "babel-eslint": "^8.0.0",
-    "babel-jest": "^22.0.6",
+    "babel-jest": "^23.0.1",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
@@ -60,7 +60,7 @@
     "fbjs": "^0.8.16",
     "fbjs-scripts": "^0.6.0",
     "filesize": "^3.5.6",
-    "flow-bin": "^0.61.0",
+    "flow-bin": "^0.72.0",
     "flow-coverage-report": "^0.4.0",
     "git-branch": "^0.3.0",
     "glob": "^6.0.4",
@@ -69,8 +69,8 @@
     "gzip-js": "~0.3.2",
     "gzip-size": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
-    "jest": "^22.0.6",
-    "jest-diff": "^22.1.0",
+    "jest": "^23.0.1",
+    "jest-diff": "^23.0.1",
     "merge-stream": "^1.0.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.0",
@@ -110,7 +110,7 @@
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
-    "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
+    "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json && node ./scripts/flow/createFlowConfigs.js",
     "debug-test": "cross-env NODE_ENV=development node --inspect-brk node_modules/.bin/jest --config ./scripts/jest/config.source.js --runInBand",
     "test": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source.js",
     "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",
@@ -118,6 +118,7 @@
     "test-build": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build.js",
     "test-build-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.build.js",
     "flow": "node ./scripts/tasks/flow.js",
+    "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
     "version-check": "node ./scripts/tasks/version-check.js"

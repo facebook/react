@@ -12,6 +12,8 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactFabricInjection';
 
+import * as ReactFabricRenderer from 'react-reconciler/inline.fabric';
+
 import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
@@ -19,7 +21,6 @@ import ReactVersion from 'shared/ReactVersion';
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
-import ReactFabricRenderer from './ReactFabricRenderer';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
@@ -62,9 +63,11 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (hostInstance == null) {
     return hostInstance;
   }
-  if (hostInstance.canonical) {
+  // TODO: the code is right but the types here are wrong.
+  // https://github.com/facebook/react/pull/12863
+  if ((hostInstance: any).canonical) {
     // Fabric
-    return hostInstance.canonical._nativeTag;
+    return (hostInstance: any).canonical._nativeTag;
   }
   return hostInstance._nativeTag;
 }
@@ -113,8 +116,6 @@ const ReactFabric: ReactFabricType = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin: NativeMethodsMixin(findNodeHandle, findHostInstance),
-    // Used by react-native-github/Libraries/ components
-    ReactNativeComponentTree, // ScrollResponder
   },
 };
 

@@ -432,7 +432,11 @@ export function setInitialProperties(
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, rawProps);
-    if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+    if (
+      isCustomComponentTag &&
+      !didWarnShadyDOM &&
+      (domElement: any).shadyRoot
+    ) {
       warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
@@ -526,7 +530,7 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
+      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, false);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
@@ -820,7 +824,11 @@ export function diffHydratedProperties(
     suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
     isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
-    if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+    if (
+      isCustomComponentTag &&
+      !didWarnShadyDOM &&
+      (domElement: any).shadyRoot
+    ) {
       warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
@@ -1069,7 +1077,7 @@ export function diffHydratedProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
+      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, true);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean

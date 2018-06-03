@@ -10,10 +10,16 @@
 
 'use strict';
 
-const React = require('react');
-const ReactTestRenderer = require('react-test-renderer');
+let React;
+let ReactTestRenderer;
 
 describe('ReactTestRendererAsync', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    React = require('react');
+    ReactTestRenderer = require('react-test-renderer');
+  });
+
   it('flushAll flushes all work', () => {
     function Foo(props) {
       return props.children;
@@ -133,5 +139,57 @@ describe('ReactTestRendererAsync', () => {
 
     // Only the higher priority properties have been committed
     expect(renderer.toJSON()).toEqual(['A:2', 'B:2']);
+  });
+
+  it('should error if flushThrough params dont match yielded values', () => {
+    const Yield = ({id}) => {
+      renderer.unstable_yield(id);
+      return id;
+    };
+
+    const renderer = ReactTestRenderer.create(
+      <div>
+        <Yield id="foo" />
+        <Yield id="bar" />
+        <Yield id="baz" />
+      </div>,
+      {
+        unstable_isAsync: true,
+      },
+    );
+
+    expect(() => renderer.unstable_flushThrough(['foo', 'baz'])).toThrow(
+      'flushThrough expected to yield "baz", but "bar" was yielded',
+    );
+  });
+
+  it('should error if flushThrough yields the wrong number of values', () => {
+    const Yield = ({id}) => {
+      renderer.unstable_yield(id);
+      return id;
+    };
+
+    const renderer = ReactTestRenderer.create(
+      <div>
+        <Yield id="foo" />
+      </div>,
+      {
+        unstable_isAsync: true,
+      },
+    );
+
+    expect(() => renderer.unstable_flushThrough(['foo', 'bar'])).toThrow(
+      'flushThrough expected to yield "bar", but nothing was yielded',
+    );
+  });
+
+  it('should error if flushThrough yields no values', () => {
+    const renderer = ReactTestRenderer.create(null, {
+      unstable_isAsync: true,
+    });
+
+    expect(() => renderer.unstable_flushThrough(['foo'])).toThrow(
+      'flushThrough expected to yield "foo", but nothing was yielded',
+    );
   });
 });

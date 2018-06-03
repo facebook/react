@@ -89,7 +89,6 @@ export type NativeMethodsMixinType = {
 
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
-  ReactNativeComponentTree: any,
   computeComponentStackForErrorReporting(tag: number): string,
   // TODO (bvaughn) Decide which additional types to expose here?
   // And how much information to fill in for the above types.
@@ -97,7 +96,6 @@ type SecretInternalsType = {
 
 type SecretInternalsFabricType = {
   NativeMethodsMixin: NativeMethodsMixinType,
-  ReactNativeComponentTree: any,
 };
 
 /**

@@ -122,13 +122,22 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
   }
 }
 
-function getRollupOutputOptions(outputPath, format, globals, globalName) {
+function getRollupOutputOptions(
+  outputPath,
+  format,
+  globals,
+  globalName,
+  bundleType
+) {
+  const isProduction = isProductionBundleType(bundleType);
+
   return Object.assign(
     {},
     {
       file: outputPath,
       format,
       globals,
+      freeze: !isProduction,
       interop: false,
       name: globalName,
       sourcemap: false,
@@ -207,7 +216,7 @@ function getPlugins(
   modulesToStub
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
-  const forks = Modules.getForks(bundleType, entry);
+  const forks = Modules.getForks(bundleType, entry, moduleType);
   const isProduction = isProductionBundleType(bundleType);
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_WWW_DEV || bundleType === FB_WWW_PROD;
@@ -352,10 +361,7 @@ async function createBundle(bundle, bundleType) {
 
   const shouldBundleDependencies =
     bundleType === UMD_DEV || bundleType === UMD_PROD;
-  const peerGlobals = Modules.getPeerGlobals(
-    bundle.externals,
-    bundle.moduleType
-  );
+  const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
   if (!shouldBundleDependencies) {
     const deps = Modules.getDependencies(bundleType, bundle.entry);
@@ -404,7 +410,8 @@ async function createBundle(bundle, bundleType) {
     mainOutputPath,
     format,
     peerGlobals,
-    bundle.global
+    bundle.global,
+    bundleType
   );
 
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
@@ -423,10 +430,6 @@ async function createBundle(bundle, bundleType) {
 }
 
 function handleRollupWarning(warning) {
-  if (warning.code === 'UNRESOLVED_IMPORT') {
-    console.error(warning.message);
-    process.exit(1);
-  }
   if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
     const match = warning.message.match(/external module '([^']+)'/);
     if (!match || typeof match[1] !== 'string') {
@@ -448,7 +451,20 @@ function handleRollupWarning(warning) {
     // Don't warn. We will remove side effectless require() in a later pass.
     return;
   }
-  console.warn(warning.message || warning);
+
+  if (typeof warning.code === 'string') {
+    // This is a warning coming from Rollup itself.
+    // These tend to be important (e.g. clashes in namespaced exports)
+    // so we'll fail the build on any of them.
+    console.error();
+    console.error(warning.message || warning);
+    console.error();
+    process.exit(1);
+  } else {
+    // The warning is from one of the plugins.
+    // Maybe it's not important, so just print it.
+    console.warn(warning.message || warning);
+  }
 }
 
 function handleRollupError(error) {

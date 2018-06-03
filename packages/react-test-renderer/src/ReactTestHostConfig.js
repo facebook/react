@@ -11,6 +11,13 @@ import emptyObject from 'fbjs/lib/emptyObject';
 
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
+export type Type = string;
+export type Props = Object;
+export type Container = {|
+  children: Array<Instance | TextInstance>,
+  createNodeMock: Function,
+  tag: 'CONTAINER',
+|};
 export type Instance = {|
   type: string,
   props: Object,
@@ -18,23 +25,22 @@ export type Instance = {|
   rootContainerInstance: Container,
   tag: 'INSTANCE',
 |};
-
 export type TextInstance = {|
   text: string,
   tag: 'TEXT',
 |};
-
-type Container = {|
-  children: Array<Instance | TextInstance>,
-  createNodeMock: Function,
-  tag: 'CONTAINER',
-|};
-
-type Props = Object;
+export type HydratableInstance = Instance | TextInstance;
+export type PublicInstance = Instance | TextInstance;
+export type HostContext = Object;
+export type UpdatePayload = Object;
+export type ChildSet = void; // Unused
 
 const UPDATE_SIGNAL = {};
 
-function getPublicInstance(inst: Instance | TextInstance): * {
+export * from 'shared/HostConfigWithNoPersistence';
+export * from 'shared/HostConfigWithNoHydration';
+
+export function getPublicInstance(inst: Instance | TextInstance): * {
   switch (inst.tag) {
     case 'INSTANCE':
       const createNodeMock = inst.rootContainerInstance.createNodeMock;
@@ -47,7 +53,7 @@ function getPublicInstance(inst: Instance | TextInstance): * {
   }
 }
 
-function appendChild(
+export function appendChild(
   parentInstance: Instance | Container,
   child: Instance | TextInstance,
 ): void {
@@ -58,7 +64,7 @@ function appendChild(
   parentInstance.children.push(child);
 }
 
-function insertBefore(
+export function insertBefore(
   parentInstance: Instance | Container,
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance,
@@ -71,7 +77,7 @@ function insertBefore(
   parentInstance.children.splice(beforeIndex, 0, child);
 }
 
-function removeChild(
+export function removeChild(
   parentInstance: Instance | Container,
   child: Instance | TextInstance,
 ): void {
@@ -79,140 +85,144 @@ function removeChild(
   parentInstance.children.splice(index, 1);
 }
 
-const ReactTestHostConfig = {
-  getRootHostContext() {
-    return emptyObject;
-  },
+export function getRootHostContext(
+  rootContainerInstance: Container,
+): HostContext {
+  return emptyObject;
+}
 
-  getChildHostContext() {
-    return emptyObject;
-  },
+export function getChildHostContext(
+  parentHostContext: HostContext,
+  type: string,
+  rootContainerInstance: Container,
+): HostContext {
+  return emptyObject;
+}
 
-  prepareForCommit(): void {
-    // noop
-  },
+export function prepareForCommit(containerInfo: Container): void {
+  // noop
+}
 
-  resetAfterCommit(): void {
-    // noop
-  },
+export function resetAfterCommit(containerInfo: Container): void {
+  // noop
+}
 
-  createInstance(
-    type: string,
-    props: Props,
-    rootContainerInstance: Container,
-    hostContext: Object,
-    internalInstanceHandle: Object,
-  ): Instance {
-    return {
-      type,
-      props,
-      children: [],
-      rootContainerInstance,
-      tag: 'INSTANCE',
-    };
-  },
+export function createInstance(
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: Object,
+  internalInstanceHandle: Object,
+): Instance {
+  return {
+    type,
+    props,
+    children: [],
+    rootContainerInstance,
+    tag: 'INSTANCE',
+  };
+}
 
-  appendInitialChild(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-  ): void {
-    const index = parentInstance.children.indexOf(child);
-    if (index !== -1) {
-      parentInstance.children.splice(index, 1);
-    }
-    parentInstance.children.push(child);
-  },
+export function appendInitialChild(
+  parentInstance: Instance,
+  child: Instance | TextInstance,
+): void {
+  const index = parentInstance.children.indexOf(child);
+  if (index !== -1) {
+    parentInstance.children.splice(index, 1);
+  }
+  parentInstance.children.push(child);
+}
 
-  finalizeInitialChildren(
-    testElement: Instance,
-    type: string,
-    props: Props,
-    rootContainerInstance: Container,
-  ): boolean {
-    return false;
-  },
+export function finalizeInitialChildren(
+  testElement: Instance,
+  type: string,
+  props: Props,
+  rootContainerInstance: Container,
+  hostContext: Object,
+): boolean {
+  return false;
+}
 
-  prepareUpdate(
-    testElement: Instance,
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-    rootContainerInstance: Container,
-    hostContext: Object,
-  ): null | {} {
-    return UPDATE_SIGNAL;
-  },
+export function prepareUpdate(
+  testElement: Instance,
+  type: string,
+  oldProps: Props,
+  newProps: Props,
+  rootContainerInstance: Container,
+  hostContext: Object,
+): null | {} {
+  return UPDATE_SIGNAL;
+}
 
-  shouldSetTextContent(type: string, props: Props): boolean {
-    return false;
-  },
+export function shouldSetTextContent(type: string, props: Props): boolean {
+  return false;
+}
 
-  shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-    return false;
-  },
+export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
+  return false;
+}
 
-  createTextInstance(
-    text: string,
-    rootContainerInstance: Container,
-    hostContext: Object,
-    internalInstanceHandle: Object,
-  ): TextInstance {
-    return {
-      text,
-      tag: 'TEXT',
-    };
-  },
+export function createTextInstance(
+  text: string,
+  rootContainerInstance: Container,
+  hostContext: Object,
+  internalInstanceHandle: Object,
+): TextInstance {
+  return {
+    text,
+    tag: 'TEXT',
+  };
+}
 
-  getPublicInstance,
+export const isPrimaryRenderer = true;
+// This approach enables `now` to be mocked by tests,
+// Even after the reconciler has initialized and read host config values.
+export const now = () => TestRendererScheduling.nowImplementation();
+export const scheduleDeferredCallback =
+  TestRendererScheduling.scheduleDeferredCallback;
+export const cancelDeferredCallback =
+  TestRendererScheduling.cancelDeferredCallback;
 
-  scheduleDeferredCallback: TestRendererScheduling.scheduleDeferredCallback,
-  cancelDeferredCallback: TestRendererScheduling.cancelDeferredCallback,
-  // This approach enables `now` to be mocked by tests,
-  // Even after the reconciler has initialized and read host config values.
-  now: () => TestRendererScheduling.nowImplementation(),
+// -------------------
+//     Mutation
+// -------------------
 
-  isPrimaryRenderer: true,
+export const supportsMutation = true;
 
-  mutation: {
-    commitUpdate(
-      instance: Instance,
-      updatePayload: {},
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-      internalInstanceHandle: Object,
-    ): void {
-      instance.type = type;
-      instance.props = newProps;
-    },
+export function commitUpdate(
+  instance: Instance,
+  updatePayload: {},
+  type: string,
+  oldProps: Props,
+  newProps: Props,
+  internalInstanceHandle: Object,
+): void {
+  instance.type = type;
+  instance.props = newProps;
+}
 
-    commitMount(
-      instance: Instance,
-      type: string,
-      newProps: Props,
-      internalInstanceHandle: Object,
-    ): void {
-      // noop
-    },
+export function commitMount(
+  instance: Instance,
+  type: string,
+  newProps: Props,
+  internalInstanceHandle: Object,
+): void {
+  // noop
+}
 
-    commitTextUpdate(
-      textInstance: TextInstance,
-      oldText: string,
-      newText: string,
-    ): void {
-      textInstance.text = newText;
-    },
-    resetTextContent(testElement: Instance): void {
-      // noop
-    },
+export function commitTextUpdate(
+  textInstance: TextInstance,
+  oldText: string,
+  newText: string,
+): void {
+  textInstance.text = newText;
+}
 
-    appendChild: appendChild,
-    appendChildToContainer: appendChild,
-    insertBefore: insertBefore,
-    insertInContainerBefore: insertBefore,
-    removeChild: removeChild,
-    removeChildFromContainer: removeChild,
-  },
-};
+export function resetTextContent(testElement: Instance): void {
+  // noop
+}
 
-export default ReactTestHostConfig;
+export const appendChildToContainer = appendChild;
+export const insertInContainerBefore = insertBefore;
+export const removeChildFromContainer = removeChild;

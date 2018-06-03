@@ -4,15 +4,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @format
  * @flow
  */
 
 'use strict';
+import {
+  now,
+  scheduleWork,
+  cancelScheduledWork,
+} from 'react-scheduler/src/ReactScheduler';
 
-const {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('ReactNative');
-
-module.exports =
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactNativeComponentTree;
+export {now, scheduleWork, cancelScheduledWork};

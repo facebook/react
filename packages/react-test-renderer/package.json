@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "16.3.2",
+  "version": "16.4.0",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -18,7 +18,7 @@
     "fbjs": "^0.8.16",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.0",
-    "react-is": "^16.3.2"
+    "react-is": "^16.4.0"
   },
   "peerDependencies": {
     "react": "^16.0.0"
