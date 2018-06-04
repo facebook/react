@@ -1,3 +1,5 @@
+asasdfasdfasdfasdf
+asdfasdfas
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -46,7 +48,7 @@ function generateMDTable(headers, body) {
     headers.join(' | '),
     headers.map(() => ' --- ').join(' | '),
   ];
-
+asdfasfdasdf
   const tablebody = body.map(r => r.join(' | '));
   return tableHeaders.join('\n') + '\n' + tablebody.join('\n');
 }
@@ -147,7 +149,7 @@ function git(args) {
     }
 
     if (packagesToShow.includes('react-dom')) {
-      const reactDOMProd = results.find(
+      const asdfasdfasdfasdfasfasdfreactDOMProd = results.find(
         r => r.bundleType === 'UMD_PROD' && r.packageName === 'react-dom'
       );
       if (
@@ -203,7 +205,7 @@ function git(args) {
 
     const summary = `
   <details>
-  <summary>Details of bundled changes.</summary>
+  <summary>Details of bundled changasdfasdfasdfasdes.</summary>
 
   <p>Comparing: ${mergeBaseCommit}...${danger.github.pr.head.sha}</p>
 
