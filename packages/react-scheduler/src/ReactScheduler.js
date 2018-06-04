@@ -41,10 +41,24 @@ type CallbackConfigType = {|
 
 export type CallbackIdType = CallbackConfigType;
 
-import requestAnimationFrameForReact from 'shared/requestAnimationFrameForReact';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
+
+import warning from 'fbjs/lib/warning';
+
+if (__DEV__) {
+  if (
+    ExecutionEnvironment.canUseDOM &&
+    typeof requestAnimationFrame !== 'function'
+  ) {
+    warning(
+      false,
+      'schedule depends on requestAnimationFrame. Make sure that you load a ' +
+        'polyfill in older browsers. https://fb.me/react-polyfills',
+    );
+  }
+}
 
 // We capture a local reference to any global, in case it gets polyfilled after
 // this module is initially evaluated.
@@ -52,6 +66,7 @@ import warning from 'fbjs/lib/warning';
 const localDate = Date;
 const localSetTimeout = setTimeout;
 const localClearTimeout = clearTimeout;
+const localRequestAnimationFrame = requestAnimationFrame;
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
