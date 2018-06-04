@@ -5,10 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as EventPluginHub from 'events/EventPluginHub';
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import {enqueueStateRestore} from 'events/ReactControlledComponent';
-import {batchedUpdates} from 'events/ReactGenericBatching';
 import SyntheticEvent from 'events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
@@ -23,7 +21,6 @@ import {
   TOP_KEY_UP,
   TOP_SELECTION_CHANGE,
 } from './DOMTopLevelEventTypes';
-import getEventTarget from './getEventTarget';
 import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
@@ -77,31 +74,6 @@ function shouldUseChangeEvent(elem) {
   );
 }
 
-function manualDispatchChangeEvent(nativeEvent) {
-  const event = createAndAccumulateChangeEvent(
-    activeElementInst,
-    nativeEvent,
-    getEventTarget(nativeEvent),
-  );
-
-  // If change and propertychange bubbled, we'd just bind to it like all the
-  // other events and have it go through ReactBrowserEventEmitter. Since it
-  // doesn't, we manually listen for the events and so we have to enqueue and
-  // process the abstract event manually.
-  //
-  // Batching is necessary here in order to ensure that all event handlers run
-  // before the next rerender (including event handlers attached to ancestor
-  // elements instead of directly on the input). Without this, controlled
-  // components don't work properly in conjunction with event bubbling because
-  // the component is rerendered and the value reverted before all the event
-  // handlers can run. See https://github.com/facebook/react/issues/708.
-  batchedUpdates(runEventInBatch, event);
-}
-
-function runEventInBatch(event) {
-  EventPluginHub.runEventsInBatch(event, false);
-}
-
 function getInstIfValueChanged(targetInst) {
   const targetNode = getNodeFromInstance(targetInst);
   if (inputValueTracking.updateValueIfChanged(targetNode)) {
@@ -135,7 +107,6 @@ if (ExecutionEnvironment.canUseDOM) {
 function startWatchingForValueChange(target, targetInst) {
   activeElement = target;
   activeElementInst = targetInst;
-  activeElement.attachEvent('onpropertychange', handlePropertyChange);
 }
 
 /**
@@ -146,22 +117,8 @@ function stopWatchingForValueChange() {
   if (!activeElement) {
     return;
   }
-  activeElement.detachEvent('onpropertychange', handlePropertyChange);
   activeElement = null;
   activeElementInst = null;
-}
-
-/**
- * (For IE <=9) Handles a propertychange event, sending a `change` event if
- * the value of the active element has changed.
- */
-function handlePropertyChange(nativeEvent) {
-  if (nativeEvent.propertyName !== 'value') {
-    return;
-  }
-  if (getInstIfValueChanged(activeElementInst)) {
-    manualDispatchChangeEvent(nativeEvent);
-  }
 }
 
 function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {

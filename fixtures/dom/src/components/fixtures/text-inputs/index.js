@@ -2,6 +2,7 @@ import Fixture from '../../Fixture';
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import InputTestCase from './InputTestCase';
+import BubbledInputTestCase from './BubbledInputTestCase';
 import ReplaceEmailInput from './ReplaceEmailInput';
 
 const React = window.React;
@@ -139,6 +140,19 @@ class TextInputFixtures extends React.Component {
           </TestCase.ExpectedResult>
 
           <ReplaceEmailInput />
+        </TestCase>
+
+        <TestCase title="Bubbled Change Events" affectedBrowsers="IE9" relatedIssues="708,11609">
+          <TestCase.Steps>
+            <li>Enter text</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            Each input's value should change as expected, despite the change
+            event being attached to the parent element
+          </TestCase.ExpectedResult>
+
+          <BubbledInputTestCase type="text" />
         </TestCase>
 
         <TestCase title="All inputs" description="General test of all inputs">
