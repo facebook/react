@@ -142,7 +142,10 @@ class TextInputFixtures extends React.Component {
           <ReplaceEmailInput />
         </TestCase>
 
-        <TestCase title="Bubbled Change Events" affectedBrowsers="IE9" relatedIssues="708,11609">
+        <TestCase
+          title="Bubbled Change Events"
+          affectedBrowsers="IE9"
+          relatedIssues="708,11609">
           <TestCase.Steps>
             <li>Enter text</li>
           </TestCase.Steps>
