@@ -692,7 +692,7 @@ class ReactDOMServerRenderer {
     // find the correct previous provider based on type
     let previousProvider;
     if (this.providerIndex > -1) {
-      for (let i = this.providerIndex; i >= 0; i -= 1) {
+      for (let i = this.providerIndex; i >= 0; i--) {
         if (this.providerStack[i] !== null && this.providerStack[i] !== undefined &&
           (this.providerStack[i]: ReactProvider<any>).type === provider.type) {
           previousProvider = this.providerStack[i];
