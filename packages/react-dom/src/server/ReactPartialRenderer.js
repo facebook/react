@@ -689,14 +689,21 @@ class ReactDOMServerRenderer {
     this.providerStack[this.providerIndex] = null;
     this.providerIndex -= 1;
     const context: ReactContext<any> = provider.type._context;
-    if (this.providerIndex < 0) {
-      context._currentValue = context._defaultValue;
-    } else {
-      // We assume this type is correct because of the index check above.
-      const previousProvider: ReactProvider<any> = (this.providerStack[
-        this.providerIndex
-      ]: any);
+    // find the correct previous provider based on type
+    let previousProvider;
+    if (this.providerIndex > -1) {
+      for (let i = 0; i <= this.providerIndex; i += 1) {
+        if (this.providerStack[i] &&
+          (this.providerStack[i]: ReactProvider<any>).type === provider.type) {
+          previousProvider = this.providerStack[i];
+          break;
+        }
+      }
+    }
+    if (previousProvider) {
       context._currentValue = previousProvider.props.value;
+    } else {
+      context._currentValue = context._defaultValue;
     }
   }
 
