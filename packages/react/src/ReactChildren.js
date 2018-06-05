@@ -51,6 +51,11 @@ function escapeUserProvidedKey(text) {
   return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
 }
 
+/* Set the Pool for cache some object, We dont need to create new object by
+ * `{}` literal with some special attribute if the pool not empty
+ * `getPooledTraverseContext` method will get the object from the pool
+ * `releaseTraverseContext` method will push the useless object to the pool
+ */
 const POOL_SIZE = 10;
 const traverseContextPool = [];
 function getPooledTraverseContext(
@@ -92,7 +97,7 @@ function releaseTraverseContext(traverseContext) {
 /**
  * @param {?*} children Children tree container.
  * @param {!string} nameSoFar Name of the key path so far.
- * @param {!function} callback Callback to invoke with each child found.
+ * @param {!function} traverseCallback Callback to invoke with each child found.
  * @param {?*} traverseContext Used to pass information throughout the traversal
  * process.
  * @return {!number} The number of children in this subtree.
@@ -100,7 +105,7 @@ function releaseTraverseContext(traverseContext) {
 function traverseAllChildrenImpl(
   children,
   nameSoFar,
-  callback,
+  traverseCallback,
   traverseContext,
 ) {
   const type = typeof children;
@@ -130,7 +135,7 @@ function traverseAllChildrenImpl(
   }
 
   if (invokeCallback) {
-    callback(
+    traverseCallback(
       traverseContext,
       children,
       // If it's the only child, treat the name as if it was wrapped in an array
@@ -153,7 +158,7 @@ function traverseAllChildrenImpl(
       subtreeCount += traverseAllChildrenImpl(
         child,
         nextName,
-        callback,
+        traverseCallback,
         traverseContext,
       );
     }
@@ -183,7 +188,7 @@ function traverseAllChildrenImpl(
         subtreeCount += traverseAllChildrenImpl(
           child,
           nextName,
-          callback,
+          traverseCallback,
           traverseContext,
         );
       }
@@ -222,16 +227,16 @@ function traverseAllChildrenImpl(
  * the callback might find relevant.
  *
  * @param {?*} children Children tree object.
- * @param {!function} callback To invoke upon traversing each child.
+ * @param {!function} traverseCallback To invoke upon traversing each child.
  * @param {?*} traverseContext Context for traversal.
  * @return {!number} The number of children in this subtree.
  */
-function traverseAllChildren(children, callback, traverseContext) {
+function traverseAllChildren(children, traverseCallback, traverseContext) {
   if (children == null) {
     return 0;
   }
 
-  return traverseAllChildrenImpl(children, '', callback, traverseContext);
+  return traverseAllChildrenImpl(children, '', traverseCallback, traverseContext);
 }
 
 /**
