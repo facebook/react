@@ -641,7 +641,7 @@ class ReactDOMServerRenderer {
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
 
-  providerStack: Array<?ReactProvider<any>>;
+  providerStack: Array<ReactProvider<any>>;
   providerIndex: number;
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
@@ -686,21 +686,19 @@ class ReactDOMServerRenderer {
         'Unexpected pop.',
       );
     }
-    this.providerStack[this.providerIndex] = null;
+    this.providerStack.length = this.providerIndex;
     this.providerIndex -= 1;
     const context: ReactContext<any> = provider.type._context;
     // find the correct previous provider based on type
-    let previousProvider;
-    if (this.providerIndex > -1) {
-      for (let i = this.providerIndex; i >= 0; i--) {
-        if (this.providerStack[i] !== null && this.providerStack[i] !== undefined &&
-          (this.providerStack[i]: ReactProvider<any>).type === provider.type) {
-          previousProvider = this.providerStack[i];
-          break;
-        }
+    let previousProvider = null;
+    for (let i = this.providerIndex; i >= 0; i--) {
+      // We assume this Flow type is correct because of the index check above.
+      if ((this.providerStack[i]: ReactProvider<any>).type === provider.type) {
+        previousProvider = this.providerStack[i];
+        break;
       }
     }
-    if (previousProvider) {
+    if (previousProvider !== null) {
       context._currentValue = previousProvider.props.value;
     } else {
       context._currentValue = context._defaultValue;
