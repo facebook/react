@@ -13,6 +13,7 @@
 'use strict';
 
 let React;
+let ReactDOM;
 let ReactTestUtils;
 
 describe('ReactChildReconciler', () => {
@@ -20,6 +21,7 @@ describe('ReactChildReconciler', () => {
     jest.resetModules();
 
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
   });
 
@@ -133,5 +135,21 @@ describe('ReactChildReconciler', () => {
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',
     );
+  });
+
+  it('should remove a element having the duplicated key', () => {
+    const container = document.createElement('div');
+    spyOnDev(console, 'error');
+    ReactDOM.render(
+      <ul>{['a', 'b', 'c', 'b'].map(s => <li key={s}>{s}</li>)}</ul>,
+      container,
+    );
+    expect(container.textContent).toEqual('abcb');
+
+    ReactDOM.render(
+      <ul>{['a', 'c', 'b'].map(s => <li key={s}>{s}</li>)}</ul>,
+      container,
+    );
+    expect(container.textContent).toEqual('acb');
   });
 });

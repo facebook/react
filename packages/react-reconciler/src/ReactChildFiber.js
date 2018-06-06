@@ -284,7 +284,13 @@ function ChildReconciler(shouldTrackSideEffects) {
     let existingChild = currentFirstChild;
     while (existingChild !== null) {
       if (existingChild.key !== null) {
-        existingChildren.set(existingChild.key, existingChild);
+        const key = existingChild.key;
+        // If the key is already used, we remove a element having the key.
+        const duplicatedChild = existingChildren.get(key);
+        if (duplicatedChild) {
+          deleteChild(returnFiber, duplicatedChild);
+        }
+        existingChildren.set(key, existingChild);
       } else {
         existingChildren.set(existingChild.index, existingChild);
       }
