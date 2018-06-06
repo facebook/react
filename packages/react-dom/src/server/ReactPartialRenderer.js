@@ -691,13 +691,10 @@ class ReactDOMServerRenderer {
     const context: ReactContext<any> = provider.type._context;
     let contextPriorProvider = null;
     for (let i = this.providerIndex; i >= 0; i--) {
-      // We assume this Flow type is correct because of the index check above.
-      const priorProvider: ?ReactProvider<any> = this.providerStack[i];
-      if (
-        priorProvider !== null &&
-        priorProvider !== undefined &&
-        priorProvider.type === provider.type
-      ) {
+      // We assume this Flow type is correct because of the index check above
+      // and because pushProvider() enforces the correct type.
+      const priorProvider: any = this.providerStack[i];
+      if (priorProvider.type === provider.type) {
         contextPriorProvider = priorProvider;
         break;
       }
