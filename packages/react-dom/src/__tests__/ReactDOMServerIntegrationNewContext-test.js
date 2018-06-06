@@ -192,32 +192,29 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.querySelector('#language').textContent).toBe('english');
     });
 
-    itRenders(
-      'nested context unwinding',
-      async render => {
-        const Theme = React.createContext('dark');
-        const Language = React.createContext('french');
+    itRenders('nested context unwinding', async render => {
+      const Theme = React.createContext('dark');
+      const Language = React.createContext('french');
 
-        const App = () => (
-          <div>
-            <Theme.Provider value="light">
-              <Language.Provider>
-                <Theme.Provider value="dark">
-                  <Theme.Consumer>
-                    {theme => <div id="theme1">{theme}</div>}
-                  </Theme.Consumer>
-                </Theme.Provider>
+      const App = () => (
+        <div>
+          <Theme.Provider value="light">
+            <Language.Provider>
+              <Theme.Provider value="dark">
                 <Theme.Consumer>
-                  {theme => <div id="theme2">{theme}</div>}
+                  {theme => <div id="theme1">{theme}</div>}
                 </Theme.Consumer>
-              </Language.Provider>
-            </Theme.Provider>
-          </div>
-        );
-        let e = await render(<App />);
-        expect(e.querySelector('#theme1').textContent).toBe('dark');
-        expect(e.querySelector('#theme2').textContent).toBe('light');
-      },
-    );
+              </Theme.Provider>
+              <Theme.Consumer>
+                {theme => <div id="theme2">{theme}</div>}
+              </Theme.Consumer>
+            </Language.Provider>
+          </Theme.Provider>
+        </div>
+      );
+      let e = await render(<App />);
+      expect(e.querySelector('#theme1').textContent).toBe('dark');
+      expect(e.querySelector('#theme2').textContent).toBe('light');
+    });
   });
 });
