@@ -1226,8 +1226,8 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Foo />, container)).toWarnDev(
       'Cannot update the state during an existing state transition. ' +
-      'Render methods should be a pure function of props and state. ' +
-      'Either assign the initial state in constructor, or move the setState call to componentDidMount',
+        'Render methods should be a pure function of props and state. ' +
+        'Either assign the initial state in constructor, or move the setState call to componentDidMount',
     );
     expect(ops).toEqual(['base: 0, memoized: 0', 'base: 1, memoized: 1']);
   });
