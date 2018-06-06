@@ -191,5 +191,35 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.querySelector('#theme').textContent).toBe('light');
       expect(e.querySelector('#language').textContent).toBe('english');
     });
+
+    itRenders(
+      'unbalanced nested contexts across multiple renders',
+      async render => {
+        const Theme = React.createContext('dark');
+        const Language = React.createContext('french');
+
+        const App = () => (
+          <div>
+            <Theme.Provider value="light">
+              <Language.Consumer>
+                {language => (
+                  <Theme.Consumer>
+                    {theme => (
+                      <Language.Provider>
+                        {language} - {theme}
+                      </Language.Provider>
+                    )}
+                  </Theme.Consumer>
+                )}
+              </Language.Consumer>
+            </Theme.Provider>
+          </div>
+        );
+        let e = await render(<App />);
+        expect(e.textContent).toBe('french - light');
+        e = await render(<App />);
+        expect(e.textContent).toBe('french - light');
+      },
+    );
   });
 });
