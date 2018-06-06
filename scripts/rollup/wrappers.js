@@ -56,7 +56,8 @@ ${license}
 'use strict';
 
 ${
-      globalName === 'ReactNoopRenderer'
+      globalName === 'ReactNoopRenderer' ||
+      globalName === 'ReactNoopRendererPersistent'
         ? // React Noop needs regenerator runtime because it uses
           // generators but GCC doesn't handle them in the output.
           // So we use Babel for them.
@@ -79,7 +80,8 @@ ${source}
 ${license}
  */
 ${
-      globalName === 'ReactNoopRenderer'
+      globalName === 'ReactNoopRenderer' ||
+      globalName === 'ReactNoopRendererPersistent'
         ? // React Noop needs regenerator runtime because it uses
           // generators but GCC doesn't handle them in the output.
           // So we use Babel for them.
@@ -129,6 +131,7 @@ ${license}
  * @noflow
  * @providesModule ${globalName}-dev
  * @preventMunge
+ * ${'@gen' + 'erated'}
  */
 
 'use strict';
@@ -148,6 +151,7 @@ ${license}
  * @noflow
  * @providesModule ${globalName}-prod
  * @preventMunge
+ * ${'@gen' + 'erated'}
  */
 
 ${source}`;
@@ -160,6 +164,7 @@ ${license}
  *
  * @noflow
  * @preventMunge
+ * ${'@gen' + 'erated'}
  */
 
 'use strict';
@@ -178,6 +183,7 @@ ${license}
  *
  * @noflow
  * @preventMunge
+ * ${'@gen' + 'erated'}
  */
 
 ${source}`;
@@ -196,14 +202,11 @@ ${license}
 'use strict';
 
 if (process.env.NODE_ENV !== "production") {
-  // This is a hacky way to ensure third party renderers don't share
-  // top-level module state inside the reconciler. Ideally we should
-  // remove this hack by putting all top-level state into the closures
-  // and then forbidding adding more of it in the reconciler.
-  var $$$reconciler;
-  module.exports = function(config) {
+  module.exports = function $$$reconciler($$$hostConfig) {
 ${source}
-    return ($$$reconciler || ($$$reconciler = module.exports))(config);
+    var $$$renderer = module.exports;
+    module.exports = $$$reconciler;
+    return $$$renderer;
   };
 }`;
   },
@@ -215,10 +218,11 @@ ${source}
  *
 ${license}
  */
-var $$$reconciler;
-module.exports = function(config) {
+module.exports = function $$$reconciler($$$hostConfig) {
 ${source}
-  return ($$$reconciler || ($$$reconciler = module.exports))(config);
+    var $$$renderer = module.exports;
+    module.exports = $$$reconciler;
+    return $$$renderer;
 };`;
   },
 };

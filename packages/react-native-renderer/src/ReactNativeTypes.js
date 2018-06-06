@@ -4,9 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
+ * @format
  * @flow
- * @providesModule ReactNativeTypes
  */
+
+import React from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -53,6 +55,22 @@ export type ReactNativeBaseComponentViewConfig = {
 export type ViewConfigGetter = () => ReactNativeBaseComponentViewConfig;
 
 /**
+ * Class only exists for its Flow type.
+ */
+class ReactNativeComponent<Props> extends React.Component<Props> {
+  blur(): void {}
+  focus(): void {}
+  measure(callback: MeasureOnSuccessCallback): void {}
+  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void {}
+  measureLayout(
+    relativeToNativeNode: number,
+    onSuccess: MeasureLayoutOnSuccessCallback,
+    onFail?: () => void,
+  ): void {}
+  setNativeProps(nativeProps: Object): void {}
+}
+
+/**
  * This type keeps ReactNativeFiberHostComponent and NativeMethodsMixin in sync.
  * It can also provide types for ReactNative applications that use NMM or refs.
  */
@@ -71,7 +89,6 @@ export type NativeMethodsMixinType = {
 
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
-  ReactNativeComponentTree: any,
   computeComponentStackForErrorReporting(tag: number): string,
   // TODO (bvaughn) Decide which additional types to expose here?
   // And how much information to fill in for the above types.
@@ -79,7 +96,6 @@ type SecretInternalsType = {
 
 type SecretInternalsFabricType = {
   NativeMethodsMixin: NativeMethodsMixinType,
-  ReactNativeComponentTree: any,
 };
 
 /**
@@ -87,7 +103,7 @@ type SecretInternalsFabricType = {
  * Provide minimal Flow typing for the high-level RN API and call it a day.
  */
 export type ReactNativeType = {
-  NativeComponent: any,
+  NativeComponent: typeof ReactNativeComponent,
   findNodeHandle(componentOrHandle: any): ?number,
   render(
     element: React$Element<any>,
@@ -102,7 +118,7 @@ export type ReactNativeType = {
 };
 
 export type ReactFabricType = {
-  NativeComponent: any,
+  NativeComponent: typeof ReactNativeComponent,
   findNodeHandle(componentOrHandle: any): ?number,
   render(
     element: React$Element<any>,

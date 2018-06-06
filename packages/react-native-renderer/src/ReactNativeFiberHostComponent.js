@@ -14,7 +14,7 @@ import type {
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
-import type {Instance} from './ReactNativeFiberRenderer';
+import type {Instance} from './ReactNativeHostConfig';
 
 // Modules provided by RN:
 import TextInputState from 'TextInputState';

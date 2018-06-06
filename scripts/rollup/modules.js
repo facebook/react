@@ -27,12 +27,12 @@ const knownGlobals = Object.freeze({
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
-function getPeerGlobals(externals, moduleType) {
+function getPeerGlobals(externals, bundleType) {
   const peerGlobals = {};
   externals.forEach(name => {
     if (
       !knownGlobals[name] &&
-      (moduleType === UMD_DEV || moduleType === UMD_PROD)
+      (bundleType === UMD_DEV || bundleType === UMD_PROD)
     ) {
       throw new Error('Cannot build UMD without a global name for: ' + name);
     }
@@ -56,11 +56,16 @@ function getDependencies(bundleType, entry) {
 }
 
 // Hijacks some modules for optimization and integration reasons.
-function getForks(bundleType, entry) {
+function getForks(bundleType, entry, moduleType) {
   const forksForBundle = {};
   Object.keys(forks).forEach(srcModule => {
     const dependencies = getDependencies(bundleType, entry);
-    const targetModule = forks[srcModule](bundleType, entry, dependencies);
+    const targetModule = forks[srcModule](
+      bundleType,
+      entry,
+      dependencies,
+      moduleType
+    );
     if (targetModule === null) {
       return;
     }

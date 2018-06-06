@@ -46,11 +46,10 @@ describe('ReactFiberHostContext', () => {
       now: function() {
         return 0;
       },
-      mutation: {
-        appendChildToContainer: function() {
-          return null;
-        },
+      appendChildToContainer: function() {
+        return null;
       },
+      supportsMutation: true,
     });
 
     const container = Renderer.createContainer(/* root: */ null);
@@ -95,11 +94,10 @@ describe('ReactFiberHostContext', () => {
       now: function() {
         return 0;
       },
-      mutation: {
-        appendChildToContainer: function() {
-          return null;
-        },
+      appendChildToContainer: function() {
+        return null;
       },
+      supportsMutation: true,
     });
 
     const container = Renderer.createContainer(rootContext);

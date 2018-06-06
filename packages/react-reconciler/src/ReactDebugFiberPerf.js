@@ -16,8 +16,6 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  CallComponent,
-  ReturnComponent,
   Fragment,
   ContextProvider,
   ContextConsumer,
@@ -171,8 +169,6 @@ const shouldIgnoreFiber = (fiber: Fiber): boolean => {
     case HostComponent:
     case HostText:
     case HostPortal:
-    case CallComponent:
-    case ReturnComponent:
     case Fragment:
     case ContextProvider:
     case ContextConsumer:

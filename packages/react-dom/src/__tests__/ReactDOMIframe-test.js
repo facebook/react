@@ -21,7 +21,7 @@ describe('ReactDOMIframe', () => {
   });
 
   it('should trigger load events', () => {
-    const onLoadSpy = jasmine.createSpy();
+    const onLoadSpy = jest.fn();
     let iframe = React.createElement('iframe', {onLoad: onLoadSpy});
     iframe = ReactTestUtils.renderIntoDocument(iframe);
 

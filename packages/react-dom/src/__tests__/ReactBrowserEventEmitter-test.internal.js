@@ -151,17 +151,17 @@ describe('ReactBrowserEventEmitter', () => {
   it('should invoke a simple handler registered on a node', () => {
     registerSimpleTestHandler();
     ReactTestUtils.Simulate.click(CHILD);
-    expect(LISTENER.mock.calls.length).toBe(1);
+    expect(LISTENER).toHaveBeenCalledTimes(1);
   });
 
   it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
     registerSimpleTestHandler();
     ReactBrowserEventEmitter.setEnabled(false);
     ReactTestUtils.SimulateNative.click(CHILD);
-    expect(LISTENER.mock.calls.length).toBe(0);
+    expect(LISTENER).toHaveBeenCalledTimes(0);
     ReactBrowserEventEmitter.setEnabled(true);
     ReactTestUtils.SimulateNative.click(CHILD);
-    expect(LISTENER.mock.calls.length).toBe(1);
+    expect(LISTENER).toHaveBeenCalledTimes(1);
   });
 
   it('should bubble simply', () => {
@@ -301,7 +301,7 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(CHILD, ON_CLICK_KEY, handleChildClick);
     putListener(PARENT, ON_CLICK_KEY, handleParentClick);
     ReactTestUtils.Simulate.click(CHILD);
-    expect(handleParentClick.mock.calls.length).toBe(1);
+    expect(handleParentClick).toHaveBeenCalledTimes(1);
   });
 
   it('should not invoke newly inserted handlers while bubbling', () => {
@@ -311,7 +311,7 @@ describe('ReactBrowserEventEmitter', () => {
     };
     putListener(CHILD, ON_CLICK_KEY, handleChildClick);
     ReactTestUtils.Simulate.click(CHILD);
-    expect(handleParentClick.mock.calls.length).toBe(0);
+    expect(handleParentClick).toHaveBeenCalledTimes(0);
   });
 
   it('should have mouse enter simulated by test utils', () => {
@@ -325,7 +325,7 @@ describe('ReactBrowserEventEmitter', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    expect(EventTarget.prototype.addEventListener.calls.count()).toBe(1);
+    expect(EventTarget.prototype.addEventListener).toHaveBeenCalledTimes(1);
   });
 
   it('should work with event plugins without dependencies', () => {

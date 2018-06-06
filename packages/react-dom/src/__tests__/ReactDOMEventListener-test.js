@@ -61,7 +61,7 @@ describe('ReactDOMEventListener', () => {
       childNode.dispatchEvent(nativeEvent);
 
       expect(mouseOut).toBeCalled();
-      expect(mouseOut.mock.calls.length).toBe(2);
+      expect(mouseOut).toHaveBeenCalledTimes(2);
       expect(mouseOut.mock.calls[0][0]).toEqual(childNode);
       expect(mouseOut.mock.calls[1][0]).toEqual(parentNode);
 
@@ -97,7 +97,7 @@ describe('ReactDOMEventListener', () => {
       childNode.dispatchEvent(nativeEvent);
 
       expect(mouseOut).toBeCalled();
-      expect(mouseOut.mock.calls.length).toBe(3);
+      expect(mouseOut).toHaveBeenCalledTimes(3);
       expect(mouseOut.mock.calls[0][0]).toEqual(childNode);
       expect(mouseOut.mock.calls[1][0]).toEqual(parentNode);
       expect(mouseOut.mock.calls[2][0]).toEqual(grandParentNode);
@@ -169,7 +169,7 @@ describe('ReactDOMEventListener', () => {
       childNode.dispatchEvent(nativeEvent);
 
       // Child and parent should both call from event handlers.
-      expect(mock.mock.calls.length).toBe(2);
+      expect(mock).toHaveBeenCalledTimes(2);
       // The first call schedules a render of '1' into the 'Child'.
       // However, we're batching so it isn't flushed yet.
       expect(mock.mock.calls[0][0]).toBe('Child');
@@ -213,8 +213,169 @@ describe('ReactDOMEventListener', () => {
     instance.getInner().dispatchEvent(nativeEvent);
 
     expect(mouseOut).toBeCalled();
-    expect(mouseOut.mock.calls.length).toBe(1);
+    expect(mouseOut).toHaveBeenCalledTimes(1);
     expect(mouseOut.mock.calls[0][0]).toEqual(instance.getInner());
     document.body.removeChild(container);
+  });
+
+  // Regression test for https://github.com/facebook/react/pull/12877
+  it('should not fire form events twice', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const formRef = React.createRef();
+    const inputRef = React.createRef();
+
+    const handleInvalid = jest.fn();
+    const handleReset = jest.fn();
+    const handleSubmit = jest.fn();
+    ReactDOM.render(
+      <form ref={formRef} onReset={handleReset} onSubmit={handleSubmit}>
+        <input ref={inputRef} onInvalid={handleInvalid} />
+      </form>,
+      container,
+    );
+
+    inputRef.current.dispatchEvent(
+      new Event('invalid', {
+        // https://developer.mozilla.org/en-US/docs/Web/Events/invalid
+        bubbles: false,
+      }),
+    );
+    expect(handleInvalid).toHaveBeenCalledTimes(1);
+
+    formRef.current.dispatchEvent(
+      new Event('reset', {
+        // https://developer.mozilla.org/en-US/docs/Web/Events/reset
+        bubbles: true,
+      }),
+    );
+    expect(handleReset).toHaveBeenCalledTimes(1);
+
+    formRef.current.dispatchEvent(
+      new Event('submit', {
+        // https://developer.mozilla.org/en-US/docs/Web/Events/submit
+        bubbles: true,
+      }),
+    );
+    expect(handleSubmit).toHaveBeenCalledTimes(1);
+
+    formRef.current.dispatchEvent(
+      new Event('submit', {
+        // Might happen on older browsers.
+        bubbles: true,
+      }),
+    );
+    expect(handleSubmit).toHaveBeenCalledTimes(2); // It already fired in this test.
+
+    document.body.removeChild(container);
+  });
+
+  it('should dispatch loadstart only for media elements', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const imgRef = React.createRef();
+    const videoRef = React.createRef();
+
+    const handleImgLoadStart = jest.fn();
+    const handleVideoLoadStart = jest.fn();
+    ReactDOM.render(
+      <div>
+        <img ref={imgRef} onLoadStart={handleImgLoadStart} />
+        <video ref={videoRef} onLoadStart={handleVideoLoadStart} />
+      </div>,
+      container,
+    );
+
+    // Note for debugging: loadstart currently doesn't fire in Chrome.
+    // https://bugs.chromium.org/p/chromium/issues/detail?id=458851
+    imgRef.current.dispatchEvent(
+      new ProgressEvent('loadstart', {
+        bubbles: false,
+      }),
+    );
+    // Historically, we happened to not support onLoadStart
+    // on <img>, and this test documents that lack of support.
+    // If we decide to support it in the future, we should change
+    // this line to expect 1 call. Note that fixing this would
+    // be simple but would require attaching a handler to each
+    // <img>. So far nobody asked us for it.
+    expect(handleImgLoadStart).toHaveBeenCalledTimes(0);
+
+    videoRef.current.dispatchEvent(
+      new ProgressEvent('loadstart', {
+        bubbles: false,
+      }),
+    );
+    expect(handleVideoLoadStart).toHaveBeenCalledTimes(1);
+
+    document.body.removeChild(container);
+  });
+
+  it('should not attempt to listen to unnecessary events on the top level', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const videoRef = React.createRef();
+    const handleVideoPlay = jest.fn(); // We'll test this one.
+    const mediaEvents = {
+      onAbort() {},
+      onCanPlay() {},
+      onCanPlayThrough() {},
+      onDurationChange() {},
+      onEmptied() {},
+      onEncrypted() {},
+      onEnded() {},
+      onError() {},
+      onLoadedData() {},
+      onLoadedMetadata() {},
+      onLoadStart() {},
+      onPause() {},
+      onPlay() {},
+      onPlaying() {},
+      onProgress() {},
+      onRateChange() {},
+      onSeeked() {},
+      onSeeking() {},
+      onStalled() {},
+      onSuspend() {},
+      onTimeUpdate() {},
+      onVolumeChange() {},
+      onWaiting() {},
+    };
+
+    const originalAddEventListener = document.addEventListener;
+    document.addEventListener = function(type) {
+      throw new Error(
+        `Did not expect to add a top-level listener for the "${type}" event.`,
+      );
+    };
+
+    try {
+      // We expect that mounting this tree will
+      // *not* attach handlers for any top-level events.
+      ReactDOM.render(
+        <div>
+          <video ref={videoRef} {...mediaEvents} onPlay={handleVideoPlay} />
+          <audio {...mediaEvents}>
+            <source {...mediaEvents} />
+          </audio>
+          <form onReset={() => {}} onSubmit={() => {}} />
+        </div>,
+        container,
+      );
+
+      // Also verify dispatching one of them works
+      videoRef.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      expect(handleVideoPlay).toHaveBeenCalledTimes(1);
+    } finally {
+      document.addEventListener = originalAddEventListener;
+      document.body.removeChild(container);
+    }
   });
 });

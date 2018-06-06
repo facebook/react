@@ -22,11 +22,21 @@ function isInDocument(node) {
  * Input selection module for React.
  */
 
+/**
+ * @hasSelectionCapabilities: we get the element types that support selection
+ * from https://html.spec.whatwg.org/#do-not-apply, looking at `selectionStart`
+ * and `selectionEnd` rows.
+ */
 export function hasSelectionCapabilities(elem) {
   const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName &&
-    ((nodeName === 'input' && elem.type === 'text') ||
+    ((nodeName === 'input' &&
+      (elem.type === 'text' ||
+        elem.type === 'search' ||
+        elem.type === 'tel' ||
+        elem.type === 'url' ||
+        elem.type === 'password')) ||
       nodeName === 'textarea' ||
       elem.contentEditable === 'true')
   );
@@ -52,7 +62,10 @@ export function restoreSelection(priorSelectionInformation) {
   const priorFocusedElem = priorSelectionInformation.focusedElem;
   const priorSelectionRange = priorSelectionInformation.selectionRange;
   if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
-    if (hasSelectionCapabilities(priorFocusedElem)) {
+    if (
+      priorSelectionRange !== null &&
+      hasSelectionCapabilities(priorFocusedElem)
+    ) {
       setSelection(priorFocusedElem, priorSelectionRange);
     }
 

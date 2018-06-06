@@ -16,13 +16,12 @@ export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
 export const enableGetDerivedStateFromCatch = false;
+export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
+export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-
-// React Fabric uses persistent reconciler.
-export const enableMutatingReconciler = false;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = true;
+export const enableProfilerTimer = false;
+export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {

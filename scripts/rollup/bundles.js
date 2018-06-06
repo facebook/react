@@ -29,6 +29,7 @@ const moduleTypes = {
   RENDERER: 'RENDERER',
   RENDERER_UTILS: 'RENDERER_UTILS',
   RECONCILER: 'RECONCILER',
+  NON_FIBER_RENDERER: 'NON_FIBER_RENDERER',
 };
 
 // React
@@ -39,6 +40,8 @@ const RENDERER = moduleTypes.RENDERER;
 const RENDERER_UTILS = moduleTypes.RENDERER_UTILS;
 // Standalone reconciler for third-party renderers.
 const RECONCILER = moduleTypes.RECONCILER;
+// Non-Fiber implementations like SSR and Shallow renderers.
+const NON_FIBER_RENDERER = moduleTypes.NON_FIBER_RENDERER;
 
 const bundles = [
   /******* Isomorphic *******/
@@ -113,7 +116,7 @@ const bundles = [
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
-    moduleType: RENDERER,
+    moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
     externals: ['react'],
@@ -122,7 +125,7 @@ const bundles = [
   {
     label: 'dom-server-node',
     bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
+    moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.node',
     externals: ['react', 'stream'],
   },
@@ -246,7 +249,7 @@ const bundles = [
   {
     label: 'test-shallow',
     bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
-    moduleType: RENDERER,
+    moduleType: NON_FIBER_RENDERER,
     entry: 'react-test-renderer/shallow',
     global: 'ReactShallowRenderer',
     externals: ['react'],
@@ -259,6 +262,29 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
+    externals: ['react', 'expect'],
+    // React Noop uses generators. However GCC currently
+    // breaks when we attempt to use them in the output.
+    // So we precompile them with regenerator, and include
+    // it as a runtime dependency of React Noop. In practice
+    // this isn't an issue because React Noop is only used
+    // in our tests. We wouldn't want to do this for any
+    // public package though.
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          require.resolve('babel-plugin-transform-regenerator'),
+        ]),
+      }),
+  },
+
+  /******* React Noop Persistent Renderer (used for tests) *******/
+  {
+    label: 'noop-persistent',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-noop-renderer/persistent',
+    global: 'ReactNoopRendererPersistent',
     externals: ['react', 'expect'],
     // React Noop uses generators. However GCC currently
     // breaks when we attempt to use them in the output.
@@ -305,16 +331,6 @@ const bundles = [
     externals: [],
   },
 
-  /******* React Call Return (experimental) *******/
-  {
-    label: 'react-call-return',
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: ISOMORPHIC,
-    entry: 'react-call-return',
-    global: 'ReactCallReturn',
-    externals: [],
-  },
-
   /******* React Is *******/
   {
     label: 'react-is',
@@ -335,7 +351,7 @@ const bundles = [
   /******* Simple Cache Provider (experimental) *******/
   {
     label: 'simple-cache-provider',
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'simple-cache-provider',
     global: 'SimpleCacheProvider',
@@ -355,7 +371,14 @@ const bundles = [
   /******* React Scheduler (experimental) *******/
   {
     label: 'react-scheduler',
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'react-scheduler',
     global: 'ReactScheduler',

@@ -123,7 +123,7 @@ describe('DOMPropertyOperations', () => {
       spyOnDevAndProd(container.firstChild, 'setAttribute');
       ReactDOM.render(<progress value={30} />, container);
       ReactDOM.render(<progress value="30" />, container);
-      expect(container.firstChild.setAttribute.calls.count()).toBe(2);
+      expect(container.firstChild.setAttribute).toHaveBeenCalledTimes(2);
     });
   });
 

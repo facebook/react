@@ -738,28 +738,28 @@ describe('ReactDOMComponent', () => {
       node.removeAttribute.mockImplementation(nodeRemoveAttribute);
 
       ReactDOM.render(<div id="" />, container);
-      expect(node.setAttribute.mock.calls.length).toBe(0);
-      expect(node.removeAttribute.mock.calls.length).toBe(0);
+      expect(node.setAttribute).toHaveBeenCalledTimes(0);
+      expect(node.removeAttribute).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(<div id="foo" />, container);
-      expect(node.setAttribute.mock.calls.length).toBe(1);
-      expect(node.removeAttribute.mock.calls.length).toBe(0);
+      expect(node.setAttribute).toHaveBeenCalledTimes(1);
+      expect(node.removeAttribute).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(<div id="foo" />, container);
-      expect(node.setAttribute.mock.calls.length).toBe(1);
-      expect(node.removeAttribute.mock.calls.length).toBe(0);
+      expect(node.setAttribute).toHaveBeenCalledTimes(1);
+      expect(node.removeAttribute).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(<div />, container);
-      expect(node.setAttribute.mock.calls.length).toBe(1);
-      expect(node.removeAttribute.mock.calls.length).toBe(1);
+      expect(node.setAttribute).toHaveBeenCalledTimes(1);
+      expect(node.removeAttribute).toHaveBeenCalledTimes(1);
 
       ReactDOM.render(<div id="" />, container);
-      expect(node.setAttribute.mock.calls.length).toBe(2);
-      expect(node.removeAttribute.mock.calls.length).toBe(1);
+      expect(node.setAttribute).toHaveBeenCalledTimes(2);
+      expect(node.removeAttribute).toHaveBeenCalledTimes(1);
 
       ReactDOM.render(<div />, container);
-      expect(node.setAttribute.mock.calls.length).toBe(2);
-      expect(node.removeAttribute.mock.calls.length).toBe(2);
+      expect(node.setAttribute).toHaveBeenCalledTimes(2);
+      expect(node.removeAttribute).toHaveBeenCalledTimes(2);
     });
 
     it('should not incur unnecessary DOM mutations for string properties', () => {
@@ -768,7 +768,7 @@ describe('ReactDOMComponent', () => {
 
       const node = container.firstChild;
 
-      const nodeValueSetter = jest.genMockFn();
+      const nodeValueSetter = jest.fn();
 
       const oldSetAttribute = node.setAttribute.bind(node);
       node.setAttribute = function(key, value) {
@@ -777,22 +777,22 @@ describe('ReactDOMComponent', () => {
       };
 
       ReactDOM.render(<div value="foo" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
       ReactDOM.render(<div value="foo" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
       ReactDOM.render(<div />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
       ReactDOM.render(<div value={null} />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
       ReactDOM.render(<div value="" />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(2);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(2);
 
       ReactDOM.render(<div />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(2);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(2);
     });
 
     it('should not incur unnecessary DOM mutations for boolean properties', () => {
@@ -812,16 +812,16 @@ describe('ReactDOMComponent', () => {
       });
 
       ReactDOM.render(<div checked={true} />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(0);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(<div />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
       ReactDOM.render(<div checked={false} />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(2);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(2);
 
       ReactDOM.render(<div checked={true} />, container);
-      expect(nodeValueSetter.mock.calls.length).toBe(3);
+      expect(nodeValueSetter).toHaveBeenCalledTimes(3);
     });
 
     it('should ignore attribute whitelist for elements with the "is" attribute', () => {
@@ -850,9 +850,9 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div dir={null} />, container);
       ReactDOM.render(<div dir={undefined} />, container);
       ReactDOM.render(<div />, container);
-      expect(setter.mock.calls.length).toBe(0);
+      expect(setter).toHaveBeenCalledTimes(0);
       ReactDOM.render(<div dir="ltr" />, container);
-      expect(setter.mock.calls.length).toBe(1);
+      expect(setter).toHaveBeenCalledTimes(1);
     });
 
     it('handles multiple child updates without interference', () => {
@@ -984,7 +984,7 @@ describe('ReactDOMComponent', () => {
       container.getElementsByTagName('source')[0].dispatchEvent(errorEvent);
 
       if (__DEV__) {
-        expect(console.log.calls.count()).toBe(1);
+        expect(console.log).toHaveBeenCalledTimes(1);
         expect(console.log.calls.argsFor(0)[0]).toContain('onError called');
       }
     });
@@ -1315,7 +1315,7 @@ describe('ReactDOMComponent', () => {
       container.getElementsByTagName('image')[0].dispatchEvent(loadEvent);
 
       if (__DEV__) {
-        expect(console.log.calls.count()).toBe(2);
+        expect(console.log).toHaveBeenCalledTimes(2);
         expect(console.log.calls.argsFor(0)[0]).toContain('onError called');
         expect(console.log.calls.argsFor(1)[0]).toContain('onLoad called');
       }

@@ -3,9 +3,7 @@
 set -e
 
 # Make sure we don't introduce accidental @providesModule annotations.
-EXPECTED='packages/react-native-renderer/src/ReactNativeTypes.js
-packages/shared/ReactTypes.js
-scripts/rollup/wrappers.js'
+EXPECTED='scripts/rollup/wrappers.js'
 ACTUAL=$(git grep -l @providesModule -- './*.js' ':!scripts/rollup/shims/*.js')
 
 # Colors

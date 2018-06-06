@@ -31,9 +31,9 @@ describe('ReactFabric', () => {
   });
 
   it('find Fabric nodes with the RN renderer', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     let ref = React.createRef();

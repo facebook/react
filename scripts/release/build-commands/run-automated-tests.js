@@ -7,7 +7,7 @@ const {logPromise, runYarnTask} = require('../utils');
 module.exports = async ({cwd}) => {
   await logPromise(runYarnTask(cwd, 'lint', 'Lint failed'), 'Running ESLint');
   await logPromise(
-    runYarnTask(cwd, 'flow', 'Flow failed'),
+    runYarnTask(cwd, 'flow-ci', 'Flow failed'),
     'Running Flow checks'
   );
   await logPromise(
