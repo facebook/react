@@ -1208,7 +1208,7 @@ function captureCommitPhaseError(fiber: Fiber, error: mixed) {
 function computeAsyncExpiration(currentTime: ExpirationTime) {
   // Given the current clock time, returns an expiration time. We use rounding
   // to batch like updates together.
-  // Should complete within ~1000ms. 1200ms max.
+  // Should complete within ~5000ms. 5250ms max.
   const expirationMs = 5000;
   const bucketSizeMs = 250;
   return computeExpirationBucket(currentTime, expirationMs, bucketSizeMs);
