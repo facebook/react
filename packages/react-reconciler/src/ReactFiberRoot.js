@@ -28,6 +28,22 @@ export type FiberRoot = {
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
+
+  // The following priority levels are used to distinguish between 1)
+  // uncommitted work, 2) uncommitted work that is suspended, and 3) uncommitted
+  // work that may be unsuspended. We choose not to track each individual
+  // pending level, trading granularity for performance.
+  //
+  // The earliest and latest priority levels that are suspended from committing.
+  earliestSuspendedTime: ExpirationTime,
+  latestSuspendedTime: ExpirationTime,
+  // The earliest and latest priority levels that are not known to be suspended.
+  earliestPendingTime: ExpirationTime,
+  latestPendingTime: ExpirationTime,
+  // The latest priority level that was pinged by a resolved promise and can
+  // be retried.
+  latestPingedTime: ExpirationTime,
+
   pendingCommitExpirationTime: ExpirationTime,
   // A finished work-in-progress HostRoot that's ready to be committed.
   // TODO: The reason this is separate from isReadyForCommit is because the
@@ -62,6 +78,13 @@ export function createFiberRoot(
     current: uninitializedFiber,
     containerInfo: containerInfo,
     pendingChildren: null,
+
+    earliestPendingTime: NoWork,
+    latestPendingTime: NoWork,
+    earliestSuspendedTime: NoWork,
+    latestSuspendedTime: NoWork,
+    latestPingedTime: NoWork,
+
     pendingCommitExpirationTime: NoWork,
     finishedWork: null,
     context: null,

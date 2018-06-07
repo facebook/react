@@ -12,20 +12,18 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
 
 // Re-export dynamic flags from the www version.
 export const {
-  enableGetDerivedStateFromCatch,
+  enableSuspense,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
-  warnAboutDeprecatedLifecycles,
+  enableGetDerivedStateFromCatch,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  alwaysUseRequestIdleCallbackPolyfill,
+  warnAboutDeprecatedLifecycles,
+  enableProfilerTimer,
+  fireGetDerivedStateFromPropsOnStateUpdates,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
-
-// The www bundles only use the mutating reconciler.
-export const enableMutatingReconciler = true;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = false;
+export const warnAboutLegacyContextAPI = __DEV__;
 
 // In www, we have experimental support for gathering data
 // from User Timing API calls in production. By default, we

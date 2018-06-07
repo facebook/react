@@ -94,7 +94,7 @@ describe('ReactShallowRenderer', () => {
     const instance = shallowRenderer.getMountedInstance();
     instance.setState({});
 
-    expect(logs).toEqual(['shouldComponentUpdate']);
+    expect(logs).toEqual(['getDerivedStateFromProps', 'shouldComponentUpdate']);
 
     logs.splice(0);
 
@@ -228,6 +228,32 @@ describe('ReactShallowRenderer', () => {
       <span className="child1" />,
       <span className="child2" />,
     ]);
+  });
+
+  it('should handle Profiler', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return (
+          <React.unstable_Profiler id="test" onRender={jest.fn()}>
+            <div>
+              <span className="child1" />
+              <span className="child2" />
+            </div>
+          </React.unstable_Profiler>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent />);
+
+    expect(result.type).toBe(React.unstable_Profiler);
+    expect(result.props.children).toEqual(
+      <div>
+        <span className="child1" />
+        <span className="child2" />
+      </div>,
+    );
   });
 
   it('should enable shouldComponentUpdate to prevent a re-render', () => {
@@ -919,6 +945,27 @@ describe('ReactShallowRenderer', () => {
     expect(result.props.children).toEqual(2);
   });
 
+  it('can access component instance from setState updater function', done => {
+    let instance;
+
+    class SimpleComponent extends React.Component {
+      state = {};
+
+      render() {
+        instance = this;
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+
+    instance.setState(function updater(state, props) {
+      expect(this).toBe(instance);
+      done();
+    });
+  });
+
   it('can setState with a callback', () => {
     let instance;
 
@@ -1190,12 +1237,12 @@ describe('ReactShallowRenderer', () => {
 
     shallowRenderer.render(<Component />);
 
-    expect(mockFn.mock.calls.length).toBe(2);
+    expect(mockFn).toHaveBeenCalledTimes(2);
 
     // Ensure the callback queue is cleared after the callbacks are invoked
     const mountedInstance = shallowRenderer.getMountedInstance();
     mountedInstance.setState({foo: 'bar'}, () => mockFn());
-    expect(mockFn.mock.calls.length).toBe(3);
+    expect(mockFn).toHaveBeenCalledTimes(3);
   });
 
   it('should call the setState callback even if shouldComponentUpdate = false', done => {
@@ -1304,5 +1351,33 @@ describe('ReactShallowRenderer', () => {
       'componentWillUpdate',
       'UNSAFE_componentWillUpdate',
     ]);
+  });
+
+  it('should stop the update when setState returns null or undefined', () => {
+    const log = [];
+    let instance;
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          count: 0,
+        };
+      }
+      render() {
+        log.push('render');
+        instance = this;
+        return null;
+      }
+    }
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component />);
+    log.length = 0;
+    instance.setState(() => null);
+    instance.setState(() => undefined);
+    instance.setState(null);
+    instance.setState(undefined);
+    expect(log).toEqual([]);
+    instance.setState(state => ({count: state.count + 1}));
+    expect(log).toEqual(['render']);
   });
 });

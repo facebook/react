@@ -21,7 +21,7 @@ describe('ReactFabric', () => {
     ReactNative = require('react-native-renderer');
     jest.resetModules();
     jest.mock('shared/ReactFeatureFlags', () =>
-      require('shared/forks/ReactFeatureFlags.native-fabric'),
+      require('shared/forks/ReactFeatureFlags.native-fabric-oss'),
     );
 
     React = require('react');
@@ -31,9 +31,9 @@ describe('ReactFabric', () => {
   });
 
   it('find Fabric nodes with the RN renderer', () => {
-    const View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {title: true},
-      uiViewClassName: 'View',
+      uiViewClassName: 'RCTView',
     }));
 
     let ref = React.createRef();

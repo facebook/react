@@ -19,12 +19,12 @@ describe('SimpleEventPlugin', function() {
 
   function expectClickThru(element) {
     ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(element));
-    expect(onClick.mock.calls.length).toBe(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
   }
 
   function expectNoClickThru(element) {
     ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(element));
-    expect(onClick.mock.calls.length).toBe(0);
+    expect(onClick).toHaveBeenCalledTimes(0);
   }
 
   function mounted(element) {
@@ -33,6 +33,31 @@ describe('SimpleEventPlugin', function() {
   }
 
   beforeEach(function() {
+    // TODO pull this into helper method, reduce repetition.
+    // mock the browser APIs which are used in react-scheduler:
+    // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
+    // - calling 'window.postMessage' should actually fire postmessage handlers
+    global.requestAnimationFrame = function(cb) {
+      return setTimeout(() => {
+        cb(Date.now());
+      });
+    };
+    const originalAddEventListener = global.addEventListener;
+    let postMessageCallback;
+    global.addEventListener = function(eventName, callback, useCapture) {
+      if (eventName === 'message') {
+        postMessageCallback = callback;
+      } else {
+        originalAddEventListener(eventName, callback, useCapture);
+      }
+    };
+    global.postMessage = function(messageKey, targetOrigin) {
+      const postMessageEvent = {source: window, data: messageKey};
+      if (postMessageCallback) {
+        postMessageCallback(postMessageEvent);
+      }
+    };
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
@@ -54,7 +79,7 @@ describe('SimpleEventPlugin', function() {
     const child = ReactDOM.findDOMNode(element).firstChild;
 
     ReactTestUtils.SimulateNative.click(child);
-    expect(onClick.mock.calls.length).toBe(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('does not register a click when clicking a child of a disabled element', function() {
@@ -66,7 +91,7 @@ describe('SimpleEventPlugin', function() {
     const child = ReactDOM.findDOMNode(element).querySelector('span');
 
     ReactTestUtils.SimulateNative.click(child);
-    expect(onClick.mock.calls.length).toBe(0);
+    expect(onClick).toHaveBeenCalledTimes(0);
   });
 
   it('triggers click events for children of disabled elements', function() {
@@ -78,7 +103,7 @@ describe('SimpleEventPlugin', function() {
     const child = ReactDOM.findDOMNode(element).querySelector('span');
 
     ReactTestUtils.SimulateNative.click(child);
-    expect(onClick.mock.calls.length).toBe(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('triggers parent captured click events when target is a child of a disabled elements', function() {
@@ -92,7 +117,7 @@ describe('SimpleEventPlugin', function() {
     const child = ReactDOM.findDOMNode(element).querySelector('span');
 
     ReactTestUtils.SimulateNative.click(child);
-    expect(onClick.mock.calls.length).toBe(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('triggers captured click events for children of disabled elements', function() {
@@ -104,7 +129,7 @@ describe('SimpleEventPlugin', function() {
     const child = ReactDOM.findDOMNode(element).querySelector('span');
 
     ReactTestUtils.SimulateNative.click(child);
-    expect(onClick.mock.calls.length).toBe(1);
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   ['button', 'input', 'select', 'textarea'].forEach(function(tagName) {
@@ -221,7 +246,6 @@ describe('SimpleEventPlugin', function() {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.enableAsyncSubtreeAPI = true;
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactDOM = require('react-dom');
     });
@@ -443,7 +467,7 @@ describe('SimpleEventPlugin', function() {
 
       node.dispatchEvent(new MouseEvent('click'));
 
-      expect(onClick.mock.calls.length).toBe(0);
+      expect(onClick).toHaveBeenCalledTimes(0);
     });
 
     it('adds a local click listener to non-interactive elements', function() {
@@ -455,7 +479,7 @@ describe('SimpleEventPlugin', function() {
 
       node.dispatchEvent(new MouseEvent('click'));
 
-      expect(onClick.mock.calls.length).toBe(0);
+      expect(onClick).toHaveBeenCalledTimes(0);
     });
   });
 });

@@ -16,7 +16,11 @@ import lowPriorityWarning from 'shared/lowPriorityWarning';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
-import {getIteratorFn, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  getIteratorFn,
+  REACT_FORWARD_REF_TYPE,
+  REACT_FRAGMENT_TYPE,
+} from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'fbjs/lib/warning';
 
@@ -42,10 +46,20 @@ if (__DEV__) {
       return '#text';
     } else if (typeof element.type === 'string') {
       return element.type;
-    } else if (element.type === REACT_FRAGMENT_TYPE) {
+    }
+
+    const type = element.type;
+    if (type === REACT_FRAGMENT_TYPE) {
       return 'React.Fragment';
+    } else if (
+      typeof type === 'object' &&
+      type !== null &&
+      type.$$typeof === REACT_FORWARD_REF_TYPE
+    ) {
+      const functionName = type.render.displayName || type.render.name || '';
+      return functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef';
     } else {
-      return element.type.displayName || element.type.name || 'Unknown';
+      return type.displayName || type.name || 'Unknown';
     }
   };
 
@@ -213,20 +227,29 @@ function validateChildKeys(node, parentType) {
  * @param {ReactElement} element
  */
 function validatePropTypes(element) {
-  const componentClass = element.type;
-  if (typeof componentClass !== 'function') {
+  const type = element.type;
+  let name, propTypes;
+  if (typeof type === 'function') {
+    // Class or functional component
+    name = type.displayName || type.name;
+    propTypes = type.propTypes;
+  } else if (
+    typeof type === 'object' &&
+    type !== null &&
+    type.$$typeof === REACT_FORWARD_REF_TYPE
+  ) {
+    // ForwardRef
+    const functionName = type.render.displayName || type.render.name || '';
+    name = functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef';
+    propTypes = type.propTypes;
+  } else {
     return;
   }
-  const name = componentClass.displayName || componentClass.name;
-  const propTypes = componentClass.propTypes;
   if (propTypes) {
     currentlyValidatingElement = element;
     checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
     currentlyValidatingElement = null;
-  } else if (
-    componentClass.PropTypes !== undefined &&
-    !propTypesMisspellWarningShown
-  ) {
+  } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
     propTypesMisspellWarningShown = true;
     warning(
       false,
@@ -234,9 +257,9 @@ function validatePropTypes(element) {
       name || 'Unknown',
     );
   }
-  if (typeof componentClass.getDefaultProps === 'function') {
+  if (typeof type.getDefaultProps === 'function') {
     warning(
-      componentClass.getDefaultProps.isReactClassApproved,
+      type.getDefaultProps.isReactClassApproved,
       'getDefaultProps is only used on classic React.createClass ' +
         'definitions. Use a static property named `defaultProps` instead.',
     );

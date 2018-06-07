@@ -18,6 +18,14 @@ export default function forwardRef<Props, ElementType: React$ElementType>(
       'forwardRef requires a render function but was given %s.',
       render === null ? 'null' : typeof render,
     );
+
+    if (render != null) {
+      warning(
+        render.defaultProps == null && render.propTypes == null,
+        'forwardRef render functions do not support propTypes or defaultProps. ' +
+          'Did you accidentally pass a React component?',
+      );
+    }
   }
 
   return {
