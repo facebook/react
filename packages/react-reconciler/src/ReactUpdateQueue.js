@@ -284,8 +284,17 @@ export function enqueueUpdate<State>(
       // Both queues are non-empty. The last update is the same in both lists,
       // because of structural sharing. So, only append to one of the lists.
       appendUpdateToQueue(queue1, update, expirationTime);
-      // But we still need to update the `lastUpdate` pointer of queue2.
+      // But we still need to update the `lastUpdate` pointer of queue2
       queue2.lastUpdate = update;
+      // and update its expiration
+      if (
+        queue2.expirationTime === NoWork ||
+        queue2.expirationTime > expirationTime
+      ) {
+        // The incoming update has the earliest expiration of any update in the
+        // queue. Update the queue's expiration time.
+        queue2.expirationTime = expirationTime;
+      }
     }
   }
 
