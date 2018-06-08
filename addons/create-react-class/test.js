@@ -324,6 +324,20 @@ describe('ReactClass-spec', () => {
     expect(Component.pqr()).toBe(Component);
   });
 
+  it('should work with init method', () => {
+    var Component = createReactClass({
+      init: function() {
+        this._props = 'props';
+      },
+      render() {
+        return <div />
+      }
+    });
+    var instance = <Component />;
+    instance = renderIntoDocument(instance);
+    expect(instance._props).toEqual('props');
+  });
+
   it('should work with object getInitialState() return values', () => {
     var Component = createReactClass({
       getInitialState: function() {
