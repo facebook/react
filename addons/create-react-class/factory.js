@@ -122,6 +122,15 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
     getDefaultProps: 'DEFINE_MANY_MERGED',
 
     /**
+     * Invoked once when instantiating component class. You can define
+     * properties for the instance in this method, etc.
+     * `this.inputRef = React.createRef()`. The return value will be discarded.
+     *
+     * @optional
+     */
+    init: 'DEFINE_ONCE',
+
+    /**
      * Invoked once before the component is mounted. The return value will be used
      * as the initial value of `this.state`.
      *
@@ -831,8 +840,13 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
 
       this.state = null;
 
-      // ReactClasses doesn't have constructors. Instead, they use the
-      // getInitialState and componentWillMount methods for initialization.
+      // Since `componentWillMount` method deprecaded, and React introduced
+      // `createRef` method. We need a method like `constructor` for
+      // defining properties of component instance.
+      // Although you can do the same things in `getInitialState`
+      // but it's not semantic. `constructor` was defined in ReactComponent class
+      // thereby we named 'init'.
+      this.init && this.init();
 
       var initialState = this.getInitialState ? this.getInitialState() : null;
       if (process.env.NODE_ENV !== 'production') {
