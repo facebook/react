@@ -9,25 +9,16 @@
 
 'use strict';
 
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
-import warning from 'fbjs/lib/warning';
-
 // We capture a local reference to any global, in case it gets polyfilled after
 // this module is initially evaluated.
 // We want to be using a consistent implementation.
-const localRequestAnimationFrame = requestAnimationFrame;
+const localRequestAnimationFrame =
+  typeof requestAnimationFrame === 'function'
+    ? requestAnimationFrame
+    : undefined;
 
-if (__DEV__) {
-  if (
-    ExecutionEnvironment.canUseDOM &&
-    typeof localRequestAnimationFrame !== 'function'
-  ) {
-    warning(
-      false,
-      'React depends on requestAnimationFrame. Make sure that you load a ' +
-        'polyfill in older browsers. https://fb.me/react-polyfills',
-    );
-  }
-}
+// The callsites should check if the requestAnimationFrame imported from this module is a function,
+// fire a developer warning if it doesn't exist, and substitute it by a shim in that case
+// (e.g. that throws on call).
 
 export default localRequestAnimationFrame;
