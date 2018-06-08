@@ -43,6 +43,7 @@ export type CallbackIdType = CallbackConfigType;
 
 import requestAnimationFrameForReact from 'shared/requestAnimationFrameForReact';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 // We capture a local reference to any global, in case it gets polyfilled after
@@ -119,8 +120,10 @@ if (!ExecutionEnvironment.canUseDOM) {
     typeof requestAnimationFrameForReact === 'function'
       ? requestAnimationFrameForReact
       : function(callback: Function) {
-          throw new Error(
-            'React depends on requestAnimationFrame, but this shim was called.',
+          invariant(
+            false,
+            'React depends on requestAnimationFrame. Make sure that you load a ' +
+              'polyfill in older browsers. https://fb.me/react-polyfills',
           );
         };
 
