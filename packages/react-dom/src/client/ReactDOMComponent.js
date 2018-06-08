@@ -66,7 +66,9 @@ const HTML = '__html';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
-let getNodeSignature = (node: Node, openTagOnly = false) => '<…>';
+let getTextContentSignature = (textContent: string) => '';
+let getNodeSignatureForDiff = (node: Node, openTagOnly = false) => '<…>';
+let getNodeSignatureForMessage = (node: Node) => '<…>';
 let getTagWithPropsSignature = (tag: string, props: Object) => '<…>';
 let getNodeSurroundingsAndDiff = (
   parentNode: Element | Document,
@@ -92,46 +94,88 @@ let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
 
 if (__DEV__) {
-  getNodeSignature = function(node: Node, openTagOnly = false) {
-    // TODO: How do we want to print quotes inside quotes?
-    // TODO: How do we want to print special characters such as &nbsp;?
+  const NODE_CONTENT_CLIP_LENGTH = 100;
+
+  const clipStringWithEllipsis = function(str: string, clipAtLength: number) {
+    return (
+      str.substring(0, clipAtLength) + (str.length > clipAtLength ? '…' : '')
+    );
+  };
+
+  getTextContentSignature = function(textContent: string) {
+    // TODO: How do we want to print quotes and other special characters inside string quotes?
+    return (
+      "{'" +
+      clipStringWithEllipsis(textContent, NODE_CONTENT_CLIP_LENGTH) +
+      "'}"
+    );
+  };
+
+  const getSpecialNodeSignature = function(node: Node) {
     const nodeType = node.nodeType;
     if (nodeType === COMMENT_NODE) {
-      return '<!--' + node.textContent + '-->';
+      return (
+        '<!--' +
+        clipStringWithEllipsis(node.textContent, NODE_CONTENT_CLIP_LENGTH) +
+        '-->'
+      );
     }
     if (nodeType === TEXT_NODE) {
-      return "{'" + node.textContent + "'}";
+      return getTextContentSignature(node.textContent);
     }
-    if (nodeType !== ELEMENT_NODE) {
-      return node.nodeName;
+    // In normal circumstances, we should only get COMMENT_NODE or TEXT_NODE here.
+    // But while looping over childNodes in getNodeSignatureForDiff, something else can show up.
+    // Below is a safety net if we'll have to display a Node that's not an element, text, or comment.
+    // For example, a PROCESSING_INSTRUCTION_NODE.
+    return (
+      '<?' +
+      node.nodeName +
+      ' ' +
+      clipStringWithEllipsis(node.textContent, NODE_CONTENT_CLIP_LENGTH) +
+      '?>'
+    );
+  };
+
+  const normalizeNodeName = function(nodeName: string) {
+    return nodeName.toLowerCase();
+  };
+
+  getNodeSignatureForMessage = function(node: Node) {
+    if (node.nodeType !== ELEMENT_NODE) {
+      return getSpecialNodeSignature(node);
     }
-    const tag = node.nodeName.toLowerCase();
-    let ret = '<' + tag;
+    return '<' + normalizeNodeName(node.nodeName) + '>';
+  };
+
+  getNodeSignatureForDiff = function(node: Node, openTagOnly = false) {
+    if (node.nodeType !== ELEMENT_NODE) {
+      return getSpecialNodeSignature(node);
+    }
+    const tagName = normalizeNodeName(node.nodeName);
+    let ret = '<' + tagName;
     if (node instanceof Element) {
       const attrs = node.attributes;
       const ic = attrs.length;
       for (let i = 0; i < ic; ++i) {
+        // TODO: Should we process the value with clipStringWithEllipsis?
+        // TODO: How do we want to print quotes and other HTML special characters inside attribute quotes?
         ret += ' ' + attrs[i].name + '="' + attrs[i].value + '"';
       }
     }
     if (openTagOnly) {
       ret += '>';
     } else {
-      const childrenString =
+      const childrenContent =
         node instanceof Element ? node.innerHTML : node.textContent;
-      if (omittedCloseTags.hasOwnProperty(tag)) {
+      if (omittedCloseTags.hasOwnProperty(tagName)) {
         ret += ' />';
       } else {
-        if (childrenString) {
-          ret +=
-            '>' +
-            childrenString.substring(0, 100) +
-            (childrenString.length > 100 ? '…' : '') +
-            '</';
-        } else {
-          ret += '></';
-        }
-        ret += tag + '>';
+        ret +=
+          '>' +
+          clipStringWithEllipsis(childrenContent, NODE_CONTENT_CLIP_LENGTH) +
+          '</' +
+          tagName +
+          '>';
       }
     }
     return ret;
@@ -216,12 +260,13 @@ if (__DEV__) {
     insertProps: Object | null,
     insertText: string | null,
   ) {
-    let ret = '';
+    // Prepending '\n' for readability to separate the diff from the warning message.
+    let ret = '\n';
     const INDENT = '  ';
     const DIFF_ADDED = '\n+ ';
     const DIFF_REMOVED = '\n- ';
     const DIFF_UNCHANGED = '\n  ';
-    ret += DIFF_UNCHANGED + getNodeSignature(parentNode, true);
+    ret += DIFF_UNCHANGED + getNodeSignatureForDiff(parentNode, true);
     let inserted = false;
     const insert = () => {
       if (!inserted) {
@@ -233,36 +278,40 @@ if (__DEV__) {
             getTagWithPropsSignature(insertTag, insertProps || {});
         } else if (typeof insertText === 'string') {
           inserted = true;
-          ret += DIFF_ADDED + INDENT + "{'" + insertText + "'}";
+          ret += DIFF_ADDED + INDENT + getTextContentSignature(insertText);
         }
       }
     };
     const childNodes = parentNode.childNodes;
     const ic = childNodes.length;
-    let skipped = 0;
+    let hydrationSkippedCount = 0;
     for (let i = 0; i < ic; ++i) {
       const node = childNodes[i];
-      // TODO: Copy-paste condition from `getNextHydratableSibling`, reuse?
+      // TODO: Below is a copy-paste of the condition from `getNextHydratableSibling`, how to not repeat ourselves?
       if (
         node &&
         node.nodeType !== ELEMENT_NODE &&
         node.nodeType !== TEXT_NODE
       ) {
-        ++skipped;
+        // Hydration skips other nodeTypes, like COMMENT_NODE, but we display them to provide more contextual info.
+        ret += DIFF_UNCHANGED + INDENT + getNodeSignatureForDiff(node);
+        ++hydrationSkippedCount;
         continue;
       }
-      if (i - skipped === deletedIndex) {
-        ret += DIFF_REMOVED + INDENT + getNodeSignature(node);
+      if (i - hydrationSkippedCount === deletedIndex) {
+        ret += DIFF_REMOVED + INDENT + getNodeSignatureForDiff(node);
       } else {
-        ret += DIFF_UNCHANGED + INDENT + getNodeSignature(node);
+        ret += DIFF_UNCHANGED + INDENT + getNodeSignatureForDiff(node);
       }
-      if (i - skipped === insertedIndex) {
+      if (i - hydrationSkippedCount === insertedIndex) {
         insert();
       }
     }
     insert();
     // TODO: Cannot tell if more sibling React elements were expected to be hydrated after the current one.
-    ret += DIFF_UNCHANGED + '</' + parentNode.nodeName.toLowerCase() + '>';
+    ret += DIFF_UNCHANGED + '</' + normalizeNodeName(parentNode.nodeName) + '>';
+    // Append '\n' for readability to separate the diff from the component stack that follows.
+    ret += '\n';
     return ret;
   };
 
@@ -1354,8 +1403,8 @@ export function warnForDeletedHydratableElement(
     warning(
       false,
       'Did not expect server HTML to contain a %s in %s.%s',
-      getNodeSignature(child),
-      getNodeSignature(parentNode),
+      getNodeSignatureForMessage(child),
+      getNodeSignatureForMessage(parentNode),
       getNodeSurroundingsAndDiff(
         parentNode,
         findNodeIndex(parentNode.childNodes, child),
@@ -1379,9 +1428,9 @@ export function warnForDeletedHydratableText(
     didWarnInvalidHydration = true;
     warning(
       false,
-      "Did not expect server HTML to contain the text node {'%s'} in %s.%s",
-      child.nodeValue,
-      getNodeSignature(parentNode),
+      'Did not expect server HTML to contain the text node %s in %s.%s',
+      getTextContentSignature(child.nodeValue),
+      getNodeSignatureForMessage(parentNode),
       getNodeSurroundingsAndDiff(
         parentNode,
         findNodeIndex(parentNode.childNodes, child),
@@ -1408,9 +1457,9 @@ export function warnForInsertedHydratedElement(
     didWarnInvalidHydration = true;
     warning(
       false,
-      'Expected server HTML to contain a matching %s in %s.%s',
-      getTagWithPropsSignature(tag, props),
-      getNodeSignature(parentNode),
+      'Expected server HTML to contain a matching <%s> in %s.%s',
+      tag,
+      getNodeSignatureForMessage(parentNode),
       getNodeSurroundingsAndDiff(
         parentNode,
         isReplaced ? index : -1,
@@ -1443,9 +1492,9 @@ export function warnForInsertedHydratedText(
     didWarnInvalidHydration = true;
     warning(
       false,
-      "Expected server HTML to contain a matching text node for {'%s'} in %s.%s",
-      text,
-      getNodeSignature(parentNode),
+      'Expected server HTML to contain a matching text node for %s in %s.%s',
+      getTextContentSignature(text),
+      getNodeSignatureForMessage(parentNode),
       getNodeSurroundingsAndDiff(
         parentNode,
         isReplaced ? index : -1,

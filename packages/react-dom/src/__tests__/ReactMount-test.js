@@ -126,12 +126,11 @@ describe('ReactMount', () => {
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
     expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
-      "Warning: Did not expect server HTML to contain the text node {' '}" +
-        ' in <container> <div data-reactroot=""></div></container>.\n' +
+      "Warning: Did not expect server HTML to contain the text node {' '} in <container>.\n\n" +
         '  <container>\n' +
         "-   {' '}\n" +
         '    <div data-reactroot=""></div>\n' +
-        '  </container>\n' +
+        '  </container>\n\n' +
         '    in div (at **)',
     );
   });
@@ -141,12 +140,11 @@ describe('ReactMount', () => {
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
     expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
-      "Warning: Did not expect server HTML to contain the text node {' '}" +
-        ' in <container><div data-reactroot=""></div> </container>.\n' +
+      "Warning: Did not expect server HTML to contain the text node {' '} in <container>.\n\n" +
         '  <container>\n' +
         '    <div data-reactroot=""></div>\n' +
         "-   {' '}\n" +
-        '  </container>',
+        '  </container>\n',
       // Without the component stack here because it's empty: found an unexpected text node directly in the root node.
       {withoutStack: true},
     );
@@ -278,7 +276,7 @@ describe('ReactMount', () => {
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
       <Component>
-        nested{' '}
+        nested{'   '}
         <p>
           children <b>text</b>
         </p>
@@ -286,10 +284,14 @@ describe('ReactMount', () => {
     );
     div.innerHTML = markup;
 
+    expect(div.outerHTML).toEqual(
+      '<div>nested<!-- -->   <p>children <b>text</b></p></div>',
+    );
+
     expect(() =>
       ReactDOM.hydrate(
         <Component>
-          nested{' '}
+          nested{'   '}
           <div>
             children <b>text</b>
           </div>
@@ -297,14 +299,14 @@ describe('ReactMount', () => {
         div,
       ),
     ).toWarnDev(
-      "Warning: Expected server HTML to contain a matching <div>{['children ', …]}</div>" +
-        ' in <div>nested<!-- --> <p>children <b>text</b></p></div>.\n' +
+      'Warning: Expected server HTML to contain a matching <div> in <div>.\n\n' +
         '  <div>\n' +
         "    {'nested'}\n" +
-        "    {' '}\n" +
+        '    <!-- -->\n' +
+        "    {'   '}\n" +
         '-   <p>children <b>text</b></p>\n' +
         "+   <div>{['children ', …]}</div>\n" +
-        '  </div>\n' +
+        '  </div>\n\n' +
         '    in div (at **)\n' +
         '    in Component (at **)',
     );
@@ -322,7 +324,7 @@ describe('ReactMount', () => {
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
       <Component>
-        nested{' '}
+        nested{'   '}
         <p>
           children <b>text</b>
         </p>
@@ -330,10 +332,14 @@ describe('ReactMount', () => {
     );
     div.innerHTML = markup;
 
+    expect(div.outerHTML).toEqual(
+      '<div>nested<!-- -->   <p>children <b>text</b></p></div>',
+    );
+
     expect(() =>
       ReactDOM.hydrate(
         <Component>
-          nested{' '}
+          nested{'   '}
           <p>
             children <b>text</b>
           </p>
@@ -344,14 +350,14 @@ describe('ReactMount', () => {
         div,
       ),
     ).toWarnDev(
-      "Warning: Expected server HTML to contain a matching <div>{['children ', …]}</div>" +
-        ' in <div>nested<!-- --> <p>children <b>text</b></p></div>.\n' +
+      'Warning: Expected server HTML to contain a matching <div> in <div>.\n\n' +
         '  <div>\n' +
         "    {'nested'}\n" +
-        "    {' '}\n" +
+        '    <!-- -->\n' +
+        "    {'   '}\n" +
         '    <p>children <b>text</b></p>\n' +
         "+   <div>{['children ', …]}</div>\n" +
-        '  </div>\n' +
+        '  </div>\n\n' +
         '    in div (at **)\n' +
         '    in Component (at **)',
     );
@@ -498,15 +504,13 @@ describe('ReactMount', () => {
         div,
       ),
     ).toWarnDev(
-      'Warning: Did not expect server HTML to contain a <br />' +
-        ' in <div data-ssr-mismatch-test-hydrate-root="">SSRMismatchTest first text' +
-        '<br><br>SSRMismatchTest second text</div>.\n' +
+      'Warning: Did not expect server HTML to contain a <br> in <div>.\n\n' +
         '  <div data-ssr-mismatch-test-hydrate-root="">\n' +
         "    {'SSRMismatchTest first text'}\n" +
         '    <br />\n' +
         '-   <br />\n' +
         "    {'SSRMismatchTest second text'}\n" +
-        '  </div>',
+        '  </div>\n',
       // Without the component stack here because it's empty: rendering a text node directly into the root node.
       {withoutStack: true},
     );
@@ -537,9 +541,7 @@ describe('ReactMount', () => {
         div,
       ),
     ).toWarnDev(
-      'Warning: Did not expect server HTML to contain a <div>SSRMismatchTest default text</div>' +
-        ' in <div data-reactroot=""><div>SSRMismatchTest default text</div><span></span>' +
-        '<div data-ssr-mismatch-padding-after=""></div><d…</div>.\n' +
+      'Warning: Did not expect server HTML to contain a <div> in <div>.\n\n' +
         '  <div data-reactroot="">\n' +
         '-   <div>SSRMismatchTest default text</div>\n' +
         '    <span></span>\n' +
@@ -548,7 +550,7 @@ describe('ReactMount', () => {
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
-        '  </div>\n' +
+        '  </div>\n\n' +
         '    in span (at **)\n' +
         '    in div (at **)',
     );
@@ -573,9 +575,7 @@ describe('ReactMount', () => {
     expect(() =>
       ReactDOM.hydrate([<br key={1} />, 'SSRMismatchTest default text'], div),
     ).toWarnDev(
-      "Warning: Did not expect server HTML to contain the text node {'SSRMismatchTest server text'}" +
-        ' in <div data-ssr-mismatch-test-hydrate-root="">SSRMismatchTest server text' +
-        '<br>SSRMismatchTest default text<div data-ssr-mismatch-padding-after=""><…</div>.\n' +
+      "Warning: Did not expect server HTML to contain the text node {'SSRMismatchTest server text'} in <div>.\n\n" +
         '  <div data-ssr-mismatch-test-hydrate-root="">\n' +
         "-   {'SSRMismatchTest server text'}\n" +
         '    <br />\n' +
@@ -585,7 +585,7 @@ describe('ReactMount', () => {
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
-        '  </div>\n' +
+        '  </div>\n\n' +
         '    in br (at **)',
     );
   });
@@ -615,9 +615,7 @@ describe('ReactMount', () => {
         div,
       ),
     ).toWarnDev(
-      "Warning: Did not expect server HTML to contain the text node {'SSRMismatchTest server text'}" +
-        ' in <div data-reactroot="">SSRMismatchTest server text<span></span>' +
-        '<div data-ssr-mismatch-padding-after=""></div><div data-ssr-…</div>.\n' +
+      "Warning: Did not expect server HTML to contain the text node {'SSRMismatchTest server text'} in <div>.\n\n" +
         '  <div data-reactroot="">\n' +
         "-   {'SSRMismatchTest server text'}\n" +
         '    <span></span>\n' +
@@ -626,7 +624,7 @@ describe('ReactMount', () => {
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
-        '  </div>\n' +
+        '  </div>\n\n' +
         '    in span (at **)\n' +
         '    in div (at **)',
     );
@@ -642,12 +640,11 @@ describe('ReactMount', () => {
     expect(() =>
       ReactDOM.hydrate(<span>SSRMismatchTest default text</span>, div),
     ).toWarnDev(
-      'Warning: Expected server HTML to contain a matching <span>SSRMismatchTest default text</span>' +
-        ' in <div>SSRMismatchTest default text</div>.\n' +
+      'Warning: Expected server HTML to contain a matching <span> in <div>.\n\n' +
         '  <div>\n' +
         "-   {'SSRMismatchTest default text'}\n" +
         '+   <span>SSRMismatchTest default text</span>\n' +
-        '  </div>\n' +
+        '  </div>\n\n' +
         '    in span (at **)',
     );
   });
@@ -671,12 +668,11 @@ describe('ReactMount', () => {
         div,
       ),
     ).toWarnDev(
-      'Warning: Expected server HTML to contain a matching <p>SSRMismatchTest default text</p>' +
-        ' in <div data-reactroot=""><em>SSRMismatchTest default text</em></div>.\n' +
+      'Warning: Expected server HTML to contain a matching <p> in <div>.\n\n' +
         '  <div data-reactroot="">\n' +
         '-   <em>SSRMismatchTest default text</em>\n' +
         '+   <p>SSRMismatchTest default text</p>\n' +
-        '  </div>\n' +
+        '  </div>\n\n' +
         '    in p (at **)\n' +
         '    in div (at **)',
     );
@@ -694,8 +690,12 @@ describe('ReactMount', () => {
     expect(() =>
       ReactDOM.hydrate('SSRMismatchTest default text', div),
     ).toWarnDev(
-      "Warning: Expected server HTML to contain a matching text node for {'SSRMismatchTest default text'}" +
-        ' in <div><span data-reactroot="">SSRMismatchTest default text</span></div>.',
+      'Warning: Expected server HTML to contain a matching text node' +
+        " for {'SSRMismatchTest default text'} in <div>.\n\n" +
+        '  <div>\n' +
+        '-   <span data-reactroot="">SSRMismatchTest default text</span>\n' +
+        "+   {'SSRMismatchTest default text'}\n" +
+        '  </div>\n',
       // Without the component stack here because it's empty: rendering a text node directly into the root node.
       {withoutStack: true},
     );
@@ -728,9 +728,8 @@ describe('ReactMount', () => {
         div,
       ),
     ).toWarnDev(
-      "Warning: Expected server HTML to contain a matching text node for {'SSRMismatchTest client text'}" +
-        ' in <div data-reactroot=""><span></span><span></span>' +
-        '<div data-ssr-mismatch-padding-after=""></div><div data-ssr-mismatch-paddi…</div>.\n' +
+      'Warning: Expected server HTML to contain a matching text node' +
+        " for {'SSRMismatchTest client text'} in <div>.\n\n" +
         '  <div data-reactroot="">\n' +
         '    <span></span>\n' +
         '-   <span></span>\n' +
@@ -740,7 +739,73 @@ describe('ReactMount', () => {
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
         '    <div data-ssr-mismatch-padding-after=""></div>\n' +
-        '  </div>\n' +
+        '  </div>\n\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when hydrate inserts an element after a comment node', () => {
+    const div = document.createElement('div');
+    div.innerHTML = '<div><!-- a comment --></div>';
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div>
+          <span />
+        </div>,
+        div,
+      ),
+    ).toWarnDev(
+      'Warning: Expected server HTML to contain a matching <span> in <div>.\n\n' +
+        '  <div>\n' +
+        '    <!-- a comment -->\n' +
+        '+   <span></span>\n' +
+        '  </div>\n\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when hydrate replaces an element after a comment node', () => {
+    const div = document.createElement('div');
+    div.innerHTML = '<div><!-- a comment --><div></div></div>';
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div>
+          <span />
+          <div />
+        </div>,
+        div,
+      ),
+    ).toWarnDev(
+      'Warning: Expected server HTML to contain a matching <span> in <div>.\n\n' +
+        '  <div>\n' +
+        '    <!-- a comment -->\n' +
+        '-   <div></div>\n' +
+        '+   <span></span>\n' +
+        '  </div>\n\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn when hydrate inserts an element after a node that is not an element, text, or comment', () => {
+    // This is an artificial test case to check how we print weird nodes if they somehow end up in the DOM.
+    const xml = document.createElement('xml');
+    xml.appendChild(
+      document.createProcessingInstruction(
+        'dom-processing-instruction',
+        'content',
+      ),
+    );
+
+    expect(() => ReactDOM.hydrate(<div />, xml)).toWarnDev(
+      'Warning: Expected server HTML to contain a matching <div> in <xml>.\n\n' +
+        '  <xml>\n' +
+        '    <?dom-processing-instruction content?>\n' +
+        '+   <div></div>\n' +
+        '  </xml>\n\n' +
         '    in div (at **)',
     );
   });

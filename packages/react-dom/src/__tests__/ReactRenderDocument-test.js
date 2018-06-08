@@ -372,11 +372,11 @@ describe('rendering React components at document', () => {
       const container = document.createElement('div');
       container.textContent = 'potato';
       expect(() => ReactDOM.hydrate(<div>parsnip</div>, container)).toWarnDev(
-        'Warning: Expected server HTML to contain a matching <div>parsnip</div> in <div>potato</div>.\n' +
+        'Warning: Expected server HTML to contain a matching <div> in <div>.\n\n' +
           '  <div>\n' +
           "-   {'potato'}\n" +
           '+   <div>parsnip</div>\n' +
-          '  </div>\n' +
+          '  </div>\n\n' +
           '    in div (at **)',
       );
       expect(container.textContent).toBe('parsnip');
@@ -388,12 +388,11 @@ describe('rendering React components at document', () => {
       expect(() =>
         ReactDOM.hydrate(<div>{['parsnip', 'carrot']}</div>, container),
       ).toWarnDev(
-        "Warning: Expected server HTML to contain a matching <div>{['parsnip', 'carrot']}</div>" +
-          ' in <div>potato</div>.\n' +
+        'Warning: Expected server HTML to contain a matching <div> in <div>.\n\n' +
           '  <div>\n' +
           "-   {'potato'}\n" +
           "+   <div>{['parsnip', 'carrot']}</div>\n" +
-          '  </div>\n' +
+          '  </div>\n\n' +
           '    in div (at **)',
       );
       expect(container.textContent).toBe('parsnipcarrot');
@@ -446,12 +445,11 @@ describe('rendering React components at document', () => {
       expect(() =>
         ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
       ).toWarnDev(
-        'Warning: Did not expect server HTML to contain a <meta charset="utf-8" />' +
-          ' in <head><meta charset="utf-8"><title>test doc</title></head>.\n' +
+        'Warning: Did not expect server HTML to contain a <meta> in <head>.\n\n' +
           '  <head>\n' +
           '-   <meta charset="utf-8" />\n' +
           '    <title>test doc</title>\n' +
-          '  </head>\n' +
+          '  </head>\n\n' +
           '    in title (at **)\n' +
           '    in head (at **)\n' +
           '    in html (at **)\n' +
@@ -488,14 +486,12 @@ describe('rendering React components at document', () => {
       expect(() =>
         ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
       ).toWarnDev(
-        'Warning: Did not expect server HTML to contain a <meta charset="utf-8" />' +
-          ' in <head><meta charset="utf-8"><title>' +
-          'test doc long title long title long title long title long title long ti…</head>.\n' +
+        'Warning: Did not expect server HTML to contain a <meta> in <head>.\n\n' +
           '  <head>\n' +
           '-   <meta charset="utf-8" />\n' +
           '    <title>test doc long title long title long title long title long title' +
           ' long title long title long title lon…</title>\n' +
-          '  </head>\n' +
+          '  </head>\n\n' +
           '    in title (at **)\n' +
           '    in head (at **)\n' +
           '    in html (at **)\n' +
