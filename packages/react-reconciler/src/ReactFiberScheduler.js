@@ -1768,7 +1768,6 @@ function performWorkOnRoot(
       // This root is already complete. We can commit it.
       completeRoot(root, finishedWork, expirationTime);
     } else {
-      root.finishedWork = null;
       finishedWork = renderRoot(root, expirationTime, false);
       if (finishedWork !== null) {
         // We've completed the root. Commit it.
@@ -1782,7 +1781,6 @@ function performWorkOnRoot(
       // This root is already complete. We can commit it.
       completeRoot(root, finishedWork, expirationTime);
     } else {
-      root.finishedWork = null;
       finishedWork = renderRoot(root, expirationTime, true);
       if (finishedWork !== null) {
         // We've completed the root. Check the deadline one more time
