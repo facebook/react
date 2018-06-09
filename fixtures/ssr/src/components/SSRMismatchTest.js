@@ -324,7 +324,7 @@ export default class SSRMismatchTest extends Component {
             ))}
           </ol>
         </div>
-        {content}
+        <div className="SSRMismatchTest__placeholder">{content}</div>
       </div>
     );
   }
