@@ -83,7 +83,12 @@ export function restoreSelection(priorSelectionInformation) {
       }
     }
 
-    focusNode(priorFocusedElem);
+    try {
+      priorFocusedElem.focus();
+    } catch (e) {
+      // The SVGElement don't have a focus method in IE11
+      focusNode(priorFocusedElem);
+    }
 
     for (let i = 0; i < ancestors.length; i++) {
       const info = ancestors[i];
