@@ -20,7 +20,7 @@ export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-export const enableProfilerTimer = __DEV__ || __PROFILE__;
+export const enableProfilerTimer = __PROFILE__;
 export const fireGetDerivedStateFromPropsOnStateUpdates = true;
 
 // Only used in www builds.
