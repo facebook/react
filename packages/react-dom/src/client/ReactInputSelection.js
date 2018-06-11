@@ -6,7 +6,6 @@
  */
 
 import containsNode from 'fbjs/lib/containsNode';
-import focusNode from 'fbjs/lib/focusNode';
 import getActiveElement from 'fbjs/lib/getActiveElement';
 
 import * as ReactDOMSelection from './ReactDOMSelection';
@@ -85,9 +84,6 @@ export function restoreSelection(priorSelectionInformation) {
 
     if (typeof priorFocusedElem.focus === 'function') {
       priorFocusedElem.focus();
-    } else {
-      // The SVGElement don't have a focus method in IE11
-      focusNode(priorFocusedElem);
     }
 
     for (let i = 0; i < ancestors.length; i++) {
