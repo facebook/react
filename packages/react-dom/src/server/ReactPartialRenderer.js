@@ -689,14 +689,23 @@ class ReactDOMServerRenderer {
     this.providerStack[this.providerIndex] = null;
     this.providerIndex -= 1;
     const context: ReactContext<any> = provider.type._context;
-    if (this.providerIndex < 0) {
-      context._currentValue = context._defaultValue;
+
+    // Find the closest parent provider of the same type and use its value.
+    // TODO: it would be nice to avoid this being O(N).
+    let contextPriorProvider = null;
+    for (let i = this.providerIndex; i >= 0; i--) {
+      // We assume this Flow type is correct because of the index check above
+      // and because pushProvider() enforces the correct type.
+      const priorProvider: ReactProvider<any> = (this.providerStack[i]: any);
+      if (priorProvider.type === provider.type) {
+        contextPriorProvider = priorProvider;
+        break;
+      }
+    }
+    if (contextPriorProvider !== null) {
+      context._currentValue = contextPriorProvider.props.value;
     } else {
-      // We assume this type is correct because of the index check above.
-      const previousProvider: ReactProvider<any> = (this.providerStack[
-        this.providerIndex
-      ]: any);
-      context._currentValue = previousProvider.props.value;
+      context._currentValue = context._defaultValue;
     }
   }
 
