@@ -1215,11 +1215,9 @@ function ChildReconciler(shouldTrackSideEffects) {
       newChild.key === null
     ) {
       newChild = newChild.props.children;
-
-      // In case of an empty fragment, this is undefined. Since we crash when
-      // undefined is reconciled, we bail out early.
-      if (typeof newChild === 'undefined') {
-        return deleteRemainingChildren(returnFiber, currentFirstChild);
+      // Allow empty <Fragment /> without an invariant about top-level undefined.
+      if (newChild === undefined) {
+        newChild = null;
       }
     }
 
