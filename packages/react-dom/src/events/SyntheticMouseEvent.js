@@ -43,7 +43,7 @@ const SyntheticMouseEvent = SyntheticUIEvent.extend({
     }
 
     const screenX = previousScreenX;
-    previousScreenX = event.ScreenX;
+    previousScreenX = event.screenX;
     return screenX ? event.screenX - screenX : 0;
   },
   movementY: function(event) {
