@@ -152,14 +152,12 @@ const {
   clearCaughtError,
 } = ReactErrorUtils;
 
-let didWarnAboutStateTransition;
-let didWarnSetStateChildContext;
 let warnAboutUpdateOnUnmounted;
 let warnAboutInvalidUpdates;
 
 if (__DEV__) {
-  didWarnAboutStateTransition = false;
-  didWarnSetStateChildContext = false;
+  const didWarnAboutStateTransition = {};
+  const didWarnSetStateChildContext = {};
   const didWarnStateUpdateForUnmountedComponent = {};
 
   warnAboutUpdateOnUnmounted = function(fiber: Fiber) {
@@ -180,20 +178,22 @@ if (__DEV__) {
     didWarnStateUpdateForUnmountedComponent[componentName] = true;
   };
 
-  warnAboutInvalidUpdates = function(instance: React$Component<any>) {
+  warnAboutInvalidUpdates = function(fiber: Fiber) {
+    const componentName = getComponentName(fiber) || 'ReactClass';
     switch (ReactDebugCurrentFiber.phase) {
       case 'getChildContext':
-        if (didWarnSetStateChildContext) {
+        if (didWarnSetStateChildContext[componentName]) {
           return;
         }
         warning(
           false,
-          'setState(...): Cannot call setState() inside getChildContext()',
+          'setState(...): Cannot call setState() inside getChildContext().%s',
+          getStackAddendumByWorkInProgressFiber(fiber),
         );
-        didWarnSetStateChildContext = true;
+        didWarnSetStateChildContext[componentName] = true;
         break;
       case 'render':
-        if (didWarnAboutStateTransition) {
+        if (didWarnAboutStateTransition[componentName]) {
           return;
         }
         warning(
@@ -201,9 +201,10 @@ if (__DEV__) {
           'Cannot update during an existing state transition (such as within ' +
             "`render` or another component's constructor). Render methods should " +
             'be a pure function of props and state; constructor side-effects are ' +
-            'an anti-pattern, but can be moved to `componentWillMount`.',
+            'an anti-pattern, but can be moved to `getDerivedStateFromProps`.%s',
+          getStackAddendumByWorkInProgressFiber(fiber),
         );
-        didWarnAboutStateTransition = true;
+        didWarnAboutStateTransition[componentName] = true;
         break;
     }
   };
@@ -1320,8 +1321,7 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
 
   if (__DEV__) {
     if (fiber.tag === ClassComponent) {
-      const instance = fiber.stateNode;
-      warnAboutInvalidUpdates(instance);
+      warnAboutInvalidUpdates(fiber);
     }
   }
 
