@@ -1520,51 +1520,6 @@ describe('ReactIncremental', () => {
     expect(ReactNoop.flush()).toEqual(['Child']);
   });
 
-  it('does not call getDerivedStateFromProps for state-only updates if feature flag is disabled', () => {
-    jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-    ReactFeatureFlags.fireGetDerivedStateFromPropsOnStateUpdates = false;
-    React = require('react');
-    ReactNoop = require('react-noop-renderer');
-
-    let ops = [];
-    let instance;
-
-    class LifeCycle extends React.Component {
-      state = {};
-      static getDerivedStateFromProps(props, prevState) {
-        ops.push('getDerivedStateFromProps');
-        return {foo: 'foo'};
-      }
-      changeState() {
-        this.setState({foo: 'bar'});
-      }
-      componentDidUpdate() {
-        ops.push('componentDidUpdate');
-      }
-      render() {
-        ops.push('render');
-        instance = this;
-        return null;
-      }
-    }
-
-    ReactNoop.render(<LifeCycle />);
-    ReactNoop.flush();
-
-    expect(ops).toEqual(['getDerivedStateFromProps', 'render']);
-    expect(instance.state).toEqual({foo: 'foo'});
-
-    ops = [];
-
-    instance.changeState();
-    ReactNoop.flush();
-
-    expect(ops).toEqual(['render', 'componentDidUpdate']);
-    expect(instance.state).toEqual({foo: 'bar'});
-  });
-
   xit('does not call componentWillReceiveProps for state-only updates', () => {
     let ops = [];
 

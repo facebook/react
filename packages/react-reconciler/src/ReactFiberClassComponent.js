@@ -15,7 +15,6 @@ import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
-  fireGetDerivedStateFromPropsOnStateUpdates,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
@@ -949,14 +948,12 @@ function updateClassInstance(
   }
 
   if (typeof getDerivedStateFromProps === 'function') {
-    if (fireGetDerivedStateFromPropsOnStateUpdates || oldProps !== newProps) {
-      applyDerivedStateFromProps(
-        workInProgress,
-        getDerivedStateFromProps,
-        newProps,
-      );
-      newState = workInProgress.memoizedState;
-    }
+    applyDerivedStateFromProps(
+      workInProgress,
+      getDerivedStateFromProps,
+      newProps,
+    );
+    newState = workInProgress.memoizedState;
   }
 
   const shouldUpdate =
