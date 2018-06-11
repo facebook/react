@@ -39,9 +39,6 @@ export const warnAboutLegacyContextAPI = false;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
-// Fires getDerivedStateFromProps for state *or* props changes
-export const fireGetDerivedStateFromPropsOnStateUpdates = true;
-
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');
