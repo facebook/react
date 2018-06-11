@@ -1208,17 +1208,13 @@ function ChildReconciler(shouldTrackSideEffects) {
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
-    if (
+    const isUnkeyedTopLevelFragment =
       typeof newChild === 'object' &&
       newChild !== null &&
       newChild.type === REACT_FRAGMENT_TYPE &&
-      newChild.key === null
-    ) {
+      newChild.key === null;
+    if (isUnkeyedTopLevelFragment) {
       newChild = newChild.props.children;
-      // Allow empty <Fragment /> without an invariant about top-level undefined.
-      if (newChild === undefined) {
-        newChild = null;
-      }
     }
 
     // Handle object types
@@ -1285,7 +1281,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         warnOnFunctionType();
       }
     }
-    if (typeof newChild === 'undefined') {
+    if (typeof newChild === 'undefined' && !isUnkeyedTopLevelFragment) {
       // If the new child is undefined, and the return fiber is a composite
       // component, throw an error. If Fiber return types are disabled,
       // we already threw above.
