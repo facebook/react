@@ -199,4 +199,48 @@ describe('ReactTestRendererTraversal', () => {
     expect(nestedViews[1].parent).toBe(expectedParent);
     expect(nestedViews[2].parent).toBe(expectedParent);
   });
+
+  it('can have special nodes as roots', () => {
+    const FR = React.forwardRef(props => <section {...props} />);
+    expect(
+      ReactTestRenderer.create(
+        <FR>
+          <div />
+          <div />
+        </FR>,
+      ).root.findAllByType('div').length,
+    ).toBe(2);
+    expect(
+      ReactTestRenderer.create(
+        <React.Fragment>
+          <div />
+          <div />
+        </React.Fragment>,
+      ).root.findAllByType('div').length,
+    ).toBe(2);
+    expect(
+      ReactTestRenderer.create(
+        <React.Fragment key="foo">
+          <div />
+          <div />
+        </React.Fragment>,
+      ).root.findAllByType('div').length,
+    ).toBe(2);
+    expect(
+      ReactTestRenderer.create(
+        <React.StrictMode>
+          <div />
+          <div />
+        </React.StrictMode>,
+      ).root.findAllByType('div').length,
+    ).toBe(2);
+    expect(
+      ReactTestRenderer.create(
+        <Context.Provider>
+          <div />
+          <div />
+        </Context.Provider>,
+      ).root.findAllByType('div').length,
+    ).toBe(2);
+  });
 });
