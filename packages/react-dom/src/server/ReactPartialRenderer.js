@@ -641,8 +641,10 @@ class ReactDOMServerRenderer {
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
 
-  providerStack: Array<?ReactProvider<any>>;
-  providerIndex: number;
+  contextIndex: number;
+  contextStack: Array<ReactContext<any>>;
+  contextValueStack: Array<any>;
+  contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
     const flatChildren = flattenTopLevelChildren(children);
@@ -667,46 +669,65 @@ class ReactDOMServerRenderer {
     this.makeStaticMarkup = makeStaticMarkup;
 
     // Context (new API)
-    this.providerStack = []; // Stack of provider objects
-    this.providerIndex = -1;
+    this.contextIndex = -1;
+    this.contextStack = [];
+    this.contextValueStack = [];
+    if (__DEV__) {
+      this.contextProviderStack = [];
+    }
   }
 
+  /**
+   * Note: We use just two stacks regardless of how many context providers you have.
+   * Providers are always popped in the reverse order to how they were pushed
+   * so we always know on the way down which provider you'll encounter next on the way up.
+   * On the way down, we push the current provider, and its context value *before*
+   * we mutated it, onto the stacks. Therefore, on the way up, we always know which
+   * provider needs to be "restored" to which value.
+   * https://github.com/facebook/react/pull/12985#issuecomment-396301248
+   */
+
   pushProvider<T>(provider: ReactProvider<T>): void {
-    this.providerIndex += 1;
-    this.providerStack[this.providerIndex] = provider;
+    const index = ++this.contextIndex;
     const context: ReactContext<any> = provider.type._context;
+    const previousValue = context._currentValue;
+
+    // Remember which value to restore this context to on our way up.
+    this.contextStack[index] = context;
+    this.contextValueStack[index] = previousValue;
+    if (__DEV__) {
+      // Only used for push/pop mismatch warnings.
+      (this.contextProviderStack: any)[index] = provider;
+    }
+
+    // Mutate the current value.
     context._currentValue = provider.props.value;
   }
 
   popProvider<T>(provider: ReactProvider<T>): void {
+    const index = this.contextIndex;
     if (__DEV__) {
       warning(
-        this.providerIndex > -1 &&
-          provider === this.providerStack[this.providerIndex],
+        index > -1 && provider === (this.contextProviderStack: any)[index],
         'Unexpected pop.',
       );
     }
-    this.providerStack[this.providerIndex] = null;
-    this.providerIndex -= 1;
-    const context: ReactContext<any> = provider.type._context;
 
-    // Find the closest parent provider of the same type and use its value.
-    // TODO: it would be nice to avoid this being O(N).
-    let contextPriorProvider = null;
-    for (let i = this.providerIndex; i >= 0; i--) {
-      // We assume this Flow type is correct because of the index check above
-      // and because pushProvider() enforces the correct type.
-      const priorProvider: ReactProvider<any> = (this.providerStack[i]: any);
-      if (priorProvider.type === provider.type) {
-        contextPriorProvider = priorProvider;
-        break;
-      }
+    const context: ReactContext<any> = this.contextStack[index];
+    const previousValue = this.contextValueStack[index];
+
+    // "Hide" these null assignments from Flow by using `any`
+    // because conceptually they are deletions--as long as we
+    // promise to never access values beyond `this.contextIndex`.
+    this.contextStack[index] = (null: any);
+    this.contextValueStack[index] = (null: any);
+    if (__DEV__) {
+      (this.contextProviderStack: any)[index] = (null: any);
     }
-    if (contextPriorProvider !== null) {
-      context._currentValue = contextPriorProvider.props.value;
-    } else {
-      context._currentValue = context._defaultValue;
-    }
+    this.contextIndex--;
+
+    // Restore to the previous value we stored as we were walking down.
+    context._currentValue = previousValue;
   }
 
   read(bytes: number): string | null {
