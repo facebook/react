@@ -10,6 +10,7 @@ const FB_WWW_DEV = bundleTypes.FB_WWW_DEV;
 const FB_WWW_PROD = bundleTypes.FB_WWW_PROD;
 const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
 const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
+const RN_OSS_PROFILING = bundleTypes.RN_OSS_PROFILING;
 const RN_FB_DEV = bundleTypes.RN_FB_DEV;
 const RN_FB_PROD = bundleTypes.RN_FB_PROD;
 const RENDERER = moduleTypes.RENDERER;
@@ -45,6 +46,7 @@ const forks = Object.freeze({
             return 'shared/forks/ReactFeatureFlags.native-fb.js';
           case RN_OSS_DEV:
           case RN_OSS_PROD:
+          case RN_OSS_PROFILING:
             return 'shared/forks/ReactFeatureFlags.native-oss.js';
           default:
             throw Error(
@@ -58,6 +60,7 @@ const forks = Object.freeze({
             return 'shared/forks/ReactFeatureFlags.native-fabric-fb.js';
           case RN_OSS_DEV:
           case RN_OSS_PROD:
+          case RN_OSS_PROFILING:
             return 'shared/forks/ReactFeatureFlags.native-fabric-oss.js';
           default:
             throw Error(
@@ -143,6 +146,7 @@ const forks = Object.freeze({
         return 'react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
       case RN_OSS_DEV:
       case RN_OSS_PROD:
+      case RN_OSS_PROFILING:
       case RN_FB_DEV:
       case RN_FB_PROD:
         switch (entry) {

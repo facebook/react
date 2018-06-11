@@ -39,10 +39,12 @@ const {
   UMD_PROD,
   NODE_DEV,
   NODE_PROD,
+  NODE_PROFILING,
   FB_WWW_DEV,
   FB_WWW_PROD,
   RN_OSS_DEV,
   RN_OSS_PROD,
+  RN_OSS_PROFILING,
   RN_FB_DEV,
   RN_FB_PROD,
 } = Bundles.bundleTypes;
@@ -95,6 +97,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
       });
     case RN_OSS_DEV:
     case RN_OSS_PROD:
+    case RN_OSS_PROFILING:
     case RN_FB_DEV:
     case RN_FB_PROD:
       return Object.assign({}, options, {
@@ -107,6 +110,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
     case UMD_PROD:
     case NODE_DEV:
     case NODE_PROD:
+    case NODE_PROFILING:
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Use object-assign polyfill in open source
@@ -152,10 +156,12 @@ function getFormat(bundleType) {
       return `umd`;
     case NODE_DEV:
     case NODE_PROD:
+    case NODE_PROFILING:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case RN_OSS_DEV:
     case RN_OSS_PROD:
+    case RN_OSS_PROFILING:
     case RN_FB_DEV:
     case RN_FB_PROD:
       return `cjs`;
@@ -174,6 +180,8 @@ function getFilename(name, globalName, bundleType) {
       return `${name}.development.js`;
     case NODE_PROD:
       return `${name}.production.min.js`;
+    case NODE_PROFILING:
+      return `${name}.profiling.min.js`;
     case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
@@ -182,6 +190,8 @@ function getFilename(name, globalName, bundleType) {
     case RN_OSS_PROD:
     case RN_FB_PROD:
       return `${globalName}-prod.js`;
+    case RN_OSS_PROFILING:
+      return `${globalName}-profiling.js`;
   }
 }
 
@@ -195,9 +205,32 @@ function isProductionBundleType(bundleType) {
       return false;
     case UMD_PROD:
     case NODE_PROD:
+    case NODE_PROFILING:
     case FB_WWW_PROD:
     case RN_OSS_PROD:
+    case RN_OSS_PROFILING:
     case RN_FB_PROD:
+      return true;
+    default:
+      throw new Error(`Unknown type: ${bundleType}`);
+  }
+}
+
+function isProfilingBundleType(bundleType) {
+  switch (bundleType) {
+    case FB_WWW_DEV:
+    case FB_WWW_PROD:
+    case NODE_DEV:
+    case NODE_PROD:
+    case RN_FB_DEV:
+    case RN_FB_PROD:
+    case RN_OSS_DEV:
+    case RN_OSS_PROD:
+    case UMD_DEV:
+    case UMD_PROD:
+      return false;
+    case NODE_PROFILING:
+    case RN_OSS_PROFILING:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -218,11 +251,13 @@ function getPlugins(
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const forks = Modules.getForks(bundleType, entry, moduleType);
   const isProduction = isProductionBundleType(bundleType);
+  const isProfiling = isProfilingBundleType(bundleType);
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_WWW_DEV || bundleType === FB_WWW_PROD;
   const isRNBundle =
     bundleType === RN_OSS_DEV ||
     bundleType === RN_OSS_PROD ||
+    bundleType === RN_OSS_PROFILING ||
     bundleType === RN_FB_DEV ||
     bundleType === RN_FB_PROD;
   const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
@@ -255,6 +290,7 @@ function getPlugins(
     // Turn __DEV__ and process.env checks into constants.
     replace({
       __DEV__: isProduction ? 'false' : 'true',
+      __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
     }),
     // We still need CommonJS for external deps like object-assign.
@@ -508,10 +544,12 @@ async function buildEverything() {
     await createBundle(bundle, UMD_PROD);
     await createBundle(bundle, NODE_DEV);
     await createBundle(bundle, NODE_PROD);
+    await createBundle(bundle, NODE_PROFILING);
     await createBundle(bundle, FB_WWW_DEV);
     await createBundle(bundle, FB_WWW_PROD);
     await createBundle(bundle, RN_OSS_DEV);
     await createBundle(bundle, RN_OSS_PROD);
+    await createBundle(bundle, RN_OSS_PROFILING);
     await createBundle(bundle, RN_FB_DEV);
     await createBundle(bundle, RN_FB_PROD);
   }

@@ -14,10 +14,12 @@ const {
   UMD_PROD,
   NODE_DEV,
   NODE_PROD,
+  NODE_PROFILING,
   FB_WWW_DEV,
   FB_WWW_PROD,
   RN_OSS_DEV,
   RN_OSS_PROD,
+  RN_OSS_PROFILING,
   RN_FB_DEV,
   RN_FB_PROD,
 } = Bundles.bundleTypes;
@@ -33,6 +35,7 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
   switch (bundleType) {
     case NODE_DEV:
     case NODE_PROD:
+    case NODE_PROFILING:
       return [`build/node_modules/${packageName}/cjs/${filename}`];
     case UMD_DEV:
     case UMD_PROD:
@@ -45,6 +48,7 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
       return [`build/facebook-www/${filename}`];
     case RN_OSS_DEV:
     case RN_OSS_PROD:
+    case RN_OSS_PROFILING:
       switch (packageName) {
         case 'react-native-renderer':
           return [`build/react-native/oss/${filename}`];
