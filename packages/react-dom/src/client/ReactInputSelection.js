@@ -82,7 +82,9 @@ export function restoreSelection(priorSelectionInformation) {
       }
     }
 
-    priorFocusedElem.focus();
+    if (typeof priorFocusedElem.focus === 'function') {
+      priorFocusedElem.focus();
+    }
 
     for (let i = 0; i < ancestors.length; i++) {
       const info = ancestors[i];
