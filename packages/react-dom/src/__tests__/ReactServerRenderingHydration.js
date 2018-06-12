@@ -90,7 +90,7 @@ describe('ReactDOMServerHydration', () => {
       // Ensure the events system works after mount into server markup
       expect(numClicks).toEqual(0);
 
-      ReactDOM.findDOMNode(instance.refs.span).click();
+      instance.refs.span.click();
       expect(numClicks).toEqual(1);
 
       ReactDOM.unmountComponentAtNode(element);
@@ -108,7 +108,7 @@ describe('ReactDOMServerHydration', () => {
 
       // Ensure the events system works after markup mismatch.
       expect(numClicks).toEqual(1);
-      ReactDOM.findDOMNode(instance.refs.span).click();
+      instance.refs.span.click();
       expect(numClicks).toEqual(2);
     } finally {
       document.body.removeChild(element);
@@ -173,7 +173,7 @@ describe('ReactDOMServerHydration', () => {
 
       // Ensure the events system works after mount into server markup
       expect(numClicks).toEqual(0);
-      ReactDOM.findDOMNode(instance.refs.span).click();
+      instance.refs.span.click();
       expect(numClicks).toEqual(1);
 
       ReactDOM.unmountComponentAtNode(element);
@@ -191,7 +191,7 @@ describe('ReactDOMServerHydration', () => {
 
       // Ensure the events system works after markup mismatch.
       expect(numClicks).toEqual(1);
-      ReactDOM.findDOMNode(instance.refs.span).click();
+      instance.refs.span.click();
       expect(numClicks).toEqual(2);
     } finally {
       document.body.removeChild(element);

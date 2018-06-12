@@ -18,12 +18,12 @@ describe('SimpleEventPlugin', function() {
   let container;
 
   function expectClickThru(element) {
-    ReactDOM.findDOMNode(element).click();
+    element.click();
     expect(onClick).toHaveBeenCalledTimes(1);
   }
 
   function expectNoClickThru(element) {
-    ReactDOM.findDOMNode(element).click();
+    element.click();
     expect(onClick).toHaveBeenCalledTimes(0);
   }
 
@@ -84,7 +84,7 @@ describe('SimpleEventPlugin', function() {
         <div />
       </div>,
     );
-    const child = ReactDOM.findDOMNode(element).firstChild;
+    const child = element.firstChild;
     child.click();
     expect(onClick).toHaveBeenCalledTimes(1);
   });
@@ -95,7 +95,7 @@ describe('SimpleEventPlugin', function() {
         <span />
       </button>,
     );
-    const child = ReactDOM.findDOMNode(element).querySelector('span');
+    const child = element.querySelector('span');
 
     child.click();
     expect(onClick).toHaveBeenCalledTimes(0);
@@ -107,7 +107,7 @@ describe('SimpleEventPlugin', function() {
         <span onClick={onClick} />
       </button>,
     );
-    const child = ReactDOM.findDOMNode(element).querySelector('span');
+    const child = element.querySelector('span');
 
     child.click();
     expect(onClick).toHaveBeenCalledTimes(1);
@@ -121,7 +121,7 @@ describe('SimpleEventPlugin', function() {
         </button>
       </div>,
     );
-    const child = ReactDOM.findDOMNode(element).querySelector('span');
+    const child = element.querySelector('span');
 
     child.click();
     expect(onClick).toHaveBeenCalledTimes(1);
@@ -133,7 +133,7 @@ describe('SimpleEventPlugin', function() {
         <span onClickCapture={onClick} />
       </button>,
     );
-    const child = ReactDOM.findDOMNode(element).querySelector('span');
+    const child = element.querySelector('span');
 
     child.click();
     expect(onClick).toHaveBeenCalledTimes(1);

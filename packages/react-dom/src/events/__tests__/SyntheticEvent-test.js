@@ -249,7 +249,7 @@ describe('SyntheticEvent', () => {
       event = e;
     }
     const node = ReactDOM.render(<div onClick={assignEvent} />, container);
-    ReactDOM.findDOMNode(node).click();
+    node.click();
 
     // access a property to cause the warning
     expect(() => {

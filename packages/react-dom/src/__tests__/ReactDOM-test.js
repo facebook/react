@@ -45,23 +45,21 @@ describe('ReactDOM', () => {
 
   it('allows a DOM element to be used with a string', () => {
     const element = React.createElement('div', {className: 'foo'});
-    const instance = ReactTestUtils.renderIntoDocument(element);
-    expect(ReactDOM.findDOMNode(instance).tagName).toBe('DIV');
+    const node = ReactTestUtils.renderIntoDocument(element);
+    expect(node.tagName).toBe('DIV');
   });
 
   it('should allow children to be passed as an argument', () => {
-    const argDiv = ReactTestUtils.renderIntoDocument(
+    const argNode = ReactTestUtils.renderIntoDocument(
       React.createElement('div', null, 'child'),
     );
-    const argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
   });
 
   it('should overwrite props.children with children argument', () => {
-    const conflictDiv = ReactTestUtils.renderIntoDocument(
+    const conflictNode = ReactTestUtils.renderIntoDocument(
       React.createElement('div', {children: 'fakechild'}, 'child'),
     );
-    const conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -103,8 +101,7 @@ describe('ReactDOM', () => {
         <div key="theBird" className="bird" />,
       </div>,
     );
-    const root = ReactDOM.findDOMNode(myDiv);
-    const dog = root.childNodes[0];
+    const dog = myDiv.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });
 
