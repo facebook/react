@@ -42,7 +42,6 @@ type CallbackConfigType = {|
 export type CallbackIdType = CallbackConfigType;
 
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
-import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 if (__DEV__) {
