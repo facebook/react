@@ -352,4 +352,49 @@ describe('ReactFabric', () => {
       11,
     );
   });
+
+  it('dispatches events to the last committed props', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTView',
+      directEventTypes: {
+        topTouchStart: {
+          registrationName: 'onTouchStart',
+        },
+      },
+    }));
+
+    const touchStart = jest.fn();
+    const touchStart2 = jest.fn();
+
+    ReactFabric.render(<View onTouchStart={touchStart} />, 11);
+
+    expect(FabricUIManager.createNode.mock.calls.length).toBe(1);
+    expect(FabricUIManager.registerEventHandler.mock.calls.length).toBe(1);
+
+    let [, , , , instanceHandle] = FabricUIManager.createNode.mock.calls[0];
+    let [dispatchEvent] = FabricUIManager.registerEventHandler.mock.calls[0];
+
+    let touchEvent = {
+      touches: [],
+      changedTouches: [],
+    };
+
+    expect(touchStart).not.toBeCalled();
+
+    dispatchEvent(instanceHandle, 'topTouchStart', touchEvent);
+
+    expect(touchStart).toBeCalled();
+    expect(touchStart2).not.toBeCalled();
+
+    ReactFabric.render(<View onTouchStart={touchStart2} />, 11);
+
+    // Intentionally dispatch to the same instanceHandle again.
+    dispatchEvent(instanceHandle, 'topTouchStart', touchEvent);
+
+    // The current semantics dictate that we always dispatch to the last committed
+    // props even though the actual scheduling of the event could have happened earlier.
+    // This could change in the future.
+    expect(touchStart2).toBeCalled();
+  });
 });
