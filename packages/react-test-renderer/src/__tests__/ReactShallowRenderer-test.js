@@ -915,6 +915,33 @@ describe('ReactShallowRenderer', () => {
     expect(result.props.children).toEqual(3);
   });
 
+  it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
+    class SimpleComponent extends React.Component {
+      state = {value: 0};
+
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {...prevState};
+      }
+
+      updateState = () => {
+        this.setState(state => ({value: state.value + 1}));
+      };
+
+      render() {
+        return <div>{`value:${this.state.value}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(<SimpleComponent />);
+    expect(result).toEqual(<div>value:0</div>);
+
+    let instance = shallowRenderer.getMountedInstance();
+    instance.updateState();
+    result = shallowRenderer.getRenderOutput();
+    expect(result).toEqual(<div>value:1</div>);
+  });
+
   it('can setState with an updater function', () => {
     let instance;
 
