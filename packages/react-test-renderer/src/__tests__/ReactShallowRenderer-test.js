@@ -915,6 +915,39 @@ describe('ReactShallowRenderer', () => {
     expect(result.props.children).toEqual(3);
   });
 
+  it('should call getDerivedStateFromProps with the state set by setState', () => {
+    class SimpleComponent extends React.Component {
+      state = {count: 1};
+
+      static getDerivedStateFromProps(nextProps, prevState) {
+        if (nextProps.updateState) {
+          return {count: nextProps.incrementBy + prevState.count};
+        }
+
+        return null;
+      }
+
+      render() {
+        return <div>{this.state.count}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(
+      <SimpleComponent updateState={false} incrementBy={2} />,
+    );
+    let instance = shallowRenderer.getMountedInstance();
+    instance.setState({count: 2});
+    expect(instance.state.count).toEqual(2);
+
+    shallowRenderer.render(
+      <SimpleComponent updateState={true} incrementBy={2} />,
+    );
+    instance = shallowRenderer.getMountedInstance();
+    instance.setState({count: 2});
+    expect(instance.state.count).toEqual(4);
+  });
+
   it('can setState with an updater function', () => {
     let instance;
 
