@@ -45,8 +45,6 @@ import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import warning from 'fbjs/lib/warning';
-
 if (__DEV__) {
   if (
     ExecutionEnvironment.canUseDOM &&
@@ -54,7 +52,9 @@ if (__DEV__) {
   ) {
     warning(
       false,
-      'schedule depends on requestAnimationFrame. Make sure that you load a ' +
+      // TODO: reword this when schedule is a stand-alone module
+      "This browser doesn't support requestAnimationFrame. " +
+        'Make sure that you load a ' +
         'polyfill in older browsers. https://fb.me/react-polyfills',
     );
   }
