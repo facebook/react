@@ -66,7 +66,6 @@ if (__DEV__) {
 const localDate = Date;
 const localSetTimeout = setTimeout;
 const localClearTimeout = clearTimeout;
-const localRequestAnimationFrame = requestAnimationFrame;
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
@@ -121,26 +120,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     localClearTimeout(timeoutId);
   };
 } else {
-  if (__DEV__) {
-    if (typeof requestAnimationFrameForReact !== 'function') {
-      warning(
-        false,
-        'React depends on requestAnimationFrame. Make sure that you load a ' +
-          'polyfill in older browsers. https://fb.me/react-polyfills',
-      );
-    }
-  }
-
-  let localRequestAnimationFrame =
-    typeof requestAnimationFrameForReact === 'function'
-      ? requestAnimationFrameForReact
-      : function(callback: Function) {
-          invariant(
-            false,
-            'React depends on requestAnimationFrame. Make sure that you load a ' +
-              'polyfill in older browsers. https://fb.me/react-polyfills',
-          );
-        };
+  const localRequestAnimationFrame = requestAnimationFrame;
 
   let headOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
   let tailOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
