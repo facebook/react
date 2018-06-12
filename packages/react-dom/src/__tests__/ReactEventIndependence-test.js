@@ -24,51 +24,60 @@ describe('ReactEventIndependence', () => {
     let clicks = 0;
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const div = ReactDOM.render(
-      <div
-        onClick={() => clicks++}
-        dangerouslySetInnerHTML={{
-          __html: '<button data-reactid=".z">click me</div>',
-        }}
-      />,
-      container,
-    );
+    try {
+      const div = ReactDOM.render(
+        <div
+          onClick={() => clicks++}
+          dangerouslySetInnerHTML={{
+            __html: '<button data-reactid=".z">click me</div>',
+          }}
+        />,
+        container,
+      );
 
-    div.firstChild.click();
-    expect(clicks).toBe(1);
-    document.body.removeChild(container);
+      div.firstChild.click();
+      expect(clicks).toBe(1);
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 
   it('does not crash with other react outside', () => {
     let clicks = 0;
     const outer = document.createElement('div');
     document.body.appendChild(outer);
-    outer.setAttribute('data-reactid', '.z');
-    const inner = ReactDOM.render(
-      <button onClick={() => clicks++}>click me</button>,
-      outer,
-    );
-    inner.click();
-    expect(clicks).toBe(1);
-    document.body.removeChild(outer);
+    try {
+      outer.setAttribute('data-reactid', '.z');
+      const inner = ReactDOM.render(
+        <button onClick={() => clicks++}>click me</button>,
+        outer,
+      );
+      inner.click();
+      expect(clicks).toBe(1);
+    } finally {
+      document.body.removeChild(outer);
+    }
   });
 
   it('does not when event fired on unmounted tree', () => {
     let clicks = 0;
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const button = ReactDOM.render(
-      <button onClick={() => clicks++}>click me</button>,
-      container,
-    );
+    try {
+      const button = ReactDOM.render(
+        <button onClick={() => clicks++}>click me</button>,
+        container,
+      );
 
-    // Now we unmount the component, as if caused by a non-React event handler
-    // for the same click we're about to simulate, like closing a layer:
-    ReactDOM.unmountComponentAtNode(container);
-    button.click();
+      // Now we unmount the component, as if caused by a non-React event handler
+      // for the same click we're about to simulate, like closing a layer:
+      ReactDOM.unmountComponentAtNode(container);
+      button.click();
 
-    // Since the tree is unmounted, we don't dispatch the click event.
-    expect(clicks).toBe(0);
-    document.body.removeChild(container);
+      // Since the tree is unmounted, we don't dispatch the click event.
+      expect(clicks).toBe(0);
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 });

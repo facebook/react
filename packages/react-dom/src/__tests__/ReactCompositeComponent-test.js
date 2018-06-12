@@ -142,13 +142,16 @@ describe('ReactCompositeComponent', () => {
   it('should react to state changes from callbacks', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
-    const instance = ReactDOM.render(<MorphingComponent />, container);
-    let el = ReactDOM.findDOMNode(instance);
-    expect(el.tagName).toBe('A');
-    el.click();
-    el = ReactDOM.findDOMNode(instance);
-    expect(el.tagName).toBe('B');
-    document.body.removeChild(container);
+    try {
+      const instance = ReactDOM.render(<MorphingComponent />, container);
+      let el = ReactDOM.findDOMNode(instance);
+      expect(el.tagName).toBe('A');
+      el.click();
+      el = ReactDOM.findDOMNode(instance);
+      expect(el.tagName).toBe('B');
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 
   it('should rewire refs when rendering to different child types', () => {

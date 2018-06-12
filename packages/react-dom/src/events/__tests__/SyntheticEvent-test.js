@@ -245,12 +245,10 @@ describe('SyntheticEvent', () => {
 
   it('should properly log warnings when events simulated with rendered components', () => {
     let event;
-    const element = document.createElement('div');
-    document.body.appendChild(element);
     function assignEvent(e) {
       event = e;
     }
-    const node = ReactDOM.render(<div onClick={assignEvent} />, element);
+    const node = ReactDOM.render(<div onClick={assignEvent} />, container);
     ReactDOM.findDOMNode(node).click();
 
     // access a property to cause the warning
@@ -263,8 +261,6 @@ describe('SyntheticEvent', () => {
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
     );
-
-    document.body.removeChild(element);
   });
 
   it('should warn if Proxy is supported and the synthetic event is added a property', () => {
