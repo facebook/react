@@ -308,15 +308,9 @@ describe('ReactDOM', () => {
   it("shouldn't fire duplicate event handler while handling other nested dispatch", () => {
     const actual = [];
 
-    function click(node) {
-      ReactTestUtils.Simulate.click(node, {
-        path: [node, container],
-      });
-    }
-
     class Wrapper extends React.Component {
       componentDidMount() {
-        click(this.ref1);
+        this.ref1.click();
       }
 
       render() {
@@ -325,7 +319,7 @@ describe('ReactDOM', () => {
             <div
               onClick={() => {
                 actual.push('1st node clicked');
-                click(this.ref2);
+                this.ref2.click();
               }}
               ref={ref => (this.ref1 = ref)}
             />
@@ -341,6 +335,7 @@ describe('ReactDOM', () => {
     }
 
     const container = document.createElement('div');
+    document.body.appendChild(container);
     ReactDOM.render(<Wrapper />, container);
 
     const expected = [
@@ -348,6 +343,8 @@ describe('ReactDOM', () => {
       "2nd node clicked imperatively from 1st's handler",
     ];
     expect(actual).toEqual(expected);
+
+    document.body.removeChild(container);
   });
 
   it('should not crash with devtools installed', () => {

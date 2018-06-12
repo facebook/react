@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactTestUtils;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
@@ -21,7 +20,6 @@ describe('ReactDOMServerHydration', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
     ReactDOMServer = require('react-dom/server');
   });
 
@@ -48,6 +46,7 @@ describe('ReactDOMServerHydration', () => {
     }
 
     const element = document.createElement('div');
+    document.body.appendChild(element);
     ReactDOM.render(<TestComponent />, element);
 
     let lastMarkup = element.innerHTML;
@@ -89,7 +88,8 @@ describe('ReactDOMServerHydration', () => {
 
     // Ensure the events system works after mount into server markup
     expect(numClicks).toEqual(0);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+
+    ReactDOM.findDOMNode(instance.refs.span).click();
     expect(numClicks).toEqual(1);
 
     ReactDOM.unmountComponentAtNode(element);
@@ -107,8 +107,10 @@ describe('ReactDOMServerHydration', () => {
 
     // Ensure the events system works after markup mismatch.
     expect(numClicks).toEqual(1);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+    ReactDOM.findDOMNode(instance.refs.span).click();
     expect(numClicks).toEqual(2);
+
+    document.body.removeChild(element);
   });
 
   it('should have the correct mounting behavior (new hydrate API)', () => {
@@ -134,6 +136,7 @@ describe('ReactDOMServerHydration', () => {
     }
 
     const element = document.createElement('div');
+    document.body.appendChild(element);
     ReactDOM.render(<TestComponent />, element);
 
     let lastMarkup = element.innerHTML;
@@ -167,7 +170,7 @@ describe('ReactDOMServerHydration', () => {
 
     // Ensure the events system works after mount into server markup
     expect(numClicks).toEqual(0);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+    ReactDOM.findDOMNode(instance.refs.span).click();
     expect(numClicks).toEqual(1);
 
     ReactDOM.unmountComponentAtNode(element);
@@ -185,8 +188,10 @@ describe('ReactDOMServerHydration', () => {
 
     // Ensure the events system works after markup mismatch.
     expect(numClicks).toEqual(1);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+    ReactDOM.findDOMNode(instance.refs.span).click();
     expect(numClicks).toEqual(2);
+
+    document.body.removeChild(element);
   });
 
   // We have a polyfill for autoFocus on the client, but we intentionally don't

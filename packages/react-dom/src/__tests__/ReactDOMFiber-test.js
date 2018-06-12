@@ -11,7 +11,6 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-dom/test-utils');
 const PropTypes = require('prop-types');
 
 describe('ReactDOMFiber', () => {
@@ -843,6 +842,7 @@ describe('ReactDOMFiber', () => {
 
   it('should bubble events from the portal to the parent', () => {
     const portalContainer = document.createElement('div');
+    document.body.appendChild(portalContainer);
 
     const ops = [];
     let portal = null;
@@ -863,13 +863,17 @@ describe('ReactDOMFiber', () => {
 
     expect(portal.tagName).toBe('DIV');
 
-    ReactTestUtils.Simulate.click(portal);
+    portal.click();
 
     expect(ops).toEqual(['portal clicked', 'parent clicked']);
+
+    document.body.removeChild(portalContainer);
   });
 
   it('should not onMouseLeave when staying in the portal', () => {
     const portalContainer = document.createElement('div');
+    document.body.appendChild(container);
+    document.body.appendChild(portalContainer);
 
     let ops = [];
     let firstTarget = null;
@@ -878,14 +882,22 @@ describe('ReactDOMFiber', () => {
 
     function simulateMouseMove(from, to) {
       if (from) {
-        ReactTestUtils.SimulateNative.mouseOut(from, {
-          relatedTarget: to,
-        });
+        from.dispatchEvent(
+          new MouseEvent('mouseout', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: to,
+          }),
+        );
       }
       if (to) {
-        ReactTestUtils.SimulateNative.mouseOver(to, {
-          relatedTarget: from,
-        });
+        to.dispatchEvent(
+          new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: from,
+          }),
+        );
       }
     }
 
@@ -928,6 +940,9 @@ describe('ReactDOMFiber', () => {
       'leave portal',
       'leave parent', // Only when we leave the portal does onMouseLeave fire.
     ]);
+
+    document.body.removeChild(container);
+    document.body.removeChild(portalContainer);
   });
 
   it('should throw on bad createPortal argument', () => {
@@ -967,6 +982,7 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should not update event handlers until commit', () => {
+    document.body.appendChild(container);
     let ops = [];
     const handlerA = () => ops.push('A');
     const handlerB = () => ops.push('B');
@@ -988,7 +1004,7 @@ describe('ReactDOMFiber', () => {
     class Click extends React.Component {
       constructor() {
         super();
-        click(node);
+        node.click();
       }
       render() {
         return null;
@@ -1000,11 +1016,7 @@ describe('ReactDOMFiber', () => {
     const node = container.firstChild;
     expect(node.tagName).toEqual('DIV');
 
-    function click(target) {
-      ReactTestUtils.Simulate.click(target);
-    }
-
-    click(node);
+    node.click();
 
     expect(ops).toEqual(['A']);
     ops = [];
@@ -1012,7 +1024,7 @@ describe('ReactDOMFiber', () => {
     // Render with the other event handler.
     inst.flip();
 
-    click(node);
+    node.click();
 
     expect(ops).toEqual(['B']);
     ops = [];
@@ -1020,7 +1032,7 @@ describe('ReactDOMFiber', () => {
     // Rerender without changing any props.
     inst.tick();
 
-    click(node);
+    node.click();
 
     expect(ops).toEqual(['B']);
     ops = [];
@@ -1040,8 +1052,10 @@ describe('ReactDOMFiber', () => {
     ops = [];
 
     // Any click that happens after commit, should invoke A.
-    click(node);
+    node.click();
     expect(ops).toEqual(['A']);
+
+    document.body.removeChild(container);
   });
 
   it('should not crash encountering low-priority tree', () => {

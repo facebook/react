@@ -1065,7 +1065,9 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Parent />);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    ReactDOM.render(<Parent />, container);
     expect(divRef.current.textContent).toBe('remote:0, local:0');
 
     // Trigger setState() calls
@@ -1073,8 +1075,10 @@ describe('ReactComponentLifeCycle', () => {
     expect(divRef.current.textContent).toBe('remote:1, local:1');
 
     // Trigger batched setState() calls
-    ReactTestUtils.Simulate.click(divRef.current);
+    divRef.current.click();
     expect(divRef.current.textContent).toBe('remote:2, local:2');
+
+    document.body.removeChild(container);
   });
 
   it('should pass the return value from getSnapshotBeforeUpdate to componentDidUpdate', () => {
