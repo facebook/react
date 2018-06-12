@@ -915,37 +915,31 @@ describe('ReactShallowRenderer', () => {
     expect(result.props.children).toEqual(3);
   });
 
-  it('should call getDerivedStateFromProps with the state set by setState', () => {
+  it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
     class SimpleComponent extends React.Component {
-      state = {count: 1};
+      state = {value: 0};
 
       static getDerivedStateFromProps(nextProps, prevState) {
-        if (nextProps.updateState) {
-          return {count: nextProps.incrementBy + prevState.count};
-        }
-
-        return null;
+        return {...prevState};
       }
 
+      updateState = () => {
+        this.setState(state => ({value: state.value + 1}));
+      };
+
       render() {
-        return <div>{this.state.count}</div>;
+        return <div>{`value:${this.state.value}`}</div>;
       }
     }
 
     const shallowRenderer = createRenderer();
-    shallowRenderer.render(
-      <SimpleComponent updateState={false} incrementBy={2} />,
-    );
-    let instance = shallowRenderer.getMountedInstance();
-    instance.setState({count: 2});
-    expect(instance.state.count).toEqual(2);
+    let result = shallowRenderer.render(<SimpleComponent />);
+    expect(result).toEqual(<div>value:0</div>);
 
-    shallowRenderer.render(
-      <SimpleComponent updateState={true} incrementBy={2} />,
-    );
-    instance = shallowRenderer.getMountedInstance();
-    instance.setState({count: 2});
-    expect(instance.state.count).toEqual(4);
+    let instance = shallowRenderer.getMountedInstance();
+    instance.updateState();
+    result = shallowRenderer.getRenderOutput();
+    expect(result).toEqual(<div>value:1</div>);
   });
 
   it('can setState with an updater function', () => {
