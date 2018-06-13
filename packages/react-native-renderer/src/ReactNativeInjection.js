@@ -9,6 +9,8 @@
 
 import './ReactNativeInjectionShared';
 
+import * as ReactNativeComponentTree from './ReactNativeComponentTree';
+import * as EventPluginUtils from 'events/EventPluginUtils';
 import * as ReactNativeEventEmitter from './ReactNativeEventEmitter';
 
 // Module provided by RN:
@@ -18,3 +20,5 @@ import RCTEventEmitter from 'RCTEventEmitter';
  * Register the event emitter with the native bridge
  */
 RCTEventEmitter.register(ReactNativeEventEmitter);
+
+EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
