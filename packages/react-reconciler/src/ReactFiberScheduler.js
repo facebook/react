@@ -805,12 +805,11 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
         // Append all the effects of the subtree and this fiber onto the effect
         // list of the parent. The completion order of the children affects the
         // side-effect order.
-        if (returnFiber.firstEffect === null) {
-          returnFiber.firstEffect = workInProgress.firstEffect;
-        }
         if (workInProgress.lastEffect !== null) {
           if (returnFiber.lastEffect !== null) {
             returnFiber.lastEffect.nextEffect = workInProgress.firstEffect;
+          } else {
+            returnFiber.firstEffect = workInProgress.firstEffect;
           }
           returnFiber.lastEffect = workInProgress.lastEffect;
         }
