@@ -14,6 +14,7 @@ describe('ReactSuspense', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactFeatureFlags.enableSuspense = true;
     React = require('react');
     Fragment = React.Fragment;
@@ -258,6 +259,11 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.flush()).toEqual([
       'Promise rejected [Result]',
       'Error! [Result]',
+
+      // React retries one more time
+      'Error! [Result]',
+
+      // Errored again on retry. Now handle it.
       'Caught error: Failed to load: Result',
     ]);
     expect(ReactNoop.getChildren()).toEqual([
@@ -320,6 +326,12 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.flush()).toEqual([
       'Promise rejected [Result]',
       'Error! [Result]',
+
+      // React retries one more time
+      'Error! [Result]',
+
+      // Errored again on retry. Now handle it.
+
       'Caught error: Failed to load: Result',
     ]);
     expect(ReactNoop.getChildren()).toEqual([

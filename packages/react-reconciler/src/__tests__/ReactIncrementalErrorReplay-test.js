@@ -36,7 +36,7 @@ describe('ReactIncrementalErrorReplay', () => {
     });
   });
 
-  it('should fail gracefully on error that does not reproduce on replay', () => {
+  it("should ignore error if it doesn't throw on retry", () => {
     let didInit = false;
 
     function badLazyInit() {
@@ -54,6 +54,6 @@ describe('ReactIncrementalErrorReplay', () => {
       }
     }
     ReactNoop.render(<App />);
-    expect(() => ReactNoop.flush()).toThrow('Hi');
+    expect(() => ReactNoop.flush()).not.toThrow();
   });
 });

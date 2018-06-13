@@ -10,7 +10,7 @@
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {NoWork} from './ReactFiberExpirationTime';
+import {NoWork, Sync} from './ReactFiberExpirationTime';
 
 // TODO: Offscreen updates
 
@@ -18,6 +18,11 @@ export function markPendingPriorityLevel(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ): void {
+  // If there's a gap between completing a failed root and retrying it,
+  // additional updates may be scheduled. Clear `didError`, in case the update
+  // is sufficient to fix the error.
+  root.didError = false;
+
   // Update the latest and earliest pending times
   const earliestPendingTime = root.earliestPendingTime;
   if (earliestPendingTime === NoWork) {
@@ -43,6 +48,8 @@ export function markCommittedPriorityLevels(
   currentTime: ExpirationTime,
   earliestRemainingTime: ExpirationTime,
 ): void {
+  root.didError = false;
+
   if (earliestRemainingTime === NoWork) {
     // Fast path. There's no remaining work. Clear everything.
     root.earliestPendingTime = NoWork;
@@ -111,10 +118,30 @@ export function markCommittedPriorityLevels(
   findNextPendingPriorityLevel(root);
 }
 
+export function hasLowerPriorityWork(
+  root: FiberRoot,
+  renderExpirationTime: ExpirationTime,
+) {
+  return (
+    renderExpirationTime !== root.latestPendingTime &&
+    renderExpirationTime !== root.latestSuspendedTime
+  );
+}
+
 export function markSuspendedPriorityLevel(
   root: FiberRoot,
   suspendedTime: ExpirationTime,
+  didError: boolean,
 ): void {
+  if (didError && !hasLowerPriorityWork(root, suspendedTime)) {
+    // TODO: When we add back resuming, we need to ensure the progressed work
+    // is thrown out and not reused during the restarted render. One way to
+    // invalidate the progressed work is to restart at expirationTime + 1.
+    root.didError = true;
+    findNextPendingPriorityLevel(root);
+    return;
+  }
+
   // First, check the known pending levels and update them if needed.
   const earliestPendingTime = root.earliestPendingTime;
   const latestPendingTime = root.latestPendingTime;
@@ -191,6 +218,12 @@ function findNextPendingPriorityLevel(root) {
     // nothing to work on.
     nextExpirationTimeToWorkOn = expirationTime = root.latestPingedTime;
   }
+
+  if (root.didError) {
+    // Revert to synchronous mode.
+    expirationTime = Sync;
+  }
+
   root.nextExpirationTimeToWorkOn = nextExpirationTimeToWorkOn;
   root.expirationTime = expirationTime;
 }

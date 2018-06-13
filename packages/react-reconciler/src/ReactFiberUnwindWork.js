@@ -56,6 +56,7 @@ import {
 } from './ReactProfilerTimer';
 import {
   markTimeout,
+  markError,
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
@@ -64,6 +65,7 @@ import {
   scheduleWork,
   retrySuspendedRoot,
 } from './ReactFiberScheduler';
+import {hasLowerPriorityWork} from './ReactFiberPendingPriority';
 
 function createRootErrorUpdate(
   fiber: Fiber,
@@ -149,20 +151,6 @@ function throwException(
   sourceFiber.effectTag |= Incomplete;
   // Its effect list is no longer valid.
   sourceFiber.firstEffect = sourceFiber.lastEffect = null;
-
-  // Check if there is lower priority work, regardless of whether it's pending.
-  // If so, it may have the effect of fixing the exception that was just thrown.
-  const latestPendingTime = root.latestPendingTime;
-  const latestSuspendedTime = root.latestSuspendedTime;
-  if (
-    renderExpirationTime !== latestPendingTime &&
-    renderExpirationTime !== latestSuspendedTime &&
-    renderExpirationTime !== Never
-  ) {
-    // There's lower priority work. Exit to suspend this render and retry at
-    // the lower priority.
-    return;
-  }
 
   if (
     enableSuspense &&
@@ -258,6 +246,20 @@ function throwException(
         }
         workInProgress = workInProgress.return;
       } while (workInProgress !== null);
+    }
+  } else {
+    // This is an error.
+    markError(root);
+    if (
+      // Retry (at the same priority) one more time before handling the error.
+      // The retry will flush synchronously. (Unless we're already rendering
+      // synchronously, in which case move to the next check.)
+      (!root.didError && renderExpirationTime !== Sync) ||
+      // There's lower priority work. If so, it may have the effect of fixing
+      // the exception that was just thrown.
+      hasLowerPriorityWork(root, renderExpirationTime)
+    ) {
+      return;
     }
   }
 

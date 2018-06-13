@@ -229,6 +229,7 @@ let nextRoot: FiberRoot | null = null;
 // The time at which we're currently rendering work.
 let nextRenderExpirationTime: ExpirationTime = NoWork;
 let nextLatestTimeoutMs: number = -1;
+let nextRenderDidError: boolean = false;
 
 // The next fiber with an effect that we're currently committing.
 let nextEffect: Fiber | null = null;
@@ -343,6 +344,7 @@ function resetStack() {
   nextRoot = null;
   nextRenderExpirationTime = NoWork;
   nextLatestTimeoutMs = -1;
+  nextRenderDidError = false;
   nextUnitOfWork = null;
 }
 
@@ -1007,6 +1009,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     nextRoot = root;
     nextRenderExpirationTime = expirationTime;
     nextLatestTimeoutMs = -1;
+    nextRenderDidError = false;
     nextUnitOfWork = createWorkInProgress(
       nextRoot.current,
       null,
@@ -1113,7 +1116,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       const didCompleteRoot = false;
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
       interruptedBy = null;
-      markSuspendedPriorityLevel(root, expirationTime);
+      markSuspendedPriorityLevel(root, expirationTime, nextRenderDidError);
       const suspendedExpirationTime = expirationTime;
       const newExpirationTime = root.expirationTime;
       onSuspend(
@@ -1288,6 +1291,10 @@ function markTimeout(
   if (timeoutMs >= 0 && nextLatestTimeoutMs < timeoutMs) {
     nextLatestTimeoutMs = timeoutMs;
   }
+}
+
+function markError(root: FiberRoot) {
+  nextRenderDidError = true;
 }
 
 function retrySuspendedRoot(root: FiberRoot, suspendedTime: ExpirationTime) {
@@ -1975,6 +1982,7 @@ export {
   captureCommitPhaseError,
   onUncaughtError,
   markTimeout,
+  markError,
   retrySuspendedRoot,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
