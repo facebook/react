@@ -148,35 +148,6 @@ export const TOP_VOLUME_CHANGE = unsafeCastStringToDOMTopLevelType(
 export const TOP_WAITING = unsafeCastStringToDOMTopLevelType('waiting');
 export const TOP_WHEEL = unsafeCastStringToDOMTopLevelType('wheel');
 
-// List of events that need to be individually attached to media elements.
-// Note that events in this list will *not* be listened to at the top level
-// unless they're explicitly whitelisted in `ReactBrowserEventEmitter.listenTo`.
-export const mediaEventTypes = [
-  TOP_ABORT,
-  TOP_CAN_PLAY,
-  TOP_CAN_PLAY_THROUGH,
-  TOP_DURATION_CHANGE,
-  TOP_EMPTIED,
-  TOP_ENCRYPTED,
-  TOP_ENDED,
-  TOP_ERROR,
-  TOP_LOADED_DATA,
-  TOP_LOADED_METADATA,
-  TOP_LOAD_START,
-  TOP_PAUSE,
-  TOP_PLAY,
-  TOP_PLAYING,
-  TOP_PROGRESS,
-  TOP_RATE_CHANGE,
-  TOP_SEEKED,
-  TOP_SEEKING,
-  TOP_STALLED,
-  TOP_SUSPEND,
-  TOP_TIME_UPDATE,
-  TOP_VOLUME_CHANGE,
-  TOP_WAITING,
-];
-
 export function getRawEventName(topLevelType: DOMTopLevelEventType): string {
   return unsafeCastDOMTopLevelTypeToString(topLevelType);
 }

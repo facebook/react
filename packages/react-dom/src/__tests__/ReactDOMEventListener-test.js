@@ -271,49 +271,7 @@ describe('ReactDOMEventListener', () => {
     document.body.removeChild(container);
   });
 
-  it('should dispatch loadstart only for media elements', () => {
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-
-    const imgRef = React.createRef();
-    const videoRef = React.createRef();
-
-    const handleImgLoadStart = jest.fn();
-    const handleVideoLoadStart = jest.fn();
-    ReactDOM.render(
-      <div>
-        <img ref={imgRef} onLoadStart={handleImgLoadStart} />
-        <video ref={videoRef} onLoadStart={handleVideoLoadStart} />
-      </div>,
-      container,
-    );
-
-    // Note for debugging: loadstart currently doesn't fire in Chrome.
-    // https://bugs.chromium.org/p/chromium/issues/detail?id=458851
-    imgRef.current.dispatchEvent(
-      new ProgressEvent('loadstart', {
-        bubbles: false,
-      }),
-    );
-    // Historically, we happened to not support onLoadStart
-    // on <img>, and this test documents that lack of support.
-    // If we decide to support it in the future, we should change
-    // this line to expect 1 call. Note that fixing this would
-    // be simple but would require attaching a handler to each
-    // <img>. So far nobody asked us for it.
-    expect(handleImgLoadStart).toHaveBeenCalledTimes(0);
-
-    videoRef.current.dispatchEvent(
-      new ProgressEvent('loadstart', {
-        bubbles: false,
-      }),
-    );
-    expect(handleVideoLoadStart).toHaveBeenCalledTimes(1);
-
-    document.body.removeChild(container);
-  });
-
-  it('should not attempt to listen to unnecessary events on the top level', () => {
+  it('should dispatch media events', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -345,13 +303,6 @@ describe('ReactDOMEventListener', () => {
       onWaiting() {},
     };
 
-    const originalAddEventListener = document.addEventListener;
-    document.addEventListener = function(type) {
-      throw new Error(
-        `Did not expect to add a top-level listener for the "${type}" event.`,
-      );
-    };
-
     try {
       // We expect that mounting this tree will
       // *not* attach handlers for any top-level events.
@@ -374,8 +325,71 @@ describe('ReactDOMEventListener', () => {
       );
       expect(handleVideoPlay).toHaveBeenCalledTimes(1);
     } finally {
-      document.addEventListener = originalAddEventListener;
       document.body.removeChild(container);
+    }
+  });
+
+  it('does not double dispatch scroll events at the deepest leaf', () => {
+    const top = jest.fn();
+    const middle = jest.fn();
+    const bottom = jest.fn();
+    const container = document.createElement('div');
+
+    ReactDOM.render(
+      <div id="top" onScroll={top}>
+        <div id="middle" onScroll={middle}>
+          <div id="bottom" onScroll={bottom} />
+        </div>
+      </div>,
+      container,
+    );
+
+    const target = container.querySelector('#bottom');
+    const event = document.createEvent('Event');
+
+    try {
+      document.body.appendChild(container);
+
+      event.initEvent('scroll', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(1);
+    } finally {
+      container.remove();
+    }
+  });
+
+  it('does not double dispatch scroll events at the middle leaf', () => {
+    const top = jest.fn();
+    const middle = jest.fn();
+    const bottom = jest.fn();
+    const container = document.createElement('div');
+
+    ReactDOM.render(
+      <div id="top" onScroll={top}>
+        <div id="middle" onScroll={middle}>
+          <div id="bottom" onScroll={bottom} />
+        </div>
+      </div>,
+      container,
+    );
+
+    const target = container.querySelector('#middle');
+    const event = document.createEvent('Event');
+
+    try {
+      document.body.appendChild(container);
+
+      event.initEvent('scroll', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(0);
+    } finally {
+      container.remove();
     }
   });
 });

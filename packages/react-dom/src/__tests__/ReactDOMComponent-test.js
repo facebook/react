@@ -965,30 +965,6 @@ describe('ReactDOMComponent', () => {
       };
     });
 
-    it('should work error event on <source> element', () => {
-      spyOnDevAndProd(console, 'log');
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <video>
-          <source
-            src="http://example.org/video"
-            type="video/mp4"
-            onError={e => console.log('onError called')}
-          />
-        </video>,
-        container,
-      );
-
-      const errorEvent = document.createEvent('Event');
-      errorEvent.initEvent('error', false, false);
-      container.getElementsByTagName('source')[0].dispatchEvent(errorEvent);
-
-      if (__DEV__) {
-        expect(console.log).toHaveBeenCalledTimes(1);
-        expect(console.log.calls.argsFor(0)[0]).toContain('onError called');
-      }
-    });
-
     it('should not duplicate uppercased selfclosing tags', () => {
       class Container extends React.Component {
         render() {
@@ -2438,6 +2414,76 @@ describe('ReactDOMComponent', () => {
       expect(node.hasAttribute('onx')).toBe(false);
       ReactDOM.render(<some-custom-element onx="bar" />, container);
       expect(node.getAttribute('onx')).toBe('bar');
+    });
+  });
+
+  describe('when dispatching events', () => {
+    it('should receive error events on <source> elements', () => {
+      const onError = jest.fn();
+      const container = document.createElement('div');
+
+      ReactDOM.render(
+        <video>
+          <source
+            src="http://example.org/video"
+            type="video/mp4"
+            onError={onError}
+          />
+        </video>,
+        container,
+      );
+
+      try {
+        document.body.appendChild(container);
+
+        const errorEvent = document.createEvent('Event');
+        errorEvent.initEvent('error', false, false);
+        container.getElementsByTagName('source')[0].dispatchEvent(errorEvent);
+
+        expect(onError).toHaveBeenCalledTimes(1);
+      } finally {
+        container.remove();
+      }
+    });
+
+    it('receives events in the correct order', () => {
+      let eventOrder = [];
+      let track = tag => () => eventOrder.push(tag);
+
+      class TestCase extends React.Component {
+        componentDidMount() {
+          document.addEventListener('click', track('document bubble'));
+          document.addEventListener('click', track('document capture'), true);
+        }
+        render() {
+          return (
+            <div
+              onClick={track('element bubble')}
+              onClickCapture={track('element capture')}
+            />
+          );
+        }
+      }
+
+      const container = document.createElement('div');
+      ReactDOM.render(<TestCase />, container);
+
+      try {
+        document.body.appendChild(container);
+
+        const errorEvent = document.createEvent('Event');
+        errorEvent.initEvent('click', true, true);
+        container.querySelector('div').dispatchEvent(errorEvent);
+
+        expect(eventOrder).toEqual([
+          'document capture',
+          'element capture',
+          'element bubble',
+          'document bubble',
+        ]);
+      } finally {
+        container.remove();
+      }
     });
   });
 });
