@@ -5,6 +5,10 @@
     Click to see more.
   </summary>
 
+</details>
+
+## 16.4.1 (June 13, 2018)
+
 ### React
 
 * You can now assign `propTypes` to components returned by `React.ForwardRef`. ([@bvaughn](https://github.com/bvaughn) in [#12911](https://github.com/facebook/react/pull/12911))
@@ -26,8 +30,6 @@
 
 * Allow multiple root children in test renderer traversal API. ([@gaearon](https://github.com/gaearon) in [#13017](https://github.com/facebook/react/pull/13017))
 * Fix `getDerivedStateFromProps()` in the shallow renderer to not discard the pending state. ([@fatfisz](https://github.com/fatfisz) in [#13030](https://github.com/facebook/react/pull/13030))
-
-</details>
 
 ## 16.4.0 (May 23, 2018)
 
