@@ -1,7 +1,7 @@
 {
   "name": "create-subscription",
   "description": "utility for subscribing to external data sources inside React components",
-  "version": "16.4.0",
+  "version": "16.4.1",
   "repository": "facebook/react",
   "files": [
     "LICENSE",
