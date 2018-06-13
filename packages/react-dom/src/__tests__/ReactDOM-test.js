@@ -45,23 +45,21 @@ describe('ReactDOM', () => {
 
   it('allows a DOM element to be used with a string', () => {
     const element = React.createElement('div', {className: 'foo'});
-    const instance = ReactTestUtils.renderIntoDocument(element);
-    expect(ReactDOM.findDOMNode(instance).tagName).toBe('DIV');
+    const node = ReactTestUtils.renderIntoDocument(element);
+    expect(node.tagName).toBe('DIV');
   });
 
   it('should allow children to be passed as an argument', () => {
-    const argDiv = ReactTestUtils.renderIntoDocument(
+    const argNode = ReactTestUtils.renderIntoDocument(
       React.createElement('div', null, 'child'),
     );
-    const argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
   });
 
   it('should overwrite props.children with children argument', () => {
-    const conflictDiv = ReactTestUtils.renderIntoDocument(
+    const conflictNode = ReactTestUtils.renderIntoDocument(
       React.createElement('div', {children: 'fakechild'}, 'child'),
     );
-    const conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -103,8 +101,7 @@ describe('ReactDOM', () => {
         <div key="theBird" className="bird" />,
       </div>,
     );
-    const root = ReactDOM.findDOMNode(myDiv);
-    const dog = root.childNodes[0];
+    const dog = myDiv.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });
 
@@ -242,34 +239,37 @@ describe('ReactDOM', () => {
     const log = [];
     const container = document.createElement('div');
     document.body.appendChild(container);
-    ReactDOM.render(<A showTwo={false} />, container);
-    input.focus();
+    try {
+      ReactDOM.render(<A showTwo={false} />, container);
+      input.focus();
 
-    // When the second input is added, let's simulate losing focus, which is
-    // something that could happen when manipulating DOM nodes (but is hard to
-    // deterministically force without relying intensely on React DOM
-    // implementation details)
-    const div = container.firstChild;
-    ['appendChild', 'insertBefore'].forEach(name => {
-      const mutator = div[name];
-      div[name] = function() {
-        if (input) {
-          input.blur();
-          expect(document.activeElement.tagName).toBe('BODY');
-          log.push('input2 inserted');
-        }
-        return mutator.apply(this, arguments);
-      };
-    });
+      // When the second input is added, let's simulate losing focus, which is
+      // something that could happen when manipulating DOM nodes (but is hard to
+      // deterministically force without relying intensely on React DOM
+      // implementation details)
+      const div = container.firstChild;
+      ['appendChild', 'insertBefore'].forEach(name => {
+        const mutator = div[name];
+        div[name] = function() {
+          if (input) {
+            input.blur();
+            expect(document.activeElement.tagName).toBe('BODY');
+            log.push('input2 inserted');
+          }
+          return mutator.apply(this, arguments);
+        };
+      });
 
-    expect(document.activeElement.id).toBe('one');
-    ReactDOM.render(<A showTwo={true} />, container);
-    // input2 gets added, which causes input to get blurred. Then
-    // componentDidUpdate focuses input2 and that should make it down to here,
-    // not get overwritten by focus restoration.
-    expect(document.activeElement.id).toBe('two');
-    expect(log).toEqual(['input2 inserted', 'input2 focused']);
-    document.body.removeChild(container);
+      expect(document.activeElement.id).toBe('one');
+      ReactDOM.render(<A showTwo={true} />, container);
+      // input2 gets added, which causes input to get blurred. Then
+      // componentDidUpdate focuses input2 and that should make it down to here,
+      // not get overwritten by focus restoration.
+      expect(document.activeElement.id).toBe('two');
+      expect(log).toEqual(['input2 inserted', 'input2 focused']);
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 
   it('calls focus() on autoFocus elements after they have been mounted to the DOM', () => {
@@ -308,15 +308,9 @@ describe('ReactDOM', () => {
   it("shouldn't fire duplicate event handler while handling other nested dispatch", () => {
     const actual = [];
 
-    function click(node) {
-      ReactTestUtils.Simulate.click(node, {
-        path: [node, container],
-      });
-    }
-
     class Wrapper extends React.Component {
       componentDidMount() {
-        click(this.ref1);
+        this.ref1.click();
       }
 
       render() {
@@ -325,7 +319,7 @@ describe('ReactDOM', () => {
             <div
               onClick={() => {
                 actual.push('1st node clicked');
-                click(this.ref2);
+                this.ref2.click();
               }}
               ref={ref => (this.ref1 = ref)}
             />
@@ -341,13 +335,18 @@ describe('ReactDOM', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<Wrapper />, container);
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(<Wrapper />, container);
 
-    const expected = [
-      '1st node clicked',
-      "2nd node clicked imperatively from 1st's handler",
-    ];
-    expect(actual).toEqual(expected);
+      const expected = [
+        '1st node clicked',
+        "2nd node clicked imperatively from 1st's handler",
+      ];
+      expect(actual).toEqual(expected);
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 
   it('should not crash with devtools installed', () => {

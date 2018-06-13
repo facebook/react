@@ -280,12 +280,11 @@ describe('ReactTestUtils', () => {
       };
       spyOnDevAndProd(obj, 'handler').and.callThrough();
       const container = document.createElement('div');
-      const instance = ReactDOM.render(
+      const node = ReactDOM.render(
         <input type="text" onChange={obj.handler} />,
         container,
       );
 
-      const node = ReactDOM.findDOMNode(instance);
       node.value = 'giraffe';
       ReactTestUtils.Simulate.change(node);
 
@@ -321,7 +320,7 @@ describe('ReactTestUtils', () => {
         container,
       );
 
-      const node = ReactDOM.findDOMNode(instance.refs.input);
+      const node = instance.refs.input;
       node.value = 'zebra';
       ReactTestUtils.Simulate.change(node);
 

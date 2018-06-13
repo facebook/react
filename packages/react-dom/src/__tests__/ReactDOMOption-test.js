@@ -26,8 +26,7 @@ describe('ReactDOMOption', () => {
         {1} {'foo'}
       </option>
     );
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     expect(node.innerHTML).toBe('1 foo');
   });
@@ -59,17 +58,15 @@ describe('ReactDOMOption', () => {
         {undefined} {2}
       </option>
     );
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
-    const node = ReactDOM.findDOMNode(stub);
     expect(node.innerHTML).toBe('1  2');
   });
 
   it('should be able to use dangerouslySetInnerHTML on option', () => {
     let stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
-    const node = ReactDOM.findDOMNode(stub);
     expect(node.innerHTML).toBe('foobar');
   });
 
@@ -95,8 +92,7 @@ describe('ReactDOMOption', () => {
     );
     const options = stub.props.children;
     const container = document.createElement('div');
-    stub = ReactDOM.render(stub, container);
-    const node = ReactDOM.findDOMNode(stub);
+    const node = ReactDOM.render(stub, container);
 
     expect(node.selectedIndex).toBe(1);
 

@@ -69,7 +69,7 @@
     "gzip-js": "~0.3.2",
     "gzip-size": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
-    "jest": "^23.0.1",
+    "jest": "^23.1.0",
     "jest-diff": "^23.0.1",
     "merge-stream": "^1.0.0",
     "minimatch": "^3.0.4",

@@ -38,27 +38,27 @@ describe('ReactDOMInput', () => {
 
   it('should properly control a value even if no event listener exists', () => {
     const container = document.createElement('div');
-    let stub;
+    let node;
 
     expect(() => {
-      stub = ReactDOM.render(<input type="text" value="lion" />, container);
+      node = ReactDOM.render(<input type="text" value="lion" />, container);
     }).toWarnDev(
       'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
     );
 
     document.body.appendChild(container);
 
-    const node = ReactDOM.findDOMNode(stub);
+    try {
+      setUntrackedValue.call(node, 'giraffe');
 
-    setUntrackedValue.call(node, 'giraffe');
+      // This must use the native event dispatching. If we simulate, we will
+      // bypass the lazy event attachment system so we won't actually test this.
+      dispatchEventOnNode(node, 'change');
 
-    // This must use the native event dispatching. If we simulate, we will
-    // bypass the lazy event attachment system so we won't actually test this.
-    dispatchEventOnNode(node, 'change');
-
-    expect(node.value).toBe('lion');
-
-    document.body.removeChild(container);
+      expect(node.value).toBe('lion');
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 
   it('should control a value in reentrant events', () => {
@@ -169,26 +169,24 @@ describe('ReactDOMInput', () => {
 
   describe('switching text inputs between numeric and string numbers', () => {
     it('does change the number 2 to "2.0" with no change handler', () => {
-      let stub = <input type="text" value={2} onChange={jest.fn()} />;
-      stub = ReactTestUtils.renderIntoDocument(stub);
-      const node = ReactDOM.findDOMNode(stub);
+      const stub = <input type="text" value={2} onChange={jest.fn()} />;
+      const node = ReactTestUtils.renderIntoDocument(stub);
 
       node.value = '2.0';
 
-      ReactTestUtils.Simulate.change(stub);
+      ReactTestUtils.Simulate.change(node);
 
       expect(node.getAttribute('value')).toBe('2');
       expect(node.value).toBe('2');
     });
 
     it('does change the string "2" to "2.0" with no change handler', () => {
-      let stub = <input type="text" value={'2'} onChange={jest.fn()} />;
-      stub = ReactTestUtils.renderIntoDocument(stub);
-      const node = ReactDOM.findDOMNode(stub);
+      const stub = <input type="text" value={'2'} onChange={jest.fn()} />;
+      const node = ReactTestUtils.renderIntoDocument(stub);
 
       node.value = '2.0';
 
-      ReactTestUtils.Simulate.change(stub);
+      ReactTestUtils.Simulate.change(node);
 
       expect(node.getAttribute('value')).toBe('2');
       expect(node.value).toBe('2');
@@ -315,8 +313,7 @@ describe('ReactDOMInput', () => {
 
   it('should display `defaultValue` of number 0', () => {
     let stub = <input type="text" defaultValue={0} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     expect(node.getAttribute('value')).toBe('0');
     expect(node.value).toBe('0');
@@ -348,16 +345,14 @@ describe('ReactDOMInput', () => {
 
   it('should display "true" for `defaultValue` of `true`', () => {
     let stub = <input type="text" defaultValue={true} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     expect(node.value).toBe('true');
   });
 
   it('should display "false" for `defaultValue` of `false`', () => {
     let stub = <input type="text" defaultValue={false} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     expect(node.value).toBe('false');
   });
@@ -467,17 +462,15 @@ describe('ReactDOMInput', () => {
       },
     };
 
-    let stub = <input type="text" defaultValue={objToString} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const stub = <input type="text" defaultValue={objToString} />;
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     expect(node.value).toBe('foobar');
   });
 
   it('should display `value` of number 0', () => {
-    let stub = <input type="text" value={0} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const stub = <input type="text" value={0} />;
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     expect(node.value).toBe('0');
   });
@@ -593,9 +586,8 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly control a value of number `0`', () => {
-    let stub = <input type="text" value={0} onChange={emptyFunction} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const stub = <input type="text" value={0} onChange={emptyFunction} />;
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
@@ -603,9 +595,8 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly control 0.0 for a text input', () => {
-    let stub = <input type="text" value={0} onChange={emptyFunction} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const stub = <input type="text" value={0} onChange={emptyFunction} />;
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     node.value = '0.0';
     ReactTestUtils.Simulate.change(node, {target: {value: '0.0'}});
@@ -613,9 +604,8 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly control 0.0 for a number input', () => {
-    let stub = <input type="number" value={0} onChange={emptyFunction} />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const stub = <input type="number" value={0} onChange={emptyFunction} />;
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     node.value = '0.0';
     ReactTestUtils.Simulate.change(node, {target: {value: '0.0'}});
@@ -702,9 +692,8 @@ describe('ReactDOMInput', () => {
   });
 
   it('should not set a value for submit buttons unnecessarily', () => {
-    let stub = <input type="submit" />;
-    stub = ReactTestUtils.renderIntoDocument(stub);
-    const node = ReactDOM.findDOMNode(stub);
+    const stub = <input type="submit" />;
+    const node = ReactTestUtils.renderIntoDocument(stub);
 
     // The value shouldn't be '', or else the button will have no text; it
     // should have the default "Submit" or "Submit Query" label. Most browsers
@@ -1460,10 +1449,9 @@ describe('ReactDOMInput', () => {
     });
 
     it('an uncontrolled number input will not update the value attribute on blur', () => {
-      const stub = ReactTestUtils.renderIntoDocument(
+      const node = ReactTestUtils.renderIntoDocument(
         <input type="number" defaultValue="1" />,
       );
-      const node = ReactDOM.findDOMNode(stub);
 
       node.value = 4;
 
@@ -1473,10 +1461,9 @@ describe('ReactDOMInput', () => {
     });
 
     it('an uncontrolled text input will not update the value attribute on blur', () => {
-      const stub = ReactTestUtils.renderIntoDocument(
+      const node = ReactTestUtils.renderIntoDocument(
         <input type="text" defaultValue="1" />,
       );
-      const node = ReactDOM.findDOMNode(stub);
 
       node.value = 4;
 
