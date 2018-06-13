@@ -41,10 +41,23 @@ type CallbackConfigType = {|
 
 export type CallbackIdType = CallbackConfigType;
 
-import requestAnimationFrameForReact from 'shared/requestAnimationFrameForReact';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
-import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
+
+if (__DEV__) {
+  if (
+    ExecutionEnvironment.canUseDOM &&
+    typeof requestAnimationFrame !== 'function'
+  ) {
+    warning(
+      false,
+      // TODO: reword this when schedule is a stand-alone module
+      "This browser doesn't support requestAnimationFrame. " +
+        'Make sure that you load a ' +
+        'polyfill in older browsers. https://fb.me/react-polyfills',
+    );
+  }
+}
 
 // We capture a local reference to any global, in case it gets polyfilled after
 // this module is initially evaluated.
@@ -106,26 +119,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     localClearTimeout(timeoutId);
   };
 } else {
-  if (__DEV__) {
-    if (typeof requestAnimationFrameForReact !== 'function') {
-      warning(
-        false,
-        'React depends on requestAnimationFrame. Make sure that you load a ' +
-          'polyfill in older browsers. https://fb.me/react-polyfills',
-      );
-    }
-  }
-
-  let localRequestAnimationFrame =
-    typeof requestAnimationFrameForReact === 'function'
-      ? requestAnimationFrameForReact
-      : function(callback: Function) {
-          invariant(
-            false,
-            'React depends on requestAnimationFrame. Make sure that you load a ' +
-              'polyfill in older browsers. https://fb.me/react-polyfills',
-          );
-        };
+  const localRequestAnimationFrame = requestAnimationFrame;
 
   let headOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
   let tailOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
