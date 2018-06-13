@@ -59,7 +59,7 @@ import {
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
-  recalculateCurrentTime,
+  getCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
   retrySuspendedRoot,
@@ -130,7 +130,7 @@ function createClassErrorUpdate(
 function schedulePing(finishedWork) {
   // Once the promise resolves, we should try rendering the non-
   // placeholder state again.
-  const currentTime = recalculateCurrentTime();
+  const currentTime = getCurrentTime();
   const expirationTime = computeExpirationForFiber(currentTime, finishedWork);
   const recoveryUpdate = createUpdate(expirationTime);
   enqueueUpdate(finishedWork, recoveryUpdate, expirationTime);
