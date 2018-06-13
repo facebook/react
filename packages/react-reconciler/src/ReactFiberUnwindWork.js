@@ -55,7 +55,7 @@ import {
   recordElapsedActualRenderTime,
 } from './ReactProfilerTimer';
 import {
-  suspendRoot,
+  markTimeout,
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
@@ -151,6 +151,20 @@ function throwException(
   // Its effect list is no longer valid.
   sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
+  // Check if there is lower priority work, regardless of whether it's pending.
+  // If so, it may have the effect of fixing the exception that was just thrown.
+  const latestPendingTime = root.latestPendingTime;
+  const latestSuspendedTime = root.latestSuspendedTime;
+  if (
+    renderExpirationTime !== latestPendingTime &&
+    renderExpirationTime !== latestSuspendedTime &&
+    renderExpirationTime !== Never
+  ) {
+    // There's lower priority work. Exit to suspend this render and retry at
+    // the lower priority.
+    return;
+  }
+
   if (
     enableSuspense &&
     value !== null &&
@@ -206,7 +220,7 @@ function throwException(
 
     if (renderExpirationTime === Never || msUntilTimeout > 0) {
       // There's still time remaining.
-      suspendRoot(root, thenable, msUntilTimeout, renderExpirationTime);
+      markTimeout(root, thenable, msUntilTimeout, renderExpirationTime);
       const onResolveOrReject = () => {
         retrySuspendedRoot(root, renderExpirationTime);
       };

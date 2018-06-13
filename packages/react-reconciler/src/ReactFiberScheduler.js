@@ -237,8 +237,6 @@ let nextEffect: Fiber | null = null;
 
 let isCommitting: boolean = false;
 
-let isRootReadyForCommit: boolean = false;
-
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
 // Used for performance tracking.
@@ -349,8 +347,6 @@ function resetStack() {
   nextLatestTimeoutMs = -1;
   nextRenderIsExpired = false;
   nextUnitOfWork = null;
-
-  isRootReadyForCommit = false;
 }
 
 function commitAllHostEffects() {
@@ -518,7 +514,12 @@ function commitRoot(finishedWork: Fiber): ExpirationTime {
   );
   root.pendingCommitExpirationTime = NoWork;
 
+  // Update the pending priority levels to account for the work that we are
+  // about to commit. This needs to happen before calling the lifecycles, since
+  // they may schedule additional updates.
+  const earliestRemainingTime = finishedWork.expirationTime;
   const currentTime = recalculateCurrentTime();
+  markCommittedPriorityLevels(root, currentTime, earliestRemainingTime);
 
   // Reset this to null before calling lifecycles
   ReactCurrentOwner.current = null;
@@ -689,14 +690,13 @@ function commitRoot(finishedWork: Fiber): ExpirationTime {
     ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
   }
 
-  markCommittedPriorityLevels(root, currentTime, root.current.expirationTime);
-  const remainingTime = findNextPendingPriorityLevel(root);
-  if (remainingTime === NoWork) {
+  const nextPendingPriorityLevel = findNextPendingPriorityLevel(root);
+  if (nextPendingPriorityLevel === NoWork) {
     // If there's no remaining work, we can clear the set of already failed
     // error boundaries.
     legacyErrorBoundariesThatAlreadyFailed = null;
   }
-  return remainingTime;
+  return nextPendingPriorityLevel;
 }
 
 function resetExpirationTime(
@@ -847,7 +847,6 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
         continue;
       } else {
         // We've reached the root.
-        isRootReadyForCommit = true;
         return null;
       }
     } else {
@@ -1097,11 +1096,11 @@ function renderRoot(
   } while (true);
 
   // We're done performing work. Time to clean up.
-  let didCompleteRoot = false;
   isWorking = false;
 
   // Yield back to main thread.
   if (didFatal) {
+    const didCompleteRoot = false;
     stopWorkLoopTimer(interruptedBy, didCompleteRoot);
     interruptedBy = null;
     // There was a fatal error.
@@ -1111,34 +1110,38 @@ function renderRoot(
     return null;
   } else if (nextUnitOfWork === null) {
     // We reached the root.
-    if (isRootReadyForCommit) {
-      didCompleteRoot = true;
+    const rootWorkInProgress = root.current.alternate;
+    invariant(
+      rootWorkInProgress !== null,
+      'Finished root should have a work-in-progress. This error is likely ' +
+        'caused by a bug in React. Please file an issue.',
+    );
+    if ((rootWorkInProgress.effectTag & Incomplete) === NoEffect) {
+      const didCompleteRoot = true;
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
       interruptedBy = null;
-      // The root successfully completed. It's ready for commit.
+      // The root successfully completed.
       root.pendingCommitExpirationTime = expirationTime;
-      const finishedWork = root.current.alternate;
-      return finishedWork;
+      // Return the completed work-in-progress.
+      return rootWorkInProgress;
     } else {
       // The root did not complete.
+      const didCompleteRoot = false;
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
       interruptedBy = null;
-      invariant(
-        !nextRenderIsExpired,
-        'Expired work should have completed. This error is likely caused ' +
-          'by a bug in React. Please file an issue.',
-      );
-      markSuspendedPriorityLevel(root, expirationTime);
       if (nextLatestTimeoutMs >= 0) {
         setTimeout(() => {
           retrySuspendedRoot(root, expirationTime);
         }, nextLatestTimeoutMs);
       }
+      markSuspendedPriorityLevel(root, expirationTime);
       const firstUnblockedExpirationTime = findNextPendingPriorityLevel(root);
       onBlock(firstUnblockedExpirationTime);
+      // Return null to indicate that the root did not complete.
       return null;
     }
   } else {
+    const didCompleteRoot = false;
     stopWorkLoopTimer(interruptedBy, didCompleteRoot);
     interruptedBy = null;
     // There's more work to do, but we ran out of time. Yield back to
@@ -1294,8 +1297,7 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
   return expirationTime;
 }
 
-// TODO: Rename this to scheduleTimeout or something
-function suspendRoot(
+function markTimeout(
   root: FiberRoot,
   thenable: Thenable,
   timeoutMs: number,
@@ -1978,7 +1980,7 @@ export {
   computeExpirationForFiber,
   captureCommitPhaseError,
   onUncaughtError,
-  suspendRoot,
+  markTimeout,
   retrySuspendedRoot,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
