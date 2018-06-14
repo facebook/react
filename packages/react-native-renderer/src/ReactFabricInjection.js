@@ -11,5 +11,11 @@ import './ReactNativeInjectionShared';
 
 import * as ReactFabricComponentTree from './ReactFabricComponentTree';
 import * as EventPluginUtils from 'events/EventPluginUtils';
+import ReactFabricGlobalResponderHandler from './ReactFabricGlobalResponderHandler';
+import ResponderEventPlugin from 'events/ResponderEventPlugin';
 
 EventPluginUtils.injection.injectComponentTree(ReactFabricComponentTree);
+
+ResponderEventPlugin.injection.injectGlobalResponderHandler(
+  ReactFabricGlobalResponderHandler,
+);

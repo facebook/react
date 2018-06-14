@@ -12,6 +12,8 @@ import './ReactNativeInjectionShared';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import * as EventPluginUtils from 'events/EventPluginUtils';
 import * as ReactNativeEventEmitter from './ReactNativeEventEmitter';
+import ReactNativeGlobalResponderHandler from './ReactNativeGlobalResponderHandler';
+import ResponderEventPlugin from 'events/ResponderEventPlugin';
 
 // Module provided by RN:
 import RCTEventEmitter from 'RCTEventEmitter';
@@ -22,3 +24,7 @@ import RCTEventEmitter from 'RCTEventEmitter';
 RCTEventEmitter.register(ReactNativeEventEmitter);
 
 EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
+
+ResponderEventPlugin.injection.injectGlobalResponderHandler(
+  ReactNativeGlobalResponderHandler,
+);

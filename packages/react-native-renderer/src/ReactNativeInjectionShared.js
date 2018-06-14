@@ -21,16 +21,11 @@ import ResponderEventPlugin from 'events/ResponderEventPlugin';
 
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeEventPluginOrder from './ReactNativeEventPluginOrder';
-import ReactNativeGlobalResponderHandler from './ReactNativeGlobalResponderHandler';
 
 /**
  * Inject module for resolving DOM hierarchy and plugin ordering.
  */
 EventPluginHub.injection.injectEventPluginOrder(ReactNativeEventPluginOrder);
-
-ResponderEventPlugin.injection.injectGlobalResponderHandler(
-  ReactNativeGlobalResponderHandler,
-);
 
 /**
  * Some important event plugins included by default (without having to require
