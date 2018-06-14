@@ -200,6 +200,20 @@ function getDataFromCustomEvent(nativeEvent) {
   return null;
 }
 
+/**
+ * Check if a composition event was triggered by Korean IME.
+ * Our fallback mode does not work well with IE's Korean IME,
+ * so just use native composition events when Korean IME is used.
+ * Although CompositionEvent.locale property is deprecated,
+ * it is available in IE, where our fallback mode is enabled.
+ *
+ * @param {object} nativeEvent
+ * @return {boolean}
+ */
+function isUsingKoreanIME(nativeEvent) {
+  return nativeEvent.locale === 'ko';
+}
+
 // Track the current IME composition status, if any.
 let isComposing = false;
 
@@ -229,7 +243,7 @@ function extractCompositionEvent(
     return null;
   }
 
-  if (useFallbackCompositionData) {
+  if (useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)) {
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
     if (!isComposing && eventType === eventTypes.compositionStart) {
@@ -378,7 +392,9 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelType, nativeEvent) {
       }
       return null;
     case TOP_COMPOSITION_END:
-      return useFallbackCompositionData ? null : nativeEvent.data;
+      return useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)
+        ? null
+        : nativeEvent.data;
     default:
       return null;
   }
