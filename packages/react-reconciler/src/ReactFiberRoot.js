@@ -44,6 +44,11 @@ export type FiberRoot = {
   // be retried.
   latestPingedTime: ExpirationTime,
 
+  // If an error is thrown, and there are no more updates in the queue, we try
+  // rendering from the root one more time, synchronously, before handling
+  // the error.
+  didError: boolean,
+
   pendingCommitExpirationTime: ExpirationTime,
   // A finished work-in-progress HostRoot that's ready to be committed.
   // TODO: The reason this is separate from isReadyForCommit is because the
@@ -85,6 +90,8 @@ export function createFiberRoot(
     earliestSuspendedTime: NoWork,
     latestSuspendedTime: NoWork,
     latestPingedTime: NoWork,
+
+    didError: false,
 
     pendingCommitExpirationTime: NoWork,
     finishedWork: null,
