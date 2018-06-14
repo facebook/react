@@ -19,9 +19,9 @@ import {
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import shallowEqual from 'shared/shallowEqual';
 import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
-import shallowEqual from 'fbjs/lib/shallowEqual';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 

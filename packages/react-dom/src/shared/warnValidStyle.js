@@ -6,7 +6,6 @@
  */
 
 import emptyFunction from 'fbjs/lib/emptyFunction';
-import camelizeStyleName from 'fbjs/lib/camelizeStyleName';
 import warning from 'fbjs/lib/warning';
 
 let warnValidStyle = emptyFunction;
@@ -14,6 +13,8 @@ let warnValidStyle = emptyFunction;
 if (__DEV__) {
   // 'msTransform' is correct, but the other prefixes should be capitalized
   const badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
+  const msPattern = /^-ms-/;
+  const hyphenPattern = /-(.)/g;
 
   // style values shouldn't contain a semicolon
   const badStyleValueWithSemicolonPattern = /;\s*$/;
@@ -22,6 +23,12 @@ if (__DEV__) {
   const warnedStyleValues = {};
   let warnedForNaNValue = false;
   let warnedForInfinityValue = false;
+
+  const camelize = function(string) {
+    return string.replace(hyphenPattern, function(_, character) {
+      return character.toUpperCase();
+    });
+  };
 
   const warnHyphenatedStyleName = function(name, getStack) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
@@ -33,7 +40,10 @@ if (__DEV__) {
       false,
       'Unsupported style property %s. Did you mean %s?%s',
       name,
-      camelizeStyleName(name),
+      // As Andi Smith suggests
+      // (http://www.andismith.com/blog/2012/02/modernizr-prefixed/), an `-ms` prefix
+      // is converted to lowercase `ms`.
+      camelize(name.replace(msPattern, 'ms-')),
       getStack(),
     );
   };

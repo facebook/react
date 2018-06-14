@@ -8,7 +8,7 @@
 import type {TopLevelType} from 'events/TopLevelEventTypes';
 
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import {
   TOP_BLUR,
@@ -29,11 +29,10 @@ import SyntheticInputEvent from './SyntheticInputEvent';
 const END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 const START_KEYCODE = 229;
 
-const canUseCompositionEvent =
-  ExecutionEnvironment.canUseDOM && 'CompositionEvent' in window;
+const canUseCompositionEvent = canUseDOM && 'CompositionEvent' in window;
 
 let documentMode = null;
-if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
+if (canUseDOM && 'documentMode' in document) {
   documentMode = document.documentMode;
 }
 
@@ -41,13 +40,13 @@ if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
 // directly represent `beforeInput`. The IE `textinput` event is not as
 // useful, so we don't use it.
 const canUseTextInputEvent =
-  ExecutionEnvironment.canUseDOM && 'TextEvent' in window && !documentMode;
+  canUseDOM && 'TextEvent' in window && !documentMode;
 
 // In IE9+, we have access to composition events, but the data supplied
 // by the native compositionend event may be incorrect. Japanese ideographic
 // spaces, for instance (\u3000) are not recorded correctly.
 const useFallbackCompositionData =
-  ExecutionEnvironment.canUseDOM &&
+  canUseDOM &&
   (!canUseCompositionEvent ||
     (documentMode && documentMode > 8 && documentMode <= 11));
 
