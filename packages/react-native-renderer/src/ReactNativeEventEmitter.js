@@ -13,9 +13,9 @@ import {batchedUpdates} from 'events/ReactGenericBatching';
 import warning from 'fbjs/lib/warning';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
-import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -89,7 +89,7 @@ const removeTouchesAtIndices = function(
  */
 export function _receiveRootNodeIDEvent(
   rootNodeID: number,
-  topLevelType: string,
+  topLevelType: TopLevelType,
   nativeEventParam: ?AnyNativeEvent,
 ) {
   const nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
@@ -115,7 +115,7 @@ export function _receiveRootNodeIDEvent(
  */
 export function receiveEvent(
   rootNodeID: number,
-  topLevelType: string,
+  topLevelType: TopLevelType,
   nativeEventParam: AnyNativeEvent,
 ) {
   _receiveRootNodeIDEvent(rootNodeID, topLevelType, nativeEventParam);
@@ -146,7 +146,7 @@ export function receiveEvent(
  * identifier 0, also abandoning traditional click handlers.
  */
 export function receiveTouches(
-  eventTopLevelType: string,
+  eventTopLevelType: TopLevelType,
   touches: Array<Object>,
   changedIndices: Array<number>,
 ) {
@@ -166,7 +166,7 @@ export function receiveTouches(
     let rootNodeID = null;
     const target = nativeEvent.target;
     if (target !== null && target !== undefined) {
-      if (target < ReactNativeTagHandles.tagsStartAt) {
+      if (target < 1) {
         if (__DEV__) {
           warning(
             false,

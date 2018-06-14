@@ -20,12 +20,7 @@ export function uncacheFiberNode(tag) {
 }
 
 function getInstanceFromTag(tag) {
-  if (typeof tag === 'number') {
-    return instanceCache[tag] || null;
-  } else {
-    // Fabric will invoke event emitters on a direct fiber reference
-    return tag;
-  }
+  return instanceCache[tag] || null;
 }
 
 function getTagFromInstance(inst) {

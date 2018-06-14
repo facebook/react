@@ -5,6 +5,7 @@ if (NODE_ENV !== 'development' && NODE_ENV !== 'production') {
   throw new Error('NODE_ENV must either be set to development or production.');
 }
 global.__DEV__ = NODE_ENV === 'development';
+global.__PROFILE__ = NODE_ENV === 'development';
 
 global.requestAnimationFrame = function(callback) {
   setTimeout(callback);
@@ -45,3 +46,9 @@ if (typeof window !== 'undefined') {
     }
   });
 }
+
+// Preserve the empty object identity across module resets.
+// This is needed for some tests that rely on string refs
+// but reset modules between loading different renderers.
+const obj = require.requireActual('fbjs/lib/emptyObject');
+jest.mock('fbjs/lib/emptyObject', () => obj);

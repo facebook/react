@@ -16,12 +16,11 @@ export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
 export const enableGetDerivedStateFromCatch = false;
+export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
+export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-export const enableMutatingReconciler = true;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = false;
-export const alwaysUseRequestIdleCallbackPolyfill = false;
+export const enableProfilerTimer = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

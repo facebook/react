@@ -72,7 +72,7 @@ describe('SelectEventPlugin', () => {
     // Verify that it doesn't get "stuck" waiting for
     // a `mouseup` event that it has "missed" because
     // a top-level listener didn't exist yet.
-    expect(select.mock.calls.length).toBe(1);
+    expect(select).toHaveBeenCalledTimes(1);
   });
 
   it('should fire `onSelect` when a listener is present', () => {
@@ -95,17 +95,17 @@ describe('SelectEventPlugin', () => {
       cancelable: true,
     });
     node.dispatchEvent(nativeEvent);
-    expect(select.mock.calls.length).toBe(0);
+    expect(select).toHaveBeenCalledTimes(0);
 
     nativeEvent = new MouseEvent('mousedown', {
       bubbles: true,
       cancelable: true,
     });
     node.dispatchEvent(nativeEvent);
-    expect(select.mock.calls.length).toBe(0);
+    expect(select).toHaveBeenCalledTimes(0);
 
     nativeEvent = new MouseEvent('mouseup', {bubbles: true, cancelable: true});
     node.dispatchEvent(nativeEvent);
-    expect(select.mock.calls.length).toBe(1);
+    expect(select).toHaveBeenCalledTimes(1);
   });
 });

@@ -21,6 +21,8 @@ type LIFECYCLE =
   | 'UNSAFE_componentWillUpdate';
 type LifecycleToComponentsMap = {[lifecycle: LIFECYCLE]: Array<Fiber>};
 type FiberToLifecycleMap = Map<Fiber, LifecycleToComponentsMap>;
+type FiberArray = Array<Fiber>;
+type FiberToFiberComponentsMap = Map<Fiber, FiberArray>;
 
 const ReactStrictModeWarnings = {
   discardPendingWarnings(): void {},
@@ -28,6 +30,8 @@ const ReactStrictModeWarnings = {
   flushPendingUnsafeLifecycleWarnings(): void {},
   recordDeprecationWarnings(fiber: Fiber, instance: any): void {},
   recordUnsafeLifecycleWarnings(fiber: Fiber, instance: any): void {},
+  recordLegacyContextWarning(fiber: Fiber, instance: any): void {},
+  flushLegacyContextWarning(): void {},
 };
 
 if (__DEV__) {
@@ -41,10 +45,12 @@ if (__DEV__) {
   let pendingComponentWillReceivePropsWarnings: Array<Fiber> = [];
   let pendingComponentWillUpdateWarnings: Array<Fiber> = [];
   let pendingUnsafeLifecycleWarnings: FiberToLifecycleMap = new Map();
+  let pendingLegacyContextWarning: FiberToFiberComponentsMap = new Map();
 
   // Tracks components we have already warned about.
   const didWarnAboutDeprecatedLifecycles = new Set();
   const didWarnAboutUnsafeLifecycles = new Set();
+  const didWarnAboutLegacyContext = new Set();
 
   const setToSortedString = set => {
     const array = [];
@@ -59,6 +65,7 @@ if (__DEV__) {
     pendingComponentWillReceivePropsWarnings = [];
     pendingComponentWillUpdateWarnings = [];
     pendingUnsafeLifecycleWarnings = new Map();
+    pendingLegacyContextWarning = new Map();
   };
 
   ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings = () => {
@@ -107,15 +114,15 @@ if (__DEV__) {
     pendingUnsafeLifecycleWarnings = new Map();
   };
 
-  const getStrictRoot = (fiber: Fiber): Fiber => {
+  const findStrictRoot = (fiber: Fiber): Fiber | null => {
     let maybeStrictRoot = null;
 
-    while (fiber !== null) {
-      if (fiber.mode & StrictMode) {
-        maybeStrictRoot = fiber;
+    let node = fiber;
+    while (node !== null) {
+      if (node.mode & StrictMode) {
+        maybeStrictRoot = node;
       }
-
-      fiber = fiber.return;
+      node = node.return;
     }
 
     return maybeStrictRoot;
@@ -225,7 +232,15 @@ if (__DEV__) {
     fiber: Fiber,
     instance: any,
   ) => {
-    const strictRoot = getStrictRoot(fiber);
+    const strictRoot = findStrictRoot(fiber);
+    if (strictRoot === null) {
+      warning(
+        false,
+        'Expected to find a StrictMode component in a strict mode tree. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+      return;
+    }
 
     // Dedup strategy: Warn once per component.
     // This is difficult to track any other way since component names
@@ -233,16 +248,6 @@ if (__DEV__) {
     // An expand property is probably okay to use here since it's DEV-only,
     // and will only be set in the event of serious warnings.
     if (didWarnAboutUnsafeLifecycles.has(fiber.type)) {
-      return;
-    }
-
-    // Don't warn about react-lifecycles-compat polyfilled components.
-    // Note that it is sufficient to check for the presence of a
-    // single lifecycle, componentWillMount, with the polyfill flag.
-    if (
-      typeof instance.componentWillMount === 'function' &&
-      instance.componentWillMount.__suppressDeprecationWarning === true
-    ) {
       return;
     }
 
@@ -261,19 +266,23 @@ if (__DEV__) {
 
     const unsafeLifecycles = [];
     if (
-      typeof instance.componentWillMount === 'function' ||
+      (typeof instance.componentWillMount === 'function' &&
+        instance.componentWillMount.__suppressDeprecationWarning !== true) ||
       typeof instance.UNSAFE_componentWillMount === 'function'
     ) {
       unsafeLifecycles.push('UNSAFE_componentWillMount');
     }
     if (
-      typeof instance.componentWillReceiveProps === 'function' ||
+      (typeof instance.componentWillReceiveProps === 'function' &&
+        instance.componentWillReceiveProps.__suppressDeprecationWarning !==
+          true) ||
       typeof instance.UNSAFE_componentWillReceiveProps === 'function'
     ) {
       unsafeLifecycles.push('UNSAFE_componentWillReceiveProps');
     }
     if (
-      typeof instance.componentWillUpdate === 'function' ||
+      (typeof instance.componentWillUpdate === 'function' &&
+        instance.componentWillUpdate.__suppressDeprecationWarning !== true) ||
       typeof instance.UNSAFE_componentWillUpdate === 'function'
     ) {
       unsafeLifecycles.push('UNSAFE_componentWillUpdate');
@@ -286,6 +295,67 @@ if (__DEV__) {
         );
       });
     }
+  };
+
+  ReactStrictModeWarnings.recordLegacyContextWarning = (
+    fiber: Fiber,
+    instance: any,
+  ) => {
+    const strictRoot = findStrictRoot(fiber);
+    if (strictRoot === null) {
+      warning(
+        false,
+        'Expected to find a StrictMode component in a strict mode tree. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+      return;
+    }
+
+    // Dedup strategy: Warn once per component.
+    if (didWarnAboutLegacyContext.has(fiber.type)) {
+      return;
+    }
+
+    let warningsForRoot = pendingLegacyContextWarning.get(strictRoot);
+
+    if (
+      fiber.type.contextTypes != null ||
+      fiber.type.childContextTypes != null ||
+      (instance !== null && typeof instance.getChildContext === 'function')
+    ) {
+      if (warningsForRoot === undefined) {
+        warningsForRoot = [];
+        pendingLegacyContextWarning.set(strictRoot, warningsForRoot);
+      }
+      warningsForRoot.push(fiber);
+    }
+  };
+
+  ReactStrictModeWarnings.flushLegacyContextWarning = () => {
+    ((pendingLegacyContextWarning: any): FiberToFiberComponentsMap).forEach(
+      (fiberArray: FiberArray, strictRoot) => {
+        const uniqueNames = new Set();
+        fiberArray.forEach(fiber => {
+          uniqueNames.add(getComponentName(fiber) || 'Component');
+          didWarnAboutLegacyContext.add(fiber.type);
+        });
+
+        const sortedNames = setToSortedString(uniqueNames);
+        const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
+          strictRoot,
+        );
+
+        warning(
+          false,
+          'Legacy context API has been detected within a strict-mode tree: %s' +
+            '\n\nPlease update the following components: %s' +
+            '\n\nLearn more about this warning here:' +
+            '\nhttps://fb.me/react-strict-mode-warnings',
+          strictRootComponentStack,
+          sortedNames,
+        );
+      },
+    );
   };
 }
 

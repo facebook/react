@@ -157,6 +157,9 @@ export function shouldRemoveAttribute(
   ) {
     return true;
   }
+  if (isCustomComponentTag) {
+    return false;
+  }
   if (propertyInfo !== null) {
     switch (propertyInfo.type) {
       case BOOLEAN:

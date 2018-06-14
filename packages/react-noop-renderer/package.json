@@ -20,6 +20,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "persistent.js",
     "cjs/"
   ]
 }

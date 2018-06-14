@@ -716,7 +716,7 @@ describe('ReactNewContext', () => {
     ReactNoop.flush();
 
     if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'calculateChangedBits: Expected the return value to be a 31-bit ' +
           'integer. Instead received: 4294967295',
@@ -844,6 +844,72 @@ describe('ReactNewContext', () => {
       'App',
       // Child does not re-render
     ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+  });
+
+  it('provider does not bail out if legacy context changed above', () => {
+    const Context = React.createContext(0);
+
+    function Child() {
+      ReactNoop.yield('Child');
+      return <span prop="Child" />;
+    }
+
+    const children = <Child />;
+
+    class LegacyProvider extends React.Component {
+      static childContextTypes = {
+        legacyValue: () => {},
+      };
+      state = {legacyValue: 1};
+      getChildContext() {
+        return {legacyValue: this.state.legacyValue};
+      }
+      render() {
+        ReactNoop.yield('LegacyProvider');
+        return this.props.children;
+      }
+    }
+
+    class App extends React.Component {
+      state = {value: 1};
+      render() {
+        ReactNoop.yield('App');
+        return (
+          <Context.Provider value={this.state.value}>
+            {this.props.children}
+          </Context.Provider>
+        );
+      }
+    }
+
+    const legacyProviderRef = React.createRef();
+    const appRef = React.createRef();
+
+    // Initial mount
+    ReactNoop.render(
+      <LegacyProvider ref={legacyProviderRef}>
+        <App ref={appRef} value={1}>
+          {children}
+        </App>
+      </LegacyProvider>,
+    );
+    expect(ReactNoop.flush()).toEqual(['LegacyProvider', 'App', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update App with same value (should bail out)
+    appRef.current.setState({value: 1});
+    expect(ReactNoop.flush()).toEqual(['App']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update LegacyProvider (should not bail out)
+    legacyProviderRef.current.setState({value: 1});
+    expect(ReactNoop.flush()).toEqual(['LegacyProvider', 'App', 'Child']);
+    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+    // Update App with same value (should bail out)
+    appRef.current.setState({value: 1});
+    expect(ReactNoop.flush()).toEqual(['App']);
     expect(ReactNoop.getChildren()).toEqual([span('Child')]);
   });
 
@@ -989,6 +1055,82 @@ describe('ReactNewContext', () => {
     ReactNoop.flush();
   });
 
+  // This is a regression case for https://github.com/facebook/react/issues/12686
+  it('does not skip some siblings', () => {
+    const Context = React.createContext(0);
+
+    class App extends React.Component {
+      state = {
+        step: 0,
+      };
+
+      render() {
+        ReactNoop.yield('App');
+        return (
+          <Context.Provider value={this.state.step}>
+            <StaticContent />
+            {this.state.step > 0 && <Indirection />}
+          </Context.Provider>
+        );
+      }
+    }
+
+    class StaticContent extends React.PureComponent {
+      render() {
+        return (
+          <React.Fragment>
+            <React.Fragment>
+              <span prop="static 1" />
+              <span prop="static 2" />
+            </React.Fragment>
+          </React.Fragment>
+        );
+      }
+    }
+
+    class Indirection extends React.PureComponent {
+      render() {
+        return <Consumer />;
+      }
+    }
+
+    function Consumer() {
+      return (
+        <Context.Consumer>
+          {value => {
+            ReactNoop.yield('Consumer');
+            return <span prop={value} />;
+          }}
+        </Context.Consumer>
+      );
+    }
+
+    // Initial mount
+    let inst;
+    ReactNoop.render(<App ref={ref => (inst = ref)} />);
+    expect(ReactNoop.flush()).toEqual(['App']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('static 1'),
+      span('static 2'),
+    ]);
+    // Update the first time
+    inst.setState({step: 1});
+    expect(ReactNoop.flush()).toEqual(['App', 'Consumer']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('static 1'),
+      span('static 2'),
+      span(1),
+    ]);
+    // Update the second time
+    inst.setState({step: 2});
+    expect(ReactNoop.flush()).toEqual(['App', 'Consumer']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('static 1'),
+      span('static 2'),
+      span(2),
+    ]);
+  });
+
   describe('fuzz test', () => {
     const Fragment = React.Fragment;
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
@@ -1123,9 +1265,7 @@ describe('ReactNewContext', () => {
             expectedValues[key] = value;
           } else if (value !== expectedValue) {
             throw new Error(
-              `Inconsistent value! Expected: ${key}:${expectedValue}. Actual: ${
-                text
-              }`,
+              `Inconsistent value! Expected: ${key}:${expectedValue}. Actual: ${text}`,
             );
           }
         });

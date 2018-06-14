@@ -348,9 +348,13 @@ describe('ReactDOMServerIntegration', () => {
         ControlledSelect;
       beforeEach(() => {
         ControlledInput = class extends React.Component {
+          static defaultProps = {
+            type: 'text',
+            initialValue: 'Hello',
+          };
           constructor() {
-            super();
-            this.state = {value: 'Hello'};
+            super(...arguments);
+            this.state = {value: this.props.initialValue};
           }
           handleChange(event) {
             if (this.props.onChange) {
@@ -361,6 +365,7 @@ describe('ReactDOMServerIntegration', () => {
           render() {
             return (
               <input
+                type={this.props.type}
                 value={this.state.value}
                 onChange={this.handleChange.bind(this)}
               />
@@ -548,6 +553,27 @@ describe('ReactDOMServerIntegration', () => {
           // note that there's a strong argument to be made that the DOM revival
           // algorithm should notice that the user has changed the value and fire
           // an onChange. however, it does not now, so that's what this tests.
+          expect(changeCount).toBe(0);
+        });
+
+        it('should not blow away user-interaction on successful reconnect to an uncontrolled range input', () =>
+          testUserInteractionBeforeClientRender(
+            <input type="text" defaultValue="0.5" />,
+            '0.5',
+            '1',
+          ));
+
+        it('should not blow away user-interaction on successful reconnect to a controlled range input', async () => {
+          let changeCount = 0;
+          await testUserInteractionBeforeClientRender(
+            <ControlledInput
+              type="range"
+              initialValue="0.25"
+              onChange={() => changeCount++}
+            />,
+            '0.25',
+            '1',
+          );
           expect(changeCount).toBe(0);
         });
 
