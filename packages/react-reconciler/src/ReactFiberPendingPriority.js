@@ -35,6 +35,7 @@ export function markPendingPriorityLevel(
       }
     }
   }
+  findNextPendingPriorityLevel(root);
 }
 
 export function markCommittedPriorityLevels(
@@ -49,6 +50,7 @@ export function markCommittedPriorityLevels(
     root.earliestSuspendedTime = NoWork;
     root.latestSuspendedTime = NoWork;
     root.latestPingedTime = NoWork;
+    findNextPendingPriorityLevel(root);
     return;
   }
 
@@ -77,6 +79,7 @@ export function markCommittedPriorityLevels(
     // There's no suspended work. Treat the earliest remaining level as a
     // pending level.
     markPendingPriorityLevel(root, earliestRemainingTime);
+    findNextPendingPriorityLevel(root);
     return;
   }
 
@@ -91,6 +94,7 @@ export function markCommittedPriorityLevels(
     // There's no suspended work. Treat the earliest remaining level as a
     // pending level.
     markPendingPriorityLevel(root, earliestRemainingTime);
+    findNextPendingPriorityLevel(root);
     return;
   }
 
@@ -98,11 +102,13 @@ export function markCommittedPriorityLevels(
     // The earliest remaining time is earlier than all the suspended work.
     // Treat it as a pending update.
     markPendingPriorityLevel(root, earliestRemainingTime);
+    findNextPendingPriorityLevel(root);
     return;
   }
 
   // The earliest remaining time falls within the range of known suspended
   // levels. We should treat this as suspended work.
+  findNextPendingPriorityLevel(root);
 }
 
 export function markSuspendedPriorityLevel(
@@ -148,6 +154,7 @@ export function markSuspendedPriorityLevel(
       root.latestSuspendedTime = suspendedTime;
     }
   }
+  findNextPendingPriorityLevel(root);
 }
 
 export function markPingedPriorityLevel(
@@ -161,22 +168,29 @@ export function markPingedPriorityLevel(
       root.latestPingedTime = pingedTime;
     }
   }
+  findNextPendingPriorityLevel(root);
 }
 
-export function findNextPendingPriorityLevel(root: FiberRoot): ExpirationTime {
+function findNextPendingPriorityLevel(root) {
   const earliestSuspendedTime = root.earliestSuspendedTime;
   const earliestPendingTime = root.earliestPendingTime;
+  let nextExpirationTimeToWorkOn;
+  let expirationTime;
   if (earliestSuspendedTime === NoWork) {
     // Fast path. There's no suspended work.
-    return earliestPendingTime;
+    nextExpirationTimeToWorkOn = expirationTime = earliestPendingTime;
+  } else if (earliestPendingTime !== NoWork) {
+    // Check if there's known pending work.
+    nextExpirationTimeToWorkOn = earliestPendingTime;
+    expirationTime =
+      earliestSuspendedTime < earliestPendingTime
+        ? earliestSuspendedTime
+        : earliestPendingTime;
+  } else {
+    // Finally, if a suspended level was pinged, work on that. Otherwise there's
+    // nothing to work on.
+    nextExpirationTimeToWorkOn = expirationTime = root.latestPingedTime;
   }
-
-  // First, check if there's known pending work.
-  if (earliestPendingTime !== NoWork) {
-    return earliestPendingTime;
-  }
-
-  // Finally, if a suspended level was pinged, work on that. Otherwise there's
-  // nothing to work on.
-  return root.latestPingedTime;
+  root.nextExpirationTimeToWorkOn = nextExpirationTimeToWorkOn;
+  root.expirationTime = expirationTime;
 }

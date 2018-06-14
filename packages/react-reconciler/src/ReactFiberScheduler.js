@@ -60,7 +60,6 @@ import {
 import {
   markPendingPriorityLevel,
   markCommittedPriorityLevels,
-  findNextPendingPriorityLevel,
   markSuspendedPriorityLevel,
   markPingedPriorityLevel,
 } from './ReactFiberPendingPriority';
@@ -230,7 +229,6 @@ let nextRoot: FiberRoot | null = null;
 // The time at which we're currently rendering work.
 let nextRenderExpirationTime: ExpirationTime = NoWork;
 let nextLatestTimeoutMs: number = -1;
-let nextRenderIsExpired: boolean = false;
 
 // The next fiber with an effect that we're currently committing.
 let nextEffect: Fiber | null = null;
@@ -254,7 +252,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
   replayUnitOfWork = (
     failedUnitOfWork: Fiber,
     thrownValue: mixed,
-    isAsync: boolean,
+    isYieldy: boolean,
   ) => {
     if (
       thrownValue !== null &&
@@ -303,7 +301,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     // Replay the begin phase.
     isReplayingFailedUnitOfWork = true;
     originalReplayError = thrownValue;
-    invokeGuardedCallback(null, workLoop, null, isAsync);
+    invokeGuardedCallback(null, workLoop, null, isYieldy);
     isReplayingFailedUnitOfWork = false;
     originalReplayError = null;
     if (hasCaughtError()) {
@@ -345,7 +343,6 @@ function resetStack() {
   nextRoot = null;
   nextRenderExpirationTime = NoWork;
   nextLatestTimeoutMs = -1;
-  nextRenderIsExpired = false;
   nextUnitOfWork = null;
 }
 
@@ -494,12 +491,11 @@ function markLegacyErrorBoundaryAsFailed(instance: mixed) {
   }
 }
 
-function commitRoot(finishedWork: Fiber): ExpirationTime {
+function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   isWorking = true;
   isCommitting = true;
   startCommitTimer();
 
-  const root: FiberRoot = finishedWork.stateNode;
   invariant(
     root.current !== finishedWork,
     'Cannot commit the same tree as before. This is probably a bug ' +
@@ -690,13 +686,13 @@ function commitRoot(finishedWork: Fiber): ExpirationTime {
     ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
   }
 
-  const nextPendingPriorityLevel = findNextPendingPriorityLevel(root);
-  if (nextPendingPriorityLevel === NoWork) {
+  const expirationTime = root.expirationTime;
+  if (expirationTime === NoWork) {
     // If there's no remaining work, we can clear the set of already failed
     // error boundaries.
     legacyErrorBoundariesThatAlreadyFailed = null;
   }
-  return nextPendingPriorityLevel;
+  onCommit(root, expirationTime);
 }
 
 function resetExpirationTime(
@@ -853,11 +849,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
       // This fiber did not complete because something threw. Pop values off
       // the stack without entering the complete phase. If this is a boundary,
       // capture values if possible.
-      const next = unwindWork(
-        workInProgress,
-        nextRenderIsExpired,
-        nextRenderExpirationTime,
-      );
+      const next = unwindWork(workInProgress, nextRenderExpirationTime);
       // Because this fiber did not complete, don't reset its expiration time.
       if (workInProgress.effectTag & DidCapture) {
         // Restarting an error boundary
@@ -973,9 +965,9 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
   return next;
 }
 
-function workLoop(isAsync) {
-  if (!isAsync) {
-    // Flush all expired work.
+function workLoop(isYieldy) {
+  if (!isYieldy) {
+    // Flush work without yielding
     while (nextUnitOfWork !== null) {
       nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
     }
@@ -993,17 +985,15 @@ function workLoop(isAsync) {
   }
 }
 
-function renderRoot(
-  root: FiberRoot,
-  expirationTime: ExpirationTime,
-  isAsync: boolean,
-): Fiber | null {
+function renderRoot(root: FiberRoot, isYieldy: boolean): void {
   invariant(
     !isWorking,
     'renderRoot was called recursively. This error is likely caused ' +
       'by a bug in React. Please file an issue.',
   );
   isWorking = true;
+
+  const expirationTime = root.nextExpirationTimeToWorkOn;
 
   // Check if we're starting from a fresh stack, or if we're resuming from
   // previously yielded work.
@@ -1027,14 +1017,11 @@ function renderRoot(
 
   let didFatal = false;
 
-  nextRenderIsExpired =
-    !isAsync || nextRenderExpirationTime <= mostRecentCurrentTime;
-
   startWorkLoopTimer(nextUnitOfWork);
 
   do {
     try {
-      workLoop(isAsync);
+      workLoop(isYieldy);
     } catch (thrownValue) {
       if (enableProfilerTimer) {
         // Stop "base" render timer in the event of an error.
@@ -1054,7 +1041,7 @@ function renderRoot(
 
         const failedUnitOfWork: Fiber = nextUnitOfWork;
         if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-          replayUnitOfWork(failedUnitOfWork, thrownValue, isAsync);
+          replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
         }
 
         // TODO: we already know this isn't true in some cases.
@@ -1085,7 +1072,6 @@ function renderRoot(
           returnFiber,
           sourceFiber,
           thrownValue,
-          nextRenderIsExpired,
           nextRenderExpirationTime,
           mostRecentCurrentTimeMs,
         );
@@ -1107,7 +1093,7 @@ function renderRoot(
     if (__DEV__) {
       resetStackAfterFatalErrorInDev();
     }
-    return null;
+    onFatal(root);
   } else if (nextUnitOfWork === null) {
     // We reached the root.
     const rootWorkInProgress = root.current.alternate;
@@ -1121,32 +1107,27 @@ function renderRoot(
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
       interruptedBy = null;
       // The root successfully completed.
-      root.pendingCommitExpirationTime = expirationTime;
-      // Return the completed work-in-progress.
-      return rootWorkInProgress;
+      onComplete(root, rootWorkInProgress, expirationTime);
     } else {
       // The root did not complete.
       const didCompleteRoot = false;
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
       interruptedBy = null;
-      if (nextLatestTimeoutMs >= 0) {
-        setTimeout(() => {
-          retrySuspendedRoot(root, expirationTime);
-        }, nextLatestTimeoutMs);
-      }
       markSuspendedPriorityLevel(root, expirationTime);
-      const firstUnblockedExpirationTime = findNextPendingPriorityLevel(root);
-      onBlock(firstUnblockedExpirationTime);
-      // Return null to indicate that the root did not complete.
-      return null;
+      const suspendedExpirationTime = expirationTime;
+      const newExpirationTime = root.expirationTime;
+      onSuspend(
+        root,
+        suspendedExpirationTime,
+        newExpirationTime,
+        nextLatestTimeoutMs,
+      );
     }
   } else {
     const didCompleteRoot = false;
     stopWorkLoopTimer(interruptedBy, didCompleteRoot);
     interruptedBy = null;
-    // There's more work to do, but we ran out of time. Yield back to
-    // the renderer.
-    return null;
+    onYield(root);
   }
 }
 
@@ -1311,9 +1292,9 @@ function markTimeout(
 
 function retrySuspendedRoot(root: FiberRoot, suspendedTime: ExpirationTime) {
   markPingedPriorityLevel(root, suspendedTime);
-  const retryTime = findNextPendingPriorityLevel(root);
+  const retryTime = root.expirationTime;
   if (retryTime !== NoWork) {
-    requestRetry(root, retryTime);
+    requestWork(root, retryTime);
   }
 }
 
@@ -1358,7 +1339,6 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
           resetStack();
         }
         markPendingPriorityLevel(root, expirationTime);
-        const nextExpirationTimeToWorkOn = findNextPendingPriorityLevel(root);
         if (
           // If we're in the render phase, we don't need to schedule this root
           // for an update, because we'll do it before we exit...
@@ -1367,7 +1347,8 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
           // ...unless this is a different root than the one we're rendering.
           nextRoot !== root
         ) {
-          requestWork(root, nextExpirationTimeToWorkOn);
+          const rootExpirationTime = root.expirationTime;
+          requestWork(root, rootExpirationTime);
         }
         if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
           invariant(
@@ -1454,7 +1435,7 @@ let nestedUpdateCount: number = 0;
 
 const timeHeuristicForUnitOfWork = 1;
 
-function scheduleCallbackWithExpiration(expirationTime) {
+function scheduleCallbackWithExpirationTime(expirationTime) {
   if (callbackExpirationTime !== NoWork) {
     // A callback is already scheduled. Check its expiration time (timeout).
     if (expirationTime > callbackExpirationTime) {
@@ -1472,25 +1453,52 @@ function scheduleCallbackWithExpiration(expirationTime) {
     startRequestCallbackTimer();
   }
 
-  // Compute a timeout for the given expiration time.
-  const currentMs = now() - originalStartTimeMs;
-  const expirationMs = expirationTimeToMs(expirationTime);
-  const timeout = expirationMs - currentMs;
-
   callbackExpirationTime = expirationTime;
+  const currentMs = now() - originalStartTimeMs;
+  const expirationTimeMs = expirationTimeToMs(expirationTime);
+  const timeout = expirationTimeMs - currentMs;
   callbackID = scheduleDeferredCallback(performAsyncWork, {timeout});
 }
 
-function requestRetry(root: FiberRoot, expirationTime: ExpirationTime) {
-  if (
-    root.remainingExpirationTime === NoWork ||
-    root.remainingExpirationTime < expirationTime
-  ) {
-    // For a retry, only update the remaining expiration time if it has a
-    // *lower priority* than the existing value. This is because, on a retry,
-    // we should attempt to coalesce as much as possible.
-    requestWork(root, expirationTime);
+// For every call to renderRoot, one of onFatal, onComplete, onSuspend, and
+// onYield is called upon exiting. We use these in lieu of returning a tuple.
+// I've also chosen not to inline them into renderRoot because these will
+// eventually be lifted into the renderer.
+function onFatal(root) {
+  root.finishedWork = null;
+}
+
+function onComplete(
+  root: FiberRoot,
+  finishedWork: Fiber,
+  expirationTime: ExpirationTime,
+) {
+  root.pendingCommitExpirationTime = expirationTime;
+  root.finishedWork = finishedWork;
+}
+
+function onSuspend(
+  root: FiberRoot,
+  suspendedExpirationTime: ExpirationTime,
+  expirationTime: ExpirationTime,
+  timeoutMs: number,
+) {
+  if (timeoutMs >= 0) {
+    const suspendedRoot = root;
+    setTimeout(() => {
+      retrySuspendedRoot(suspendedRoot, suspendedExpirationTime);
+    }, timeoutMs);
   }
+  root.expirationTime = expirationTime;
+}
+
+function onYield(root) {
+  root.finishedWork = null;
+}
+
+function onCommit(root, expirationTime) {
+  root.expirationTime = expirationTime;
+  root.finishedWork = null;
 }
 
 // requestWork is called by the scheduler whenever a root receives an update.
@@ -1520,7 +1528,7 @@ function requestWork(root: FiberRoot, expirationTime: ExpirationTime) {
   if (expirationTime === Sync) {
     performSyncWork();
   } else {
-    scheduleCallbackWithExpiration(expirationTime);
+    scheduleCallbackWithExpirationTime(expirationTime);
   }
 }
 
@@ -1529,7 +1537,7 @@ function addRootToSchedule(root: FiberRoot, expirationTime: ExpirationTime) {
   // Check if this root is already part of the schedule.
   if (root.nextScheduledRoot === null) {
     // This root is not already scheduled. Add it.
-    root.remainingExpirationTime = expirationTime;
+    root.expirationTime = expirationTime;
     if (lastScheduledRoot === null) {
       firstScheduledRoot = lastScheduledRoot = root;
       root.nextScheduledRoot = root;
@@ -1540,13 +1548,13 @@ function addRootToSchedule(root: FiberRoot, expirationTime: ExpirationTime) {
     }
   } else {
     // This root is already scheduled, but its priority may have increased.
-    const remainingExpirationTime = root.remainingExpirationTime;
+    const remainingExpirationTime = root.expirationTime;
     if (
       remainingExpirationTime === NoWork ||
       expirationTime < remainingExpirationTime
     ) {
       // Update the priority.
-      root.remainingExpirationTime = expirationTime;
+      root.expirationTime = expirationTime;
     }
   }
 }
@@ -1558,7 +1566,7 @@ function findHighestPriorityRoot() {
     let previousScheduledRoot = lastScheduledRoot;
     let root = firstScheduledRoot;
     while (root !== null) {
-      const remainingExpirationTime = root.remainingExpirationTime;
+      const remainingExpirationTime = root.expirationTime;
       if (remainingExpirationTime === NoWork) {
         // This root no longer has work. Remove it from the scheduler.
 
@@ -1628,18 +1636,14 @@ function findHighestPriorityRoot() {
 }
 
 function performAsyncWork(dl) {
-  performWork(NoWork, true, dl);
+  performWork(NoWork, dl);
 }
 
 function performSyncWork() {
-  performWork(Sync, false, null);
+  performWork(Sync, null);
 }
 
-function performWork(
-  minExpirationTime: ExpirationTime,
-  isAsync: boolean,
-  dl: Deadline | null,
-) {
+function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
   deadline = dl;
 
   // Keep working on roots until there's no more work, or until the we reach
@@ -1656,7 +1660,7 @@ function performWork(
     stopRequestCallbackTimer(didExpire, timeout);
   }
 
-  if (isAsync) {
+  if (deadline !== null) {
     while (
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
@@ -1666,11 +1670,7 @@ function performWork(
         recalculateCurrentTime() >= nextFlushedExpirationTime)
     ) {
       recalculateCurrentTime();
-      performWorkOnRoot(
-        nextFlushedRoot,
-        nextFlushedExpirationTime,
-        !deadlineDidExpire,
-      );
+      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, true);
       findHighestPriorityRoot();
     }
   } else {
@@ -1695,7 +1695,7 @@ function performWork(
   }
   // If there's work left over, schedule a new callback.
   if (nextFlushedExpirationTime !== NoWork) {
-    scheduleCallbackWithExpiration(nextFlushedExpirationTime);
+    scheduleCallbackWithExpirationTime(nextFlushedExpirationTime);
   }
 
   // Clean-up.
@@ -1752,7 +1752,7 @@ function finishRendering() {
 function performWorkOnRoot(
   root: FiberRoot,
   expirationTime: ExpirationTime,
-  isAsync: boolean,
+  isYieldy: boolean,
 ) {
   invariant(
     !isRendering,
@@ -1763,14 +1763,16 @@ function performWorkOnRoot(
   isRendering = true;
 
   // Check if this is async work or sync/expired work.
-  if (!isAsync) {
-    // Flush sync work.
+  if (!isYieldy) {
+    // Flush work without yielding.
     let finishedWork = root.finishedWork;
     if (finishedWork !== null) {
       // This root is already complete. We can commit it.
       completeRoot(root, finishedWork, expirationTime);
     } else {
-      finishedWork = renderRoot(root, expirationTime, false);
+      root.finishedWork = null;
+      renderRoot(root, false);
+      finishedWork = root.finishedWork;
       if (finishedWork !== null) {
         // We've completed the root. Commit it.
         completeRoot(root, finishedWork, expirationTime);
@@ -1783,7 +1785,9 @@ function performWorkOnRoot(
       // This root is already complete. We can commit it.
       completeRoot(root, finishedWork, expirationTime);
     } else {
-      finishedWork = renderRoot(root, expirationTime, true);
+      root.finishedWork = null;
+      renderRoot(root, true);
+      finishedWork = root.finishedWork;
       if (finishedWork !== null) {
         // We've completed the root. Check the deadline one more time
         // before committing.
@@ -1825,20 +1829,20 @@ function completeRoot(
       // This root is blocked from committing by a batch. Unschedule it until
       // we receive another update.
       root.finishedWork = finishedWork;
-      root.remainingExpirationTime = NoWork;
+      root.expirationTime = NoWork;
       return;
     }
   }
 
   // Commit the root.
   root.finishedWork = null;
-  root.remainingExpirationTime = commitRoot(finishedWork);
+  commitRoot(root, finishedWork);
 }
 
 // When working on async work, the reconciler asks the renderer if it should
 // yield execution. For DOM, we implement this with requestIdleCallback.
 function shouldYield() {
-  if (deadline === null) {
+  if (deadline === null || deadlineDidExpire) {
     return false;
   }
   if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
@@ -1858,21 +1862,11 @@ function onUncaughtError(error: mixed) {
   );
   // Unschedule this root so we don't work on it again until there's
   // another update.
-  nextFlushedRoot.remainingExpirationTime = NoWork;
+  nextFlushedRoot.expirationTime = NoWork;
   if (!hasUnhandledError) {
     hasUnhandledError = true;
     unhandledError = error;
   }
-}
-
-function onBlock(remainingExpirationTime: ExpirationTime) {
-  invariant(
-    nextFlushedRoot !== null,
-    'Should be working on a root. This error is likely caused by a bug in ' +
-      'React. Please file an issue.',
-  );
-  // This root was blocked. Unschedule it until there's another update.
-  nextFlushedRoot.remainingExpirationTime = remainingExpirationTime;
 }
 
 // TODO: Batching should be implemented at the renderer level, not inside
@@ -1936,7 +1930,7 @@ function interactiveUpdates<A, B, R>(fn: (A, B) => R, a: A, b: B): R {
     lowestPendingInteractiveExpirationTime !== NoWork
   ) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPendingInteractiveExpirationTime, false, null);
+    performWork(lowestPendingInteractiveExpirationTime, null);
     lowestPendingInteractiveExpirationTime = NoWork;
   }
   const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
@@ -1957,7 +1951,7 @@ function interactiveUpdates<A, B, R>(fn: (A, B) => R, a: A, b: B): R {
 function flushInteractiveUpdates() {
   if (!isRendering && lowestPendingInteractiveExpirationTime !== NoWork) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPendingInteractiveExpirationTime, false, null);
+    performWork(lowestPendingInteractiveExpirationTime, null);
     lowestPendingInteractiveExpirationTime = NoWork;
   }
 }
@@ -1970,7 +1964,7 @@ function flushControlled(fn: () => mixed): void {
   } finally {
     isBatchingUpdates = previousIsBatchingUpdates;
     if (!isBatchingUpdates && !isRendering) {
-      performWork(Sync, false, null);
+      performWork(Sync, null);
     }
   }
 }

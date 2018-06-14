@@ -9,7 +9,6 @@
 
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
-// TODO: Use an opaque type once ESLint et al support the syntax
 export type ExpirationTime = number;
 
 export const NoWork = 0;
