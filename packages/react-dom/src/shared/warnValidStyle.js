@@ -5,10 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
 
-let warnValidStyle = emptyFunction;
+let warnValidStyle = () => {};
 
 if (__DEV__) {
   // 'msTransform' is correct, but the other prefixes should be capitalized

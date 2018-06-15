@@ -15,7 +15,6 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import emptyFunction from 'fbjs/lib/emptyFunction';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
@@ -66,8 +65,8 @@ const toArray = ((React.Children.toArray: any): toArrayType);
 let currentDebugStack;
 let currentDebugElementStack;
 
-let getStackAddendum = emptyFunction.thatReturns('');
-let describeStackFrame = emptyFunction.thatReturns('');
+let getStackAddendum = () => '';
+let describeStackFrame = element => '';
 
 let validatePropertiesInDevelopment = (type, props) => {};
 let setCurrentDebugStack = (stack: Array<Frame>) => {};

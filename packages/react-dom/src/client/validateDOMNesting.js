@@ -5,13 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
-let validateDOMNesting = emptyFunction;
+let validateDOMNesting = () => {};
 
 if (__DEV__) {
   // This validation code was written based on the HTML5 parsing spec:

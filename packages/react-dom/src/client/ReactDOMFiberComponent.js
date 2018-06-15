@@ -10,7 +10,6 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
-import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
@@ -63,7 +62,7 @@ const HTML = '__html';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
-let getStack = emptyFunction.thatReturns('');
+let getStack = () => '';
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
@@ -232,6 +231,8 @@ function getOwnerDocumentFromRootContainer(
     : rootContainerElement.ownerDocument;
 }
 
+function noop() {}
+
 function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
@@ -242,7 +243,7 @@ function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
   // TODO: Only do this for the relevant Safaris maybe?
-  node.onclick = emptyFunction;
+  node.onclick = noop;
 }
 
 function setInitialDOMProperties(
