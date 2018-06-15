@@ -28,7 +28,6 @@ import {
   Fragment,
 } from 'shared/ReactTypeOfWork';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
@@ -157,7 +156,17 @@ function coerceRef(
         return current.ref;
       }
       const ref = function(value) {
-        const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+        let refs;
+        // This flag tells us if we need to initialize `this.refs`.
+        if (inst.__reactInternalHasLegacyRefs) {
+          refs = inst.refs;
+        } else {
+          // `this.refs` points to a pooled empty object.
+          // Replace it so we can mutate it.
+          inst.refs = refs = {};
+          // Remember that now we can mutate it.
+          inst.__reactInternalHasLegacyRefs = true;
+        }
         if (value === null) {
           delete refs[stringRef];
         } else {

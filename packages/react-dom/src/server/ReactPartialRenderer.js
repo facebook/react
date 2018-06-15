@@ -15,7 +15,6 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'fbjs/lib/warning';
@@ -282,6 +281,11 @@ function flattenOptionChildren(children: mixed): string {
     }
   });
   return content;
+}
+
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
 }
 
 function maskContext(type, context) {

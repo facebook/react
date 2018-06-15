@@ -19,7 +19,6 @@ import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import * as ReactPortal from 'shared/ReactPortal';
-import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
 
 type Container = {rootID: string, children: Array<Instance | TextInstance>};
@@ -31,6 +30,11 @@ type Instance = {|
   prop: any,
 |};
 type TextInstance = {|text: string, id: number|};
+
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
+}
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
   const UPDATE_SIGNAL = {};

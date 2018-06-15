@@ -7,8 +7,6 @@
  * @flow
  */
 
-import emptyObject from 'fbjs/lib/emptyObject';
-
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 export type Type = string;
@@ -35,10 +33,13 @@ export type HostContext = Object;
 export type UpdatePayload = Object;
 export type ChildSet = void; // Unused
 
-const UPDATE_SIGNAL = {};
-
 export * from 'shared/HostConfigWithNoPersistence';
 export * from 'shared/HostConfigWithNoHydration';
+
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
+}
 
 export function getPublicInstance(inst: Instance | TextInstance): * {
   switch (inst.tag) {
@@ -152,7 +153,7 @@ export function prepareUpdate(
   rootContainerInstance: Container,
   hostContext: Object,
 ): null | {} {
-  return UPDATE_SIGNAL;
+  return emptyObject;
 }
 
 export function shouldSetTextContent(type: string, props: Props): boolean {

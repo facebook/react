@@ -9,13 +9,15 @@ import * as ReactScheduler from 'shared/ReactScheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import invariant from 'fbjs/lib/invariant';
-import emptyObject from 'fbjs/lib/emptyObject';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 
 const pooledTransform = new Transform();
 
-const UPDATE_SIGNAL = {};
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
+}
 
 /** Helper Methods */
 
@@ -302,7 +304,7 @@ export function prepareForCommit() {
 }
 
 export function prepareUpdate(domElement, type, oldProps, newProps) {
-  return UPDATE_SIGNAL;
+  return emptyObject;
 }
 
 export function resetAfterCommit() {

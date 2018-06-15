@@ -9,7 +9,6 @@
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
-import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 
 // Modules provided by RN:
@@ -42,6 +41,11 @@ export type HostContext = $ReadOnly<{|
 |}>;
 export type UpdatePayload = Object; // Unused
 export type ChildSet = void; // Unused
+
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
+}
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.

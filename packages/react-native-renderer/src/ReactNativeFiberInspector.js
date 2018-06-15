@@ -15,12 +15,16 @@ import {
 } from 'react-reconciler/reflection';
 import getComponentName from 'shared/getComponentName';
 import {HostComponent} from 'shared/ReactTypeOfWork';
-import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 // Module provided by RN:
 import UIManager from 'UIManager';
 
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
+
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
+}
 
 let getInspectorDataForViewTag;
 

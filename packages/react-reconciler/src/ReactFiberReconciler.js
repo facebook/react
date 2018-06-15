@@ -24,7 +24,6 @@ import {
 } from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {HostComponent} from 'shared/ReactTypeOfWork';
-import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -34,6 +33,7 @@ import {
   findCurrentUnmaskedContext,
   isContextProvider,
   processChildContext,
+  emptyContextObject,
 } from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
@@ -86,7 +86,7 @@ function getContextForSubtree(
   parentComponent: ?React$Component<any, any>,
 ): Object {
   if (!parentComponent) {
-    return emptyObject;
+    return emptyContextObject;
   }
 
   const fiber = ReactInstanceMap.get(parentComponent);
