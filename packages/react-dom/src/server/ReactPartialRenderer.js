@@ -17,10 +17,8 @@ import type {
 import React from 'react';
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import emptyObject from 'fbjs/lib/emptyObject';
-import hyphenateStyleName from 'fbjs/lib/hyphenateStyleName';
 import invariant from 'fbjs/lib/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import memoizeStringOnly from 'fbjs/lib/memoizeStringOnly';
 import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
@@ -51,6 +49,7 @@ import {
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
+import hyphenateStyleName from '../shared/hyphenateStyleName';
 import isCustomComponent from '../shared/isCustomComponent';
 import omittedCloseTags from '../shared/omittedCloseTags';
 import warnValidStyle from '../shared/warnValidStyle';
@@ -162,9 +161,15 @@ function validateDangerousTag(tag) {
   }
 }
 
-const processStyleName = memoizeStringOnly(function(styleName) {
-  return hyphenateStyleName(styleName);
-});
+const styleNameCache = {};
+const processStyleName = function(styleName) {
+  if (styleNameCache.hasOwnProperty(styleName)) {
+    return styleNameCache[styleName];
+  }
+  const result = hyphenateStyleName(styleName);
+  styleNameCache[styleName] = result;
+  return result;
+};
 
 function createMarkupForStyles(styles): string | null {
   let serialized = '';

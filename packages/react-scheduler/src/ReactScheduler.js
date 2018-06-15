@@ -41,14 +41,11 @@ type CallbackConfigType = {|
 
 export type CallbackIdType = CallbackConfigType;
 
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warning from 'fbjs/lib/warning';
 
 if (__DEV__) {
-  if (
-    ExecutionEnvironment.canUseDOM &&
-    typeof requestAnimationFrame !== 'function'
-  ) {
+  if (canUseDOM && typeof requestAnimationFrame !== 'function') {
     warning(
       false,
       // TODO: reword this when schedule is a stand-alone module
@@ -87,7 +84,7 @@ let scheduleWork: (
 ) => CallbackIdType;
 let cancelScheduledWork: (callbackId: CallbackIdType) => void;
 
-if (!ExecutionEnvironment.canUseDOM) {
+if (!canUseDOM) {
   const timeoutIds = new Map();
 
   scheduleWork = function(

@@ -8,7 +8,6 @@
  */
 
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
-import TouchEventUtils from 'fbjs/lib/TouchEventUtils';
 import type {TopLevelType} from 'events/TopLevelEventTypes';
 
 import {
@@ -85,11 +84,24 @@ const Axis: AxisType = {
   y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'},
 };
 
+function extractSingleTouch(nativeEvent) {
+  // $FlowFixMe: figure out why this is missing
+  const touches = nativeEvent.touches;
+  // $FlowFixMe: figure out why this is missing
+  const changedTouches = nativeEvent.changedTouches;
+  const hasTouches = touches && touches.length > 0;
+  const hasChangedTouches = changedTouches && changedTouches.length > 0;
+
+  return !hasTouches && hasChangedTouches
+    ? changedTouches[0]
+    : hasTouches ? touches[0] : nativeEvent;
+}
+
 function getAxisCoordOfEvent(
   axis: AxisCoordinateData,
   nativeEvent: _Touch,
 ): number {
-  const singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
+  const singleTouch = extractSingleTouch(nativeEvent);
   if (singleTouch) {
     return singleTouch[axis.page];
   }

@@ -6,7 +6,7 @@
  */
 
 import dangerousStyleValue from './dangerousStyleValue';
-import hyphenateStyleName from 'fbjs/lib/hyphenateStyleName';
+import hyphenateStyleName from './hyphenateStyleName';
 import warnValidStyle from './warnValidStyle';
 
 /**

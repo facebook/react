@@ -21,7 +21,7 @@ import './ReactDOMClientInjection';
 
 import * as DOMRenderer from 'react-reconciler/inline.dom';
 import * as ReactPortal from 'shared/ReactPortal';
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import * as ReactControlledComponent from 'events/ReactControlledComponent';
 import * as EventPluginHub from 'events/EventPluginHub';
@@ -768,11 +768,7 @@ const foundDevTools = DOMRenderer.injectIntoDevTools({
 });
 
 if (__DEV__) {
-  if (
-    !foundDevTools &&
-    ExecutionEnvironment.canUseDOM &&
-    window.top === window.self
-  ) {
+  if (!foundDevTools && canUseDOM && window.top === window.self) {
     // If we're in Chrome or Firefox, provide a download link if not installed.
     if (
       (navigator.userAgent.indexOf('Chrome') > -1 &&
