@@ -65,6 +65,7 @@ class Header extends React.Component {
                 <option value="/custom-elements">Custom Elements</option>
                 <option value="/media-events">Media Events</option>
                 <option value="/pointer-events">Pointer Events</option>
+                <option value="/mouse-events">Mouse Events</option>
               </select>
             </label>
             <label htmlFor="react_version">

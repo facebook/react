@@ -8,6 +8,9 @@
 import SyntheticUIEvent from './SyntheticUIEvent';
 import getEventModifierState from './getEventModifierState';
 
+let previousScreenX = null;
+let previousScreenY = null;
+
 /**
  * @interface MouseEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -33,6 +36,24 @@ const SyntheticMouseEvent = SyntheticUIEvent.extend({
         ? event.toElement
         : event.fromElement)
     );
+  },
+  movementX: function(event) {
+    if ('movementX' in event) {
+      return event.movementX;
+    }
+
+    const screenX = previousScreenX;
+    previousScreenX = event.screenX;
+    return screenX ? event.screenX - screenX : 0;
+  },
+  movementY: function(event) {
+    if ('movementY' in event) {
+      return event.movementY;
+    }
+
+    const screenY = previousScreenY;
+    previousScreenY = event.screenY;
+    return screenY ? event.screenY - screenY : 0;
   },
 });
 
