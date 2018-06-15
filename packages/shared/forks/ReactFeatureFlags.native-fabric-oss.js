@@ -19,7 +19,6 @@ export const enableGetDerivedStateFromCatch = false;
 export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = false;
-export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 
 // Only used in www builds.

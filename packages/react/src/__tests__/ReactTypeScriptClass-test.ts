@@ -325,13 +325,10 @@ describe('ReactTypeScriptClass', function() {
       expect(() =>
         ReactDOM.render(React.createElement(Empty), container)
       ).toThrow()
-    ).toWarnDev([
-      // A failed component renders twice in DEV
+    ).toWarnDev(
       'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-      'Warning: Empty(...): No `render` method found on the returned ' +
-        'component instance: you may have forgotten to define `render`.',
-    ]);
+        'component instance: you may have forgotten to define `render`.'
+    );
   });
 
   it('renders a simple stateless component with prop', function() {
@@ -414,8 +411,7 @@ describe('ReactTypeScriptClass', function() {
 
   it('warns if getSnapshotBeforeUpdate is static', function() {
     class Foo extends React.Component {
-      static getSnapshotBeforeUpdate() {
-      }
+      static getSnapshotBeforeUpdate() {}
       render() {
         return React.createElement('div', {});
       }
