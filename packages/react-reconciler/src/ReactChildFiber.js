@@ -41,6 +41,8 @@ import {
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 
+function LegacyRefsObject() {}
+
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
 let didWarnAboutMaps;
@@ -157,15 +159,15 @@ function coerceRef(
       }
       const ref = function(value) {
         let refs;
-        // This flag tells us if we need to initialize `this.refs`.
-        if (inst.__reactInternalHasLegacyRefs === undefined) {
-          // `this.refs` points to a pooled empty object.
-          // Replace it so we can mutate it.
-          inst.refs = refs = {};
-          // Remember that now we can mutate it.
-          inst.__reactInternalHasLegacyRefs = true;
-        } else {
+        if (inst.refs instanceof LegacyRefsObject) {
+          // We've already assigned legacy refs to this component before.
           refs = inst.refs;
+        } else {
+          // `this.refs` either points to a pooled empty object,
+          // or (very unlikely) an object created by another renderer.
+          // Ensure we can mutate it and copy any existing refs over.
+          refs = inst.refs = Object.assign(new LegacyRefsObject(), inst.refs);
+          // This should happen only once per instance.
         }
         if (value === null) {
           delete refs[stringRef];
