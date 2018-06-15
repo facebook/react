@@ -158,14 +158,14 @@ function coerceRef(
       const ref = function(value) {
         let refs;
         // This flag tells us if we need to initialize `this.refs`.
-        if (inst.__reactInternalHasLegacyRefs) {
-          refs = inst.refs;
-        } else {
+        if (inst.__reactInternalHasLegacyRefs === undefined) {
           // `this.refs` points to a pooled empty object.
           // Replace it so we can mutate it.
           inst.refs = refs = {};
           // Remember that now we can mutate it.
           inst.__reactInternalHasLegacyRefs = true;
+        } else {
+          refs = inst.refs;
         }
         if (value === null) {
           delete refs[stringRef];
