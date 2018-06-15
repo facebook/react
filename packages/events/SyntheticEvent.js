@@ -7,7 +7,6 @@
 
 /* eslint valid-typeof: 0 */
 
-import emptyFunction from 'fbjs/lib/emptyFunction';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
@@ -32,7 +31,9 @@ const EventInterface = {
   type: null,
   target: null,
   // currentTarget is set when dispatching; no use in copying it here
-  currentTarget: emptyFunction.thatReturnsNull,
+  currentTarget: function() {
+    return null;
+  },
   eventPhase: null,
   bubbles: null,
   cancelable: null,
@@ -42,6 +43,14 @@ const EventInterface = {
   defaultPrevented: null,
   isTrusted: null,
 };
+
+function functionThatReturnsTrue() {
+  return true;
+}
+
+function functionThatReturnsFalse() {
+  return false;
+}
 
 /**
  * Synthetic events are dispatched by event plugins, typically in response to a
@@ -103,11 +112,11 @@ function SyntheticEvent(
       ? nativeEvent.defaultPrevented
       : nativeEvent.returnValue === false;
   if (defaultPrevented) {
-    this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
+    this.isDefaultPrevented = functionThatReturnsTrue;
   } else {
-    this.isDefaultPrevented = emptyFunction.thatReturnsFalse;
+    this.isDefaultPrevented = functionThatReturnsFalse;
   }
-  this.isPropagationStopped = emptyFunction.thatReturnsFalse;
+  this.isPropagationStopped = functionThatReturnsFalse;
   return this;
 }
 
@@ -124,7 +133,7 @@ Object.assign(SyntheticEvent.prototype, {
     } else if (typeof event.returnValue !== 'unknown') {
       event.returnValue = false;
     }
-    this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
+    this.isDefaultPrevented = functionThatReturnsTrue;
   },
 
   stopPropagation: function() {
@@ -144,7 +153,7 @@ Object.assign(SyntheticEvent.prototype, {
       event.cancelBubble = true;
     }
 
-    this.isPropagationStopped = emptyFunction.thatReturnsTrue;
+    this.isPropagationStopped = functionThatReturnsTrue;
   },
 
   /**
@@ -153,7 +162,7 @@ Object.assign(SyntheticEvent.prototype, {
    * won't be added back into the pool.
    */
   persist: function() {
-    this.isPersistent = emptyFunction.thatReturnsTrue;
+    this.isPersistent = functionThatReturnsTrue;
   },
 
   /**
@@ -161,7 +170,7 @@ Object.assign(SyntheticEvent.prototype, {
    *
    * @return {boolean} True if this should not be released, false otherwise.
    */
-  isPersistent: emptyFunction.thatReturnsFalse,
+  isPersistent: functionThatReturnsFalse,
 
   /**
    * `PooledClass` looks for `destructor` on each instance it releases.
@@ -191,12 +200,12 @@ Object.assign(SyntheticEvent.prototype, {
       Object.defineProperty(
         this,
         'preventDefault',
-        getPooledWarningPropertyDefinition('preventDefault', emptyFunction),
+        getPooledWarningPropertyDefinition('preventDefault', () => {}),
       );
       Object.defineProperty(
         this,
         'stopPropagation',
-        getPooledWarningPropertyDefinition('stopPropagation', emptyFunction),
+        getPooledWarningPropertyDefinition('stopPropagation', () => {}),
       );
     }
   },
