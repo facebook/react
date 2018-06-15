@@ -42,9 +42,9 @@ export type HostContext = $ReadOnly<{|
 export type UpdatePayload = Object; // Unused
 export type ChildSet = void; // Unused
 
-const emptyObject = {};
+const UPDATE_SIGNAL = {};
 if (__DEV__) {
-  Object.freeze(emptyObject);
+  Object.freeze(UPDATE_SIGNAL);
 }
 
 // Counter for uniquely identifying views.
@@ -222,7 +222,7 @@ export function prepareUpdate(
   rootContainerInstance: Container,
   hostContext: HostContext,
 ): null | Object {
-  return emptyObject;
+  return UPDATE_SIGNAL;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {

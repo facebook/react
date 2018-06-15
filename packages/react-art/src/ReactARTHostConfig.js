@@ -14,9 +14,11 @@ import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 
 const pooledTransform = new Transform();
 
-const emptyObject = {};
+const NO_CONTEXT = {};
+const UPDATE_SIGNAL = {};
 if (__DEV__) {
-  Object.freeze(emptyObject);
+  Object.freeze(NO_CONTEXT);
+  Object.freeze(UPDATE_SIGNAL);
 }
 
 /** Helper Methods */
@@ -304,7 +306,7 @@ export function prepareForCommit() {
 }
 
 export function prepareUpdate(domElement, type, oldProps, newProps) {
-  return emptyObject;
+  return UPDATE_SIGNAL;
 }
 
 export function resetAfterCommit() {
@@ -320,11 +322,11 @@ export function shouldDeprioritizeSubtree(type, props) {
 }
 
 export function getRootHostContext() {
-  return emptyObject;
+  return NO_CONTEXT;
 }
 
 export function getChildHostContext() {
-  return emptyObject;
+  return NO_CONTEXT;
 }
 
 export const scheduleDeferredCallback = ReactScheduler.scheduleWork;

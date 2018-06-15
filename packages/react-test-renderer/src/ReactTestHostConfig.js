@@ -36,9 +36,11 @@ export type ChildSet = void; // Unused
 export * from 'shared/HostConfigWithNoPersistence';
 export * from 'shared/HostConfigWithNoHydration';
 
-const emptyObject = {};
+const NO_CONTEXT = {};
+const UPDATE_SIGNAL = {};
 if (__DEV__) {
-  Object.freeze(emptyObject);
+  Object.freeze(NO_CONTEXT);
+  Object.freeze(UPDATE_SIGNAL);
 }
 
 export function getPublicInstance(inst: Instance | TextInstance): * {
@@ -89,7 +91,7 @@ export function removeChild(
 export function getRootHostContext(
   rootContainerInstance: Container,
 ): HostContext {
-  return emptyObject;
+  return NO_CONTEXT;
 }
 
 export function getChildHostContext(
@@ -97,7 +99,7 @@ export function getChildHostContext(
   type: string,
   rootContainerInstance: Container,
 ): HostContext {
-  return emptyObject;
+  return NO_CONTEXT;
 }
 
 export function prepareForCommit(containerInfo: Container): void {
@@ -153,7 +155,7 @@ export function prepareUpdate(
   rootContainerInstance: Container,
   hostContext: Object,
 ): null | {} {
-  return emptyObject;
+  return UPDATE_SIGNAL;
 }
 
 export function shouldSetTextContent(type: string, props: Props): boolean {

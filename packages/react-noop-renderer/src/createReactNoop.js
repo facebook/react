@@ -31,13 +31,14 @@ type Instance = {|
 |};
 type TextInstance = {|text: string, id: number|};
 
-const emptyObject = {};
+const NO_CONTEXT = {};
+const UPDATE_SIGNAL = {};
 if (__DEV__) {
-  Object.freeze(emptyObject);
+  Object.freeze(NO_CONTEXT);
+  Object.freeze(UPDATE_SIGNAL);
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
-  const UPDATE_SIGNAL = {};
   let scheduledCallback = null;
 
   let instanceCounter = 0;
@@ -88,11 +89,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (failInBeginPhase) {
         throw new Error('Error in host config.');
       }
-      return emptyObject;
+      return NO_CONTEXT;
     },
 
     getChildHostContext() {
-      return emptyObject;
+      return NO_CONTEXT;
     },
 
     getPublicInstance(instance) {
