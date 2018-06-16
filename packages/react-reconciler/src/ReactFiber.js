@@ -346,7 +346,15 @@ export function createWorkInProgress(
 }
 
 export function createHostRootFiber(isAsync: boolean): Fiber {
-  const mode = isAsync ? AsyncMode | StrictMode : NoContext;
+  let mode = isAsync ? AsyncMode | StrictMode : NoContext;
+
+  if (enableProfilerTimer && isDevToolsPresent) {
+    // Always collect profile timings when DevTools are present.
+    // This enables DevTools to start capturing timing at any point–
+    // Without some nodes in the tree having empty base times.
+    mode |= ProfileMode;
+  }
+
   return createFiber(HostRoot, null, null, mode);
 }
 
@@ -399,13 +407,6 @@ export function createFiberFromElement(
         fiberTag = getFiberTagFromObjectType(type, owner);
         break;
     }
-  }
-
-  if (enableProfilerTimer && isDevToolsPresent) {
-    // Always collect profile timings when DevTools are present.
-    // This enables DevTools to start capturing timing at any point–
-    // Without some nodes in the tree having empty base times.
-    mode |= ProfileMode;
   }
 
   fiber = createFiber(fiberTag, pendingProps, key, mode);
