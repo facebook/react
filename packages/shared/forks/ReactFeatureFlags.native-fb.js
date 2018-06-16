@@ -27,6 +27,8 @@ export const {
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutLegacyContextAPI = __DEV__;
 
+export const supportDevToolsIfPresent = true;
+
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');

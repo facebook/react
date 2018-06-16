@@ -11,6 +11,7 @@
 
 describe('ReactProfiler DevTools integrate', () => {
   let React;
+  let ReactFeatureFlags;
   let ReactTestRenderer;
   let AdvanceTime;
   let advanceTimeBy;
@@ -38,6 +39,8 @@ describe('ReactProfiler DevTools integrate', () => {
 
     jest.resetModules();
 
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.supportDevToolsIfPresent = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
 
