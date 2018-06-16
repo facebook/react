@@ -31,6 +31,9 @@ function catchErrors(fn) {
   };
 }
 
+export const isDevToolsPresent =
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined';
+
 export function injectInternals(internals: Object): boolean {
   if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
     // No DevTools

@@ -35,6 +35,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
+import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {NoWork} from './ReactFiberExpirationTime';
 import {NoContext, AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
 import {
@@ -398,6 +399,13 @@ export function createFiberFromElement(
         fiberTag = getFiberTagFromObjectType(type, owner);
         break;
     }
+  }
+
+  if (enableProfilerTimer && isDevToolsPresent) {
+    // Always collect profile timings when DevTools are present.
+    // This enables DevTools to start capturing timing at any point–
+    // Without some nodes in the tree having empty base times.
+    mode |= ProfileMode;
   }
 
   fiber = createFiber(fiberTag, pendingProps, key, mode);
