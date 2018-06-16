@@ -34,7 +34,6 @@ import ReactVersion from 'shared/ReactVersion';
 
 import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
-import {findFiberByHostInstance} from './ReactTestRendererComponentTree';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -520,7 +519,11 @@ const ReactTestRendererFiber = {
 // Enable ReactTestRenderer to be used to test DevTools integration.
 if (supportDevToolsIfPresent) {
   TestRenderer.injectIntoDevTools({
-    findFiberByHostInstance,
+    findFiberByHostInstance: (() => {
+      throw new Error(
+        'TestRenderer does not support findFiberByHostInstance()',
+      );
+    }: any),
     bundleType: __DEV__ ? 1 : 0,
     version: ReactVersion,
     rendererPackageName: 'react-test-renderer',
