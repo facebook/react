@@ -40,6 +40,7 @@ describe('ReactProfiler DevTools integration', () => {
     jest.resetModules();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableProfilerTimer = true;
     ReactFeatureFlags.supportDevToolsIfPresent = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
