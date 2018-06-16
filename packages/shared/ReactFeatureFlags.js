@@ -40,7 +40,7 @@ export const warnAboutLegacyContextAPI = false;
 export const enableProfilerTimer = __PROFILE__;
 
 // If the DevTools hook is present, inject into it.
-export const supportDevToolsIfPresent = false;
+export const supportDevToolsIfPresent = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {
