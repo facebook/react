@@ -29,9 +29,11 @@ import {
   Profiler,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'shared/invariant';
+import ReactVersion from 'shared/ReactVersion';
 
 import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
+import {findFiberByHostInstance} from './ReactTestRendererComponentTree';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -279,6 +281,10 @@ class ReactTestInstance {
     return this._currentFiber().memoizedProps;
   }
 
+  get treeBaseTime(): number {
+    return this._currentFiber().treeBaseTime || 0;
+  }
+
   get parent(): ?ReactTestInstance {
     let parent = this._fiber.return;
     while (parent !== null) {
@@ -509,5 +515,14 @@ const ReactTestRendererFiber = {
 
   unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,
 };
+
+// Enable ReactTestRenderer to be used to test DevTools integration.
+// TODO (bvaughn) Perhaps this injection should be hidden behind a feature flag?
+TestRenderer.injectIntoDevTools({
+  findFiberByHostInstance,
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+  rendererPackageName: 'react-test-renderer',
+});
 
 export default ReactTestRendererFiber;

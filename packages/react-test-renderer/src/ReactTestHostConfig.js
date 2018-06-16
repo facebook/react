@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {precacheFiberNode} from './ReactTestRendererComponentTree';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 export type Type = string;
@@ -117,13 +118,15 @@ export function createInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): Instance {
-  return {
+  const instance = {
     type,
     props,
     children: [],
     rootContainerInstance,
     tag: 'INSTANCE',
   };
+  precacheFiberNode(internalInstanceHandle, instance);
+  return instance;
 }
 
 export function appendInitialChild(
@@ -172,10 +175,12 @@ export function createTextInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): TextInstance {
-  return {
+  const textInstance = {
     text,
     tag: 'TEXT',
   };
+  precacheFiberNode(internalInstanceHandle, textInstance);
+  return textInstance;
 }
 
 export const isPrimaryRenderer = true;
