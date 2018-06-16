@@ -281,10 +281,6 @@ class ReactTestInstance {
     return this._currentFiber().memoizedProps;
   }
 
-  get treeBaseTime(): number {
-    return this._currentFiber().treeBaseTime || 0;
-  }
-
   get parent(): ?ReactTestInstance {
     let parent = this._fiber.return;
     while (parent !== null) {
