@@ -9,7 +9,7 @@
 
 'use strict';
 
-describe('ReactProfiler DevTools integrate', () => {
+describe('ReactProfiler DevTools integration', () => {
   let React;
   let ReactFeatureFlags;
   let ReactTestRenderer;
@@ -62,7 +62,7 @@ describe('ReactProfiler DevTools integrate', () => {
     };
   });
 
-  it('should automatically profile all fibers if the DevTools hook is detected', () => {
+  it('should auto-Profile all fibers if the DevTools hook is detected', () => {
     const App = ({multiplier}) => {
       advanceTimeBy(2);
       return (
