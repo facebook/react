@@ -159,4 +159,57 @@ describe('ReactExpiration', () => {
       expect(ReactNoop.flush()).toEqual(['B [render]', 'B [commit]']);
     },
   );
+
+  it('cannot update at the same expiration time that is already rendering', () => {
+    let store = {text: 'initial'};
+    let subscribers = [];
+    class Connected extends React.Component {
+      state = {text: store.text};
+      componentDidMount() {
+        subscribers.push(this);
+        ReactNoop.yield(`${this.state.text} [${this.props.label}] [commit]`);
+      }
+      componentDidUpdate() {
+        ReactNoop.yield(`${this.state.text} [${this.props.label}] [commit]`);
+      }
+      render() {
+        ReactNoop.yield(`${this.state.text} [${this.props.label}] [render]`);
+        return <span prop={this.state.text} />;
+      }
+    }
+
+    function App() {
+      return (
+        <React.Fragment>
+          <Connected label="A" />
+          <Connected label="B" />
+          <Connected label="C" />
+          <Connected label="D" />
+        </React.Fragment>
+      );
+    }
+
+    // Initial mount
+    ReactNoop.render(<App />);
+    expect(ReactNoop.flush()).toEqual([
+      'initial [A] [render]',
+      'initial [B] [render]',
+      'initial [C] [render]',
+      'initial [D] [render]',
+      'initial [A] [commit]',
+      'initial [B] [commit]',
+      'initial [C] [commit]',
+      'initial [D] [commit]',
+    ]);
+
+    // Partial update
+    subscribers.forEach(s => s.setState({text: '1'}));
+    ReactNoop.flushThrough(['1 [A] [render]', '1 [B] [render]']);
+
+    // Before the update can finish, update again. Even though no time has
+    // advanced, this update should be given a different expiration time than
+    // the currently rendering one. So, C and D should render with 1, not 2.
+    subscribers.forEach(s => s.setState({text: '2'}));
+    ReactNoop.flushThrough(['1 [C] [render]', '1 [D] [render]']);
+  });
 });

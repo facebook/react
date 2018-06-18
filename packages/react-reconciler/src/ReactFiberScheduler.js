@@ -1086,6 +1086,8 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     if (__DEV__) {
       resetStackAfterFatalErrorInDev();
     }
+    // Clear the currently rendering root.
+    nextRoot = null;
     onFatal(root);
   } else if (nextUnitOfWork === null) {
     // We reached the root.
@@ -1100,12 +1102,16 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
       interruptedBy = null;
       // The root successfully completed.
+      // Clear the currently rendering root.
+      nextRoot = null;
       onComplete(root, rootWorkInProgress, expirationTime);
     } else {
       // The root did not complete.
       const didCompleteRoot = false;
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
       interruptedBy = null;
+      // Clear the currently rendering root.
+      nextRoot = null;
       markSuspendedPriorityLevel(root, expirationTime, nextRenderDidError);
       const suspendedExpirationTime = expirationTime;
       const newExpirationTime = root.expirationTime;
@@ -1251,6 +1257,11 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
       } else {
         // This is an async update
         expirationTime = computeAsyncExpiration(currentTime);
+      }
+      // If we're in the middle of rendering a tree, do not update at the same
+      // expiration time that is already rendering.
+      if (nextRoot !== null && expirationTime === nextRenderExpirationTime) {
+        expirationTime += 1;
       }
     } else {
       // This is a sync update
