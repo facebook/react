@@ -15,9 +15,9 @@
 let warning = () => {};
 
 if (__DEV__) {
-  function printWarning(format, ...args) {
-    var argIndex = 0;
-    var message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
+  const printWarning = function(format, ...args) {
+    let argIndex = 0;
+    const message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
     if (typeof console !== 'undefined') {
       console.error(message);
     }
@@ -27,7 +27,7 @@ if (__DEV__) {
       // to find the callsite that caused this warning to fire.
       throw new Error(message);
     } catch (x) {}
-  }
+  };
 
   warning = function(condition, format, ...args) {
     if (format === undefined) {
