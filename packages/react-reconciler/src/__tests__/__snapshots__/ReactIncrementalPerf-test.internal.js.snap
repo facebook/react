@@ -406,6 +406,8 @@ exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] =
 exports[`ReactDebugFiberPerf warns if async work expires (starvation) 1`] = `
 "⛔ (Waiting for async callback... will force flush in 5250 ms) Warning: React was blocked by main thread
 
+⚛ (React Tree Reconciliation: Yielded)
+
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Foo [mount]
 

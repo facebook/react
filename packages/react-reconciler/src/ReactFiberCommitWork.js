@@ -224,7 +224,6 @@ function commitLifeCycles(
   finishedRoot: FiberRoot,
   current: Fiber | null,
   finishedWork: Fiber,
-  currentTime: ExpirationTime,
   committedExpirationTime: ExpirationTime,
 ): void {
   switch (finishedWork.tag) {
