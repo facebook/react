@@ -157,12 +157,10 @@ function coerceRef(
         return current.ref;
       }
       const ref = function(value) {
-        let refs;
-        if (inst.refs === emptyRefsObject) {
+        let refs = inst.refs;
+        if (refs === emptyRefsObject) {
           // This is a lazy pooled frozen object, so we need to initialize.
           refs = inst.refs = {};
-        } else {
-          refs = inst.refs;
         }
         if (value === null) {
           delete refs[stringRef];
