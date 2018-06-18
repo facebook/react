@@ -9,7 +9,7 @@
 
 // Mock of the Native Hooks
 
-const invariant = require('shared/invariant');
+import invariant from 'shared/invariant';
 
 const roots = new Map();
 const allocatedTags = new Set();
