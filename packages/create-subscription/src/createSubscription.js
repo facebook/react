@@ -9,7 +9,7 @@
 
 import React from 'react';
 import invariant from 'shared/invariant';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 type Unsubscribe = () => void;
 

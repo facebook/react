@@ -6,7 +6,7 @@
  */
 
 import invariant from 'shared/invariant';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,

@@ -10,7 +10,7 @@ import {
   possibleRegistrationNames,
 } from 'events/EventPluginRegistry';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,

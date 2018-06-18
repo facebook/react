@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 export type StackCursor<T> = {
   current: T,

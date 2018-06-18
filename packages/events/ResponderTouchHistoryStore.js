@@ -8,7 +8,7 @@
  */
 
 import invariant from 'shared/invariant';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';
 

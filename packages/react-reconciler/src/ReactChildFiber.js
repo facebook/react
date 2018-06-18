@@ -29,7 +29,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import invariant from 'shared/invariant';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import {
   createWorkInProgress,

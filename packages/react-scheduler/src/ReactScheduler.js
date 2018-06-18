@@ -42,7 +42,7 @@ type CallbackConfigType = {|
 export type CallbackIdType = CallbackConfigType;
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 if (__DEV__) {
   if (canUseDOM && typeof requestAnimationFrame !== 'function') {

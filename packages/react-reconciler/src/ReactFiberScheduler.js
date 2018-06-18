@@ -46,7 +46,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';

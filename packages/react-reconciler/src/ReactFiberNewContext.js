@@ -18,7 +18,7 @@ export type NewContext = {
   getContextChangedBits(context: ReactContext<any>): number,
 };
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 

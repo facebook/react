@@ -113,6 +113,17 @@ const forks = Object.freeze({
     }
   },
 
+  // This logic is forked on www to blacklist warnings.
+  'shared/warning': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+        return 'shared/forks/warning.www.js';
+      default:
+        return null;
+    }
+  },
+
   // In FB bundles, we preserve an inline require to ReactCurrentOwner.
   // See the explanation in FB version of ReactCurrentOwner in www:
   'react/src/ReactCurrentOwner': (bundleType, entry) => {

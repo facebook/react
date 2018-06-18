@@ -6,7 +6,7 @@
  */
 
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 let didWarnValueNull = false;
 

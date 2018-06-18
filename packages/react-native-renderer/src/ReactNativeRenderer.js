@@ -28,7 +28,7 @@ import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import getComponentName from 'shared/getComponentName';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 const findHostInstance = ReactNativeFiberRenderer.findHostInstance;
 

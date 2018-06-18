@@ -33,7 +33,7 @@ import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';

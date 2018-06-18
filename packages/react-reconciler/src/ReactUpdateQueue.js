@@ -103,7 +103,7 @@ import {
 import {StrictMode} from './ReactTypeOfMode';
 
 import invariant from 'shared/invariant';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 export type Update<State> = {
   expirationTime: ExpirationTime,

@@ -7,7 +7,7 @@
 
 import {REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 export default function forwardRef<Props, ElementType: React$ElementType>(
   render: (props: Props, ref: React$ElementRef<ElementType>) => React$Node,

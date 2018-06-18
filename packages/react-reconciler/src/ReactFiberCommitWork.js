@@ -39,7 +39,7 @@ import {
 } from 'shared/ReactTypeOfSideEffect';
 import {commitUpdateQueue} from './ReactUpdateQueue';
 import invariant from 'shared/invariant';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';

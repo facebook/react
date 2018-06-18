@@ -12,7 +12,7 @@ import type {Fiber} from './ReactFiber';
 import getComponentName from 'shared/getComponentName';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 import {now} from './ReactFiberHostConfig';
 
 export type ProfilerTimer = {

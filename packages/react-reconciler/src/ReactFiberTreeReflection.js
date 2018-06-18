@@ -10,7 +10,7 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 import invariant from 'shared/invariant';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
