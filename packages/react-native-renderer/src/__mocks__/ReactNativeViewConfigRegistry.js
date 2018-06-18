@@ -13,7 +13,7 @@ import type {
   ViewConfigGetter,
 } from './ReactNativeTypes';
 
-const invariant = require('fbjs/lib/invariant');
+const invariant = require('shared/invariant');
 
 // Event configs
 const customBubblingEventTypes = {};

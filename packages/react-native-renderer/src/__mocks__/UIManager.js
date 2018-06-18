@@ -9,7 +9,7 @@
 
 // Mock of the Native Hooks
 
-const invariant = require('fbjs/lib/invariant');
+const invariant = require('shared/invariant');
 
 // Map of viewTag -> {children: [childTag], parent: ?parentTag}
 const roots = [];

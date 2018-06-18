@@ -33,7 +33,7 @@ if (__DEV__) {
     if (format === undefined) {
       throw new Error(
         '`warning(condition, format, ...args)` requires a warning ' +
-        'message argument'
+          'message argument',
       );
     }
     if (!condition) {
