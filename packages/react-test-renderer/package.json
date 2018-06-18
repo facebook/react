@@ -15,7 +15,6 @@
   },
   "homepage": "https://reactjs.org/",
   "dependencies": {
-    "fbjs": "^0.8.16",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.0",
     "react-is": "^16.4.1"

@@ -57,7 +57,6 @@
     "eslint-plugin-no-for-of-loops": "^1.0.0",
     "eslint-plugin-react": "^6.7.1",
     "eslint-plugin-react-internal": "link:./scripts/eslint-rules/",
-    "fbjs": "^0.8.16",
     "fbjs-scripts": "^0.6.0",
     "filesize": "^3.5.6",
     "flow-bin": "^0.72.0",
