@@ -38,7 +38,7 @@ import {
   Update,
 } from 'shared/ReactTypeOfSideEffect';
 import {commitUpdateQueue} from './ReactUpdateQueue';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook';

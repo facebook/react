@@ -91,6 +91,17 @@ const forks = Object.freeze({
     }
   },
 
+  // This logic is forked on www to fork the formatting function.
+  'shared/invariant': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+        return 'shared/forks/invariant.www.js';
+      default:
+        return null;
+    }
+  },
+
   // This logic is forked on www to blacklist warnings.
   'shared/lowPriorityWarning': (bundleType, entry) => {
     switch (bundleType) {

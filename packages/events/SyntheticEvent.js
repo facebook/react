@@ -7,7 +7,7 @@
 
 /* eslint valid-typeof: 0 */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import warning from 'fbjs/lib/warning';
 
 let didWarnForAddedNewProperty = false;

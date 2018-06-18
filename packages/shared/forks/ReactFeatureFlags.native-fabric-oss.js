@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as FabricFeatureFlagsType from './ReactFeatureFlags.native-fabric-oss';

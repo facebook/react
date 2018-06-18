@@ -15,7 +15,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';

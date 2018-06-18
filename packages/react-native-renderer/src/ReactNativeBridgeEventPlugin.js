@@ -15,7 +15,7 @@ import {
 import type {TopLevelType} from 'events/TopLevelEventTypes';
 import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 import SyntheticEvent from 'events/SyntheticEvent';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 const {
   customBubblingEventTypes,

@@ -28,7 +28,7 @@ import {
   ForwardRef,
   Profiler,
 } from 'shared/ReactTypeOfWork';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';

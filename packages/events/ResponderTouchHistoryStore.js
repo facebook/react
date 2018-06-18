@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';

@@ -6,7 +6,7 @@
  */
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import warning from 'fbjs/lib/warning';
 
 export let getFiberCurrentPropsFromNode = null;

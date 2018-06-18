@@ -102,7 +102,7 @@ import {
 
 import {StrictMode} from './ReactTypeOfMode';
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import warning from 'fbjs/lib/warning';
 
 export type Update<State> = {

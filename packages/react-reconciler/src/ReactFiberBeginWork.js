@@ -46,7 +46,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'fbjs/lib/warning';

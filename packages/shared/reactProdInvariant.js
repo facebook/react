@@ -9,7 +9,7 @@
 
 // Relying on the `invariant()` implementation lets us
 // have preserve the format and params in the www builds.
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 /**
  * WARNING: DO NOT manually require this module.

@@ -25,7 +25,7 @@ import {
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {HostComponent} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {getPublicInstance} from './ReactFiberHostConfig';

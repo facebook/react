@@ -31,7 +31,7 @@ import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import ReactVersion from 'shared/ReactVersion';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import getComponentName from 'shared/getComponentName';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'fbjs/lib/warning';
 

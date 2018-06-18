@@ -13,7 +13,7 @@ import type {StackCursor} from './ReactFiberStack';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 

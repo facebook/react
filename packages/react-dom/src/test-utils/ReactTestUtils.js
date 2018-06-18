@@ -16,7 +16,7 @@ import {
   HostText,
 } from 'shared/ReactTypeOfWork';
 import SyntheticEvent from 'events/SyntheticEvent';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 

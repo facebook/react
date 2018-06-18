@@ -21,7 +21,7 @@ import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
 import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 
