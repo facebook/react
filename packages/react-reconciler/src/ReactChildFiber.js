@@ -38,10 +38,9 @@ import {
   createFiberFromText,
   createFiberFromPortal,
 } from './ReactFiber';
+import {emptyRefsObject} from './ReactFiberClassComponent';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
-
-function MutableLegacyRefs() {}
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
@@ -159,15 +158,11 @@ function coerceRef(
       }
       const ref = function(value) {
         let refs;
-        if (inst.refs instanceof MutableLegacyRefs) {
-          // We've already assigned legacy refs to this component before.
-          refs = inst.refs;
+        if (inst.refs === emptyRefsObject) {
+          // This is a lazy pooled frozen object, so we need to initialize.
+          refs = inst.refs = {};
         } else {
-          // `this.refs` either points to a pooled empty object,
-          // or (very unlikely) an object created by another renderer.
-          // Ensure we can mutate it and copy any existing refs over.
-          refs = inst.refs = Object.assign(new MutableLegacyRefs(), inst.refs);
-          // This should happen only once per instance.
+          refs = inst.refs;
         }
         if (value === null) {
           delete refs[stringRef];

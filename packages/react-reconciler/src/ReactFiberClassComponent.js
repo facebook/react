@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import React from 'react';
 import {Update, Snapshot} from 'shared/ReactTypeOfSideEffect';
 import {
   debugRenderPhaseSideEffects,
@@ -53,10 +54,9 @@ import {
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
-const emptyRefsObject = {};
-if (__DEV__) {
-  Object.freeze(emptyRefsObject);
-}
+// React.Component uses a shared frozen object by default.
+// We'll use it to determine whether we need to initialize legacy refs.
+export const emptyRefsObject = new React.Component().refs;
 
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
