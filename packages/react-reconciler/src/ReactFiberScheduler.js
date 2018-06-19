@@ -1086,6 +1086,10 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     if (__DEV__) {
       resetStackAfterFatalErrorInDev();
     }
+    // `nextRoot` points to the in-progress root. A non-null value indicates
+    // that we're in the middle of an async render. Set it to null to indicate
+    // there's no more work to be done in the current batch.
+    nextRoot = null;
     onFatal(root);
   } else if (nextUnitOfWork === null) {
     // We reached the root.
@@ -1096,16 +1100,24 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
         'caused by a bug in React. Please file an issue.',
     );
     if ((rootWorkInProgress.effectTag & Incomplete) === NoEffect) {
+      // The root successfully completed.
       const didCompleteRoot = true;
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
       interruptedBy = null;
-      // The root successfully completed.
+      // `nextRoot` points to the in-progress root. A non-null value indicates
+      // that we're in the middle of an async render. Set it to null to indicate
+      // there's no more work to be done in the current batch.
+      nextRoot = null;
       onComplete(root, rootWorkInProgress, expirationTime);
     } else {
       // The root did not complete.
       const didCompleteRoot = false;
       stopWorkLoopTimer(interruptedBy, didCompleteRoot);
       interruptedBy = null;
+      // `nextRoot` points to the in-progress root. A non-null value indicates
+      // that we're in the middle of an async render. Set it to null to indicate
+      // there's no more work to be done in the current batch.
+      nextRoot = null;
       markSuspendedPriorityLevel(root, expirationTime, nextRenderDidError);
       const suspendedExpirationTime = expirationTime;
       const newExpirationTime = root.expirationTime;
@@ -1117,6 +1129,10 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       );
     }
   } else {
+    // There's still remaining async work in this tree, but we ran out of time
+    // in the current frame. Yield back to the renderer. Unless we're
+    // interrupted by a higher priority update, we'll continue later from where
+    // we left off.
     const didCompleteRoot = false;
     stopWorkLoopTimer(interruptedBy, didCompleteRoot);
     interruptedBy = null;
@@ -1251,6 +1267,11 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
       } else {
         // This is an async update
         expirationTime = computeAsyncExpiration(currentTime);
+      }
+      // If we're in the middle of rendering a tree, do not update at the same
+      // expiration time that is already rendering.
+      if (nextRoot !== null && expirationTime === nextRenderExpirationTime) {
+        expirationTime += 1;
       }
     } else {
       // This is a sync update
