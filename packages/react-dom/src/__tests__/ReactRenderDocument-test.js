@@ -490,7 +490,7 @@ describe('rendering React components at document', () => {
           '  <head>\n' +
           '-   <meta charset="utf-8" />\n' +
           '    <title>test doc long title long title long title long title long title' +
-          ' long title long title long title lon…</title>\n' +
+          ' long title long title long title lon...</title>\n' +
           '  </head>\n\n' +
           '    in title (at **)\n' +
           '    in head (at **)\n' +

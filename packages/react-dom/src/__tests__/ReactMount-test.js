@@ -305,7 +305,7 @@ describe('ReactMount', () => {
         '    <!-- -->\n' +
         "    {'   '}\n" +
         '-   <p>children <b>text</b></p>\n' +
-        "+   <div>{['children ', …]}</div>\n" +
+        "+   <div>{['children ', ...]}</div>\n" +
         '  </div>\n\n' +
         '    in div (at **)\n' +
         '    in Component (at **)',
@@ -356,7 +356,7 @@ describe('ReactMount', () => {
         '    <!-- -->\n' +
         "    {'   '}\n" +
         '    <p>children <b>text</b></p>\n' +
-        "+   <div>{['children ', …]}</div>\n" +
+        "+   <div>{['children ', ...]}</div>\n" +
         '  </div>\n\n' +
         '    in div (at **)\n' +
         '    in Component (at **)',

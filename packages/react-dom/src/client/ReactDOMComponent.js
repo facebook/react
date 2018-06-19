@@ -67,9 +67,9 @@ const HTML = '__html';
 const {html: HTML_NAMESPACE} = Namespaces;
 
 let getTextContentSignature = (textContent: string) => '';
-let getNodeSignatureForDiff = (node: Node, openTagOnly = false) => '<…>';
-let getNodeSignatureForMessage = (node: Node) => '<…>';
-let getTagWithPropsSignature = (tag: string, props: Object) => '<…>';
+let getNodeSignatureForDiff = (node: Node, openTagOnly = false) => '<...>';
+let getNodeSignatureForMessage = (node: Node) => '<...>';
+let getTagWithPropsSignature = (tag: string, props: Object) => '<...>';
 let getNodeSurroundingsAndDiff = (
   parentNode: Element | Document,
   deletedIndex: number,
@@ -98,7 +98,7 @@ if (__DEV__) {
 
   const clipStringWithEllipsis = function(str: string, clipAtLength: number) {
     return (
-      str.substring(0, clipAtLength) + (str.length > clipAtLength ? '…' : '')
+      str.substring(0, clipAtLength) + (str.length > clipAtLength ? '...' : '')
     );
   };
 
@@ -207,7 +207,7 @@ if (__DEV__) {
       }
       let markup = null;
       if (propKey === STYLE) {
-        markup = propKey + '={…}';
+        markup = propKey + '={...}';
       } else if (typeof propValue === 'function') {
         markup = propKey + '={' + propValue.name || propValue.toString() + '}';
       } else {
@@ -237,12 +237,12 @@ if (__DEV__) {
           if (typeof child === 'string') {
             ret += "'" + child + "'";
           } else {
-            ret += '…';
+            ret += '...';
           }
         }
         ret += ']}</';
       } else if (props.children) {
-        ret += '>{…}</';
+        ret += '>{...}</';
       } else {
         ret += '></';
       }
