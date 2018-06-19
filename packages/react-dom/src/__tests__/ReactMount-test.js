@@ -810,6 +810,62 @@ describe('ReactMount', () => {
     );
   });
 
+  it('should warn with special characters in the JSX string output', () => {
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <div>{'SSRMismatchTest special characters: \'"\t\n'}</div>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div>
+          <span />
+          {'SSRMismatchTest special characters: \'"\t\n'}
+        </div>,
+        div,
+      ),
+    ).toWarnDev(
+      // TODO: Currently, the special characters in the JSX string output are not escaped, the output looks invalid.
+      'Warning: Expected server HTML to contain a matching <span> in <div>.\n\n' +
+        '  <div data-reactroot="">\n' +
+        "-   {'SSRMismatchTest special characters: '\"\t\n'}\n" +
+        '+   <span></span>\n' +
+        '  </div>\n\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('should warn with special characters in the HTML tag output', () => {
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <div data-ssr-mismatch-attribute-with-special-characters={'"'}>
+        <div>{'SSRMismatchTest text'}</div>
+      </div>,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div data-ssr-mismatch-attribute-with-special-characters={'"'}>
+          <span>&nbsp;&mdash; &lt;div&gt;</span>
+          <div>{'SSRMismatchTest text'}</div>
+        </div>,
+        div,
+      ),
+    ).toWarnDev(
+      // TODO: Currently, the special characters in the HTML string output are not escaped, the output looks invalid.
+      'Warning: Expected server HTML to contain a matching <span> in <div>.\n\n' +
+        '  <div data-ssr-mismatch-attribute-with-special-characters=""" data-reactroot="">\n' +
+        '-   <div>SSRMismatchTest text</div>\n' +
+        '+   <span> — <div></span>\n' +
+        '  </div>\n\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)',
+    );
+  });
+
   it('should warn if render removes React-rendered children', () => {
     const container = document.createElement('container');
 
