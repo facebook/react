@@ -11,7 +11,7 @@ import {isForwardRef} from 'react-is';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import shallowEqual from 'shared/shallowEqual';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 const emptyObject = {};

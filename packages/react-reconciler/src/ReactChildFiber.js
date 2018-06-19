@@ -28,8 +28,8 @@ import {
   Fragment,
 } from 'shared/ReactTypeOfWork';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 
 import {
   createWorkInProgress,

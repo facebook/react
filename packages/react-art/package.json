@@ -20,7 +20,6 @@
   "dependencies": {
     "art": "^0.10.1",
     "create-react-class": "^15.6.2",
-    "fbjs": "^0.8.16",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.0"

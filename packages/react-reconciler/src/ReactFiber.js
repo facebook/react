@@ -15,7 +15,7 @@ import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactTypeOfSideEffect';
 import {

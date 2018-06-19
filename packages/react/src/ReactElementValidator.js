@@ -22,7 +22,7 @@ import {
   REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {isValidElement, createElement, cloneElement} from './ReactElement';

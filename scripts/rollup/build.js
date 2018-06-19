@@ -237,6 +237,20 @@ function isProfilingBundleType(bundleType) {
   }
 }
 
+function blacklistFBJS() {
+  return {
+    name: 'blacklistFBJS',
+    resolveId(importee, importer) {
+      if (/^fbjs\//.test(importee)) {
+        throw new Error(
+          `Don't import ${importee} (found in ${importer}). ` +
+            `Use the utilities in packages/shared/ instead.`
+        );
+      }
+    },
+  };
+}
+
 function getPlugins(
   entry,
   externals,
@@ -252,7 +266,7 @@ function getPlugins(
   const forks = Modules.getForks(bundleType, entry, moduleType);
   const isProduction = isProductionBundleType(bundleType);
   const isProfiling = isProfilingBundleType(bundleType);
-  const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
+  const isUMDBundle = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_WWW_DEV || bundleType === FB_WWW_PROD;
   const isRNBundle =
     bundleType === RN_OSS_DEV ||
@@ -271,6 +285,9 @@ function getPlugins(
     },
     // Shim any modules that need forking in this environment.
     useForks(forks),
+    // Ensure we don't try to bundle any fbjs modules
+    // unless they're transitive (e.g. through prop-types).
+    !isUMDBundle && blacklistFBJS(),
     // Use Node resolution mechanism.
     resolve({
       skip: externals,
@@ -309,7 +326,7 @@ function getPlugins(
         Object.assign({}, closureOptions, {
           // Don't let it create global variables in the browser.
           // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isInGlobalScope,
+          assume_function_wrapper: !isUMDBundle,
           // Works because `google-closure-compiler-js` is forked in Yarn lockfile.
           // We can remove this if GCC merges my PR:
           // https://github.com/google/closure-compiler/pull/2707

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 /**
  * Accumulates items that must not be null or undefined.

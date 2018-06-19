@@ -39,7 +39,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import {ProfileMode} from './ReactTypeOfMode';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import {
   createInstance,

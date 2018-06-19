@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 // Exports ReactDOM.createRoot
 export const enableUserTimingAPI = __DEV__;

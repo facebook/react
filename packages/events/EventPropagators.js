@@ -10,7 +10,7 @@ import {
   traverseTwoPhase,
   traverseEnterLeave,
 } from 'shared/ReactTreeTraversal';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import {getListener} from './EventPluginHub';
 import accumulateInto from './accumulateInto';

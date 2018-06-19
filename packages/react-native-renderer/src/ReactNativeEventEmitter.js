@@ -10,7 +10,7 @@
 import {getListener, runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import {batchedUpdates} from 'events/ReactGenericBatching';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
 

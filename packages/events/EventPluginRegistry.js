@@ -14,7 +14,7 @@ import type {
   PluginModule,
 } from './PluginModuleType';
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 type EventPluginOrder = null | Array<PluginName>;

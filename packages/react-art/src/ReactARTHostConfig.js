@@ -8,7 +8,7 @@
 import * as ReactScheduler from 'shared/ReactScheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 

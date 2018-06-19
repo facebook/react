@@ -9,7 +9,7 @@
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 // Modules provided by RN:
 import UIManager from 'UIManager';

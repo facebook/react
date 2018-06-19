@@ -7,8 +7,8 @@
 
 /* eslint valid-typeof: 0 */
 
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 
 let didWarnForAddedNewProperty = false;
 const EVENT_POOL_SIZE = 10;

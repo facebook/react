@@ -10,7 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 

@@ -8,8 +8,8 @@
  */
 
 import React from 'react';
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 
 type Unsubscribe = () => void;
 

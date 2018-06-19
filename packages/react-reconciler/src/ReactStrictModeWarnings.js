@@ -13,7 +13,7 @@ import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {StrictMode} from './ReactTypeOfMode';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 type LIFECYCLE =
   | 'UNSAFE_componentWillMount'

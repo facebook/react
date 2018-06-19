@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 let invokeGuardedCallback = function<A, B, C, D, E, F, Context>(
   name: string | null,
