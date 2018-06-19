@@ -21,7 +21,7 @@ export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = false;
-export const supportDevToolsIfPresent = false;
+export const supportDevToolsIfPresent = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {
