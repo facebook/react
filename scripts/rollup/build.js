@@ -285,9 +285,8 @@ function getPlugins(
     },
     // Shim any modules that need forking in this environment.
     useForks(forks),
-    // Ensure we don't try to bundle any fbjs modules
-    // unless they're transitive (e.g. through prop-types).
-    !isUMDBundle && blacklistFBJS(),
+    // Ensure we don't try to bundle any fbjs modules.
+    blacklistFBJS(),
     // Use Node resolution mechanism.
     resolve({
       skip: externals,
