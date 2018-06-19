@@ -13,7 +13,6 @@ import type {StackCursor} from './ReactFiberStack';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
-import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
@@ -28,14 +27,19 @@ if (__DEV__) {
   warnedAboutMissingGetChildContext = {};
 }
 
+export const emptyContextObject = {};
+if (__DEV__) {
+  Object.freeze(emptyContextObject);
+}
+
 // A cursor to the current merged context object on the stack.
-let contextStackCursor: StackCursor<Object> = createCursor(emptyObject);
+let contextStackCursor: StackCursor<Object> = createCursor(emptyContextObject);
 // A cursor to a boolean indicating whether the context has changed.
 let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
 // Keep track of the previous context object that was on the stack.
 // We use this to get access to the parent context after we have already
 // pushed the next context provider, and now need to merge their contexts.
-let previousContext: Object = emptyObject;
+let previousContext: Object = emptyContextObject;
 
 function getUnmaskedContext(workInProgress: Fiber): Object {
   const hasOwnContext = isContextProvider(workInProgress);
@@ -66,7 +70,7 @@ function getMaskedContext(
   const type = workInProgress.type;
   const contextTypes = type.contextTypes;
   if (!contextTypes) {
-    return emptyObject;
+    return emptyContextObject;
   }
 
   // Avoid recreating masked context unless unmasked context has changed.
@@ -137,7 +141,7 @@ function pushTopLevelContextObject(
   didChange: boolean,
 ): void {
   invariant(
-    contextStackCursor.current === emptyObject,
+    contextStackCursor.current === emptyContextObject,
     'Unexpected context found on stack. ' +
       'This error is likely caused by a bug in React. Please file an issue.',
   );
@@ -219,7 +223,7 @@ function pushContextProvider(workInProgress: Fiber): boolean {
   // and replace it on the stack later when invalidating the context.
   const memoizedMergedChildContext =
     (instance && instance.__reactInternalMemoizedMergedChildContext) ||
-    emptyObject;
+    emptyContextObject;
 
   // Remember the parent context so we can merge with it later.
   // Inherit the parent's did-perform-work value to avoid inadvertently blocking updates.

@@ -11,9 +11,13 @@ import {isForwardRef} from 'react-is';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import shallowEqual from 'shared/shallowEqual';
-import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import checkPropTypes from 'prop-types/checkPropTypes';
+
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
+}
 
 class ReactShallowRenderer {
   static createRenderer = function() {

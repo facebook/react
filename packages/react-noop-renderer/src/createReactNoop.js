@@ -19,7 +19,6 @@ import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import * as ReactPortal from 'shared/ReactPortal';
-import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
 
 type Container = {rootID: string, children: Array<Instance | TextInstance>};
@@ -32,8 +31,14 @@ type Instance = {|
 |};
 type TextInstance = {|text: string, id: number|};
 
+const NO_CONTEXT = {};
+const UPDATE_SIGNAL = {};
+if (__DEV__) {
+  Object.freeze(NO_CONTEXT);
+  Object.freeze(UPDATE_SIGNAL);
+}
+
 function createReactNoop(reconciler: Function, useMutation: boolean) {
-  const UPDATE_SIGNAL = {};
   let scheduledCallback = null;
 
   let instanceCounter = 0;
@@ -84,11 +89,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (failInBeginPhase) {
         throw new Error('Error in host config.');
       }
-      return emptyObject;
+      return NO_CONTEXT;
     },
 
     getChildHostContext() {
-      return emptyObject;
+      return NO_CONTEXT;
     },
 
     getPublicInstance(instance) {

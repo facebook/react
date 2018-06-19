@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import React from 'react';
 import {Update, Snapshot} from 'shared/ReactTypeOfSideEffect';
 import {
   debugRenderPhaseSideEffects,
@@ -20,7 +21,6 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
-import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -43,6 +43,7 @@ import {
   getUnmaskedContext,
   isContextConsumer,
   hasContextChanged,
+  emptyContextObject,
 } from './ReactFiberContext';
 import {
   recalculateCurrentTime,
@@ -52,6 +53,10 @@ import {
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
+
+// React.Component uses a shared frozen object by default.
+// We'll use it to determine whether we need to initialize legacy refs.
+export const emptyRefsObject = new React.Component().refs;
 
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
@@ -469,7 +474,7 @@ function constructClassInstance(
   const needsContext = isContextConsumer(workInProgress);
   const context = needsContext
     ? getMaskedContext(workInProgress, unmaskedContext)
-    : emptyObject;
+    : emptyContextObject;
 
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
@@ -658,7 +663,7 @@ function mountClassInstance(
 
   instance.props = props;
   instance.state = workInProgress.memoizedState;
-  instance.refs = emptyObject;
+  instance.refs = emptyRefsObject;
   instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
   if (__DEV__) {

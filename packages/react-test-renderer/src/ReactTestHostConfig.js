@@ -7,8 +7,6 @@
  * @flow
  */
 
-import emptyObject from 'fbjs/lib/emptyObject';
-
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 export type Type = string;
@@ -35,10 +33,15 @@ export type HostContext = Object;
 export type UpdatePayload = Object;
 export type ChildSet = void; // Unused
 
-const UPDATE_SIGNAL = {};
-
 export * from 'shared/HostConfigWithNoPersistence';
 export * from 'shared/HostConfigWithNoHydration';
+
+const NO_CONTEXT = {};
+const UPDATE_SIGNAL = {};
+if (__DEV__) {
+  Object.freeze(NO_CONTEXT);
+  Object.freeze(UPDATE_SIGNAL);
+}
 
 export function getPublicInstance(inst: Instance | TextInstance): * {
   switch (inst.tag) {
@@ -88,7 +91,7 @@ export function removeChild(
 export function getRootHostContext(
   rootContainerInstance: Container,
 ): HostContext {
-  return emptyObject;
+  return NO_CONTEXT;
 }
 
 export function getChildHostContext(
@@ -96,7 +99,7 @@ export function getChildHostContext(
   type: string,
   rootContainerInstance: Container,
 ): HostContext {
-  return emptyObject;
+  return NO_CONTEXT;
 }
 
 export function prepareForCommit(containerInfo: Container): void {

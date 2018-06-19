@@ -412,3 +412,46 @@ describe('creating element with ref in constructor', () => {
     );
   });
 });
+
+describe('strings refs across renderers', () => {
+  it('does not break', () => {
+    class Parent extends React.Component {
+      render() {
+        // This component owns both refs.
+        return (
+          <Indirection
+            child1={<div ref="child1" />}
+            child2={<div ref="child2" />}
+          />
+        );
+      }
+    }
+
+    class Indirection extends React.Component {
+      componentDidUpdate() {
+        // One ref is being rendered later using another renderer copy.
+        jest.resetModules();
+        const AnotherCopyOfReactDOM = require('react-dom');
+        AnotherCopyOfReactDOM.render(this.props.child2, div2);
+      }
+      render() {
+        // The other one is being rendered directly.
+        return this.props.child1;
+      }
+    }
+
+    const div1 = document.createElement('div');
+    const div2 = document.createElement('div');
+    const inst = ReactDOM.render(<Parent />, div1);
+    // Only the first ref has rendered yet.
+    expect(inst.refs.child1.tagName).toBe('DIV');
+    expect(inst.refs.child1).toBe(div1.firstChild);
+
+    // Now both refs should be rendered.
+    ReactDOM.render(<Parent />, div1);
+    expect(inst.refs.child1.tagName).toBe('DIV');
+    expect(inst.refs.child1).toBe(div1.firstChild);
+    expect(inst.refs.child2.tagName).toBe('DIV');
+    expect(inst.refs.child2).toBe(div2.firstChild);
+  });
+});
