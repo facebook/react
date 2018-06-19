@@ -177,11 +177,10 @@ describe('Profiler', () => {
         </div>,
       );
 
-      // Should only be called three times:
-      // Twice for normal expiration time purposes,
-      // And once to capture the commit time.
+      // Should be called twice: once to compute the update expiration time,
+      // and once to record the commit time.
       // No additional calls from ProfilerTimer are expected.
-      expect(mockNow).toHaveBeenCalledTimes(3);
+      expect(mockNow).toHaveBeenCalledTimes(2);
     });
 
     it('logs render times for both mount and update', () => {

@@ -60,7 +60,7 @@ import {
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
-  recalculateCurrentTime,
+  requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
   retrySuspendedRoot,
@@ -132,7 +132,7 @@ function createClassErrorUpdate(
 function schedulePing(finishedWork) {
   // Once the promise resolves, we should try rendering the non-
   // placeholder state again.
-  const currentTime = recalculateCurrentTime();
+  const currentTime = requestCurrentTime();
   const expirationTime = computeExpirationForFiber(currentTime, finishedWork);
   const recoveryUpdate = createUpdate(expirationTime);
   enqueueUpdate(finishedWork, recoveryUpdate, expirationTime);
@@ -145,7 +145,6 @@ function throwException(
   sourceFiber: Fiber,
   value: mixed,
   renderExpirationTime: ExpirationTime,
-  currentTimeMs: number,
 ) {
   // The source fiber did not complete.
   sourceFiber.effectTag |= Incomplete;
@@ -162,7 +161,9 @@ function throwException(
     const thenable: Thenable = (value: any);
 
     // TODO: Should use the earliest known expiration time
+    const currentTime = requestCurrentTime();
     const expirationTimeMs = expirationTimeToMs(renderExpirationTime);
+    const currentTimeMs = expirationTimeToMs(currentTime);
     const startTimeMs = expirationTimeMs - 5000;
     let elapsedMs = currentTimeMs - startTimeMs;
     if (elapsedMs < 0) {

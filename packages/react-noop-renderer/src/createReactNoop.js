@@ -440,7 +440,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       expect(actual).toEqual(expected);
     },
 
-    expire(ms: number): void {
+    expire(ms: number): Array<mixed> {
+      ReactNoop.advanceTime(ms);
+      return ReactNoop.flushExpired();
+    },
+
+    advanceTime(ms: number): void {
       elapsedTimeInMs += ms;
     },
 

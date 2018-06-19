@@ -208,12 +208,7 @@ if (__DEV__) {
   };
 }
 
-// Represents the current time in ms.
-const originalStartTimeMs = now();
-let mostRecentCurrentTime: ExpirationTime = msToExpirationTime(0);
-let mostRecentCurrentTimeMs: number = originalStartTimeMs;
-
-// Used to ensure computeUniqueAsyncExpiration is monotonically increases.
+// Used to ensure computeUniqueAsyncExpiration is monotonically increasing.
 let lastUniqueAsyncExpiration: number = 0;
 
 // Represents the expiration time that incoming updates should use. (If this
@@ -432,7 +427,6 @@ function commitBeforeMutationLifecycles() {
 
 function commitAllLifeCycles(
   finishedRoot: FiberRoot,
-  currentTime: ExpirationTime,
   committedExpirationTime: ExpirationTime,
 ) {
   if (__DEV__) {
@@ -456,7 +450,6 @@ function commitAllLifeCycles(
         finishedRoot,
         current,
         nextEffect,
-        currentTime,
         committedExpirationTime,
       );
     }
@@ -516,8 +509,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   // about to commit. This needs to happen before calling the lifecycles, since
   // they may schedule additional updates.
   const earliestRemainingTime = finishedWork.expirationTime;
-  const currentTime = recalculateCurrentTime();
-  markCommittedPriorityLevels(root, currentTime, earliestRemainingTime);
+  markCommittedPriorityLevels(root, earliestRemainingTime);
 
   // Reset this to null before calling lifecycles
   ReactCurrentOwner.current = null;
@@ -642,7 +634,6 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
         commitAllLifeCycles,
         null,
         root,
-        currentTime,
         committedExpirationTime,
       );
       if (hasCaughtError()) {
@@ -651,7 +642,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       }
     } else {
       try {
-        commitAllLifeCycles(root, currentTime, committedExpirationTime);
+        commitAllLifeCycles(root, committedExpirationTime);
       } catch (e) {
         didError = true;
         error = e;
@@ -1076,7 +1067,6 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
           sourceFiber,
           thrownValue,
           nextRenderExpirationTime,
-          mostRecentCurrentTimeMs,
         );
         nextUnitOfWork = completeUnitOfWork(sourceFiber);
       }
@@ -1192,7 +1182,7 @@ function captureCommitPhaseError(fiber: Fiber, error: mixed) {
   return dispatch(fiber, error, Sync);
 }
 
-function computeAsyncExpiration(currentTime: ExpirationTime) {
+function computeAsyncExpiration(currentTime) {
   // Given the current clock time, returns an expiration time. We use rounding
   // to batch like updates together.
   // Should complete within ~5000ms. 5250ms max.
@@ -1201,7 +1191,7 @@ function computeAsyncExpiration(currentTime: ExpirationTime) {
   return computeExpirationBucket(currentTime, expirationMs, bucketSizeMs);
 }
 
-function computeInteractiveExpiration(currentTime: ExpirationTime) {
+function computeInteractiveExpiration(currentTime) {
   let expirationMs;
   // We intentionally set a higher expiration time for interactive updates in
   // dev than in production.
@@ -1224,7 +1214,7 @@ function computeInteractiveExpiration(currentTime: ExpirationTime) {
 
 // Creates a unique async expiration time.
 function computeUniqueAsyncExpiration(): ExpirationTime {
-  const currentTime = recalculateCurrentTime();
+  const currentTime = requestCurrentTime();
   let result = computeAsyncExpiration(currentTime);
   if (result <= lastUniqueAsyncExpiration) {
     // Since we assume the current time monotonically increases, we only hit
@@ -1379,16 +1369,9 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
   }
 }
 
-function recalculateCurrentTime(): ExpirationTime {
-  // Subtract initial time so it fits inside 32bits
-  mostRecentCurrentTimeMs = now() - originalStartTimeMs;
-  mostRecentCurrentTime = msToExpirationTime(mostRecentCurrentTimeMs);
-  return mostRecentCurrentTime;
-}
-
 function deferredUpdates<A>(fn: () => A): A {
+  const currentTime = requestCurrentTime();
   const previousExpirationContext = expirationContext;
-  const currentTime = recalculateCurrentTime();
   expirationContext = computeAsyncExpiration(currentTime);
   try {
     return fn();
@@ -1396,6 +1379,7 @@ function deferredUpdates<A>(fn: () => A): A {
     expirationContext = previousExpirationContext;
   }
 }
+
 function syncUpdates<A, B, C0, D, R>(
   fn: (A, B, C0, D) => R,
   a: A,
@@ -1436,11 +1420,22 @@ let isBatchingInteractiveUpdates: boolean = false;
 
 let completedBatches: Array<Batch> | null = null;
 
+let originalStartTimeMs: number = now();
+let currentRendererTime: ExpirationTime = msToExpirationTime(
+  originalStartTimeMs,
+);
+let currentSchedulerTime: ExpirationTime = currentRendererTime;
+
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 1000;
 let nestedUpdateCount: number = 0;
 
 const timeHeuristicForUnitOfWork = 1;
+
+function recomputeCurrentRendererTime() {
+  const currentTimeMs = now() - originalStartTimeMs;
+  currentRendererTime = msToExpirationTime(currentTimeMs);
+}
 
 function scheduleCallbackWithExpirationTime(expirationTime) {
   if (callbackExpirationTime !== NoWork) {
@@ -1506,6 +1501,50 @@ function onYield(root) {
 function onCommit(root, expirationTime) {
   root.expirationTime = expirationTime;
   root.finishedWork = null;
+}
+
+function requestCurrentTime() {
+  // requestCurrentTime is called by the scheduler to compute an expiration
+  // time.
+  //
+  // Expiration times are computed by adding to the current time (the start
+  // time). However, if two updates are scheduled within the same event, we
+  // should treat their start times as simultaneous, even if the actual clock
+  // time has advanced between the first and second call.
+
+  // In other words, because expiration times determine how updates are batched,
+  // we want all updates of like priority that occur within the same event to
+  // receive the same expiration time. Otherwise we get tearing.
+  //
+  // We keep track of two separate times: the current "renderer" time and the
+  // current "scheduler" time. The renderer time can be updated whenever; it
+  // only exists to minimize the calls performance.now.
+  //
+  // But the scheduler time can only be updated if there's no pending work, or
+  // if we know for certain that we're not in the middle of an event.
+
+  if (isRendering) {
+    // We're already rendering. Return the most recently read time.
+    return currentSchedulerTime;
+  }
+  // Check if there's pending work.
+  findHighestPriorityRoot();
+  if (
+    nextFlushedExpirationTime === NoWork ||
+    nextFlushedExpirationTime === Never
+  ) {
+    // If there's no pending work, or if the pending work is offscreen, we can
+    // read the current time without risk of tearing.
+    recomputeCurrentRendererTime();
+    currentSchedulerTime = currentRendererTime;
+    return currentSchedulerTime;
+  }
+  // There's already pending work. We might be in the middle of a browser
+  // event. If we were to read the current time, it could cause multiple updates
+  // within the same event to receive different expiration times, leading to
+  // tearing. Return the last read time. During the next idle callback, the
+  // time will be updated.
+  return currentSchedulerTime;
 }
 
 // requestWork is called by the scheduler whenever a root receives an update.
@@ -1661,24 +1700,27 @@ function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
     resumeActualRenderTimerIfPaused();
   }
 
-  if (enableUserTimingAPI && deadline !== null) {
-    const didExpire = nextFlushedExpirationTime < recalculateCurrentTime();
-    const timeout = expirationTimeToMs(nextFlushedExpirationTime);
-    stopRequestCallbackTimer(didExpire, timeout);
-  }
-
   if (deadline !== null) {
+    recomputeCurrentRendererTime();
+    currentSchedulerTime = currentRendererTime;
+
+    if (enableUserTimingAPI) {
+      const didExpire = nextFlushedExpirationTime < currentRendererTime;
+      const timeout = expirationTimeToMs(nextFlushedExpirationTime);
+      stopRequestCallbackTimer(didExpire, timeout);
+    }
+
     while (
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
       (minExpirationTime === NoWork ||
         minExpirationTime >= nextFlushedExpirationTime) &&
-      (!deadlineDidExpire ||
-        recalculateCurrentTime() >= nextFlushedExpirationTime)
+      (!deadlineDidExpire || currentRendererTime >= nextFlushedExpirationTime)
     ) {
-      recalculateCurrentTime();
       performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime, true);
       findHighestPriorityRoot();
+      recomputeCurrentRendererTime();
+      currentSchedulerTime = currentRendererTime;
     }
   } else {
     while (
@@ -1977,7 +2019,7 @@ function flushControlled(fn: () => mixed): void {
 }
 
 export {
-  recalculateCurrentTime,
+  requestCurrentTime,
   computeExpirationForFiber,
   captureCommitPhaseError,
   onUncaughtError,

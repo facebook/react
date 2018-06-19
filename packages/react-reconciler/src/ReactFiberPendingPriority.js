@@ -45,7 +45,6 @@ export function markPendingPriorityLevel(
 
 export function markCommittedPriorityLevels(
   root: FiberRoot,
-  currentTime: ExpirationTime,
   earliestRemainingTime: ExpirationTime,
 ): void {
   root.didError = false;
