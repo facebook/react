@@ -999,8 +999,6 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     resetStack();
     nextRoot = root;
     nextRenderExpirationTime = expirationTime;
-    nextLatestTimeoutMs = -1;
-    nextRenderDidError = false;
     nextUnitOfWork = createWorkInProgress(
       nextRoot.current,
       null,
@@ -1840,7 +1838,6 @@ function performWorkOnRoot(
       // This root is already complete. We can commit it.
       completeRoot(root, finishedWork, expirationTime);
     } else {
-      root.finishedWork = null;
       renderRoot(root, false);
       finishedWork = root.finishedWork;
       if (finishedWork !== null) {
@@ -1855,7 +1852,6 @@ function performWorkOnRoot(
       // This root is already complete. We can commit it.
       completeRoot(root, finishedWork, expirationTime);
     } else {
-      root.finishedWork = null;
       renderRoot(root, true);
       finishedWork = root.finishedWork;
       if (finishedWork !== null) {
