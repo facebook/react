@@ -32,8 +32,6 @@ export const warnAboutLegacyContextAPI = __DEV__;
 // as long as there is more than a single listener.
 export let enableUserTimingAPI = __DEV__;
 
-export const supportDevToolsIfPresent = true;
-
 let refCount = 0;
 export function addUserTimingListener() {
   if (__DEV__) {

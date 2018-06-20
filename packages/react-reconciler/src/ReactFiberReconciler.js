@@ -15,7 +15,6 @@ import type {
   Container,
   PublicInstance,
 } from './ReactFiberHostConfig';
-import {supportDevToolsIfPresent} from 'shared/ReactFeatureFlags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
@@ -262,9 +261,6 @@ export function findHostInstanceWithNoPortals(
 }
 
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
-  if (!supportDevToolsIfPresent) {
-    return false;
-  }
   const {findFiberByHostInstance} = devToolsConfig;
   return ReactFiberDevToolsHook.injectInternals({
     ...devToolsConfig,

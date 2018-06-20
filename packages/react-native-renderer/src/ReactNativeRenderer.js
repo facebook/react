@@ -26,7 +26,6 @@ import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
-import {supportDevToolsIfPresent} from 'shared/ReactFeatureFlags';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
@@ -143,15 +142,12 @@ const ReactNativeRenderer: ReactNativeType = {
   },
 };
 
-if (supportDevToolsIfPresent) {
-  ReactNativeFiberRenderer.injectIntoDevTools({
-    findFiberByHostInstance:
-      ReactNativeComponentTree.getClosestInstanceFromNode,
-    getInspectorDataForViewTag: getInspectorDataForViewTag,
-    bundleType: __DEV__ ? 1 : 0,
-    version: ReactVersion,
-    rendererPackageName: 'react-native-renderer',
-  });
-}
+ReactNativeFiberRenderer.injectIntoDevTools({
+  findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
+  getInspectorDataForViewTag: getInspectorDataForViewTag,
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+  rendererPackageName: 'react-native-renderer',
+});
 
 export default ReactNativeRenderer;

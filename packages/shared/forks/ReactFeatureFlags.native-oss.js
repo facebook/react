@@ -22,8 +22,6 @@ export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = false;
 export const enableProfilerTimer = __PROFILE__;
 
-export const supportDevToolsIfPresent = true;
-
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');

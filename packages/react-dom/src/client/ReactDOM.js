@@ -32,7 +32,6 @@ import ReactVersion from 'shared/ReactVersion';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import {supportDevToolsIfPresent} from 'shared/ReactFeatureFlags';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
 
@@ -761,36 +760,34 @@ ReactDOM.unstable_createRoot = function createRoot(
   return new ReactRoot(container, true, hydrate);
 };
 
-if (supportDevToolsIfPresent) {
-  const foundDevTools = DOMRenderer.injectIntoDevTools({
-    findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
-    bundleType: __DEV__ ? 1 : 0,
-    version: ReactVersion,
-    rendererPackageName: 'react-dom',
-  });
+const foundDevTools = DOMRenderer.injectIntoDevTools({
+  findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+  rendererPackageName: 'react-dom',
+});
 
-  if (__DEV__) {
-    if (!foundDevTools && canUseDOM && window.top === window.self) {
-      // If we're in Chrome or Firefox, provide a download link if not installed.
-      if (
-        (navigator.userAgent.indexOf('Chrome') > -1 &&
-          navigator.userAgent.indexOf('Edge') === -1) ||
-        navigator.userAgent.indexOf('Firefox') > -1
-      ) {
-        const protocol = window.location.protocol;
-        // Don't warn in exotic cases like chrome-extension://.
-        if (/^(https?|file):$/.test(protocol)) {
-          console.info(
-            '%cDownload the React DevTools ' +
-              'for a better development experience: ' +
-              'https://fb.me/react-devtools' +
-              (protocol === 'file:'
-                ? '\nYou might need to use a local HTTP server (instead of file://): ' +
-                  'https://fb.me/react-devtools-faq'
-                : ''),
-            'font-weight:bold',
-          );
-        }
+if (__DEV__) {
+  if (!foundDevTools && canUseDOM && window.top === window.self) {
+    // If we're in Chrome or Firefox, provide a download link if not installed.
+    if (
+      (navigator.userAgent.indexOf('Chrome') > -1 &&
+        navigator.userAgent.indexOf('Edge') === -1) ||
+      navigator.userAgent.indexOf('Firefox') > -1
+    ) {
+      const protocol = window.location.protocol;
+      // Don't warn in exotic cases like chrome-extension://.
+      if (/^(https?|file):$/.test(protocol)) {
+        console.info(
+          '%cDownload the React DevTools ' +
+            'for a better development experience: ' +
+            'https://fb.me/react-devtools' +
+            (protocol === 'file:'
+              ? '\nYou might need to use a local HTTP server (instead of file://): ' +
+                'https://fb.me/react-devtools-faq'
+              : ''),
+          'font-weight:bold',
+        );
       }
     }
   }

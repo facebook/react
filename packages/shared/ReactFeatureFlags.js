@@ -39,9 +39,6 @@ export const warnAboutLegacyContextAPI = false;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
-// If the DevTools hook is present, inject into it.
-export const supportDevToolsIfPresent = true;
-
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');

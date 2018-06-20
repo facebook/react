@@ -41,7 +41,6 @@ describe('ReactProfiler DevTools integration', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableProfilerTimer = true;
-    ReactFeatureFlags.supportDevToolsIfPresent = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
 
