@@ -999,8 +999,6 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
     resetStack();
     nextRoot = root;
     nextRenderExpirationTime = expirationTime;
-    nextLatestTimeoutMs = -1;
-    nextRenderDidError = false;
     nextUnitOfWork = createWorkInProgress(
       nextRoot.current,
       null,
