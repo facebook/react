@@ -29,6 +29,7 @@ import {
   Profiler,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'shared/invariant';
+import ReactVersion from 'shared/ReactVersion';
 
 import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
@@ -509,5 +510,15 @@ const ReactTestRendererFiber = {
 
   unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,
 };
+
+// Enable ReactTestRenderer to be used to test DevTools integration.
+TestRenderer.injectIntoDevTools({
+  findFiberByHostInstance: (() => {
+    throw new Error('TestRenderer does not support findFiberByHostInstance()');
+  }: any),
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+  rendererPackageName: 'react-test-renderer',
+});
 
 export default ReactTestRendererFiber;
