@@ -901,4 +901,109 @@ describe('ReactStrictMode', () => {
       rendered.update(<Root />);
     });
   });
+
+  describe('prefixing all warnings when in strict mode', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      React = require('react');
+      ReactTestRenderer = require('react-test-renderer');
+      PropTypes = require('prop-types');
+    });
+
+    fit('should should prefix any warning with "Strict Mode Warning: "', () => {
+      // We chose some common warnings randomly, feel free to update this test
+      // if/when the warnings change.
+
+      class BuggyComponentA extends React.Component {
+        constructor() {
+          super();
+          // ANTIPATTERN
+          // warns for assigning invalid state
+          this.state = 'foo';
+        }
+        render() {
+          return <span>A</span>;
+        }
+      }
+
+      function BuggyComponentB() {
+        // ANTIPATTERN
+        // warns about duplicate keys
+        return [<span key={1}>B Child 1</span>, <span key={1}>B Child 2</span>];
+      }
+
+      function BuggyComponentC() {
+        // ANTIPATTERN
+        // warns about functions being invalid children
+        return () => 'hello';
+      }
+
+      function BuggyComponentCollection() {
+        return (
+          <div>
+            <BuggyComponentA />
+            <BuggyComponentB />
+            <BuggyComponentC />
+          </div>
+        );
+      };
+
+      const {StrictMode} = React;
+      class StrictModeRoot extends React.Component {
+        render() {
+          return (
+            <div>
+              <StrictMode>
+                <BuggyComponentCollection />
+              </StrictMode>
+            </div>
+          );
+        }
+      }
+
+      let rendered;
+      // Check that warnings show up when not in strict mode
+      expect(() => {
+        rendered = ReactTestRenderer.create(<BuggyComponentCollection />);
+      }).toWarnDev([
+        'Warning: BuggyComponentA.state: must be set to an object or null',
+        'Warning: Encountered two children with the same key, `1`.' +
+          ' Keys should be unique so that components maintain their identity' +
+          ' across updates. Non-unique keys may cause children to be' +
+          ' duplicated and/or omitted — the behavior is unsupported and' +
+          ' could change in a future version.' +
+          '\n    in BuggyComponentB (at **)' +
+          '\n    in div (at **)' +
+          '\n    in BuggyComponentCollection (at **)',
+        'Warning: Functions are not valid as a React child. This may ' +
+          'happen if you return a Component instead of <Component /> from ' +
+          'render. Or maybe you meant to call this function rather ' +
+          'than return it.' +
+          '\n    in BuggyComponentC (at **)' +
+          '\n    in div (at **)' +
+          '\n    in BuggyComponentCollection (at **)',
+      ]);
+
+      expect(() => {
+        rendered = ReactTestRenderer.create(<StrictModeRoot />);
+      }).toWarnDev([
+        'Strict Mode Warning: BuggyComponentA.state: must be set to an object or null',
+        'Strict Mode Warning: Encountered two children with the same key, `1`.' +
+          ' Keys should be unique so that components maintain their identity' +
+          ' across updates. Non-unique keys may cause children to be' +
+          ' duplicated and/or omitted — the behavior is unsupported and' +
+          ' could change in a future version.' +
+          '\n    in BuggyComponentB (at **)' +
+          '\n    in div (at **)' +
+          '\n    in BuggyComponentCollection (at **)',
+        'Strict Mode Warning: Functions are not valid as a React child. This may ' +
+          'happen if you return a Component instead of <Component /> from ' +
+          'render. Or maybe you meant to call this function rather ' +
+          'than return it.' +
+          '\n    in BuggyComponentC (at **)' +
+          '\n    in div (at **)' +
+          '\n    in BuggyComponentCollection (at **)',
+      ]);
+    });
+  });
 });
