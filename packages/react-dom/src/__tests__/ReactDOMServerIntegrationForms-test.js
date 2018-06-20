@@ -328,6 +328,39 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders(
+        'a select with options that use dangerouslySetInnerHTML',
+        async render => {
+          const e = await render(
+            <select defaultValue="baz" value="bar" readOnly={true}>
+              <option
+                id="foo"
+                value="foo"
+                dangerouslySetInnerHTML={{
+                  __html: 'Foo',
+                }}
+              />
+              <option
+                id="bar"
+                value="bar"
+                dangerouslySetInnerHTML={{
+                  __html: 'Bar',
+                }}
+              />
+              <option
+                id="baz"
+                value="baz"
+                dangerouslySetInnerHTML={{
+                  __html: 'Baz',
+                }}
+              />
+            </select>,
+            1,
+          );
+          expectSelectValue(e, 'bar');
+        },
+      );
+
+      itRenders(
         'a select value overriding defaultValue no matter the prop order',
         async render => {
           const e = await render(
