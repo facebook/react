@@ -1173,7 +1173,9 @@ class ReactDOMServerRenderer {
     } else if (tag === 'option') {
       let selected = null;
       const selectValue = this.currentSelectValue;
-      const optionChildren = flattenOptionChildren(props.children);
+      const optionChildren = Array.isArray(props.children)
+        ? flattenOptionChildren(props.children)
+        : props.children;
       if (selectValue != null) {
         let value;
         if (props.value != null) {
