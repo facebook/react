@@ -83,7 +83,7 @@ describe('ReactProfiler DevTools integration', () => {
 
     // Measure observable timing using the Profiler component.
     // The time spent in App (above the Profiler) won't be included in the durations,
-    // But needs to be acocunted for in the offset times.
+    // But needs to be accounted for in the offset times.
     expect(onRender).toHaveBeenCalledTimes(1);
     expect(onRender).toHaveBeenCalledWith('Profiler', 'mount', 10, 10, 2, 12);
     onRender.mockClear();
@@ -98,7 +98,7 @@ describe('ReactProfiler DevTools integration', () => {
 
     // Measure observable timing using the Profiler component.
     // The time spent in App (above the Profiler) won't be included in the durations,
-    // But needs to be acocunted for in the offset times.
+    // But needs to be accounted for in the offset times.
     expect(onRender).toHaveBeenCalledTimes(1);
     expect(onRender).toHaveBeenCalledWith('Profiler', 'update', 6, 13, 14, 20);
 
