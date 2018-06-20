@@ -46,6 +46,8 @@ var HostConfig = {
 };
 ```
 
+**For an introduction to writing a very simple custom renderer, [check out this small guide](https://medium.com/@agent_hunt/hello-world-custom-react-renderer-9a95b7cd04bc).**
+
 The full list of supported methods [can be found here](https://github.com/facebook/react/blob/master/packages/react-reconciler/src/forks/ReactFiberHostConfig.custom.js). For their signatures, we recommend looking at specific examples below.
 
 The React repository includes several renderers. Each of them has its own host config.
