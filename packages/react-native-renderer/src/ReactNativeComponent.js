@@ -16,7 +16,7 @@ import type {
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 
-import React from 'react';
+import * as React from 'react';
 // Modules provided by RN:
 import TextInputState from 'TextInputState';
 import UIManager from 'UIManager';

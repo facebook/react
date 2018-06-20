@@ -6,7 +6,7 @@
  *
  */
 
-import React from 'react';
+import * as React from 'react';
 import {isForwardRef} from 'react-is';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';

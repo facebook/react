@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import * as React from 'react';
 import * as ARTRenderer from 'react-reconciler/inline.art';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';

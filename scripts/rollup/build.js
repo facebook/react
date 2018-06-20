@@ -275,6 +275,8 @@ function getPlugins(
     bundleType === RN_FB_DEV ||
     bundleType === RN_FB_PROD;
   const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
+  const shouldHaveSmoothInterop = packageName === 'react';
+
   return [
     // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
@@ -317,6 +319,15 @@ function getPlugins(
         return source
           .replace(/require\(['"]react['"]\)/g, "require('React')")
           .replace(/require\(['"]react-is['"]\)/g, "require('ReactIs')");
+      },
+    },
+    // remove Object.defineProperty(exports, '__esModule', { value: true })
+    // to allow both import React from 'react' and import * as React from 'react'
+    // TODO replace with esModule: false after rollup upgrade with
+    // https://github.com/rollup/rollup/pull/2287
+    shouldHaveSmoothInterop && {
+      transformBundle(source) {
+        return source.replace(/Object\.defineProperty\(.+__esModule.+\n/, '');
       },
     },
     // Apply dead code elimination and/or minification.

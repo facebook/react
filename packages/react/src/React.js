@@ -21,9 +21,9 @@ import {createRef} from './ReactCreateRef';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {
-  createElement,
-  createFactory,
-  cloneElement,
+  createElement as createElementNormal,
+  createFactory as createFactoryNormal,
+  cloneElement as cloneElementNormal,
   isValidElement,
 } from './ReactElement';
 import {createContext} from './ReactContext';
@@ -35,53 +35,49 @@ import {
 } from './ReactElementValidator';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
-const React = {
-  Children: {
-    map,
-    forEach,
-    count,
-    toArray,
-    only,
-  },
+export const Children = {
+  map,
+  forEach,
+  count,
+  toArray,
+  only,
+};
 
+export {
   createRef,
   Component,
   PureComponent,
-
   createContext,
   forwardRef,
-
-  Fragment: REACT_FRAGMENT_TYPE,
-  StrictMode: REACT_STRICT_MODE_TYPE,
-  unstable_AsyncMode: REACT_ASYNC_MODE_TYPE,
-  unstable_Profiler: REACT_PROFILER_TYPE,
-
-  createElement: __DEV__ ? createElementWithValidation : createElement,
-  cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
-  createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
-  isValidElement: isValidElement,
-
-  version: ReactVersion,
-
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    ReactCurrentOwner,
-    // Used by renderers to avoid bundling object-assign twice in UMD bundles:
-    assign,
-  },
+  isValidElement,
 };
 
-if (enableSuspense) {
-  React.Timeout = REACT_TIMEOUT_TYPE;
-}
+export const Fragment = REACT_FRAGMENT_TYPE;
+export const StrictMode = REACT_STRICT_MODE_TYPE;
+export const unstable_AsyncMode = REACT_ASYNC_MODE_TYPE;
+export const unstable_Profiler = REACT_PROFILER_TYPE;
 
-if (__DEV__) {
-  Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
-    // These should not be included in production.
-    ReactDebugCurrentFrame,
-    // Shim for React DOM 16.0.0 which still destructured (but not used) this.
-    // TODO: remove in React 17.0.
-    ReactComponentTreeHook: {},
-  });
-}
+export const createElement = __DEV__
+  ? createElementWithValidation
+  : createElementNormal;
+export const cloneElement = __DEV__
+  ? cloneElementWithValidation
+  : cloneElementNormal;
+export const createFactory = __DEV__
+  ? createFactoryWithValidation
+  : createFactoryNormal;
 
-export default React;
+export const version = ReactVersion;
+
+export const __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
+  ReactCurrentOwner,
+  // Used by renderers to avoid bundling object-assign twice in UMD bundles:
+  assign,
+  // These should not be included in production.
+  ReactDebugCurrentFrame: __DEV__ ? ReactDebugCurrentFrame : null,
+  // Shim for React DOM 16.0.0 which still destructured (but not used) this.
+  // TODO: remove in React 17.0.
+  ReactComponentTreeHook: __DEV__ ? {} : null,
+};
+
+export const Timeout = enableSuspense ? REACT_TIMEOUT_TYPE : null;
