@@ -13,7 +13,6 @@
 // classic JS without JSX.
 
 let PropTypes;
-let ReactFeatureFlags;
 let React;
 let ReactDOM;
 let ReactTestUtils;
@@ -25,8 +24,6 @@ describe('ReactElementValidator', () => {
     jest.resetModules();
 
     PropTypes = require('prop-types');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');

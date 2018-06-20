@@ -30,17 +30,10 @@ import {
   Incomplete,
   HostEffectMask,
 } from 'shared/ReactTypeOfSideEffect';
-import {
-  HostRoot,
-  ClassComponent,
-  HostComponent,
-  ContextProvider,
-  HostPortal,
-} from 'shared/ReactTypeOfWork';
+import {HostRoot, ClassComponent} from 'shared/ReactTypeOfWork';
 import {
   enableProfilerTimer,
   enableUserTimingAPI,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
   warnAboutLegacyContextAPI,
 } from 'shared/ReactFeatureFlags';
@@ -82,7 +75,7 @@ import {
   startCommitLifeCyclesTimer,
   stopCommitLifeCyclesTimer,
 } from './ReactDebugFiberPerf';
-import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
+import {createWorkInProgress} from './ReactFiber';
 import {onCommitRoot} from './ReactFiberDevToolsHook';
 import {
   NoWork,
@@ -96,16 +89,9 @@ import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-  popContextProvider as popLegacyContextProvider,
-} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
-import {popHostContext, popHostContainer} from './ReactFiberHostContext';
-import {
   checkActualRenderTimeStackEmpty,
   pauseActualRenderTimerIfRunning,
   recordCommitTime,
-  recordElapsedActualRenderTime,
   recordElapsedBaseRenderTimeIfRunning,
   resetActualRenderTimer,
   resumeActualRenderTimerIfPaused,
@@ -235,92 +221,6 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
 // Used for performance tracking.
 let interruptedBy: Fiber | null = null;
-
-let stashedWorkInProgressProperties;
-let replayUnitOfWork;
-let isReplayingFailedUnitOfWork;
-let originalReplayError;
-let rethrowOriginalError;
-if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-  stashedWorkInProgressProperties = null;
-  isReplayingFailedUnitOfWork = false;
-  originalReplayError = null;
-  replayUnitOfWork = (
-    failedUnitOfWork: Fiber,
-    thrownValue: mixed,
-    isYieldy: boolean,
-  ) => {
-    if (
-      thrownValue !== null &&
-      typeof thrownValue === 'object' &&
-      typeof thrownValue.then === 'function'
-    ) {
-      // Don't replay promises. Treat everything else like an error.
-      // TODO: Need to figure out a different strategy if/when we add
-      // support for catching other types.
-      return;
-    }
-
-    // Restore the original state of the work-in-progress
-    if (stashedWorkInProgressProperties === null) {
-      // This should never happen. Don't throw because this code is DEV-only.
-      warning(
-        false,
-        'Could not replay rendering after an error. This is likely a bug in React. ' +
-          'Please file an issue.',
-      );
-      return;
-    }
-    assignFiberPropertiesInDEV(
-      failedUnitOfWork,
-      stashedWorkInProgressProperties,
-    );
-
-    switch (failedUnitOfWork.tag) {
-      case HostRoot:
-        popHostContainer(failedUnitOfWork);
-        popTopLevelLegacyContextObject(failedUnitOfWork);
-        break;
-      case HostComponent:
-        popHostContext(failedUnitOfWork);
-        break;
-      case ClassComponent:
-        popLegacyContextProvider(failedUnitOfWork);
-        break;
-      case HostPortal:
-        popHostContainer(failedUnitOfWork);
-        break;
-      case ContextProvider:
-        popProvider(failedUnitOfWork);
-        break;
-    }
-    // Replay the begin phase.
-    isReplayingFailedUnitOfWork = true;
-    originalReplayError = thrownValue;
-    invokeGuardedCallback(null, workLoop, null, isYieldy);
-    isReplayingFailedUnitOfWork = false;
-    originalReplayError = null;
-    if (hasCaughtError()) {
-      clearCaughtError();
-
-      if (enableProfilerTimer) {
-        if (failedUnitOfWork.mode & ProfileMode) {
-          recordElapsedActualRenderTime(failedUnitOfWork);
-        }
-
-        // Stop "base" render timer again (after the re-thrown error).
-        stopBaseRenderTimerIfRunning();
-      }
-    } else {
-      // If the begin phase did not fail the second time, set this pointer
-      // back to the original value.
-      nextUnitOfWork = failedUnitOfWork;
-    }
-  };
-  rethrowOriginalError = () => {
-    throw originalReplayError;
-  };
-}
 
 function resetStack() {
   if (nextUnitOfWork !== null) {
@@ -910,13 +810,6 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
     ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
   }
 
-  if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-    stashedWorkInProgressProperties = assignFiberPropertiesInDEV(
-      stashedWorkInProgressProperties,
-      workInProgress,
-    );
-  }
-
   let next;
   if (enableProfilerTimer) {
     if (workInProgress.mode & ProfileMode) {
@@ -936,13 +829,6 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
 
   if (__DEV__) {
     ReactDebugCurrentFiber.resetCurrentFiber();
-    if (isReplayingFailedUnitOfWork) {
-      // Currently replaying a failed unit of work. This should be unreachable,
-      // because the render phase is meant to be idempotent, and it should
-      // have thrown again. Since it didn't, rethrow the original error, so
-      // React's internal stack is not misaligned.
-      rethrowOriginalError();
-    }
   }
   if (__DEV__ && ReactFiberInstrumentation.debugTool) {
     ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
@@ -1012,9 +898,26 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
   startWorkLoopTimer(nextUnitOfWork);
 
   do {
-    try {
-      workLoop(isYieldy);
-    } catch (thrownValue) {
+    let didThrow = false;
+    let thrownValue;
+    if (__DEV__ && root.didError) {
+      // In development, when handling an error, wrap the render phase in
+      // invokeGuardedCallback instead of try-catch.
+      invokeGuardedCallback(null, workLoop, null, isYieldy);
+      if (hasCaughtError()) {
+        didThrow = true;
+        thrownValue = clearCaughtError();
+      }
+    } else {
+      try {
+        workLoop(isYieldy);
+      } catch (e) {
+        didThrow = true;
+        thrownValue = e;
+      }
+    }
+
+    if (didThrow) {
       if (enableProfilerTimer) {
         // Stop "base" render timer in the event of an error.
         stopBaseRenderTimerIfRunning();
@@ -1030,24 +933,8 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
           // We assume this is defined in DEV
           (resetCurrentlyProcessingQueue: any)();
         }
-
-        const failedUnitOfWork: Fiber = nextUnitOfWork;
-        if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-          replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
-        }
-
-        // TODO: we already know this isn't true in some cases.
-        // At least this shows a nicer error message until we figure out the cause.
-        // https://github.com/facebook/react/issues/12449#issuecomment-386727431
-        invariant(
-          nextUnitOfWork !== null,
-          'Failed to replay rendering after an error. This ' +
-            'is likely caused by a bug in React. Please file an issue ' +
-            'with a reproducing case to help us find it.',
-        );
-
-        const sourceFiber: Fiber = nextUnitOfWork;
-        let returnFiber = sourceFiber.return;
+        const sourceFiber = nextUnitOfWork;
+        let returnFiber = nextUnitOfWork.return;
         if (returnFiber === null) {
           // This is the root. The root could capture its own errors. However,
           // we don't know if it errors before or after we pushed the host

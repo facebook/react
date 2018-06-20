@@ -12,7 +12,6 @@
 let PropTypes;
 let React;
 let ReactDOM;
-let ReactFeatureFlags;
 
 describe('ReactErrorBoundaries', () => {
   let log;
@@ -37,8 +36,6 @@ describe('ReactErrorBoundaries', () => {
   beforeEach(() => {
     jest.resetModules();
     PropTypes = require('prop-types');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     React = require('react');
 

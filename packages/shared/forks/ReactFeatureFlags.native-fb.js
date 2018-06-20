@@ -19,7 +19,6 @@ export const {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
 } = require('ReactFeatureFlags');
 
