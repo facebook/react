@@ -8,8 +8,11 @@
 import SyntheticUIEvent from './SyntheticUIEvent';
 import getEventModifierState from './getEventModifierState';
 
-let previousScreenX = null;
-let previousScreenY = null;
+let previousScreenX = 0;
+let previousScreenY = 0;
+// Use flags to signal movementX/Y has already been set
+let isMovementXSet = false;
+let isMovementYSet = false;
 
 /**
  * @interface MouseEvent
@@ -44,7 +47,13 @@ const SyntheticMouseEvent = SyntheticUIEvent.extend({
 
     const screenX = previousScreenX;
     previousScreenX = event.screenX;
-    return screenX ? event.screenX - screenX : 0;
+
+    if (!isMovementXSet) {
+      isMovementXSet = true;
+      return 0;
+    }
+
+    return event.screenX - screenX;
   },
   movementY: function(event) {
     if ('movementY' in event) {
@@ -53,7 +62,13 @@ const SyntheticMouseEvent = SyntheticUIEvent.extend({
 
     const screenY = previousScreenY;
     previousScreenY = event.screenY;
-    return screenY ? event.screenY - screenY : 0;
+
+    if (!isMovementYSet) {
+      isMovementYSet = true;
+      return 0;
+    }
+
+    return event.screenY - screenY;
   },
 });
 
