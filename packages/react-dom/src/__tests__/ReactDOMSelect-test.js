@@ -443,38 +443,35 @@ describe('ReactDOMSelect', () => {
     expect(markup).not.toContain('<option selected="" value="gorilla"');
   });
 
-  [null, undefined].forEach(val => {
-    it(`should support server-side rendering with dangerouslySetInnerHTML and ${val} children`, () => {
-      const stub = (
-        <select defaultValue="giraffe">
-          <option
-            value="monkey"
-            dangerouslySetInnerHTML={{
-              __html: 'A monkey!',
-            }}>
-            {val}
-          </option>
-          <option
-            value="giraffe"
-            dangerouslySetInnerHTML={{
-              __html: 'A giraffe!',
-            }}>
-            {val}
-          </option>
-          <option
-            value="gorilla"
-            dangerouslySetInnerHTML={{
-              __html: 'A gorilla!',
-            }}>
-            {val}
-          </option>
-        </select>
-      );
-      const markup = ReactDOMServer.renderToString(stub);
-      expect(markup).toContain('<option selected="" value="giraffe"');
-      expect(markup).not.toContain('<option selected="" value="monkey"');
-      expect(markup).not.toContain('<option selected="" value="gorilla"');
-    });
+  it('should support server-side rendering with dangerouslySetInnerHTML', () => {
+    const stub = (
+      <select defaultValue="giraffe">
+        <option
+          value="monkey"
+          dangerouslySetInnerHTML={{
+            __html: 'A monkey!',
+          }}>
+          {undefined}
+        </option>
+        <option
+          value="giraffe"
+          dangerouslySetInnerHTML={{
+            __html: 'A giraffe!',
+          }}>
+          {null}
+        </option>
+        <option
+          value="gorilla"
+          dangerouslySetInnerHTML={{
+            __html: 'A gorilla!',
+          }}
+        />
+      </select>
+    );
+    const markup = ReactDOMServer.renderToString(stub);
+    expect(markup).toContain('<option selected="" value="giraffe"');
+    expect(markup).not.toContain('<option selected="" value="monkey"');
+    expect(markup).not.toContain('<option selected="" value="gorilla"');
   });
 
   it('should support server-side rendering with multiple', () => {
