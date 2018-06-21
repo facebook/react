@@ -1011,54 +1011,52 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
 
   startWorkLoopTimer(nextUnitOfWork);
 
-  do {
-    try {
-      workLoop(isYieldy);
-    } catch (thrownValue) {
-      if (enableProfilerTimer) {
-        // Stop "base" render timer in the event of an error.
-        stopBaseRenderTimerIfRunning();
+  try {
+    workLoop(isYieldy);
+  } catch (thrownValue) {
+    if (enableProfilerTimer) {
+      // Stop "base" render timer in the event of an error.
+      stopBaseRenderTimerIfRunning();
+    }
+
+    if (nextUnitOfWork === null) {
+      // This is a fatal error.
+      didFatal = true;
+      onUncaughtError(thrownValue);
+    } else {
+      if (__DEV__) {
+        // Reset global debug state
+        // We assume this is defined in DEV
+        (resetCurrentlyProcessingQueue: any)();
       }
 
-      if (nextUnitOfWork === null) {
-        // This is a fatal error.
+      const failedUnitOfWork: Fiber = nextUnitOfWork;
+      if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+        replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
+      }
+
+      // TODO: we already know this isn't true in some cases.
+      // At least this shows a nicer error message until we figure out the cause.
+      // https://github.com/facebook/react/issues/12449#issuecomment-386727431
+      invariant(
+        nextUnitOfWork !== null,
+        'Failed to replay rendering after an error. This ' +
+          'is likely caused by a bug in React. Please file an issue ' +
+          'with a reproducing case to help us find it.',
+      );
+
+      const sourceFiber: Fiber = nextUnitOfWork;
+      let returnFiber = sourceFiber.return;
+      if (returnFiber === null) {
+        // This is the root. The root could capture its own errors. However,
+        // we don't know if it errors before or after we pushed the host
+        // context. This information is needed to avoid a stack mismatch.
+        // Because we're not sure, treat this as a fatal error. We could track
+        // which phase it fails in, but doesn't seem worth it. At least
+        // for now.
         didFatal = true;
         onUncaughtError(thrownValue);
       } else {
-        if (__DEV__) {
-          // Reset global debug state
-          // We assume this is defined in DEV
-          (resetCurrentlyProcessingQueue: any)();
-        }
-
-        const failedUnitOfWork: Fiber = nextUnitOfWork;
-        if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-          replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
-        }
-
-        // TODO: we already know this isn't true in some cases.
-        // At least this shows a nicer error message until we figure out the cause.
-        // https://github.com/facebook/react/issues/12449#issuecomment-386727431
-        invariant(
-          nextUnitOfWork !== null,
-          'Failed to replay rendering after an error. This ' +
-            'is likely caused by a bug in React. Please file an issue ' +
-            'with a reproducing case to help us find it.',
-        );
-
-        const sourceFiber: Fiber = nextUnitOfWork;
-        let returnFiber = sourceFiber.return;
-        if (returnFiber === null) {
-          // This is the root. The root could capture its own errors. However,
-          // we don't know if it errors before or after we pushed the host
-          // context. This information is needed to avoid a stack mismatch.
-          // Because we're not sure, treat this as a fatal error. We could track
-          // which phase it fails in, but doesn't seem worth it. At least
-          // for now.
-          didFatal = true;
-          onUncaughtError(thrownValue);
-          break;
-        }
         throwException(
           root,
           returnFiber,
@@ -1069,8 +1067,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
         nextUnitOfWork = completeUnitOfWork(sourceFiber);
       }
     }
-    break;
-  } while (true);
+  }
 
   // We're done performing work. Time to clean up.
   isWorking = false;
