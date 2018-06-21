@@ -53,7 +53,8 @@ const SyntheticMouseEvent = SyntheticUIEvent.extend({
       return 0;
     }
 
-    return event.screenX - screenX;
+    // movementX/Y must be zero for all mouse events except mousemove.
+    return event.type === 'mousemove' ? event.screenX - screenX : 0;
   },
   movementY: function(event) {
     if ('movementY' in event) {
@@ -68,7 +69,8 @@ const SyntheticMouseEvent = SyntheticUIEvent.extend({
       return 0;
     }
 
-    return event.screenY - screenY;
+    // movementX/Y must be zero for all mouse events except mousemove.
+    return event.type === 'mousemove' ? event.screenY - screenY : 0;
   },
 });
 
