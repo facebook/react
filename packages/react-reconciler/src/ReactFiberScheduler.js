@@ -49,7 +49,7 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import ReactDebugCurrentFiber from 'shared/ReactDebugCurrentFiber';
 import {
   now,
   scheduleDeferredCallback,

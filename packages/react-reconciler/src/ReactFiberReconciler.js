@@ -55,7 +55,7 @@ import {
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import ReactDebugCurrentFiber from 'shared/ReactDebugCurrentFiber';
 
 type OpaqueRoot = FiberRoot;
 

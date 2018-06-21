@@ -50,7 +50,7 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import ReactDebugCurrentFiber from 'shared/ReactDebugCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import {applyDerivedStateFromProps} from './ReactFiberClassComponent';

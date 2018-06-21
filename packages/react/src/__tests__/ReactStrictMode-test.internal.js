@@ -946,7 +946,7 @@ describe('ReactStrictMode', () => {
             <BuggyComponentC />
           </div>
         );
-      };
+      }
 
       const {StrictMode} = React;
       class StrictModeRoot extends React.Component {

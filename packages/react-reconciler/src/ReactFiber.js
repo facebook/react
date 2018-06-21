@@ -37,7 +37,12 @@ import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {NoWork} from './ReactFiberExpirationTime';
-import {NoContext, AsyncMode, ProfileMode, StrictMode} from 'shared/ReactTypeOfMode';
+import {
+  NoContext,
+  AsyncMode,
+  ProfileMode,
+  StrictMode,
+} from 'shared/ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,

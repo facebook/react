@@ -39,7 +39,7 @@ import {
   createFiberFromPortal,
 } from './ReactFiber';
 import {emptyRefsObject} from './ReactFiberClassComponent';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import ReactDebugCurrentFiber from 'shared/ReactDebugCurrentFiber';
 import {StrictMode} from 'shared/ReactTypeOfMode';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
