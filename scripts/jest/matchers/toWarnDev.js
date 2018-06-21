@@ -7,7 +7,7 @@ function normalizeCodeLocInfo(str) {
 }
 
 const createMatcherFor = consoleMethod =>
-  function matcher(callback, expectedMessages) {
+  function matcher(callback, expectedMessages, config) {
     if (__DEV__) {
       // Warn about incorrect usage of matcher.
       if (typeof expectedMessages === 'string') {
@@ -32,10 +32,12 @@ const createMatcherFor = consoleMethod =>
 
         for (let index = 0; index < expectedMessages.length; index++) {
           const expectedMessage = expectedMessages[index];
-          if (
-            normalizedMessage === expectedMessage ||
-            normalizedMessage.includes(expectedMessage)
-          ) {
+          const messageMatches =
+            config && config.exactMatch
+              ? normalizedMessage === expectedMessage
+              : normalizedMessage === expectedMessage ||
+                normalizedMessage.includes(expectedMessage);
+          if (messageMatches) {
             expectedMessages.splice(index, 1);
             return;
           }

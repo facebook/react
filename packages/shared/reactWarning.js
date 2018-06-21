@@ -23,12 +23,14 @@
  * same logic and follow the same code paths.
  */
 
+import ReactDebugCurrentFiber from 'shared/ReactDebugCurrentFiber';
+
 let reactWarning = function() {};
 
 if (__DEV__) {
-  const printWarning = function(fig, format, ...args) {
+  const printWarning = function(format, ...args) {
     let argIndex = 0;
-    const prefix = false // ReactDebugCurrentFiber.isInStrictMode ?
+    const prefix = ReactDebugCurrentFiber.isInStrictMode
       ? 'Strict Mode Warning: '
       : 'Warning: ';
     const message = prefix + format.replace(/%s/g, () => args[argIndex++]);
@@ -43,7 +45,7 @@ if (__DEV__) {
     } catch (x) {}
   };
 
-  reactWarning = function(condition, fig, format, ...args) {
+  reactWarning = function(condition, format, ...args) {
     // TODO: warn if ReactDebugCurrentFiber is not set up.
     if (format === undefined) {
       throw new Error(

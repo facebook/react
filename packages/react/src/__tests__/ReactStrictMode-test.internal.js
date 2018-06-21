@@ -20,6 +20,7 @@ describe('ReactStrictMode', () => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.debugRenderPhaseSideEffects = true;
+      ReactFeatureFlags.reactPrefixWarningsInStrictMode = true;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
     });
@@ -152,6 +153,7 @@ describe('ReactStrictMode', () => {
         jest.resetModules();
         ReactFeatureFlags = require('shared/ReactFeatureFlags');
         ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = debugRenderPhaseSideEffectsForStrictMode;
+        ReactFeatureFlags.reactPrefixWarningsInStrictMode = true;
         React = require('react');
         ReactTestRenderer = require('react-test-renderer');
       });
@@ -301,7 +303,8 @@ describe('ReactStrictMode', () => {
   describe('async subtree', () => {
     beforeEach(() => {
       jest.resetModules();
-
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.reactPrefixWarningsInStrictMode = true;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
     });
@@ -356,7 +359,8 @@ describe('ReactStrictMode', () => {
       expect(() => {
         rendered = ReactTestRenderer.create(<SyncRoot />);
       }).toWarnDev(
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
+        'Strict Mode Warning: Unsafe lifecycle methods were found ' +
+          'within a strict-mode tree:' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot' +
@@ -366,6 +370,7 @@ describe('ReactStrictMode', () => {
           'to use componentDidUpdate instead: AsyncRoot' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-strict-mode-warnings',
+        {exactMatch: true},
       );
 
       // Dedupe
@@ -413,7 +418,8 @@ describe('ReactStrictMode', () => {
       expect(
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev(
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
+        'Strict Mode Warning: Unsafe lifecycle methods were found ' +
+          'within a strict-mode tree:' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot, Parent' +
@@ -423,6 +429,7 @@ describe('ReactStrictMode', () => {
           'to use componentDidUpdate instead: AsyncRoot, Parent' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-strict-mode-warnings',
+        {exactMatch: true},
       );
 
       // Dedupe
@@ -489,20 +496,31 @@ describe('ReactStrictMode', () => {
 
       expect(
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
-      ).toWarnDev([
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncRootOne (at **)' +
-          '\n    in div (at **)' +
-          '\n    in SyncRoot (at **)' +
-          '\n\ncomponentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: Bar, Foo',
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncRootTwo (at **)' +
-          '\n    in div (at **)' +
-          '\n    in SyncRoot (at **)' +
-          '\n\ncomponentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: Baz',
-      ]);
+      ).toWarnDev(
+        [
+          'Strict Mode Warning: Unsafe lifecycle methods were found ' +
+            'within a strict-mode tree:' +
+            '\n    in AsyncRootOne (at **)' +
+            '\n    in div (at **)' +
+            '\n    in SyncRoot (at **)' +
+            '\n\ncomponentWillMount: Please update the following components ' +
+            'to use componentDidMount instead: Bar, Foo' +
+            '\n' +
+            '\nLearn more about this warning here:' +
+            '\nhttps://fb.me/react-strict-mode-warnings',
+          'Strict Mode Warning: Unsafe lifecycle methods were found ' +
+            'within a strict-mode tree:' +
+            '\n    in AsyncRootTwo (at **)' +
+            '\n    in div (at **)' +
+            '\n    in SyncRoot (at **)' +
+            '\n\ncomponentWillMount: Please update the following components ' +
+            'to use componentDidMount instead: Baz, Foo' +
+            '\n' +
+            '\nLearn more about this warning here:' +
+            '\nhttps://fb.me/react-strict-mode-warnings',
+        ],
+        {exactMatch: true},
+      );
 
       // Dedupe
       rendered = ReactTestRenderer.create(<SyncRoot />);
@@ -536,21 +554,25 @@ describe('ReactStrictMode', () => {
       expect(() => {
         rendered = ReactTestRenderer.create(<AsyncRoot foo={true} />);
       }).toWarnDev(
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
+        'Strict Mode Warning: Unsafe lifecycle methods were found ' +
+          'within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Foo' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-strict-mode-warnings',
+        {exactMatch: true},
       );
 
       expect(() => rendered.update(<AsyncRoot foo={false} />)).toWarnDev(
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
+        'Strict Mode Warning: Unsafe lifecycle methods were found ' +
+          'within a strict-mode tree:' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-strict-mode-warnings',
+        {exactMatch: true},
       );
 
       // Dedupe
@@ -595,12 +617,14 @@ describe('ReactStrictMode', () => {
       }
 
       expect(() => ReactTestRenderer.create(<SyncRoot />)).toWarnDev(
-        'Unsafe lifecycle methods were found within a strict-mode tree:' +
+        'Strict Mode Warning: ' +
+          'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillReceiveProps: Please update the following components ' +
           'to use static getDerivedStateFromProps instead: Bar, Foo' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-strict-mode-warnings',
+        {exactMatch: true},
       );
 
       // Dedupe
@@ -612,6 +636,8 @@ describe('ReactStrictMode', () => {
   describe('symbol checks', () => {
     beforeEach(() => {
       jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.reactPrefixWarningsInStrictMode = true;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
     });
@@ -725,6 +751,8 @@ describe('ReactStrictMode', () => {
   describe('string refs', () => {
     beforeEach(() => {
       jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.reactPrefixWarningsInStrictMode = true;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
     });
@@ -758,6 +786,7 @@ describe('ReactStrictMode', () => {
           '    in OuterComponent (at **)\n\n' +
           'Learn more about using refs safely here:\n' +
           'https://fb.me/react-strict-mode-string-ref',
+        {exactMatch: true},
       );
 
       // Dedup
@@ -800,6 +829,7 @@ describe('ReactStrictMode', () => {
           '    in OuterComponent (at **)\n\n' +
           'Learn more about using refs safely here:\n' +
           'https://fb.me/react-strict-mode-string-ref',
+        {exactMatch: true},
       );
 
       // Dedup
@@ -810,11 +840,12 @@ describe('ReactStrictMode', () => {
   describe('context legacy', () => {
     beforeEach(() => {
       jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.warnAboutLegacyContextAPI = true;
+      ReactFeatureFlags.reactPrefixWarningsInStrictMode = true;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
       PropTypes = require('prop-types');
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.warnAboutLegacyContextAPI = true;
     });
 
     it('should warn if the legacy context API have been used in strict mode', () => {
@@ -894,6 +925,7 @@ describe('ReactStrictMode', () => {
           'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
           '\n\nLearn more about this warning here:' +
           '\nhttps://fb.me/react-strict-mode-warnings',
+        {exactMatch: true},
       );
 
       // Dedupe
@@ -905,12 +937,14 @@ describe('ReactStrictMode', () => {
   describe('prefixing all warnings when in strict mode', () => {
     beforeEach(() => {
       jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.reactPrefixWarningsInStrictMode = true;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
       PropTypes = require('prop-types');
     });
 
-    it('should should prefix any warning with "Strict Mode Warning: "', () => {
+    xit('should should prefix any warning with "Strict Mode Warning: "', () => {
       // We chose some common warnings randomly, feel free to update this test
       // if/when the warnings change.
 
@@ -964,45 +998,51 @@ describe('ReactStrictMode', () => {
       // Check that warnings show up when not in strict mode
       expect(() => {
         ReactTestRenderer.create(<BuggyComponentCollection />);
-      }).toWarnDev([
-        'Warning: BuggyComponentA.state: must be set to an object or null',
-        'Warning: Encountered two children with the same key, `1`.' +
-          ' Keys should be unique so that components maintain their identity' +
-          ' across updates. Non-unique keys may cause children to be' +
-          ' duplicated and/or omitted — the behavior is unsupported and' +
-          ' could change in a future version.' +
-          '\n    in BuggyComponentB (at **)' +
-          '\n    in div (at **)' +
-          '\n    in BuggyComponentCollection (at **)',
-        'Warning: Functions are not valid as a React child. This may ' +
-          'happen if you return a Component instead of <Component /> from ' +
-          'render. Or maybe you meant to call this function rather ' +
-          'than return it.' +
-          '\n    in BuggyComponentC (at **)' +
-          '\n    in div (at **)' +
-          '\n    in BuggyComponentCollection (at **)',
-      ]);
+      }).toWarnDev(
+        [
+          'Warning: BuggyComponentA.state: must be set to an object or null',
+          'Warning: Encountered two children with the same key, `1`.' +
+            ' Keys should be unique so that components maintain their identity' +
+            ' across updates. Non-unique keys may cause children to be' +
+            ' duplicated and/or omitted — the behavior is unsupported and' +
+            ' could change in a future version.' +
+            '\n    in BuggyComponentB (at **)' +
+            '\n    in div (at **)' +
+            '\n    in BuggyComponentCollection (at **)',
+          'Warning: Functions are not valid as a React child. This may ' +
+            'happen if you return a Component instead of <Component /> from ' +
+            'render. Or maybe you meant to call this function rather ' +
+            'than return it.' +
+            '\n    in BuggyComponentC (at **)' +
+            '\n    in div (at **)' +
+            '\n    in BuggyComponentCollection (at **)',
+        ],
+        {exactMatch: true},
+      );
 
       expect(() => {
         ReactTestRenderer.create(<StrictModeRoot />);
-      }).toWarnDev([
-        'Strict Mode Warning: BuggyComponentA.state: must be set to an object or null',
-        'Strict Mode Warning: Encountered two children with the same key, `1`.' +
-          ' Keys should be unique so that components maintain their identity' +
-          ' across updates. Non-unique keys may cause children to be' +
-          ' duplicated and/or omitted — the behavior is unsupported and' +
-          ' could change in a future version.' +
-          '\n    in BuggyComponentB (at **)' +
-          '\n    in div (at **)' +
-          '\n    in BuggyComponentCollection (at **)',
-        'Strict Mode Warning: Functions are not valid as a React child. This may ' +
-          'happen if you return a Component instead of <Component /> from ' +
-          'render. Or maybe you meant to call this function rather ' +
-          'than return it.' +
-          '\n    in BuggyComponentC (at **)' +
-          '\n    in div (at **)' +
-          '\n    in BuggyComponentCollection (at **)',
-      ]);
+      }).toWarnDev(
+        [
+          'Strict Mode Warning: BuggyComponentA.state: must be set to an object or null',
+          'Strict Mode Warning: Encountered two children with the same key, `1`.' +
+            ' Keys should be unique so that components maintain their identity' +
+            ' across updates. Non-unique keys may cause children to be' +
+            ' duplicated and/or omitted — the behavior is unsupported and' +
+            ' could change in a future version.' +
+            '\n    in BuggyComponentB (at **)' +
+            '\n    in div (at **)' +
+            '\n    in BuggyComponentCollection (at **)',
+          'Strict Mode Warning: Functions are not valid as a React child. This may ' +
+            'happen if you return a Component instead of <Component /> from ' +
+            'render. Or maybe you meant to call this function rather ' +
+            'than return it.' +
+            '\n    in BuggyComponentC (at **)' +
+            '\n    in div (at **)' +
+            '\n    in BuggyComponentCollection (at **)',
+        ],
+        {exactMatch: true},
+      );
     });
   });
 });
