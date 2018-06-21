@@ -33,7 +33,7 @@ import {
   enableProfilerTimer,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
-import {ProfileMode} from './ReactTypeOfMode';
+import {ProfileMode} from 'shared/ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {

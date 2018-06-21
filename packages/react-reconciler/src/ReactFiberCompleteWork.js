@@ -38,7 +38,7 @@ import {
   TimeoutComponent,
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
-import {ProfileMode} from './ReactTypeOfMode';
+import {ProfileMode} from 'shared/ReactTypeOfMode';
 import invariant from 'shared/invariant';
 
 import {

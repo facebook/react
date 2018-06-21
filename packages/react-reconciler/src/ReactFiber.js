@@ -10,7 +10,7 @@
 import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {ReactFragment, ReactPortal, RefObject} from 'shared/ReactTypes';
 import type {TypeOfWork} from 'shared/ReactTypeOfWork';
-import type {TypeOfMode} from './ReactTypeOfMode';
+import type {TypeOfMode} from 'shared/ReactTypeOfMode';
 import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
@@ -37,7 +37,7 @@ import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {NoWork} from './ReactFiberExpirationTime';
-import {NoContext, AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
+import {NoContext, AsyncMode, ProfileMode, StrictMode} from 'shared/ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,

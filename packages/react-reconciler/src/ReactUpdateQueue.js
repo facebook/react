@@ -100,7 +100,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
 } from 'shared/ReactFeatureFlags';
 
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/ReactTypeOfMode';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';

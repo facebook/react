@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/ReactTypeOfMode';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
 

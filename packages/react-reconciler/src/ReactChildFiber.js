@@ -40,7 +40,7 @@ import {
 } from './ReactFiber';
 import {emptyRefsObject} from './ReactFiberClassComponent';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/ReactTypeOfMode';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 

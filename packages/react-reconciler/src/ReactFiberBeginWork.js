@@ -61,7 +61,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
+import {AsyncMode, ProfileMode, StrictMode} from 'shared/ReactTypeOfMode';
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
