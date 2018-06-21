@@ -43,6 +43,7 @@ export type CallbackIdType = CallbackConfigType;
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warning from 'shared/warning';
+import invariant from 'shared/invariant';
 
 if (__DEV__) {
   if (canUseDOM && typeof requestAnimationFrame !== 'function') {
@@ -61,20 +62,9 @@ if (__DEV__) {
 // We want to be using a consistent implementation.
 const localDate = Date;
 const localSetTimeout =
-  typeof setTimeout === 'function'
-    ? setTimeout
-    : warning(
-        false,
-        'setTimeout is not a function. Please load a polyfill that defines this function.',
-      );
-
+  typeof setTimeout === 'function' ? setTimeout : undefined;
 const localClearTimeout =
-  typeof clearTimeout === 'function'
-    ? clearTimeout
-    : warning(
-        false,
-        'clearTimeout is not a function. Please load a polyfill that defines this function.',
-      );
+  typeof clearTimeout === 'function' ? clearTimeout : undefined;
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
@@ -104,6 +94,11 @@ if (!canUseDOM) {
     callback: FrameCallbackType,
     options?: {timeout: number},
   ): CallbackIdType {
+    invariant(
+      typeof localSetTimeout === 'function',
+      'localSetTimeout is not a function. Please load a polyfill that defines this function.',
+    );
+
     // keeping return type consistent
     const callbackConfig = {
       scheduledCallback: callback,
@@ -123,6 +118,11 @@ if (!canUseDOM) {
     return callbackConfig;
   };
   cancelScheduledWork = function(callbackId: CallbackIdType) {
+    invariant(
+      typeof localClearTimeout === 'function',
+      'localClearTimeout is not a function. Please load a polyfill that defines this function.',
+    );
+
     const callback = callbackId.scheduledCallback;
     const timeoutId = timeoutIds.get(callback);
     timeoutIds.delete(callbackId);
