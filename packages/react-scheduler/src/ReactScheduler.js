@@ -60,8 +60,9 @@ if (__DEV__) {
 // this module is initially evaluated.
 // We want to be using a consistent implementation.
 const localDate = Date;
-const localSetTimeout = setTimeout;
-const localClearTimeout = clearTimeout;
+const localSetTimeout = typeof setTimeout === 'function' ? setTimeout : null;
+const localClearTimeout =
+  typeof clearTimeout === 'function' ? clearTimeout : null;
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
