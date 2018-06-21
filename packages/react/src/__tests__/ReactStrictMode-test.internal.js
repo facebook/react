@@ -910,7 +910,7 @@ describe('ReactStrictMode', () => {
       PropTypes = require('prop-types');
     });
 
-    fit('should should prefix any warning with "Strict Mode Warning: "', () => {
+    it('should should prefix any warning with "Strict Mode Warning: "', () => {
       // We chose some common warnings randomly, feel free to update this test
       // if/when the warnings change.
 
@@ -961,10 +961,9 @@ describe('ReactStrictMode', () => {
         }
       }
 
-      let rendered;
       // Check that warnings show up when not in strict mode
       expect(() => {
-        rendered = ReactTestRenderer.create(<BuggyComponentCollection />);
+        ReactTestRenderer.create(<BuggyComponentCollection />);
       }).toWarnDev([
         'Warning: BuggyComponentA.state: must be set to an object or null',
         'Warning: Encountered two children with the same key, `1`.' +
@@ -985,7 +984,7 @@ describe('ReactStrictMode', () => {
       ]);
 
       expect(() => {
-        rendered = ReactTestRenderer.create(<StrictModeRoot />);
+        ReactTestRenderer.create(<StrictModeRoot />);
       }).toWarnDev([
         'Strict Mode Warning: BuggyComponentA.state: must be set to an object or null',
         'Strict Mode Warning: Encountered two children with the same key, `1`.' +
