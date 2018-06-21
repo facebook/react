@@ -327,38 +327,43 @@ describe('ReactDOMServerIntegration', () => {
         expectSelectValue(e, 'bar');
       });
 
-      itRenders(
-        'a select with options that use dangerouslySetInnerHTML',
-        async render => {
-          const e = await render(
-            <select defaultValue="baz" value="bar" readOnly={true}>
-              <option
-                id="foo"
-                value="foo"
-                dangerouslySetInnerHTML={{
-                  __html: 'Foo',
-                }}
-              />
-              <option
-                id="bar"
-                value="bar"
-                dangerouslySetInnerHTML={{
-                  __html: 'Bar',
-                }}
-              />
-              <option
-                id="baz"
-                value="baz"
-                dangerouslySetInnerHTML={{
-                  __html: 'Baz',
-                }}
-              />
-            </select>,
-            1,
-          );
-          expectSelectValue(e, 'bar');
-        },
-      );
+      [null, undefined].forEach(val => {
+        itRenders(
+          `a select with options that use dangerouslySetInnerHTML and ${val} children`,
+          async render => {
+            const e = await render(
+              <select defaultValue="baz" value="bar" readOnly={true}>
+                <option
+                  id="foo"
+                  value="foo"
+                  dangerouslySetInnerHTML={{
+                    __html: 'Foo',
+                  }}>
+                  {val}
+                </option>
+                <option
+                  id="bar"
+                  value="bar"
+                  dangerouslySetInnerHTML={{
+                    __html: 'Bar',
+                  }}>
+                  {val}
+                </option>
+                <option
+                  id="baz"
+                  value="baz"
+                  dangerouslySetInnerHTML={{
+                    __html: 'Baz',
+                  }}>
+                  {val}
+                </option>
+              </select>,
+              1,
+            );
+            expectSelectValue(e, 'bar');
+          },
+        );
+      });
 
       itRenders(
         'a select value overriding defaultValue no matter the prop order',

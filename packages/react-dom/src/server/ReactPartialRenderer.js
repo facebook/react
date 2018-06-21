@@ -258,7 +258,10 @@ function flattenTopLevelChildren(children: mixed): FlatReactChildren {
   return [fragmentChildElement];
 }
 
-function flattenOptionChildren(children: mixed): string {
+function flattenOptionChildren(children: mixed): ?string {
+  if (children === undefined || children === null) {
+    return children;
+  }
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
@@ -1173,10 +1176,7 @@ class ReactDOMServerRenderer {
     } else if (tag === 'option') {
       let selected = null;
       const selectValue = this.currentSelectValue;
-      const optionChildren =
-        props.children === undefined
-          ? props.children
-          : flattenOptionChildren(props.children);
+      const optionChildren = flattenOptionChildren(props.children);
       if (selectValue != null) {
         let value;
         if (props.value != null) {
