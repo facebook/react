@@ -366,7 +366,7 @@ describe('ReactDOMServerIntegration', () => {
       itThrowsWhenRendering(
         'a select with option that uses dangerouslySetInnerHTML and 0 as child',
         async render => {
-          const e = await render(
+          await render(
             <select defaultValue="baz" value="foo" readOnly={true}>
               <option
                 id="foo"
@@ -386,7 +386,7 @@ describe('ReactDOMServerIntegration', () => {
       itThrowsWhenRendering(
         'a select with option that uses dangerouslySetInnerHTML and empty string as child',
         async render => {
-          const e = await render(
+          await render(
             <select defaultValue="baz" value="foo" readOnly={true}>
               <option
                 id="foo"
