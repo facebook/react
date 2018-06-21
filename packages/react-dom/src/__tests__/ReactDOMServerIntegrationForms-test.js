@@ -35,6 +35,7 @@ const {
   resetModules,
   itRenders,
   itClientRenders,
+  itThrowsWhenRendering,
   renderIntoDom,
   serverRender,
 } = ReactDOMServerIntegrationUtils(initModules);
@@ -328,7 +329,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders(
-        `a select with options that use dangerouslySetInnerHTML`,
+        'a select with options that use dangerouslySetInnerHTML',
         async render => {
           const e = await render(
             <select defaultValue="baz" value="bar" readOnly={true}>
@@ -360,6 +361,46 @@ describe('ReactDOMServerIntegration', () => {
           );
           expectSelectValue(e, 'bar');
         },
+      );
+
+      itThrowsWhenRendering(
+        'a select with option that uses dangerouslySetInnerHTML and 0 as child',
+        async render => {
+          const e = await render(
+            <select defaultValue="baz" value="foo" readOnly={true}>
+              <option
+                id="foo"
+                value="foo"
+                dangerouslySetInnerHTML={{
+                  __html: 'Foo',
+                }}>
+                {0}
+              </option>
+            </select>,
+            1,
+          );
+        },
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+      );
+
+      itThrowsWhenRendering(
+        'a select with option that uses dangerouslySetInnerHTML and empty string as child',
+        async render => {
+          const e = await render(
+            <select defaultValue="baz" value="foo" readOnly={true}>
+              <option
+                id="foo"
+                value="foo"
+                dangerouslySetInnerHTML={{
+                  __html: 'Foo',
+                }}>
+                {''}
+              </option>
+            </select>,
+            1,
+          );
+        },
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
       );
 
       itRenders(
