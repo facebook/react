@@ -60,9 +60,21 @@ if (__DEV__) {
 // this module is initially evaluated.
 // We want to be using a consistent implementation.
 const localDate = Date;
-const localSetTimeout = typeof setTimeout === 'function' ? setTimeout : null;
+const localSetTimeout =
+  typeof setTimeout === 'function'
+    ? setTimeout
+    : warning(
+        false,
+        'setTimeout is not a function. Please load a polyfill that defines this function.',
+      );
+
 const localClearTimeout =
-  typeof clearTimeout === 'function' ? clearTimeout : null;
+  typeof clearTimeout === 'function'
+    ? clearTimeout
+    : warning(
+        false,
+        'clearTimeout is not a function. Please load a polyfill that defines this function.',
+      );
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
