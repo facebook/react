@@ -12,7 +12,7 @@ import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentT
 import getComponentName from 'shared/getComponentName';
 import {StrictMode} from 'shared/ReactTypeOfMode';
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 type LifeCyclePhase = 'render' | 'getChildContext';
 
@@ -54,7 +54,8 @@ function setCurrentFiber(fiber: Fiber) {
   ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackAddendum;
   ReactDebugCurrentFiber.current = fiber;
   ReactDebugCurrentFiber.phase = null;
-  ReactDebugCurrentFiber.isInStrictMode = fiber.mode & StrictMode;
+  const isInStrictMode = !!(fiber.mode & StrictMode);
+  ReactDebugCurrentFiber.isInStrictMode = isInStrictMode;
 }
 
 function setCurrentPhase(phase: LifeCyclePhase | null) {
@@ -63,12 +64,13 @@ function setCurrentPhase(phase: LifeCyclePhase | null) {
 
 const ReactDebugCurrentFiber = {
   current: (null: Fiber | null),
+  getCurrentFiberOwnerName,
+  getCurrentFiberStackAddendum,
   phase: (null: LifeCyclePhase | null),
   resetCurrentFiber,
   setCurrentFiber,
   setCurrentPhase,
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
+  isInStrictMode: (null: boolean | null),
 };
 
 export default ReactDebugCurrentFiber;
