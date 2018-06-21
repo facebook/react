@@ -443,6 +443,37 @@ describe('ReactDOMSelect', () => {
     expect(markup).not.toContain('<option selected="" value="gorilla"');
   });
 
+  it('should support server-side rendering with dangerouslySetInnerHTML', () => {
+    const stub = (
+      <select defaultValue="giraffe">
+        <option
+          value="monkey"
+          dangerouslySetInnerHTML={{
+            __html: 'A monkey!',
+          }}>
+          {undefined}
+        </option>
+        <option
+          value="giraffe"
+          dangerouslySetInnerHTML={{
+            __html: 'A giraffe!',
+          }}>
+          {null}
+        </option>
+        <option
+          value="gorilla"
+          dangerouslySetInnerHTML={{
+            __html: 'A gorilla!',
+          }}
+        />
+      </select>
+    );
+    const markup = ReactDOMServer.renderToString(stub);
+    expect(markup).toContain('<option selected="" value="giraffe"');
+    expect(markup).not.toContain('<option selected="" value="monkey"');
+    expect(markup).not.toContain('<option selected="" value="gorilla"');
+  });
+
   it('should support server-side rendering with multiple', () => {
     const stub = (
       <select multiple={true} value={['giraffe', 'gorilla']} onChange={noop}>

@@ -258,7 +258,10 @@ function flattenTopLevelChildren(children: mixed): FlatReactChildren {
   return [fragmentChildElement];
 }
 
-function flattenOptionChildren(children: mixed): string {
+function flattenOptionChildren(children: mixed): ?string {
+  if (children === undefined || children === null) {
+    return children;
+  }
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
