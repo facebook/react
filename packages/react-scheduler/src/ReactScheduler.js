@@ -138,10 +138,10 @@ if (!canUseDOM) {
   let timeoutID;
   const scheduleAnimationFrameWithFallbackSupport = function(callback) {
     // schedule rAF and also a setTimeout
-    rafID = localRequestAnimationFrame(function(...args) {
+    rafID = localRequestAnimationFrame(function(timestamp) {
       // cancel the setTimeout
       localClearTimeout(timeoutID);
-      callback(...args);
+      callback(timestamp);
     });
     timeoutID = localSetTimeout(function() {
       // cancel the requestAnimationFrame
