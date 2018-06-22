@@ -120,11 +120,11 @@ function reconcileChildren(current, workInProgress, nextChildren) {
   );
 }
 
-function reconcileChildrenAtExpirationTime(
-  current,
-  workInProgress,
-  nextChildren,
-  renderExpirationTime,
+export function reconcileChildrenAtExpirationTime(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextChildren: any,
+  renderExpirationTime: ExpirationTime,
 ) {
   if (current === null) {
     // If this is a fresh new component that hasn't been rendered yet, we
@@ -376,7 +376,7 @@ function finishClassComponent(
 
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
-  if (didCaptureError) {
+  if (current !== null && didCaptureError) {
     // If we're recovering from an error, reconcile twice: first to delete
     // all the existing children.
     reconcileChildrenAtExpirationTime(
@@ -714,7 +714,28 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
     // and we timed out, render the placeholder state.
     const alreadyCaptured =
       (workInProgress.effectTag & DidCapture) === NoEffect;
-    const nextDidTimeout = !alreadyCaptured;
+
+    let nextDidTimeout;
+    if (current !== null && workInProgress.updateQueue !== null) {
+      // We're outside strict mode. Something inside this Timeout boundary
+      // suspended during the last commit. Switch to the placholder.
+      workInProgress.updateQueue = null;
+      nextDidTimeout = true;
+      // If we're recovering from an error, reconcile twice: first to delete
+      // all the existing children.
+      reconcileChildrenAtExpirationTime(
+        current,
+        workInProgress,
+        null,
+        renderExpirationTime,
+      );
+      current.child = null;
+      // Now we can continue reconciling like normal. This has the effect of
+      // remounting all children regardless of whether their their
+      // identity matches.
+    } else {
+      nextDidTimeout = !alreadyCaptured;
+    }
 
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
@@ -723,14 +744,16 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    if (nextDidTimeout) {
-      // If the timed-out view commits, schedule an update effect to record
-      // the committed time.
-      workInProgress.effectTag |= Update;
-    } else {
-      // The state node points to the time at which placeholder timed out.
-      // We can clear it once we switch back to the normal children.
-      workInProgress.stateNode = null;
+    if ((workInProgress.mode & StrictMode) !== NoEffect) {
+      if (nextDidTimeout) {
+        // If the timed-out view commits, schedule an update effect to record
+        // the committed time.
+        workInProgress.effectTag |= Update;
+      } else {
+        // The state node points to the time at which placeholder timed out.
+        // We can clear it once we switch back to the normal children.
+        workInProgress.stateNode = null;
+      }
     }
 
     const render = nextProps.children;

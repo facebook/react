@@ -399,9 +399,6 @@ export function createFiberFromElement(
         return createFiberFromProfiler(pendingProps, mode, expirationTime, key);
       case REACT_TIMEOUT_TYPE:
         fiberTag = TimeoutComponent;
-        // Suspense does not require async, but its children should be strict
-        // mode compatible.
-        mode |= StrictMode;
         break;
       default:
         fiberTag = getFiberTagFromObjectType(type, owner);
