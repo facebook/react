@@ -234,10 +234,10 @@ describe('ReactIncrementalErrorHandling', () => {
     // Finish the rest of the async work
     ReactNoop.flushThrough(['Sibling']);
 
-    // Rendering one more unit of work should be enough to trigger the retry
+    // Rendering two more units of work should be enough to trigger the retry
     // and synchronously throw an error.
     ops = [];
-    expect(() => ReactNoop.flushUnitsOfWork(1)).toThrow('oops');
+    expect(() => ReactNoop.flushUnitsOfWork(2)).toThrow('oops');
     expect(ops).toEqual(['Parent', 'BadRender', 'Sibling']);
   });
 

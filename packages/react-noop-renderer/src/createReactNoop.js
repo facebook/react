@@ -182,6 +182,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       scheduledCallback = null;
     },
 
+    scheduleTimeout: setTimeout,
+    cancelTimeout: clearTimeout,
+    noTimeout: -1,
+
     prepareForCommit(): void {},
 
     resetAfterCommit(): void {},

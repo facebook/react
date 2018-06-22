@@ -66,6 +66,9 @@ export type HostContext = $ReadOnly<{|
 |}>;
 export type UpdatePayload = Object;
 
+export type TimeoutHandle = TimeoutID;
+export type NoTimeout = -1;
+
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
   /**
@@ -323,6 +326,10 @@ export const scheduleDeferredCallback =
   ReactNativeFrameScheduling.scheduleDeferredCallback;
 export const cancelDeferredCallback =
   ReactNativeFrameScheduling.cancelDeferredCallback;
+
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
 
 // -------------------
 //     Persistence

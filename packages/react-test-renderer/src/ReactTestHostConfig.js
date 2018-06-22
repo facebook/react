@@ -32,6 +32,8 @@ export type PublicInstance = Instance | TextInstance;
 export type HostContext = Object;
 export type UpdatePayload = Object;
 export type ChildSet = void; // Unused
+export type TimeoutHandle = TimeoutID;
+export type NoTimeout = -1;
 
 export * from 'shared/HostConfigWithNoPersistence';
 export * from 'shared/HostConfigWithNoHydration';
@@ -186,6 +188,10 @@ export const scheduleDeferredCallback =
   TestRendererScheduling.scheduleDeferredCallback;
 export const cancelDeferredCallback =
   TestRendererScheduling.cancelDeferredCallback;
+
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
 
 // -------------------
 //     Mutation
