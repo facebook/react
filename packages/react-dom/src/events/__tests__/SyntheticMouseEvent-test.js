@@ -47,8 +47,8 @@ describe('SyntheticMouseEvent', () => {
     let event = new MouseEvent('mousemove', {
       relatedTarget: null,
       bubbles: true,
-      screenX: 0,
-      screenY: 0,
+      screenX: 2,
+      screenY: 2,
     });
 
     node.dispatchEvent(event);
@@ -74,7 +74,7 @@ describe('SyntheticMouseEvent', () => {
 
     expect(events.length).toBe(3);
     expect(events[0]).toBe(0);
-    expect(events[1]).toBe(8);
+    expect(events[1]).toBe(6);
     expect(events[2]).toBe(0); // mousedown event should have movementX at 0
   });
 });
