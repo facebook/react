@@ -60,8 +60,15 @@ if (__DEV__) {
 // this module is initially evaluated.
 // We want to be using a consistent implementation.
 const localDate = Date;
-const localSetTimeout = setTimeout;
-const localClearTimeout = clearTimeout;
+
+// This initialization code may run even on server environments
+// if a component just imports ReactDOM (e.g. for findDOMNode).
+// Some environments might not have setTimeout or clearTimeout.
+// https://github.com/facebook/react/pull/13088
+const localSetTimeout =
+  typeof setTimeout === 'function' ? setTimeout : (undefined: any);
+const localClearTimeout =
+  typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
