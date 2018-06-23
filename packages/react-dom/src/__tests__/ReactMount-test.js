@@ -556,6 +556,92 @@ describe('ReactMount', () => {
     );
   });
 
+  it('should warn when hydrate replaces an element within server-rendered nested components', () => {
+    class TestPaddingBeforeComponent extends React.Component {
+      render() {
+        return (
+          <React.Fragment>
+            <div data-ssr-mismatch-padding-before="1" />
+            <div data-ssr-mismatch-padding-before="2" />
+            <div data-ssr-mismatch-padding-before="3" />
+            <div data-ssr-mismatch-padding-before="4" />
+            <div data-ssr-mismatch-padding-before="5" />
+          </React.Fragment>
+        );
+      }
+    }
+    class TestPaddingAfterComponent extends React.Component {
+      render() {
+        return (
+          <React.Fragment>
+            <div data-ssr-mismatch-padding-after="1" />
+            <div data-ssr-mismatch-padding-after="2" />
+            <div data-ssr-mismatch-padding-after="3" />
+            <div data-ssr-mismatch-padding-after="4" />
+            <div data-ssr-mismatch-padding-after="5" />
+          </React.Fragment>
+        );
+      }
+    }
+    class TestNestedComponent extends React.Component {
+      render() {
+        if (this.props.server) {
+          return (
+            <div>
+              <TestPaddingBeforeComponent />
+              <h1>SSRMismatchTest default text</h1>
+              <span />
+              <TestPaddingAfterComponent />
+            </div>
+          );
+        }
+        return (
+          <div>
+            <TestPaddingBeforeComponent />
+            <h2>SSRMismatchTest default text</h2>
+            <span />
+          </div>
+        );
+      }
+    }
+    class TestComponent extends React.Component {
+      render() {
+        return <TestNestedComponent server={this.props.server} />;
+      }
+    }
+
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
+      <TestComponent server={true} />,
+    );
+    div.innerHTML = markup;
+
+    expect(() =>
+      ReactDOM.hydrate(<TestComponent server={false} />, div),
+    ).toWarnDev(
+      'Warning: Expected server HTML to contain a matching <h2> in <div>.\n\n' +
+        '  <div data-reactroot="">\n' +
+        '    <div data-ssr-mismatch-padding-before="1"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="2"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="3"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="4"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="5"></div>\n' +
+        '-   <h1>SSRMismatchTest default text</h1>\n' +
+        '+   <h2>SSRMismatchTest default text</h2>\n' +
+        '    <span></span>\n' +
+        '    <div data-ssr-mismatch-padding-after="1"></div>\n' +
+        '    <div data-ssr-mismatch-padding-after="2"></div>\n' +
+        '    <div data-ssr-mismatch-padding-after="3"></div>\n' +
+        '    <div data-ssr-mismatch-padding-after="4"></div>\n' +
+        '    <div data-ssr-mismatch-padding-after="5"></div>\n' +
+        '  </div>\n\n' +
+        '    in h2 (at **)\n' +
+        '    in div (at **)\n' +
+        '    in TestNestedComponent (at **)\n' +
+        '    in TestComponent (at **)',
+    );
+  });
+
   it('should warn when hydrate removes a text node from a server-rendered sequence in the root container', () => {
     // See fixtures/ssr: ssr-warnForDeletedHydratableText-didNotHydrateContainerInstance
 
