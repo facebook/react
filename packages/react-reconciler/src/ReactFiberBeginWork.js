@@ -27,7 +27,7 @@ import {
   ContextProvider,
   ContextConsumer,
   Profiler,
-  TimeoutComponent,
+  PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
 import {
   NoEffect,
@@ -703,7 +703,11 @@ function mountIndeterminateComponent(
   }
 }
 
-function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
+function updatePlaceholderComponent(
+  current,
+  workInProgress,
+  renderExpirationTime,
+) {
   if (enableSuspense) {
     const nextProps = workInProgress.pendingProps;
     const prevProps = workInProgress.memoizedProps;
@@ -717,7 +721,7 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
 
     let nextDidTimeout;
     if (current !== null && workInProgress.updateQueue !== null) {
-      // We're outside strict mode. Something inside this Timeout boundary
+      // We're outside strict mode. Something inside this Placeholder boundary
       // suspended during the last commit. Switch to the placholder.
       workInProgress.updateQueue = null;
       nextDidTimeout = true;
@@ -756,8 +760,16 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
       }
     }
 
-    const render = nextProps.children;
-    const nextChildren = render(nextDidTimeout);
+    // If the `children` prop is a function, treat it like a render prop.
+    // TODO: This is temporary until we finalize a lower level API.
+    const children = nextProps.children;
+    let nextChildren;
+    if (typeof children === 'function') {
+      nextChildren = children(nextDidTimeout);
+    } else {
+      nextChildren = nextDidTimeout ? nextProps.fallback : children;
+    }
+
     workInProgress.memoizedProps = nextProps;
     workInProgress.memoizedState = nextDidTimeout;
     reconcileChildren(current, workInProgress, nextChildren);
@@ -1197,8 +1209,8 @@ function beginWork(
       return updateHostComponent(current, workInProgress, renderExpirationTime);
     case HostText:
       return updateHostText(current, workInProgress);
-    case TimeoutComponent:
-      return updateTimeoutComponent(
+    case PlaceholderComponent:
+      return updatePlaceholderComponent(
         current,
         workInProgress,
         renderExpirationTime,

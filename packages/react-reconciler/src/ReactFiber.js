@@ -31,7 +31,7 @@ import {
   ContextProvider,
   ContextConsumer,
   Profiler,
-  TimeoutComponent,
+  PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
@@ -46,7 +46,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_ASYNC_MODE_TYPE,
-  REACT_TIMEOUT_TYPE,
+  REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -397,8 +397,8 @@ export function createFiberFromElement(
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, expirationTime, key);
-      case REACT_TIMEOUT_TYPE:
-        fiberTag = TimeoutComponent;
+      case REACT_PLACEHOLDER_TYPE:
+        fiberTag = PlaceholderComponent;
         break;
       default:
         fiberTag = getFiberTagFromObjectType(type, owner);
