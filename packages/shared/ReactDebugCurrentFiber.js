@@ -47,19 +47,21 @@ function resetCurrentFiber() {
   ReactDebugCurrentFrame.getCurrentStack = null;
   ReactDebugCurrentFiber.current = null;
   ReactDebugCurrentFiber.phase = null;
-  ReactDebugCurrentFiber.isInStrictMode = null;
 }
 
 function setCurrentFiber(fiber: Fiber) {
   ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackAddendum;
   ReactDebugCurrentFiber.current = fiber;
   ReactDebugCurrentFiber.phase = null;
-  const isInStrictMode = !!(fiber.mode & StrictMode);
-  ReactDebugCurrentFiber.isInStrictMode = isInStrictMode;
 }
 
 function setCurrentPhase(phase: LifeCyclePhase | null) {
   ReactDebugCurrentFiber.phase = phase;
+}
+
+function isInStrictMode(): boolean {
+  const currentFiber = ReactDebugCurrentFiber.current;
+  return currentFiber !== null && !!(currentFiber.mode & StrictMode);
 }
 
 const ReactDebugCurrentFiber = {
@@ -70,7 +72,7 @@ const ReactDebugCurrentFiber = {
   resetCurrentFiber,
   setCurrentFiber,
   setCurrentPhase,
-  isInStrictMode: (null: boolean | null),
+  isInStrictMode,
 };
 
 export default ReactDebugCurrentFiber;

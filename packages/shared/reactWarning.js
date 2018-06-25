@@ -30,7 +30,7 @@ let reactWarning = function() {};
 if (__DEV__) {
   const printWarning = function(format, ...args) {
     let argIndex = 0;
-    const prefix = ReactDebugCurrentFiber.isInStrictMode
+    const prefix = ReactDebugCurrentFiber.isInStrictMode()
       ? 'Strict Mode Warning: '
       : 'Warning: ';
     const message = prefix + format.replace(/%s/g, () => args[argIndex++]);
