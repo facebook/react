@@ -20,12 +20,12 @@ export const {
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableProfilerTimer,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutLegacyContextAPI = __DEV__;
+export const enableProfilerTimer = __PROFILE__;
 
 // Only used in www builds.
 export function addUserTimingListener() {

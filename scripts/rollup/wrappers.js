@@ -10,11 +10,13 @@ const NODE_PROD = Bundles.bundleTypes.NODE_PROD;
 const NODE_PROFILING = Bundles.bundleTypes.NODE_PROFILING;
 const FB_WWW_DEV = Bundles.bundleTypes.FB_WWW_DEV;
 const FB_WWW_PROD = Bundles.bundleTypes.FB_WWW_PROD;
+const FB_WWW_PROFILING = Bundles.bundleTypes.FB_WWW_PROFILING;
 const RN_OSS_DEV = Bundles.bundleTypes.RN_OSS_DEV;
 const RN_OSS_PROD = Bundles.bundleTypes.RN_OSS_PROD;
 const RN_OSS_PROFILING = Bundles.bundleTypes.RN_OSS_PROFILING;
 const RN_FB_DEV = Bundles.bundleTypes.RN_FB_DEV;
 const RN_FB_PROD = Bundles.bundleTypes.RN_FB_PROD;
+const RN_FB_PROFILING = Bundles.bundleTypes.RN_FB_PROFILING;
 
 const RECONCILER = Bundles.moduleTypes.RECONCILER;
 
@@ -144,6 +146,19 @@ ${license}
 ${source}`;
   },
 
+  /****************** FB_WWW_PROFILING ******************/
+  [FB_WWW_PROFILING](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+${source}`;
+  },
+
   /****************** RN_OSS_DEV ******************/
   [RN_OSS_DEV](source, globalName, filename, moduleType) {
     return `/**
@@ -213,6 +228,19 @@ ${source}
 
   /****************** RN_FB_PROD ******************/
   [RN_FB_PROD](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @preventMunge
+ * ${'@gen' + 'erated'}
+ */
+
+${source}`;
+  },
+
+  /****************** RN_FB_PROFILING ******************/
+  [RN_FB_PROFILING](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *
