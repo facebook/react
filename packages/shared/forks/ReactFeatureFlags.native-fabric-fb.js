@@ -20,7 +20,7 @@ export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-export const enableProfilerTimer = __DEV__;
+export const enableProfilerTimer = __PROFILE__;
 
 // Only used in www builds.
 export function addUserTimingListener() {
