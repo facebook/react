@@ -26,7 +26,7 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/ReactTypeOfMode';
 import {
   enqueueUpdate,
   processUpdateQueue,

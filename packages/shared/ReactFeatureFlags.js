@@ -36,6 +36,9 @@ export const warnAboutDeprecatedLifecycles = false;
 // Warn about legacy context API
 export const warnAboutLegacyContextAPI = false;
 
+// Add a 'Strict Mode' prefix to all warnings fired in strict mode
+export const reactPrefixWarningsInStrictMode = false;
+
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 

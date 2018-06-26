@@ -11,9 +11,12 @@ import type {Fiber} from './ReactFiber';
 
 import getComponentName from 'shared/getComponentName';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/ReactTypeOfMode';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
+import reactWarning from 'shared/reactWarning';
+import ReactDebugCurrentFiber from 'shared/ReactDebugCurrentFiber';
+import {reactPrefixWarningsInStrictMode} from 'shared/ReactFeatureFlags';
 
 type LIFECYCLE =
   | 'UNSAFE_componentWillMount'
@@ -97,16 +100,39 @@ if (__DEV__) {
           const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
             strictRoot,
           );
-
-          warning(
-            false,
-            'Unsafe lifecycle methods were found within a strict-mode tree:%s' +
-              '\n\n%s' +
-              '\n\nLearn more about this warning here:' +
-              '\nhttps://fb.me/react-strict-mode-warnings',
-            strictRootComponentStack,
-            lifecyclesWarningMesages.join('\n\n'),
-          );
+          if (reactPrefixWarningsInStrictMode && strictRoot !== null) {
+            const prevFiber = ReactDebugCurrentFiber.current;
+            const prevPhase = ReactDebugCurrentFiber.phase;
+            ReactDebugCurrentFiber.setCurrentFiber(strictRoot);
+            try {
+              reactWarning(
+                false,
+                'Unsafe lifecycle methods were found within a strict-mode tree:%s' +
+                  '\n\n%s' +
+                  '\n\nLearn more about this warning here:' +
+                  '\nhttps://fb.me/react-strict-mode-warnings',
+                strictRootComponentStack,
+                lifecyclesWarningMesages.join('\n\n'),
+              );
+            } finally {
+              if (prevFiber) {
+                ReactDebugCurrentFiber.setCurrentFiber(prevFiber);
+              } else {
+                ReactDebugCurrentFiber.resetCurrentFiber();
+              }
+              ReactDebugCurrentFiber.setCurrentPhase(prevPhase);
+            }
+          } else {
+            warning(
+              false,
+              'Unsafe lifecycle methods were found within a strict-mode tree:%s' +
+                '\n\n%s' +
+                '\n\nLearn more about this warning here:' +
+                '\nhttps://fb.me/react-strict-mode-warnings',
+              strictRootComponentStack,
+              lifecyclesWarningMesages.join('\n\n'),
+            );
+          }
         }
       },
     );
@@ -234,11 +260,31 @@ if (__DEV__) {
   ) => {
     const strictRoot = findStrictRoot(fiber);
     if (strictRoot === null) {
-      warning(
-        false,
-        'Expected to find a StrictMode component in a strict mode tree. ' +
-          'This error is likely caused by a bug in React. Please file an issue.',
-      );
+      if (reactPrefixWarningsInStrictMode && strictRoot !== null) {
+        const prevFiber = ReactDebugCurrentFiber.current;
+        const prevPhase = ReactDebugCurrentFiber.phase;
+        ReactDebugCurrentFiber.setCurrentFiber(strictRoot);
+        try {
+          reactWarning(
+            false,
+            'Expected to find a StrictMode component in a strict mode tree. ' +
+              'This error is likely caused by a bug in React. Please file an issue.',
+          );
+        } finally {
+          if (prevFiber) {
+            ReactDebugCurrentFiber.setCurrentFiber(prevFiber);
+          } else {
+            ReactDebugCurrentFiber.resetCurrentFiber();
+          }
+          ReactDebugCurrentFiber.setCurrentPhase(prevPhase);
+        }
+      } else {
+        warning(
+          false,
+          'Expected to find a StrictMode component in a strict mode tree. ' +
+            'This error is likely caused by a bug in React. Please file an issue.',
+        );
+      }
       return;
     }
 
