@@ -52,7 +52,7 @@ React is designed for gradual adoption, and **you can use as little or as much R
 
 Whether you want to get a taste of React, add some interactivity to a simple HTML page, or start a complex React-powered app, the links in this section will help you get started:
 
-* [Online Plagrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds)
+* [Online Playgrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds)
 * [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html)
 * [Create a New React App](https://reactjs.org/docs/create-a-new-react-app.html)
 
