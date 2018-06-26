@@ -11,12 +11,15 @@ React is a JavaScript library for building user interfaces.
 ## Documentation
 
 You can find the React documentation [on the website](https://reactjs.org/docs).  
-It is divided into several sections:
 
-* [Quick Start](https://reactjs.org/docs/hello-world.html)
+Check out the [Getting Started](https://reactjs.org/docs/getting-started.html) page for a quick overview.
+
+The documentation is divided into several sections:
+
+* [Tutorial](https://reactjs.org/tutorial/tutorial.html)
+* [Main Concepts](https://reactjs.org/docs/hello-world.html)
 * [Advanced Guides](https://reactjs.org/docs/jsx-in-depth.html)
 * [API Reference](https://reactjs.org/docs/react-api.html)
-* [Tutorial](https://reactjs.org/tutorial/tutorial.html)
 * [Where to Get Support](https://reactjs.org/community/support.html)
 * [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
 
@@ -45,15 +48,15 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs
 
 ## Installation
 
+React is designed for gradual adoption, and **you can use as little or as much React as you need**.
+
+Whether you want to get a taste of React, add some interactivity to a simple HTML page, or start a complex React-powered app, the links in this section will help you get started:
+
+* [Online Plagrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds)
+* [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html)
+* [Create a New React App](https://reactjs.org/docs/create-a-new-react-app.html)
+
 React is available as the `react` package on [npm](https://www.npmjs.com/). It is also available on a [CDN](https://reactjs.org/docs/cdn-links.html).
-
-React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
-
-The recommended way to install React depends on your project. Here you can find short guides for the most common scenarios:
-
-* [Trying Out React](https://reactjs.org/docs/try-react.html)
-* [Creating a New Application](https://reactjs.org/docs/add-react-to-a-new-app.html)
-* [Adding React to an Existing Application](https://reactjs.org/docs/add-react-to-an-existing-app.html)
 
 ## Contributing
 
