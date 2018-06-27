@@ -368,7 +368,7 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
-    it('renders over an existing text child without throwing, warning has replacement diff', () => {
+    it('renders over an existing text child without throwing, should warn (replacement diff)', () => {
       const container = document.createElement('div');
       container.textContent = 'potato';
       expect(() => ReactDOM.hydrate(<div>parsnip</div>, container)).toWarnDev(
@@ -382,7 +382,7 @@ describe('rendering React components at document', () => {
       expect(container.textContent).toBe('parsnip');
     });
 
-    it('renders an array of texts over an existing text child without throwing, warning has replacement diff', () => {
+    it('renders an array of texts over an existing text child without throwing, should warn (replacement diff)', () => {
       const container = document.createElement('div');
       container.textContent = 'potato';
       expect(() =>
