@@ -10,7 +10,6 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
@@ -71,6 +70,8 @@ import {
   markSuspendedPriorityLevel,
   markPingedPriorityLevel,
   hasLowerPriorityWork,
+  isPriorityLevelSuspended,
+  findEarliestOutstandingPriorityLevel,
 } from './ReactFiberPendingPriority';
 import {
   recordEffect,
@@ -101,7 +102,6 @@ import {
   expirationTimeToMs,
   computeAsyncExpiration,
   computeInteractiveExpiration,
-  LOW_PRIORITY_EXPIRATION,
 } from './ReactFiberExpirationTime';
 import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
@@ -234,7 +234,7 @@ let nextUnitOfWork: Fiber | null = null;
 let nextRoot: FiberRoot | null = null;
 // The time at which we're currently rendering work.
 let nextRenderExpirationTime: ExpirationTime = NoWork;
-let nextLatestTimeoutMs: number = -1;
+let nextLatestAbsoluteTimeoutMs: number = -1;
 let nextRenderDidError: boolean = false;
 
 // The next fiber with an effect that we're currently committing.
@@ -349,7 +349,7 @@ function resetStack() {
 
   nextRoot = null;
   nextRenderExpirationTime = NoWork;
-  nextLatestTimeoutMs = -1;
+  nextLatestAbsoluteTimeoutMs = -1;
   nextRenderDidError = false;
   nextUnitOfWork = null;
 }
@@ -1170,40 +1170,30 @@ function renderRoot(
     }
   }
 
-  if (enableSuspense && !isExpired && nextLatestTimeoutMs !== -1) {
+  if (enableSuspense && !isExpired && nextLatestAbsoluteTimeoutMs !== -1) {
     // The tree was suspended.
     const suspendedExpirationTime = expirationTime;
     markSuspendedPriorityLevel(root, suspendedExpirationTime);
 
-    let earliestExpirationTime = root.earliestPendingTime;
-    const earliestSuspendedTime = root.earliestSuspendedTime;
-    if (
-      earliestExpirationTime === NoWork ||
-      (earliestSuspendedTime !== NoWork &&
-        earliestSuspendedTime < earliestExpirationTime)
-    ) {
-      earliestExpirationTime = earliestSuspendedTime;
+    // Find the earliest uncommitted expiration time in the tree, including
+    // work that is suspended. The timeout threshold cannot be longer than
+    // the overall expiration.
+    const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
+      root,
+      expirationTime,
+    );
+    const earliestExpirationTimeMs = expirationTimeToMs(earliestExpirationTime);
+    if (earliestExpirationTimeMs < nextLatestAbsoluteTimeoutMs) {
+      nextLatestAbsoluteTimeoutMs = earliestExpirationTimeMs;
     }
 
-    const earliestExpirationMs = expirationTimeToMs(earliestExpirationTime);
+    // Subtract the current time from the absolute timeout to get the number
+    // of milliseconds until the timeout. In other words, convert an absolute
+    // timestamp to a relative time. This is the value that is passed
+    // to `setTimeout`.
     const currentTimeMs = expirationTimeToMs(requestCurrentTime());
-    const msUntilExpiration = earliestExpirationMs - currentTimeMs;
-
-    let msUntilTimeout;
-    if (nextLatestTimeoutMs >= 0) {
-      // Infer the start time of the suspended work by subtracting the
-      // offset used to compute an async update's expiration time. This will
-      // cause high priority (interactive) work to expire earlier than
-      // neccessary, but we can account for this by adjusting for the Just
-      // Noticable Difference.
-      const startTimeMs = earliestExpirationMs - LOW_PRIORITY_EXPIRATION;
-      msUntilTimeout = startTimeMs + nextLatestTimeoutMs - currentTimeMs;
-      // Cannot use a timeout threshold larger than the expiration.
-      msUntilTimeout =
-        msUntilExpiration < msUntilTimeout ? msUntilExpiration : msUntilTimeout;
-    } else {
-      msUntilTimeout = msUntilExpiration;
-    }
+    let msUntilTimeout = nextLatestAbsoluteTimeoutMs - currentTimeMs;
+    msUntilTimeout = msUntilTimeout < 0 ? 0 : msUntilTimeout;
 
     // TODO: Account for the Just Noticable Difference
 
@@ -1346,12 +1336,15 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
 
 function renderDidSuspend(
   root: FiberRoot,
-  timeoutMs: number,
+  absoluteTimeoutMs: number,
   suspendedTime: ExpirationTime,
 ) {
   // Schedule the timeout.
-  if (timeoutMs >= 0 && nextLatestTimeoutMs < timeoutMs) {
-    nextLatestTimeoutMs = timeoutMs;
+  if (
+    absoluteTimeoutMs >= 0 &&
+    nextLatestAbsoluteTimeoutMs < absoluteTimeoutMs
+  ) {
+    nextLatestAbsoluteTimeoutMs = absoluteTimeoutMs;
   }
 }
 
@@ -1359,18 +1352,29 @@ function renderDidError(root: FiberRoot) {
   nextRenderDidError = true;
 }
 
-function retrySuspendedRoot(fiber: Fiber, suspendedTime: ExpirationTime) {
+function retrySuspendedRoot(
+  root: FiberRoot,
+  fiber: Fiber,
+  suspendedTime: ExpirationTime,
+) {
   if (enableSuspense) {
-    // A ping is different from an update. We don't need to traverse the entire
-    // ancestor path, because we already have access to the root. We can bail out
-    // once we reach a parent with sufficient priority.
-    const root = scheduleWorkToRoot(fiber, suspendedTime);
-    if (root !== null) {
-      markPingedPriorityLevel(root, suspendedTime);
-      const retryTime = root.expirationTime;
-      if (retryTime !== NoWork) {
-        requestWork(root, retryTime);
-      }
+    let retryTime;
+
+    if (isPriorityLevelSuspended(root, suspendedTime)) {
+      // Ping at the original level
+      retryTime = suspendedTime;
+      markPingedPriorityLevel(root, retryTime);
+    } else {
+      // Placeholder already timed out. Compute a new expiration time
+      const currentTime = requestCurrentTime();
+      retryTime = computeExpirationForFiber(currentTime, fiber);
+      markPendingPriorityLevel(root, retryTime);
+    }
+
+    scheduleWorkToRoot(fiber, retryTime);
+    const rootExpirationTime = root.expirationTime;
+    if (rootExpirationTime !== NoWork) {
+      requestWork(root, rootExpirationTime);
     }
   }
 }
@@ -1576,7 +1580,12 @@ function onSuspend(
   msUntilTimeout: number,
 ): void {
   root.expirationTime = rootExpirationTime;
-  if (enableSuspense && msUntilTimeout >= 0) {
+  if (enableSuspense && msUntilTimeout === 0 && !shouldYield()) {
+    // Don't wait an additional tick. Commit the tree immediately.
+    root.pendingCommitExpirationTime = suspendedExpirationTime;
+    root.finishedWork = finishedWork;
+  } else if (msUntilTimeout > 0) {
+    // Wait `msUntilTimeout` milliseconds before committing.
     root.timeoutHandle = scheduleTimeout(
       onTimeout.bind(null, root, finishedWork, suspendedExpirationTime),
       msUntilTimeout,
@@ -1590,8 +1599,14 @@ function onYield(root) {
 
 function onTimeout(root, finishedWork, suspendedExpirationTime) {
   if (enableSuspense) {
+    // The root timed out. Commit it.
     root.pendingCommitExpirationTime = suspendedExpirationTime;
     root.finishedWork = finishedWork;
+    // Read the current time before entering the commit phase. We can be
+    // certain this won't cause tearing related to batching of event updates
+    // because we're at the top of a timer event.
+    recomputeCurrentRendererTime();
+    currentSchedulerTime = currentRendererTime;
     flushRoot(root, suspendedExpirationTime);
   }
 }
@@ -1649,7 +1664,6 @@ function requestCurrentTime() {
 // It's up to the renderer to call renderRoot at some point in the future.
 function requestWork(root: FiberRoot, expirationTime: ExpirationTime) {
   addRootToSchedule(root, expirationTime);
-
   if (isRendering) {
     // Prevent reentrancy. Remaining work will be scheduled at the end of
     // the currently rendering batch.
@@ -1919,7 +1933,6 @@ function performWorkOnRoot(
     // TODO: Non-yieldy work does not necessarily imply expired work. A renderer
     // may want to perform some work without yielding, but also without
     // requiring the root to complete (by triggering placeholders).
-    const isYieldy = false;
 
     let finishedWork = root.finishedWork;
     if (finishedWork !== null) {
@@ -1935,6 +1948,7 @@ function performWorkOnRoot(
         // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
         cancelTimeout(timeoutHandle);
       }
+      const isYieldy = false;
       renderRoot(root, isYieldy, isExpired);
       finishedWork = root.finishedWork;
       if (finishedWork !== null) {
@@ -1944,7 +1958,6 @@ function performWorkOnRoot(
     }
   } else {
     // Flush async work.
-    const isYieldy = true;
     let finishedWork = root.finishedWork;
     if (finishedWork !== null) {
       // This root is already complete. We can commit it.
@@ -1959,6 +1972,7 @@ function performWorkOnRoot(
         // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
         cancelTimeout(timeoutHandle);
       }
+      const isYieldy = true;
       renderRoot(root, isYieldy, isExpired);
       finishedWork = root.finishedWork;
       if (finishedWork !== null) {
@@ -2009,6 +2023,7 @@ function completeRoot(
 
   // Commit the root.
   root.finishedWork = null;
+
   commitRoot(root, finishedWork);
 }
 

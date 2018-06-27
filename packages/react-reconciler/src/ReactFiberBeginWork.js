@@ -723,6 +723,16 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
+    if (nextDidTimeout) {
+      // If the timed-out view commits, schedule an update effect to record
+      // the committed time.
+      workInProgress.effectTag |= Update;
+    } else {
+      // The state node points to the time at which placeholder timed out.
+      // We can clear it once we switch back to the normal children.
+      workInProgress.stateNode = null;
+    }
+
     const render = nextProps.children;
     const nextChildren = render(nextDidTimeout);
     workInProgress.memoizedProps = nextProps;

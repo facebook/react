@@ -63,6 +63,11 @@ import {
 
 import invariant from 'shared/invariant';
 import maxSigned31BitInt from './maxSigned31BitInt';
+import {
+  expirationTimeToMs,
+  LOW_PRIORITY_EXPIRATION,
+} from './ReactFiberExpirationTime';
+import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
 
 function createRootErrorUpdate(
   fiber: Fiber,
@@ -154,22 +159,30 @@ function throwException(
     // bound case.
     let workInProgress = returnFiber;
     let earliestTimeoutMs = -1;
-    let didSuspendInsideAlreadyTimedOutBoundary = false;
+    let startTimeMs = -1;
     do {
       if (workInProgress.tag === TimeoutComponent) {
-        // If we're inside a Timeout that already timed out, do not suspend the
-        // current commit.
-        // TODO: This should also be stored on context.
         const current = workInProgress.alternate;
-        if (current !== null && current.memoizedState === true) {
-          didSuspendInsideAlreadyTimedOutBoundary = true;
+        if (
+          current !== null &&
+          current.memoizedState === true &&
+          current.stateNode !== null
+        ) {
+          // Reached a placeholder that already timed out. Each timed out
+          // placeholder acts as the root of a new suspense boundary.
+
+          // Use the time at which the placeholder timed out as the start time
+          // for the current render.
+          const timedOutAt = current.stateNode.timedOutAt;
+          startTimeMs = expirationTimeToMs(timedOutAt);
+
+          // Do not search any further.
           break;
         }
         let timeoutPropMs = workInProgress.pendingProps.ms;
         if (typeof timeoutPropMs === 'number') {
           if (timeoutPropMs <= 0) {
             earliestTimeoutMs = 0;
-            break;
           } else if (
             earliestTimeoutMs === -1 ||
             timeoutPropMs < earliestTimeoutMs
@@ -181,19 +194,39 @@ function throwException(
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
 
+    let absoluteTimeoutMs;
     if (earliestTimeoutMs === -1) {
       // If no explicit threshold is given, default to an abitrarily large
       // value. The actual size doesn't matter because the threshold for the
       // whole tree will be clamped to the expiration time.
-      earliestTimeoutMs = maxSigned31BitInt;
+      absoluteTimeoutMs = maxSigned31BitInt;
+    } else {
+      if (startTimeMs === -1) {
+        // This suspend happened outside of any already timed-out
+        // placeholders. We don't know exactly when the update was scheduled,
+        // but we can infer an approximate start time from the expiration
+        // time. First, find the earliest uncommitted expiration time in the
+        // tree, including work that is suspended. Then subtract the offset
+        // used to compute an async update's expiration time. This will cause
+        // high priority (interactive) work to expire earlier than neccessary,
+        // but we can account for this by adjusting for the Just Noticable
+        // Difference.
+        const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
+          root,
+          renderExpirationTime,
+        );
+        const earliestExpirationTimeMs = expirationTimeToMs(
+          earliestExpirationTime,
+        );
+        startTimeMs = earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
+      }
+      absoluteTimeoutMs = startTimeMs + earliestTimeoutMs;
     }
 
-    if (!didSuspendInsideAlreadyTimedOutBoundary) {
-      // Mark the smallest timeout in the suspended fiber's ancestor path. After
-      // completing the root, we'll take the largest of all the suspended fiber's
-      // timeouts and use it to compute a timeout for the whole tree.
-      renderDidSuspend(root, earliestTimeoutMs, renderExpirationTime);
-    }
+    // Mark the earliest timeout in the suspended fiber's ancestor path. After
+    // completing the root, we'll take the largest of all the suspended
+    // fiber's timeouts and use it to compute a timeout for the whole tree.
+    renderDidSuspend(root, absoluteTimeoutMs, renderExpirationTime);
 
     // Schedule the nearest Timeout to re-render using a placeholder.
     workInProgress = returnFiber;
@@ -204,6 +237,7 @@ function throwException(
           // Attach a listener to the promise to "ping" the root and retry.
           const onResolveOrReject = retrySuspendedRoot.bind(
             null,
+            root,
             workInProgress,
             renderExpirationTime,
           );

@@ -19,7 +19,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer, enableSuspense} from 'shared/ReactFeatureFlags';
 import {getCommitTime} from './ReactProfilerTimer';
 import {
   ClassComponent,
@@ -63,7 +63,10 @@ import {
   replaceContainerChildren,
   createContainerChildSet,
 } from './ReactFiberHostConfig';
-import {captureCommitPhaseError} from './ReactFiberScheduler';
+import {
+  captureCommitPhaseError,
+  requestCurrentTime,
+} from './ReactFiberScheduler';
 
 const {
   invokeGuardedCallback,
@@ -314,7 +317,10 @@ function commitLifeCycles(
       return;
     }
     case TimeoutComponent: {
-      // We have no life-cycles associated with Timeouts.
+      if (enableSuspense) {
+        const currentTime = requestCurrentTime();
+        finishedWork.stateNode = {timedOutAt: currentTime};
+      }
       return;
     }
     default: {

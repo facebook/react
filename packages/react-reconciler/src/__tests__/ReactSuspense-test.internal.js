@@ -488,9 +488,9 @@ describe('ReactSuspense', () => {
         <Fallback timeout={1000} placeholder={<Text text="Loading outer..." />}>
           <AsyncText text="Outer content" ms={2000} />
           <Fallback
-            timeout={3000}
+            timeout={2500}
             placeholder={<Text text="Loading inner..." />}>
-            <AsyncText text="Inner content" ms={4000} />
+            <AsyncText text="Inner content" ms={5000} />
           </Fallback>
         </Fallback>
       </Fragment>,
@@ -512,23 +512,35 @@ describe('ReactSuspense', () => {
     ReactNoop.expire(1500);
     await advanceTimers(1500);
     expect(ReactNoop.flush()).toEqual([]);
-
     expect(ReactNoop.getChildren()).toEqual([
       span('Sync'),
       span('Loading outer...'),
     ]);
 
-    // Resolve the outer content's promise
-    ReactNoop.expire(1000);
-    await advanceTimers(1000);
+    // Resolve the outer promise.
+    ReactNoop.expire(2000);
+    await advanceTimers(2000);
+    // At this point, 3.5 seconds have elapsed total. The outer placeholder
+    // timed out at 1.5 seconds. So, 2 seconds have elapsed since the
+    // placeholder timed out. That means we still haven't reached the 2.5 second
+    // threshold of the inner placeholder.
     expect(ReactNoop.flush()).toEqual([
       'Promise resolved [Outer content]',
       'Outer content',
-      // Inner content still hasn't loaded
       'Suspend! [Inner content]',
       'Loading inner...',
     ]);
-    // We should now see the inner fallback UI.
+    // Don't commit the inner placeholder yet.
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Sync'),
+      span('Loading outer...'),
+    ]);
+
+    // Expire the inner timeout.
+    ReactNoop.expire(500);
+    await advanceTimers(500);
+    // Now that 2.5 seconds have elapsed since the outer placeholder timed out,
+    // we can timeout the inner placeholder.
     expect(ReactNoop.getChildren()).toEqual([
       span('Sync'),
       span('Outer content'),
@@ -536,8 +548,8 @@ describe('ReactSuspense', () => {
     ]);
 
     // Finally, flush the inner promise. We should see the complete screen.
-    ReactNoop.expire(3000);
-    await advanceTimers(3000);
+    ReactNoop.expire(1000);
+    await advanceTimers(1000);
     expect(ReactNoop.flush()).toEqual([
       'Promise resolved [Inner content]',
       'Inner content',

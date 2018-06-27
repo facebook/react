@@ -135,6 +135,19 @@ export function hasLowerPriorityWork(
   );
 }
 
+export function isPriorityLevelSuspended(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): boolean {
+  const earliestSuspendedTime = root.earliestSuspendedTime;
+  const latestSuspendedTime = root.latestSuspendedTime;
+  return (
+    earliestSuspendedTime !== NoWork &&
+    expirationTime >= earliestSuspendedTime &&
+    expirationTime <= latestSuspendedTime
+  );
+}
+
 export function markSuspendedPriorityLevel(
   root: FiberRoot,
   suspendedTime: ExpirationTime,
@@ -202,6 +215,31 @@ function clearPing(root, completedTime) {
   if (latestPingedTime !== NoWork && latestPingedTime <= completedTime) {
     root.latestPingedTime = NoWork;
   }
+}
+
+export function findEarliestOutstandingPriorityLevel(
+  root: FiberRoot,
+  renderExpirationTime: ExpirationTime,
+): ExpirationTime {
+  let earliestExpirationTime = renderExpirationTime;
+
+  const earliestPendingTime = root.earliestPendingTime;
+  const earliestSuspendedTime = root.earliestSuspendedTime;
+  if (
+    earliestExpirationTime === NoWork ||
+    (earliestPendingTime !== NoWork &&
+      earliestPendingTime < earliestExpirationTime)
+  ) {
+    earliestExpirationTime = earliestPendingTime;
+  }
+  if (
+    earliestExpirationTime === NoWork ||
+    (earliestSuspendedTime !== NoWork &&
+      earliestSuspendedTime < earliestExpirationTime)
+  ) {
+    earliestExpirationTime = earliestSuspendedTime;
+  }
+  return earliestExpirationTime;
 }
 
 function findNextExpirationTimeToWorkOn(completedExpirationTime, root) {
