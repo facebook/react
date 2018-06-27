@@ -8,6 +8,16 @@ React is a JavaScript library for building user interfaces.
 
 [Learn how to use React in your own project](https://reactjs.org/docs/getting-started.html).
 
+## Installation
+
+React has been designed for gradual adoption from the start, and **you can use as little or as much React as you need**:
+
+* Use [Online Playgrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds) to get a taste of React.
+* [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html) as a `<script>` tag in one minute.
+* [Create a New React App](https://reactjs.org/docs/create-a-new-react-app.html) if you're looking for a powerful JavaScript toolchain.
+
+You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-links.html), or as a `react` package on [npm](https://www.npmjs.com/).
+
 ## Documentation
 
 You can find the React documentation [on the website](https://reactjs.org/docs).  
@@ -45,16 +55,6 @@ ReactDOM.render(
 This example will render "Hello Taylor" into a container on the page.
 
 You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs.org/docs/introducing-jsx.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML.
-
-## Installation
-
-React has been designed for gradual adoption from the start, and **you can use as little or as much React as you need**:
-
-* Use [Online Playgrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds) to get a taste of React.
-* [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html) as a `<script>` tag in one minute.
-* [Create a New React App](https://reactjs.org/docs/create-a-new-react-app.html) if you're looking for a powerful JavaScript toolchain.
-
-You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-links.html), or as a `react` package on [npm](https://www.npmjs.com/).
 
 ## Contributing
 
