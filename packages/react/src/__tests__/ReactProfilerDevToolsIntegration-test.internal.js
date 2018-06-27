@@ -108,4 +108,13 @@ describe('ReactProfiler DevTools integration', () => {
     // The updated 6ms for the component that does.
     expect(rendered.root.findByType(App)._currentFiber().treeBaseTime).toBe(15);
   });
+
+  it('should reset the DEV mode fiber stack correct after an error', () => {
+    expect(() => {
+      ReactTestRenderer.create(<div ref="this-will-cause-an-error" />);
+    }).toThrow();
+
+    // But this should render correctly, if the profiler's fiber stack has been reset.
+    ReactTestRenderer.create(<div />);
+  });
 });

@@ -25,6 +25,7 @@ export type ProfilerTimer = {
   resumeActualRenderTimerIfPaused(): void,
   recordCommitTime(): void,
   recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void,
+  resetActualRenderTimerStackAfterFatalErrorInDev(): void,
   startBaseRenderTimer(): void,
   stopBaseRenderTimerIfRunning(): void,
 };
@@ -125,6 +126,15 @@ function resumeActualRenderTimerIfPaused(): void {
   }
 }
 
+function resetActualRenderTimerStackAfterFatalErrorInDev(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  if (__DEV__) {
+    fiberStack.length = 0;
+  }
+}
+
 /**
  * The "base" render time is the duration of the “begin” phase of work for a particular fiber.
  * This time is measured and stored on each fiber.
@@ -175,6 +185,7 @@ export {
   recordCommitTime,
   recordElapsedActualRenderTime,
   resetActualRenderTimer,
+  resetActualRenderTimerStackAfterFatalErrorInDev,
   resumeActualRenderTimerIfPaused,
   recordElapsedBaseRenderTimeIfRunning,
   startBaseRenderTimer,

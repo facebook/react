@@ -119,6 +119,7 @@ import {
   recordElapsedActualRenderTime,
   recordElapsedBaseRenderTimeIfRunning,
   resetActualRenderTimer,
+  resetActualRenderTimerStackAfterFatalErrorInDev,
   resumeActualRenderTimerIfPaused,
   startBaseRenderTimer,
   stopBaseRenderTimerIfRunning,
@@ -1100,6 +1101,7 @@ function renderRoot(
     // There was a fatal error.
     if (__DEV__) {
       resetStackAfterFatalErrorInDev();
+      resetActualRenderTimerStackAfterFatalErrorInDev();
     }
     // `nextRoot` points to the in-progress root. A non-null value indicates
     // that we're in the middle of an async render. Set it to null to indicate
