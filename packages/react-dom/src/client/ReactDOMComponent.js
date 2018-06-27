@@ -72,8 +72,8 @@ let getNodeSignatureForMessage = (node: Node) => '<...>';
 let getTagWithPropsSignature = (tag: string, props: Object) => '<...>';
 let getNodeSurroundingsAndDiff = (
   parentNode: Element | Document,
-  deletedIndex: number,
-  insertedIndex: number,
+  hostInstanceDeletedIndex: number,
+  hostInstanceInsertedIndex: number,
   insertTag: string | null,
   insertProps: Object | null,
   insertText: string | null,
@@ -254,8 +254,8 @@ if (__DEV__) {
 
   getNodeSurroundingsAndDiff = function(
     parentNode: Element | Document,
-    deletedIndex: number,
-    insertedIndex: number,
+    hostInstanceDeletedIndex: number,
+    hostInstanceInsertedIndex: number,
     insertTag: string | null,
     insertProps: Object | null,
     insertText: string | null,
@@ -298,12 +298,12 @@ if (__DEV__) {
         ++hydrationSkippedCount;
         continue;
       }
-      if (i - hydrationSkippedCount === deletedIndex) {
+      if (i - hydrationSkippedCount === hostInstanceDeletedIndex) {
         ret += DIFF_REMOVED + INDENT + getNodeSignatureForDiff(node);
       } else {
         ret += DIFF_UNCHANGED + INDENT + getNodeSignatureForDiff(node);
       }
-      if (i - hydrationSkippedCount === insertedIndex) {
+      if (i - hydrationSkippedCount === hostInstanceInsertedIndex) {
         insert();
       }
     }
@@ -1447,8 +1447,8 @@ export function warnForInsertedHydratedElement(
   parentNode: Element | Document,
   tag: string,
   props: Object,
-  index: number,
-  isReplaced: boolean,
+  hydrationWarningHostInstanceIndex: number,
+  hydrationWarningHostInstanceIsReplaced: boolean,
 ) {
   if (__DEV__) {
     if (didWarnInvalidHydration) {
@@ -1462,8 +1462,10 @@ export function warnForInsertedHydratedElement(
       getNodeSignatureForMessage(parentNode),
       getNodeSurroundingsAndDiff(
         parentNode,
-        isReplaced ? index : -1,
-        index,
+        hydrationWarningHostInstanceIsReplaced
+          ? hydrationWarningHostInstanceIndex
+          : -1,
+        hydrationWarningHostInstanceIndex,
         tag,
         props,
         null,
@@ -1475,8 +1477,8 @@ export function warnForInsertedHydratedElement(
 export function warnForInsertedHydratedText(
   parentNode: Element | Document,
   text: string,
-  index: number,
-  isReplaced: boolean,
+  hydrationWarningHostInstanceIndex: number,
+  hydrationWarningHostInstanceIsReplaced: boolean,
 ) {
   if (__DEV__) {
     if (text === '') {
@@ -1497,8 +1499,10 @@ export function warnForInsertedHydratedText(
       getNodeSignatureForMessage(parentNode),
       getNodeSurroundingsAndDiff(
         parentNode,
-        isReplaced ? index : -1,
-        index,
+        hydrationWarningHostInstanceIsReplaced
+          ? hydrationWarningHostInstanceIndex
+          : -1,
+        hydrationWarningHostInstanceIndex,
         null,
         null,
         text,

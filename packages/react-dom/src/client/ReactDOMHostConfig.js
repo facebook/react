@@ -558,16 +558,16 @@ export function didNotFindHydratableContainerInstance(
   parentContainer: Container,
   type: string,
   props: Props,
-  index: number,
-  isReplaced: boolean,
+  hydrationWarningHostInstanceIndex: number,
+  hydrationWarningHostInstanceIsReplaced: boolean,
 ) {
   if (__DEV__) {
     warnForInsertedHydratedElement(
       parentContainer,
       type,
       props,
-      index,
-      isReplaced,
+      hydrationWarningHostInstanceIndex,
+      hydrationWarningHostInstanceIsReplaced,
     );
   }
 }
@@ -575,11 +575,16 @@ export function didNotFindHydratableContainerInstance(
 export function didNotFindHydratableContainerTextInstance(
   parentContainer: Container,
   text: string,
-  index: number,
-  isReplaced: boolean,
+  hydrationWarningHostInstanceIndex: number,
+  hydrationWarningHostInstanceIsReplaced: boolean,
 ) {
   if (__DEV__) {
-    warnForInsertedHydratedText(parentContainer, text, index, isReplaced);
+    warnForInsertedHydratedText(
+      parentContainer,
+      text,
+      hydrationWarningHostInstanceIndex,
+      hydrationWarningHostInstanceIsReplaced,
+    );
   }
 }
 
@@ -589,16 +594,16 @@ export function didNotFindHydratableInstance(
   parentInstance: Instance,
   type: string,
   props: Props,
-  index: number,
-  isReplaced: boolean,
+  hydrationWarningHostInstanceIndex: number,
+  hydrationWarningHostInstanceIsReplaced: boolean,
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     warnForInsertedHydratedElement(
       parentInstance,
       type,
       props,
-      index,
-      isReplaced,
+      hydrationWarningHostInstanceIndex,
+      hydrationWarningHostInstanceIsReplaced,
     );
   }
 }
@@ -608,10 +613,15 @@ export function didNotFindHydratableTextInstance(
   parentProps: Props,
   parentInstance: Instance,
   text: string,
-  index: number,
-  isReplaced: boolean,
+  hydrationWarningHostInstanceIndex: number,
+  hydrationWarningHostInstanceIsReplaced: boolean,
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    warnForInsertedHydratedText(parentInstance, text, index, isReplaced);
+    warnForInsertedHydratedText(
+      parentInstance,
+      text,
+      hydrationWarningHostInstanceIndex,
+      hydrationWarningHostInstanceIsReplaced,
+    );
   }
 }

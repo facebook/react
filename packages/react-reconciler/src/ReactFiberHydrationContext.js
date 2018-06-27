@@ -102,10 +102,12 @@ function deleteHydratableInstance(
 function insertNonHydratedInstance(
   returnFiber: Fiber,
   fiber: Fiber,
-  isReplaced: boolean,
+  hydrationWarningHostInstanceIsReplaced: boolean,
 ) {
   fiber.effectTag |= Placement;
   if (__DEV__) {
+    // TODO: Find out what `hydrationWarningHostInstanceIndex` should be, `fiber.index` is wrong.
+    const hydrationWarningHostInstanceIndex = fiber.index;
     switch (returnFiber.tag) {
       case HostRoot: {
         const parentContainer = returnFiber.stateNode.containerInfo;
@@ -117,8 +119,8 @@ function insertNonHydratedInstance(
               parentContainer,
               type,
               props,
-              fiber.index,
-              isReplaced,
+              hydrationWarningHostInstanceIndex,
+              hydrationWarningHostInstanceIsReplaced,
             );
             break;
           case HostText:
@@ -126,8 +128,8 @@ function insertNonHydratedInstance(
             didNotFindHydratableContainerTextInstance(
               parentContainer,
               text,
-              fiber.index,
-              isReplaced,
+              hydrationWarningHostInstanceIndex,
+              hydrationWarningHostInstanceIsReplaced,
             );
             break;
         }
@@ -147,8 +149,8 @@ function insertNonHydratedInstance(
               parentInstance,
               type,
               props,
-              fiber.index,
-              isReplaced,
+              hydrationWarningHostInstanceIndex,
+              hydrationWarningHostInstanceIsReplaced,
             );
             break;
           case HostText:
@@ -158,8 +160,8 @@ function insertNonHydratedInstance(
               parentProps,
               parentInstance,
               text,
-              fiber.index,
-              isReplaced,
+              hydrationWarningHostInstanceIndex,
+              hydrationWarningHostInstanceIsReplaced,
             );
             break;
         }
