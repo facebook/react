@@ -44,7 +44,7 @@ ReactDOM.render(
 
 This example will render "Hello Taylor" into a container on the page.
 
-You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs.org/docs/introducing-jsx.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. The next section contains instructions for integrating React and JSX (optionally) into your project.
+You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs.org/docs/introducing-jsx.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML.
 
 ## Installation
 
