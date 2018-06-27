@@ -37,26 +37,24 @@ class HelloMessage extends React.Component {
 }
 
 ReactDOM.render(
-  <HelloMessage name="John" />,
+  <HelloMessage name="Taylor" />,
   document.getElementById('container')
 );
 ```
 
-This example will render "Hello John" into a container on the page.
+This example will render "Hello Taylor" into a container on the page.
 
-You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs.org/docs/introducing-jsx.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. We recommend using [Babel](https://babeljs.io/) with a [React preset](https://babeljs.io/docs/plugins/preset-react/) to convert JSX into native JavaScript for browsers to digest.
+You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs.org/docs/introducing-jsx.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. The next section contains instructions for integrating React and JSX (optionally) into your project.
 
 ## Installation
 
-React is designed for gradual adoption, and **you can use as little or as much React as you need**.
+React has been designed for gradual adoption from the start, and **you can use as little or as much React as you need**:
 
-Whether you want to get a taste of React, add some interactivity to a simple HTML page, or start a complex React-powered app, the links in this section will help you get started:
+* Use [Online Playgrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds) to get a taste of React.
+* [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html) as a `<script>` tag in one minute.
+* [Create a New React App](https://reactjs.org/docs/create-a-new-react-app.html) if you're looking for a powerful JavaScript toolchain.
 
-* [Online Playgrounds](https://reactjs.org/docs/getting-started.html#online-playgrounds)
-* [Add React to a Website](https://reactjs.org/docs/add-react-to-a-website.html)
-* [Create a New React App](https://reactjs.org/docs/create-a-new-react-app.html)
-
-React is available as the `react` package on [npm](https://www.npmjs.com/). It is also available on a [CDN](https://reactjs.org/docs/cdn-links.html).
+You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-links.html), or as a `react` package on [npm](https://www.npmjs.com/).
 
 ## Contributing
 
