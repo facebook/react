@@ -85,6 +85,26 @@ describe('ReactIs', () => {
     expect(ReactIs.isContextConsumer(<div />)).toBe(false);
   });
 
+  it('should identify nodes', () => {
+    expect(ReactIs.isNode(<div />)).toBe(true);
+    expect(ReactIs.isNode('div')).toBe(true);
+    expect(ReactIs.isNode(false)).toBe(true);
+    expect(ReactIs.isNode(true)).toBe(false);
+    expect(ReactIs.isNode(123)).toBe(true);
+    expect(ReactIs.isNode(null)).toBe(true);
+    expect(ReactIs.isNode(undefined)).toBe(true);
+    expect(ReactIs.isNode([1, 'string', <div />])).toBe(true);
+    expect(ReactIs.isNode({})).toBe(false);
+
+    // It should also identify more specific types as nodes
+    const Context = React.createContext(false);
+    expect(ReactIs.isNode(<Context.Provider />)).toBe(true);
+    expect(ReactIs.isNode(<Context.Consumer />)).toBe(true);
+    expect(ReactIs.isNode(<React.Fragment />)).toBe(true);
+    expect(ReactIs.isNode(<React.unstable_AsyncMode />)).toBe(true);
+    expect(ReactIs.isNode(<React.StrictMode />)).toBe(true);
+  });
+
   it('should identify context providers', () => {
     const Context = React.createContext(false);
     expect(ReactIs.typeOf(<Context.Provider />)).toBe(ReactIs.ContextProvider);

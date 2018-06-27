@@ -90,6 +90,23 @@ export function isForwardRef(object: any) {
 export function isFragment(object: any) {
   return typeOf(object) === REACT_FRAGMENT_TYPE;
 }
+export function isNode(object: any) {
+  switch (typeof object) {
+    case 'number':
+    case 'string':
+    case 'undefined':
+      return true;
+    case 'boolean':
+      return !object;
+    case 'object':
+      if (Array.isArray(object)) {
+        return object.every(isNode);
+      }
+      return object === null || isElement(object);
+    default:
+      return false;
+  }
+}
 export function isProfiler(object: any) {
   return typeOf(object) === REACT_PROFILER_TYPE;
 }
