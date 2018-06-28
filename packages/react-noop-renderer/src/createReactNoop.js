@@ -43,6 +43,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   let instanceCounter = 0;
   let failInBeginPhase = false;
+  let failInCompletePhase = false;
 
   function appendChild(
     parentInstance: Instance | Container,
@@ -101,6 +102,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     createInstance(type: string, props: Props): Instance {
+      if (failInCompletePhase) {
+        throw new Error('Error in host config.');
+      }
       const inst = {
         id: instanceCounter++,
         type: type,
@@ -606,12 +610,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       console.log(...bufferedLog);
     },
 
-    simulateErrorInHostConfig(fn: () => void) {
+    simulateErrorInHostConfigDuringBeginPhase(fn: () => void) {
       failInBeginPhase = true;
       try {
         fn();
       } finally {
         failInBeginPhase = false;
+      }
+    },
+
+    simulateErrorInHostConfigDuringCompletePhase(fn: () => void) {
+      failInCompletePhase = true;
+      try {
+        fn();
+      } finally {
+        failInCompletePhase = false;
       }
     },
   };

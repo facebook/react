@@ -1211,7 +1211,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('handles error thrown by host config while working on failed root', () => {
-    ReactNoop.simulateErrorInHostConfig(() => {
+    ReactNoop.simulateErrorInHostConfigDuringBeginPhase(() => {
       ReactNoop.render(<span />);
       expect(() => ReactNoop.flush()).toThrow('Error in host config.');
     });
