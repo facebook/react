@@ -992,7 +992,7 @@ describe('Profiler', () => {
             ReactNoop.render(
               <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
                 <span>hi</span>
-              </React.unstable_Profiler>
+              </React.unstable_Profiler>,
             );
             ReactNoop.flush();
           });
