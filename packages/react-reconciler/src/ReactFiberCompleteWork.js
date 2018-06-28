@@ -71,6 +71,8 @@ import {
   prepareToHydrateHostTextInstance,
   popHydrationState,
 } from './ReactFiberHydrationContext';
+import {NoWork, Never} from './ReactFiberExpirationTime';
+import {PlaceholderFallback} from './ReactFiberPlaceholder';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -314,6 +316,67 @@ function completeWork(
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
 
+  // Reset the child expiration time by bubbling it from the children. Skip
+  // if the children are hidden and we're not rendering at hidden priority.
+  if (
+    workInProgress.childExpirationTime !== Never ||
+    renderExpirationTime === Never
+  ) {
+    let newChildExpirationTime = NoWork;
+
+    // Bubble up the earliest expiration time.
+    if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+      // We're in profiling mode. Let's use this same traversal to update the
+      // "base" render times.
+      let treeBaseDuration = workInProgress.selfBaseDuration;
+      let child = workInProgress.child;
+      while (child !== null) {
+        const childUpdateExpirationTime = child.expirationTime;
+        const childChildExpirationTime = child.childExpirationTime;
+        if (
+          newChildExpirationTime === NoWork ||
+          (childUpdateExpirationTime !== NoWork &&
+            childUpdateExpirationTime < newChildExpirationTime)
+        ) {
+          newChildExpirationTime = childUpdateExpirationTime;
+        }
+        if (
+          newChildExpirationTime === NoWork ||
+          (childChildExpirationTime !== NoWork &&
+            childChildExpirationTime < newChildExpirationTime)
+        ) {
+          newChildExpirationTime = childChildExpirationTime;
+        }
+        treeBaseDuration += child.treeBaseDuration;
+        child = child.sibling;
+      }
+      workInProgress.treeBaseDuration = treeBaseDuration;
+    } else {
+      let child = workInProgress.child;
+      while (child !== null) {
+        const childUpdateExpirationTime = child.expirationTime;
+        const childChildExpirationTime = child.childExpirationTime;
+        if (
+          newChildExpirationTime === NoWork ||
+          (childUpdateExpirationTime !== NoWork &&
+            childUpdateExpirationTime < newChildExpirationTime)
+        ) {
+          newChildExpirationTime = childUpdateExpirationTime;
+        }
+        if (
+          newChildExpirationTime === NoWork ||
+          (childChildExpirationTime !== NoWork &&
+            childChildExpirationTime < newChildExpirationTime)
+        ) {
+          newChildExpirationTime = childChildExpirationTime;
+        }
+        child = child.sibling;
+      }
+    }
+
+    workInProgress.childExpirationTime = newChildExpirationTime;
+  }
+
   switch (workInProgress.tag) {
     case FunctionalComponent:
       break;
@@ -484,6 +547,32 @@ function completeWork(
     case ForwardRef:
       break;
     case PlaceholderComponent:
+      if (workInProgress.memoizedState === true) {
+        let newChildExpirationTime = workInProgress.expirationTime;
+        let child = workInProgress.child;
+        while (child !== null) {
+          if (child.type === PlaceholderFallback) {
+            const placeholderUpdateExpirationTIme = child.expirationTime;
+            const placeholderChildExpirationTime = child.childExpirationTime;
+            if (
+              newChildExpirationTime === NoWork ||
+              (placeholderUpdateExpirationTIme !== NoWork &&
+                placeholderUpdateExpirationTIme < newChildExpirationTime)
+            ) {
+              newChildExpirationTime = placeholderUpdateExpirationTIme;
+            }
+            if (
+              newChildExpirationTime === NoWork ||
+              (placeholderChildExpirationTime !== NoWork &&
+                placeholderChildExpirationTime < newChildExpirationTime)
+            ) {
+              newChildExpirationTime = placeholderChildExpirationTime;
+            }
+          }
+          child = child.sibling;
+        }
+        workInProgress.childExpirationTime = newChildExpirationTime;
+      }
       break;
     case Fragment:
       break;
@@ -521,9 +610,10 @@ function completeWork(
   if (enableProfilerTimer) {
     if (workInProgress.mode & ProfileMode) {
       // Don't record elapsed time unless the "complete" phase has succeeded.
-      // Certain renderers may error during this phase (i.e. ReactNative View/Text nesting validation).
-      // If an error occurs, we'll mark the time while unwinding.
-      // This simplifies the unwinding logic and ensures consistency.
+      // Certain renderers may error during this phase (i.e. ReactNative
+      // View/Text nesting validation). If an error occurs, we'll mark the time
+      // while unwinding. This simplifies the unwinding logic and ensures
+      // consistency.
       recordElapsedActualRenderTime(workInProgress);
     }
   }

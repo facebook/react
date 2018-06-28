@@ -100,6 +100,9 @@ import {
   updateClassInstance,
 } from './ReactFiberClassComponent';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
+import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {completeWork} from './ReactFiberCompleteWork';
+import {PlaceholderFallback} from './ReactFiberPlaceholder';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -709,6 +712,7 @@ function updatePlaceholderComponent(
 ) {
   if (enableSuspense) {
     const nextProps = workInProgress.pendingProps;
+    const prevProps = current !== null ? current.memoizedProps : null;
 
     // Check if we already attempted to render the normal state. If we did,
     // and we timed out, render the placeholder state.
@@ -721,13 +725,6 @@ function updatePlaceholderComponent(
       // suspended during the last commit. Switch to the placholder.
       workInProgress.updateQueue = null;
       nextDidTimeout = true;
-      // If we're recovering from an error, reconcile twice: first to delete
-      // all the existing children.
-      reconcileChildren(current, workInProgress, null, renderExpirationTime);
-      current.child = null;
-      // Now we can continue reconciling like normal. This has the effect of
-      // remounting all children regardless of whether their their
-      // identity matches.
     } else {
       nextDidTimeout = !alreadyCaptured;
     }
@@ -744,25 +741,106 @@ function updatePlaceholderComponent(
       }
     }
 
-    // If the `children` prop is a function, treat it like a render prop.
-    // TODO: This is temporary until we finalize a lower level API.
-    const children = nextProps.children;
-    let nextChildren;
-    if (typeof children === 'function') {
-      nextChildren = children(nextDidTimeout);
-    } else {
-      nextChildren = nextDidTimeout ? nextProps.fallback : children;
-    }
-
     workInProgress.memoizedProps = nextProps;
     workInProgress.memoizedState = nextDidTimeout;
-    reconcileChildren(
-      current,
-      workInProgress,
-      nextChildren,
-      renderExpirationTime,
-    );
-    return workInProgress.child;
+
+    // A placeholder has two sets of children: the normal children, and the
+    // fallback children that render if the normal children time out. The
+    // combined children of the placeholder are a tuple of [normalChildren,
+    // fallbackChildren]. We always render both slots, to avoid reconciliation
+    // mismatches, but a non-timed-out placeholder's fallback children are
+    // always null.
+    //
+    // When the placeholder times out, the normal children are not unmounted.
+    // We keep them in the tree to preserve their existing state. Then the
+    // renderer hides them visually e.g. using display: none.
+    //
+    // The fallback children are wrapped in an extra fiber with a special,
+    // private type. We use the type to distinguish between the two sets.
+
+    // If the `children` prop is a function, treat it like a render prop.
+    // TODO: This is temporary until we finalize a lower level API.
+    if (!nextDidTimeout) {
+      // Haven't timed out yet. Render null in place of the fallback children.
+      const childrenProp = nextProps.children;
+      const nextNormalChildren =
+        typeof childrenProp === 'function' ? childrenProp(false) : childrenProp;
+      if (__DEV__) {
+        // Suppress the key warning. The normal children set will never clash
+        // with the fallback children set, because the fallback set is wrapped
+        // with a special, private type.
+        if (
+          nextNormalChildren !== null &&
+          typeof nextNormalChildren === 'object' &&
+          nextNormalChildren.$$typeof === REACT_ELEMENT_TYPE &&
+          nextNormalChildren._store &&
+          typeof nextNormalChildren._store === 'object'
+        ) {
+          nextNormalChildren._store.validated = true;
+        }
+      }
+      const nextCombinedChildren = [nextNormalChildren, null];
+      reconcileChildren(
+        current,
+        workInProgress,
+        nextCombinedChildren,
+        renderExpirationTime,
+      );
+      return workInProgress.child;
+    } else {
+      // Timed out.
+      let nextNormalChildren;
+      if (prevProps !== null) {
+        const prevChildrenProp = prevProps.children;
+        nextNormalChildren =
+          typeof prevChildrenProp === 'function'
+            ? prevChildrenProp(false)
+            : prevChildrenProp;
+      } else {
+        nextNormalChildren = null;
+      }
+      const childrenProp = nextProps.children;
+      const unwrappedFallbackChildren =
+        typeof childrenProp === 'function'
+          ? childrenProp(true)
+          : nextProps.fallback;
+      // Wrap the fallback children in an extra fiber to prevent reconcilation
+      // mistmatches. FallbackPlaceholder is a private internal type, so it will
+      // never clash with the normal children set.
+      const nextFallbackChildren =
+        unwrappedFallbackChildren !== null &&
+        unwrappedFallbackChildren !== undefined
+          ? {
+              $$typeof: REACT_ELEMENT_TYPE,
+              type: PlaceholderFallback,
+              key: null,
+              ref: null,
+              props: {children: unwrappedFallbackChildren},
+              _owner: null,
+            }
+          : null;
+      const nextCombinedChildren = [nextNormalChildren, nextFallbackChildren];
+      reconcileChildren(
+        current,
+        workInProgress,
+        nextCombinedChildren,
+        renderExpirationTime,
+      );
+      let child = workInProgress.child;
+      while (child !== null) {
+        if (child.type !== PlaceholderFallback) {
+          // Reuse the normal children by bailing out entirely.
+          const currentChild = child.alternate;
+          prepareToBailout(child);
+          completeWork(currentChild, child, renderExpirationTime);
+        } else {
+          // The last fiber contains the fallback children. Continue rendering.
+          return child;
+        }
+        child = child.sibling;
+      }
+      return null;
+    }
   } else {
     return null;
   }
@@ -958,6 +1036,32 @@ function memoizeState(workInProgress: Fiber, nextState: any) {
   // is handled by processUpdateQueue.
 }
 
+function prepareToBailout(workInProgress) {
+  switch (workInProgress.tag) {
+    case HostRoot:
+      pushHostRootContext(workInProgress);
+      resetHydrationState();
+      break;
+    case HostComponent:
+      pushHostContext(workInProgress);
+      break;
+    case ClassComponent:
+      pushLegacyContextProvider(workInProgress);
+      break;
+    case HostPortal:
+      pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
+      break;
+    case ContextProvider:
+      pushProvider(workInProgress, 0);
+      break;
+    case Profiler:
+      if (enableProfilerTimer) {
+        workInProgress.effectTag |= Update;
+      }
+      break;
+  }
+}
+
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -978,32 +1082,7 @@ function beginWork(
     // This fiber does not have any pending work. Bailout without entering
     // the begin phase. There's still some bookkeeping we that needs to be done
     // in this optimized path, mostly pushing stuff onto the stack.
-    switch (workInProgress.tag) {
-      case HostRoot:
-        pushHostRootContext(workInProgress);
-        resetHydrationState();
-        break;
-      case HostComponent:
-        pushHostContext(workInProgress);
-        break;
-      case ClassComponent:
-        pushLegacyContextProvider(workInProgress);
-        break;
-      case HostPortal:
-        pushHostContainer(
-          workInProgress,
-          workInProgress.stateNode.containerInfo,
-        );
-        break;
-      case ContextProvider:
-        pushProvider(workInProgress, 0);
-        break;
-      case Profiler:
-        if (enableProfilerTimer) {
-          workInProgress.effectTag |= Update;
-        }
-        break;
-    }
+    prepareToBailout(workInProgress);
     return bailoutOnAlreadyFinishedWork(
       current,
       workInProgress,

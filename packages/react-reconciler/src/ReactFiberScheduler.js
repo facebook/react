@@ -102,7 +102,7 @@ import {
   computeAsyncExpiration,
   computeInteractiveExpiration,
 } from './ReactFiberExpirationTime';
-import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
+import {AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -729,71 +729,6 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   onCommit(root, earliestRemainingTimeAfterCommit);
 }
 
-function resetChildExpirationTime(
-  workInProgress: Fiber,
-  renderTime: ExpirationTime,
-) {
-  if (renderTime !== Never && workInProgress.childExpirationTime === Never) {
-    // The children of this component are hidden. Don't bubble their
-    // expiration times.
-    return;
-  }
-
-  let newChildExpirationTime = NoWork;
-
-  // Bubble up the earliest expiration time.
-  if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
-    // We're in profiling mode. Let's use this same traversal to update the
-    // "base" render times.
-    let treeBaseDuration = workInProgress.selfBaseDuration;
-    let child = workInProgress.child;
-    while (child !== null) {
-      const childUpdateExpirationTime = child.expirationTime;
-      const childChildExpirationTime = child.childExpirationTime;
-      if (
-        newChildExpirationTime === NoWork ||
-        (childUpdateExpirationTime !== NoWork &&
-          childUpdateExpirationTime < newChildExpirationTime)
-      ) {
-        newChildExpirationTime = childUpdateExpirationTime;
-      }
-      if (
-        newChildExpirationTime === NoWork ||
-        (childChildExpirationTime !== NoWork &&
-          childChildExpirationTime < newChildExpirationTime)
-      ) {
-        newChildExpirationTime = childChildExpirationTime;
-      }
-      treeBaseDuration += child.treeBaseDuration;
-      child = child.sibling;
-    }
-    workInProgress.treeBaseDuration = treeBaseDuration;
-  } else {
-    let child = workInProgress.child;
-    while (child !== null) {
-      const childUpdateExpirationTime = child.expirationTime;
-      const childChildExpirationTime = child.childExpirationTime;
-      if (
-        newChildExpirationTime === NoWork ||
-        (childUpdateExpirationTime !== NoWork &&
-          childUpdateExpirationTime < newChildExpirationTime)
-      ) {
-        newChildExpirationTime = childUpdateExpirationTime;
-      }
-      if (
-        newChildExpirationTime === NoWork ||
-        (childChildExpirationTime !== NoWork &&
-          childChildExpirationTime < newChildExpirationTime)
-      ) {
-        newChildExpirationTime = childChildExpirationTime;
-      }
-      child = child.sibling;
-    }
-  }
-
-  workInProgress.childExpirationTime = newChildExpirationTime;
-}
-
 function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
   // Attempt to complete the current unit of work, then move to the
   // next sibling. If there are no more siblings, return to the
@@ -820,7 +755,6 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
       );
       let next = nextUnitOfWork;
       stopWorkTimer(workInProgress);
-      resetChildExpirationTime(workInProgress, nextRenderExpirationTime);
       if (__DEV__) {
         ReactCurrentFiber.resetCurrentFiber();
       }
@@ -1407,7 +1341,8 @@ function renderDidError() {
 
 function retrySuspendedRoot(
   root: FiberRoot,
-  fiber: Fiber,
+  boundaryFiber: Fiber,
+  sourceFiber: Fiber,
   suspendedTime: ExpirationTime,
 ) {
   if (enableSuspense) {
@@ -1418,13 +1353,21 @@ function retrySuspendedRoot(
       retryTime = suspendedTime;
       markPingedPriorityLevel(root, retryTime);
     } else {
-      // Placeholder already timed out. Compute a new expiration time
+      // Placeholder already timed out. Compute a new expiration time. Use the
+      // source fiber, not the boundary fiber. If the source is async, we should
+      // ping at async priority.
       const currentTime = requestCurrentTime();
-      retryTime = computeExpirationForFiber(currentTime, fiber);
+      retryTime = computeExpirationForFiber(currentTime, sourceFiber);
       markPendingPriorityLevel(root, retryTime);
     }
 
-    scheduleWorkToRoot(fiber, retryTime);
+    scheduleWorkToRoot(boundaryFiber, retryTime);
+    if ((boundaryFiber.mode & StrictMode) === NoEffect) {
+      // Outside of strict mode, we must schedule an update on the source fiber,
+      // too, since it already committed.
+      scheduleWorkToRoot(sourceFiber, retryTime);
+    }
+
     const rootExpirationTime = root.expirationTime;
     if (rootExpirationTime !== NoWork) {
       requestWork(root, rootExpirationTime);

@@ -37,7 +37,7 @@ import {
   enableProfilerTimer,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
-import {ProfileMode, StrictMode, AsyncMode} from './ReactTypeOfMode';
+import {ProfileMode, StrictMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -61,7 +61,6 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   retrySuspendedRoot,
 } from './ReactFiberScheduler';
-import {Sync} from './ReactFiberExpirationTime';
 
 import invariant from 'shared/invariant';
 import maxSigned31BitInt from './maxSigned31BitInt';
@@ -209,22 +208,6 @@ function throwException(
         if (!didTimeout) {
           // Found the nearest boundary.
 
-          // If the boundary is not in async mode, we should not suspend, and
-          // likewise, when the promise resolves, we should ping synchronously.
-          const pingTime =
-            (workInProgress.mode & AsyncMode) === NoEffect
-              ? Sync
-              : renderExpirationTime;
-
-          // Attach a listener to the promise to "ping" the root and retry.
-          const onResolveOrReject = retrySuspendedRoot.bind(
-            null,
-            root,
-            workInProgress,
-            pingTime,
-          );
-          thenable.then(onResolveOrReject, onResolveOrReject);
-
           // If the boundary is outside of strict mode, we should *not* suspend
           // the commit. Pretend as if the suspended component rendered null and
           // keep rendering. In the commit phase, we'll schedule a subsequent
@@ -258,59 +241,70 @@ function throwException(
               sourceFiber.effectTag &= ~LifecycleEffectMask;
               if (sourceFiber.alternate === null) {
                 // We're about to mount a class component that doesn't have an
-                // instance. Turn this into a dummy functional component instead,
-                // to prevent type errors. This is a bit weird but it's an edge
-                // case and we're about to synchronously delete this
+                // instance. Turn this into a dummy functional component
+                // instead, to prevent type errors. This is a bit weird but it's
+                // an edge case and we're about to synchronously delete this
                 // component, anyway.
                 sourceFiber.tag = FunctionalComponent;
                 sourceFiber.type = NoopComponent;
               }
             }
-
             // Exit without suspending.
-            return;
-          }
-
-          // Confirmed that the boundary is in a strict mode tree. Continue with
-          // the normal suspend path.
-
-          let absoluteTimeoutMs;
-          if (earliestTimeoutMs === -1) {
-            // If no explicit threshold is given, default to an abitrarily large
-            // value. The actual size doesn't matter because the threshold for the
-            // whole tree will be clamped to the expiration time.
-            absoluteTimeoutMs = maxSigned31BitInt;
           } else {
-            if (startTimeMs === -1) {
-              // This suspend happened outside of any already timed-out
-              // placeholders. We don't know exactly when the update was scheduled,
-              // but we can infer an approximate start time from the expiration
-              // time. First, find the earliest uncommitted expiration time in the
-              // tree, including work that is suspended. Then subtract the offset
-              // used to compute an async update's expiration time. This will cause
-              // high priority (interactive) work to expire earlier than neccessary,
-              // but we can account for this by adjusting for the Just Noticable
-              // Difference.
-              const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
-                root,
-                renderExpirationTime,
-              );
-              const earliestExpirationTimeMs = expirationTimeToMs(
-                earliestExpirationTime,
-              );
-              startTimeMs = earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
+            // Confirmed that the boundary is in a strict mode tree. Continue
+            // with the normal suspend path.
+
+            let absoluteTimeoutMs;
+            if (earliestTimeoutMs === -1) {
+              // If no explicit threshold is given, default to an abitrarily
+              // large value. The actual size doesn't matter because the
+              // threshold for the whole tree will be clamped to the expiration
+              // time.
+              absoluteTimeoutMs = maxSigned31BitInt;
+            } else {
+              if (startTimeMs === -1) {
+                // This suspend happened outside of any already timed-out
+                // placeholders. We don't know exactly when the update was
+                // scheduled, but we can infer an approximate start time from
+                // the expiration time. First, find the earliest uncommitted
+                // expiration time in the tree, including work that is
+                // suspended. Then subtract the offset used to compute an async
+                // update's expiration time. This will cause high priority
+                // (interactive) work to expire earlier than neccessary, but we
+                // can account for this by adjusting for the Just Noticable
+                // Difference.
+                const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
+                  root,
+                  renderExpirationTime,
+                );
+                const earliestExpirationTimeMs = expirationTimeToMs(
+                  earliestExpirationTime,
+                );
+                startTimeMs =
+                  earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
+              }
+              absoluteTimeoutMs = startTimeMs + earliestTimeoutMs;
             }
-            absoluteTimeoutMs = startTimeMs + earliestTimeoutMs;
+
+            workInProgress.effectTag |= ShouldCapture;
+            workInProgress.expirationTime = renderExpirationTime;
+
+            // Mark the earliest timeout in the suspended fiber's ancestor path.
+            // After completing the root, we'll take the largest of all the
+            // suspended fiber's timeouts and use it to compute a timeout for
+            // the whole tree.
+            renderDidSuspend(root, absoluteTimeoutMs, renderExpirationTime);
           }
-
-          // Mark the earliest timeout in the suspended fiber's ancestor path.
-          // After completing the root, we'll take the largest of all the
-          // suspended fiber's timeouts and use it to compute a timeout for the
-          // whole tree.
-          renderDidSuspend(root, absoluteTimeoutMs, renderExpirationTime);
-
-          workInProgress.effectTag |= ShouldCapture;
-          workInProgress.expirationTime = renderExpirationTime;
+          // Attach a listener to the promise to "ping" the root and retry.
+          const pingTime = renderExpirationTime;
+          const onResolveOrReject = retrySuspendedRoot.bind(
+            null,
+            root,
+            workInProgress,
+            sourceFiber,
+            pingTime,
+          );
+          thenable.then(onResolveOrReject, onResolveOrReject);
           return;
         }
         // This boundary already captured during this render. Continue to the
