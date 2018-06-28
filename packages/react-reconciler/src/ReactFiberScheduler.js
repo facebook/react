@@ -253,6 +253,7 @@ let replayUnitOfWork;
 let isReplayingFailedUnitOfWork;
 let originalReplayError;
 let rethrowOriginalError;
+let recordElapsedActualRenderTimeWhileUnwinding;
 if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
   stashedWorkInProgressProperties = null;
   isReplayingFailedUnitOfWork = false;
@@ -776,12 +777,18 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
     const siblingFiber = workInProgress.sibling;
 
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
+      if (enableProfilerTimer) {
+        recordElapsedActualRenderTimeWhileUnwinding = false;
+      }
       // This fiber completed.
       let next = completeWork(
         current,
         workInProgress,
         nextRenderExpirationTime,
       );
+      if (enableProfilerTimer) {
+        recordElapsedActualRenderTimeWhileUnwinding = true;
+      }
       stopWorkTimer(workInProgress);
       resetExpirationTime(workInProgress, nextRenderExpirationTime);
       if (__DEV__) {
@@ -854,6 +861,19 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
       // This fiber did not complete because something threw. Pop values off
       // the stack without entering the complete phase. If this is a boundary,
       // capture values if possible.
+
+      if (enableProfilerTimer) {
+        // In case an error was thrown while completing work,
+        // We should record elapsed time while unwinding.
+        // Doing this would result in us recording time twice.
+        if (recordElapsedActualRenderTimeWhileUnwinding) {
+          if (workInProgress.mode & ProfileMode) {
+            recordElapsedActualRenderTime(workInProgress);
+          }
+        }
+        recordElapsedActualRenderTimeWhileUnwinding = true;
+      }
+
       const next = unwindWork(workInProgress, nextRenderExpirationTime);
       // Because this fiber did not complete, don't reset its expiration time.
       if (workInProgress.effectTag & DidCapture) {
@@ -1101,6 +1121,9 @@ function renderRoot(
     // There was a fatal error.
     if (__DEV__) {
       resetStackAfterFatalErrorInDev();
+
+      // Reset the DEV fiber stack in case we're profiling roots.
+      // (We do this for profiling bulds when DevTools is detected.)
       resetActualRenderTimerStackAfterFatalErrorInDev();
     }
     // `nextRoot` points to the in-progress root. A non-null value indicates

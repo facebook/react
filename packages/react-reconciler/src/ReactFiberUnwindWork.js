@@ -359,12 +359,6 @@ function unwindWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  if (enableProfilerTimer) {
-    if (workInProgress.mode & ProfileMode) {
-      recordElapsedActualRenderTime(workInProgress);
-    }
-  }
-
   switch (workInProgress.tag) {
     case ClassComponent: {
       popLegacyContextProvider(workInProgress);
