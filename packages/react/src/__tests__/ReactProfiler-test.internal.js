@@ -11,11 +11,13 @@
 
 let React;
 let ReactFeatureFlags;
+let ReactNoop;
 let ReactTestRenderer;
 
 function loadModules({
   enableProfilerTimer = true,
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
+  useNoopRenderer = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.debugRenderPhaseSideEffects = false;
@@ -24,7 +26,12 @@ function loadModules({
   ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
   React = require('react');
-  ReactTestRenderer = require('react-test-renderer');
+
+  if (useNoopRenderer) {
+    ReactNoop = require('react-noop-renderer');
+  } else {
+    ReactTestRenderer = require('react-test-renderer');
+  }
 }
 
 describe('Profiler', () => {
@@ -959,6 +966,35 @@ describe('Profiler', () => {
             expect(mountCall[4]).toBe(5);
             // commit time
             expect(mountCall[5]).toBe(flagEnabled && __DEV__ ? 54 : 44);
+          });
+
+          it('should reset the fiber stack correct after a "complete" phase error', () => {
+            jest.resetModules();
+
+            loadModules({
+              useNoopRenderer: true,
+              replayFailedUnitOfWorkWithInvokeGuardedCallback: flagEnabled,
+            });
+
+            // Simulate a renderer error during the "complete" phase.
+            // This mimics behavior like React Native's View/Text nesting validation.
+            ReactNoop.simulateErrorInHostConfigDuringCompletePhase(() => {
+              ReactNoop.render(
+                <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                  <span>hi</span>
+                </React.unstable_Profiler>,
+              );
+              expect(ReactNoop.flush).toThrow('Error in host config.');
+            });
+
+            // So long as the profiler timer's fiber stack is reset correctly,
+            // Subsequent renders should not error.
+            ReactNoop.render(
+              <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                <span>hi</span>
+              </React.unstable_Profiler>
+            );
+            ReactNoop.flush();
           });
         });
       });
