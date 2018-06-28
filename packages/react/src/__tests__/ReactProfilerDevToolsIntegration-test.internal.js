@@ -109,7 +109,7 @@ describe('ReactProfiler DevTools integration', () => {
     expect(rendered.root.findByType(App)._currentFiber().treeBaseTime).toBe(15);
   });
 
-  it('should reset the DEV mode fiber stack correct after an error', () => {
+  it('should reset the fiber stack correctly after an error when profiling host roots', () => {
     expect(() => {
       ReactTestRenderer.create(<div ref="this-will-cause-an-error" />);
     }).toThrow();
