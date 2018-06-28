@@ -1010,6 +1010,41 @@ describe('ReactIncremental', () => {
     expect(instance.state.num).toEqual(6);
   });
 
+  it('warns in strict mode if updater form of setState returns undefined', () => {
+    let instance;
+    class Bar extends React.Component {
+      constructor() {
+        super();
+        this.state = {num: 1};
+        instance = this;
+      }
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    function Foo({multiplier}) {
+      return (
+        <React.StrictMode>
+          <Bar multiplier={multiplier} />
+        </React.StrictMode>
+      );
+    }
+
+    function updater(state, props) {
+      // intentionally blank
+    }
+
+    ReactNoop.render(<Foo multiplier={2} />);
+    ReactNoop.flush();
+    instance.setState(updater);
+    expect(ReactNoop.flush).toWarnDev(
+      'A setState updater function was called that returned undefined. ' +
+        'Check if you forgot to return a value in your setState updater ' +
+        'function. If a no-op was intended, return null.',
+    );
+  });
+
   it('can call setState inside update callback', () => {
     let instance;
     class Bar extends React.Component {

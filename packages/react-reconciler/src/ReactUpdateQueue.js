@@ -410,6 +410,16 @@ function getStateFromUpdate<State>(
           }
         }
         partialState = payload.call(instance, prevState, nextProps);
+        if (__DEV__ && workInProgress.mode & StrictMode) {
+          if (partialState === undefined) {
+            warning(
+              false,
+              'A setState updater function was called that returned undefined. ' +
+                'Check if you forgot to return a value in your setState updater ' +
+                'function. If a no-op was intended, return null.',
+            );
+          }
+        }
       } else {
         // Partial state object
         partialState = payload;
