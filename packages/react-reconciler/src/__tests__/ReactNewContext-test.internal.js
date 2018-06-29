@@ -764,6 +764,48 @@ describe('ReactNewContext', () => {
     }
   });
 
+  it('does not warn if multiple renderers used with the same context, but not interleave each other', () => {
+    spyOnDev(console, 'error');
+    const Context = React.createContext(0);
+
+    function Foo(props) {
+      ReactNoop.yield('Foo');
+      return null;
+    }
+
+    function App(props) {
+      return (
+        <React.Fragment>
+          <Context.Provider value={props.value}>
+            <Foo />
+          </Context.Provider>
+          <Foo />
+          <Context.Provider value={props.value}>
+            <Foo />
+          </Context.Provider>
+        </React.Fragment>
+      );
+    }
+
+    ReactNoop.render(<App value={1} />);
+    // Render past the first Provider, but don't commit yet
+    ReactNoop.flushThrough(['Foo', 'Foo']);
+
+    // Get a new copy of ReactNoop
+    jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+
+    // Render the provider again using a different renderer
+    ReactNoop.render(<App value={1} />);
+    ReactNoop.flush();
+
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
+  });
+
   it('warns if consumer child is not a function', () => {
     spyOnDev(console, 'error');
     const Context = React.createContext(0);
