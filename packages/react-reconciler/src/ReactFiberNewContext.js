@@ -85,13 +85,17 @@ function popProvider(providerFiber: Fiber): void {
     context._currentValue = currentValue;
     context._changedBits = changedBits;
     if (__DEV__) {
-      context._currentRenderer = null;
+      if (context._currentRenderer === rendererSigil) {
+        context._currentRenderer = null;
+      }
     }
   } else {
     context._currentValue2 = currentValue;
     context._changedBits2 = changedBits;
     if (__DEV__) {
-      context._currentRenderer2 = null;
+      if (context._currentRenderer2 === rendererSigil) {
+        context._currentRenderer2 = null;
+      }
     }
   }
 }
