@@ -768,6 +768,58 @@ describe('ReactNewContext', () => {
     }
   });
 
+  it('warns if multiple renderers concurrently render the same context (with shadow context)', () => {
+    spyOnDev(console, 'error');
+    const Context = React.createContext(0);
+    const Context2 = React.createContext(0);
+
+    function Foo(props) {
+      ReactNoop.yield('Foo');
+      return null;
+    }
+
+    function App(props) {
+      return (
+        <Context.Provider value={props.value}>
+          <Context2.Provider value={props.value}>
+            <Foo />
+            <Foo />
+          </Context2.Provider>
+        </Context.Provider>
+      );
+    }
+
+    function App2(props) {
+      return (
+        <Context.Provider value={props.value}>
+          <Foo />
+          <Foo />
+        </Context.Provider>
+      );
+    }
+
+    ReactNoop.render(<App value={1} />);
+    // Render past the second Provider, but don't commit yet
+    ReactNoop.flushThrough(['Foo']);
+
+    // Get a new copy of ReactNoop
+    jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+
+    // Render first Provider again using a different renderer
+    ReactNoop.render(<App2 value={1} />);
+    ReactNoop.flush();
+
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Detected multiple renderers concurrently rendering the same ' +
+          'context provider. This is currently unsupported',
+      );
+    }
+  });
+
   it('does not warn if multiple renderers used with the same context, but not interleave each other', () => {
     spyOnDev(console, 'error');
     const Context = React.createContext(0);
