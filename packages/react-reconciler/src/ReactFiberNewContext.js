@@ -25,6 +25,8 @@ import {createCursor, push, pop} from './ReactFiberStack';
 const providerCursor: StackCursor<Fiber | null> = createCursor(null);
 const valueCursor: StackCursor<mixed> = createCursor(null);
 const changedBitsCursor: StackCursor<number> = createCursor(0);
+const rendererSigilCursor: StackCursor<Object | null> = createCursor(null);
+const rendererSigilCursor2: StackCursor<Object | null> = createCursor(null);
 
 let rendererSigil;
 if (__DEV__) {
@@ -36,12 +38,6 @@ function pushProvider(providerFiber: Fiber): void {
   const context: ReactContext<any> = providerFiber.type._context;
 
   if (isPrimaryRenderer) {
-    push(changedBitsCursor, context._changedBits, providerFiber);
-    push(valueCursor, context._currentValue, providerFiber);
-    push(providerCursor, providerFiber, providerFiber);
-
-    context._currentValue = providerFiber.pendingProps.value;
-    context._changedBits = providerFiber.stateNode;
     if (__DEV__) {
       warning(
         context._currentRenderer === undefined ||
@@ -51,14 +47,15 @@ function pushProvider(providerFiber: Fiber): void {
           'same context provider. This is currently unsupported.',
       );
       context._currentRenderer = rendererSigil;
+      push(rendererSigilCursor, context._currentRenderer, providerFiber);
     }
-  } else {
-    push(changedBitsCursor, context._changedBits2, providerFiber);
-    push(valueCursor, context._currentValue2, providerFiber);
+    push(changedBitsCursor, context._changedBits, providerFiber);
+    push(valueCursor, context._currentValue, providerFiber);
     push(providerCursor, providerFiber, providerFiber);
 
-    context._currentValue2 = providerFiber.pendingProps.value;
-    context._changedBits2 = providerFiber.stateNode;
+    context._currentValue = providerFiber.pendingProps.value;
+    context._changedBits = providerFiber.stateNode;
+  } else {
     if (__DEV__) {
       warning(
         context._currentRenderer2 === undefined ||
@@ -68,7 +65,14 @@ function pushProvider(providerFiber: Fiber): void {
           'same context provider. This is currently unsupported.',
       );
       context._currentRenderer2 = rendererSigil;
+      push(rendererSigilCursor2, context._currentRenderer2, providerFiber);
     }
+    push(changedBitsCursor, context._changedBits2, providerFiber);
+    push(valueCursor, context._currentValue2, providerFiber);
+    push(providerCursor, providerFiber, providerFiber);
+
+    context._currentValue2 = providerFiber.pendingProps.value;
+    context._changedBits2 = providerFiber.stateNode;
   }
 }
 
@@ -82,21 +86,25 @@ function popProvider(providerFiber: Fiber): void {
 
   const context: ReactContext<any> = providerFiber.type._context;
   if (isPrimaryRenderer) {
-    context._currentValue = currentValue;
-    context._changedBits = changedBits;
     if (__DEV__) {
-      if (context._currentRenderer === rendererSigil) {
+      pop(rendererSigilCursor, providerFiber);
+      if (rendererSigilCursor.current === null) {
         context._currentRenderer = null;
       }
     }
+
+    context._currentValue = currentValue;
+    context._changedBits = changedBits;
   } else {
-    context._currentValue2 = currentValue;
-    context._changedBits2 = changedBits;
     if (__DEV__) {
-      if (context._currentRenderer2 === rendererSigil) {
-        context._currentRenderer2 = null;
+      pop(rendererSigilCursor2, providerFiber);
+      if (rendererSigilCursor2.current === null) {
+        context._currentRenderer = null;
       }
     }
+
+    context._currentValue2 = currentValue;
+    context._changedBits2 = changedBits;
   }
 }
 
