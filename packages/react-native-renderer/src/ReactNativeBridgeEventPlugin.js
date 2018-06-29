@@ -31,7 +31,7 @@ const ReactNativeBridgeEventPlugin = {
    */
   extractEvents: function(
     topLevelType: TopLevelType,
-    targetInst: Object,
+    targetInst: null | Object,
     nativeEvent: AnyNativeEvent,
     nativeEventTarget: Object,
   ): ?Object {
