@@ -735,10 +735,14 @@ describe('ReactNewContext', () => {
 
     function App(props) {
       return (
-        <Context.Provider value={props.value}>
-          <Foo />
-          <Foo />
-        </Context.Provider>
+        <React.Fragment>
+          <Context.Provider value={props.value}>
+            <Context.Provider value={props.value}>
+              <Foo />
+            </Context.Provider>
+            <Foo />
+          </Context.Provider>
+        </React.Fragment>
       );
     }
 
