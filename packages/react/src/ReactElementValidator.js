@@ -327,15 +327,13 @@ export function createElementWithValidation(type, props, children) {
     info += getStackAddendum() || '';
 
     let typeString;
-    if (type === null) {
-      typeString = 'null';
-    } else if (type === undefined) {
-      typeString = 'undefined';
-    } else if (Array.isArray(type)) {
-      typeString = 'array';
-    } else if (type.$$typeof) {
+    if (type && type.$$typeof) {
       typeString = 'element';
       info = ' Did you accidentally export JSX instead of a component?';
+    } else if (type === null) {
+      typeString = 'null';
+    } else if (Array.isArray(type)) {
+      typeString = 'array';
     } else {
       typeString = typeof type;
     }
