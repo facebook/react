@@ -372,6 +372,24 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         removeChild,
         removeChildFromContainer,
 
+        hideInstance(instance: Instance): void {
+          instance.hidden = true;
+        },
+
+        hideTextInstance(textInstance: TextInstance): void {
+          textInstance.hidden = true;
+        },
+
+        unhideInstance(instance: Instance, props: Props): void {
+          if (!props.hidden) {
+            instance.hidden = false;
+          }
+        },
+
+        unhideTextInstance(textInstance: TextInstance): void {
+          textInstance.hidden = false;
+        },
+
         resetTextContent(instance: Instance): void {
           instance.text = null;
         },
@@ -406,6 +424,61 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           newChildren: Array<Instance | TextInstance>,
         ): void {
           container.children = newChildren;
+        },
+
+        cloneHiddenInstance(
+          instance: Instance,
+          type: string,
+          props: Props,
+          internalInstanceHandle: Object,
+        ): Instance {
+          const clone = cloneInstance(
+            instance,
+            null,
+            type,
+            props,
+            props,
+            internalInstanceHandle,
+            true,
+            null,
+          );
+          clone.hidden = true;
+          return clone;
+        },
+
+        cloneUnhiddenInstance(
+          instance: Instance,
+          type: string,
+          props: Props,
+          internalInstanceHandle: Object,
+        ): Instance {
+          const clone = cloneInstance(
+            instance,
+            null,
+            type,
+            props,
+            props,
+            internalInstanceHandle,
+            true,
+            null,
+          );
+          clone.hidden = props.hidden;
+          return clone;
+        },
+
+        createHiddenTextInstance(
+          text: string,
+          rootContainerInstance: Container,
+          hostContext: Object,
+          internalInstanceHandle: Object,
+        ): TextInstance {
+          const inst = {text: text, id: instanceCounter++, hidden: true};
+          // Hide from unit tests
+          Object.defineProperty(inst, 'id', {
+            value: inst.id,
+            enumerable: false,
+          });
+          return inst;
         },
       };
 
