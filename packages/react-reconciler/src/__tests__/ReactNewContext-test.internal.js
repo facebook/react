@@ -25,18 +25,19 @@ describe('ReactNewContext', () => {
     gen = require('random-seed');
   });
 
-  // function div(...children) {
-  //   children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-  //   return {type: 'div', children, prop: undefined};
-  // }
+  function span(prop) {
+    const inst = {
+      type: 'span',
+      children: [],
+      prop,
+      hidden: false,
+    };
+    return inst;
+  }
 
   function Text(props) {
     ReactNoop.yield(props.text);
     return <span prop={props.text} />;
-  }
-
-  function span(prop) {
-    return {type: 'span', children: [], prop};
   }
 
   // We have several ways of reading from context. sharedContextTests runs

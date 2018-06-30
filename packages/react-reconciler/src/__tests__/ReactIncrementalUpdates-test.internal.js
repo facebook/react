@@ -23,8 +23,19 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
+  function div(...children) {
+    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
+    return {type: 'div', children, prop: undefined, hidden: false};
+  }
+
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    const inst = {
+      type: 'span',
+      children: [],
+      prop,
+      hidden: false,
+    };
+    return inst;
   }
 
   it('applies updates in order of priority', () => {

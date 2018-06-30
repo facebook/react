@@ -20,17 +20,19 @@ describe('ReactFragment', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
-  function span(prop) {
-    return {type: 'span', children: [], prop};
-  }
-
-  function text(val) {
-    return {text: val};
-  }
-
   function div(...children) {
     children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-    return {type: 'div', children, prop: undefined};
+    return {type: 'div', children, prop: undefined, hidden: false};
+  }
+
+  function span(prop) {
+    const inst = {
+      type: 'span',
+      children: [],
+      prop,
+      hidden: false,
+    };
+    return inst;
   }
 
   it('should render a single child via noop renderer', () => {
@@ -43,7 +45,7 @@ describe('ReactFragment', () => {
     ReactNoop.render(element);
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([span()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<span>foo</span>);
   });
 
   it('should render zero children via noop renderer', () => {
@@ -65,7 +67,11 @@ describe('ReactFragment', () => {
     ReactNoop.render(element);
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([text('hello '), span()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        hello <span>world</span>
+      </React.Fragment>,
+    );
   });
 
   it('should render an iterable via noop renderer', () => {
@@ -78,7 +84,12 @@ describe('ReactFragment', () => {
     ReactNoop.render(element);
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([span(), span()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <span>hi</span>
+        <span>bye</span>
+      </React.Fragment>,
+    );
   });
 
   it('should preserve state of children with 1 level nesting', function() {
@@ -112,13 +123,18 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div(), div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <div>Hello</div>
+        <div>World</div>
+      </React.Fragment>,
+    );
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should preserve state between top-level fragments', function() {
@@ -153,13 +169,13 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should preserve state of children nested at same level', function() {
@@ -203,13 +219,18 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div(), div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <div />
+        <div>Hello</div>
+      </React.Fragment>,
+    );
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should not preserve state in non-top-level fragment nesting', function() {
@@ -246,13 +267,13 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should not preserve state of children if nested 2 levels without siblings', function() {
@@ -287,13 +308,13 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should not preserve state of children if nested 2 levels with siblings', function() {
@@ -329,13 +350,18 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div(), div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <div>Hello</div>
+        <div />
+      </React.Fragment>,
+    );
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should preserve state between array nested in fragment and fragment', function() {
@@ -368,13 +394,13 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should preserve state between top level fragment and array', function() {
@@ -407,13 +433,13 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should not preserve state between array nested in fragment and double nested fragment', function() {
@@ -448,13 +474,13 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should not preserve state between array nested in fragment and double nested array', function() {
@@ -485,13 +511,13 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should preserve state between double nested fragment and double nested array', function() {
@@ -526,13 +552,13 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should not preserve state of children when the keys are different', function() {
@@ -568,13 +594,18 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div(), span()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <div>Hello</div>
+        <span>World</span>
+      </React.Fragment>,
+    );
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should not preserve state between unkeyed and keyed fragment', function() {
@@ -609,13 +640,13 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(<div>Hello</div>);
   });
 
   it('should preserve state with reordering in multiple levels', function() {
@@ -662,13 +693,29 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div(span(), div(div()), span())]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <span>beep</span>
+        <div>
+          <div>Hello</div>
+        </div>
+        <span>bar</span>
+      </div>,
+    );
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([div(span(), div(div()), span())]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <span>foo</span>
+        <div>
+          <div>Hello</div>
+        </div>
+        <span>boop</span>
+      </div>,
+    );
   });
 
   it('should not preserve state when switching to a keyed fragment to an array', function() {
@@ -711,13 +758,23 @@ describe('ReactFragment', () => {
     );
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <div>Hello</div>
+        <span />
+      </div>,
+    );
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
-    expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <div>
+        <div>Hello</div>
+        <span />
+      </div>,
+    );
   });
 
   it('should preserve state when it does not change positions', function() {
@@ -760,7 +817,12 @@ describe('ReactFragment', () => {
     );
 
     expect(ops).toEqual(['Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([span(), div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <span />
+        <div>Hello</div>
+      </React.Fragment>,
+    );
 
     ReactNoop.render(<Foo condition={true} />);
     expect(ReactNoop.flush).toWarnDev(
@@ -768,6 +830,11 @@ describe('ReactFragment', () => {
     );
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
-    expect(ReactNoop.getChildren()).toEqual([span(), div()]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <span />
+        <div>Hello</div>
+      </React.Fragment>,
+    );
   });
 });

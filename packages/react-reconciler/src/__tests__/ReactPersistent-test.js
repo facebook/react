@@ -37,12 +37,20 @@ describe('ReactPersistent', () => {
   }
 
   function div(...children) {
-    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-    return {type: 'div', children, prop: undefined};
+    children = children.map(
+      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    );
+    return {type: 'div', children, prop: undefined, hidden: false};
   }
 
   function span(prop) {
-    return {type: 'span', children: [], prop};
+    const inst = {
+      type: 'span',
+      children: [],
+      prop,
+      hidden: false,
+    };
+    return inst;
   }
 
   function getChildren() {
@@ -65,15 +73,28 @@ describe('ReactPersistent', () => {
 
     render(<Foo text="Hello" />);
     ReactNoopPersistent.flush();
-    const originalChildren = getChildren();
-    expect(originalChildren).toEqual([div(span())]);
+    const originalChildren = ReactNoopPersistent.getChildrenAsJSX();
+    expect(originalChildren).toEqual(
+      <div>
+        <span>Hello</span>
+      </div>,
+    );
 
     render(<Foo text="World" />);
     ReactNoopPersistent.flush();
-    const newChildren = getChildren();
-    expect(newChildren).toEqual([div(span(), span())]);
+    const newChildren = ReactNoopPersistent.getChildrenAsJSX();
+    expect(newChildren).toEqual(
+      <div>
+        <span>World</span>
+        <span>World</span>
+      </div>,
+    );
 
-    expect(originalChildren).toEqual([div(span())]);
+    expect(originalChildren).toEqual(
+      <div>
+        <span>Hello</span>
+      </div>,
+    );
   });
 
   it('can reuse child nodes between updates', () => {
