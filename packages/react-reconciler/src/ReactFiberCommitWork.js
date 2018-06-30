@@ -44,6 +44,7 @@ import {
   Placement,
   Snapshot,
   Update,
+  Callback,
 } from 'shared/ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -72,6 +73,10 @@ import {
   removeChildFromContainer,
   replaceContainerChildren,
   createContainerChildSet,
+  hideInstance,
+  hideTextInstance,
+  unhideInstance,
+  unhideTextInstance,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -349,26 +354,45 @@ function commitLifeCycles(
       return;
     }
     case SuspenseComponent: {
-      let newState: SuspenseState | null = finishedWork.memoizedState;
-      if (newState === null) {
+      if (finishedWork.effectTag & Callback) {
         // In non-strict mode, a suspense boundary times out by commiting
         // twice: first, by committing the children in an inconsistent state,
         // then hiding them and showing the fallback children in a subsequent
         // commit.
-        newState = finishedWork.memoizedState = {
+        const newState: SuspenseState = {
           alreadyCaptured: true,
           didTimeout: false,
           timedOutAt: NoWork,
         };
+        finishedWork.memoizedState = newState;
         scheduleWork(finishedWork, Sync);
+        return;
+      }
+      let oldState: SuspenseState | null =
+        current !== null ? current.memoizedState : null;
+      let newState: SuspenseState | null = finishedWork.memoizedState;
+      let oldDidTimeout = oldState !== null ? oldState.didTimeout : false;
+
+      let newDidTimeout;
+      let primaryChildParent = finishedWork;
+      if (newState === null) {
+        newDidTimeout = false;
       } else {
-        newState.alreadyCaptured = false;
-        if (newState.timedOutAt === NoWork) {
-          // If the children had not already timed out, record the time.
-          // This is used to compute the elapsed time during subsequent
-          // attempts to render the children.
-          newState.timedOutAt = requestCurrentTime();
+        newDidTimeout = newState.didTimeout;
+        if (newDidTimeout) {
+          primaryChildParent = finishedWork.child;
+          newState.alreadyCaptured = false;
+          if (newState.timedOutAt === NoWork) {
+            // If the children had not already timed out, record the time.
+            // This is used to compute the elapsed time during subsequent
+            // attempts to render the children.
+            newState.timedOutAt = requestCurrentTime();
+          }
         }
+      }
+
+      if (newDidTimeout !== oldDidTimeout && primaryChildParent !== null) {
+        hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
       }
       return;
     }
@@ -378,6 +402,46 @@ function commitLifeCycles(
         'This unit of work tag should not have side-effects. This error is ' +
           'likely caused by a bug in React. Please file an issue.',
       );
+    }
+  }
+}
+
+function hideOrUnhideAllChildren(finishedWork, isHidden) {
+  if (supportsMutation) {
+    // We only have the top Fiber that was inserted but we need recurse down its
+    // children to find all the terminal nodes.
+    let node: Fiber = finishedWork;
+    while (true) {
+      if (node.tag === HostComponent) {
+        const instance = node.stateNode;
+        if (isHidden) {
+          hideInstance(instance);
+        } else {
+          unhideInstance(node.stateNode, node.memoizedProps);
+        }
+      } else if (node.tag === HostText) {
+        const instance = node.stateNode;
+        if (isHidden) {
+          hideTextInstance(instance);
+        } else {
+          unhideTextInstance(instance);
+        }
+      } else if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === finishedWork) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === finishedWork) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
     }
   }
 }

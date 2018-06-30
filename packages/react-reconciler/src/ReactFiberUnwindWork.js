@@ -32,7 +32,7 @@ import {
   Incomplete,
   NoEffect,
   ShouldCapture,
-  Update as UpdateEffect,
+  Callback as CallbackEffect,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
@@ -239,7 +239,7 @@ function throwException(
           // inside a strict mode tree. If the Suspense is outside of it, we
           // should *not* suspend the commit.
           if ((workInProgress.mode & StrictMode) === NoEffect) {
-            workInProgress.effectTag |= UpdateEffect;
+            workInProgress.effectTag |= CallbackEffect;
 
             // Unmount the source fiber's children
             const nextChildren = null;

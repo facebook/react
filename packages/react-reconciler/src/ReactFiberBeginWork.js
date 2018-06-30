@@ -976,9 +976,6 @@ function updateSuspenseComponent(
         nextState.alreadyCaptured = true;
         nextState.didTimeout = true;
       }
-      // If this render commits, schedule an update effect to record the timed-
-      // out time.
-      workInProgress.effectTag |= Update;
     }
   }
 

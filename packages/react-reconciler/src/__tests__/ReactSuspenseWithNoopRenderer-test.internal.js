@@ -978,10 +978,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Promise resolved [Step: 1]',
         'Step: 1',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Step: 1'),
-        span('Sibling'),
-      ]);
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span prop="Step: 1" />
+          <span prop="Sibling" />
+        </React.Fragment>,
+      );
 
       // Update. This starts out asynchronously.
       text.current.setState({step: 2}, () =>
@@ -997,22 +999,26 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Loading (2)',
         'Loading (3)',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Sibling'),
-        span('Loading (1)'),
-        span('Loading (2)'),
-        span('Loading (3)'),
-      ]);
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span hidden={true} prop="Sibling" />
+          <span prop="Loading (1)" />
+          <span prop="Loading (2)" />
+          <span prop="Loading (3)" />
+        </React.Fragment>,
+      );
 
       await advanceTimers(100);
       expect(ReactNoop.flush()).toEqual([
         'Promise resolved [Step: 2]',
         'Step: 2',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Step: 2'),
-        span('Sibling'),
-      ]);
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span prop="Step: 2" />
+          <span prop="Sibling" />
+        </React.Fragment>,
+      );
     });
 
     it(
@@ -1213,15 +1219,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           'Promise resolved [Async: 1]',
           'Async: 1',
         ]);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before'),
-          span('Async: 1'),
-          span('After'),
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <React.Fragment>
+            <span prop="Before" />
+            <span prop="Async: 1" />
+            <span prop="After" />
 
-          span('Before'),
-          span('Sync: 1'),
-          span('After'),
-        ]);
+            <span prop="Before" />
+            <span prop="Sync: 1" />
+            <span prop="After" />
+          </React.Fragment>,
+        );
 
         // Update. This starts out asynchronously.
         text1.current.setState({text: 'Async: 2'}, () =>
@@ -1250,15 +1258,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           // Switch to the placeholder in a subsequent commit
           'Loading...',
         ]);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before'),
-          span('After'),
-          span('Loading...'),
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <React.Fragment>
+            <span hidden={true} prop="Before" />
+            <span hidden={true} prop="After" />
+            <span prop="Loading..." />
 
-          span('Before'),
-          span('Sync: 2'),
-          span('After'),
-        ]);
+            <span prop="Before" />
+            <span prop="Sync: 2" />
+            <span prop="After" />
+          </React.Fragment>,
+        );
 
         // When the placeholder is pinged, the boundary must be re-rendered
         // synchronously.
@@ -1268,15 +1278,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           'Async: 2',
         ]);
 
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before'),
-          span('Async: 2'),
-          span('After'),
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <React.Fragment>
+            <span prop="Before" />
+            <span prop="Async: 2" />
+            <span prop="After" />
 
-          span('Before'),
-          span('Sync: 2'),
-          span('After'),
-        ]);
+            <span prop="Before" />
+            <span prop="Sync: 2" />
+            <span prop="After" />
+          </React.Fragment>,
+        );
       },
     );
 
@@ -1336,21 +1348,25 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // placeholder. This should be a mount, not an update.
         'Mount [Loading...]',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('A'),
-        span('C'),
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span hidden={true} prop="A" />
+          <span hidden={true} prop="C" />
 
-        span('Loading...'),
-      ]);
+          <span prop="Loading..." />
+        </React.Fragment>,
+      );
 
       await advanceTimers(1000);
       expect(ReactNoop.expire(1000)).toEqual(['Promise resolved [B]', 'B']);
 
-      expect(ReactNoop.getChildren()).toEqual([
-        span('A'),
-        span('B'),
-        span('C'),
-      ]);
+      expect(ReactNoop.getChildrenAsJSX()).toEqual(
+        <React.Fragment>
+          <span prop="A" />
+          <span prop="B" />
+          <span prop="C" />
+        </React.Fragment>,
+      );
     });
 
     it('suspends inside constructor', async () => {
@@ -1779,11 +1795,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Loading...',
       'Mount [Loading...]',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('A'),
-      span('C'),
-      span('Loading...'),
-    ]);
+    expect(ReactNoop.getChildrenAsJSX()).toEqual(
+      <React.Fragment>
+        <span hidden={true} prop="A" />
+        <span hidden={true} prop="C" />
+        <span prop="Loading..." />
+      </React.Fragment>,
+    );
   });
 });
 

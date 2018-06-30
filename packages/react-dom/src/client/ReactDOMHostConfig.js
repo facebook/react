@@ -411,6 +411,22 @@ export function removeChildFromContainer(
   }
 }
 
+export function hideInstance(instance: Instance): void {
+  throw new Error('TODO');
+}
+
+export function hideTextInstance(textInstance: TextInstance): void {
+  throw new Error('TODO');
+}
+
+export function unhideInstance(instance: Instance, props: Props): void {
+  throw new Error('TODO');
+}
+
+export function unhideTextInstance(textInstance: TextInstance): void {
+  throw new Error('TODO');
+}
+
 // -------------------
 //     Hydration
 // -------------------
