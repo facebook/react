@@ -56,6 +56,31 @@ export function typeOf(object: any) {
   return undefined;
 }
 
+export function elementType(type: any) {
+  switch (type) {
+    case REACT_ASYNC_MODE_TYPE:
+    case REACT_FRAGMENT_TYPE:
+    case REACT_PROFILER_TYPE:
+    case REACT_STRICT_MODE_TYPE:
+      return type;
+  }
+  const typeofType = typeof type;
+  switch (typeofType) {
+    case 'string':
+    case 'function':
+      return REACT_ELEMENT_TYPE;
+    case 'object':
+      const $$typeof = type && type.$$typeof;
+      switch ($$typeof) {
+        case REACT_CONTEXT_TYPE:
+        case REACT_FORWARD_REF_TYPE:
+        case REACT_PROVIDER_TYPE:
+          return $$typeof;
+      }
+  }
+  return undefined;
+}
+
 export const AsyncMode = REACT_ASYNC_MODE_TYPE;
 export const ContextConsumer = REACT_CONTEXT_TYPE;
 export const ContextProvider = REACT_PROVIDER_TYPE;
