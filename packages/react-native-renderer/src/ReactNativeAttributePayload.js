@@ -11,8 +11,6 @@
 import deepDiffer from 'deepDiffer';
 import flattenStyle from 'flattenStyle';
 
-import ReactNativePropRegistry from './ReactNativePropRegistry';
-
 const emptyObject = {};
 
 /**
@@ -38,7 +36,7 @@ type AttributeConfiguration = {
     | AttributeConfiguration /*| boolean*/,
 };
 
-type NestedNode = Array<NestedNode> | Object | number;
+type NestedNode = Array<NestedNode> | Object;
 
 // Tracks removed keys
 let removedKeys = null;
@@ -52,13 +50,6 @@ function defaultDiffer(prevProp: mixed, nextProp: mixed): boolean {
     // For objects and arrays, the default diffing algorithm is a deep compare
     return deepDiffer(prevProp, nextProp);
   }
-}
-
-function resolveObject(idOrObject: number | Object): Object {
-  if (typeof idOrObject === 'number') {
-    return ReactNativePropRegistry.getByID(idOrObject);
-  }
-  return idOrObject;
 }
 
 function restoreDeletedValuesInNestedArray(
@@ -76,7 +67,7 @@ function restoreDeletedValuesInNestedArray(
       );
     }
   } else if (node && removedKeyCount > 0) {
-    const obj = resolveObject(node);
+    const obj = node;
     for (const propKey in removedKeys) {
       if (!removedKeys[propKey]) {
         continue;
@@ -180,12 +171,7 @@ function diffNestedProperty(
 
   if (!Array.isArray(prevProp) && !Array.isArray(nextProp)) {
     // Both are leaves, we can diff the leaves.
-    return diffProperties(
-      updatePayload,
-      resolveObject(prevProp),
-      resolveObject(nextProp),
-      validAttributes,
-    );
+    return diffProperties(updatePayload, prevProp, nextProp, validAttributes);
   }
 
   if (Array.isArray(prevProp) && Array.isArray(nextProp)) {
@@ -204,14 +190,14 @@ function diffNestedProperty(
       // $FlowFixMe - We know that this is always an object when the input is.
       flattenStyle(prevProp),
       // $FlowFixMe - We know that this isn't an array because of above flow.
-      resolveObject(nextProp),
+      nextProp,
       validAttributes,
     );
   }
 
   return diffProperties(
     updatePayload,
-    resolveObject(prevProp),
+    prevProp,
     // $FlowFixMe - We know that this is always an object when the input is.
     flattenStyle(nextProp),
     validAttributes,
@@ -234,11 +220,7 @@ function addNestedProperty(
 
   if (!Array.isArray(nextProp)) {
     // Add each property of the leaf.
-    return addProperties(
-      updatePayload,
-      resolveObject(nextProp),
-      validAttributes,
-    );
+    return addProperties(updatePayload, nextProp, validAttributes);
   }
 
   for (let i = 0; i < nextProp.length; i++) {
@@ -268,11 +250,7 @@ function clearNestedProperty(
 
   if (!Array.isArray(prevProp)) {
     // Add each property of the leaf.
-    return clearProperties(
-      updatePayload,
-      resolveObject(prevProp),
-      validAttributes,
-    );
+    return clearProperties(updatePayload, prevProp, validAttributes);
   }
 
   for (let i = 0; i < prevProp.length; i++) {

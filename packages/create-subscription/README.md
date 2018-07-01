@@ -145,7 +145,7 @@ const ReplaySubscription = createSubscription({
 
 Below is an example showing how `create-subscription` can be used with native Promises.
 
-**Note** that it an initial render value of `undefined` is unavoidable due to the fact that Promises provide no way to synchronously read their current value.
+**Note** that an initial render value of `undefined` is unavoidable due to the fact that Promises provide no way to synchronously read their current value.
 
 **Note** the lack of a way to "unsubscribe" from a Promise can result in memory leaks as long as something has a reference to the Promise. This should be taken into consideration when determining whether Promises are appropriate to use in this way within your application.
 

@@ -15,13 +15,9 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import emptyFunction from 'fbjs/lib/emptyFunction';
-import emptyObject from 'fbjs/lib/emptyObject';
-import hyphenateStyleName from 'fbjs/lib/hyphenateStyleName';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import memoizeStringOnly from 'fbjs/lib/memoizeStringOnly';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
@@ -31,9 +27,8 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_ASYNC_MODE_TYPE,
-  REACT_CALL_TYPE,
-  REACT_RETURN_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
@@ -52,6 +47,7 @@ import {
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
+import hyphenateStyleName from '../shared/hyphenateStyleName';
 import isCustomComponent from '../shared/isCustomComponent';
 import omittedCloseTags from '../shared/omittedCloseTags';
 import warnValidStyle from '../shared/warnValidStyle';
@@ -68,8 +64,8 @@ const toArray = ((React.Children.toArray: any): toArrayType);
 let currentDebugStack;
 let currentDebugElementStack;
 
-let getStackAddendum = emptyFunction.thatReturns('');
-let describeStackFrame = emptyFunction.thatReturns('');
+let getStackAddendum = () => '';
+let describeStackFrame = element => '';
 
 let validatePropertiesInDevelopment = (type, props) => {};
 let setCurrentDebugStack = (stack: Array<Frame>) => {};
@@ -163,9 +159,15 @@ function validateDangerousTag(tag) {
   }
 }
 
-const processStyleName = memoizeStringOnly(function(styleName) {
-  return hyphenateStyleName(styleName);
-});
+const styleNameCache = {};
+const processStyleName = function(styleName) {
+  if (styleNameCache.hasOwnProperty(styleName)) {
+    return styleNameCache[styleName];
+  }
+  const result = hyphenateStyleName(styleName);
+  styleNameCache[styleName] = result;
+  return result;
+};
 
 function createMarkupForStyles(styles): string | null {
   let serialized = '';
@@ -256,7 +258,10 @@ function flattenTopLevelChildren(children: mixed): FlatReactChildren {
   return [fragmentChildElement];
 }
 
-function flattenOptionChildren(children: mixed): string {
+function flattenOptionChildren(children: mixed): ?string {
+  if (children === undefined || children === null) {
+    return children;
+  }
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
@@ -279,6 +284,11 @@ function flattenOptionChildren(children: mixed): string {
     }
   });
   return content;
+}
+
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
 }
 
 function maskContext(type, context) {
@@ -642,8 +652,10 @@ class ReactDOMServerRenderer {
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
 
-  providerStack: Array<?ReactProvider<any>>;
-  providerIndex: number;
+  contextIndex: number;
+  contextStack: Array<ReactContext<any>>;
+  contextValueStack: Array<any>;
+  contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
     const flatChildren = flattenTopLevelChildren(children);
@@ -668,37 +680,65 @@ class ReactDOMServerRenderer {
     this.makeStaticMarkup = makeStaticMarkup;
 
     // Context (new API)
-    this.providerStack = []; // Stack of provider objects
-    this.providerIndex = -1;
+    this.contextIndex = -1;
+    this.contextStack = [];
+    this.contextValueStack = [];
+    if (__DEV__) {
+      this.contextProviderStack = [];
+    }
   }
 
+  /**
+   * Note: We use just two stacks regardless of how many context providers you have.
+   * Providers are always popped in the reverse order to how they were pushed
+   * so we always know on the way down which provider you'll encounter next on the way up.
+   * On the way down, we push the current provider, and its context value *before*
+   * we mutated it, onto the stacks. Therefore, on the way up, we always know which
+   * provider needs to be "restored" to which value.
+   * https://github.com/facebook/react/pull/12985#issuecomment-396301248
+   */
+
   pushProvider<T>(provider: ReactProvider<T>): void {
-    this.providerIndex += 1;
-    this.providerStack[this.providerIndex] = provider;
+    const index = ++this.contextIndex;
     const context: ReactContext<any> = provider.type._context;
+    const previousValue = context._currentValue;
+
+    // Remember which value to restore this context to on our way up.
+    this.contextStack[index] = context;
+    this.contextValueStack[index] = previousValue;
+    if (__DEV__) {
+      // Only used for push/pop mismatch warnings.
+      (this.contextProviderStack: any)[index] = provider;
+    }
+
+    // Mutate the current value.
     context._currentValue = provider.props.value;
   }
 
   popProvider<T>(provider: ReactProvider<T>): void {
+    const index = this.contextIndex;
     if (__DEV__) {
       warning(
-        this.providerIndex > -1 &&
-          provider === this.providerStack[this.providerIndex],
+        index > -1 && provider === (this.contextProviderStack: any)[index],
         'Unexpected pop.',
       );
     }
-    this.providerStack[this.providerIndex] = null;
-    this.providerIndex -= 1;
-    const context: ReactContext<any> = provider.type._context;
-    if (this.providerIndex < 0) {
-      context._currentValue = context._defaultValue;
-    } else {
-      // We assume this type is correct because of the index check above.
-      const previousProvider: ReactProvider<any> = (this.providerStack[
-        this.providerIndex
-      ]: any);
-      context._currentValue = previousProvider.props.value;
+
+    const context: ReactContext<any> = this.contextStack[index];
+    const previousValue = this.contextValueStack[index];
+
+    // "Hide" these null assignments from Flow by using `any`
+    // because conceptually they are deletions--as long as we
+    // promise to never access values beyond `this.contextIndex`.
+    this.contextStack[index] = (null: any);
+    this.contextValueStack[index] = (null: any);
+    if (__DEV__) {
+      (this.contextProviderStack: any)[index] = (null: any);
     }
+    this.contextIndex--;
+
+    // Restore to the previous value we stored as we were walking down.
+    context._currentValue = previousValue;
   }
 
   read(bytes: number): string | null {
@@ -811,6 +851,7 @@ class ReactDOMServerRenderer {
       switch (elementType) {
         case REACT_STRICT_MODE_TYPE:
         case REACT_ASYNC_MODE_TYPE:
+        case REACT_PROFILER_TYPE:
         case REACT_FRAGMENT_TYPE: {
           const nextChildren = toArray(
             ((nextChild: any): ReactElement).props.children,
@@ -829,13 +870,6 @@ class ReactDOMServerRenderer {
           this.stack.push(frame);
           return '';
         }
-        case REACT_CALL_TYPE:
-        case REACT_RETURN_TYPE:
-          invariant(
-            false,
-            'The experimental Call and Return types are not currently ' +
-              'supported by the server renderer.',
-          );
         // eslint-disable-next-line-no-fallthrough
         default:
           break;
@@ -955,8 +989,9 @@ class ReactDOMServerRenderer {
         // allow <SVG> or <mATH>.
         warning(
           tag === element.type,
-          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
-            'in React.',
+          '<%s /> is using incorrect casing. ' +
+            'Use PascalCase for React components, ' +
+            'or lowercase for HTML elements.',
           element.type,
         );
       }

@@ -10,7 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -30,6 +30,9 @@ function catchErrors(fn) {
     }
   };
 }
+
+export const isDevToolsPresent =
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined';
 
 export function injectInternals(internals: Object): boolean {
   if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {

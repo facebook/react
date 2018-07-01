@@ -7,7 +7,7 @@
 
 import {REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 export default function forwardRef<Props, ElementType: React$ElementType>(
   render: (props: Props, ref: React$ElementRef<ElementType>) => React$Node,
@@ -18,6 +18,14 @@ export default function forwardRef<Props, ElementType: React$ElementType>(
       'forwardRef requires a render function but was given %s.',
       render === null ? 'null' : typeof render,
     );
+
+    if (render != null) {
+      warning(
+        render.defaultProps == null && render.propTypes == null,
+        'forwardRef render functions do not support propTypes or defaultProps. ' +
+          'Did you accidentally pass a React component?',
+      );
+    }
   }
 
   return {

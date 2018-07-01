@@ -64,7 +64,7 @@ module.exports = function(babel) {
             //   that references a verbose error message.
             //   The mapping is stored in `scripts/error-codes/codes.json`.
             // - `PROD_INVARIANT` is the `reactProdInvariant` function that always throws with an error URL like
-            //   http://facebook.github.io/react/docs/error-decoder.html?invariant=XYZ&args[]=foo&args[]=bar
+            //   http://reactjs.org/docs/error-decoder.html?invariant=XYZ&args[]=foo&args[]=bar
             //
             // Specifically this does 3 things:
             // 1. Checks the condition first, preventing an extra function call.

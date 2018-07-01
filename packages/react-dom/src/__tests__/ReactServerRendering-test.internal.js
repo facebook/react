@@ -11,7 +11,6 @@
 'use strict';
 
 let React;
-let ReactCallReturn;
 let ReactDOMServer;
 let PropTypes;
 
@@ -23,7 +22,6 @@ describe('ReactDOMServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactCallReturn = require('react-call-return');
     PropTypes = require('prop-types');
     ReactDOMServer = require('react-dom/server');
   });
@@ -602,11 +600,13 @@ describe('ReactDOMServer', () => {
         </div>,
       ),
     ).toWarnDev([
-      'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
-        'HTML tags in React.',
+      'Warning: <inPUT /> is using incorrect casing. ' +
+        'Use PascalCase for React components, ' +
+        'or lowercase for HTML elements.',
       // linearGradient doesn't warn
-      'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
-        'HTML tags in React.',
+      'Warning: <iFrame /> is using incorrect casing. ' +
+        'Use PascalCase for React components, ' +
+        'or lowercase for HTML elements.',
     ]);
   });
 
@@ -618,25 +618,6 @@ describe('ReactDOMServer', () => {
         'managed by React. It is now your responsibility to guarantee that ' +
         'none of those nodes are unexpectedly modified or duplicated. This ' +
         'is probably not intentional.\n    in div (at **)',
-    );
-  });
-
-  it('should throw rendering call/return on the server', () => {
-    expect(() => {
-      ReactDOMServer.renderToString(
-        <div>{ReactCallReturn.unstable_createReturn(42)}</div>,
-      );
-    }).toThrow(
-      'The experimental Call and Return types are not currently supported by the server renderer.',
-    );
-    expect(() => {
-      ReactDOMServer.renderToString(
-        <div>
-          {ReactCallReturn.unstable_createCall(null, function() {}, {})}
-        </div>,
-      );
-    }).toThrow(
-      'The experimental Call and Return types are not currently supported by the server renderer.',
     );
   });
 

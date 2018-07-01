@@ -7,7 +7,7 @@
  * @flow
  */
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -156,6 +156,9 @@ export function shouldRemoveAttribute(
     )
   ) {
     return true;
+  }
+  if (isCustomComponentTag) {
+    return false;
   }
   if (propertyInfo !== null) {
     switch (propertyInfo.type) {

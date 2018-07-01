@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persistent';
@@ -16,15 +16,11 @@ export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
 export const enableGetDerivedStateFromCatch = false;
+export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
+export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
-
-// react-reconciler/persistent entry point
-// uses a persistent reconciler.
-export const enableMutatingReconciler = false;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = true;
-export const alwaysUseRequestIdleCallbackPolyfill = false;
+export const enableProfilerTimer = __PROFILE__;
 
 // Only used in www builds.
 export function addUserTimingListener() {

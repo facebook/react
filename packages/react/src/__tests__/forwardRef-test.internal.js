@@ -18,6 +18,7 @@ describe('forwardRef', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -92,31 +93,6 @@ describe('forwardRef', () => {
     );
     expect(ReactNoop.flush()).toEqual([123]);
     expect(ref.current instanceof Child).toBe(true);
-  });
-
-  it('should update refs when switching between children', () => {
-    function FunctionalComponent({forwardedRef, setRefOnDiv}) {
-      return (
-        <section>
-          <div ref={setRefOnDiv ? forwardedRef : null}>First</div>
-          <span ref={setRefOnDiv ? null : forwardedRef}>Second</span>
-        </section>
-      );
-    }
-
-    const RefForwardingComponent = React.forwardRef((props, ref) => (
-      <FunctionalComponent {...props} forwardedRef={ref} />
-    ));
-
-    const ref = React.createRef();
-
-    ReactNoop.render(<RefForwardingComponent ref={ref} setRefOnDiv={true} />);
-    ReactNoop.flush();
-    expect(ref.current.type).toBe('div');
-
-    ReactNoop.render(<RefForwardingComponent ref={ref} setRefOnDiv={false} />);
-    ReactNoop.flush();
-    expect(ref.current.type).toBe('span');
   });
 
   it('should maintain child instance and ref through updates', () => {
@@ -200,53 +176,49 @@ describe('forwardRef', () => {
       'ErrorBoundary.render: try',
       'Wrapper',
       'BadRender throw',
+
+      // React retries one more time
+      'ErrorBoundary.render: try',
+      'Wrapper',
+      'BadRender throw',
+
+      // Errored again on retry. Now handle it.
       'ErrorBoundary.componentDidCatch',
       'ErrorBoundary.render: catch',
     ]);
     expect(ref.current).toBe(null);
   });
 
-  it('should support rendering null', () => {
-    const RefForwardingComponent = React.forwardRef((props, ref) => null);
+  it('should not re-run the render callback on a deep setState', () => {
+    let inst;
 
-    const ref = React.createRef();
+    class Inner extends React.Component {
+      render() {
+        ReactNoop.yield('Inner');
+        inst = this;
+        return <div ref={this.props.forwardedRef} />;
+      }
+    }
 
-    ReactNoop.render(<RefForwardingComponent ref={ref} />);
-    ReactNoop.flush();
-    expect(ref.current).toBe(null);
-  });
+    function Middle(props) {
+      ReactNoop.yield('Middle');
+      return <Inner {...props} />;
+    }
 
-  it('should support rendering null for multiple children', () => {
-    const RefForwardingComponent = React.forwardRef((props, ref) => null);
+    const Forward = React.forwardRef((props, ref) => {
+      ReactNoop.yield('Forward');
+      return <Middle {...props} forwardedRef={ref} />;
+    });
 
-    const ref = React.createRef();
+    function App() {
+      ReactNoop.yield('App');
+      return <Forward />;
+    }
 
-    ReactNoop.render(
-      <div>
-        <div />
-        <RefForwardingComponent ref={ref} />
-        <div />
-      </div>,
-    );
-    ReactNoop.flush();
-    expect(ref.current).toBe(null);
-  });
+    ReactNoop.render(<App />);
+    expect(ReactNoop.flush()).toEqual(['App', 'Forward', 'Middle', 'Inner']);
 
-  it('should warn if not provided a callback during creation', () => {
-    expect(() => React.forwardRef(undefined)).toWarnDev(
-      'forwardRef requires a render function but was given undefined.',
-    );
-    expect(() => React.forwardRef(null)).toWarnDev(
-      'forwardRef requires a render function but was given null.',
-    );
-    expect(() => React.forwardRef('foo')).toWarnDev(
-      'forwardRef requires a render function but was given string.',
-    );
-  });
-
-  it('should warn if no render function is provided', () => {
-    expect(React.forwardRef).toWarnDev(
-      'forwardRef requires a render function but was given undefined.',
-    );
+    inst.setState({});
+    expect(ReactNoop.flush()).toEqual(['Inner']);
   });
 });

@@ -11,13 +11,11 @@
 
 let React;
 let ReactDOM;
-let ReactTestUtils;
 
 describe('ReactCompositeComponentNestedState-state', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should provide up to date values for props', () => {
@@ -102,7 +100,7 @@ describe('ReactCompositeComponentNestedState-state', () => {
     void ReactDOM.render(<ParentComponent logger={logger} />, container);
 
     // click "light green"
-    ReactTestUtils.Simulate.click(container.childNodes[0].childNodes[3]);
+    container.childNodes[0].childNodes[3].click();
 
     expect(logger.mock.calls).toEqual([
       ['parent-render', 'blue'],

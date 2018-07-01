@@ -6,7 +6,7 @@
  */
 
 import {HostComponent, HostText} from 'shared/ReactTypeOfWork';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 const randomKey = Math.random()
   .toString(36)

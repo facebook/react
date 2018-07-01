@@ -28,9 +28,8 @@ import {
   Fragment,
 } from 'shared/ReactTypeOfWork';
 import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-import emptyObject from 'fbjs/lib/emptyObject';
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 
 import {
   createWorkInProgress,
@@ -39,6 +38,7 @@ import {
   createFiberFromText,
   createFiberFromPortal,
 } from './ReactFiber';
+import {emptyRefsObject} from './ReactFiberClassComponent';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 
@@ -151,12 +151,17 @@ function coerceRef(
       if (
         current !== null &&
         current.ref !== null &&
+        typeof current.ref === 'function' &&
         current.ref._stringRef === stringRef
       ) {
         return current.ref;
       }
       const ref = function(value) {
-        const refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+        let refs = inst.refs;
+        if (refs === emptyRefsObject) {
+          // This is a lazy pooled frozen object, so we need to initialize.
+          refs = inst.refs = {};
+        }
         if (value === null) {
           delete refs[stringRef];
         } else {
@@ -901,18 +906,15 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     if (__DEV__) {
       // Warn about using Maps as children
-      if (typeof newChildrenIterable.entries === 'function') {
-        const possibleMap = (newChildrenIterable: any);
-        if (possibleMap.entries === iteratorFn) {
-          warning(
-            didWarnAboutMaps,
-            'Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.%s',
-            getCurrentFiberStackAddendum(),
-          );
-          didWarnAboutMaps = true;
-        }
+      if ((newChildrenIterable: any).entries === iteratorFn) {
+        warning(
+          didWarnAboutMaps,
+          'Using Maps as children is unsupported and will likely yield ' +
+            'unexpected results. Convert it to a sequence/iterable of keyed ' +
+            'ReactElements instead.%s',
+          getCurrentFiberStackAddendum(),
+        );
+        didWarnAboutMaps = true;
       }
 
       // First, validate keys.
@@ -1210,12 +1212,12 @@ function ChildReconciler(shouldTrackSideEffects) {
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
-    if (
+    const isUnkeyedTopLevelFragment =
       typeof newChild === 'object' &&
       newChild !== null &&
       newChild.type === REACT_FRAGMENT_TYPE &&
-      newChild.key === null
-    ) {
+      newChild.key === null;
+    if (isUnkeyedTopLevelFragment) {
       newChild = newChild.props.children;
     }
 
@@ -1283,7 +1285,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         warnOnFunctionType();
       }
     }
-    if (typeof newChild === 'undefined') {
+    if (typeof newChild === 'undefined' && !isUnkeyedTopLevelFragment) {
       // If the new child is undefined, and the return fiber is a composite
       // component, throw an error. If Fiber return types are disabled,
       // we already threw above.

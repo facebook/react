@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOM;
-let ReactTestUtils;
 
 describe('SyntheticEvent', () => {
   let container;
@@ -19,7 +18,6 @@ describe('SyntheticEvent', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -147,9 +145,7 @@ describe('SyntheticEvent', () => {
 
     const getExpectedWarning = property =>
       'Warning: This synthetic event is reused for performance reasons. If ' +
-      `you're seeing this, you're accessing the property \`${
-        property
-      }\` on a ` +
+      `you're seeing this, you're accessing the property \`${property}\` on a ` +
       'released/nullified synthetic event. This is set to null. If you must ' +
       'keep the original synthetic event around, use event.persist(). ' +
       'See https://fb.me/react-event-pooling for more information.';
@@ -247,17 +243,13 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
-  // TODO: reenable this test. We are currently silencing these warnings when
-  // using TestUtils.Simulate to avoid spurious warnings that result from the
-  // way we simulate events.
-  xit('should properly log warnings when events simulated with rendered components', () => {
+  it('should properly log warnings when events simulated with rendered components', () => {
     let event;
-    const element = document.createElement('div');
     function assignEvent(e) {
       event = e;
     }
-    const node = ReactDOM.render(<div onClick={assignEvent} />, element);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(node));
+    const node = ReactDOM.render(<div onClick={assignEvent} />, container);
+    node.click();
 
     // access a property to cause the warning
     expect(() => {

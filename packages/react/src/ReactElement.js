@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -290,6 +291,12 @@ export function cloneAndReplaceKey(oldElement, newKey) {
  * See https://reactjs.org/docs/react-api.html#cloneelement
  */
 export function cloneElement(element, config, children) {
+  invariant(
+    !(element === null || element === undefined),
+    'React.cloneElement(...): The argument must be a React element, but you passed %s.',
+    element,
+  );
+
   let propName;
 
   // Original props are copied

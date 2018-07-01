@@ -9,7 +9,6 @@
 
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
-// TODO: Use an opaque type once ESLint et al support the syntax
 export type ExpirationTime = number;
 
 export const NoWork = 0;
@@ -38,8 +37,11 @@ export function computeExpirationBucket(
   expirationInMs: number,
   bucketSizeMs: number,
 ): ExpirationTime {
-  return ceiling(
-    currentTime + expirationInMs / UNIT_SIZE,
-    bucketSizeMs / UNIT_SIZE,
+  return (
+    MAGIC_NUMBER_OFFSET +
+    ceiling(
+      currentTime - MAGIC_NUMBER_OFFSET + expirationInMs / UNIT_SIZE,
+      bucketSizeMs / UNIT_SIZE,
+    )
   );
 }

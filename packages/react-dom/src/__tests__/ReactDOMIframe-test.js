@@ -11,24 +11,22 @@
 
 describe('ReactDOMIframe', () => {
   let React;
-  let ReactDOM;
   let ReactTestUtils;
 
   beforeEach(() => {
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should trigger load events', () => {
-    const onLoadSpy = jasmine.createSpy();
+    const onLoadSpy = jest.fn();
     let iframe = React.createElement('iframe', {onLoad: onLoadSpy});
     iframe = ReactTestUtils.renderIntoDocument(iframe);
 
     const loadEvent = document.createEvent('Event');
     loadEvent.initEvent('load', false, false);
 
-    ReactDOM.findDOMNode(iframe).dispatchEvent(loadEvent);
+    iframe.dispatchEvent(loadEvent);
 
     expect(onLoadSpy).toHaveBeenCalled();
   });

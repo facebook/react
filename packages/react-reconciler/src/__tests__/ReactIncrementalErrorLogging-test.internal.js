@@ -145,7 +145,7 @@ describe('ReactIncrementalErrorLogging', () => {
       expect(logCapturedErrorCalls.length).toBe(1);
 
       // The error thrown in logCapturedError should also be logged
-      expect(console.error.calls.count()).toBe(1);
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0].message).toContain(
         'logCapturedError error',
       );
