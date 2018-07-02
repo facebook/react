@@ -71,7 +71,7 @@ function createRootErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<mixed>,
   expirationTime: ExpirationTime,
-): Update<null> {
+): Update<mixed> {
   const update = createUpdate(expirationTime);
   // Unmount the root by rendering null.
   update.tag = CaptureUpdate;
