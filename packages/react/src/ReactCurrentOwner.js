@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import typeof {Dispatcher} from 'react-reconciler/src/ReactFiberDispatcher';
 
 /**
  * Keeps track of the current owner.
@@ -21,6 +22,7 @@ const ReactCurrentOwner = {
    * @type {ReactComponent}
    */
   current: (null: null | Fiber),
+  currentDispatcher: (null: null | Dispatcher),
 };
 
 export default ReactCurrentOwner;
