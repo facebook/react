@@ -50,6 +50,7 @@ import {
   computeExpirationForFiber,
   scheduleWork,
 } from './ReactFiberScheduler';
+import {checkForPendingContext} from './ReactFiberNewContext';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -231,7 +232,7 @@ function checkShouldComponentUpdate(
   newProps,
   oldState,
   newState,
-  newContext,
+  nextLegacyContext,
 ) {
   const instance = workInProgress.stateNode;
   const ctor = workInProgress.type;
@@ -240,7 +241,7 @@ function checkShouldComponentUpdate(
     const shouldUpdate = instance.shouldComponentUpdate(
       newProps,
       newState,
-      newContext,
+      nextLegacyContext,
     );
     stopPhaseTimer();
 
@@ -616,15 +617,15 @@ function callComponentWillReceiveProps(
   workInProgress,
   instance,
   newProps,
-  newContext,
+  nextLegacyContext,
 ) {
   const oldState = instance.state;
   startPhaseTimer(workInProgress, 'componentWillReceiveProps');
   if (typeof instance.componentWillReceiveProps === 'function') {
-    instance.componentWillReceiveProps(newProps, newContext);
+    instance.componentWillReceiveProps(newProps, nextLegacyContext);
   }
   if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
-    instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
+    instance.UNSAFE_componentWillReceiveProps(newProps, nextLegacyContext);
   }
   stopPhaseTimer();
 
@@ -746,8 +747,16 @@ function resumeMountClassInstance(
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const newUnmaskedContext = getUnmaskedContext(workInProgress);
-  const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
+  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
+  const nextLegacyContext = getMaskedContext(
+    workInProgress,
+    nextLegacyUnmaskedContext,
+  );
+
+  const hasPendingNewContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   const hasNewLifecycles =
@@ -765,12 +774,12 @@ function resumeMountClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== newContext) {
+    if (oldProps !== newProps || oldContext !== nextLegacyContext) {
       callComponentWillReceiveProps(
         workInProgress,
         instance,
         newProps,
-        newContext,
+        nextLegacyContext,
       );
     }
   }
@@ -794,6 +803,7 @@ function resumeMountClassInstance(
     oldProps === newProps &&
     oldState === newState &&
     !hasContextChanged() &&
+    !hasPendingNewContext &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -815,13 +825,14 @@ function resumeMountClassInstance(
 
   const shouldUpdate =
     checkHasForceUpdateAfterProcessing() ||
+    hasPendingNewContext ||
     checkShouldComponentUpdate(
       workInProgress,
       oldProps,
       newProps,
       oldState,
       newState,
-      newContext,
+      nextLegacyContext,
     );
 
   if (shouldUpdate) {
@@ -861,7 +872,7 @@ function resumeMountClassInstance(
   // if shouldComponentUpdate returns false.
   instance.props = newProps;
   instance.state = newState;
-  instance.context = newContext;
+  instance.context = nextLegacyContext;
 
   return shouldUpdate;
 }
@@ -880,8 +891,16 @@ function updateClassInstance(
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const newUnmaskedContext = getUnmaskedContext(workInProgress);
-  const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
+  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
+  const nextLegacyContext = getMaskedContext(
+    workInProgress,
+    nextLegacyUnmaskedContext,
+  );
+
+  const hasPendingNewContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   const hasNewLifecycles =
@@ -899,12 +918,12 @@ function updateClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== newContext) {
+    if (oldProps !== newProps || oldContext !== nextLegacyContext) {
       callComponentWillReceiveProps(
         workInProgress,
         instance,
         newProps,
-        newContext,
+        nextLegacyContext,
       );
     }
   }
@@ -929,6 +948,7 @@ function updateClassInstance(
     oldProps === newProps &&
     oldState === newState &&
     !hasContextChanged() &&
+    !hasPendingNewContext &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -963,13 +983,14 @@ function updateClassInstance(
 
   const shouldUpdate =
     checkHasForceUpdateAfterProcessing() ||
+    hasPendingNewContext ||
     checkShouldComponentUpdate(
       workInProgress,
       oldProps,
       newProps,
       oldState,
       newState,
-      newContext,
+      nextLegacyContext,
     );
 
   if (shouldUpdate) {
@@ -982,10 +1003,14 @@ function updateClassInstance(
     ) {
       startPhaseTimer(workInProgress, 'componentWillUpdate');
       if (typeof instance.componentWillUpdate === 'function') {
-        instance.componentWillUpdate(newProps, newState, newContext);
+        instance.componentWillUpdate(newProps, newState, nextLegacyContext);
       }
       if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
-        instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
+        instance.UNSAFE_componentWillUpdate(
+          newProps,
+          newState,
+          nextLegacyContext,
+        );
       }
       stopPhaseTimer();
     }
@@ -1025,7 +1050,7 @@ function updateClassInstance(
   // if shouldComponentUpdate returns false.
   instance.props = newProps;
   instance.state = newState;
-  instance.context = newContext;
+  instance.context = nextLegacyContext;
 
   return shouldUpdate;
 }

@@ -239,19 +239,25 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   }
 }
 
-function updateFunctionalComponent(current, workInProgress) {
+function updateFunctionalComponent(
+  current,
+  workInProgress,
+  renderExpirationTime,
+) {
   const fn = workInProgress.type;
   const nextProps = workInProgress.pendingProps;
 
-  if (hasLegacyContextChanged()) {
-    // Normally we can bail out on props equality but if context has changed
-    // we don't do the bailout and we have to reuse existing props instead.
-  } else {
-    if (workInProgress.memoizedProps === nextProps) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+  if (!checkForPendingContext(workInProgress, renderExpirationTime)) {
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else {
+      if (workInProgress.memoizedProps === nextProps) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+      // TODO: consider bringing fn.shouldComponentUpdate() back.
+      // It used to be here.
     }
-    // TODO: consider bringing fn.shouldComponentUpdate() back.
-    // It used to be here.
   }
 
   const unmaskedContext = getUnmaskedContext(workInProgress);
@@ -259,6 +265,7 @@ function updateFunctionalComponent(current, workInProgress) {
 
   let nextChildren;
 
+  prepareToReadContext();
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     ReactDebugCurrentFiber.setCurrentPhase('render');
@@ -267,6 +274,8 @@ function updateFunctionalComponent(current, workInProgress) {
   } else {
     nextChildren = fn(nextProps, context);
   }
+  workInProgress.firstContextReader = finishReadingContext();
+
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
   reconcileChildren(current, workInProgress, nextChildren);
@@ -283,6 +292,8 @@ function updateClassComponent(
   // During mounting we don't know the child context yet as the instance doesn't exist.
   // We will invalidate the child context in finishClassComponent() right after rendering.
   const hasContext = pushLegacyContextProvider(workInProgress);
+  prepareToReadContext();
+
   let shouldUpdate;
   if (current === null) {
     if (workInProgress.stateNode === null) {
@@ -376,6 +387,8 @@ function finishClassComponent(
       nextChildren = instance.render();
     }
   }
+
+  workInProgress.firstContextReader = finishReadingContext();
 
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
@@ -582,6 +595,8 @@ function mountIndeterminateComponent(
   const unmaskedContext = getUnmaskedContext(workInProgress);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
+  prepareToReadContext();
+
   let value;
 
   if (__DEV__) {
@@ -611,6 +626,8 @@ function mountIndeterminateComponent(
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
+
+  workInProgress.firstContextReader = finishReadingContext();
 
   if (
     typeof value === 'object' &&
@@ -1035,7 +1052,11 @@ function beginWork(
         renderExpirationTime,
       );
     case FunctionalComponent:
-      return updateFunctionalComponent(current, workInProgress);
+      return updateFunctionalComponent(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
     case ClassComponent:
       return updateClassComponent(
         current,

@@ -135,6 +135,7 @@ import {
   commitAttachRef,
   commitDetachRef,
 } from './ReactFiberCommitWork';
+import {Dispatcher} from './ReactFiberDispatcher';
 
 export type Deadline = {
   timeRemaining: () => number,
@@ -985,6 +986,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       'by a bug in React. Please file an issue.',
   );
   isWorking = true;
+  ReactCurrentOwner.currentDispatcher = Dispatcher;
 
   const expirationTime = root.nextExpirationTimeToWorkOn;
 
@@ -1071,6 +1073,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
 
   // We're done performing work. Time to clean up.
   isWorking = false;
+  ReactCurrentOwner.currentDispatcher = null;
 
   // Yield back to main thread.
   if (didFatal) {
