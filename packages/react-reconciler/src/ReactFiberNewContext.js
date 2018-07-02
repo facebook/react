@@ -7,20 +7,25 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
 import type {ReactContext} from 'shared/ReactTypes';
+import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-export type NewContext = {
-  pushProvider(providerFiber: Fiber): void,
-  popProvider(providerFiber: Fiber): void,
-  getContextCurrentValue(context: ReactContext<any>): any,
-  getContextChangedBits(context: ReactContext<any>): number,
+export type ContextDependency<T> = {
+  context: ReactContext<T>,
+  observedBits: number,
+  next: ContextDependency<mixed> | null,
 };
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
+import maxSigned31BitInt from './maxSigned31BitInt';
+import {NoWork} from './ReactFiberExpirationTime';
+import {ContextProvider} from 'shared/ReactTypeOfWork';
+
+import invariant from 'shared/invariant';
 
 const providerCursor: StackCursor<Fiber | null> = createCursor(null);
 const valueCursor: StackCursor<mixed> = createCursor(null);
@@ -32,7 +37,11 @@ if (__DEV__) {
   rendererSigil = {};
 }
 
-function pushProvider(providerFiber: Fiber): void {
+let currentlyRenderingFiber: Fiber | null = null;
+let lastContextDependency: ContextDependency<mixed> | null = null;
+let memoizedFirstContextDependency: ContextDependency<mixed> | null = null;
+
+export function pushProvider(providerFiber: Fiber): void {
   const context: ReactContext<any> = providerFiber.type._context;
 
   if (isPrimaryRenderer) {
@@ -72,7 +81,7 @@ function pushProvider(providerFiber: Fiber): void {
   }
 }
 
-function popProvider(providerFiber: Fiber): void {
+export function popProvider(providerFiber: Fiber): void {
   const changedBits = changedBitsCursor.current;
   const currentValue = valueCursor.current;
 
@@ -90,17 +99,191 @@ function popProvider(providerFiber: Fiber): void {
   }
 }
 
-function getContextCurrentValue(context: ReactContext<any>): any {
+export function propagateContextChange(
+  workInProgress: Fiber,
+  context: ReactContext<mixed>,
+  changedBits: number,
+  renderExpirationTime: ExpirationTime,
+): void {
+  let fiber = workInProgress.child;
+  if (fiber !== null) {
+    // Set the return pointer of the child to the work-in-progress fiber.
+    fiber.return = workInProgress;
+  }
+  while (fiber !== null) {
+    let nextFiber;
+
+    // Visit this fiber.
+    let dependency = fiber.firstContextDependency;
+    if (dependency !== null) {
+      do {
+        // Check if the context matches.
+        if (
+          dependency.context === context &&
+          (dependency.observedBits & changedBits) !== 0
+        ) {
+          // Match! Update the expiration time of all the ancestors, including
+          // the alternates.
+          let node = fiber;
+          while (node !== null) {
+            const alternate = node.alternate;
+            if (
+              node.expirationTime === NoWork ||
+              node.expirationTime > renderExpirationTime
+            ) {
+              node.expirationTime = renderExpirationTime;
+              if (
+                alternate !== null &&
+                (alternate.expirationTime === NoWork ||
+                  alternate.expirationTime > renderExpirationTime)
+              ) {
+                alternate.expirationTime = renderExpirationTime;
+              }
+            } else if (
+              alternate !== null &&
+              (alternate.expirationTime === NoWork ||
+                alternate.expirationTime > renderExpirationTime)
+            ) {
+              alternate.expirationTime = renderExpirationTime;
+            } else {
+              // Neither alternate was updated, which means the rest of the
+              // ancestor path already has sufficient priority.
+              break;
+            }
+            node = node.return;
+          }
+          // Don't scan deeper than a matching consumer. When we render the
+          // consumer, we'll continue scanning from that point. This way the
+          // scanning work is time-sliced.
+          nextFiber = null;
+        } else {
+          nextFiber = fiber.child;
+        }
+        dependency = dependency.next;
+      } while (dependency !== null);
+    } else if (fiber.tag === ContextProvider) {
+      // Don't scan deeper if this is a matching provider
+      nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
+    } else {
+      // Traverse down.
+      nextFiber = fiber.child;
+    }
+
+    if (nextFiber !== null) {
+      // Set the return pointer of the child to the work-in-progress fiber.
+      nextFiber.return = fiber;
+    } else {
+      // No child. Traverse to next sibling.
+      nextFiber = fiber;
+      while (nextFiber !== null) {
+        if (nextFiber === workInProgress) {
+          // We're back to the root of this subtree. Exit.
+          nextFiber = null;
+          break;
+        }
+        let sibling = nextFiber.sibling;
+        if (sibling !== null) {
+          // Set the return pointer of the sibling to the work-in-progress fiber.
+          sibling.return = nextFiber.return;
+          nextFiber = sibling;
+          break;
+        }
+        // No more siblings. Traverse up.
+        nextFiber = nextFiber.return;
+      }
+    }
+    fiber = nextFiber;
+  }
+}
+
+export function prepareToReadContext(
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+): boolean {
+  currentlyRenderingFiber = workInProgress;
+  memoizedFirstContextDependency = workInProgress.firstContextDependency;
+  if (memoizedFirstContextDependency !== null) {
+    // Reset the work-in-progress list
+    workInProgress.firstContextDependency = null;
+
+    // Iterate through the context dependencies and see if there were any
+    // changes. If so, continue propagating the context change by scanning
+    // the child subtree.
+    let dependency = memoizedFirstContextDependency;
+    let hasPendingContext = false;
+    do {
+      const context = dependency.context;
+      const changedBits = isPrimaryRenderer
+        ? context._changedBits
+        : context._changedBits2;
+      if (changedBits !== 0) {
+        // Resume context change propagation. We need to call this even if
+        // this fiber bails out, in case deeply nested consumers observe more
+        // bits than this one.
+        propagateContextChange(
+          workInProgress,
+          context,
+          changedBits,
+          renderExpirationTime,
+        );
+        if ((changedBits & dependency.observedBits) !== 0) {
+          hasPendingContext = true;
+        }
+      }
+      dependency = dependency.next;
+    } while (dependency !== null);
+    return hasPendingContext;
+  } else {
+    return false;
+  }
+}
+
+export function readContext<T>(
+  context: ReactContext<T>,
+  observedBits: void | number | boolean,
+): T {
+  invariant(
+    currentlyRenderingFiber !== null,
+    'Context.unstable_read(): Context can only be read while React is ' +
+      'rendering, e.g. inside the render method or getDerivedStateFromProps.',
+  );
+
+  if (typeof observedBits !== 'number') {
+    if (observedBits === false) {
+      // Do not observe updates
+      observedBits = 0;
+    } else {
+      // Observe all updates
+      observedBits = maxSigned31BitInt;
+    }
+  }
+
+  if (currentlyRenderingFiber.firstContextDependency === null) {
+    // This is the first dependency in the list
+    currentlyRenderingFiber.firstContextDependency = lastContextDependency = {
+      context: ((context: any): ReactContext<mixed>),
+      observedBits,
+      next: null,
+    };
+  } else {
+    invariant(
+      lastContextDependency !== null,
+      'Expected a non-empty list of context dependencies. This is likely a ' +
+        'bug in React. Please file an issue.',
+    );
+    if (lastContextDependency.context === context) {
+      // Fast path. The previous context has the same type. We can reuse
+      // the same node.
+      lastContextDependency.observedBits |= observedBits;
+    } else {
+      // Append a new context item.
+      lastContextDependency = lastContextDependency.next = {
+        context: ((context: any): ReactContext<mixed>),
+        observedBits,
+        next: null,
+      };
+    }
+  }
+
   return isPrimaryRenderer ? context._currentValue : context._currentValue2;
 }
-
-function getContextChangedBits(context: ReactContext<any>): number {
-  return isPrimaryRenderer ? context._changedBits : context._changedBits2;
-}
-
-export {
-  pushProvider,
-  popProvider,
-  getContextCurrentValue,
-  getContextChangedBits,
-};
