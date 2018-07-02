@@ -386,7 +386,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           }
         },
 
-        unhideTextInstance(textInstance: TextInstance): void {
+        unhideTextInstance(textInstance: TextInstance, text: string): void {
           textInstance.hidden = false;
         },
 

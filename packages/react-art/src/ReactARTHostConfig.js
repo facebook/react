@@ -419,6 +419,9 @@ export function unhideInstance(instance: Instance, props: Props): void {
   throw new Error('Not yet implemented.');
 }
 
-export function unhideTextInstance(textInstance: TextInstance): void {
+export function unhideTextInstance(
+  textInstance: TextInstance,
+  text: string,
+): void {
   throw new Error('Not yet implemented.');
 }

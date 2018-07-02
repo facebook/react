@@ -31,6 +31,9 @@ export type Props = {
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
   dangerouslySetInnerHTML?: mixed,
+  style?: {
+    display?: string,
+  },
 };
 export type Container = Element | Document;
 export type Instance = Element;
@@ -69,6 +72,8 @@ let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
   SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 }
+
+const STYLE = 'style';
 
 let eventsEnabled: ?boolean = null;
 let selectionInformation: ?mixed = null;
@@ -395,19 +400,38 @@ export function removeChildFromContainer(
 }
 
 export function hideInstance(instance: Instance): void {
-  throw new Error('TODO');
+  // TODO: Does this work for all element types? What about MathML? Should we
+  // pass host context to this method?
+  instance = ((instance: any): HTMLElement);
+  if (instance.style !== undefined && instance.style !== null) {
+    instance.style.display = 'none';
+  }
 }
 
 export function hideTextInstance(textInstance: TextInstance): void {
-  throw new Error('TODO');
+  textInstance.nodeValue = '';
 }
 
 export function unhideInstance(instance: Instance, props: Props): void {
-  throw new Error('TODO');
+  instance = ((instance: any): HTMLElement);
+  if (instance.style !== undefined && instance.style !== null) {
+    let display = null;
+    if (props[STYLE] !== undefined && props[STYLE] !== null) {
+      const styleProp = props[STYLE];
+      if (styleProp.hasOwnProperty('display')) {
+        display = styleProp.display;
+      }
+    }
+    // $FlowFixMe Setting a style property to null is the valid way to reset it.
+    instance.style.display = display;
+  }
 }
 
-export function unhideTextInstance(textInstance: TextInstance): void {
-  throw new Error('TODO');
+export function unhideTextInstance(
+  textInstance: TextInstance,
+  text: string,
+): void {
+  textInstance.nodeValue = text;
 }
 
 // -------------------

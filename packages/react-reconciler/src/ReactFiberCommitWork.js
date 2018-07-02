@@ -390,7 +390,7 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
         if (isHidden) {
           hideTextInstance(instance);
         } else {
-          unhideTextInstance(instance);
+          unhideTextInstance(instance, node.memoizedProps);
         }
       } else if (node.child !== null) {
         node.child.return = node;

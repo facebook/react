@@ -248,6 +248,9 @@ export function unhideInstance(instance: Instance, props: Props): void {
   throw new Error('TODO');
 }
 
-export function unhideTextInstance(textInstance: TextInstance): void {
+export function unhideTextInstance(
+  textInstance: TextInstance,
+  text: string,
+): void {
   throw new Error('TODO');
 }
