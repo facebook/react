@@ -70,8 +70,9 @@ import {
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   pushProvider,
-  getContextCurrentValue,
-  getContextChangedBits,
+  propagateContextChange,
+  readContext,
+  prepareToReadContext,
 } from './ReactFiberNewContext';
 import {
   markActualRenderTimeStarted,
@@ -809,102 +810,6 @@ function updatePortalComponent(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function propagateContextChange<V>(
-  workInProgress: Fiber,
-  context: ReactContext<V>,
-  changedBits: number,
-  renderExpirationTime: ExpirationTime,
-): void {
-  let fiber = workInProgress.child;
-  if (fiber !== null) {
-    // Set the return pointer of the child to the work-in-progress fiber.
-    fiber.return = workInProgress;
-  }
-  while (fiber !== null) {
-    let nextFiber;
-    // Visit this fiber.
-    switch (fiber.tag) {
-      case ContextConsumer:
-        // Check if the context matches.
-        const observedBits: number = fiber.stateNode | 0;
-        if (fiber.type === context && (observedBits & changedBits) !== 0) {
-          // Update the expiration time of all the ancestors, including
-          // the alternates.
-
-          let node = fiber;
-          do {
-            const alternate = node.alternate;
-            if (
-              node.expirationTime === NoWork ||
-              node.expirationTime > renderExpirationTime
-            ) {
-              node.expirationTime = renderExpirationTime;
-              if (
-                alternate !== null &&
-                (alternate.expirationTime === NoWork ||
-                  alternate.expirationTime > renderExpirationTime)
-              ) {
-                alternate.expirationTime = renderExpirationTime;
-              }
-            } else if (
-              alternate !== null &&
-              (alternate.expirationTime === NoWork ||
-                alternate.expirationTime > renderExpirationTime)
-            ) {
-              alternate.expirationTime = renderExpirationTime;
-            } else {
-              // Neither alternate was updated, which means the rest of the
-              // ancestor path already has sufficient priority.
-              break;
-            }
-            node = node.return;
-          } while (node !== null);
-
-          // Don't scan deeper than a matching consumer. When we render the
-          // consumer, we'll continue scanning from that point. This way the
-          // scanning work is time-sliced.
-          nextFiber = null;
-        } else {
-          // Traverse down.
-          nextFiber = fiber.child;
-        }
-        break;
-      case ContextProvider:
-        // Don't scan deeper if this is a matching provider
-        nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
-        break;
-      default:
-        // Traverse down.
-        nextFiber = fiber.child;
-        break;
-    }
-    if (nextFiber !== null) {
-      // Set the return pointer of the child to the work-in-progress fiber.
-      nextFiber.return = fiber;
-    } else {
-      // No child. Traverse to next sibling.
-      nextFiber = fiber;
-      while (nextFiber !== null) {
-        if (nextFiber === workInProgress) {
-          // We're back to the root of this subtree. Exit.
-          nextFiber = null;
-          break;
-        }
-        let sibling = nextFiber.sibling;
-        if (sibling !== null) {
-          // Set the return pointer of the sibling to the work-in-progress fiber.
-          sibling.return = nextFiber.return;
-          nextFiber = sibling;
-          break;
-        }
-        // No more siblings. Traverse up.
-        nextFiber = nextFiber.return;
-      }
-    }
-    fiber = nextFiber;
-  }
-}
-
 function updateContextProvider(current, workInProgress, renderExpirationTime) {
   const providerType: ReactProviderType<any> = workInProgress.type;
   const context: ReactContext<any> = providerType._context;
@@ -1017,42 +922,18 @@ function updateContextConsumer(current, workInProgress, renderExpirationTime) {
   const newProps = workInProgress.pendingProps;
   const oldProps = workInProgress.memoizedProps;
 
-  const newValue = getContextCurrentValue(context);
-  const changedBits = getContextChangedBits(context);
-
+  const hasPendingContext = prepareToReadContext(
+    workInProgress,
+    renderExpirationTime,
+  );
   if (hasLegacyContextChanged()) {
     // Normally we can bail out on props equality but if context has changed
     // we don't do the bailout and we have to reuse existing props instead.
-  } else if (changedBits === 0 && oldProps === newProps) {
+  } else if (oldProps === newProps && !hasPendingContext) {
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
+
   workInProgress.memoizedProps = newProps;
-
-  let observedBits = newProps.unstable_observedBits;
-  if (observedBits === undefined || observedBits === null) {
-    // Subscribe to all changes by default
-    observedBits = MAX_SIGNED_31_BIT_INT;
-  }
-  // Store the observedBits on the fiber's stateNode for quick access.
-  workInProgress.stateNode = observedBits;
-
-  if ((changedBits & observedBits) !== 0) {
-    // Context change propagation stops at matching consumers, for time-
-    // slicing. Continue the propagation here.
-    propagateContextChange(
-      workInProgress,
-      context,
-      changedBits,
-      renderExpirationTime,
-    );
-  } else if (oldProps === newProps) {
-    // Skip over a memoized parent with a bitmask bailout even
-    // if we began working on it because of a deeper matching child.
-    return bailoutOnAlreadyFinishedWork(current, workInProgress);
-  }
-  // There is no bailout on `children` equality because we expect people
-  // to often pass a bound method as a child, but it may reference
-  // `this.state` or `this.props` (and thus needs to re-render on `setState`).
 
   const render = newProps.children;
 
@@ -1066,6 +947,7 @@ function updateContextConsumer(current, workInProgress, renderExpirationTime) {
     );
   }
 
+  const newValue = readContext(context, newProps.unstable_observedBits);
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
@@ -1106,6 +988,10 @@ function bailoutOnAlreadyFinishedWork(
   workInProgress: Fiber,
 ): Fiber | null {
   cancelWorkTimer(workInProgress);
+
+  if (current !== null) {
+    workInProgress.firstContextDependency = current.firstContextDependency;
+  }
 
   if (enableProfilerTimer) {
     // Don't update "base" render times for bailouts.
