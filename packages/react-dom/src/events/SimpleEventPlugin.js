@@ -212,7 +212,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
 
   extractEvents: function(
     topLevelType: TopLevelType,
-    targetInst: Fiber,
+    targetInst: null | Fiber,
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
   ): null | ReactSyntheticEvent {

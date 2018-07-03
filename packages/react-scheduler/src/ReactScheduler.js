@@ -60,8 +60,15 @@ if (__DEV__) {
 // this module is initially evaluated.
 // We want to be using a consistent implementation.
 const localDate = Date;
-const localSetTimeout = setTimeout;
-const localClearTimeout = clearTimeout;
+
+// This initialization code may run even on server environments
+// if a component just imports ReactDOM (e.g. for findDOMNode).
+// Some environments might not have setTimeout or clearTimeout.
+// https://github.com/facebook/react/pull/13088
+const localSetTimeout =
+  typeof setTimeout === 'function' ? setTimeout : (undefined: any);
+const localClearTimeout =
+  typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
@@ -117,6 +124,7 @@ if (!canUseDOM) {
   };
 } else {
   const localRequestAnimationFrame = requestAnimationFrame;
+  const localCancelAnimationFrame = cancelAnimationFrame;
 
   let headOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
   let tailOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
@@ -127,6 +135,27 @@ if (!canUseDOM) {
 
   let isIdleScheduled = false;
   let isAnimationFrameScheduled = false;
+
+  // requestAnimationFrame does not run when the tab is in the background.
+  // if we're backgrounded we prefer for that work to happen so that the page
+  // continues	to load in the background.
+  // so we also schedule a 'setTimeout' as a fallback.
+  const animationFrameTimeout = 100;
+  let rafID;
+  let timeoutID;
+  const scheduleAnimationFrameWithFallbackSupport = function(callback) {
+    // schedule rAF and also a setTimeout
+    rafID = localRequestAnimationFrame(function(timestamp) {
+      // cancel the setTimeout
+      localClearTimeout(timeoutID);
+      callback(timestamp);
+    });
+    timeoutID = localSetTimeout(function() {
+      // cancel the requestAnimationFrame
+      localCancelAnimationFrame(rafID);
+      callback(now());
+    }, animationFrameTimeout);
+  };
 
   let frameDeadline = 0;
   // We start out assuming that we run at 30fps but then the heuristic tracking
@@ -266,7 +295,7 @@ if (!canUseDOM) {
       if (!isAnimationFrameScheduled) {
         // Schedule another animation callback so we retry later.
         isAnimationFrameScheduled = true;
-        localRequestAnimationFrame(animationTick);
+        scheduleAnimationFrameWithFallbackSupport(animationTick);
       }
     }
   };
@@ -347,7 +376,7 @@ if (!canUseDOM) {
       // might want to still have setTimeout trigger scheduleWork as a backup to ensure
       // that we keep performing work.
       isAnimationFrameScheduled = true;
-      localRequestAnimationFrame(animationTick);
+      scheduleAnimationFrameWithFallbackSupport(animationTick);
     }
     return scheduledCallbackConfig;
   };
