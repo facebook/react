@@ -675,6 +675,9 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
 
   if (enableProfilerTimer) {
     if (__DEV__) {
+      // TODO Rather than checking that the stack is empty,
+      // Maybe change this check to assert that it matches an expected length,
+      // Which we explicitly mark at the start of a chunk of work.
       checkActualRenderTimeStackEmpty();
     }
     resetActualRenderTimer();

@@ -34,6 +34,13 @@ function loadModules({
   }
 }
 
+const mockDevToolsForTest = () => {
+  jest.mock('react-reconciler/src/ReactFiberDevToolsHook', () => ({
+    injectInternals: () => {},
+    isDevToolsPresent: true,
+  }));
+};
+
 describe('Profiler', () => {
   describe('works in profiling and non-profiling bundles', () => {
     [true, false].forEach(flagEnabled => {
@@ -1041,13 +1048,11 @@ describe('Profiler', () => {
 
   it('should handle interleaved async yields and batched commits', () => {
     jest.resetModules();
-    jest.mock('react-reconciler/src/ReactFiberDevToolsHook', () => ({
-      injectInternals: () => {},
-      isDevToolsPresent: true,
-    }));
+    mockDevToolsForTest();
     loadModules({useNoopRenderer: true});
 
-    const Child = ({id}) => {
+    const Child = ({duration, id}) => {
+      ReactNoop.advanceTime(duration);
       ReactNoop.yield(`Child:render:${id}`);
       return null;
     };
@@ -1057,31 +1062,46 @@ describe('Profiler', () => {
         ReactNoop.yield(`Parent:componentDidMount:${this.props.id}`);
       }
       render() {
-        const {id} = this.props;
+        const {duration, id} = this.props;
         return (
           <React.Fragment>
-            <Child id={id} />
-            <Child id={id} />
-            <Child id={id} />
+            <Child duration={duration} id={id} />
+            <Child duration={duration} id={id} />
+            <Child duration={duration} id={id} />
           </React.Fragment>
         );
       }
     }
 
-    ReactNoop.renderToRootWithID(<Parent id="one" />, 'one');
+    ReactNoop.advanceTime(100);
+
+    ReactNoop.renderToRootWithID(<Parent duration={3} id="one" />, 'one');
 
     // Process up to the <Parent> component, but yield before committing.
     // This ensures that the profiler timer still has paused fibers.
-    const commitFirstRender = ReactNoop.unstable_flushWithoutCommitting(
+    const commitFirstRender = ReactNoop.flushWithoutCommitting(
       ['Child:render:one', 'Child:render:one', 'Child:render:one'],
       'one',
     );
 
+    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(0);
+
+    ReactNoop.advanceTime(100);
+
     // Process some async work, but yield before committing it.
-    ReactNoop.renderToRootWithID(<Parent id="two" />, 'two');
+    ReactNoop.renderToRootWithID(<Parent duration={7} id="two" />, 'two');
     ReactNoop.flushThrough(['Child:render:two', 'Child:render:two']);
 
     // Commit the previously paused, batched work.
     commitFirstRender(['Parent:componentDidMount:one']);
+
+    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(9);
+    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(0);
+
+    ReactNoop.advanceTime(100);
+
+    ReactNoop.flush();
+
+    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(21);
   });
 });

@@ -628,7 +628,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
-    unstable_flushWithoutCommitting(
+    flushWithoutCommitting(
       expectedFlush: Array<mixed>,
       rootID: string = DEFAULT_ROOT_ID,
     ) {
@@ -649,6 +649,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         expect(yieldedValues).toEqual(expectedCommit);
       };
     },
+
+    getRoot(rootID: string = DEFAULT_ROOT_ID) {
+      return roots.get(rootID);
+    }
   };
 
   return ReactNoop;

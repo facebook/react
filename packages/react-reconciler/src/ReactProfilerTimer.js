@@ -79,6 +79,9 @@ function markActualRenderTimeStarted(fiber: Fiber): void {
     fiberStack.push(fiber);
   }
 
+  // TODO Offset accumulated total run time (like with pause time) to handle overlapping roots
+  // TODO If this doesn't work, deopt to force-flush of in-progress times when batch+committing?
+
   fiber.actualDuration =
     now() - ((fiber.actualDuration: any): number) - totalElapsedPauseTime;
   fiber.actualStartTime = now();
