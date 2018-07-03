@@ -1407,4 +1407,15 @@ describe('ReactShallowRenderer', () => {
     instance.setState(state => ({count: state.count + 1}));
     expect(log).toEqual(['render']);
   });
+
+  it('should not get this in a functional component', () => {
+    const logs = [];
+    function Foo() {
+      logs.push(this);
+      return <div>foo</div>;
+    }
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo foo="bar" />);
+    expect(logs).toEqual([undefined]);
+  });
 });
