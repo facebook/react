@@ -25,13 +25,15 @@ import {createCursor, push, pop} from './ReactFiberStack';
 const providerCursor: StackCursor<Fiber | null> = createCursor(null);
 const valueCursor: StackCursor<mixed> = createCursor(null);
 const changedBitsCursor: StackCursor<number> = createCursor(0);
-const rendererSigilCursor: StackCursor<Object | null> = createCursor(null);
-const rendererSigilCursor2: StackCursor<Object | null> = createCursor(null);
 
 let rendererSigil;
+let rendererSigilCursor: StackCursor<Object | null>;
+let rendererSigilCursor2: StackCursor<Object | null>;
 if (__DEV__) {
   // Use this to detect multiple renderers using the same context
   rendererSigil = {};
+  rendererSigilCursor = createCursor(null);
+  rendererSigilCursor2 = createCursor(null);
 }
 
 function pushProvider(providerFiber: Fiber): void {
