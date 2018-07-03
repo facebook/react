@@ -352,7 +352,8 @@ export function createHostRootFiber(isAsync: boolean): Fiber {
     // Always collect profile timings when DevTools are present.
     // This enables DevTools to start capturing timing at any point–
     // Without some nodes in the tree having empty base times.
-    mode |= ProfileMode;
+    // TODO (bvaughn) Re-enable as part of PR #13123
+    // mode |= ProfileMode;
   }
 
   return createFiber(HostRoot, null, null, mode);
