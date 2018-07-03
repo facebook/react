@@ -7,207 +7,287 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
 import type {ReactContext} from 'shared/ReactTypes';
-import {isFiberMounted} from 'react-reconciler/reflection';
-import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
+import type {Fiber} from './ReactFiber';
+import type {StackCursor} from './ReactFiberStack';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+
+export type ContextReader<T> = {
+  context: ReactContext<T>,
+  observedBits: number,
+  next: ContextReader<mixed> | null,
+};
+
+let nextFirstReader: ContextReader<mixed> | null = null;
+let nextLastReader: ContextReader<mixed> | null = null;
+
 import warning from 'shared/warning';
-import checkPropTypes from 'prop-types/checkPropTypes';
 
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
-import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
-import {readContext, pushContext, popContext} from './ReactFiberNewContext';
+import {isPrimaryRenderer} from './ReactFiberHostConfig';
+import {createCursor, push, pop} from './ReactFiberStack';
 import maxSigned31BitInt from './maxSigned31BitInt';
-import {DidThrow, NoEffect} from 'shared/ReactTypeOfSideEffect';
+import {NoWork} from './ReactFiberExpirationTime';
+import {ContextProvider} from 'shared/ReactTypeOfWork';
+import {LegacyContext} from './ReactFiberLegacyContext';
 
-let warnedAboutMissingGetChildContext;
+const valueCursor: StackCursor<mixed> = createCursor(null);
+const changedBitsCursor: StackCursor<number> = createCursor(0);
 
+let rendererSigil;
 if (__DEV__) {
-  warnedAboutMissingGetChildContext = {};
-}
-export const emptyContextObject = {};
-if (__DEV__) {
-  Object.freeze(emptyContextObject);
-}
-
-export const LegacyContext: ReactContext<any> = {
-  $$typeof: REACT_CONTEXT_TYPE,
-  _calculateChangedBits: null,
-  _defaultValue: emptyContextObject,
-  _currentValue: emptyContextObject,
-  _currentValue2: emptyContextObject,
-  _changedBits: 0,
-  _changedBits2: 0,
-  // These are circular
-  Provider: (null: any),
-  Consumer: (null: any),
-  unstable_read: (null: any),
-};
-
-LegacyContext.Provider = {
-  $$typeof: REACT_PROVIDER_TYPE,
-  _context: LegacyContext,
-};
-LegacyContext.Consumer = LegacyContext;
-LegacyContext.unstable_read = readContext.bind(null, LegacyContext);
-
-if (__DEV__) {
-  LegacyContext._currentRenderer = null;
-  LegacyContext._currentRenderer2 = null;
+  // Use this to detect multiple renderers using the same context
+  rendererSigil = {};
 }
 
-export function calculateLegacyChildContext(
+export function pushProvider(providerFiber: Fiber): void {
+  const context: ReactContext<any> = providerFiber.type._context;
+  const value = providerFiber.pendingProps.value;
+  const changedBits = providerFiber.stateNode;
+  pushContext(providerFiber, context, value, changedBits);
+}
+
+export function pushContext<T>(
   workInProgress: Fiber,
-  childContextTypes: Object,
-  unmaskedParentContext: Object,
-): Object {
-  const instance = workInProgress.stateNode;
+  context: ReactContext<T>,
+  value: T,
+  changedBits: number,
+): void {
+  if (isPrimaryRenderer) {
+    push(changedBitsCursor, context._changedBits, workInProgress);
+    push(valueCursor, context._currentValue, workInProgress);
 
-  let childContext;
-  // TODO (bvaughn) Replace this behavior with an invariant() in the future.
-  // It has only been added in Fiber to match the (unintentional) behavior in Stack.
-  if (typeof instance.getChildContext !== 'function') {
+    context._currentValue = value;
+    context._changedBits = changedBits;
     if (__DEV__) {
-      const componentName = getComponentName(workInProgress) || 'Unknown';
+      warning(
+        context._currentRenderer === undefined ||
+          context._currentRenderer === null ||
+          context._currentRenderer === rendererSigil,
+        'Detected multiple renderers concurrently rendering the ' +
+          'same context provider. This is currently unsupported.',
+      );
+      context._currentRenderer = rendererSigil;
+    }
+  } else {
+    push(changedBitsCursor, context._changedBits2, workInProgress);
+    push(valueCursor, context._currentValue2, workInProgress);
 
-      if (!warnedAboutMissingGetChildContext[componentName]) {
-        warnedAboutMissingGetChildContext[componentName] = true;
-        warning(
-          false,
-          '%s.childContextTypes is specified but there is no getChildContext() method ' +
-            'on the instance. You can either define getChildContext() on %s or remove ' +
-            'childContextTypes from it.',
-          componentName,
-          componentName,
-        );
+    context._currentValue2 = value;
+    context._changedBits2 = changedBits;
+    if (__DEV__) {
+      warning(
+        context._currentRenderer2 === undefined ||
+          context._currentRenderer2 === null ||
+          context._currentRenderer2 === rendererSigil,
+        'Detected multiple renderers concurrently rendering the ' +
+          'same context provider. This is currently unsupported.',
+      );
+      context._currentRenderer2 = rendererSigil;
+    }
+  }
+}
+
+export function popProvider(providerFiber: Fiber): void {
+  const context: ReactContext<any> = providerFiber.type._context;
+  popContext(providerFiber, context);
+}
+
+export function popContext(
+  workInProgress: Fiber,
+  context: ReactContext<mixed>,
+): void {
+  const changedBits = changedBitsCursor.current;
+  const currentValue = valueCursor.current;
+
+  pop(valueCursor, workInProgress);
+  pop(changedBitsCursor, workInProgress);
+
+  if (isPrimaryRenderer) {
+    context._currentValue = currentValue;
+    context._changedBits = changedBits;
+  } else {
+    context._currentValue2 = currentValue;
+    context._changedBits2 = changedBits;
+  }
+}
+
+export function propagateContextChange(
+  workInProgress: Fiber,
+  context: ReactContext<mixed>,
+  changedBits: number,
+  renderExpirationTime: ExpirationTime,
+): void {
+  let fiber = workInProgress.child;
+  if (fiber !== null) {
+    // Set the return pointer of the child to the work-in-progress fiber.
+    fiber.return = workInProgress;
+  }
+  while (fiber !== null) {
+    let nextFiber;
+
+    // Visit this fiber.
+    let reader = fiber.firstContextReader;
+    if (reader !== null) {
+      do {
+        // Check if the context matches.
+        if (
+          reader.context === context &&
+          (reader.observedBits & changedBits) !== 0
+        ) {
+          // Match! Update the expiration time of all the ancestors, including
+          // the alternates.
+          let node = fiber;
+          while (node !== null) {
+            const alternate = node.alternate;
+            if (
+              node.expirationTime === NoWork ||
+              node.expirationTime > renderExpirationTime
+            ) {
+              node.expirationTime = renderExpirationTime;
+              if (
+                alternate !== null &&
+                (alternate.expirationTime === NoWork ||
+                  alternate.expirationTime > renderExpirationTime)
+              ) {
+                alternate.expirationTime = renderExpirationTime;
+              }
+            } else if (
+              alternate !== null &&
+              (alternate.expirationTime === NoWork ||
+                alternate.expirationTime > renderExpirationTime)
+            ) {
+              alternate.expirationTime = renderExpirationTime;
+            } else {
+              // Neither alternate was updated, which means the rest of the
+              // ancestor path already has sufficient priority.
+              break;
+            }
+            node = node.return;
+          }
+          // Don't scan deeper than a matching consumer. When we render the
+          // consumer, we'll continue scanning from that point. This way the
+          // scanning work is time-sliced.
+          nextFiber = null;
+        } else {
+          nextFiber = fiber.child;
+        }
+        reader = reader.next;
+      } while (reader !== null);
+    } else if (fiber.tag === ContextProvider) {
+      // Don't scan deeper if this is a matching provider
+      nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
+    } else {
+      // Traverse down.
+      nextFiber = fiber.child;
+    }
+
+    if (nextFiber !== null) {
+      // Set the return pointer of the child to the work-in-progress fiber.
+      nextFiber.return = fiber;
+    } else {
+      // No child. Traverse to next sibling.
+      nextFiber = fiber;
+      while (nextFiber !== null) {
+        if (nextFiber === workInProgress) {
+          // We're back to the root of this subtree. Exit.
+          nextFiber = null;
+          break;
+        }
+        let sibling = nextFiber.sibling;
+        if (sibling !== null) {
+          // Set the return pointer of the sibling to the work-in-progress fiber.
+          sibling.return = nextFiber.return;
+          nextFiber = sibling;
+          break;
+        }
+        // No more siblings. Traverse up.
+        nextFiber = nextFiber.return;
       }
     }
-    childContext = unmaskedParentContext;
+    fiber = nextFiber;
+  }
+}
+
+export function checkForPendingContext(
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+): boolean {
+  let reader = workInProgress.firstContextReader;
+  let hasPendingContext = false;
+  while (reader !== null) {
+    const context = reader.context;
+    const changedBits = isPrimaryRenderer
+      ? context._changedBits
+      : context._changedBits2;
+    if (changedBits !== 0) {
+      // Resume context change propagation. We need to call this even if
+      // this fiber bails out, in case deeply nested consumers observe more
+      // bits than this one.
+      propagateContextChange(
+        workInProgress,
+        context,
+        changedBits,
+        renderExpirationTime,
+      );
+      if ((changedBits & reader.observedBits) !== 0) {
+        hasPendingContext = true;
+      }
+    }
+    reader = reader.next;
+  }
+
+  return hasPendingContext || getContextChangedBits(LegacyContext) !== 0;
+}
+
+export function prepareToReadContext(): void {
+  nextFirstReader = nextLastReader = null;
+}
+
+export function readContext<T>(
+  context: ReactContext<T>,
+  observedBits: void | number | boolean,
+): T {
+  if (typeof observedBits !== 'number') {
+    if (observedBits === false) {
+      // Do not observe updates
+      observedBits = 0;
+    } else {
+      // Observe all updates
+      observedBits = maxSigned31BitInt;
+    }
+  }
+
+  if (nextLastReader !== null) {
+    if (nextLastReader.context === context) {
+      // Fast path. The previous context has the same type. We can reuse
+      // the same node.
+      nextLastReader.observedBits |= observedBits;
+    } else {
+      // Append a new context item.
+      nextLastReader = nextLastReader.next = {
+        context: ((context: any): ReactContext<mixed>),
+        observedBits,
+        next: null,
+      };
+    }
   } else {
-    if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentPhase('getChildContext');
-    }
-    startPhaseTimer(workInProgress, 'getChildContext');
-    childContext = instance.getChildContext();
-    stopPhaseTimer();
-    if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentPhase(null);
-    }
-    for (let contextKey in childContext) {
-      invariant(
-        contextKey in childContextTypes,
-        '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-        getComponentName(workInProgress) || 'Unknown',
-        contextKey,
-      );
-    }
-    if (__DEV__) {
-      const name = getComponentName(workInProgress) || 'Unknown';
-      checkPropTypes(
-        childContextTypes,
-        childContext,
-        'child context',
-        name,
-        // In practice, there is one case in which we won't get a stack. It's when
-        // somebody calls unstable_renderSubtreeIntoContainer() and we process
-        // context from the parent component instance. The stack will be missing
-        // because it's outside of the reconciliation, and so the pointer has not
-        // been set. This is rare and doesn't matter. We'll also remove that API.
-        ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
-      );
-    }
-    childContext = Object.assign({}, unmaskedParentContext, childContext);
+    // This is the first reader in the list
+    nextFirstReader = nextLastReader = {
+      context: ((context: any): ReactContext<mixed>),
+      observedBits,
+      next: null,
+    };
   }
 
-  return childContext;
+  return isPrimaryRenderer ? context._currentValue : context._currentValue2;
 }
 
-export function pushLegacyContext(
-  workInProgress: Fiber,
-  childContextTypes: Object,
-  childContext: Object,
-  didChange: boolean,
-): void {
-  const changedBits = didChange ? maxSigned31BitInt : 0;
-  pushContext(workInProgress, LegacyContext, childContext, changedBits);
+export function getContextChangedBits(context: ReactContext<mixed>): number {
+  return isPrimaryRenderer ? context._changedBits : context._changedBits2;
 }
 
-export function popLegacyContext(workInProgress: Fiber): void {
-  // Legacy context providers do not push their child context until the end of
-  // the render phase. If the render phase did not complete, the child context
-  // was never pushed.
-  if ((workInProgress.effectTag & DidThrow) === NoEffect) {
-    const childContextTypes = workInProgress.type.childContextTypes;
-    if (typeof childContextTypes === 'object' && childContextTypes != null) {
-      popContext(workInProgress, LegacyContext);
-    }
-  }
-}
-
-export function pushRootLegacyContext(
-  workInProgress: Fiber,
-  rootContext: Object,
-  didChange: boolean,
-): void {
-  const changedBits = didChange ? maxSigned31BitInt : 0;
-  pushContext(workInProgress, LegacyContext, rootContext, changedBits);
-}
-
-export function popRootLegacyContext(workInProgress: Fiber): void {
-  popContext(workInProgress, LegacyContext);
-}
-
-export function readUnmaskedLegacyContext(): Object {
-  return readContext(LegacyContext);
-}
-
-export function maskLegacyContext(
-  workInProgress: Fiber,
-  unmaskedContext: Object,
-  contextTypes: Object,
-): Object {
-  const maskedContext = {};
-  for (let key in contextTypes) {
-    maskedContext[key] = unmaskedContext[key];
-  }
-
-  if (__DEV__) {
-    const name = getComponentName(workInProgress) || 'Unknown';
-    checkPropTypes(
-      contextTypes,
-      maskedContext,
-      'context',
-      name,
-      ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
-    );
-  }
-  return maskedContext;
-}
-
-export function findCurrentUnmaskedContext(fiber: Fiber): Object {
-  // Currently this is only used with renderSubtreeIntoContainer; not sure if it
-  // makes sense elsewhere
-  invariant(
-    isFiberMounted(fiber) && fiber.tag === ClassComponent,
-    'Expected subtree parent to be a mounted class component. ' +
-      'This error is likely caused by a bug in React. Please file an issue.',
-  );
-
-  let node: Fiber = fiber;
-  while (node.tag !== HostRoot) {
-    if (node.tag === ClassComponent && node.type.childContextTypes != null) {
-      return node.stateNode.__reactInternalUnmaskedLegacyChildContext;
-    }
-    const parent = node.return;
-    invariant(
-      parent,
-      'Found unexpected detached subtree parent. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
-    node = parent;
-  }
-  return node.stateNode.context;
+export function finishReadingContext(): ContextReader<mixed> | null {
+  const list = nextFirstReader;
+  nextFirstReader = nextLastReader = null;
+  return list;
 }

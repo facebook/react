@@ -61,8 +61,11 @@ import {
   popHostContainer,
 } from './ReactFiberHostContext';
 import {recordElapsedActualRenderTime} from './ReactProfilerTimer';
-import {popLegacyContext, popRootLegacyContext} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+import {
+  popLegacyContext,
+  popRootLegacyContext,
+} from './ReactFiberLegacyContext';
+import {popProvider} from './ReactFiberContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,

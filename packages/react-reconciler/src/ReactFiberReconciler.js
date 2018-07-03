@@ -33,7 +33,7 @@ import {
   findCurrentUnmaskedContext,
   emptyContextObject,
   maskLegacyContext,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import {

@@ -46,8 +46,11 @@ import {
 import {logError} from './ReactFiberCommitWork';
 import {Never, Sync, expirationTimeToMs} from './ReactFiberExpirationTime';
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
-import {popLegacyContext, popRootLegacyContext} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+import {
+  popLegacyContext,
+  popRootLegacyContext,
+} from './ReactFiberLegacyContext';
+import {popProvider} from './ReactFiberContext';
 import {
   resumeActualRenderTimerIfPaused,
   recordElapsedActualRenderTime,

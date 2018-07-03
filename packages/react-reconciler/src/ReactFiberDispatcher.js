@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {readContext} from './ReactFiberNewContext';
+import {readContext} from './ReactFiberContext';
 
 export const Dispatcher = {
   readContext,

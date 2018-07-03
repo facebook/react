@@ -95,8 +95,8 @@ import {
 import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
-import {popRootLegacyContext} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+import {popRootLegacyContext} from './ReactFiberLegacyContext';
+import {popProvider} from './ReactFiberContext';
 import {popHostContext, popHostContainer} from './ReactFiberHostContext';
 import {
   checkActualRenderTimeStackEmpty,

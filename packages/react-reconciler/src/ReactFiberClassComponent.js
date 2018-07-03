@@ -43,7 +43,7 @@ import {
   computeExpirationForFiber,
   scheduleWork,
 } from './ReactFiberScheduler';
-import {checkForPendingContext} from './ReactFiberNewContext';
+import {checkForPendingContext} from './ReactFiberContext';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;

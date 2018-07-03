@@ -14,7 +14,7 @@ import type {TypeOfMode} from './ReactTypeOfMode';
 import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
-import type {ContextReader} from './ReactFiberNewContext';
+import type {ContextReader} from './ReactFiberContext';
 
 import invariant from 'shared/invariant';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';

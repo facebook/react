@@ -74,7 +74,7 @@ import {
   readContext,
   prepareToReadContext,
   finishReadingContext,
-} from './ReactFiberNewContext';
+} from './ReactFiberContext';
 import {
   markActualRenderTimeStarted,
   stopBaseRenderTimerIfRunning,
@@ -86,7 +86,7 @@ import {
   pushRootLegacyContext,
   calculateLegacyChildContext,
   pushLegacyContext,
-} from './ReactFiberContext';
+} from './ReactFiberLegacyContext';
 import {
   enterHydrationState,
   resetHydrationState,
