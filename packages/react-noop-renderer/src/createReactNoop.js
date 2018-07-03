@@ -627,6 +627,28 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         failInCompletePhase = false;
       }
     },
+
+    unstable_flushWithoutCommitting(
+      expectedFlush: Array<mixed>,
+      rootID: string = DEFAULT_ROOT_ID,
+    ) {
+      const batch = {
+        _expirationTime: 1,
+        _defer: true,
+      };
+      const root = roots.get(rootID);
+      root.firstBatch = batch;
+      batch._onComplete = () => {
+        root.firstBatch = null;
+      };
+      const actual = ReactNoop.flush(rootID);
+      expect(actual).toEqual(expectedFlush);
+      return expectedCommit => {
+        batch._defer = false;
+        NoopRenderer.flushRoot(root, 1);
+        expect(yieldedValues).toEqual(expectedCommit);
+      };
+    },
   };
 
   return ReactNoop;
