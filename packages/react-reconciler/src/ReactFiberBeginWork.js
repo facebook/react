@@ -110,16 +110,6 @@ if (__DEV__) {
   didWarnAboutStatelessRefs = {};
 }
 
-// TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
-function reconcileChildren(current, workInProgress, nextChildren) {
-  reconcileChildrenAtExpirationTime(
-    current,
-    workInProgress,
-    nextChildren,
-    workInProgress.expirationTime,
-  );
-}
-
 function reconcileChildrenAtExpirationTime(
   current,
   workInProgress,
@@ -177,7 +167,12 @@ function updateForwardRef(current, workInProgress) {
     nextChildren = render(nextProps, ref);
   }
 
-  reconcileChildren(current, workInProgress, nextChildren);
+  reconcileChildrenAtExpirationTime(
+    current,
+    workInProgress,
+    nextChildren,
+    workInProgress.expirationTime,
+  );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
 }
@@ -190,7 +185,12 @@ function updateFragment(current, workInProgress) {
   } else if (workInProgress.memoizedProps === nextChildren) {
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
-  reconcileChildren(current, workInProgress, nextChildren);
+  reconcileChildrenAtExpirationTime(
+    current,
+    workInProgress,
+    nextChildren,
+    workInProgress.expirationTime,
+  );
   memoizeProps(workInProgress, nextChildren);
   return workInProgress.child;
 }
@@ -206,7 +206,12 @@ function updateMode(current, workInProgress) {
   ) {
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
-  reconcileChildren(current, workInProgress, nextChildren);
+  reconcileChildrenAtExpirationTime(
+    current,
+    workInProgress,
+    nextChildren,
+    workInProgress.expirationTime,
+  );
   memoizeProps(workInProgress, nextChildren);
   return workInProgress.child;
 }
@@ -220,7 +225,12 @@ function updateProfiler(current, workInProgress) {
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
   const nextChildren = nextProps.children;
-  reconcileChildren(current, workInProgress, nextChildren);
+  reconcileChildrenAtExpirationTime(
+    current,
+    workInProgress,
+    nextChildren,
+    workInProgress.expirationTime,
+  );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
 }
@@ -266,7 +276,12 @@ function updateFunctionalComponent(current, workInProgress) {
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
-  reconcileChildren(current, workInProgress, nextChildren);
+  reconcileChildrenAtExpirationTime(
+    current,
+    workInProgress,
+    nextChildren,
+    workInProgress.expirationTime,
+  );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
 }
@@ -479,7 +494,12 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
       // Otherwise reset hydration state in case we aborted and resumed another
       // root.
       resetHydrationState();
-      reconcileChildren(current, workInProgress, nextChildren);
+      reconcileChildrenAtExpirationTime(
+        current,
+        workInProgress,
+        nextChildren,
+        workInProgress.expirationTime,
+      );
     }
     return workInProgress.child;
   }
@@ -548,7 +568,12 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     return null;
   }
 
-  reconcileChildren(current, workInProgress, nextChildren);
+  reconcileChildrenAtExpirationTime(
+    current,
+    workInProgress,
+    nextChildren,
+    workInProgress.expirationTime,
+  );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
 }
@@ -697,7 +722,12 @@ function mountIndeterminateComponent(
         }
       }
     }
-    reconcileChildren(current, workInProgress, value);
+    reconcileChildrenAtExpirationTime(
+      current,
+      workInProgress,
+      value,
+      workInProgress.expirationTime,
+    );
     memoizeProps(workInProgress, props);
     return workInProgress.child;
   }
@@ -727,7 +757,12 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
     const nextChildren = render(nextDidTimeout);
     workInProgress.memoizedProps = nextProps;
     workInProgress.memoizedState = nextDidTimeout;
-    reconcileChildren(current, workInProgress, nextChildren);
+    reconcileChildrenAtExpirationTime(
+      current,
+      workInProgress,
+      nextChildren,
+      workInProgress.expirationTime,
+    );
     return workInProgress.child;
   } else {
     return null;
@@ -758,7 +793,12 @@ function updatePortalComponent(current, workInProgress, renderExpirationTime) {
     );
     memoizeProps(workInProgress, nextChildren);
   } else {
-    reconcileChildren(current, workInProgress, nextChildren);
+    reconcileChildrenAtExpirationTime(
+      current,
+      workInProgress,
+      nextChildren,
+      workInProgress.expirationTime,
+    );
     memoizeProps(workInProgress, nextChildren);
   }
   return workInProgress.child;
@@ -961,7 +1001,12 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
   pushProvider(workInProgress);
 
   const newChildren = newProps.children;
-  reconcileChildren(current, workInProgress, newChildren);
+  reconcileChildrenAtExpirationTime(
+    current,
+    workInProgress,
+    newChildren,
+    workInProgress.expirationTime,
+  );
   return workInProgress.child;
 }
 
@@ -1031,7 +1076,12 @@ function updateContextConsumer(current, workInProgress, renderExpirationTime) {
 
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
-  reconcileChildren(current, workInProgress, newChildren);
+  reconcileChildrenAtExpirationTime(
+    current,
+    workInProgress,
+    newChildren,
+    workInProgress.expirationTime,
+  );
   return workInProgress.child;
 }
 
