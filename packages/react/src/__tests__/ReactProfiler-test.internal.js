@@ -1038,4 +1038,50 @@ describe('Profiler', () => {
       expect(updateCall[4]).toBe(27); // start time
     });
   });
+
+  it('should handle interleaved async yields and batched commits', () => {
+    jest.resetModules();
+    jest.mock('react-reconciler/src/ReactFiberDevToolsHook', () => ({
+      injectInternals: () => {},
+      isDevToolsPresent: true,
+    }));
+    loadModules({useNoopRenderer: true});
+
+    const Child = ({id}) => {
+      ReactNoop.yield(`Child:render:${id}`);
+      return null;
+    };
+
+    class Parent extends React.Component {
+      componentDidMount() {
+        ReactNoop.yield(`Parent:componentDidMount:${this.props.id}`);
+      }
+      render() {
+        const {id} = this.props;
+        return (
+          <React.Fragment>
+            <Child id={id} />
+            <Child id={id} />
+            <Child id={id} />
+          </React.Fragment>
+        );
+      }
+    }
+
+    ReactNoop.renderToRootWithID(<Parent id="one" />, 'one');
+
+    // Process up to the <Parent> component, but yield before committing.
+    // This ensures that the profiler timer still has paused fibers.
+    const commitFirstRender = ReactNoop.unstable_flushWithoutCommitting(
+      ['Child:render:one', 'Child:render:one', 'Child:render:one'],
+      'one',
+    );
+
+    // Process some async work, but yield before committing it.
+    ReactNoop.renderToRootWithID(<Parent id="two" />, 'two');
+    ReactNoop.flushThrough(['Child:render:two', 'Child:render:two']);
+
+    // Commit the previously paused, batched work.
+    commitFirstRender(['Parent:componentDidMount:one']);
+  });
 });
