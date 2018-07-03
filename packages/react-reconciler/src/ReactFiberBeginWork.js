@@ -80,12 +80,12 @@ import {
   stopBaseRenderTimerIfRunning,
 } from './ReactProfilerTimer';
 import {
-  getMaskedContext,
-  getUnmaskedContext,
-  hasContextChanged as hasLegacyContextChanged,
-  pushContextProvider as pushLegacyContextProvider,
-  pushTopLevelContextObject,
-  invalidateContextProvider,
+  readUnmaskedLegacyContext,
+  maskLegacyContext,
+  emptyContextObject,
+  pushRootLegacyContext,
+  calculateLegacyChildContext,
+  pushLegacyContext,
 } from './ReactFiberContext';
 import {
   enterHydrationState,
@@ -156,14 +156,16 @@ function reconcileChildrenAtExpirationTime(
   }
 }
 
-function updateForwardRef(current, workInProgress) {
+function updateForwardRef(current, workInProgress, renderExpirationTime) {
   const render = workInProgress.type.render;
   const nextProps = workInProgress.pendingProps;
   const ref = workInProgress.ref;
-  if (hasLegacyContextChanged()) {
-    // Normally we can bail out on props equality but if context has changed
-    // we don't do the bailout and we have to reuse existing props instead.
-  } else if (workInProgress.memoizedProps === nextProps) {
+
+  const hasPendingContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
+  if (!hasPendingContext && workInProgress.memoizedProps === nextProps) {
     const currentRef = current !== null ? current.ref : null;
     if (ref === currentRef) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -185,12 +187,13 @@ function updateForwardRef(current, workInProgress) {
   return workInProgress.child;
 }
 
-function updateFragment(current, workInProgress) {
+function updateFragment(current, workInProgress, renderExpirationTime) {
   const nextChildren = workInProgress.pendingProps;
-  if (hasLegacyContextChanged()) {
-    // Normally we can bail out on props equality but if context has changed
-    // we don't do the bailout and we have to reuse existing props instead.
-  } else if (workInProgress.memoizedProps === nextChildren) {
+  const hasPendingContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
+  if (!hasPendingContext && workInProgress.memoizedProps === nextChildren) {
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
   reconcileChildren(current, workInProgress, nextChildren);
@@ -198,14 +201,15 @@ function updateFragment(current, workInProgress) {
   return workInProgress.child;
 }
 
-function updateMode(current, workInProgress) {
+function updateMode(current, workInProgress, renderExpirationTime) {
   const nextChildren = workInProgress.pendingProps.children;
-  if (hasLegacyContextChanged()) {
-    // Normally we can bail out on props equality but if context has changed
-    // we don't do the bailout and we have to reuse existing props instead.
-  } else if (
-    nextChildren === null ||
-    workInProgress.memoizedProps === nextChildren
+  const hasPendingContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
+  if (
+    !hasPendingContext &&
+    (nextChildren === null || workInProgress.memoizedProps === nextChildren)
   ) {
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
@@ -214,12 +218,16 @@ function updateMode(current, workInProgress) {
   return workInProgress.child;
 }
 
-function updateProfiler(current, workInProgress) {
+function updateProfiler(current, workInProgress, renderExpirationTime) {
   const nextProps = workInProgress.pendingProps;
   if (enableProfilerTimer) {
     workInProgress.effectTag |= Update;
   }
-  if (workInProgress.memoizedProps === nextProps) {
+  const hasPendingContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
+  if (!hasPendingContext && workInProgress.memoizedProps === nextProps) {
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
   const nextChildren = nextProps.children;
@@ -247,32 +255,40 @@ function updateFunctionalComponent(
   const fn = workInProgress.type;
   const nextProps = workInProgress.pendingProps;
 
-  if (!checkForPendingContext(workInProgress, renderExpirationTime)) {
-    if (hasLegacyContextChanged()) {
-      // Normally we can bail out on props equality but if context has changed
-      // we don't do the bailout and we have to reuse existing props instead.
-    } else {
-      if (workInProgress.memoizedProps === nextProps) {
-        return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      }
-      // TODO: consider bringing fn.shouldComponentUpdate() back.
-      // It used to be here.
-    }
+  const hasPendingContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
+  if (!hasPendingContext && workInProgress.memoizedProps === nextProps) {
+    return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
+  // TODO: consider bringing fn.shouldComponentUpdate() back.
+  // It used to be here.
 
-  const unmaskedContext = getUnmaskedContext(workInProgress);
-  const context = getMaskedContext(workInProgress, unmaskedContext);
+  prepareToReadContext();
+
+  let legacyContext;
+  const contextTypes = fn.contextTypes;
+  if (typeof contextTypes === 'object' && contextTypes !== null) {
+    const unmaskedContext = readUnmaskedLegacyContext();
+    legacyContext = maskLegacyContext(
+      unmaskedContext,
+      unmaskedContext,
+      contextTypes,
+    );
+  } else {
+    legacyContext = emptyContextObject;
+  }
 
   let nextChildren;
 
-  prepareToReadContext();
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     ReactDebugCurrentFiber.setCurrentPhase('render');
-    nextChildren = fn(nextProps, context);
+    nextChildren = fn(nextProps, legacyContext);
     ReactDebugCurrentFiber.setCurrentPhase(null);
   } else {
-    nextChildren = fn(nextProps, context);
+    nextChildren = fn(nextProps, legacyContext);
   }
   workInProgress.firstContextReader = finishReadingContext();
 
@@ -288,11 +304,33 @@ function updateClassComponent(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  // Push context providers early to prevent context stack mismatches.
-  // During mounting we don't know the child context yet as the instance doesn't exist.
-  // We will invalidate the child context in finishClassComponent() right after rendering.
-  const hasContext = pushLegacyContextProvider(workInProgress);
+  // It's possible for a component to both provide and read from context. We
+  // should read the current context before pushing additional context onto
+  // the stack.
   prepareToReadContext();
+  let maskedLegacyContext;
+  const contextTypes = workInProgress.type.contextTypes;
+  if (typeof contextTypes === 'object' && contextTypes !== null) {
+    const unmaskedLegacyContext = readUnmaskedLegacyContext();
+    const instance = workInProgress.stateNode;
+    if (
+      instance !== null &&
+      instance.__reactInternalUnmaskedLegacyContext === unmaskedLegacyContext
+    ) {
+      // Avoid recreating masked context unless unmasked context has changed.
+      // Failing to do this will result in unnecessary calls to componentWillReceiveProps.
+      // This may trigger infinite loops if componentWillReceiveProps calls setState.
+      maskedLegacyContext = instance.__reactInternalMaskedLegacyContext;
+    } else {
+      maskedLegacyContext = maskLegacyContext(
+        workInProgress,
+        unmaskedLegacyContext,
+        contextTypes,
+      );
+    }
+  } else {
+    maskedLegacyContext = emptyContextObject;
+  }
 
   let shouldUpdate;
   if (current === null) {
@@ -301,15 +339,21 @@ function updateClassComponent(
       constructClassInstance(
         workInProgress,
         workInProgress.pendingProps,
+        maskedLegacyContext,
         renderExpirationTime,
       );
-      mountClassInstance(workInProgress, renderExpirationTime);
+      mountClassInstance(
+        workInProgress,
+        maskedLegacyContext,
+        renderExpirationTime,
+      );
 
       shouldUpdate = true;
     } else {
       // In a resume, we'll already have an instance we can reuse.
       shouldUpdate = resumeMountClassInstance(
         workInProgress,
+        maskedLegacyContext,
         renderExpirationTime,
       );
     }
@@ -317,14 +361,22 @@ function updateClassComponent(
     shouldUpdate = updateClassInstance(
       current,
       workInProgress,
+      maskedLegacyContext,
       renderExpirationTime,
     );
   }
+
+  // We can assume we have an instance at this point
+  const instance = workInProgress.stateNode;
+  if (typeof contextTypes === 'object' && contextTypes !== null) {
+    instance.__reactInternalUnmaskedLegacyContext = readUnmaskedLegacyContext();
+    instance.__reactInternalMaskedLegacyContext = maskedLegacyContext;
+  }
+
   return finishClassComponent(
     current,
     workInProgress,
     shouldUpdate,
-    hasContext,
     renderExpirationTime,
   );
 }
@@ -333,25 +385,34 @@ function finishClassComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   shouldUpdate: boolean,
-  hasContext: boolean,
   renderExpirationTime: ExpirationTime,
 ) {
+  const ctor = workInProgress.type;
+  const childContextTypes = ctor.childContextTypes;
+
   // Refs should update even if shouldComponentUpdate returns false
   markRef(current, workInProgress);
 
   const didCaptureError = (workInProgress.effectTag & DidCapture) !== NoEffect;
 
+  const instance = workInProgress.stateNode;
   if (!shouldUpdate && !didCaptureError) {
-    // Context providers should defer to sCU for rendering
-    if (hasContext) {
-      invalidateContextProvider(workInProgress, false);
+    // Call finishReadingContext to clear the current context list, but don't
+    // use the result. Because we're about to bail out without rendering, we
+    // should re-use the previous list.
+    finishReadingContext();
+    if (typeof childContextTypes === 'object' && childContextTypes !== null) {
+      const legacyChildContext =
+        instance.__reactInternalUnmaskedLegacyChildContext;
+      pushLegacyContext(
+        workInProgress,
+        childContextTypes,
+        legacyChildContext,
+        false,
+      );
     }
-
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
-
-  const ctor = workInProgress.type;
-  const instance = workInProgress.stateNode;
 
   // Rerender
   ReactCurrentOwner.current = workInProgress;
@@ -388,8 +449,6 @@ function finishClassComponent(
     }
   }
 
-  workInProgress.firstContextReader = finishReadingContext();
-
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
   if (didCaptureError) {
@@ -417,9 +476,21 @@ function finishClassComponent(
   memoizeState(workInProgress, instance.state);
   memoizeProps(workInProgress, instance.props);
 
-  // The context might have changed so we need to recalculate it.
-  if (hasContext) {
-    invalidateContextProvider(workInProgress, true);
+  workInProgress.firstContextReader = finishReadingContext();
+  if (typeof childContextTypes === 'object' && childContextTypes !== null) {
+    const unmaskedLegacyContext = readUnmaskedLegacyContext();
+    const legacyChildContext = calculateLegacyChildContext(
+      workInProgress,
+      childContextTypes,
+      unmaskedLegacyContext,
+    );
+    instance.__reactInternalUnmaskedLegacyChildContext = legacyChildContext;
+    pushLegacyContext(
+      workInProgress,
+      childContextTypes,
+      legacyChildContext,
+      true,
+    );
   }
 
   return workInProgress.child;
@@ -427,15 +498,15 @@ function finishClassComponent(
 
 function pushHostRootContext(workInProgress) {
   const root = (workInProgress.stateNode: FiberRoot);
-  if (root.pendingContext) {
-    pushTopLevelContextObject(
+  if (root.pendingContext !== null) {
+    pushRootLegacyContext(
       workInProgress,
       root.pendingContext,
       root.pendingContext !== root.context,
     );
-  } else if (root.context) {
+  } else if (root.context !== null) {
     // Should always be set
-    pushTopLevelContextObject(workInProgress, root.context, false);
+    pushRootLegacyContext(workInProgress, root.context, false);
   }
   pushHostContainer(workInProgress, root.containerInfo);
 }
@@ -516,10 +587,11 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
   const nextProps = workInProgress.pendingProps;
   const prevProps = current !== null ? current.memoizedProps : null;
 
-  if (hasLegacyContextChanged()) {
-    // Normally we can bail out on props equality but if context has changed
-    // we don't do the bailout and we have to reuse existing props instead.
-  } else if (memoizedProps === nextProps) {
+  const hasPendingContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
+  if (!hasPendingContext && memoizedProps === nextProps) {
     const isHidden =
       workInProgress.mode & AsyncMode &&
       shouldDeprioritizeSubtree(type, nextProps);
@@ -592,10 +664,25 @@ function mountIndeterminateComponent(
   );
   const fn = workInProgress.type;
   const props = workInProgress.pendingProps;
-  const unmaskedContext = getUnmaskedContext(workInProgress);
-  const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext();
+
+  // It's possible for a component to both provide and read from context. We
+  // should read the current context before pushing additional context onto
+  // the stack.
+  prepareToReadContext();
+  let maskedLegacyContext;
+  const contextTypes = workInProgress.type.contextTypes;
+  if (typeof contextTypes === 'object' && contextTypes !== null) {
+    const unmaskedLegacyContext = readUnmaskedLegacyContext();
+    maskedLegacyContext = maskLegacyContext(
+      unmaskedLegacyContext,
+      unmaskedLegacyContext,
+      contextTypes,
+    );
+  } else {
+    maskedLegacyContext = emptyContextObject;
+  }
 
   let value;
 
@@ -620,9 +707,9 @@ function mountIndeterminateComponent(
     }
 
     ReactCurrentOwner.current = workInProgress;
-    value = fn(props, context);
+    value = fn(props, maskedLegacyContext);
   } else {
-    value = fn(props, context);
+    value = fn(props, maskedLegacyContext);
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
@@ -655,14 +742,16 @@ function mountIndeterminateComponent(
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
-    const hasContext = pushLegacyContextProvider(workInProgress);
     adoptClassInstance(workInProgress, value);
-    mountClassInstance(workInProgress, renderExpirationTime);
+    mountClassInstance(
+      workInProgress,
+      maskedLegacyContext,
+      renderExpirationTime,
+    );
     return finishClassComponent(
       current,
       workInProgress,
       true,
-      hasContext,
       renderExpirationTime,
     );
   } else {
@@ -736,10 +825,15 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
       (workInProgress.effectTag & DidCapture) === NoEffect;
     const nextDidTimeout = !alreadyCaptured;
 
-    if (hasLegacyContextChanged()) {
-      // Normally we can bail out on props equality but if context has changed
-      // we don't do the bailout and we have to reuse existing props instead.
-    } else if (nextProps === prevProps && nextDidTimeout === prevDidTimeout) {
+    const hasPendingContext = checkForPendingContext(
+      workInProgress,
+      renderExpirationTime,
+    );
+    if (
+      !hasPendingContext &&
+      nextProps === prevProps &&
+      nextDidTimeout === prevDidTimeout
+    ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
@@ -757,10 +851,11 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
 function updatePortalComponent(current, workInProgress, renderExpirationTime) {
   pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
   const nextChildren = workInProgress.pendingProps;
-  if (hasLegacyContextChanged()) {
-    // Normally we can bail out on props equality but if context has changed
-    // we don't do the bailout and we have to reuse existing props instead.
-  } else if (workInProgress.memoizedProps === nextChildren) {
+  const hasPendingContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
+  if (!hasPendingContext && workInProgress.memoizedProps === nextChildren) {
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
 
@@ -790,13 +885,12 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
 
   const newProps = workInProgress.pendingProps;
   const oldProps = workInProgress.memoizedProps;
-  let canBailOnProps = true;
 
-  if (hasLegacyContextChanged()) {
-    canBailOnProps = false;
-    // Normally we can bail out on props equality but if context has changed
-    // we don't do the bailout and we have to reuse existing props instead.
-  } else if (oldProps === newProps) {
+  const hasPendingContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
+  if (!hasPendingContext && oldProps === newProps) {
     workInProgress.stateNode = 0;
     pushProvider(workInProgress);
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -826,7 +920,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
   } else {
     if (oldProps.value === newProps.value) {
       // No change. Bailout early if children are the same.
-      if (oldProps.children === newProps.children && canBailOnProps) {
+      if (!hasPendingContext && oldProps.children === newProps.children) {
         workInProgress.stateNode = 0;
         pushProvider(workInProgress);
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -843,7 +937,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
         (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
       ) {
         // No change. Bailout early if children are the same.
-        if (oldProps.children === newProps.children && canBailOnProps) {
+        if (!hasPendingContext && oldProps.children === newProps.children) {
           workInProgress.stateNode = 0;
           pushProvider(workInProgress);
           return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -866,7 +960,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
 
         if (changedBits === 0) {
           // No change. Bailout early if children are the same.
-          if (oldProps.children === newProps.children && canBailOnProps) {
+          if (!hasPendingContext && oldProps.children === newProps.children) {
             workInProgress.stateNode = 0;
             pushProvider(workInProgress);
             return bailoutOnAlreadyFinishedWork(current, workInProgress);
@@ -896,13 +990,12 @@ function updateContextConsumer(current, workInProgress, renderExpirationTime) {
   const newProps = workInProgress.pendingProps;
   const oldProps = workInProgress.memoizedProps;
 
-  if (!checkForPendingContext(workInProgress, renderExpirationTime)) {
-    if (hasLegacyContextChanged()) {
-      // Normally we can bail out on props equality but if context has changed
-      // we don't do the bailout and we have to reuse existing props instead.
-    } else if (oldProps === newProps) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
-    }
+  const hasPendingContext = checkForPendingContext(
+    workInProgress,
+    renderExpirationTime,
+  );
+  if (!hasPendingContext && oldProps === newProps) {
+    return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
 
   workInProgress.memoizedProps = newProps;
@@ -1001,7 +1094,18 @@ function bailoutOnLowPriority(current, workInProgress) {
       pushHostRootContext(workInProgress);
       break;
     case ClassComponent:
-      pushLegacyContextProvider(workInProgress);
+      const childContextTypes = workInProgress.type.childContextTypes;
+      if (typeof childContextTypes === 'object' && childContextTypes !== null) {
+        const instance = workInProgress.stateNode;
+        const legacyChildContext =
+          instance.__reactInternalUnmaskedLegacyChildContext;
+        pushLegacyContext(
+          workInProgress,
+          childContextTypes,
+          legacyChildContext,
+          false,
+        );
+      }
       break;
     case HostPortal:
       pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
@@ -1082,13 +1186,13 @@ function beginWork(
         renderExpirationTime,
       );
     case ForwardRef:
-      return updateForwardRef(current, workInProgress);
+      return updateForwardRef(current, workInProgress, renderExpirationTime);
     case Fragment:
-      return updateFragment(current, workInProgress);
+      return updateFragment(current, workInProgress, renderExpirationTime);
     case Mode:
-      return updateMode(current, workInProgress);
+      return updateMode(current, workInProgress, renderExpirationTime);
     case Profiler:
-      return updateProfiler(current, workInProgress);
+      return updateProfiler(current, workInProgress, renderExpirationTime);
     case ContextProvider:
       return updateContextProvider(
         current,

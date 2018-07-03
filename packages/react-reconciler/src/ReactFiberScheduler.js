@@ -95,10 +95,7 @@ import {
 import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
-import {
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-  popContextProvider as popLegacyContextProvider,
-} from './ReactFiberContext';
+import {popRootLegacyContext} from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
 import {popHostContext, popHostContainer} from './ReactFiberHostContext';
 import {
@@ -280,13 +277,15 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     switch (failedUnitOfWork.tag) {
       case HostRoot:
         popHostContainer(failedUnitOfWork);
-        popTopLevelLegacyContextObject(failedUnitOfWork);
+        popRootLegacyContext(failedUnitOfWork);
         break;
       case HostComponent:
         popHostContext(failedUnitOfWork);
         break;
       case ClassComponent:
-        popLegacyContextProvider(failedUnitOfWork);
+        // Legacy context providers do not push their child context until the
+        // end of the render phase. Since the render phase did not complete, the
+        // child context was never pushed. Do not pop.
         break;
       case HostPortal:
         popHostContainer(failedUnitOfWork);

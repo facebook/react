@@ -15,7 +15,7 @@ let React = require('react');
 let ReactNoop;
 let gen;
 
-describe('ReactNewContext', () => {
+describe('ReactContext', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');

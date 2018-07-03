@@ -61,10 +61,7 @@ import {
   popHostContainer,
 } from './ReactFiberHostContext';
 import {recordElapsedActualRenderTime} from './ReactProfilerTimer';
-import {
-  popContextProvider as popLegacyContextProvider,
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
+import {popLegacyContext, popRootLegacyContext} from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
@@ -325,12 +322,12 @@ function completeWork(
       return null;
     case ClassComponent: {
       // We are leaving this subtree, so pop context if any.
-      popLegacyContextProvider(workInProgress);
+      popLegacyContext(workInProgress);
       return null;
     }
     case HostRoot: {
       popHostContainer(workInProgress);
-      popTopLevelLegacyContextObject(workInProgress);
+      popRootLegacyContext(workInProgress);
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;

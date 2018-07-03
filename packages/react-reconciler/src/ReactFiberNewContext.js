@@ -28,8 +28,8 @@ import {createCursor, push, pop} from './ReactFiberStack';
 import maxSigned31BitInt from './maxSigned31BitInt';
 import {NoWork} from './ReactFiberExpirationTime';
 import {ContextProvider} from 'shared/ReactTypeOfWork';
+import {LegacyContext} from './ReactFiberContext';
 
-const providerCursor: StackCursor<Fiber | null> = createCursor(null);
 const valueCursor: StackCursor<mixed> = createCursor(null);
 const changedBitsCursor: StackCursor<number> = createCursor(0);
 
@@ -41,14 +41,23 @@ if (__DEV__) {
 
 export function pushProvider(providerFiber: Fiber): void {
   const context: ReactContext<any> = providerFiber.type._context;
+  const value = providerFiber.pendingProps.value;
+  const changedBits = providerFiber.stateNode;
+  pushContext(providerFiber, context, value, changedBits);
+}
 
+export function pushContext<T>(
+  workInProgress: Fiber,
+  context: ReactContext<T>,
+  value: T,
+  changedBits: number,
+): void {
   if (isPrimaryRenderer) {
-    push(changedBitsCursor, context._changedBits, providerFiber);
-    push(valueCursor, context._currentValue, providerFiber);
-    push(providerCursor, providerFiber, providerFiber);
+    push(changedBitsCursor, context._changedBits, workInProgress);
+    push(valueCursor, context._currentValue, workInProgress);
 
-    context._currentValue = providerFiber.pendingProps.value;
-    context._changedBits = providerFiber.stateNode;
+    context._currentValue = value;
+    context._changedBits = changedBits;
     if (__DEV__) {
       warning(
         context._currentRenderer === undefined ||
@@ -60,12 +69,11 @@ export function pushProvider(providerFiber: Fiber): void {
       context._currentRenderer = rendererSigil;
     }
   } else {
-    push(changedBitsCursor, context._changedBits2, providerFiber);
-    push(valueCursor, context._currentValue2, providerFiber);
-    push(providerCursor, providerFiber, providerFiber);
+    push(changedBitsCursor, context._changedBits2, workInProgress);
+    push(valueCursor, context._currentValue2, workInProgress);
 
-    context._currentValue2 = providerFiber.pendingProps.value;
-    context._changedBits2 = providerFiber.stateNode;
+    context._currentValue2 = value;
+    context._changedBits2 = changedBits;
     if (__DEV__) {
       warning(
         context._currentRenderer2 === undefined ||
@@ -80,14 +88,20 @@ export function pushProvider(providerFiber: Fiber): void {
 }
 
 export function popProvider(providerFiber: Fiber): void {
+  const context: ReactContext<any> = providerFiber.type._context;
+  popContext(providerFiber, context);
+}
+
+export function popContext(
+  workInProgress: Fiber,
+  context: ReactContext<mixed>,
+): void {
   const changedBits = changedBitsCursor.current;
   const currentValue = valueCursor.current;
 
-  pop(providerCursor, providerFiber);
-  pop(valueCursor, providerFiber);
-  pop(changedBitsCursor, providerFiber);
+  pop(valueCursor, workInProgress);
+  pop(changedBitsCursor, workInProgress);
 
-  const context: ReactContext<any> = providerFiber.type._context;
   if (isPrimaryRenderer) {
     context._currentValue = currentValue;
     context._changedBits = changedBits;
@@ -221,7 +235,8 @@ export function checkForPendingContext(
     }
     reader = reader.next;
   }
-  return hasPendingContext;
+
+  return hasPendingContext || getContextChangedBits(LegacyContext) !== 0;
 }
 
 export function prepareToReadContext(): void {
@@ -265,6 +280,10 @@ export function readContext<T>(
   }
 
   return isPrimaryRenderer ? context._currentValue : context._currentValue2;
+}
+
+export function getContextChangedBits(context: ReactContext<mixed>): number {
+  return isPrimaryRenderer ? context._changedBits : context._changedBits2;
 }
 
 export function finishReadingContext(): ContextReader<mixed> | null {

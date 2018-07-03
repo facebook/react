@@ -37,14 +37,7 @@ import {
   ForceUpdate,
 } from './ReactUpdateQueue';
 import {NoWork} from './ReactFiberExpirationTime';
-import {
-  cacheContext,
-  getMaskedContext,
-  getUnmaskedContext,
-  isContextConsumer,
-  hasContextChanged,
-  emptyContextObject,
-} from './ReactFiberContext';
+// TODO: Maybe we can remove this?
 import {
   requestCurrentTime,
   computeExpirationForFiber,
@@ -468,14 +461,10 @@ function adoptClassInstance(workInProgress: Fiber, instance: any): void {
 function constructClassInstance(
   workInProgress: Fiber,
   props: any,
+  legacyContext: Object,
   renderExpirationTime: ExpirationTime,
 ): any {
   const ctor = workInProgress.type;
-  const unmaskedContext = getUnmaskedContext(workInProgress);
-  const needsContext = isContextConsumer(workInProgress);
-  const context = needsContext
-    ? getMaskedContext(workInProgress, unmaskedContext)
-    : emptyContextObject;
 
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
@@ -484,11 +473,11 @@ function constructClassInstance(
       (debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictMode)
     ) {
-      new ctor(props, context); // eslint-disable-line no-new
+      new ctor(props, legacyContext); // eslint-disable-line no-new
     }
   }
 
-  const instance = new ctor(props, context);
+  const instance = new ctor(props, legacyContext);
   const state = (workInProgress.memoizedState =
     instance.state !== null && instance.state !== undefined
       ? instance.state
@@ -577,12 +566,6 @@ function constructClassInstance(
     }
   }
 
-  // Cache unmasked context so we can avoid recreating masked context unless necessary.
-  // ReactFiberContext usually updates this cache but can't for newly-created instances.
-  if (needsContext) {
-    cacheContext(workInProgress, unmaskedContext, context);
-  }
-
   return instance;
 }
 
@@ -650,6 +633,7 @@ function callComponentWillReceiveProps(
 // Invokes the mount life-cycles on a previously never rendered instance.
 function mountClassInstance(
   workInProgress: Fiber,
+  legacyContext: Object,
   renderExpirationTime: ExpirationTime,
 ): void {
   const ctor = workInProgress.type;
@@ -660,12 +644,11 @@ function mountClassInstance(
 
   const instance = workInProgress.stateNode;
   const props = workInProgress.pendingProps;
-  const unmaskedContext = getUnmaskedContext(workInProgress);
 
   instance.props = props;
   instance.state = workInProgress.memoizedState;
   instance.refs = emptyRefsObject;
-  instance.context = getMaskedContext(workInProgress, unmaskedContext);
+  instance.context = legacyContext;
 
   if (__DEV__) {
     if (workInProgress.mode & StrictMode) {
@@ -737,6 +720,7 @@ function mountClassInstance(
 
 function resumeMountClassInstance(
   workInProgress: Fiber,
+  nextLegacyContext: Object,
   renderExpirationTime: ExpirationTime,
 ): boolean {
   const ctor = workInProgress.type;
@@ -747,13 +731,8 @@ function resumeMountClassInstance(
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
-  const nextLegacyContext = getMaskedContext(
-    workInProgress,
-    nextLegacyUnmaskedContext,
-  );
 
-  const hasPendingNewContext = checkForPendingContext(
+  const hasPendingContext = checkForPendingContext(
     workInProgress,
     renderExpirationTime,
   );
@@ -802,8 +781,7 @@ function resumeMountClassInstance(
   if (
     oldProps === newProps &&
     oldState === newState &&
-    !hasContextChanged() &&
-    !hasPendingNewContext &&
+    !hasPendingContext &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -825,7 +803,6 @@ function resumeMountClassInstance(
 
   const shouldUpdate =
     checkHasForceUpdateAfterProcessing() ||
-    hasPendingNewContext ||
     checkShouldComponentUpdate(
       workInProgress,
       oldProps,
@@ -881,6 +858,7 @@ function resumeMountClassInstance(
 function updateClassInstance(
   current: Fiber,
   workInProgress: Fiber,
+  nextLegacyContext: Object,
   renderExpirationTime: ExpirationTime,
 ): boolean {
   const ctor = workInProgress.type;
@@ -891,13 +869,8 @@ function updateClassInstance(
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
-  const nextLegacyContext = getMaskedContext(
-    workInProgress,
-    nextLegacyUnmaskedContext,
-  );
 
-  const hasPendingNewContext = checkForPendingContext(
+  const hasPendingContext = checkForPendingContext(
     workInProgress,
     renderExpirationTime,
   );
@@ -947,8 +920,7 @@ function updateClassInstance(
   if (
     oldProps === newProps &&
     oldState === newState &&
-    !hasContextChanged() &&
-    !hasPendingNewContext &&
+    !hasPendingContext &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -983,7 +955,6 @@ function updateClassInstance(
 
   const shouldUpdate =
     checkHasForceUpdateAfterProcessing() ||
-    hasPendingNewContext ||
     checkShouldComponentUpdate(
       workInProgress,
       oldProps,
