@@ -107,7 +107,11 @@ class ReactShallowRenderer {
 
         this._mountClassComponent(element, this._context);
       } else {
-        this._rendered = element.type(element.props, this._context);
+        this._rendered = element.type.call(
+          undefined,
+          element.props,
+          this._context,
+        );
       }
     }
 
