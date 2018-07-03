@@ -27,6 +27,7 @@ import {
   Incomplete,
   NoEffect,
   ShouldCapture,
+  DidThrow,
 } from 'shared/ReactTypeOfSideEffect';
 import {
   enableGetDerivedStateFromCatch,
@@ -46,10 +47,10 @@ import {logError} from './ReactFiberCommitWork';
 import {Never, Sync, expirationTimeToMs} from './ReactFiberExpirationTime';
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
 import {
-  popContextProvider as popLegacyContextProvider,
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+  popLegacyContext,
+  popRootLegacyContext,
+} from './ReactFiberLegacyContext';
+import {popProvider} from './ReactFiberContext';
 import {
   resumeActualRenderTimerIfPaused,
   recordElapsedActualRenderTime,
@@ -71,7 +72,7 @@ function createRootErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<mixed>,
   expirationTime: ExpirationTime,
-): Update<null> {
+): Update<mixed> {
   const update = createUpdate(expirationTime);
   // Unmount the root by rendering null.
   update.tag = CaptureUpdate;
@@ -147,7 +148,7 @@ function throwException(
   renderExpirationTime: ExpirationTime,
 ) {
   // The source fiber did not complete.
-  sourceFiber.effectTag |= Incomplete;
+  sourceFiber.effectTag |= Incomplete | DidThrow;
   // Its effect list is no longer valid.
   sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
@@ -325,7 +326,7 @@ function unwindWork(
 
   switch (workInProgress.tag) {
     case ClassComponent: {
-      popLegacyContextProvider(workInProgress);
+      popLegacyContext(workInProgress);
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -335,7 +336,7 @@ function unwindWork(
     }
     case HostRoot: {
       popHostContainer(workInProgress);
-      popTopLevelLegacyContextObject(workInProgress);
+      popRootLegacyContext(workInProgress);
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -377,12 +378,12 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
 
   switch (interruptedWork.tag) {
     case ClassComponent: {
-      popLegacyContextProvider(interruptedWork);
+      popLegacyContext(interruptedWork);
       break;
     }
     case HostRoot: {
       popHostContainer(interruptedWork);
-      popTopLevelLegacyContextObject(interruptedWork);
+      popRootLegacyContext(interruptedWork);
       break;
     }
     case HostComponent: {

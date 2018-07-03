@@ -23,7 +23,7 @@ import {
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {HostComponent} from 'shared/ReactTypeOfWork';
+import {HostComponent, ClassComponent} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -31,10 +31,9 @@ import warning from 'shared/warning';
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
-  isContextProvider,
-  processChildContext,
   emptyContextObject,
-} from './ReactFiberContext';
+  maskLegacyContext,
+} from './ReactFiberLegacyContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import {
@@ -90,10 +89,14 @@ function getContextForSubtree(
   }
 
   const fiber = ReactInstanceMap.get(parentComponent);
-  const parentContext = findCurrentUnmaskedContext(fiber);
-  return isContextProvider(fiber)
-    ? processChildContext(fiber, parentContext)
-    : parentContext;
+  const unmaskedContext = findCurrentUnmaskedContext(fiber);
+  if (fiber.tag === ClassComponent) {
+    const childContextTypes = fiber.type.childContextTypes;
+    if (typeof childContextTypes === 'object' && childContextTypes !== null) {
+      return maskLegacyContext(fiber, unmaskedContext, childContextTypes);
+    }
+  }
+  return unmaskedContext;
 }
 
 function scheduleRootUpdate(

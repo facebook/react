@@ -95,11 +95,8 @@ import {
 import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
-import {
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-  popContextProvider as popLegacyContextProvider,
-} from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+import {popRootLegacyContext} from './ReactFiberLegacyContext';
+import {popProvider} from './ReactFiberContext';
 import {popHostContext, popHostContainer} from './ReactFiberHostContext';
 import {
   checkActualRenderTimeStackEmpty,
@@ -135,6 +132,7 @@ import {
   commitAttachRef,
   commitDetachRef,
 } from './ReactFiberCommitWork';
+import {Dispatcher} from './ReactFiberDispatcher';
 
 export type Deadline = {
   timeRemaining: () => number,
@@ -279,13 +277,15 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     switch (failedUnitOfWork.tag) {
       case HostRoot:
         popHostContainer(failedUnitOfWork);
-        popTopLevelLegacyContextObject(failedUnitOfWork);
+        popRootLegacyContext(failedUnitOfWork);
         break;
       case HostComponent:
         popHostContext(failedUnitOfWork);
         break;
       case ClassComponent:
-        popLegacyContextProvider(failedUnitOfWork);
+        // Legacy context providers do not push their child context until the
+        // end of the render phase. Since the render phase did not complete, the
+        // child context was never pushed. Do not pop.
         break;
       case HostPortal:
         popHostContainer(failedUnitOfWork);
@@ -985,6 +985,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
       'by a bug in React. Please file an issue.',
   );
   isWorking = true;
+  ReactCurrentOwner.currentDispatcher = Dispatcher;
 
   const expirationTime = root.nextExpirationTimeToWorkOn;
 
@@ -1071,6 +1072,7 @@ function renderRoot(root: FiberRoot, isYieldy: boolean): void {
 
   // We're done performing work. Time to clean up.
   isWorking = false;
+  ReactCurrentOwner.currentDispatcher = null;
 
   // Yield back to main thread.
   if (didFatal) {
