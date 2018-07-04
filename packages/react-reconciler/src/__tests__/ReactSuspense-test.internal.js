@@ -3,7 +3,7 @@ let ReactFeatureFlags;
 let Fragment;
 let ReactNoop;
 let SimpleCacheProvider;
-let Timeout;
+let Placeholder;
 let StrictMode;
 let AsyncMode;
 
@@ -22,7 +22,7 @@ describe('ReactSuspense', () => {
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
     SimpleCacheProvider = require('simple-cache-provider');
-    Timeout = React.Timeout;
+    Placeholder = React.Placeholder;
     StrictMode = React.StrictMode;
     AsyncMode = React.unstable_AsyncMode;
 
@@ -89,14 +89,6 @@ describe('ReactSuspense', () => {
     }
   }
 
-  function Fallback(props) {
-    return (
-      <Timeout ms={props.timeout}>
-        {didExpire => (didExpire ? props.placeholder : props.children)}
-      </Timeout>
-    );
-  }
-
   it('suspends rendering and continues later', async () => {
     function Bar(props) {
       ReactNoop.yield('Bar');
@@ -106,12 +98,12 @@ describe('ReactSuspense', () => {
     function Foo() {
       ReactNoop.yield('Foo');
       return (
-        <Fallback>
+        <Placeholder>
           <Bar>
             <AsyncText text="A" ms={100} />
             <Text text="B" />
           </Bar>
-        </Fallback>
+        </Placeholder>
       );
     }
 
@@ -146,15 +138,15 @@ describe('ReactSuspense', () => {
   });
 
   it('suspends siblings and later recovers each independently', async () => {
-    // Render two sibling Timeout components
+    // Render two sibling Placeholder components
     ReactNoop.render(
       <Fragment>
-        <Fallback timeout={1000} placeholder={<Text text="Loading A..." />}>
+        <Placeholder delayMs={1000} fallback={<Text text="Loading A..." />}>
           <AsyncText text="A" ms={5000} />
-        </Fallback>
-        <Fallback timeout={3000} placeholder={<Text text="Loading B..." />}>
+        </Placeholder>
+        <Placeholder delayMs={3000} fallback={<Text text="Loading B..." />}>
           <AsyncText text="B" ms={6000} />
-        </Fallback>
+        </Placeholder>
       </Fragment>,
     );
     expect(ReactNoop.flush()).toEqual([
@@ -175,15 +167,16 @@ describe('ReactSuspense', () => {
       span('Loading B...'),
     ]);
 
-    // Advance time by enough that the first Timeout's promise resolves
-    // and switches back to the normal view. The second Timeout should still show the placeholder
+    // Advance time by enough that the first Placeholder's promise resolves and
+    // switches back to the normal view. The second Placeholder should still
+    // show the placeholder
     ReactNoop.expire(1000);
     await advanceTimers(1000);
 
     expect(ReactNoop.flush()).toEqual(['Promise resolved [A]', 'A']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading B...')]);
 
-    // Advance time by enough that the second Timeout's promise resolves
+    // Advance time by enough that the second Placeholder's promise resolves
     // and switches back to the normal view
     ReactNoop.expire(1000);
     await advanceTimers(1000);
@@ -194,12 +187,12 @@ describe('ReactSuspense', () => {
 
   it('continues rendering siblings after suspending', async () => {
     ReactNoop.render(
-      <Fallback>
+      <Placeholder>
         <Text text="A" />
         <AsyncText text="B" />
         <Text text="C" />
         <Text text="D" />
-      </Fallback>,
+      </Placeholder>,
     );
     // B suspends. Continue rendering the remaining siblings.
     expect(ReactNoop.flush()).toEqual(['A', 'Suspend! [B]', 'C', 'D']);
@@ -244,11 +237,11 @@ describe('ReactSuspense', () => {
     const errorBoundary = React.createRef();
     function App() {
       return (
-        <Fallback>
+        <Placeholder>
           <ErrorBoundary ref={errorBoundary}>
             <AsyncText text="Result" ms={1000} />
           </ErrorBoundary>
-        </Fallback>
+        </Placeholder>
       );
     }
 
@@ -306,11 +299,11 @@ describe('ReactSuspense', () => {
     const errorBoundary = React.createRef();
     function App() {
       return (
-        <Fallback timeout={1000} placeholder={<Text text="Loading..." />}>
+        <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
           <ErrorBoundary ref={errorBoundary}>
             <AsyncText text="Result" ms={3000} />
           </ErrorBoundary>
-        </Fallback>
+        </Placeholder>
       );
     }
 
@@ -357,10 +350,10 @@ describe('ReactSuspense', () => {
   it('can update at a higher priority while in a suspended state', async () => {
     function App(props) {
       return (
-        <Fallback>
+        <Placeholder>
           <Text text={props.highPri} />
           <AsyncText text={props.lowPri} />
-        </Fallback>
+        </Placeholder>
       );
     }
 
@@ -396,10 +389,10 @@ describe('ReactSuspense', () => {
   it('keeps working on lower priority work after being pinged', async () => {
     function App(props) {
       return (
-        <Fallback>
+        <Placeholder>
           <AsyncText text="A" />
           {props.showB && <Text text="B" />}
-        </Fallback>
+        </Placeholder>
       );
     }
 
@@ -424,9 +417,9 @@ describe('ReactSuspense', () => {
         return <Text text="(empty)" />;
       }
       return (
-        <Fallback>
+        <Placeholder>
           <AsyncText ms={2000} text="Async" />
-        </Fallback>
+        </Placeholder>
       );
     }
 
@@ -451,9 +444,9 @@ describe('ReactSuspense', () => {
   it('forces an expiration after an update times out', async () => {
     ReactNoop.render(
       <Fragment>
-        <Fallback placeholder={<Text text="Loading..." />}>
+        <Placeholder fallback={<Text text="Loading..." />}>
           <AsyncText text="Async" ms={20000} />
-        </Fallback>
+        </Placeholder>
         <Text text="Sync" />
       </Fragment>,
     );
@@ -489,14 +482,14 @@ describe('ReactSuspense', () => {
     ReactNoop.render(
       <Fragment>
         <Text text="Sync" />
-        <Fallback timeout={1000} placeholder={<Text text="Loading outer..." />}>
+        <Placeholder delayMs={1000} fallback={<Text text="Loading outer..." />}>
           <AsyncText text="Outer content" ms={2000} />
-          <Fallback
-            timeout={2500}
-            placeholder={<Text text="Loading inner..." />}>
+          <Placeholder
+            delayMs={2500}
+            fallback={<Text text="Loading inner..." />}>
             <AsyncText text="Inner content" ms={5000} />
-          </Fallback>
-        </Fallback>
+          </Placeholder>
+        </Placeholder>
       </Fragment>,
     );
 
@@ -570,9 +563,9 @@ describe('ReactSuspense', () => {
     ReactNoop.flushSync(() =>
       ReactNoop.render(
         <Fragment>
-          <Fallback placeholder={<Text text="Loading..." />}>
+          <Placeholder fallback={<Text text="Loading..." />}>
             <AsyncText text="Async" />
-          </Fallback>
+          </Placeholder>
           <Text text="Sync" />
         </Fragment>,
       ),
@@ -598,12 +591,12 @@ describe('ReactSuspense', () => {
     ReactNoop.flushSync(() =>
       ReactNoop.render(
         <Fragment>
-          <Fallback placeholder={<Text text="Loading (outer)..." />}>
-            <Fallback placeholder={<AsyncText text="Loading (inner)..." />}>
+          <Placeholder fallback={<Text text="Loading (outer)..." />}>
+            <Placeholder fallback={<AsyncText text="Loading (inner)..." />}>
               <AsyncText text="Async" />
-            </Fallback>
+            </Placeholder>
             <Text text="Sync" />
-          </Fallback>
+          </Placeholder>
         </Fragment>,
       ),
     );
@@ -617,12 +610,12 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading (outer)...')]);
   });
 
-  it('expires early with a `timeout` option', async () => {
+  it('expires early with a `delayMs` option', async () => {
     ReactNoop.render(
       <Fragment>
-        <Fallback timeout={1000} placeholder={<Text text="Loading..." />}>
+        <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
           <AsyncText text="Async" ms={3000} />
-        </Fallback>
+        </Placeholder>
         <Text text="Sync" />
       </Fragment>,
     );
@@ -654,17 +647,19 @@ describe('ReactSuspense', () => {
   it('throws a helpful error when an update is suspends without a placeholder', () => {
     expect(() => {
       ReactNoop.flushSync(() =>
-        ReactNoop.render(<Timeout>{() => <AsyncText text="Async" />}</Timeout>),
+        ReactNoop.render(
+          <Placeholder>{() => <AsyncText text="Async" />}</Placeholder>,
+        ),
       );
     }).toThrow('An update was suspended, but no placeholder UI was provided.');
   });
 
-  it('a Timeout component correctly handles more than one suspended child', async () => {
+  it('a Placeholder component correctly handles more than one suspended child', async () => {
     ReactNoop.render(
-      <Fallback timeout={0}>
+      <Placeholder delayMs={0}>
         <AsyncText text="A" ms={100} />
         <AsyncText text="B" ms={100} />
-      </Fallback>,
+      </Placeholder>,
     );
     expect(ReactNoop.expire(10000)).toEqual(['Suspend! [A]', 'Suspend! [B]']);
     expect(ReactNoop.getChildren()).toEqual([]);
@@ -682,9 +677,9 @@ describe('ReactSuspense', () => {
 
   it('can resume rendering earlier than a timeout', async () => {
     ReactNoop.render(
-      <Fallback timeout={1000} placeholder={<Text text="Loading..." />}>
+      <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
         <AsyncText text="Async" ms={100} />
-      </Fallback>,
+      </Placeholder>,
     );
     expect(ReactNoop.flush()).toEqual(['Suspend! [Async]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
@@ -707,13 +702,13 @@ describe('ReactSuspense', () => {
   it('starts working on an update even if its priority falls between two suspended levels', async () => {
     function App(props) {
       return (
-        <Fallback timeout={10000}>
+        <Placeholder delayMs={10000}>
           {props.text === 'C' ? (
             <Text text="C" />
           ) : (
             <AsyncText text={props.text} ms={10000} />
           )}
-        </Fallback>
+        </Placeholder>
       );
     }
 
@@ -756,7 +751,7 @@ describe('ReactSuspense', () => {
   it('can hide a tree to unblock its surroundings', async () => {
     function App() {
       return (
-        <Timeout ms={1000}>
+        <Placeholder delayMs={1000}>
           {didTimeout => (
             <Fragment>
               <div hidden={didTimeout}>
@@ -765,7 +760,7 @@ describe('ReactSuspense', () => {
               {didTimeout ? <Text text="Loading..." /> : null}
             </Fragment>
           )}
-        </Timeout>
+        </Placeholder>
       );
     }
 
@@ -789,13 +784,13 @@ describe('ReactSuspense', () => {
     function Never() {
       // Throws a promise that resolves after some arbitrarily large
       // number of seconds. The idea is that this component will never
-      // resolve. It's always wrapped by a Timeout.
+      // resolve. It's always wrapped by a Placeholder.
       throw new Promise(resolve => setTimeout(() => resolve(), 10000));
     }
 
     function Delay({ms}) {
       return (
-        <Timeout ms={ms}>
+        <Placeholder delayMs={ms}>
           {didTimeout => {
             if (didTimeout) {
               // Once ms has elapsed, render null. This allows the rest of the
@@ -804,7 +799,7 @@ describe('ReactSuspense', () => {
             }
             return <Never />;
           }}
-        </Timeout>
+        </Placeholder>
       );
     }
 
@@ -838,9 +833,9 @@ describe('ReactSuspense', () => {
     it('times out immediately', async () => {
       function App() {
         return (
-          <Fallback timeout={1000} placeholder={<Text text="Loading..." />}>
+          <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
             <AsyncText ms={100} text="Result" />
-          </Fallback>
+          </Placeholder>
         );
       }
 
@@ -861,7 +856,7 @@ describe('ReactSuspense', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Result')]);
     });
 
-    it('times out immediately when Timeout is in loose mode, even if the suspender is async', async () => {
+    it('times out immediately when Placeholder is in loose mode, even if the suspender is async', async () => {
       class UpdatingText extends React.Component {
         state = {step: 1};
         render() {
@@ -869,7 +864,7 @@ describe('ReactSuspense', () => {
         }
       }
 
-      function Placeholder() {
+      function Spinner() {
         return (
           <Fragment>
             <Text text="Loading (1)" />
@@ -882,12 +877,12 @@ describe('ReactSuspense', () => {
       const text = React.createRef(null);
       function App() {
         return (
-          <Fallback timeout={1000} placeholder={<Placeholder />}>
+          <Placeholder delayMs={1000} fallback={<Spinner />}>
             <AsyncMode>
               <UpdatingText ref={text} />
               <Text text="Sibling" />
             </AsyncMode>
-          </Fallback>
+          </Placeholder>
         );
       }
 
@@ -959,7 +954,7 @@ describe('ReactSuspense', () => {
         function App() {
           return (
             <StrictMode>
-              <Fallback timeout={1000} placeholder={<Text text="Loading..." />}>
+              <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
                 <AsyncMode>
                   <UpdatingText ref={text1} initialText="Async: 1">
                     {text => (
@@ -971,7 +966,7 @@ describe('ReactSuspense', () => {
                     )}
                   </UpdatingText>
                 </AsyncMode>
-              </Fallback>
+              </Placeholder>
               <AsyncMode>
                 <UpdatingText ref={text2} initialText="Sync: 1">
                   {text => (
@@ -1091,7 +1086,7 @@ describe('ReactSuspense', () => {
         function App() {
           return (
             <Fragment>
-              <Fallback timeout={1000} placeholder={<Text text="Loading..." />}>
+              <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
                 <AsyncMode>
                   <UpdatingText ref={text1} initialText="Async: 1">
                     {text => (
@@ -1103,7 +1098,7 @@ describe('ReactSuspense', () => {
                     )}
                   </UpdatingText>
                 </AsyncMode>
-              </Fallback>
+              </Placeholder>
               <AsyncMode>
                 <UpdatingText ref={text2} initialText="Sync: 1">
                   {text => (
@@ -1235,13 +1230,13 @@ describe('ReactSuspense', () => {
 
       function App() {
         return (
-          <Fallback
-            timeout={1000}
-            placeholder={<TextWithLifecycle text="Loading..." />}>
+          <Placeholder
+            delayMs={1000}
+            fallback={<TextWithLifecycle text="Loading..." />}>
             <TextWithLifecycle text="A" />
             <AsyncTextWithLifecycle ms={100} text="B" />
             <TextWithLifecycle text="C" />
-          </Fallback>
+          </Placeholder>
         );
       }
 

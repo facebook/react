@@ -35,7 +35,7 @@ import {
   Fragment,
   Mode,
   Profiler,
-  TimeoutComponent,
+  PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import {ProfileMode} from './ReactTypeOfMode';
@@ -490,7 +490,7 @@ function completeWork(
     }
     case ForwardRef:
       return null;
-    case TimeoutComponent:
+    case PlaceholderComponent:
       return null;
     case Fragment:
       return null;

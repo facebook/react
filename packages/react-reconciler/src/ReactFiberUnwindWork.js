@@ -22,7 +22,7 @@ import {
   HostComponent,
   HostPortal,
   ContextProvider,
-  TimeoutComponent,
+  PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
 import {
   DidCapture,
@@ -157,16 +157,16 @@ function throwException(
     // This is a thenable.
     const thenable: Thenable = (value: any);
 
-    // Find the earliest timeout of all the timeouts in the ancestor path. We
-    // could avoid this traversal by storing the timeouts on the stack, but we
-    // choose not to because we only hit this path if we're IO-bound (i.e. if
-    // something suspends). Whereas the stack is used even in the non-IO-
-    // bound case.
+    // Find the earliest timeout threshold of all the placeholders in the
+    // ancestor path. We could avoid this traversal by storing the thresholds on
+    // the stack, but we choose not to because we only hit this path if we're
+    // IO-bound (i.e. if something suspends). Whereas the stack is used even in
+    // the non-IO- bound case.
     let workInProgress = returnFiber;
     let earliestTimeoutMs = -1;
     let startTimeMs = -1;
     do {
-      if (workInProgress.tag === TimeoutComponent) {
+      if (workInProgress.tag === PlaceholderComponent) {
         const current = workInProgress.alternate;
         if (
           current !== null &&
@@ -184,7 +184,7 @@ function throwException(
           // Do not search any further.
           break;
         }
-        let timeoutPropMs = workInProgress.pendingProps.ms;
+        let timeoutPropMs = workInProgress.pendingProps.delayMs;
         if (typeof timeoutPropMs === 'number') {
           if (timeoutPropMs <= 0) {
             earliestTimeoutMs = 0;
@@ -199,15 +199,15 @@ function throwException(
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
 
-    // Schedule the nearest Timeout to re-render using a placeholder.
+    // Schedule the nearest Placeholder to re-render the timed out view.
     workInProgress = returnFiber;
     do {
-      if (workInProgress.tag === TimeoutComponent) {
+      if (workInProgress.tag === PlaceholderComponent) {
         const didTimeout = workInProgress.memoizedState;
         if (!didTimeout) {
-          // Found the nearest Timeout.
+          // Found the nearest boundary.
 
-          // If the Timeout is not in async mode, we should not suspend, and
+          // If the boundary is not in async mode, we should not suspend, and
           // likewise, when the promise resolves, we should ping synchronously.
           const pingTime =
             (workInProgress.mode & AsyncMode) === NoEffect
@@ -223,13 +223,13 @@ function throwException(
           );
           thenable.then(onResolveOrReject, onResolveOrReject);
 
-          // If the Timeout component is outside of strict mode, we should *not*
-          // suspend the commit. Pretend as if the suspended component rendered
-          // null and keep rendering. In the commit phase, we'll schedule a
-          // subsequent synchronous update to re-render the Timeout.
+          // If the boundary is outside of strict mode, we should *not* suspend
+          // the commit. Pretend as if the suspended component rendered null and
+          // keep rendering. In the commit phase, we'll schedule a subsequent
+          // synchronous update to re-render the Placeholder.
           //
           // Note: It doesn't matter whether the component that suspended was
-          // inside a strict mode tree. If the Timeout is outside of it, we
+          // inside a strict mode tree. If the Placeholder is outside of it, we
           // should *not* suspend the commit.
           if ((workInProgress.mode & StrictMode) === NoEffect) {
             workInProgress.effectTag |= UpdateEffect;
@@ -253,7 +253,7 @@ function throwException(
             return;
           }
 
-          // Confirmed that the Timeout is in a strict mode tree. Continue with
+          // Confirmed that the bounary is in a strict mode tree. Continue with
           // the normal suspend path.
 
           let absoluteTimeoutMs;
@@ -285,20 +285,21 @@ function throwException(
             absoluteTimeoutMs = startTimeMs + earliestTimeoutMs;
           }
 
-          // Mark the earliest timeout in the suspended fiber's ancestor path. After
-          // completing the root, we'll take the largest of all the suspended
-          // fiber's timeouts and use it to compute a timeout for the whole tree.
+          // Mark the earliest timeout in the suspended fiber's ancestor path.
+          // After completing the root, we'll take the largest of all the
+          // suspended fiber's timeouts and use it to compute a timeout for the
+          // whole tree.
           renderDidSuspend(root, absoluteTimeoutMs, renderExpirationTime);
 
           workInProgress.effectTag |= ShouldCapture;
           return;
         }
-        // Already captured during this render. Continue to the next
-        // Timeout ancestor.
+        // This boundary already captured during this render. Continue to the
+        // next boundary.
       }
       workInProgress = workInProgress.return;
     } while (workInProgress !== null);
-    // No Timeout was found. Fallthrough to error mode.
+    // No boundary was found. Fallthrough to error mode.
     value = new Error(
       'An update was suspended, but no placeholder UI was provided.',
     );
@@ -390,7 +391,7 @@ function unwindWork(
       popHostContext(workInProgress);
       return null;
     }
-    case TimeoutComponent: {
+    case PlaceholderComponent: {
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;

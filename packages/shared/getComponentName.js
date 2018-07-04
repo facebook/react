@@ -18,7 +18,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_TIMEOUT_TYPE,
+  REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
 
 function getComponentName(fiber: Fiber): string | null {
@@ -44,8 +44,8 @@ function getComponentName(fiber: Fiber): string | null {
       return 'Context.Provider';
     case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
-    case REACT_TIMEOUT_TYPE:
-      return 'Timeout';
+    case REACT_PLACEHOLDER_TYPE:
+      return 'Placeholder';
   }
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {

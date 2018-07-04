@@ -28,7 +28,7 @@ import {
   HostText,
   HostPortal,
   Profiler,
-  TimeoutComponent,
+  PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {
@@ -322,7 +322,7 @@ function commitLifeCycles(
       // We have no life-cycles associated with Profiler.
       return;
     }
-    case TimeoutComponent: {
+    case PlaceholderComponent: {
       if (enableSuspense) {
         if ((finishedWork.mode & StrictMode) === NoEffect) {
           // In loose mode, a placeholder times out by scheduling a synchronous
@@ -837,7 +837,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       }
       return;
     }
-    case TimeoutComponent: {
+    case PlaceholderComponent: {
       return;
     }
     default: {
