@@ -62,7 +62,8 @@ describe('ReactProfiler DevTools integration', () => {
     };
   });
 
-  it('should auto-Profile all fibers if the DevTools hook is detected', () => {
+  // TODO (bvaughn) Re-enable as part of PR #13123
+  xit('should auto-Profile all fibers if the DevTools hook is detected', () => {
     const App = ({multiplier}) => {
       advanceTimeBy(2);
       return (
