@@ -871,6 +871,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
         if (__DEV__ && ReactFiberInstrumentation.debugTool) {
           ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
         }
+
         // If completing this work spawned new work, do that next. We'll come
         // back here again.
         // Since we're restarting, remove anything that is not a host effect
@@ -1026,63 +1027,67 @@ function renderRoot(
 
   startWorkLoopTimer(nextUnitOfWork);
 
-  try {
-    workLoop(isYieldy);
-  } catch (thrownValue) {
-    if (enableProfilerTimer) {
-      // Stop "base" render timer in the event of an error.
-      stopBaseRenderTimerIfRunning();
-    }
-
-    if (nextUnitOfWork === null) {
-      // This is a fatal error.
-      didFatal = true;
-      onUncaughtError(thrownValue);
-    } else {
-      if (__DEV__) {
-        // Reset global debug state
-        // We assume this is defined in DEV
-        (resetCurrentlyProcessingQueue: any)();
+  do {
+    try {
+      workLoop(isYieldy);
+    } catch (thrownValue) {
+      if (enableProfilerTimer) {
+        // Stop "base" render timer in the event of an error.
+        stopBaseRenderTimerIfRunning();
       }
 
-      const failedUnitOfWork: Fiber = nextUnitOfWork;
-      if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
-        replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
-      }
-
-      // TODO: we already know this isn't true in some cases.
-      // At least this shows a nicer error message until we figure out the cause.
-      // https://github.com/facebook/react/issues/12449#issuecomment-386727431
-      invariant(
-        nextUnitOfWork !== null,
-        'Failed to replay rendering after an error. This ' +
-          'is likely caused by a bug in React. Please file an issue ' +
-          'with a reproducing case to help us find it.',
-      );
-
-      const sourceFiber: Fiber = nextUnitOfWork;
-      let returnFiber = sourceFiber.return;
-      if (returnFiber === null) {
-        // This is the root. The root could capture its own errors. However,
-        // we don't know if it errors before or after we pushed the host
-        // context. This information is needed to avoid a stack mismatch.
-        // Because we're not sure, treat this as a fatal error. We could track
-        // which phase it fails in, but doesn't seem worth it. At least
-        // for now.
+      if (nextUnitOfWork === null) {
+        // This is a fatal error.
         didFatal = true;
         onUncaughtError(thrownValue);
       } else {
-        throwException(
-          root,
-          returnFiber,
-          sourceFiber,
-          thrownValue,
-          nextRenderExpirationTime,
+        if (__DEV__) {
+          // Reset global debug state
+          // We assume this is defined in DEV
+          (resetCurrentlyProcessingQueue: any)();
+        }
+
+        const failedUnitOfWork: Fiber = nextUnitOfWork;
+        if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
+          replayUnitOfWork(failedUnitOfWork, thrownValue, isYieldy);
+        }
+
+        // TODO: we already know this isn't true in some cases.
+        // At least this shows a nicer error message until we figure out the cause.
+        // https://github.com/facebook/react/issues/12449#issuecomment-386727431
+        invariant(
+          nextUnitOfWork !== null,
+          'Failed to replay rendering after an error. This ' +
+            'is likely caused by a bug in React. Please file an issue ' +
+            'with a reproducing case to help us find it.',
         );
-        nextUnitOfWork = completeUnitOfWork(sourceFiber);
+
+        const sourceFiber: Fiber = nextUnitOfWork;
+        let returnFiber = sourceFiber.return;
+        if (returnFiber === null) {
+          // This is the root. The root could capture its own errors. However,
+          // we don't know if it errors before or after we pushed the host
+          // context. This information is needed to avoid a stack mismatch.
+          // Because we're not sure, treat this as a fatal error. We could track
+          // which phase it fails in, but doesn't seem worth it. At least
+          // for now.
+          didFatal = true;
+          onUncaughtError(thrownValue);
+        } else {
+          throwException(
+            root,
+            returnFiber,
+            sourceFiber,
+            thrownValue,
+            nextRenderExpirationTime,
+          );
+          nextUnitOfWork = completeUnitOfWork(sourceFiber);
+          continue;
+        }
       }
     }
-  }
+    break;
+  } while (true);
 
   // We're done performing work. Time to clean up.
   isWorking = false;
@@ -1151,11 +1156,14 @@ function renderRoot(
         -1, // Indicates no timeout
       );
       return;
-    } else if (!root.didError && expirationTime !== Sync) {
+    } else if (
       // There's no lower priority work, but we're rendering asynchronously.
       // Synchronsouly attempt to render the same level one more time. This is
       // similar to a suspend, but without a timeout because we're not waiting
       // for a promise to resolve.
+      !root.didError &&
+      !isExpired
+    ) {
       root.didError = true;
       const suspendedExpirationTime = (root.nextExpirationTimeToWorkOn = expirationTime);
       const rootExpirationTime = (root.expirationTime = Sync);
@@ -1348,7 +1356,7 @@ function renderDidSuspend(
   }
 }
 
-function renderDidError(root: FiberRoot) {
+function renderDidError() {
   nextRenderDidError = true;
 }
 

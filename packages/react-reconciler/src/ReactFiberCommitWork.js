@@ -32,6 +32,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {
+  NoEffect,
   ContentReset,
   Placement,
   Snapshot,
@@ -41,6 +42,7 @@ import {commitUpdateQueue} from './ReactUpdateQueue';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
+import {Sync} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import getComponentName from 'shared/getComponentName';
@@ -66,13 +68,17 @@ import {
 import {
   captureCommitPhaseError,
   requestCurrentTime,
+  scheduleWork,
 } from './ReactFiberScheduler';
+import {StrictMode} from './ReactTypeOfMode';
 
 const {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
 } = ReactErrorUtils;
+
+const emptyObject = {};
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -318,8 +324,20 @@ function commitLifeCycles(
     }
     case TimeoutComponent: {
       if (enableSuspense) {
-        const currentTime = requestCurrentTime();
-        finishedWork.stateNode = {timedOutAt: currentTime};
+        if ((finishedWork.mode & StrictMode) === NoEffect) {
+          // In loose mode, a placeholder times out by scheduling a synchronous
+          // update in the commit phase. Use `updateQueue` field to signal that
+          // the Timeout needs to switch to the placeholder. We don't need an
+          // entire queue. Any non-null value works.
+          // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
+          finishedWork.updateQueue = emptyObject;
+          scheduleWork(finishedWork, Sync);
+        } else {
+          // In strict mode, the Update effect is used to record the time at
+          // which the placeholder timed out.
+          const currentTime = requestCurrentTime();
+          finishedWork.stateNode = {timedOutAt: currentTime};
+        }
       }
       return;
     }

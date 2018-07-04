@@ -357,6 +357,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
     },
 
+    renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
+      const rootID = DEFAULT_ROOT_ID;
+      let root = roots.get(rootID);
+      if (!root) {
+        const container = {rootID: rootID, children: []};
+        rootContainers.set(rootID, container);
+        const isAsync = false;
+        root = NoopRenderer.createContainer(container, isAsync, false);
+        roots.set(rootID, root);
+      }
+      NoopRenderer.updateContainer(element, root, null, callback);
+    },
+
     renderToRootWithID(
       element: React$Element<any>,
       rootID: string,
@@ -442,6 +455,16 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         }
       }
       expect(actual).toEqual(expected);
+    },
+
+    flushNextYield(): Array<mixed> {
+      let actual = null;
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+      for (const value of flushUnitsOfWork(Infinity)) {
+        actual = value;
+        break;
+      }
+      return actual !== null ? actual : [];
     },
 
     expire(ms: number): Array<mixed> {

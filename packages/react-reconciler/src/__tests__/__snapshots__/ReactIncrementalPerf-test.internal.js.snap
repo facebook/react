@@ -286,24 +286,18 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5250 ms)
 
 // Stop on Baddie and restart from Boundary
-⚛ (React Tree Reconciliation: Yielded)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⛔ Boundary [mount] Warning: An error was thrown inside this error boundary
       ⚛ Parent [mount]
         ⚛ Baddie [mount]
-
-⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ Parent [mount]
     ⚛ Boundary [mount]
 
-⚛ (React Tree Reconciliation: Yielded)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⛔ Boundary [mount] Warning: An error was thrown inside this error boundary
       ⚛ Parent [mount]
         ⚛ Baddie [mount]
-
-⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ Parent [mount]
     ⚛ Boundary [mount]
 
 ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
@@ -326,17 +320,13 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5250 ms)
 
 // Will fatal
-⚛ (React Tree Reconciliation: Yielded)
+⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
     ⚛ Baddie [mount]
 
 ⚛ (React Tree Reconciliation: Completed Root)
-
-⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ Baddie [mount]
-
-⚛ (React Tree Reconciliation: Completed Root)
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
