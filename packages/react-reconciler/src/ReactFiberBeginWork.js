@@ -708,7 +708,7 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
     const nextProps = workInProgress.pendingProps;
     const prevProps = workInProgress.memoizedProps;
 
-    const prevDidTimeout = workInProgress.memoizedState;
+    const prevDidTimeout = workInProgress.memoizedState === true;
 
     // Check if we already attempted to render the normal state. If we did,
     // and we timed out, render the placeholder state.
@@ -721,6 +721,16 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
       // we don't do the bailout and we have to reuse existing props instead.
     } else if (nextProps === prevProps && nextDidTimeout === prevDidTimeout) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    if (nextDidTimeout) {
+      // If the timed-out view commits, schedule an update effect to record
+      // the committed time.
+      workInProgress.effectTag |= Update;
+    } else {
+      // The state node points to the time at which placeholder timed out.
+      // We can clear it once we switch back to the normal children.
+      workInProgress.stateNode = null;
     }
 
     const render = nextProps.children;
@@ -785,8 +795,9 @@ function propagateContextChange<V>(
         if (fiber.type === context && (observedBits & changedBits) !== 0) {
           // Update the expiration time of all the ancestors, including
           // the alternates.
+
           let node = fiber;
-          while (node !== null) {
+          do {
             const alternate = node.alternate;
             if (
               node.expirationTime === NoWork ||
@@ -812,7 +823,8 @@ function propagateContextChange<V>(
               break;
             }
             node = node.return;
-          }
+          } while (node !== null);
+
           // Don't scan deeper than a matching consumer. When we render the
           // consumer, we'll continue scanning from that point. This way the
           // scanning work is time-sliced.

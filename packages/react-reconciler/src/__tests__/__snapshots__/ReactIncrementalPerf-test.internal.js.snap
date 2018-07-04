@@ -288,9 +288,13 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 // Stop on Baddie and restart from Boundary
 ⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
-    ⚛ Boundary [mount]
+    ⛔ Boundary [mount] Warning: An error was thrown inside this error boundary
       ⚛ Parent [mount]
         ⚛ Baddie [mount]
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⚛ Boundary [mount]
 
 ⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
@@ -325,6 +329,8 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
 ⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
     ⚛ Baddie [mount]
+
+⚛ (React Tree Reconciliation: Completed Root)
 
 ⚛ (React Tree Reconciliation: Yielded)
   ⚛ Parent [mount]
@@ -405,8 +411,6 @@ exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] =
 
 exports[`ReactDebugFiberPerf warns if async work expires (starvation) 1`] = `
 "⛔ (Waiting for async callback... will force flush in 5250 ms) Warning: React was blocked by main thread
-
-⚛ (React Tree Reconciliation: Yielded)
 
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Foo [mount]

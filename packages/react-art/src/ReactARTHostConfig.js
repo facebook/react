@@ -332,6 +332,10 @@ export function getChildHostContext() {
 export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
 export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
 
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
+
 export function shouldSetTextContent(type, props) {
   return (
     typeof props.children === 'string' || typeof props.children === 'number'
