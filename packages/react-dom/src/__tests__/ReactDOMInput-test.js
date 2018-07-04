@@ -739,9 +739,12 @@ describe('ReactDOMInput', () => {
     const cNode = stub.refs.c;
 
     expect(aNode.checked).toBe(true);
+    expect(aNode.hasAttribute('checked')).toBe(true);
     expect(bNode.checked).toBe(false);
+    expect(bNode.hasAttribute('checked')).toBe(false);
     // c is in a separate form and shouldn't be affected at all here
     expect(cNode.checked).toBe(true);
+    expect(cNode.hasAttribute('checked')).toBe(true);
 
     bNode.checked = true;
     // This next line isn't necessary in a proper browser environment, but
@@ -749,6 +752,11 @@ describe('ReactDOMInput', () => {
     // a little less effective)
     aNode.checked = false;
     expect(cNode.checked).toBe(true);
+
+    // The original 'checked' attribute should be unchanged
+    expect(aNode.hasAttribute('checked')).toBe(true);
+    expect(bNode.hasAttribute('checked')).toBe(false);
+    expect(cNode.hasAttribute('checked')).toBe(true);
 
     // Now let's run the actual ReactDOMInput change event handler
     ReactTestUtils.Simulate.change(bNode);
@@ -1324,7 +1332,6 @@ describe('ReactDOMInput', () => {
       'set property value',
       'set attribute value',
       'set attribute checked',
-      'set attribute checked',
     ]);
   });
 
@@ -1388,7 +1395,6 @@ describe('ReactDOMInput', () => {
       'node.setAttribute("type", "date")',
       'node.value = "1980-01-01"',
       'node.setAttribute("value", "1980-01-01")',
-      'node.setAttribute("checked", "")',
       'node.setAttribute("checked", "")',
     ]);
   });
