@@ -80,7 +80,7 @@ function generateResultsArray(current, prevResults) {
       };
       // Strip any nulls
     })
-    .filter(f => f);
+    .filter(Boolean);
 }
 
 function printResults() {
