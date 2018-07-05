@@ -434,7 +434,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
+  it('warns when requestAnimationFrame is not polyfilled', () => {
     const previousRAF = global.requestAnimationFrame;
     try {
       delete global.requestAnimationFrame;
