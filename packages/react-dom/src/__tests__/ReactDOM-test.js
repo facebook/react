@@ -437,7 +437,7 @@ describe('ReactDOM', () => {
   it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
     const previousRAF = global.requestAnimationFrame;
     try {
-      global.requestAnimationFrame = undefined;
+      delete global.requestAnimationFrame;
       jest.resetModules();
       expect(() => require('react-dom')).toWarnDev(
         "This browser doesn't support requestAnimationFrame.",
