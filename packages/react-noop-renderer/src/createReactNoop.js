@@ -632,18 +632,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       expectedFlush: Array<mixed>,
       rootID: string = DEFAULT_ROOT_ID,
     ) {
+      const root: any = roots.get(rootID);
       const batch = {
-        _expirationTime: 1,
         _defer: true,
+        _expirationTime: 1,
+        _onComplete: () => {
+          root.firstBatch = null;
+        },
+        _next: null,
       };
-      const root = roots.get(rootID);
       root.firstBatch = batch;
-      batch._onComplete = () => {
-        root.firstBatch = null;
-      };
-      const actual = ReactNoop.flush(rootID);
+      const actual = ReactNoop.flush();
       expect(actual).toEqual(expectedFlush);
-      return expectedCommit => {
+      return (expectedCommit: Array<mixed>) => {
         batch._defer = false;
         NoopRenderer.flushRoot(root, 1);
         expect(yieldedValues).toEqual(expectedCommit);
@@ -652,7 +653,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     getRoot(rootID: string = DEFAULT_ROOT_ID) {
       return roots.get(rootID);
-    }
+    },
   };
 
   return ReactNoop;

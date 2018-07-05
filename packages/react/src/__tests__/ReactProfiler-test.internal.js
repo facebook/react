@@ -188,13 +188,17 @@ describe('Profiler', () => {
           <AdvanceTime />
           <AdvanceTime />
           <AdvanceTime />
+          <AdvanceTime />
+          <AdvanceTime />
         </div>,
       );
 
-      // Should be called twice: once to compute the update expiration time,
-      // and once to record the commit time.
+      // Should be called three times:
+      // 1. To mark the start (resuming) of work
+      // 1. To compute the update expiration time,
+      // 2. To record the commit time.
       // No additional calls from ProfilerTimer are expected.
-      expect(mockNow).toHaveBeenCalledTimes(2);
+      expect(mockNow).toHaveBeenCalledTimes(3);
     });
 
     it('logs render times for both mount and update', () => {
@@ -1067,20 +1071,19 @@ describe('Profiler', () => {
           <React.Fragment>
             <Child duration={duration} id={id} />
             <Child duration={duration} id={id} />
-            <Child duration={duration} id={id} />
           </React.Fragment>
         );
       }
     }
 
-    ReactNoop.advanceTime(100);
+    ReactNoop.advanceTime(50);
 
     ReactNoop.renderToRootWithID(<Parent duration={3} id="one" />, 'one');
 
     // Process up to the <Parent> component, but yield before committing.
     // This ensures that the profiler timer still has paused fibers.
     const commitFirstRender = ReactNoop.flushWithoutCommitting(
-      ['Child:render:one', 'Child:render:one', 'Child:render:one'],
+      ['Child:render:one', 'Child:render:one'],
       'one',
     );
 
@@ -1090,18 +1093,20 @@ describe('Profiler', () => {
 
     // Process some async work, but yield before committing it.
     ReactNoop.renderToRootWithID(<Parent duration={7} id="two" />, 'two');
-    ReactNoop.flushThrough(['Child:render:two', 'Child:render:two']);
+    ReactNoop.flushThrough(['Child:render:two']);
+
+    ReactNoop.advanceTime(150);
 
     // Commit the previously paused, batched work.
     commitFirstRender(['Parent:componentDidMount:one']);
 
-    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(9);
+    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(6);
     expect(ReactNoop.getRoot('two').current.actualDuration).toBe(0);
 
-    ReactNoop.advanceTime(100);
+    ReactNoop.advanceTime(200);
 
     ReactNoop.flush();
 
-    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(21);
+    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(14);
   });
 });

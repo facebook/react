@@ -8,6 +8,7 @@
  */
 
 import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
 
 import getComponentName from 'shared/getComponentName';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
@@ -19,10 +20,9 @@ export type ProfilerTimer = {
   checkActualRenderTimeStackEmpty(): void,
   getCommitTime(): number,
   markActualRenderTimeStarted(fiber: Fiber): void,
-  pauseActualRenderTimerIfRunning(): void,
+  pauseActualRenderTimerIfRunning(root: FiberRoot | null): void,
   recordElapsedActualRenderTime(fiber: Fiber): void,
-  resetActualRenderTimer(): void,
-  resumeActualRenderTimerIfPaused(): void,
+  resumeActualRenderTimerIfPaused(root: FiberRoot | null): void,
   recordCommitTime(): void,
   recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void,
   resetActualRenderTimerStackAfterFatalErrorInDev(): void,
@@ -56,6 +56,7 @@ if (__DEV__) {
   fiberStack = [];
 }
 
+let rootStartTimes: Map<FiberRoot | null, number> = new Map();
 let timerPausedAt: number = 0;
 let totalElapsedPauseTime: number = 0;
 
@@ -87,13 +88,22 @@ function markActualRenderTimeStarted(fiber: Fiber): void {
   fiber.actualStartTime = now();
 }
 
-function pauseActualRenderTimerIfRunning(): void {
+function pauseActualRenderTimerIfRunning(root: FiberRoot | null | null): void {
   if (!enableProfilerTimer) {
     return;
   }
   if (timerPausedAt === 0) {
     timerPausedAt = now();
   }
+  if (rootStartTimes.size > 1) {
+    if (rootStartTimes.has(root)) {
+      totalElapsedPauseTime +=
+        now() - ((rootStartTimes.get(root): any): number);
+    }
+  } else {
+    totalElapsedPauseTime = 0;
+  }
+  rootStartTimes.delete(root);
 }
 
 function recordElapsedActualRenderTime(fiber: Fiber): void {
@@ -112,16 +122,12 @@ function recordElapsedActualRenderTime(fiber: Fiber): void {
     now() - totalElapsedPauseTime - ((fiber.actualDuration: any): number);
 }
 
-function resetActualRenderTimer(): void {
+function resumeActualRenderTimerIfPaused(root: FiberRoot | null): void {
   if (!enableProfilerTimer) {
     return;
   }
-  totalElapsedPauseTime = 0;
-}
-
-function resumeActualRenderTimerIfPaused(): void {
-  if (!enableProfilerTimer) {
-    return;
+  if (!rootStartTimes.has(root)) {
+    rootStartTimes.set(root, now());
   }
   if (timerPausedAt > 0) {
     totalElapsedPauseTime += now() - timerPausedAt;
@@ -187,7 +193,6 @@ export {
   pauseActualRenderTimerIfRunning,
   recordCommitTime,
   recordElapsedActualRenderTime,
-  resetActualRenderTimer,
   resetActualRenderTimerStackAfterFatalErrorInDev,
   resumeActualRenderTimerIfPaused,
   recordElapsedBaseRenderTimeIfRunning,

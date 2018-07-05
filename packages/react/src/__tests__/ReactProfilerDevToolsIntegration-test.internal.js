@@ -112,23 +112,37 @@ describe('ReactProfiler DevTools integration', () => {
   it('should reset the fiber stack correctly after an error when profiling host roots', () => {
     advanceTimeBy(20);
 
-    const rendered = ReactTestRenderer.create(<div><AdvanceTime byAmount={2} /></div>);
+    const rendered = ReactTestRenderer.create(
+      <div>
+        <AdvanceTime byAmount={2} />
+      </div>,
+    );
 
     advanceTimeBy(20);
 
     expect(() => {
-      rendered.update(<div ref="this-will-cause-an-error"><AdvanceTime byAmount={3} /></div>);
+      rendered.update(
+        <div ref="this-will-cause-an-error">
+          <AdvanceTime byAmount={3} />
+        </div>,
+      );
     }).toThrow();
 
     advanceTimeBy(20);
 
     // But this should render correctly, if the profiler's fiber stack has been reset.
-    rendered.update(<div><AdvanceTime byAmount={7} /></div>);
+    rendered.update(
+      <div>
+        <AdvanceTime byAmount={7} />
+      </div>,
+    );
 
     // Measure unobservable timing required by the DevTools profiler.
     // At this point, the base time should include only the most recent (not failed) render.
     // It should not include time spent on the initial render,
     // Or time that elapsed between any of the above renders.
-    expect(rendered.root.findByType('div')._currentFiber().treeBaseTime).toBe(7);
+    expect(rendered.root.findByType('div')._currentFiber().treeBaseTime).toBe(
+      7,
+    );
   });
 });

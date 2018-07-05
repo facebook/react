@@ -51,10 +51,7 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
-import {
-  resumeActualRenderTimerIfPaused,
-  recordElapsedActualRenderTime,
-} from './ReactProfilerTimer';
+import {recordElapsedActualRenderTime} from './ReactProfilerTimer';
 import {
   renderDidSuspend,
   renderDidError,
@@ -413,8 +410,6 @@ function unwindWork(
 function unwindInterruptedWork(interruptedWork: Fiber) {
   if (enableProfilerTimer) {
     if (interruptedWork.mode & ProfileMode) {
-      // Resume in case we're picking up on work that was paused.
-      resumeActualRenderTimerIfPaused();
       recordElapsedActualRenderTime(interruptedWork);
     }
   }

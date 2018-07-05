@@ -118,7 +118,6 @@ import {
   recordCommitTime,
   recordElapsedActualRenderTime,
   recordElapsedBaseRenderTimeIfRunning,
-  resetActualRenderTimer,
   resetActualRenderTimerStackAfterFatalErrorInDev,
   resumeActualRenderTimerIfPaused,
   startBaseRenderTimer,
@@ -338,6 +337,12 @@ function resetStack() {
   if (nextUnitOfWork !== null) {
     let interruptedWork = nextUnitOfWork.return;
     while (interruptedWork !== null) {
+      if (enableProfilerTimer) {
+        if (interruptedWork.mode & ProfileMode) {
+          // Resume in case we're picking up on work that was paused.
+          resumeActualRenderTimerIfPaused(nextRoot);
+        }
+      }
       unwindInterruptedWork(interruptedWork);
       interruptedWork = interruptedWork.return;
     }
@@ -675,12 +680,13 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
 
   if (enableProfilerTimer) {
     if (__DEV__) {
-      // TODO Rather than checking that the stack is empty,
-      // Maybe change this check to assert that it matches an expected length,
-      // Which we explicitly mark at the start of a chunk of work.
-      checkActualRenderTimeStackEmpty();
+      if (nextRoot === null) {
+        // Only check this stack once we're done processing async work.
+        // This prevents a false positive that occurs after a batched commit,
+        // If there was in-progress async work before the commit.
+        checkActualRenderTimeStackEmpty();
+      }
     }
-    resetActualRenderTimer();
   }
 
   isCommitting = false;
@@ -990,7 +996,7 @@ function workLoop(isYieldy) {
     if (enableProfilerTimer) {
       // If we didn't finish, pause the "actual" render timer.
       // We'll restart it when we resume work.
-      pauseActualRenderTimerIfRunning();
+      pauseActualRenderTimerIfRunning(nextRoot);
     }
   }
 }
@@ -1826,7 +1832,7 @@ function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
   findHighestPriorityRoot();
 
   if (enableProfilerTimer) {
-    resumeActualRenderTimerIfPaused();
+    resumeActualRenderTimerIfPaused(nextRoot);
   }
 
   if (deadline !== null) {
@@ -1901,7 +1907,7 @@ function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
   performWorkOnRoot(root, expirationTime, true);
   // Flush any sync work that was scheduled by lifecycles
   performSyncWork();
-  finishRendering();
+  pauseActualRenderTimerIfRunning(root);
 }
 
 function finishRendering() {
@@ -2006,7 +2012,7 @@ function performWorkOnRoot(
           if (enableProfilerTimer) {
             // If we didn't finish, pause the "actual" render timer.
             // We'll restart it when we resume work.
-            pauseActualRenderTimerIfRunning();
+            pauseActualRenderTimerIfRunning(root);
           }
         }
       }
