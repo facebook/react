@@ -118,13 +118,13 @@
           s /= 2;
 
           return [
-            <SierpinskiTriangle x={x} y={y - (s / 2)} s={s}>
+            <SierpinskiTriangle x={x} y={y - (s / 2)} s={s} key={1}>
               {children}
             </SierpinskiTriangle>,
-            <SierpinskiTriangle x={x - s} y={y + (s / 2)} s={s}>
+            <SierpinskiTriangle x={x - s} y={y + (s / 2)} s={s} key={2}>
               {children}
             </SierpinskiTriangle>,
-            <SierpinskiTriangle x={x + s} y={y + (s / 2)} s={s}>
+            <SierpinskiTriangle x={x + s} y={y + (s / 2)} s={s} key={3}>
               {children}
             </SierpinskiTriangle>,
           ];
@@ -202,14 +202,14 @@
         render() {
           const { value, onLabel, offLabel } = this.props;
           return (
-            <label onChange={this.onChange}>
+            <label>
               <label>
                 {onLabel}
-                <input type="radio" name="value" value="on" checked={value} />
+                <input type="radio" name="value" value="on" checked={value} onChange={this.onChange}/>
               </label>
               <label>
                 {offLabel}
-                <input type="radio" name="value" value="off" checked={!value} />
+                <input type="radio" name="value" value="off" checked={!value} onChange={this.onChange}  />
               </label>
             </label>
           );
