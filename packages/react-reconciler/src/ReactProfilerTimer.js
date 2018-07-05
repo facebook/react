@@ -21,10 +21,10 @@ export type ProfilerTimer = {
   markActualRenderTimeStarted(fiber: Fiber): void,
   pauseActualRenderTimerIfRunning(): void,
   recordElapsedActualRenderTime(fiber: Fiber): void,
-  resetActualRenderTimer(): void,
-  resumeActualRenderTimerIfPaused(): void,
+  resumeActualRenderTimerIfPaused(isProcessingBatchCommit: boolean): void,
   recordCommitTime(): void,
   recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void,
+  resetActualRenderTimerStackAfterFatalErrorInDev(): void,
   startBaseRenderTimer(): void,
   stopBaseRenderTimerIfRunning(): void,
 };
@@ -55,6 +55,7 @@ if (__DEV__) {
   fiberStack = [];
 }
 
+let syncCommitStartTime: number = 0;
 let timerPausedAt: number = 0;
 let totalElapsedPauseTime: number = 0;
 
@@ -90,6 +91,14 @@ function pauseActualRenderTimerIfRunning(): void {
   if (timerPausedAt === 0) {
     timerPausedAt = now();
   }
+  if (syncCommitStartTime > 0) {
+    // Don't count the time spent processing sycn work,
+    // Against yielded async work that will be resumed later.
+    totalElapsedPauseTime += now() - syncCommitStartTime;
+    syncCommitStartTime = 0;
+  } else {
+    totalElapsedPauseTime = 0;
+  }
 }
 
 function recordElapsedActualRenderTime(fiber: Fiber): void {
@@ -108,20 +117,25 @@ function recordElapsedActualRenderTime(fiber: Fiber): void {
     now() - totalElapsedPauseTime - ((fiber.actualDuration: any): number);
 }
 
-function resetActualRenderTimer(): void {
+function resumeActualRenderTimerIfPaused(isProcessingSyncWork: boolean): void {
   if (!enableProfilerTimer) {
     return;
   }
-  totalElapsedPauseTime = 0;
-}
-
-function resumeActualRenderTimerIfPaused(): void {
-  if (!enableProfilerTimer) {
-    return;
+  if (isProcessingSyncWork && syncCommitStartTime === 0) {
+    syncCommitStartTime = now();
   }
   if (timerPausedAt > 0) {
     totalElapsedPauseTime += now() - timerPausedAt;
     timerPausedAt = 0;
+  }
+}
+
+function resetActualRenderTimerStackAfterFatalErrorInDev(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  if (__DEV__) {
+    fiberStack.length = 0;
   }
 }
 
@@ -174,7 +188,7 @@ export {
   pauseActualRenderTimerIfRunning,
   recordCommitTime,
   recordElapsedActualRenderTime,
-  resetActualRenderTimer,
+  resetActualRenderTimerStackAfterFatalErrorInDev,
   resumeActualRenderTimerIfPaused,
   recordElapsedBaseRenderTimeIfRunning,
   startBaseRenderTimer,

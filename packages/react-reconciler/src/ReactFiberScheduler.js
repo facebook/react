@@ -118,7 +118,7 @@ import {
   recordCommitTime,
   recordElapsedActualRenderTime,
   recordElapsedBaseRenderTimeIfRunning,
-  resetActualRenderTimer,
+  resetActualRenderTimerStackAfterFatalErrorInDev,
   resumeActualRenderTimerIfPaused,
   startBaseRenderTimer,
   stopBaseRenderTimerIfRunning,
@@ -337,6 +337,12 @@ function resetStack() {
   if (nextUnitOfWork !== null) {
     let interruptedWork = nextUnitOfWork.return;
     while (interruptedWork !== null) {
+      if (enableProfilerTimer) {
+        if (interruptedWork.mode & ProfileMode) {
+          // Resume in case we're picking up on work that was paused.
+          resumeActualRenderTimerIfPaused(false);
+        }
+      }
       unwindInterruptedWork(interruptedWork);
       interruptedWork = interruptedWork.return;
     }
@@ -674,9 +680,13 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
 
   if (enableProfilerTimer) {
     if (__DEV__) {
-      checkActualRenderTimeStackEmpty();
+      if (nextRoot === null) {
+        // Only check this stack once we're done processing async work.
+        // This prevents a false positive that occurs after a batched commit,
+        // If there was in-progress async work before the commit.
+        checkActualRenderTimeStackEmpty();
+      }
     }
-    resetActualRenderTimer();
   }
 
   isCommitting = false;
@@ -1100,6 +1110,10 @@ function renderRoot(
     // There was a fatal error.
     if (__DEV__) {
       resetStackAfterFatalErrorInDev();
+
+      // Reset the DEV fiber stack in case we're profiling roots.
+      // (We do this for profiling bulds when DevTools is detected.)
+      resetActualRenderTimerStackAfterFatalErrorInDev();
     }
     // `nextRoot` points to the in-progress root. A non-null value indicates
     // that we're in the middle of an async render. Set it to null to indicate
@@ -1817,7 +1831,7 @@ function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
   findHighestPriorityRoot();
 
   if (enableProfilerTimer) {
-    resumeActualRenderTimerIfPaused();
+    resumeActualRenderTimerIfPaused(minExpirationTime === Sync);
   }
 
   if (deadline !== null) {
@@ -1892,7 +1906,7 @@ function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
   performWorkOnRoot(root, expirationTime, true);
   // Flush any sync work that was scheduled by lifecycles
   performSyncWork();
-  finishRendering();
+  pauseActualRenderTimerIfRunning();
 }
 
 function finishRendering() {

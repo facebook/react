@@ -43,6 +43,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   let instanceCounter = 0;
   let failInBeginPhase = false;
+  let failInCompletePhase = false;
 
   function appendChild(
     parentInstance: Instance | Container,
@@ -101,6 +102,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     createInstance(type: string, props: Props): Instance {
+      if (failInCompletePhase) {
+        throw new Error('Error in host config.');
+      }
       const inst = {
         id: instanceCounter++,
         type: type,
@@ -606,13 +610,49 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       console.log(...bufferedLog);
     },
 
-    simulateErrorInHostConfig(fn: () => void) {
+    simulateErrorInHostConfigDuringBeginPhase(fn: () => void) {
       failInBeginPhase = true;
       try {
         fn();
       } finally {
         failInBeginPhase = false;
       }
+    },
+
+    simulateErrorInHostConfigDuringCompletePhase(fn: () => void) {
+      failInCompletePhase = true;
+      try {
+        fn();
+      } finally {
+        failInCompletePhase = false;
+      }
+    },
+
+    flushWithoutCommitting(
+      expectedFlush: Array<mixed>,
+      rootID: string = DEFAULT_ROOT_ID,
+    ) {
+      const root: any = roots.get(rootID);
+      const batch = {
+        _defer: true,
+        _expirationTime: 1,
+        _onComplete: () => {
+          root.firstBatch = null;
+        },
+        _next: null,
+      };
+      root.firstBatch = batch;
+      const actual = ReactNoop.flush();
+      expect(actual).toEqual(expectedFlush);
+      return (expectedCommit: Array<mixed>) => {
+        batch._defer = false;
+        NoopRenderer.flushRoot(root, 1);
+        expect(yieldedValues).toEqual(expectedCommit);
+      };
+    },
+
+    getRoot(rootID: string = DEFAULT_ROOT_ID) {
+      return roots.get(rootID);
     },
   };
 

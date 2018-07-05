@@ -314,19 +314,13 @@ function completeWork(
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
 
-  if (enableProfilerTimer) {
-    if (workInProgress.mode & ProfileMode) {
-      recordElapsedActualRenderTime(workInProgress);
-    }
-  }
-
   switch (workInProgress.tag) {
     case FunctionalComponent:
-      return null;
+      break;
     case ClassComponent: {
       // We are leaving this subtree, so pop context if any.
       popLegacyContextProvider(workInProgress);
-      return null;
+      break;
     }
     case HostRoot: {
       popHostContainer(workInProgress);
@@ -345,7 +339,7 @@ function completeWork(
         workInProgress.effectTag &= ~Placement;
       }
       updateHostContainer(workInProgress);
-      return null;
+      break;
     }
     case HostComponent: {
       popHostContext(workInProgress);
@@ -395,7 +389,7 @@ function completeWork(
               'caused by a bug in React. Please file an issue.',
           );
           // This can happen when we abort work.
-          return null;
+          break;
         }
 
         const currentHostContext = getHostContext();
@@ -451,7 +445,7 @@ function completeWork(
           markRef(workInProgress);
         }
       }
-      return null;
+      break;
     }
     case HostText: {
       let newText = newProps;
@@ -468,7 +462,6 @@ function completeWork(
               'caused by a bug in React. Please file an issue.',
           );
           // This can happen when we abort work.
-          return null;
         }
         const rootContainerInstance = getRootHostContainer();
         const currentHostContext = getHostContext();
@@ -486,28 +479,28 @@ function completeWork(
           );
         }
       }
-      return null;
+      break;
     }
     case ForwardRef:
-      return null;
+      break;
     case PlaceholderComponent:
-      return null;
+      break;
     case Fragment:
-      return null;
+      break;
     case Mode:
-      return null;
+      break;
     case Profiler:
-      return null;
+      break;
     case HostPortal:
       popHostContainer(workInProgress);
       updateHostContainer(workInProgress);
-      return null;
+      break;
     case ContextProvider:
       // Pop provider fiber
       popProvider(workInProgress);
-      return null;
+      break;
     case ContextConsumer:
-      return null;
+      break;
     // Error cases
     case IndeterminateComponent:
       invariant(
@@ -524,6 +517,18 @@ function completeWork(
           'React. Please file an issue.',
       );
   }
+
+  if (enableProfilerTimer) {
+    if (workInProgress.mode & ProfileMode) {
+      // Don't record elapsed time unless the "complete" phase has succeeded.
+      // Certain renderers may error during this phase (i.e. ReactNative View/Text nesting validation).
+      // If an error occurs, we'll mark the time while unwinding.
+      // This simplifies the unwinding logic and ensures consistency.
+      recordElapsedActualRenderTime(workInProgress);
+    }
+  }
+
+  return null;
 }
 
 export {completeWork};
