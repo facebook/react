@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html style="width: 100%; height: 100%; overflow: hidden">
-  <head>
-    <meta charset="utf-8">
-    <title>Fiber Example</title>
-  </head>
-  <body>
-    <h1>Fiber Example</h1>
-    <div id="container">
-      <p>
-        To install React, follow the instructions on
-        <a href="https://github.com/facebook/react/">GitHub</a>.
-      </p>
-      <p>
-        If you can see this, React is <strong>not</strong> working right.
-        If you checked out the source from GitHub make sure to run <code>npm run build</code>.
-      </p>
-    </div>
-    <script src="../../build/dist/react.development.js"></script>
-    <script src="../../build/dist/react-dom.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
-    <script type="text/babel">
-      var dotStyle = {
+
+<head>
+  <meta charset="utf-8">
+  <title>Fiber Example</title>
+</head>
+
+<body>
+  <h1>Fiber Example</h1>
+  <div id="container">
+    <p>
+      To install React, follow the instructions on
+      <a href="https://github.com/facebook/react/">GitHub</a>.
+    </p>
+    <p>
+      If you can see this, React is
+      <strong>not</strong> working right. If you checked out the source from GitHub make sure to run
+      <code>npm run build</code>.
+    </p>
+  </div>
+  <script src="../../build/dist/react.development.js"></script>
+  <script src="../../build/dist/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+  <script type="text/babel">
+      const dotStyle = {
         position: 'absolute',
         background: '#61dafb',
         font: 'normal 15px sans-serif',
@@ -28,7 +31,7 @@
         cursor: 'pointer',
       };
 
-      var containerStyle = {
+      const containerStyle = {
         position: 'absolute',
         transformOrigin: '0 0',
         left: '50%',
@@ -38,12 +41,14 @@
         background: '#eee',
       };
 
-      var targetSize = 25;
+      const targetSize = 25;
 
       class Dot extends React.Component {
         constructor() {
           super();
           this.state = { hover: false };
+          this.enter = this.enter.bind(this);
+          this.leave = this.leave.bind(this);
         }
         enter() {
           this.setState({
@@ -56,21 +61,22 @@
           });
         }
         render() {
-          var props = this.props;
-          var s = props.size * 1.3;
-          var style = {
+          const { size, x, y, text } = this.props;
+          const { hover } = this.state;
+          const s = size * 1.3;
+          const style = {
             ...dotStyle,
             width: s + 'px',
             height: s + 'px',
-            left: (props.x) + 'px',
-            top: (props.y) + 'px',
-            borderRadius: (s / 2) + 'px',
-            lineHeight: (s) + 'px',
+            left: `${x}px`,
+            top: `${y}px`,
+            borderRadius: `${s / 2}px`,
+            lineHeight: `${s}px`,
             background: this.state.hover ? '#ff0' : dotStyle.background
           };
           return (
-            <div style={style} onMouseEnter={() => this.enter()} onMouseLeave={() => this.leave()}>
-              {this.state.hover ? '*' + props.text + '*' : props.text}
+            <div style={style} onMouseEnter={this.enter} onMouseLeave={this.leave}>
+              {hover ? '*' + text + '*' : text}
             </div>
           );
         }
@@ -78,8 +84,8 @@
 
       class SierpinskiTriangle extends React.Component {
         shouldComponentUpdate(nextProps) {
-          var o = this.props;
-          var n = nextProps;
+          const o = this.props;
+          const n = nextProps;
           return !(
             o.x === n.x &&
             o.y === n.y &&
@@ -88,7 +94,7 @@
           );
         }
         render() {
-          let {x, y, s, children} = this.props;
+          let { x, y, s, children } = this.props;
           if (s <= targetSize) {
             return (
               <Dot
@@ -100,10 +106,10 @@
             );
             return r;
           }
-          var newSize = s / 2;
-          var slowDown = true;
+          const newSize = s / 2;
+          const slowDown = true;
           if (slowDown) {
-            var e = performance.now() + 0.8;
+            const e = performance.now() + 0.8;
             while (performance.now() < e) {
               // Artificially long execution time.
             }
@@ -160,7 +166,7 @@
           const elapsed = this.props.elapsed;
           const t = (elapsed / 1000) % 10;
           const scale = 1 + (t > 5 ? 10 - t : t) / 10;
-          const transform = 'scaleX(' + (scale / 2.1) + ') scaleY(0.7) translateZ(0.1px)';
+          const transform = `scaleX(${scale / 2.1}) scaleY(0.7) translateZ(0.1px)`;
           return (
             <div>
               <div>
@@ -176,7 +182,7 @@
               <div style={{ ...containerStyle, transform }}>
                 <div>
                   <SierpinskiTriangle x={0} y={0} s={1000}>
-                    {this.state.seconds}
+                    {seconds}
                   </SierpinskiTriangle>
                 </div>
               </div>
@@ -194,15 +200,15 @@
           this.props.onChange(event.target.value === 'on');
         }
         render() {
-          const value = this.props.value;
+          const { value, onLabel, offLabel } = this.props;
           return (
             <label onChange={this.onChange}>
               <label>
-                {this.props.onLabel}
+                {onLabel}
                 <input type="radio" name="value" value="on" checked={value} />
               </label>
               <label>
-                {this.props.offLabel}
+                {offLabel}
                 <input type="radio" name="value" value="off" checked={!value} />
               </label>
             </label>
@@ -210,7 +216,7 @@
         }
       }
 
-      var start = new Date().getTime();
+      const start = new Date().getTime();
       function update() {
         ReactDOM.render(
           <ExampleApplication elapsed={new Date().getTime() - start} />,
@@ -220,5 +226,6 @@
       }
       requestAnimationFrame(update);
     </script>
-  </body>
+</body>
+
 </html>
