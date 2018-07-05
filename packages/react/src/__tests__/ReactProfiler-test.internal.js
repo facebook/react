@@ -193,10 +193,10 @@ describe('Profiler', () => {
         </div>,
       );
 
-      // Should be called three times:
+      // Should be called two times:
       // 1. To mark the start (resuming) of work
-      // 1. To compute the update expiration time,
-      // 2. To record the commit time.
+      // 2. To compute the update expiration time,
+      // 3. To record the commit time.
       // No additional calls from ProfilerTimer are expected.
       expect(mockNow).toHaveBeenCalledTimes(3);
     });

@@ -340,7 +340,7 @@ function resetStack() {
       if (enableProfilerTimer) {
         if (interruptedWork.mode & ProfileMode) {
           // Resume in case we're picking up on work that was paused.
-          resumeActualRenderTimerIfPaused(nextRoot);
+          resumeActualRenderTimerIfPaused(false);
         }
       }
       unwindInterruptedWork(interruptedWork);
@@ -996,7 +996,7 @@ function workLoop(isYieldy) {
     if (enableProfilerTimer) {
       // If we didn't finish, pause the "actual" render timer.
       // We'll restart it when we resume work.
-      pauseActualRenderTimerIfRunning(nextRoot);
+      pauseActualRenderTimerIfRunning();
     }
   }
 }
@@ -1832,7 +1832,7 @@ function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
   findHighestPriorityRoot();
 
   if (enableProfilerTimer) {
-    resumeActualRenderTimerIfPaused(nextRoot);
+    resumeActualRenderTimerIfPaused(minExpirationTime === Sync);
   }
 
   if (deadline !== null) {
@@ -1907,7 +1907,7 @@ function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
   performWorkOnRoot(root, expirationTime, true);
   // Flush any sync work that was scheduled by lifecycles
   performSyncWork();
-  pauseActualRenderTimerIfRunning(root);
+  pauseActualRenderTimerIfRunning();
 }
 
 function finishRendering() {
@@ -2012,7 +2012,7 @@ function performWorkOnRoot(
           if (enableProfilerTimer) {
             // If we didn't finish, pause the "actual" render timer.
             // We'll restart it when we resume work.
-            pauseActualRenderTimerIfRunning(root);
+            pauseActualRenderTimerIfRunning();
           }
         }
       }
