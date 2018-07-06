@@ -664,4 +664,60 @@ describe('ReactDOMServer', () => {
       require('react-dom');
     }).not.toThrow();
   });
+
+  it('includes a useful stack in warnings', () => {
+    function A() {
+      return null;
+    }
+
+    function B() {
+      return (
+        <font>
+          <C>
+            <span ariaTypo="no" />
+          </C>
+        </font>
+      );
+    }
+
+    class C extends React.Component {
+      render() {
+        return <b>{this.props.children}</b>;
+      }
+    }
+
+    function Child() {
+      return [<A key="1" />, <B key="2" />, <span ariaTypo2="no" />];
+    }
+
+    function App() {
+      return (
+        <div>
+          <section />
+          <span>
+            <Child />
+          </span>
+        </div>
+      );
+    }
+
+    expect(() => ReactDOMServer.renderToString(<App />)).toWarnDev([
+      'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in b (at **)\n' +
+        '    in C (at **)\n' +
+        '    in font (at **)\n' +
+        '    in B (at **)\n' +
+        '    in Child (at **)\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+      'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in Child (at **)\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+    ]);
+  });
 });
