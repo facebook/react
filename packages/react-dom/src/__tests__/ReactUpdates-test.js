@@ -1364,4 +1364,37 @@ describe('ReactUpdates', () => {
       ReactDOM.render(<NonTerminating />, container);
     }).toThrow('Maximum');
   });
+
+  it('can schedule ridiculously many updates within the same batch without triggering a maximum update error', () => {
+    const subscribers = [];
+
+    class Child extends React.Component {
+      state = {value: 'initial'};
+      componentDidMount() {
+        subscribers.push(this);
+      }
+      render() {
+        return null;
+      }
+    }
+
+    class App extends React.Component {
+      render() {
+        const children = [];
+        for (let i = 0; i < 1200; i++) {
+          children.push(<Child key={i} />);
+        }
+        return children;
+      }
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<App />, container);
+
+    ReactDOM.unstable_batchedUpdates(() => {
+      subscribers.forEach(s => {
+        s.setState({value: 'update'});
+      });
+    });
+  });
 });

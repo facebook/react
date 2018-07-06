@@ -1474,6 +1474,8 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
     requestWork(root, rootExpirationTime);
   }
   if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
+    // Reset this back to zero so subsequent updates don't throw.
+    nestedUpdateCount = 0;
     invariant(
       false,
       'Maximum update depth exceeded. This can happen when a ' +
@@ -1544,6 +1546,7 @@ let currentSchedulerTime: ExpirationTime = currentRendererTime;
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 1000;
 let nestedUpdateCount: number = 0;
+let lastCommittedRootDuringThisBatch: FiberRoot | null = null;
 
 const timeHeuristicForUnitOfWork = 1;
 
@@ -1798,19 +1801,6 @@ function findHighestPriorityRoot() {
     }
   }
 
-  // If the next root is the same as the previous root, this is a nested
-  // update. To prevent an infinite loop, increment the nested update count.
-  const previousFlushedRoot = nextFlushedRoot;
-  if (
-    previousFlushedRoot !== null &&
-    previousFlushedRoot === highestPriorityRoot &&
-    highestPriorityWork === Sync
-  ) {
-    nestedUpdateCount++;
-  } else {
-    // Reset whenever we switch roots.
-    nestedUpdateCount = 0;
-  }
   nextFlushedRoot = highestPriorityRoot;
   nextFlushedExpirationTime = highestPriorityWork;
 }
@@ -1911,6 +1901,7 @@ function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
 
 function finishRendering() {
   nestedUpdateCount = 0;
+  lastCommittedRootDuringThisBatch = null;
 
   if (completedBatches !== null) {
     const batches = completedBatches;
@@ -2046,6 +2037,17 @@ function completeRoot(
   // Commit the root.
   root.finishedWork = null;
 
+  // Check if this is a nested update (a sync update scheduled during the
+  // commit phase).
+  if (root === lastCommittedRootDuringThisBatch) {
+    // If the next root is the same as the previous root, this is a nested
+    // update. To prevent an infinite loop, increment the nested update count.
+    nestedUpdateCount++;
+  } else {
+    // Reset whenever we switch roots.
+    lastCommittedRootDuringThisBatch = root;
+    nestedUpdateCount = 0;
+  }
   commitRoot(root, finishedWork);
 }
 
