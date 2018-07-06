@@ -8,7 +8,10 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
+import {
+  getCurrentFiberOwnerName,
+  getCurrentFiberStackAddendum,
+} from 'react-reconciler/src/ReactDebugCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 
@@ -45,10 +48,6 @@ import {validateProperties as validateARIAProperties} from '../shared/ReactDOMIn
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
-const {
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
-} = ReactDebugCurrentFiber;
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
 

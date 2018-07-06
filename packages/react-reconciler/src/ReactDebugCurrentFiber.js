@@ -15,13 +15,15 @@ import type {Fiber} from './ReactFiber';
 
 type LifeCyclePhase = 'render' | 'getChildContext';
 
-function getCurrentFiberOwnerName(): string | null {
+export let current: Fiber | null = null;
+export let phase: LifeCyclePhase | null = null;
+
+export function getCurrentFiberOwnerName(): string | null {
   if (__DEV__) {
-    const fiber = ReactDebugCurrentFiber.current;
-    if (fiber === null) {
+    if (current === null) {
       return null;
     }
-    const owner = fiber._debugOwner;
+    const owner = current._debugOwner;
     if (owner !== null && typeof owner !== 'undefined') {
       return getComponentName(owner);
     }
@@ -29,43 +31,36 @@ function getCurrentFiberOwnerName(): string | null {
   return null;
 }
 
-function getCurrentFiberStackAddendum(): string | null {
+export function getCurrentFiberStackAddendum(): string | null {
   if (__DEV__) {
-    const fiber = ReactDebugCurrentFiber.current;
-    if (fiber === null) {
+    if (current === null) {
       return null;
     }
     // Safe because if current fiber exists, we are reconciling,
     // and it is guaranteed to be the work-in-progress version.
-    return getStackAddendumByWorkInProgressFiber(fiber);
+    return getStackAddendumByWorkInProgressFiber(current);
   }
   return null;
 }
 
-function resetCurrentFiber() {
-  ReactDebugCurrentFrame.getCurrentStack = null;
-  ReactDebugCurrentFiber.current = null;
-  ReactDebugCurrentFiber.phase = null;
+export function resetCurrentFiber() {
+  if (__DEV__) {
+    ReactDebugCurrentFrame.getCurrentStack = null;
+    current = null;
+    phase = null;
+  }
 }
 
-function setCurrentFiber(fiber: Fiber) {
-  ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackAddendum;
-  ReactDebugCurrentFiber.current = fiber;
-  ReactDebugCurrentFiber.phase = null;
+export function setCurrentFiber(fiber: Fiber) {
+  if (__DEV__) {
+    ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackAddendum;
+    current = fiber;
+    phase = null;
+  }
 }
 
-function setCurrentPhase(phase: LifeCyclePhase | null) {
-  ReactDebugCurrentFiber.phase = phase;
+export function setCurrentPhase(lifeCyclePhase: LifeCyclePhase | null) {
+  if (__DEV__) {
+    phase = lifeCyclePhase;
+  }
 }
-
-const ReactDebugCurrentFiber = {
-  current: (null: Fiber | null),
-  phase: (null: LifeCyclePhase | null),
-  resetCurrentFiber,
-  setCurrentFiber,
-  setCurrentPhase,
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
-};
-
-export default ReactDebugCurrentFiber;

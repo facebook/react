@@ -56,7 +56,7 @@ import {
 } from './ReactFiberHostConfig';
 
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import * as ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {
   now,
   scheduleDeferredCallback,

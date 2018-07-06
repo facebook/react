@@ -50,7 +50,7 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import * as ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import {applyDerivedStateFromProps} from './ReactFiberClassComponent';
@@ -97,8 +97,6 @@ import {
   updateClassInstance,
 } from './ReactFiberClassComponent';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
-
-const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
@@ -935,7 +933,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
         newProps,
         'prop',
         'Context.Provider',
-        getCurrentFiberStackAddendum,
+        ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
       );
     }
   }

@@ -17,7 +17,7 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import * as ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
 

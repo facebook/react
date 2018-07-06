@@ -39,10 +39,8 @@ import {
   createFiberFromPortal,
 } from './ReactFiber';
 import {emptyRefsObject} from './ReactFiberClassComponent';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import {getCurrentFiberStackAddendum} from './ReactDebugCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
-
-const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
 let didWarnAboutMaps;
 let didWarnAboutStringRefInStrictMode;

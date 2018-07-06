@@ -7,9 +7,8 @@
 
 import warning from 'shared/warning';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
+import {getCurrentFiberStackAddendum} from 'react-reconciler/src/ReactDebugCurrentFiber';
 
-const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 let validateDOMNesting = () => {};
 
 if (__DEV__) {

@@ -8,7 +8,10 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
+import {
+  getCurrentFiberOwnerName,
+  getCurrentFiberStackAddendum,
+} from 'react-reconciler/src/ReactDebugCurrentFiber';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
@@ -25,10 +28,6 @@ type InputWithWrapperState = HTMLInputElement & {
   },
 };
 
-const {
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
-} = ReactDebugCurrentFiber;
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
 let didWarnControlledToUncontrolled = false;
