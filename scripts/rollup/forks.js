@@ -74,6 +74,12 @@ const forks = Object.freeze({
       case 'react-reconciler/persistent':
         return 'shared/forks/ReactFeatureFlags.persistent.js';
       case 'react-test-renderer':
+        switch (bundleType) {
+          case FB_WWW_DEV:
+          case FB_WWW_PROD:
+          case FB_WWW_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.test-renderer.www.js';
+        }
         return 'shared/forks/ReactFeatureFlags.test-renderer.js';
       default:
         switch (bundleType) {
