@@ -61,13 +61,13 @@ type FlatReactChildren = Array<null | ReactNode>;
 type toArrayType = (children: mixed) => FlatReactChildren;
 const toArray = ((React.Children.toArray: any): toArrayType);
 
-let getStackAddendum = () => '';
+let getStackAddendum: () => string = () => '';
 let describeStackFrame = element => '';
 
 let validatePropertiesInDevelopment = (type, props) => {};
 
 if (__DEV__) {
-  getStackAddendum = () => ReactDebugCurrentFrame.getCurrentStack() || '';
+  getStackAddendum = () => ReactDebugCurrentFrame.getStackAddendum() || '';
   describeStackFrame = function(element): string {
     const source = element._source;
     const type = element.type;
