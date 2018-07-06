@@ -9,8 +9,8 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
+  getCurrentFiberOwnerNameInDevOrNull,
+  getCurrentFiberStackInDevOrNull,
 } from 'react-reconciler/src/ReactDebugCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
@@ -61,7 +61,7 @@ const HTML = '__html';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
-let getStack = () => '';
+let getStackInDevOrNull = () => '';
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
@@ -76,7 +76,7 @@ let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
 
 if (__DEV__) {
-  getStack = getCurrentFiberStackAddendum;
+  getStackInDevOrNull = getCurrentFiberStackInDevOrNull;
 
   warnedUnknownTags = {
     // Chrome is the only major browser not shipping <time>. But as of July
@@ -180,7 +180,7 @@ if (__DEV__) {
         registrationName,
         registrationName,
         registrationName,
-        getCurrentFiberStackAddendum(),
+        getCurrentFiberStackInDevOrNull(),
       );
     } else {
       warning(
@@ -188,7 +188,7 @@ if (__DEV__) {
         'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
         registrationName,
         typeof listener,
-        getCurrentFiberStackAddendum(),
+        getCurrentFiberStackInDevOrNull(),
       );
     }
   };
@@ -266,7 +266,11 @@ function setInitialDOMProperties(
         }
       }
       // Relies on `updateStylesByID` not mutating `styleUpdates`.
-      CSSPropertyOperations.setValueForStyles(domElement, nextProp, getStack);
+      CSSPropertyOperations.setValueForStyles(
+        domElement,
+        nextProp,
+        getStackInDevOrNull,
+      );
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       const nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
@@ -322,7 +326,11 @@ function updateDOMProperties(
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
     if (propKey === STYLE) {
-      CSSPropertyOperations.setValueForStyles(domElement, propValue, getStack);
+      CSSPropertyOperations.setValueForStyles(
+        domElement,
+        propValue,
+        getStackInDevOrNull,
+      );
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {
@@ -441,7 +449,7 @@ export function setInitialProperties(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnShadyDOM = true;
     }
@@ -515,7 +523,7 @@ export function setInitialProperties(
       props = rawProps;
   }
 
-  assertValidProps(tag, props, getStack);
+  assertValidProps(tag, props, getStackInDevOrNull);
 
   setInitialDOMProperties(
     tag,
@@ -603,7 +611,7 @@ export function diffProperties(
       break;
   }
 
-  assertValidProps(tag, nextProps, getStack);
+  assertValidProps(tag, nextProps, getStackInDevOrNull);
 
   let propKey;
   let styleName;
@@ -833,7 +841,7 @@ export function diffHydratedProperties(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnShadyDOM = true;
     }
@@ -894,7 +902,7 @@ export function diffHydratedProperties(
       break;
   }
 
-  assertValidProps(tag, rawProps, getStack);
+  assertValidProps(tag, rawProps, getStackInDevOrNull);
 
   if (__DEV__) {
     extraAttributeNames = new Set();

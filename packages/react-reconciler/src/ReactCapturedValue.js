@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {getStackAddendumByWorkInProgressFiber} from './ReactDebugCurrentFiber';
+import {getStackByFiberInDevAndProd} from './ReactDebugCurrentFiber';
 
 export type CapturedValue<T> = {
   value: T,
@@ -36,6 +36,6 @@ export function createCapturedValue<T>(
   return {
     value,
     source,
-    stack: getStackAddendumByWorkInProgressFiber(source),
+    stack: getStackByFiberInDevAndProd(source),
   };
 }

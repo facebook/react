@@ -9,8 +9,8 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
+  getCurrentFiberOwnerNameInDevOrNull,
+  getCurrentFiberStackInDevOrNull,
 } from 'react-reconciler/src/ReactDebugCurrentFiber';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -74,7 +74,7 @@ export function initWrapperState(element: Element, props: Object) {
     ReactControlledValuePropTypes.checkPropTypes(
       'input',
       props,
-      getCurrentFiberStackAddendum,
+      getCurrentFiberStackInDevOrNull,
     );
 
     if (
@@ -90,7 +90,7 @@ export function initWrapperState(element: Element, props: Object) {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
       didWarnCheckedDefaultChecked = true;
@@ -108,7 +108,7 @@ export function initWrapperState(element: Element, props: Object) {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
       didWarnValueDefaultValue = true;
@@ -153,7 +153,7 @@ export function updateWrapper(element: Element, props: Object) {
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
         props.type,
-        getCurrentFiberStackAddendum(),
+        getCurrentFiberStackInDevOrNull(),
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -169,7 +169,7 @@ export function updateWrapper(element: Element, props: Object) {
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
         props.type,
-        getCurrentFiberStackAddendum(),
+        getCurrentFiberStackInDevOrNull(),
       );
       didWarnControlledToUncontrolled = true;
     }

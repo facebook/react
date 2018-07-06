@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {getStackAddendumByWorkInProgressFiber} from './ReactDebugCurrentFiber';
+import {getStackByFiberInDevAndProd} from './ReactDebugCurrentFiber';
 
 import getComponentName from 'shared/getComponentName';
 import {StrictMode} from './ReactTypeOfMode';
@@ -95,7 +95,7 @@ if (__DEV__) {
         });
 
         if (lifecyclesWarningMesages.length > 0) {
-          const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
+          const strictRootComponentStack = getStackByFiberInDevAndProd(
             strictRoot,
           );
 
@@ -342,7 +342,7 @@ if (__DEV__) {
         });
 
         const sortedNames = setToSortedString(uniqueNames);
-        const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
+        const strictRootComponentStack = getStackByFiberInDevAndProd(
           strictRoot,
         );
 

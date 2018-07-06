@@ -658,7 +658,7 @@ function mountIndeterminateComponent(
       }
       if (workInProgress.ref !== null) {
         let info = '';
-        const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
+        const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerNameInDevOrNull();
         if (ownerName) {
           info += '\n\nCheck the render method of `' + ownerName + '`.';
         }
@@ -675,7 +675,7 @@ function mountIndeterminateComponent(
             'Stateless function components cannot be given refs. ' +
               'Attempts to access this ref will fail.%s%s',
             info,
-            ReactDebugCurrentFiber.getCurrentFiberStackAddendum(),
+            ReactDebugCurrentFiber.getCurrentFiberStackInDevOrNull(),
           );
         }
       }
@@ -933,7 +933,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
         newProps,
         'prop',
         'Context.Provider',
-        ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
+        ReactDebugCurrentFiber.getCurrentFiberStackInDevOrNull,
       );
     }
   }

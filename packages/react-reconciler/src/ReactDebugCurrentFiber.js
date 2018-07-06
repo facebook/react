@@ -40,17 +40,11 @@ function describeFiber(fiber: Fiber): string {
   }
 }
 
-// This function can only be called with a work-in-progress fiber and
-// only during begin or complete phase. Do not call it under any other
-// circumstances. Note that this method works both in DEV and PROD.
-export function getStackAddendumByWorkInProgressFiber(
-  workInProgress: Fiber,
-): string {
+export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
   let info = '';
   let node = workInProgress;
   do {
     info += describeFiber(node);
-    // Otherwise this return pointer might point to the wrong tree:
     node = node.return;
   } while (node);
   return info;
@@ -59,7 +53,7 @@ export function getStackAddendumByWorkInProgressFiber(
 export let current: Fiber | null = null;
 export let phase: LifeCyclePhase | null = null;
 
-export function getCurrentFiberOwnerName(): string | null {
+export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   if (__DEV__) {
     if (current === null) {
       return null;
@@ -72,14 +66,14 @@ export function getCurrentFiberOwnerName(): string | null {
   return null;
 }
 
-export function getCurrentFiberStackAddendum(): string | null {
+export function getCurrentFiberStackInDevOrNull(): string | null {
   if (__DEV__) {
     if (current === null) {
       return null;
     }
     // Safe because if current fiber exists, we are reconciling,
     // and it is guaranteed to be the work-in-progress version.
-    return getStackAddendumByWorkInProgressFiber(current);
+    return getStackByFiberInDevAndProd(current);
   }
   return null;
 }
@@ -94,7 +88,7 @@ export function resetCurrentFiber() {
 
 export function setCurrentFiber(fiber: Fiber) {
   if (__DEV__) {
-    ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackAddendum;
+    ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDevOrNull;
     current = fiber;
     phase = null;
   }

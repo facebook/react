@@ -44,7 +44,7 @@ import warning from 'shared/warning';
 import {Sync} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import {getStackAddendumByWorkInProgressFiber} from './ReactDebugCurrentFiber';
+import {getStackByFiberInDevAndProd} from './ReactDebugCurrentFiber';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {getCommitTime} from './ReactProfilerTimer';
 import {commitUpdateQueue} from './ReactUpdateQueue';
@@ -89,7 +89,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   const source = errorInfo.source;
   let stack = errorInfo.stack;
   if (stack === null && source !== null) {
-    stack = getStackAddendumByWorkInProgressFiber(source);
+    stack = getStackByFiberInDevAndProd(source);
   }
 
   const capturedError: CapturedError = {
@@ -373,7 +373,7 @@ function commitAttachRef(finishedWork: Fiber) {
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().%s',
             getComponentName(finishedWork),
-            getStackAddendumByWorkInProgressFiber(finishedWork),
+            getStackByFiberInDevAndProd(finishedWork),
           );
         }
       }
