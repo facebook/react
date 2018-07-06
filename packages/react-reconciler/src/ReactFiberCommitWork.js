@@ -830,7 +830,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           finishedWork.memoizedProps.id,
           current === null ? 'mount' : 'update',
           finishedWork.actualDuration,
-          finishedWork.treeBaseTime,
+          finishedWork.treeBaseDuration,
           finishedWork.actualStartTime,
           getCommitTime(),
         );
