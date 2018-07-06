@@ -14,7 +14,7 @@ import './ReactNativeInjection';
 
 import * as ReactNativeFiberRenderer from 'react-reconciler/inline.native';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactDebugCurrentFiber';
+import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactCurrentFiber';
 import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';

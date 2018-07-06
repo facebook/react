@@ -10,7 +10,7 @@
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getCurrentFiberStackInDevOrNull} from 'react-reconciler/src/ReactDebugCurrentFiber';
+import {getCurrentFiberStackInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 

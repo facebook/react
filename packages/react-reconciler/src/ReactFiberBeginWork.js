@@ -50,7 +50,7 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
-import * as ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import {applyDerivedStateFromProps} from './ReactFiberClassComponent';
@@ -168,9 +168,9 @@ function updateForwardRef(current, workInProgress) {
   let nextChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactDebugCurrentFiber.setCurrentPhase('render');
+    ReactCurrentFiber.setCurrentPhase('render');
     nextChildren = render(nextProps, ref);
-    ReactDebugCurrentFiber.setCurrentPhase(null);
+    ReactCurrentFiber.setCurrentPhase(null);
   } else {
     nextChildren = render(nextProps, ref);
   }
@@ -256,9 +256,9 @@ function updateFunctionalComponent(current, workInProgress) {
 
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactDebugCurrentFiber.setCurrentPhase('render');
+    ReactCurrentFiber.setCurrentPhase('render');
     nextChildren = fn(nextProps, context);
-    ReactDebugCurrentFiber.setCurrentPhase(null);
+    ReactCurrentFiber.setCurrentPhase(null);
   } else {
     nextChildren = fn(nextProps, context);
   }
@@ -357,7 +357,7 @@ function finishClassComponent(
     }
   } else {
     if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentPhase('render');
+      ReactCurrentFiber.setCurrentPhase('render');
       nextChildren = instance.render();
       if (
         debugRenderPhaseSideEffects ||
@@ -366,7 +366,7 @@ function finishClassComponent(
       ) {
         instance.render();
       }
-      ReactDebugCurrentFiber.setCurrentPhase(null);
+      ReactCurrentFiber.setCurrentPhase(null);
     } else {
       nextChildren = instance.render();
     }
@@ -658,7 +658,7 @@ function mountIndeterminateComponent(
       }
       if (workInProgress.ref !== null) {
         let info = '';
-        const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerNameInDevOrNull();
+        const ownerName = ReactCurrentFiber.getCurrentFiberOwnerNameInDevOrNull();
         if (ownerName) {
           info += '\n\nCheck the render method of `' + ownerName + '`.';
         }
@@ -675,7 +675,7 @@ function mountIndeterminateComponent(
             'Stateless function components cannot be given refs. ' +
               'Attempts to access this ref will fail.%s%s',
             info,
-            ReactDebugCurrentFiber.getCurrentFiberStackInDevOrNull(),
+            ReactCurrentFiber.getCurrentFiberStackInDevOrNull(),
           );
         }
       }
@@ -933,7 +933,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
         newProps,
         'prop',
         'Context.Provider',
-        ReactDebugCurrentFiber.getCurrentFiberStackInDevOrNull,
+        ReactCurrentFiber.getCurrentFiberStackInDevOrNull,
       );
     }
   }
@@ -1067,9 +1067,9 @@ function updateContextConsumer(current, workInProgress, renderExpirationTime) {
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactDebugCurrentFiber.setCurrentPhase('render');
+    ReactCurrentFiber.setCurrentPhase('render');
     newChildren = render(newValue);
-    ReactDebugCurrentFiber.setCurrentPhase(null);
+    ReactCurrentFiber.setCurrentPhase(null);
   } else {
     newChildren = render(newValue);
   }

@@ -41,7 +41,7 @@ import {emptyRefsObject} from './ReactFiberClassComponent';
 import {
   getCurrentFiberStackInDevOrNull,
   getStackByFiberInDevAndProd,
-} from './ReactDebugCurrentFiber';
+} from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;

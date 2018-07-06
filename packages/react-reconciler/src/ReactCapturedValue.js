@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {getStackByFiberInDevAndProd} from './ReactDebugCurrentFiber';
+import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 
 export type CapturedValue<T> = {
   value: T,

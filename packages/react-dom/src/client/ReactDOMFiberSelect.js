@@ -11,7 +11,7 @@
 import {
   getCurrentFiberOwnerNameInDevOrNull,
   getCurrentFiberStackInDevOrNull,
-} from 'react-reconciler/src/ReactDebugCurrentFiber';
+} from 'react-reconciler/src/ReactCurrentFiber';
 import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';

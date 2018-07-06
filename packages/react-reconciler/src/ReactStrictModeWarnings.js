@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {getStackByFiberInDevAndProd} from './ReactDebugCurrentFiber';
+import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 
 import getComponentName from 'shared/getComponentName';
 import {StrictMode} from './ReactTypeOfMode';
