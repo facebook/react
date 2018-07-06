@@ -16,6 +16,10 @@ const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
 const prettyFormat = require('pretty-format');
 
+// Isolate noop renderer
+jest.resetModules();
+const ReactNoop = require('react-noop-renderer');
+
 // Kind of hacky, but we nullify all the instances to test the tree structure
 // with jasmine's deep equality function, and test the instances separate. We
 // also delete children props because testing them is more annoying and not
@@ -999,5 +1003,20 @@ describe('ReactTestRenderer', () => {
         type: App,
       }),
     );
+  });
+
+  it('can concurrently render context with a "primary" renderer', () => {
+    const Context = React.createContext(null);
+    const Indirection = React.Fragment;
+    const App = () => (
+      <Context.Provider>
+        <Indirection>
+          <Context.Consumer>{() => null}</Context.Consumer>
+        </Indirection>
+      </Context.Provider>
+    );
+    ReactNoop.render(<App />);
+    ReactNoop.flush();
+    ReactTestRenderer.create(<App />);
   });
 });

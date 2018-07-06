@@ -180,7 +180,7 @@ export function createTextInstance(
   };
 }
 
-export const isPrimaryRenderer = true;
+export const isPrimaryRenderer = false;
 // This approach enables `now` to be mocked by tests,
 // Even after the reconciler has initialized and read host config values.
 export const now = () => TestRendererScheduling.nowImplementation();
