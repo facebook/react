@@ -92,7 +92,9 @@ describe('ReactProfiler DevTools integration', () => {
     // At this point, the base time should include both:
     // The time 2ms in the App component itself, and
     // The 10ms spend in the Profiler sub-tree beneath.
-    expect(rendered.root.findByType(App)._currentFiber().treeBaseTime).toBe(12);
+    expect(rendered.root.findByType(App)._currentFiber().treeBaseDuration).toBe(
+      12,
+    );
 
     rendered.update(<App multiplier={2} />);
 
@@ -106,7 +108,9 @@ describe('ReactProfiler DevTools integration', () => {
     // At this point, the base time should include both:
     // The initial 9ms for the components that do not re-render, and
     // The updated 6ms for the component that does.
-    expect(rendered.root.findByType(App)._currentFiber().treeBaseTime).toBe(15);
+    expect(rendered.root.findByType(App)._currentFiber().treeBaseDuration).toBe(
+      15,
+    );
   });
 
   it('should reset the fiber stack correctly after an error when profiling host roots', () => {
@@ -141,8 +145,8 @@ describe('ReactProfiler DevTools integration', () => {
     // At this point, the base time should include only the most recent (not failed) render.
     // It should not include time spent on the initial render,
     // Or time that elapsed between any of the above renders.
-    expect(rendered.root.findByType('div')._currentFiber().treeBaseTime).toBe(
-      7,
-    );
+    expect(
+      rendered.root.findByType('div')._currentFiber().treeBaseDuration,
+    ).toBe(7);
   });
 });

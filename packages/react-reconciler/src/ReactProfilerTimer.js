@@ -153,7 +153,7 @@ function recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void {
     return;
   }
   if (baseStartTime !== -1) {
-    fiber.selfBaseTime = now() - baseStartTime;
+    fiber.selfBaseDuration = now() - baseStartTime;
   }
 }
 
