@@ -28,6 +28,10 @@ const Circle = require('react-art/Circle');
 const Rectangle = require('react-art/Rectangle');
 const Wedge = require('react-art/Wedge');
 
+// Isolate the noop renderer
+jest.resetModules();
+const ReactNoop = require('react-noop-renderer');
+
 let Group;
 let Shape;
 let Surface;
@@ -354,7 +358,7 @@ describe('ReactART', () => {
     const CurrentRendererContext = React.createContext(null);
 
     function Yield(props) {
-      testRenderer.unstable_yield(props.value);
+      ReactNoop.yield(props.value);
       return null;
     }
 
@@ -372,19 +376,16 @@ describe('ReactART', () => {
 
     // Using test renderer instead of the DOM renderer here because async
     // testing APIs for the DOM renderer don't exist.
-    const testRenderer = ReactTestRenderer.create(
+    ReactNoop.render(
       <CurrentRendererContext.Provider value="Test">
         <Yield value="A" />
         <Yield value="B" />
         <LogCurrentRenderer />
         <Yield value="C" />
       </CurrentRendererContext.Provider>,
-      {
-        unstable_isAsync: true,
-      },
     );
 
-    testRenderer.unstable_flushThrough(['A']);
+    ReactNoop.flushThrough(['A']);
 
     ReactDOM.render(
       <Surface>
@@ -399,7 +400,7 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(testRenderer.unstable_flushAll()).toEqual(['B', 'C']);
+    expect(ReactNoop.flush()).toEqual(['B', 'C']);
 
     expect(ops).toEqual(['Test']);
   });
