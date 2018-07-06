@@ -20,7 +20,6 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
 import {enableProfilerTimer, enableSuspense} from 'shared/ReactFeatureFlags';
-import {getCommitTime} from './ReactProfilerTimer';
 import {
   ClassComponent,
   HostRoot,
@@ -38,16 +37,17 @@ import {
   Snapshot,
   Update,
 } from 'shared/ReactTypeOfSideEffect';
-import {commitUpdateQueue} from './ReactUpdateQueue';
+import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 import {Sync} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import getComponentName from 'shared/getComponentName';
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
+import {getStackAddendumByWorkInProgressFiber} from './ReactDebugCurrentFiber';
 import {logCapturedError} from './ReactFiberErrorLogger';
+import {getCommitTime} from './ReactProfilerTimer';
+import {commitUpdateQueue} from './ReactUpdateQueue';
 import {
   getPublicInstance,
   supportsMutation,

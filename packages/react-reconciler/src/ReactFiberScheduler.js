@@ -12,7 +12,6 @@ import type {FiberRoot, Batch} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {
@@ -185,7 +184,7 @@ if (__DEV__) {
         'is a no-op, but it indicates a memory leak in your application. To ' +
         'fix, cancel all subscriptions and asynchronous tasks in the ' +
         'componentWillUnmount method.%s',
-      getStackAddendumByWorkInProgressFiber(fiber),
+      ReactDebugCurrentFiber.getStackAddendumByWorkInProgressFiber(fiber),
     );
     didWarnStateUpdateForUnmountedComponent[componentName] = true;
   };

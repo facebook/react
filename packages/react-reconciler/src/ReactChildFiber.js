@@ -27,7 +27,6 @@ import {
   HostPortal,
   Fragment,
 } from 'shared/ReactTypeOfWork';
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
@@ -39,7 +38,10 @@ import {
   createFiberFromPortal,
 } from './ReactFiber';
 import {emptyRefsObject} from './ReactFiberClassComponent';
-import {getCurrentFiberStackAddendum} from './ReactDebugCurrentFiber';
+import {
+  getCurrentFiberStackAddendum,
+  getStackAddendumByWorkInProgressFiber,
+} from './ReactDebugCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;

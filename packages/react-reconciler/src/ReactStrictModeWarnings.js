@@ -9,8 +9,9 @@
 
 import type {Fiber} from './ReactFiber';
 
+import {getStackAddendumByWorkInProgressFiber} from './ReactDebugCurrentFiber';
+
 import getComponentName from 'shared/getComponentName';
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {StrictMode} from './ReactTypeOfMode';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';

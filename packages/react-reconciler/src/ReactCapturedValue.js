@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
+import {getStackAddendumByWorkInProgressFiber} from './ReactDebugCurrentFiber';
 
 export type CapturedValue<T> = {
   value: T,
