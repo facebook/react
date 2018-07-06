@@ -1544,7 +1544,7 @@ let currentRendererTime: ExpirationTime = msToExpirationTime(
 let currentSchedulerTime: ExpirationTime = currentRendererTime;
 
 // Use these to prevent an infinite loop of nested updates
-const NESTED_UPDATE_LIMIT = 1000;
+const NESTED_UPDATE_LIMIT = 50;
 let nestedUpdateCount: number = 0;
 let lastCommittedRootDuringThisBatch: FiberRoot | null = null;
 
