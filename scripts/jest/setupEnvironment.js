@@ -7,24 +7,6 @@ if (NODE_ENV !== 'development' && NODE_ENV !== 'production') {
 global.__DEV__ = NODE_ENV === 'development';
 global.__PROFILE__ = NODE_ENV === 'development';
 
-global.requestAnimationFrame = function(callback) {
-  setTimeout(callback);
-};
-
-global.requestIdleCallback = function(callback) {
-  return setTimeout(() => {
-    callback({
-      timeRemaining() {
-        return Infinity;
-      },
-    });
-  });
-};
-
-global.cancelIdleCallback = function(callbackID) {
-  clearTimeout(callbackID);
-};
-
 // By default React console.error()'s any errors, caught or uncaught.
 // However it is annoying to assert that a warning fired each time
 // we assert that there is an exception in our tests. This lets us
@@ -34,7 +16,25 @@ global.cancelIdleCallback = function(callbackID) {
 Error.prototype.suppressReactErrorLogging = true;
 
 if (typeof window !== 'undefined') {
-  // Same as above.
+  global.requestAnimationFrame = function(callback) {
+    setTimeout(callback);
+  };
+
+  global.requestIdleCallback = function(callback) {
+    return setTimeout(() => {
+      callback({
+        timeRemaining() {
+          return Infinity;
+        },
+      });
+    });
+  };
+
+  global.cancelIdleCallback = function(callbackID) {
+    clearTimeout(callbackID);
+  };
+
+  // Same as we did with Error.prototype above.
   DOMException.prototype.suppressReactErrorLogging = true;
 
   // Also prevent JSDOM from logging intentionally thrown errors.

@@ -643,4 +643,25 @@ describe('ReactDOMServer', () => {
       ReactDOMServer.renderToString(<ClassWithRenderNotExtended />);
     }).toThrow(TypeError);
   });
+
+  // We're just testing importing, not using it.
+  // It is important because even isomorphic components may import it.
+  it('can import react-dom in Node environment', () => {
+    if (
+      typeof requestAnimationFrame !== 'undefined' ||
+      global.hasOwnProperty('requestAnimationFrame') ||
+      typeof requestIdleCallback !== 'undefined' ||
+      global.hasOwnProperty('requestIdleCallback') ||
+      typeof window !== 'undefined' ||
+      global.hasOwnProperty('window')
+    ) {
+      // Don't remove this. This test is specifically checking
+      // what happens when they *don't* exist. It's useless otherwise.
+      throw new Error('Expected this test to run in a Node environment.');
+    }
+    jest.resetModules();
+    expect(() => {
+      require('react-dom');
+    }).not.toThrow();
+  });
 });
