@@ -61,8 +61,6 @@ const HTML = '__html';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
-let getStackInDev = () => '';
-
 let warnedUnknownTags;
 let suppressHydrationWarning;
 
@@ -76,8 +74,6 @@ let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
 
 if (__DEV__) {
-  getStackInDev = getCurrentFiberStackInDev;
-
   warnedUnknownTags = {
     // Chrome is the only major browser not shipping <time>. But as of July
     // 2017 it intends to ship it due to widespread usage. We intentionally
@@ -266,11 +262,7 @@ function setInitialDOMProperties(
         }
       }
       // Relies on `updateStylesByID` not mutating `styleUpdates`.
-      CSSPropertyOperations.setValueForStyles(
-        domElement,
-        nextProp,
-        getStackInDev,
-      );
+      CSSPropertyOperations.setValueForStyles(domElement, nextProp);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       const nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
@@ -326,11 +318,7 @@ function updateDOMProperties(
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
     if (propKey === STYLE) {
-      CSSPropertyOperations.setValueForStyles(
-        domElement,
-        propValue,
-        getStackInDev,
-      );
+      CSSPropertyOperations.setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {
@@ -523,7 +511,7 @@ export function setInitialProperties(
       props = rawProps;
   }
 
-  assertValidProps(tag, props, getStackInDev);
+  assertValidProps(tag, props);
 
   setInitialDOMProperties(
     tag,
@@ -611,7 +599,7 @@ export function diffProperties(
       break;
   }
 
-  assertValidProps(tag, nextProps, getStackInDev);
+  assertValidProps(tag, nextProps);
 
   let propKey;
   let styleName;
@@ -902,7 +890,7 @@ export function diffHydratedProperties(
       break;
   }
 
-  assertValidProps(tag, rawProps, getStackInDev);
+  assertValidProps(tag, rawProps);
 
   if (__DEV__) {
     extraAttributeNames = new Set();

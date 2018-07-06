@@ -71,11 +71,7 @@ export function getHostProps(element: Element, props: Object) {
 
 export function initWrapperState(element: Element, props: Object) {
   if (__DEV__) {
-    ReactControlledValuePropTypes.checkPropTypes(
-      'input',
-      props,
-      getCurrentFiberStackInDev,
-    );
+    ReactControlledValuePropTypes.checkPropTypes('input', props);
 
     if (
       props.checked !== undefined &&

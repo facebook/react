@@ -8,10 +8,7 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {
-  getCurrentFiberOwnerNameInDevOrNull,
-  getCurrentFiberStackInDev,
-} from 'react-reconciler/src/ReactCurrentFiber';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
@@ -43,11 +40,7 @@ const valuePropNames = ['value', 'defaultValue'];
  * Validation function for `value` and `defaultValue`.
  */
 function checkSelectPropTypes(props) {
-  ReactControlledValuePropTypes.checkPropTypes(
-    'select',
-    props,
-    getCurrentFiberStackInDev,
-  );
+  ReactControlledValuePropTypes.checkPropTypes('select', props);
 
   for (let i = 0; i < valuePropNames.length; i++) {
     const propName = valuePropNames[i];

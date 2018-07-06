@@ -203,7 +203,7 @@ function createMarkupForStyles(styles): string | null {
     const styleValue = styles[styleName];
     if (__DEV__) {
       if (!isCustomProperty) {
-        warnValidStyle(styleName, styleValue, getCurrentServerStackImpl);
+        warnValidStyle(styleName, styleValue);
       }
     }
     if (styleValue != null) {
@@ -1037,11 +1037,7 @@ class ReactDOMServerRenderer {
     let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes(
-          'input',
-          props,
-          getCurrentServerStackImpl,
-        );
+        ReactControlledValuePropTypes.checkPropTypes('input', props);
 
         if (
           props.checked !== undefined &&
@@ -1095,11 +1091,7 @@ class ReactDOMServerRenderer {
       );
     } else if (tag === 'textarea') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes(
-          'textarea',
-          props,
-          getCurrentServerStackImpl,
-        );
+        ReactControlledValuePropTypes.checkPropTypes('textarea', props);
         if (
           props.value !== undefined &&
           props.defaultValue !== undefined &&
@@ -1156,11 +1148,7 @@ class ReactDOMServerRenderer {
       });
     } else if (tag === 'select') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes(
-          'select',
-          props,
-          getCurrentServerStackImpl,
-        );
+        ReactControlledValuePropTypes.checkPropTypes('select', props);
 
         for (let i = 0; i < valuePropNames.length; i++) {
           const propName = valuePropNames[i];
@@ -1250,7 +1238,7 @@ class ReactDOMServerRenderer {
       validatePropertiesInDevelopment(tag, props);
     }
 
-    assertValidProps(tag, props, getCurrentServerStackImpl);
+    assertValidProps(tag, props);
 
     let out = createOpenTagMarkup(
       element.type,

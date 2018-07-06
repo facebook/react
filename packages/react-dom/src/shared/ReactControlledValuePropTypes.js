@@ -6,6 +6,7 @@
  */
 
 import checkPropTypes from 'prop-types/checkPropTypes';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 
 const ReactControlledValuePropTypes = {
   checkPropTypes: null,
@@ -62,12 +63,14 @@ if (__DEV__) {
    * Provide a linked `value` attribute for controlled forms. You should not use
    * this outside of the ReactDOM controlled form components.
    */
-  ReactControlledValuePropTypes.checkPropTypes = function(
-    tagName,
-    props,
-    getStack,
-  ) {
-    checkPropTypes(propTypes, props, 'prop', tagName, getStack);
+  ReactControlledValuePropTypes.checkPropTypes = function(tagName, props) {
+    checkPropTypes(
+      propTypes,
+      props,
+      'prop',
+      tagName,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
   };
 }
 
