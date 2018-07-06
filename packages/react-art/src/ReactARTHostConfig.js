@@ -407,21 +407,22 @@ export function commitUpdate(
   instance._applyProps(instance, newProps, oldProps);
 }
 
-export function hideInstance(instance: Instance): void {
-  throw new Error('Not yet implemented.');
+export function hideInstance(instance) {
+  instance.hide();
 }
 
-export function hideTextInstance(textInstance: TextInstance): void {
-  throw new Error('Not yet implemented.');
+export function hideTextInstance(textInstance) {
+  // Noop
 }
 
-export function unhideInstance(instance: Instance, props: Props): void {
-  throw new Error('Not yet implemented.');
+export function unhideInstance(instance, props) {
+  if (props.visible == null || props.visible) {
+    instance.show();
+  } else {
+    instance.hide();
+  }
 }
 
-export function unhideTextInstance(
-  textInstance: TextInstance,
-  text: string,
-): void {
-  throw new Error('Not yet implemented.');
+export function unhideTextInstance(textInstance, text): void {
+  // Noop
 }
