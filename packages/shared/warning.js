@@ -16,15 +16,16 @@ let warning = () => {};
 
 if (__DEV__) {
   const printWarning = function(format, ...args) {
-    let argIndex = 0;
-    const message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
     if (typeof console !== 'undefined') {
-      console.error(message);
+      console.error('Warning: ' + format, ...args);
     }
     try {
       // --- Welcome to debugging React ---
       // This error was thrown as a convenience so that you can use this stack
       // to find the callsite that caused this warning to fire.
+      let argIndex = 0;
+      const message =
+        'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
       throw new Error(message);
     } catch (x) {}
   };

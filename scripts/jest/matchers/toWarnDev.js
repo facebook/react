@@ -1,6 +1,7 @@
 'use strict';
 
 const jestDiff = require('jest-diff');
+const util = require('util');
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
@@ -30,7 +31,8 @@ const createMatcherFor = consoleMethod =>
       // and result in a test that passes when it shouldn't.
       let caughtError;
 
-      const consoleSpy = message => {
+      const consoleSpy = (format, ...args) => {
+        const message = util.format(format, ...args);
         const normalizedMessage = normalizeCodeLocInfo(message);
 
         for (let index = 0; index < expectedMessages.length; index++) {
