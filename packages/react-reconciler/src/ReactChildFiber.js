@@ -27,7 +27,6 @@ import {
   HostPortal,
   Fragment,
 } from 'shared/ReactTypeOfWork';
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
@@ -39,10 +38,11 @@ import {
   createFiberFromPortal,
 } from './ReactFiber';
 import {emptyRefsObject} from './ReactFiberClassComponent';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import {
+  getCurrentFiberStackInDevOrNull,
+  getStackByFiberInDevAndProd,
+} from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
-
-const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
 let didWarnAboutMaps;
 let didWarnAboutStringRefInStrictMode;
@@ -80,7 +80,7 @@ if (__DEV__) {
       'Each child in an array or iterator should have a unique ' +
       '"key" prop. See https://fb.me/react-warning-keys for ' +
       'more information.' +
-      (getCurrentFiberStackAddendum() || '');
+      (getCurrentFiberStackInDevOrNull() || '');
     if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
       return;
     }
@@ -91,7 +91,7 @@ if (__DEV__) {
       'Each child in an array or iterator should have a unique ' +
         '"key" prop. See https://fb.me/react-warning-keys for ' +
         'more information.%s',
-      getCurrentFiberStackAddendum(),
+      getCurrentFiberStackInDevOrNull(),
     );
   };
 }
@@ -122,7 +122,7 @@ function coerceRef(
               '\n\nLearn more about using refs safely here:' +
               '\nhttps://fb.me/react-strict-mode-string-ref',
             mixedRef,
-            getStackAddendumByWorkInProgressFiber(returnFiber),
+            getStackByFiberInDevAndProd(returnFiber),
           );
           didWarnAboutStringRefInStrictMode[componentName] = true;
         }
@@ -197,7 +197,7 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
       addendum =
         ' If you meant to render a collection of children, use an array ' +
         'instead.' +
-        (getCurrentFiberStackAddendum() || '');
+        (getCurrentFiberStackInDevOrNull() || '');
     }
     invariant(
       false,
@@ -215,7 +215,7 @@ function warnOnFunctionType() {
     'Functions are not valid as a React child. This may happen if ' +
     'you return a Component instead of <Component /> from render. ' +
     'Or maybe you meant to call this function rather than return it.' +
-    (getCurrentFiberStackAddendum() || '');
+    (getCurrentFiberStackInDevOrNull() || '');
 
   if (ownerHasFunctionTypeWarning[currentComponentErrorInfo]) {
     return;
@@ -227,7 +227,7 @@ function warnOnFunctionType() {
     'Functions are not valid as a React child. This may happen if ' +
       'you return a Component instead of <Component /> from render. ' +
       'Or maybe you meant to call this function rather than return it.%s',
-    getCurrentFiberStackAddendum() || '',
+    getCurrentFiberStackInDevOrNull() || '',
   );
 }
 
@@ -719,7 +719,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               'duplicated and/or omitted — the behavior is unsupported and ' +
               'could change in a future version.%s',
             key,
-            getCurrentFiberStackAddendum(),
+            getCurrentFiberStackInDevOrNull(),
           );
           break;
         default:
@@ -912,7 +912,7 @@ function ChildReconciler(shouldTrackSideEffects) {
           'Using Maps as children is unsupported and will likely yield ' +
             'unexpected results. Convert it to a sequence/iterable of keyed ' +
             'ReactElements instead.%s',
-          getCurrentFiberStackAddendum(),
+          getCurrentFiberStackInDevOrNull(),
         );
         didWarnAboutMaps = true;
       }

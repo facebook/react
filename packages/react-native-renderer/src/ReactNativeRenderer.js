@@ -13,13 +13,13 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import './ReactNativeInjection';
 
 import * as ReactNativeFiberRenderer from 'react-reconciler/inline.native';
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactCurrentFiber';
 import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import UIManager from 'UIManager';
-
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
@@ -80,7 +80,7 @@ function computeComponentStackForErrorReporting(reactTag: number): string {
   if (!fiber) {
     return '';
   }
-  return getStackAddendumByWorkInProgressFiber(fiber);
+  return getStackByFiberInDevAndProd(fiber);
 }
 
 const roots = new Map();

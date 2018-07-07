@@ -9,8 +9,9 @@
 
 import type {Fiber} from './ReactFiber';
 
+import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
+
 import getComponentName from 'shared/getComponentName';
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {StrictMode} from './ReactTypeOfMode';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
@@ -94,7 +95,7 @@ if (__DEV__) {
         });
 
         if (lifecyclesWarningMesages.length > 0) {
-          const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
+          const strictRootComponentStack = getStackByFiberInDevAndProd(
             strictRoot,
           );
 
@@ -341,7 +342,7 @@ if (__DEV__) {
         });
 
         const sortedNames = setToSortedString(uniqueNames);
-        const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
+        const strictRootComponentStack = getStackByFiberInDevAndProd(
           strictRoot,
         );
 

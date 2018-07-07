@@ -55,7 +55,7 @@ import {
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import * as ReactCurrentFiber from './ReactCurrentFiber';
 
 type OpaqueRoot = FiberRoot;
 
@@ -104,8 +104,8 @@ function scheduleRootUpdate(
 ) {
   if (__DEV__) {
     if (
-      ReactDebugCurrentFiber.phase === 'render' &&
-      ReactDebugCurrentFiber.current !== null &&
+      ReactCurrentFiber.phase === 'render' &&
+      ReactCurrentFiber.current !== null &&
       !didWarnAboutNestedUpdates
     ) {
       didWarnAboutNestedUpdates = true;
@@ -115,7 +115,7 @@ function scheduleRootUpdate(
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
           'Check the render method of %s.',
-        getComponentName(ReactDebugCurrentFiber.current) || 'Unknown',
+        getComponentName(ReactCurrentFiber.current) || 'Unknown',
       );
     }
   }
