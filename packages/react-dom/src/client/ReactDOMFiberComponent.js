@@ -10,7 +10,7 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {
   getCurrentFiberOwnerNameInDevOrNull,
-  getCurrentFiberStackInDevOrNull,
+  getCurrentFiberStackInDev,
 } from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
@@ -61,7 +61,7 @@ const HTML = '__html';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
-let getStackInDevOrNull = () => '';
+let getStackInDev = () => '';
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
@@ -76,7 +76,7 @@ let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
 
 if (__DEV__) {
-  getStackInDevOrNull = getCurrentFiberStackInDevOrNull;
+  getStackInDev = getCurrentFiberStackInDev;
 
   warnedUnknownTags = {
     // Chrome is the only major browser not shipping <time>. But as of July
@@ -180,7 +180,7 @@ if (__DEV__) {
         registrationName,
         registrationName,
         registrationName,
-        getCurrentFiberStackInDevOrNull(),
+        getCurrentFiberStackInDev(),
       );
     } else {
       warning(
@@ -188,7 +188,7 @@ if (__DEV__) {
         'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
         registrationName,
         typeof listener,
-        getCurrentFiberStackInDevOrNull(),
+        getCurrentFiberStackInDev(),
       );
     }
   };
@@ -269,7 +269,7 @@ function setInitialDOMProperties(
       CSSPropertyOperations.setValueForStyles(
         domElement,
         nextProp,
-        getStackInDevOrNull,
+        getStackInDev,
       );
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       const nextHtml = nextProp ? nextProp[HTML] : undefined;
@@ -329,7 +329,7 @@ function updateDOMProperties(
       CSSPropertyOperations.setValueForStyles(
         domElement,
         propValue,
-        getStackInDevOrNull,
+        getStackInDev,
       );
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       setInnerHTML(domElement, propValue);
@@ -523,7 +523,7 @@ export function setInitialProperties(
       props = rawProps;
   }
 
-  assertValidProps(tag, props, getStackInDevOrNull);
+  assertValidProps(tag, props, getStackInDev);
 
   setInitialDOMProperties(
     tag,
@@ -611,7 +611,7 @@ export function diffProperties(
       break;
   }
 
-  assertValidProps(tag, nextProps, getStackInDevOrNull);
+  assertValidProps(tag, nextProps, getStackInDev);
 
   let propKey;
   let styleName;
@@ -902,7 +902,7 @@ export function diffHydratedProperties(
       break;
   }
 
-  assertValidProps(tag, rawProps, getStackInDevOrNull);
+  assertValidProps(tag, rawProps, getStackInDev);
 
   if (__DEV__) {
     extraAttributeNames = new Set();

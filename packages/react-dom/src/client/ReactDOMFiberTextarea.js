@@ -10,7 +10,7 @@
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getCurrentFiberStackInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import {getCurrentFiberStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 
@@ -67,7 +67,7 @@ export function initWrapperState(element: Element, props: Object) {
     ReactControlledValuePropTypes.checkPropTypes(
       'textarea',
       props,
-      getCurrentFiberStackInDevOrNull,
+      getCurrentFiberStackInDev,
     );
     if (
       props.value !== undefined &&

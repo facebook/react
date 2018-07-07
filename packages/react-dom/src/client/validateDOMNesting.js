@@ -7,7 +7,7 @@
 
 import warning from 'shared/warning';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getCurrentFiberStackInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import {getCurrentFiberStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
 
 let validateDOMNesting = () => {};
 
@@ -426,7 +426,7 @@ if (__DEV__) {
     }
 
     const ancestorTag = invalidParentOrAncestor.tag;
-    const addendum = getCurrentFiberStackInDevOrNull();
+    const addendum = getCurrentFiberStackInDev();
 
     const warnKey =
       !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + addendum;

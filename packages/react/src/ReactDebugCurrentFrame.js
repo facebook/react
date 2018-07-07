@@ -11,14 +11,14 @@ const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {
   // Component that is being worked on
-  ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string | null));
+  ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string));
 
-  ReactDebugCurrentFrame.getStackAddendum = function(): string | null {
+  ReactDebugCurrentFrame.getStackAddendum = function(): string {
     const impl = ReactDebugCurrentFrame.getCurrentStack;
     if (impl) {
-      return impl();
+      return impl() || '';
     }
-    return null;
+    return '';
   };
 }
 

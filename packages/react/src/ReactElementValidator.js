@@ -74,7 +74,7 @@ if (__DEV__) {
         owner && getComponentName(owner),
       );
     }
-    stack += ReactDebugCurrentFrame.getStackAddendum() || '';
+    stack += ReactDebugCurrentFrame.getStackAddendum();
     return stack;
   };
 }
@@ -324,7 +324,7 @@ export function createElementWithValidation(type, props, children) {
       info += getDeclarationErrorAddendum();
     }
 
-    info += getStackAddendum() || '';
+    info += getStackAddendum();
 
     let typeString;
     if (type === null) {

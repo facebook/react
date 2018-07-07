@@ -675,7 +675,7 @@ function mountIndeterminateComponent(
             'Stateless function components cannot be given refs. ' +
               'Attempts to access this ref will fail.%s%s',
             info,
-            ReactCurrentFiber.getCurrentFiberStackInDevOrNull(),
+            ReactCurrentFiber.getCurrentFiberStackInDev(),
           );
         }
       }
@@ -933,7 +933,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
         newProps,
         'prop',
         'Context.Provider',
-        ReactCurrentFiber.getCurrentFiberStackInDevOrNull,
+        ReactCurrentFiber.getCurrentFiberStackInDev,
       );
     }
   }

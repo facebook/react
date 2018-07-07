@@ -18,11 +18,6 @@ const rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
-function getStackAddendum() {
-  const stack = ReactDebugCurrentFrame.getStackAddendum();
-  return stack != null ? stack : '';
-}
-
 function validateProperty(tagName, name) {
   if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
     return true;
@@ -41,7 +36,7 @@ function validateProperty(tagName, name) {
         false,
         'Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.%s',
         name,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -53,7 +48,7 @@ function validateProperty(tagName, name) {
         'Invalid ARIA attribute `%s`. Did you mean `%s`?%s',
         name,
         correctName,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -79,7 +74,7 @@ function validateProperty(tagName, name) {
         'Unknown ARIA attribute `%s`. Did you mean `%s`?%s',
         name,
         standardName,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -110,7 +105,7 @@ function warnInvalidARIAProps(type, props) {
         'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
       type,
-      getStackAddendum(),
+      ReactDebugCurrentFrame.getStackAddendum(),
     );
   } else if (invalidProps.length > 1) {
     warning(
@@ -119,7 +114,7 @@ function warnInvalidARIAProps(type, props) {
         'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
       type,
-      getStackAddendum(),
+      ReactDebugCurrentFrame.getStackAddendum(),
     );
   }
 }
