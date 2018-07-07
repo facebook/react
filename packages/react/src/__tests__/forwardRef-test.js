@@ -136,12 +136,12 @@ describe('forwardRef', () => {
   });
 
   it('should warn if the render function provided has propTypes or defaultProps attributes', () => {
-    function renderWithPropTypes() {
+    function renderWithPropTypes(props, ref) {
       return null;
     }
     renderWithPropTypes.propTypes = {};
 
-    function renderWithDefaultProps() {
+    function renderWithDefaultProps(props, ref) {
       return null;
     }
     renderWithDefaultProps.defaultProps = {};
@@ -153,6 +153,24 @@ describe('forwardRef', () => {
     expect(() => React.forwardRef(renderWithDefaultProps)).toWarnDev(
       'forwardRef render functions do not support propTypes or defaultProps. ' +
         'Did you accidentally pass a React component?',
+    );
+  });
+
+  it('should warn if the render function provided does not use the forwarded ref parameter', () => {
+    function arityOfZero() {
+      return null;
+    }
+
+    const arityOfOne = props => null;
+
+    expect(() => React.forwardRef(arityOfZero)).toWarnDev(
+      'forwardRef render functions accept two parameters: props and ref. ' +
+        'Did you forget to use the ref parameter?',
+    );
+
+    expect(() => React.forwardRef(arityOfOne)).toWarnDev(
+      'forwardRef render functions accept two parameters: props and ref. ' +
+        'Did you forget to use the ref parameter?',
     );
   });
 });
