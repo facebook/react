@@ -106,8 +106,30 @@ function insertNonHydratedInstance(
 ) {
   fiber.effectTag |= Placement;
   if (__DEV__) {
-    // TODO: Find out what `hydrationWarningHostInstanceIndex` should be, `fiber.index` is wrong.
-    const hydrationWarningHostInstanceIndex = fiber.index;
+    let hydrationWarningHostInstanceIndex = 0;
+    {
+      // Count rendered host nodes by traversing `returnFiber` subtree until `fiber` is found.
+      let node = returnFiber.child;
+      const nextNodeStack = [];
+      while (node && node !== fiber) {
+        if (node.tag === HostComponent || node.tag === HostText) {
+          ++hydrationWarningHostInstanceIndex;
+        }
+        // Depth-first traversal.
+        if (node.child) {
+          if (node.sibling) {
+            // Remember where to continue on this tree level, then go deeper.
+            nextNodeStack.push(node.sibling);
+          }
+          node = node.child;
+        } else if (node.sibling) {
+          node = node.sibling;
+        } else {
+          node = nextNodeStack.pop();
+        }
+      }
+    }
+
     switch (returnFiber.tag) {
       case HostRoot: {
         const parentContainer = returnFiber.stateNode.containerInfo;

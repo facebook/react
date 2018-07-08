@@ -663,13 +663,24 @@ describe('ReactMount', () => {
   });
 
   it('should warn when hydrate replaces an element within server-rendered nested components (replacement diff)', () => {
+    // See fixtures/ssr: ssr-hydrationWarningHostInstanceIndex-didNotFindHydratableInstance-replacement
+
+    class TestPaddingBeforeInnerComponent extends React.Component {
+      render() {
+        return (
+          <React.Fragment>
+            <div data-ssr-mismatch-padding-before="2" />
+            <div data-ssr-mismatch-padding-before="3" />
+          </React.Fragment>
+        );
+      }
+    }
     class TestPaddingBeforeComponent extends React.Component {
       render() {
         return (
           <React.Fragment>
             <div data-ssr-mismatch-padding-before="1" />
-            <div data-ssr-mismatch-padding-before="2" />
-            <div data-ssr-mismatch-padding-before="3" />
+            <TestPaddingBeforeInnerComponent />
             <div data-ssr-mismatch-padding-before="4" />
             <div data-ssr-mismatch-padding-before="5" />
           </React.Fragment>
@@ -691,7 +702,7 @@ describe('ReactMount', () => {
     }
     class TestNestedComponent extends React.Component {
       render() {
-        if (this.props.server) {
+        if (this.props.isServer) {
           return (
             <div>
               <TestPaddingBeforeComponent />
@@ -713,18 +724,18 @@ describe('ReactMount', () => {
     }
     class TestComponent extends React.Component {
       render() {
-        return <TestNestedComponent server={this.props.server} />;
+        return <TestNestedComponent isServer={this.props.isServer} />;
       }
     }
 
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
-      <TestComponent server={true} />,
+      <TestComponent isServer={true} />,
     );
     div.innerHTML = markup;
 
     expect(() =>
-      ReactDOM.hydrate(<TestComponent server={false} />, div),
+      ReactDOM.hydrate(<TestComponent isServer={false} />, div),
     ).toWarnDev(
       'Warning: Expected server HTML to contain a matching <h2> in <div>.\n\n' +
         '  <div data-reactroot="">\n' +
@@ -894,19 +905,48 @@ describe('ReactMount', () => {
     );
   });
 
-  it('should warn when hydrate inserts a text node between matching elements (insertion diff)', () => {
-    // See fixtures/ssr: ssr-warnForInsertedHydratedText-didNotFindHydratableTextInstance
+  it('should warn when hydrate inserts a text node after matching elements (insertion diff)', () => {
+    // See fixtures/ssr: ssr-hydrationWarningHostInstanceIndex-didNotFindHydratableInstance-insertion
+
+    class TestPaddingBeforeInnerInnerComponent extends React.Component {
+      render() {
+        return <div data-ssr-mismatch-padding-before="6" />;
+      }
+    }
+    class TestPaddingBeforeInnerComponent extends React.Component {
+      render() {
+        return (
+          <React.Fragment>
+            <div data-ssr-mismatch-padding-before="4" />
+            <div data-ssr-mismatch-padding-before="5" />
+            <TestPaddingBeforeInnerInnerComponent />
+          </React.Fragment>
+        );
+      }
+    }
+    class TestPaddingBeforeComponent extends React.Component {
+      render() {
+        return (
+          <React.Fragment>
+            <div data-ssr-mismatch-padding-before="2" />
+            <div data-ssr-mismatch-padding-before="3" />
+            <TestPaddingBeforeInnerComponent />
+            <div data-ssr-mismatch-padding-before="7" />
+            <div data-ssr-mismatch-padding-before="8" />
+            <div data-ssr-mismatch-padding-before="9" />
+          </React.Fragment>
+        );
+      }
+    }
 
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
       <div>
-        <span data-ssr-mismatch-padding-before="1" />
-        <span />
-        <div data-ssr-mismatch-padding-after="1" />
-        <div data-ssr-mismatch-padding-after="2" />
-        <div data-ssr-mismatch-padding-after="3" />
-        <div data-ssr-mismatch-padding-after="4" />
-        <div data-ssr-mismatch-padding-after="5" />
+        <div data-ssr-mismatch-padding-before="1" />
+        <TestPaddingBeforeComponent />
+        <div data-ssr-mismatch-padding-before="10" />
+        <div data-ssr-mismatch-padding-before="11" />
+        <div data-ssr-mismatch-padding-before="12" />
       </div>,
     );
     div.innerHTML = markup;
@@ -914,7 +954,11 @@ describe('ReactMount', () => {
     expect(() =>
       ReactDOM.hydrate(
         <div>
-          <span data-ssr-mismatch-padding-before="1" />
+          <div data-ssr-mismatch-padding-before="1" />
+          <TestPaddingBeforeComponent />
+          <div data-ssr-mismatch-padding-before="10" />
+          <div data-ssr-mismatch-padding-before="11" />
+          <div data-ssr-mismatch-padding-before="12" />
           SSRMismatchTest client text
         </div>,
         div,
@@ -923,14 +967,19 @@ describe('ReactMount', () => {
       'Warning: Expected server HTML to contain a matching text node' +
         " for {'SSRMismatchTest client text'} in <div>.\n\n" +
         '  <div data-reactroot="">\n' +
-        '    <span data-ssr-mismatch-padding-before="1"></span>\n' +
+        '    <div data-ssr-mismatch-padding-before="1"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="2"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="3"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="4"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="5"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="6"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="7"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="8"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="9"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="10"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="11"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="12"></div>\n' +
         "+   {'SSRMismatchTest client text'}\n" +
-        '    <span></span>\n' +
-        '    <div data-ssr-mismatch-padding-after="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="5"></div>\n' +
         '  </div>\n\n' +
         '    in div (at **)',
     );

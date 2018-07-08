@@ -285,6 +285,132 @@ const testCases = [
       </div>
     ),
   },
+  {
+    key:
+      'ssr-hydrationWarningHostInstanceIndex-didNotFindHydratableInstance-replacement',
+    render: isServer => {
+      class TestPaddingBeforeInnerComponent extends React.Component {
+        render() {
+          return (
+            <React.Fragment>
+              <div data-ssr-mismatch-padding-before="2" />
+              <div data-ssr-mismatch-padding-before="3" />
+            </React.Fragment>
+          );
+        }
+      }
+      class TestPaddingBeforeComponent extends React.Component {
+        render() {
+          return (
+            <React.Fragment>
+              <div data-ssr-mismatch-padding-before="1" />
+              <TestPaddingBeforeInnerComponent />
+              <div data-ssr-mismatch-padding-before="4" />
+              <div data-ssr-mismatch-padding-before="5" />
+            </React.Fragment>
+          );
+        }
+      }
+      class TestPaddingAfterComponent extends React.Component {
+        render() {
+          return (
+            <React.Fragment>
+              <div data-ssr-mismatch-padding-after="1" />
+              <div data-ssr-mismatch-padding-after="2" />
+              <div data-ssr-mismatch-padding-after="3" />
+              <div data-ssr-mismatch-padding-after="4" />
+              <div data-ssr-mismatch-padding-after="5" />
+            </React.Fragment>
+          );
+        }
+      }
+      class TestNestedComponent extends React.Component {
+        render() {
+          if (this.props.isServer) {
+            return (
+              <div>
+                <TestPaddingBeforeComponent />
+                <h1>SSRMismatchTest default text</h1>
+                <span />
+                <TestPaddingAfterComponent />
+              </div>
+            );
+          }
+          return (
+            <div>
+              <TestPaddingBeforeComponent />
+              <h2>SSRMismatchTest default text</h2>
+              <span />
+              <TestPaddingAfterComponent />
+            </div>
+          );
+        }
+      }
+      class TestComponent extends React.Component {
+        render() {
+          return <TestNestedComponent isServer={this.props.isServer} />;
+        }
+      }
+
+      return <TestComponent isServer={isServer} />;
+    },
+  },
+
+  {
+    key:
+      'ssr-hydrationWarningHostInstanceIndex-didNotFindHydratableInstance-insertion',
+    render(isServer) {
+      class TestPaddingBeforeInnerInnerComponent extends React.Component {
+        render() {
+          return <div data-ssr-mismatch-padding-before="6" />;
+        }
+      }
+      class TestPaddingBeforeInnerComponent extends React.Component {
+        render() {
+          return (
+            <React.Fragment>
+              <div data-ssr-mismatch-padding-before="4" />
+              <div data-ssr-mismatch-padding-before="5" />
+              <TestPaddingBeforeInnerInnerComponent />
+            </React.Fragment>
+          );
+        }
+      }
+      class TestPaddingBeforeComponent extends React.Component {
+        render() {
+          return (
+            <React.Fragment>
+              <div data-ssr-mismatch-padding-before="2" />
+              <div data-ssr-mismatch-padding-before="3" />
+              <TestPaddingBeforeInnerComponent />
+              <div data-ssr-mismatch-padding-before="7" />
+              <div data-ssr-mismatch-padding-before="8" />
+              <div data-ssr-mismatch-padding-before="9" />
+            </React.Fragment>
+          );
+        }
+      }
+
+      return isServer ? (
+        <div>
+          <div data-ssr-mismatch-padding-before="1" />
+          <TestPaddingBeforeComponent />
+          <div data-ssr-mismatch-padding-before="10" />
+          <div data-ssr-mismatch-padding-before="11" />
+          <div data-ssr-mismatch-padding-before="12" />
+        </div>
+      ) : (
+        <div>
+          <div data-ssr-mismatch-padding-before="1" />
+          <TestPaddingBeforeComponent />
+          <div data-ssr-mismatch-padding-before="10" />
+          <div data-ssr-mismatch-padding-before="11" />
+          <div data-ssr-mismatch-padding-before="12" />
+          SSRMismatchTest client text
+        </div>
+      );
+    },
+  },
 ];
 
 // Triggers the DOM mismatch warnings if requested via query string.
@@ -297,13 +423,14 @@ export default class SSRMismatchTest extends Component {
     );
     if (testCaseFound) {
       // In the browser where `window` is available, triggering a DOM mismatch if it's requested.
+      const isServer = typeof window === 'undefined';
       let render;
-      if (typeof window !== 'undefined') {
-        render = testCaseFound.renderBrowser || testCaseFound.render;
-      } else {
+      if (isServer) {
         render = testCaseFound.renderServer || testCaseFound.render;
+      } else {
+        render = testCaseFound.renderBrowser || testCaseFound.render;
       }
-      content = render();
+      content = render(isServer);
     }
 
     return (
