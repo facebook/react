@@ -44,6 +44,7 @@ if (__DEV__) {
       if (
         !props[propName] ||
         props.onChange ||
+        props.onClick ||
         props.readOnly ||
         props.disabled
       ) {
@@ -51,9 +52,9 @@ if (__DEV__) {
       }
       return new Error(
         'You provided a `checked` prop to a form field without an ' +
-          '`onChange` handler. This will render a read-only field. If ' +
+          '`onChange` or `onClick` handler. This will render a read-only field. If ' +
           'the field should be mutable use `defaultChecked`. Otherwise, ' +
-          'set either `onChange` or `readOnly`.',
+          'set `onChange`, `onClick` or `readOnly`.',
       );
     },
   };
