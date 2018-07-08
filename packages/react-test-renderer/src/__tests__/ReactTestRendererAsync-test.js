@@ -32,7 +32,7 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(null);
 
     // Flush initial mount.
-    renderer.unstable_flushAll();
+    renderer.unstable_flushAll([]);
     expect(renderer.toJSON()).toEqual('Hi');
 
     // Update
@@ -40,7 +40,7 @@ describe('ReactTestRendererAsync', () => {
     // Not yet updated.
     expect(renderer.toJSON()).toEqual('Hi');
     // Flush update.
-    renderer.unstable_flushAll();
+    renderer.unstable_flushAll([]);
     expect(renderer.toJSON()).toEqual('Bye');
   });
 
@@ -62,11 +62,11 @@ describe('ReactTestRendererAsync', () => {
       unstable_isAsync: true,
     });
 
-    expect(renderer.unstable_flushAll()).toEqual(['A:1', 'B:1', 'C:1']);
+    renderer.unstable_flushAll(['A:1', 'B:1', 'C:1']);
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
 
     renderer.update(<Parent step={2} />);
-    expect(renderer.unstable_flushAll()).toEqual(['A:2', 'B:2', 'C:2']);
+    renderer.unstable_flushAll(['A:2', 'B:2', 'C:2']);
     expect(renderer.toJSON()).toEqual(['A:2', 'B:2', 'C:2']);
   });
 
@@ -97,7 +97,7 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(null);
 
     // Flush the remaining work
-    expect(renderer.unstable_flushAll()).toEqual(['C:1']);
+    renderer.unstable_flushAll(['C:1']);
     expect(renderer.toJSON()).toEqual(['A:1', 'B:1', 'C:1']);
   });
 
@@ -159,7 +159,41 @@ describe('ReactTestRendererAsync', () => {
     );
 
     expect(() => renderer.unstable_flushThrough(['foo', 'baz'])).toThrow(
-      'flushThrough expected to yield "baz", but "bar" was yielded',
+      'Flush expected to yield "baz", but "bar" was yielded',
+    );
+  });
+
+  it('should error if flushAll params dont match yielded values', () => {
+    const Yield = ({id}) => {
+      renderer.unstable_yield(id);
+      return id;
+    };
+
+    const renderer = ReactTestRenderer.create(
+      <div>
+        <Yield id="foo" />
+        <Yield id="bar" />
+        <Yield id="baz" />
+      </div>,
+      {
+        unstable_isAsync: true,
+      },
+    );
+
+    expect(() => renderer.unstable_flushAll([])).toThrow(
+      'Flush expected to yield 0 values, but yielded 3',
+    );
+
+    renderer.update(
+      <div>
+        <Yield id="foo" />
+        <Yield id="bar" />
+        <Yield id="baz" />
+      </div>,
+    );
+
+    expect(() => renderer.unstable_flushAll(['foo', 'baz'])).toThrow(
+      'Flush expected to yield "baz", but "bar" was yielded',
     );
   });
 
@@ -179,7 +213,7 @@ describe('ReactTestRendererAsync', () => {
     );
 
     expect(() => renderer.unstable_flushThrough(['foo', 'bar'])).toThrow(
-      'flushThrough expected to yield "bar", but nothing was yielded',
+      'Flush expected to yield "bar", but nothing was yielded',
     );
   });
 
@@ -189,7 +223,7 @@ describe('ReactTestRendererAsync', () => {
     });
 
     expect(() => renderer.unstable_flushThrough(['foo'])).toThrow(
-      'flushThrough expected to yield "foo", but nothing was yielded',
+      'Flush expected to yield "foo", but nothing was yielded',
     );
   });
 });
