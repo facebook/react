@@ -61,24 +61,13 @@ type FlatReactChildren = Array<null | ReactNode>;
 type toArrayType = (children: mixed) => FlatReactChildren;
 const toArray = ((React.Children.toArray: any): toArrayType);
 
-let currentDebugStack;
-let currentDebugElementStack;
-
-let getStackAddendum = () => '';
+let getStackAddendum: () => string = () => '';
 let describeStackFrame = element => '';
 
 let validatePropertiesInDevelopment = (type, props) => {};
-let setCurrentDebugStack = (stack: Array<Frame>) => {};
-let pushElementToDebugStack = (element: ReactElement) => {};
-let resetCurrentDebugStack = () => {};
 
 if (__DEV__) {
-  validatePropertiesInDevelopment = function(type, props) {
-    validateARIAProperties(type, props);
-    validateInputProperties(type, props);
-    validateUnknownProperties(type, props, /* canUseEventSystem */ false);
-  };
-
+  getStackAddendum = () => ReactDebugCurrentFrame.getStackAddendum() || '';
   describeStackFrame = function(element): string {
     const source = element._source;
     const type = element.type;
@@ -87,40 +76,10 @@ if (__DEV__) {
     return describeComponentFrame(name, source, ownerName);
   };
 
-  currentDebugStack = null;
-  currentDebugElementStack = null;
-  setCurrentDebugStack = function(stack: Array<Frame>) {
-    const frame: Frame = stack[stack.length - 1];
-    currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
-    // We are about to enter a new composite stack, reset the array.
-    currentDebugElementStack.length = 0;
-    currentDebugStack = stack;
-    ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
-  };
-  pushElementToDebugStack = function(element: ReactElement) {
-    if (currentDebugElementStack !== null) {
-      currentDebugElementStack.push(element);
-    }
-  };
-  resetCurrentDebugStack = function() {
-    currentDebugElementStack = null;
-    currentDebugStack = null;
-    ReactDebugCurrentFrame.getCurrentStack = null;
-  };
-  getStackAddendum = function(): null | string {
-    if (currentDebugStack === null) {
-      return '';
-    }
-    let stack = '';
-    let debugStack = currentDebugStack;
-    for (let i = debugStack.length - 1; i >= 0; i--) {
-      const frame: Frame = debugStack[i];
-      let debugElementStack = ((frame: any): FrameDev).debugElementStack;
-      for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
-        stack += describeStackFrame(debugElementStack[ii]);
-      }
-    }
-    return stack;
+  validatePropertiesInDevelopment = function(type, props) {
+    validateARIAProperties(type, props);
+    validateInputProperties(type, props);
+    validateUnknownProperties(type, props, /* canUseEventSystem */ false);
   };
 }
 
@@ -388,6 +347,7 @@ function validateRenderResult(child, type) {
 function resolve(
   child: mixed,
   context: Object,
+  debugElementStack: Array<ReactElement> | null,
 ): {|
   child: mixed,
   context: Object,
@@ -397,7 +357,7 @@ function resolve(
     let element: ReactElement = (child: any);
     let Component = element.type;
     if (__DEV__) {
-      pushElementToDebugStack(element);
+      ((debugElementStack: any): Array<ReactElement>).push(element);
     }
     if (typeof Component !== 'function') {
       break;
@@ -747,19 +707,20 @@ class ReactDOMServerRenderer {
     }
 
     let out = '';
+    const stack = this.stack;
     while (out.length < bytes) {
-      if (this.stack.length === 0) {
+      if (stack.length === 0) {
         this.exhausted = true;
         break;
       }
-      const frame: Frame = this.stack[this.stack.length - 1];
+      const frame: Frame = stack[stack.length - 1];
       if (frame.childIndex >= frame.children.length) {
         const footer = frame.footer;
         out += footer;
         if (footer !== '') {
           this.previousWasTextNode = false;
         }
-        this.stack.pop();
+        stack.pop();
         if (frame.type === 'select') {
           this.currentSelectValue = null;
         } else if (
@@ -773,13 +734,39 @@ class ReactDOMServerRenderer {
         continue;
       }
       const child = frame.children[frame.childIndex++];
+
+      let debugElementStack = null;
+      let prevStackImplementation = null;
       if (__DEV__) {
-        setCurrentDebugStack(this.stack);
+        // Keep a reference to the previous stack implementation
+        // because ReactDOMServer calls can be re-entrant.
+        prevStackImplementation = ReactDebugCurrentFrame.getCurrentStack;
+        ReactDebugCurrentFrame.getCurrentStack = () => {
+          let stackInfo = '';
+          for (let i = stack.length - 1; i >= 0; i--) {
+            let innerStack = ((stack[i]: any): FrameDev).debugElementStack;
+            for (let ii = innerStack.length - 1; ii >= 0; ii--) {
+              stackInfo += describeStackFrame(innerStack[ii]);
+            }
+          }
+          return stackInfo;
+        };
+        // We are about to enter a new composite stack, reset the array.
+        debugElementStack = ((frame: any): FrameDev).debugElementStack;
+        debugElementStack.length = 0;
       }
-      out += this.render(child, frame.context, frame.domNamespace);
+
+      out += this.render(
+        child,
+        frame.context,
+        frame.domNamespace,
+        debugElementStack,
+      );
+
       if (__DEV__) {
-        // TODO: Handle reentrant server render calls. This doesn't.
-        resetCurrentDebugStack();
+        // Handle reentrant calls.
+        // TODO: this doesn't work on errors but maybe that's fine.
+        ReactDebugCurrentFrame.getCurrentStack = prevStackImplementation;
       }
     }
     return out;
@@ -789,6 +776,7 @@ class ReactDOMServerRenderer {
     child: ReactNode | null,
     context: Object,
     parentNamespace: string,
+    debugElementStack: Array<ReactElement> | null,
   ): string {
     if (typeof child === 'string' || typeof child === 'number') {
       const text = '' + child;
@@ -805,7 +793,11 @@ class ReactDOMServerRenderer {
       return escapeTextForBrowser(text);
     } else {
       let nextChild;
-      ({child: nextChild, context} = resolve(child, context));
+      ({child: nextChild, context} = resolve(
+        child,
+        context,
+        debugElementStack,
+      ));
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {

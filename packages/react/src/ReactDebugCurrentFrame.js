@@ -7,13 +7,17 @@
  * @flow
  */
 
+export type ReactDebugCurrentFrameDev = {|
+  getCurrentStack: null | (() => string),
+  getStackAddendum: () => string,
+|};
+
 const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {
   // Component that is being worked on
-  ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string));
-
-  ReactDebugCurrentFrame.getStackAddendum = function(): string {
+  ((ReactDebugCurrentFrame: any): ReactDebugCurrentFrameDev).getCurrentStack = null;
+  ((ReactDebugCurrentFrame: any): ReactDebugCurrentFrameDev).getStackAddendum = function() {
     const impl = ReactDebugCurrentFrame.getCurrentStack;
     if (impl) {
       return impl() || '';
