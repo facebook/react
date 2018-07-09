@@ -95,6 +95,7 @@
     }
     render() {
       let {x, y, s, children} = this.props;
+      const {Fragment} = React;
       if (s <= targetSize) {
         return (
           <Dot
@@ -117,17 +118,19 @@
 
       s /= 2;
 
-      return [
-        <SierpinskiTriangle x={x} y={y - s / 2} s={s} key={1}>
-          {children}
-        </SierpinskiTriangle>,
-        <SierpinskiTriangle x={x - s} y={y + s / 2} s={s} key={2}>
-          {children}
-        </SierpinskiTriangle>,
-        <SierpinskiTriangle x={x + s} y={y + s / 2} s={s} key={3}>
-          {children}
-        </SierpinskiTriangle>,
-      ];
+      return (
+        <Fragment>
+          <SierpinskiTriangle x={x} y={y - s / 2} s={s}>
+            {children}
+          </SierpinskiTriangle>
+          <SierpinskiTriangle x={x - s} y={y + s / 2} s={s}>
+            {children}
+          </SierpinskiTriangle>
+          <SierpinskiTriangle x={x + s} y={y + s / 2} s={s}>
+            {children}
+          </SierpinskiTriangle>
+        </Fragment>
+      );
     }
   }
 
@@ -162,8 +165,8 @@
       clearInterval(this.intervalID);
     }
     render() {
-      const seconds = this.state.seconds;
-      const elapsed = this.props.elapsed;
+      const {seconds} = this.state;
+      const {elapsed} = this.props;
       const t = (elapsed / 1000) % 10;
       const scale = 1 + (t > 5 ? 10 - t : t) / 10;
       const transform = `scaleX(${scale / 2.1}) scaleY(0.7) translateZ(0.1px)`;
