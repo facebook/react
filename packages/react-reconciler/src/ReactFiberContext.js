@@ -96,7 +96,7 @@ function getMaskedContext(
       context,
       'context',
       name,
-      ReactCurrentFiber.getCurrentFiberStackInDevOrNull,
+      ReactCurrentFiber.getCurrentFiberStackInDev,
     );
   }
 
@@ -205,7 +205,7 @@ function processChildContext(fiber: Fiber, parentContext: Object): Object {
       // context from the parent component instance. The stack will be missing
       // because it's outside of the reconciliation, and so the pointer has not
       // been set. This is rare and doesn't matter. We'll also remove that API.
-      ReactCurrentFiber.getCurrentFiberStackInDevOrNull,
+      ReactCurrentFiber.getCurrentFiberStackInDev,
     );
   }
 

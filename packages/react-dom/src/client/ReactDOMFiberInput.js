@@ -10,7 +10,7 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {
   getCurrentFiberOwnerNameInDevOrNull,
-  getCurrentFiberStackInDevOrNull,
+  getCurrentFiberStackInDev,
 } from 'react-reconciler/src/ReactCurrentFiber';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -74,7 +74,7 @@ export function initWrapperState(element: Element, props: Object) {
     ReactControlledValuePropTypes.checkPropTypes(
       'input',
       props,
-      getCurrentFiberStackInDevOrNull,
+      getCurrentFiberStackInDev,
     );
 
     if (
@@ -153,7 +153,7 @@ export function updateWrapper(element: Element, props: Object) {
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
         props.type,
-        getCurrentFiberStackInDevOrNull(),
+        getCurrentFiberStackInDev(),
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -169,7 +169,7 @@ export function updateWrapper(element: Element, props: Object) {
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
         props.type,
-        getCurrentFiberStackInDevOrNull(),
+        getCurrentFiberStackInDev(),
       );
       didWarnControlledToUncontrolled = true;
     }

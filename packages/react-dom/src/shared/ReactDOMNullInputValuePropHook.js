@@ -10,11 +10,6 @@ import warning from 'shared/warning';
 
 let didWarnValueNull = false;
 
-function getStackAddendum() {
-  const stack = ReactDebugCurrentFrame.getStackAddendum();
-  return stack != null ? stack : '';
-}
-
 export function validateProperties(type, props) {
   if (type !== 'input' && type !== 'textarea' && type !== 'select') {
     return;
@@ -29,7 +24,7 @@ export function validateProperties(type, props) {
           'Consider using an empty array when `multiple` is set to `true` ' +
           'to clear the component or `undefined` for uncontrolled components.%s',
         type,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
     } else {
       warning(
@@ -38,7 +33,7 @@ export function validateProperties(type, props) {
           'Consider using an empty string to clear the component or `undefined` ' +
           'for uncontrolled components.%s',
         type,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
     }
   }

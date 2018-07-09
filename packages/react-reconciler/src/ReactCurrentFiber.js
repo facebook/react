@@ -66,16 +66,16 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   return null;
 }
 
-export function getCurrentFiberStackInDevOrNull(): string | null {
+export function getCurrentFiberStackInDev(): string {
   if (__DEV__) {
     if (current === null) {
-      return null;
+      return '';
     }
     // Safe because if current fiber exists, we are reconciling,
     // and it is guaranteed to be the work-in-progress version.
     return getStackByFiberInDevAndProd(current);
   }
-  return null;
+  return '';
 }
 
 export function resetCurrentFiber() {
@@ -88,7 +88,7 @@ export function resetCurrentFiber() {
 
 export function setCurrentFiber(fiber: Fiber) {
   if (__DEV__) {
-    ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDevOrNull;
+    ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDev;
     current = fiber;
     phase = null;
   }

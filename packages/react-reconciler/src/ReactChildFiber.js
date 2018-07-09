@@ -39,7 +39,7 @@ import {
 } from './ReactFiber';
 import {emptyRefsObject} from './ReactFiberClassComponent';
 import {
-  getCurrentFiberStackInDevOrNull,
+  getCurrentFiberStackInDev,
   getStackByFiberInDevAndProd,
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
@@ -80,7 +80,7 @@ if (__DEV__) {
       'Each child in an array or iterator should have a unique ' +
       '"key" prop. See https://fb.me/react-warning-keys for ' +
       'more information.' +
-      (getCurrentFiberStackInDevOrNull() || '');
+      getCurrentFiberStackInDev();
     if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
       return;
     }
@@ -91,7 +91,7 @@ if (__DEV__) {
       'Each child in an array or iterator should have a unique ' +
         '"key" prop. See https://fb.me/react-warning-keys for ' +
         'more information.%s',
-      getCurrentFiberStackInDevOrNull(),
+      getCurrentFiberStackInDev(),
     );
   };
 }
@@ -197,7 +197,7 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
       addendum =
         ' If you meant to render a collection of children, use an array ' +
         'instead.' +
-        (getCurrentFiberStackInDevOrNull() || '');
+        getCurrentFiberStackInDev();
     }
     invariant(
       false,
@@ -215,7 +215,7 @@ function warnOnFunctionType() {
     'Functions are not valid as a React child. This may happen if ' +
     'you return a Component instead of <Component /> from render. ' +
     'Or maybe you meant to call this function rather than return it.' +
-    (getCurrentFiberStackInDevOrNull() || '');
+    getCurrentFiberStackInDev();
 
   if (ownerHasFunctionTypeWarning[currentComponentErrorInfo]) {
     return;
@@ -227,7 +227,7 @@ function warnOnFunctionType() {
     'Functions are not valid as a React child. This may happen if ' +
       'you return a Component instead of <Component /> from render. ' +
       'Or maybe you meant to call this function rather than return it.%s',
-    getCurrentFiberStackInDevOrNull() || '',
+    getCurrentFiberStackInDev(),
   );
 }
 
@@ -719,7 +719,7 @@ function ChildReconciler(shouldTrackSideEffects) {
               'duplicated and/or omitted — the behavior is unsupported and ' +
               'could change in a future version.%s',
             key,
-            getCurrentFiberStackInDevOrNull(),
+            getCurrentFiberStackInDev(),
           );
           break;
         default:
@@ -912,7 +912,7 @@ function ChildReconciler(shouldTrackSideEffects) {
           'Using Maps as children is unsupported and will likely yield ' +
             'unexpected results. Convert it to a sequence/iterable of keyed ' +
             'ReactElements instead.%s',
-          getCurrentFiberStackInDevOrNull(),
+          getCurrentFiberStackInDev(),
         );
         didWarnAboutMaps = true;
       }
