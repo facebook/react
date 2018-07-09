@@ -60,7 +60,7 @@ describe('ReactDOMInput', () => {
 
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    dispatchEventOnNode(node, 'change');
+    dispatchEventOnNode(node, 'input');
 
     expect(node.value).toBe('lion');
   });
@@ -76,7 +76,7 @@ describe('ReactDOMInput', () => {
         // Calling focus here will blur the text box which causes a native
         // change event. Ideally we shouldn't have to fire this ourselves.
         // Don't remove unless you've verified the fix in #8240 is still covered.
-        dispatchEventOnNode(this.a, 'change');
+        dispatchEventOnNode(this.a, 'input');
         this.b.focus();
       }
       blur(currentValue) {
@@ -109,7 +109,7 @@ describe('ReactDOMInput', () => {
     setUntrackedValue.call(instance.a, 'giraffe');
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    dispatchEventOnNode(instance.a, 'change');
+    dispatchEventOnNode(instance.a, 'input');
     dispatchEventOnNode(instance.a, 'blur');
 
     expect(instance.a.value).toBe('giraffe');
@@ -166,7 +166,7 @@ describe('ReactDOMInput', () => {
 
       setUntrackedValue.call(node, '2.0');
 
-      dispatchEventOnNode(node, 'change');
+      dispatchEventOnNode(node, 'input');
 
       expect(node.getAttribute('value')).toBe('2');
       expect(node.value).toBe('2');
@@ -178,7 +178,7 @@ describe('ReactDOMInput', () => {
 
       setUntrackedValue.call(node, '2.0');
 
-      dispatchEventOnNode(node, 'change');
+      dispatchEventOnNode(node, 'input');
 
       expect(node.getAttribute('value')).toBe('2');
       expect(node.value).toBe('2');
@@ -204,7 +204,7 @@ describe('ReactDOMInput', () => {
 
       setUntrackedValue.call(node, '2.0');
 
-      dispatchEventOnNode(node, 'change');
+      dispatchEventOnNode(node, 'input');
 
       expect(node.getAttribute('value')).toBe('2.0');
       expect(node.value).toBe('2.0');
@@ -567,7 +567,7 @@ describe('ReactDOMInput', () => {
     const node = ReactDOM.render(stub, container);
 
     setUntrackedValue.call(node, 'giraffe');
-    dispatchEventOnNode(node, 'change');
+    dispatchEventOnNode(node, 'input');
     expect(node.value).toBe('0');
   });
 
@@ -576,7 +576,7 @@ describe('ReactDOMInput', () => {
     const node = ReactDOM.render(stub, container);
 
     setUntrackedValue.call(node, '0.0');
-    dispatchEventOnNode(node, 'change');
+    dispatchEventOnNode(node, 'input');
     expect(node.value).toBe('0');
   });
 
@@ -585,7 +585,7 @@ describe('ReactDOMInput', () => {
     const node = ReactDOM.render(stub, container);
 
     setUntrackedValue.call(node, '0.0');
-    dispatchEventOnNode(node, 'change');
+    dispatchEventOnNode(node, 'input');
     expect(node.value).toBe('0.0');
   });
 
@@ -871,7 +871,7 @@ describe('ReactDOMInput', () => {
     const node = ReactDOM.render(stub, container);
 
     setUntrackedValue.call(node, 'giraffe');
-    dispatchEventOnNode(node, 'change');
+    dispatchEventOnNode(node, 'input');
   });
 
   it('should warn with checked and no onChange handler with readOnly specified', () => {
@@ -1377,7 +1377,7 @@ describe('ReactDOMInput', () => {
       const node = ReactDOM.findDOMNode(stub);
 
       setUntrackedValue.call(node, '2');
-      dispatchEventOnNode(node, 'change');
+      dispatchEventOnNode(node, 'input');
 
       expect(node.getAttribute('value')).toBe('2');
     });
@@ -1393,7 +1393,7 @@ describe('ReactDOMInput', () => {
       node.focus();
 
       setUntrackedValue.call(node, '2');
-      dispatchEventOnNode(node, 'change');
+      dispatchEventOnNode(node, 'input');
 
       expect(node.getAttribute('value')).toBe('1');
     });
@@ -1407,7 +1407,7 @@ describe('ReactDOMInput', () => {
       const node = ReactDOM.findDOMNode(stub);
 
       setUntrackedValue.call(node, '2');
-      dispatchEventOnNode(node, 'change');
+      dispatchEventOnNode(node, 'input');
       dispatchEventOnNode(node, 'blur');
 
       expect(node.getAttribute('value')).toBe('2');
@@ -1464,7 +1464,7 @@ describe('ReactDOMInput', () => {
       const stub = ReactDOM.render(<Input />, container);
       input = ReactDOM.findDOMNode(stub);
       setUntrackedValue.call(input, 'latest');
-      dispatchEventOnNode(input, 'change');
+      dispatchEventOnNode(input, 'input');
       setValueToUndefined();
     }
 
@@ -1509,7 +1509,7 @@ describe('ReactDOMInput', () => {
       const stub = ReactDOM.render(<Input />, container);
       input = ReactDOM.findDOMNode(stub);
       setUntrackedValue.call(input, 'latest');
-      dispatchEventOnNode(input, 'change');
+      dispatchEventOnNode(input, 'input');
       setValueToNull();
     }
 

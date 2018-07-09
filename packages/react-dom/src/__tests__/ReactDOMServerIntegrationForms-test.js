@@ -536,7 +536,7 @@ describe('ReactDOMServerIntegration', () => {
             // simulate a user typing.
             setUntrackedValue.call(e, 'Goodbye');
             e.dispatchEvent(
-              new Event('change', {bubbles: true, cancelable: false}),
+              new Event('input', {bubbles: true, cancelable: false}),
             );
 
             expect(changeCount).toBe(1);
@@ -566,7 +566,7 @@ describe('ReactDOMServerIntegration', () => {
             // simulate a user typing.
             setUntrackedValue.call(e, 'Goodbye');
             e.dispatchEvent(
-              new Event('change', {bubbles: true, cancelable: false}),
+              new Event('input', {bubbles: true, cancelable: false}),
             );
 
             expect(changeCount).toBe(1);

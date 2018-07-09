@@ -250,7 +250,7 @@ describe('ReactDOMTextarea', () => {
 
       setUntrackedValue.call(node, 'giraffe');
       node.dispatchEvent(
-        new Event('change', {bubbles: true, cancelable: false}),
+        new Event('input', {bubbles: true, cancelable: false}),
       );
       expect(node.value).toBe('0');
     } finally {
