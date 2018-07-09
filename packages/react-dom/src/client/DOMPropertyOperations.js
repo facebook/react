@@ -16,6 +16,8 @@ import {
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
 
+import {getSafeInContext} from './safeInContext';
+
 import type {PropertyInfo} from '../shared/DOMProperty';
 
 /**
@@ -126,6 +128,13 @@ export function setValueForProperty(
   if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
     value = null;
   }
+
+  const safeInContext = getSafeInContext();
+  if (value !== null && safeInContext) {
+    // Don't interfere with deletes.
+    value = safeInContext(node, name, value);
+  }
+
   // If the prop isn't in the special list, treat it as a simple attribute.
   if (isCustomComponentTag || propertyInfo === null) {
     if (isAttributeNameSafe(name)) {

@@ -44,6 +44,8 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
+import {getSafeInContext, setSafeInContext} from './safeInContext';
+import type {SafeInContext} from './safeInContext';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
 
 let topLevelUpdateWarnings;
@@ -735,6 +737,13 @@ const ReactDOM: Object = {
   flushSync: DOMRenderer.flushSync,
 
   unstable_flushControlled: DOMRenderer.flushControlled,
+
+  get safeInContext(): SafeInContext | null {
+    return getSafeInContext();
+  },
+  set safeInContext(x: SafeInContext | null) {
+    setSafeInContext(x);
+  },
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source

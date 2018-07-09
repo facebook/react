@@ -391,6 +391,79 @@ describe('ReactDOM', () => {
     }
   });
 
+  describe('hooks should intercept URL attributes', () => {
+    // TODO: xlink:href in SVG
+
+    const origSafeInContext = ReactDOM.safeInContext;
+
+    const innocuous = 'about:invalid()';
+    const protocolWhitelist = new Set(['http', 'https', 'mailto', 'tel']);
+    const symbolTrustedUrl = Symbol('trustedUrl');
+    function safeInContext(node, attrName, value) {
+      // This hook is only for test purposes.  Do not use in prod.
+      if (attrName && /href$/i.test(attrName)) {
+        if (
+          value &&
+          typeof value === 'object' &&
+          !Array.isArray(value) &&
+          Object.hasOwnProperty.call(value, symbolTrustedUrl)
+        ) {
+          return value.toString();
+        }
+
+        let svalue = `${value}`.replace(
+          /^[\x09\x0a\x0c\x0d ]+|[\x09\x0a\x0c\x0d ]+$/g,
+          '',
+        );
+        const match = /^([^:/?#]+):/.exec(svalue); // Per Std 66 Appendix B
+        return match && !protocolWhitelist.has(match[1].toLowerCase())
+          ? innocuous
+          : svalue;
+      }
+      return value;
+    }
+
+    /* See invariant violation TODO below
+    const trustedUrl = 'javascript:ok()';
+    const trustedUrlValue = {
+      [symbolTrustedUrl]: trustedUrl,
+      valueOf() {
+        return trustedUrl;
+      },
+    };
+    */
+
+    [
+      // eslint-disable-next-line no-script-url
+      ['javascript:evil()', innocuous],
+      ['https://example.com/', 'https://example.com/'],
+      ['mailto:person@example.com', 'mailto:person@example.com'],
+      ['/abs/path', '/abs/path'],
+      ['rel/path', 'rel/path'],
+      ['?query', '?query'],
+      ['#fragment', '#fragment'],
+      // [trustedUrlValue, trustedUrl],  // TODO: this is currently an invariant violation
+    ].forEach(([input, expected]) => {
+      const container = document.createElement('div');
+
+      it(`${input}`, () => {
+        ReactDOM.safeInContext = safeInContext;
+        try {
+          ReactDOM.render(
+            React.createElement('a', {href: input}, [input]),
+            container,
+          );
+        } finally {
+          ReactDOM.safeInContext = origSafeInContext;
+        }
+
+        let link = container.getElementsByTagName('a')[0];
+        expect(link.getAttribute('href')).toEqual(expected);
+        expect(link.textContent).toEqual(`${input}`);
+      });
+    });
+  });
+
   it('throws in DEV if jsdom is destroyed by the time setState() is called', () => {
     class App extends React.Component {
       state = {x: 1};
