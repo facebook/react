@@ -16,7 +16,8 @@
     <p>
       If you can see this, React is
       <strong>not</strong> working right. If you checked out the source from GitHub make sure to run
-      <code>npm run build</code>.
+      <code>npm run build</code> or
+      <code>yarn build</code>.
     </p>
   </div>
   <script src="../../build/dist/react.development.js"></script>
@@ -158,8 +159,8 @@
         this.setState(state => ({seconds: state.seconds % 10 + 1}));
       }
     }
-    onTimeSlicingChange({target: {value}}) {
-      this.setState(() => ({useTimeSlicing: value === 'on'}));
+    onTimeSlicingChange(value) {
+      this.setState(() => ({ useTimeSlicing: value }));
     }
     componentWillUnmount() {
       clearInterval(this.intervalID);
@@ -194,30 +195,36 @@
     }
   }
 
-  const Toggle = ({value, onLabel, offLabel, onChange}) => (
-    <label>
-      <label>
-        {onLabel}
-        <input
-          type="radio"
-          name="value"
-          value="on"
-          checked={value}
-          onChange={onChange}
-        />
-      </label>
-      <label>
-        {offLabel}
-        <input
-          type="radio"
-          name="value"
-          value="off"
-          checked={!value}
-          onChange={onChange}
-        />
-      </label>
-    </label>
-  );
+  class Toggle extends React.Component {
+    constructor(props) {
+      super(props);
+      this.onChange = this.onChange.bind(this);
+    }
+    onChange(event) {
+      this.props.onChange(event.target.value === 'on');
+    }
+
+    shouldComponentUpdate(nextProps) {
+      return nextProps.value !== this.props.value;
+    }
+
+    render() {
+      const {value, onLabel, offLabel} = this.props;
+      return (
+        <label>
+          <label style={{fontWeight: value ? 'bold': 'normal'}}>
+            {onLabel}
+            <input type="radio" name="value" value="on" checked={value} onChange={this.onChange}/>
+          </label>
+          <label style={{fontWeight: value ? 'normal': 'bold'}}>
+            {offLabel}
+            <input type="radio" name="value" value="off" checked={!value} onChange={this.onChange}  />
+          </label>
+        </label>
+      );
+    }
+  }
+
   const start = new Date().getTime();
   function update() {
     ReactDOM.render(
