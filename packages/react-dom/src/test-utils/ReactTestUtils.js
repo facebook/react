@@ -311,9 +311,23 @@ const ReactTestUtils = {
   mockComponent: function(module, mockTagName) {
     mockTagName = mockTagName || module.mockTagName || 'div';
 
-    module.prototype.render.mockImplementation(function() {
-      return React.createElement(mockTagName, null, this.props.children);
-    });
+    if (module.prototype != null) {
+      // Class or functional component
+      if (typeof module.prototype.render === 'function') {
+        module.prototype.render.mockImplementation(function() {
+          return React.createElement(mockTagName, null, this.props.children);
+        });
+      } else {
+        module.mockImplementation(props =>
+          React.createElement(mockTagName, null, props.children),
+        );
+      }
+    } else if (typeof module.render === 'function') {
+      // Forward ref object
+      module.render.mockImplementation(props =>
+        React.createElement(mockTagName, null, props.children),
+      );
+    }
 
     return this;
   },
