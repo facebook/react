@@ -326,9 +326,13 @@ describe('ReactDOMServerHydration', () => {
 
     ReactDOM.hydrate(markup, element);
     expect(element.textContent).toBe('Hi');
-    expect(callback).toHaveBeenCalledTimes(1);
-    const [id, phase] = callback.mock.calls[0];
-    expect(id).toBe('profiler');
-    expect(phase).toBe('mount');
+    if (__DEV__) {
+      expect(callback).toHaveBeenCalledTimes(1);
+      const [id, phase] = callback.mock.calls[0];
+      expect(id).toBe('profiler');
+      expect(phase).toBe('mount');
+    } else {
+      expect(callback).toHaveBeenCalledTimes(0);
+    }
   });
 });
