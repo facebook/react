@@ -98,7 +98,7 @@
     "yargs": "^6.3.0"
   },
   "devEngines": {
-    "node": "8.x || 9.x"
+    "node": "8.x || 9.x || 10.x"
   },
   "jest": {
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
