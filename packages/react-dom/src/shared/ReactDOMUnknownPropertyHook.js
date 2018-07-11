@@ -9,8 +9,7 @@ import {
   registrationNameModules,
   possibleRegistrationNames,
 } from 'events/EventPluginRegistry';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import warning from 'shared/warning';
+import warningWithStack from 'shared/warningWithStack';
 
 import {
   ATTRIBUTE_NAME_CHAR,
@@ -21,13 +20,9 @@ import {
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
 
-let ReactDebugCurrentFrame = null;
-
 let validateProperty = () => {};
 
 if (__DEV__) {
-  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-
   const warnedProperties = {};
   const hasOwnProperty = Object.prototype.hasOwnProperty;
   const EVENT_NAME_REGEX = /^on./;
@@ -42,7 +37,7 @@ if (__DEV__) {
 
     const lowerCasedName = name.toLowerCase();
     if (lowerCasedName === 'onfocusin' || lowerCasedName === 'onfocusout') {
-      warning(
+      warningWithStack(
         false,
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
           'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
@@ -63,22 +58,20 @@ if (__DEV__) {
         ? possibleRegistrationNames[lowerCasedName]
         : null;
       if (registrationName != null) {
-        warning(
+        warningWithStack(
           false,
-          'Invalid event handler property `%s`. Did you mean `%s`?%s',
+          'Invalid event handler property `%s`. Did you mean `%s`?',
           name,
           registrationName,
-          ReactDebugCurrentFrame.getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
       }
       if (EVENT_NAME_REGEX.test(name)) {
-        warning(
+        warningWithStack(
           false,
-          'Unknown event handler property `%s`. It will be ignored.%s',
+          'Unknown event handler property `%s`. It will be ignored.',
           name,
-          ReactDebugCurrentFrame.getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
@@ -88,12 +81,11 @@ if (__DEV__) {
       // So we can't tell if the event name is correct for sure, but we can filter
       // out known bad ones like `onclick`. We can't suggest a specific replacement though.
       if (INVALID_EVENT_NAME_REGEX.test(name)) {
-        warning(
+        warningWithStack(
           false,
           'Invalid event handler property `%s`. ' +
-            'React events use the camelCase naming convention, for example `onClick`.%s',
+            'React events use the camelCase naming convention, for example `onClick`.',
           name,
-          ReactDebugCurrentFrame.getStackAddendum(),
         );
       }
       warnedProperties[name] = true;
@@ -106,7 +98,7 @@ if (__DEV__) {
     }
 
     if (lowerCasedName === 'innerhtml') {
-      warning(
+      warningWithStack(
         false,
         'Directly setting property `innerHTML` is not permitted. ' +
           'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
@@ -116,7 +108,7 @@ if (__DEV__) {
     }
 
     if (lowerCasedName === 'aria') {
-      warning(
+      warningWithStack(
         false,
         'The `aria` attribute is reserved for future use in React. ' +
           'Pass individual `aria-` attributes instead.',
@@ -131,24 +123,22 @@ if (__DEV__) {
       value !== undefined &&
       typeof value !== 'string'
     ) {
-      warning(
+      warningWithStack(
         false,
         'Received a `%s` for a string attribute `is`. If this is expected, cast ' +
-          'the value to a string.%s',
+          'the value to a string.',
         typeof value,
-        ReactDebugCurrentFrame.getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
     }
 
     if (typeof value === 'number' && isNaN(value)) {
-      warning(
+      warningWithStack(
         false,
         'Received NaN for the `%s` attribute. If this is expected, cast ' +
-          'the value to a string.%s',
+          'the value to a string.',
         name,
-        ReactDebugCurrentFrame.getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -161,12 +151,11 @@ if (__DEV__) {
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       const standardName = possibleStandardNames[lowerCasedName];
       if (standardName !== name) {
-        warning(
+        warningWithStack(
           false,
-          'Invalid DOM property `%s`. Did you mean `%s`?%s',
+          'Invalid DOM property `%s`. Did you mean `%s`?',
           name,
           standardName,
-          ReactDebugCurrentFrame.getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
@@ -174,16 +163,15 @@ if (__DEV__) {
     } else if (!isReserved && name !== lowerCasedName) {
       // Unknown attributes should have lowercase casing since that's how they
       // will be cased anyway with server rendering.
-      warning(
+      warningWithStack(
         false,
         'React does not recognize the `%s` prop on a DOM element. If you ' +
           'intentionally want it to appear in the DOM as a custom ' +
           'attribute, spell it as lowercase `%s` instead. ' +
           'If you accidentally passed it from a parent component, remove ' +
-          'it from the DOM element.%s',
+          'it from the DOM element.',
         name,
         lowerCasedName,
-        ReactDebugCurrentFrame.getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -194,26 +182,25 @@ if (__DEV__) {
       shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)
     ) {
       if (value) {
-        warning(
+        warningWithStack(
           false,
           'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
-            '%s="%s" or %s={value.toString()}.%s',
+            '%s="%s" or %s={value.toString()}.',
           value,
           name,
           name,
           value,
           name,
-          ReactDebugCurrentFrame.getStackAddendum(),
         );
       } else {
-        warning(
+        warningWithStack(
           false,
           'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
             '%s="%s" or %s={value.toString()}.\n\n' +
             'If you used to conditionally omit it with %s={condition && value}, ' +
-            'pass %s={condition ? value : undefined} instead.%s',
+            'pass %s={condition ? value : undefined} instead.',
           value,
           name,
           name,
@@ -221,7 +208,6 @@ if (__DEV__) {
           name,
           name,
           name,
-          ReactDebugCurrentFrame.getStackAddendum(),
         );
       }
       warnedProperties[name] = true;
@@ -257,24 +243,22 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
     .map(prop => '`' + prop + '`')
     .join(', ');
   if (unknownProps.length === 1) {
-    warning(
+    warningWithStack(
       false,
       'Invalid value for prop %s on <%s> tag. Either remove it from the element, ' +
         'or pass a string or number value to keep it in the DOM. ' +
-        'For details, see https://fb.me/react-attribute-behavior%s',
+        'For details, see https://fb.me/react-attribute-behavior',
       unknownPropString,
       type,
-      ReactDebugCurrentFrame.getStackAddendum(),
     );
   } else if (unknownProps.length > 1) {
-    warning(
+    warningWithStack(
       false,
       'Invalid values for props %s on <%s> tag. Either remove them from the element, ' +
         'or pass a string or number value to keep them in the DOM. ' +
-        'For details, see https://fb.me/react-attribute-behavior%s',
+        'For details, see https://fb.me/react-attribute-behavior',
       unknownPropString,
       type,
-      ReactDebugCurrentFrame.getStackAddendum(),
     );
   }
 };

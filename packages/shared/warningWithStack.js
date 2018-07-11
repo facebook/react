@@ -16,7 +16,7 @@ if (__DEV__) {
   // TODO: wrap calls to it with a transform
   warningWithStack = function(condition, format, ...args) {
     if (!condition) {
-      const stack = ReactDebugCurrentFrame.getStackAddendum() || '';
+      const stack = ReactDebugCurrentFrame.getStackAddendum();
       warning(false, format + '%s', ...args, stack);
     }
   };

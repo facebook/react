@@ -5,10 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import warning from 'shared/warning';
-
-let ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+import warningWithStack from 'shared/warningWithStack';
 
 let didWarnValueNull = false;
 
@@ -20,22 +17,20 @@ export function validateProperties(type, props) {
   if (props != null && props.value === null && !didWarnValueNull) {
     didWarnValueNull = true;
     if (type === 'select' && props.multiple) {
-      warning(
+      warningWithStack(
         false,
         '`value` prop on `%s` should not be null. ' +
           'Consider using an empty array when `multiple` is set to `true` ' +
-          'to clear the component or `undefined` for uncontrolled components.%s',
+          'to clear the component or `undefined` for uncontrolled components.',
         type,
-        ReactDebugCurrentFrame.getStackAddendum(),
       );
     } else {
-      warning(
+      warningWithStack(
         false,
         '`value` prop on `%s` should not be null. ' +
           'Consider using an empty string to clear the component or `undefined` ' +
-          'for uncontrolled components.%s',
+          'for uncontrolled components.',
         type,
-        ReactDebugCurrentFrame.getStackAddendum(),
       );
     }
   }
