@@ -431,7 +431,7 @@ describe('ReactCompositeComponent', () => {
       instance = ReactDOM.render(<Component />, container);
     }).toWarnDev(
       'Cannot update during an existing state transition (such as within ' +
-        "`render`). Render methods should " +
+        '`render`). Render methods should ' +
         'be a pure function of props and state.',
     );
 
