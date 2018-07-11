@@ -33,6 +33,8 @@ const {
 
 function Event(suffix) {}
 
+let hasWarnedAboutDeprecatedMockComponent = false;
+
 /**
  * @class ReactTestUtils
  */
@@ -310,11 +312,15 @@ const ReactTestUtils = {
    * @return {object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
-    lowPriorityWarning(
-      false,
-      'ReactTestUtils.mockComponent() is deprecated. ' +
-        'Use shallow rendering or jest.mock() instead.',
-    );
+    if (!hasWarnedAboutDeprecatedMockComponent) {
+      hasWarnedAboutDeprecatedMockComponent = true;
+      lowPriorityWarning(
+        false,
+        'ReactTestUtils.mockComponent() is deprecated. ' +
+          'Use shallow rendering or jest.mock() instead.\n\n' +
+          'See https://fb.me/test-utils-mock-component for more information.',
+      );
+    }
 
     mockTagName = mockTagName || module.mockTagName || 'div';
 
