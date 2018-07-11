@@ -53,7 +53,12 @@ describe('ReactTestUtils', () => {
     MockedComponent.prototype.render = jest.fn();
 
     // Patch it up so it returns its children.
-    ReactTestUtils.mockComponent(MockedComponent);
+    expect(() =>
+      ReactTestUtils.mockComponent(MockedComponent),
+    ).toLowPriorityWarnDev(
+      'ReactTestUtils.mockComponent() is deprecated. ' +
+        'Use shallow rendering or jest.mock() instead.',
+    );
 
     const container = document.createElement('div');
     ReactDOM.render(<MockedComponent>Hello</MockedComponent>, container);

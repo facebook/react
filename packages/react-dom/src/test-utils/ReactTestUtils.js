@@ -17,6 +17,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'shared/invariant';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 
@@ -309,6 +310,12 @@ const ReactTestUtils = {
    * @return {object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
+    lowPriorityWarning(
+      false,
+      'ReactTestUtils.mockComponent() is deprecated. ' +
+        'Use shallow rendering or jest.mock() instead.',
+    );
+
     mockTagName = mockTagName || module.mockTagName || 'div';
 
     module.prototype.render.mockImplementation(function() {
