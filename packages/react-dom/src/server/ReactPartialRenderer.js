@@ -62,14 +62,12 @@ type toArrayType = (children: mixed) => FlatReactChildren;
 const toArray = ((React.Children.toArray: any): toArrayType);
 
 let currentDebugStack;
-let currentDebugElementStack;
 
 let getStackAddendum = () => '';
 let describeStackFrame = element => '';
 
 let validatePropertiesInDevelopment = (type, props) => {};
 let setCurrentDebugStack = (stack: Array<Frame>) => {};
-let pushElementToDebugStack = (element: ReactElement) => {};
 let resetCurrentDebugStack = () => {};
 
 if (__DEV__) {
@@ -88,22 +86,11 @@ if (__DEV__) {
   };
 
   currentDebugStack = null;
-  currentDebugElementStack = null;
   setCurrentDebugStack = function(stack: Array<Frame>) {
-    const frame: Frame = stack[stack.length - 1];
-    currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
-    // We are about to enter a new composite stack, reset the array.
-    currentDebugElementStack.length = 0;
     currentDebugStack = stack;
     ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
   };
-  pushElementToDebugStack = function(element: ReactElement) {
-    if (currentDebugElementStack !== null) {
-      currentDebugElementStack.push(element);
-    }
-  };
   resetCurrentDebugStack = function() {
-    currentDebugElementStack = null;
     currentDebugStack = null;
     ReactDebugCurrentFrame.getCurrentStack = null;
   };
@@ -388,6 +375,7 @@ function validateRenderResult(child, type) {
 function resolve(
   child: mixed,
   context: Object,
+  debugElementStack: Array<ReactElement> | null,
 ): {|
   child: mixed,
   context: Object,
@@ -397,7 +385,7 @@ function resolve(
     let element: ReactElement = (child: any);
     let Component = element.type;
     if (__DEV__) {
-      pushElementToDebugStack(element);
+      ((debugElementStack: any): Array<ReactElement>).push(element);
     }
     if (typeof Component !== 'function') {
       break;
@@ -773,10 +761,19 @@ class ReactDOMServerRenderer {
         continue;
       }
       const child = frame.children[frame.childIndex++];
+      let debugElementStack = null;
       if (__DEV__) {
         setCurrentDebugStack(this.stack);
+        debugElementStack = ((frame: any): FrameDev).debugElementStack;
+        // We are about to enter a new composite stack, reset the array.
+        debugElementStack.length = 0;
       }
-      out += this.render(child, frame.context, frame.domNamespace);
+      out += this.render(
+        child,
+        frame.context,
+        frame.domNamespace,
+        debugElementStack,
+      );
       if (__DEV__) {
         // TODO: Handle reentrant server render calls. This doesn't.
         resetCurrentDebugStack();
@@ -789,6 +786,7 @@ class ReactDOMServerRenderer {
     child: ReactNode | null,
     context: Object,
     parentNamespace: string,
+    debugElementStack: Array<ReactElement> | null,
   ): string {
     if (typeof child === 'string' || typeof child === 'number') {
       const text = '' + child;
@@ -805,7 +803,11 @@ class ReactDOMServerRenderer {
       return escapeTextForBrowser(text);
     } else {
       let nextChild;
-      ({child: nextChild, context} = resolve(child, context));
+      ({child: nextChild, context} = resolve(
+        child,
+        context,
+        debugElementStack,
+      ));
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
