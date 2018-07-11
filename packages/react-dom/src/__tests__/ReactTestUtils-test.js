@@ -43,21 +43,60 @@ describe('ReactTestUtils', () => {
     expect(Object.keys(ReactTestUtils.SimulateNative).sort()).toMatchSnapshot();
   });
 
-  it('gives Jest mocks a passthrough implementation with mockComponent()', () => {
-    class MockedComponent extends React.Component {
-      render() {
-        throw new Error('Should not get here.');
+  describe('mockComponent', () => {
+    it('should support jest-mocked class components', () => {
+      class MockedClassComponent extends React.Component {
+        render() {
+          throw new Error('Should not get here.');
+        }
       }
-    }
-    // This is close enough to what a Jest mock would give us.
-    MockedComponent.prototype.render = jest.fn();
 
-    // Patch it up so it returns its children.
-    ReactTestUtils.mockComponent(MockedComponent);
+      // This is close enough to what a Jest mock would give us.
+      MockedClassComponent.prototype.render = jest.fn();
 
-    const container = document.createElement('div');
-    ReactDOM.render(<MockedComponent>Hello</MockedComponent>, container);
-    expect(container.textContent).toBe('Hello');
+      ReactTestUtils.mockComponent(MockedClassComponent);
+
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <MockedClassComponent>Hello</MockedClassComponent>,
+        container,
+      );
+      expect(container.textContent).toBe('Hello');
+    });
+
+    it('should support jest-mocked functional components', () => {
+      const MockedFunctionComponent = jest.fn(props => {
+        throw new Error('Should not get here.');
+      });
+
+      ReactTestUtils.mockComponent(MockedFunctionComponent);
+
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <MockedFunctionComponent>Hello</MockedFunctionComponent>,
+        container,
+      );
+      expect(container.textContent).toBe('Hello');
+    });
+
+    it('should support jest-mocked forwardRef object', () => {
+      const RefForwardingFunction = (props, ref) => {
+        throw new Error('Should not get here.');
+      };
+      const RefForwardingComponent = React.forwardRef(RefForwardingFunction);
+
+      // This is close enough to what a Jest mock would give us.
+      RefForwardingComponent.render = jest.fn();
+
+      ReactTestUtils.mockComponent(RefForwardingComponent);
+
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <RefForwardingComponent>Hello</RefForwardingComponent>,
+        container,
+      );
+      expect(container.textContent).toBe('Hello');
+    });
   });
 
   it('can scryRenderedComponentsWithType', () => {
