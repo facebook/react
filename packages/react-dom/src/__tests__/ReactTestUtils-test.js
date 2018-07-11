@@ -60,6 +60,9 @@ describe('ReactTestUtils', () => {
         'Use shallow rendering or jest.mock() instead.',
     );
 
+    // De-duplication check
+    ReactTestUtils.mockComponent(MockedComponent);
+
     const container = document.createElement('div');
     ReactDOM.render(<MockedComponent>Hello</MockedComponent>, container);
     expect(container.textContent).toBe('Hello');
