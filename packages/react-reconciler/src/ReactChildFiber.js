@@ -29,6 +29,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
+import warningWithStack from 'shared/warningWithStack';
 
 import {
   createWorkInProgress,
@@ -86,12 +87,11 @@ if (__DEV__) {
     }
     ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
-    warning(
+    warningWithStack(
       false,
       'Each child in an array or iterator should have a unique ' +
         '"key" prop. See https://fb.me/react-warning-keys for ' +
-        'more information.%s',
-      getCurrentFiberStackInDev(),
+        'more information.',
     );
   };
 }
@@ -222,12 +222,11 @@ function warnOnFunctionType() {
   }
   ownerHasFunctionTypeWarning[currentComponentErrorInfo] = true;
 
-  warning(
+  warningWithStack(
     false,
     'Functions are not valid as a React child. This may happen if ' +
       'you return a Component instead of <Component /> from render. ' +
-      'Or maybe you meant to call this function rather than return it.%s',
-    getCurrentFiberStackInDev(),
+      'Or maybe you meant to call this function rather than return it.',
   );
 }
 
@@ -711,15 +710,14 @@ function ChildReconciler(shouldTrackSideEffects) {
             knownKeys.add(key);
             break;
           }
-          warning(
+          warningWithStack(
             false,
             'Encountered two children with the same key, `%s`. ' +
               'Keys should be unique so that components maintain their identity ' +
               'across updates. Non-unique keys may cause children to be ' +
               'duplicated and/or omitted — the behavior is unsupported and ' +
-              'could change in a future version.%s',
+              'could change in a future version.',
             key,
-            getCurrentFiberStackInDev(),
           );
           break;
         default:
@@ -907,12 +905,11 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (__DEV__) {
       // Warn about using Maps as children
       if ((newChildrenIterable: any).entries === iteratorFn) {
-        warning(
+        warningWithStack(
           didWarnAboutMaps,
           'Using Maps as children is unsupported and will likely yield ' +
             'unexpected results. Convert it to a sequence/iterable of keyed ' +
-            'ReactElements instead.%s',
-          getCurrentFiberStackInDev(),
+            'ReactElements instead.',
         );
         didWarnAboutMaps = true;
       }

@@ -8,12 +8,10 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {
-  getCurrentFiberOwnerNameInDevOrNull,
-  getCurrentFiberStackInDev,
-} from 'react-reconciler/src/ReactCurrentFiber';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
+import warningWithStack from 'shared/warningWithStack';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import * as ReactDOMFiberInput from './ReactDOMFiberInput';
@@ -168,23 +166,21 @@ if (__DEV__) {
 
   warnForInvalidEventListener = function(registrationName, listener) {
     if (listener === false) {
-      warning(
+      warningWithStack(
         false,
         'Expected `%s` listener to be a function, instead got `false`.\n\n' +
           'If you used to conditionally omit it with %s={condition && value}, ' +
-          'pass %s={condition ? value : undefined} instead.%s',
+          'pass %s={condition ? value : undefined} instead.',
         registrationName,
         registrationName,
         registrationName,
-        getCurrentFiberStackInDev(),
       );
     } else {
-      warning(
+      warningWithStack(
         false,
-        'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
+        'Expected `%s` listener to be a function, instead got a value of `%s` type.',
         registrationName,
         typeof listener,
-        getCurrentFiberStackInDev(),
       );
     }
   };
@@ -357,7 +353,7 @@ export function createElement(
       isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
       // allow <SVG> or <mATH>.
-      warning(
+      warningWithStack(
         isCustomComponentTag || type === type.toLowerCase(),
         '<%s /> is using incorrect casing. ' +
           'Use PascalCase for React components, ' +
@@ -396,7 +392,7 @@ export function createElement(
         !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
       ) {
         warnedUnknownTags[type] = true;
-        warning(
+        warningWithStack(
           false,
           'The tag <%s> is unrecognized in this browser. ' +
             'If you meant to render a React component, start its name with ' +
@@ -433,7 +429,7 @@ export function setInitialProperties(
       !didWarnShadyDOM &&
       (domElement: any).shadyRoot
     ) {
-      warning(
+      warningWithStack(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
@@ -825,7 +821,7 @@ export function diffHydratedProperties(
       !didWarnShadyDOM &&
       (domElement: any).shadyRoot
     ) {
-      warning(
+      warningWithStack(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',

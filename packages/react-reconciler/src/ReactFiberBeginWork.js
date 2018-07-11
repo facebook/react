@@ -50,6 +50,7 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
+import warningWithStack from 'shared/warningWithStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
@@ -672,12 +673,11 @@ function mountIndeterminateComponent(
         }
         if (!didWarnAboutStatelessRefs[warningKey]) {
           didWarnAboutStatelessRefs[warningKey] = true;
-          warning(
+          warningWithStack(
             false,
             'Stateless function components cannot be given refs. ' +
-              'Attempts to access this ref will fail.%s%s',
+              'Attempts to access this ref will fail.%s',
             info,
-            ReactCurrentFiber.getCurrentFiberStackInDev(),
           );
         }
       }
