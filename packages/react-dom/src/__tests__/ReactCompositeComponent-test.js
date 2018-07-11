@@ -431,9 +431,8 @@ describe('ReactCompositeComponent', () => {
       instance = ReactDOM.render(<Component />, container);
     }).toWarnDev(
       'Cannot update during an existing state transition (such as within ' +
-        "`render` or another component's constructor). Render methods should " +
-        'be a pure function of props and state. ' +
-        'Move the setState call to componentDidMount`.',
+        "`render`). Render methods should " +
+        'be a pure function of props and state.',
     );
 
     // The setState call is queued and then executed as a second pass. This
