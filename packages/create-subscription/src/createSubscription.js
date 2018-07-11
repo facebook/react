@@ -21,7 +21,7 @@ export function createSubscription<Property, Value>(
     getCurrentValue: (source: Property) => Value | void,
 
     // Setup a subscription for the subscribable value in props, and return an unsubscribe function.
-    // Return false to indicate the property cannot be unsubscribed from (e.g. native Promises).
+    // Return empty function if the property cannot be unsubscribed from (e.g. native Promises).
     // Due to the variety of change event types, subscribers should provide their own handlers.
     // Those handlers should not attempt to update state though;
     // They should call the callback() instead when a subscription changes.
