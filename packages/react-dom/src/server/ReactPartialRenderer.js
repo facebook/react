@@ -61,16 +61,20 @@ type FlatReactChildren = Array<null | ReactNode>;
 type toArrayType = (children: mixed) => FlatReactChildren;
 const toArray = ((React.Children.toArray: any): toArrayType);
 
-let currentDebugStack;
-let currentDebugElementStack;
+// This is only used in DEV.
+// Each entry is `this.stack` from a currently executing renderer instance.
+// (There may be more than one because ReactDOMServer is reentrant).
+// Each stack is an array of frames which may contain nested stacks of elements.
+let currentDebugStacks = [];
 
-let getStackAddendum = () => '';
+let prevGetCurrentStackImpl = null;
+let getCurrentServerStackImpl = () => '';
 let describeStackFrame = element => '';
 
 let validatePropertiesInDevelopment = (type, props) => {};
-let setCurrentDebugStack = (stack: Array<Frame>) => {};
+let pushCurrentDebugStack = (stack: Array<Frame>) => {};
 let pushElementToDebugStack = (element: ReactElement) => {};
-let resetCurrentDebugStack = () => {};
+let popCurrentDebugStack = () => {};
 
 if (__DEV__) {
   validatePropertiesInDevelopment = function(type, props) {
@@ -87,34 +91,55 @@ if (__DEV__) {
     return describeComponentFrame(name, source, ownerName);
   };
 
-  currentDebugStack = null;
-  currentDebugElementStack = null;
-  setCurrentDebugStack = function(stack: Array<Frame>) {
-    const frame: Frame = stack[stack.length - 1];
-    currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
-    // We are about to enter a new composite stack, reset the array.
-    currentDebugElementStack.length = 0;
-    currentDebugStack = stack;
-    ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
-  };
-  pushElementToDebugStack = function(element: ReactElement) {
-    if (currentDebugElementStack !== null) {
-      currentDebugElementStack.push(element);
+  pushCurrentDebugStack = function(stack: Array<Frame>) {
+    currentDebugStacks.push(stack);
+
+    if (currentDebugStacks.length === 1) {
+      // We are entering a server renderer.
+      // Remember the previous (e.g. client) global stack implementation.
+      prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
+      ReactDebugCurrentFrame.getCurrentStack = getCurrentServerStackImpl;
     }
   };
-  resetCurrentDebugStack = function() {
-    currentDebugElementStack = null;
-    currentDebugStack = null;
-    ReactDebugCurrentFrame.getCurrentStack = null;
+
+  pushElementToDebugStack = function(element: ReactElement) {
+    // For the innermost executing ReactDOMServer call,
+    const stack = currentDebugStacks[currentDebugStacks.length - 1];
+    // Take the innermost executing frame (e.g. <Foo>),
+    const frame: Frame = stack[stack.length - 1];
+    // and record that it has one more element associated with it.
+    ((frame: any): FrameDev).debugElementStack.push(element);
+    // We only need this because we tail-optimize single-element
+    // children and directly handle them in an inner loop instead of
+    // creating separate frames for them.
   };
-  getStackAddendum = function(): null | string {
-    if (currentDebugStack === null) {
+
+  popCurrentDebugStack = function() {
+    currentDebugStacks.pop();
+
+    if (currentDebugStacks.length === 0) {
+      // We are exiting the server renderer.
+      // Restore the previous (e.g. client) global stack implementation.
+      ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
+      prevGetCurrentStackImpl = null;
+    }
+  };
+
+  getCurrentServerStackImpl = function(): string {
+    if (currentDebugStacks.length === 0) {
+      // Nothing is currently rendering.
       return '';
     }
+    // ReactDOMServer is reentrant so there may be multiple calls at the same time.
+    // Take the frames from the innermost call which is the last in the array.
+    let frames = currentDebugStacks[currentDebugStacks.length - 1];
     let stack = '';
-    let debugStack = currentDebugStack;
-    for (let i = debugStack.length - 1; i >= 0; i--) {
-      const frame: Frame = debugStack[i];
+    // Go through every frame in the stack from the innermost one.
+    for (let i = frames.length - 1; i >= 0; i--) {
+      const frame: Frame = frames[i];
+      // Every frame might have more than one debug element stack entry associated with it.
+      // This is because single-child nesting doesn't create materialized frames.
+      // Instead it would push them through `pushElementToDebugStack()`.
       let debugElementStack = ((frame: any): FrameDev).debugElementStack;
       for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
         stack += describeStackFrame(debugElementStack[ii]);
@@ -180,7 +205,7 @@ function createMarkupForStyles(styles): string | null {
     const styleValue = styles[styleName];
     if (__DEV__) {
       if (!isCustomProperty) {
-        warnValidStyle(styleName, styleValue, getStackAddendum);
+        warnValidStyle(styleName, styleValue, getCurrentServerStackImpl);
       }
     }
     if (styleValue != null) {
@@ -305,7 +330,13 @@ function maskContext(type, context) {
 
 function checkContextTypes(typeSpecs, values, location: string) {
   if (__DEV__) {
-    checkPropTypes(typeSpecs, values, location, 'Component', getStackAddendum);
+    checkPropTypes(
+      typeSpecs,
+      values,
+      location,
+      'Component',
+      getCurrentServerStackImpl,
+    );
   }
 }
 
@@ -774,12 +805,18 @@ class ReactDOMServerRenderer {
       }
       const child = frame.children[frame.childIndex++];
       if (__DEV__) {
-        setCurrentDebugStack(this.stack);
-      }
-      out += this.render(child, frame.context, frame.domNamespace);
-      if (__DEV__) {
-        // TODO: Handle reentrant server render calls. This doesn't.
-        resetCurrentDebugStack();
+        pushCurrentDebugStack(this.stack);
+        // We're starting work on this frame, so reset its inner stack.
+        ((frame: any): FrameDev).debugElementStack.length = 0;
+        try {
+          // Be careful! Make sure this matches the PROD path below.
+          out += this.render(child, frame.context, frame.domNamespace);
+        } finally {
+          popCurrentDebugStack();
+        }
+      } else {
+        // Be careful! Make sure this matches the DEV path above.
+        out += this.render(child, frame.context, frame.domNamespace);
       }
     }
     return out;
@@ -1005,7 +1042,7 @@ class ReactDOMServerRenderer {
         ReactControlledValuePropTypes.checkPropTypes(
           'input',
           props,
-          getStackAddendum,
+          getCurrentServerStackImpl,
         );
 
         if (
@@ -1063,7 +1100,7 @@ class ReactDOMServerRenderer {
         ReactControlledValuePropTypes.checkPropTypes(
           'textarea',
           props,
-          getStackAddendum,
+          getCurrentServerStackImpl,
         );
         if (
           props.value !== undefined &&
@@ -1124,7 +1161,7 @@ class ReactDOMServerRenderer {
         ReactControlledValuePropTypes.checkPropTypes(
           'select',
           props,
-          getStackAddendum,
+          getCurrentServerStackImpl,
         );
 
         for (let i = 0; i < valuePropNames.length; i++) {
@@ -1215,7 +1252,7 @@ class ReactDOMServerRenderer {
       validatePropertiesInDevelopment(tag, props);
     }
 
-    assertValidProps(tag, props, getStackAddendum);
+    assertValidProps(tag, props, getCurrentServerStackImpl);
 
     let out = createOpenTagMarkup(
       element.type,

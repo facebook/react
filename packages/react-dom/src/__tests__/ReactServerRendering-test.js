@@ -720,4 +720,61 @@ describe('ReactDOMServer', () => {
         '    in App (at **)',
     ]);
   });
+
+  it('reports stacks with re-entrant renderToString() calls', () => {
+    function Child2(props) {
+      return <span ariaTypo3="no">{props.children}</span>;
+    }
+
+    function App2() {
+      return (
+        <Child2>
+          {ReactDOMServer.renderToString(<blink ariaTypo2="no" />)}
+        </Child2>
+      );
+    }
+
+    function Child() {
+      return (
+        <span ariaTypo4="no">{ReactDOMServer.renderToString(<App2 />)}</span>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <span ariaTypo="no" />
+          <Child />
+          <font ariaTypo5="no" />
+        </div>
+      );
+    }
+
+    expect(() => ReactDOMServer.renderToString(<App />)).toWarnDev([
+      // ReactDOMServer(App > div > span)
+      'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+      // ReactDOMServer(App > div > Child) >>> ReactDOMServer(App2) >>> ReactDOMServer(blink)
+      'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in blink (at **)',
+      // ReactDOMServer(App > div > Child) >>> ReactDOMServer(App2 > Child2 > span)
+      'Invalid ARIA attribute `ariaTypo3`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in Child2 (at **)\n' +
+        '    in App2 (at **)',
+      // ReactDOMServer(App > div > Child > span)
+      'Invalid ARIA attribute `ariaTypo4`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in Child (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+      // ReactDOMServer(App > div > font)
+      'Invalid ARIA attribute `ariaTypo5`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in font (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+    ]);
+  });
 });
