@@ -313,7 +313,7 @@ const ReactTestUtils = {
     lowPriorityWarning(
       false,
       'ReactTestUtils.mockComponent() is deprecated. ' +
-        'We recommend using shallow rendering or jest.mock() instead.',
+        'Use shallow rendering or jest.mock() instead.',
     );
 
     mockTagName = mockTagName || module.mockTagName || 'div';

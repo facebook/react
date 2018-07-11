@@ -57,7 +57,7 @@ describe('ReactTestUtils', () => {
       ReactTestUtils.mockComponent(MockedComponent),
     ).toLowPriorityWarnDev(
       'ReactTestUtils.mockComponent() is deprecated. ' +
-        'We recommend using shallow rendering or jest.mock() instead.',
+        'Use shallow rendering or jest.mock() instead.',
     );
 
     const container = document.createElement('div');
