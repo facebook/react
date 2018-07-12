@@ -53,4 +53,16 @@ describe('ReactDOMServerIntegration', () => {
     expect(div.tagName).toBe('DIV');
     expect(div.textContent).toBe('Test');
   });
+
+  itRenders('a Profiler component and its children', async render => {
+    const element = await render(
+      <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+        <div>Test</div>
+      </React.unstable_Profiler>,
+    );
+    const parent = element.parentNode;
+    const div = parent.childNodes[0];
+    expect(div.tagName).toBe('DIV');
+    expect(div.textContent).toBe('Test');
+  });
 });
