@@ -115,7 +115,7 @@ function scheduleRootUpdate(
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
           'Check the render method of %s.',
-        getComponentName(ReactCurrentFiber.current) || 'Unknown',
+        getComponentName(ReactCurrentFiber.current.type) || 'Unknown',
       );
     }
   }

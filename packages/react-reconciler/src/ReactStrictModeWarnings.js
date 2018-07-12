@@ -79,7 +79,7 @@ if (__DEV__) {
           if (lifecycleWarnings.length > 0) {
             const componentNames = new Set();
             lifecycleWarnings.forEach(fiber => {
-              componentNames.add(getComponentName(fiber) || 'Component');
+              componentNames.add(getComponentName(fiber.type) || 'Component');
               didWarnAboutUnsafeLifecycles.add(fiber.type);
             });
 
@@ -133,7 +133,7 @@ if (__DEV__) {
     if (pendingComponentWillMountWarnings.length > 0) {
       const uniqueNames = new Set();
       pendingComponentWillMountWarnings.forEach(fiber => {
-        uniqueNames.add(getComponentName(fiber) || 'Component');
+        uniqueNames.add(getComponentName(fiber.type) || 'Component');
         didWarnAboutDeprecatedLifecycles.add(fiber.type);
       });
 
@@ -156,7 +156,7 @@ if (__DEV__) {
     if (pendingComponentWillReceivePropsWarnings.length > 0) {
       const uniqueNames = new Set();
       pendingComponentWillReceivePropsWarnings.forEach(fiber => {
-        uniqueNames.add(getComponentName(fiber) || 'Component');
+        uniqueNames.add(getComponentName(fiber.type) || 'Component');
         didWarnAboutDeprecatedLifecycles.add(fiber.type);
       });
 
@@ -178,7 +178,7 @@ if (__DEV__) {
     if (pendingComponentWillUpdateWarnings.length > 0) {
       const uniqueNames = new Set();
       pendingComponentWillUpdateWarnings.forEach(fiber => {
-        uniqueNames.add(getComponentName(fiber) || 'Component');
+        uniqueNames.add(getComponentName(fiber.type) || 'Component');
         didWarnAboutDeprecatedLifecycles.add(fiber.type);
       });
 
@@ -337,7 +337,7 @@ if (__DEV__) {
       (fiberArray: FiberArray, strictRoot) => {
         const uniqueNames = new Set();
         fiberArray.forEach(fiber => {
-          uniqueNames.add(getComponentName(fiber) || 'Component');
+          uniqueNames.add(getComponentName(fiber.type) || 'Component');
           didWarnAboutLegacyContext.add(fiber.type);
         });
 

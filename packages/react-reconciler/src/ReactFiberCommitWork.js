@@ -93,7 +93,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   }
 
   const capturedError: CapturedError = {
-    componentName: source !== null ? getComponentName(source) : null,
+    componentName: source !== null ? getComponentName(source.type) : null,
     componentStack: stack !== null ? stack : '',
     error: errorInfo.value,
     errorBoundary: null,
@@ -104,7 +104,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
 
   if (boundary !== null && boundary.tag === ClassComponent) {
     capturedError.errorBoundary = boundary.stateNode;
-    capturedError.errorBoundaryName = getComponentName(boundary);
+    capturedError.errorBoundaryName = getComponentName(boundary.type);
     capturedError.errorBoundaryFound = true;
     capturedError.willRetry = true;
   }
@@ -203,7 +203,7 @@ function commitBeforeMutationLifeCycles(
                 false,
                 '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
                   'must be returned. You have returned undefined.',
-                getComponentName(finishedWork),
+                getComponentName(finishedWork.type),
               );
             }
           }
@@ -372,7 +372,7 @@ function commitAttachRef(finishedWork: Fiber) {
             false,
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().%s',
-            getComponentName(finishedWork),
+            getComponentName(finishedWork.type),
             getStackByFiberInDevAndProd(finishedWork),
           );
         }

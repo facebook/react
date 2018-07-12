@@ -71,7 +71,7 @@ if (__DEV__) {
       stack += describeComponentFrame(
         name,
         currentlyValidatingElement._source,
-        owner && getComponentName(owner),
+        owner && getComponentName(owner.type),
       );
     }
     stack += ReactDebugCurrentFrame.getStackAddendum();
@@ -81,7 +81,7 @@ if (__DEV__) {
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    const name = getComponentName(ReactCurrentOwner.current);
+    const name = getComponentName(ReactCurrentOwner.current.type);
     if (name) {
       return '\n\nCheck the render method of `' + name + '`.';
     }
@@ -159,7 +159,7 @@ function validateExplicitKey(element, parentType) {
   ) {
     // Give the component that originally created this child.
     childOwner = ` It was passed a child from ${getComponentName(
-      element._owner,
+      element._owner.type,
     )}.`;
   }
 

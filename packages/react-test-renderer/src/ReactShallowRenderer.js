@@ -349,7 +349,7 @@ function getStackAddendum() {
     stack += describeComponentFrame(
       name,
       currentlyValidatingElement._source,
-      owner && getComponentName(owner),
+      owner && getComponentName(owner.type),
     );
   }
   return stack;

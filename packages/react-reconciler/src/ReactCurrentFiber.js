@@ -29,10 +29,10 @@ function describeFiber(fiber: Fiber): string {
     case HostComponent:
       const owner = fiber._debugOwner;
       const source = fiber._debugSource;
-      const name = getComponentName(fiber);
+      const name = getComponentName(fiber.type);
       let ownerName = null;
       if (owner) {
-        ownerName = getComponentName(owner);
+        ownerName = getComponentName(owner.type);
       }
       return describeComponentFrame(name, source, ownerName);
     default:
@@ -60,7 +60,7 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
     }
     const owner = current._debugOwner;
     if (owner !== null && typeof owner !== 'undefined') {
-      return getComponentName(owner);
+      return getComponentName(owner.type);
     }
   }
   return null;

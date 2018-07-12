@@ -74,7 +74,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
           'never access something that requires stale data from the previous ' +
           'render, such as refs. Move this logic to componentDidMount and ' +
           'componentDidUpdate instead.',
-        getComponentName(ownerFiber) || 'A component',
+        getComponentName(ownerFiber.type) || 'A component',
       );
       instance._warnedAboutRefsInRender = true;
     }
