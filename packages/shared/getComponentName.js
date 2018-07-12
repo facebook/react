@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
-
 import warning from 'shared/warning';
 import {
   REACT_ASYNC_MODE_TYPE,
