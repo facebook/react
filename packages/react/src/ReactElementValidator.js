@@ -13,7 +13,6 @@
  */
 
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import describeComponentFrame from 'shared/describeComponentFrame';
 import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
 import {
@@ -26,32 +25,14 @@ import warning from 'shared/warning';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {isValidElement, createElement, cloneElement} from './ReactElement';
-import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
+import ReactDebugCurrentFrame, {
+  setCurrentlyValidatingElement,
+} from './ReactDebugCurrentFrame';
 
-let currentlyValidatingElement;
 let propTypesMisspellWarningShown;
 
-let getStackAddendum = () => {};
-
 if (__DEV__) {
-  currentlyValidatingElement = null;
-
   propTypesMisspellWarningShown = false;
-
-  getStackAddendum = function(): string {
-    let stack = '';
-    if (currentlyValidatingElement) {
-      const name = getComponentName(currentlyValidatingElement.type);
-      const owner = currentlyValidatingElement._owner;
-      stack += describeComponentFrame(
-        name,
-        currentlyValidatingElement._source,
-        owner && getComponentName(owner.type),
-      );
-    }
-    stack += ReactDebugCurrentFrame.getStackAddendum();
-    return stack;
-  };
 }
 
 function getDeclarationErrorAddendum() {
@@ -138,7 +119,7 @@ function validateExplicitKey(element, parentType) {
     )}.`;
   }
 
-  currentlyValidatingElement = element;
+  setCurrentlyValidatingElement(element);
   if (__DEV__) {
     warning(
       false,
@@ -146,10 +127,10 @@ function validateExplicitKey(element, parentType) {
         '%s%s See https://fb.me/react-warning-keys for more information.%s',
       currentComponentErrorInfo,
       childOwner,
-      getStackAddendum(),
+      ReactDebugCurrentFrame.getStackAddendum(),
     );
   }
-  currentlyValidatingElement = null;
+  setCurrentlyValidatingElement(null);
 }
 
 /**
@@ -221,9 +202,15 @@ function validatePropTypes(element) {
     return;
   }
   if (propTypes) {
-    currentlyValidatingElement = element;
-    checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
-    currentlyValidatingElement = null;
+    setCurrentlyValidatingElement(element);
+    checkPropTypes(
+      propTypes,
+      element.props,
+      'prop',
+      name,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
+    setCurrentlyValidatingElement(null);
   } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
     propTypesMisspellWarningShown = true;
     warning(
@@ -246,7 +233,7 @@ function validatePropTypes(element) {
  * @param {ReactElement} fragment
  */
 function validateFragmentProps(fragment) {
-  currentlyValidatingElement = fragment;
+  setCurrentlyValidatingElement(fragment);
 
   const keys = Object.keys(fragment.props);
   for (let i = 0; i < keys.length; i++) {
@@ -257,7 +244,7 @@ function validateFragmentProps(fragment) {
         'Invalid prop `%s` supplied to `React.Fragment`. ' +
           'React.Fragment can only have `key` and `children` props.%s',
         key,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
       break;
     }
@@ -267,11 +254,11 @@ function validateFragmentProps(fragment) {
     warning(
       false,
       'Invalid attribute `ref` supplied to `React.Fragment`.%s',
-      getStackAddendum(),
+      ReactDebugCurrentFrame.getStackAddendum(),
     );
   }
 
-  currentlyValidatingElement = null;
+  setCurrentlyValidatingElement(null);
 }
 
 export function createElementWithValidation(type, props, children) {
@@ -299,7 +286,7 @@ export function createElementWithValidation(type, props, children) {
       info += getDeclarationErrorAddendum();
     }
 
-    info += getStackAddendum();
+    info += ReactDebugCurrentFrame.getStackAddendum();
 
     let typeString;
     if (type === null) {
