@@ -1282,6 +1282,38 @@ describe('ReactSuspense', () => {
         span('C'),
       ]);
     });
+
+    it('suspends inside constructor', async () => {
+      class AsyncTextInConstructor extends React.Component {
+        constructor(props) {
+          super(props);
+          const text = props.text;
+          try {
+            TextResource.read(cache, [props.text, props.ms]);
+            this.state = {text};
+          } catch (promise) {
+            if (typeof promise.then === 'function') {
+              ReactNoop.yield(`Suspend! [${text}]`);
+            } else {
+              ReactNoop.yield(`Error! [${text}]`);
+            }
+            throw promise;
+          }
+        }
+        render() {
+          ReactNoop.yield(this.state.text);
+          return <span prop={this.state.text} />;
+        }
+      }
+
+      ReactNoop.renderLegacySyncRoot(
+        <Placeholder fallback={<Text text="Loading..." />}>
+          <AsyncTextInConstructor ms={100} text="Hi" />
+        </Placeholder>,
+      );
+
+      expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+    });
   });
 });
 

@@ -71,6 +71,10 @@ import {
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
 import {reconcileChildrenAtExpirationTime} from './ReactFiberBeginWork';
 
+function NoopComponent() {
+  return null;
+}
+
 function createRootErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<mixed>,
@@ -244,6 +248,19 @@ function throwException(
               // Let's just assume it's a functional component. This fiber will
               // be unmounted in the immediate next commit, anyway.
               sourceFiber.tag = FunctionalComponent;
+            }
+
+            if (
+              sourceFiber.tag === ClassComponent &&
+              workInProgress.stateNode === null
+            ) {
+              // We're about to mount a class component that doesn't have an
+              // instance. Turn this into a dummy functional component instead,
+              // to prevent type errors. This is a bit weird but it's an edge
+              // case and we're about to synchronously delete this
+              // component, anyway.
+              sourceFiber.tag = FunctionalComponent;
+              sourceFiber.type = NoopComponent;
             }
 
             // Exit without suspending.
