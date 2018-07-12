@@ -29,7 +29,7 @@ import * as EventPluginRegistry from 'events/EventPluginRegistry';
 import * as EventPropagators from 'events/EventPropagators';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import ReactVersion from 'shared/ReactVersion';
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
@@ -45,6 +45,8 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
+
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let topLevelUpdateWarnings;
 let warnOnInvalidCallback;

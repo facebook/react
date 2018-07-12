@@ -9,7 +9,7 @@ import {
   registrationNameModules,
   possibleRegistrationNames,
 } from 'events/EventPluginRegistry';
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warning from 'shared/warning';
 
 import {
@@ -21,9 +21,13 @@ import {
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
 
+let ReactDebugCurrentFrame = null;
+
 let validateProperty = () => {};
 
 if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
   const warnedProperties = {};
   const hasOwnProperty = Object.prototype.hasOwnProperty;
   const EVENT_NAME_REGEX = /^on./;

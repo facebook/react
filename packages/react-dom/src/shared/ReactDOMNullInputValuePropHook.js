@@ -5,8 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warning from 'shared/warning';
+
+let ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 let didWarnValueNull = false;
 
