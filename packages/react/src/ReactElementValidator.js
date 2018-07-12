@@ -31,7 +31,6 @@ import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 let currentlyValidatingElement;
 let propTypesMisspellWarningShown;
 
-let getDisplayName = () => {};
 let getStackAddendum = () => {};
 
 if (__DEV__) {
@@ -39,34 +38,10 @@ if (__DEV__) {
 
   propTypesMisspellWarningShown = false;
 
-  getDisplayName = function(element): string {
-    if (element == null) {
-      return '#empty';
-    } else if (typeof element === 'string' || typeof element === 'number') {
-      return '#text';
-    } else if (typeof element.type === 'string') {
-      return element.type;
-    }
-
-    const type = element.type;
-    if (type === REACT_FRAGMENT_TYPE) {
-      return 'React.Fragment';
-    } else if (
-      typeof type === 'object' &&
-      type !== null &&
-      type.$$typeof === REACT_FORWARD_REF_TYPE
-    ) {
-      const functionName = type.render.displayName || type.render.name || '';
-      return functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef';
-    } else {
-      return type.displayName || type.name || 'Unknown';
-    }
-  };
-
   getStackAddendum = function(): string {
     let stack = '';
     if (currentlyValidatingElement) {
-      const name = getDisplayName(currentlyValidatingElement);
+      const name = getComponentName(currentlyValidatingElement.type);
       const owner = currentlyValidatingElement._owner;
       stack += describeComponentFrame(
         name,
