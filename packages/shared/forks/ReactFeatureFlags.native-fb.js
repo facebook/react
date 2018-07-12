@@ -15,7 +15,6 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
 // Re-export dynamic flags from the fbsource version.
 export const {
   enableGetDerivedStateFromCatch,
-  enableSuspense,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
@@ -26,6 +25,7 @@ export const {
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutLegacyContextAPI = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
+export const enableSuspense = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {
