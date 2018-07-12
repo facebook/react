@@ -92,9 +92,9 @@ if (__DEV__) {
     }
   };
 
-  warnOnUndefinedDerivedState = function(workInProgress, partialState) {
+  warnOnUndefinedDerivedState = function(type, partialState) {
     if (partialState === undefined) {
-      const componentName = getComponentName(workInProgress) || 'Component';
+      const componentName = getComponentName(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
         didWarnAboutUndefinedDerivedState.add(componentName);
         warning(
@@ -150,7 +150,7 @@ export function applyDerivedStateFromProps(
   const partialState = getDerivedStateFromProps(nextProps, prevState);
 
   if (__DEV__) {
-    warnOnUndefinedDerivedState(workInProgress, partialState);
+    warnOnUndefinedDerivedState(workInProgress.type, partialState);
   }
   // Merge the partial state and the previous state.
   const memoizedState =
@@ -249,7 +249,7 @@ function checkShouldComponentUpdate(
         shouldUpdate !== undefined,
         '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
           'boolean value. Make sure to return true or false.',
-        getComponentName(workInProgress) || 'Component',
+        getComponentName(ctor) || 'Component',
       );
     }
 
@@ -269,7 +269,7 @@ function checkClassInstance(workInProgress: Fiber) {
   const instance = workInProgress.stateNode;
   const type = workInProgress.type;
   if (__DEV__) {
-    const name = getComponentName(workInProgress) || 'Component';
+    const name = getComponentName(type) || 'Component';
     const renderPresent = instance.render;
 
     if (!renderPresent) {
@@ -345,7 +345,7 @@ function checkClassInstance(workInProgress: Fiber) {
         '%s has a method called shouldComponentUpdate(). ' +
           'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
           'Please extend React.Component if shouldComponentUpdate is used.',
-        getComponentName(workInProgress) || 'A pure component',
+        getComponentName(type) || 'A pure component',
       );
     }
     const noComponentDidUnmount =
@@ -411,7 +411,7 @@ function checkClassInstance(workInProgress: Fiber) {
         false,
         '%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
           'This component defines getSnapshotBeforeUpdate() only.',
-        getComponentName(workInProgress),
+        getComponentName(type),
       );
     }
 
@@ -496,7 +496,7 @@ function constructClassInstance(
 
   if (__DEV__) {
     if (typeof ctor.getDerivedStateFromProps === 'function' && state === null) {
-      const componentName = getComponentName(workInProgress) || 'Component';
+      const componentName = getComponentName(ctor) || 'Component';
       if (!didWarnAboutUninitializedState.has(componentName)) {
         didWarnAboutUninitializedState.add(componentName);
         warning(
@@ -550,7 +550,7 @@ function constructClassInstance(
         foundWillReceivePropsName !== null ||
         foundWillUpdateName !== null
       ) {
-        const componentName = getComponentName(workInProgress) || 'Component';
+        const componentName = getComponentName(ctor) || 'Component';
         const newApiName =
           typeof ctor.getDerivedStateFromProps === 'function'
             ? 'getDerivedStateFromProps()'
@@ -605,7 +605,7 @@ function callComponentWillMount(workInProgress, instance) {
         '%s.componentWillMount(): Assigning directly to this.state is ' +
           "deprecated (except inside a component's " +
           'constructor). Use setState instead.',
-        getComponentName(workInProgress) || 'Component',
+        getComponentName(workInProgress.type) || 'Component',
       );
     }
     classComponentUpdater.enqueueReplaceState(instance, instance.state, null);
@@ -630,7 +630,8 @@ function callComponentWillReceiveProps(
 
   if (instance.state !== oldState) {
     if (__DEV__) {
-      const componentName = getComponentName(workInProgress) || 'Component';
+      const componentName =
+        getComponentName(workInProgress.type) || 'Component';
       if (!didWarnAboutStateAssignmentForComponent.has(componentName)) {
         didWarnAboutStateAssignmentForComponent.add(componentName);
         warning(
@@ -699,7 +700,7 @@ function mountClassInstance(
     instance.state = workInProgress.memoizedState;
   }
 
-  const getDerivedStateFromProps = workInProgress.type.getDerivedStateFromProps;
+  const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   if (typeof getDerivedStateFromProps === 'function') {
     applyDerivedStateFromProps(workInProgress, getDerivedStateFromProps, props);
     instance.state = workInProgress.memoizedState;

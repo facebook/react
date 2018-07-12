@@ -16,6 +16,7 @@ import type {
 
 import React from 'react';
 import invariant from 'shared/invariant';
+import getComponentName from 'shared/getComponentName';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
@@ -165,12 +166,6 @@ const newlineEatingTags = {
   pre: true,
   textarea: true,
 };
-
-function getComponentName(type) {
-  return typeof type === 'string'
-    ? type
-    : typeof type === 'function' ? type.displayName || type.name : null;
-}
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.

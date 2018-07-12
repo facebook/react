@@ -581,7 +581,7 @@ function mountIndeterminateComponent(
 
   if (__DEV__) {
     if (fn.prototype && typeof fn.prototype.render === 'function') {
-      const componentName = getComponentName(workInProgress) || 'Unknown';
+      const componentName = getComponentName(fn) || 'Unknown';
 
       if (!didWarnAboutBadClass[componentName]) {
         warning(
@@ -681,7 +681,7 @@ function mountIndeterminateComponent(
       }
 
       if (typeof fn.getDerivedStateFromProps === 'function') {
-        const componentName = getComponentName(workInProgress) || 'Unknown';
+        const componentName = getComponentName(fn) || 'Unknown';
 
         if (!didWarnAboutGetDerivedStateOnFunctionalComponent[componentName]) {
           warning(

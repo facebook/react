@@ -90,7 +90,7 @@ function getMaskedContext(
   }
 
   if (__DEV__) {
-    const name = getComponentName(workInProgress) || 'Unknown';
+    const name = getComponentName(type) || 'Unknown';
     checkPropTypes(
       contextTypes,
       context,
@@ -152,13 +152,14 @@ function pushTopLevelContextObject(
 
 function processChildContext(fiber: Fiber, parentContext: Object): Object {
   const instance = fiber.stateNode;
-  const childContextTypes = fiber.type.childContextTypes;
+  const type = fiber.type;
+  const childContextTypes = type.childContextTypes;
 
   // TODO (bvaughn) Replace this behavior with an invariant() in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   if (typeof instance.getChildContext !== 'function') {
     if (__DEV__) {
-      const componentName = getComponentName(fiber) || 'Unknown';
+      const componentName = getComponentName(type) || 'Unknown';
 
       if (!warnedAboutMissingGetChildContext[componentName]) {
         warnedAboutMissingGetChildContext[componentName] = true;
@@ -189,12 +190,12 @@ function processChildContext(fiber: Fiber, parentContext: Object): Object {
     invariant(
       contextKey in childContextTypes,
       '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-      getComponentName(fiber) || 'Unknown',
+      getComponentName(type) || 'Unknown',
       contextKey,
     );
   }
   if (__DEV__) {
-    const name = getComponentName(fiber) || 'Unknown';
+    const name = getComponentName(type) || 'Unknown';
     checkPropTypes(
       childContextTypes,
       childContext,

@@ -111,7 +111,7 @@ function coerceRef(
   ) {
     if (__DEV__) {
       if (returnFiber.mode & StrictMode) {
-        const componentName = getComponentName(returnFiber) || 'Component';
+        const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefInStrictMode[componentName]) {
           warning(
             false,

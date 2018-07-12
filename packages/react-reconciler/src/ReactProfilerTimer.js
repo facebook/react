@@ -109,7 +109,7 @@ function recordElapsedActualRenderTime(fiber: Fiber): void {
     warning(
       fiber === fiberStack.pop(),
       'Unexpected Fiber (%s) popped.',
-      getComponentName(fiber),
+      getComponentName(fiber.type),
     );
   }
 

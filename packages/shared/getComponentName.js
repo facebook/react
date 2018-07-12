@@ -7,8 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
-
+import warning from 'shared/warning';
 import {
   REACT_ASYNC_MODE_TYPE,
   REACT_CONTEXT_TYPE,
@@ -21,10 +20,22 @@ import {
   REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
 
-function getComponentName(fiber: Fiber): string | null {
-  const {type} = fiber;
+function getComponentName(type: mixed): string | null {
+  if (type == null) {
+    // Host root, text node or just invalid type.
+    return null;
+  }
+  if (__DEV__) {
+    if (typeof (type: any).tag === 'number') {
+      warning(
+        false,
+        'Received an unexpected object in getComponentName(). ' +
+          'This is likely a bug in React. Please file an issue.',
+      );
+    }
+  }
   if (typeof type === 'function') {
-    return type.displayName || type.name;
+    return type.displayName || type.name || null;
   }
   if (typeof type === 'string') {
     return type;
@@ -32,25 +43,26 @@ function getComponentName(fiber: Fiber): string | null {
   switch (type) {
     case REACT_ASYNC_MODE_TYPE:
       return 'AsyncMode';
-    case REACT_CONTEXT_TYPE:
-      return 'Context.Consumer';
     case REACT_FRAGMENT_TYPE:
-      return 'ReactFragment';
+      return 'Fragment';
     case REACT_PORTAL_TYPE:
-      return 'ReactPortal';
+      return 'Portal';
     case REACT_PROFILER_TYPE:
-      return `Profiler(${fiber.pendingProps.id})`;
-    case REACT_PROVIDER_TYPE:
-      return 'Context.Provider';
+      return `Profiler`;
     case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
     case REACT_PLACEHOLDER_TYPE:
       return 'Placeholder';
   }
-  if (typeof type === 'object' && type !== null) {
+  if (typeof type === 'object') {
     switch (type.$$typeof) {
+      case REACT_CONTEXT_TYPE:
+        return 'Context.Consumer';
+      case REACT_PROVIDER_TYPE:
+        return 'Context.Provider';
       case REACT_FORWARD_REF_TYPE:
-        const functionName = type.render.displayName || type.render.name || '';
+        const renderFn = (type.render: any);
+        const functionName = renderFn.displayName || renderFn.name || '';
         return functionName !== ''
           ? `ForwardRef(${functionName})`
           : 'ForwardRef';

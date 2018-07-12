@@ -174,7 +174,7 @@ if (__DEV__) {
   warnAboutUpdateOnUnmounted = function(fiber: Fiber) {
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
-    const componentName = getComponentName(fiber) || 'ReactClass';
+    const componentName = getComponentName(fiber.type) || 'ReactClass';
     if (didWarnStateUpdateForUnmountedComponent[componentName]) {
       return;
     }
