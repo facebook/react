@@ -32,16 +32,12 @@ function getComponentName(fiber: Fiber): string | null {
   switch (type) {
     case REACT_ASYNC_MODE_TYPE:
       return 'AsyncMode';
-    case REACT_CONTEXT_TYPE:
-      return 'Context.Consumer';
     case REACT_FRAGMENT_TYPE:
-      return 'ReactFragment';
+      return 'Fragment';
     case REACT_PORTAL_TYPE:
-      return 'ReactPortal';
+      return 'Portal';
     case REACT_PROFILER_TYPE:
       return `Profiler(${fiber.pendingProps.id})`;
-    case REACT_PROVIDER_TYPE:
-      return 'Context.Provider';
     case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
     case REACT_PLACEHOLDER_TYPE:
@@ -49,6 +45,10 @@ function getComponentName(fiber: Fiber): string | null {
   }
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
+      case REACT_CONTEXT_TYPE:
+        return 'Context.Consumer';
+      case REACT_PROVIDER_TYPE:
+        return 'Context.Provider';
       case REACT_FORWARD_REF_TYPE:
         const functionName = type.render.displayName || type.render.name || '';
         return functionName !== ''
