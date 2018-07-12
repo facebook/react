@@ -615,11 +615,20 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    const node = ReactTestUtils.renderIntoDocument(stub);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
 
-    ReactTestUtils.Simulate.change(node);
+    try {
+      const node = ReactDOM.render(stub, container);
 
-    expect(node.value).toBe('giraffe');
+      node.dispatchEvent(
+        new Event('change', {bubbles: true, cancelable: false}),
+      );
+
+      expect(node.value).toBe('giraffe');
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 
   it('should warn if value and defaultValue props are specified', () => {
