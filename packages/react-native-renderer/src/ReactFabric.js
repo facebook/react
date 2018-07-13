@@ -23,10 +23,11 @@ import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactFabricComponentTree from './ReactFabricComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
 
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const findHostInstance = ReactFabricRenderer.findHostInstance;
 
 function findNodeHandle(componentOrHandle: any): ?number {

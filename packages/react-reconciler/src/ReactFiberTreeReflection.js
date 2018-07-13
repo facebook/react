@@ -13,7 +13,7 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import {
   ClassComponent,
@@ -23,6 +23,8 @@ import {
   HostText,
 } from 'shared/ReactTypeOfWork';
 import {NoEffect, Placement} from 'shared/ReactTypeOfSideEffect';
+
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 const MOUNTING = 1;
 const MOUNTED = 2;

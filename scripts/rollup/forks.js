@@ -38,6 +38,15 @@ const forks = Object.freeze({
     return 'shared/forks/object-assign.umd.js';
   },
 
+  // Without this fork, importing `shared/ReactSharedInternals` inside
+  // the `react` package itself would not work due to a cyclical dependency.
+  'shared/ReactSharedInternals': (bundleType, entry) => {
+    if (entry === 'react') {
+      return 'react/src/ReactSharedInternals';
+    }
+    return null;
+  },
+
   // We have a few forks for different environments.
   'shared/ReactFeatureFlags': (bundleType, entry) => {
     switch (entry) {

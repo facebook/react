@@ -38,7 +38,7 @@ import {
   Update,
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableGetDerivedStateFromCatch,
   enableSuspense,
@@ -97,6 +97,8 @@ import {
   updateClassInstance,
 } from './ReactFiberClassComponent';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
+
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;

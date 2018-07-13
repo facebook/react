@@ -21,7 +21,7 @@ import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -68,6 +68,7 @@ const toArray = ((React.Children.toArray: any): toArrayType);
 // Each stack is an array of frames which may contain nested stacks of elements.
 let currentDebugStacks = [];
 
+let ReactDebugCurrentFrame;
 let prevGetCurrentStackImpl = null;
 let getCurrentServerStackImpl = () => '';
 let describeStackFrame = element => '';
@@ -78,6 +79,8 @@ let pushElementToDebugStack = (element: ReactElement) => {};
 let popCurrentDebugStack = () => {};
 
 if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
   validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);

@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
 import {
   REACT_ASYNC_MODE_TYPE,
@@ -19,7 +18,6 @@ import {enableSuspense} from 'shared/ReactFeatureFlags';
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
 import {forEach, map, count, toArray, only} from './ReactChildren';
-import ReactCurrentOwner from './ReactCurrentOwner';
 import {
   createElement,
   createFactory,
@@ -33,7 +31,7 @@ import {
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
-import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
+import ReactSharedInternals from './ReactSharedInternals';
 
 const React = {
   Children: {
@@ -63,25 +61,11 @@ const React = {
 
   version: ReactVersion,
 
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    ReactCurrentOwner,
-    // Used by renderers to avoid bundling object-assign twice in UMD bundles:
-    assign,
-  },
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
 
 if (enableSuspense) {
   React.Placeholder = REACT_PLACEHOLDER_TYPE;
-}
-
-if (__DEV__) {
-  Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
-    // These should not be included in production.
-    ReactDebugCurrentFrame,
-    // Shim for React DOM 16.0.0 which still destructured (but not used) this.
-    // TODO: remove in React 17.0.
-    ReactComponentTreeHook: {},
-  });
 }
 
 export default React;

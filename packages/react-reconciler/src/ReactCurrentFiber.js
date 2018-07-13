@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   IndeterminateComponent,
   FunctionalComponent,
@@ -16,6 +16,8 @@ import {
 } from 'shared/ReactTypeOfWork';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
+
+const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 import type {Fiber} from './ReactFiber';
 
