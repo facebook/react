@@ -716,7 +716,7 @@ describe('ReactNewContext', () => {
     ReactNoop.flush();
 
     if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'calculateChangedBits: Expected the return value to be a 31-bit ' +
           'integer. Instead received: 4294967295',

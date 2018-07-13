@@ -2,7 +2,7 @@
 
 const {readdirSync, statSync} = require('fs');
 const {join} = require('path');
-const sourceConfig = require('./config.source');
+const baseConfig = require('./config.base');
 
 // Find all folders in packages/* with package.json
 const packagesRoot = join(__dirname, '..', '..', 'packages');
@@ -24,7 +24,7 @@ packages.forEach(name => {
   ] = `<rootDir>/build/node_modules/${name}/$1`;
 });
 
-module.exports = Object.assign({}, sourceConfig, {
+module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
   moduleNameMapper,
   // Don't run bundle tests on blacklisted -test.internal.* files

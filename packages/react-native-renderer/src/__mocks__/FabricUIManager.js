@@ -9,7 +9,7 @@
 
 // Mock of the Native Hooks
 
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'shared/invariant';
 
 const roots = new Map();
 const allocatedTags = new Set();
@@ -125,6 +125,8 @@ const RCTFabricUIManager = {
   completeRoot: jest.fn(function completeRoot(rootTag, newChildSet) {
     roots.set(rootTag, newChildSet);
   }),
+
+  registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
 };
 
 module.exports = RCTFabricUIManager;

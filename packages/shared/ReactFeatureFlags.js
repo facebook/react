@@ -7,17 +7,11 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 // Exports ReactDOM.createRoot
 export const enableUserTimingAPI = __DEV__;
 
-// Mutating mode (React DOM, React ART, React Native):
-export const enableMutatingReconciler = true;
-// Experimental noop mode (currently unused):
-export const enableNoopReconciler = false;
-// Experimental persistent mode (Fabric):
-export const enablePersistentReconciler = false;
 // Experimental error-boundary API that can recover from errors within a single
 // render phase
 export const enableGetDerivedStateFromCatch = false;
@@ -39,11 +33,11 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
 export const warnAboutDeprecatedLifecycles = false;
 
-// Gather advanced timing metrics for Profiler subtrees.
-export const enableProfilerTimer = __DEV__;
+// Warn about legacy context API
+export const warnAboutLegacyContextAPI = false;
 
-// Fires getDerivedStateFromProps for state *or* props changes
-export const fireGetDerivedStateFromPropsOnStateUpdates = true;
+// Gather advanced timing metrics for Profiler subtrees.
+export const enableProfilerTimer = __PROFILE__;
 
 // Only used in www builds.
 export function addUserTimingListener() {

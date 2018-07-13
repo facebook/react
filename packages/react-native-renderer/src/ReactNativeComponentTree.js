@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 const instanceCache = {};
 const instanceProps = {};
@@ -20,12 +20,7 @@ export function uncacheFiberNode(tag) {
 }
 
 function getInstanceFromTag(tag) {
-  if (typeof tag === 'number') {
-    return instanceCache[tag] || null;
-  } else {
-    // Fabric will invoke event emitters on a direct fiber reference
-    return tag;
-  }
+  return instanceCache[tag] || null;
 }
 
 function getTagFromInstance(inst) {

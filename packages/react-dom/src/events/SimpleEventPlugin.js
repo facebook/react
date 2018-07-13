@@ -22,7 +22,7 @@ import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import SyntheticEvent from 'events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import SyntheticAnimationEvent from './SyntheticAnimationEvent';
 import SyntheticClipboardEvent from './SyntheticClipboardEvent';
@@ -212,7 +212,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
 
   extractEvents: function(
     topLevelType: TopLevelType,
-    targetInst: Fiber,
+    targetInst: null | Fiber,
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
   ): null | ReactSyntheticEvent {

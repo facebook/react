@@ -12,27 +12,25 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactNativeInjection';
 
-import ReactFiberReconciler from 'react-reconciler';
+import * as ReactNativeFiberRenderer from 'react-reconciler/inline.native';
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactCurrentFiber';
 import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import UIManager from 'UIManager';
 
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
-
-import ReactNativeHostConfig from './ReactNativeHostConfig';
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
-const ReactNativeFiberRenderer = ReactFiberReconciler(ReactNativeHostConfig);
-
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const findHostInstance = ReactNativeFiberRenderer.findHostInstance;
 
 function findNodeHandle(componentOrHandle: any): ?number {
@@ -46,7 +44,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
           'never access something that requires stale data from the previous ' +
           'render, such as refs. Move this logic to componentDidMount and ' +
           'componentDidUpdate instead.',
-        getComponentName(owner) || 'A component',
+        getComponentName(owner.type) || 'A component',
       );
 
       owner.stateNode._warnedAboutRefsInRender = true;
@@ -69,9 +67,9 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (hostInstance == null) {
     return hostInstance;
   }
-  if (hostInstance.canonical) {
+  if ((hostInstance: any).canonical) {
     // Fabric
-    return hostInstance.canonical._nativeTag;
+    return (hostInstance: any).canonical._nativeTag;
   }
   return hostInstance._nativeTag;
 }
@@ -83,7 +81,7 @@ function computeComponentStackForErrorReporting(reactTag: number): string {
   if (!fiber) {
     return '';
   }
-  return getStackAddendumByWorkInProgressFiber(fiber);
+  return getStackByFiberInDevAndProd(fiber);
 }
 
 const roots = new Map();
@@ -141,8 +139,6 @@ const ReactNativeRenderer: ReactNativeType = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin: NativeMethodsMixin(findNodeHandle, findHostInstance),
-    // Used by react-native-github/Libraries/ components
-    ReactNativeComponentTree, // ScrollResponder
     computeComponentStackForErrorReporting,
   },
 };

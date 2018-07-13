@@ -9,11 +9,11 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import {
   ClassComponent,
@@ -23,6 +23,8 @@ import {
   HostText,
 } from 'shared/ReactTypeOfWork';
 import {NoEffect, Placement} from 'shared/ReactTypeOfSideEffect';
+
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 const MOUNTING = 1;
 const MOUNTED = 2;
@@ -74,7 +76,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
           'never access something that requires stale data from the previous ' +
           'render, such as refs. Move this logic to componentDidMount and ' +
           'componentDidUpdate instead.',
-        getComponentName(ownerFiber) || 'A component',
+        getComponentName(ownerFiber.type) || 'A component',
       );
       instance._warnedAboutRefsInRender = true;
     }

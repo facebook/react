@@ -643,4 +643,138 @@ describe('ReactDOMServer', () => {
       ReactDOMServer.renderToString(<ClassWithRenderNotExtended />);
     }).toThrow(TypeError);
   });
+
+  // We're just testing importing, not using it.
+  // It is important because even isomorphic components may import it.
+  it('can import react-dom in Node environment', () => {
+    if (
+      typeof requestAnimationFrame !== 'undefined' ||
+      global.hasOwnProperty('requestAnimationFrame') ||
+      typeof requestIdleCallback !== 'undefined' ||
+      global.hasOwnProperty('requestIdleCallback') ||
+      typeof window !== 'undefined' ||
+      global.hasOwnProperty('window')
+    ) {
+      // Don't remove this. This test is specifically checking
+      // what happens when they *don't* exist. It's useless otherwise.
+      throw new Error('Expected this test to run in a Node environment.');
+    }
+    jest.resetModules();
+    expect(() => {
+      require('react-dom');
+    }).not.toThrow();
+  });
+
+  it('includes a useful stack in warnings', () => {
+    function A() {
+      return null;
+    }
+
+    function B() {
+      return (
+        <font>
+          <C>
+            <span ariaTypo="no" />
+          </C>
+        </font>
+      );
+    }
+
+    class C extends React.Component {
+      render() {
+        return <b>{this.props.children}</b>;
+      }
+    }
+
+    function Child() {
+      return [<A key="1" />, <B key="2" />, <span ariaTypo2="no" />];
+    }
+
+    function App() {
+      return (
+        <div>
+          <section />
+          <span>
+            <Child />
+          </span>
+        </div>
+      );
+    }
+
+    expect(() => ReactDOMServer.renderToString(<App />)).toWarnDev([
+      'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in b (at **)\n' +
+        '    in C (at **)\n' +
+        '    in font (at **)\n' +
+        '    in B (at **)\n' +
+        '    in Child (at **)\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+      'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in Child (at **)\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+    ]);
+  });
+
+  it('reports stacks with re-entrant renderToString() calls', () => {
+    function Child2(props) {
+      return <span ariaTypo3="no">{props.children}</span>;
+    }
+
+    function App2() {
+      return (
+        <Child2>
+          {ReactDOMServer.renderToString(<blink ariaTypo2="no" />)}
+        </Child2>
+      );
+    }
+
+    function Child() {
+      return (
+        <span ariaTypo4="no">{ReactDOMServer.renderToString(<App2 />)}</span>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <span ariaTypo="no" />
+          <Child />
+          <font ariaTypo5="no" />
+        </div>
+      );
+    }
+
+    expect(() => ReactDOMServer.renderToString(<App />)).toWarnDev([
+      // ReactDOMServer(App > div > span)
+      'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+      // ReactDOMServer(App > div > Child) >>> ReactDOMServer(App2) >>> ReactDOMServer(blink)
+      'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in blink (at **)',
+      // ReactDOMServer(App > div > Child) >>> ReactDOMServer(App2 > Child2 > span)
+      'Invalid ARIA attribute `ariaTypo3`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in Child2 (at **)\n' +
+        '    in App2 (at **)',
+      // ReactDOMServer(App > div > Child > span)
+      'Invalid ARIA attribute `ariaTypo4`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in Child (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+      // ReactDOMServer(App > div > font)
+      'Invalid ARIA attribute `ariaTypo5`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in font (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+    ]);
+  });
 });

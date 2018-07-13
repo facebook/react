@@ -5,15 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
-import warning from 'fbjs/lib/warning';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+import warning from 'shared/warning';
+
+let ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
 let didWarnValueNull = false;
-
-function getStackAddendum() {
-  const stack = ReactDebugCurrentFrame.getStackAddendum();
-  return stack != null ? stack : '';
-}
 
 export function validateProperties(type, props) {
   if (type !== 'input' && type !== 'textarea' && type !== 'select') {
@@ -29,7 +26,7 @@ export function validateProperties(type, props) {
           'Consider using an empty array when `multiple` is set to `true` ' +
           'to clear the component or `undefined` for uncontrolled components.%s',
         type,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
     } else {
       warning(
@@ -38,7 +35,7 @@ export function validateProperties(type, props) {
           'Consider using an empty string to clear the component or `undefined` ' +
           'for uncontrolled components.%s',
         type,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
     }
   }

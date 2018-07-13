@@ -7,7 +7,7 @@
  * @flow
  */
 
-type RNTopLevelEventType =
+export type RNTopLevelEventType =
   | 'topMouseDown'
   | 'topMouseMove'
   | 'topMouseUp'

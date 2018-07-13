@@ -36,9 +36,9 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUpdate.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUpdate).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -47,9 +47,9 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUpdate.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUpdate).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -58,9 +58,9 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUpdate.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
     });
 
     it('should replace children with different constructors', () => {
@@ -77,8 +77,8 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -87,8 +87,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -97,8 +97,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(1);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(1);
     });
 
     it('should NOT replace children with different owners', () => {
@@ -121,13 +121,13 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(<WrapperComponent />, container);
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <WrapperComponent>
@@ -136,8 +136,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
     });
 
     it('should replace children with different keys', () => {
@@ -154,8 +154,8 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -164,8 +164,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -174,8 +174,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(2);
-      expect(mockUnmount.mock.calls.length).toBe(1);
+      expect(mockMount).toHaveBeenCalledTimes(2);
+      expect(mockUnmount).toHaveBeenCalledTimes(1);
     });
 
     it('should warn for duplicated array keys with component stack info', () => {

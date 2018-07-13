@@ -191,5 +191,63 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.querySelector('#theme').textContent).toBe('light');
       expect(e.querySelector('#language').textContent).toBe('english');
     });
+
+    itRenders('nested context unwinding', async render => {
+      const Theme = React.createContext('dark');
+      const Language = React.createContext('french');
+
+      const App = () => (
+        <div>
+          <Theme.Provider value="light">
+            <Language.Provider value="english">
+              <Theme.Provider value="dark">
+                <Theme.Consumer>
+                  {theme => <div id="theme1">{theme}</div>}
+                </Theme.Consumer>
+              </Theme.Provider>
+              <Theme.Consumer>
+                {theme => <div id="theme2">{theme}</div>}
+              </Theme.Consumer>
+              <Language.Provider value="sanskrit">
+                <Theme.Provider value="blue">
+                  <Theme.Provider value="red">
+                    <Language.Consumer>
+                      {() => (
+                        <Language.Provider value="chinese">
+                          <Language.Provider value="hungarian" />
+                          <Language.Consumer>
+                            {language => <div id="language1">{language}</div>}
+                          </Language.Consumer>
+                        </Language.Provider>
+                      )}
+                    </Language.Consumer>
+                  </Theme.Provider>
+                  <Language.Consumer>
+                    {language => (
+                      <React.Fragment>
+                        <Theme.Consumer>
+                          {theme => <div id="theme3">{theme}</div>}
+                        </Theme.Consumer>
+                        <div id="language2">{language}</div>
+                      </React.Fragment>
+                    )}
+                  </Language.Consumer>
+                </Theme.Provider>
+              </Language.Provider>
+            </Language.Provider>
+          </Theme.Provider>
+          <Language.Consumer>
+            {language => <div id="language3">{language}</div>}
+          </Language.Consumer>
+        </div>
+      );
+      let e = await render(<App />);
+      expect(e.querySelector('#theme1').textContent).toBe('dark');
+      expect(e.querySelector('#theme2').textContent).toBe('light');
+      expect(e.querySelector('#theme3').textContent).toBe('blue');
+      expect(e.querySelector('#language1').textContent).toBe('chinese');
+      expect(e.querySelector('#language2').textContent).toBe('sanskrit');
+      expect(e.querySelector('#language3').textContent).toBe('french');
+    });
   });
 });

@@ -915,6 +915,33 @@ describe('ReactShallowRenderer', () => {
     expect(result.props.children).toEqual(3);
   });
 
+  it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
+    class SimpleComponent extends React.Component {
+      state = {value: 0};
+
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {...prevState};
+      }
+
+      updateState = () => {
+        this.setState(state => ({value: state.value + 1}));
+      };
+
+      render() {
+        return <div>{`value:${this.state.value}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(<SimpleComponent />);
+    expect(result).toEqual(<div>value:0</div>);
+
+    let instance = shallowRenderer.getMountedInstance();
+    instance.updateState();
+    result = shallowRenderer.getRenderOutput();
+    expect(result).toEqual(<div>value:1</div>);
+  });
+
   it('can setState with an updater function', () => {
     let instance;
 
@@ -1237,12 +1264,12 @@ describe('ReactShallowRenderer', () => {
 
     shallowRenderer.render(<Component />);
 
-    expect(mockFn.mock.calls.length).toBe(2);
+    expect(mockFn).toHaveBeenCalledTimes(2);
 
     // Ensure the callback queue is cleared after the callbacks are invoked
     const mountedInstance = shallowRenderer.getMountedInstance();
     mountedInstance.setState({foo: 'bar'}, () => mockFn());
-    expect(mockFn.mock.calls.length).toBe(3);
+    expect(mockFn).toHaveBeenCalledTimes(3);
   });
 
   it('should call the setState callback even if shouldComponentUpdate = false', done => {
@@ -1379,5 +1406,16 @@ describe('ReactShallowRenderer', () => {
     expect(log).toEqual([]);
     instance.setState(state => ({count: state.count + 1}));
     expect(log).toEqual(['render']);
+  });
+
+  it('should not get this in a functional component', () => {
+    const logs = [];
+    function Foo() {
+      logs.push(this);
+      return <div>foo</div>;
+    }
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo foo="bar" />);
+    expect(logs).toEqual([undefined]);
   });
 });

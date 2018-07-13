@@ -18,16 +18,10 @@ export const {
   enableGetDerivedStateFromCatch,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
-  enableProfilerTimer,
-  fireGetDerivedStateFromPropsOnStateUpdates,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
-
-// The www bundles only use the mutating reconciler.
-export const enableMutatingReconciler = true;
-export const enableNoopReconciler = false;
-export const enablePersistentReconciler = false;
+export const warnAboutLegacyContextAPI = __DEV__;
 
 // In www, we have experimental support for gathering data
 // from User Timing API calls in production. By default, we
@@ -36,6 +30,8 @@ export const enablePersistentReconciler = false;
 // experimental FB-only export, we call performance.mark/measure
 // as long as there is more than a single listener.
 export let enableUserTimingAPI = __DEV__;
+
+export const enableProfilerTimer = __PROFILE__;
 
 let refCount = 0;
 export function addUserTimingListener() {

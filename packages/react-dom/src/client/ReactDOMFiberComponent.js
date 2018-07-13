@@ -8,10 +8,12 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
+import {
+  getCurrentFiberOwnerNameInDevOrNull,
+  getCurrentFiberStackInDev,
+} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
-import emptyFunction from 'fbjs/lib/emptyFunction';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import * as ReactDOMFiberInput from './ReactDOMFiberInput';
@@ -46,10 +48,6 @@ import {validateProperties as validateARIAProperties} from '../shared/ReactDOMIn
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
-const {
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
-} = ReactDebugCurrentFiber;
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
 
@@ -63,7 +61,7 @@ const HTML = '__html';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
-let getStack = emptyFunction.thatReturns('');
+let getStackInDev = () => '';
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
@@ -78,7 +76,7 @@ let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
 
 if (__DEV__) {
-  getStack = getCurrentFiberStackAddendum;
+  getStackInDev = getCurrentFiberStackInDev;
 
   warnedUnknownTags = {
     // Chrome is the only major browser not shipping <time>. But as of July
@@ -182,7 +180,7 @@ if (__DEV__) {
         registrationName,
         registrationName,
         registrationName,
-        getCurrentFiberStackAddendum(),
+        getCurrentFiberStackInDev(),
       );
     } else {
       warning(
@@ -190,7 +188,7 @@ if (__DEV__) {
         'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
         registrationName,
         typeof listener,
-        getCurrentFiberStackAddendum(),
+        getCurrentFiberStackInDev(),
       );
     }
   };
@@ -232,6 +230,8 @@ function getOwnerDocumentFromRootContainer(
     : rootContainerElement.ownerDocument;
 }
 
+function noop() {}
+
 function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
@@ -242,7 +242,7 @@ function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
   // TODO: Only do this for the relevant Safaris maybe?
-  node.onclick = emptyFunction;
+  node.onclick = noop;
 }
 
 function setInitialDOMProperties(
@@ -266,7 +266,11 @@ function setInitialDOMProperties(
         }
       }
       // Relies on `updateStylesByID` not mutating `styleUpdates`.
-      CSSPropertyOperations.setValueForStyles(domElement, nextProp, getStack);
+      CSSPropertyOperations.setValueForStyles(
+        domElement,
+        nextProp,
+        getStackInDev,
+      );
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       const nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
@@ -322,7 +326,11 @@ function updateDOMProperties(
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
     if (propKey === STYLE) {
-      CSSPropertyOperations.setValueForStyles(domElement, propValue, getStack);
+      CSSPropertyOperations.setValueForStyles(
+        domElement,
+        propValue,
+        getStackInDev,
+      );
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {
@@ -432,12 +440,16 @@ export function setInitialProperties(
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, rawProps);
-    if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+    if (
+      isCustomComponentTag &&
+      !didWarnShadyDOM &&
+      (domElement: any).shadyRoot
+    ) {
       warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnShadyDOM = true;
     }
@@ -511,7 +523,7 @@ export function setInitialProperties(
       props = rawProps;
   }
 
-  assertValidProps(tag, props, getStack);
+  assertValidProps(tag, props, getStackInDev);
 
   setInitialDOMProperties(
     tag,
@@ -526,7 +538,7 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
+      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, false);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
@@ -599,7 +611,7 @@ export function diffProperties(
       break;
   }
 
-  assertValidProps(tag, nextProps, getStack);
+  assertValidProps(tag, nextProps, getStackInDev);
 
   let propKey;
   let styleName;
@@ -820,12 +832,16 @@ export function diffHydratedProperties(
     suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
     isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
-    if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+    if (
+      isCustomComponentTag &&
+      !didWarnShadyDOM &&
+      (domElement: any).shadyRoot
+    ) {
       warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnShadyDOM = true;
     }
@@ -886,7 +902,7 @@ export function diffHydratedProperties(
       break;
   }
 
-  assertValidProps(tag, rawProps, getStack);
+  assertValidProps(tag, rawProps, getStackInDev);
 
   if (__DEV__) {
     extraAttributeNames = new Set();
@@ -1069,7 +1085,7 @@ export function diffHydratedProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
+      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, true);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean

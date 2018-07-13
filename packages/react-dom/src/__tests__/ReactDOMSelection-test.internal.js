@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactDOMSelection;
-let invariant;
 
 let getModernOffsetsFromPoints;
 
@@ -21,7 +20,6 @@ describe('ReactDOMSelection', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMSelection = require('../client/ReactDOMSelection');
-    invariant = require('fbjs/lib/invariant');
 
     ({getModernOffsetsFromPoints} = ReactDOMSelection);
   });
@@ -68,10 +66,9 @@ describe('ReactDOMSelection', () => {
     }
     traverse(outerNode);
 
-    invariant(
-      start !== null && end !== null,
-      'Provided anchor/focus nodes were outside of root.',
-    );
+    if (start === null || end === null) {
+      throw new Error('Provided anchor/focus nodes were outside of root.');
+    }
     return {start, end};
   }
 

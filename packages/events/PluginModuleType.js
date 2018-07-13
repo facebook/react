@@ -24,7 +24,7 @@ export type PluginModule<NativeEvent> = {
   eventTypes: EventTypes,
   extractEvents: (
     topLevelType: TopLevelType,
-    targetInst: Fiber,
+    targetInst: null | Fiber,
     nativeTarget: NativeEvent,
     nativeEventTarget: EventTarget,
   ) => ?ReactSyntheticEvent,

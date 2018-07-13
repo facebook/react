@@ -18,13 +18,11 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import ReactFiberReconciler from 'react-reconciler';
 import * as ReactPortal from 'shared/ReactPortal';
-import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
 
 type Container = {rootID: string, children: Array<Instance | TextInstance>};
-type Props = {prop: any, hidden?: boolean};
+type Props = {prop: any, hidden?: boolean, children?: mixed};
 type Instance = {|
   type: string,
   id: number,
@@ -33,12 +31,19 @@ type Instance = {|
 |};
 type TextInstance = {|text: string, id: number|};
 
-function createReactNoop(useMutation: boolean) {
-  const UPDATE_SIGNAL = {};
+const NO_CONTEXT = {};
+const UPDATE_SIGNAL = {};
+if (__DEV__) {
+  Object.freeze(NO_CONTEXT);
+  Object.freeze(UPDATE_SIGNAL);
+}
+
+function createReactNoop(reconciler: Function, useMutation: boolean) {
   let scheduledCallback = null;
 
   let instanceCounter = 0;
   let failInBeginPhase = false;
+  let failInCompletePhase = false;
 
   function appendChild(
     parentInstance: Instance | Container,
@@ -85,11 +90,11 @@ function createReactNoop(useMutation: boolean) {
       if (failInBeginPhase) {
         throw new Error('Error in host config.');
       }
-      return emptyObject;
+      return NO_CONTEXT;
     },
 
     getChildHostContext() {
-      return emptyObject;
+      return NO_CONTEXT;
     },
 
     getPublicInstance(instance) {
@@ -97,6 +102,9 @@ function createReactNoop(useMutation: boolean) {
     },
 
     createInstance(type: string, props: Props): Instance {
+      if (failInCompletePhase) {
+        throw new Error('Error in host config.');
+      }
       const inst = {
         id: instanceCounter++,
         type: type,
@@ -178,6 +186,10 @@ function createReactNoop(useMutation: boolean) {
       scheduledCallback = null;
     },
 
+    scheduleTimeout: setTimeout,
+    cancelTimeout: clearTimeout,
+    noTimeout: -1,
+
     prepareForCommit(): void {},
 
     resetAfterCommit(): void {},
@@ -187,101 +199,105 @@ function createReactNoop(useMutation: boolean) {
     },
 
     isPrimaryRenderer: true,
+    supportsHydration: false,
   };
 
   const hostConfig = useMutation
     ? {
         ...sharedHostConfig,
-        mutation: {
-          commitMount(instance: Instance, type: string, newProps: Props): void {
-            // Noop
-          },
 
-          commitUpdate(
-            instance: Instance,
-            updatePayload: Object,
-            type: string,
-            oldProps: Props,
-            newProps: Props,
-          ): void {
-            if (oldProps === null) {
-              throw new Error('Should have old props');
-            }
-            instance.prop = newProps.prop;
-          },
+        supportsMutation: true,
+        supportsPersistence: false,
 
-          commitTextUpdate(
-            textInstance: TextInstance,
-            oldText: string,
-            newText: string,
-          ): void {
-            textInstance.text = newText;
-          },
-
-          appendChild: appendChild,
-          appendChildToContainer: appendChild,
-          insertBefore: insertBefore,
-          insertInContainerBefore: insertBefore,
-          removeChild: removeChild,
-          removeChildFromContainer: removeChild,
-
-          resetTextContent(instance: Instance): void {},
+        commitMount(instance: Instance, type: string, newProps: Props): void {
+          // Noop
         },
+
+        commitUpdate(
+          instance: Instance,
+          updatePayload: Object,
+          type: string,
+          oldProps: Props,
+          newProps: Props,
+        ): void {
+          if (oldProps === null) {
+            throw new Error('Should have old props');
+          }
+          instance.prop = newProps.prop;
+        },
+
+        commitTextUpdate(
+          textInstance: TextInstance,
+          oldText: string,
+          newText: string,
+        ): void {
+          textInstance.text = newText;
+        },
+
+        appendChild: appendChild,
+        appendChildToContainer: appendChild,
+        insertBefore: insertBefore,
+        insertInContainerBefore: insertBefore,
+        removeChild: removeChild,
+        removeChildFromContainer: removeChild,
+
+        resetTextContent(instance: Instance): void {},
       }
     : {
         ...sharedHostConfig,
-        persistence: {
-          cloneInstance(
-            instance: Instance,
-            updatePayload: null | Object,
-            type: string,
-            oldProps: Props,
-            newProps: Props,
-            internalInstanceHandle: Object,
-            keepChildren: boolean,
-            recyclableInstance: null | Instance,
-          ): Instance {
-            const clone = {
-              id: instance.id,
-              type: type,
-              children: keepChildren ? instance.children : [],
-              prop: newProps.prop,
-            };
-            Object.defineProperty(clone, 'id', {
-              value: clone.id,
-              enumerable: false,
-            });
-            return clone;
-          },
+        supportsMutation: false,
+        supportsPersistence: true,
 
-          createContainerChildSet(
-            container: Container,
-          ): Array<Instance | TextInstance> {
-            return [];
-          },
+        cloneInstance(
+          instance: Instance,
+          updatePayload: null | Object,
+          type: string,
+          oldProps: Props,
+          newProps: Props,
+          internalInstanceHandle: Object,
+          keepChildren: boolean,
+          recyclableInstance: null | Instance,
+        ): Instance {
+          const clone = {
+            id: instance.id,
+            type: type,
+            children: keepChildren ? instance.children : [],
+            prop: newProps.prop,
+          };
+          Object.defineProperty(clone, 'id', {
+            value: clone.id,
+            enumerable: false,
+          });
+          return clone;
+        },
 
-          appendChildToContainerChildSet(
-            childSet: Array<Instance | TextInstance>,
-            child: Instance | TextInstance,
-          ): void {
-            childSet.push(child);
-          },
+        createContainerChildSet(
+          container: Container,
+        ): Array<Instance | TextInstance> {
+          return [];
+        },
 
-          finalizeContainerChildren(
-            container: Container,
-            newChildren: Array<Instance | TextInstance>,
-          ): void {},
+        appendChildToContainerChildSet(
+          childSet: Array<Instance | TextInstance>,
+          child: Instance | TextInstance,
+        ): void {
+          childSet.push(child);
+        },
 
-          replaceContainerChildren(
-            container: Container,
-            newChildren: Array<Instance | TextInstance>,
-          ): void {
-            container.children = newChildren;
-          },
+        finalizeContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
+        ): void {},
+
+        replaceContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
+        ): void {
+          container.children = newChildren;
         },
       };
 
-  const NoopRenderer = ReactFiberReconciler(hostConfig);
+  const NoopRenderer = reconciler(hostConfig);
 
   const rootContainers = new Map();
   const roots = new Map();
@@ -343,6 +359,19 @@ function createReactNoop(useMutation: boolean) {
     // Shortcut for testing a single root
     render(element: React$Element<any>, callback: ?Function) {
       ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
+    },
+
+    renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
+      const rootID = DEFAULT_ROOT_ID;
+      let root = roots.get(rootID);
+      if (!root) {
+        const container = {rootID: rootID, children: []};
+        rootContainers.set(rootID, container);
+        const isAsync = false;
+        root = NoopRenderer.createContainer(container, isAsync, false);
+        roots.set(rootID, root);
+      }
+      NoopRenderer.updateContainer(element, root, null, callback);
     },
 
     renderToRootWithID(
@@ -432,7 +461,22 @@ function createReactNoop(useMutation: boolean) {
       expect(actual).toEqual(expected);
     },
 
-    expire(ms: number): void {
+    flushNextYield(): Array<mixed> {
+      let actual = null;
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+      for (const value of flushUnitsOfWork(Infinity)) {
+        actual = value;
+        break;
+      }
+      return actual !== null ? actual : [];
+    },
+
+    expire(ms: number): Array<mixed> {
+      ReactNoop.advanceTime(ms);
+      return ReactNoop.flushExpired();
+    },
+
+    advanceTime(ms: number): void {
       elapsedTimeInMs += ms;
     },
 
@@ -566,13 +610,49 @@ function createReactNoop(useMutation: boolean) {
       console.log(...bufferedLog);
     },
 
-    simulateErrorInHostConfig(fn: () => void) {
+    simulateErrorInHostConfigDuringBeginPhase(fn: () => void) {
       failInBeginPhase = true;
       try {
         fn();
       } finally {
         failInBeginPhase = false;
       }
+    },
+
+    simulateErrorInHostConfigDuringCompletePhase(fn: () => void) {
+      failInCompletePhase = true;
+      try {
+        fn();
+      } finally {
+        failInCompletePhase = false;
+      }
+    },
+
+    flushWithoutCommitting(
+      expectedFlush: Array<mixed>,
+      rootID: string = DEFAULT_ROOT_ID,
+    ) {
+      const root: any = roots.get(rootID);
+      const batch = {
+        _defer: true,
+        _expirationTime: 1,
+        _onComplete: () => {
+          root.firstBatch = null;
+        },
+        _next: null,
+      };
+      root.firstBatch = batch;
+      const actual = ReactNoop.flush();
+      expect(actual).toEqual(expectedFlush);
+      return (expectedCommit: Array<mixed>) => {
+        batch._defer = false;
+        NoopRenderer.flushRoot(root, 1);
+        expect(yieldedValues).toEqual(expectedCommit);
+      };
+    },
+
+    getRoot(rootID: string = DEFAULT_ROOT_ID) {
+      return roots.get(rootID);
     },
   };
 

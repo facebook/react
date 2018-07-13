@@ -11,7 +11,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
-import ReactFiberReconciler from 'react-reconciler';
+import * as TestRenderer from 'react-reconciler/inline.test';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
@@ -28,9 +28,10 @@ import {
   ForwardRef,
   Profiler,
 } from 'shared/ReactTypeOfWork';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
+import ReactVersion from 'shared/ReactVersion';
 
-import ReactTestHostConfig from './ReactTestHostConfig';
+import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 type TestRendererOptions = {
@@ -53,8 +54,6 @@ type FindOptions = $Shape<{
 }>;
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
-
-const TestRenderer = ReactFiberReconciler(ReactTestHostConfig);
 
 const defaultTestOptions = {
   createNodeMock: function() {
@@ -202,7 +201,44 @@ const validWrapperTypes = new Set([
   ClassComponent,
   HostComponent,
   ForwardRef,
+  // Normally skipped, but used when there's more than one root child.
+  HostRoot,
 ]);
+
+function getChildren(parent: Fiber) {
+  const children = [];
+  const startingNode = parent;
+  let node: Fiber = startingNode;
+  if (node.child === null) {
+    return children;
+  }
+  node.child.return = node;
+  node = node.child;
+  outer: while (true) {
+    let descend = false;
+    if (validWrapperTypes.has(node.tag)) {
+      children.push(wrapFiber(node));
+    } else if (node.tag === HostText) {
+      children.push('' + node.memoizedProps);
+    } else {
+      descend = true;
+    }
+    if (descend && node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    while (node.sibling === null) {
+      if (node.return === startingNode) {
+        break outer;
+      }
+      node = (node.return: any);
+    }
+    (node.sibling: any).return = node.return;
+    node = (node.sibling: any);
+  }
+  return children;
+}
 
 class ReactTestInstance {
   _fiber: Fiber;
@@ -248,6 +284,13 @@ class ReactTestInstance {
     let parent = this._fiber.return;
     while (parent !== null) {
       if (validWrapperTypes.has(parent.tag)) {
+        if (parent.tag === HostRoot) {
+          // Special case: we only "materialize" instances for roots
+          // if they have more than a single child. So we'll check that now.
+          if (getChildren(parent).length < 2) {
+            return null;
+          }
+        }
         return wrapFiber(parent);
       }
       parent = parent.return;
@@ -256,38 +299,7 @@ class ReactTestInstance {
   }
 
   get children(): Array<ReactTestInstance | string> {
-    const children = [];
-    const startingNode = this._currentFiber();
-    let node: Fiber = startingNode;
-    if (node.child === null) {
-      return children;
-    }
-    node.child.return = node;
-    node = node.child;
-    outer: while (true) {
-      let descend = false;
-      if (validWrapperTypes.has(node.tag)) {
-        children.push(wrapFiber(node));
-      } else if (node.tag === HostText) {
-        children.push('' + node.memoizedProps);
-      } else {
-        descend = true;
-      }
-      if (descend && node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-      while (node.sibling === null) {
-        if (node.return === startingNode) {
-          break outer;
-        }
-        node = (node.return: any);
-      }
-      (node.sibling: any).return = node.return;
-      node = (node.sibling: any);
-    }
-    return children;
+    return getChildren(this._currentFiber());
   }
 
   // Custom search functions
@@ -416,7 +428,7 @@ const ReactTestRendererFiber = {
     const entry = {
       root: undefined, // makes flow happy
       // we define a 'getter' for 'root' below using 'Object.defineProperty'
-      toJSON() {
+      toJSON(): Array<ReactTestRendererNode> | ReactTestRendererNode | null {
         if (root == null || root.current == null || container == null) {
           return null;
         }
@@ -471,10 +483,20 @@ const ReactTestRendererFiber = {
         configurable: true,
         enumerable: true,
         get: function() {
-          if (root === null || root.current.child === null) {
+          if (root === null) {
             throw new Error("Can't access .root on unmounted test renderer");
           }
-          return wrapFiber(root.current.child);
+          const children = getChildren(root.current);
+          if (children.length === 0) {
+            throw new Error("Can't access .root on unmounted test renderer");
+          } else if (children.length === 1) {
+            // Normally, we skip the root and just give you the child.
+            return children[0];
+          } else {
+            // However, we give you the root if there's more than one root child.
+            // We could make this the behavior for all cases but it would be a breaking change.
+            return wrapFiber(root.current);
+          }
         },
       }: Object),
     );
@@ -488,5 +510,15 @@ const ReactTestRendererFiber = {
 
   unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,
 };
+
+// Enable ReactTestRenderer to be used to test DevTools integration.
+TestRenderer.injectIntoDevTools({
+  findFiberByHostInstance: (() => {
+    throw new Error('TestRenderer does not support findFiberByHostInstance()');
+  }: any),
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+  rendererPackageName: 'react-test-renderer',
+});
 
 export default ReactTestRendererFiber;

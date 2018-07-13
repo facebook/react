@@ -9,15 +9,13 @@
 
 import './ReactNativeInjectionShared';
 
-// TODO: The event emitter registration is interfering with the existing
-// ReactNative renderer. So disable it for Fabric for now.
+import * as ReactFabricComponentTree from './ReactFabricComponentTree';
+import * as EventPluginUtils from 'events/EventPluginUtils';
+import ReactFabricGlobalResponderHandler from './ReactFabricGlobalResponderHandler';
+import ResponderEventPlugin from 'events/ResponderEventPlugin';
 
-// import * as ReactNativeEventEmitter from './ReactNativeEventEmitter';
+EventPluginUtils.injection.injectComponentTree(ReactFabricComponentTree);
 
-// Module provided by RN:
-// import RCTEventEmitter from 'RCTEventEmitter';
-
-/**
- * Register the event emitter with the native bridge
- */
-// RCTEventEmitter.register(ReactNativeEventEmitter);
+ResponderEventPlugin.injection.injectGlobalResponderHandler(
+  ReactFabricGlobalResponderHandler,
+);

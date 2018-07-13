@@ -11,7 +11,7 @@ import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 export function createContext<T>(
   defaultValue: T,

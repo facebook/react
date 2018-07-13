@@ -6,11 +6,10 @@
  */
 
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import SyntheticEvent from 'events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
-import getActiveElement from 'fbjs/lib/getActiveElement';
-import shallowEqual from 'fbjs/lib/shallowEqual';
+import shallowEqual from 'shared/shallowEqual';
 
 import {
   TOP_BLUR,
@@ -23,14 +22,13 @@ import {
   TOP_SELECTION_CHANGE,
 } from './DOMTopLevelEventTypes';
 import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
+import getActiveElement from '../client/getActiveElement';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as ReactInputSelection from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 const skipSelectionChangeEvent =
-  ExecutionEnvironment.canUseDOM &&
-  'documentMode' in document &&
-  document.documentMode <= 11;
+  canUseDOM && 'documentMode' in document && document.documentMode <= 11;
 
 const eventTypes = {
   select: {

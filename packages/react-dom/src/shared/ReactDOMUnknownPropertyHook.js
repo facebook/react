@@ -9,8 +9,8 @@ import {
   registrationNameModules,
   possibleRegistrationNames,
 } from 'events/EventPluginRegistry';
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
-import warning from 'fbjs/lib/warning';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+import warning from 'shared/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
@@ -21,14 +21,13 @@ import {
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
 
-function getStackAddendum() {
-  const stack = ReactDebugCurrentFrame.getStackAddendum();
-  return stack != null ? stack : '';
-}
+let ReactDebugCurrentFrame = null;
 
 let validateProperty = () => {};
 
 if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
   const warnedProperties = {};
   const hasOwnProperty = Object.prototype.hasOwnProperty;
   const EVENT_NAME_REGEX = /^on./;
@@ -69,7 +68,7 @@ if (__DEV__) {
           'Invalid event handler property `%s`. Did you mean `%s`?%s',
           name,
           registrationName,
-          getStackAddendum(),
+          ReactDebugCurrentFrame.getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
@@ -79,7 +78,7 @@ if (__DEV__) {
           false,
           'Unknown event handler property `%s`. It will be ignored.%s',
           name,
-          getStackAddendum(),
+          ReactDebugCurrentFrame.getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
@@ -94,7 +93,7 @@ if (__DEV__) {
           'Invalid event handler property `%s`. ' +
             'React events use the camelCase naming convention, for example `onClick`.%s',
           name,
-          getStackAddendum(),
+          ReactDebugCurrentFrame.getStackAddendum(),
         );
       }
       warnedProperties[name] = true;
@@ -137,7 +136,7 @@ if (__DEV__) {
         'Received a `%s` for a string attribute `is`. If this is expected, cast ' +
           'the value to a string.%s',
         typeof value,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -149,7 +148,7 @@ if (__DEV__) {
         'Received NaN for the `%s` attribute. If this is expected, cast ' +
           'the value to a string.%s',
         name,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -167,7 +166,7 @@ if (__DEV__) {
           'Invalid DOM property `%s`. Did you mean `%s`?%s',
           name,
           standardName,
-          getStackAddendum(),
+          ReactDebugCurrentFrame.getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
@@ -184,7 +183,7 @@ if (__DEV__) {
           'it from the DOM element.%s',
         name,
         lowerCasedName,
-        getStackAddendum(),
+        ReactDebugCurrentFrame.getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -205,7 +204,7 @@ if (__DEV__) {
           name,
           value,
           name,
-          getStackAddendum(),
+          ReactDebugCurrentFrame.getStackAddendum(),
         );
       } else {
         warning(
@@ -222,7 +221,7 @@ if (__DEV__) {
           name,
           name,
           name,
-          getStackAddendum(),
+          ReactDebugCurrentFrame.getStackAddendum(),
         );
       }
       warnedProperties[name] = true;
@@ -265,7 +264,7 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
         'For details, see https://fb.me/react-attribute-behavior%s',
       unknownPropString,
       type,
-      getStackAddendum(),
+      ReactDebugCurrentFrame.getStackAddendum(),
     );
   } else if (unknownProps.length > 1) {
     warning(
@@ -275,7 +274,7 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
         'For details, see https://fb.me/react-attribute-behavior%s',
       unknownPropString,
       type,
-      getStackAddendum(),
+      ReactDebugCurrentFrame.getStackAddendum(),
     );
   }
 };

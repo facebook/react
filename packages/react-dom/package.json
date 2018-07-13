@@ -1,6 +1,6 @@
 {
   "name": "react-dom",
-  "version": "16.3.2",
+  "version": "16.4.1",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -13,10 +13,9 @@
   },
   "homepage": "https://reactjs.org/",
   "dependencies": {
-    "fbjs": "^0.8.16",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
-    "prop-types": "^15.6.0"
+    "prop-types": "^15.6.2"
   },
   "peerDependencies": {
     "react": "^16.0.0"

@@ -56,12 +56,12 @@ describe('ReactFabric', () => {
 
     ReactFabric.render(<View foo="foo" />, 11);
 
-    expect(FabricUIManager.createNode.mock.calls.length).toBe(1);
+    expect(FabricUIManager.createNode).toHaveBeenCalledTimes(1);
 
     ReactFabric.render(<View foo="bar" />, 11);
 
-    expect(FabricUIManager.createNode.mock.calls.length).toBe(1);
-    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls.length).toBe(1);
+    expect(FabricUIManager.createNode).toHaveBeenCalledTimes(1);
+    expect(FabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledTimes(1);
     expect(FabricUIManager.cloneNodeWithNewProps.mock.calls[0][0]).toBe(
       firstNode,
     );
@@ -93,24 +93,24 @@ describe('ReactFabric', () => {
     ReactFabric.render(<Text foo="b">1</Text>, 11);
     expect(FabricUIManager.cloneNode).not.toBeCalled();
     expect(FabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
-    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls.length).toBe(1);
+    expect(FabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledTimes(1);
     expect(FabricUIManager.cloneNodeWithNewChildrenAndProps).not.toBeCalled();
 
     // Only call cloneNode for the changed text (and no other properties).
     ReactFabric.render(<Text foo="b">2</Text>, 11);
     expect(FabricUIManager.cloneNode).not.toBeCalled();
-    expect(FabricUIManager.cloneNodeWithNewChildren.mock.calls.length).toBe(1);
-    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls.length).toBe(1);
+    expect(FabricUIManager.cloneNodeWithNewChildren).toHaveBeenCalledTimes(1);
+    expect(FabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledTimes(1);
     expect(FabricUIManager.cloneNodeWithNewChildrenAndProps).not.toBeCalled();
 
     // Call cloneNode for both changed text and properties.
     ReactFabric.render(<Text foo="c">3</Text>, 11);
     expect(FabricUIManager.cloneNode).not.toBeCalled();
-    expect(FabricUIManager.cloneNodeWithNewChildren.mock.calls.length).toBe(1);
-    expect(FabricUIManager.cloneNodeWithNewProps.mock.calls.length).toBe(1);
+    expect(FabricUIManager.cloneNodeWithNewChildren).toHaveBeenCalledTimes(1);
+    expect(FabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledTimes(1);
     expect(
-      FabricUIManager.cloneNodeWithNewChildrenAndProps.mock.calls.length,
-    ).toBe(1);
+      FabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).toHaveBeenCalledTimes(1);
   });
 
   it('should only pass props diffs to FabricUIManager.cloneNode', () => {
@@ -186,7 +186,7 @@ describe('ReactFabric', () => {
       expect(UIManager.updateView).not.toBeCalled();
 
       viewRef.setNativeProps({foo: 'baz'});
-      expect(UIManager.updateView.mock.calls.length).toBe(1);
+      expect(UIManager.updateView).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -351,5 +351,50 @@ describe('ReactFabric', () => {
       </Text>,
       11,
     );
+  });
+
+  it('dispatches events to the last committed props', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {},
+      uiViewClassName: 'RCTView',
+      directEventTypes: {
+        topTouchStart: {
+          registrationName: 'onTouchStart',
+        },
+      },
+    }));
+
+    const touchStart = jest.fn();
+    const touchStart2 = jest.fn();
+
+    ReactFabric.render(<View onTouchStart={touchStart} />, 11);
+
+    expect(FabricUIManager.createNode.mock.calls.length).toBe(1);
+    expect(FabricUIManager.registerEventHandler.mock.calls.length).toBe(1);
+
+    let [, , , , instanceHandle] = FabricUIManager.createNode.mock.calls[0];
+    let [dispatchEvent] = FabricUIManager.registerEventHandler.mock.calls[0];
+
+    let touchEvent = {
+      touches: [],
+      changedTouches: [],
+    };
+
+    expect(touchStart).not.toBeCalled();
+
+    dispatchEvent(instanceHandle, 'topTouchStart', touchEvent);
+
+    expect(touchStart).toBeCalled();
+    expect(touchStart2).not.toBeCalled();
+
+    ReactFabric.render(<View onTouchStart={touchStart2} />, 11);
+
+    // Intentionally dispatch to the same instanceHandle again.
+    dispatchEvent(instanceHandle, 'topTouchStart', touchEvent);
+
+    // The current semantics dictate that we always dispatch to the last committed
+    // props even though the actual scheduling of the event could have happened earlier.
+    // This could change in the future.
+    expect(touchStart2).toBeCalled();
   });
 });

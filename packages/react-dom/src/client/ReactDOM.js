@@ -19,9 +19,9 @@ import type {Container} from './ReactDOMHostConfig';
 import '../shared/checkReact';
 import './ReactDOMClientInjection';
 
-import ReactFiberReconciler from 'react-reconciler';
+import * as DOMRenderer from 'react-reconciler/inline.dom';
 import * as ReactPortal from 'shared/ReactPortal';
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import * as ReactControlledComponent from 'events/ReactControlledComponent';
 import * as EventPluginHub from 'events/EventPluginHub';
@@ -29,13 +29,12 @@ import * as EventPluginRegistry from 'events/EventPluginRegistry';
 import * as EventPropagators from 'events/EventPropagators';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import ReactVersion from 'shared/ReactVersion';
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
-import ReactDOMHostConfig from './ReactDOMHostConfig';
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
 import * as ReactDOMEventListener from '../events/ReactDOMEventListener';
@@ -47,6 +46,8 @@ import {
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
 
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+
 let topLevelUpdateWarnings;
 let warnOnInvalidCallback;
 let didWarnAboutUnstableCreatePortal = false;
@@ -54,9 +55,11 @@ let didWarnAboutUnstableCreatePortal = false;
 if (__DEV__) {
   if (
     typeof Map !== 'function' ||
+    // $FlowIssue Flow incorrectly thinks Map has no prototype
     Map.prototype == null ||
     typeof Map.prototype.forEach !== 'function' ||
     typeof Set !== 'function' ||
+    // $FlowIssue Flow incorrectly thinks Set has no prototype
     Set.prototype == null ||
     typeof Set.prototype.clear !== 'function' ||
     typeof Set.prototype.forEach !== 'function'
@@ -447,8 +450,6 @@ function shouldHydrateDueToLegacyHeuristic(container) {
   );
 }
 
-const DOMRenderer = ReactFiberReconciler(ReactDOMHostConfig);
-
 ReactGenericBatching.injection.injectRenderer(DOMRenderer);
 
 let warnedAboutHydrateAPI = false;
@@ -596,7 +597,7 @@ const ReactDOM: Object = {
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner) || 'A component',
+          getComponentName(owner.type) || 'A component',
         );
         owner.stateNode._warnedAboutRefsInRender = true;
       }
@@ -731,6 +732,8 @@ const ReactDOM: Object = {
 
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
+  unstable_interactiveUpdates: DOMRenderer.interactiveUpdates,
+
   flushSync: DOMRenderer.flushSync,
 
   unstable_flushControlled: DOMRenderer.flushControlled,
@@ -767,11 +770,7 @@ const foundDevTools = DOMRenderer.injectIntoDevTools({
 });
 
 if (__DEV__) {
-  if (
-    !foundDevTools &&
-    ExecutionEnvironment.canUseDOM &&
-    window.top === window.self
-  ) {
+  if (!foundDevTools && canUseDOM && window.top === window.self) {
     // If we're in Chrome or Firefox, provide a download link if not installed.
     if (
       (navigator.userAgent.indexOf('Chrome') > -1 &&

@@ -17,10 +17,50 @@ let ReactDOMServer;
 let ReactCurrentOwner;
 let ReactTestUtils;
 let PropTypes;
-let shallowEqual;
-let shallowCompare;
 
 describe('ReactCompositeComponent', () => {
+  const hasOwnProperty = Object.prototype.hasOwnProperty;
+
+  /**
+   * Performs equality by iterating through keys on an object and returning false
+   * when any key has values which are not strictly equal between the arguments.
+   * Returns true when the values of all keys are strictly equal.
+   */
+  function shallowEqual(objA: mixed, objB: mixed): boolean {
+    if (Object.is(objA, objB)) {
+      return true;
+    }
+    if (
+      typeof objA !== 'object' ||
+      objA === null ||
+      typeof objB !== 'object' ||
+      objB === null
+    ) {
+      return false;
+    }
+    const keysA = Object.keys(objA);
+    const keysB = Object.keys(objB);
+    if (keysA.length !== keysB.length) {
+      return false;
+    }
+    for (let i = 0; i < keysA.length; i++) {
+      if (
+        !hasOwnProperty.call(objB, keysA[i]) ||
+        !Object.is(objA[keysA[i]], objB[keysA[i]])
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function shallowCompare(instance, nextProps, nextState) {
+    return (
+      !shallowEqual(instance.props, nextProps) ||
+      !shallowEqual(instance.state, nextState)
+    );
+  }
+
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -30,14 +70,6 @@ describe('ReactCompositeComponent', () => {
       .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
     ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
-    shallowEqual = require('fbjs/lib/shallowEqual');
-
-    shallowCompare = function(instance, nextProps, nextState) {
-      return (
-        !shallowEqual(instance.props, nextProps) ||
-        !shallowEqual(instance.state, nextState)
-      );
-    };
 
     MorphingComponent = class extends React.Component {
       state = {activated: false};
@@ -140,23 +172,28 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should react to state changes from callbacks', () => {
-    const instance = ReactTestUtils.renderIntoDocument(<MorphingComponent />);
-    let el = ReactDOM.findDOMNode(instance);
-    expect(el.tagName).toBe('A');
-
-    ReactTestUtils.Simulate.click(el);
-    el = ReactDOM.findDOMNode(instance);
-    expect(el.tagName).toBe('B');
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    try {
+      const instance = ReactDOM.render(<MorphingComponent />, container);
+      let el = ReactDOM.findDOMNode(instance);
+      expect(el.tagName).toBe('A');
+      el.click();
+      el = ReactDOM.findDOMNode(instance);
+      expect(el.tagName).toBe('B');
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 
   it('should rewire refs when rendering to different child types', () => {
     const instance = ReactTestUtils.renderIntoDocument(<MorphingComponent />);
 
-    expect(ReactDOM.findDOMNode(instance.refs.x).tagName).toBe('A');
+    expect(instance.refs.x.tagName).toBe('A');
     instance._toggleActivatedState();
-    expect(ReactDOM.findDOMNode(instance.refs.x).tagName).toBe('B');
+    expect(instance.refs.x.tagName).toBe('B');
     instance._toggleActivatedState();
-    expect(ReactDOM.findDOMNode(instance.refs.x).tagName).toBe('A');
+    expect(instance.refs.x.tagName).toBe('A');
   });
 
   it('should not cache old DOM nodes when switching constructors', () => {

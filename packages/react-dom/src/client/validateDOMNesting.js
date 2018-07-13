@@ -5,13 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import emptyFunction from 'fbjs/lib/emptyFunction';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
+import {getCurrentFiberStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
 
-const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
-let validateDOMNesting = emptyFunction;
+let validateDOMNesting = () => {};
 
 if (__DEV__) {
   // This validation code was written based on the HTML5 parsing spec:
@@ -428,7 +426,7 @@ if (__DEV__) {
     }
 
     const ancestorTag = invalidParentOrAncestor.tag;
-    const addendum = getCurrentFiberStackAddendum();
+    const addendum = getCurrentFiberStackInDev();
 
     const warnKey =
       !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + addendum;
