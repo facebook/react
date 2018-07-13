@@ -38,8 +38,8 @@ const forks = Object.freeze({
     return 'shared/forks/object-assign.umd.js';
   },
 
-  // Make this module available in both renderers and the isomorphic package.
-  // This forks avoids a cyclical dependency in React package itself.
+  // Without this fork, importing `shared/ReactSharedInternals` inside
+  // the `react` package itself would not work due to a cyclical dependency.
   'shared/ReactSharedInternals': (bundleType, entry) => {
     if (entry === 'react') {
       return 'react/src/ReactSharedInternals';
