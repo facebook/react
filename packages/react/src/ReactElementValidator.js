@@ -22,6 +22,7 @@ import {
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'shared/warning';
+import warningWithStack from 'shared/warningWithStack';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {isValidElement, createElement, cloneElement} from './ReactElement';
@@ -121,13 +122,12 @@ function validateExplicitKey(element, parentType) {
 
   setCurrentlyValidatingElement(element);
   if (__DEV__) {
-    warning(
+    warningWithStack(
       false,
       'Each child in an array or iterator should have a unique "key" prop.' +
-        '%s%s See https://fb.me/react-warning-keys for more information.%s',
+        '%s%s See https://fb.me/react-warning-keys for more information.',
       currentComponentErrorInfo,
       childOwner,
-      ReactDebugCurrentFrame.getStackAddendum(),
     );
   }
   setCurrentlyValidatingElement(null);
@@ -239,22 +239,20 @@ function validateFragmentProps(fragment) {
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     if (key !== 'children' && key !== 'key') {
-      warning(
+      warningWithStack(
         false,
         'Invalid prop `%s` supplied to `React.Fragment`. ' +
-          'React.Fragment can only have `key` and `children` props.%s',
+          'React.Fragment can only have `key` and `children` props.',
         key,
-        ReactDebugCurrentFrame.getStackAddendum(),
       );
       break;
     }
   }
 
   if (fragment.ref !== null) {
-    warning(
+    warningWithStack(
       false,
-      'Invalid attribute `ref` supplied to `React.Fragment`.%s',
-      ReactDebugCurrentFrame.getStackAddendum(),
+      'Invalid attribute `ref` supplied to `React.Fragment`.',
     );
   }
 
@@ -286,8 +284,6 @@ export function createElementWithValidation(type, props, children) {
       info += getDeclarationErrorAddendum();
     }
 
-    info += ReactDebugCurrentFrame.getStackAddendum();
-
     let typeString;
     if (type === null) {
       typeString = 'null';
@@ -297,7 +293,7 @@ export function createElementWithValidation(type, props, children) {
       typeString = typeof type;
     }
 
-    warning(
+    warningWithStack(
       false,
       'React.createElement: type is invalid -- expected a string (for ' +
         'built-in components) or a class/function (for composite ' +

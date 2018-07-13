@@ -8,9 +8,7 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {
-  getCurrentFiberOwnerNameInDevOrNull,
-} from 'react-reconciler/src/ReactCurrentFiber';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import invariant from 'shared/invariant';
 import warningWithStack from 'shared/warningWithStack';
 

@@ -9,11 +9,16 @@ import invariant from 'shared/invariant';
 import warningWithStack from 'shared/warningWithStack';
 // TODO: We can remove this if we add invariantWithStack()
 // or add stack by default to invariants where possible.
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import voidElementTags from './voidElementTags';
 
 const HTML = '__html';
+
+let ReactDebugCurrentFrame = null;
+if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+}
 
 function assertValidProps(tag: string, props: ?Object) {
   if (!props) {
@@ -26,7 +31,7 @@ function assertValidProps(tag: string, props: ?Object) {
       '%s is a void element tag and must neither have `children` nor ' +
         'use `dangerouslySetInnerHTML`.%s',
       tag,
-      ReactDebugCurrentFrame.getStackAddendum(),
+      __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
@@ -58,7 +63,7 @@ function assertValidProps(tag: string, props: ?Object) {
     'The `style` prop expects a mapping from style properties to values, ' +
       "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
       'using JSX.%s',
-    ReactDebugCurrentFrame.getStackAddendum(),
+    __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
   );
 }
 

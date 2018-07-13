@@ -6,13 +6,17 @@
  */
 
 import checkPropTypes from 'prop-types/checkPropTypes';
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+let ReactDebugCurrentFrame = null;
 
 const ReactControlledValuePropTypes = {
   checkPropTypes: null,
 };
 
 if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
   const hasReadOnlyValue = {
     button: true,
     checkbox: true,

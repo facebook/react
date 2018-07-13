@@ -7,6 +7,7 @@
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
+import warningWithStack from 'shared/warningWithStack';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -162,12 +163,11 @@ function traverseAllChildrenImpl(
       if (__DEV__) {
         // Warn about using Maps as children
         if (iteratorFn === children.entries) {
-          warning(
+          warningWithStack(
             didWarnAboutMaps,
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.%s',
-            ReactDebugCurrentFrame.getStackAddendum(),
+              'ReactElements instead.',
           );
           didWarnAboutMaps = true;
         }
