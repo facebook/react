@@ -1315,6 +1315,90 @@ describe('ReactSuspense', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
     });
   });
+
+  it('does not call lifecycles of a suspended component', async () => {
+    class TextWithLifecycle extends React.Component {
+      componentDidMount() {
+        ReactNoop.yield(`Mount [${this.props.text}]`);
+      }
+      componentDidUpdate() {
+        ReactNoop.yield(`Update [${this.props.text}]`);
+      }
+      componentWillUnmount() {
+        ReactNoop.yield(`Unmount [${this.props.text}]`);
+      }
+      render() {
+        return <Text {...this.props} />;
+      }
+    }
+
+    class AsyncTextWithLifecycle extends React.Component {
+      componentDidMount() {
+        ReactNoop.yield(`Mount [${this.props.text}]`);
+      }
+      componentDidUpdate() {
+        ReactNoop.yield(`Update [${this.props.text}]`);
+      }
+      componentWillUnmount() {
+        ReactNoop.yield(`Unmount [${this.props.text}]`);
+      }
+      render() {
+        const text = this.props.text;
+        const ms = this.props.ms;
+        try {
+          TextResource.read(cache, [text, ms]);
+          ReactNoop.yield(text);
+          return <span prop={text} />;
+        } catch (promise) {
+          if (typeof promise.then === 'function') {
+            ReactNoop.yield(`Suspend! [${text}]`);
+          } else {
+            ReactNoop.yield(`Error! [${text}]`);
+          }
+          throw promise;
+        }
+      }
+    }
+
+    function App() {
+      return (
+        <Placeholder
+          delayMs={1000}
+          fallback={<TextWithLifecycle text="Loading..." />}>
+          <TextWithLifecycle text="A" />
+          <AsyncTextWithLifecycle ms={100} text="B" />
+          <TextWithLifecycle text="C" />
+        </Placeholder>
+      );
+    }
+
+    ReactNoop.renderLegacySyncRoot(<App />, () =>
+      ReactNoop.yield('Commit root'),
+    );
+    expect(ReactNoop.clearYields()).toEqual([
+      'A',
+      'Suspend! [B]',
+      'C',
+
+      'Mount [A]',
+      // B's lifecycle should not fire because it suspended
+      // 'Mount [B]',
+      'Mount [C]',
+      'Commit root',
+
+      // In a subsequent commit, render a placeholder
+      'Loading...',
+
+      // A, B, and C are unmounted, but we skip calling B's componentWillUnmount
+      'Unmount [A]',
+      'Unmount [C]',
+
+      // Force delete all the existing children when switching to the
+      // placeholder. This should be a mount, not an update.
+      'Mount [Loading...]',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+  });
 });
 
 // TODO:

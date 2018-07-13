@@ -30,6 +30,7 @@ import {
   NoEffect,
   ShouldCapture,
   Update as UpdateEffect,
+  LifecycleEffectMask,
 } from 'shared/ReactTypeOfSideEffect';
 import {
   enableGetDerivedStateFromCatch,
@@ -250,17 +251,20 @@ function throwException(
               sourceFiber.tag = FunctionalComponent;
             }
 
-            if (
-              sourceFiber.tag === ClassComponent &&
-              workInProgress.stateNode === null
-            ) {
-              // We're about to mount a class component that doesn't have an
-              // instance. Turn this into a dummy functional component instead,
-              // to prevent type errors. This is a bit weird but it's an edge
-              // case and we're about to synchronously delete this
-              // component, anyway.
-              sourceFiber.tag = FunctionalComponent;
-              sourceFiber.type = NoopComponent;
+            if (sourceFiber.tag === ClassComponent) {
+              // We're going to commit this fiber even though it didn't
+              // complete. But we shouldn't call any lifecycle methods or
+              // callbacks. Remove all lifecycle effect tags.
+              sourceFiber.effectTag &= ~LifecycleEffectMask;
+              if (sourceFiber.alternate === null) {
+                // We're about to mount a class component that doesn't have an
+                // instance. Turn this into a dummy functional component instead,
+                // to prevent type errors. This is a bit weird but it's an edge
+                // case and we're about to synchronously delete this
+                // component, anyway.
+                sourceFiber.tag = FunctionalComponent;
+                sourceFiber.type = NoopComponent;
+              }
             }
 
             // Exit without suspending.
