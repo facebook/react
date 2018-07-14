@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import warningWithStack from 'shared/warningWithStack';
+import warning from 'shared/warning';
 
 let warnValidStyle = () => {};
 
@@ -35,7 +35,7 @@ if (__DEV__) {
     }
 
     warnedStyleNames[name] = true;
-    warningWithStack(
+    warning(
       false,
       'Unsupported style property %s. Did you mean %s?',
       name,
@@ -52,7 +52,7 @@ if (__DEV__) {
     }
 
     warnedStyleNames[name] = true;
-    warningWithStack(
+    warning(
       false,
       'Unsupported vendor-prefixed style property %s. Did you mean %s?',
       name,
@@ -66,7 +66,7 @@ if (__DEV__) {
     }
 
     warnedStyleValues[value] = true;
-    warningWithStack(
+    warning(
       false,
       "Style property values shouldn't contain a semicolon. " +
         'Try "%s: %s" instead.',
@@ -81,7 +81,7 @@ if (__DEV__) {
     }
 
     warnedForNaNValue = true;
-    warningWithStack(
+    warning(
       false,
       '`NaN` is an invalid value for the `%s` css style property.',
       name,
@@ -94,7 +94,7 @@ if (__DEV__) {
     }
 
     warnedForInfinityValue = true;
-    warningWithStack(
+    warning(
       false,
       '`Infinity` is an invalid value for the `%s` css style property.',
       name,

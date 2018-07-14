@@ -10,7 +10,7 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import invariant from 'shared/invariant';
-import warningWithStack from 'shared/warningWithStack';
+import warning from 'shared/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
@@ -75,7 +75,7 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultChecked !== undefined &&
       !didWarnCheckedDefaultChecked
     ) {
-      warningWithStack(
+      warning(
         false,
         '%s contains an input of type %s with both checked and defaultChecked props. ' +
           'Input elements must be either controlled or uncontrolled ' +
@@ -93,7 +93,7 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValueDefaultValue
     ) {
-      warningWithStack(
+      warning(
         false,
         '%s contains an input of type %s with both value and defaultValue props. ' +
           'Input elements must be either controlled or uncontrolled ' +
@@ -139,7 +139,7 @@ export function updateWrapper(element: Element, props: Object) {
       controlled &&
       !didWarnUncontrolledToControlled
     ) {
-      warningWithStack(
+      warning(
         false,
         'A component is changing an uncontrolled input of type %s to be controlled. ' +
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
@@ -154,7 +154,7 @@ export function updateWrapper(element: Element, props: Object) {
       !controlled &&
       !didWarnControlledToUncontrolled
     ) {
-      warningWithStack(
+      warning(
         false,
         'A component is changing a controlled input of type %s to be uncontrolled. ' +
           'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +

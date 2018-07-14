@@ -10,8 +10,8 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
-import warningWithStack from 'shared/warningWithStack';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import * as ReactDOMFiberInput from './ReactDOMFiberInput';
@@ -117,7 +117,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Text content did not match. Server: "%s" Client: "%s"',
       normalizedServerText,
@@ -143,7 +143,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Prop `%s` did not match. Server: %s Client: %s',
       propName,
@@ -161,12 +161,12 @@ if (__DEV__) {
     attributeNames.forEach(function(name) {
       names.push(name);
     });
-    warning(false, 'Extra attributes from the server: %s', names);
+    warningWithoutStack(false, 'Extra attributes from the server: %s', names);
   };
 
   warnForInvalidEventListener = function(registrationName, listener) {
     if (listener === false) {
-      warningWithStack(
+      warning(
         false,
         'Expected `%s` listener to be a function, instead got `false`.\n\n' +
           'If you used to conditionally omit it with %s={condition && value}, ' +
@@ -176,7 +176,7 @@ if (__DEV__) {
         registrationName,
       );
     } else {
-      warningWithStack(
+      warning(
         false,
         'Expected `%s` listener to be a function, instead got a value of `%s` type.',
         registrationName,
@@ -353,7 +353,7 @@ export function createElement(
       isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
       // allow <SVG> or <mATH>.
-      warningWithStack(
+      warning(
         isCustomComponentTag || type === type.toLowerCase(),
         '<%s /> is using incorrect casing. ' +
           'Use PascalCase for React components, ' +
@@ -392,7 +392,7 @@ export function createElement(
         !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
       ) {
         warnedUnknownTags[type] = true;
-        warningWithStack(
+        warning(
           false,
           'The tag <%s> is unrecognized in this browser. ' +
             'If you meant to render a React component, start its name with ' +
@@ -429,7 +429,7 @@ export function setInitialProperties(
       !didWarnShadyDOM &&
       (domElement: any).shadyRoot
     ) {
-      warningWithStack(
+      warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
@@ -821,7 +821,7 @@ export function diffHydratedProperties(
       !didWarnShadyDOM &&
       (domElement: any).shadyRoot
     ) {
-      warningWithStack(
+      warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
@@ -1116,7 +1116,7 @@ export function warnForDeletedHydratableElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Did not expect server HTML to contain a <%s> in <%s>.',
       child.nodeName.toLowerCase(),
@@ -1134,7 +1134,7 @@ export function warnForDeletedHydratableText(
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Did not expect server HTML to contain the text node "%s" in <%s>.',
       child.nodeValue,
@@ -1153,7 +1153,7 @@ export function warnForInsertedHydratedElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Expected server HTML to contain a matching <%s> in <%s>.',
       tag,
@@ -1178,7 +1178,7 @@ export function warnForInsertedHydratedText(
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Expected server HTML to contain a matching text node for "%s" in <%s>.',
       text,

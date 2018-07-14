@@ -25,7 +25,7 @@ import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const findHostInstance = ReactFabricRenderer.findHostInstance;
@@ -34,7 +34,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
-      warning(
+      warningWithoutStack(
         owner.stateNode._warnedAboutRefsInRender,
         '%s is accessing findNodeHandle inside its render(). ' +
           'render() should be a pure function of props and state. It should ' +

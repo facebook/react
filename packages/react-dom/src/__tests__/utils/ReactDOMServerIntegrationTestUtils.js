@@ -53,7 +53,7 @@ module.exports = function(initModules) {
       console.error.calls.count() !== 0
     ) {
       console.log(
-        `We expected ${count} warning(s), but saw ${console.error.calls.count()} warning(s).`,
+        `We expected ${count} warningWithoutStack(s), but saw ${console.error.calls.count()} warningWithoutStack(s).`,
       );
       if (console.error.calls.count() > 0) {
         console.log(`We saw these warnings:`);

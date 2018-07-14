@@ -6,7 +6,7 @@
  */
 
 import invariant from 'shared/invariant';
-import warningWithStack from 'shared/warningWithStack';
+import warning from 'shared/warning';
 // TODO: We can remove this if we add invariantWithStack()
 // or add stack by default to invariants where possible.
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -48,7 +48,7 @@ function assertValidProps(tag: string, props: ?Object) {
     );
   }
   if (__DEV__) {
-    warningWithStack(
+    warning(
       props.suppressContentEditableWarning ||
         !props.contentEditable ||
         props.children == null,

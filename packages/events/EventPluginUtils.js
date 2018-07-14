@@ -7,7 +7,7 @@
 
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 export let getFiberCurrentPropsFromNode = null;
 export let getInstanceFromNode = null;
@@ -21,7 +21,7 @@ export const injection = {
       getNodeFromInstance,
     } = Injected);
     if (__DEV__) {
-      warning(
+      warningWithoutStack(
         getNodeFromInstance && getInstanceFromNode,
         'EventPluginUtils.injection.injectComponentTree(...): Injected ' +
           'module is missing getNodeFromInstance or getInstanceFromNode.',
@@ -46,7 +46,7 @@ if (__DEV__) {
       ? dispatchInstances.length
       : dispatchInstances ? 1 : 0;
 
-    warning(
+    warningWithoutStack(
       instancesIsArr === listenersIsArr && instancesLen === listenersLen,
       'EventPluginUtils: Invalid `event`.',
     );

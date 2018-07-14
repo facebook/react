@@ -28,8 +28,8 @@ import {
   Fragment,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
-import warningWithStack from 'shared/warningWithStack';
 
 import {
   createWorkInProgress,
@@ -87,7 +87,7 @@ if (__DEV__) {
     }
     ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
-    warningWithStack(
+    warning(
       false,
       'Each child in an array or iterator should have a unique ' +
         '"key" prop. See https://fb.me/react-warning-keys for ' +
@@ -113,7 +113,7 @@ function coerceRef(
       if (returnFiber.mode & StrictMode) {
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefInStrictMode[componentName]) {
-          warning(
+          warningWithoutStack(
             false,
             'A string ref, "%s", has been found within a strict mode tree. ' +
               'String refs are a source of potential bugs and should be avoided. ' +
@@ -222,7 +222,7 @@ function warnOnFunctionType() {
   }
   ownerHasFunctionTypeWarning[currentComponentErrorInfo] = true;
 
-  warningWithStack(
+  warning(
     false,
     'Functions are not valid as a React child. This may happen if ' +
       'you return a Component instead of <Component /> from render. ' +
@@ -710,7 +710,7 @@ function ChildReconciler(shouldTrackSideEffects) {
             knownKeys.add(key);
             break;
           }
-          warningWithStack(
+          warning(
             false,
             'Encountered two children with the same key, `%s`. ' +
               'Keys should be unique so that components maintain their identity ' +
@@ -905,7 +905,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (__DEV__) {
       // Warn about using Maps as children
       if ((newChildrenIterable: any).entries === iteratorFn) {
-        warningWithStack(
+        warning(
           didWarnAboutMaps,
           'Using Maps as children is unsupported and will likely yield ' +
             'unexpected results. Convert it to a sequence/iterable of keyed ' +

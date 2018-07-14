@@ -21,8 +21,8 @@ import {
   REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
-import warningWithStack from 'shared/warningWithStack';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {isValidElement, createElement, cloneElement} from './ReactElement';
@@ -122,7 +122,7 @@ function validateExplicitKey(element, parentType) {
 
   setCurrentlyValidatingElement(element);
   if (__DEV__) {
-    warningWithStack(
+    warning(
       false,
       'Each child in an array or iterator should have a unique "key" prop.' +
         '%s%s See https://fb.me/react-warning-keys for more information.',
@@ -213,14 +213,14 @@ function validatePropTypes(element) {
     setCurrentlyValidatingElement(null);
   } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
     propTypesMisspellWarningShown = true;
-    warning(
+    warningWithoutStack(
       false,
       'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
       name || 'Unknown',
     );
   }
   if (typeof type.getDefaultProps === 'function') {
-    warning(
+    warningWithoutStack(
       type.getDefaultProps.isReactClassApproved,
       'getDefaultProps is only used on classic React.createClass ' +
         'definitions. Use a static property named `defaultProps` instead.',
@@ -239,7 +239,7 @@ function validateFragmentProps(fragment) {
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     if (key !== 'children' && key !== 'key') {
-      warningWithStack(
+      warning(
         false,
         'Invalid prop `%s` supplied to `React.Fragment`. ' +
           'React.Fragment can only have `key` and `children` props.',
@@ -250,10 +250,7 @@ function validateFragmentProps(fragment) {
   }
 
   if (fragment.ref !== null) {
-    warningWithStack(
-      false,
-      'Invalid attribute `ref` supplied to `React.Fragment`.',
-    );
+    warning(false, 'Invalid attribute `ref` supplied to `React.Fragment`.');
   }
 
   setCurrentlyValidatingElement(null);
@@ -293,7 +290,7 @@ export function createElementWithValidation(type, props, children) {
       typeString = typeof type;
     }
 
-    warningWithStack(
+    warning(
       false,
       'React.createElement: type is invalid -- expected a string (for ' +
         'built-in components) or a class/function (for composite ' +

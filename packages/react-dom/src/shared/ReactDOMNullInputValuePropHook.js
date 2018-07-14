@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import warningWithStack from 'shared/warningWithStack';
+import warning from 'shared/warning';
 
 let didWarnValueNull = false;
 
@@ -17,7 +17,7 @@ export function validateProperties(type, props) {
   if (props != null && props.value === null && !didWarnValueNull) {
     didWarnValueNull = true;
     if (type === 'select' && props.multiple) {
-      warningWithStack(
+      warning(
         false,
         '`value` prop on `%s` should not be null. ' +
           'Consider using an empty array when `multiple` is set to `true` ' +
@@ -25,7 +25,7 @@ export function validateProperties(type, props) {
         type,
       );
     } else {
-      warningWithStack(
+      warning(
         false,
         '`value` prop on `%s` should not be null. ' +
           'Consider using an empty string to clear the component or `undefined` ' +

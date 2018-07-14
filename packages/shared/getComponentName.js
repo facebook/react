@@ -7,7 +7,7 @@
  * @flow
  */
 
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   REACT_ASYNC_MODE_TYPE,
   REACT_CONTEXT_TYPE,
@@ -27,7 +27,7 @@ function getComponentName(type: mixed): string | null {
   }
   if (__DEV__) {
     if (typeof (type: any).tag === 'number') {
-      warning(
+      warningWithoutStack(
         false,
         'Received an unexpected object in getComponentName(). ' +
           'This is likely a bug in React. Please file an issue.',

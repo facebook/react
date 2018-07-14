@@ -14,7 +14,7 @@ import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import getComponentName from 'shared/getComponentName';
 import {StrictMode} from './ReactTypeOfMode';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 type LIFECYCLE =
   | 'UNSAFE_componentWillMount'
@@ -99,7 +99,7 @@ if (__DEV__) {
             strictRoot,
           );
 
-          warning(
+          warningWithoutStack(
             false,
             'Unsafe lifecycle methods were found within a strict-mode tree:%s' +
               '\n\n%s' +
@@ -235,7 +235,7 @@ if (__DEV__) {
   ) => {
     const strictRoot = findStrictRoot(fiber);
     if (strictRoot === null) {
-      warning(
+      warningWithoutStack(
         false,
         'Expected to find a StrictMode component in a strict mode tree. ' +
           'This error is likely caused by a bug in React. Please file an issue.',
@@ -304,7 +304,7 @@ if (__DEV__) {
   ) => {
     const strictRoot = findStrictRoot(fiber);
     if (strictRoot === null) {
-      warning(
+      warningWithoutStack(
         false,
         'Expected to find a StrictMode component in a strict mode tree. ' +
           'This error is likely caused by a bug in React. Please file an issue.',
@@ -346,7 +346,7 @@ if (__DEV__) {
           strictRoot,
         );
 
-        warning(
+        warningWithoutStack(
           false,
           'Legacy context API has been detected within a strict-mode tree: %s' +
             '\n\nPlease update the following components: %s' +

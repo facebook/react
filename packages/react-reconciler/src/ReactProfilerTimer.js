@@ -12,7 +12,7 @@ import type {Fiber} from './ReactFiber';
 import getComponentName from 'shared/getComponentName';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {now} from './ReactFiberHostConfig';
 
 export type ProfilerTimer = {
@@ -64,7 +64,7 @@ function checkActualRenderTimeStackEmpty(): void {
     return;
   }
   if (__DEV__) {
-    warning(
+    warningWithoutStack(
       fiberStack.length === 0,
       'Expected an empty stack. Something was not reset properly.',
     );
@@ -106,7 +106,7 @@ function recordElapsedActualRenderTime(fiber: Fiber): void {
     return;
   }
   if (__DEV__) {
-    warning(
+    warningWithoutStack(
       fiber === fiberStack.pop(),
       'Unexpected Fiber (%s) popped.',
       getComponentName(fiber.type),
@@ -163,7 +163,7 @@ function startBaseRenderTimer(): void {
   }
   if (__DEV__) {
     if (baseStartTime !== -1) {
-      warning(
+      warningWithoutStack(
         false,
         'Cannot start base timer that is already running. ' +
           'This error is likely caused by a bug in React. ' +

@@ -10,7 +10,7 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -69,7 +69,7 @@ export function isMounted(component: React$Component<any, any>): boolean {
     if (owner !== null && owner.tag === ClassComponent) {
       const ownerFiber: Fiber = owner;
       const instance = ownerFiber.stateNode;
-      warning(
+      warningWithoutStack(
         instance._warnedAboutRefsInRender,
         '%s is accessing isMounted inside its render() function. ' +
           'render() should be a pure function of props and state. It should ' +
