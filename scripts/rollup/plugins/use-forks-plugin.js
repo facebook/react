@@ -33,7 +33,9 @@ function useForks(forks) {
     const targetModule = forks[srcModule];
     resolvedForks.set(
       require.resolve(srcModule),
-      require.resolve(targetModule)
+      typeof targetModule === 'string'
+        ? require.resolve(targetModule)
+        : targetModule
     );
   });
   return {
@@ -64,7 +66,11 @@ function useForks(forks) {
       }
       if (resolvedImportee && resolvedForks.has(resolvedImportee)) {
         // We found a fork!
-        return resolvedForks.get(resolvedImportee);
+        const fork = resolvedForks.get(resolvedImportee);
+        if (fork instanceof Error) {
+          throw fork;
+        }
+        return fork;
       }
       return null;
     },
