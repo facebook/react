@@ -66,20 +66,7 @@ describe('SyntheticEvent', () => {
     event.preventDefault();
     node.dispatchEvent(event);
 
-    event = document.createEvent('Event');
-    event.initEvent('click', true, true);
-    // Emulate IE8
-    Object.defineProperty(event, 'defaultPrevented', {
-      get() {},
-    });
-    Object.defineProperty(event, 'returnValue', {
-      get() {
-        return false;
-      },
-    });
-    node.dispatchEvent(event);
-
-    expect(expectedCount).toBe(2);
+    expect(expectedCount).toBe(1);
   });
 
   it('should be able to `stopPropagation`', () => {
