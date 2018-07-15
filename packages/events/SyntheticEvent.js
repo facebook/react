@@ -106,15 +106,9 @@ function SyntheticEvent(
     }
   });
 
-  const defaultPrevented =
-    nativeEvent.defaultPrevented != null
-      ? nativeEvent.defaultPrevented
-      : nativeEvent.returnValue === false;
-  if (defaultPrevented) {
-    this.isDefaultPrevented = functionThatReturnsTrue;
-  } else {
-    this.isDefaultPrevented = functionThatReturnsFalse;
-  }
+  this.isDefaultPrevented = nativeEvent.defaultPrevented
+    ? functionThatReturnsTrue
+    : functionThatReturnsFalse;
   this.isPropagationStopped = functionThatReturnsFalse;
   return this;
 }
