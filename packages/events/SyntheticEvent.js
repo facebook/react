@@ -219,15 +219,10 @@ SyntheticEvent.Interface = EventInterface;
 SyntheticEvent.extend = function(Interface) {
   const Super = this;
 
-  const E = function() {};
-  E.prototype = Super.prototype;
-  const prototype = new E();
-
   function Class() {
     return Super.apply(this, arguments);
   }
-  Object.assign(prototype, Class.prototype);
-  Class.prototype = prototype;
+  Class.prototype = Object.create(Super.prototype);
   Class.prototype.constructor = Class;
 
   Class.Interface = Object.assign({}, Super.Interface, Interface);
