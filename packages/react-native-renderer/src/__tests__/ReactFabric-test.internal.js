@@ -353,6 +353,30 @@ describe('ReactFabric', () => {
     );
   });
 
+  it('should not throw for text inside of a component that has static property "canRenderString" set', () => {
+    const ICanRenderString = createReactNativeComponentClass('ICanRenderString', () => ({
+      validAttributes: {},
+      uiViewClassName: 'ICanRenderString',
+    }));
+
+    class Text extends React.Component {
+      static canRenderString = true;
+      
+      render () {
+        return <ICanRenderString {...this.props} />;
+      }
+    }
+
+    const Indirection = () => 'Hi';
+    
+    ReactFabric.render(
+      <Text>
+        <Indirection />
+      </Text>,
+      11,
+    );
+  });
+
   it('dispatches events to the last committed props', () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {},

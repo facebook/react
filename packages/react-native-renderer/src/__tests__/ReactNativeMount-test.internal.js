@@ -258,4 +258,28 @@ describe('ReactNative', () => {
       11,
     );
   });
+
+  it('should not throw for text inside of a component that has static property "canRenderString" set', () => {
+    const ICanRenderString = createReactNativeComponentClass('ICanRenderString', () => ({
+      validAttributes: {},
+      uiViewClassName: 'ICanRenderString',
+    }));
+
+    class Text extends React.Component {
+      static canRenderString = true;
+      
+      render () {
+        return <ICanRenderString {...this.props} />;
+      }
+    }
+
+    const Indirection = () => 'Hi';
+    
+    ReactNative.render(
+      <Text>
+        <Indirection />
+      </Text>,
+      11,
+    );
+  });
 });

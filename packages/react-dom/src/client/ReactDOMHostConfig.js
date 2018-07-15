@@ -121,9 +121,10 @@ export function getRootHostContext(
 
 export function getChildHostContext(
   parentHostContext: HostContext,
-  type: string,
+  fiber: Fiber,
   rootContainerInstance: Container,
 ): HostContext {
+  const type = fiber.type;
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
     const namespace = getChildNamespace(parentHostContextDev.namespace, type);

@@ -98,7 +98,7 @@ export function getRootHostContext(
 
 export function getChildHostContext(
   parentHostContext: HostContext,
-  type: string,
+  fiber: Fiber,
   rootContainerInstance: Container,
 ): HostContext {
   return NO_CONTEXT;
