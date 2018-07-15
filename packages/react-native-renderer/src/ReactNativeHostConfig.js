@@ -8,6 +8,7 @@
  */
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 import invariant from 'shared/invariant';
 
@@ -202,7 +203,7 @@ export function getChildHostContext(
     type === 'RCTSinglelineTextInputView' || // iOS
     type === 'RCTText' ||
     type === 'RCTVirtualText' ||
-    (fiber.return && fiber.return.type && fiber.return.type.canRenderString);
+    !!(fiber.return && fiber.return.type && fiber.return.type.canRenderString);
 
   if (prevIsInAParentText !== isInAParentText) {
     return {isInAParentText};

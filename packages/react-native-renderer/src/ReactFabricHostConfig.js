@@ -15,6 +15,8 @@ import type {
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
 import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
 import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
@@ -265,7 +267,7 @@ export function getChildHostContext(
     type === 'RCTSinglelineTextInputView' || // iOS
     type === 'RCTText' ||
     type === 'RCTVirtualText' ||
-    (fiber.return && fiber.return.type && fiber.return.type.canRenderString);
+    !!(fiber.return && fiber.return.type && fiber.return.type.canRenderString);
 
   if (prevIsInAParentText !== isInAParentText) {
     return {isInAParentText};

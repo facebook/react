@@ -354,21 +354,24 @@ describe('ReactFabric', () => {
   });
 
   it('should not throw for text inside of a component that has static property "canRenderString" set', () => {
-    const ICanRenderString = createReactNativeComponentClass('ICanRenderString', () => ({
-      validAttributes: {},
-      uiViewClassName: 'ICanRenderString',
-    }));
+    const ICanRenderString = createReactNativeComponentClass(
+      'ICanRenderString',
+      () => ({
+        validAttributes: {},
+        uiViewClassName: 'ICanRenderString',
+      }),
+    );
 
     class Text extends React.Component {
       static canRenderString = true;
-      
-      render () {
+
+      render() {
         return <ICanRenderString {...this.props} />;
       }
     }
 
     const Indirection = () => 'Hi';
-    
+
     ReactFabric.render(
       <Text>
         <Indirection />

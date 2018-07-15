@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
 import * as ReactScheduler from 'shared/ReactScheduler';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';

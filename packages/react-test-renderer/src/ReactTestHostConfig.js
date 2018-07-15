@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 export type Type = string;
