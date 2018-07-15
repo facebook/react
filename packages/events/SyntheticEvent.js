@@ -83,15 +83,14 @@ function SyntheticEvent(
     delete this.stopPropagation;
   }
 
-  this.dispatchConfig = dispatchConfig;
-  this._targetInst = targetInst;
-  this.nativeEvent = nativeEvent;
+  Object.assign(this, {
+    dispatchConfig,
+    nativeEvent,
+    _targetInst: targetInst,
+  });
 
-  const Interface = this.constructor.Interface;
-  for (const propName in Interface) {
-    if (!Interface.hasOwnProperty(propName)) {
-      continue;
-    }
+  const {Interface} = this.constructor;
+  Object.keys(Interface).forEach(propName => {
     if (__DEV__) {
       delete this[propName]; // this has a getter/setter for warnings
     }
@@ -105,7 +104,7 @@ function SyntheticEvent(
         this[propName] = nativeEvent[propName];
       }
     }
-  }
+  });
 
   const defaultPrevented =
     nativeEvent.defaultPrevented != null
