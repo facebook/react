@@ -31,13 +31,13 @@ const EventInterface = {
   type: null,
   target: null,
   // currentTarget is set when dispatching; no use in copying it here
-  currentTarget: function() {
+  currentTarget() {
     return null;
   },
   eventPhase: null,
   bubbles: null,
   cancelable: null,
-  timeStamp: function(event) {
+  timeStamp(event) {
     return event.timeStamp || Date.now();
   },
   defaultPrevented: null,
@@ -120,7 +120,7 @@ function SyntheticEvent(
 }
 
 Object.assign(SyntheticEvent.prototype, {
-  preventDefault: function() {
+  preventDefault() {
     this.defaultPrevented = true;
     const event = this.nativeEvent;
     if (!event) {
@@ -135,7 +135,7 @@ Object.assign(SyntheticEvent.prototype, {
     this.isDefaultPrevented = functionThatReturnsTrue;
   },
 
-  stopPropagation: function() {
+  stopPropagation() {
     const event = this.nativeEvent;
     if (!event) {
       return;
@@ -160,7 +160,7 @@ Object.assign(SyntheticEvent.prototype, {
    * them back into the pool. This allows a way to hold onto a reference that
    * won't be added back into the pool.
    */
-  persist: function() {
+  persist() {
     this.isPersistent = functionThatReturnsTrue;
   },
 
@@ -174,7 +174,7 @@ Object.assign(SyntheticEvent.prototype, {
   /**
    * `PooledClass` looks for `destructor` on each instance it releases.
    */
-  destructor: function() {
+  destructor() {
     const Interface = this.constructor.Interface;
     for (const propName in Interface) {
       if (__DEV__) {
@@ -244,10 +244,10 @@ if (__DEV__) {
   if (isProxySupported) {
     /*eslint-disable no-func-assign */
     SyntheticEvent = new Proxy(SyntheticEvent, {
-      construct: function(target, args) {
+      construct(target, args) {
         return this.apply(target, Object.create(target.prototype), args);
       },
-      apply: function(constructor, that, args) {
+      apply(constructor, that, args) {
         return new Proxy(constructor.apply(that, args), {
           set: function(target, prop, value) {
             if (
@@ -287,8 +287,8 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
   const isFunction = typeof getVal === 'function';
   return {
     configurable: true,
-    set: set,
-    get: get,
+    set,
+    get,
   };
 
   function set(val) {
