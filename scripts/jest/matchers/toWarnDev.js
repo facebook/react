@@ -36,6 +36,9 @@ const createMatcherFor = consoleMethod =>
         const message = util.format(format, ...args);
         const normalizedMessage = normalizeCodeLocInfo(message);
 
+        // Remember if the number of %s interpolations
+        // doesn't match the number of arguments.
+        // We'll fail the test if it happens.
         let argIndex = 0;
         format.replace(/%s/g, () => argIndex++);
         if (argIndex !== args.length) {

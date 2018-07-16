@@ -709,11 +709,9 @@ describe('ReactNewContext', () => {
     ReactNoop.render(<Context.Provider value={1} />);
     ReactNoop.flush();
 
-    expect(() => {
-      // Update
-      ReactNoop.render(<Context.Provider value={2} />);
-      ReactNoop.flush();
-    }).toWarnDev(
+    // Update
+    ReactNoop.render(<Context.Provider value={2} />);
+    expect(ReactNoop.flush).toWarnDev(
       'calculateChangedBits: Expected the return value to be a 31-bit ' +
         'integer. Instead received: 4294967295',
       {withoutStack: true}, // TODO: add a stack
