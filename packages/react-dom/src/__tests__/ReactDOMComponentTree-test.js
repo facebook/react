@@ -195,7 +195,7 @@ describe('ReactDOMComponentTree', () => {
         'was rendered by React and is not a top-level container. You may ' +
         'have accidentally passed in a React root node instead of its ' +
         'container.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -212,7 +212,7 @@ describe('ReactDOMComponentTree', () => {
         'component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state ' +
         'and render the new components instead of calling ReactDOM.render.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 });

@@ -158,7 +158,7 @@ describe('SimpleCacheProvider', () => {
             'instead received: 123. Strings and numbers are not permitted as ' +
             'resource types.',
         ],
-        {expectNoStack: true},
+        {withoutStack: true},
       );
     } else {
       fn();
@@ -189,7 +189,7 @@ describe('SimpleCacheProvider', () => {
             'To use non-primitive values as keys, you must pass a hash ' +
             'function as the second argument to createResource().',
         ],
-        {expectNoStack: true},
+        {withoutStack: true},
       );
     } else {
       fn();

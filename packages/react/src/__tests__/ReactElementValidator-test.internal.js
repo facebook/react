@@ -257,7 +257,7 @@ describe('ReactElementValidator', () => {
           "component from the file it's defined in, or you might have mixed up " +
           'default and named imports.',
       ],
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // Should not log any additional warnings
@@ -375,7 +375,7 @@ describe('ReactElementValidator', () => {
         'returned a function. You may have forgotten to pass an argument to ' +
         'the type checker creator (arrayOf, instanceOf, objectOf, oneOf, ' +
         'oneOfType, and shape all require an argument).',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -396,7 +396,7 @@ describe('ReactElementValidator', () => {
     }).toWarnDev(
       'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
         'instead of `propTypes`. Did you misspell the property assignment?',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -409,7 +409,7 @@ describe('ReactElementValidator', () => {
     expect(() => TestFactory.type).toLowPriorityWarnDev(
       'Warning: Factory.type is deprecated. Access the class directly before ' +
         'passing it to createFactory.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // Warn once, not again
@@ -477,7 +477,7 @@ describe('ReactElementValidator', () => {
         'components) but got: undefined. You likely forgot to export your ' +
         "component from the file it's defined in, or you might have mixed up " +
         'default and named imports.\n\nCheck your code at **.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 });

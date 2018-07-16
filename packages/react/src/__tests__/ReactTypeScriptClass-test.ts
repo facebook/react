@@ -331,7 +331,7 @@ describe('ReactTypeScriptClass', function() {
         'component instance: you may have forgotten to define `render`.',
       'Warning: Empty(...): No `render` method found on the returned ' +
         'component instance: you may have forgotten to define `render`.',
-    ], {expectNoStack: true});
+    ], {withoutStack: true});
   });
 
   it('renders a simple stateless component with prop', function() {
@@ -392,7 +392,7 @@ describe('ReactTypeScriptClass', function() {
     }).toWarnDev(
       'Foo: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
-        {expectNoStack: true}
+        {withoutStack: true}
     );
   });
 
@@ -410,7 +410,7 @@ describe('ReactTypeScriptClass', function() {
     }).toWarnDev(
       'Foo: getDerivedStateFromCatch() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
-        {expectNoStack: true}
+        {withoutStack: true}
     );
   });
 
@@ -427,7 +427,7 @@ describe('ReactTypeScriptClass', function() {
     }).toWarnDev(
       'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
-        {expectNoStack: true}
+        {withoutStack: true}
     );
   });
 
@@ -450,7 +450,7 @@ describe('ReactTypeScriptClass', function() {
     }).toWarnDev(
       'Foo: Did not properly initialize state during construction. ' +
         'Expected state to be an object, but it was undefined.',
-        {expectNoStack: true}
+        {withoutStack: true}
     );
   });
 
@@ -508,15 +508,15 @@ describe('ReactTypeScriptClass', function() {
   it('should warn with non-object in the initial state property', function() {
     expect(() => test(React.createElement(ArrayState), 'SPAN', '')).toWarnDev(
       'ArrayState.state: must be set to an object or null',
-      {expectNoStack: true}
+      {withoutStack: true}
     );
     expect(() => test(React.createElement(StringState), 'SPAN', '')).toWarnDev(
       'StringState.state: must be set to an object or null',
-      {expectNoStack: true}
+      {withoutStack: true}
     );
     expect(() => test(React.createElement(NumberState), 'SPAN', '')).toWarnDev(
       'NumberState.state: must be set to an object or null',
-      {expectNoStack: true}
+      {withoutStack: true}
     );
   });
 
@@ -592,7 +592,7 @@ describe('ReactTypeScriptClass', function() {
           'a plain JavaScript class.',
         'propTypes was defined as an instance property on ClassicProperties.',
         'contextTypes was defined as an instance property on ClassicProperties.',
-      ], {expectNoStack: true});
+      ], {withoutStack: true});
       expect(getInitialStateWasCalled).toBe(false);
       expect(getDefaultPropsWasCalled).toBe(false);
     }
@@ -624,7 +624,7 @@ describe('ReactTypeScriptClass', function() {
         'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
         'you mean shouldComponentUpdate()? The name is phrased as a question ' +
         'because the function is expected to return a value.',
-        {expectNoStack: true}
+        {withoutStack: true}
     );
   });
 
@@ -635,7 +635,7 @@ describe('ReactTypeScriptClass', function() {
       'Warning: ' +
         'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
         'Did you mean componentWillReceiveProps()?',
-        {expectNoStack: true}
+        {withoutStack: true}
     );
   });
 
@@ -646,7 +646,7 @@ describe('ReactTypeScriptClass', function() {
       'Warning: ' +
         'MisspelledComponent3 has a method called UNSAFE_componentWillRecieveProps(). ' +
         'Did you mean UNSAFE_componentWillReceiveProps()?',
-        {expectNoStack: true}
+        {withoutStack: true}
     );
   });
 
@@ -660,13 +660,13 @@ describe('ReactTypeScriptClass', function() {
       expect(() => instance.replaceState({})).toThrow()
     ).toLowPriorityWarnDev(
       'replaceState(...) is deprecated in plain JavaScript React classes',
-      {expectNoStack: true}
+      {withoutStack: true}
     );
     expect(() =>
       expect(() => instance.isMounted()).toThrow()
     ).toLowPriorityWarnDev(
       'isMounted(...) is deprecated in plain JavaScript React classes',
-      {expectNoStack: true}
+      {withoutStack: true}
     );
   });
 

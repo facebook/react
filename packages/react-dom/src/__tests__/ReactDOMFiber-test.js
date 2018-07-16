@@ -256,7 +256,7 @@ describe('ReactDOMFiber', () => {
         'and will be removed in React 17+. Update your code to use ' +
         'ReactDOM.createPortal() instead. It has the exact same API, ' +
         'but without the "unstable_" prefix.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(portalContainer.innerHTML).toBe('<div>portal</div>');
     expect(container.innerHTML).toBe('<div></div>');
@@ -1101,7 +1101,7 @@ describe('ReactDOMFiber', () => {
           'removed without using React. This is not supported and will ' +
           'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
           'to empty a container.',
-        {expectNoStack: true},
+        {withoutStack: true},
       );
     }).toThrowError();
   });
@@ -1119,7 +1119,7 @@ describe('ReactDOMFiber', () => {
         'removed without using React. This is not supported and will ' +
         'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
         'to empty a container.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -1136,7 +1136,7 @@ describe('ReactDOMFiber', () => {
         'removed without using React. This is not supported and will ' +
         'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
         'to empty a container.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 

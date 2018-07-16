@@ -567,7 +567,7 @@ describe('ReactDOMComponent', () => {
         }
       }).toWarnDev(
         'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
     });
 
@@ -587,7 +587,7 @@ describe('ReactDOMComponent', () => {
         }
       }).toWarnDev(
         'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
     });
 
@@ -1006,7 +1006,7 @@ describe('ReactDOMComponent', () => {
         '<BR /> is using incorrect casing. ' +
           'Use PascalCase for React components, ' +
           'or lowercase for HTML elements.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
       expect(returnedValue).not.toContain('</BR>');
     });
@@ -1023,7 +1023,7 @@ describe('ReactDOMComponent', () => {
         '<IMG /> is using incorrect casing. ' +
           'Use PascalCase for React components, ' +
           'or lowercase for HTML elements.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
     });
 
@@ -1033,7 +1033,7 @@ describe('ReactDOMComponent', () => {
       ).toWarnDev(
         'The `aria` attribute is reserved for future use in React. ' +
           'Pass individual `aria-` attributes instead.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
     });
 
@@ -1056,12 +1056,12 @@ describe('ReactDOMComponent', () => {
 
         expect(() => ReactTestUtils.renderIntoDocument(<bar />)).toWarnDev(
           'The tag <bar> is unrecognized in this browser',
-          {expectNoStack: true}, // TODO: add a stack
+          {withoutStack: true}, // TODO: add a stack
         );
         // Test deduplication
         expect(() => ReactTestUtils.renderIntoDocument(<foo />)).toWarnDev(
           'The tag <foo> is unrecognized in this browser',
-          {expectNoStack: true}, // TODO: add a stack
+          {withoutStack: true}, // TODO: add a stack
         );
         ReactTestUtils.renderIntoDocument(<foo />);
         // This is a funny case.
@@ -1080,7 +1080,7 @@ describe('ReactDOMComponent', () => {
               'or lowercase for HTML elements.',
             'The tag <hasOwnProperty> is unrecognized in this browser',
           ],
-          {expectNoStack: true}, // TODO: add a stack
+          {withoutStack: true}, // TODO: add a stack
         );
       } finally {
         Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
@@ -1140,7 +1140,7 @@ describe('ReactDOMComponent', () => {
         expect(() => ReactDOM.render(<ShadyComponent />, node)).toWarnDev(
           'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
             'cause things to break subtly.',
-          {expectNoStack: true}, // TODO: add a stack
+          {withoutStack: true}, // TODO: add a stack
         );
         mountComponent({is: 'custom-shady-div2'});
       } finally {
@@ -1161,7 +1161,7 @@ describe('ReactDOMComponent', () => {
         expect(() => mountComponent({is: 'custom-shady-div'})).toWarnDev(
           'A component is using shady DOM. Using shady DOM with React can ' +
             'cause things to break subtly.',
-          {expectNoStack: true}, // TODO: add a stack
+          {withoutStack: true}, // TODO: add a stack
         );
 
         // No additional warnings are expected
@@ -1210,7 +1210,7 @@ describe('ReactDOMComponent', () => {
       expect(() =>
         mountComponent({innerHTML: '<span>Hi Jim!</span>'}),
       ).toWarnDev('Directly setting property `innerHTML` is not permitted. ', {
-        expectNoStack: true, // TODO: add a stack
+        withoutStack: true, // TODO: add a stack
       });
     });
 
@@ -1218,7 +1218,7 @@ describe('ReactDOMComponent', () => {
       expect(() =>
         mountComponent({innerhtml: '<span>Hi Jim!</span>'}),
       ).toWarnDev('Directly setting property `innerHTML` is not permitted. ', {
-        expectNoStack: true, // TODO: add a stack
+        withoutStack: true, // TODO: add a stack
       });
     });
 
@@ -1812,13 +1812,13 @@ describe('ReactDOMComponent', () => {
         ReactTestUtils.renderIntoDocument(<div onFocusIn={() => {}} />),
       ).toWarnDev(
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
       expect(() =>
         ReactTestUtils.renderIntoDocument(<div onFocusOut={() => {}} />),
       ).toWarnDev(
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
     });
 
@@ -1828,13 +1828,13 @@ describe('ReactDOMComponent', () => {
         ReactTestUtils.renderIntoDocument(<div onfocusin={() => {}} />),
       ).toWarnDev(
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
       expect(() =>
         ReactTestUtils.renderIntoDocument(<div onfocusout={() => {}} />),
       ).toWarnDev(
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
     });
 
@@ -1844,13 +1844,13 @@ describe('ReactDOMComponent', () => {
         ReactDOMServer.renderToString(<div onFocusIn={() => {}} />),
       ).toWarnDev(
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
       expect(() =>
         ReactDOMServer.renderToString(<div onFocusOut={() => {}} />),
       ).toWarnDev(
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
     });
 
@@ -1860,13 +1860,13 @@ describe('ReactDOMComponent', () => {
         ReactDOMServer.renderToString(<div onfocusin={() => {}} />),
       ).toWarnDev(
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
       expect(() =>
         ReactDOMServer.renderToString(<div onfocusout={() => {}} />),
       ).toWarnDev(
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut.',
-        {expectNoStack: true}, // TODO: add a stack
+        {withoutStack: true}, // TODO: add a stack
       );
     });
 

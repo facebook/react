@@ -271,7 +271,7 @@ describe('ReactContextValidator', () => {
       'Warning: ComponentA.childContextTypes is specified but there is no ' +
         'getChildContext() method on the instance. You can either define ' +
         'getChildContext() on ComponentA or remove childContextTypes from it.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // Warnings should be deduped by component type
@@ -281,7 +281,7 @@ describe('ReactContextValidator', () => {
       'Warning: ComponentB.childContextTypes is specified but there is no ' +
         'getChildContext() method on the instance. You can either define ' +
         'getChildContext() on ComponentB or remove childContextTypes from it.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -333,7 +333,7 @@ describe('ReactContextValidator', () => {
         'Warning: Failed context type: The context `bar` is marked as required in `ChildContextConsumer`, but its ' +
           'value is `undefined`.',
       ],
-      {expectNoStack: 1},
+      {withoutStack: 1},
     );
     expect(childContext.bar).toBeUndefined();
     expect(childContext.foo).toBe('FOO');

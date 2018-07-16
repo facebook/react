@@ -451,7 +451,7 @@ describe('createSubscription', () => {
           () => null,
         );
       }).toWarnDev('Subscription must specify a getCurrentValue function', {
-        expectNoStack: true,
+        withoutStack: true,
       });
     });
 
@@ -464,7 +464,7 @@ describe('createSubscription', () => {
           () => null,
         );
       }).toWarnDev('Subscription must specify a subscribe function', {
-        expectNoStack: true,
+        withoutStack: true,
       });
     });
 

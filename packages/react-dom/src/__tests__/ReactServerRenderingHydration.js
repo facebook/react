@@ -83,7 +83,7 @@ describe('ReactDOMServerHydration', () => {
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-        {expectNoStack: true},
+        {withoutStack: true},
       );
       expect(mountCount).toEqual(3);
       expect(element.innerHTML).toBe(lastMarkup);
@@ -103,7 +103,7 @@ describe('ReactDOMServerHydration', () => {
       expect(() => {
         instance = ReactDOM.render(<TestComponent name="y" />, element);
       }).toWarnDev('Text content did not match. Server: "x" Client: "y"', {
-        expectNoStack: true,
+        withoutStack: true,
       });
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
@@ -188,7 +188,7 @@ describe('ReactDOMServerHydration', () => {
       expect(() => {
         instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
       }).toWarnDev('Text content did not match. Server: "x" Client: "y"', {
-        expectNoStack: true,
+        withoutStack: true,
       });
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
@@ -252,7 +252,7 @@ describe('ReactDOMServerHydration', () => {
       ReactDOM.hydrate(<button autoFocus={false}>client</button>, element),
     ).toWarnDev(
       'Warning: Text content did not match. Server: "server" Client: "client"',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     expect(element.firstChild.focus).not.toHaveBeenCalled();
@@ -292,7 +292,7 @@ describe('ReactDOMServerHydration', () => {
 
     expect(() => ReactDOM.hydrate(markup, element)).toWarnDev(
       'Please update the following components to use componentDidMount instead: ComponentWithWarning',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(element.textContent).toBe('Hi');
   });

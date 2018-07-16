@@ -2403,7 +2403,7 @@ describe('ReactIncremental', () => {
     expect(ReactNoop.flush).toWarnDev(
       'componentWillReceiveProps: Please update the following components ' +
         'to use static getDerivedStateFromProps instead: MyComponent',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     expect(ops).toEqual([

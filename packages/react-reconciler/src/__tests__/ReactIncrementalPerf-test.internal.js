@@ -321,7 +321,7 @@ describe('ReactDebugFiberPerf', () => {
           '\n\ncomponentWillReceiveProps: Please update the following components ' +
           'to use static getDerivedStateFromProps instead: NotCascading',
       ],
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     ReactNoop.render(
       <Parent>
@@ -363,7 +363,7 @@ describe('ReactDebugFiberPerf', () => {
         'to use static getDerivedStateFromProps instead: AllLifecycles' +
         '\n\ncomponentWillUpdate: Please update the following components ' +
         'to use componentDidUpdate instead: AllLifecycles',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     ReactNoop.render(<AllLifecycles />);
     addComment('Update');

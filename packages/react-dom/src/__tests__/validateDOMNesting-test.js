@@ -12,7 +12,7 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 
-function expectWarnings(tags, warnings = [], expectNoStack = 0) {
+function expectWarnings(tags, warnings = [], withoutStack = 0) {
   tags = [...tags];
   warnings = [...warnings];
 
@@ -29,7 +29,7 @@ function expectWarnings(tags, warnings = [], expectNoStack = 0) {
   }
 
   expect(() => ReactDOM.render(element, container)).toWarnDev(warnings, {
-    expectNoStack: expectNoStack,
+    withoutStack,
   });
 }
 

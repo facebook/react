@@ -57,7 +57,7 @@ describe('ReactComponentLifeCycle', () => {
           'you can rename to UNSAFE_componentWillUpdate.' +
           '\n\nPlease update the following components: MyComponent',
       ],
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // Dedupe check (update and instantiate new

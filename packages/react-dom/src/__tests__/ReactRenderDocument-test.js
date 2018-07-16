@@ -39,7 +39,7 @@ describe('rendering React components at document', () => {
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-        {expectNoStack: true},
+        {withoutStack: true},
       );
     }
 
@@ -201,10 +201,10 @@ describe('rendering React components at document', () => {
           'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
             'will stop working in React v17. Replace the ReactDOM.render() call ' +
             'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-          {expectNoStack: true},
+          {withoutStack: true},
         );
       }).toWarnDev('Warning: Text content did not match.', {
-        expectNoStack: true,
+        withoutStack: true,
       });
     });
 
@@ -373,7 +373,7 @@ describe('rendering React components at document', () => {
       container.textContent = 'potato';
       expect(() => ReactDOM.hydrate(<div>parsnip</div>, container)).toWarnDev(
         'Expected server HTML to contain a matching <div> in <div>.',
-        {expectNoStack: true},
+        {withoutStack: true},
       );
       expect(container.textContent).toBe('parsnip');
     });
@@ -400,7 +400,7 @@ describe('rendering React components at document', () => {
       expect(() =>
         ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
       ).toWarnDev('Warning: Text content did not match.', {
-        expectNoStack: true,
+        withoutStack: true,
       });
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
@@ -425,7 +425,7 @@ describe('rendering React components at document', () => {
       expect(() =>
         ReactDOM.hydrate(<Component text="Hello world" />, testDocument),
       ).toWarnDev('Did not expect server HTML to contain a <meta> in <head>.', {
-        expectNoStack: true,
+        withoutStack: true,
       });
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });

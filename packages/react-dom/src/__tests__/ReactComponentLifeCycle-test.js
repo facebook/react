@@ -218,7 +218,7 @@ describe('ReactComponentLifeCycle', () => {
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +
         'class property with the desired state in the StatefulComponent component.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // Check deduplication; (no extra warnings should be logged).
@@ -250,7 +250,7 @@ describe('ReactComponentLifeCycle', () => {
       const instance = ReactTestUtils.renderIntoDocument(element);
       expect(instance._isMounted()).toBeTruthy();
     }).toWarnDev('Component is accessing isMounted inside its render()', {
-      expectNoStack: true,
+      withoutStack: true,
     });
   });
 
@@ -279,7 +279,7 @@ describe('ReactComponentLifeCycle', () => {
       const instance = ReactTestUtils.renderIntoDocument(element);
       expect(instance._isMounted()).toBeTruthy();
     }).toWarnDev('Component is accessing isMounted inside its render()', {
-      expectNoStack: true,
+      withoutStack: true,
     });
   });
 
@@ -319,7 +319,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toWarnDev('Component is accessing findDOMNode inside its render()', {
-      expectNoStack: true,
+      withoutStack: true,
     });
   });
 
@@ -386,7 +386,7 @@ describe('ReactComponentLifeCycle', () => {
       instance = ReactDOM.render(<LifeCycleComponent />, container);
     }).toWarnDev(
       'LifeCycleComponent is accessing isMounted inside its render() function',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // getInitialState
@@ -682,7 +682,7 @@ describe('ReactComponentLifeCycle', () => {
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Component />, container)).toWarnDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -710,7 +710,7 @@ describe('ReactComponentLifeCycle', () => {
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Component value={1} />, container)).toWarnDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     ReactDOM.render(<Component value={2} />, container);
   });
@@ -738,7 +738,7 @@ describe('ReactComponentLifeCycle', () => {
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Component value={1} />, container)).toWarnDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     ReactDOM.render(<Component value={2} />, container);
   });
@@ -767,7 +767,7 @@ describe('ReactComponentLifeCycle', () => {
         '  componentWillUpdate\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     class WillMount extends React.Component {
@@ -787,7 +787,7 @@ describe('ReactComponentLifeCycle', () => {
         '  UNSAFE_componentWillMount\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     class WillMountAndUpdate extends React.Component {
@@ -809,7 +809,7 @@ describe('ReactComponentLifeCycle', () => {
         '  UNSAFE_componentWillUpdate\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     class WillReceiveProps extends React.Component {
@@ -829,7 +829,7 @@ describe('ReactComponentLifeCycle', () => {
         '  componentWillReceiveProps\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -856,7 +856,7 @@ describe('ReactComponentLifeCycle', () => {
         '  componentWillUpdate\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     class WillMount extends React.Component {
@@ -875,7 +875,7 @@ describe('ReactComponentLifeCycle', () => {
         '  UNSAFE_componentWillMount\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     class WillMountAndUpdate extends React.Component {
@@ -896,7 +896,7 @@ describe('ReactComponentLifeCycle', () => {
         '  UNSAFE_componentWillUpdate\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     class WillReceiveProps extends React.Component {
@@ -915,7 +915,7 @@ describe('ReactComponentLifeCycle', () => {
         '  componentWillReceiveProps\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -983,7 +983,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
       'MyComponent.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // De-duped
@@ -1004,7 +1004,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
       'MyComponent: Did not properly initialize state during construction. ' +
         'Expected state to be an object, but it was undefined.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // De-duped
@@ -1230,7 +1230,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => ReactDOM.render(<MyComponent value="bar" />, div)).toWarnDev(
       'MyComponent.getSnapshotBeforeUpdate(): A snapshot value (or null) must ' +
         'be returned. You have returned undefined.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // De-duped
@@ -1251,7 +1251,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
       'MyComponent: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
         'This component defines getSnapshotBeforeUpdate() only.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     // De-duped

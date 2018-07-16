@@ -221,21 +221,21 @@ describe('ReactJSXElementValidator', () => {
         "component from the file it's defined in, or you might have mixed up " +
         'default and named imports.' +
         '\n\nCheck your code at **.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(() => void <Null />).toWarnDev(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: null.' +
         '\n\nCheck your code at **.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(() => void <True />).toWarnDev(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: boolean.' +
         '\n\nCheck your code at **.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     // No error expected
     void <Div />;
@@ -337,7 +337,7 @@ describe('ReactJSXElementValidator', () => {
     ).toWarnDev(
       'getDefaultProps is only used on classic React.createClass definitions.' +
         ' Use a static property named `defaultProps` instead.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -357,7 +357,7 @@ describe('ReactJSXElementValidator', () => {
     ).toWarnDev(
       'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
         'instead of `propTypes`. Did you misspell the property assignment?',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -412,7 +412,7 @@ describe('ReactJSXElementValidator', () => {
         </React.Fragment>,
       ),
     ).toWarnDev('Encountered two children with the same key, `a`.', {
-      expectNoStack: true,
+      withoutStack: true,
     });
   });
 });

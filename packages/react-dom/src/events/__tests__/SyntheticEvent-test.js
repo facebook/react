@@ -153,15 +153,15 @@ describe('SyntheticEvent', () => {
     // once for each property accessed
     expect(() => expect(syntheticEvent.type).toBe(null)).toWarnDev(
       getExpectedWarning('type'),
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(() => expect(syntheticEvent.nativeEvent).toBe(null)).toWarnDev(
       getExpectedWarning('nativeEvent'),
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(() => expect(syntheticEvent.target).toBe(null)).toWarnDev(
       getExpectedWarning('target'),
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     expect(expectedCount).toBe(1);
@@ -191,7 +191,7 @@ describe('SyntheticEvent', () => {
         'released/nullified synthetic event. This is effectively a no-op. If you must ' +
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(expectedCount).toBe(1);
   });
@@ -217,7 +217,7 @@ describe('SyntheticEvent', () => {
         'released/nullified synthetic event. This is a no-op function. If you must ' +
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(expectedCount).toBe(1);
   });
@@ -244,7 +244,7 @@ describe('SyntheticEvent', () => {
         'released/nullified synthetic event. This is a no-op function. If you must ' +
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(expectedCount).toBe(1);
   });
@@ -266,7 +266,7 @@ describe('SyntheticEvent', () => {
         'released/nullified synthetic event. This is set to null. If you must ' +
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 
@@ -284,7 +284,7 @@ describe('SyntheticEvent', () => {
             "you're seeing this, you're adding a new property in the synthetic " +
             'event object. The property is never released. ' +
             'See https://fb.me/react-event-pooling for more information.',
-          {expectNoStack: true},
+          {withoutStack: true},
         );
       } else {
         e.foo = 'bar';

@@ -519,7 +519,7 @@ describe('ReactDOMServer', () => {
       'Warning: setState(...): Can only update a mounting component.' +
         ' This usually means you called setState() outside componentWillMount() on the server.' +
         ' This is a no-op.\n\nPlease check the code for the Foo component.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
 
     const markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
@@ -547,7 +547,7 @@ describe('ReactDOMServer', () => {
       'Warning: forceUpdate(...): Can only update a mounting component. ' +
         'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
         'This is a no-op.\n\nPlease check the code for the Baz component.',
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     const markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
@@ -611,7 +611,7 @@ describe('ReactDOMServer', () => {
           'Use PascalCase for React components, ' +
           'or lowercase for HTML elements.',
       ],
-      {expectNoStack: true},
+      {withoutStack: true},
     );
   });
 

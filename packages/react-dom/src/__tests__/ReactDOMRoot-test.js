@@ -144,7 +144,7 @@ describe('ReactDOMRoot', () => {
       </div>,
     );
     expect(jest.runAllTimers).toWarnDev('Extra attributes', {
-      expectNoStack: true,
+      withoutStack: true,
     });
   });
 
@@ -362,7 +362,7 @@ describe('ReactDOMRoot', () => {
     const InvalidType = undefined;
     expect(() => batch.render(<InvalidType />)).toWarnDev(
       ['React.createElement: type is invalid'],
-      {expectNoStack: true},
+      {withoutStack: true},
     );
     expect(() => batch.commit()).toThrow('Element type is invalid');
   });
