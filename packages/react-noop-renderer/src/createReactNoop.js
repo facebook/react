@@ -56,6 +56,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     parentInstance.children.push(child);
   }
 
+  function appendChildToContainer(
+    parentInstance: Container,
+    child: Instance | TextInstance,
+  ): void {
+    if (typeof parentInstance.rootID !== 'string') {
+      throw new Error(
+        'appendChildToContainer() first argument is not a container.',
+      );
+    }
+    appendChild(parentInstance, child);
+  }
+
   function insertBefore(
     parentInstance: Instance | Container,
     child: Instance | TextInstance,
@@ -72,6 +84,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     parentInstance.children.splice(beforeIndex, 0, child);
   }
 
+  function insertInContainerBefore(
+    parentInstance: Container,
+    child: Instance | TextInstance,
+    beforeChild: Instance | TextInstance,
+  ) {
+    if (typeof parentInstance.rootID !== 'string') {
+      throw new Error(
+        'insertInContainerBefore() first argument is not a container.',
+      );
+    }
+    insertBefore(parentInstance, child, beforeChild);
+  }
+
   function removeChild(
     parentInstance: Instance | Container,
     child: Instance | TextInstance,
@@ -81,6 +106,18 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       throw new Error('This child does not exist.');
     }
     parentInstance.children.splice(index, 1);
+  }
+
+  function removeChildFromContainer(
+    parentInstance: Container,
+    child: Instance | TextInstance,
+  ): void {
+    if (typeof parentInstance.rootID !== 'string') {
+      throw new Error(
+        'removeChildFromContainer() first argument is not a container.',
+      );
+    }
+    removeChild(parentInstance, child);
   }
 
   let elapsedTimeInMs = 0;
@@ -234,12 +271,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           textInstance.text = newText;
         },
 
-        appendChild: appendChild,
-        appendChildToContainer: appendChild,
-        insertBefore: insertBefore,
-        insertInContainerBefore: insertBefore,
-        removeChild: removeChild,
-        removeChildFromContainer: removeChild,
+        appendChild,
+        appendChildToContainer,
+        insertBefore,
+        insertInContainerBefore,
+        removeChild,
+        removeChildFromContainer,
 
         resetTextContent(instance: Instance): void {},
       }
