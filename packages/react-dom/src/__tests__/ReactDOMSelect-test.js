@@ -566,25 +566,21 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should warn if selected is set on <option>', () => {
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(
+    function App() {
+      return (
         <select>
           <option selected={true} />
           <option selected={true} />
-        </select>,
-      ),
-    ).toWarnDev(
+        </select>
+      );
+    }
+
+    expect(() => ReactTestUtils.renderIntoDocument(<App />)).toWarnDev(
       'Use the `defaultValue` or `value` props on <select> instead of ' +
         'setting `selected` on <option>.',
-      {withoutStack: true}, // TODO: add a stack
     );
 
-    ReactTestUtils.renderIntoDocument(
-      <select>
-        <option selected={true} />
-        <option selected={true} />
-      </select>,
-    );
+    ReactTestUtils.renderIntoDocument(<App />);
   });
 
   it('should warn if value is null and multiple is true', () => {
@@ -647,7 +643,6 @@ describe('ReactDOMSelect', () => {
         'both). Decide between using a controlled or uncontrolled select ' +
         'element and remove one of these props. More info: ' +
         'https://fb.me/react-controlled-components',
-      {withoutStack: true}, // TODO: add a stack
     );
 
     ReactTestUtils.renderIntoDocument(

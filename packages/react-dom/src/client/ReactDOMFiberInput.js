@@ -11,7 +11,6 @@
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
@@ -76,7 +75,7 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultChecked !== undefined &&
       !didWarnCheckedDefaultChecked
     ) {
-      warningWithoutStack(
+      warning(
         false,
         '%s contains an input of type %s with both checked and defaultChecked props. ' +
           'Input elements must be either controlled or uncontrolled ' +
@@ -94,7 +93,7 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValueDefaultValue
     ) {
-      warningWithoutStack(
+      warning(
         false,
         '%s contains an input of type %s with both value and defaultValue props. ' +
           'Input elements must be either controlled or uncontrolled ' +

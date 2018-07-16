@@ -930,7 +930,6 @@ describe('ReactDOMInput', () => {
         'both). Decide between using a controlled or uncontrolled input ' +
         'element and remove one of these props. More info: ' +
         'https://fb.me/react-controlled-components',
-      {withoutStack: true}, // TODO: add a stack
     );
     ReactDOM.unmountComponentAtNode(container);
 
@@ -958,7 +957,6 @@ describe('ReactDOMInput', () => {
         'both). Decide between using a controlled or uncontrolled input ' +
         'element and remove one of these props. More info: ' +
         'https://fb.me/react-controlled-components',
-      {withoutStack: true}, // TODO: add a stack
     );
     ReactDOM.unmountComponentAtNode(container);
 

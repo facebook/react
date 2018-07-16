@@ -976,7 +976,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
             ? context._calculateChangedBits(oldValue, newValue)
             : MAX_SIGNED_31_BIT_INT;
         if (__DEV__) {
-          warningWithoutStack(
+          warning(
             (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
             'calculateChangedBits: Expected the return value to be a ' +
               '31-bit integer. Instead received: %s',
