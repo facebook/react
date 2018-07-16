@@ -147,5 +147,19 @@ describe('toWarnDev', () => {
         }).toWarnDev('Hi', {withoutStack: 'haha'});
       }).toThrow('Instead received string');
     });
+
+    it('fails if the argument number does not match', () => {
+      expect(() => {
+        expect(() => {
+          console.error('Hi %s', 'Sara', 'extra');
+        }).toWarnDev('Hi', {withoutStack: true});
+      }).toThrow('Received 2 arguments for a message with 1 placeholders');
+
+      expect(() => {
+        expect(() => {
+          console.error('Hi %s');
+        }).toWarnDev('Hi', {withoutStack: true});
+      }).toThrow('Received 0 arguments for a message with 1 placeholders');
+    });
   }
 });

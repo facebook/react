@@ -29,6 +29,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {
   createWorkInProgress,
@@ -90,8 +91,7 @@ if (__DEV__) {
       false,
       'Each child in an array or iterator should have a unique ' +
         '"key" prop. See https://fb.me/react-warning-keys for ' +
-        'more information.%s',
-      getCurrentFiberStackInDev(),
+        'more information.',
     );
   };
 }
@@ -113,7 +113,7 @@ function coerceRef(
       if (returnFiber.mode & StrictMode) {
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefInStrictMode[componentName]) {
-          warning(
+          warningWithoutStack(
             false,
             'A string ref, "%s", has been found within a strict mode tree. ' +
               'String refs are a source of potential bugs and should be avoided. ' +
@@ -226,8 +226,7 @@ function warnOnFunctionType() {
     false,
     'Functions are not valid as a React child. This may happen if ' +
       'you return a Component instead of <Component /> from render. ' +
-      'Or maybe you meant to call this function rather than return it.%s',
-    getCurrentFiberStackInDev(),
+      'Or maybe you meant to call this function rather than return it.',
   );
 }
 
@@ -717,9 +716,8 @@ function ChildReconciler(shouldTrackSideEffects) {
               'Keys should be unique so that components maintain their identity ' +
               'across updates. Non-unique keys may cause children to be ' +
               'duplicated and/or omitted — the behavior is unsupported and ' +
-              'could change in a future version.%s',
+              'could change in a future version.',
             key,
-            getCurrentFiberStackInDev(),
           );
           break;
         default:
@@ -911,8 +909,7 @@ function ChildReconciler(shouldTrackSideEffects) {
           didWarnAboutMaps,
           'Using Maps as children is unsupported and will likely yield ' +
             'unexpected results. Convert it to a sequence/iterable of keyed ' +
-            'ReactElements instead.%s',
-          getCurrentFiberStackInDev(),
+            'ReactElements instead.',
         );
         didWarnAboutMaps = true;
       }

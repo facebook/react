@@ -46,7 +46,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {
   scheduleTimeout,
@@ -179,7 +179,7 @@ if (__DEV__) {
     if (didWarnStateUpdateForUnmountedComponent[componentName]) {
       return;
     }
-    warning(
+    warningWithoutStack(
       false,
       "Can't call setState (or forceUpdate) on an unmounted component. This " +
         'is a no-op, but it indicates a memory leak in your application. To ' +
@@ -196,7 +196,7 @@ if (__DEV__) {
         if (didWarnSetStateChildContext) {
           return;
         }
-        warning(
+        warningWithoutStack(
           false,
           'setState(...): Cannot call setState() inside getChildContext()',
         );
@@ -206,7 +206,7 @@ if (__DEV__) {
         if (didWarnAboutStateTransition) {
           return;
         }
-        warning(
+        warningWithoutStack(
           false,
           'Cannot update during an existing state transition (such as within ' +
             "`render` or another component's constructor). Render methods should " +
@@ -275,7 +275,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     // Restore the original state of the work-in-progress
     if (stashedWorkInProgressProperties === null) {
       // This should never happen. Don't throw because this code is DEV-only.
-      warning(
+      warningWithoutStack(
         false,
         'Could not replay rendering after an error. This is likely a bug in React. ' +
           'Please file an issue.',

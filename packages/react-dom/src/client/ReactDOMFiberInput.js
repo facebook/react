@@ -8,12 +8,10 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {
-  getCurrentFiberOwnerNameInDevOrNull,
-  getCurrentFiberStackInDev,
-} from 'react-reconciler/src/ReactCurrentFiber';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
@@ -71,18 +69,14 @@ export function getHostProps(element: Element, props: Object) {
 
 export function initWrapperState(element: Element, props: Object) {
   if (__DEV__) {
-    ReactControlledValuePropTypes.checkPropTypes(
-      'input',
-      props,
-      getCurrentFiberStackInDev,
-    );
+    ReactControlledValuePropTypes.checkPropTypes('input', props);
 
     if (
       props.checked !== undefined &&
       props.defaultChecked !== undefined &&
       !didWarnCheckedDefaultChecked
     ) {
-      warning(
+      warningWithoutStack(
         false,
         '%s contains an input of type %s with both checked and defaultChecked props. ' +
           'Input elements must be either controlled or uncontrolled ' +
@@ -100,7 +94,7 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValueDefaultValue
     ) {
-      warning(
+      warningWithoutStack(
         false,
         '%s contains an input of type %s with both value and defaultValue props. ' +
           'Input elements must be either controlled or uncontrolled ' +
@@ -151,9 +145,8 @@ export function updateWrapper(element: Element, props: Object) {
         'A component is changing an uncontrolled input of type %s to be controlled. ' +
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
         props.type,
-        getCurrentFiberStackInDev(),
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -167,9 +160,8 @@ export function updateWrapper(element: Element, props: Object) {
         'A component is changing a controlled input of type %s to be uncontrolled. ' +
           'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
         props.type,
-        getCurrentFiberStackInDev(),
       );
       didWarnControlledToUncontrolled = true;
     }

@@ -8,11 +8,8 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import {
-  getCurrentFiberOwnerNameInDevOrNull,
-  getCurrentFiberStackInDev,
-} from 'react-reconciler/src/ReactCurrentFiber';
-import warning from 'shared/warning';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 
@@ -43,11 +40,7 @@ const valuePropNames = ['value', 'defaultValue'];
  * Validation function for `value` and `defaultValue`.
  */
 function checkSelectPropTypes(props) {
-  ReactControlledValuePropTypes.checkPropTypes(
-    'select',
-    props,
-    getCurrentFiberStackInDev,
-  );
+  ReactControlledValuePropTypes.checkPropTypes('select', props);
 
   for (let i = 0; i < valuePropNames.length; i++) {
     const propName = valuePropNames[i];
@@ -56,7 +49,7 @@ function checkSelectPropTypes(props) {
     }
     const isArray = Array.isArray(props[propName]);
     if (props.multiple && !isArray) {
-      warning(
+      warningWithoutStack(
         false,
         'The `%s` prop supplied to <select> must be an array if ' +
           '`multiple` is true.%s',
@@ -64,7 +57,7 @@ function checkSelectPropTypes(props) {
         getDeclarationErrorAddendum(),
       );
     } else if (!props.multiple && isArray) {
-      warning(
+      warningWithoutStack(
         false,
         'The `%s` prop supplied to <select> must be a scalar ' +
           'value if `multiple` is false.%s',
@@ -165,7 +158,7 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValueDefaultValue
     ) {
-      warning(
+      warningWithoutStack(
         false,
         'Select elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +

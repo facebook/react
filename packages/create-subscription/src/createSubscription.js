@@ -9,7 +9,7 @@
 
 import React from 'react';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 type Unsubscribe = () => void;
 
@@ -36,11 +36,11 @@ export function createSubscription<Property, Value>(
 }> {
   const {getCurrentValue, subscribe} = config;
 
-  warning(
+  warningWithoutStack(
     typeof getCurrentValue === 'function',
     'Subscription must specify a getCurrentValue function',
   );
-  warning(
+  warningWithoutStack(
     typeof subscribe === 'function',
     'Subscription must specify a subscribe function',
   );

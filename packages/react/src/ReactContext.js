@@ -11,7 +11,7 @@ import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 export function createContext<T>(
   defaultValue: T,
@@ -21,7 +21,7 @@ export function createContext<T>(
     calculateChangedBits = null;
   } else {
     if (__DEV__) {
-      warning(
+      warningWithoutStack(
         calculateChangedBits === null ||
           typeof calculateChangedBits === 'function',
         'createContext: Expected the optional second argument to be a ' +
