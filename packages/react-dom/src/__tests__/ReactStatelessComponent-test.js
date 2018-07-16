@@ -111,6 +111,7 @@ describe('ReactStatelessComponent', () => {
     ).toWarnDev(
       'StatelessComponentWithChildContext: Stateless ' +
         'functional components do not support getDerivedStateFromProps.',
+      {expectNoStack: true},
     );
   });
 
@@ -133,6 +134,7 @@ describe('ReactStatelessComponent', () => {
     ).toWarnDev(
       'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
         'be defined on a functional component.',
+      {expectNoStack: true},
     );
   });
 

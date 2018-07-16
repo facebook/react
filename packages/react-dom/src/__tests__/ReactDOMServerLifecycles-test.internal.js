@@ -44,6 +44,7 @@ describe('ReactDOMServerLifecycles', () => {
       ReactDOMServer.renderToString(<Component />),
     ).toLowPriorityWarnDev(
       'Component: componentWillMount() is deprecated and will be removed in the next major version.',
+      {expectNoStack: true},
     );
   });
 
@@ -62,6 +63,7 @@ describe('ReactDOMServerLifecycles', () => {
     ).toLowPriorityWarnDev(
       'Warning: Component: componentWillMount() is deprecated and will be removed ' +
         'in the next major version.',
+      {expectNoStack: true},
     );
 
     // De-duped

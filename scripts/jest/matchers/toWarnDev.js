@@ -7,7 +7,7 @@ function normalizeCodeLocInfo(str) {
 }
 
 const createMatcherFor = consoleMethod =>
-  function matcher(callback, expectedMessages) {
+  function matcher(callback, expectedMessages, options = {}) {
     if (__DEV__) {
       // Warn about incorrect usage of matcher.
       if (typeof expectedMessages === 'string') {
@@ -19,6 +19,9 @@ const createMatcherFor = consoleMethod =>
         );
       }
 
+      const expectNoStack = options.expectNoStack;
+      const warningsWithoutComponentStack = [];
+      const warningsWithComponentStack = [];
       const unexpectedWarnings = [];
 
       // Catch errors thrown by the callback,
@@ -36,6 +39,11 @@ const createMatcherFor = consoleMethod =>
             normalizedMessage === expectedMessage ||
             normalizedMessage.includes(expectedMessage)
           ) {
+            if (normalizedMessage.includes('\n    in ')) {
+              warningsWithComponentStack.push(normalizedMessage);
+            } else {
+              warningsWithoutComponentStack.push(normalizedMessage);
+            }
             expectedMessages.splice(index, 1);
             return;
           }
@@ -103,6 +111,55 @@ const createMatcherFor = consoleMethod =>
           };
         }
 
+        if (typeof expectNoStack === 'number') {
+          // We're expecting a particular number of warnings without stacks.
+          if (expectNoStack !== warningsWithoutComponentStack.length) {
+            return {
+              message: () =>
+                `Expected ${expectNoStack} warnings without the component stack but received ${
+                  warningsWithoutComponentStack.length
+                }:\n` +
+                warningsWithoutComponentStack.map(warning =>
+                  this.utils.printReceived(warning)
+                ),
+              pass: false,
+            };
+          }
+        } else if (expectNoStack === true) {
+          // We're expecting that all warnings won't have the stack.
+          // If some warnings have it, it's an error.
+          if (warningsWithComponentStack.length > 0) {
+            return {
+              message: () =>
+                `Received warning unexpectedly includes the component stack:\n  ${this.utils.printReceived(
+                  warningsWithComponentStack[0]
+                )}\nIf this warning intentionally includes the component stack, remove ` +
+                `{expectNoStack: true} from the toWarnDev() call. If you have a mix of ` +
+                `warnings with and without stack in one toWarnDev() call, pass ` +
+                `{expectNoStack: N} where N is the number of warnings without stacks.`,
+              pass: false,
+            };
+          }
+        } else if (expectNoStack === false || expectNoStack === undefined) {
+          // We're expecting that all warnings *do* have the stack (default).
+          // If some warnings don't have it, it's an error.
+          if (warningsWithoutComponentStack.length > 0) {
+            return {
+              message: () =>
+                `Received warning unexpectedly does not include component stack:\n  ${this.utils.printReceived(
+                  warningsWithoutComponentStack[0]
+                )}\nIf this warning intentionally omits the component stack, add ` +
+                `{expectNoStack: true} to the toWarnDev() call.`,
+              pass: false,
+            };
+          }
+        } else {
+          throw Error(
+            `The options toWarnDev() argument passed to toWarnDev() may include ` +
+              `an option called "expectNoStack" which may be undefined, boolean, or a number. ` +
+              `Instead received ${typeof expectNoStack}.`
+          );
+        }
         return {pass: true};
       }
     } else {
