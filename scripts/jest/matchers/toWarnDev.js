@@ -116,7 +116,7 @@ const createMatcherFor = consoleMethod =>
           if (withoutStack !== warningsWithoutComponentStack.length) {
             return {
               message: () =>
-                `Expected ${withoutStack} warnings without the component stack but received ${
+                `Expected ${withoutStack} warnings without a component stack but received ${
                   warningsWithoutComponentStack.length
                 }:\n` +
                 warningsWithoutComponentStack.map(warning =>
@@ -131,7 +131,7 @@ const createMatcherFor = consoleMethod =>
           if (warningsWithComponentStack.length > 0) {
             return {
               message: () =>
-                `Received warning unexpectedly includes the component stack:\n  ${this.utils.printReceived(
+                `Received warning unexpectedly includes a component stack:\n  ${this.utils.printReceived(
                   warningsWithComponentStack[0]
                 )}\nIf this warning intentionally includes the component stack, remove ` +
                 `{withoutStack: true} from the toWarnDev() call. If you have a mix of ` +
@@ -146,7 +146,7 @@ const createMatcherFor = consoleMethod =>
           if (warningsWithoutComponentStack.length > 0) {
             return {
               message: () =>
-                `Received warning unexpectedly does not include component stack:\n  ${this.utils.printReceived(
+                `Received warning unexpectedly does not include a component stack:\n  ${this.utils.printReceived(
                   warningsWithoutComponentStack[0]
                 )}\nIf this warning intentionally omits the component stack, add ` +
                 `{withoutStack: true} to the toWarnDev() call.`,
@@ -155,8 +155,8 @@ const createMatcherFor = consoleMethod =>
           }
         } else {
           throw Error(
-            `The options toWarnDev() argument passed to toWarnDev() may include ` +
-              `an option called "withoutStack" which may be undefined, boolean, or a number. ` +
+            `The second argument for toWarnDev(), when specified, must be an object. It may have a ` +
+              `property called "withoutStack" whose value may be undefined, boolean, or a number. ` +
               `Instead received ${typeof withoutStack}.`
           );
         }
