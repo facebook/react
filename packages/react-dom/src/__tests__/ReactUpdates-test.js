@@ -1226,6 +1226,7 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Foo />, container)).toWarnDev(
       'Cannot update during an existing state transition',
+      {withoutStack: true},
     );
     expect(ops).toEqual(['base: 0, memoized: 0', 'base: 1, memoized: 1']);
   });

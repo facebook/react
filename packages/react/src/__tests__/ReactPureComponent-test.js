@@ -79,6 +79,7 @@ describe('ReactPureComponent', () => {
         'Component has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
         'Please extend React.Component if shouldComponentUpdate is used.',
+      {withoutStack: true},
     );
     ReactDOM.render(<Component />, container);
     expect(renders).toBe(2);
@@ -113,6 +114,7 @@ describe('ReactPureComponent', () => {
         'PureComponent has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
         'Please extend React.Component if shouldComponentUpdate is used.',
+      {withoutStack: true},
     );
   });
 });

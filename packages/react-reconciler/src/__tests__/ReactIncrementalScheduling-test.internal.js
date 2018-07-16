@@ -353,6 +353,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.flush).toWarnDev(
       'componentWillReceiveProps: Please update the following components ' +
         'to use static getDerivedStateFromProps instead: Foo',
+      {withoutStack: true},
     );
 
     ReactNoop.render(<Foo step={2} />);

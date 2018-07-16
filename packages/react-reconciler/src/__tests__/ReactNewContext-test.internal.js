@@ -720,6 +720,7 @@ describe('ReactNewContext', () => {
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'calculateChangedBits: Expected the return value to be a 31-bit ' +
           'integer. Instead received: 4294967295',
+        {withoutStack: true}, // TODO: add a stack
       );
     }
   });

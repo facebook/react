@@ -183,6 +183,7 @@ describe('ReactDOMServerLifecycles', () => {
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
       'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
+      {withoutStack: true},
     );
 
     // De-duped
@@ -202,6 +203,7 @@ describe('ReactDOMServerLifecycles', () => {
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
       'Component: Did not properly initialize state during construction. ' +
         'Expected state to be an object, but it was undefined.',
+      {withoutStack: true},
     );
 
     // De-duped
@@ -258,6 +260,7 @@ describe('ReactDOMServerLifecycles', () => {
         'usually means you called setState() outside componentWillMount() on ' +
         'the server. This is a no-op.\n\n' +
         'Please check the code for the Outer component.',
+      {withoutStack: true},
     );
   });
 });

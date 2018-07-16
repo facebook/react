@@ -450,7 +450,9 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a getCurrentValue function');
+      }).toWarnDev('Subscription must specify a getCurrentValue function', {
+        withoutStack: true,
+      });
     });
 
     it('should warn for invalid missing subscribe', () => {
@@ -461,7 +463,9 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a subscribe function');
+      }).toWarnDev('Subscription must specify a subscribe function', {
+        withoutStack: true,
+      });
     });
 
     it('should warn if subscribe does not return an unsubscribe method', () => {

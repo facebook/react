@@ -142,7 +142,9 @@ describe('ReactDOMServerIntegration', () => {
         // so that it gets deduplicated later, and doesn't fail the test.
         expect(() => {
           ReactDOM.render(<nonstandard />, document.createElement('div'));
-        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.');
+        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.', {
+          withoutStack: true, // TODO: add a stack
+        });
 
         const e = await render(<nonstandard>Text</nonstandard>);
         expect(e.tagName).toBe('NONSTANDARD');
@@ -885,6 +887,7 @@ describe('ReactDOMServerIntegration', () => {
               'components) but got: object. You likely forgot to export your ' +
               "component from the file it's defined in, or you might have mixed up " +
               'default and named imports.',
+            {withoutStack: true},
           );
           await render(EmptyComponent);
         },
@@ -906,6 +909,7 @@ describe('ReactDOMServerIntegration', () => {
             'Warning: React.createElement: type is invalid -- expected a string ' +
               '(for built-in components) or a class/function (for composite ' +
               'components) but got: null.',
+            {withoutStack: true},
           );
           await render(NullComponent);
         },
@@ -925,6 +929,7 @@ describe('ReactDOMServerIntegration', () => {
               'components) but got: undefined. You likely forgot to export your ' +
               "component from the file it's defined in, or you might have mixed up " +
               'default and named imports.',
+            {withoutStack: true},
           );
 
           await render(UndefinedComponent);

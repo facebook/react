@@ -55,6 +55,7 @@ describe('ReactMount', () => {
         'unmount was rendered by React and is not a top-level container. You ' +
         'may have accidentally passed in a React root node instead of its ' +
         'container.',
+      {withoutStack: true},
     );
   });
 
@@ -77,6 +78,7 @@ describe('ReactMount', () => {
         'unmount was rendered by React and is not a top-level container. ' +
         'Instead, have the parent component update its state and rerender in ' +
         'order to remove this component.',
+      {withoutStack: true},
     );
   });
 });

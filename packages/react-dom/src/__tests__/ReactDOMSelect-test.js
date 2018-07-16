@@ -576,6 +576,7 @@ describe('ReactDOMSelect', () => {
     ).toWarnDev(
       'Use the `defaultValue` or `value` props on <select> instead of ' +
         'setting `selected` on <option>.',
+      {withoutStack: true}, // TODO: add a stack
     );
 
     ReactTestUtils.renderIntoDocument(
@@ -646,6 +647,7 @@ describe('ReactDOMSelect', () => {
         'both). Decide between using a controlled or uncontrolled select ' +
         'element and remove one of these props. More info: ' +
         'https://fb.me/react-controlled-components',
+      {withoutStack: true}, // TODO: add a stack
     );
 
     ReactTestUtils.renderIntoDocument(

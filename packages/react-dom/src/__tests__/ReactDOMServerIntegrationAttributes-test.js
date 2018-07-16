@@ -598,7 +598,9 @@ describe('ReactDOMServerIntegration', () => {
         // so that it gets deduplicated later, and doesn't fail the test.
         expect(() => {
           ReactDOM.render(<nonstandard />, document.createElement('div'));
-        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.');
+        }).toWarnDev('The tag <nonstandard> is unrecognized in this browser.', {
+          withoutStack: true, // TODO: add a stack
+        });
 
         const e = await render(<nonstandard foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
