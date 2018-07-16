@@ -24,6 +24,7 @@ const createMatcherFor = consoleMethod =>
       const warningsWithoutComponentStack = [];
       const warningsWithComponentStack = [];
       const unexpectedWarnings = [];
+      let lastWarningWithMismatchingFormat = null;
 
       // Catch errors thrown by the callback,
       // But only rethrow them if all test expectations have been satisfied.
@@ -34,6 +35,16 @@ const createMatcherFor = consoleMethod =>
       const consoleSpy = (format, ...args) => {
         const message = util.format(format, ...args);
         const normalizedMessage = normalizeCodeLocInfo(message);
+
+        let argIndex = 0;
+        format.replace(/%s/g, () => argIndex++);
+        if (argIndex !== args.length) {
+          lastWarningWithMismatchingFormat = {
+            format,
+            args,
+            expectedArgCount: argIndex,
+          };
+        }
 
         for (let index = 0; index < expectedMessages.length; index++) {
           const expectedMessage = expectedMessages[index];
@@ -162,6 +173,21 @@ const createMatcherFor = consoleMethod =>
               `Instead received ${typeof withoutStack}.`
           );
         }
+
+        if (lastWarningWithMismatchingFormat !== null) {
+          return {
+            message: () =>
+              `Received ${
+                lastWarningWithMismatchingFormat.args.length
+              } arguments for a message with ${
+                lastWarningWithMismatchingFormat.expectedArgCount
+              } placeholders:\n  ${this.utils.printReceived(
+                lastWarningWithMismatchingFormat.format
+              )}`,
+            pass: false,
+          };
+        }
+
         return {pass: true};
       }
     } else {
