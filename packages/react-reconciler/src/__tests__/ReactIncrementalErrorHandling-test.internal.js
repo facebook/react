@@ -1100,6 +1100,7 @@ describe('ReactIncrementalErrorHandling', () => {
     const InvalidType = undefined;
     expect(() => ReactNoop.render(<InvalidType />)).toWarnDev(
       'Warning: React.createElement: type is invalid -- expected a string',
+      {withoutStack: true},
     );
     expect(ReactNoop.flush).toThrowError(
       'Element type is invalid: expected a string (for built-in components) or ' +

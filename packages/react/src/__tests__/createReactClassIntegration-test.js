@@ -66,6 +66,7 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Warning: Component: prop type `prop` is invalid; ' +
         'it must be a function, usually from React.PropTypes.',
+      {withoutStack: true},
     );
   });
 
@@ -83,6 +84,7 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Warning: Component: context type `prop` is invalid; ' +
         'it must be a function, usually from React.PropTypes.',
+      {withoutStack: true},
     );
   });
 
@@ -100,6 +102,7 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Warning: Component: child context type `prop` is invalid; ' +
         'it must be a function, usually from React.PropTypes.',
+      {withoutStack: true},
     );
   });
 
@@ -117,6 +120,7 @@ describe('create-react-class-integration', () => {
       'Warning: A component has a method called componentShouldUpdate(). Did you ' +
         'mean shouldComponentUpdate()? The name is phrased as a question ' +
         'because the function is expected to return a value.',
+      {withoutStack: true},
     );
 
     expect(() =>
@@ -133,6 +137,7 @@ describe('create-react-class-integration', () => {
       'Warning: NamedComponent has a method called componentShouldUpdate(). Did you ' +
         'mean shouldComponentUpdate()? The name is phrased as a question ' +
         'because the function is expected to return a value.',
+      {withoutStack: true},
     );
   });
 
@@ -149,6 +154,7 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Warning: A component has a method called componentWillRecieveProps(). Did you ' +
         'mean componentWillReceiveProps()?',
+      {withoutStack: true},
     );
   });
 
@@ -165,6 +171,7 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Warning: A component has a method called UNSAFE_componentWillRecieveProps(). ' +
         'Did you mean UNSAFE_componentWillReceiveProps()?',
+      {withoutStack: true},
     );
   });
 
@@ -357,6 +364,7 @@ describe('create-react-class-integration', () => {
     expect(() => expect(() => Component()).toThrow()).toWarnDev(
       'Warning: Something is calling a React component directly. Use a ' +
         'factory or JSX instead. See: https://fb.me/react-legacyfactory',
+      {withoutStack: true},
     );
   });
 
@@ -447,6 +455,7 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Component: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
+      {withoutStack: true},
     );
   });
 
@@ -464,6 +473,7 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Component: getDerivedStateFromCatch() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
+      {withoutStack: true},
     );
   });
 
@@ -483,6 +493,7 @@ describe('create-react-class-integration', () => {
     ).toWarnDev(
       'Component: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
+      {withoutStack: true},
     );
   });
 
@@ -499,7 +510,9 @@ describe('create-react-class-integration', () => {
     });
     expect(() =>
       ReactDOM.render(<Component />, document.createElement('div')),
-    ).toWarnDev('Did not properly initialize state during construction.');
+    ).toWarnDev('Did not properly initialize state during construction.', {
+      withoutStack: true,
+    });
   });
 
   it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
@@ -536,6 +549,7 @@ describe('create-react-class-integration', () => {
         '  componentWillUpdate\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
+      {withoutStack: true},
     );
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
   });
@@ -570,6 +584,7 @@ describe('create-react-class-integration', () => {
         '  componentWillUpdate\n\n' +
         'The above lifecycles should be removed. Learn more about this warning here:\n' +
         'https://fb.me/react-async-component-lifecycle-hooks',
+      {withoutStack: true},
     );
     ReactDOM.render(<Component foo={1} />, document.createElement('div'));
   });

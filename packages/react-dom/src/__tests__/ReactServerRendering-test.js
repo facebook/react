@@ -519,6 +519,7 @@ describe('ReactDOMServer', () => {
       'Warning: setState(...): Can only update a mounting component.' +
         ' This usually means you called setState() outside componentWillMount() on the server.' +
         ' This is a no-op.\n\nPlease check the code for the Foo component.',
+      {withoutStack: true},
     );
 
     const markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
@@ -546,6 +547,7 @@ describe('ReactDOMServer', () => {
       'Warning: forceUpdate(...): Can only update a mounting component. ' +
         'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
         'This is a no-op.\n\nPlease check the code for the Baz component.',
+      {withoutStack: true},
     );
     const markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
@@ -599,15 +601,18 @@ describe('ReactDOMServer', () => {
           </svg>
         </div>,
       ),
-    ).toWarnDev([
-      'Warning: <inPUT /> is using incorrect casing. ' +
-        'Use PascalCase for React components, ' +
-        'or lowercase for HTML elements.',
-      // linearGradient doesn't warn
-      'Warning: <iFrame /> is using incorrect casing. ' +
-        'Use PascalCase for React components, ' +
-        'or lowercase for HTML elements.',
-    ]);
+    ).toWarnDev(
+      [
+        'Warning: <inPUT /> is using incorrect casing. ' +
+          'Use PascalCase for React components, ' +
+          'or lowercase for HTML elements.',
+        // linearGradient doesn't warn
+        'Warning: <iFrame /> is using incorrect casing. ' +
+          'Use PascalCase for React components, ' +
+          'or lowercase for HTML elements.',
+      ],
+      {withoutStack: true},
+    );
   });
 
   it('should warn about contentEditable and children', () => {

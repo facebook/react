@@ -267,6 +267,7 @@ describe('ReactDOMTextarea', () => {
       node = renderTextarea(stub, container);
     }).toWarnDev(
       'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+      {withoutStack: true}, // TODO: add a stack
     );
 
     expect(node.value).toBe('giraffe');
@@ -319,6 +320,7 @@ describe('ReactDOMTextarea', () => {
       node = renderTextarea(<textarea>{17}</textarea>);
     }).toWarnDev(
       'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+      {withoutStack: true}, // TODO: add a stack
     );
     expect(node.value).toBe('17');
   });
@@ -329,6 +331,7 @@ describe('ReactDOMTextarea', () => {
       node = renderTextarea(<textarea>{false}</textarea>);
     }).toWarnDev(
       'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+      {withoutStack: true}, // TODO: add a stack
     );
     expect(node.value).toBe('false');
   });
@@ -344,6 +347,7 @@ describe('ReactDOMTextarea', () => {
       node = renderTextarea(<textarea>{obj}</textarea>);
     }).toWarnDev(
       'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+      {withoutStack: true}, // TODO: add a stack
     );
     expect(node.value).toBe('sharkswithlasers');
   });
@@ -359,6 +363,7 @@ describe('ReactDOMTextarea', () => {
         ),
       ).toWarnDev(
         'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+        {withoutStack: true}, // TODO: add a stack
       );
     }).toThrow();
 
@@ -373,6 +378,7 @@ describe('ReactDOMTextarea', () => {
           )),
       ).toWarnDev(
         'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+        {withoutStack: true}, // TODO: add a stack
       );
     }).not.toThrow();
 
@@ -409,6 +415,7 @@ describe('ReactDOMTextarea', () => {
         'both). Decide between using a controlled or uncontrolled textarea ' +
         'and remove one of these props. More info: ' +
         'https://fb.me/react-controlled-components',
+      {withoutStack: true}, // TODO: add a stack
     );
 
     // No additional warnings are expected

@@ -59,6 +59,7 @@ describe('ReactTestUtils', () => {
       'ReactTestUtils.mockComponent() is deprecated. ' +
         'Use shallow rendering or jest.mock() instead.\n\n' +
         'See https://fb.me/test-utils-mock-component for more information.',
+      {withoutStack: true},
     );
 
     // De-duplication check
