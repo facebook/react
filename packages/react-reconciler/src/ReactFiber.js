@@ -149,8 +149,11 @@ export type Fiber = {|
   lastEffect: Fiber | null,
 
   // Represents a time in the future by which this work should be completed.
-  // This is also used to quickly determine if a subtree has no pending changes.
+  // Does not include work found in its subtree.
   expirationTime: ExpirationTime,
+
+  // This is used to quickly determine if a subtree has no pending changes.
+  childExpirationTime: ExpirationTime,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -229,6 +232,7 @@ function FiberNode(
   this.lastEffect = null;
 
   this.expirationTime = NoWork;
+  this.childExpirationTime = NoWork;
 
   this.alternate = null;
 
@@ -330,7 +334,15 @@ export function createWorkInProgress(
     }
   }
 
-  workInProgress.expirationTime = expirationTime;
+  // Don't touching the subtree's expiration time, which has not changed.
+  workInProgress.childExpirationTime = current.childExpirationTime;
+  if (pendingProps !== current.pendingProps) {
+    // This fiber has new props.
+    workInProgress.expirationTime = expirationTime;
+  } else {
+    // This fiber's props have not changed.
+    workInProgress.expirationTime = current.expirationTime;
+  }
 
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
@@ -572,6 +584,7 @@ export function assignFiberPropertiesInDEV(
   target.firstEffect = source.firstEffect;
   target.lastEffect = source.lastEffect;
   target.expirationTime = source.expirationTime;
+  target.childExpirationTime = source.childExpirationTime;
   target.alternate = source.alternate;
   if (enableProfilerTimer) {
     target.actualDuration = source.actualDuration;

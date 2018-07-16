@@ -70,7 +70,7 @@ import {
   LOW_PRIORITY_EXPIRATION,
 } from './ReactFiberExpirationTime';
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
-import {reconcileChildrenAtExpirationTime} from './ReactFiberBeginWork';
+import {reconcileChildren} from './ReactFiberBeginWork';
 
 function NoopComponent() {
   return null;
@@ -238,7 +238,7 @@ function throwException(
 
             // Unmount the source fiber's children
             const nextChildren = null;
-            reconcileChildrenAtExpirationTime(
+            reconcileChildren(
               sourceFiber.alternate,
               sourceFiber,
               nextChildren,
@@ -310,6 +310,7 @@ function throwException(
           renderDidSuspend(root, absoluteTimeoutMs, renderExpirationTime);
 
           workInProgress.effectTag |= ShouldCapture;
+          workInProgress.expirationTime = renderExpirationTime;
           return;
         }
         // This boundary already captured during this render. Continue to the
@@ -334,12 +335,13 @@ function throwException(
       case HostRoot: {
         const errorInfo = value;
         workInProgress.effectTag |= ShouldCapture;
+        workInProgress.expirationTime = renderExpirationTime;
         const update = createRootErrorUpdate(
           workInProgress,
           errorInfo,
           renderExpirationTime,
         );
-        enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
+        enqueueCapturedUpdate(workInProgress, update);
         return;
       }
       case ClassComponent:
@@ -356,13 +358,14 @@ function throwException(
               !isAlreadyFailedLegacyErrorBoundary(instance)))
         ) {
           workInProgress.effectTag |= ShouldCapture;
+          workInProgress.expirationTime = renderExpirationTime;
           // Schedule the error boundary to re-render using updated state
           const update = createClassErrorUpdate(
             workInProgress,
             errorInfo,
             renderExpirationTime,
           );
-          enqueueCapturedUpdate(workInProgress, update, renderExpirationTime);
+          enqueueCapturedUpdate(workInProgress, update);
           return;
         }
         break;
