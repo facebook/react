@@ -722,6 +722,7 @@ function unmountHostComponents(current): void {
       // When we go into a portal, it becomes the parent to remove from.
       // We will reassign it back when we pop the portal on the way up.
       currentParent = node.stateNode.containerInfo;
+      currentParentIsContainer = true;
       // Visit children because portals might contain host components.
       if (node.child !== null) {
         node.child.return = node;
