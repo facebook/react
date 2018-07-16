@@ -353,7 +353,7 @@ export function createElement(
       isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
       // allow <SVG> or <mATH>.
-      warning(
+      warningWithoutStack(
         isCustomComponentTag || type === type.toLowerCase(),
         '<%s /> is using incorrect casing. ' +
           'Use PascalCase for React components, ' +
@@ -392,7 +392,7 @@ export function createElement(
         !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
       ) {
         warnedUnknownTags[type] = true;
-        warning(
+        warningWithoutStack(
           false,
           'The tag <%s> is unrecognized in this browser. ' +
             'If you meant to render a React component, start its name with ' +
@@ -429,7 +429,7 @@ export function setInitialProperties(
       !didWarnShadyDOM &&
       (domElement: any).shadyRoot
     ) {
-      warning(
+      warningWithoutStack(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
@@ -821,7 +821,7 @@ export function diffHydratedProperties(
       !didWarnShadyDOM &&
       (domElement: any).shadyRoot
     ) {
-      warning(
+      warningWithoutStack(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',

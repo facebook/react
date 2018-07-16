@@ -10,6 +10,7 @@ import {
   possibleRegistrationNames,
 } from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {
   ATTRIBUTE_NAME_CHAR,
@@ -37,7 +38,7 @@ if (__DEV__) {
 
     const lowerCasedName = name.toLowerCase();
     if (lowerCasedName === 'onfocusin' || lowerCasedName === 'onfocusout') {
-      warning(
+      warningWithoutStack(
         false,
         'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
           'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
@@ -98,7 +99,7 @@ if (__DEV__) {
     }
 
     if (lowerCasedName === 'innerhtml') {
-      warning(
+      warningWithoutStack(
         false,
         'Directly setting property `innerHTML` is not permitted. ' +
           'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
@@ -108,7 +109,7 @@ if (__DEV__) {
     }
 
     if (lowerCasedName === 'aria') {
-      warning(
+      warningWithoutStack(
         false,
         'The `aria` attribute is reserved for future use in React. ' +
           'Pass individual `aria-` attributes instead.',
