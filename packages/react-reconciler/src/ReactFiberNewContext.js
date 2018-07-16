@@ -27,7 +27,6 @@ import {ContextProvider} from 'shared/ReactTypeOfWork';
 
 import invariant from 'shared/invariant';
 
-const providerCursor: StackCursor<Fiber | null> = createCursor(null);
 const valueCursor: StackCursor<mixed> = createCursor(null);
 const changedBitsCursor: StackCursor<number> = createCursor(0);
 
@@ -47,7 +46,6 @@ export function pushProvider(providerFiber: Fiber): void {
   if (isPrimaryRenderer) {
     push(changedBitsCursor, context._changedBits, providerFiber);
     push(valueCursor, context._currentValue, providerFiber);
-    push(providerCursor, providerFiber, providerFiber);
 
     context._currentValue = providerFiber.pendingProps.value;
     context._changedBits = providerFiber.stateNode;
@@ -64,7 +62,6 @@ export function pushProvider(providerFiber: Fiber): void {
   } else {
     push(changedBitsCursor, context._changedBits2, providerFiber);
     push(valueCursor, context._currentValue2, providerFiber);
-    push(providerCursor, providerFiber, providerFiber);
 
     context._currentValue2 = providerFiber.pendingProps.value;
     context._changedBits2 = providerFiber.stateNode;
@@ -85,7 +82,6 @@ export function popProvider(providerFiber: Fiber): void {
   const changedBits = changedBitsCursor.current;
   const currentValue = valueCursor.current;
 
-  pop(providerCursor, providerFiber);
   pop(valueCursor, providerFiber);
   pop(changedBitsCursor, providerFiber);
 
