@@ -327,11 +327,11 @@ describe('ReactContextValidator', () => {
       ReactTestUtils.renderIntoDocument(<ParentContextProvider />),
     ).toWarnDev(
       [
-        'Warning: MiddleMissingContext.childContextTypes is specified but there is no getChildContext() method on the ' +
-          'instance. You can either define getChildContext() on MiddleMissingContext or remove childContextTypes from ' +
-          'it.',
-        'Warning: Failed context type: The context `bar` is marked as required in `ChildContextConsumer`, but its ' +
-          'value is `undefined`.',
+        'Warning: MiddleMissingContext.childContextTypes is specified but there is no ' +
+          'getChildContext() method on the instance. You can either define getChildContext() ' +
+          'on MiddleMissingContext or remove childContextTypes from it.',
+        'Warning: Failed context type: The context `bar` is marked as required ' +
+          'in `ChildContextConsumer`, but its value is `undefined`.',
       ],
       {withoutStack: 1},
     );
