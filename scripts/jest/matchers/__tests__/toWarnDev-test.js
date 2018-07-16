@@ -161,5 +161,13 @@ describe('toWarnDev', () => {
         }).toWarnDev('Hi', {withoutStack: true});
       }).toThrow('Received 0 arguments for a message with 1 placeholders');
     });
+
+    it('fails if stack is passed twice', () => {
+      expect(() => {
+        expect(() => {
+          console.error('Hi %s%s', '\n    in div', '\n    in div');
+        }).toWarnDev('Hi');
+      }).toThrow('Received more than one component stack for a warning');
+    });
   }
 });
