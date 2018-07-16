@@ -40,9 +40,22 @@ const forks = Object.freeze({
 
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
-  'shared/ReactSharedInternals': (bundleType, entry) => {
+  'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
     if (entry === 'react') {
       return 'react/src/ReactSharedInternals';
+    }
+    if (dependencies.indexOf('react') === -1) {
+      // React internals are unavailable if we can't reference the package.
+      // We return an error because we only want to throw if this module gets used.
+      return new Error(
+        'Cannot use a module that depends on ReactSharedInternals ' +
+          'from "' +
+          entry +
+          '" because it does not declare "react" in the package ' +
+          'dependencies or peerDependencies. For example, this can happen if you use ' +
+          'warning() instead of warningWithoutStack() in a package that does not ' +
+          'depend on React.'
+      );
     }
     return null;
   },

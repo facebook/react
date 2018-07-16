@@ -42,7 +42,7 @@ type CallbackConfigType = {|
 export type CallbackIdType = CallbackConfigType;
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 // We capture a local reference to any global, in case it gets polyfilled after
 // this module is initially evaluated.
@@ -124,7 +124,7 @@ if (!canUseDOM) {
   };
 } else {
   if (typeof localRequestAnimationFrame !== 'function') {
-    warning(
+    warningWithoutStack(
       false,
       "This browser doesn't support requestAnimationFrame. " +
         'Make sure that you load a ' +
@@ -132,7 +132,7 @@ if (!canUseDOM) {
     );
   }
   if (typeof localCancelAnimationFrame !== 'function') {
-    warning(
+    warningWithoutStack(
       false,
       "This browser doesn't support cancelAnimationFrame. " +
         'Make sure that you load a ' +

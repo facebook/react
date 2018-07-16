@@ -29,7 +29,7 @@ if (__DEV__) {
     });
   };
 
-  const warnHyphenatedStyleName = function(name, getStack) {
+  const warnHyphenatedStyleName = function(name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -37,17 +37,16 @@ if (__DEV__) {
     warnedStyleNames[name] = true;
     warning(
       false,
-      'Unsupported style property %s. Did you mean %s?%s',
+      'Unsupported style property %s. Did you mean %s?',
       name,
       // As Andi Smith suggests
       // (http://www.andismith.com/blog/2012/02/modernizr-prefixed/), an `-ms` prefix
       // is converted to lowercase `ms`.
       camelize(name.replace(msPattern, 'ms-')),
-      getStack(),
     );
   };
 
-  const warnBadVendoredStyleName = function(name, getStack) {
+  const warnBadVendoredStyleName = function(name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -55,14 +54,13 @@ if (__DEV__) {
     warnedStyleNames[name] = true;
     warning(
       false,
-      'Unsupported vendor-prefixed style property %s. Did you mean %s?%s',
+      'Unsupported vendor-prefixed style property %s. Did you mean %s?',
       name,
       name.charAt(0).toUpperCase() + name.slice(1),
-      getStack(),
     );
   };
 
-  const warnStyleValueWithSemicolon = function(name, value, getStack) {
+  const warnStyleValueWithSemicolon = function(name, value) {
     if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
       return;
     }
@@ -71,14 +69,13 @@ if (__DEV__) {
     warning(
       false,
       "Style property values shouldn't contain a semicolon. " +
-        'Try "%s: %s" instead.%s',
+        'Try "%s: %s" instead.',
       name,
       value.replace(badStyleValueWithSemicolonPattern, ''),
-      getStack(),
     );
   };
 
-  const warnStyleValueIsNaN = function(name, value, getStack) {
+  const warnStyleValueIsNaN = function(name, value) {
     if (warnedForNaNValue) {
       return;
     }
@@ -86,13 +83,12 @@ if (__DEV__) {
     warnedForNaNValue = true;
     warning(
       false,
-      '`NaN` is an invalid value for the `%s` css style property.%s',
+      '`NaN` is an invalid value for the `%s` css style property.',
       name,
-      getStack(),
     );
   };
 
-  const warnStyleValueIsInfinity = function(name, value, getStack) {
+  const warnStyleValueIsInfinity = function(name, value) {
     if (warnedForInfinityValue) {
       return;
     }
@@ -100,26 +96,25 @@ if (__DEV__) {
     warnedForInfinityValue = true;
     warning(
       false,
-      '`Infinity` is an invalid value for the `%s` css style property.%s',
+      '`Infinity` is an invalid value for the `%s` css style property.',
       name,
-      getStack(),
     );
   };
 
-  warnValidStyle = function(name, value, getStack) {
+  warnValidStyle = function(name, value) {
     if (name.indexOf('-') > -1) {
-      warnHyphenatedStyleName(name, getStack);
+      warnHyphenatedStyleName(name);
     } else if (badVendoredStyleNamePattern.test(name)) {
-      warnBadVendoredStyleName(name, getStack);
+      warnBadVendoredStyleName(name);
     } else if (badStyleValueWithSemicolonPattern.test(value)) {
-      warnStyleValueWithSemicolon(name, value, getStack);
+      warnStyleValueWithSemicolon(name, value);
     }
 
     if (typeof value === 'number') {
       if (isNaN(value)) {
-        warnStyleValueIsNaN(name, value, getStack);
+        warnStyleValueIsNaN(name, value);
       } else if (!isFinite(value)) {
-        warnStyleValueIsInfinity(name, value, getStack);
+        warnStyleValueIsInfinity(name, value);
       }
     }
   };

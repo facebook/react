@@ -701,8 +701,6 @@ describe('ReactNewContext', () => {
   });
 
   it('warns if calculateChangedBits returns larger than a 31-bit integer', () => {
-    spyOnDev(console, 'error');
-
     const Context = React.createContext(
       0,
       (a, b) => Math.pow(2, 32) - 1, // Return 32 bit int
@@ -713,16 +711,11 @@ describe('ReactNewContext', () => {
 
     // Update
     ReactNoop.render(<Context.Provider value={2} />);
-    ReactNoop.flush();
-
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'calculateChangedBits: Expected the return value to be a 31-bit ' +
-          'integer. Instead received: 4294967295',
-        {withoutStack: true}, // TODO: add a stack
-      );
-    }
+    expect(ReactNoop.flush).toWarnDev(
+      'calculateChangedBits: Expected the return value to be a 31-bit ' +
+        'integer. Instead received: 4294967295',
+      {withoutStack: true}, // TODO: add a stack
+    );
   });
 
   it('warns if multiple renderers concurrently render the same context', () => {

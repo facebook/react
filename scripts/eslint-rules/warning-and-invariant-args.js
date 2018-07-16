@@ -35,7 +35,9 @@ module.exports = function(context) {
       // how warning/invariant was defined.
       const isWarningOrInvariant =
         node.callee.type === 'Identifier' &&
-        (node.callee.name === 'warning' || node.callee.name === 'invariant');
+        (node.callee.name === 'warning' ||
+          node.callee.name === 'warningWithoutStack' ||
+          node.callee.name === 'invariant');
       if (!isWarningOrInvariant) {
         return;
       }

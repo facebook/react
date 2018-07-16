@@ -22,7 +22,7 @@ import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import SyntheticEvent from 'events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import SyntheticAnimationEvent from './SyntheticAnimationEvent';
 import SyntheticClipboardEvent from './SyntheticClipboardEvent';
@@ -304,7 +304,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
       default:
         if (__DEV__) {
           if (knownHTMLTopLevelTypes.indexOf(topLevelType) === -1) {
-            warning(
+            warningWithoutStack(
               false,
               'SimpleEventPlugin: Unhandled event type, `%s`. This warning ' +
                 'is likely caused by a bug in React. Please file an issue.',

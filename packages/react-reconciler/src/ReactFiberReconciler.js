@@ -26,7 +26,7 @@ import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {HostComponent} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -109,7 +109,7 @@ function scheduleRootUpdate(
       !didWarnAboutNestedUpdates
     ) {
       didWarnAboutNestedUpdates = true;
-      warning(
+      warningWithoutStack(
         false,
         'Render methods should be a pure function of props and state; ' +
           'triggering nested component updates from render is not allowed. ' +
@@ -127,7 +127,7 @@ function scheduleRootUpdate(
 
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
-    warning(
+    warningWithoutStack(
       typeof callback === 'function',
       'render(...): Expected the last optional `callback` argument to be a ' +
         'function. Instead received: %s.',

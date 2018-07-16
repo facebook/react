@@ -8,9 +8,7 @@
  */
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getCurrentFiberStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 
@@ -64,17 +62,13 @@ export function getHostProps(element: Element, props: Object) {
 export function initWrapperState(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   if (__DEV__) {
-    ReactControlledValuePropTypes.checkPropTypes(
-      'textarea',
-      props,
-      getCurrentFiberStackInDev,
-    );
+    ReactControlledValuePropTypes.checkPropTypes('textarea', props);
     if (
       props.value !== undefined &&
       props.defaultValue !== undefined &&
       !didWarnValDefaultVal
     ) {
-      warning(
+      warningWithoutStack(
         false,
         'Textarea elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
@@ -95,7 +89,7 @@ export function initWrapperState(element: Element, props: Object) {
     let children = props.children;
     if (children != null) {
       if (__DEV__) {
-        warning(
+        warningWithoutStack(
           false,
           'Use the `defaultValue` or `value` props instead of setting ' +
             'children on <textarea>.',

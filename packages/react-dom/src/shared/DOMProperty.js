@@ -7,7 +7,7 @@
  * @flow
  */
 
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -82,7 +82,7 @@ export function isAttributeNameSafe(attributeName: string): boolean {
   }
   illegalAttributeNameCache[attributeName] = true;
   if (__DEV__) {
-    warning(false, 'Invalid attribute name: `%s`', attributeName);
+    warningWithoutStack(false, 'Invalid attribute name: `%s`', attributeName);
   }
   return false;
 }

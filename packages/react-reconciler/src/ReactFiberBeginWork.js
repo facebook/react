@@ -50,6 +50,7 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
@@ -586,7 +587,7 @@ function mountIndeterminateComponent(
       const componentName = getComponentName(fn) || 'Unknown';
 
       if (!didWarnAboutBadClass[componentName]) {
-        warning(
+        warningWithoutStack(
           false,
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
             'This is likely to cause errors. Change %s to extend React.Component instead.',
@@ -652,7 +653,7 @@ function mountIndeterminateComponent(
       const Component = workInProgress.type;
 
       if (Component) {
-        warning(
+        warningWithoutStack(
           !Component.childContextTypes,
           '%s(...): childContextTypes cannot be defined on a functional component.',
           Component.displayName || Component.name || 'Component',
@@ -675,9 +676,8 @@ function mountIndeterminateComponent(
           warning(
             false,
             'Stateless function components cannot be given refs. ' +
-              'Attempts to access this ref will fail.%s%s',
+              'Attempts to access this ref will fail.%s',
             info,
-            ReactCurrentFiber.getCurrentFiberStackInDev(),
           );
         }
       }
@@ -686,7 +686,7 @@ function mountIndeterminateComponent(
         const componentName = getComponentName(fn) || 'Unknown';
 
         if (!didWarnAboutGetDerivedStateOnFunctionalComponent[componentName]) {
-          warning(
+          warningWithoutStack(
             false,
             '%s: Stateless functional components do not support getDerivedStateFromProps.',
             componentName,
@@ -976,7 +976,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
             ? context._calculateChangedBits(oldValue, newValue)
             : MAX_SIGNED_31_BIT_INT;
         if (__DEV__) {
-          warning(
+          warningWithoutStack(
             (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
             'calculateChangedBits: Expected the return value to be a ' +
               '31-bit integer. Instead received: %s',
@@ -1057,7 +1057,7 @@ function updateContextConsumer(current, workInProgress, renderExpirationTime) {
   const render = newProps.children;
 
   if (__DEV__) {
-    warning(
+    warningWithoutStack(
       typeof render === 'function',
       'A context consumer was rendered with multiple children, or a child ' +
         "that isn't a function. A context consumer expects a single child " +

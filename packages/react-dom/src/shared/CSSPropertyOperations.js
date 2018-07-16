@@ -51,7 +51,7 @@ export function createDangerousStringForStyles(styles) {
  * @param {DOMElement} node
  * @param {object} styles
  */
-export function setValueForStyles(node, styles, getStack) {
+export function setValueForStyles(node, styles) {
   const style = node.style;
   for (let styleName in styles) {
     if (!styles.hasOwnProperty(styleName)) {
@@ -60,7 +60,7 @@ export function setValueForStyles(node, styles, getStack) {
     const isCustomProperty = styleName.indexOf('--') === 0;
     if (__DEV__) {
       if (!isCustomProperty) {
-        warnValidStyle(styleName, styles[styleName], getStack);
+        warnValidStyle(styleName, styles[styleName]);
       }
     }
     const styleValue = dangerousStyleValue(

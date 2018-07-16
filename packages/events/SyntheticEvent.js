@@ -8,7 +8,7 @@
 /* eslint valid-typeof: 0 */
 
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 let didWarnForAddedNewProperty = false;
 const EVENT_POOL_SIZE = 10;
@@ -261,7 +261,7 @@ if (__DEV__) {
               !target.constructor.Interface.hasOwnProperty(prop) &&
               shouldBeReleasedProperties.indexOf(prop) === -1
             ) {
-              warning(
+              warningWithoutStack(
                 didWarnForAddedNewProperty || target.isPersistent(),
                 "This synthetic event is reused for performance reasons. If you're " +
                   "seeing this, you're adding a new property in the synthetic event object. " +
@@ -316,7 +316,7 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
 
   function warn(action, result) {
     const warningCondition = false;
-    warning(
+    warningWithoutStack(
       warningCondition,
       "This synthetic event is reused for performance reasons. If you're seeing this, " +
         "you're %s `%s` on a released/nullified synthetic event. %s. " +

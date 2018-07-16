@@ -39,7 +39,7 @@ import {
 } from 'shared/ReactTypeOfSideEffect';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {Sync} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
@@ -199,7 +199,7 @@ function commitBeforeMutationLifeCycles(
             >);
             if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
               didWarnSet.add(finishedWork.type);
-              warning(
+              warningWithoutStack(
                 false,
                 '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
                   'must be returned. You have returned undefined.',
@@ -368,7 +368,7 @@ function commitAttachRef(finishedWork: Fiber) {
     } else {
       if (__DEV__) {
         if (!ref.hasOwnProperty('current')) {
-          warning(
+          warningWithoutStack(
             false,
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().%s',

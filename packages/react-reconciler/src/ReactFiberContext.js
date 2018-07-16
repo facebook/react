@@ -14,7 +14,7 @@ import {isFiberMounted} from 'react-reconciler/reflection';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
 import * as ReactCurrentFiber from './ReactCurrentFiber';
@@ -163,7 +163,7 @@ function processChildContext(fiber: Fiber, parentContext: Object): Object {
 
       if (!warnedAboutMissingGetChildContext[componentName]) {
         warnedAboutMissingGetChildContext[componentName] = true;
-        warning(
+        warningWithoutStack(
           false,
           '%s.childContextTypes is specified but there is no getChildContext() method ' +
             'on the instance. You can either define getChildContext() on %s or remove ' +
