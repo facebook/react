@@ -51,11 +51,11 @@ function FixturesPage() {
       return <MediaEventsFixtures />;
     case '/pointer-events':
       return <PointerEventsFixtures />;
+    case '/mouse-events':
+      return <MouseEventsFixtures />;
     case '/selection-events':
-    return <MouseEventsFixtures />;
+      return <SelectionEventsFixtures />;
     default:
-    return <SelectionEventsFixtures />;
-  case '/mouse-events':
       return <p>Please select a test fixture.</p>;
   }
 }
