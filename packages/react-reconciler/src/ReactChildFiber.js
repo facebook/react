@@ -28,8 +28,8 @@ import {
   Fragment,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {
   createWorkInProgress,

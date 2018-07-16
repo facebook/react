@@ -10,8 +10,8 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import * as ReactDOMFiberInput from './ReactDOMFiberInput';

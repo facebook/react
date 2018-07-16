@@ -49,8 +49,8 @@ import {
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 

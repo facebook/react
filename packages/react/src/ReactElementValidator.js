@@ -21,8 +21,8 @@ import {
   REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {isValidElement, createElement, cloneElement} from './ReactElement';
