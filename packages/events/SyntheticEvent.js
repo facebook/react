@@ -195,12 +195,18 @@ Object.assign(SyntheticEvent.prototype, {
       Object.defineProperty(
         this,
         'isDefaultPrevented',
-        getPooledWarningPropertyDefinition('isDefaultPrevented', functionThatReturnsFalse),
+        getPooledWarningPropertyDefinition(
+          'isDefaultPrevented',
+          functionThatReturnsFalse,
+        ),
       );
       Object.defineProperty(
         this,
         'isPropagationStopped',
-        getPooledWarningPropertyDefinition('isPropagationStopped', functionThatReturnsFalse),
+        getPooledWarningPropertyDefinition(
+          'isPropagationStopped',
+          functionThatReturnsFalse,
+        ),
       );
       Object.defineProperty(
         this,

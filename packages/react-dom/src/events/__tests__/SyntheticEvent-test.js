@@ -264,7 +264,9 @@ describe('SyntheticEvent', () => {
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
-    expect(() => expect(syntheticEvent.isPropagationStopped()).toBe(false)).toWarnDev(
+    expect(() =>
+      expect(syntheticEvent.isPropagationStopped()).toBe(false),
+    ).toWarnDev(
       'Warning: This synthetic event is reused for performance reasons. If ' +
         "you're seeing this, you're accessing the method `isPropagationStopped` on a " +
         'released/nullified synthetic event. This is a no-op function. If you must ' +
@@ -290,7 +292,9 @@ describe('SyntheticEvent', () => {
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
-    expect(() => expect(syntheticEvent.isDefaultPrevented()).toBe(false)).toWarnDev(
+    expect(() =>
+      expect(syntheticEvent.isDefaultPrevented()).toBe(false),
+    ).toWarnDev(
       'Warning: This synthetic event is reused for performance reasons. If ' +
         "you're seeing this, you're accessing the method `isDefaultPrevented` on a " +
         'released/nullified synthetic event. This is a no-op function. If you must ' +
