@@ -249,6 +249,62 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
+  it('should warn when calling `isPropagationStopped` if the synthetic event has not been persisted', () => {
+    let node;
+    let expectedCount = 0;
+    let syntheticEvent;
+
+    const eventHandler = e => {
+      syntheticEvent = e;
+      expectedCount++;
+    };
+    node = ReactDOM.render(<div onClick={eventHandler} />, container);
+
+    const event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    node.dispatchEvent(event);
+
+    expect(() =>
+      expect(syntheticEvent.isPropagationStopped()).toBe(false),
+    ).toWarnDev(
+      'Warning: This synthetic event is reused for performance reasons. If ' +
+        "you're seeing this, you're accessing the method `isPropagationStopped` on a " +
+        'released/nullified synthetic event. This is a no-op function. If you must ' +
+        'keep the original synthetic event around, use event.persist(). ' +
+        'See https://fb.me/react-event-pooling for more information.',
+      {withoutStack: true},
+    );
+    expect(expectedCount).toBe(1);
+  });
+
+  it('should warn when calling `isDefaultPrevented` if the synthetic event has not been persisted', () => {
+    let node;
+    let expectedCount = 0;
+    let syntheticEvent;
+
+    const eventHandler = e => {
+      syntheticEvent = e;
+      expectedCount++;
+    };
+    node = ReactDOM.render(<div onClick={eventHandler} />, container);
+
+    const event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    node.dispatchEvent(event);
+
+    expect(() =>
+      expect(syntheticEvent.isDefaultPrevented()).toBe(false),
+    ).toWarnDev(
+      'Warning: This synthetic event is reused for performance reasons. If ' +
+        "you're seeing this, you're accessing the method `isDefaultPrevented` on a " +
+        'released/nullified synthetic event. This is a no-op function. If you must ' +
+        'keep the original synthetic event around, use event.persist(). ' +
+        'See https://fb.me/react-event-pooling for more information.',
+      {withoutStack: true},
+    );
+    expect(expectedCount).toBe(1);
+  });
+
   it('should properly log warnings when events simulated with rendered components', () => {
     let event;
     function assignEvent(e) {
@@ -270,25 +326,25 @@ describe('SyntheticEvent', () => {
     );
   });
 
-  it('should warn if Proxy is supported and the synthetic event is added a property', () => {
+  // TODO: we might want to re-add a warning like this in the future,
+  // but it shouldn't use Proxies because they make debugging difficult.
+  // Or we might disallow this pattern altogether:
+  // https://github.com/facebook/react/issues/13224
+  xit('should warn if a property is added to the synthetic event', () => {
     let node;
     let expectedCount = 0;
     let syntheticEvent;
 
     const eventHandler = e => {
-      if (typeof Proxy === 'function') {
-        expect(() => {
-          e.foo = 'bar';
-        }).toWarnDev(
-          'Warning: This synthetic event is reused for performance reasons. If ' +
-            "you're seeing this, you're adding a new property in the synthetic " +
-            'event object. The property is never released. ' +
-            'See https://fb.me/react-event-pooling for more information.',
-          {withoutStack: true},
-        );
-      } else {
+      expect(() => {
         e.foo = 'bar';
-      }
+      }).toWarnDev(
+        'Warning: This synthetic event is reused for performance reasons. If ' +
+          "you're seeing this, you're adding a new property in the synthetic " +
+          'event object. The property is never released. ' +
+          'See https://fb.me/react-event-pooling for more information.',
+        {withoutStack: true},
+      );
       syntheticEvent = e;
       expectedCount++;
     };

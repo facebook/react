@@ -10,18 +10,7 @@
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
-let didWarnForAddedNewProperty = false;
 const EVENT_POOL_SIZE = 10;
-
-const shouldBeReleasedProperties = [
-  'dispatchConfig',
-  '_targetInst',
-  'nativeEvent',
-  'isDefaultPrevented',
-  'isPropagationStopped',
-  '_dispatchListeners',
-  '_dispatchInstances',
-];
 
 /**
  * @interface Event
@@ -81,6 +70,8 @@ function SyntheticEvent(
     delete this.nativeEvent;
     delete this.preventDefault;
     delete this.stopPropagation;
+    delete this.isDefaultPrevented;
+    delete this.isPropagationStopped;
   }
 
   this.dispatchConfig = dispatchConfig;
@@ -188,14 +179,34 @@ Object.assign(SyntheticEvent.prototype, {
         this[propName] = null;
       }
     }
-    for (let i = 0; i < shouldBeReleasedProperties.length; i++) {
-      this[shouldBeReleasedProperties[i]] = null;
-    }
+    this.dispatchConfig = null;
+    this._targetInst = null;
+    this.nativeEvent = null;
+    this.isDefaultPrevented = functionThatReturnsFalse;
+    this.isPropagationStopped = functionThatReturnsFalse;
+    this._dispatchListeners = null;
+    this._dispatchInstances = null;
     if (__DEV__) {
       Object.defineProperty(
         this,
         'nativeEvent',
         getPooledWarningPropertyDefinition('nativeEvent', null),
+      );
+      Object.defineProperty(
+        this,
+        'isDefaultPrevented',
+        getPooledWarningPropertyDefinition(
+          'isDefaultPrevented',
+          functionThatReturnsFalse,
+        ),
+      );
+      Object.defineProperty(
+        this,
+        'isPropagationStopped',
+        getPooledWarningPropertyDefinition(
+          'isPropagationStopped',
+          functionThatReturnsFalse,
+        ),
       );
       Object.defineProperty(
         this,
@@ -236,49 +247,6 @@ SyntheticEvent.extend = function(Interface) {
 
   return Class;
 };
-
-/** Proxying after everything set on SyntheticEvent
- * to resolve Proxy issue on some WebKit browsers
- * in which some Event properties are set to undefined (GH#10010)
- */
-if (__DEV__) {
-  const isProxySupported =
-    typeof Proxy === 'function' &&
-    // https://github.com/facebook/react/issues/12011
-    !Object.isSealed(new Proxy({}, {}));
-
-  if (isProxySupported) {
-    /*eslint-disable no-func-assign */
-    SyntheticEvent = new Proxy(SyntheticEvent, {
-      construct: function(target, args) {
-        return this.apply(target, Object.create(target.prototype), args);
-      },
-      apply: function(constructor, that, args) {
-        return new Proxy(constructor.apply(that, args), {
-          set: function(target, prop, value) {
-            if (
-              prop !== 'isPersistent' &&
-              !target.constructor.Interface.hasOwnProperty(prop) &&
-              shouldBeReleasedProperties.indexOf(prop) === -1
-            ) {
-              warningWithoutStack(
-                didWarnForAddedNewProperty || target.isPersistent(),
-                "This synthetic event is reused for performance reasons. If you're " +
-                  "seeing this, you're adding a new property in the synthetic event object. " +
-                  'The property is never released. See ' +
-                  'https://fb.me/react-event-pooling for more information.',
-              );
-              didWarnForAddedNewProperty = true;
-            }
-            target[prop] = value;
-            return true;
-          },
-        });
-      },
-    });
-    /*eslint-enable no-func-assign */
-  }
-}
 
 addEventPoolingTo(SyntheticEvent);
 
@@ -354,7 +322,7 @@ function releasePooledEvent(event) {
   const EventConstructor = this;
   invariant(
     event instanceof EventConstructor,
-    'Trying to release an event instance  into a pool of a different type.',
+    'Trying to release an event instance into a pool of a different type.',
   );
   event.destructor();
   if (EventConstructor.eventPool.length < EVENT_POOL_SIZE) {
