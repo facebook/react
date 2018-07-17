@@ -8,7 +8,7 @@
  */
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 
@@ -68,7 +68,7 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValDefaultVal
     ) {
-      warningWithoutStack(
+      warning(
         false,
         'Textarea elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
@@ -89,7 +89,7 @@ export function initWrapperState(element: Element, props: Object) {
     let children = props.children;
     if (children != null) {
       if (__DEV__) {
-        warningWithoutStack(
+        warning(
           false,
           'Use the `defaultValue` or `value` props instead of setting ' +
             'children on <textarea>.',

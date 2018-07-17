@@ -601,18 +601,15 @@ describe('ReactDOMServer', () => {
           </svg>
         </div>,
       ),
-    ).toWarnDev(
-      [
-        'Warning: <inPUT /> is using incorrect casing. ' +
-          'Use PascalCase for React components, ' +
-          'or lowercase for HTML elements.',
-        // linearGradient doesn't warn
-        'Warning: <iFrame /> is using incorrect casing. ' +
-          'Use PascalCase for React components, ' +
-          'or lowercase for HTML elements.',
-      ],
-      {withoutStack: true},
-    );
+    ).toWarnDev([
+      'Warning: <inPUT /> is using incorrect casing. ' +
+        'Use PascalCase for React components, ' +
+        'or lowercase for HTML elements.',
+      // linearGradient doesn't warn
+      'Warning: <iFrame /> is using incorrect casing. ' +
+        'Use PascalCase for React components, ' +
+        'or lowercase for HTML elements.',
+    ]);
   });
 
   it('should warn about contentEditable and children', () => {
