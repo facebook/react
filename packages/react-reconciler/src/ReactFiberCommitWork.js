@@ -598,8 +598,11 @@ function commitPlacement(finishedWork: Fiber): void {
 
   // Recursively insert all host nodes into the parent.
   const parentFiber = getHostParentFiber(finishedWork);
+
+  // Note: these two variables *must* always be updated together.
   let parent;
   let isContainer;
+
   switch (parentFiber.tag) {
     case HostComponent:
       parent = parentFiber.stateNode;
@@ -677,6 +680,8 @@ function unmountHostComponents(current): void {
   // Each iteration, currentParent is populated with node's host parent if not
   // currentParentIsValid.
   let currentParentIsValid = false;
+
+  // Note: these two variables *must* always be updated together.
   let currentParent;
   let currentParentIsContainer;
 
