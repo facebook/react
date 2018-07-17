@@ -18,6 +18,7 @@ import React from 'react';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
@@ -1022,7 +1023,7 @@ class ReactDOMServerRenderer {
       if (namespace === Namespaces.html) {
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
-        warningWithoutStack(
+        warning(
           tag === element.type,
           '<%s /> is using incorrect casing. ' +
             'Use PascalCase for React components, ' +
@@ -1044,7 +1045,7 @@ class ReactDOMServerRenderer {
           props.defaultChecked !== undefined &&
           !didWarnDefaultChecked
         ) {
-          warningWithoutStack(
+          warning(
             false,
             '%s contains an input of type %s with both checked and defaultChecked props. ' +
               'Input elements must be either controlled or uncontrolled ' +
@@ -1062,7 +1063,7 @@ class ReactDOMServerRenderer {
           props.defaultValue !== undefined &&
           !didWarnDefaultInputValue
         ) {
-          warningWithoutStack(
+          warning(
             false,
             '%s contains an input of type %s with both value and defaultValue props. ' +
               'Input elements must be either controlled or uncontrolled ' +
@@ -1097,7 +1098,7 @@ class ReactDOMServerRenderer {
           props.defaultValue !== undefined &&
           !didWarnDefaultTextareaValue
         ) {
-          warningWithoutStack(
+          warning(
             false,
             'Textarea elements must be either controlled or uncontrolled ' +
               '(specify either the value prop, or the defaultValue prop, but not ' +
@@ -1116,7 +1117,7 @@ class ReactDOMServerRenderer {
         let textareaChildren = props.children;
         if (textareaChildren != null) {
           if (__DEV__) {
-            warningWithoutStack(
+            warning(
               false,
               'Use the `defaultValue` or `value` props instead of setting ' +
                 'children on <textarea>.',
@@ -1157,20 +1158,18 @@ class ReactDOMServerRenderer {
           }
           const isArray = Array.isArray(props[propName]);
           if (props.multiple && !isArray) {
-            warningWithoutStack(
+            warning(
               false,
               'The `%s` prop supplied to <select> must be an array if ' +
-                '`multiple` is true.%s',
+                '`multiple` is true.',
               propName,
-              '', // getDeclarationErrorAddendum(),
             );
           } else if (!props.multiple && isArray) {
-            warningWithoutStack(
+            warning(
               false,
               'The `%s` prop supplied to <select> must be a scalar ' +
-                'value if `multiple` is false.%s',
+                'value if `multiple` is false.',
               propName,
-              '', // getDeclarationErrorAddendum(),
             );
           }
         }
@@ -1180,7 +1179,7 @@ class ReactDOMServerRenderer {
           props.defaultValue !== undefined &&
           !didWarnDefaultSelectValue
         ) {
-          warningWithoutStack(
+          warning(
             false,
             'Select elements must be either controlled or uncontrolled ' +
               '(specify either the value prop, or the defaultValue prop, but not ' +

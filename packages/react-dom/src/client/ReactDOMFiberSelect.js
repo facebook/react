@@ -9,7 +9,7 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 
@@ -49,7 +49,7 @@ function checkSelectPropTypes(props) {
     }
     const isArray = Array.isArray(props[propName]);
     if (props.multiple && !isArray) {
-      warningWithoutStack(
+      warning(
         false,
         'The `%s` prop supplied to <select> must be an array if ' +
           '`multiple` is true.%s',
@@ -57,7 +57,7 @@ function checkSelectPropTypes(props) {
         getDeclarationErrorAddendum(),
       );
     } else if (!props.multiple && isArray) {
-      warningWithoutStack(
+      warning(
         false,
         'The `%s` prop supplied to <select> must be a scalar ' +
           'value if `multiple` is false.%s',
@@ -158,7 +158,7 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValueDefaultValue
     ) {
-      warningWithoutStack(
+      warning(
         false,
         'Select elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +

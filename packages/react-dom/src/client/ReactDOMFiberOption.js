@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 
 let didWarnSelectedSetOnOption = false;
 
@@ -39,7 +39,7 @@ export function validateProps(element: Element, props: Object) {
   // TODO (yungsters): Remove support for `selected` in <option>.
   if (__DEV__) {
     if (props.selected != null && !didWarnSelectedSetOnOption) {
-      warningWithoutStack(
+      warning(
         false,
         'Use the `defaultValue` or `value` props on <select> instead of ' +
           'setting `selected` on <option>.',
