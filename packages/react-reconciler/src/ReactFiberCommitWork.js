@@ -598,8 +598,11 @@ function commitPlacement(finishedWork: Fiber): void {
 
   // Recursively insert all host nodes into the parent.
   const parentFiber = getHostParentFiber(finishedWork);
+
+  // Note: these two variables *must* always be updated together.
   let parent;
   let isContainer;
+
   switch (parentFiber.tag) {
     case HostComponent:
       parent = parentFiber.stateNode;
@@ -670,13 +673,15 @@ function commitPlacement(finishedWork: Fiber): void {
 }
 
 function unmountHostComponents(current): void {
-  // We only have the top Fiber that was inserted but we need recurse down its
+  // We only have the top Fiber that was deleted but we need recurse down its
   // children to find all the terminal nodes.
   let node: Fiber = current;
 
   // Each iteration, currentParent is populated with node's host parent if not
   // currentParentIsValid.
   let currentParentIsValid = false;
+
+  // Note: these two variables *must* always be updated together.
   let currentParent;
   let currentParentIsContainer;
 
@@ -722,6 +727,7 @@ function unmountHostComponents(current): void {
       // When we go into a portal, it becomes the parent to remove from.
       // We will reassign it back when we pop the portal on the way up.
       currentParent = node.stateNode.containerInfo;
+      currentParentIsContainer = true;
       // Visit children because portals might contain host components.
       if (node.child !== null) {
         node.child.return = node;
