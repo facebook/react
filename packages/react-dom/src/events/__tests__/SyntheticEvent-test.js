@@ -270,25 +270,21 @@ describe('SyntheticEvent', () => {
     );
   });
 
-  it('should warn if Proxy is supported and the synthetic event is added a property', () => {
+  xit('should warn if synthetic event is added a property', () => {
     let node;
     let expectedCount = 0;
     let syntheticEvent;
 
     const eventHandler = e => {
-      if (typeof Proxy === 'function') {
-        expect(() => {
-          e.foo = 'bar';
-        }).toWarnDev(
-          'Warning: This synthetic event is reused for performance reasons. If ' +
-            "you're seeing this, you're adding a new property in the synthetic " +
-            'event object. The property is never released. ' +
-            'See https://fb.me/react-event-pooling for more information.',
-          {withoutStack: true},
-        );
-      } else {
+      expect(() => {
         e.foo = 'bar';
-      }
+      }).toWarnDev(
+        'Warning: This synthetic event is reused for performance reasons. If ' +
+          "you're seeing this, you're adding a new property in the synthetic " +
+          'event object. The property is never released. ' +
+          'See https://fb.me/react-event-pooling for more information.',
+        {withoutStack: true},
+      );
       syntheticEvent = e;
       expectedCount++;
     };
