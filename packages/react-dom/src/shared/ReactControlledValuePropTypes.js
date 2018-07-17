@@ -30,11 +30,12 @@ if (__DEV__) {
   const propTypes = {
     value: function(props, propName, componentName) {
       if (
-        !props[propName] ||
+        !(propName in props) ||
         hasReadOnlyValue[props.type] ||
         props.onChange ||
         props.readOnly ||
-        props.disabled
+        props.disabled ||
+        props[propName] == null
       ) {
         return null;
       }
@@ -47,10 +48,11 @@ if (__DEV__) {
     },
     checked: function(props, propName, componentName) {
       if (
-        !props[propName] ||
+        !(propName in props) ||
         props.onChange ||
         props.readOnly ||
-        props.disabled
+        props.disabled ||
+        props[propName] == null
       ) {
         return null;
       }
