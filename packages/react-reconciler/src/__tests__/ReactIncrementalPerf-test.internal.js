@@ -539,9 +539,13 @@ describe('ReactDebugFiberPerf', () => {
   });
 
   it('supports portals', () => {
-    const noopContainer = {children: []};
+    const portalContainer = ReactNoop.getOrCreateRootContainer(
+      'portalContainer',
+    );
     ReactNoop.render(
-      <Parent>{ReactNoop.createPortal(<Child />, noopContainer, null)}</Parent>,
+      <Parent>
+        {ReactNoop.createPortal(<Child />, portalContainer, null)}
+      </Parent>,
     );
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();

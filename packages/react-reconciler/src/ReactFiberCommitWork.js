@@ -670,7 +670,7 @@ function commitPlacement(finishedWork: Fiber): void {
 }
 
 function unmountHostComponents(current): void {
-  // We only have the top Fiber that was inserted but we need recurse down its
+  // We only have the top Fiber that was deleted but we need recurse down its
   // children to find all the terminal nodes.
   let node: Fiber = current;
 
