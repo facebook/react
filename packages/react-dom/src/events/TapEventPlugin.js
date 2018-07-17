@@ -94,7 +94,9 @@ function extractSingleTouch(nativeEvent) {
 
   return !hasTouches && hasChangedTouches
     ? changedTouches[0]
-    : hasTouches ? touches[0] : nativeEvent;
+    : hasTouches
+      ? touches[0]
+      : nativeEvent;
 }
 
 function getAxisCoordOfEvent(

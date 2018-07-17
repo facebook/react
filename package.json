@@ -77,7 +77,7 @@
     "ncp": "^2.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
-    "prettier": "1.11.1",
+    "prettier": "1.13.7",
     "prop-types": "^15.6.2",
     "random-seed": "^0.3.0",
     "react-lifecycles-compat": "^3.0.2",

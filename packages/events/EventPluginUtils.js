@@ -39,12 +39,16 @@ if (__DEV__) {
     const listenersIsArr = Array.isArray(dispatchListeners);
     const listenersLen = listenersIsArr
       ? dispatchListeners.length
-      : dispatchListeners ? 1 : 0;
+      : dispatchListeners
+        ? 1
+        : 0;
 
     const instancesIsArr = Array.isArray(dispatchInstances);
     const instancesLen = instancesIsArr
       ? dispatchInstances.length
-      : dispatchInstances ? 1 : 0;
+      : dispatchInstances
+        ? 1
+        : 0;
 
     warningWithoutStack(
       instancesIsArr === listenersIsArr && instancesLen === listenersLen,
