@@ -271,7 +271,7 @@ function throwException(
             return;
           }
 
-          // Confirmed that the bounary is in a strict mode tree. Continue with
+          // Confirmed that the boundary is in a strict mode tree. Continue with
           // the normal suspend path.
 
           let absoluteTimeoutMs;
