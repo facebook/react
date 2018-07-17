@@ -327,10 +327,10 @@ describe('SyntheticEvent', () => {
   });
 
   // TODO: we might want to re-add a warning like this in the future,
-  // but it shouldn't use Proxies because they making debugging difficult.
+  // but it shouldn't use Proxies because they make debugging difficult.
   // Or we might disallow this pattern altogether:
   // https://github.com/facebook/react/issues/13224
-  xit('should warn if synthetic event is added a property', () => {
+  xit('should warn if a property is added to the synthetic event', () => {
     let node;
     let expectedCount = 0;
     let syntheticEvent;
