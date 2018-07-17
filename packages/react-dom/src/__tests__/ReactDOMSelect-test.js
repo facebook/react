@@ -654,6 +654,13 @@ describe('ReactDOMSelect', () => {
     );
   });
 
+  it('should not warn about missing onChange in uncontrolled textareas', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(<select />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<select value={undefined} />, container);
+  });
+
   it('should be able to safely remove select onChange', () => {
     function changeView() {
       ReactDOM.unmountComponentAtNode(container);

@@ -47,28 +47,68 @@ describe('ReactDOMInput', () => {
     document.body.removeChild(container);
   });
 
-  it('should warn of no event listener with a falsey value of 0', () => {
+  it('should warn for controlled value of 0 with missing onChange', () => {
     expect(() => {
-      ReactTestUtils.renderIntoDocument(<input type="text" value={0} />);
+      ReactDOM.render(<input type="text" value={0} />, container);
     }).toWarnDev(
       'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
     );
   });
 
-  it('should warn of no event listener with a falsey value of ""', () => {
+  it('should warn for controlled value of "" with missing onChange', () => {
     expect(() => {
-      ReactTestUtils.renderIntoDocument(<input type="text" value="" />);
+      ReactDOM.render(<input type="text" value="" />, container);
     }).toWarnDev(
       'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
     );
   });
 
-  it('should warn of no event listener with a value of "0"', () => {
+  it('should warn for controlled value of "0" with missing onChange', () => {
     expect(() => {
-      ReactTestUtils.renderIntoDocument(<input type="text" value="0" />);
+      ReactDOM.render(<input type="text" value="0" />, container);
     }).toWarnDev(
       'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
     );
+  });
+
+  it('should warn for controlled value of false with missing onChange', () => {
+    expect(() =>
+      ReactDOM.render(<input type="checkbox" checked={false} />, container),
+    ).toWarnDev(
+      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler.',
+    );
+  });
+
+  it('should warn with checked and no onChange handler with readOnly specified', () => {
+    ReactDOM.render(
+      <input type="checkbox" checked={false} readOnly={true} />,
+      container,
+    );
+    ReactDOM.unmountComponentAtNode(container);
+
+    expect(() =>
+      ReactDOM.render(
+        <input type="checkbox" checked={false} readOnly={false} />,
+        container,
+      ),
+    ).toWarnDev(
+      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler. ' +
+        'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
+
+  it('should not warn about missing onChange in uncontrolled inputs', () => {
+    ReactDOM.render(<input />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<input value={undefined} />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<input type="text" />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<input type="text" value={undefined} />, container);
+    ReactDOM.render(<input type="checkbox" />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<input type="checkbox" checked={undefined} />, container);
   });
 
   it('should properly control a value even if no event listener exists', () => {
@@ -928,35 +968,6 @@ describe('ReactDOMInput', () => {
     dispatchEventOnNode(node, 'input');
   });
 
-  it('should warn of no event listener with a falsey checked prop', () => {
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(
-        <input type="checkbox" checked="false" />,
-      ),
-    ).toWarnDev(
-      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler.',
-    );
-  });
-
-  it('should warn with checked and no onChange handler with readOnly specified', () => {
-    ReactDOM.render(
-      <input type="checkbox" checked="false" readOnly={true} />,
-      container,
-    );
-    ReactDOM.unmountComponentAtNode(container);
-
-    expect(() =>
-      ReactDOM.render(
-        <input type="checkbox" checked="false" readOnly={false} />,
-        container,
-      ),
-    ).toWarnDev(
-      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler. ' +
-        'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
-        'Otherwise, set either `onChange` or `readOnly`.',
-    );
-  });
-
   it('should update defaultValue to empty string', () => {
     ReactDOM.render(<input type="text" defaultValue={'foo'} />, container);
     ReactDOM.render(<input type="text" defaultValue={''} />, container);
@@ -1184,15 +1195,10 @@ describe('ReactDOMInput', () => {
   });
 
   it('should warn if uncontrolled checkbox (checked is null) switches to controlled', () => {
-    const stub = (
-      <input type="checkbox" checked={null} />
-    );
+    const stub = <input type="checkbox" checked={null} />;
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(
-        <input type="checkbox" checked={true} />,
-        container,
-      ),
+      ReactDOM.render(<input type="checkbox" checked={true} />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type checkbox to be controlled. ' +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
@@ -1218,10 +1224,7 @@ describe('ReactDOMInput', () => {
     const stub = <input type="radio" checked={true} onChange={emptyFunction} />;
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(
-        <input type="radio" checked={null} />,
-        container,
-      ),
+      ReactDOM.render(<input type="radio" checked={null} />, container),
     ).toWarnDev(
       'Warning: A component is changing a controlled input of type radio to be uncontrolled. ' +
         'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +

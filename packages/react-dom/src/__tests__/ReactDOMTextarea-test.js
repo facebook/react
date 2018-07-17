@@ -387,9 +387,7 @@ describe('ReactDOMTextarea', () => {
 
   it('should warn if value is null', () => {
     expect(() =>
-      ReactTestUtils.renderIntoDocument(
-        <textarea value={null} onChange={emptyFunction} />,
-      ),
+      ReactTestUtils.renderIntoDocument(<textarea value={null} />),
     ).toWarnDev(
       '`value` prop on `textarea` should not be null. ' +
         'Consider using an empty string to clear the component or `undefined` ' +
@@ -397,9 +395,7 @@ describe('ReactDOMTextarea', () => {
     );
 
     // No additional warnings are expected
-    ReactTestUtils.renderIntoDocument(
-      <textarea value={null} onChange={emptyFunction} />,
-    );
+    ReactTestUtils.renderIntoDocument(<textarea value={null} />);
   });
 
   it('should warn if value and defaultValue are specified', () => {
@@ -419,5 +415,12 @@ describe('ReactDOMTextarea', () => {
     ReactTestUtils.renderIntoDocument(
       <textarea value="foo" defaultValue="bar" readOnly={true} />,
     );
+  });
+
+  it('should not warn about missing onChange in uncontrolled textareas', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(<textarea />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<textarea value={undefined} />, container);
   });
 });

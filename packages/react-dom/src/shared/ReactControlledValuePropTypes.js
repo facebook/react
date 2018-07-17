@@ -35,7 +35,7 @@ if (__DEV__) {
         props.onChange ||
         props.readOnly ||
         props.disabled ||
-        props.value === null
+        props[propName] == null
       ) {
         return null;
       }
@@ -52,7 +52,7 @@ if (__DEV__) {
         props.onChange ||
         props.readOnly ||
         props.disabled ||
-        props.value === null
+        props[propName] == null
       ) {
         return null;
       }
