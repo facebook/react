@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 // We expect that our Rollup, Jest, and Flow configurations
 // always shim this module with the corresponding host config

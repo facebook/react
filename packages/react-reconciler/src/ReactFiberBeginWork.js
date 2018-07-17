@@ -27,7 +27,7 @@ import {
   ContextProvider,
   ContextConsumer,
   Profiler,
-  TimeoutComponent,
+  PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
 import {
   NoEffect,
@@ -38,7 +38,7 @@ import {
   Update,
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableGetDerivedStateFromCatch,
   enableSuspense,
@@ -46,11 +46,12 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
-import warning from 'fbjs/lib/warning';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
+import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import {applyDerivedStateFromProps} from './ReactFiberClassComponent';
@@ -98,7 +99,7 @@ import {
 } from './ReactFiberClassComponent';
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
-const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let didWarnAboutBadClass;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
@@ -120,11 +121,11 @@ function reconcileChildren(current, workInProgress, nextChildren) {
   );
 }
 
-function reconcileChildrenAtExpirationTime(
-  current,
-  workInProgress,
-  nextChildren,
-  renderExpirationTime,
+export function reconcileChildrenAtExpirationTime(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  nextChildren: any,
+  renderExpirationTime: ExpirationTime,
 ) {
   if (current === null) {
     // If this is a fresh new component that hasn't been rendered yet, we
@@ -170,9 +171,9 @@ function updateForwardRef(current, workInProgress) {
   let nextChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactDebugCurrentFiber.setCurrentPhase('render');
+    ReactCurrentFiber.setCurrentPhase('render');
     nextChildren = render(nextProps, ref);
-    ReactDebugCurrentFiber.setCurrentPhase(null);
+    ReactCurrentFiber.setCurrentPhase(null);
   } else {
     nextChildren = render(nextProps, ref);
   }
@@ -258,9 +259,9 @@ function updateFunctionalComponent(current, workInProgress) {
 
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactDebugCurrentFiber.setCurrentPhase('render');
+    ReactCurrentFiber.setCurrentPhase('render');
     nextChildren = fn(nextProps, context);
-    ReactDebugCurrentFiber.setCurrentPhase(null);
+    ReactCurrentFiber.setCurrentPhase(null);
   } else {
     nextChildren = fn(nextProps, context);
   }
@@ -359,7 +360,7 @@ function finishClassComponent(
     }
   } else {
     if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentPhase('render');
+      ReactCurrentFiber.setCurrentPhase('render');
       nextChildren = instance.render();
       if (
         debugRenderPhaseSideEffects ||
@@ -368,7 +369,7 @@ function finishClassComponent(
       ) {
         instance.render();
       }
-      ReactDebugCurrentFiber.setCurrentPhase(null);
+      ReactCurrentFiber.setCurrentPhase(null);
     } else {
       nextChildren = instance.render();
     }
@@ -376,7 +377,7 @@ function finishClassComponent(
 
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
-  if (didCaptureError) {
+  if (current !== null && didCaptureError) {
     // If we're recovering from an error, reconcile twice: first to delete
     // all the existing children.
     reconcileChildrenAtExpirationTime(
@@ -583,10 +584,10 @@ function mountIndeterminateComponent(
 
   if (__DEV__) {
     if (fn.prototype && typeof fn.prototype.render === 'function') {
-      const componentName = getComponentName(workInProgress) || 'Unknown';
+      const componentName = getComponentName(fn) || 'Unknown';
 
       if (!didWarnAboutBadClass[componentName]) {
-        warning(
+        warningWithoutStack(
           false,
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
             'This is likely to cause errors. Change %s to extend React.Component instead.',
@@ -652,7 +653,7 @@ function mountIndeterminateComponent(
       const Component = workInProgress.type;
 
       if (Component) {
-        warning(
+        warningWithoutStack(
           !Component.childContextTypes,
           '%s(...): childContextTypes cannot be defined on a functional component.',
           Component.displayName || Component.name || 'Component',
@@ -660,7 +661,7 @@ function mountIndeterminateComponent(
       }
       if (workInProgress.ref !== null) {
         let info = '';
-        const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
+        const ownerName = ReactCurrentFiber.getCurrentFiberOwnerNameInDevOrNull();
         if (ownerName) {
           info += '\n\nCheck the render method of `' + ownerName + '`.';
         }
@@ -675,18 +676,17 @@ function mountIndeterminateComponent(
           warning(
             false,
             'Stateless function components cannot be given refs. ' +
-              'Attempts to access this ref will fail.%s%s',
+              'Attempts to access this ref will fail.%s',
             info,
-            ReactDebugCurrentFiber.getCurrentFiberStackAddendum(),
           );
         }
       }
 
       if (typeof fn.getDerivedStateFromProps === 'function') {
-        const componentName = getComponentName(workInProgress) || 'Unknown';
+        const componentName = getComponentName(fn) || 'Unknown';
 
         if (!didWarnAboutGetDerivedStateOnFunctionalComponent[componentName]) {
-          warning(
+          warningWithoutStack(
             false,
             '%s: Stateless functional components do not support getDerivedStateFromProps.',
             componentName,
@@ -703,18 +703,43 @@ function mountIndeterminateComponent(
   }
 }
 
-function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
+function updatePlaceholderComponent(
+  current,
+  workInProgress,
+  renderExpirationTime,
+) {
   if (enableSuspense) {
     const nextProps = workInProgress.pendingProps;
     const prevProps = workInProgress.memoizedProps;
 
-    const prevDidTimeout = workInProgress.memoizedState;
+    const prevDidTimeout = workInProgress.memoizedState === true;
 
     // Check if we already attempted to render the normal state. If we did,
     // and we timed out, render the placeholder state.
     const alreadyCaptured =
       (workInProgress.effectTag & DidCapture) === NoEffect;
-    const nextDidTimeout = !alreadyCaptured;
+
+    let nextDidTimeout;
+    if (current !== null && workInProgress.updateQueue !== null) {
+      // We're outside strict mode. Something inside this Placeholder boundary
+      // suspended during the last commit. Switch to the placholder.
+      workInProgress.updateQueue = null;
+      nextDidTimeout = true;
+      // If we're recovering from an error, reconcile twice: first to delete
+      // all the existing children.
+      reconcileChildrenAtExpirationTime(
+        current,
+        workInProgress,
+        null,
+        renderExpirationTime,
+      );
+      current.child = null;
+      // Now we can continue reconciling like normal. This has the effect of
+      // remounting all children regardless of whether their their
+      // identity matches.
+    } else {
+      nextDidTimeout = !alreadyCaptured;
+    }
 
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
@@ -723,8 +748,28 @@ function updateTimeoutComponent(current, workInProgress, renderExpirationTime) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    const render = nextProps.children;
-    const nextChildren = render(nextDidTimeout);
+    if ((workInProgress.mode & StrictMode) !== NoEffect) {
+      if (nextDidTimeout) {
+        // If the timed-out view commits, schedule an update effect to record
+        // the committed time.
+        workInProgress.effectTag |= Update;
+      } else {
+        // The state node points to the time at which placeholder timed out.
+        // We can clear it once we switch back to the normal children.
+        workInProgress.stateNode = null;
+      }
+    }
+
+    // If the `children` prop is a function, treat it like a render prop.
+    // TODO: This is temporary until we finalize a lower level API.
+    const children = nextProps.children;
+    let nextChildren;
+    if (typeof children === 'function') {
+      nextChildren = children(nextDidTimeout);
+    } else {
+      nextChildren = nextDidTimeout ? nextProps.fallback : children;
+    }
+
     workInProgress.memoizedProps = nextProps;
     workInProgress.memoizedState = nextDidTimeout;
     reconcileChildren(current, workInProgress, nextChildren);
@@ -785,8 +830,9 @@ function propagateContextChange<V>(
         if (fiber.type === context && (observedBits & changedBits) !== 0) {
           // Update the expiration time of all the ancestors, including
           // the alternates.
+
           let node = fiber;
-          while (node !== null) {
+          do {
             const alternate = node.alternate;
             if (
               node.expirationTime === NoWork ||
@@ -812,7 +858,8 @@ function propagateContextChange<V>(
               break;
             }
             node = node.return;
-          }
+          } while (node !== null);
+
           // Don't scan deeper than a matching consumer. When we render the
           // consumer, we'll continue scanning from that point. This way the
           // scanning work is time-sliced.
@@ -888,7 +935,7 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
         newProps,
         'prop',
         'Context.Provider',
-        getCurrentFiberStackAddendum,
+        ReactCurrentFiber.getCurrentFiberStackInDev,
       );
     }
   }
@@ -1010,7 +1057,7 @@ function updateContextConsumer(current, workInProgress, renderExpirationTime) {
   const render = newProps.children;
 
   if (__DEV__) {
-    warning(
+    warningWithoutStack(
       typeof render === 'function',
       'A context consumer was rendered with multiple children, or a child ' +
         "that isn't a function. A context consumer expects a single child " +
@@ -1022,9 +1069,9 @@ function updateContextConsumer(current, workInProgress, renderExpirationTime) {
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
-    ReactDebugCurrentFiber.setCurrentPhase('render');
+    ReactCurrentFiber.setCurrentPhase('render');
     newChildren = render(newValue);
-    ReactDebugCurrentFiber.setCurrentPhase(null);
+    ReactCurrentFiber.setCurrentPhase(null);
   } else {
     newChildren = render(newValue);
   }
@@ -1162,8 +1209,8 @@ function beginWork(
       return updateHostComponent(current, workInProgress, renderExpirationTime);
     case HostText:
       return updateHostText(current, workInProgress);
-    case TimeoutComponent:
-      return updateTimeoutComponent(
+    case PlaceholderComponent:
+      return updatePlaceholderComponent(
         current,
         workInProgress,
         renderExpirationTime,

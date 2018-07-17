@@ -21,7 +21,7 @@ import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
 import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 
 import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 
@@ -65,6 +65,9 @@ export type HostContext = $ReadOnly<{|
   isInAParentText: boolean,
 |}>;
 export type UpdatePayload = Object;
+
+export type TimeoutHandle = TimeoutID;
+export type NoTimeout = -1;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
@@ -293,6 +296,8 @@ export function prepareUpdate(
   );
   // TODO: If the event handlers have changed, we need to update the current props
   // in the commit phase but there is no host config hook to do it yet.
+  // So instead we hack it by updating it in the render phase.
+  instance.canonical.currentProps = newProps;
   return updatePayload;
 }
 
@@ -321,6 +326,10 @@ export const scheduleDeferredCallback =
   ReactNativeFrameScheduling.scheduleDeferredCallback;
 export const cancelDeferredCallback =
   ReactNativeFrameScheduling.cancelDeferredCallback;
+
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
 
 // -------------------
 //     Persistence

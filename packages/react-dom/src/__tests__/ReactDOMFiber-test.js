@@ -11,7 +11,6 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-dom/test-utils');
 const PropTypes = require('prop-types');
 
 describe('ReactDOMFiber', () => {
@@ -171,6 +170,31 @@ describe('ReactDOMFiber', () => {
     expect(firstNode.tagName).toBe('DIV');
   });
 
+  it('renders an empty fragment', () => {
+    const Div = () => <div />;
+    const EmptyFragment = () => <React.Fragment />;
+    const NonEmptyFragment = () => (
+      <React.Fragment>
+        <Div />
+      </React.Fragment>
+    );
+
+    ReactDOM.render(<EmptyFragment />, container);
+    expect(container.firstChild).toBe(null);
+
+    ReactDOM.render(<NonEmptyFragment />, container);
+    expect(container.firstChild.tagName).toBe('DIV');
+
+    ReactDOM.render(<EmptyFragment />, container);
+    expect(container.firstChild).toBe(null);
+
+    ReactDOM.render(<Div />, container);
+    expect(container.firstChild.tagName).toBe('DIV');
+
+    ReactDOM.render(<EmptyFragment />, container);
+    expect(container.firstChild).toBe(null);
+  });
+
   let svgEls, htmlEls, mathEls;
   const expectSVG = {ref: el => svgEls.push(el)};
   const expectHTML = {ref: el => htmlEls.push(el)};
@@ -232,6 +256,7 @@ describe('ReactDOMFiber', () => {
         'and will be removed in React 17+. Update your code to use ' +
         'ReactDOM.createPortal() instead. It has the exact same API, ' +
         'but without the "unstable_" prefix.',
+      {withoutStack: true},
     );
     expect(portalContainer.innerHTML).toBe('<div>portal</div>');
     expect(container.innerHTML).toBe('<div></div>');
@@ -818,33 +843,39 @@ describe('ReactDOMFiber', () => {
 
   it('should bubble events from the portal to the parent', () => {
     const portalContainer = document.createElement('div');
+    document.body.appendChild(portalContainer);
+    try {
+      const ops = [];
+      let portal = null;
 
-    const ops = [];
-    let portal = null;
+      ReactDOM.render(
+        <div onClick={() => ops.push('parent clicked')}>
+          {ReactDOM.createPortal(
+            <div
+              onClick={() => ops.push('portal clicked')}
+              ref={n => (portal = n)}>
+              portal
+            </div>,
+            portalContainer,
+          )}
+        </div>,
+        container,
+      );
 
-    ReactDOM.render(
-      <div onClick={() => ops.push('parent clicked')}>
-        {ReactDOM.createPortal(
-          <div
-            onClick={() => ops.push('portal clicked')}
-            ref={n => (portal = n)}>
-            portal
-          </div>,
-          portalContainer,
-        )}
-      </div>,
-      container,
-    );
+      expect(portal.tagName).toBe('DIV');
 
-    expect(portal.tagName).toBe('DIV');
+      portal.click();
 
-    ReactTestUtils.Simulate.click(portal);
-
-    expect(ops).toEqual(['portal clicked', 'parent clicked']);
+      expect(ops).toEqual(['portal clicked', 'parent clicked']);
+    } finally {
+      document.body.removeChild(portalContainer);
+    }
   });
 
   it('should not onMouseLeave when staying in the portal', () => {
     const portalContainer = document.createElement('div');
+    document.body.appendChild(container);
+    document.body.appendChild(portalContainer);
 
     let ops = [];
     let firstTarget = null;
@@ -853,56 +884,69 @@ describe('ReactDOMFiber', () => {
 
     function simulateMouseMove(from, to) {
       if (from) {
-        ReactTestUtils.SimulateNative.mouseOut(from, {
-          relatedTarget: to,
-        });
+        from.dispatchEvent(
+          new MouseEvent('mouseout', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: to,
+          }),
+        );
       }
       if (to) {
-        ReactTestUtils.SimulateNative.mouseOver(to, {
-          relatedTarget: from,
-        });
+        to.dispatchEvent(
+          new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: from,
+          }),
+        );
       }
     }
 
-    ReactDOM.render(
-      <div>
-        <div
-          onMouseEnter={() => ops.push('enter parent')}
-          onMouseLeave={() => ops.push('leave parent')}>
-          <div ref={n => (firstTarget = n)} />
-          {ReactDOM.createPortal(
-            <div
-              onMouseEnter={() => ops.push('enter portal')}
-              onMouseLeave={() => ops.push('leave portal')}
-              ref={n => (secondTarget = n)}>
-              portal
-            </div>,
-            portalContainer,
-          )}
-        </div>
-        <div ref={n => (thirdTarget = n)} />
-      </div>,
-      container,
-    );
+    try {
+      ReactDOM.render(
+        <div>
+          <div
+            onMouseEnter={() => ops.push('enter parent')}
+            onMouseLeave={() => ops.push('leave parent')}>
+            <div ref={n => (firstTarget = n)} />
+            {ReactDOM.createPortal(
+              <div
+                onMouseEnter={() => ops.push('enter portal')}
+                onMouseLeave={() => ops.push('leave portal')}
+                ref={n => (secondTarget = n)}>
+                portal
+              </div>,
+              portalContainer,
+            )}
+          </div>
+          <div ref={n => (thirdTarget = n)} />
+        </div>,
+        container,
+      );
 
-    simulateMouseMove(null, firstTarget);
-    expect(ops).toEqual(['enter parent']);
+      simulateMouseMove(null, firstTarget);
+      expect(ops).toEqual(['enter parent']);
 
-    ops = [];
+      ops = [];
 
-    simulateMouseMove(firstTarget, secondTarget);
-    expect(ops).toEqual([
-      // Parent did not invoke leave because we're still inside the portal.
-      'enter portal',
-    ]);
+      simulateMouseMove(firstTarget, secondTarget);
+      expect(ops).toEqual([
+        // Parent did not invoke leave because we're still inside the portal.
+        'enter portal',
+      ]);
 
-    ops = [];
+      ops = [];
 
-    simulateMouseMove(secondTarget, thirdTarget);
-    expect(ops).toEqual([
-      'leave portal',
-      'leave parent', // Only when we leave the portal does onMouseLeave fire.
-    ]);
+      simulateMouseMove(secondTarget, thirdTarget);
+      expect(ops).toEqual([
+        'leave portal',
+        'leave parent', // Only when we leave the portal does onMouseLeave fire.
+      ]);
+    } finally {
+      document.body.removeChild(container);
+      document.body.removeChild(portalContainer);
+    }
   });
 
   it('should throw on bad createPortal argument', () => {
@@ -942,81 +986,82 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should not update event handlers until commit', () => {
-    let ops = [];
-    const handlerA = () => ops.push('A');
-    const handlerB = () => ops.push('B');
+    document.body.appendChild(container);
+    try {
+      let ops = [];
+      const handlerA = () => ops.push('A');
+      const handlerB = () => ops.push('B');
 
-    class Example extends React.Component {
-      state = {flip: false, count: 0};
-      flip() {
-        this.setState({flip: true, count: this.state.count + 1});
+      class Example extends React.Component {
+        state = {flip: false, count: 0};
+        flip() {
+          this.setState({flip: true, count: this.state.count + 1});
+        }
+        tick() {
+          this.setState({count: this.state.count + 1});
+        }
+        render() {
+          const useB = !this.props.forceA && this.state.flip;
+          return <div onClick={useB ? handlerB : handlerA} />;
+        }
       }
-      tick() {
-        this.setState({count: this.state.count + 1});
+
+      class Click extends React.Component {
+        constructor() {
+          super();
+          node.click();
+        }
+        render() {
+          return null;
+        }
       }
-      render() {
-        const useB = !this.props.forceA && this.state.flip;
-        return <div onClick={useB ? handlerB : handlerA} />;
-      }
+
+      let inst;
+      ReactDOM.render([<Example key="a" ref={n => (inst = n)} />], container);
+      const node = container.firstChild;
+      expect(node.tagName).toEqual('DIV');
+
+      node.click();
+
+      expect(ops).toEqual(['A']);
+      ops = [];
+
+      // Render with the other event handler.
+      inst.flip();
+
+      node.click();
+
+      expect(ops).toEqual(['B']);
+      ops = [];
+
+      // Rerender without changing any props.
+      inst.tick();
+
+      node.click();
+
+      expect(ops).toEqual(['B']);
+      ops = [];
+
+      // Render a flip back to the A handler. The second component invokes the
+      // click handler during render to simulate a click during an aborted
+      // render. I use this hack because at current time we don't have a way to
+      // test aborted ReactDOM renders.
+      ReactDOM.render(
+        [<Example key="a" forceA={true} />, <Click key="b" />],
+        container,
+      );
+
+      // Because the new click handler has not yet committed, we should still
+      // invoke B.
+      expect(ops).toEqual(['B']);
+      ops = [];
+
+      // Any click that happens after commit, should invoke A.
+      node.click();
+      expect(ops).toEqual(['A']);
+    } finally {
+      document.body.removeChild(container);
     }
-
-    class Click extends React.Component {
-      constructor() {
-        super();
-        click(node);
-      }
-      render() {
-        return null;
-      }
-    }
-
-    let inst;
-    ReactDOM.render([<Example key="a" ref={n => (inst = n)} />], container);
-    const node = container.firstChild;
-    expect(node.tagName).toEqual('DIV');
-
-    function click(target) {
-      ReactTestUtils.Simulate.click(target);
-    }
-
-    click(node);
-
-    expect(ops).toEqual(['A']);
-    ops = [];
-
-    // Render with the other event handler.
-    inst.flip();
-
-    click(node);
-
-    expect(ops).toEqual(['B']);
-    ops = [];
-
-    // Rerender without changing any props.
-    inst.tick();
-
-    click(node);
-
-    expect(ops).toEqual(['B']);
-    ops = [];
-
-    // Render a flip back to the A handler. The second component invokes the
-    // click handler during render to simulate a click during an aborted
-    // render. I use this hack because at current time we don't have a way to
-    // test aborted ReactDOM renders.
-    ReactDOM.render(
-      [<Example key="a" forceA={true} />, <Click key="b" />],
-      container,
-    );
-
-    // Because the new click handler has not yet committed, we should still
-    // invoke B.
-    expect(ops).toEqual(['B']);
-    ops = [];
-
-    // Any click that happens after commit, should invoke A.
-    click(node);
-    expect(ops).toEqual(['A']);
   });
 
   it('should not crash encountering low-priority tree', () => {
@@ -1056,6 +1101,7 @@ describe('ReactDOMFiber', () => {
           'removed without using React. This is not supported and will ' +
           'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
           'to empty a container.',
+        {withoutStack: true},
       );
     }).toThrowError();
   });
@@ -1073,6 +1119,7 @@ describe('ReactDOMFiber', () => {
         'removed without using React. This is not supported and will ' +
         'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
         'to empty a container.',
+      {withoutStack: true},
     );
   });
 
@@ -1089,6 +1136,7 @@ describe('ReactDOMFiber', () => {
         'removed without using React. This is not supported and will ' +
         'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
         'to empty a container.',
+      {withoutStack: true},
     );
   });
 

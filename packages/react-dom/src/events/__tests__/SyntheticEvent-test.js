@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOM;
-let ReactTestUtils;
 
 describe('SyntheticEvent', () => {
   let container;
@@ -19,7 +18,6 @@ describe('SyntheticEvent', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -155,12 +153,15 @@ describe('SyntheticEvent', () => {
     // once for each property accessed
     expect(() => expect(syntheticEvent.type).toBe(null)).toWarnDev(
       getExpectedWarning('type'),
+      {withoutStack: true},
     );
     expect(() => expect(syntheticEvent.nativeEvent).toBe(null)).toWarnDev(
       getExpectedWarning('nativeEvent'),
+      {withoutStack: true},
     );
     expect(() => expect(syntheticEvent.target).toBe(null)).toWarnDev(
       getExpectedWarning('target'),
+      {withoutStack: true},
     );
 
     expect(expectedCount).toBe(1);
@@ -190,6 +191,7 @@ describe('SyntheticEvent', () => {
         'released/nullified synthetic event. This is effectively a no-op. If you must ' +
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
+      {withoutStack: true},
     );
     expect(expectedCount).toBe(1);
   });
@@ -215,6 +217,7 @@ describe('SyntheticEvent', () => {
         'released/nullified synthetic event. This is a no-op function. If you must ' +
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
+      {withoutStack: true},
     );
     expect(expectedCount).toBe(1);
   });
@@ -241,21 +244,18 @@ describe('SyntheticEvent', () => {
         'released/nullified synthetic event. This is a no-op function. If you must ' +
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
+      {withoutStack: true},
     );
     expect(expectedCount).toBe(1);
   });
 
-  // TODO: reenable this test. We are currently silencing these warnings when
-  // using TestUtils.Simulate to avoid spurious warnings that result from the
-  // way we simulate events.
-  xit('should properly log warnings when events simulated with rendered components', () => {
+  it('should properly log warnings when events simulated with rendered components', () => {
     let event;
-    const element = document.createElement('div');
     function assignEvent(e) {
       event = e;
     }
-    const node = ReactDOM.render(<div onClick={assignEvent} />, element);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(node));
+    const node = ReactDOM.render(<div onClick={assignEvent} />, container);
+    node.click();
 
     // access a property to cause the warning
     expect(() => {
@@ -266,6 +266,7 @@ describe('SyntheticEvent', () => {
         'released/nullified synthetic event. This is set to null. If you must ' +
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
+      {withoutStack: true},
     );
   });
 
@@ -283,6 +284,7 @@ describe('SyntheticEvent', () => {
             "you're seeing this, you're adding a new property in the synthetic " +
             'event object. The property is never released. ' +
             'See https://fb.me/react-event-pooling for more information.',
+          {withoutStack: true},
         );
       } else {
         e.foo = 'bar';

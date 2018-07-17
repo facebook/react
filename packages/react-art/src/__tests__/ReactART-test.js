@@ -28,6 +28,10 @@ const Circle = require('react-art/Circle');
 const Rectangle = require('react-art/Rectangle');
 const Wedge = require('react-art/Wedge');
 
+// Isolate the noop renderer
+jest.resetModules();
+const ReactNoop = require('react-noop-renderer');
+
 let Group;
 let Shape;
 let Surface;
@@ -71,6 +75,8 @@ describe('ReactART', () => {
     Surface = ReactART.Surface;
 
     TestComponent = class extends React.Component {
+      group = React.createRef();
+
       render() {
         const a = (
           <Shape
@@ -104,7 +110,7 @@ describe('ReactART', () => {
 
         return (
           <Surface width={150} height={200}>
-            <Group ref="group">
+            <Group ref={this.group}>
               {this.props.flipped ? [b, a, c] : [a, b, c]}
             </Group>
           </Surface>
@@ -121,7 +127,7 @@ describe('ReactART', () => {
   it('should have the correct lifecycle state', () => {
     let instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
-    const group = instance.refs.group;
+    const group = instance.group.current;
     // Duck type test for an ART group
     expect(typeof group.indicate).toBe('function');
   });
@@ -260,15 +266,17 @@ describe('ReactART', () => {
     let ref = null;
 
     class Outer extends React.Component {
+      test = React.createRef();
+
       componentDidMount() {
-        ref = this.refs.test;
+        ref = this.test.current;
       }
 
       render() {
         return (
           <Surface>
             <Group>
-              <CustomShape ref="test" />
+              <CustomShape ref={this.test} />
             </Group>
           </Surface>
         );
@@ -289,26 +297,28 @@ describe('ReactART', () => {
     let ref = {};
 
     class Outer extends React.Component {
+      test = React.createRef();
+
       componentDidMount() {
-        ref = this.refs.test;
+        ref = this.test.current;
       }
 
       componentDidUpdate() {
-        ref = this.refs.test;
+        ref = this.test.current;
       }
 
       render() {
         return (
           <Surface>
             <Group>
-              {this.props.mountCustomShape && <CustomShape ref="test" />}
+              {this.props.mountCustomShape && <CustomShape ref={this.test} />}
             </Group>
           </Surface>
         );
       }
     }
     ReactDOM.render(<Outer />, container);
-    expect(ref).not.toBeDefined();
+    expect(ref).toBe(null);
     ReactDOM.render(<Outer mountCustomShape={true} />, container);
     expect(ref.constructor).toBe(CustomShape);
   });
@@ -348,7 +358,7 @@ describe('ReactART', () => {
     const CurrentRendererContext = React.createContext(null);
 
     function Yield(props) {
-      testRenderer.unstable_yield(props.value);
+      ReactNoop.yield(props.value);
       return null;
     }
 
@@ -366,19 +376,16 @@ describe('ReactART', () => {
 
     // Using test renderer instead of the DOM renderer here because async
     // testing APIs for the DOM renderer don't exist.
-    const testRenderer = ReactTestRenderer.create(
+    ReactNoop.render(
       <CurrentRendererContext.Provider value="Test">
         <Yield value="A" />
         <Yield value="B" />
         <LogCurrentRenderer />
         <Yield value="C" />
       </CurrentRendererContext.Provider>,
-      {
-        unstable_isAsync: true,
-      },
     );
 
-    testRenderer.unstable_flushThrough(['A']);
+    ReactNoop.flushThrough(['A']);
 
     ReactDOM.render(
       <Surface>
@@ -393,7 +400,7 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(testRenderer.unstable_flushAll()).toEqual(['B', 'C']);
+    expect(ReactNoop.flush()).toEqual(['B', 'C']);
 
     expect(ops).toEqual(['Test']);
   });

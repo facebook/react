@@ -102,8 +102,8 @@ import {
 
 import {StrictMode} from './ReactTypeOfMode';
 
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 export type Update<State> = {
   expirationTime: ExpirationTime,
@@ -296,7 +296,7 @@ export function enqueueUpdate<State>(
         (queue2 !== null && currentlyProcessingQueue === queue2)) &&
       !didWarnUpdateInsideUpdate
     ) {
-      warning(
+      warningWithoutStack(
         false,
         'An update (setState, replaceState, or forceUpdate) was scheduled ' +
           'from inside an update function. Update functions should be pure, ' +

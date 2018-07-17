@@ -120,28 +120,32 @@ describe('forwardRef', () => {
   it('should warn if not provided a callback during creation', () => {
     expect(() => React.forwardRef(undefined)).toWarnDev(
       'forwardRef requires a render function but was given undefined.',
+      {withoutStack: true},
     );
     expect(() => React.forwardRef(null)).toWarnDev(
       'forwardRef requires a render function but was given null.',
+      {withoutStack: true},
     );
     expect(() => React.forwardRef('foo')).toWarnDev(
       'forwardRef requires a render function but was given string.',
+      {withoutStack: true},
     );
   });
 
   it('should warn if no render function is provided', () => {
     expect(React.forwardRef).toWarnDev(
       'forwardRef requires a render function but was given undefined.',
+      {withoutStack: true},
     );
   });
 
   it('should warn if the render function provided has propTypes or defaultProps attributes', () => {
-    function renderWithPropTypes() {
+    function renderWithPropTypes(props, ref) {
       return null;
     }
     renderWithPropTypes.propTypes = {};
 
-    function renderWithDefaultProps() {
+    function renderWithDefaultProps(props, ref) {
       return null;
     }
     renderWithDefaultProps.defaultProps = {};
@@ -149,10 +153,32 @@ describe('forwardRef', () => {
     expect(() => React.forwardRef(renderWithPropTypes)).toWarnDev(
       'forwardRef render functions do not support propTypes or defaultProps. ' +
         'Did you accidentally pass a React component?',
+      {withoutStack: true},
     );
     expect(() => React.forwardRef(renderWithDefaultProps)).toWarnDev(
       'forwardRef render functions do not support propTypes or defaultProps. ' +
         'Did you accidentally pass a React component?',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn if the render function provided does not use the forwarded ref parameter', () => {
+    function arityOfZero() {
+      return null;
+    }
+
+    const arityOfOne = props => null;
+
+    expect(() => React.forwardRef(arityOfZero)).toWarnDev(
+      'forwardRef render functions accept two parameters: props and ref. ' +
+        'Did you forget to use the ref parameter?',
+      {withoutStack: true},
+    );
+
+    expect(() => React.forwardRef(arityOfOne)).toWarnDev(
+      'forwardRef render functions accept two parameters: props and ref. ' +
+        'Did you forget to use the ref parameter?',
+      {withoutStack: true},
     );
   });
 });

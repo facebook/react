@@ -91,6 +91,7 @@ describe('create-react-class-integration', () => {
       'Warning: MyComponent: isMounted is deprecated. Instead, make sure to ' +
         'clean up subscriptions and pending requests in componentWillUnmount ' +
         'to prevent memory leaks.',
+      {withoutStack: true},
     );
 
     // Dedupe
@@ -149,6 +150,7 @@ describe('create-react-class-integration', () => {
           'Use componentDidMount instead. As a temporary workaround, ' +
           'you can rename to UNSAFE_componentWillMount.' +
           '\n\nPlease update the following components: MyNativeComponent',
+        {withoutStack: true},
       );
     });
 
@@ -164,6 +166,7 @@ describe('create-react-class-integration', () => {
         'componentWillReceiveProps is deprecated and will be removed in the next major version. ' +
           'Use static getDerivedStateFromProps instead.' +
           '\n\nPlease update the following components: MyNativeComponent',
+        {withoutStack: true},
       );
     });
   });

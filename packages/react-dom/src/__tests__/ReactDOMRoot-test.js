@@ -143,7 +143,9 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    expect(jest.runAllTimers).toWarnDev('Extra attributes');
+    expect(jest.runAllTimers).toWarnDev('Extra attributes', {
+      withoutStack: true,
+    });
   });
 
   it('does not clear existing children', async () => {
@@ -358,9 +360,10 @@ describe('ReactDOMRoot', () => {
     const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
     const InvalidType = undefined;
-    expect(() => batch.render(<InvalidType />)).toWarnDev([
-      'React.createElement: type is invalid',
-    ]);
+    expect(() => batch.render(<InvalidType />)).toWarnDev(
+      ['React.createElement: type is invalid'],
+      {withoutStack: true},
+    );
     expect(() => batch.commit()).toThrow('Element type is invalid');
   });
 });

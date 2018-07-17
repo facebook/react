@@ -68,6 +68,8 @@ describe('ReactScheduler', () => {
     // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
     // - calling 'window.postMessage' should actually fire postmessage handlers
     // - Date.now should return the correct thing
+    // - test with native performance.now()
+    delete global.performance;
     global.requestAnimationFrame = function(cb) {
       return rAFCallbacks.push(() => {
         cb(startOfLatestFrame);

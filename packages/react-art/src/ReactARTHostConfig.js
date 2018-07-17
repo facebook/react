@@ -8,14 +8,18 @@
 import * as ReactScheduler from 'shared/ReactScheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
-import invariant from 'fbjs/lib/invariant';
-import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 
 const pooledTransform = new Transform();
 
+const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
+if (__DEV__) {
+  Object.freeze(NO_CONTEXT);
+  Object.freeze(UPDATE_SIGNAL);
+}
 
 /** Helper Methods */
 
@@ -318,15 +322,19 @@ export function shouldDeprioritizeSubtree(type, props) {
 }
 
 export function getRootHostContext() {
-  return emptyObject;
+  return NO_CONTEXT;
 }
 
 export function getChildHostContext() {
-  return emptyObject;
+  return NO_CONTEXT;
 }
 
 export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
 export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
+
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
 
 export function shouldSetTextContent(type, props) {
   return (

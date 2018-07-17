@@ -13,6 +13,9 @@
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://reactjs.org/",
+  "dependencies": {
+    "object-assign": "^4.1.1"
+  },
   "files": [
     "LICENSE",
     "README.md",

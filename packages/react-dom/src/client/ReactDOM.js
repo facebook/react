@@ -21,7 +21,7 @@ import './ReactDOMClientInjection';
 
 import * as DOMRenderer from 'react-reconciler/inline.dom';
 import * as ReactPortal from 'shared/ReactPortal';
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import * as ReactControlledComponent from 'events/ReactControlledComponent';
 import * as EventPluginHub from 'events/EventPluginHub';
@@ -29,11 +29,11 @@ import * as EventPluginRegistry from 'events/EventPluginRegistry';
 import * as EventPropagators from 'events/EventPropagators';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import ReactVersion from 'shared/ReactVersion';
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'fbjs/lib/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
@@ -45,6 +45,8 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
+
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let topLevelUpdateWarnings;
 let warnOnInvalidCallback;
@@ -62,7 +64,7 @@ if (__DEV__) {
     typeof Set.prototype.clear !== 'function' ||
     typeof Set.prototype.forEach !== 'function'
   ) {
-    warning(
+    warningWithoutStack(
       false,
       'React depends on Map and Set built-in types. Make sure that you load a ' +
         'polyfill in older browsers. https://fb.me/react-polyfills',
@@ -75,7 +77,7 @@ if (__DEV__) {
         container._reactRootContainer._internalRoot.current,
       );
       if (hostInstance) {
-        warning(
+        warningWithoutStack(
           hostInstance.parentNode === container,
           'render(...): It looks like the React-rendered content of this ' +
             'container was removed without using React. This is not ' +
@@ -91,7 +93,7 @@ if (__DEV__) {
       rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl)
     );
 
-    warning(
+    warningWithoutStack(
       !hasNonRootReactChild || isRootRenderedBySomeReact,
       'render(...): Replacing React-rendered children with a new root ' +
         'component. If you intended to update the children of this node, ' +
@@ -99,7 +101,7 @@ if (__DEV__) {
         'and render the new components instead of calling ReactDOM.render.',
     );
 
-    warning(
+    warningWithoutStack(
       container.nodeType !== ELEMENT_NODE ||
         !((container: any): Element).tagName ||
         ((container: any): Element).tagName.toUpperCase() !== 'BODY',
@@ -112,7 +114,7 @@ if (__DEV__) {
   };
 
   warnOnInvalidCallback = function(callback: mixed, callerName: string) {
-    warning(
+    warningWithoutStack(
       callback === null || typeof callback === 'function',
       '%s(...): Expected the last optional `callback` argument to be a ' +
         'function. Instead received: %s.',
@@ -470,7 +472,7 @@ function legacyCreateRootFromDOMContainer(
           (rootSibling: any).hasAttribute(ROOT_ATTRIBUTE_NAME)
         ) {
           warned = true;
-          warning(
+          warningWithoutStack(
             false,
             'render(): Target node has markup rendered by React, but there ' +
               'are unrelated nodes as well. This is most commonly caused by ' +
@@ -588,14 +590,14 @@ const ReactDOM: Object = {
       if (owner !== null && owner.stateNode !== null) {
         const warnedAboutRefsInRender =
           owner.stateNode._warnedAboutRefsInRender;
-        warning(
+        warningWithoutStack(
           warnedAboutRefsInRender,
           '%s is accessing findDOMNode inside its render(). ' +
             'render() should be a pure function of props and state. It should ' +
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner) || 'A component',
+          getComponentName(owner.type) || 'A component',
         );
         owner.stateNode._warnedAboutRefsInRender = true;
       }
@@ -665,7 +667,7 @@ const ReactDOM: Object = {
         const rootEl = getReactRootElementInContainer(container);
         const renderedByDifferentReact =
           rootEl && !ReactDOMComponentTree.getInstanceFromNode(rootEl);
-        warning(
+        warningWithoutStack(
           !renderedByDifferentReact,
           "unmountComponentAtNode(): The node you're attempting to unmount " +
             'was rendered by another copy of React.',
@@ -694,7 +696,7 @@ const ReactDOM: Object = {
           isValidContainer(container.parentNode) &&
           !!container.parentNode._reactRootContainer;
 
-        warning(
+        warningWithoutStack(
           !hasNonRootReactChild,
           "unmountComponentAtNode(): The node you're attempting to unmount " +
             'was rendered by React and is not a top-level container. %s',
@@ -768,11 +770,7 @@ const foundDevTools = DOMRenderer.injectIntoDevTools({
 });
 
 if (__DEV__) {
-  if (
-    !foundDevTools &&
-    ExecutionEnvironment.canUseDOM &&
-    window.top === window.self
-  ) {
+  if (!foundDevTools && canUseDOM && window.top === window.self) {
     // If we're in Chrome or Firefox, provide a download link if not installed.
     if (
       (navigator.userAgent.indexOf('Chrome') > -1 &&

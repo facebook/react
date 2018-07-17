@@ -42,6 +42,8 @@ let getListener;
 let putListener;
 let deleteAllListeners;
 
+let container;
+
 function registerSimpleTestHandler() {
   putListener(CHILD, ON_CLICK_KEY, LISTENER);
   const listener = getListener(CHILD, ON_CLICK_KEY);
@@ -63,7 +65,8 @@ describe('ReactBrowserEventEmitter', () => {
     ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
 
-    const container = document.createElement('div');
+    container = document.createElement('div');
+    document.body.appendChild(container);
 
     let GRANDPARENT_PROPS = {};
     let PARENT_PROPS = {};
@@ -129,6 +132,11 @@ describe('ReactBrowserEventEmitter', () => {
     idCallOrder = [];
   });
 
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
+  });
+
   it('should store a listener correctly', () => {
     registerSimpleTestHandler();
     const listener = getListener(CHILD, ON_CLICK_KEY);
@@ -150,17 +158,17 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should invoke a simple handler registered on a node', () => {
     registerSimpleTestHandler();
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(LISTENER).toHaveBeenCalledTimes(1);
   });
 
   it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
     registerSimpleTestHandler();
     ReactBrowserEventEmitter.setEnabled(false);
-    ReactTestUtils.SimulateNative.click(CHILD);
+    CHILD.click();
     expect(LISTENER).toHaveBeenCalledTimes(0);
     ReactBrowserEventEmitter.setEnabled(true);
-    ReactTestUtils.SimulateNative.click(CHILD);
+    CHILD.click();
     expect(LISTENER).toHaveBeenCalledTimes(1);
   });
 
@@ -168,7 +176,7 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
     putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(idCallOrder.length).toBe(3);
     expect(idCallOrder[0]).toBe(CHILD);
     expect(idCallOrder[1]).toBe(PARENT);
@@ -179,7 +187,7 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, 'GRANDPARENT'));
     putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, 'PARENT'));
     putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, 'CHILD'));
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(idCallOrder).toEqual(['CHILD', 'PARENT', 'GRANDPARENT']);
 
     idCallOrder = [];
@@ -191,7 +199,7 @@ describe('ReactBrowserEventEmitter', () => {
       recordID.bind(null, 'UPDATED_GRANDPARENT'),
     );
 
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(idCallOrder).toEqual(['CHILD', 'PARENT', 'UPDATED_GRANDPARENT']);
   });
 
@@ -224,7 +232,7 @@ describe('ReactBrowserEventEmitter', () => {
       recordID(GRANDPARENT);
       expect(event.currentTarget).toBe(GRANDPARENT);
     });
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(idCallOrder.length).toBe(3);
     expect(idCallOrder[0]).toBe(CHILD);
     expect(idCallOrder[1]).toBe(PARENT);
@@ -239,7 +247,7 @@ describe('ReactBrowserEventEmitter', () => {
       recordIDAndStopPropagation.bind(null, PARENT),
     );
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(idCallOrder.length).toBe(2);
     expect(idCallOrder[0]).toBe(CHILD);
     expect(idCallOrder[1]).toBe(PARENT);
@@ -254,7 +262,7 @@ describe('ReactBrowserEventEmitter', () => {
       e.isPropagationStopped = () => true;
     });
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(idCallOrder.length).toBe(2);
     expect(idCallOrder[0]).toBe(CHILD);
     expect(idCallOrder[1]).toBe(PARENT);
@@ -268,7 +276,7 @@ describe('ReactBrowserEventEmitter', () => {
     );
     putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(idCallOrder.length).toBe(1);
     expect(idCallOrder[0]).toBe(CHILD);
   });
@@ -277,7 +285,7 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(CHILD, ON_CLICK_KEY, recordIDAndReturnFalse.bind(null, CHILD));
     putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(idCallOrder.length).toBe(3);
     expect(idCallOrder[0]).toBe(CHILD);
     expect(idCallOrder[1]).toBe(PARENT);
@@ -300,7 +308,7 @@ describe('ReactBrowserEventEmitter', () => {
     };
     putListener(CHILD, ON_CLICK_KEY, handleChildClick);
     putListener(PARENT, ON_CLICK_KEY, handleParentClick);
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(handleParentClick).toHaveBeenCalledTimes(1);
   });
 
@@ -310,7 +318,7 @@ describe('ReactBrowserEventEmitter', () => {
       putListener(PARENT, ON_CLICK_KEY, handleParentClick);
     };
     putListener(CHILD, ON_CLICK_KEY, handleChildClick);
-    ReactTestUtils.Simulate.click(CHILD);
+    CHILD.click();
     expect(handleParentClick).toHaveBeenCalledTimes(0);
   });
 

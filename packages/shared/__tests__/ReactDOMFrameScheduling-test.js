@@ -16,7 +16,8 @@ describe('ReactDOMFrameScheduling', () => {
       global.requestAnimationFrame = undefined;
       jest.resetModules();
       expect(() => require('react-dom')).toWarnDev(
-        'React depends on requestAnimationFrame.',
+        "This browser doesn't support requestAnimationFrame.",
+        {withoutStack: true},
       );
     } finally {
       global.requestAnimationFrame = previousRAF;

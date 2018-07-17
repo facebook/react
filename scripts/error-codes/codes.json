@@ -274,5 +274,6 @@
   "272": "The current renderer does not support hyration. This error is likely caused by a bug in React. Please file an issue.",
   "273": "Nesting of <View> within <Text> is not currently supported.",
   "274": "Text strings must be rendered within a <Text> component.",
-  "275": "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue."
+  "275": "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue.",
+  "276": "React depends on requestAnimationFrame. Make sure that you load a polyfill in older browsers. https://fb.me/react-polyfills"
 }

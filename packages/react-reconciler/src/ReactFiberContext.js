@@ -13,12 +13,11 @@ import type {StackCursor} from './ReactFiberStack';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
-import emptyObject from 'fbjs/lib/emptyObject';
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
 
@@ -28,14 +27,19 @@ if (__DEV__) {
   warnedAboutMissingGetChildContext = {};
 }
 
+export const emptyContextObject = {};
+if (__DEV__) {
+  Object.freeze(emptyContextObject);
+}
+
 // A cursor to the current merged context object on the stack.
-let contextStackCursor: StackCursor<Object> = createCursor(emptyObject);
+let contextStackCursor: StackCursor<Object> = createCursor(emptyContextObject);
 // A cursor to a boolean indicating whether the context has changed.
 let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
 // Keep track of the previous context object that was on the stack.
 // We use this to get access to the parent context after we have already
 // pushed the next context provider, and now need to merge their contexts.
-let previousContext: Object = emptyObject;
+let previousContext: Object = emptyContextObject;
 
 function getUnmaskedContext(workInProgress: Fiber): Object {
   const hasOwnContext = isContextProvider(workInProgress);
@@ -66,7 +70,7 @@ function getMaskedContext(
   const type = workInProgress.type;
   const contextTypes = type.contextTypes;
   if (!contextTypes) {
-    return emptyObject;
+    return emptyContextObject;
   }
 
   // Avoid recreating masked context unless unmasked context has changed.
@@ -86,13 +90,13 @@ function getMaskedContext(
   }
 
   if (__DEV__) {
-    const name = getComponentName(workInProgress) || 'Unknown';
+    const name = getComponentName(type) || 'Unknown';
     checkPropTypes(
       contextTypes,
       context,
       'context',
       name,
-      ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
+      ReactCurrentFiber.getCurrentFiberStackInDev,
     );
   }
 
@@ -137,7 +141,7 @@ function pushTopLevelContextObject(
   didChange: boolean,
 ): void {
   invariant(
-    contextStackCursor.current === emptyObject,
+    contextStackCursor.current === emptyContextObject,
     'Unexpected context found on stack. ' +
       'This error is likely caused by a bug in React. Please file an issue.',
   );
@@ -148,17 +152,18 @@ function pushTopLevelContextObject(
 
 function processChildContext(fiber: Fiber, parentContext: Object): Object {
   const instance = fiber.stateNode;
-  const childContextTypes = fiber.type.childContextTypes;
+  const type = fiber.type;
+  const childContextTypes = type.childContextTypes;
 
   // TODO (bvaughn) Replace this behavior with an invariant() in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   if (typeof instance.getChildContext !== 'function') {
     if (__DEV__) {
-      const componentName = getComponentName(fiber) || 'Unknown';
+      const componentName = getComponentName(type) || 'Unknown';
 
       if (!warnedAboutMissingGetChildContext[componentName]) {
         warnedAboutMissingGetChildContext[componentName] = true;
-        warning(
+        warningWithoutStack(
           false,
           '%s.childContextTypes is specified but there is no getChildContext() method ' +
             'on the instance. You can either define getChildContext() on %s or remove ' +
@@ -173,24 +178,24 @@ function processChildContext(fiber: Fiber, parentContext: Object): Object {
 
   let childContext;
   if (__DEV__) {
-    ReactDebugCurrentFiber.setCurrentPhase('getChildContext');
+    ReactCurrentFiber.setCurrentPhase('getChildContext');
   }
   startPhaseTimer(fiber, 'getChildContext');
   childContext = instance.getChildContext();
   stopPhaseTimer();
   if (__DEV__) {
-    ReactDebugCurrentFiber.setCurrentPhase(null);
+    ReactCurrentFiber.setCurrentPhase(null);
   }
   for (let contextKey in childContext) {
     invariant(
       contextKey in childContextTypes,
       '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-      getComponentName(fiber) || 'Unknown',
+      getComponentName(type) || 'Unknown',
       contextKey,
     );
   }
   if (__DEV__) {
-    const name = getComponentName(fiber) || 'Unknown';
+    const name = getComponentName(type) || 'Unknown';
     checkPropTypes(
       childContextTypes,
       childContext,
@@ -201,7 +206,7 @@ function processChildContext(fiber: Fiber, parentContext: Object): Object {
       // context from the parent component instance. The stack will be missing
       // because it's outside of the reconciliation, and so the pointer has not
       // been set. This is rare and doesn't matter. We'll also remove that API.
-      ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
+      ReactCurrentFiber.getCurrentFiberStackInDev,
     );
   }
 
@@ -219,7 +224,7 @@ function pushContextProvider(workInProgress: Fiber): boolean {
   // and replace it on the stack later when invalidating the context.
   const memoizedMergedChildContext =
     (instance && instance.__reactInternalMemoizedMergedChildContext) ||
-    emptyObject;
+    emptyContextObject;
 
   // Remember the parent context so we can merge with it later.
   // Inherit the parent's did-perform-work value to avoid inadvertently blocking updates.

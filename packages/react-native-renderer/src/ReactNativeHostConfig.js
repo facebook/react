@@ -9,8 +9,7 @@
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
-import emptyObject from 'fbjs/lib/emptyObject';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 // Modules provided by RN:
 import UIManager from 'UIManager';
@@ -42,6 +41,14 @@ export type HostContext = $ReadOnly<{|
 |}>;
 export type UpdatePayload = Object; // Unused
 export type ChildSet = void; // Unused
+
+export type TimeoutHandle = TimeoutID;
+export type NoTimeout = -1;
+
+const UPDATE_SIGNAL = {};
+if (__DEV__) {
+  Object.freeze(UPDATE_SIGNAL);
+}
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
@@ -218,7 +225,7 @@ export function prepareUpdate(
   rootContainerInstance: Container,
   hostContext: HostContext,
 ): null | Object {
-  return emptyObject;
+  return UPDATE_SIGNAL;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
@@ -231,6 +238,10 @@ export const scheduleDeferredCallback =
   ReactNativeFrameScheduling.scheduleDeferredCallback;
 export const cancelDeferredCallback =
   ReactNativeFrameScheduling.cancelDeferredCallback;
+
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
 
 export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
   return false;

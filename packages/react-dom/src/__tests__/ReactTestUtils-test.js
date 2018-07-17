@@ -53,6 +53,16 @@ describe('ReactTestUtils', () => {
     MockedComponent.prototype.render = jest.fn();
 
     // Patch it up so it returns its children.
+    expect(() =>
+      ReactTestUtils.mockComponent(MockedComponent),
+    ).toLowPriorityWarnDev(
+      'ReactTestUtils.mockComponent() is deprecated. ' +
+        'Use shallow rendering or jest.mock() instead.\n\n' +
+        'See https://fb.me/test-utils-mock-component for more information.',
+      {withoutStack: true},
+    );
+
+    // De-duplication check
     ReactTestUtils.mockComponent(MockedComponent);
 
     const container = document.createElement('div');
@@ -280,12 +290,11 @@ describe('ReactTestUtils', () => {
       };
       spyOnDevAndProd(obj, 'handler').and.callThrough();
       const container = document.createElement('div');
-      const instance = ReactDOM.render(
+      const node = ReactDOM.render(
         <input type="text" onChange={obj.handler} />,
         container,
       );
 
-      const node = ReactDOM.findDOMNode(instance);
       node.value = 'giraffe';
       ReactTestUtils.Simulate.change(node);
 
@@ -321,7 +330,7 @@ describe('ReactTestUtils', () => {
         container,
       );
 
-      const node = ReactDOM.findDOMNode(instance.refs.input);
+      const node = instance.refs.input;
       node.value = 'zebra';
       ReactTestUtils.Simulate.change(node);
 

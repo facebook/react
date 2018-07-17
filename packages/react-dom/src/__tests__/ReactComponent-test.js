@@ -278,7 +278,7 @@ describe('ReactComponent', () => {
       componentDidMount() {
         // Check .props.title to make sure we got the right elements back
         expect(this.wrapperRef.getTitle()).toBe('wrapper');
-        expect(ReactDOM.findDOMNode(this.innerRef).className).toBe('inner');
+        expect(this.innerRef.className).toBe('inner');
         mounted = true;
       }
     }
