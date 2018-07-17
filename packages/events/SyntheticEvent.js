@@ -31,13 +31,13 @@ const EventInterface = {
   type: null,
   target: null,
   // currentTarget is set when dispatching; no use in copying it here
-  currentTarget: function() {
+  currentTarget() {
     return null;
   },
   eventPhase: null,
   bubbles: null,
   cancelable: null,
-  timeStamp: function(event) {
+  timeStamp(event) {
     return event.timeStamp || Date.now();
   },
   defaultPrevented: null,
@@ -83,15 +83,14 @@ function SyntheticEvent(
     delete this.stopPropagation;
   }
 
-  this.dispatchConfig = dispatchConfig;
-  this._targetInst = targetInst;
-  this.nativeEvent = nativeEvent;
+  Object.assign(this, {
+    dispatchConfig,
+    nativeEvent,
+    _targetInst: targetInst,
+  });
 
-  const Interface = this.constructor.Interface;
-  for (const propName in Interface) {
-    if (!Interface.hasOwnProperty(propName)) {
-      continue;
-    }
+  const {Interface} = this.constructor;
+  Object.keys(Interface).forEach(propName => {
     if (__DEV__) {
       delete this[propName]; // this has a getter/setter for warnings
     }
@@ -105,23 +104,17 @@ function SyntheticEvent(
         this[propName] = nativeEvent[propName];
       }
     }
-  }
+  });
 
-  const defaultPrevented =
-    nativeEvent.defaultPrevented != null
-      ? nativeEvent.defaultPrevented
-      : nativeEvent.returnValue === false;
-  if (defaultPrevented) {
-    this.isDefaultPrevented = functionThatReturnsTrue;
-  } else {
-    this.isDefaultPrevented = functionThatReturnsFalse;
-  }
+  this.isDefaultPrevented = nativeEvent.defaultPrevented
+    ? functionThatReturnsTrue
+    : functionThatReturnsFalse;
   this.isPropagationStopped = functionThatReturnsFalse;
   return this;
 }
 
 Object.assign(SyntheticEvent.prototype, {
-  preventDefault: function() {
+  preventDefault() {
     this.defaultPrevented = true;
     const event = this.nativeEvent;
     if (!event) {
@@ -136,7 +129,7 @@ Object.assign(SyntheticEvent.prototype, {
     this.isDefaultPrevented = functionThatReturnsTrue;
   },
 
-  stopPropagation: function() {
+  stopPropagation() {
     const event = this.nativeEvent;
     if (!event) {
       return;
@@ -161,7 +154,7 @@ Object.assign(SyntheticEvent.prototype, {
    * them back into the pool. This allows a way to hold onto a reference that
    * won't be added back into the pool.
    */
-  persist: function() {
+  persist() {
     this.isPersistent = functionThatReturnsTrue;
   },
 
@@ -175,7 +168,7 @@ Object.assign(SyntheticEvent.prototype, {
   /**
    * `PooledClass` looks for `destructor` on each instance it releases.
    */
-  destructor: function() {
+  destructor() {
     const Interface = this.constructor.Interface;
     for (const propName in Interface) {
       if (__DEV__) {
@@ -219,15 +212,10 @@ SyntheticEvent.Interface = EventInterface;
 SyntheticEvent.extend = function(Interface) {
   const Super = this;
 
-  const E = function() {};
-  E.prototype = Super.prototype;
-  const prototype = new E();
-
   function Class() {
     return Super.apply(this, arguments);
   }
-  Object.assign(prototype, Class.prototype);
-  Class.prototype = prototype;
+  Class.prototype = Object.create(Super.prototype);
   Class.prototype.constructor = Class;
 
   Class.Interface = Object.assign({}, Super.Interface, Interface);
@@ -250,10 +238,10 @@ if (__DEV__) {
   if (isProxySupported) {
     /*eslint-disable no-func-assign */
     SyntheticEvent = new Proxy(SyntheticEvent, {
-      construct: function(target, args) {
+      construct(target, args) {
         return this.apply(target, Object.create(target.prototype), args);
       },
-      apply: function(constructor, that, args) {
+      apply(constructor, that, args) {
         return new Proxy(constructor.apply(that, args), {
           set: function(target, prop, value) {
             if (
@@ -293,8 +281,8 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
   const isFunction = typeof getVal === 'function';
   return {
     configurable: true,
-    set: set,
-    get: get,
+    set,
+    get,
   };
 
   function set(val) {
