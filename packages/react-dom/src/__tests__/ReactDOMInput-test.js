@@ -47,6 +47,71 @@ describe('ReactDOMInput', () => {
     document.body.removeChild(container);
   });
 
+  it('should warn for controlled value of 0 with missing onChange', () => {
+    expect(() => {
+      ReactDOM.render(<input type="text" value={0} />, container);
+    }).toWarnDev(
+      'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
+    );
+  });
+
+  it('should warn for controlled value of "" with missing onChange', () => {
+    expect(() => {
+      ReactDOM.render(<input type="text" value="" />, container);
+    }).toWarnDev(
+      'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
+    );
+  });
+
+  it('should warn for controlled value of "0" with missing onChange', () => {
+    expect(() => {
+      ReactDOM.render(<input type="text" value="0" />, container);
+    }).toWarnDev(
+      'Failed prop type: You provided a `value` prop to a form field without an `onChange` handler.',
+    );
+  });
+
+  it('should warn for controlled value of false with missing onChange', () => {
+    expect(() =>
+      ReactDOM.render(<input type="checkbox" checked={false} />, container),
+    ).toWarnDev(
+      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler.',
+    );
+  });
+
+  it('should warn with checked and no onChange handler with readOnly specified', () => {
+    ReactDOM.render(
+      <input type="checkbox" checked={false} readOnly={true} />,
+      container,
+    );
+    ReactDOM.unmountComponentAtNode(container);
+
+    expect(() =>
+      ReactDOM.render(
+        <input type="checkbox" checked={false} readOnly={false} />,
+        container,
+      ),
+    ).toWarnDev(
+      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler. ' +
+        'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
+
+  it('should not warn about missing onChange in uncontrolled inputs', () => {
+    ReactDOM.render(<input />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<input value={undefined} />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<input type="text" />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<input type="text" value={undefined} />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<input type="checkbox" />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<input type="checkbox" checked={undefined} />, container);
+  });
+
   it('should properly control a value even if no event listener exists', () => {
     let node;
 
@@ -452,7 +517,7 @@ describe('ReactDOMInput', () => {
   });
 
   it('should display `value` of number 0', () => {
-    const stub = <input type="text" value={0} />;
+    const stub = <input type="text" value={0} onChange={emptyFunction} />;
     const node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('0');
@@ -590,8 +655,14 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly transition from an empty value to 0', function() {
-    ReactDOM.render(<input type="text" value="" />, container);
-    ReactDOM.render(<input type="text" value={0} />, container);
+    ReactDOM.render(
+      <input type="text" value="" onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="text" value={0} onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -600,8 +671,14 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly transition from 0 to an empty value', function() {
-    ReactDOM.render(<input type="text" value={0} />, container);
-    ReactDOM.render(<input type="text" value="" />, container);
+    ReactDOM.render(
+      <input type="text" value={0} onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="text" value="" onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -610,8 +687,14 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly transition a text input from 0 to an empty 0.0', function() {
-    ReactDOM.render(<input type="text" value={0} />, container);
-    ReactDOM.render(<input type="text" value="0.0" />, container);
+    ReactDOM.render(
+      <input type="text" value={0} onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="text" value="0.0" onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -620,8 +703,14 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly transition a number input from "" to 0', function() {
-    ReactDOM.render(<input type="number" value="" />, container);
-    ReactDOM.render(<input type="number" value={0} />, container);
+    ReactDOM.render(
+      <input type="number" value="" onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="number" value={0} onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -630,8 +719,14 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly transition a number input from "" to "0"', function() {
-    ReactDOM.render(<input type="number" value="" />, container);
-    ReactDOM.render(<input type="number" value="0" />, container);
+    ReactDOM.render(
+      <input type="number" value="" onChange={emptyFunction} />,
+      container,
+    );
+    ReactDOM.render(
+      <input type="number" value="0" onChange={emptyFunction} />,
+      container,
+    );
 
     const node = container.firstChild;
 
@@ -872,25 +967,6 @@ describe('ReactDOMInput', () => {
 
     setUntrackedValue.call(node, 'giraffe');
     dispatchEventOnNode(node, 'input');
-  });
-
-  it('should warn with checked and no onChange handler with readOnly specified', () => {
-    ReactDOM.render(
-      <input type="checkbox" checked="false" readOnly={true} />,
-      container,
-    );
-    ReactDOM.unmountComponentAtNode(container);
-
-    expect(() =>
-      ReactDOM.render(
-        <input type="checkbox" checked="false" readOnly={false} />,
-        container,
-      ),
-    ).toWarnDev(
-      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler. ' +
-        'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
-        'Otherwise, set either `onChange` or `readOnly`.',
-    );
   });
 
   it('should update defaultValue to empty string', () => {
