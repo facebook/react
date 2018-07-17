@@ -37,6 +37,8 @@ function loadModules({
 const mockDevToolsForTest = () => {
   jest.mock('react-reconciler/src/ReactFiberDevToolsHook', () => ({
     injectInternals: () => {},
+    onCommitRoot: () => {},
+    onCommitUnmount: () => {},
     isDevToolsPresent: true,
   }));
 };
