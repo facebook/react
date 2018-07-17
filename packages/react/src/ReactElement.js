@@ -206,7 +206,7 @@ export function createElement(type, config, children) {
   if (childrenLength === 1) {
     props.children = children;
   } else if (childrenLength > 1) {
-    const childArray = Array(childrenLength);
+    const childArray = new Array(childrenLength);
     for (let i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
@@ -351,7 +351,7 @@ export function cloneElement(element, config, children) {
   if (childrenLength === 1) {
     props.children = children;
   } else if (childrenLength > 1) {
-    const childArray = Array(childrenLength);
+    const childArray = new Array(childrenLength);
     for (let i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
