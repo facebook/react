@@ -1099,7 +1099,7 @@ describe('ReactDOMInput', () => {
   });
 
   it('should warn if uncontrolled input (value is null) switches to controlled', () => {
-    const stub = <input type="text" value={null} onChange={emptyFunction} />;
+    const stub = <input type="text" value={null} />;
     expect(() => ReactDOM.render(stub, container)).toWarnDev(
       '`value` prop on `input` should not be null. ' +
         'Consider using an empty string to clear the component or `undefined` for uncontrolled components.',
@@ -1185,12 +1185,12 @@ describe('ReactDOMInput', () => {
 
   it('should warn if uncontrolled checkbox (checked is null) switches to controlled', () => {
     const stub = (
-      <input type="checkbox" checked={null} onChange={emptyFunction} />
+      <input type="checkbox" checked={null} />
     );
     ReactDOM.render(stub, container);
     expect(() =>
       ReactDOM.render(
-        <input type="checkbox" checked={true} onChange={emptyFunction} />,
+        <input type="checkbox" checked={true} />,
         container,
       ),
     ).toWarnDev(
@@ -1219,7 +1219,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(stub, container);
     expect(() =>
       ReactDOM.render(
-        <input type="radio" checked={null} onChange={emptyFunction} />,
+        <input type="radio" checked={null} />,
         container,
       ),
     ).toWarnDev(
@@ -1260,7 +1260,7 @@ describe('ReactDOMInput', () => {
   });
 
   it('should warn if uncontrolled radio (checked is null) switches to controlled', () => {
-    const stub = <input type="radio" checked={null} onChange={emptyFunction} />;
+    const stub = <input type="radio" checked={null} />;
     ReactDOM.render(stub, container);
     expect(() =>
       ReactDOM.render(
