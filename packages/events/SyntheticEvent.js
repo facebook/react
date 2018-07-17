@@ -70,6 +70,8 @@ function SyntheticEvent(
     delete this.nativeEvent;
     delete this.preventDefault;
     delete this.stopPropagation;
+    delete this.isDefaultPrevented;
+    delete this.isPropagationStopped;
   }
 
   this.dispatchConfig = dispatchConfig;
@@ -180,8 +182,8 @@ Object.assign(SyntheticEvent.prototype, {
     this.dispatchConfig = null;
     this._targetInst = null;
     this.nativeEvent = null;
-    this.isDefaultPrevented = null;
-    this.isPropagationStopped = null;
+    this.isDefaultPrevented = functionThatReturnsFalse;
+    this.isPropagationStopped = functionThatReturnsFalse;
     this._dispatchListeners = null;
     this._dispatchInstances = null;
     if (__DEV__) {
@@ -189,6 +191,16 @@ Object.assign(SyntheticEvent.prototype, {
         this,
         'nativeEvent',
         getPooledWarningPropertyDefinition('nativeEvent', null),
+      );
+      Object.defineProperty(
+        this,
+        'isDefaultPrevented',
+        getPooledWarningPropertyDefinition('isDefaultPrevented', functionThatReturnsFalse),
+      );
+      Object.defineProperty(
+        this,
+        'isPropagationStopped',
+        getPooledWarningPropertyDefinition('isPropagationStopped', functionThatReturnsFalse),
       );
       Object.defineProperty(
         this,
