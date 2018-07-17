@@ -106,6 +106,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input type="text" />, container);
     ReactDOM.unmountComponentAtNode(container);
     ReactDOM.render(<input type="text" value={undefined} />, container);
+    ReactDOM.unmountComponentAtNode(container);
     ReactDOM.render(<input type="checkbox" />, container);
     ReactDOM.unmountComponentAtNode(container);
     ReactDOM.render(<input type="checkbox" checked={undefined} />, container);
@@ -1096,10 +1097,7 @@ describe('ReactDOMInput', () => {
     const stub = <input type="text" />;
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(
-        <input type="text" value="controlled" onChange={emptyFunction} />,
-        container,
-      ),
+      ReactDOM.render(<input type="text" value="controlled" />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type text to be controlled. ' +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
@@ -1181,10 +1179,7 @@ describe('ReactDOMInput', () => {
     const stub = <input type="checkbox" />;
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(
-        <input type="checkbox" checked={true} onChange={emptyFunction} />,
-        container,
-      ),
+      ReactDOM.render(<input type="checkbox" checked={true} />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type checkbox to be controlled. ' +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
@@ -1266,10 +1261,7 @@ describe('ReactDOMInput', () => {
     const stub = <input type="radio" checked={null} />;
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(
-        <input type="radio" checked={true} onChange={emptyFunction} />,
-        container,
-      ),
+      ReactDOM.render(<input type="radio" checked={true} />, container),
     ).toWarnDev(
       'Warning: A component is changing an uncontrolled input of type radio to be controlled. ' +
         'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
