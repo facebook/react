@@ -24,12 +24,16 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   function div(...children) {
-    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
+    children = children.map(c => (typeof c === 'string' ? text(c) : c));
     return {type: 'div', children, prop: undefined};
   }
 
   function span(prop) {
     return {type: 'span', children: [], prop};
+  }
+
+  function text(t) {
+    return {text: t};
   }
 
   it('can update child nodes of a host instance', () => {
@@ -238,6 +242,131 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([div('Trail')]);
+  });
+
+  it('can delete a child when it unmounts inside a portal', () => {
+    function Bar(props) {
+      return <span prop={props.children} />;
+    }
+
+    const portalContainer = ReactNoop.getOrCreateRootContainer(
+      'portalContainer',
+    );
+    function Foo(props) {
+      return ReactNoop.createPortal(
+        props.show ? [<div key="a" />, <Bar key="b">Hello</Bar>, 'World'] : [],
+        portalContainer,
+        null,
+      );
+    }
+
+    ReactNoop.render(
+      <div>
+        <Foo show={true} />
+      </div>,
+    );
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([
+      div(),
+      span('Hello'),
+      text('World'),
+    ]);
+
+    ReactNoop.render(
+      <div>
+        <Foo show={false} />
+      </div>,
+    );
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([]);
+
+    ReactNoop.render(
+      <div>
+        <Foo show={true} />
+      </div>,
+    );
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([
+      div(),
+      span('Hello'),
+      text('World'),
+    ]);
+
+    ReactNoop.render(null);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([]);
+
+    ReactNoop.render(<Foo show={false} />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([]);
+
+    ReactNoop.render(<Foo show={true} />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([
+      div(),
+      span('Hello'),
+      text('World'),
+    ]);
+
+    ReactNoop.render(null);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([]);
+  });
+
+  it('can delete a child when it unmounts with a portal', () => {
+    function Bar(props) {
+      return <span prop={props.children} />;
+    }
+
+    const portalContainer = ReactNoop.getOrCreateRootContainer(
+      'portalContainer',
+    );
+    function Foo(props) {
+      return ReactNoop.createPortal(
+        [<div key="a" />, <Bar key="b">Hello</Bar>, 'World'],
+        portalContainer,
+        null,
+      );
+    }
+
+    ReactNoop.render(
+      <div>
+        <Foo />
+      </div>,
+    );
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([
+      div(),
+      span('Hello'),
+      text('World'),
+    ]);
+
+    ReactNoop.render(null);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([]);
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([
+      div(),
+      span('Hello'),
+      text('World'),
+    ]);
+
+    ReactNoop.render(null);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([]);
+    expect(ReactNoop.getChildren('portalContainer')).toEqual([]);
   });
 
   it('does not update child nodes if a flush is aborted', () => {
