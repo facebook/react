@@ -428,8 +428,11 @@ function commitAllHostEffects() {
 
 function commitBeforeMutationLifecycles() {
   while (nextEffect !== null) {
-    const effectTag = nextEffect.effectTag;
+    if (__DEV__) {
+      ReactCurrentFiber.setCurrentFiber(nextEffect);
+    }
 
+    const effectTag = nextEffect.effectTag;
     if (effectTag & Snapshot) {
       recordEffect();
       const current = nextEffect.alternate;
@@ -439,6 +442,10 @@ function commitBeforeMutationLifecycles() {
     // Don't cleanup effects yet;
     // This will be done by commitAllLifeCycles()
     nextEffect = nextEffect.nextEffect;
+  }
+
+  if (__DEV__) {
+    ReactCurrentFiber.resetCurrentFiber();
   }
 }
 
