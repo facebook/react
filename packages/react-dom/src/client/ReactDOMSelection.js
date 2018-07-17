@@ -14,8 +14,9 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
  * @return {?object}
  */
 export function getOffsets(outerNode) {
+  const { ownerDocument } = outerNode;  
   const win =
-    (outerNode.ownerDocument && outerNode.ownerDocument.defaultView) || window;
+    (ownerDocument && ownerDocument.defaultView) || window;
   const selection = win.getSelection && win.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
