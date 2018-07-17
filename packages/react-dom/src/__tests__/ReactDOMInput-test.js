@@ -881,15 +881,33 @@ describe('ReactDOMInput', () => {
     );
     ReactDOM.unmountComponentAtNode(container);
 
+    ReactTestUtils.renderIntoDocument(
+      <input
+        type="checkbox"
+        checked="false"
+        onChange={emptyFunction}
+        readOnly={false}
+      />,
+    );
+
+    ReactTestUtils.renderIntoDocument(
+      <input
+        type="checkbox"
+        checked="false"
+        onClick={emptyFunction}
+        readOnly={false}
+      />,
+    );
+
     expect(() =>
       ReactDOM.render(
         <input type="checkbox" checked="false" readOnly={false} />,
         container,
       ),
     ).toWarnDev(
-      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` handler. ' +
+      'Failed prop type: You provided a `checked` prop to a form field without an `onChange` or `onClick` handler. ' +
         'This will render a read-only field. If the field should be mutable use `defaultChecked`. ' +
-        'Otherwise, set either `onChange` or `readOnly`.',
+        'Otherwise, set `onChange`, `onClick` or `readOnly`.',
     );
   });
 
