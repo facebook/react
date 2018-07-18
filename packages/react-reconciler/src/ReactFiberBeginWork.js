@@ -1061,7 +1061,24 @@ function bailoutOnAlreadyFinishedWork(
   cloneChildFibers(current, workInProgress);
   return workInProgress.child;
 }
-
+/*
+  function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
+    let child = firstChild;
+    do {
+      // Ensure that the first and last effect of the parent corresponds
+      // to the children's first and last effect.
+      if (!returnFiber.firstEffect) {
+        returnFiber.firstEffect = child.firstEffect;
+      }
+      if (child.lastEffect) {
+        if (returnFiber.lastEffect) {
+          returnFiber.lastEffect.nextEffect = child.firstEffect;
+        }
+        returnFiber.lastEffect = child.lastEffect;
+      }
+    } while (child = child.sibling);
+  }
+  */
 function bailoutOnLowPriority(current, workInProgress) {
   cancelWorkTimer(workInProgress);
 
