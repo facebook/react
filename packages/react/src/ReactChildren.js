@@ -166,8 +166,7 @@ function traverseAllChildrenImpl(
             didWarnAboutMaps,
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.%s',
-            ReactDebugCurrentFrame.getStackAddendum(),
+              'ReactElements instead.',
           );
           didWarnAboutMaps = true;
         }

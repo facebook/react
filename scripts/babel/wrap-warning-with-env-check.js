@@ -24,7 +24,10 @@ module.exports = function(babel, options) {
             return;
           }
 
-          if (path.get('callee').isIdentifier({name: 'warning'})) {
+          if (
+            path.get('callee').isIdentifier({name: 'warning'}) ||
+            path.get('callee').isIdentifier({name: 'warningWithoutStack'})
+          ) {
             // Turns this code:
             //
             // warning(condition, argument, argument);

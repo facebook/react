@@ -410,6 +410,7 @@ describe('ReactCompositeComponent-state', () => {
       'Warning: Test.componentWillReceiveProps(): Assigning directly to ' +
         "this.state is deprecated (except inside a component's constructor). " +
         'Use setState instead.',
+      {withoutStack: true},
     );
 
     expect(ops).toEqual([
@@ -451,6 +452,7 @@ describe('ReactCompositeComponent-state', () => {
       'Warning: Test.componentWillMount(): Assigning directly to ' +
         "this.state is deprecated (except inside a component's constructor). " +
         'Use setState instead.',
+      {withoutStack: true},
     );
 
     expect(ops).toEqual([

@@ -19,8 +19,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
-import {getCommitTime} from './ReactProfilerTimer';
+import {enableProfilerTimer, enableSuspense} from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
   HostRoot,
@@ -28,24 +27,27 @@ import {
   HostText,
   HostPortal,
   Profiler,
-  TimeoutComponent,
+  PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {
+  NoEffect,
   ContentReset,
   Placement,
   Snapshot,
   Update,
 } from 'shared/ReactTypeOfSideEffect';
-import {commitUpdateQueue} from './ReactUpdateQueue';
+import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
+import {Sync} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
-import getComponentName from 'shared/getComponentName';
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
+import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {logCapturedError} from './ReactFiberErrorLogger';
+import {getCommitTime} from './ReactProfilerTimer';
+import {commitUpdateQueue} from './ReactUpdateQueue';
 import {
   getPublicInstance,
   supportsMutation,
@@ -63,13 +65,20 @@ import {
   replaceContainerChildren,
   createContainerChildSet,
 } from './ReactFiberHostConfig';
-import {captureCommitPhaseError} from './ReactFiberScheduler';
+import {
+  captureCommitPhaseError,
+  requestCurrentTime,
+  scheduleWork,
+} from './ReactFiberScheduler';
+import {StrictMode} from './ReactTypeOfMode';
 
 const {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
 } = ReactErrorUtils;
+
+const emptyObject = {};
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -80,11 +89,11 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
   const source = errorInfo.source;
   let stack = errorInfo.stack;
   if (stack === null && source !== null) {
-    stack = getStackAddendumByWorkInProgressFiber(source);
+    stack = getStackByFiberInDevAndProd(source);
   }
 
   const capturedError: CapturedError = {
-    componentName: source !== null ? getComponentName(source) : null,
+    componentName: source !== null ? getComponentName(source.type) : null,
     componentStack: stack !== null ? stack : '',
     error: errorInfo.value,
     errorBoundary: null,
@@ -95,7 +104,7 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
 
   if (boundary !== null && boundary.tag === ClassComponent) {
     capturedError.errorBoundary = boundary.stateNode;
-    capturedError.errorBoundaryName = getComponentName(boundary);
+    capturedError.errorBoundaryName = getComponentName(boundary.type);
     capturedError.errorBoundaryFound = true;
     capturedError.willRetry = true;
   }
@@ -190,11 +199,11 @@ function commitBeforeMutationLifeCycles(
             >);
             if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
               didWarnSet.add(finishedWork.type);
-              warning(
+              warningWithoutStack(
                 false,
                 '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
                   'must be returned. You have returned undefined.',
-                getComponentName(finishedWork),
+                getComponentName(finishedWork.type),
               );
             }
           }
@@ -313,8 +322,23 @@ function commitLifeCycles(
       // We have no life-cycles associated with Profiler.
       return;
     }
-    case TimeoutComponent: {
-      // We have no life-cycles associated with Timeouts.
+    case PlaceholderComponent: {
+      if (enableSuspense) {
+        if ((finishedWork.mode & StrictMode) === NoEffect) {
+          // In loose mode, a placeholder times out by scheduling a synchronous
+          // update in the commit phase. Use `updateQueue` field to signal that
+          // the Timeout needs to switch to the placeholder. We don't need an
+          // entire queue. Any non-null value works.
+          // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
+          finishedWork.updateQueue = emptyObject;
+          scheduleWork(finishedWork, Sync);
+        } else {
+          // In strict mode, the Update effect is used to record the time at
+          // which the placeholder timed out.
+          const currentTime = requestCurrentTime();
+          finishedWork.stateNode = {timedOutAt: currentTime};
+        }
+      }
       return;
     }
     default: {
@@ -344,12 +368,12 @@ function commitAttachRef(finishedWork: Fiber) {
     } else {
       if (__DEV__) {
         if (!ref.hasOwnProperty('current')) {
-          warning(
+          warningWithoutStack(
             false,
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().%s',
-            getComponentName(finishedWork),
-            getStackAddendumByWorkInProgressFiber(finishedWork),
+            getComponentName(finishedWork.type),
+            getStackByFiberInDevAndProd(finishedWork),
           );
         }
       }
@@ -374,9 +398,7 @@ function commitDetachRef(current: Fiber) {
 // deletion, so don't let them throw. Host-originating errors should
 // interrupt deletion, so it's okay
 function commitUnmount(current: Fiber): void {
-  if (typeof onCommitUnmount === 'function') {
-    onCommitUnmount(current);
-  }
+  onCommitUnmount(current);
 
   switch (current.tag) {
     case ClassComponent: {
@@ -574,8 +596,11 @@ function commitPlacement(finishedWork: Fiber): void {
 
   // Recursively insert all host nodes into the parent.
   const parentFiber = getHostParentFiber(finishedWork);
+
+  // Note: these two variables *must* always be updated together.
   let parent;
   let isContainer;
+
   switch (parentFiber.tag) {
     case HostComponent:
       parent = parentFiber.stateNode;
@@ -646,13 +671,15 @@ function commitPlacement(finishedWork: Fiber): void {
 }
 
 function unmountHostComponents(current): void {
-  // We only have the top Fiber that was inserted but we need recurse down its
+  // We only have the top Fiber that was deleted but we need recurse down its
   // children to find all the terminal nodes.
   let node: Fiber = current;
 
   // Each iteration, currentParent is populated with node's host parent if not
   // currentParentIsValid.
   let currentParentIsValid = false;
+
+  // Note: these two variables *must* always be updated together.
   let currentParent;
   let currentParentIsContainer;
 
@@ -698,6 +725,7 @@ function unmountHostComponents(current): void {
       // When we go into a portal, it becomes the parent to remove from.
       // We will reassign it back when we pop the portal on the way up.
       currentParent = node.stateNode.containerInfo;
+      currentParentIsContainer = true;
       // Visit children because portals might contain host components.
       if (node.child !== null) {
         node.child.return = node;
@@ -806,14 +834,14 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           finishedWork.memoizedProps.id,
           current === null ? 'mount' : 'update',
           finishedWork.actualDuration,
-          finishedWork.treeBaseTime,
+          finishedWork.treeBaseDuration,
           finishedWork.actualStartTime,
           getCommitTime(),
         );
       }
       return;
     }
-    case TimeoutComponent: {
+    case PlaceholderComponent: {
       return;
     }
     default: {

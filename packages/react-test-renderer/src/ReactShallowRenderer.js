@@ -66,7 +66,9 @@ class ReactShallowRenderer {
         'components, but the provided element type was `%s`.',
       Array.isArray(element.type)
         ? 'array'
-        : element.type === null ? 'null' : typeof element.type,
+        : element.type === null
+          ? 'null'
+          : typeof element.type,
     );
 
     if (this._rendering) {
@@ -107,7 +109,11 @@ class ReactShallowRenderer {
 
         this._mountClassComponent(element, this._context);
       } else {
-        this._rendered = element.type(element.props, this._context);
+        this._rendered = element.type.call(
+          undefined,
+          element.props,
+          this._context,
+        );
       }
     }
 
@@ -345,7 +351,7 @@ function getStackAddendum() {
     stack += describeComponentFrame(
       name,
       currentlyValidatingElement._source,
-      owner && getComponentName(owner),
+      owner && getComponentName(owner.type),
     );
   }
   return stack;

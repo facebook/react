@@ -33,7 +33,13 @@ function useForks(forks) {
     const targetModule = forks[srcModule];
     resolvedForks.set(
       require.resolve(srcModule),
-      require.resolve(targetModule)
+      // targetModule could be a string (a file path),
+      // or an error (which we'd throw if it gets used).
+      // Don't try to "resolve" errors, but cache
+      // resolved file paths.
+      typeof targetModule === 'string'
+        ? require.resolve(targetModule)
+        : targetModule
     );
   });
   return {
@@ -64,7 +70,11 @@ function useForks(forks) {
       }
       if (resolvedImportee && resolvedForks.has(resolvedImportee)) {
         // We found a fork!
-        return resolvedForks.get(resolvedImportee);
+        const fork = resolvedForks.get(resolvedImportee);
+        if (fork instanceof Error) {
+          throw fork;
+        }
+        return fork;
       }
       return null;
     },

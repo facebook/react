@@ -18,7 +18,7 @@ export type NewContext = {
   getContextChangedBits(context: ReactContext<any>): number,
 };
 
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 
@@ -43,7 +43,7 @@ function pushProvider(providerFiber: Fiber): void {
     context._currentValue = providerFiber.pendingProps.value;
     context._changedBits = providerFiber.stateNode;
     if (__DEV__) {
-      warning(
+      warningWithoutStack(
         context._currentRenderer === undefined ||
           context._currentRenderer === null ||
           context._currentRenderer === rendererSigil,
@@ -60,7 +60,7 @@ function pushProvider(providerFiber: Fiber): void {
     context._currentValue2 = providerFiber.pendingProps.value;
     context._changedBits2 = providerFiber.stateNode;
     if (__DEV__) {
-      warning(
+      warningWithoutStack(
         context._currentRenderer2 === undefined ||
           context._currentRenderer2 === null ||
           context._currentRenderer2 === rendererSigil,

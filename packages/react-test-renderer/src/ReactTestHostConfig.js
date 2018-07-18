@@ -32,6 +32,8 @@ export type PublicInstance = Instance | TextInstance;
 export type HostContext = Object;
 export type UpdatePayload = Object;
 export type ChildSet = void; // Unused
+export type TimeoutHandle = TimeoutID;
+export type NoTimeout = -1;
 
 export * from 'shared/HostConfigWithNoPersistence';
 export * from 'shared/HostConfigWithNoHydration';
@@ -178,7 +180,7 @@ export function createTextInstance(
   };
 }
 
-export const isPrimaryRenderer = true;
+export const isPrimaryRenderer = false;
 // This approach enables `now` to be mocked by tests,
 // Even after the reconciler has initialized and read host config values.
 export const now = () => TestRendererScheduling.nowImplementation();
@@ -186,6 +188,10 @@ export const scheduleDeferredCallback =
   TestRendererScheduling.scheduleDeferredCallback;
 export const cancelDeferredCallback =
   TestRendererScheduling.cancelDeferredCallback;
+
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
 
 // -------------------
 //     Mutation
