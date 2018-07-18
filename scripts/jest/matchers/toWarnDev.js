@@ -25,7 +25,7 @@ const createMatcherFor = consoleMethod =>
       ) {
         throw new Error(
           'toWarnDev() second argument, when present, should be an object. ' +
-            'Did you forget to wrap messages into an array?'
+            'Did you forget to wrap the messages into an array?'
         );
       }
       if (arguments.length > 3) {
