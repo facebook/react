@@ -19,6 +19,22 @@ const createMatcherFor = consoleMethod =>
             `but was given ${typeof expectedMessages}.`
         );
       }
+      if (
+        options != null &&
+        (typeof options !== 'object' || Array.isArray(options))
+      ) {
+        throw new Error(
+          'toWarnDev() second argument, when present, should be an object. ' +
+            'Did you forget to wrap the messages into an array?'
+        );
+      }
+      if (arguments.length > 3) {
+        // `matcher` comes from Jest, so it's more than 2 in practice
+        throw new Error(
+          'toWarnDev() received more than two arguments. ' +
+            'Did you forget to wrap the messages into an array?'
+        );
+      }
 
       const withoutStack = options.withoutStack;
       const warningsWithoutComponentStack = [];
