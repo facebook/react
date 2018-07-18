@@ -46,7 +46,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushAll returns array of yielded values', () => {
     function Child(props) {
-      renderer.unstable_yield(props.children);
+      ReactTestRenderer.unstable_yield(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -72,7 +72,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushThrough flushes until the expected values is yielded', () => {
     function Child(props) {
-      renderer.unstable_yield(props.children);
+      ReactTestRenderer.unstable_yield(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -103,7 +103,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('supports high priority interruptions', () => {
     function Child(props) {
-      renderer.unstable_yield(props.children);
+      ReactTestRenderer.unstable_yield(props.children);
       return props.children;
     }
 
@@ -143,7 +143,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('should error if flushThrough params dont match yielded values', () => {
     const Yield = ({id}) => {
-      renderer.unstable_yield(id);
+      ReactTestRenderer.unstable_yield(id);
       return id;
     };
 
@@ -165,7 +165,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('should error if flushAll params dont match yielded values', () => {
     const Yield = ({id}) => {
-      renderer.unstable_yield(id);
+      ReactTestRenderer.unstable_yield(id);
       return id;
     };
 
@@ -199,7 +199,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('should error if flushThrough yields the wrong number of values', () => {
     const Yield = ({id}) => {
-      renderer.unstable_yield(id);
+      ReactTestRenderer.unstable_yield(id);
       return id;
     };
 
