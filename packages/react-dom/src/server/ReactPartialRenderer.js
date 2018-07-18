@@ -412,7 +412,7 @@ function resolve(
     let queue = [];
     let replace = false;
     let updater = {
-      isMounted: function(publicInstance) {
+      isMounted: function() {
         return false;
       },
       enqueueForceUpdate: function(publicInstance) {

@@ -43,7 +43,7 @@ const canUseTextInputEvent =
   canUseDOM && 'TextEvent' in window && !documentMode;
 
 // In IE9+, we have access to composition events, but the data supplied
-// by the native compositionend event may be incorrect. Japanese ideographic
+// by the native compositioned event may be incorrect. Japanese ideographic
 // spaces, for instance (\u3000) are not recorded correctly.
 const useFallbackCompositionData =
   canUseDOM &&
