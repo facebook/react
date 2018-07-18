@@ -60,6 +60,8 @@ function getActiveElementDeep() {
   let win = window;
   let element = getActiveElement();
   while (element instanceof win.HTMLIFrameElement) {
+    // Accessing the contentDocument of a HTMLIframeElement can cause the browser
+    // to throw, e.g. if the src is not in the same domains the parent document
     try {
       win = element.contentDocument.defaultView;
     } catch (e) {
