@@ -20,6 +20,7 @@ import {
   getIteratorFn,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
+  REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'shared/warning';
@@ -333,8 +334,8 @@ export function createElementWithValidation(type, props, children) {
       typeString = 'array';
     } else {
       typeString = typeof type;
-      if (type && type.hasOwnProperty('$$typeof')) {
-        typeString = 'element';
+      if (type && type.$$typeof === REACT_ELEMENT_TYPE) {
+        typeString = 'React element';
         info = ' Did you accidentally export JSX instead of a component?';
       }
     }

@@ -236,31 +236,38 @@ describe('ReactElementValidator', () => {
       React.createElement({x: 17});
       React.createElement({});
       React.createElement(React.createElement('div'));
-    }).toWarnDev([
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: undefined. You likely forgot to export your ' +
-        "component from the file it's defined in, or you might have mixed up " +
-        'default and named imports.',
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: null.',
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: boolean.',
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: object.',
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: object. You likely forgot to export your ' +
-        "component from the file it's defined in, or you might have mixed up " +
-        'default and named imports.',
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: element. Did you accidentally export JSX ' +
-        'instead of a component?',
-    ]);
+      React.createElement({ $$typeof: {} });
+    }).toWarnDev(
+      [
+        'Warning: React.createElement: type is invalid -- expected a string ' +
+          '(for built-in components) or a class/function (for composite ' +
+          'components) but got: undefined. You likely forgot to export your ' +
+          "component from the file it's defined in, or you might have mixed up " +
+          'default and named imports.',
+        'Warning: React.createElement: type is invalid -- expected a string ' +
+          '(for built-in components) or a class/function (for composite ' +
+          'components) but got: null.',
+        'Warning: React.createElement: type is invalid -- expected a string ' +
+          '(for built-in components) or a class/function (for composite ' +
+          'components) but got: boolean.',
+        'Warning: React.createElement: type is invalid -- expected a string ' +
+          '(for built-in components) or a class/function (for composite ' +
+          'components) but got: object.',
+        'Warning: React.createElement: type is invalid -- expected a string ' +
+          '(for built-in components) or a class/function (for composite ' +
+          'components) but got: object. You likely forgot to export your ' +
+          "component from the file it's defined in, or you might have mixed up " +
+          'default and named imports.',
+        'Warning: React.createElement: type is invalid -- expected a string ' +
+          '(for built-in components) or a class/function (for composite ' +
+          'components) but got: React element. Did you accidentally export JSX ' +
+          'instead of a component?',
+        'Warning: React.createElement: type is invalid -- expected a string ' +
+          '(for built-in components) or a class/function (for composite ' +
+          'components) but got: object.',
+      ],
+      {withoutStack: true},
+    );
 
     // Should not log any additional warnings
     React.createElement('div');
