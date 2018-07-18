@@ -66,7 +66,9 @@ class ReactShallowRenderer {
         'components, but the provided element type was `%s`.',
       Array.isArray(element.type)
         ? 'array'
-        : element.type === null ? 'null' : typeof element.type,
+        : element.type === null
+          ? 'null'
+          : typeof element.type,
     );
 
     if (this._rendering) {
