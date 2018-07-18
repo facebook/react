@@ -211,6 +211,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       oldProps: Props,
       newProps: Props,
     ): null | {} {
+      if (type === 'errorInCompletePhase') {
+        throw new Error('Error in host config.');
+      }
       if (oldProps === null) {
         throw new Error('Should have old props');
       }
