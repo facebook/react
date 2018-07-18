@@ -40,10 +40,7 @@ if (__DEV__) {
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
   let scheduledCallback = null;
-
   let instanceCounter = 0;
-  let failInBeginPhase = false;
-  let failInCompletePhase = false;
 
   function appendChildToContainerOrInstance(
     parentInstance: Container | Instance,
@@ -167,9 +164,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   const sharedHostConfig = {
     getRootHostContext() {
-      if (failInBeginPhase) {
-        throw new Error('Error in host config.');
-      }
       return NO_CONTEXT;
     },
 
@@ -182,7 +176,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     createInstance(type: string, props: Props): Instance {
-      if (failInCompletePhase) {
+      if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
       }
       const inst = {
@@ -217,6 +211,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       oldProps: Props,
       newProps: Props,
     ): null | {} {
+      if (type === 'errorInCompletePhase') {
+        throw new Error('Error in host config.');
+      }
       if (oldProps === null) {
         throw new Error('Should have old props');
       }
@@ -227,6 +224,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     shouldSetTextContent(type: string, props: Props): boolean {
+      if (type === 'errorInBeginPhase') {
+        throw new Error('Error in host config.');
+      }
       return (
         typeof props.children === 'string' || typeof props.children === 'number'
       );
@@ -693,24 +693,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       logFiber(root.current, 0);
 
       console.log(...bufferedLog);
-    },
-
-    simulateErrorInHostConfigDuringBeginPhase(fn: () => void) {
-      failInBeginPhase = true;
-      try {
-        fn();
-      } finally {
-        failInBeginPhase = false;
-      }
-    },
-
-    simulateErrorInHostConfigDuringCompletePhase(fn: () => void) {
-      failInCompletePhase = true;
-      try {
-        fn();
-      } finally {
-        failInCompletePhase = false;
-      }
     },
 
     flushWithoutCommitting(

@@ -992,14 +992,12 @@ describe('Profiler', () => {
 
             // Simulate a renderer error during the "complete" phase.
             // This mimics behavior like React Native's View/Text nesting validation.
-            ReactNoop.simulateErrorInHostConfigDuringCompletePhase(() => {
-              ReactNoop.render(
-                <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
-                  <span>hi</span>
-                </React.unstable_Profiler>,
-              );
-              expect(ReactNoop.flush).toThrow('Error in host config.');
-            });
+            ReactNoop.render(
+              <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                <errorInCompletePhase>hi</errorInCompletePhase>
+              </React.unstable_Profiler>,
+            );
+            expect(ReactNoop.flush).toThrow('Error in host config.');
 
             // So long as the profiler timer's fiber stack is reset correctly,
             // Subsequent renders should not error.
