@@ -495,8 +495,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     tryToClaimNextHydratableInstance(workInProgress);
   }
 
-  const type = workInProgress.type;
-  const memoizedProps = workInProgress.memoizedProps;
+  const {type, memoizedProps} = workInProgress;
   const nextProps = workInProgress.pendingProps;
   const prevProps = current !== null ? current.memoizedProps : null;
 
@@ -602,10 +601,9 @@ function mountIndeterminateComponent(
     }
 
     ReactCurrentOwner.current = workInProgress;
-    value = fn(props, context);
-  } else {
-    value = fn(props, context);
   }
+
+  value = fn(props, context);
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
 
@@ -1034,25 +1032,6 @@ function updateContextConsumer(current, workInProgress, renderExpirationTime) {
   reconcileChildren(current, workInProgress, newChildren);
   return workInProgress.child;
 }
-
-/*
-  function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
-    let child = firstChild;
-    do {
-      // Ensure that the first and last effect of the parent corresponds
-      // to the children's first and last effect.
-      if (!returnFiber.firstEffect) {
-        returnFiber.firstEffect = child.firstEffect;
-      }
-      if (child.lastEffect) {
-        if (returnFiber.lastEffect) {
-          returnFiber.lastEffect.nextEffect = child.firstEffect;
-        }
-        returnFiber.lastEffect = child.lastEffect;
-      }
-    } while (child = child.sibling);
-  }
-  */
 
 function bailoutOnAlreadyFinishedWork(
   current,
