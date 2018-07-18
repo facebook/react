@@ -87,13 +87,13 @@ export function createSubscription<Property, Value>(
 
     componentDidUpdate(prevProps, prevState) {
       if (this.state.source !== prevState.source) {
-        this.unsubscribe(prevState);
+        this.unsubscribe();
         this.subscribe();
       }
     }
 
     componentWillUnmount() {
-      this.unsubscribe(this.state);
+      this.unsubscribe();
 
       // Track mounted to avoid calling setState after unmounting
       // For source like Promises that can't be unsubscribed from.
@@ -147,7 +147,7 @@ export function createSubscription<Property, Value>(
       }
     }
 
-    unsubscribe(state: State) {
+    unsubscribe() {
       if (typeof this._unsubscribe === 'function') {
         this._unsubscribe();
       }
