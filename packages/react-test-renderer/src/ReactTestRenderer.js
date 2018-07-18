@@ -466,14 +466,14 @@ const ReactTestRendererFiber = {
         }
         return TestRenderer.getPublicRootInstance(root);
       },
+
       unstable_flushAll: TestRendererScheduling.flushAll,
-      unstable_flushSync(fn: Function) {
-        return TestRendererScheduling.withCleanYields(() => {
-          TestRenderer.flushSync(fn);
-        });
+      unstable_flushSync<T>(fn: () => T): T {
+        TestRendererScheduling.clearYields();
+        return TestRenderer.flushSync(fn);
       },
       unstable_flushThrough: TestRendererScheduling.flushThrough,
-      unstable_yield: TestRendererScheduling.yieldValue,
+      unstable_clearYields: TestRendererScheduling.clearYields,
     };
 
     Object.defineProperty(
@@ -503,6 +503,9 @@ const ReactTestRendererFiber = {
 
     return entry;
   },
+
+  unstable_yield: TestRendererScheduling.yieldValue,
+  unstable_clearYields: TestRendererScheduling.clearYields,
 
   /* eslint-disable camelcase */
   unstable_batchedUpdates: batchedUpdates,

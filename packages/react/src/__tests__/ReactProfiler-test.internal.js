@@ -163,7 +163,7 @@ describe('Profiler', () => {
       const callback = jest.fn();
 
       const Yield = ({value}) => {
-        renderer.unstable_yield(value);
+        ReactTestRenderer.unstable_yield(value);
         return null;
       };
 
@@ -514,7 +514,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -550,7 +550,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -602,7 +602,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -627,15 +627,14 @@ describe('Profiler', () => {
 
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 5ms of time.
-        expect(
-          renderer.unstable_flushSync(() => {
-            renderer.update(
-              <React.unstable_Profiler id="test" onRender={callback}>
-                <Yield renderTime={5} />
-              </React.unstable_Profiler>,
-            );
-          }),
-        ).toEqual(['Yield:5']);
+        renderer.unstable_flushSync(() => {
+          renderer.update(
+            <React.unstable_Profiler id="test" onRender={callback}>
+              <Yield renderTime={5} />
+            </React.unstable_Profiler>,
+          );
+        });
+        expect(ReactTestRenderer.unstable_clearYields()).toEqual(['Yield:5']);
 
         // The initial work was thrown away in this case,
         // So the actual and base times should only include the final rendered tree times.
@@ -658,7 +657,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -714,15 +713,14 @@ describe('Profiler', () => {
 
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 11ms of time.
-        expect(
-          renderer.unstable_flushSync(() => {
-            renderer.update(
-              <React.unstable_Profiler id="test" onRender={callback}>
-                <Yield renderTime={11} />
-              </React.unstable_Profiler>,
-            );
-          }),
-        ).toEqual(['Yield:11']);
+        renderer.unstable_flushSync(() => {
+          renderer.update(
+            <React.unstable_Profiler id="test" onRender={callback}>
+              <Yield renderTime={11} />
+            </React.unstable_Profiler>,
+          );
+        });
+        expect(ReactTestRenderer.unstable_clearYields()).toEqual(['Yield:11']);
 
         // The actual time should include only the most recent render,
         // Because this lets us avoid a lot of commit phase reset complexity.
@@ -744,7 +742,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -754,7 +752,9 @@ describe('Profiler', () => {
           render() {
             first = this;
             advanceTimeBy(this.state.renderTime);
-            renderer.unstable_yield('FirstComponent:' + this.state.renderTime);
+            ReactTestRenderer.unstable_yield(
+              'FirstComponent:' + this.state.renderTime,
+            );
             return <Yield renderTime={4} />;
           }
         }
@@ -764,7 +764,9 @@ describe('Profiler', () => {
           render() {
             second = this;
             advanceTimeBy(this.state.renderTime);
-            renderer.unstable_yield('SecondComponent:' + this.state.renderTime);
+            ReactTestRenderer.unstable_yield(
+              'SecondComponent:' + this.state.renderTime,
+            );
             return <Yield renderTime={7} />;
           }
         }
@@ -812,9 +814,11 @@ describe('Profiler', () => {
 
         // Interrupt with higher priority work.
         // This simulates a total of 37ms of actual render time.
-        expect(
-          renderer.unstable_flushSync(() => second.setState({renderTime: 30})),
-        ).toEqual(['SecondComponent:30', 'Yield:7']);
+        renderer.unstable_flushSync(() => second.setState({renderTime: 30}));
+        expect(ReactTestRenderer.unstable_clearYields()).toEqual([
+          'SecondComponent:30',
+          'Yield:7',
+        ]);
 
         // The actual time should include only the most recent render (37ms),
         // Because this lets us avoid a lot of commit phase reset complexity.
