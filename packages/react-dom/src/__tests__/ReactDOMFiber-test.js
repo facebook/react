@@ -980,8 +980,9 @@ describe('ReactDOMFiber', () => {
     expect(() => ReactDOM.render(<Example />, container)).toWarnDev(
       'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
         'If you used to conditionally omit it with onClick={condition && value}, ' +
-        'pass onClick={condition ? value : undefined} instead.\n',
-      '    in div (at **)\n' + '    in Example (at **)',
+        'pass onClick={condition ? value : undefined} instead.\n' +
+        '    in div (at **)\n' +
+        '    in Example (at **)',
     );
   });
 
