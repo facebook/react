@@ -548,9 +548,7 @@ const ResponderEventPlugin = {
       ? eventTypes.responderStart
       : isResponderTouchMove
         ? eventTypes.responderMove
-        : isResponderTouchEnd
-          ? eventTypes.responderEnd
-          : null;
+        : isResponderTouchEnd ? eventTypes.responderEnd : null;
 
     if (incrementalTouch) {
       const gesture = ResponderSyntheticEvent.getPooled(
@@ -573,9 +571,7 @@ const ResponderEventPlugin = {
       noResponderTouches(nativeEvent);
     const finalTouch = isResponderTerminate
       ? eventTypes.responderTerminate
-      : isResponderRelease
-        ? eventTypes.responderRelease
-        : null;
+      : isResponderRelease ? eventTypes.responderRelease : null;
     if (finalTouch) {
       const finalEvent = ResponderSyntheticEvent.getPooled(
         finalTouch,

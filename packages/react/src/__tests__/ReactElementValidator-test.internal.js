@@ -236,7 +236,7 @@ describe('ReactElementValidator', () => {
       React.createElement({x: 17});
       React.createElement({});
       React.createElement(React.createElement('div'));
-      React.createElement({ $$typeof: {} });
+      React.createElement({$$typeof: {}});
     }).toWarnDev(
       [
         'Warning: React.createElement: type is invalid -- expected a string ' +
