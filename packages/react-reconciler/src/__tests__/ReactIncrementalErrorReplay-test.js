@@ -21,10 +21,8 @@ describe('ReactIncrementalErrorReplay', () => {
   });
 
   it('should fail gracefully on error in the host environment', () => {
-    ReactNoop.simulateErrorInHostConfigDuringBeginPhase(() => {
-      ReactNoop.render(<span />);
-      expect(() => ReactNoop.flush()).toThrow('Error in host config.');
-    });
+    ReactNoop.render(<errorInBeginPhase />);
+    expect(() => ReactNoop.flush()).toThrow('Error in host config.');
   });
 
   it("should ignore error if it doesn't throw on retry", () => {
