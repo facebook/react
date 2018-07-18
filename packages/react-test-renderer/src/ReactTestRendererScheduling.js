@@ -112,8 +112,8 @@ export function yieldValue(value: mixed): void {
   yieldedValues.push(value);
 }
 
-export function withCleanYields(fn: Function) {
+export function clearYields(): Array<mixed> {
+  const values = yieldedValues;
   yieldedValues = [];
-  fn();
-  return yieldedValues;
+  return values;
 }
