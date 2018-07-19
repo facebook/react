@@ -79,7 +79,7 @@ if (__DEV__) {
 
   const createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
-      name: getComponentName(fiber),
+      name: getComponentName(fiber.type),
       getInspectorData: findNodeHandle => ({
         measure: callback =>
           UIManager.measure(getHostNode(fiber, findNodeHandle), callback),

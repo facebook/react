@@ -1226,6 +1226,7 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
     expect(() => ReactDOM.render(<Foo />, container)).toWarnDev(
       'Cannot update during an existing state transition',
+      {withoutStack: true},
     );
     expect(ops).toEqual(['base: 0, memoized: 0', 'base: 1, memoized: 1']);
   });
@@ -1363,5 +1364,38 @@ describe('ReactUpdates', () => {
     expect(() => {
       ReactDOM.render(<NonTerminating />, container);
     }).toThrow('Maximum');
+  });
+
+  it('can schedule ridiculously many updates within the same batch without triggering a maximum update error', () => {
+    const subscribers = [];
+
+    class Child extends React.Component {
+      state = {value: 'initial'};
+      componentDidMount() {
+        subscribers.push(this);
+      }
+      render() {
+        return null;
+      }
+    }
+
+    class App extends React.Component {
+      render() {
+        const children = [];
+        for (let i = 0; i < 1200; i++) {
+          children.push(<Child key={i} />);
+        }
+        return children;
+      }
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<App />, container);
+
+    ReactDOM.unstable_batchedUpdates(() => {
+      subscribers.forEach(s => {
+        s.setState({value: 'update'});
+      });
+    });
   });
 });

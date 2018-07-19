@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 function noop() {}
 
@@ -154,7 +154,7 @@ export function createCache(invalidator: () => mixed): Cache {
 
   function accessRecord<K, V>(resourceType: any, key: K): Record<K, V> {
     if (__DEV__) {
-      warning(
+      warningWithoutStack(
         typeof resourceType !== 'string' && typeof resourceType !== 'number',
         'Invalid resourceType: Expected a symbol, object, or function, but ' +
           'instead received: %s. Strings and numbers are not permitted as ' +
@@ -314,7 +314,7 @@ export function createCache(invalidator: () => mixed): Cache {
 let warnIfNonPrimitiveKey;
 if (__DEV__) {
   warnIfNonPrimitiveKey = (key, methodName) => {
-    warning(
+    warningWithoutStack(
       typeof key === 'string' ||
         typeof key === 'number' ||
         typeof key === 'boolean' ||
@@ -361,7 +361,7 @@ export function createResource<V, K, H: primitive>(
   const resource = {
     read(cache, key) {
       if (__DEV__) {
-        warning(
+        warningWithoutStack(
           isCache(cache),
           'read(): The first argument must be a cache. Instead received: %s',
           cache,
@@ -378,7 +378,7 @@ export function createResource<V, K, H: primitive>(
     },
     preload(cache, key) {
       if (__DEV__) {
-        warning(
+        warningWithoutStack(
           isCache(cache),
           'preload(): The first argument must be a cache. Instead received: %s',
           cache,

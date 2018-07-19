@@ -26,7 +26,7 @@ import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {HostComponent} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -55,7 +55,7 @@ import {
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import * as ReactCurrentFiber from './ReactCurrentFiber';
 
 type OpaqueRoot = FiberRoot;
 
@@ -104,18 +104,18 @@ function scheduleRootUpdate(
 ) {
   if (__DEV__) {
     if (
-      ReactDebugCurrentFiber.phase === 'render' &&
-      ReactDebugCurrentFiber.current !== null &&
+      ReactCurrentFiber.phase === 'render' &&
+      ReactCurrentFiber.current !== null &&
       !didWarnAboutNestedUpdates
     ) {
       didWarnAboutNestedUpdates = true;
-      warning(
+      warningWithoutStack(
         false,
         'Render methods should be a pure function of props and state; ' +
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
           'Check the render method of %s.',
-        getComponentName(ReactDebugCurrentFiber.current) || 'Unknown',
+        getComponentName(ReactCurrentFiber.current.type) || 'Unknown',
       );
     }
   }
@@ -127,7 +127,7 @@ function scheduleRootUpdate(
 
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
-    warning(
+    warningWithoutStack(
       typeof callback === 'function',
       'render(...): Expected the last optional `callback` argument to be a ' +
         'function. Instead received: %s.',

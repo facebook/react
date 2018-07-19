@@ -63,6 +63,7 @@ describe('ReactMount', () => {
       'Functions are not valid as a React child. ' +
         'This may happen if you return a Component instead of <Component /> from render. ' +
         'Or maybe you meant to call this function rather than return it.',
+      {withoutStack: true},
     );
   });
 
@@ -126,6 +127,7 @@ describe('ReactMount', () => {
 
     expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
       'Did not expect server HTML to contain the text node " " in <container>.',
+      {withoutStack: true},
     );
   });
 
@@ -135,6 +137,7 @@ describe('ReactMount', () => {
 
     expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
       'Did not expect server HTML to contain the text node " " in <container>.',
+      {withoutStack: true},
     );
   });
 
@@ -153,6 +156,7 @@ describe('ReactMount', () => {
       ReactDOM.render(<div />, iFrame.contentDocument.body),
     ).toWarnDev(
       'Rendering components directly into document.body is discouraged',
+      {withoutStack: true},
     );
   });
 
@@ -171,6 +175,7 @@ describe('ReactMount', () => {
     ).toWarnDev(
       'Server: "This markup contains an nbsp entity:   server text" ' +
         'Client: "This markup contains an nbsp entity:   client text"',
+      {withoutStack: true},
     );
   });
 
@@ -197,6 +202,7 @@ describe('ReactMount', () => {
         'root component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state and ' +
         'render the new components instead of calling ReactDOM.render.',
+      {withoutStack: true},
     );
   });
 
@@ -222,6 +228,7 @@ describe('ReactMount', () => {
     expect(() => ReactDOMOther.unmountComponentAtNode(container)).toWarnDev(
       "Warning: unmountComponentAtNode(): The node you're attempting to unmount " +
         'was rendered by another copy of React.',
+      {withoutStack: true},
     );
 
     // Don't throw a warning if the correct React copy unmounts the node

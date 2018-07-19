@@ -10,7 +10,7 @@
 import {getListener, runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import {batchedUpdates} from 'events/ReactGenericBatching';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
 
@@ -168,7 +168,7 @@ export function receiveTouches(
     if (target !== null && target !== undefined) {
       if (target < 1) {
         if (__DEV__) {
-          warning(
+          warningWithoutStack(
             false,
             'A view is reporting that a touch occurred on tag zero.',
           );

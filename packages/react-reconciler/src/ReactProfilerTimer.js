@@ -12,7 +12,7 @@ import type {Fiber} from './ReactFiber';
 import getComponentName from 'shared/getComponentName';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {now} from './ReactFiberHostConfig';
 
 export type ProfilerTimer = {
@@ -21,10 +21,10 @@ export type ProfilerTimer = {
   markActualRenderTimeStarted(fiber: Fiber): void,
   pauseActualRenderTimerIfRunning(): void,
   recordElapsedActualRenderTime(fiber: Fiber): void,
-  resetActualRenderTimer(): void,
-  resumeActualRenderTimerIfPaused(): void,
+  resumeActualRenderTimerIfPaused(isProcessingBatchCommit: boolean): void,
   recordCommitTime(): void,
   recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void,
+  resetActualRenderTimerStackAfterFatalErrorInDev(): void,
   startBaseRenderTimer(): void,
   stopBaseRenderTimerIfRunning(): void,
 };
@@ -55,6 +55,7 @@ if (__DEV__) {
   fiberStack = [];
 }
 
+let syncCommitStartTime: number = 0;
 let timerPausedAt: number = 0;
 let totalElapsedPauseTime: number = 0;
 
@@ -63,7 +64,7 @@ function checkActualRenderTimeStackEmpty(): void {
     return;
   }
   if (__DEV__) {
-    warning(
+    warningWithoutStack(
       fiberStack.length === 0,
       'Expected an empty stack. Something was not reset properly.',
     );
@@ -90,6 +91,14 @@ function pauseActualRenderTimerIfRunning(): void {
   if (timerPausedAt === 0) {
     timerPausedAt = now();
   }
+  if (syncCommitStartTime > 0) {
+    // Don't count the time spent processing sycn work,
+    // Against yielded async work that will be resumed later.
+    totalElapsedPauseTime += now() - syncCommitStartTime;
+    syncCommitStartTime = 0;
+  } else {
+    totalElapsedPauseTime = 0;
+  }
 }
 
 function recordElapsedActualRenderTime(fiber: Fiber): void {
@@ -97,10 +106,10 @@ function recordElapsedActualRenderTime(fiber: Fiber): void {
     return;
   }
   if (__DEV__) {
-    warning(
+    warningWithoutStack(
       fiber === fiberStack.pop(),
       'Unexpected Fiber (%s) popped.',
-      getComponentName(fiber),
+      getComponentName(fiber.type),
     );
   }
 
@@ -108,20 +117,25 @@ function recordElapsedActualRenderTime(fiber: Fiber): void {
     now() - totalElapsedPauseTime - ((fiber.actualDuration: any): number);
 }
 
-function resetActualRenderTimer(): void {
+function resumeActualRenderTimerIfPaused(isProcessingSyncWork: boolean): void {
   if (!enableProfilerTimer) {
     return;
   }
-  totalElapsedPauseTime = 0;
-}
-
-function resumeActualRenderTimerIfPaused(): void {
-  if (!enableProfilerTimer) {
-    return;
+  if (isProcessingSyncWork && syncCommitStartTime === 0) {
+    syncCommitStartTime = now();
   }
   if (timerPausedAt > 0) {
     totalElapsedPauseTime += now() - timerPausedAt;
     timerPausedAt = 0;
+  }
+}
+
+function resetActualRenderTimerStackAfterFatalErrorInDev(): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+  if (__DEV__) {
+    fiberStack.length = 0;
   }
 }
 
@@ -139,7 +153,7 @@ function recordElapsedBaseRenderTimeIfRunning(fiber: Fiber): void {
     return;
   }
   if (baseStartTime !== -1) {
-    fiber.selfBaseTime = now() - baseStartTime;
+    fiber.selfBaseDuration = now() - baseStartTime;
   }
 }
 
@@ -149,7 +163,7 @@ function startBaseRenderTimer(): void {
   }
   if (__DEV__) {
     if (baseStartTime !== -1) {
-      warning(
+      warningWithoutStack(
         false,
         'Cannot start base timer that is already running. ' +
           'This error is likely caused by a bug in React. ' +
@@ -174,7 +188,7 @@ export {
   pauseActualRenderTimerIfRunning,
   recordCommitTime,
   recordElapsedActualRenderTime,
-  resetActualRenderTimer,
+  resetActualRenderTimerStackAfterFatalErrorInDev,
   resumeActualRenderTimerIfPaused,
   recordElapsedBaseRenderTimeIfRunning,
   startBaseRenderTimer,

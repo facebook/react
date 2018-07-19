@@ -42,4 +42,4 @@ export const ContextConsumer = 12;
 export const ContextProvider = 13;
 export const ForwardRef = 14;
 export const Profiler = 15;
-export const TimeoutComponent = 16;
+export const PlaceholderComponent = 16;

@@ -8,7 +8,7 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
@@ -25,10 +25,6 @@ type InputWithWrapperState = HTMLInputElement & {
   },
 };
 
-const {
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
-} = ReactDebugCurrentFiber;
 let didWarnValueDefaultValue = false;
 let didWarnCheckedDefaultChecked = false;
 let didWarnControlledToUncontrolled = false;
@@ -72,11 +68,7 @@ export function getHostProps(element: Element, props: Object) {
 
 export function initWrapperState(element: Element, props: Object) {
   if (__DEV__) {
-    ReactControlledValuePropTypes.checkPropTypes(
-      'input',
-      props,
-      getCurrentFiberStackAddendum,
-    );
+    ReactControlledValuePropTypes.checkPropTypes('input', props);
 
     if (
       props.checked !== undefined &&
@@ -91,7 +83,7 @@ export function initWrapperState(element: Element, props: Object) {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
       didWarnCheckedDefaultChecked = true;
@@ -109,7 +101,7 @@ export function initWrapperState(element: Element, props: Object) {
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
       didWarnValueDefaultValue = true;
@@ -152,9 +144,8 @@ export function updateWrapper(element: Element, props: Object) {
         'A component is changing an uncontrolled input of type %s to be controlled. ' +
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
         props.type,
-        getCurrentFiberStackAddendum(),
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -168,9 +159,8 @@ export function updateWrapper(element: Element, props: Object) {
         'A component is changing a controlled input of type %s to be uncontrolled. ' +
           'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
         props.type,
-        getCurrentFiberStackAddendum(),
       );
       didWarnControlledToUncontrolled = true;
     }
@@ -243,7 +233,7 @@ export function postMountWrapper(
     node.name = '';
   }
   node.defaultChecked = !node.defaultChecked;
-  node.defaultChecked = !node.defaultChecked;
+  node.defaultChecked = !!node._wrapperState.initialChecked;
   if (name !== '') {
     node.name = name;
   }

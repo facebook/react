@@ -9,11 +9,20 @@
 
 'use strict';
 
-let React = require('react');
-let ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-dom/test-utils');
+let React;
+let ReactDOM;
+let ReactDOMServer;
+let ReactTestUtils;
 
 describe('ReactDOM', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
+    ReactTestUtils = require('react-dom/test-utils');
+  });
+
   // TODO: uncomment this test once we can run in phantom, which
   // supports real submit events.
   /*
@@ -434,38 +443,77 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
+  it('warns when requestAnimationFrame is not polyfilled', () => {
     const previousRAF = global.requestAnimationFrame;
     try {
-      global.requestAnimationFrame = undefined;
+      delete global.requestAnimationFrame;
       jest.resetModules();
       expect(() => require('react-dom')).toWarnDev(
         "This browser doesn't support requestAnimationFrame.",
+        {withoutStack: true},
       );
     } finally {
       global.requestAnimationFrame = previousRAF;
     }
   });
 
-  // We're just testing importing, not using it.
-  // It is important because even isomorphic components may import it.
-  it('can import findDOMNode in Node environment', () => {
-    const previousRAF = global.requestAnimationFrame;
-    const previousRIC = global.requestIdleCallback;
-    const prevWindow = global.window;
-    try {
-      global.requestAnimationFrame = undefined;
-      global.requestIdleCallback = undefined;
-      // Simulate the Node environment:
-      delete global.window;
-      jest.resetModules();
-      expect(() => {
-        require('react-dom');
-      }).not.toThrow();
-    } finally {
-      global.requestAnimationFrame = previousRAF;
-      global.requestIdleCallback = previousRIC;
-      global.window = prevWindow;
+  it('reports stacks with re-entrant renderToString() calls on the client', () => {
+    function Child2(props) {
+      return <span ariaTypo3="no">{props.children}</span>;
     }
+
+    function App2() {
+      return (
+        <Child2>
+          {ReactDOMServer.renderToString(<blink ariaTypo2="no" />)}
+        </Child2>
+      );
+    }
+
+    function Child() {
+      return (
+        <span ariaTypo4="no">{ReactDOMServer.renderToString(<App2 />)}</span>
+      );
+    }
+
+    function ServerEntry() {
+      return ReactDOMServer.renderToString(<Child />);
+    }
+
+    function App() {
+      return (
+        <div>
+          <span ariaTypo="no" />
+          <ServerEntry />
+          <font ariaTypo5="no" />
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    expect(() => ReactDOM.render(<App />, container)).toWarnDev([
+      // ReactDOM(App > div > span)
+      'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+      // ReactDOM(App > div > ServerEntry) >>> ReactDOMServer(Child) >>> ReactDOMServer(App2) >>> ReactDOMServer(blink)
+      'Invalid ARIA attribute `ariaTypo2`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in blink (at **)',
+      // ReactDOM(App > div > ServerEntry) >>> ReactDOMServer(Child) >>> ReactDOMServer(App2 > Child2 > span)
+      'Invalid ARIA attribute `ariaTypo3`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in Child2 (at **)\n' +
+        '    in App2 (at **)',
+      // ReactDOM(App > div > ServerEntry) >>> ReactDOMServer(Child > span)
+      'Invalid ARIA attribute `ariaTypo4`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in span (at **)\n' +
+        '    in Child (at **)',
+      // ReactDOM(App > div > font)
+      'Invalid ARIA attribute `ariaTypo5`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
+        '    in font (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+    ]);
   });
 });

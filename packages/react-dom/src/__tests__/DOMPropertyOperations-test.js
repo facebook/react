@@ -79,7 +79,7 @@ describe('DOMPropertyOperations', () => {
 
     it('should not remove empty attributes for special properties', () => {
       const container = document.createElement('div');
-      ReactDOM.render(<input value="" />, container);
+      ReactDOM.render(<input value="" onChange={() => {}} />, container);
       expect(container.firstChild.getAttribute('value')).toBe('');
       expect(container.firstChild.value).toBe('');
     });
