@@ -39,7 +39,7 @@ if (__DEV__) {
   lowPriorityWarning = function(condition, format, ...args) {
     if (format === undefined) {
       throw new Error(
-        '`warningWithoutStack(condition, format, ...args)` requires a warning ' +
+        '`lowPriorityWarning(condition, format, ...args)` requires a warning ' +
           'message argument',
       );
     }
