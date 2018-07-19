@@ -13,6 +13,7 @@ import {
   FunctionalComponent,
   ClassComponent,
   HostComponent,
+  Mode,
 } from 'shared/ReactTypeOfWork';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
@@ -29,6 +30,7 @@ function describeFiber(fiber: Fiber): string {
     case FunctionalComponent:
     case ClassComponent:
     case HostComponent:
+    case Mode:
       const owner = fiber._debugOwner;
       const source = fiber._debugSource;
       const name = getComponentName(fiber.type);
