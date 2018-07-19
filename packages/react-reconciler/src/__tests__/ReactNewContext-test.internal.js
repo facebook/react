@@ -1128,6 +1128,27 @@ describe('ReactNewContext', () => {
     ]);
   });
 
+  it('unwinds after errors in complete phase', () => {
+    const Context = React.createContext(0);
+
+    // This is a regression test for stack misalignment
+    // caused by unwinding the context from wrong point.
+    ReactNoop.render(
+      <errorInCompletePhase>
+        <Context.Provider />
+      </errorInCompletePhase>,
+    );
+    expect(ReactNoop.flush).toThrow('Error in host config.');
+
+    ReactNoop.render(
+      <Context.Provider value={10}>
+        <Context.Consumer>{value => <span prop={value} />}</Context.Consumer>
+      </Context.Provider>,
+    );
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span(10)]);
+  });
+
   describe('fuzz test', () => {
     const Fragment = React.Fragment;
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];

@@ -791,11 +791,12 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
 
     if ((workInProgress.effectTag & Incomplete) === NoEffect) {
       // This fiber completed.
-      let next = completeWork(
+      nextUnitOfWork = completeWork(
         current,
         workInProgress,
         nextRenderExpirationTime,
       );
+      let next = nextUnitOfWork;
       stopWorkTimer(workInProgress);
       resetExpirationTime(workInProgress, nextRenderExpirationTime);
       if (__DEV__) {
