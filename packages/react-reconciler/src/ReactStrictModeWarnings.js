@@ -9,11 +9,12 @@
 
 import type {Fiber} from './ReactFiber';
 
+import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
+
 import getComponentName from 'shared/getComponentName';
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import {StrictMode} from './ReactTypeOfMode';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 type LIFECYCLE =
   | 'UNSAFE_componentWillMount'
@@ -78,7 +79,7 @@ if (__DEV__) {
           if (lifecycleWarnings.length > 0) {
             const componentNames = new Set();
             lifecycleWarnings.forEach(fiber => {
-              componentNames.add(getComponentName(fiber) || 'Component');
+              componentNames.add(getComponentName(fiber.type) || 'Component');
               didWarnAboutUnsafeLifecycles.add(fiber.type);
             });
 
@@ -94,11 +95,11 @@ if (__DEV__) {
         });
 
         if (lifecyclesWarningMesages.length > 0) {
-          const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
+          const strictRootComponentStack = getStackByFiberInDevAndProd(
             strictRoot,
           );
 
-          warning(
+          warningWithoutStack(
             false,
             'Unsafe lifecycle methods were found within a strict-mode tree:%s' +
               '\n\n%s' +
@@ -132,7 +133,7 @@ if (__DEV__) {
     if (pendingComponentWillMountWarnings.length > 0) {
       const uniqueNames = new Set();
       pendingComponentWillMountWarnings.forEach(fiber => {
-        uniqueNames.add(getComponentName(fiber) || 'Component');
+        uniqueNames.add(getComponentName(fiber.type) || 'Component');
         didWarnAboutDeprecatedLifecycles.add(fiber.type);
       });
 
@@ -155,7 +156,7 @@ if (__DEV__) {
     if (pendingComponentWillReceivePropsWarnings.length > 0) {
       const uniqueNames = new Set();
       pendingComponentWillReceivePropsWarnings.forEach(fiber => {
-        uniqueNames.add(getComponentName(fiber) || 'Component');
+        uniqueNames.add(getComponentName(fiber.type) || 'Component');
         didWarnAboutDeprecatedLifecycles.add(fiber.type);
       });
 
@@ -177,7 +178,7 @@ if (__DEV__) {
     if (pendingComponentWillUpdateWarnings.length > 0) {
       const uniqueNames = new Set();
       pendingComponentWillUpdateWarnings.forEach(fiber => {
-        uniqueNames.add(getComponentName(fiber) || 'Component');
+        uniqueNames.add(getComponentName(fiber.type) || 'Component');
         didWarnAboutDeprecatedLifecycles.add(fiber.type);
       });
 
@@ -234,7 +235,7 @@ if (__DEV__) {
   ) => {
     const strictRoot = findStrictRoot(fiber);
     if (strictRoot === null) {
-      warning(
+      warningWithoutStack(
         false,
         'Expected to find a StrictMode component in a strict mode tree. ' +
           'This error is likely caused by a bug in React. Please file an issue.',
@@ -303,7 +304,7 @@ if (__DEV__) {
   ) => {
     const strictRoot = findStrictRoot(fiber);
     if (strictRoot === null) {
-      warning(
+      warningWithoutStack(
         false,
         'Expected to find a StrictMode component in a strict mode tree. ' +
           'This error is likely caused by a bug in React. Please file an issue.',
@@ -336,16 +337,16 @@ if (__DEV__) {
       (fiberArray: FiberArray, strictRoot) => {
         const uniqueNames = new Set();
         fiberArray.forEach(fiber => {
-          uniqueNames.add(getComponentName(fiber) || 'Component');
+          uniqueNames.add(getComponentName(fiber.type) || 'Component');
           didWarnAboutLegacyContext.add(fiber.type);
         });
 
         const sortedNames = setToSortedString(uniqueNames);
-        const strictRootComponentStack = getStackAddendumByWorkInProgressFiber(
+        const strictRootComponentStack = getStackByFiberInDevAndProd(
           strictRoot,
         );
 
-        warning(
+        warningWithoutStack(
           false,
           'Legacy context API has been detected within a strict-mode tree: %s' +
             '\n\nPlease update the following components: %s' +

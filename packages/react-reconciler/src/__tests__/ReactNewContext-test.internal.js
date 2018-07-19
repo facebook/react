@@ -701,27 +701,24 @@ describe('ReactNewContext', () => {
   });
 
   it('warns if calculateChangedBits returns larger than a 31-bit integer', () => {
-    spyOnDev(console, 'error');
-
     const Context = React.createContext(
       0,
       (a, b) => Math.pow(2, 32) - 1, // Return 32 bit int
     );
 
-    ReactNoop.render(<Context.Provider value={1} />);
+    function App(props) {
+      return <Context.Provider value={props.value} />;
+    }
+
+    ReactNoop.render(<App value={1} />);
     ReactNoop.flush();
 
     // Update
-    ReactNoop.render(<Context.Provider value={2} />);
-    ReactNoop.flush();
-
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'calculateChangedBits: Expected the return value to be a 31-bit ' +
-          'integer. Instead received: 4294967295',
-      );
-    }
+    ReactNoop.render(<App value={2} />);
+    expect(ReactNoop.flush).toWarnDev(
+      'calculateChangedBits: Expected the return value to be a 31-bit ' +
+        'integer. Instead received: 4294967295',
+    );
   });
 
   it('warns if multiple renderers concurrently render the same context', () => {
@@ -1129,6 +1126,27 @@ describe('ReactNewContext', () => {
       span('static 2'),
       span(2),
     ]);
+  });
+
+  it('unwinds after errors in complete phase', () => {
+    const Context = React.createContext(0);
+
+    // This is a regression test for stack misalignment
+    // caused by unwinding the context from wrong point.
+    ReactNoop.render(
+      <errorInCompletePhase>
+        <Context.Provider />
+      </errorInCompletePhase>,
+    );
+    expect(ReactNoop.flush).toThrow('Error in host config.');
+
+    ReactNoop.render(
+      <Context.Provider value={10}>
+        <Context.Consumer>{value => <span prop={value} />}</Context.Consumer>
+      </Context.Provider>,
+    );
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([span(10)]);
   });
 
   describe('fuzz test', () => {

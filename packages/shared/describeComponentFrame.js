@@ -21,6 +21,8 @@ export default function(
         ':' +
         source.lineNumber +
         ')'
-      : ownerName ? ' (created by ' + ownerName + ')' : '')
+      : ownerName
+        ? ' (created by ' + ownerName + ')'
+        : '')
   );
 }

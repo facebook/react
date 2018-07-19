@@ -14,14 +14,12 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
   jest.resetModuleRegistry();
   React = require('react');
   ReactDOM = require('react-dom');
-  ReactTestUtils = require('react-dom/test-utils');
   ReactDOMServer = require('react-dom/server');
 
   // Make them available to the helpers.
@@ -519,35 +517,63 @@ describe('ReactDOMServerIntegration', () => {
 
       describe('user interaction with controlled inputs', function() {
         itClientRenders('a controlled text input', async render => {
+          const setUntrackedValue = Object.getOwnPropertyDescriptor(
+            HTMLInputElement.prototype,
+            'value',
+          ).set;
+
           let changeCount = 0;
           const e = await render(
             <ControlledInput onChange={() => changeCount++} />,
           );
-          expect(changeCount).toBe(0);
-          expect(e.value).toBe('Hello');
+          const container = e.parentNode;
+          document.body.appendChild(container);
 
-          // simulate a user typing.
-          e.value = 'Goodbye';
-          ReactTestUtils.Simulate.change(e);
+          try {
+            expect(changeCount).toBe(0);
+            expect(e.value).toBe('Hello');
 
-          expect(changeCount).toBe(1);
-          expect(e.value).toBe('Goodbye');
+            // simulate a user typing.
+            setUntrackedValue.call(e, 'Goodbye');
+            e.dispatchEvent(
+              new Event('input', {bubbles: true, cancelable: false}),
+            );
+
+            expect(changeCount).toBe(1);
+            expect(e.value).toBe('Goodbye');
+          } finally {
+            document.body.removeChild(container);
+          }
         });
 
         itClientRenders('a controlled textarea', async render => {
+          const setUntrackedValue = Object.getOwnPropertyDescriptor(
+            HTMLTextAreaElement.prototype,
+            'value',
+          ).set;
+
           let changeCount = 0;
           const e = await render(
             <ControlledTextArea onChange={() => changeCount++} />,
           );
-          expect(changeCount).toBe(0);
-          expect(e.value).toBe('Hello');
+          const container = e.parentNode;
+          document.body.appendChild(container);
 
-          // simulate a user typing.
-          e.value = 'Goodbye';
-          ReactTestUtils.Simulate.change(e);
+          try {
+            expect(changeCount).toBe(0);
+            expect(e.value).toBe('Hello');
 
-          expect(changeCount).toBe(1);
-          expect(e.value).toBe('Goodbye');
+            // simulate a user typing.
+            setUntrackedValue.call(e, 'Goodbye');
+            e.dispatchEvent(
+              new Event('input', {bubbles: true, cancelable: false}),
+            );
+
+            expect(changeCount).toBe(1);
+            expect(e.value).toBe('Goodbye');
+          } finally {
+            document.body.removeChild(container);
+          }
         });
 
         itClientRenders('a controlled checkbox', async render => {
@@ -555,31 +581,53 @@ describe('ReactDOMServerIntegration', () => {
           const e = await render(
             <ControlledCheckbox onChange={() => changeCount++} />,
           );
-          expect(changeCount).toBe(0);
-          expect(e.checked).toBe(true);
+          const container = e.parentNode;
+          document.body.appendChild(container);
 
-          // simulate a user typing.
-          e.checked = false;
-          ReactTestUtils.Simulate.change(e);
+          try {
+            expect(changeCount).toBe(0);
+            expect(e.checked).toBe(true);
 
-          expect(changeCount).toBe(1);
-          expect(e.checked).toBe(false);
+            // simulate a user clicking.
+            e.dispatchEvent(
+              new Event('click', {bubbles: true, cancelable: true}),
+            );
+
+            expect(changeCount).toBe(1);
+            expect(e.checked).toBe(false);
+          } finally {
+            document.body.removeChild(container);
+          }
         });
 
         itClientRenders('a controlled select', async render => {
+          const setUntrackedValue = Object.getOwnPropertyDescriptor(
+            HTMLSelectElement.prototype,
+            'value',
+          ).set;
+
           let changeCount = 0;
           const e = await render(
             <ControlledSelect onChange={() => changeCount++} />,
           );
-          expect(changeCount).toBe(0);
-          expect(e.value).toBe('Hello');
+          const container = e.parentNode;
+          document.body.appendChild(container);
 
-          // simulate a user typing.
-          e.value = 'Goodbye';
-          ReactTestUtils.Simulate.change(e);
+          try {
+            expect(changeCount).toBe(0);
+            expect(e.value).toBe('Hello');
 
-          expect(changeCount).toBe(1);
-          expect(e.value).toBe('Goodbye');
+            // simulate a user typing.
+            setUntrackedValue.call(e, 'Goodbye');
+            e.dispatchEvent(
+              new Event('change', {bubbles: true, cancelable: false}),
+            );
+
+            expect(changeCount).toBe(1);
+            expect(e.value).toBe('Goodbye');
+          } finally {
+            document.body.removeChild(container);
+          }
         });
       });
 

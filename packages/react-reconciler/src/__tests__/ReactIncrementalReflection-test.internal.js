@@ -65,6 +65,7 @@ describe('ReactIncrementalReflection', () => {
     expect(ReactNoop.flush).toWarnDev(
       'componentWillMount: Please update the following components ' +
         'to use componentDidMount instead: Component',
+      {withoutStack: true},
     );
 
     expect(ops).toEqual(['componentDidMount', true]);
@@ -106,6 +107,7 @@ describe('ReactIncrementalReflection', () => {
     expect(ReactNoop.flush).toWarnDev(
       'componentWillMount: Please update the following components ' +
         'to use componentDidMount instead: Component',
+      {withoutStack: true},
     );
 
     expect(ops).toEqual(['Component']);
@@ -198,6 +200,7 @@ describe('ReactIncrementalReflection', () => {
         'to use componentDidMount instead: Component' +
         '\n\ncomponentWillUpdate: Please update the following components ' +
         'to use componentDidUpdate instead: Component',
+      {withoutStack: true},
     );
 
     const hostSpan = classInstance.span;

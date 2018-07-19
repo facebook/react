@@ -83,6 +83,7 @@ describe('ReactDOMServerHydration', () => {
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        {withoutStack: true},
       );
       expect(mountCount).toEqual(3);
       expect(element.innerHTML).toBe(lastMarkup);
@@ -101,7 +102,9 @@ describe('ReactDOMServerHydration', () => {
       element.innerHTML = lastMarkup;
       expect(() => {
         instance = ReactDOM.render(<TestComponent name="y" />, element);
-      }).toWarnDev('Text content did not match. Server: "x" Client: "y"');
+      }).toWarnDev('Text content did not match. Server: "x" Client: "y"', {
+        withoutStack: true,
+      });
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
@@ -184,7 +187,9 @@ describe('ReactDOMServerHydration', () => {
       element.innerHTML = lastMarkup;
       expect(() => {
         instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
-      }).toWarnDev('Text content did not match. Server: "x" Client: "y"');
+      }).toWarnDev('Text content did not match. Server: "x" Client: "y"', {
+        withoutStack: true,
+      });
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
@@ -247,6 +252,7 @@ describe('ReactDOMServerHydration', () => {
       ReactDOM.hydrate(<button autoFocus={false}>client</button>, element),
     ).toWarnDev(
       'Warning: Text content did not match. Server: "server" Client: "client"',
+      {withoutStack: true},
     );
 
     expect(element.firstChild.focus).not.toHaveBeenCalled();
@@ -262,5 +268,78 @@ describe('ReactDOMServerHydration', () => {
       'Portals are not currently supported by the server renderer. ' +
         'Render them conditionally so that they only appear on the client render.',
     );
+  });
+
+  it('should be able to render and hydrate Mode components', () => {
+    class ComponentWithWarning extends React.Component {
+      componentWillMount() {
+        // Expected warning
+      }
+      render() {
+        return 'Hi';
+      }
+    }
+
+    const markup = (
+      <React.StrictMode>
+        <ComponentWithWarning />
+      </React.StrictMode>
+    );
+
+    const element = document.createElement('div');
+    element.innerHTML = ReactDOMServer.renderToString(markup);
+    expect(element.textContent).toBe('Hi');
+
+    expect(() => ReactDOM.hydrate(markup, element)).toWarnDev(
+      'Please update the following components to use componentDidMount instead: ComponentWithWarning',
+      {withoutStack: true},
+    );
+    expect(element.textContent).toBe('Hi');
+  });
+
+  it('should be able to render and hydrate forwardRef components', () => {
+    const FunctionComponent = ({label, forwardedRef}) => (
+      <div ref={forwardedRef}>{label}</div>
+    );
+    const WrappedFunctionComponent = React.forwardRef((props, ref) => (
+      <FunctionComponent {...props} forwardedRef={ref} />
+    ));
+
+    const ref = React.createRef();
+    const markup = <WrappedFunctionComponent ref={ref} label="Hi" />;
+
+    const element = document.createElement('div');
+    element.innerHTML = ReactDOMServer.renderToString(markup);
+    expect(element.textContent).toBe('Hi');
+    expect(ref.current).toBe(null);
+
+    ReactDOM.hydrate(markup, element);
+    expect(element.textContent).toBe('Hi');
+    expect(ref.current.tagName).toBe('DIV');
+  });
+
+  it('should be able to render and hydrate Profiler components', () => {
+    const callback = jest.fn();
+    const markup = (
+      <React.unstable_Profiler id="profiler" onRender={callback}>
+        <div>Hi</div>
+      </React.unstable_Profiler>
+    );
+
+    const element = document.createElement('div');
+    element.innerHTML = ReactDOMServer.renderToString(markup);
+    expect(element.textContent).toBe('Hi');
+    expect(callback).not.toHaveBeenCalled();
+
+    ReactDOM.hydrate(markup, element);
+    expect(element.textContent).toBe('Hi');
+    if (__DEV__) {
+      expect(callback).toHaveBeenCalledTimes(1);
+      const [id, phase] = callback.mock.calls[0];
+      expect(id).toBe('profiler');
+      expect(phase).toBe('mount');
+    } else {
+      expect(callback).toHaveBeenCalledTimes(0);
+    }
   });
 });

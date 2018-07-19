@@ -20,20 +20,9 @@ describe('ReactIncrementalErrorReplay', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
-  function div(...children) {
-    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-    return {type: 'div', children, prop: undefined};
-  }
-
-  function span(prop) {
-    return {type: 'span', children: [], prop};
-  }
-
   it('should fail gracefully on error in the host environment', () => {
-    ReactNoop.simulateErrorInHostConfig(() => {
-      ReactNoop.render(<span />);
-      expect(() => ReactNoop.flush()).toThrow('Error in host config.');
-    });
+    ReactNoop.render(<errorInBeginPhase />);
+    expect(() => ReactNoop.flush()).toThrow('Error in host config.');
   });
 
   it("should ignore error if it doesn't throw on retry", () => {

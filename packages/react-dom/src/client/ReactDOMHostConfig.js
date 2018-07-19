@@ -45,6 +45,8 @@ type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
 export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
+export type TimeoutHandle = TimeoutID;
+export type NoTimeout = -1;
 
 const {
   createElement,
@@ -277,6 +279,10 @@ export const now = ReactScheduler.now;
 export const isPrimaryRenderer = true;
 export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
 export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
+
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
 
 // -------------------
 //     Mutation

@@ -345,6 +345,7 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.flush).toWarnDev(
       'componentWillReceiveProps: Please update the following components ' +
         'to use static getDerivedStateFromProps instead: Foo',
+      {withoutStack: true},
     );
 
     ops = [];
@@ -385,6 +386,7 @@ describe('ReactIncrementalUpdates', () => {
         'from inside an update function. Update functions should be pure, ' +
         'with zero side-effects. Consider using componentDidUpdate or a ' +
         'callback.',
+      {withoutStack: true},
     );
     expect(ops).toEqual([
       // Initial render

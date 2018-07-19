@@ -38,6 +38,28 @@ const forks = Object.freeze({
     return 'shared/forks/object-assign.umd.js';
   },
 
+  // Without this fork, importing `shared/ReactSharedInternals` inside
+  // the `react` package itself would not work due to a cyclical dependency.
+  'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
+    if (entry === 'react') {
+      return 'react/src/ReactSharedInternals';
+    }
+    if (dependencies.indexOf('react') === -1) {
+      // React internals are unavailable if we can't reference the package.
+      // We return an error because we only want to throw if this module gets used.
+      return new Error(
+        'Cannot use a module that depends on ReactSharedInternals ' +
+          'from "' +
+          entry +
+          '" because it does not declare "react" in the package ' +
+          'dependencies or peerDependencies. For example, this can happen if you use ' +
+          'warning() instead of warningWithoutStack() in a package that does not ' +
+          'depend on React.'
+      );
+    }
+    return null;
+  },
+
   // We have a few forks for different environments.
   'shared/ReactFeatureFlags': (bundleType, entry) => {
     switch (entry) {
@@ -74,6 +96,12 @@ const forks = Object.freeze({
       case 'react-reconciler/persistent':
         return 'shared/forks/ReactFeatureFlags.persistent.js';
       case 'react-test-renderer':
+        switch (bundleType) {
+          case FB_WWW_DEV:
+          case FB_WWW_PROD:
+          case FB_WWW_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.test-renderer.www.js';
+        }
         return 'shared/forks/ReactFeatureFlags.test-renderer.js';
       default:
         switch (bundleType) {
