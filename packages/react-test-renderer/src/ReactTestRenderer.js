@@ -472,7 +472,7 @@ const ReactTestRendererFiber = {
         TestRendererScheduling.clearYields();
         return TestRenderer.flushSync(fn);
       },
-      unstable_flushThrough: TestRendererScheduling.flushThrough,
+      unstable_flushNumberOfYields: TestRendererScheduling.flushNumberOfYields,
       unstable_clearYields: TestRendererScheduling.clearYields,
     };
 
