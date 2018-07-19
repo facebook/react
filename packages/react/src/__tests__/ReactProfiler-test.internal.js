@@ -1000,17 +1000,12 @@ describe('Profiler', () => {
             expect(ReactNoop.flush).toThrow('Error in host config.');
 
             // A similar case we've seen caused by an invariant in ReactDOM.
-            // It didn't reproduce without this specific nesting pattern.
+            // It didn't reproduce without a host component inside.
             ReactNoop.render(
               <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
-                <div>
-                  <errorInCompletePhase>
-                    <div />
-                  </errorInCompletePhase>
-                  <errorInCompletePhase>
-                    <div />
-                  </errorInCompletePhase>
-                </div>
+                <errorInCompletePhase>
+                  <span>hi</span>
+                </errorInCompletePhase>
               </React.unstable_Profiler>,
             );
             expect(ReactNoop.flush).toThrow('Error in host config.');
