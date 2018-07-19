@@ -999,6 +999,17 @@ describe('Profiler', () => {
             );
             expect(ReactNoop.flush).toThrow('Error in host config.');
 
+            // A similar case we've seen caused by an invariant in ReactDOM.
+            // It didn't reproduce without a host component inside.
+            ReactNoop.render(
+              <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                <errorInCompletePhase>
+                  <span>hi</span>
+                </errorInCompletePhase>
+              </React.unstable_Profiler>,
+            );
+            expect(ReactNoop.flush).toThrow('Error in host config.');
+
             // So long as the profiler timer's fiber stack is reset correctly,
             // Subsequent renders should not error.
             ReactNoop.render(
