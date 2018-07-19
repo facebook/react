@@ -292,7 +292,6 @@ describe('ReactDOMServerHydration', () => {
 
     expect(() => ReactDOM.hydrate(markup, element)).toWarnDev(
       'Please update the following components to use componentDidMount instead: ComponentWithWarning',
-      {withoutStack: true},
     );
     expect(element.textContent).toBe('Hi');
   });
