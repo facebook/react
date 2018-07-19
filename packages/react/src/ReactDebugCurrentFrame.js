@@ -8,9 +8,15 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
+
+type ReactFrame = {
+  fileName?: string | null,
+  lineNumber?: number | null,
+  name?: string | null,
+};
 
 const ReactDebugCurrentFrame = {};
 
@@ -25,6 +31,39 @@ export function setCurrentlyValidatingElement(element: null | ReactElement) {
 if (__DEV__) {
   // Stack implementation injected by the current renderer.
   ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string));
+
+  ReactDebugCurrentFrame.currentFiber = (null: null | Fiber);
+
+  ReactDebugCurrentFrame.getStackFrames = function(): ReactFrame[] {
+    let frames = [];
+
+    // Add an extra top frame while an element is being validated
+    if (currentlyValidatingElement) {
+      const _name = getComponentName(currentlyValidatingElement.type);
+      const _source = currentlyValidatingElement._source;
+      frames.push({
+        fileName: _source && _source.fileName.replace(/^.*[\\\/]/, ''),
+        lineNumber: _source && _source.lineNumber,
+        name: _name,
+      });
+    }
+
+    // renderer (react-reconciler) injects currentFiber alongside getCurrentStack
+    if (ReactDebugCurrentFrame.currentFiber) {
+      let node = ReactDebugCurrentFrame.currentFiber;
+      do {
+        const owner = node._debugOwner;
+        const source = node._debugSource;
+        frames.push({
+          fileName: source && source.fileName.replace(/^.*[\\\/]/, ''),
+          lineNumber: source && source.lineNumber,
+          name: owner && getComponentName(owner.type),
+        });
+        node = node.return;
+      } while (node);
+    }
+    return frames;
+  };
 
   ReactDebugCurrentFrame.getStackAddendum = function(): string {
     let stack = '';

@@ -24,8 +24,23 @@ if (__DEV__) {
     }
     const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     const stack = ReactDebugCurrentFrame.getStackAddendum();
-    // eslint-disable-next-line react-internal/warning-and-invariant-args
-    warningWithoutStack(false, format + '%s', ...args, stack);
+
+    if (typeof console.reactStack === 'function') {
+      const frames = ReactDebugCurrentFrame.getStackFrames();
+      console.reactStack(frames);
+      try {
+        let argIndex = 0;
+        // // react-error-overlay consoleProxy only takes first arg so we have to do our own string interp
+        const message =
+          'Warning - ' + format.replace(/%s/g, () => args[argIndex++]);
+        // // add `stack` for the console display; it gets stripped in overlay by stripInlineStacktrace
+        console.error(message + stack);
+      } catch (x) {}
+      console.reactStackEnd();
+    } else {
+      // eslint-disable-next-line react-internal/warning-and-invariant-args
+      warningWithoutStack(false, format + '%s', ...args, stack);
+    }
   };
 }
 

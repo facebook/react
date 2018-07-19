@@ -91,6 +91,7 @@ export function resetCurrentFiber() {
 export function setCurrentFiber(fiber: Fiber) {
   if (__DEV__) {
     ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDev;
+    ReactDebugCurrentFrame.currentFiber = fiber;
     current = fiber;
     phase = null;
   }
