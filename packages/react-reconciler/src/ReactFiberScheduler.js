@@ -109,7 +109,7 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
   popContextProvider as popLegacyContextProvider,
 } from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+import {popProvider, resetContextDependences} from './ReactFiberNewContext';
 import {popHostContext, popHostContainer} from './ReactFiberHostContext';
 import {
   checkActualRenderTimeStackEmpty,
@@ -1131,6 +1131,7 @@ function renderRoot(
   // We're done performing work. Time to clean up.
   isWorking = false;
   ReactCurrentOwner.currentDispatcher = null;
+  resetContextDependences();
 
   // Yield back to main thread.
   if (didFatal) {

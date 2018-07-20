@@ -38,7 +38,15 @@ if (__DEV__) {
 
 let currentlyRenderingFiber: Fiber | null = null;
 let lastContextDependency: ContextDependency<mixed> | null = null;
-let memoizedFirstContextDependency: ContextDependency<mixed> | null = null;
+let lastContext: ReactContext<any> | null = null;
+
+export function resetContextDependences(): void {
+  // This is called right before React yields execution, to ensure `readContext`
+  // cannot be called outside the render phase.
+  currentlyRenderingFiber = null;
+  lastContextDependency = null;
+  lastContext = null;
+}
 
 export function pushProvider(providerFiber: Fiber): void {
   const context: ReactContext<any> = providerFiber.type._context;
@@ -212,15 +220,18 @@ export function prepareToReadContext(
   renderExpirationTime: ExpirationTime,
 ): boolean {
   currentlyRenderingFiber = workInProgress;
-  memoizedFirstContextDependency = workInProgress.firstContextDependency;
-  if (memoizedFirstContextDependency !== null) {
+  lastContextDependency = null;
+  lastContext = null;
+
+  const firstContextDependency = workInProgress.firstContextDependency;
+  if (firstContextDependency !== null) {
     // Reset the work-in-progress list
     workInProgress.firstContextDependency = null;
 
     // Iterate through the context dependencies and see if there were any
     // changes. If so, continue propagating the context change by scanning
     // the child subtree.
-    let dependency = memoizedFirstContextDependency;
+    let dependency = firstContextDependency;
     let hasPendingContext = false;
     do {
       const context = dependency.context;
@@ -253,12 +264,6 @@ export function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  invariant(
-    currentlyRenderingFiber !== null,
-    'Context.unstable_read(): Context can only be read while React is ' +
-      'rendering, e.g. inside the render method or getDerivedStateFromProps.',
-  );
-
   if (typeof observedBits !== 'number') {
     if (observedBits === false) {
       // Do not observe updates
@@ -269,30 +274,34 @@ export function readContext<T>(
     }
   }
 
-  if (currentlyRenderingFiber.firstContextDependency === null) {
+  if (lastContext === null) {
+    invariant(
+      currentlyRenderingFiber !== null,
+      'Context.unstable_read(): Context can only be read while React is ' +
+        'rendering, e.g. inside the render method or getDerivedStateFromProps.',
+    );
     // This is the first dependency in the list
     currentlyRenderingFiber.firstContextDependency = lastContextDependency = {
       context: ((context: any): ReactContext<mixed>),
       observedBits,
       next: null,
     };
+    lastContext = context;
   } else {
-    invariant(
-      lastContextDependency !== null,
-      'Expected a non-empty list of context dependencies. This is likely a ' +
-        'bug in React. Please file an issue.',
-    );
-    if (lastContextDependency.context === context) {
+    // `lastContextDependency` is always non-null if `lastContext is.
+    const lastDependency: ContextDependency<T> = (lastContextDependency: any);
+    if (lastContext === context) {
       // Fast path. The previous context has the same type. We can reuse
       // the same node.
-      lastContextDependency.observedBits |= observedBits;
+      lastDependency.observedBits |= observedBits;
     } else {
       // Append a new context item.
-      lastContextDependency = lastContextDependency.next = {
+      lastContextDependency = lastDependency.next = {
         context: ((context: any): ReactContext<mixed>),
         observedBits,
         next: null,
       };
+      lastContext = context;
     }
   }
 
