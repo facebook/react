@@ -109,7 +109,7 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
   popContextProvider as popLegacyContextProvider,
 } from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+import {popProvider, resetContextDependences} from './ReactFiberNewContext';
 import {popHostContext, popHostContainer} from './ReactFiberHostContext';
 import {
   checkActualRenderTimeStackEmpty,
@@ -145,6 +145,7 @@ import {
   commitAttachRef,
   commitDetachRef,
 } from './ReactFiberCommitWork';
+import {Dispatcher} from './ReactFiberDispatcher';
 
 export type Deadline = {
   timeRemaining: () => number,
@@ -532,8 +533,15 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   // Update the pending priority levels to account for the work that we are
   // about to commit. This needs to happen before calling the lifecycles, since
   // they may schedule additional updates.
-  const earliestRemainingTime = finishedWork.expirationTime;
-  markCommittedPriorityLevels(root, earliestRemainingTime);
+  const updateExpirationTimeBeforeCommit = finishedWork.expirationTime;
+  const childExpirationTimeBeforeCommit = finishedWork.childExpirationTime;
+  const earliestRemainingTimeBeforeCommit =
+    updateExpirationTimeBeforeCommit === NoWork ||
+    (childExpirationTimeBeforeCommit !== NoWork &&
+      childExpirationTimeBeforeCommit < updateExpirationTimeBeforeCommit)
+      ? childExpirationTimeBeforeCommit
+      : updateExpirationTimeBeforeCommit;
+  markCommittedPriorityLevels(root, earliestRemainingTimeBeforeCommit);
 
   // Reset this to null before calling lifecycles
   ReactCurrentOwner.current = null;
@@ -705,71 +713,85 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     ReactFiberInstrumentation.debugTool.onCommitWork(finishedWork);
   }
 
-  const expirationTime = root.expirationTime;
-  if (expirationTime === NoWork) {
+  const updateExpirationTimeAfterCommit = finishedWork.expirationTime;
+  const childExpirationTimeAfterCommit = finishedWork.childExpirationTime;
+  const earliestRemainingTimeAfterCommit =
+    updateExpirationTimeAfterCommit === NoWork ||
+    (childExpirationTimeAfterCommit !== NoWork &&
+      childExpirationTimeAfterCommit < updateExpirationTimeAfterCommit)
+      ? childExpirationTimeAfterCommit
+      : updateExpirationTimeAfterCommit;
+  if (earliestRemainingTimeAfterCommit === NoWork) {
     // If there's no remaining work, we can clear the set of already failed
     // error boundaries.
     legacyErrorBoundariesThatAlreadyFailed = null;
   }
-  onCommit(root, expirationTime);
+  onCommit(root, earliestRemainingTimeAfterCommit);
 }
 
-function resetExpirationTime(
+function resetChildExpirationTime(
   workInProgress: Fiber,
   renderTime: ExpirationTime,
 ) {
-  if (renderTime !== Never && workInProgress.expirationTime === Never) {
+  if (renderTime !== Never && workInProgress.childExpirationTime === Never) {
     // The children of this component are hidden. Don't bubble their
     // expiration times.
     return;
   }
 
-  // Check for pending updates.
-  let newExpirationTime = NoWork;
-  switch (workInProgress.tag) {
-    case HostRoot:
-    case ClassComponent: {
-      const updateQueue = workInProgress.updateQueue;
-      if (updateQueue !== null) {
-        newExpirationTime = updateQueue.expirationTime;
-      }
-    }
-  }
-
-  // TODO: Calls need to visit stateNode
+  let newChildExpirationTime = NoWork;
 
   // Bubble up the earliest expiration time.
-  // (And "base" render timers if that feature flag is enabled)
   if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+    // We're in profiling mode. Let's use this same traversal to update the
+    // "base" render times.
     let treeBaseDuration = workInProgress.selfBaseDuration;
     let child = workInProgress.child;
     while (child !== null) {
-      treeBaseDuration += child.treeBaseDuration;
+      const childUpdateExpirationTime = child.expirationTime;
+      const childChildExpirationTime = child.childExpirationTime;
       if (
-        child.expirationTime !== NoWork &&
-        (newExpirationTime === NoWork ||
-          newExpirationTime > child.expirationTime)
+        newChildExpirationTime === NoWork ||
+        (childUpdateExpirationTime !== NoWork &&
+          childUpdateExpirationTime < newChildExpirationTime)
       ) {
-        newExpirationTime = child.expirationTime;
+        newChildExpirationTime = childUpdateExpirationTime;
       }
+      if (
+        newChildExpirationTime === NoWork ||
+        (childChildExpirationTime !== NoWork &&
+          childChildExpirationTime < newChildExpirationTime)
+      ) {
+        newChildExpirationTime = childChildExpirationTime;
+      }
+      treeBaseDuration += child.treeBaseDuration;
       child = child.sibling;
     }
     workInProgress.treeBaseDuration = treeBaseDuration;
   } else {
     let child = workInProgress.child;
     while (child !== null) {
+      const childUpdateExpirationTime = child.expirationTime;
+      const childChildExpirationTime = child.childExpirationTime;
       if (
-        child.expirationTime !== NoWork &&
-        (newExpirationTime === NoWork ||
-          newExpirationTime > child.expirationTime)
+        newChildExpirationTime === NoWork ||
+        (childUpdateExpirationTime !== NoWork &&
+          childUpdateExpirationTime < newChildExpirationTime)
       ) {
-        newExpirationTime = child.expirationTime;
+        newChildExpirationTime = childUpdateExpirationTime;
+      }
+      if (
+        newChildExpirationTime === NoWork ||
+        (childChildExpirationTime !== NoWork &&
+          childChildExpirationTime < newChildExpirationTime)
+      ) {
+        newChildExpirationTime = childChildExpirationTime;
       }
       child = child.sibling;
     }
   }
 
-  workInProgress.expirationTime = newExpirationTime;
+  workInProgress.childExpirationTime = newChildExpirationTime;
 }
 
 function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
@@ -798,7 +820,7 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
       );
       let next = nextUnitOfWork;
       stopWorkTimer(workInProgress);
-      resetExpirationTime(workInProgress, nextRenderExpirationTime);
+      resetChildExpirationTime(workInProgress, nextRenderExpirationTime);
       if (__DEV__) {
         ReactCurrentFiber.resetCurrentFiber();
       }
@@ -1017,6 +1039,7 @@ function renderRoot(
       'by a bug in React. Please file an issue.',
   );
   isWorking = true;
+  ReactCurrentOwner.currentDispatcher = Dispatcher;
 
   const expirationTime = root.nextExpirationTimeToWorkOn;
 
@@ -1107,6 +1130,8 @@ function renderRoot(
 
   // We're done performing work. Time to clean up.
   isWorking = false;
+  ReactCurrentOwner.currentDispatcher = null;
+  resetContextDependences();
 
   // Yield back to main thread.
   if (didFatal) {
@@ -1267,7 +1292,7 @@ function dispatch(
             errorInfo,
             expirationTime,
           );
-          enqueueUpdate(fiber, update, expirationTime);
+          enqueueUpdate(fiber, update);
           scheduleWork(fiber, expirationTime);
           return;
         }
@@ -1275,7 +1300,7 @@ function dispatch(
       case HostRoot: {
         const errorInfo = createCapturedValue(value, sourceFiber);
         const update = createRootErrorUpdate(fiber, errorInfo, expirationTime);
-        enqueueUpdate(fiber, update, expirationTime);
+        enqueueUpdate(fiber, update);
         scheduleWork(fiber, expirationTime);
         return;
       }
@@ -1289,7 +1314,7 @@ function dispatch(
     const rootFiber = sourceFiber;
     const errorInfo = createCapturedValue(value, rootFiber);
     const update = createRootErrorUpdate(rootFiber, errorInfo, expirationTime);
-    enqueueUpdate(rootFiber, update, expirationTime);
+    enqueueUpdate(rootFiber, update);
     scheduleWork(rootFiber, expirationTime);
   }
 }
@@ -1408,35 +1433,52 @@ function retrySuspendedRoot(
 }
 
 function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
-  // Walk the parent path to the root and update each node's
-  // expiration time.
-  let node = fiber;
-  do {
-    const alternate = node.alternate;
+  // Update the source fiber's expiration time
+  if (
+    fiber.expirationTime === NoWork ||
+    fiber.expirationTime > expirationTime
+  ) {
+    fiber.expirationTime = expirationTime;
+  }
+  let alternate = fiber.alternate;
+  if (
+    alternate !== null &&
+    (alternate.expirationTime === NoWork ||
+      alternate.expirationTime > expirationTime)
+  ) {
+    alternate.expirationTime = expirationTime;
+  }
+  // Walk the parent path to the root and update the child expiration time.
+  let node = fiber.return;
+  if (node === null && fiber.tag === HostRoot) {
+    return fiber.stateNode;
+  }
+  while (node !== null) {
+    alternate = node.alternate;
     if (
-      node.expirationTime === NoWork ||
-      node.expirationTime > expirationTime
+      node.childExpirationTime === NoWork ||
+      node.childExpirationTime > expirationTime
     ) {
-      node.expirationTime = expirationTime;
+      node.childExpirationTime = expirationTime;
       if (
         alternate !== null &&
-        (alternate.expirationTime === NoWork ||
-          alternate.expirationTime > expirationTime)
+        (alternate.childExpirationTime === NoWork ||
+          alternate.childExpirationTime > expirationTime)
       ) {
-        alternate.expirationTime = expirationTime;
+        alternate.childExpirationTime = expirationTime;
       }
     } else if (
       alternate !== null &&
-      (alternate.expirationTime === NoWork ||
-        alternate.expirationTime > expirationTime)
+      (alternate.childExpirationTime === NoWork ||
+        alternate.childExpirationTime > expirationTime)
     ) {
-      alternate.expirationTime = expirationTime;
+      alternate.childExpirationTime = expirationTime;
     }
     if (node.return === null && node.tag === HostRoot) {
       return node.stateNode;
     }
     node = node.return;
-  } while (node !== null);
+  }
   return null;
 }
 
