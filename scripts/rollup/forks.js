@@ -150,12 +150,12 @@ const forks = Object.freeze({
   },
 
   // This logic is forked on www to blacklist warnings.
-  'shared/warning': (bundleType, entry) => {
+  'shared/warningWithoutStack': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-        return 'shared/forks/warning.www.js';
+        return 'shared/forks/warningWithoutStack.www.js';
       default:
         return null;
     }
