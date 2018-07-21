@@ -21,9 +21,14 @@ const ReactTestRenderer = require('react-test-renderer');
 
 // Isolate ART renderer.
 jest.resetModules();
-const ReactART = require('react-art');
-const ARTSVGMode = require('art/modes/svg');
-const ARTCurrentMode = require('art/modes/current');
+const {
+  Surface,
+  Group,
+  Shape,
+  Text,
+  ClippingRectangle,
+  LinearGradient,
+} = require('react-art');
 const Circle = require('react-art/Circle');
 const Rectangle = require('react-art/Rectangle');
 const Wedge = require('react-art/Wedge');
@@ -31,12 +36,6 @@ const Wedge = require('react-art/Wedge');
 // Isolate the noop renderer
 jest.resetModules();
 const ReactNoop = require('react-noop-renderer');
-
-let Group;
-let Shape;
-let Surface;
-let TestComponent;
-
 const Missing = {};
 
 function testDOMNodeStructure(domNode, expectedStructure) {
@@ -63,16 +62,12 @@ function testDOMNodeStructure(domNode, expectedStructure) {
 
 describe('ReactART', () => {
   let container;
+  let TestComponent;
+  const svgMode = 'svg';
 
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
-
-    ARTCurrentMode.setCurrent(ARTSVGMode);
-
-    Group = ReactART.Group;
-    Shape = ReactART.Shape;
-    Surface = ReactART.Surface;
 
     TestComponent = class extends React.Component {
       group = React.createRef();
@@ -81,7 +76,7 @@ describe('ReactART', () => {
         const a = (
           <Shape
             d="M0,0l50,0l0,50l-50,0z"
-            fill={new ReactART.LinearGradient(['black', 'white'])}
+            fill={new LinearGradient(['black', 'white'])}
             key="a"
             width={50}
             height={50}
@@ -109,7 +104,7 @@ describe('ReactART', () => {
         const c = <Group key="c" />;
 
         return (
-          <Surface width={150} height={200}>
+          <Surface mode={svgMode} width={150} height={200}>
             <Group ref={this.group}>
               {this.props.flipped ? [b, a, c] : [a, b, c]}
             </Group>
@@ -207,12 +202,13 @@ describe('ReactART', () => {
     testDOMNodeStructure(realNode, expectedNewStructure);
   });
 
+
   it('should be able to reorder many components', () => {
     class Component extends React.Component {
       render() {
         const chars = this.props.chars.split('');
         return (
-          <Surface>
+          <Surface mode={svgMode}>
             {chars.map(text => <Shape key={text} title={text} />)}
           </Surface>
         );
@@ -247,7 +243,7 @@ describe('ReactART', () => {
     }
 
     ReactTestUtils.renderIntoDocument(
-      <Surface>
+      <Surface mode={svgMode}>
         <Group>
           <CustomShape />
         </Group>
@@ -274,7 +270,7 @@ describe('ReactART', () => {
 
       render() {
         return (
-          <Surface>
+          <Surface mode={svgMode}>
             <Group>
               <CustomShape ref={this.test} />
             </Group>
@@ -309,7 +305,7 @@ describe('ReactART', () => {
 
       render() {
         return (
-          <Surface>
+          <Surface mode={svgMode}>
             <Group>
               {this.props.mountCustomShape && <CustomShape ref={this.test} />}
             </Group>
@@ -326,7 +322,7 @@ describe('ReactART', () => {
   it('adds and updates event handlers', () => {
     function render(onClick) {
       return ReactDOM.render(
-        <Surface>
+        <Surface mode={svgMode}>
           <Shape onClick={onClick} />
         </Surface>,
         container,
@@ -388,7 +384,7 @@ describe('ReactART', () => {
     ReactNoop.flushThrough(['A']);
 
     ReactDOM.render(
-      <Surface>
+      <Surface mode={svgMode}>
         <LogCurrentRenderer />
         <CurrentRendererContext.Provider value="ART">
           <LogCurrentRenderer />
@@ -405,6 +401,129 @@ describe('ReactART', () => {
     expect(ops).toEqual(['Test']);
   });
 });
+
+describe('ReactARTMode', () => {
+  const svgMode = 'svg';
+  const canvasMode = 'canvas';
+
+  let container;
+  const TestComponent = class extends React.Component {
+    render() {
+      return (
+        <Surface mode={this.props.mode} width={100} height={100}>
+          <Group>
+            <Shape width={10} height={10} opacity={0.1} />
+            <ClippingRectangle width={10} height={10} />
+            <Text> test component </Text>
+          </Group>
+        </Surface>
+      );
+    }
+  };
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+  
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
+  });
+
+  it('should render `svg` DOM element for SVG Surface', () => {
+    let instance = ReactDOM.render(<Surface mode={svgMode} />, container);
+    let realNode = ReactDOM.findDOMNode(instance);
+    expect(realNode.tagName).toBe(svgMode);
+  });
+
+  it('should render `canvas` DOM element for Canvas Surface', () => {
+    let instance = ReactDOM.render(<Surface mode={canvasMode} />, container);
+    let realNode = ReactDOM.findDOMNode(instance);
+    expect(realNode.tagName.toLowerCase()).toBe(canvasMode);
+  });
+
+  it('should render `canvas` DOM element for Surface with wrong mode', () => {
+    // if `mode` property has value not available, `canvas` mode should run.
+    let instance = ReactDOM.render(<Surface mode="foo" />, container);
+    let realNode = ReactDOM.findDOMNode(instance);
+    expect(realNode.tagName.toLowerCase()).toBe(canvasMode);
+  });
+
+  it('should render `canvas` DOM element for Surface without explicit mode', () => {
+    // if `mode` property is not set, `canvas` mode should run.
+    let instance = ReactDOM.render(<Surface />, container);
+    let realNode = ReactDOM.findDOMNode(instance);
+    expect(realNode.tagName.toLowerCase()).toBe(canvasMode);
+  });
+
+  it('should render Components for SVG Surface', () => {
+    const expectedStructure = {
+      nodeName: 'svg',
+      children: [
+        {nodeName: 'defs'},
+        {
+          nodeName: 'g',
+          children: [
+            {nodeName: 'defs'},
+            {nodeName: 'path', opacity: '0.1'},
+            {
+              nodeName: 'g',
+              children: [
+                {nodeName: 'defs'},
+              ],
+            },
+            {
+              nodeName: 'text',
+              children: [
+                {nodeName: 'tspan'},
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    let instance = ReactDOM.render(<TestComponent mode={svgMode} />, container);
+    let realNode = ReactDOM.findDOMNode(instance);
+    testDOMNodeStructure(realNode, expectedStructure);
+  });
+
+  it('should render Components for Canvas Surface', () => {
+    const expectedStructure = {
+      nodeName: 'CANVAS',
+    };
+    let instance = ReactDOM.render(<TestComponent mode={canvasMode} />, container);
+    let realNode = ReactDOM.findDOMNode(instance);
+    testDOMNodeStructure(realNode, expectedStructure);
+  });
+
+  it('should be able to render SVG Surface, Canvas Surface together in a document', () => {
+    let svgRef = {};
+    let canvasRef = {};
+    class MultipleSurface extends React.Component {
+      svgTest = React.createRef();
+      canvasTest = React.createRef();
+
+      componentDidMount() {
+        svgRef = this.svgTest.current;
+        canvasRef = this.canvasTest.current;
+      }
+
+      render() {
+        return (
+          <React.Fragment>
+            <Surface mode={svgMode} ref={this.svgTest} />
+            <Surface mode={canvasMode} ref={this.canvasTest} />
+          </React.Fragment>
+        );
+      }
+    }
+    ReactDOM.render(<MultipleSurface />, container);
+    expect(svgRef.ARTSurface.tagName).toBe(svgMode);
+    expect(canvasRef.ARTSurface.tagName).toBe(canvasMode);
+  });
+});
+
 
 describe('ReactARTComponents', () => {
   it('should generate a <Shape> with props for drawing the Circle', () => {

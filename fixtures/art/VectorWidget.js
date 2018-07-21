@@ -11,6 +11,7 @@ var React = require('react');
 var ReactART = require('react-art');
 var Group = ReactART.Group;
 var Shape = ReactART.Shape;
+var Text = ReactART.Text;
 var Surface = ReactART.Surface;
 var Transform = ReactART.Transform;
 
@@ -21,12 +22,13 @@ var CLICK_ACCEL = 3;
 var BASE_VEL = 0.15;
 
 /**
- * An animated SVG component.
+ * An animated component.
  */
 class VectorWidget extends React.Component {
   /**
-   * Initialize state members.
+   * Initialize members.
    */
+  mode = this.props.mode || 'canvas';
   state = {degrees: 0, velocity: 0, drag: MOUSE_UP_DRAG};
 
   /**
@@ -71,15 +73,12 @@ class VectorWidget extends React.Component {
    */
   render() {
     return (
-      <Surface width={700} height={700} style={{cursor: 'pointer'}}>
+      <Surface mode={this.mode} width={700} height={700} style={{cursor: 'pointer'}}>
         {this.renderGraphic(this.state.degrees)}
       </Surface>
     );
   }
 
-  /**
-   * Better SVG support for React coming soon.
-   */
   renderGraphic = rotation => {
     return (
       <Group onMouseDown={this.handleMouseDown} onMouseUp={this.handleMouseUp}>
@@ -93,7 +92,7 @@ class VectorWidget extends React.Component {
           <Group x={55} y={29}>
             <Group rotation={rotation} originX={84} originY={89}>
               <Group x={84} y={89}>
-                <Circle fill="#FFFFFF" radius={16} />
+                <Circle mode={this.mode} fill="#FFFFFF" radius={16} />
               </Group>
               <Group>
                 <Shape d={RING_ONE_PATH} stroke="#FFFFFF" strokeWidth={8} />
@@ -112,6 +111,9 @@ class VectorWidget extends React.Component {
               </Group>
             </Group>
           </Group>
+          <Text x={190} y={200} font="13px sans-serif" fill="#000000">
+            {this.mode} widget
+          </Text>
         </Group>
       </Group>
     );
