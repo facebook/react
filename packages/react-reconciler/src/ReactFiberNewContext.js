@@ -39,6 +39,7 @@ if (__DEV__) {
 let currentlyRenderingFiber: Fiber | null = null;
 let lastContextDependency: ContextDependency<mixed> | null = null;
 let lastContext: ReactContext<any> | null = null;
+let lastContextIfItHasMaskedBits: ReactContext<any> | null = null;
 
 export function resetContextDependences(): void {
   // This is called right before React yields execution, to ensure `readContext`
@@ -46,6 +47,7 @@ export function resetContextDependences(): void {
   currentlyRenderingFiber = null;
   lastContextDependency = null;
   lastContext = null;
+  lastContextIfItHasMaskedBits = null;
 }
 
 export function pushProvider(providerFiber: Fiber): void {
@@ -222,6 +224,7 @@ export function prepareToReadContext(
   currentlyRenderingFiber = workInProgress;
   lastContextDependency = null;
   lastContext = null;
+  lastContextIfItHasMaskedBits = null;
 
   const firstContextDependency = workInProgress.firstContextDependency;
   if (firstContextDependency !== null) {
@@ -264,46 +267,60 @@ export function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  if (typeof observedBits !== 'number') {
-    if (observedBits === false) {
-      // Do not observe updates
-      observedBits = 0;
+  if (lastContextIfItHasMaskedBits === context) {
+    // Fast path. The previous context has the same type. We can reuse
+    // the same node.
+    const lastDependency: ContextDependency<T> = (lastContextDependency: any);
+    if (typeof observedBits !== 'number') {
+      if (observedBits !== false) {
+        // Observe all changes
+        lastDependency.observedBits = maxSigned31BitInt;
+        lastContextIfItHasMaskedBits = null;
+      }
     } else {
-      // Observe all updates
-      observedBits = maxSigned31BitInt;
+      lastDependency.observedBits |= observedBits;
     }
-  }
-
-  if (lastContext === null) {
-    invariant(
-      currentlyRenderingFiber !== null,
-      'Context.unstable_read(): Context can only be read while React is ' +
-        'rendering, e.g. inside the render method or getDerivedStateFromProps.',
-    );
-    // This is the first dependency in the list
-    currentlyRenderingFiber.firstContextDependency = lastContextDependency = {
+  } else if (lastContext !== context) {
+    const newContextDependency = {
       context: ((context: any): ReactContext<mixed>),
-      observedBits,
+      observedBits: 0,
       next: null,
     };
-    lastContext = context;
-  } else {
-    // `lastContextDependency` is always non-null if `lastContext is.
-    const lastDependency: ContextDependency<T> = (lastContextDependency: any);
-    if (lastContext === context) {
-      // Fast path. The previous context has the same type. We can reuse
-      // the same node.
-      lastDependency.observedBits |= observedBits;
+
+    if (typeof observedBits !== 'number') {
+      if (observedBits !== false) {
+        // Observe all updates
+        newContextDependency.observedBits = maxSigned31BitInt;
+      } else {
+        // Observe no updates.
+        lastContextIfItHasMaskedBits = context;
+      }
     } else {
-      // Append a new context item.
-      lastContextDependency = lastDependency.next = {
-        context: ((context: any): ReactContext<mixed>),
-        observedBits,
-        next: null,
-      };
-      lastContext = context;
+      // Observe some updates.
+      newContextDependency.observedBits = observedBits;
+      // Store this context object for fast access.
+      lastContextIfItHasMaskedBits = context;
     }
+
+    // Append the new dependency to the end of the list.
+    if (lastContextDependency !== null) {
+      lastContextDependency.next = newContextDependency;
+    } else {
+      invariant(
+        currentlyRenderingFiber !== null,
+        'Context.unstable_read(): Context can only be read while React is ' +
+          'rendering, e.g. inside the render method ' +
+          'or getDerivedStateFromProps.',
+      );
+      currentlyRenderingFiber.firstContextDependency = newContextDependency;
+    }
+
+    lastContextDependency = newContextDependency;
   }
+
+  // If neither of the above conditions passes, the previous context dependency
+  // has the same type and already observes all the bits. There's nothing left
+  // to do.
 
   return isPrimaryRenderer ? context._currentValue : context._currentValue2;
 }
