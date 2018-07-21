@@ -19,11 +19,11 @@ import type {TopLevelType} from 'events/TopLevelEventTypes';
 export {getListener, registrationNameModules as registrationNames};
 
 export function dispatchEvent(
-  target: Object,
+  target: null | Object,
   topLevelType: TopLevelType,
   nativeEvent: AnyNativeEvent,
 ) {
-  const targetFiber = (target: Fiber);
+  const targetFiber = (target: null | Fiber);
   batchedUpdates(function() {
     runExtractedEventsInBatch(
       topLevelType,

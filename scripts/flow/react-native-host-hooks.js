@@ -100,7 +100,7 @@ declare module 'FabricUIManager' {
     viewName: string,
     rootTag: number,
     props: ?Object,
-    instanceHandle: Object,
+    eventTarget: Object,
   ): Object;
   declare function cloneNode(node: Object, instanceHandle: Object): Object;
   declare function cloneNodeWithNewChildren(
@@ -124,7 +124,7 @@ declare module 'FabricUIManager' {
   declare function completeRoot(rootTag: number, childSet: Object): void;
   declare function registerEventHandler(
     callback: (
-      instanceHandle: Object,
+      eventTarget: null | Object,
       type: RNTopLevelEventType,
       payload: Object,
     ) => void,

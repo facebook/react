@@ -14,6 +14,7 @@ import type {TypeOfMode} from './ReactTypeOfMode';
 import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
+import type {ContextDependency} from './ReactFiberNewContext';
 
 import invariant from 'shared/invariant';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
@@ -31,7 +32,7 @@ import {
   ContextProvider,
   ContextConsumer,
   Profiler,
-  TimeoutComponent,
+  PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
@@ -46,7 +47,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_ASYNC_MODE_TYPE,
-  REACT_TIMEOUT_TYPE,
+  REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -124,6 +125,9 @@ export type Fiber = {|
   // The state used to create the output
   memoizedState: any,
 
+  // A linked-list of contexts that this fiber depends on
+  firstContextDependency: ContextDependency<mixed> | null,
+
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the AsyncMode flag indicates whether the subtree should be async-by-
   // default. When a fiber is created, it inherits the mode of its
@@ -145,8 +149,11 @@ export type Fiber = {|
   lastEffect: Fiber | null,
 
   // Represents a time in the future by which this work should be completed.
-  // This is also used to quickly determine if a subtree has no pending changes.
+  // Does not include work found in its subtree.
   expirationTime: ExpirationTime,
+
+  // This is used to quickly determine if a subtree has no pending changes.
+  childExpirationTime: ExpirationTime,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -166,12 +173,12 @@ export type Fiber = {|
   // Duration of the most recent render time for this Fiber.
   // This value is not updated when we bailout for memoization purposes.
   // This field is only set when the enableProfilerTimer flag is enabled.
-  selfBaseTime?: number,
+  selfBaseDuration?: number,
 
   // Sum of base times for all descedents of this Fiber.
   // This value bubbles up during the "complete" phase.
   // This field is only set when the enableProfilerTimer flag is enabled.
-  treeBaseTime?: number,
+  treeBaseDuration?: number,
 
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
@@ -213,6 +220,7 @@ function FiberNode(
   this.memoizedProps = null;
   this.updateQueue = null;
   this.memoizedState = null;
+  this.firstContextDependency = null;
 
   this.mode = mode;
 
@@ -224,14 +232,15 @@ function FiberNode(
   this.lastEffect = null;
 
   this.expirationTime = NoWork;
+  this.childExpirationTime = NoWork;
 
   this.alternate = null;
 
   if (enableProfilerTimer) {
     this.actualDuration = 0;
     this.actualStartTime = 0;
-    this.selfBaseTime = 0;
-    this.treeBaseTime = 0;
+    this.selfBaseDuration = 0;
+    this.treeBaseDuration = 0;
   }
 
   if (__DEV__) {
@@ -325,12 +334,21 @@ export function createWorkInProgress(
     }
   }
 
-  workInProgress.expirationTime = expirationTime;
+  // Don't touching the subtree's expiration time, which has not changed.
+  workInProgress.childExpirationTime = current.childExpirationTime;
+  if (pendingProps !== current.pendingProps) {
+    // This fiber has new props.
+    workInProgress.expirationTime = expirationTime;
+  } else {
+    // This fiber's props have not changed.
+    workInProgress.expirationTime = current.expirationTime;
+  }
 
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
+  workInProgress.firstContextDependency = current.firstContextDependency;
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
@@ -338,8 +356,8 @@ export function createWorkInProgress(
   workInProgress.ref = current.ref;
 
   if (enableProfilerTimer) {
-    workInProgress.selfBaseTime = current.selfBaseTime;
-    workInProgress.treeBaseTime = current.treeBaseTime;
+    workInProgress.selfBaseDuration = current.selfBaseDuration;
+    workInProgress.treeBaseDuration = current.treeBaseDuration;
   }
 
   return workInProgress;
@@ -396,11 +414,8 @@ export function createFiberFromElement(
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, expirationTime, key);
-      case REACT_TIMEOUT_TYPE:
-        fiberTag = TimeoutComponent;
-        // Suspense does not require async, but its children should be strict
-        // mode compatible.
-        mode |= StrictMode;
+      case REACT_PLACEHOLDER_TYPE:
+        fiberTag = PlaceholderComponent;
         break;
       default:
         fiberTag = getFiberTagFromObjectType(type, owner);
@@ -446,7 +461,7 @@ function getFiberTagFromObjectType(type, owner): TypeOfWork {
             "it's defined in, or you might have mixed up default and " +
             'named imports.';
         }
-        const ownerName = owner ? getComponentName(owner) : null;
+        const ownerName = owner ? getComponentName(owner.type) : null;
         if (ownerName) {
           info += '\n\nCheck the render method of `' + ownerName + '`.';
         }
@@ -561,18 +576,20 @@ export function assignFiberPropertiesInDEV(
   target.memoizedProps = source.memoizedProps;
   target.updateQueue = source.updateQueue;
   target.memoizedState = source.memoizedState;
+  target.firstContextDependency = source.firstContextDependency;
   target.mode = source.mode;
   target.effectTag = source.effectTag;
   target.nextEffect = source.nextEffect;
   target.firstEffect = source.firstEffect;
   target.lastEffect = source.lastEffect;
   target.expirationTime = source.expirationTime;
+  target.childExpirationTime = source.childExpirationTime;
   target.alternate = source.alternate;
   if (enableProfilerTimer) {
     target.actualDuration = source.actualDuration;
     target.actualStartTime = source.actualStartTime;
-    target.selfBaseTime = source.selfBaseTime;
-    target.treeBaseTime = source.treeBaseTime;
+    target.selfBaseDuration = source.selfBaseDuration;
+    target.treeBaseDuration = source.treeBaseDuration;
   }
   target._debugID = source._debugID;
   target._debugSource = source._debugSource;

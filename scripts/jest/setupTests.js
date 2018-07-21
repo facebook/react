@@ -1,6 +1,7 @@
 'use strict';
 
 const chalk = require('chalk');
+const util = require('util');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
@@ -43,6 +44,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 
   expect.extend({
     ...require('./matchers/toWarnDev'),
+    ...require('./matchers/testRenderer'),
   });
 
   // We have a Babel transform that inserts guards against infinite loops.
@@ -63,14 +65,14 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 
   ['error', 'warn'].forEach(methodName => {
     const unexpectedConsoleCallStacks = [];
-    const newMethod = function(message) {
+    const newMethod = function(format, ...args) {
       // Capture the call stack now so we can warn about it later.
       // The call stack has helpful information for the test author.
       // Don't throw yet though b'c it might be accidentally caught and suppressed.
       const stack = new Error().stack;
       unexpectedConsoleCallStacks.push([
         stack.substr(stack.indexOf('\n') + 1),
-        message,
+        util.format(format, ...args),
       ]);
     };
 

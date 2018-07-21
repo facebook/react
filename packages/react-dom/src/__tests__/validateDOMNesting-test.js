@@ -12,7 +12,7 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 
-function expectWarnings(tags, warnings = []) {
+function expectWarnings(tags, warnings = [], withoutStack = 0) {
   tags = [...tags];
   warnings = [...warnings];
 
@@ -28,7 +28,9 @@ function expectWarnings(tags, warnings = []) {
     element = <Tag>{element}</Tag>;
   }
 
-  expect(() => ReactDOM.render(element, container)).toWarnDev(warnings);
+  expect(() => ReactDOM.render(element, container)).toWarnDev(warnings, {
+    withoutStack,
+  });
 }
 
 describe('validateDOMNesting', () => {
@@ -39,6 +41,7 @@ describe('validateDOMNesting', () => {
       [
         'render(): Rendering components directly into document.body is discouraged',
       ],
+      1,
     );
     expectWarnings(['div', 'a', 'object', 'a']);
     expectWarnings(['div', 'p', 'button', 'p']);
@@ -106,6 +109,7 @@ describe('validateDOMNesting', () => {
         'validateDOMNesting(...): <body> cannot appear as a child of <body>.\n' +
           '    in body (at **)',
       ],
+      1,
     );
     expectWarnings(
       ['svg', 'foreignObject', 'body', 'p'],

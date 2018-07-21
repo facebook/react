@@ -566,24 +566,21 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should warn if selected is set on <option>', () => {
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(
+    function App() {
+      return (
         <select>
           <option selected={true} />
           <option selected={true} />
-        </select>,
-      ),
-    ).toWarnDev(
+        </select>
+      );
+    }
+
+    expect(() => ReactTestUtils.renderIntoDocument(<App />)).toWarnDev(
       'Use the `defaultValue` or `value` props on <select> instead of ' +
         'setting `selected` on <option>.',
     );
 
-    ReactTestUtils.renderIntoDocument(
-      <select>
-        <option selected={true} />
-        <option selected={true} />
-      </select>,
-    );
+    ReactTestUtils.renderIntoDocument(<App />);
   });
 
   it('should warn if value is null and multiple is true', () => {
@@ -615,11 +612,20 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>
     );
-    const node = ReactTestUtils.renderIntoDocument(stub);
+    const container = document.createElement('div');
+    document.body.appendChild(container);
 
-    ReactTestUtils.Simulate.change(node);
+    try {
+      const node = ReactDOM.render(stub, container);
 
-    expect(node.value).toBe('giraffe');
+      node.dispatchEvent(
+        new Event('change', {bubbles: true, cancelable: false}),
+      );
+
+      expect(node.value).toBe('giraffe');
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 
   it('should warn if value and defaultValue props are specified', () => {
@@ -646,6 +652,13 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>,
     );
+  });
+
+  it('should not warn about missing onChange in uncontrolled textareas', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(<select />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<select value={undefined} />, container);
   });
 
   it('should be able to safely remove select onChange', () => {

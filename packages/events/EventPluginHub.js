@@ -167,7 +167,7 @@ export function getListener(inst: Fiber, registrationName: string) {
  */
 function extractEvents(
   topLevelType: TopLevelType,
-  targetInst: Fiber,
+  targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
@@ -229,7 +229,7 @@ export function runEventsInBatch(
 
 export function runExtractedEventsInBatch(
   topLevelType: TopLevelType,
-  targetInst: Fiber,
+  targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
 ) {

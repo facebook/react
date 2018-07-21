@@ -12,7 +12,7 @@ import type {Deadline} from 'react-reconciler/src/ReactFiberScheduler';
 // Current virtual time
 export let nowImplementation = () => 0;
 export let scheduledCallback: ((deadline: Deadline) => mixed) | null = null;
-export let yieldedValues: Array<mixed> | null = null;
+export let yieldedValues: Array<mixed> = [];
 
 export function scheduleDeferredCallback(
   callback: (deadline: Deadline) => mixed,
@@ -32,7 +32,7 @@ export function setNowImplementation(implementation: () => number): void {
 }
 
 export function flushAll(): Array<mixed> {
-  yieldedValues = null;
+  yieldedValues = [];
   while (scheduledCallback !== null) {
     const cb = scheduledCallback;
     scheduledCallback = null;
@@ -47,25 +47,18 @@ export function flushAll(): Array<mixed> {
       didTimeout: false,
     });
   }
-  if (yieldedValues === null) {
-    // Always return an array.
-    return [];
-  }
   return yieldedValues;
 }
 
-export function flushThrough(expectedValues: Array<mixed>): Array<mixed> {
+export function flushNumberOfYields(count: number): Array<mixed> {
   let didStop = false;
-  yieldedValues = null;
+  yieldedValues = [];
   while (scheduledCallback !== null && !didStop) {
     const cb = scheduledCallback;
     scheduledCallback = null;
     cb({
       timeRemaining() {
-        if (
-          yieldedValues !== null &&
-          yieldedValues.length >= expectedValues.length
-        ) {
+        if (yieldedValues.length >= count) {
           // We at least as many values as expected. Stop rendering.
           didStop = true;
           return 0;
@@ -79,38 +72,15 @@ export function flushThrough(expectedValues: Array<mixed>): Array<mixed> {
       didTimeout: false,
     });
   }
-  if (yieldedValues === null) {
-    // Always return an array.
-    yieldedValues = [];
-  }
-  for (let i = 0; i < expectedValues.length; i++) {
-    const expectedValue = `"${(expectedValues[i]: any)}"`;
-    const yieldedValue =
-      i < yieldedValues.length ? `"${(yieldedValues[i]: any)}"` : 'nothing';
-    if (yieldedValue !== expectedValue) {
-      const error = new Error(
-        `flushThrough expected to yield ${(expectedValue: any)}, but ${(yieldedValue: any)} was yielded`,
-      );
-      // Attach expected and yielded arrays,
-      // So the caller could pretty print the diff (if desired).
-      (error: any).expectedValues = expectedValues;
-      (error: any).actualValues = yieldedValues;
-      throw error;
-    }
-  }
   return yieldedValues;
 }
 
 export function yieldValue(value: mixed): void {
-  if (yieldedValues === null) {
-    yieldedValues = [value];
-  } else {
-    yieldedValues.push(value);
-  }
+  yieldedValues.push(value);
 }
 
-export function withCleanYields(fn: Function) {
+export function clearYields(): Array<mixed> {
+  const values = yieldedValues;
   yieldedValues = [];
-  fn();
-  return yieldedValues;
+  return values;
 }

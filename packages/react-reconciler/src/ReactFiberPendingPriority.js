@@ -10,9 +10,11 @@
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {NoWork, Sync} from './ReactFiberExpirationTime';
+import {NoWork} from './ReactFiberExpirationTime';
 
-// TODO: Offscreen updates
+// TODO: Offscreen updates should never suspend. However, a promise that
+// suspended inside an offscreen subtree should be able to ping at the priority
+// of the outer render.
 
 export function markPendingPriorityLevel(
   root: FiberRoot,
@@ -40,7 +42,7 @@ export function markPendingPriorityLevel(
       }
     }
   }
-  findNextPendingPriorityLevel(root);
+  findNextExpirationTimeToWorkOn(expirationTime, root);
 }
 
 export function markCommittedPriorityLevels(
@@ -56,7 +58,7 @@ export function markCommittedPriorityLevels(
     root.earliestSuspendedTime = NoWork;
     root.latestSuspendedTime = NoWork;
     root.latestPingedTime = NoWork;
-    findNextPendingPriorityLevel(root);
+    findNextExpirationTimeToWorkOn(NoWork, root);
     return;
   }
 
@@ -85,7 +87,7 @@ export function markCommittedPriorityLevels(
     // There's no suspended work. Treat the earliest remaining level as a
     // pending level.
     markPendingPriorityLevel(root, earliestRemainingTime);
-    findNextPendingPriorityLevel(root);
+    findNextExpirationTimeToWorkOn(NoWork, root);
     return;
   }
 
@@ -100,7 +102,7 @@ export function markCommittedPriorityLevels(
     // There's no suspended work. Treat the earliest remaining level as a
     // pending level.
     markPendingPriorityLevel(root, earliestRemainingTime);
-    findNextPendingPriorityLevel(root);
+    findNextExpirationTimeToWorkOn(NoWork, root);
     return;
   }
 
@@ -108,38 +110,50 @@ export function markCommittedPriorityLevels(
     // The earliest remaining time is earlier than all the suspended work.
     // Treat it as a pending update.
     markPendingPriorityLevel(root, earliestRemainingTime);
-    findNextPendingPriorityLevel(root);
+    findNextExpirationTimeToWorkOn(NoWork, root);
     return;
   }
 
   // The earliest remaining time falls within the range of known suspended
   // levels. We should treat this as suspended work.
-  findNextPendingPriorityLevel(root);
+  findNextExpirationTimeToWorkOn(NoWork, root);
 }
 
 export function hasLowerPriorityWork(
   root: FiberRoot,
-  renderExpirationTime: ExpirationTime,
-) {
+  erroredExpirationTime: ExpirationTime,
+): boolean {
+  const latestPendingTime = root.latestPendingTime;
+  const latestSuspendedTime = root.latestSuspendedTime;
+  const latestPingedTime = root.latestPingedTime;
   return (
-    renderExpirationTime !== root.latestPendingTime &&
-    renderExpirationTime !== root.latestSuspendedTime
+    (latestPendingTime !== NoWork &&
+      latestPendingTime > erroredExpirationTime) ||
+    (latestSuspendedTime !== NoWork &&
+      latestSuspendedTime > erroredExpirationTime) ||
+    (latestPingedTime !== NoWork && latestPingedTime > erroredExpirationTime)
+  );
+}
+
+export function isPriorityLevelSuspended(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): boolean {
+  const earliestSuspendedTime = root.earliestSuspendedTime;
+  const latestSuspendedTime = root.latestSuspendedTime;
+  return (
+    earliestSuspendedTime !== NoWork &&
+    expirationTime >= earliestSuspendedTime &&
+    expirationTime <= latestSuspendedTime
   );
 }
 
 export function markSuspendedPriorityLevel(
   root: FiberRoot,
   suspendedTime: ExpirationTime,
-  didError: boolean,
 ): void {
-  if (didError && !hasLowerPriorityWork(root, suspendedTime)) {
-    // TODO: When we add back resuming, we need to ensure the progressed work
-    // is thrown out and not reused during the restarted render. One way to
-    // invalidate the progressed work is to restart at expirationTime + 1.
-    root.didError = true;
-    findNextPendingPriorityLevel(root);
-    return;
-  }
+  root.didError = false;
+  clearPing(root, suspendedTime);
 
   // First, check the known pending levels and update them if needed.
   const earliestPendingTime = root.earliestPendingTime;
@@ -159,15 +173,9 @@ export function markSuspendedPriorityLevel(
     root.latestPendingTime = earliestPendingTime;
   }
 
-  // Next, if we're working on the lowest known suspended level, clear the ping.
-  // TODO: What if a promise suspends and pings before the root completes?
-  const latestSuspendedTime = root.latestSuspendedTime;
-  if (latestSuspendedTime === suspendedTime) {
-    root.latestPingedTime = NoWork;
-  }
-
   // Finally, update the known suspended levels.
   const earliestSuspendedTime = root.earliestSuspendedTime;
+  const latestSuspendedTime = root.latestSuspendedTime;
   if (earliestSuspendedTime === NoWork) {
     // No other suspended levels.
     root.earliestSuspendedTime = root.latestSuspendedTime = suspendedTime;
@@ -180,47 +188,92 @@ export function markSuspendedPriorityLevel(
       root.latestSuspendedTime = suspendedTime;
     }
   }
-  findNextPendingPriorityLevel(root);
+
+  findNextExpirationTimeToWorkOn(suspendedTime, root);
 }
 
 export function markPingedPriorityLevel(
   root: FiberRoot,
   pingedTime: ExpirationTime,
 ): void {
-  const latestSuspendedTime = root.latestSuspendedTime;
-  if (latestSuspendedTime !== NoWork && latestSuspendedTime <= pingedTime) {
-    const latestPingedTime = root.latestPingedTime;
-    if (latestPingedTime === NoWork || latestPingedTime < pingedTime) {
-      root.latestPingedTime = pingedTime;
-    }
+  root.didError = false;
+
+  // TODO: When we add back resuming, we need to ensure the progressed work
+  // is thrown out and not reused during the restarted render. One way to
+  // invalidate the progressed work is to restart at expirationTime + 1.
+  const latestPingedTime = root.latestPingedTime;
+  if (latestPingedTime === NoWork || latestPingedTime < pingedTime) {
+    root.latestPingedTime = pingedTime;
   }
-  findNextPendingPriorityLevel(root);
+  findNextExpirationTimeToWorkOn(pingedTime, root);
 }
 
-function findNextPendingPriorityLevel(root) {
-  const earliestSuspendedTime = root.earliestSuspendedTime;
+function clearPing(root, completedTime) {
+  // TODO: Track whether the root was pinged during the render phase. If so,
+  // we need to make sure we don't lose track of it.
+  const latestPingedTime = root.latestPingedTime;
+  if (latestPingedTime !== NoWork && latestPingedTime <= completedTime) {
+    root.latestPingedTime = NoWork;
+  }
+}
+
+export function findEarliestOutstandingPriorityLevel(
+  root: FiberRoot,
+  renderExpirationTime: ExpirationTime,
+): ExpirationTime {
+  let earliestExpirationTime = renderExpirationTime;
+
   const earliestPendingTime = root.earliestPendingTime;
-  let nextExpirationTimeToWorkOn;
-  let expirationTime;
-  if (earliestSuspendedTime === NoWork) {
-    // Fast path. There's no suspended work.
-    nextExpirationTimeToWorkOn = expirationTime = earliestPendingTime;
-  } else if (earliestPendingTime !== NoWork) {
-    // Check if there's known pending work.
-    nextExpirationTimeToWorkOn = earliestPendingTime;
-    expirationTime =
-      earliestSuspendedTime < earliestPendingTime
-        ? earliestSuspendedTime
-        : earliestPendingTime;
-  } else {
-    // Finally, if a suspended level was pinged, work on that. Otherwise there's
-    // nothing to work on.
-    nextExpirationTimeToWorkOn = expirationTime = root.latestPingedTime;
+  const earliestSuspendedTime = root.earliestSuspendedTime;
+  if (
+    earliestExpirationTime === NoWork ||
+    (earliestPendingTime !== NoWork &&
+      earliestPendingTime < earliestExpirationTime)
+  ) {
+    earliestExpirationTime = earliestPendingTime;
+  }
+  if (
+    earliestExpirationTime === NoWork ||
+    (earliestSuspendedTime !== NoWork &&
+      earliestSuspendedTime < earliestExpirationTime)
+  ) {
+    earliestExpirationTime = earliestSuspendedTime;
+  }
+  return earliestExpirationTime;
+}
+
+function findNextExpirationTimeToWorkOn(completedExpirationTime, root) {
+  const earliestSuspendedTime = root.earliestSuspendedTime;
+  const latestSuspendedTime = root.latestSuspendedTime;
+  const earliestPendingTime = root.earliestPendingTime;
+  const latestPingedTime = root.latestPingedTime;
+
+  // Work on the earliest pending time. Failing that, work on the latest
+  // pinged time.
+  let nextExpirationTimeToWorkOn =
+    earliestPendingTime !== NoWork ? earliestPendingTime : latestPingedTime;
+
+  // If there is no pending or pinted work, check if there's suspended work
+  // that's lower priority than what we just completed.
+  if (
+    nextExpirationTimeToWorkOn === NoWork &&
+    (completedExpirationTime === NoWork ||
+      latestSuspendedTime > completedExpirationTime)
+  ) {
+    // The lowest priority suspended work is the work most likely to be
+    // committed next. Let's start rendering it again, so that if it times out,
+    // it's ready to commit.
+    nextExpirationTimeToWorkOn = latestSuspendedTime;
   }
 
-  if (root.didError) {
-    // Revert to synchronous mode.
-    expirationTime = Sync;
+  let expirationTime = nextExpirationTimeToWorkOn;
+  if (
+    expirationTime !== NoWork &&
+    earliestSuspendedTime !== NoWork &&
+    earliestSuspendedTime < expirationTime
+  ) {
+    // Expire using the earliest known expiration time.
+    expirationTime = earliestSuspendedTime;
   }
 
   root.nextExpirationTimeToWorkOn = nextExpirationTimeToWorkOn;

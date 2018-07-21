@@ -14,10 +14,10 @@ import {isFiberMounted} from 'react-reconciler/reflection';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
 
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
 
@@ -90,13 +90,13 @@ function getMaskedContext(
   }
 
   if (__DEV__) {
-    const name = getComponentName(workInProgress) || 'Unknown';
+    const name = getComponentName(type) || 'Unknown';
     checkPropTypes(
       contextTypes,
       context,
       'context',
       name,
-      ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
+      ReactCurrentFiber.getCurrentFiberStackInDev,
     );
   }
 
@@ -152,17 +152,18 @@ function pushTopLevelContextObject(
 
 function processChildContext(fiber: Fiber, parentContext: Object): Object {
   const instance = fiber.stateNode;
-  const childContextTypes = fiber.type.childContextTypes;
+  const type = fiber.type;
+  const childContextTypes = type.childContextTypes;
 
   // TODO (bvaughn) Replace this behavior with an invariant() in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   if (typeof instance.getChildContext !== 'function') {
     if (__DEV__) {
-      const componentName = getComponentName(fiber) || 'Unknown';
+      const componentName = getComponentName(type) || 'Unknown';
 
       if (!warnedAboutMissingGetChildContext[componentName]) {
         warnedAboutMissingGetChildContext[componentName] = true;
-        warning(
+        warningWithoutStack(
           false,
           '%s.childContextTypes is specified but there is no getChildContext() method ' +
             'on the instance. You can either define getChildContext() on %s or remove ' +
@@ -177,24 +178,24 @@ function processChildContext(fiber: Fiber, parentContext: Object): Object {
 
   let childContext;
   if (__DEV__) {
-    ReactDebugCurrentFiber.setCurrentPhase('getChildContext');
+    ReactCurrentFiber.setCurrentPhase('getChildContext');
   }
   startPhaseTimer(fiber, 'getChildContext');
   childContext = instance.getChildContext();
   stopPhaseTimer();
   if (__DEV__) {
-    ReactDebugCurrentFiber.setCurrentPhase(null);
+    ReactCurrentFiber.setCurrentPhase(null);
   }
   for (let contextKey in childContext) {
     invariant(
       contextKey in childContextTypes,
       '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-      getComponentName(fiber) || 'Unknown',
+      getComponentName(type) || 'Unknown',
       contextKey,
     );
   }
   if (__DEV__) {
-    const name = getComponentName(fiber) || 'Unknown';
+    const name = getComponentName(type) || 'Unknown';
     checkPropTypes(
       childContextTypes,
       childContext,
@@ -205,7 +206,7 @@ function processChildContext(fiber: Fiber, parentContext: Object): Object {
       // context from the parent component instance. The stack will be missing
       // because it's outside of the reconciliation, and so the pointer has not
       // been set. This is rare and doesn't matter. We'll also remove that API.
-      ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
+      ReactCurrentFiber.getCurrentFiberStackInDev,
     );
   }
 

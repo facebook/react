@@ -357,6 +357,7 @@ describe('ReactStrictMode', () => {
         rendered = ReactTestRenderer.create(<SyncRoot />);
       }).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot' +
@@ -414,6 +415,7 @@ describe('ReactStrictMode', () => {
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot, Parent' +
@@ -491,12 +493,14 @@ describe('ReactStrictMode', () => {
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev([
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in AsyncRootOne (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar, Foo',
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in AsyncRootTwo (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
@@ -537,6 +541,7 @@ describe('ReactStrictMode', () => {
         rendered = ReactTestRenderer.create(<AsyncRoot foo={true} />);
       }).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Foo' +
@@ -546,6 +551,7 @@ describe('ReactStrictMode', () => {
 
       expect(() => rendered.update(<AsyncRoot foo={false} />)).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
@@ -596,6 +602,7 @@ describe('ReactStrictMode', () => {
 
       expect(() => ReactTestRenderer.create(<SyncRoot />)).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in StrictMode (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillReceiveProps: Please update the following components ' +
           'to use static getDerivedStateFromProps instead: Bar, Foo' +
@@ -755,6 +762,7 @@ describe('ReactStrictMode', () => {
         'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
           'We recommend using createRef() instead.\n\n' +
+          '    in StrictMode (at **)\n' +
           '    in OuterComponent (at **)\n\n' +
           'Learn more about using refs safely here:\n' +
           'https://fb.me/react-strict-mode-string-ref',
@@ -797,6 +805,7 @@ describe('ReactStrictMode', () => {
           'String refs are a source of potential bugs and should be avoided. ' +
           'We recommend using createRef() instead.\n\n' +
           '    in InnerComponent (at **)\n' +
+          '    in StrictMode (at **)\n' +
           '    in OuterComponent (at **)\n\n' +
           'Learn more about using refs safely here:\n' +
           'https://fb.me/react-strict-mode-string-ref',
@@ -888,6 +897,7 @@ describe('ReactStrictMode', () => {
         rendered = ReactTestRenderer.create(<Root />);
       }).toWarnDev(
         'Warning: Legacy context API has been detected within a strict-mode tree: ' +
+          '\n    in StrictMode (at **)' +
           '\n    in div (at **)' +
           '\n    in Root (at **)' +
           '\n\nPlease update the following components: FactoryLegacyContextConsumer, ' +

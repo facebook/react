@@ -45,6 +45,7 @@ function transform(file, enc, cb) {
           const callee = astPath.get('callee');
           if (
             callee.isIdentifier({name: 'warning'}) ||
+            callee.isIdentifier({name: 'warningWithoutStack'}) ||
             callee.isIdentifier({name: 'lowPriorityWarning'})
           ) {
             const node = astPath.node;
@@ -62,7 +63,12 @@ function transform(file, enc, cb) {
   });
 }
 
-gs(['packages/**/*.js', '!**/__tests__/**/*.js', '!**/__mocks__/**/*.js']).pipe(
+gs([
+  'packages/**/*.js',
+  '!packages/shared/warning.js',
+  '!**/__tests__/**/*.js',
+  '!**/__mocks__/**/*.js',
+]).pipe(
   through.obj(transform, cb => {
     process.stdout.write(
       Array.from(warnings)

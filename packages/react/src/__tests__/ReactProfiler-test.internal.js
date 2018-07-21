@@ -11,11 +11,13 @@
 
 let React;
 let ReactFeatureFlags;
+let ReactNoop;
 let ReactTestRenderer;
 
 function loadModules({
   enableProfilerTimer = true,
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
+  useNoopRenderer = false,
 } = {}) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.debugRenderPhaseSideEffects = false;
@@ -24,8 +26,22 @@ function loadModules({
   ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
   React = require('react');
-  ReactTestRenderer = require('react-test-renderer');
+
+  if (useNoopRenderer) {
+    ReactNoop = require('react-noop-renderer');
+  } else {
+    ReactTestRenderer = require('react-test-renderer');
+  }
 }
+
+const mockDevToolsForTest = () => {
+  jest.mock('react-reconciler/src/ReactFiberDevToolsHook', () => ({
+    injectInternals: () => {},
+    onCommitRoot: () => {},
+    onCommitUnmount: () => {},
+    isDevToolsPresent: true,
+  }));
+};
 
 describe('Profiler', () => {
   describe('works in profiling and non-profiling bundles', () => {
@@ -147,7 +163,7 @@ describe('Profiler', () => {
       const callback = jest.fn();
 
       const Yield = ({value}) => {
-        renderer.unstable_yield(value);
+        ReactTestRenderer.unstable_yield(value);
         return null;
       };
 
@@ -162,9 +178,9 @@ describe('Profiler', () => {
       );
 
       // Times are logged until a render is committed.
-      renderer.unstable_flushThrough(['first']);
+      expect(renderer).toFlushThrough(['first']);
       expect(callback).toHaveBeenCalledTimes(0);
-      expect(renderer.unstable_flushAll()).toEqual(['last']);
+      expect(renderer).toFlushAll(['last']);
       expect(callback).toHaveBeenCalledTimes(1);
     });
 
@@ -174,13 +190,17 @@ describe('Profiler', () => {
           <AdvanceTime />
           <AdvanceTime />
           <AdvanceTime />
+          <AdvanceTime />
+          <AdvanceTime />
         </div>,
       );
 
-      // Should be called twice: once to compute the update expiration time,
-      // and once to record the commit time.
+      // Should be called two times:
+      // 1. To mark the start (resuming) of work
+      // 2. To compute the update expiration time,
+      // 3. To record the commit time.
       // No additional calls from ProfilerTimer are expected.
-      expect(mockNow).toHaveBeenCalledTimes(2);
+      expect(mockNow).toHaveBeenCalledTimes(3);
     });
 
     it('logs render times for both mount and update', () => {
@@ -494,7 +514,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -508,13 +528,11 @@ describe('Profiler', () => {
           </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
-        expect(renderer.unstable_flushThrough(['Yield:2'])).toEqual([
-          'Yield:2',
-        ]);
+        expect(renderer).toFlushThrough(['Yield:2']);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Resume render for remaining children.
-        expect(renderer.unstable_flushAll()).toEqual(['Yield:3']);
+        expect(renderer).toFlushAll(['Yield:3']);
 
         // Verify that logged times include both durations above.
         expect(callback).toHaveBeenCalledTimes(1);
@@ -530,7 +548,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -548,9 +566,7 @@ describe('Profiler', () => {
           </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
-        expect(renderer.unstable_flushThrough(['Yield:5'])).toEqual([
-          'Yield:5',
-        ]);
+        expect(renderer).toFlushThrough(['Yield:5']);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
@@ -558,7 +574,7 @@ describe('Profiler', () => {
 
         // Flush the remaninig work,
         // Which should take an additional 10ms of simulated time.
-        expect(renderer.unstable_flushAll()).toEqual(['Yield:10', 'Yield:17']);
+        expect(renderer).toFlushAll(['Yield:10', 'Yield:17']);
         expect(callback).toHaveBeenCalledTimes(2);
 
         const [innerCall, outerCall] = callback.mock.calls;
@@ -582,7 +598,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -597,9 +613,7 @@ describe('Profiler', () => {
           </React.unstable_Profiler>,
           {unstable_isAsync: true},
         );
-        expect(renderer.unstable_flushThrough(['Yield:10'])).toEqual([
-          'Yield:10',
-        ]);
+        expect(renderer).toFlushThrough(['Yield:10']);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
@@ -607,15 +621,14 @@ describe('Profiler', () => {
 
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 5ms of time.
-        expect(
-          renderer.unstable_flushSync(() => {
-            renderer.update(
-              <React.unstable_Profiler id="test" onRender={callback}>
-                <Yield renderTime={5} />
-              </React.unstable_Profiler>,
-            );
-          }),
-        ).toEqual(['Yield:5']);
+        renderer.unstable_flushSync(() => {
+          renderer.update(
+            <React.unstable_Profiler id="test" onRender={callback}>
+              <Yield renderTime={5} />
+            </React.unstable_Profiler>,
+          );
+        });
+        expect(ReactTestRenderer).toClearYields(['Yield:5']);
 
         // The initial work was thrown away in this case,
         // So the actual and base times should only include the final rendered tree times.
@@ -629,7 +642,7 @@ describe('Profiler', () => {
         callback.mockReset();
 
         // Verify no more unexpected callbacks from low priority work
-        expect(renderer.unstable_flushAll()).toEqual([]);
+        expect(renderer).toFlushAll([]);
         expect(callback).toHaveBeenCalledTimes(0);
       });
 
@@ -638,7 +651,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -654,7 +667,7 @@ describe('Profiler', () => {
 
         // Render everything initially.
         // This should take 21 seconds of actual and base time.
-        expect(renderer.unstable_flushAll()).toEqual(['Yield:6', 'Yield:15']);
+        expect(renderer).toFlushAll(['Yield:6', 'Yield:15']);
         expect(callback).toHaveBeenCalledTimes(1);
         let call = callback.mock.calls[0];
         expect(call[2]).toBe(21); // actual time
@@ -675,18 +688,14 @@ describe('Profiler', () => {
             <Yield renderTime={9} />
           </React.unstable_Profiler>,
         );
-        expect(renderer.unstable_flushThrough(['Yield:3'])).toEqual([
-          'Yield:3',
-        ]);
+        expect(renderer).toFlushThrough(['Yield:3']);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
         advanceTimeBy(100); // 59 -> 159
 
         // Render another 5ms of simulated time.
-        expect(renderer.unstable_flushThrough(['Yield:5'])).toEqual([
-          'Yield:5',
-        ]);
+        expect(renderer).toFlushThrough(['Yield:5']);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
@@ -694,15 +703,14 @@ describe('Profiler', () => {
 
         // Interrupt with higher priority work.
         // The interrupted work simulates an additional 11ms of time.
-        expect(
-          renderer.unstable_flushSync(() => {
-            renderer.update(
-              <React.unstable_Profiler id="test" onRender={callback}>
-                <Yield renderTime={11} />
-              </React.unstable_Profiler>,
-            );
-          }),
-        ).toEqual(['Yield:11']);
+        renderer.unstable_flushSync(() => {
+          renderer.update(
+            <React.unstable_Profiler id="test" onRender={callback}>
+              <Yield renderTime={11} />
+            </React.unstable_Profiler>,
+          );
+        });
+        expect(ReactTestRenderer).toClearYields(['Yield:11']);
 
         // The actual time should include only the most recent render,
         // Because this lets us avoid a lot of commit phase reset complexity.
@@ -715,7 +723,7 @@ describe('Profiler', () => {
         expect(call[5]).toBe(275); // commit time
 
         // Verify no more unexpected callbacks from low priority work
-        expect(renderer.unstable_flushAll()).toEqual([]);
+        expect(renderer).toFlushAll([]);
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
@@ -724,7 +732,7 @@ describe('Profiler', () => {
 
         const Yield = ({renderTime}) => {
           advanceTimeBy(renderTime);
-          renderer.unstable_yield('Yield:' + renderTime);
+          ReactTestRenderer.unstable_yield('Yield:' + renderTime);
           return null;
         };
 
@@ -734,7 +742,9 @@ describe('Profiler', () => {
           render() {
             first = this;
             advanceTimeBy(this.state.renderTime);
-            renderer.unstable_yield('FirstComponent:' + this.state.renderTime);
+            ReactTestRenderer.unstable_yield(
+              'FirstComponent:' + this.state.renderTime,
+            );
             return <Yield renderTime={4} />;
           }
         }
@@ -744,7 +754,9 @@ describe('Profiler', () => {
           render() {
             second = this;
             advanceTimeBy(this.state.renderTime);
-            renderer.unstable_yield('SecondComponent:' + this.state.renderTime);
+            ReactTestRenderer.unstable_yield(
+              'SecondComponent:' + this.state.renderTime,
+            );
             return <Yield renderTime={7} />;
           }
         }
@@ -762,7 +774,7 @@ describe('Profiler', () => {
         // Render everything initially.
         // This simulates a total of 14ms of actual render time.
         // The base render time is also 14ms for the initial render.
-        expect(renderer.unstable_flushAll()).toEqual([
+        expect(renderer).toFlushAll([
           'FirstComponent:1',
           'Yield:4',
           'SecondComponent:2',
@@ -782,9 +794,7 @@ describe('Profiler', () => {
         // Render a partially update, but don't finish.
         // This partial render will take 10ms of actual render time.
         first.setState({renderTime: 10});
-        expect(renderer.unstable_flushThrough(['FirstComponent:10'])).toEqual([
-          'FirstComponent:10',
-        ]);
+        expect(renderer).toFlushThrough(['FirstComponent:10']);
         expect(callback).toHaveBeenCalledTimes(0);
 
         // Simulate time moving forward while frame is paused.
@@ -792,9 +802,11 @@ describe('Profiler', () => {
 
         // Interrupt with higher priority work.
         // This simulates a total of 37ms of actual render time.
-        expect(
-          renderer.unstable_flushSync(() => second.setState({renderTime: 30})),
-        ).toEqual(['SecondComponent:30', 'Yield:7']);
+        renderer.unstable_flushSync(() => second.setState({renderTime: 30}));
+        expect(ReactTestRenderer).toClearYields([
+          'SecondComponent:30',
+          'Yield:7',
+        ]);
 
         // The actual time should include only the most recent render (37ms),
         // Because this lets us avoid a lot of commit phase reset complexity.
@@ -818,10 +830,7 @@ describe('Profiler', () => {
         // The tree contains 42ms of base render time at this point,
         // Reflecting the most recent (longer) render durations.
         // TODO: This actual time should decrease by 10ms once the scheduler supports resuming.
-        expect(renderer.unstable_flushAll()).toEqual([
-          'FirstComponent:10',
-          'Yield:4',
-        ]);
+        expect(renderer).toFlushAll(['FirstComponent:10', 'Yield:4']);
         expect(callback).toHaveBeenCalledTimes(1);
         call = callback.mock.calls[0];
         expect(call[2]).toBe(14); // actual time
@@ -960,6 +969,44 @@ describe('Profiler', () => {
             // commit time
             expect(mountCall[5]).toBe(flagEnabled && __DEV__ ? 54 : 44);
           });
+
+          it('should reset the fiber stack correct after a "complete" phase error', () => {
+            jest.resetModules();
+
+            loadModules({
+              useNoopRenderer: true,
+              replayFailedUnitOfWorkWithInvokeGuardedCallback: flagEnabled,
+            });
+
+            // Simulate a renderer error during the "complete" phase.
+            // This mimics behavior like React Native's View/Text nesting validation.
+            ReactNoop.render(
+              <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                <errorInCompletePhase>hi</errorInCompletePhase>
+              </React.unstable_Profiler>,
+            );
+            expect(ReactNoop.flush).toThrow('Error in host config.');
+
+            // A similar case we've seen caused by an invariant in ReactDOM.
+            // It didn't reproduce without a host component inside.
+            ReactNoop.render(
+              <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                <errorInCompletePhase>
+                  <span>hi</span>
+                </errorInCompletePhase>
+              </React.unstable_Profiler>,
+            );
+            expect(ReactNoop.flush).toThrow('Error in host config.');
+
+            // So long as the profiler timer's fiber stack is reset correctly,
+            // Subsequent renders should not error.
+            ReactNoop.render(
+              <React.unstable_Profiler id="profiler" onRender={jest.fn()}>
+                <span>hi</span>
+              </React.unstable_Profiler>,
+            );
+            ReactNoop.flush();
+          });
         });
       });
     });
@@ -1001,5 +1048,65 @@ describe('Profiler', () => {
       expect(updateCall[3]).toBe(1); // base time
       expect(updateCall[4]).toBe(27); // start time
     });
+  });
+
+  it('should handle interleaved async yields and batched commits', () => {
+    jest.resetModules();
+    mockDevToolsForTest();
+    loadModules({useNoopRenderer: true});
+
+    const Child = ({duration, id}) => {
+      ReactNoop.advanceTime(duration);
+      ReactNoop.yield(`Child:render:${id}`);
+      return null;
+    };
+
+    class Parent extends React.Component {
+      componentDidMount() {
+        ReactNoop.yield(`Parent:componentDidMount:${this.props.id}`);
+      }
+      render() {
+        const {duration, id} = this.props;
+        return (
+          <React.Fragment>
+            <Child duration={duration} id={id} />
+            <Child duration={duration} id={id} />
+          </React.Fragment>
+        );
+      }
+    }
+
+    ReactNoop.advanceTime(50);
+
+    ReactNoop.renderToRootWithID(<Parent duration={3} id="one" />, 'one');
+
+    // Process up to the <Parent> component, but yield before committing.
+    // This ensures that the profiler timer still has paused fibers.
+    const commitFirstRender = ReactNoop.flushWithoutCommitting(
+      ['Child:render:one', 'Child:render:one'],
+      'one',
+    );
+
+    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(0);
+
+    ReactNoop.advanceTime(100);
+
+    // Process some async work, but yield before committing it.
+    ReactNoop.renderToRootWithID(<Parent duration={7} id="two" />, 'two');
+    ReactNoop.flushThrough(['Child:render:two']);
+
+    ReactNoop.advanceTime(150);
+
+    // Commit the previously paused, batched work.
+    commitFirstRender(['Parent:componentDidMount:one']);
+
+    expect(ReactNoop.getRoot('one').current.actualDuration).toBe(6);
+    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(0);
+
+    ReactNoop.advanceTime(200);
+
+    ReactNoop.flush();
+
+    expect(ReactNoop.getRoot('two').current.actualDuration).toBe(14);
   });
 });
