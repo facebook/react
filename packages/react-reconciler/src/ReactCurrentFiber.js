@@ -52,6 +52,30 @@ export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
   return info;
 }
 
+type ReactFrame = {
+  fileName?: string | null,
+  lineNumber?: number | null,
+  name?: string | null,
+};
+
+export function getStackFramesByFiberInDevAndProd(
+  workInProgress: Fiber,
+): ReactFrame[] {
+  let node = workInProgress;
+  let frames = [];
+  do {
+    const owner = node._debugOwner;
+    const source = node._debugSource;
+    frames.push({
+      fileName: source && source.fileName.replace(/^.*[\\\/]/, ''),
+      lineNumber: source && source.lineNumber,
+      name: owner && getComponentName(owner.type),
+    });
+    node = node.return;
+  } while (node);
+  return frames;
+}
+
 export let current: Fiber | null = null;
 export let phase: LifeCyclePhase | null = null;
 
@@ -80,9 +104,22 @@ export function getCurrentFiberStackInDev(): string {
   return '';
 }
 
+export function getCurrentFiberStackFramesInDev(): ReactFrame[] {
+  if (__DEV__) {
+    if (current === null) {
+      return [];
+    }
+    // Safe because if current fiber exists, we are reconciling,
+    // and it is guaranteed to be the work-in-progress version.
+    return getStackFramesByFiberInDevAndProd(current);
+  }
+  return [];
+}
+
 export function resetCurrentFiber() {
   if (__DEV__) {
     ReactDebugCurrentFrame.getCurrentStack = null;
+    ReactDebugCurrentFrame.getCurrentStackFrames = null;
     current = null;
     phase = null;
   }
@@ -91,7 +128,7 @@ export function resetCurrentFiber() {
 export function setCurrentFiber(fiber: Fiber) {
   if (__DEV__) {
     ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDev;
-    ReactDebugCurrentFrame.currentFiber = fiber;
+    ReactDebugCurrentFrame.getCurrentStackFrames = getCurrentFiberStackFramesInDev;
     current = fiber;
     phase = null;
   }

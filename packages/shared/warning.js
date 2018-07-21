@@ -25,15 +25,17 @@ if (__DEV__) {
     const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     const stack = ReactDebugCurrentFrame.getStackAddendum();
 
-    if (typeof console.reactStack === 'function') {
-      const frames = ReactDebugCurrentFrame.getStackFrames();
+    // Delegate to the injected renderer-specific implementation
+    const impl = ReactDebugCurrentFrame.getCurrentStackFrames;
+    if (typeof console.reactStack === 'function' && impl) {
+      const frames = impl();
       console.reactStack(frames);
       try {
         let argIndex = 0;
-        // // react-error-overlay consoleProxy only takes first arg so we have to do our own string interp
+        // react-error-overlay consoleProxy only takes first arg so we have to do our own string interp
         const message =
           'Warning - ' + format.replace(/%s/g, () => args[argIndex++]);
-        // // add `stack` for the console display; it gets stripped in overlay by stripInlineStacktrace
+        // add `stack` for the console display; it gets stripped in overlay by stripInlineStacktrace; yes this is hacky
         console.error(message + stack);
       } catch (x) {}
       console.reactStackEnd();

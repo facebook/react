@@ -62,6 +62,11 @@ type ReactNode = string | number | ReactElement;
 type FlatReactChildren = Array<null | ReactNode>;
 type toArrayType = (children: mixed) => FlatReactChildren;
 const toArray = ((React.Children.toArray: any): toArrayType);
+type ReactFrame = {
+  fileName?: string | null,
+  lineNumber?: number | null,
+  name?: string | null,
+};
 
 // This is only used in DEV.
 // Each entry is `this.stack` from a currently executing renderer instance.
@@ -71,7 +76,9 @@ let currentDebugStacks = [];
 
 let ReactDebugCurrentFrame;
 let prevGetCurrentStackImpl = null;
+let prevGetCurrentStackFramesImpl = null;
 let getCurrentServerStackImpl = () => '';
+let getCurrentServerStackFramesImpl = () => [];
 let describeStackFrame = element => '';
 
 let validatePropertiesInDevelopment = (type, props) => {};
@@ -104,6 +111,9 @@ if (__DEV__) {
       // Remember the previous (e.g. client) global stack implementation.
       prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
       ReactDebugCurrentFrame.getCurrentStack = getCurrentServerStackImpl;
+      prevGetCurrentStackFramesImpl =
+        ReactDebugCurrentFrame.getCurrentStackFrames;
+      ReactDebugCurrentFrame.getCurrentStackFrames = getCurrentServerStackFramesImpl;
     }
   };
 
@@ -127,6 +137,8 @@ if (__DEV__) {
       // Restore the previous (e.g. client) global stack implementation.
       ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
       prevGetCurrentStackImpl = null;
+      ReactDebugCurrentFrame.getCurrentStackFrames = prevGetCurrentStackFramesImpl;
+      prevGetCurrentStackFramesImpl = null;
     }
   };
 
@@ -151,6 +163,35 @@ if (__DEV__) {
       }
     }
     return stack;
+  };
+
+  getCurrentServerStackFramesImpl = function(): ReactFrame[] {
+    if (currentDebugStacks.length === 0) {
+      // Nothing is currently rendering.
+      return [];
+    }
+    // ReactDOMServer is reentrant so there may be multiple calls at the same time.
+    // Take the frames from the innermost call which is the last in the array.
+    let frames = currentDebugStacks[currentDebugStacks.length - 1];
+    let stackFrames = [];
+    // Go through every frame in the stack from the innermost one.
+    for (let i = frames.length - 1; i >= 0; i--) {
+      const frame: Frame = frames[i];
+      // Every frame might have more than one debug element stack entry associated with it.
+      // This is because single-child nesting doesn't create materialized frames.
+      // Instead it would push them through `pushElementToDebugStack()`.
+      let debugElementStack = ((frame: any): FrameDev).debugElementStack;
+      for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
+        const el = debugElementStack[ii];
+        const {fileName, lineNumber} = el._source;
+        stackFrames.push({
+          fileName,
+          lineNumber,
+          name: getComponentName(el.type),
+        });
+      }
+    }
+    return stackFrames;
   };
 }
 
