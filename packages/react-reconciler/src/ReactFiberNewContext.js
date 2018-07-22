@@ -38,14 +38,14 @@ if (__DEV__) {
 
 let currentlyRenderingFiber: Fiber | null = null;
 let lastContextDependency: ContextDependency<mixed> | null = null;
-let lastContext: ReactContext<any> | null = null;
+let lastContextWithAllBitsObserved: ReactContext<any> | null = null;
 
 export function resetContextDependences(): void {
   // This is called right before React yields execution, to ensure `readContext`
   // cannot be called outside the render phase.
   currentlyRenderingFiber = null;
   lastContextDependency = null;
-  lastContext = null;
+  lastContextWithAllBitsObserved = null;
 }
 
 export function pushProvider(providerFiber: Fiber): void {
@@ -221,7 +221,7 @@ export function prepareToReadContext(
 ): boolean {
   currentlyRenderingFiber = workInProgress;
   lastContextDependency = null;
-  lastContext = null;
+  lastContextWithAllBitsObserved = null;
 
   const firstContextDependency = workInProgress.firstContextDependency;
   if (firstContextDependency !== null) {
@@ -264,46 +264,41 @@ export function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  if (typeof observedBits !== 'number') {
-    if (observedBits === false) {
-      // Do not observe updates
-      observedBits = 0;
+  if (lastContextWithAllBitsObserved === context) {
+    // Nothing to do. We already observe everything in this context.
+  } else if (observedBits === false || observedBits === 0) {
+    // Do not observe any updates.
+  } else {
+    let resolvedObservedBits; // Avoid deopting on observable arguments or heterogeneous types.
+    if (
+      typeof observedBits !== 'number' ||
+      observedBits === maxSigned31BitInt
+    ) {
+      // Observe all updates.
+      lastContextWithAllBitsObserved = ((context: any): ReactContext<mixed>);
+      resolvedObservedBits = maxSigned31BitInt;
     } else {
-      // Observe all updates
-      observedBits = maxSigned31BitInt;
+      resolvedObservedBits = observedBits;
     }
-  }
 
-  if (lastContext === null) {
-    invariant(
-      currentlyRenderingFiber !== null,
-      'Context.unstable_read(): Context can only be read while React is ' +
-        'rendering, e.g. inside the render method or getDerivedStateFromProps.',
-    );
-    // This is the first dependency in the list
-    currentlyRenderingFiber.firstContextDependency = lastContextDependency = {
+    let contextItem = {
       context: ((context: any): ReactContext<mixed>),
-      observedBits,
+      observedBits: resolvedObservedBits,
       next: null,
     };
-    lastContext = context;
-  } else {
-    // `lastContextDependency` is always non-null if `lastContext is.
-    const lastDependency: ContextDependency<T> = (lastContextDependency: any);
-    if (lastContext === context) {
-      // Fast path. The previous context has the same type. We can reuse
-      // the same node.
-      lastDependency.observedBits |= observedBits;
+
+    if (lastContextDependency === null) {
+      invariant(
+        currentlyRenderingFiber !== null,
+        'Context.unstable_read(): Context can only be read while React is ' +
+          'rendering, e.g. inside the render method or getDerivedStateFromProps.',
+      );
+      // This is the first dependency in the list
+      currentlyRenderingFiber.firstContextDependency = lastContextDependency = contextItem;
     } else {
       // Append a new context item.
-      lastContextDependency = lastDependency.next = {
-        context: ((context: any): ReactContext<mixed>),
-        observedBits,
-        next: null,
-      };
-      lastContext = context;
+      lastContextDependency = lastContextDependency.next = contextItem;
     }
   }
-
   return isPrimaryRenderer ? context._currentValue : context._currentValue2;
 }
