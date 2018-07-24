@@ -9,6 +9,7 @@
 
 import React from 'react';
 import warning from 'shared/warning';
+import validateDOMNesting from './validateDOMNesting';
 
 let didWarnSelectedSetOnOption = false;
 
@@ -17,14 +18,23 @@ function flattenChildren(children) {
 
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
-  // We can silently skip them because invalid DOM nesting warning
-  // catches these cases in Fiber.
   React.Children.forEach(children, function(child) {
     if (child == null) {
       return;
     }
     if (typeof child === 'string' || typeof child === 'number') {
       content += child;
+      return;
+    }
+    if (__DEV__) {
+      // We do not have HostContext here
+      // but we can put some parent information at least
+      // Also this cause a bit different message than it was previously
+      validateDOMNesting(child.type, null, {
+        current: {
+          tag: 'option',
+        },
+      });
     }
   });
 

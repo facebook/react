@@ -41,9 +41,7 @@ describe('ReactDOMOption', () => {
     expect(() => {
       node = ReactTestUtils.renderIntoDocument(el);
     }).toWarnDev(
-      '<div> cannot appear as a child of <option>.\n' +
-        '    in div (at **)\n' +
-        '    in option (at **)',
+      '<div> cannot appear as a child of <option>.\n' + '    in option (at **)',
     );
     expect(node.innerHTML).toBe('1  2');
     ReactTestUtils.renderIntoDocument(el);
