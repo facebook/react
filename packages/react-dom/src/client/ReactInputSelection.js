@@ -9,25 +9,9 @@ import getActiveElement from './getActiveElement';
 
 import * as ReactDOMSelection from './ReactDOMSelection';
 import {ELEMENT_NODE, TEXT_NODE} from '../shared/HTMLNodeType';
-
-// TODO: this code is originally inlined from fbjs.
-// It is likely that we don't actually need all these checks
-// for the particular use case in this file.
-function isNode(object) {
-  const doc = object ? object.ownerDocument || object : document;
-  const defaultView = doc.defaultView || window;
-  return !!(
-    object &&
-    (typeof defaultView.Node === 'function'
-      ? object instanceof defaultView.Node
-      : typeof object === 'object' &&
-        typeof object.nodeType === 'number' &&
-        typeof object.nodeName === 'string')
-  );
-}
-
-function isTextNode(object) {
-  return isNode(object) && object.nodeType === TEXT_NODE;
+  
+function isTextNode(node) {
+  return node && node.nodeType === TEXT_NODE;
 }
 
 function containsNode(outerNode, innerNode) {
