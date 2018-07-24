@@ -75,15 +75,13 @@ function getSelection(node) {
   } else {
     const win =
       (node.ownerDocument && node.ownerDocument.defaultView) || window;
-    if (win.getSelection) {
-      const selection = win.getSelection();
-      return {
-        anchorNode: selection.anchorNode,
-        anchorOffset: selection.anchorOffset,
-        focusNode: selection.focusNode,
-        focusOffset: selection.focusOffset,
-      };
-    }
+    const selection = win.getSelection();
+    return {
+      anchorNode: selection.anchorNode,
+      anchorOffset: selection.anchorOffset,
+      focusNode: selection.focusNode,
+      focusOffset: selection.focusOffset,
+    };
   }
 }
 

@@ -9,7 +9,7 @@ import getActiveElement from './getActiveElement';
 
 import * as ReactDOMSelection from './ReactDOMSelection';
 import {ELEMENT_NODE, TEXT_NODE} from '../shared/HTMLNodeType';
-  
+
 function isTextNode(node) {
   return node && node.nodeType === TEXT_NODE;
 }
@@ -34,8 +34,7 @@ function containsNode(outerNode, innerNode) {
 
 function isInDocument(node) {
   return (
-    node.ownerDocument &&
-    containsNode(node.ownerDocument.documentElement, node)
+    node.ownerDocument && containsNode(node.ownerDocument.documentElement, node)
   );
 }
 

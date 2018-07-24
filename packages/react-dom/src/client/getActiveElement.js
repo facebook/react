@@ -9,7 +9,7 @@
 
 export default function getActiveElement(doc?: ?Document): Element {
   doc = doc || document;
-  // To account for edge cases in which document.body could be null  
+  // To account for edge cases in which document.body could be null
   const body = doc.body || doc.createElement('body');
   try {
     return doc.activeElement || body;
