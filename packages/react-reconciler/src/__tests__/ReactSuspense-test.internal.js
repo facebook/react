@@ -1314,6 +1314,37 @@ describe('ReactSuspense', () => {
 
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
     });
+
+    it('does not infinite loop if fallback contains lifecycle method', async () => {
+      class Fallback extends React.Component {
+        state = {
+          name: 'foo',
+        };
+        componentDidMount() {
+          this.setState({
+            name: 'bar',
+          });
+        }
+        render() {
+          return <Text text="Loading..." />;
+        }
+      }
+
+      class Demo extends React.Component {
+        render() {
+          return (
+            <Placeholder fallback={<Fallback />}>
+              <AsyncText text="Hi" ms={100} />
+            </Placeholder>
+          );
+        }
+      }
+
+      ReactNoop.renderLegacySyncRoot(<Demo />);
+      expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+      await advanceTimers(100);
+      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
+    });
   });
 
   it('does not call lifecycles of a suspended component', async () => {
