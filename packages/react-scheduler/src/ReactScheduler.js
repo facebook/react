@@ -42,7 +42,6 @@ type CallbackConfigType = {|
 export type CallbackIdType = CallbackConfigType;
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 // We capture a local reference to any global, in case it gets polyfilled after
 // this module is initially evaluated.
@@ -123,17 +122,15 @@ if (!canUseDOM) {
     localClearTimeout(timeoutId);
   };
 } else {
-  if (typeof localRequestAnimationFrame !== 'function') {
-    warningWithoutStack(
-      false,
+  if (__DEV__ && typeof localRequestAnimationFrame !== 'function') {
+    console.error(
       "This browser doesn't support requestAnimationFrame. " +
         'Make sure that you load a ' +
         'polyfill in older browsers. https://fb.me/react-polyfills',
     );
   }
-  if (typeof localCancelAnimationFrame !== 'function') {
-    warningWithoutStack(
-      false,
+  if (__DEV__ && typeof localCancelAnimationFrame !== 'function') {
+    console.error(
       "This browser doesn't support cancelAnimationFrame. " +
         'Make sure that you load a ' +
         'polyfill in older browsers. https://fb.me/react-polyfills',
