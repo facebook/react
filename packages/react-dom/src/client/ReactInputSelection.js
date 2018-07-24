@@ -50,7 +50,6 @@ function containsNode(outerNode, innerNode) {
 
 function isInDocument(node) {
   return (
-    node &&
     node.ownerDocument &&
     containsNode(node.ownerDocument.documentElement, node)
   );
@@ -85,7 +84,7 @@ function getActiveElementDeep() {
  * and `selectionEnd` rows.
  */
 export function hasSelectionCapabilities(elem) {
-  const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+  const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName &&
     ((nodeName === 'input' &&
