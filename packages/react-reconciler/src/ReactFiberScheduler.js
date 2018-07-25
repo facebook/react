@@ -1603,7 +1603,10 @@ function recomputeCurrentRendererTime() {
   currentRendererTime = msToExpirationTime(currentTimeMs);
 }
 
-function scheduleCallbackWithExpirationTime(expirationTime) {
+function scheduleCallbackWithExpirationTime(
+  expirationTime,
+  options?: {continued?: boolean},
+) {
   if (callbackExpirationTime !== NoWork) {
     // A callback is already scheduled. Check its expiration time (timeout).
     if (expirationTime > callbackExpirationTime) {
@@ -1625,7 +1628,8 @@ function scheduleCallbackWithExpirationTime(expirationTime) {
   const currentMs = now() - originalStartTimeMs;
   const expirationTimeMs = expirationTimeToMs(expirationTime);
   const timeout = expirationTimeMs - currentMs;
-  callbackID = scheduleDeferredCallback(performAsyncWork, {timeout});
+  const continued = options && options.continued;
+  callbackID = scheduleDeferredCallback(performAsyncWork, {timeout, continued});
 }
 
 // For every call to renderRoot, one of onFatal, onComplete, onSuspend, and
@@ -1920,7 +1924,9 @@ function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
   }
   // If there's work left over, schedule a new callback.
   if (nextFlushedExpirationTime !== NoWork) {
-    scheduleCallbackWithExpirationTime(nextFlushedExpirationTime);
+    scheduleCallbackWithExpirationTime(nextFlushedExpirationTime, {
+      continue: true,
+    });
   }
 
   // Clean-up.
