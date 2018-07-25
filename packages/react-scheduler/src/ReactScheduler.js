@@ -16,8 +16,8 @@
  * X- Pull out the scheduleWork polyfill built into React
  * X- Initial test coverage
  * X- Support for multiple callbacks
- * - Support for two priorities; serial and deferred
- * - Better test coverage
+ * - Support for some kind of priority
+ * X- Better test coverage
  * - Better docblock
  * - Polish documentation, API
  */
@@ -86,7 +86,7 @@ if (hasNativePerformanceNow) {
 
 let scheduleWork: (
   callback: FrameCallbackType,
-  options?: {timeout: number},
+  options?: {timeout: number, continued?: boolean},
 ) => CallbackIdType;
 let cancelScheduledWork: (callbackId: CallbackIdType) => void;
 
@@ -351,7 +351,7 @@ if (!canUseDOM) {
 
   scheduleWork = function(
     callback: FrameCallbackType,
-    options?: {timeout: number},
+    options?: {timeout: number, continued?: boolean},
   ): CallbackIdType /* CallbackConfigType */ {
     let timeoutTime = -1;
     if (options != null && typeof options.timeout === 'number') {
@@ -375,14 +375,26 @@ if (!canUseDOM) {
       headOfPendingCallbacksLinkedList = scheduledCallbackConfig;
       tailOfPendingCallbacksLinkedList = scheduledCallbackConfig;
     } else {
-      // Add latest callback as the new tail of the list
-      scheduledCallbackConfig.prev = tailOfPendingCallbacksLinkedList;
-      // renaming for clarity
-      const oldTailOfPendingCallbacksLinkedList = tailOfPendingCallbacksLinkedList;
-      if (oldTailOfPendingCallbacksLinkedList !== null) {
-        oldTailOfPendingCallbacksLinkedList.next = scheduledCallbackConfig;
+      if (options && options.continued) {
+        // If we are continuing work that was already started,
+        // put it at the head of the list.
+        scheduledCallbackConfig.next = headOfPendingCallbacksLinkedList;
+        // renaming for clarity
+        const oldHeadOfPendingCallbacksLinkedList = headOfPendingCallbacksLinkedList;
+        if (oldHeadOfPendingCallbacksLinkedList !== null) {
+          oldHeadOfPendingCallbacksLinkedList.prev = scheduledCallbackConfig;
+        }
+        headOfPendingCallbacksLinkedList = scheduledCallbackConfig;
+      } else {
+        // Add latest callback as the new tail of the list
+        scheduledCallbackConfig.prev = tailOfPendingCallbacksLinkedList;
+        // renaming for clarity
+        const oldTailOfPendingCallbacksLinkedList = tailOfPendingCallbacksLinkedList;
+        if (oldTailOfPendingCallbacksLinkedList !== null) {
+          oldTailOfPendingCallbacksLinkedList.next = scheduledCallbackConfig;
+        }
+        tailOfPendingCallbacksLinkedList = scheduledCallbackConfig;
       }
-      tailOfPendingCallbacksLinkedList = scheduledCallbackConfig;
     }
 
     if (!isAnimationFrameScheduled) {

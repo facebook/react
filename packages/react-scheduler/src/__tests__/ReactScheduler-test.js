@@ -339,6 +339,110 @@ describe('ReactScheduler', () => {
         });
       });
     });
+    describe('with "continued: true":', () => {
+      it('puts continued callback at front of queue', () => {
+        const {scheduleWork} = ReactScheduler;
+        startOfLatestFrame = 1000000000000;
+        currentTime = startOfLatestFrame - 10;
+        let continueWorkCounter = 0;
+        const callbackLog = [];
+        // this callback will continue twice
+        const callbackA = jest.fn(() => {
+          callbackLog.push('A' + continueWorkCounter);
+          // time passes, causing us to run out of idle time
+          currentTime += 25;
+          if (continueWorkCounter < 2) {
+            continueWorkCounter += 1;
+            scheduleWork(callbackA, {continued: true});
+          }
+        });
+        const callbackB = jest.fn(() => {
+          callbackLog.push('B');
+          // time passes, causing us to run out of idle time
+          currentTime += 25;
+        });
+
+        scheduleWork(callbackA); // should run 3 times before B
+        scheduleWork(callbackB); // should be delayed by callbackA continuing
+
+        advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
+
+        // callbackA should have run and used up all the time
+        expect(callbackLog).toEqual(['A0']);
+
+        advanceOneFrame({timeLeftInFrame: 18}); // runs rAF and postMessage callbacks
+
+        // we should have run callbackA again, since it was continued
+        expect(callbackLog).toEqual(['A0', 'A1']);
+
+        advanceOneFrame({timeLeftInFrame: 18}); // runs rAF and postMessage callbacks
+
+        // we should have run callbackA again, since it was continued
+        expect(callbackLog).toEqual(['A0', 'A1', 'A2']);
+
+        advanceOneFrame({timeLeftInFrame: 18}); // runs rAF and postMessage callbacks
+
+        // we should have run callbackB, now that A did not continue
+        expect(callbackLog).toEqual(['A0', 'A1', 'A2', 'B']);
+      });
+
+      it('still runs timed out callbacks first', () => {
+        const {scheduleWork} = ReactScheduler;
+        startOfLatestFrame = 1000000000000;
+        currentTime = startOfLatestFrame - 10;
+        let continueWorkCounter = 0;
+        const callbackLog = [];
+        // this callback will continue twice
+        const callbackA = jest.fn(() => {
+          callbackLog.push('A' + continueWorkCounter);
+          // time passes, causing us to run out of idle time
+          currentTime += 25;
+          if (continueWorkCounter < 2) {
+            continueWorkCounter += 1;
+            scheduleWork(callbackA, {continued: true});
+          }
+        });
+        const callbackB = jest.fn(() => {
+          callbackLog.push('B');
+          // time passes, causing us to run out of idle time
+          currentTime += 25;
+        });
+        const callbackC = jest.fn(() => {
+          callbackLog.push('C');
+          // time passes, causing us to run out of idle time
+          currentTime += 25;
+        });
+
+        scheduleWork(callbackA); // should run 3 times before B
+        scheduleWork(callbackB); // should be delayed by callbackA continuing
+        scheduleWork(callbackC, {timeout: 100}); // should time out after callback A is called twice
+
+        advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
+
+        // callbackA should have run and used up all the time
+        expect(callbackLog).toEqual(['A0']);
+
+        advanceOneFrame({timeLeftInFrame: 18}); // runs rAF and postMessage callbacks
+
+        // we should have run callbackA again, since it was continued
+        expect(callbackLog).toEqual(['A0', 'A1']);
+
+        advanceOneFrame({timeLeftInFrame: 18}); // runs rAF and postMessage callbacks
+
+        // we should have run callbackA again, since it was continued
+        expect(callbackLog).toEqual(['A0', 'A1', 'C']);
+
+        advanceOneFrame({timeLeftInFrame: 18}); // runs rAF and postMessage callbacks
+
+        // we should have run callbackA again, since it was continued
+        expect(callbackLog).toEqual(['A0', 'A1', 'C', 'A2']);
+
+        advanceOneFrame({timeLeftInFrame: 18}); // runs rAF and postMessage callbacks
+
+        // we should have run callbackB, now that A did not continue
+        expect(callbackLog).toEqual(['A0', 'A1', 'C', 'A2', 'B']);
+      });
+    });
   });
 
   describe('cancelScheduledWork', () => {
