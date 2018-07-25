@@ -122,19 +122,21 @@ if (!canUseDOM) {
     localClearTimeout(timeoutId);
   };
 } else {
-  if (__DEV__ && typeof localRequestAnimationFrame !== 'function') {
-    console.error(
-      "This browser doesn't support requestAnimationFrame. " +
-        'Make sure that you load a ' +
-        'polyfill in older browsers. https://fb.me/react-polyfills',
-    );
-  }
-  if (__DEV__ && typeof localCancelAnimationFrame !== 'function') {
-    console.error(
-      "This browser doesn't support cancelAnimationFrame. " +
-        'Make sure that you load a ' +
-        'polyfill in older browsers. https://fb.me/react-polyfills',
-    );
+  if (__DEV__ && typeof console !== 'undefined') {
+    if (typeof localRequestAnimationFrame !== 'function') {
+      console.error(
+        "This browser doesn't support requestAnimationFrame. " +
+          'Make sure that you load a ' +
+          'polyfill in older browsers. https://fb.me/react-polyfills',
+      );
+    }
+    if (typeof localCancelAnimationFrame !== 'function') {
+      console.error(
+        "This browser doesn't support cancelAnimationFrame. " +
+          'Make sure that you load a ' +
+          'polyfill in older browsers. https://fb.me/react-polyfills',
+      );
+    }
   }
 
   let headOfPendingCallbacksLinkedList: CallbackConfigType | null = null;
