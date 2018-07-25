@@ -9,4 +9,25 @@
 
 'use strict';
 
-export * from './src/ReactIs';
+export {
+  typeOf,
+  AsyncMode,
+  ContextConsumer,
+  ContextProvider,
+  Element,
+  ForwardRef,
+  Fragment,
+  Profiler,
+  Portal,
+  StrictMode,
+  isValidElementType,
+  isAsyncMode,
+  isContextConsumer,
+  isContextProvider,
+  isElement,
+  isForwardRef,
+  isFragment,
+  isProfiler,
+  isPortal,
+  isStrictMode,
+} from './src/ReactIs';
