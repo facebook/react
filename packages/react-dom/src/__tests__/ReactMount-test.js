@@ -314,35 +314,49 @@ describe('ReactMount', () => {
     let containerDiv;
     let mountPoint;
 
-    beforeEach(() => {
+    const Char = props => props.children;
+    const list = chars => chars.split('').map(c => <Char key={c}>{c}</Char>);
+
+    function initializeMountPoint(commentText) {
       containerDiv = document.createElement('div');
-      containerDiv.innerHTML = 'A<!-- react-mount-point-unstable -->B';
+      containerDiv.innerHTML = 'A<!--' + commentText + '-->B';
       mountPoint = containerDiv.childNodes[1];
       expect(mountPoint.nodeType).toBe(COMMENT_NODE);
+    }
+
+    describe('with proper marker', () => {
+      beforeEach(() => {
+        initializeMountPoint(' ABC react-mount-point-unstable def 123 ');
+      });
+
+      it('renders at a comment node', () => {
+        ReactDOM.render(list('aeiou'), mountPoint);
+        expect(containerDiv.innerHTML).toBe(
+          'Aaeiou<!-- ABC react-mount-point-unstable def 123 -->B',
+        );
+
+        ReactDOM.render(list('yea'), mountPoint);
+        expect(containerDiv.innerHTML).toBe(
+          'Ayea<!-- ABC react-mount-point-unstable def 123 -->B',
+        );
+
+        ReactDOM.render(list(''), mountPoint);
+        expect(containerDiv.innerHTML).toBe(
+          'A<!-- ABC react-mount-point-unstable def 123 -->B',
+        );
+      });
     });
 
-    it('renders at a comment node', () => {
-      function Char(props) {
-        return props.children;
-      }
-      function list(chars) {
-        return chars.split('').map(c => <Char key={c}>{c}</Char>);
-      }
+    describe('without proper marker', () => {
+      beforeEach(() => {
+        initializeMountPoint(' ABC def 123 ');
+      });
 
-      ReactDOM.render(list('aeiou'), mountPoint);
-      expect(containerDiv.innerHTML).toBe(
-        'Aaeiou<!-- react-mount-point-unstable -->B',
-      );
-
-      ReactDOM.render(list('yea'), mountPoint);
-      expect(containerDiv.innerHTML).toBe(
-        'Ayea<!-- react-mount-point-unstable -->B',
-      );
-
-      ReactDOM.render(list(''), mountPoint);
-      expect(containerDiv.innerHTML).toBe(
-        'A<!-- react-mount-point-unstable -->B',
-      );
+      it('throws an error', () => {
+        expect(() => {
+          ReactDOM.render(list('boooom!'), mountPoint);
+        }).toThrow();
+      });
     });
   });
 });

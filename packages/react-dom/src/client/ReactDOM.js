@@ -425,7 +425,7 @@ function isValidContainer(node) {
       node.nodeType === DOCUMENT_NODE ||
       node.nodeType === DOCUMENT_FRAGMENT_NODE ||
       (node.nodeType === COMMENT_NODE &&
-        node.nodeValue === ' react-mount-point-unstable '))
+        node.nodeValue.indexOf(' react-mount-point-unstable ') !== -1))
   );
 }
 
