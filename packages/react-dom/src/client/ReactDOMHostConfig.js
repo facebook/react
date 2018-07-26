@@ -208,7 +208,7 @@ export function finalizeInitialChildren(
   rootContainerInstance: Container,
   hostContext: HostContext,
 ): boolean {
-  setInitialProperties(domElement, type, props, rootContainerInstance);
+  setInitialProperties(domElement, type, props, rootContainerInstance, hostContext);
   return shouldAutoFocusHostComponent(type, props);
 }
 

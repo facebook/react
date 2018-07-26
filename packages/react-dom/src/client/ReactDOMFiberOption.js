@@ -13,7 +13,7 @@ import validateDOMNesting from './validateDOMNesting';
 
 let didWarnSelectedSetOnOption = false;
 
-function flattenChildren(children) {
+function flattenChildren(children, hostContext = {}) {
   let content = '';
 
   // Flatten children and warn if they aren't strings or numbers;
@@ -29,11 +29,7 @@ function flattenChildren(children) {
     if (__DEV__) {
       // We do not have HostContext here, but we can at least
       // put some parent information
-      validateDOMNesting(child.type, null, {
-        current: {
-          tag: 'option',
-        },
-      });
+      validateDOMNesting(child.type, null, hostContext.ancestorInfo);
     }
   });
 
@@ -65,9 +61,9 @@ export function postMountWrapper(element: Element, props: Object) {
   }
 }
 
-export function getHostProps(element: Element, props: Object) {
+export function getHostProps(element: Element, props: Object, hostContext: Object = {}) {
   const hostProps = {children: undefined, ...props};
-  const content = flattenChildren(props.children);
+  const content = flattenChildren(props.children, hostContext);
 
   if (content) {
     hostProps.children = content;
