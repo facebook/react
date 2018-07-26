@@ -29,7 +29,6 @@ function flattenChildren(children) {
     if (__DEV__) {
       // We do not have HostContext here
       // but we can put some parent information at least
-      // Also this cause a bit different message than it was previously
       validateDOMNesting(child.type, null, {
         current: {
           tag: 'option',

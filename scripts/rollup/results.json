@@ -4,15 +4,15 @@
       "filename": "react.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react",
-      "size": 59233,
-      "gzip": 16554
+      "size": 59086,
+      "gzip": 16296
     },
     {
       "filename": "react.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react",
-      "size": 7332,
-      "gzip": 3111
+      "size": 7217,
+      "gzip": 3050
     },
     {
       "filename": "react.development.js",
@@ -46,15 +46,15 @@
       "filename": "react-dom.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 656643,
-      "gzip": 153886
+      "size": 641505,
+      "gzip": 149286
     },
     {
       "filename": "react-dom.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 98962,
-      "gzip": 32102
+      "size": 96507,
+      "gzip": 31258
     },
     {
       "filename": "react-dom.development.js",
@@ -88,15 +88,15 @@
       "filename": "react-dom-test-utils.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 44787,
-      "gzip": 12185
+      "size": 46355,
+      "gzip": 12768
     },
     {
       "filename": "react-dom-test-utils.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 10366,
-      "gzip": 3841
+      "size": 10653,
+      "gzip": 3918
     },
     {
       "filename": "react-dom-test-utils.development.js",
@@ -123,15 +123,15 @@
       "filename": "react-dom-unstable-native-dependencies.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 60219,
-      "gzip": 15769
+      "size": 62921,
+      "gzip": 16559
     },
     {
       "filename": "react-dom-unstable-native-dependencies.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 11378,
-      "gzip": 3929
+      "size": 11622,
+      "gzip": 4007
     },
     {
       "filename": "react-dom-unstable-native-dependencies.development.js",
@@ -165,15 +165,15 @@
       "filename": "react-dom-server.browser.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-dom",
-      "size": 104567,
-      "gzip": 27873
+      "size": 105006,
+      "gzip": 27524
     },
     {
       "filename": "react-dom-server.browser.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-dom",
-      "size": 15619,
-      "gzip": 5953
+      "size": 15463,
+      "gzip": 5917
     },
     {
       "filename": "react-dom-server.browser.development.js",
