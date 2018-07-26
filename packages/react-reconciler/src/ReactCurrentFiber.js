@@ -23,32 +23,15 @@ import type {Fiber} from './ReactFiber';
 
 type LifeCyclePhase = 'render' | 'getChildContext';
 
-function describeFiber(fiber: Fiber): string {
-  switch (fiber.tag) {
-    case IndeterminateComponent:
-    case FunctionalComponent:
-    case ClassComponent:
-    case HostComponent:
-      const owner = fiber._debugOwner;
-      const source = fiber._debugSource;
-      const name = getComponentName(fiber.type);
-      let ownerName = null;
-      if (owner) {
-        ownerName = getComponentName(owner.type);
-      }
-      return describeComponentFrame(name, source, ownerName);
-    default:
-      return '';
-  }
-}
-
+// will be removed someday; here for backward compat
 export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
   let info = '';
   let node = workInProgress;
-  do {
-    info += describeFiber(node);
-    node = node.return;
-  } while (node);
+  const frames = getStackFramesByFiberInDevAndProd(node);
+  frames.forEach(({fileName, lineNumber, name = null, ownerName = null}) => {
+    const source = fileName && lineNumber && {fileName, lineNumber};
+    info += describeComponentFrame(name, source, ownerName);
+  });
   return info;
 }
 
@@ -56,6 +39,7 @@ type ReactFrame = {
   fileName?: string | null,
   lineNumber?: number | null,
   name?: string | null,
+  ownerName?: string | null,
 };
 
 export function getStackFramesByFiberInDevAndProd(
@@ -64,13 +48,25 @@ export function getStackFramesByFiberInDevAndProd(
   let node = workInProgress;
   let frames = [];
   do {
-    const owner = node._debugOwner;
-    const source = node._debugSource;
-    frames.push({
-      fileName: source && source.fileName.replace(/^.*[\\\/]/, ''),
-      lineNumber: source && source.lineNumber,
-      name: owner && getComponentName(owner.type),
-    });
+    switch (node.tag) {
+      case IndeterminateComponent:
+      case FunctionalComponent:
+      case ClassComponent:
+      case HostComponent:
+        const owner = node._debugOwner;
+        const source = node._debugSource;
+        const name = owner && getComponentName(node.type);
+        let ownerName = null;
+        if (owner) {
+          ownerName = getComponentName(owner.type);
+        }
+        frames.push({
+          fileName: source && source.fileName.replace(/^.*[\\\/]/, ''),
+          lineNumber: source && source.lineNumber,
+          name,
+          ownerName,
+        });
+    }
     node = node.return;
   } while (node);
   return frames;
@@ -92,6 +88,7 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   return null;
 }
 
+// will be removed someday; here for backward compat
 export function getCurrentFiberStackInDev(): string {
   if (__DEV__) {
     if (current === null) {

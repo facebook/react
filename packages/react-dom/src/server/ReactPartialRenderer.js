@@ -79,7 +79,6 @@ let prevGetCurrentStackImpl = null;
 let prevGetCurrentStackFramesImpl = null;
 let getCurrentServerStackImpl = () => '';
 let getCurrentServerStackFramesImpl = () => [];
-let describeStackFrame = element => '';
 
 let validatePropertiesInDevelopment = (type, props) => {};
 let pushCurrentDebugStack = (stack: Array<Frame>) => {};
@@ -93,14 +92,6 @@ if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props, /* canUseEventSystem */ false);
-  };
-
-  describeStackFrame = function(element): string {
-    const source = element._source;
-    const type = element.type;
-    const name = getComponentName(type);
-    const ownerName = null;
-    return describeComponentFrame(name, source, ownerName);
   };
 
   pushCurrentDebugStack = function(stack: Array<Frame>) {
@@ -142,26 +133,15 @@ if (__DEV__) {
     }
   };
 
+  // will be removed someday; here for backward compat
   getCurrentServerStackImpl = function(): string {
-    if (currentDebugStacks.length === 0) {
-      // Nothing is currently rendering.
-      return '';
-    }
-    // ReactDOMServer is reentrant so there may be multiple calls at the same time.
-    // Take the frames from the innermost call which is the last in the array.
-    let frames = currentDebugStacks[currentDebugStacks.length - 1];
     let stack = '';
-    // Go through every frame in the stack from the innermost one.
-    for (let i = frames.length - 1; i >= 0; i--) {
-      const frame: Frame = frames[i];
-      // Every frame might have more than one debug element stack entry associated with it.
-      // This is because single-child nesting doesn't create materialized frames.
-      // Instead it would push them through `pushElementToDebugStack()`.
-      let debugElementStack = ((frame: any): FrameDev).debugElementStack;
-      for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
-        stack += describeStackFrame(debugElementStack[ii]);
-      }
-    }
+    const frames = getCurrentServerStackFramesImpl();
+    const ownerName = null;
+    frames.forEach(({fileName, lineNumber, name = null}) => {
+      const source = fileName && lineNumber && {fileName, lineNumber};
+      stack += describeComponentFrame(name, source, ownerName);
+    });
     return stack;
   };
 

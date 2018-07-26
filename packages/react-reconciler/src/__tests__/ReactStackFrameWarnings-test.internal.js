@@ -11,14 +11,11 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactNoop;
 
 describe('ReactStackFrameWarnings', () => {
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -29,18 +26,11 @@ describe('ReactStackFrameWarnings', () => {
     }
 
     console.reactStack = () => {};
-    spyOnDevAndProd(console, 'reactStack');
+    spyOnDev(console, 'reactStack');
 
     ReactNoop.render(<Foo />);
     expect(console.reactStack).toHaveBeenCalledTimes(1); // doesnt work yet
-    // expect(ReactNoop.flush).toWarnDev(
-    //   'Warning: Stateless function components cannot be given refs. ' +
-    //     'Attempts to access this ref will fail.\n\nCheck the render method ' +
-    //     'of `Foo`.\n' +
-    //     '    in FunctionalComponent (at **)\n' +
-    //     '    in div (at **)\n' +
-    //     '    in Foo (at **)',
-    // );
+    // // then check for the frames
     // expect(console.reactStack.calls.argsFor(0)[0].message).toEqual(
     //   ['mock frames', 'here', 'tbd'],
     // );
