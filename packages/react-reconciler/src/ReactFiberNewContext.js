@@ -26,7 +26,9 @@ import {NoWork} from './ReactFiberExpirationTime';
 import {ContextProvider} from 'shared/ReactTypeOfWork';
 
 import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 
+import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 const valueCursor: StackCursor<mixed> = createCursor(null);
 const changedBitsCursor: StackCursor<number> = createCursor(0);
 
@@ -48,7 +50,7 @@ export function resetContextDependences(): void {
   lastContextWithAllBitsObserved = null;
 }
 
-export function pushProvider(providerFiber: Fiber): void {
+export function pushProvider(providerFiber: Fiber, changedBits: number): void {
   const context: ReactContext<any> = providerFiber.type._context;
 
   if (isPrimaryRenderer) {
@@ -56,7 +58,7 @@ export function pushProvider(providerFiber: Fiber): void {
     push(valueCursor, context._currentValue, providerFiber);
 
     context._currentValue = providerFiber.pendingProps.value;
-    context._changedBits = providerFiber.stateNode;
+    context._changedBits = changedBits;
     if (__DEV__) {
       warningWithoutStack(
         context._currentRenderer === undefined ||
@@ -72,7 +74,7 @@ export function pushProvider(providerFiber: Fiber): void {
     push(valueCursor, context._currentValue2, providerFiber);
 
     context._currentValue2 = providerFiber.pendingProps.value;
-    context._changedBits2 = providerFiber.stateNode;
+    context._changedBits2 = changedBits;
     if (__DEV__) {
       warningWithoutStack(
         context._currentRenderer2 === undefined ||
@@ -100,6 +102,39 @@ export function popProvider(providerFiber: Fiber): void {
   } else {
     context._currentValue2 = currentValue;
     context._changedBits2 = changedBits;
+  }
+}
+
+export function calculateChangedBits<T>(
+  context: ReactContext<T>,
+  newValue: T,
+  oldValue: T,
+) {
+  // Use Object.is to compare the new context value to the old value. Inlined
+  // Object.is polyfill.
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
+  if (
+    (oldValue === newValue &&
+      (oldValue !== 0 || 1 / oldValue === 1 / (newValue: any))) ||
+    (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
+  ) {
+    // No change
+    return 0;
+  } else {
+    const changedBits =
+      typeof context._calculateChangedBits === 'function'
+        ? context._calculateChangedBits(oldValue, newValue)
+        : MAX_SIGNED_31_BIT_INT;
+
+    if (__DEV__) {
+      warning(
+        (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
+        'calculateChangedBits: Expected the return value to be a ' +
+          '31-bit integer. Instead received: %s',
+        changedBits,
+      );
+    }
+    return changedBits | 0;
   }
 }
 
