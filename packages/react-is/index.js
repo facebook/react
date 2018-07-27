@@ -10,3 +10,4 @@
 'use strict';
 
 export * from './src/ReactIs';
+export {default} from './src/ReactIs';

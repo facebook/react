@@ -99,3 +99,26 @@ export function isPortal(object: any) {
 export function isStrictMode(object: any) {
   return typeOf(object) === REACT_STRICT_MODE_TYPE;
 }
+
+export default {
+    typeOf,
+    AsyncMode,
+    ContextConsumer,
+    ContextProvider,
+    Element,
+    ForwardRef,
+    Fragment,
+    Profiler,
+    Portal,
+    StrictMode,
+    isValidElementType,
+    isAsyncMode,
+    isContextConsumer,
+    isContextProvider,
+    isElement,
+    isForwardRef,
+    isFragment,
+    isProfiler,
+    isPortal,
+    isStrictMode,
+};
