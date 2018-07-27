@@ -121,4 +121,4 @@ export default {
     isProfiler,
     isPortal,
     isStrictMode,
-}
+};
