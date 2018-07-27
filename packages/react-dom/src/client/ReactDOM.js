@@ -758,6 +758,10 @@ ReactDOM.unstable_createRoot = function createRoot(
   container: DOMContainer,
   options?: RootOptions,
 ): ReactRoot {
+  invariant(
+    isValidContainer(container),
+    'unstable_createRoot(...): Target container is not a DOM element.',
+  );
   const hydrate = options != null && options.hydrate === true;
   return new ReactRoot(container, true, hydrate);
 };
