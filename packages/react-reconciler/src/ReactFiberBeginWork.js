@@ -73,6 +73,7 @@ import {
   propagateContextChange,
   readContext,
   prepareToReadContext,
+  calculateChangedBits,
 } from './ReactFiberNewContext';
 import {
   markActualRenderTimeStarted,
@@ -824,88 +825,34 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
     // Initial render
     changedBits = MAX_SIGNED_31_BIT_INT;
   } else {
-    if (oldProps.value === newProps.value) {
+    const oldValue = oldProps.value;
+    changedBits = calculateChangedBits(context, newValue, oldValue);
+    if (changedBits === 0) {
       // No change. Bailout early if children are the same.
       if (
         oldProps.children === newProps.children &&
         !hasLegacyContextChanged()
       ) {
-        workInProgress.stateNode = 0;
-        pushProvider(workInProgress);
+        pushProvider(workInProgress, 0);
         return bailoutOnAlreadyFinishedWork(
           current,
           workInProgress,
           renderExpirationTime,
         );
       }
-      changedBits = 0;
     } else {
-      const oldValue = oldProps.value;
-      // Use Object.is to compare the new context value to the old value.
-      // Inlined Object.is polyfill.
-      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is
-      if (
-        (oldValue === newValue &&
-          (oldValue !== 0 || 1 / oldValue === 1 / newValue)) ||
-        (oldValue !== oldValue && newValue !== newValue) // eslint-disable-line no-self-compare
-      ) {
-        // No change. Bailout early if children are the same.
-        if (
-          oldProps.children === newProps.children &&
-          !hasLegacyContextChanged()
-        ) {
-          workInProgress.stateNode = 0;
-          pushProvider(workInProgress);
-          return bailoutOnAlreadyFinishedWork(
-            current,
-            workInProgress,
-            renderExpirationTime,
-          );
-        }
-        changedBits = 0;
-      } else {
-        changedBits =
-          typeof context._calculateChangedBits === 'function'
-            ? context._calculateChangedBits(oldValue, newValue)
-            : MAX_SIGNED_31_BIT_INT;
-        if (__DEV__) {
-          warning(
-            (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
-            'calculateChangedBits: Expected the return value to be a ' +
-              '31-bit integer. Instead received: %s',
-            changedBits,
-          );
-        }
-        changedBits |= 0;
-
-        if (changedBits === 0) {
-          // No change. Bailout early if children are the same.
-          if (
-            oldProps.children === newProps.children &&
-            !hasLegacyContextChanged()
-          ) {
-            workInProgress.stateNode = 0;
-            pushProvider(workInProgress);
-            return bailoutOnAlreadyFinishedWork(
-              current,
-              workInProgress,
-              renderExpirationTime,
-            );
-          }
-        } else {
-          propagateContextChange(
-            workInProgress,
-            context,
-            changedBits,
-            renderExpirationTime,
-          );
-        }
-      }
+      // The context value changed. Search for matching consumers and schedule
+      // them to update.
+      propagateContextChange(
+        workInProgress,
+        context,
+        changedBits,
+        renderExpirationTime,
+      );
     }
   }
 
-  workInProgress.stateNode = changedBits;
-  pushProvider(workInProgress);
+  pushProvider(workInProgress, changedBits);
 
   const newChildren = newProps.children;
   reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
@@ -1049,8 +996,7 @@ function beginWork(
         );
         break;
       case ContextProvider:
-        workInProgress.stateNode = 0;
-        pushProvider(workInProgress);
+        pushProvider(workInProgress, 0);
         break;
       case Profiler:
         if (enableProfilerTimer) {
