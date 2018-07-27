@@ -9,8 +9,5 @@
 
 'use strict';
 
-import * as ReactIs from './src/ReactIs';
-
-export default ReactIs;
-// support for backward compatibility
-module.exports =  ReactIs;
+export * from './src/ReactIs';
+export {default} from './src/ReactIs';
