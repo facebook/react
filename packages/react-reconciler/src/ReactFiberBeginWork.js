@@ -145,7 +145,11 @@ export function reconcileChildren(
   }
 }
 
-function updateForwardRef(current, workInProgress, renderExpirationTime) {
+function updateForwardRef(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
   const render = workInProgress.type.render;
   const nextProps = workInProgress.pendingProps;
   const ref = workInProgress.ref;
@@ -183,7 +187,11 @@ function updateForwardRef(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateFragment(current, workInProgress, renderExpirationTime) {
+function updateFragment(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
   const nextChildren = workInProgress.pendingProps;
   reconcileChildren(
     current,
@@ -195,7 +203,11 @@ function updateFragment(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateMode(current, workInProgress, renderExpirationTime) {
+function updateMode(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(
     current,
@@ -207,7 +219,11 @@ function updateMode(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateProfiler(current, workInProgress, renderExpirationTime) {
+function updateProfiler(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
   if (enableProfilerTimer) {
     workInProgress.effectTag |= Update;
   }
@@ -767,7 +783,11 @@ function updatePlaceholderComponent(
   }
 }
 
-function updatePortalComponent(current, workInProgress, renderExpirationTime) {
+function updatePortalComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
   pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
   const nextChildren = workInProgress.pendingProps;
   if (current === null) {
@@ -795,7 +815,11 @@ function updatePortalComponent(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateContextProvider(current, workInProgress, renderExpirationTime) {
+function updateContextProvider(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
   const providerType: ReactProviderType<any> = workInProgress.type;
   const context: ReactContext<any> = providerType._context;
 
@@ -912,7 +936,11 @@ function updateContextProvider(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateContextConsumer(current, workInProgress, renderExpirationTime) {
+function updateContextConsumer(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
   const context: ReactContext<any> = workInProgress.type;
   const newProps = workInProgress.pendingProps;
   const render = newProps.children;
