@@ -452,6 +452,51 @@ describe('ReactScheduler', () => {
         // we should have run callbackB, now that A did not continue
         expect(callbackLog).toEqual(['A0', 'A1', 'C', 'A2', 'B']);
       });
+
+      it('uses yielded value to set new timeout of iterable callback', () => {
+        const {scheduleWork} = ReactScheduler;
+        startOfLatestFrame = 1000000000000;
+        currentTime = startOfLatestFrame - 10;
+        let continueWorkCounter = 0;
+        const callbackLog = [];
+        // using a generator to get an iterable callback
+        const genA = function* a() {
+          while (continueWorkCounter < 2) {
+            callbackLog.push('A' + continueWorkCounter);
+            // time passes, causing us to run out of idle time
+            currentTime += 25;
+            continueWorkCounter += 1;
+            // set new timeout time
+            yield 40;
+          }
+        };
+        const callbackASequence = genA();
+        // this callback will continue twice
+        const callbackA = callbackASequence.next.bind(callbackASequence);
+
+        scheduleWork(callbackA);
+
+        advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
+
+        // callbackA should have run and used up all the time
+        // it will be continued with a timeout
+        expect(callbackLog).toEqual(['A0']);
+
+        advanceOneFrame({timePastFrameDeadline: 16});
+
+        // we have not quite timed out yet, should not have run A again
+        expect(callbackLog).toEqual(['A0']);
+
+        advanceOneFrame({timePastFrameDeadline: 16});
+
+        // now we have timed out, should run A again even with no time in frame
+        expect(callbackLog).toEqual(['A0', 'A1']);
+
+        advanceOneFrame({timeLeftInFrame: 18}); // runs rAF and postMessage callbacks
+
+        // A is done, it should not have run again
+        expect(callbackLog).toEqual(['A0', 'A1']);
+      });
     });
   });
 

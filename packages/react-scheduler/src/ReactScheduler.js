@@ -219,6 +219,18 @@ if (!canUseDOM) {
         callbackReturnValue.done === false
       ) {
         // We keep the callback in the queue; it's an unfinished generator
+        const value = callbackReturnValue.value;
+        // If a value is passed, that is the new timeout
+        if (typeof value === 'number') {
+          const timeoutTime = now() + value;
+          if (
+            nextSoonestTimeoutTime === -1 ||
+            nextSoonestTimeoutTime > timeoutTime
+          ) {
+            nextSoonestTimeoutTime = timeoutTime;
+          }
+          callbackConfig.timeoutTime = timeoutTime;
+        }
       } else {
         cancelScheduledWork(callbackConfig);
       }
