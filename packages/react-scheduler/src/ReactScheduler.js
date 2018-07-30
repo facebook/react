@@ -31,7 +31,8 @@
 // The frame rate is dynamically adjusted.
 
 import type {Deadline} from 'react-reconciler/src/ReactFiberScheduler';
-type FrameCallbackType = Deadline => void;
+type IterableNextMethod = Deadline => {done: boolean, value: any};
+type FrameCallbackType = Deadline => void | IterableNextMethod;
 type CallbackConfigType = {|
   scheduledCallback: FrameCallbackType,
   timeoutTime: number,
@@ -97,6 +98,9 @@ if (!canUseDOM) {
     callback: FrameCallbackType,
     options?: {timeout: number},
   ): CallbackIdType {
+    if (typeof callback === 'object') {
+      callback = callback.next;
+    }
     // keeping return type consistent
     const callbackConfig = {
       scheduledCallback: callback,
@@ -105,12 +109,18 @@ if (!canUseDOM) {
       prev: null,
     };
     const timeoutId = localSetTimeout(() => {
-      callback({
+      const valueAndDone = callback({
         timeRemaining() {
           return Infinity;
         },
         didTimeout: false,
       });
+      if (typeof valueAndDone === 'object') {
+        // In case this is a generator
+        if (valueAndDone.done === false) {
+          scheduleWork(callback);
+        }
+      }
     });
     timeoutIds.set(callback, timeoutId);
     return callbackConfig;
@@ -199,12 +209,19 @@ if (!canUseDOM) {
   ) {
     const callback = callbackConfig.scheduledCallback;
     let finishedCalling = false;
+    let callbackReturnValue;
     try {
-      callback(arg);
+      callbackReturnValue = callback(arg);
       finishedCalling = true;
     } finally {
-      // always remove it from linked list
-      cancelScheduledWork(callbackConfig);
+      if (
+        typeof callbackReturnValue === 'object' &&
+        callbackReturnValue.done === false
+      ) {
+        // We keep the callback in the queue; it's an unfinished generator
+      } else {
+        cancelScheduledWork(callbackConfig);
+      }
 
       if (!finishedCalling) {
         // an error must have been thrown
@@ -303,6 +320,7 @@ if (!canUseDOM) {
       const latestCallbackConfig = headOfPendingCallbacksLinkedList;
       frameDeadlineObject.didTimeout = false;
       // callUnsafely will remove it from the head of the linked list
+      // unless it is an unfinished generator
       callUnsafely(latestCallbackConfig, frameDeadlineObject);
       currentTime = now();
     }
