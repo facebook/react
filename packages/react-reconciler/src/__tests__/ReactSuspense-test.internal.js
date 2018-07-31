@@ -3,12 +3,12 @@ let ReactFeatureFlags;
 let Fragment;
 let ReactNoop;
 let SimpleCacheProvider;
+let useCache;
 let Placeholder;
 let StrictMode;
 let AsyncMode;
 let lazy;
 
-let cache;
 let TextResource;
 let textResourceShouldFail;
 
@@ -23,28 +23,29 @@ describe('ReactSuspense', () => {
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
     SimpleCacheProvider = require('simple-cache-provider');
+    useCache = SimpleCacheProvider.useCache;
     Placeholder = React.Placeholder;
     StrictMode = React.StrictMode;
     AsyncMode = React.unstable_AsyncMode;
     lazy = React.lazy;
 
-    function invalidateCache() {
-      cache = SimpleCacheProvider.createCache(invalidateCache);
-    }
-    invalidateCache();
-    TextResource = SimpleCacheProvider.createResource(([text, ms = 0]) => {
-      return new Promise((resolve, reject) =>
-        setTimeout(() => {
-          if (textResourceShouldFail) {
-            ReactNoop.yield(`Promise rejected [${text}]`);
-            reject(new Error('Failed to load: ' + text));
-          } else {
-            ReactNoop.yield(`Promise resolved [${text}]`);
-            resolve(text);
-          }
-        }, ms),
-      );
-    }, ([text, ms]) => text);
+    TextResource = SimpleCacheProvider.createResource(
+      ([text, ms = 0]) => {
+        return new Promise((resolve, reject) =>
+          setTimeout(() => {
+            if (textResourceShouldFail) {
+              ReactNoop.yield(`Promise rejected [${text}]`);
+              reject(new Error('Failed to load: ' + text));
+            } else {
+              ReactNoop.yield(`Promise resolved [${text}]`);
+              resolve(text);
+            }
+          }, ms),
+        );
+      },
+      null,
+      ([text, ms]) => text,
+    );
     textResourceShouldFail = false;
   });
 
@@ -78,7 +79,7 @@ describe('ReactSuspense', () => {
   function AsyncText(props) {
     const text = props.text;
     try {
-      TextResource.read(cache, [props.text, props.ms]);
+      TextResource.read([props.text, props.ms]);
       ReactNoop.yield(text);
       return <span prop={text} />;
     } catch (promise) {
@@ -222,10 +223,12 @@ describe('ReactSuspense', () => {
   it('retries on error', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
+      cache = useCache();
       componentDidCatch(error) {
         this.setState({error});
       }
       reset() {
+        this.cache.purge();
         this.setState({error: null});
       }
       render() {
@@ -272,7 +275,6 @@ describe('ReactSuspense', () => {
 
     // Reset the error boundary and cache, and try again.
     errorBoundary.current.reset();
-    cache.invalidate();
 
     expect(ReactNoop.flush()).toEqual(['Suspend! [Result]']);
     ReactNoop.expire(1000);
@@ -284,10 +286,12 @@ describe('ReactSuspense', () => {
   it('retries on error after falling back to a placeholder', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
+      cache = useCache();
       componentDidCatch(error) {
         this.setState({error});
       }
       reset() {
+        this.cache.purge();
         this.setState({error: null});
       }
       render() {
@@ -340,7 +344,7 @@ describe('ReactSuspense', () => {
 
     // Reset the error boundary and cache, and try again.
     errorBoundary.current.reset();
-    cache.invalidate();
+    // cache.invalidate();
 
     expect(ReactNoop.flush()).toEqual(['Suspend! [Result]', 'Loading...']);
     ReactNoop.expire(3000);
@@ -1291,7 +1295,7 @@ describe('ReactSuspense', () => {
           super(props);
           const text = props.text;
           try {
-            TextResource.read(cache, [props.text, props.ms]);
+            TextResource.read([props.text, props.ms]);
             this.state = {text};
           } catch (promise) {
             if (typeof promise.then === 'function') {
@@ -1608,7 +1612,7 @@ describe('ReactSuspense', () => {
         const text = this.props.text;
         const ms = this.props.ms;
         try {
-          TextResource.read(cache, [text, ms]);
+          TextResource.read([text, ms]);
           ReactNoop.yield(text);
           return <span prop={text} />;
         } catch (promise) {
