@@ -1,20 +1,17 @@
-import { track } from 'interaction-tracking';
-import React, { Fragment, Placeholder, PureComponent } from 'react';
-import { unstable_deferredUpdates } from 'react-dom';
-import { createResource } from 'simple-cache-provider';
+import {track} from 'interaction-tracking';
+import React, {Fragment, Placeholder, PureComponent} from 'react';
+import {unstable_deferredUpdates} from 'react-dom';
+import {createResource} from 'simple-cache-provider';
 import {cache} from '../cache';
 import Spinner from './Spinner';
 import MovieListPage from './MovieListPage';
 
-const MoviePageResource = createResource(
-  () => import('./MoviePage')
-);
+const MoviePageResource = createResource(() => import('./MoviePage'));
 
 function MoviePageLoader(props) {
   const MoviePage = MoviePageResource.read(cache).default;
   return <MoviePage {...props} />;
 }
-
 
 // -------------------------------
 // Main screen
@@ -34,7 +31,7 @@ export default class App extends PureComponent {
     }
   }
 
-  handleMovieClick = (id) => {
+  handleMovieClick = id => {
     track(`View movie ${id}`, () => {
       track(`Update button state`, () => {
         this.setState({
@@ -44,7 +41,7 @@ export default class App extends PureComponent {
       track(`Show movie details`, () => {
         unstable_deferredUpdates(() => {
           this.setState({
-            showDetail: true
+            showDetail: true,
           });
         });
       });
@@ -56,16 +53,15 @@ export default class App extends PureComponent {
       this.setState({
         currentId: null,
         showDetail: false,
-      }));
+      })
+    );
   };
 
   render() {
-    const { currentId, showDetail } = this.state;
+    const {currentId, showDetail} = this.state;
     return (
-      <div className='App'>
-        {showDetail
-          ? this.renderDetail(currentId)
-          : this.renderList(currentId)}
+      <div className="App">
+        {showDetail ? this.renderDetail(currentId) : this.renderList(currentId)}
       </div>
     );
   }
@@ -73,15 +69,10 @@ export default class App extends PureComponent {
   renderDetail(id) {
     return (
       <Fragment>
-        <button
-          className='App-back'
-          onClick={this.handleBackClick}>
+        <button className="App-back" onClick={this.handleBackClick}>
           {'👈'}
         </button>
-        <Placeholder
-          delayMs={2000}
-          fallback={<Spinner size='large' />}
-        >
+        <Placeholder delayMs={2000} fallback={<Spinner size="large" />}>
           <MoviePageLoader id={id} />
         </Placeholder>
       </Fragment>
@@ -90,15 +81,12 @@ export default class App extends PureComponent {
 
   renderList(loadingId) {
     return (
-      <Placeholder
-        delayMs={1500}
-        fallback={<Spinner size='large' />}
-      >
+      <Placeholder delayMs={1500} fallback={<Spinner size="large" />}>
         <MovieListPage
           loadingId={loadingId}
           onMovieClick={this.handleMovieClick}
         />
       </Placeholder>
-    )
+    );
   }
 }

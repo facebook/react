@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React, {PureComponent} from 'react';
 import {
   VictoryArea,
   VictoryAxis,
@@ -16,7 +16,7 @@ export default class Charts extends PureComponent {
     const streamData = this.props.data;
     return (
       <div>
-        <div style={{ display: 'flex' }}>
+        <div style={{display: 'flex'}}>
           <VictoryChart
             theme={VictoryTheme.material}
             width={400}
@@ -25,18 +25,17 @@ export default class Charts extends PureComponent {
               parent: {
                 backgroundColor: '#222',
               },
-            }}
-          >
+            }}>
             <VictoryAxis
               style={{
-                axis: { stroke: 'white' },
-                tickLabels: { fill: 'white' },
+                axis: {stroke: 'white'},
+                tickLabels: {fill: 'white'},
               }}
             />
             <VictoryAxis
               style={{
-                axis: { stroke: 'white' },
-                tickLabels: { fill: 'white' },
+                axis: {stroke: 'white'},
+                tickLabels: {fill: 'white'},
               }}
               dependentAxis
             />
@@ -60,18 +59,17 @@ export default class Charts extends PureComponent {
                 backgroundColor: '#222',
               },
             }}
-            domainPadding={[20, 20]}
-          >
+            domainPadding={[20, 20]}>
             <VictoryAxis
               style={{
-                axis: { stroke: 'white' },
-                tickLabels: { fill: 'white' },
+                axis: {stroke: 'white'},
+                tickLabels: {fill: 'white'},
               }}
             />
             <VictoryAxis
               style={{
-                axis: { stroke: 'white' },
-                tickLabels: { fill: 'white' },
+                axis: {stroke: 'white'},
+                tickLabels: {fill: 'white'},
               }}
               dependentAxis
             />
@@ -87,11 +85,12 @@ export default class Charts extends PureComponent {
             />
           </VictoryChart>
         </div>
-        <div style={{
-          display: 'flex',
-          position: 'relative',
-          top: '-50px'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            position: 'relative',
+            top: '-50px',
+          }}>
           <VictoryChart
             theme={VictoryTheme.material}
             width={800}
@@ -100,29 +99,24 @@ export default class Charts extends PureComponent {
               parent: {
                 backgroundColor: '#222',
               },
-            }}
-          >
+            }}>
             <VictoryAxis
               style={{
-                axis: { stroke: 'white' },
-                tickLabels: { fill: 'white' },
+                axis: {stroke: 'white'},
+                tickLabels: {fill: 'white'},
               }}
             />
             <VictoryAxis
               style={{
-                axis: { stroke: 'white' },
-                tickLabels: { fill: 'white' },
+                axis: {stroke: 'white'},
+                tickLabels: {fill: 'white'},
               }}
               dependentAxis
             />
             <VictoryStack>
-              {streamData.map((data, i) =>
-                <VictoryArea
-                  key={i}
-                  data={data}
-                  colorScale={colors}
-                />
-              )}
+              {streamData.map((data, i) => (
+                <VictoryArea key={i} data={data} colorScale={colors} />
+              ))}
             </VictoryStack>
           </VictoryChart>
         </div>

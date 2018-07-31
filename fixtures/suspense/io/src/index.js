@@ -1,8 +1,13 @@
-import { track } from 'interaction-tracking';
-import React, { Fragment, PureComponent } from 'react';
-import { unstable_createRoot, render } from 'react-dom';
+import {track} from 'interaction-tracking';
+import React, {Fragment, PureComponent} from 'react';
+import {unstable_createRoot, render} from 'react-dom';
 import {cache} from './cache';
-import {setFakeRequestTime, setPaused, setPauseNewRequests, setProgressHandler} from './api';
+import {
+  setFakeRequestTime,
+  setPaused,
+  setPauseNewRequests,
+  setProgressHandler,
+} from './api';
 import App from './components/App';
 import Draggable from 'react-draggable';
 import './index.css';
@@ -21,14 +26,13 @@ class Shell extends PureComponent {
   handleReset = () => {
     track('Reset cache', () =>
       this.setState(prevState => ({
-        iteration: prevState.iteration + 1
-      })));
-  }
+        iteration: prevState.iteration + 1,
+      }))
+    );
+  };
 
   render() {
-    return (
-      <App key={this.state.iteration} />
-    ); 
+    return <App key={this.state.iteration} />;
   }
 }
 
@@ -40,16 +44,16 @@ class Debugger extends PureComponent {
     showDebugger: false,
     pauseNewRequests: false,
     waitTime: 0,
-    requests: {}
+    requests: {},
   };
 
   componentDidMount() {
     setFakeRequestTime(this.state.requestTime * 1000);
     setProgressHandler(this.handleProgress);
-    window.addEventListener('keydown', (e) => {
+    window.addEventListener('keydown', e => {
       if (e.key.toLowerCase() === '/') {
         this.setState(state => ({
-          showDebugger: !state.showDebugger
+          showDebugger: !state.showDebugger,
         }));
       } else if (e.key.toLowerCase() === 'p') {
         this.togglePauseRequests();
@@ -78,18 +82,21 @@ class Debugger extends PureComponent {
         [url]: {
           url,
           progress,
-          isPaused
-        }
-      }
+          isPaused,
+        },
+      },
     }));
-  }
+  };
 
   togglePauseRequests = () => {
-    this.setState(prevState => {
-      return { pauseNewRequests: !prevState.pauseNewRequests };
-    }, () => {
-      setPauseNewRequests(this.state.pauseNewRequests);
-    });
+    this.setState(
+      prevState => {
+        return {pauseNewRequests: !prevState.pauseNewRequests};
+      },
+      () => {
+        setPauseNewRequests(this.state.pauseNewRequests);
+      }
+    );
   };
 
   render() {
@@ -97,26 +104,28 @@ class Debugger extends PureComponent {
       return null;
     }
     return (
-      <Draggable cancel='input'>
+      <Draggable cancel="input">
         <div
-          className='🎛'  
+          className="🎛"
           style={{
-            left: window.innerWidth / 2 - 300/2 + 180,
+            left: window.innerWidth / 2 - 300 / 2 + 180,
             top: 40,
           }}>
           <div>
-            Latency: {this.state.requestTime} second{this.state.requestTime !== 1 ? 's' : ''}
-            {' '}
+            Latency: {this.state.requestTime} second{this.state.requestTime !==
+            1
+              ? 's'
+              : ''}{' '}
             <input
               type="range"
               min="0"
               max="3"
               step="0.5"
-              style={{ width: '100%' }}
+              style={{width: '100%'}}
               value={this.state.requestTime}
               onChange={e => {
                 e.stopPropagation();
-                this.setState({ requestTime: parseFloat(e.target.value) });
+                this.setState({requestTime: parseFloat(e.target.value)});
               }}
             />
           </div>
@@ -130,96 +139,135 @@ class Debugger extends PureComponent {
           </label>
           <br />
           <br />
-          {Object.values(this.state.requests).filter(x => x.progress !== 100).length > 0 ?
+          {Object.values(this.state.requests).filter(x => x.progress !== 100)
+            .length > 0 ? (
             <Fragment>
-              <div style={{ marginBottom: 10 }}><b>Loading</b></div>
-            </Fragment> :
-            <Fragment>
-              <div style={{ marginBottom: 10 }}><b>Loading</b></div>
-              <small style={{ height: 20, display: 'block' }}>(None)</small>
-            </Fragment>
-          }
-          {Object.keys(this.state.requests).reverse().map(url => {
-            const {progress, isPaused} = this.state.requests[url];
-            if (progress === 100) {
-              return null
-            }
-            return (
-              <div key={url} style={{
-                height: 20,
-                width: '100%',
-                position: 'relative',
-                cursor: 'pointer',
-                title: isPaused ? 'Resume' : 'Pause'
-              }} onClick={e => {
-                setPaused(url, !isPaused);
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: progress + '%',
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  backgroundColor: isPaused ? '#fbfb0e' : '#61dafb',
-                  zIndex: -1,
-                  opacity: .8
-                }} />
-                <div style={{
-                  fontFamily: 'monospace',
-                  fontWeight: 'bold',
-                  color: 'black'
-                }}>
-                  {url}
-                </div>
+              <div style={{marginBottom: 10}}>
+                <b>Loading</b>
               </div>
-            )
-          })}
-          {Object.values(this.state.requests).filter(x => x.progress === 100).length > 0 ?
-            <Fragment>
-              <br />
-              <div style={{ marginBottom: 10 }}><b>Cached</b> <button style={{ height: 16, outline: 'none', border: 'none', background: 'none', cursor: 'pointer' }} onClick={this.handleReset}>🗑</button></div>
-            </Fragment> : 
-            <Fragment>
-              <br />
-              <div style={{ marginBottom: 10 }}><b>Cached</b></div>
-              <small style={{ height: 20, display: 'block' }}>(None)</small>
             </Fragment>
-          }
-          {Object.keys(this.state.requests).reverse().map(url => {
-            const {progress} = this.state.requests[url];
-            if (progress !== 100) {
-              return null
-            }
+          ) : (
+            <Fragment>
+              <div style={{marginBottom: 10}}>
+                <b>Loading</b>
+              </div>
+              <small style={{height: 20, display: 'block'}}>(None)</small>
+            </Fragment>
+          )}
+          {Object.keys(this.state.requests)
+            .reverse()
+            .map(url => {
+              const {progress, isPaused} = this.state.requests[url];
+              if (progress === 100) {
+                return null;
+              }
+              return (
+                <div
+                  key={url}
+                  style={{
+                    height: 20,
+                    width: '100%',
+                    position: 'relative',
+                    cursor: 'pointer',
+                    title: isPaused ? 'Resume' : 'Pause',
+                  }}
+                  onClick={e => {
+                    setPaused(url, !isPaused);
+                  }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      width: progress + '%',
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      backgroundColor: isPaused ? '#fbfb0e' : '#61dafb',
+                      zIndex: -1,
+                      opacity: 0.8,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontFamily: 'monospace',
+                      fontWeight: 'bold',
+                      color: 'black',
+                    }}>
+                    {url}
+                  </div>
+                </div>
+              );
+            })}
+          {Object.values(this.state.requests).filter(x => x.progress === 100)
+            .length > 0 ? (
+            <Fragment>
+              <br />
+              <div style={{marginBottom: 10}}>
+                <b>Cached</b>{' '}
+                <button
+                  style={{
+                    height: 16,
+                    outline: 'none',
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                  }}
+                  onClick={this.handleReset}>
+                  🗑
+                </button>
+              </div>
+            </Fragment>
+          ) : (
+            <Fragment>
+              <br />
+              <div style={{marginBottom: 10}}>
+                <b>Cached</b>
+              </div>
+              <small style={{height: 20, display: 'block'}}>(None)</small>
+            </Fragment>
+          )}
+          {Object.keys(this.state.requests)
+            .reverse()
+            .map(url => {
+              const {progress} = this.state.requests[url];
+              if (progress !== 100) {
+                return null;
+              }
 
-            return (
-              <div key={url} style={{
-                height: 20,
-                width: '100%',
-                position: 'relative',
-              }}>
-                <div style={{
-                  height: '100%',
-                  width: progress + '%',
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  backgroundColor: progress !== 100 ? '#61dafb' : 'lightgreen',
-                  zIndex: -1,
-                  opacity: .8
-                }} />
-                <div style={{
-                  fontFamily: 'monospace',
-                  fontWeight: 'bold',
-                  color: 'black'
-                }}>
-                  {url}
+              return (
+                <div
+                  key={url}
+                  style={{
+                    height: 20,
+                    width: '100%',
+                    position: 'relative',
+                  }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      width: progress + '%',
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      backgroundColor:
+                        progress !== 100 ? '#61dafb' : 'lightgreen',
+                      zIndex: -1,
+                      opacity: 0.8,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontFamily: 'monospace',
+                      fontWeight: 'bold',
+                      color: 'black',
+                    }}>
+                    {url}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              );
+            })}
         </div>
       </Draggable>
-    )
+    );
   }
 }
 

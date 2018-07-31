@@ -1,4 +1,4 @@
-import React, { createRef, PureComponent } from 'react';
+import React, {createRef, PureComponent} from 'react';
 
 const SPEED = 0.003 / Math.PI;
 const FRAMES = 10;
@@ -15,26 +15,26 @@ export default class Clock extends PureComponent {
 
   animate = () => {
     const now = Date.now();
-    const td = now - this.t0
-    this.rotation = (this.rotation + SPEED * td) % (2*Math.PI);
+    const td = now - this.t0;
+    this.rotation = (this.rotation + SPEED * td) % (2 * Math.PI);
     this.t0 = now;
 
     this.arcs.push({rotation: this.rotation, td});
 
     let lx, ly, tx, ty;
-    if( this.arcs.length > FRAMES ) {
-      this.arcs.forEach( ({rotation, td}, i) => {
+    if (this.arcs.length > FRAMES) {
+      this.arcs.forEach(({rotation, td}, i) => {
         lx = tx;
         ly = ty;
         const r = 145;
         tx = 155 + r * Math.cos(rotation);
         ty = 155 + r * Math.sin(rotation);
-        const bigArc = (SPEED * td) < Math.PI ? '0' : '1';
+        const bigArc = SPEED * td < Math.PI ? '0' : '1';
         const path = `M${tx} ${ty}A${r} ${r} 0 ${bigArc} 0 ${lx} ${ly}L155 155`;
-        const hue = 120 - Math.min(120, td/4);
-        const colour = `hsl(${hue}, 100%, ${60-(i*(30/FRAMES))}%)`;
+        const hue = 120 - Math.min(120, td / 4);
+        const colour = `hsl(${hue}, 100%, ${60 - i * (30 / FRAMES)}%)`;
         if (i !== 0) {
-          const arcEl = this.arcGroupRef.current.children[i-1]
+          const arcEl = this.arcGroupRef.current.children[i - 1];
           arcEl.setAttribute('d', path);
           arcEl.setAttribute('fill', colour);
         }
@@ -58,7 +58,7 @@ export default class Clock extends PureComponent {
   };
 
   componentDidMount() {
-     this.frame = requestAnimationFrame(this.animate);
+    this.frame = requestAnimationFrame(this.animate);
     if (this.faceRef.current) {
       this.faceRef.current.addEventListener('click', this.handleClick);
     }
@@ -75,7 +75,7 @@ export default class Clock extends PureComponent {
     }
   }
 
-  handleClick = (e) => {
+  handleClick = e => {
     e.stopPropagation();
     this.hitCounter = 50;
   };
@@ -88,11 +88,16 @@ export default class Clock extends PureComponent {
     return (
       <div className="stutterer">
         <svg height="310" width="310">
-          <circle className="clockFace" onClick={this.handleClick} cx={155} cy={155} r={150} ref={this.faceRef} />
-          <g ref={this.arcGroupRef}>
-            {paths}
-          </g>
-          <path className="clockHand" ref={this.clockHandRef}/>
+          <circle
+            className="clockFace"
+            onClick={this.handleClick}
+            cx={155}
+            cy={155}
+            r={150}
+            ref={this.faceRef}
+          />
+          <g ref={this.arcGroupRef}>{paths}</g>
+          <path className="clockHand" ref={this.clockHandRef} />
         </svg>
       </div>
     );

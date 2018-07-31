@@ -56,7 +56,7 @@ function makeFakeAPICall(url, result) {
       } else {
         setTimeout(notify, fakeRequestTime / 100);
       }
-    };
+    }
     notifiers[url] = notify;
     notify();
   });
