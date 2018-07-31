@@ -1,0 +1,332 @@
+* { box-sizing: border-box; }
+
+:root {
+  --color-debuggerBg: white;
+  --color-debuggerText: #21252E;
+  --color-debuggerShadow: rgba(0,0,0,0.5);
+
+  --color-panelBg: #30333E;
+  --color-panelText: black;
+
+  --color-pageText: white;
+  --color-pageBg: #21252E;
+
+  --color-buttonBg: #2A2F38;
+  --color-buttonBorder: #494E58;
+
+  --pt: 8px;
+}
+
+body {
+  margin: 0;
+  padding: calc(var(--pt)*4);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color: var(--color-pageText);
+  background-color: var(--color-pageBg);
+}
+
+/* -------------------------------- */
+/* Debugger */
+/* -------------------------------- */
+
+#debugger {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* width: 100vw; */
+  /* height: 100vh; */
+  pointer-events: none;
+}
+
+.🎛 {
+  position: fixed;
+  max-width: calc(var(--pt)*28);
+  border-radius: var(--pt);
+  padding: calc(var(--pt)*2);
+  background-color: var(--color-debuggerBg);
+  color: var(--color-debuggerText);
+  pointer-events: all;
+  box-shadow: 0 var(--pt) var(--pt) var(--color-debuggerShadow);
+}
+
+.🕹 {
+  background-color: var(--color-buttonBg);
+  border: 1px solid var(--color-buttonBorder);
+  border-radius: var(--pt);
+  padding: 0;
+  width: calc(var(--pt)*5);
+  height: calc(var(--pt)*5);
+  font-size: calc(var(--pt)*3);
+  line-height: 1;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+}
+
+.🕹.👶 {
+  width: calc(var(--pt)*3);
+  height: calc(var(--pt)*3);
+  font-size: calc(var(--pt)*2);
+}
+
+.🕹.🐘 {
+  width: auto;
+  height: calc(var(--pt)*7);
+  padding: var(--pt) calc(var(--pt)*2);
+}
+
+.🕹:hover {
+  background-color: white;
+  top: -4px;
+  left: -4px;
+  box-shadow: 4px 4px 0 var(--color-buttonBorder);
+}
+
+.🕹:active {
+  box-shadow: none;
+  top: 0;
+  left: 0;
+}
+
+/* -------------------------------- */
+/* App */
+/* -------------------------------- */
+
+.App {
+  max-width: calc(var(--pt)*80);
+  margin: 0 auto;
+}
+
+.Spinner {
+  display: inline-block;
+  animation: 🌀 1s linear infinite;
+}
+
+.Spinner.Spinner--big {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  margin: auto;
+  font-size: calc(var(--pt)*6);
+  width: calc(var(--pt)*6);
+  height: calc(var(--pt)*6);
+}
+
+@keyframes 🌀 {
+  from { transform: rotateZ(0deg); }
+  to { transform: rotateZ(360deg); }
+} 
+
+/* -------------------------------- */
+/* Movie list page */
+/* -------------------------------- */
+
+.MovieListPage-header {
+  margin: 0 0 calc(var(--pt)*4);
+  font-weight: 900;
+  font-size: calc(var(--pt)*5);
+  line-height: 1.25;
+}
+
+.MovieListPage-popcorn {
+  font-size: calc(var(--pt)*7);
+  line-height: 1;
+  margin-left: calc(var(--pt)*1);
+}
+
+.MovieListPage-list {
+  display: grid;
+  grid-gap: calc(var(--pt)*2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.MovieListItem {
+  display: grid;
+  grid-template-columns: calc(var(--pt)*4) 1fr calc(var(--pt)*4);
+  grid-template-rows: 3fr 2fr;
+  grid-column-gap: calc(var(--pt)*2);
+  align-items: center;
+  background-color: var(--color-buttonBg);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--pt);
+  height: calc(var(--pt)*9);
+  padding: var(--pt) calc(var(--pt)*2);
+  cursor: pointer;
+  transition: transform 0.05s ease-in 0.05s;
+  user-select: none;
+}
+
+.MovieListItem:hover {
+  border-color: rgba(255,255,255,0.2);
+}
+
+.MovieListItem:focus {
+  transform: scale(0.98);
+  outline: none;
+}
+
+.MovieListItem-freshness {
+  grid-column: 1;
+  grid-row: 1/-1;
+}
+
+.MovieListItem-title {
+  grid-column: 2;
+  font-weight: 900;
+  font-size: calc(var(--pt)*3);
+  font-weight: bold;
+  line-height: 1;
+}
+
+.MovieListItem-meta {
+  grid-row: 2;
+  font-weight: 500;
+  font-size: calc(var(--pt)*2);
+  opacity: 0.5;
+}
+
+.MovieListItem-action {
+  grid-column: -2/-1;
+  grid-row: 1/-1;
+}
+.MovieListItem .MovieListItem-more {opacity: 0}
+.MovieListItem:hover .MovieListItem-more { opacity: 1;}
+
+.MovieListItem-freshness,
+.MovieListItem-action {
+  font-size: calc(var(--pt)*4);
+  line-height: 1;
+}
+
+/* -------------------------------- */
+/* Movie page */
+/* -------------------------------- */
+
+/* movie info container */
+
+.App-back {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--pt);
+  width: calc(var(--pt)*5);
+  height: calc(var(--pt)*5);
+  margin-bottom: calc(var(--pt)*3);
+  background-color: var(--color-buttonBg);
+  border: 1px solid rgba(255,255,255,0.1);
+  font-size: calc(var(--pt)*3);
+  line-height: 1;
+  cursor: pointer;
+  outline: none;
+}
+.App-back:hover {
+  border-color: rgba(255,255,255,0.2);
+}
+
+.MovieDetails {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  grid-template-rows: auto auto 1fr;
+  grid-column-gap: calc(var(--pt)*4);
+  grid-row-gap: calc(var(--pt)*2);
+  align-items: start;
+  margin-bottom: calc(var(--pt)*4);
+}
+
+/* title */
+
+.MovieDetails h1 {
+  grid-column: 2/-1;
+  margin: 0;
+  padding-bottom: calc(var(--pt)*2);
+  border-bottom: 1px solid var(--color-buttonBorder);
+  font-size: calc(var(--pt)*5);
+  line-height: 1.25;
+}
+
+/* poster */
+
+.MoviePoster {
+  grid-row: 1/-1;
+  width: 200px;
+}
+
+.MoviePoster img {
+  display: block;
+  width: 200px;
+}
+
+/* metrics */
+
+.MovieMetrics-tomato {
+  grid-row: 2 / 3;
+  grid-column: 2 / 3;
+  font-size: calc(var(--pt)*4);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.MovieMetrics-audience {
+  grid-row: 2 / 3;
+  grid-column: 3 / 4;
+  font-size: calc(var(--pt)*4);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.MovieMetrics-consensus {
+  grid-row: 3 / 4;
+  grid-column: 2/-1;
+}
+
+.MovieMetrics-tomato h4,
+.MovieMetrics-audience h4,
+.MovieMetrics-consensus h4 {
+  margin: 0 0 calc(var(--pt)*1.5);
+  font-size: calc(var(--pt)*1.5);
+  text-transform: uppercase;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  opacity: 0.5;
+}
+
+.MovieMetrics-tomato p,
+.MovieMetrics-audience p,
+.MovieMetrics-consensus p {
+  margin: 0;
+}
+
+/* reviews */
+
+.MovieReviews {
+  column-count: 2;
+}
+.MovieReview {
+  display: inline-grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: calc(var(--pt)*1) calc(var(--pt)*2);
+  margin: 0 0 calc(var(--pt)*2);
+  padding: calc(var(--pt)*2);
+  font-size: calc(var(--pt)*1.75);
+  background-color: var(--color-panelBg);
+  border-radius: var(--pt);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.MovieReview figure {
+  margin: 0;
+  padding: 0;
+  font-size: calc(var(--pt)*3);
+}
+
+.MovieReview p {
+  grid-column: 2/-1;
+  margin: 0;
+}
+
+.MovieReview footer {
+  grid-column: 2/-1;
+  opacity: 0.5;
+}
