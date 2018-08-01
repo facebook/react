@@ -545,6 +545,38 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // gorilla
   });
 
+  it('should support options with dynamic children', () => {
+    const container = document.createElement('div');
+
+    let node;
+
+    function App({value}) {
+      return (
+        <select value={value} ref={n => (node = n)} onChange={noop}>
+          <option key="monkey" value="monkey">
+            A monkey {value === 'monkey' ? 'is chosen' : null}!
+          </option>
+          <option key="giraffe" value="giraffe">
+            A giraffe {value === 'giraffe' && 'is chosen'}!
+          </option>
+          <option key="gorilla" value="gorilla">
+            A gorilla {value === 'gorilla' && 'is chosen'}!
+          </option>
+        </select>
+      );
+    }
+
+    ReactDOM.render(<App value="monkey" />, container);
+    expect(node.options[0].selected).toBe(true); // monkey
+    expect(node.options[1].selected).toBe(false); // giraffe
+    expect(node.options[2].selected).toBe(false); // gorilla
+
+    ReactDOM.render(<App value="giraffe" />, container);
+    expect(node.options[0].selected).toBe(false); // monkey
+    expect(node.options[1].selected).toBe(true); // giraffe
+    expect(node.options[2].selected).toBe(false); // gorilla
+  });
+
   it('should warn if value is null', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(

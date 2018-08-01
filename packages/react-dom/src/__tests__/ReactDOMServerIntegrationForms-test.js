@@ -413,6 +413,21 @@ describe('ReactDOMServerIntegration', () => {
           expectSelectValue(e, 'bar');
         },
       );
+
+      itRenders('an option with flattened children', async render => {
+        const e = await render(
+          <select readOnly={true} value="bar">
+            <option value="bar">
+              {['Bar', false, 'Foo', <div key="1" />, 'Baz']}
+            </option>
+          </select>,
+          1,
+        );
+        expect(e.getAttribute('value')).toBe(null);
+        expect(e.getAttribute('defaultValue')).toBe(null);
+        expect(e.firstChild.innerHTML).toBe('BarFooBaz');
+        expect(e.firstChild.selected).toBe(true);
+      });
     });
 
     describe('user interaction', function() {

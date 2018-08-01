@@ -251,6 +251,7 @@ export function prepareUpdate(
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
+    type === 'option' ||
     typeof props.children === 'string' ||
     typeof props.children === 'number' ||
     (typeof props.dangerouslySetInnerHTML === 'object' &&

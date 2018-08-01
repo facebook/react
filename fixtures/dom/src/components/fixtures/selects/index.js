@@ -158,6 +158,31 @@ class SelectFixture extends React.Component {
             </form>
           </div>
         </TestCase>
+
+        <TestCase
+          title="An option which contains conditional render fails"
+          relatedIssues="11911">
+          <TestCase.Steps>
+            <li>Select any option</li>
+          </TestCase.Steps>
+          <TestCase.ExpectedResult>
+            Option should be set
+          </TestCase.ExpectedResult>
+
+          <div className="test-fixture">
+            <select value={this.state.value} onChange={this.onChange}>
+              <option value="red">
+                red {this.state.value === 'red' && 'is chosen '} TextNode
+              </option>
+              <option value="blue">
+                blue {this.state.value === 'blue' && 'is chosen '} TextNode
+              </option>
+              <option value="green">
+                green {this.state.value === 'green' && 'is chosen '} TextNode
+              </option>
+            </select>
+          </div>
+        </TestCase>
       </FixtureSet>
     );
   }
