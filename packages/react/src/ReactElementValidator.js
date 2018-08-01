@@ -19,6 +19,7 @@ import {
   getIteratorFn,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
+  REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'shared/warning';
@@ -286,6 +287,10 @@ export function createElementWithValidation(type, props, children) {
       typeString = 'null';
     } else if (Array.isArray(type)) {
       typeString = 'array';
+    } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
+      typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
+      info =
+        ' Did you accidentally export a JSX literal instead of a component?';
     } else {
       typeString = typeof type;
     }
