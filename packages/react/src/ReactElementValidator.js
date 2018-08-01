@@ -287,12 +287,12 @@ export function createElementWithValidation(type, props, children) {
       typeString = 'null';
     } else if (Array.isArray(type)) {
       typeString = 'array';
+    } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
+      typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
+      info =
+        ' Did you accidentally export a JSX literal instead of a component?';
     } else {
       typeString = typeof type;
-      if (type && type.$$typeof === REACT_ELEMENT_TYPE) {
-        typeString = 'React element';
-        info = ' Did you accidentally export JSX instead of a component?';
-      }
     }
 
     warning(
