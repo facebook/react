@@ -3,18 +3,15 @@ import {unstable_deferredUpdates} from 'react-dom';
 import {createResource} from 'simple-cache-provider';
 import {cache} from '../cache';
 import Spinner from './Spinner';
-import MovieListPage from './MovieListPage';
+import ContributorListPage from './ContributorListPage';
 
-const MoviePageResource = createResource(() => import('./MoviePage'));
+const UserPageResource = createResource(() => import('./UserPage'));
 
-function MoviePageLoader(props) {
-  const MoviePage = MoviePageResource.read(cache).default;
-  return <MoviePage {...props} />;
+function UserPageLoader(props) {
+  const UserPage = UserPageResource.read(cache).default;
+  return <UserPage {...props} />;
 }
 
-// -------------------------------
-// Main screen
-// -------------------------------
 export default class App extends PureComponent {
   state = {
     currentId: null,
@@ -30,7 +27,7 @@ export default class App extends PureComponent {
     }
   }
 
-  handleMovieClick = id => {
+  handleUserClick = id => {
     this.setState({
       currentId: id,
     });
@@ -49,32 +46,35 @@ export default class App extends PureComponent {
 
   render() {
     const {currentId, showDetail} = this.state;
-    return (
-      <div className="App">
-        {showDetail ? this.renderDetail(currentId) : this.renderList(currentId)}
-      </div>
-    );
+    return showDetail
+      ? this.renderDetail(currentId)
+      : this.renderList(currentId);
   }
 
   renderDetail(id) {
     return (
-      <Fragment>
-        <button className="App-back" onClick={this.handleBackClick}>
-          {'👈'}
+      <div>
+        <button
+          onClick={this.handleBackClick}
+          style={{
+            display: 'block',
+            marginBottom: '1rem',
+          }}>
+          Return to list
         </button>
         <Placeholder delayMs={2000} fallback={<Spinner size="large" />}>
-          <MoviePageLoader id={id} />
+          <UserPageLoader id={id} />
         </Placeholder>
-      </Fragment>
+      </div>
     );
   }
 
   renderList(loadingId) {
     return (
       <Placeholder delayMs={1500} fallback={<Spinner size="large" />}>
-        <MovieListPage
+        <ContributorListPage
           loadingId={loadingId}
-          onMovieClick={this.handleMovieClick}
+          onUserClick={this.handleUserClick}
         />
       </Placeholder>
     );

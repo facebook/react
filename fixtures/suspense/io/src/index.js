@@ -104,8 +104,8 @@ class Debugger extends PureComponent {
         <div
           className="🎛"
           style={{
-            left: window.innerWidth / 2 - 300 / 2 + 180,
-            top: 40,
+            bottom: 20,
+            right: 20,
           }}>
           <div>
             Latency: {this.state.requestTime} second{this.state.requestTime !==

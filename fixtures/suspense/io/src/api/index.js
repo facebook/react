@@ -1,15 +1,19 @@
-import {movieListJSON, movieDetailsJSON, movieReviewsJSON} from './data';
+import {
+  coreContributorListJSON,
+  userProfileJSON,
+  userRepositoriesListJSON,
+} from './data';
 
-export function fetchMovieListJSON() {
-  return makeFakeAPICall('/movies', movieListJSON);
+export function fetchCoreContributorListJSON() {
+  return makeFakeAPICall('/react/contributors', coreContributorListJSON);
 }
 
-export function fetchMovieDetailsJSON(id) {
-  return makeFakeAPICall(`/movies/${id}/details`, movieDetailsJSON[id]);
+export function fetchUserProfileJSON(id) {
+  return makeFakeAPICall(`/${id}/details`, userProfileJSON[id]);
 }
 
-export function fetchMovieReviewsJSON(id) {
-  return makeFakeAPICall(`/movies/${id}/reviews`, movieReviewsJSON[id]);
+export function fetchUserRepositoriesListJSON(id) {
+  return makeFakeAPICall(`/${id}/repositories`, userRepositoriesListJSON[id]);
 }
 
 let fakeRequestTime = 1000;
