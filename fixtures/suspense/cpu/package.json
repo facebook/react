@@ -4,7 +4,6 @@
   "private": true,
   "dependencies": {
     "glamor": "^2.20.40",
-    "interaction-tracking": "../../../build/node_modules/interaction-tracking",
     "react": "../../../build/node_modules/react",
     "react-dom": "../../../build/node_modules/react-dom",
     "react-markdown": "^3.2.0",

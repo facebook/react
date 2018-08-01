@@ -1,4 +1,3 @@
-import {track} from 'interaction-tracking';
 import React, {Fragment, PureComponent} from 'react';
 import {unstable_createRoot, render} from 'react-dom';
 import {cache} from './cache';
@@ -23,13 +22,10 @@ class Shell extends PureComponent {
     handleReset = this.handleReset;
   }
 
-  handleReset = () => {
-    track('Reset cache', () =>
-      this.setState(prevState => ({
-        iteration: prevState.iteration + 1,
-      }))
-    );
-  };
+  handleReset = () =>
+    this.setState(prevState => ({
+      iteration: prevState.iteration + 1,
+    }));
 
   render() {
     return <App key={this.state.iteration} />;

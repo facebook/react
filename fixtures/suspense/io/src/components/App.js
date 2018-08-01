@@ -1,4 +1,3 @@
-import {track} from 'interaction-tracking';
 import React, {Fragment, Placeholder, PureComponent} from 'react';
 import {unstable_deferredUpdates} from 'react-dom';
 import {createResource} from 'simple-cache-provider';
@@ -32,30 +31,21 @@ export default class App extends PureComponent {
   }
 
   handleMovieClick = id => {
-    track(`View movie ${id}`, () => {
-      track(`Update button state`, () => {
-        this.setState({
-          currentId: id,
-        });
-      });
-      track(`Show movie details`, () => {
-        unstable_deferredUpdates(() => {
-          this.setState({
-            showDetail: true,
-          });
-        });
+    this.setState({
+      currentId: id,
+    });
+    unstable_deferredUpdates(() => {
+      this.setState({
+        showDetail: true,
       });
     });
   };
 
-  handleBackClick = () => {
-    track('Return to list', () =>
-      this.setState({
-        currentId: null,
-        showDetail: false,
-      })
-    );
-  };
+  handleBackClick = () =>
+    this.setState({
+      currentId: null,
+      showDetail: false,
+    });
 
   render() {
     const {currentId, showDetail} = this.state;
