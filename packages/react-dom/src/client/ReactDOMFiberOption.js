@@ -7,15 +7,13 @@
  * @flow
  */
 
-import type {HostContextDev} from './ReactDOMHostConfig';
-
 import React from 'react';
 import warning from 'shared/warning';
 import validateDOMNesting from './validateDOMNesting';
 
 let didWarnSelectedSetOnOption = false;
 
-function flattenChildren(children, hostContext) {
+function flattenChildren(children) {
   let content = '';
 
   // Flatten children and warn if they aren't strings or numbers;
@@ -29,12 +27,16 @@ function flattenChildren(children, hostContext) {
       return;
     }
     if (__DEV__) {
-      const hostContextDev = ((hostContext: any): HostContextDev);
-      const optionAncestorInfo = validateDOMNesting.updatedAncestorInfo(
-        hostContextDev.ancestorInfo,
+      // This is not real ancestor info but it's close enough
+      // to produce a useful warning for invalid children.
+      // We don't have access to the real one because the <option>
+      // fiber has already been popped, and threading it through
+      // is needlessly annoying.
+      const ancestorInfo = validateDOMNesting.updatedAncestorInfo(
+        null,
         'option',
       );
-      validateDOMNesting(child.type, null, optionAncestorInfo);
+      validateDOMNesting(child.type, null, ancestorInfo);
     }
   });
 
@@ -66,9 +68,9 @@ export function postMountWrapper(element: Element, props: Object) {
   }
 }
 
-export function getHostProps(element: Element, props: Object, hostContext: *) {
+export function getHostProps(element: Element, props: Object) {
   const hostProps = {children: undefined, ...props};
-  const content = flattenChildren(props.children, hostContext);
+  const content = flattenChildren(props.children);
 
   if (content) {
     hostProps.children = content;

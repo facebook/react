@@ -420,7 +420,6 @@ export function setInitialProperties(
   tag: string,
   rawProps: Object,
   rootContainerElement: Element | Document,
-  hostContext: *,
 ): void {
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
@@ -486,11 +485,7 @@ export function setInitialProperties(
       break;
     case 'option':
       ReactDOMFiberOption.validateProps(domElement, rawProps);
-      props = ReactDOMFiberOption.getHostProps(
-        domElement,
-        rawProps,
-        hostContext,
-      );
+      props = ReactDOMFiberOption.getHostProps(domElement, rawProps);
       break;
     case 'select':
       ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
