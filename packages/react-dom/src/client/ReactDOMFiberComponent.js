@@ -80,6 +80,12 @@ if (__DEV__) {
     time: true,
     // There are working polyfills for <dialog>. Let people use it.
     dialog: true,
+    // Electron ships a custom <webview> tag to display external web content in
+    // an isolated frame and process.
+    // This tag is not present in non Electron environments such as JSDom which
+    // is often used for testing purposes.
+    // @see https://electronjs.org/docs/api/webview-tag
+    webview: true,
   };
 
   validatePropertiesInDevelopment = function(type, props) {
