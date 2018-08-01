@@ -159,7 +159,7 @@ class SelectFixture extends React.Component {
           </div>
         </TestCase>
 
-        <TestCase title="A multiple selec being scrolled to first selected option">
+        <TestCase title="A multiple select being scrolled to first selected option">
           <TestCase.ExpectedResult>
             First selected option should be visible
           </TestCase.ExpectedResult>
