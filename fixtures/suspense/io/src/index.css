@@ -1,0 +1,90 @@
+* { box-sizing: border-box; }
+
+:root {
+  --color-debuggerBg: #f7f7f7;
+  --color-debuggerText: #333;
+  --color-debuggerBorder: #e7e7e7;
+
+  --color-panelBg: #f7f7f7;
+  --color-panelText: #333;
+
+  --color-pageTextDark: #000;
+  --color-pageText: #333;
+  --color-pageBg: #fff;
+
+  --color-buttonBg: #f7f7f7;
+  --color-buttonBorder: #e7e7e7;
+
+  --pt: 8px;
+}
+
+body {
+  margin: 0;
+  padding: calc(var(--pt)*4);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  color: var(--color-pageText);
+  background-color: var(--color-pageBg);
+}
+
+/* -------------------------------- */
+/* Debugger */
+/* -------------------------------- */
+
+#debugger {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  /* width: 100vw; */
+  /* height: 100vh; */
+  pointer-events: none;
+}
+
+.🎛 {
+  position: fixed;
+  max-width: calc(var(--pt)*28);
+  border-radius: var(--pt);
+  padding: calc(var(--pt)*2);
+  background-color: var(--color-debuggerBg);
+  border: 1px solid var(--color-debuggerBorder);
+  border-radius: 0.5rem;
+  color: var(--color-debuggerText);
+  pointer-events: all;
+}
+
+.🕹 {
+  background-color: var(--color-buttonBg);
+  border: 1px solid var(--color-buttonBorder);
+  border-radius: var(--pt);
+  padding: 0;
+  width: calc(var(--pt)*5);
+  height: calc(var(--pt)*5);
+  font-size: calc(var(--pt)*3);
+  line-height: 1;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+}
+
+.🕹.👶 {
+  width: calc(var(--pt)*3);
+  height: calc(var(--pt)*3);
+  font-size: calc(var(--pt)*2);
+}
+
+.🕹.🐘 {
+  width: auto;
+  height: calc(var(--pt)*7);
+  padding: var(--pt) calc(var(--pt)*2);
+}
+
+.🕹:hover {
+  background-color: white;
+  top: -4px;
+  left: -4px;
+  box-shadow: 4px 4px 0 var(--color-buttonBorder);
+}
+
+.🕹:active {
+  box-shadow: none;
+  top: 0;
+  left: 0;
+}
