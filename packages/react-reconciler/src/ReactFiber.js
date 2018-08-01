@@ -387,8 +387,7 @@ export function createFiberFromElement(
   }
 
   let fiber;
-  const type = element.type;
-  const key = element.key;
+  const {type, key} = element;
   let pendingProps = element.props;
 
   let fiberTag;
