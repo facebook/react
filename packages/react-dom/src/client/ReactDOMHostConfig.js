@@ -37,7 +37,7 @@ export type Instance = Element;
 export type TextInstance = Text;
 export type HydratableInstance = Element | Text;
 export type PublicInstance = Element | Text;
-type HostContextDev = {
+export type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
 };
@@ -208,7 +208,13 @@ export function finalizeInitialChildren(
   rootContainerInstance: Container,
   hostContext: HostContext,
 ): boolean {
-  setInitialProperties(domElement, type, props, rootContainerInstance, hostContext);
+  setInitialProperties(
+    domElement,
+    type,
+    props,
+    rootContainerInstance,
+    hostContext,
+  );
   return shouldAutoFocusHostComponent(type, props);
 }
 

@@ -7,13 +7,15 @@
  * @flow
  */
 
+import type {HostContextDev} from './ReactDOMHostConfig';
+
 import React from 'react';
 import warning from 'shared/warning';
 import validateDOMNesting from './validateDOMNesting';
 
 let didWarnSelectedSetOnOption = false;
 
-function flattenChildren(children, hostContext = {}) {
+function flattenChildren(children, hostContext) {
   let content = '';
 
   // Flatten children and warn if they aren't strings or numbers;
@@ -27,9 +29,12 @@ function flattenChildren(children, hostContext = {}) {
       return;
     }
     if (__DEV__) {
-      // We do not have HostContext here, but we can at least
-      // put some parent information
-      validateDOMNesting(child.type, null, hostContext.ancestorInfo);
+      const hostContextDev = ((hostContext: any): HostContextDev);
+      const optionAncestorInfo = validateDOMNesting.updatedAncestorInfo(
+        hostContextDev.ancestorInfo,
+        'option',
+      );
+      validateDOMNesting(child.type, null, optionAncestorInfo);
     }
   });
 
@@ -61,7 +66,7 @@ export function postMountWrapper(element: Element, props: Object) {
   }
 }
 
-export function getHostProps(element: Element, props: Object, hostContext: Object = {}) {
+export function getHostProps(element: Element, props: Object, hostContext: *) {
   const hostProps = {children: undefined, ...props};
   const content = flattenChildren(props.children, hostContext);
 

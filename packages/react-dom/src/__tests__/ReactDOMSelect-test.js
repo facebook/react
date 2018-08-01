@@ -545,7 +545,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // gorilla
   });
 
-  it('Options with stateful children; it should change its state properly and shouldn\'t fail', () => {
+  it('should support options with dynamic children', () => {
     const container = document.createElement('div');
 
     let node;
@@ -566,25 +566,15 @@ describe('ReactDOMSelect', () => {
       );
     }
 
-    ReactDOM.render(
-      <App value={'monkey'} />,
-      container,
-    );
-
+    ReactDOM.render(<App value="monkey" />, container);
     expect(node.options[0].selected).toBe(true); // monkey
     expect(node.options[1].selected).toBe(false); // giraffe
     expect(node.options[2].selected).toBe(false); // gorilla
 
-
-    ReactDOM.render(
-      <App value={'giraffe'} />,
-      container,
-    );
-
+    ReactDOM.render(<App value="giraffe" />, container);
     expect(node.options[0].selected).toBe(false); // monkey
     expect(node.options[1].selected).toBe(true); // giraffe
     expect(node.options[2].selected).toBe(false); // gorilla
-
   });
 
   it('should warn if value is null', () => {
