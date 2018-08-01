@@ -174,6 +174,19 @@ describe('ReactDOMServer', () => {
           (__DEV__ ? '\n    in iframe (at **)' : ''),
       );
     });
+
+    it('should not crash on poisoned hasOwnProperty', () => {
+      let html;
+      expect(
+        () =>
+          (html = ReactDOMServer.renderToString(
+            <div hasOwnProperty="poison">
+              <span unknown="test" />
+            </div>,
+          )),
+      ).toWarnDev(['React does not recognize the `hasOwnProperty` prop']);
+      expect(html).toContain('<span unknown="test">');
+    });
   });
 
   describe('renderToStaticMarkup', () => {
