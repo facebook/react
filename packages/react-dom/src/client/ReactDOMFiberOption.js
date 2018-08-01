@@ -9,7 +9,7 @@
 
 import React from 'react';
 import warning from 'shared/warning';
-import validateDOMNesting from './validateDOMNesting';
+import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
 
 let didWarnSelectedSetOnOption = false;
 
@@ -53,10 +53,7 @@ export function validateProps(element: Element, props: Object) {
         // We don't have access to the real one because the <option>
         // fiber has already been popped, and threading it through
         // is needlessly annoying.
-        const ancestorInfo = validateDOMNesting.updatedAncestorInfo(
-          null,
-          'option',
-        );
+        const ancestorInfo = updatedAncestorInfo(null, 'option');
         validateDOMNesting(child.type, null, ancestorInfo);
       });
     }

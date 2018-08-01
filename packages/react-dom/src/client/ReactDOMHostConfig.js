@@ -15,7 +15,7 @@ import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
 import * as ReactInputSelection from './ReactInputSelection';
 import setTextContent from './setTextContent';
-import validateDOMNesting from './validateDOMNesting';
+import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
 import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
@@ -64,7 +64,6 @@ const {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
 } = ReactDOMFiberComponent;
-const {updatedAncestorInfo} = validateDOMNesting;
 const {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 let SUPPRESS_HYDRATION_WARNING;
@@ -115,7 +114,7 @@ export function getRootHostContext(
   }
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
-    const ancestorInfo = updatedAncestorInfo(null, validatedTag, null);
+    const ancestorInfo = updatedAncestorInfo(null, validatedTag);
     return {namespace, ancestorInfo};
   }
   return namespace;
@@ -133,7 +132,6 @@ export function getChildHostContext(
     const ancestorInfo = updatedAncestorInfo(
       parentHostContextDev.ancestorInfo,
       type,
-      null,
     );
     return {namespace, ancestorInfo};
   }
@@ -178,7 +176,6 @@ export function createInstance(
       const ownAncestorInfo = updatedAncestorInfo(
         hostContextDev.ancestorInfo,
         type,
-        null,
       );
       validateDOMNesting(null, string, ownAncestorInfo);
     }
@@ -234,7 +231,6 @@ export function prepareUpdate(
       const ownAncestorInfo = updatedAncestorInfo(
         hostContextDev.ancestorInfo,
         type,
-        null,
       );
       validateDOMNesting(null, string, ownAncestorInfo);
     }
