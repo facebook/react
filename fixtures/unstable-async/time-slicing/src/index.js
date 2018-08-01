@@ -1,4 +1,4 @@
-import React, {Component, PureComponent, unstable_AsyncMode} from 'react';
+import React, {PureComponent, unstable_AsyncMode} from 'react';
 import {flushSync, render, unstable_deferredUpdates} from 'react-dom';
 import _ from 'lodash';
 import Charts from './Charts';
@@ -64,9 +64,12 @@ class App extends PureComponent {
     }
     this._ignoreClick = true;
 
-    unstable_deferredUpdates(() => {
-      this.setState({showDemo: true}, () => {
-        this._ignoreClick = false;
+    // TODO: needing setTimeout here seems like a React bug.
+    setTimeout(() => {
+      unstable_deferredUpdates(() => {
+        this.setState({showDemo: true}, () => {
+          this._ignoreClick = false;
+        });
       });
     });
   };
@@ -107,8 +110,11 @@ class App extends PureComponent {
         this.debouncedHandleChange(value);
         break;
       case 'async':
-        unstable_deferredUpdates(() => {
-          this.setState({value});
+        // TODO: needing setTimeout here seems like a React bug.
+        setTimeout(() => {
+          unstable_deferredUpdates(() => {
+            this.setState({value});
+          });
         });
         break;
       default:
@@ -126,11 +132,7 @@ class App extends PureComponent {
         <div className="rendering">
           {this.renderOption('sync', 'Synchronous', true)}
           {this.renderOption('debounced', 'Debounced', true)}
-          {this.renderOption(
-            'async',
-            'Asynchronous',
-            false
-          ) /* TODO Fix async demo and re-enable */}
+          {this.renderOption('async', 'Asynchronous', true)}
         </div>
         <input
           className={'input ' + this.state.strategy}
