@@ -24,20 +24,10 @@ function flattenChildren(children) {
     }
     if (typeof child === 'string' || typeof child === 'number') {
       content += child;
-      return;
     }
-    if (__DEV__) {
-      // This is not real ancestor info but it's close enough
-      // to produce a useful warning for invalid children.
-      // We don't have access to the real one because the <option>
-      // fiber has already been popped, and threading it through
-      // is needlessly annoying.
-      const ancestorInfo = validateDOMNesting.updatedAncestorInfo(
-        null,
-        'option',
-      );
-      validateDOMNesting(child.type, null, ancestorInfo);
-    }
+    // Note: we don't warn about invalid children here.
+    // Instead, this is done separately below so that
+    // it happens during the hydration codepath too.
   });
 
   return content;
@@ -48,8 +38,30 @@ function flattenChildren(children) {
  */
 
 export function validateProps(element: Element, props: Object) {
-  // TODO (yungsters): Remove support for `selected` in <option>.
   if (__DEV__) {
+    // Warn about invalid children, mirroring the logic above.
+    if (typeof props.children === 'object' && props.children !== null) {
+      React.Children.forEach(props.children, function(child) {
+        if (child == null) {
+          return;
+        }
+        if (typeof child === 'string' || typeof child === 'number') {
+          return;
+        }
+        // This is not real ancestor info but it's close enough
+        // to produce a useful warning for invalid children.
+        // We don't have access to the real one because the <option>
+        // fiber has already been popped, and threading it through
+        // is needlessly annoying.
+        const ancestorInfo = validateDOMNesting.updatedAncestorInfo(
+          null,
+          'option',
+        );
+        validateDOMNesting(child.type, null, ancestorInfo);
+      });
+    }
+
+    // TODO: Remove support for `selected` in <option>.
     if (props.selected != null && !didWarnSelectedSetOnOption) {
       warning(
         false,
