@@ -545,7 +545,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // gorilla
   });
 
-  it('should not fail', () => {
+  it('Options with stateful children; it should change its state properly and shouldn\'t fail', () => {
     const container = document.createElement('div');
 
     let node;
