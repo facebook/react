@@ -60,9 +60,10 @@ export function createMarkupForProperty(name: string, value: mixed): string {
     } else {
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
     }
-  } else {
+  } else if (isAttributeNameSafe(name)) {
     return name + '=' + quoteAttributeValueForBrowser(value);
   }
+  return '';
 }
 
 /**
