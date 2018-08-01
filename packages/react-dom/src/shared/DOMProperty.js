@@ -66,14 +66,15 @@ export const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 const illegalAttributeNameCache = {};
 const validatedAttributeNameCache = {};
 
 export function isAttributeNameSafe(attributeName: string): boolean {
-  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (hasOwnProperty.call(validatedAttributeNameCache, attributeName)) {
     return true;
   }
-  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (hasOwnProperty.call(illegalAttributeNameCache, attributeName)) {
     return false;
   }
   if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {

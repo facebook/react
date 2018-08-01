@@ -349,6 +349,7 @@ function processContext(type, context) {
   return maskedContext;
 }
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 const STYLE = 'style';
 const RESERVED_PROPS = {
   children: null,
@@ -368,7 +369,7 @@ function createOpenTagMarkup(
   let ret = '<' + tagVerbatim;
 
   for (const propKey in props) {
-    if (!props.hasOwnProperty(propKey)) {
+    if (!hasOwnProperty.call(props, propKey)) {
       continue;
     }
     let propValue = props[propKey];
