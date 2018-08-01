@@ -82,15 +82,13 @@ class App extends PureComponent {
     }
   }, 1000);
 
-  renderOption(strategy, label, enabled) {
+  renderOption(strategy, label) {
     const {strategy: currentStrategy} = this.state;
     return (
       <label
-        className={strategy === currentStrategy ? 'selected' : null}
-        style={{opacity: enabled ? 1 : 0.5}}>
+        className={strategy === currentStrategy ? 'selected' : null}>
         <input
           type="radio"
-          disabled={!enabled}
           checked={strategy === currentStrategy}
           onChange={() => this.setState({strategy})}
         />
@@ -130,9 +128,9 @@ class App extends PureComponent {
     return (
       <div className="container">
         <div className="rendering">
-          {this.renderOption('sync', 'Synchronous', true)}
-          {this.renderOption('debounced', 'Debounced', true)}
-          {this.renderOption('async', 'Asynchronous', true)}
+          {this.renderOption('sync', 'Synchronous')}
+          {this.renderOption('debounced', 'Debounced')}
+          {this.renderOption('async', 'Asynchronous')}
         </div>
         <input
           className={'input ' + this.state.strategy}
