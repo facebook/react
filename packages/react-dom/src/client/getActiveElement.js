@@ -7,13 +7,14 @@
  * @flow
  */
 
-export default function getActiveElement(doc?: ?Document): Element {
-  doc = doc || document;
-  // To account for edge cases in which document.body could be null
-  const body = doc.body || doc.createElement('body');
+export default function getActiveElement(doc: ?Document): ?Element {
+  doc = doc || (typeof document !== 'undefined' ? document : undefined);
+  if (typeof doc === 'undefined') {
+    return null;
+  }
   try {
-    return doc.activeElement || body;
+    return doc.activeElement || doc.body;
   } catch (e) {
-    return body;
+    return doc.body;
   }
 }
