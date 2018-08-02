@@ -20,7 +20,9 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 
 // Unlike other tests, we want to enable error logging.
-// Note that we'll later override console.error.
+// Note this is not a real Error prototype property,
+// it's only set in our Jest environment.
+// eslint-disable-next-line no-extend-native
 Error.prototype.suppressReactErrorLogging = false;
 
 // Initialize JSDOM separately.
