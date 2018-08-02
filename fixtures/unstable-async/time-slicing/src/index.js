@@ -85,8 +85,7 @@ class App extends PureComponent {
   renderOption(strategy, label) {
     const {strategy: currentStrategy} = this.state;
     return (
-      <label
-        className={strategy === currentStrategy ? 'selected' : null}>
+      <label className={strategy === currentStrategy ? 'selected' : null}>
         <input
           type="radio"
           checked={strategy === currentStrategy}
