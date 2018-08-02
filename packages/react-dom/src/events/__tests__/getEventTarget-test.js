@@ -47,7 +47,6 @@ describe('getEventTarget', () => {
           bubbles: true,
           cancelable: true,
         });
-
         expect(target).toEqual(null);
         container.firstChild.dispatchEvent(nativeEvent);
         expect(target).toEqual(container.firstChild);
@@ -61,9 +60,11 @@ describe('getEventTarget', () => {
           render() {
             return (
               <svg>
-                <circle id="myCircle" cx="5" cy="5" r="4" />
+                <circle id="circleElement" cx="5" cy="5" r="4"
+                  onClick={e => (target = e.target)} />
                 <use
-                  href="#myCircle"
+                  id="useElement"
+                  href="#circleElement"
                   x="10"
                   fill="blue"
                   onClick={e => (target = e.target)}
@@ -80,13 +81,15 @@ describe('getEventTarget', () => {
           cancelable: true,
         });
 
-        const useElement = container.firstChild.children[1];
-        // Mock correspondingUseElement property on target element
-        useElement.correspondingUseElement = useElement;
+        const useElement = document.querySelector('#useElement');
+        const circleElement = document.querySelector('#circleElement');
+        // Normalize SVG <use> element events #4963
+        useElement.correspondingUseElement = circleElement;
 
         expect(target).toEqual(null);
         useElement.dispatchEvent(nativeEvent);
-        expect(target).toEqual(useElement);
+        expect(target).toEqual(circleElement);
+
       });
     });
 
