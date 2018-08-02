@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import React from 'react';
 import {Update, Snapshot} from 'shared/ReactTypeOfSideEffect';
 import {
   debugRenderPhaseSideEffects,
@@ -20,10 +21,9 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
-import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {StrictMode} from './ReactTypeOfMode';
@@ -43,15 +43,20 @@ import {
   getUnmaskedContext,
   isContextConsumer,
   hasContextChanged,
+  emptyContextObject,
 } from './ReactFiberContext';
 import {
-  recalculateCurrentTime,
+  requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
 } from './ReactFiberScheduler';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
+
+// React.Component uses a shared frozen object by default.
+// We'll use it to determine whether we need to initialize legacy refs.
+export const emptyRefsObject = new React.Component().refs;
 
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
@@ -77,7 +82,7 @@ if (__DEV__) {
     const key = `${callerName}_${(callback: any)}`;
     if (!didWarnOnInvalidCallback.has(key)) {
       didWarnOnInvalidCallback.add(key);
-      warning(
+      warningWithoutStack(
         false,
         '%s(...): Expected the last optional `callback` argument to be a ' +
           'function. Instead received: %s.',
@@ -87,12 +92,12 @@ if (__DEV__) {
     }
   };
 
-  warnOnUndefinedDerivedState = function(workInProgress, partialState) {
+  warnOnUndefinedDerivedState = function(type, partialState) {
     if (partialState === undefined) {
-      const componentName = getComponentName(workInProgress) || 'Component';
+      const componentName = getComponentName(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
         didWarnAboutUndefinedDerivedState.add(componentName);
-        warning(
+        warningWithoutStack(
           false,
           '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
             'You have returned undefined.',
@@ -145,7 +150,7 @@ export function applyDerivedStateFromProps(
   const partialState = getDerivedStateFromProps(nextProps, prevState);
 
   if (__DEV__) {
-    warnOnUndefinedDerivedState(workInProgress, partialState);
+    warnOnUndefinedDerivedState(workInProgress.type, partialState);
   }
   // Merge the partial state and the previous state.
   const memoizedState =
@@ -157,7 +162,7 @@ export function applyDerivedStateFromProps(
   // Once the update queue is empty, persist the derived state onto the
   // base state.
   const updateQueue = workInProgress.updateQueue;
-  if (updateQueue !== null && updateQueue.expirationTime === NoWork) {
+  if (updateQueue !== null && workInProgress.expirationTime === NoWork) {
     updateQueue.baseState = memoizedState;
   }
 }
@@ -166,7 +171,7 @@ const classComponentUpdater = {
   isMounted,
   enqueueSetState(inst, payload, callback) {
     const fiber = ReactInstanceMap.get(inst);
-    const currentTime = recalculateCurrentTime();
+    const currentTime = requestCurrentTime();
     const expirationTime = computeExpirationForFiber(currentTime, fiber);
 
     const update = createUpdate(expirationTime);
@@ -178,12 +183,12 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, expirationTime);
+    enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = ReactInstanceMap.get(inst);
-    const currentTime = recalculateCurrentTime();
+    const currentTime = requestCurrentTime();
     const expirationTime = computeExpirationForFiber(currentTime, fiber);
 
     const update = createUpdate(expirationTime);
@@ -197,12 +202,12 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, expirationTime);
+    enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = ReactInstanceMap.get(inst);
-    const currentTime = recalculateCurrentTime();
+    const currentTime = requestCurrentTime();
     const expirationTime = computeExpirationForFiber(currentTime, fiber);
 
     const update = createUpdate(expirationTime);
@@ -215,7 +220,7 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update, expirationTime);
+    enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
 };
@@ -226,7 +231,7 @@ function checkShouldComponentUpdate(
   newProps,
   oldState,
   newState,
-  newContext,
+  nextLegacyContext,
 ) {
   const instance = workInProgress.stateNode;
   const ctor = workInProgress.type;
@@ -235,16 +240,16 @@ function checkShouldComponentUpdate(
     const shouldUpdate = instance.shouldComponentUpdate(
       newProps,
       newState,
-      newContext,
+      nextLegacyContext,
     );
     stopPhaseTimer();
 
     if (__DEV__) {
-      warning(
+      warningWithoutStack(
         shouldUpdate !== undefined,
         '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
           'boolean value. Make sure to return true or false.',
-        getComponentName(workInProgress) || 'Component',
+        getComponentName(ctor) || 'Component',
       );
     }
 
@@ -264,19 +269,19 @@ function checkClassInstance(workInProgress: Fiber) {
   const instance = workInProgress.stateNode;
   const type = workInProgress.type;
   if (__DEV__) {
-    const name = getComponentName(workInProgress) || 'Component';
+    const name = getComponentName(type) || 'Component';
     const renderPresent = instance.render;
 
     if (!renderPresent) {
       if (type.prototype && typeof type.prototype.render === 'function') {
-        warning(
+        warningWithoutStack(
           false,
           '%s(...): No `render` method found on the returned component ' +
             'instance: did you accidentally return an object from the constructor?',
           name,
         );
       } else {
-        warning(
+        warningWithoutStack(
           false,
           '%s(...): No `render` method found on the returned component ' +
             'instance: you may have forgotten to define `render`.',
@@ -289,7 +294,7 @@ function checkClassInstance(workInProgress: Fiber) {
       !instance.getInitialState ||
       instance.getInitialState.isReactClassApproved ||
       instance.state;
-    warning(
+    warningWithoutStack(
       noGetInitialStateOnES6,
       'getInitialState was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
@@ -299,7 +304,7 @@ function checkClassInstance(workInProgress: Fiber) {
     const noGetDefaultPropsOnES6 =
       !instance.getDefaultProps ||
       instance.getDefaultProps.isReactClassApproved;
-    warning(
+    warningWithoutStack(
       noGetDefaultPropsOnES6,
       'getDefaultProps was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
@@ -307,14 +312,14 @@ function checkClassInstance(workInProgress: Fiber) {
       name,
     );
     const noInstancePropTypes = !instance.propTypes;
-    warning(
+    warningWithoutStack(
       noInstancePropTypes,
       'propTypes was defined as an instance property on %s. Use a static ' +
         'property to define propTypes instead.',
       name,
     );
     const noInstanceContextTypes = !instance.contextTypes;
-    warning(
+    warningWithoutStack(
       noInstanceContextTypes,
       'contextTypes was defined as an instance property on %s. Use a static ' +
         'property to define contextTypes instead.',
@@ -322,7 +327,7 @@ function checkClassInstance(workInProgress: Fiber) {
     );
     const noComponentShouldUpdate =
       typeof instance.componentShouldUpdate !== 'function';
-    warning(
+    warningWithoutStack(
       noComponentShouldUpdate,
       '%s has a method called ' +
         'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
@@ -335,17 +340,17 @@ function checkClassInstance(workInProgress: Fiber) {
       type.prototype.isPureReactComponent &&
       typeof instance.shouldComponentUpdate !== 'undefined'
     ) {
-      warning(
+      warningWithoutStack(
         false,
         '%s has a method called shouldComponentUpdate(). ' +
           'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
           'Please extend React.Component if shouldComponentUpdate is used.',
-        getComponentName(workInProgress) || 'A pure component',
+        getComponentName(type) || 'A pure component',
       );
     }
     const noComponentDidUnmount =
       typeof instance.componentDidUnmount !== 'function';
-    warning(
+    warningWithoutStack(
       noComponentDidUnmount,
       '%s has a method called ' +
         'componentDidUnmount(). But there is no such lifecycle method. ' +
@@ -354,7 +359,7 @@ function checkClassInstance(workInProgress: Fiber) {
     );
     const noComponentDidReceiveProps =
       typeof instance.componentDidReceiveProps !== 'function';
-    warning(
+    warningWithoutStack(
       noComponentDidReceiveProps,
       '%s has a method called ' +
         'componentDidReceiveProps(). But there is no such lifecycle method. ' +
@@ -365,7 +370,7 @@ function checkClassInstance(workInProgress: Fiber) {
     );
     const noComponentWillRecieveProps =
       typeof instance.componentWillRecieveProps !== 'function';
-    warning(
+    warningWithoutStack(
       noComponentWillRecieveProps,
       '%s has a method called ' +
         'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
@@ -373,14 +378,14 @@ function checkClassInstance(workInProgress: Fiber) {
     );
     const noUnsafeComponentWillRecieveProps =
       typeof instance.UNSAFE_componentWillRecieveProps !== 'function';
-    warning(
+    warningWithoutStack(
       noUnsafeComponentWillRecieveProps,
       '%s has a method called ' +
         'UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?',
       name,
     );
     const hasMutatedProps = instance.props !== workInProgress.pendingProps;
-    warning(
+    warningWithoutStack(
       instance.props === undefined || !hasMutatedProps,
       '%s(...): When calling super() in `%s`, make sure to pass ' +
         "up the same props that your component's constructor was passed.",
@@ -388,7 +393,7 @@ function checkClassInstance(workInProgress: Fiber) {
       name,
     );
     const noInstanceDefaultProps = !instance.defaultProps;
-    warning(
+    warningWithoutStack(
       noInstanceDefaultProps,
       'Setting defaultProps as an instance property on %s is not supported and will be ignored.' +
         ' Instead, define defaultProps as a static property on %s.',
@@ -402,17 +407,17 @@ function checkClassInstance(workInProgress: Fiber) {
       !didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(type)
     ) {
       didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(type);
-      warning(
+      warningWithoutStack(
         false,
         '%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
           'This component defines getSnapshotBeforeUpdate() only.',
-        getComponentName(workInProgress),
+        getComponentName(type),
       );
     }
 
     const noInstanceGetDerivedStateFromProps =
       typeof instance.getDerivedStateFromProps !== 'function';
-    warning(
+    warningWithoutStack(
       noInstanceGetDerivedStateFromProps,
       '%s: getDerivedStateFromProps() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
@@ -420,7 +425,7 @@ function checkClassInstance(workInProgress: Fiber) {
     );
     const noInstanceGetDerivedStateFromCatch =
       typeof instance.getDerivedStateFromCatch !== 'function';
-    warning(
+    warningWithoutStack(
       noInstanceGetDerivedStateFromCatch,
       '%s: getDerivedStateFromCatch() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
@@ -428,7 +433,7 @@ function checkClassInstance(workInProgress: Fiber) {
     );
     const noStaticGetSnapshotBeforeUpdate =
       typeof type.getSnapshotBeforeUpdate !== 'function';
-    warning(
+    warningWithoutStack(
       noStaticGetSnapshotBeforeUpdate,
       '%s: getSnapshotBeforeUpdate() is defined as a static method ' +
         'and will be ignored. Instead, declare it as an instance method.',
@@ -436,10 +441,14 @@ function checkClassInstance(workInProgress: Fiber) {
     );
     const state = instance.state;
     if (state && (typeof state !== 'object' || isArray(state))) {
-      warning(false, '%s.state: must be set to an object or null', name);
+      warningWithoutStack(
+        false,
+        '%s.state: must be set to an object or null',
+        name,
+      );
     }
     if (typeof instance.getChildContext === 'function') {
-      warning(
+      warningWithoutStack(
         typeof type.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
           'use getChildContext().',
@@ -469,7 +478,7 @@ function constructClassInstance(
   const needsContext = isContextConsumer(workInProgress);
   const context = needsContext
     ? getMaskedContext(workInProgress, unmaskedContext)
-    : emptyObject;
+    : emptyContextObject;
 
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
@@ -491,10 +500,10 @@ function constructClassInstance(
 
   if (__DEV__) {
     if (typeof ctor.getDerivedStateFromProps === 'function' && state === null) {
-      const componentName = getComponentName(workInProgress) || 'Component';
+      const componentName = getComponentName(ctor) || 'Component';
       if (!didWarnAboutUninitializedState.has(componentName)) {
         didWarnAboutUninitializedState.add(componentName);
-        warning(
+        warningWithoutStack(
           false,
           '%s: Did not properly initialize state during construction. ' +
             'Expected state to be an object, but it was %s.',
@@ -545,14 +554,14 @@ function constructClassInstance(
         foundWillReceivePropsName !== null ||
         foundWillUpdateName !== null
       ) {
-        const componentName = getComponentName(workInProgress) || 'Component';
+        const componentName = getComponentName(ctor) || 'Component';
         const newApiName =
           typeof ctor.getDerivedStateFromProps === 'function'
             ? 'getDerivedStateFromProps()'
             : 'getSnapshotBeforeUpdate()';
         if (!didWarnAboutLegacyLifecyclesAndDerivedState.has(componentName)) {
           didWarnAboutLegacyLifecyclesAndDerivedState.add(componentName);
-          warning(
+          warningWithoutStack(
             false,
             'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
               '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
@@ -595,12 +604,12 @@ function callComponentWillMount(workInProgress, instance) {
 
   if (oldState !== instance.state) {
     if (__DEV__) {
-      warning(
+      warningWithoutStack(
         false,
         '%s.componentWillMount(): Assigning directly to this.state is ' +
           "deprecated (except inside a component's " +
           'constructor). Use setState instead.',
-        getComponentName(workInProgress) || 'Component',
+        getComponentName(workInProgress.type) || 'Component',
       );
     }
     classComponentUpdater.enqueueReplaceState(instance, instance.state, null);
@@ -611,24 +620,25 @@ function callComponentWillReceiveProps(
   workInProgress,
   instance,
   newProps,
-  newContext,
+  nextLegacyContext,
 ) {
   const oldState = instance.state;
   startPhaseTimer(workInProgress, 'componentWillReceiveProps');
   if (typeof instance.componentWillReceiveProps === 'function') {
-    instance.componentWillReceiveProps(newProps, newContext);
+    instance.componentWillReceiveProps(newProps, nextLegacyContext);
   }
   if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
-    instance.UNSAFE_componentWillReceiveProps(newProps, newContext);
+    instance.UNSAFE_componentWillReceiveProps(newProps, nextLegacyContext);
   }
   stopPhaseTimer();
 
   if (instance.state !== oldState) {
     if (__DEV__) {
-      const componentName = getComponentName(workInProgress) || 'Component';
+      const componentName =
+        getComponentName(workInProgress.type) || 'Component';
       if (!didWarnAboutStateAssignmentForComponent.has(componentName)) {
         didWarnAboutStateAssignmentForComponent.add(componentName);
-        warning(
+        warningWithoutStack(
           false,
           '%s.componentWillReceiveProps(): Assigning directly to ' +
             "this.state is deprecated (except inside a component's " +
@@ -658,7 +668,7 @@ function mountClassInstance(
 
   instance.props = props;
   instance.state = workInProgress.memoizedState;
-  instance.refs = emptyObject;
+  instance.refs = emptyRefsObject;
   instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
   if (__DEV__) {
@@ -694,7 +704,7 @@ function mountClassInstance(
     instance.state = workInProgress.memoizedState;
   }
 
-  const getDerivedStateFromProps = workInProgress.type.getDerivedStateFromProps;
+  const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   if (typeof getDerivedStateFromProps === 'function') {
     applyDerivedStateFromProps(workInProgress, getDerivedStateFromProps, props);
     instance.state = workInProgress.memoizedState;
@@ -731,6 +741,7 @@ function mountClassInstance(
 
 function resumeMountClassInstance(
   workInProgress: Fiber,
+  hasPendingNewContext: boolean,
   renderExpirationTime: ExpirationTime,
 ): boolean {
   const ctor = workInProgress.type;
@@ -741,8 +752,11 @@ function resumeMountClassInstance(
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const newUnmaskedContext = getUnmaskedContext(workInProgress);
-  const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
+  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
+  const nextLegacyContext = getMaskedContext(
+    workInProgress,
+    nextLegacyUnmaskedContext,
+  );
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   const hasNewLifecycles =
@@ -760,12 +774,12 @@ function resumeMountClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== newContext) {
+    if (oldProps !== newProps || oldContext !== nextLegacyContext) {
       callComponentWillReceiveProps(
         workInProgress,
         instance,
         newProps,
-        newContext,
+        nextLegacyContext,
       );
     }
   }
@@ -789,6 +803,7 @@ function resumeMountClassInstance(
     oldProps === newProps &&
     oldState === newState &&
     !hasContextChanged() &&
+    !hasPendingNewContext &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -810,13 +825,14 @@ function resumeMountClassInstance(
 
   const shouldUpdate =
     checkHasForceUpdateAfterProcessing() ||
+    hasPendingNewContext ||
     checkShouldComponentUpdate(
       workInProgress,
       oldProps,
       newProps,
       oldState,
       newState,
-      newContext,
+      nextLegacyContext,
     );
 
   if (shouldUpdate) {
@@ -856,7 +872,7 @@ function resumeMountClassInstance(
   // if shouldComponentUpdate returns false.
   instance.props = newProps;
   instance.state = newState;
-  instance.context = newContext;
+  instance.context = nextLegacyContext;
 
   return shouldUpdate;
 }
@@ -865,6 +881,7 @@ function resumeMountClassInstance(
 function updateClassInstance(
   current: Fiber,
   workInProgress: Fiber,
+  hasPendingNewContext: boolean,
   renderExpirationTime: ExpirationTime,
 ): boolean {
   const ctor = workInProgress.type;
@@ -875,8 +892,11 @@ function updateClassInstance(
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const newUnmaskedContext = getUnmaskedContext(workInProgress);
-  const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
+  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
+  const nextLegacyContext = getMaskedContext(
+    workInProgress,
+    nextLegacyUnmaskedContext,
+  );
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   const hasNewLifecycles =
@@ -894,12 +914,12 @@ function updateClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== newContext) {
+    if (oldProps !== newProps || oldContext !== nextLegacyContext) {
       callComponentWillReceiveProps(
         workInProgress,
         instance,
         newProps,
-        newContext,
+        nextLegacyContext,
       );
     }
   }
@@ -924,6 +944,7 @@ function updateClassInstance(
     oldProps === newProps &&
     oldState === newState &&
     !hasContextChanged() &&
+    !hasPendingNewContext &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -958,13 +979,14 @@ function updateClassInstance(
 
   const shouldUpdate =
     checkHasForceUpdateAfterProcessing() ||
+    hasPendingNewContext ||
     checkShouldComponentUpdate(
       workInProgress,
       oldProps,
       newProps,
       oldState,
       newState,
-      newContext,
+      nextLegacyContext,
     );
 
   if (shouldUpdate) {
@@ -977,10 +999,14 @@ function updateClassInstance(
     ) {
       startPhaseTimer(workInProgress, 'componentWillUpdate');
       if (typeof instance.componentWillUpdate === 'function') {
-        instance.componentWillUpdate(newProps, newState, newContext);
+        instance.componentWillUpdate(newProps, newState, nextLegacyContext);
       }
       if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
-        instance.UNSAFE_componentWillUpdate(newProps, newState, newContext);
+        instance.UNSAFE_componentWillUpdate(
+          newProps,
+          newState,
+          nextLegacyContext,
+        );
       }
       stopPhaseTimer();
     }
@@ -1020,7 +1046,7 @@ function updateClassInstance(
   // if shouldComponentUpdate returns false.
   instance.props = newProps;
   instance.state = newState;
-  instance.context = newContext;
+  instance.context = nextLegacyContext;
 
   return shouldUpdate;
 }

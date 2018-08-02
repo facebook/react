@@ -40,6 +40,13 @@ describe('wrap-warning-with-env-check', () => {
     );
   });
 
+  it('should wrap warningWithoutStack calls', () => {
+    compare(
+      "warningWithoutStack(condition, 'a %s b', 'c');",
+      "__DEV__ ? !condition ? warningWithoutStack(false, 'a %s b', 'c') : void 0 : void 0;"
+    );
+  });
+
   it('should not wrap invariant calls', () => {
     compare(
       "invariant(condition, 'a %s b', 'c');",

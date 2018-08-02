@@ -19,7 +19,6 @@ import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import * as ReactPortal from 'shared/ReactPortal';
-import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
 
 type Container = {rootID: string, children: Array<Instance | TextInstance>};
@@ -32,15 +31,19 @@ type Instance = {|
 |};
 type TextInstance = {|text: string, id: number|};
 
+const NO_CONTEXT = {};
+const UPDATE_SIGNAL = {};
+if (__DEV__) {
+  Object.freeze(NO_CONTEXT);
+  Object.freeze(UPDATE_SIGNAL);
+}
+
 function createReactNoop(reconciler: Function, useMutation: boolean) {
-  const UPDATE_SIGNAL = {};
   let scheduledCallback = null;
-
   let instanceCounter = 0;
-  let failInBeginPhase = false;
 
-  function appendChild(
-    parentInstance: Instance | Container,
+  function appendChildToContainerOrInstance(
+    parentInstance: Container | Instance,
     child: Instance | TextInstance,
   ): void {
     const index = parentInstance.children.indexOf(child);
@@ -50,8 +53,34 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     parentInstance.children.push(child);
   }
 
-  function insertBefore(
-    parentInstance: Instance | Container,
+  function appendChildToContainer(
+    parentInstance: Container,
+    child: Instance | TextInstance,
+  ): void {
+    if (typeof parentInstance.rootID !== 'string') {
+      // Some calls to this aren't typesafe.
+      // This helps surface mistakes in tests.
+      throw new Error(
+        'appendChildToContainer() first argument is not a container.',
+      );
+    }
+    appendChildToContainerOrInstance(parentInstance, child);
+  }
+
+  function appendChild(
+    parentInstance: Instance,
+    child: Instance | TextInstance,
+  ): void {
+    if (typeof (parentInstance: any).rootID === 'string') {
+      // Some calls to this aren't typesafe.
+      // This helps surface mistakes in tests.
+      throw new Error('appendChild() first argument is not an instance.');
+    }
+    appendChildToContainerOrInstance(parentInstance, child);
+  }
+
+  function insertInContainerOrInstanceBefore(
+    parentInstance: Container | Instance,
     child: Instance | TextInstance,
     beforeChild: Instance | TextInstance,
   ): void {
@@ -66,8 +95,36 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     parentInstance.children.splice(beforeIndex, 0, child);
   }
 
-  function removeChild(
-    parentInstance: Instance | Container,
+  function insertInContainerBefore(
+    parentInstance: Container,
+    child: Instance | TextInstance,
+    beforeChild: Instance | TextInstance,
+  ) {
+    if (typeof parentInstance.rootID !== 'string') {
+      // Some calls to this aren't typesafe.
+      // This helps surface mistakes in tests.
+      throw new Error(
+        'insertInContainerBefore() first argument is not a container.',
+      );
+    }
+    insertInContainerOrInstanceBefore(parentInstance, child, beforeChild);
+  }
+
+  function insertBefore(
+    parentInstance: Instance,
+    child: Instance | TextInstance,
+    beforeChild: Instance | TextInstance,
+  ) {
+    if (typeof (parentInstance: any).rootID === 'string') {
+      // Some calls to this aren't typesafe.
+      // This helps surface mistakes in tests.
+      throw new Error('insertBefore() first argument is not an instance.');
+    }
+    insertInContainerOrInstanceBefore(parentInstance, child, beforeChild);
+  }
+
+  function removeChildFromContainerOrInstance(
+    parentInstance: Container | Instance,
     child: Instance | TextInstance,
   ): void {
     const index = parentInstance.children.indexOf(child);
@@ -77,18 +134,41 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     parentInstance.children.splice(index, 1);
   }
 
+  function removeChildFromContainer(
+    parentInstance: Container,
+    child: Instance | TextInstance,
+  ): void {
+    if (typeof parentInstance.rootID !== 'string') {
+      // Some calls to this aren't typesafe.
+      // This helps surface mistakes in tests.
+      throw new Error(
+        'removeChildFromContainer() first argument is not a container.',
+      );
+    }
+    removeChildFromContainerOrInstance(parentInstance, child);
+  }
+
+  function removeChild(
+    parentInstance: Instance,
+    child: Instance | TextInstance,
+  ): void {
+    if (typeof (parentInstance: any).rootID === 'string') {
+      // Some calls to this aren't typesafe.
+      // This helps surface mistakes in tests.
+      throw new Error('removeChild() first argument is not an instance.');
+    }
+    removeChildFromContainerOrInstance(parentInstance, child);
+  }
+
   let elapsedTimeInMs = 0;
 
   const sharedHostConfig = {
     getRootHostContext() {
-      if (failInBeginPhase) {
-        throw new Error('Error in host config.');
-      }
-      return emptyObject;
+      return NO_CONTEXT;
     },
 
     getChildHostContext() {
-      return emptyObject;
+      return NO_CONTEXT;
     },
 
     getPublicInstance(instance) {
@@ -96,6 +176,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     createInstance(type: string, props: Props): Instance {
+      if (type === 'errorInCompletePhase') {
+        throw new Error('Error in host config.');
+      }
       const inst = {
         id: instanceCounter++,
         type: type,
@@ -128,6 +211,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       oldProps: Props,
       newProps: Props,
     ): null | {} {
+      if (type === 'errorInCompletePhase') {
+        throw new Error('Error in host config.');
+      }
       if (oldProps === null) {
         throw new Error('Should have old props');
       }
@@ -138,6 +224,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     shouldSetTextContent(type: string, props: Props): boolean {
+      if (type === 'errorInBeginPhase') {
+        throw new Error('Error in host config.');
+      }
       return (
         typeof props.children === 'string' || typeof props.children === 'number'
       );
@@ -176,6 +265,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
       scheduledCallback = null;
     },
+
+    scheduleTimeout: setTimeout,
+    cancelTimeout: clearTimeout,
+    noTimeout: -1,
 
     prepareForCommit(): void {},
 
@@ -221,12 +314,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           textInstance.text = newText;
         },
 
-        appendChild: appendChild,
-        appendChildToContainer: appendChild,
-        insertBefore: insertBefore,
-        insertInContainerBefore: insertBefore,
-        removeChild: removeChild,
-        removeChildFromContainer: removeChild,
+        appendChild,
+        appendChildToContainer,
+        insertBefore,
+        insertInContainerBefore,
+        removeChild,
+        removeChildFromContainer,
 
         resetTextContent(instance: Instance): void {},
       }
@@ -335,6 +428,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
+    getOrCreateRootContainer(
+      rootID: string = DEFAULT_ROOT_ID,
+      isAsync: boolean = false,
+    ) {
+      let root = roots.get(rootID);
+      if (!root) {
+        const container = {rootID: rootID, children: []};
+        rootContainers.set(rootID, container);
+        root = NoopRenderer.createContainer(container, isAsync, false);
+        roots.set(rootID, root);
+      }
+      return root.current.stateNode.containerInfo;
+    },
+
     createPortal(
       children: ReactNodeList,
       container: Container,
@@ -348,18 +455,22 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
     },
 
+    renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
+      const rootID = DEFAULT_ROOT_ID;
+      const isAsync = false;
+      const container = ReactNoop.getOrCreateRootContainer(rootID, isAsync);
+      const root = roots.get(container.rootID);
+      NoopRenderer.updateContainer(element, root, null, callback);
+    },
+
     renderToRootWithID(
       element: React$Element<any>,
       rootID: string,
       callback: ?Function,
     ) {
-      let root = roots.get(rootID);
-      if (!root) {
-        const container = {rootID: rootID, children: []};
-        rootContainers.set(rootID, container);
-        root = NoopRenderer.createContainer(container, true, false);
-        roots.set(rootID, root);
-      }
+      const isAsync = true;
+      const container = ReactNoop.getOrCreateRootContainer(rootID, isAsync);
+      const root = roots.get(container.rootID);
       NoopRenderer.updateContainer(element, root, null, callback);
     },
 
@@ -435,7 +546,22 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       expect(actual).toEqual(expected);
     },
 
-    expire(ms: number): void {
+    flushNextYield(): Array<mixed> {
+      let actual = null;
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+      for (const value of flushUnitsOfWork(Infinity)) {
+        actual = value;
+        break;
+      }
+      return actual !== null ? actual : [];
+    },
+
+    expire(ms: number): Array<mixed> {
+      ReactNoop.advanceTime(ms);
+      return ReactNoop.flushExpired();
+    },
+
+    advanceTime(ms: number): void {
       elapsedTimeInMs += ms;
     },
 
@@ -536,7 +662,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             '- ' +
             // need to explicitly coerce Symbol to a string
             (fiber.type ? fiber.type.name || fiber.type.toString() : '[root]'),
-          '[' + fiber.expirationTime + (fiber.pendingProps ? '*' : '') + ']',
+          '[' +
+            fiber.childExpirationTime +
+            (fiber.pendingProps ? '*' : '') +
+            ']',
         );
         if (fiber.updateQueue) {
           logUpdateQueue(fiber.updateQueue, depth);
@@ -569,13 +698,31 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       console.log(...bufferedLog);
     },
 
-    simulateErrorInHostConfig(fn: () => void) {
-      failInBeginPhase = true;
-      try {
-        fn();
-      } finally {
-        failInBeginPhase = false;
-      }
+    flushWithoutCommitting(
+      expectedFlush: Array<mixed>,
+      rootID: string = DEFAULT_ROOT_ID,
+    ) {
+      const root: any = roots.get(rootID);
+      const batch = {
+        _defer: true,
+        _expirationTime: 1,
+        _onComplete: () => {
+          root.firstBatch = null;
+        },
+        _next: null,
+      };
+      root.firstBatch = batch;
+      const actual = ReactNoop.flush();
+      expect(actual).toEqual(expectedFlush);
+      return (expectedCommit: Array<mixed>) => {
+        batch._defer = false;
+        NoopRenderer.flushRoot(root, 1);
+        expect(yieldedValues).toEqual(expectedCommit);
+      };
+    },
+
+    getRoot(rootID: string = DEFAULT_ROOT_ID) {
+      return roots.get(rootID);
     },
   };
 

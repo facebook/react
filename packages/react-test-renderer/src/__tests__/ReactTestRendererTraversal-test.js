@@ -201,7 +201,7 @@ describe('ReactTestRendererTraversal', () => {
   });
 
   it('can have special nodes as roots', () => {
-    const FR = React.forwardRef(props => <section {...props} />);
+    const FR = React.forwardRef((props, ref) => <section {...props} />);
     expect(
       ReactTestRenderer.create(
         <FR>

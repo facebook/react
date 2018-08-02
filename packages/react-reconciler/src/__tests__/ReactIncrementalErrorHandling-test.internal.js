@@ -234,10 +234,10 @@ describe('ReactIncrementalErrorHandling', () => {
     // Finish the rest of the async work
     ReactNoop.flushThrough(['Sibling']);
 
-    // Rendering one more unit of work should be enough to trigger the retry
+    // Rendering two more units of work should be enough to trigger the retry
     // and synchronously throw an error.
     ops = [];
-    expect(() => ReactNoop.flushUnitsOfWork(1)).toThrow('oops');
+    expect(() => ReactNoop.flushUnitsOfWork(2)).toThrow('oops');
     expect(ops).toEqual(['Parent', 'BadRender', 'Sibling']);
   });
 
@@ -1100,6 +1100,7 @@ describe('ReactIncrementalErrorHandling', () => {
     const InvalidType = undefined;
     expect(() => ReactNoop.render(<InvalidType />)).toWarnDev(
       'Warning: React.createElement: type is invalid -- expected a string',
+      {withoutStack: true},
     );
     expect(ReactNoop.flush).toThrowError(
       'Element type is invalid: expected a string (for built-in components) or ' +
@@ -1211,10 +1212,8 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('handles error thrown by host config while working on failed root', () => {
-    ReactNoop.simulateErrorInHostConfig(() => {
-      ReactNoop.render(<span />);
-      expect(() => ReactNoop.flush()).toThrow('Error in host config.');
-    });
+    ReactNoop.render(<errorInBeginPhase />);
+    expect(() => ReactNoop.flush()).toThrow('Error in host config.');
   });
 
   it('handles error thrown by top-level callback', () => {
@@ -1469,5 +1468,27 @@ describe('ReactIncrementalErrorHandling', () => {
     );
     ReactNoop.flushDeferredPri();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
+  });
+
+  it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
+    function Provider() {
+      return {
+        getChildContext() {
+          return {foo: 'bar'};
+        },
+        render() {
+          return 'Hi';
+        },
+      };
+    }
+    Provider.childContextTypes = {
+      x: () => {},
+    };
+    Provider.getDerivedStateFromProps = () => {
+      throw new Error('Oops!');
+    };
+
+    ReactNoop.render(<Provider />);
+    expect(() => ReactNoop.flush()).toThrow('Oops!');
   });
 });

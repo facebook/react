@@ -24,22 +24,22 @@ import {
 } from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {HostComponent} from 'shared/ReactTypeOfWork';
-import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
   isContextProvider,
   processChildContext,
+  emptyContextObject,
 } from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import {
   computeUniqueAsyncExpiration,
-  recalculateCurrentTime,
+  requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
   requestWork,
@@ -55,7 +55,7 @@ import {
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
-import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import * as ReactCurrentFiber from './ReactCurrentFiber';
 
 type OpaqueRoot = FiberRoot;
 
@@ -86,7 +86,7 @@ function getContextForSubtree(
   parentComponent: ?React$Component<any, any>,
 ): Object {
   if (!parentComponent) {
-    return emptyObject;
+    return emptyContextObject;
   }
 
   const fiber = ReactInstanceMap.get(parentComponent);
@@ -104,18 +104,18 @@ function scheduleRootUpdate(
 ) {
   if (__DEV__) {
     if (
-      ReactDebugCurrentFiber.phase === 'render' &&
-      ReactDebugCurrentFiber.current !== null &&
+      ReactCurrentFiber.phase === 'render' &&
+      ReactCurrentFiber.current !== null &&
       !didWarnAboutNestedUpdates
     ) {
       didWarnAboutNestedUpdates = true;
-      warning(
+      warningWithoutStack(
         false,
         'Render methods should be a pure function of props and state; ' +
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
           'Check the render method of %s.',
-        getComponentName(ReactDebugCurrentFiber.current) || 'Unknown',
+        getComponentName(ReactCurrentFiber.current.type) || 'Unknown',
       );
     }
   }
@@ -127,7 +127,7 @@ function scheduleRootUpdate(
 
   callback = callback === undefined ? null : callback;
   if (callback !== null) {
-    warning(
+    warningWithoutStack(
       typeof callback === 'function',
       'render(...): Expected the last optional `callback` argument to be a ' +
         'function. Instead received: %s.',
@@ -135,7 +135,7 @@ function scheduleRootUpdate(
     );
     update.callback = callback;
   }
-  enqueueUpdate(current, update, expirationTime);
+  enqueueUpdate(current, update);
 
   scheduleWork(current, expirationTime);
   return expirationTime;
@@ -208,7 +208,7 @@ export function updateContainer(
   callback: ?Function,
 ): ExpirationTime {
   const current = container.current;
-  const currentTime = recalculateCurrentTime();
+  const currentTime = requestCurrentTime();
   const expirationTime = computeExpirationForFiber(currentTime, current);
   return updateContainerAtExpirationTime(
     element,

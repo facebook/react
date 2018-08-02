@@ -23,7 +23,7 @@
     <ol>
       <li>
         <button onClick="runTestOne()">Run Test 1</button>
-        <p>Calls the callback with the frame when not blocked:</p>
+        <p>Calls the callback within the frame when not blocked:</p>
         <div><b>Expected:</b></div>
         <div id="test-1-expected">
         </div>
@@ -78,6 +78,15 @@
         <p>When some callbacks throw errors <b> and some also time out</b>, still calls them all within the same frame</p>
         <p><b>IMPORTANT:</b> Open the console when you run this! Inspect the logs there!</p>
         <button onClick="runTestSix()">Run Test 6</button>
+      </li>
+      <li>
+        <p>Continues calling callbacks even when user switches away from this tab</p>
+        <button onClick="runTestSeven()">Run Test 7</button>
+        <div><b>Click the button above, observe the counter, then switch to
+            another tab and switch back:</b></div>
+        <div id="test-7">
+        </div>
+        <div> If the counter advanced while you were away from this tab, it's correct.</div>
       </li>
     </ol>
     <script src="../../build/dist/react-scheduler.development.js"></script>
@@ -463,6 +472,22 @@ function runTestSix() {
     scheduleWork(cbE, {timeout: 1});
     console.log('scheduled cbE');
   };
+}
+
+function runTestSeven() {
+  // Test 7
+  // Calls callbacks, continues calling them even when this tab is in the
+  // background
+  clearTestResult(7);
+  let counter = -1;
+  function incrementCounterAndScheduleNextCallback() {
+    const counterNode = document.getElementById('test-7');
+    counter++;
+    counterNode.innerHTML = counter;
+    waitForTimeToPass(100);
+    scheduleWork(incrementCounterAndScheduleNextCallback);
+  }
+  scheduleWork(incrementCounterAndScheduleNextCallback);
 }
     </script type="text/babel">
   </body>

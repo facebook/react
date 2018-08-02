@@ -13,7 +13,7 @@ import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
 import * as ReactInputSelection from './ReactInputSelection';
 import setTextContent from './setTextContent';
-import validateDOMNesting from './validateDOMNesting';
+import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
 import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
@@ -45,6 +45,8 @@ type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
 export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
+export type TimeoutHandle = TimeoutID;
+export type NoTimeout = -1;
 
 const {
   createElement,
@@ -60,7 +62,6 @@ const {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
 } = ReactDOMFiberComponent;
-const {updatedAncestorInfo} = validateDOMNesting;
 const {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 let SUPPRESS_HYDRATION_WARNING;
@@ -111,7 +112,7 @@ export function getRootHostContext(
   }
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
-    const ancestorInfo = updatedAncestorInfo(null, validatedTag, null);
+    const ancestorInfo = updatedAncestorInfo(null, validatedTag);
     return {namespace, ancestorInfo};
   }
   return namespace;
@@ -128,7 +129,6 @@ export function getChildHostContext(
     const ancestorInfo = updatedAncestorInfo(
       parentHostContextDev.ancestorInfo,
       type,
-      null,
     );
     return {namespace, ancestorInfo};
   }
@@ -173,7 +173,6 @@ export function createInstance(
       const ownAncestorInfo = updatedAncestorInfo(
         hostContextDev.ancestorInfo,
         type,
-        null,
       );
       validateDOMNesting(null, string, ownAncestorInfo);
     }
@@ -229,7 +228,6 @@ export function prepareUpdate(
       const ownAncestorInfo = updatedAncestorInfo(
         hostContextDev.ancestorInfo,
         type,
-        null,
       );
       validateDOMNesting(null, string, ownAncestorInfo);
     }
@@ -246,6 +244,7 @@ export function prepareUpdate(
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
+    type === 'option' ||
     typeof props.children === 'string' ||
     typeof props.children === 'number' ||
     (typeof props.dangerouslySetInnerHTML === 'object' &&
@@ -277,6 +276,10 @@ export const now = ReactScheduler.now;
 export const isPrimaryRenderer = true;
 export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
 export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
+
+export const scheduleTimeout = setTimeout;
+export const cancelTimeout = clearTimeout;
+export const noTimeout = -1;
 
 // -------------------
 //     Mutation

@@ -15,7 +15,7 @@ import {
 import type {TopLevelType} from 'events/TopLevelEventTypes';
 import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
 import SyntheticEvent from 'events/SyntheticEvent';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 const {
   customBubblingEventTypes,
@@ -31,7 +31,7 @@ const ReactNativeBridgeEventPlugin = {
    */
   extractEvents: function(
     topLevelType: TopLevelType,
-    targetInst: Object,
+    targetInst: null | Object,
     nativeEvent: AnyNativeEvent,
     nativeEventTarget: Object,
   ): ?Object {

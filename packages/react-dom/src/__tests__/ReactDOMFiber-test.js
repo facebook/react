@@ -256,6 +256,7 @@ describe('ReactDOMFiber', () => {
         'and will be removed in React 17+. Update your code to use ' +
         'ReactDOM.createPortal() instead. It has the exact same API, ' +
         'but without the "unstable_" prefix.',
+      {withoutStack: true},
     );
     expect(portalContainer.innerHTML).toBe('<div>portal</div>');
     expect(container.innerHTML).toBe('<div></div>');
@@ -979,8 +980,9 @@ describe('ReactDOMFiber', () => {
     expect(() => ReactDOM.render(<Example />, container)).toWarnDev(
       'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
         'If you used to conditionally omit it with onClick={condition && value}, ' +
-        'pass onClick={condition ? value : undefined} instead.\n',
-      '    in div (at **)\n' + '    in Example (at **)',
+        'pass onClick={condition ? value : undefined} instead.\n' +
+        '    in div (at **)\n' +
+        '    in Example (at **)',
     );
   });
 
@@ -1100,6 +1102,7 @@ describe('ReactDOMFiber', () => {
           'removed without using React. This is not supported and will ' +
           'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
           'to empty a container.',
+        {withoutStack: true},
       );
     }).toThrowError();
   });
@@ -1117,6 +1120,7 @@ describe('ReactDOMFiber', () => {
         'removed without using React. This is not supported and will ' +
         'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
         'to empty a container.',
+      {withoutStack: true},
     );
   });
 
@@ -1133,6 +1137,7 @@ describe('ReactDOMFiber', () => {
         'removed without using React. This is not supported and will ' +
         'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
         'to empty a container.',
+      {withoutStack: true},
     );
   });
 

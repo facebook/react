@@ -23,24 +23,25 @@ import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactFabricComponentTree from './ReactFabricComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-import warning from 'fbjs/lib/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const findHostInstance = ReactFabricRenderer.findHostInstance;
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
-      warning(
+      warningWithoutStack(
         owner.stateNode._warnedAboutRefsInRender,
         '%s is accessing findNodeHandle inside its render(). ' +
           'render() should be a pure function of props and state. It should ' +
           'never access something that requires stale data from the previous ' +
           'render, such as refs. Move this logic to componentDidMount and ' +
           'componentDidUpdate instead.',
-        getComponentName(owner) || 'A component',
+        getComponentName(owner.type) || 'A component',
       );
 
       owner.stateNode._warnedAboutRefsInRender = true;

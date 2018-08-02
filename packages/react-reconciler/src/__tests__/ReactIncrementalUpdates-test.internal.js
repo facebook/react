@@ -163,7 +163,7 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.flushThrough(['a', 'b', 'c']);
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
-    // Schedule some more updates at different priorities{
+    // Schedule some more updates at different priorities
     instance.setState(createUpdate('d'));
     ReactNoop.flushSync(() => {
       instance.setState(createUpdate('e'));
@@ -178,7 +178,22 @@ describe('ReactIncrementalUpdates', () => {
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
     ReactNoop.clearYields();
-    expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+    expect(ReactNoop.flush()).toEqual([
+      'a',
+      'b',
+      'c',
+
+      // e, f, and g are in a separate batch from a, b, and c because they
+      // were scheduled in the middle of a render
+      'e',
+      'f',
+      'g',
+
+      'd',
+      'e',
+      'f',
+      'g',
+    ]);
     expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
   });
 
@@ -237,7 +252,22 @@ describe('ReactIncrementalUpdates', () => {
     // they should be processed again, to ensure that the terminal state
     // is deterministic.
     ReactNoop.clearYields();
-    expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+    expect(ReactNoop.flush()).toEqual([
+      'a',
+      'b',
+      'c',
+
+      // e, f, and g are in a separate batch from a, b, and c because they
+      // were scheduled in the middle of a render
+      'e',
+      'f',
+      'g',
+
+      'd',
+      'e',
+      'f',
+      'g',
+    ]);
     expect(ReactNoop.getChildren()).toEqual([span('fg')]);
   });
 
@@ -315,6 +345,7 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.flush).toWarnDev(
       'componentWillReceiveProps: Please update the following components ' +
         'to use static getDerivedStateFromProps instead: Foo',
+      {withoutStack: true},
     );
 
     ops = [];
@@ -355,6 +386,7 @@ describe('ReactIncrementalUpdates', () => {
         'from inside an update function. Update functions should be pure, ' +
         'with zero side-effects. Consider using componentDidUpdate or a ' +
         'callback.',
+      {withoutStack: true},
     );
     expect(ops).toEqual([
       // Initial render

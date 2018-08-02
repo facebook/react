@@ -28,7 +28,8 @@ import {
   ForwardRef,
   Profiler,
 } from 'shared/ReactTypeOfWork';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
+import ReactVersion from 'shared/ReactVersion';
 
 import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
@@ -465,14 +466,14 @@ const ReactTestRendererFiber = {
         }
         return TestRenderer.getPublicRootInstance(root);
       },
+
       unstable_flushAll: TestRendererScheduling.flushAll,
-      unstable_flushSync(fn: Function) {
-        return TestRendererScheduling.withCleanYields(() => {
-          TestRenderer.flushSync(fn);
-        });
+      unstable_flushSync<T>(fn: () => T): T {
+        TestRendererScheduling.clearYields();
+        return TestRenderer.flushSync(fn);
       },
-      unstable_flushThrough: TestRendererScheduling.flushThrough,
-      unstable_yield: TestRendererScheduling.yieldValue,
+      unstable_flushNumberOfYields: TestRendererScheduling.flushNumberOfYields,
+      unstable_clearYields: TestRendererScheduling.clearYields,
     };
 
     Object.defineProperty(
@@ -503,11 +504,24 @@ const ReactTestRendererFiber = {
     return entry;
   },
 
+  unstable_yield: TestRendererScheduling.yieldValue,
+  unstable_clearYields: TestRendererScheduling.clearYields,
+
   /* eslint-disable camelcase */
   unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
 
   unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,
 };
+
+// Enable ReactTestRenderer to be used to test DevTools integration.
+TestRenderer.injectIntoDevTools({
+  findFiberByHostInstance: (() => {
+    throw new Error('TestRenderer does not support findFiberByHostInstance()');
+  }: any),
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+  rendererPackageName: 'react-test-renderer',
+});
 
 export default ReactTestRendererFiber;

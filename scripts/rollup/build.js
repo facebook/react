@@ -42,11 +42,13 @@ const {
   NODE_PROFILING,
   FB_WWW_DEV,
   FB_WWW_PROD,
+  FB_WWW_PROFILING,
   RN_OSS_DEV,
   RN_OSS_PROD,
   RN_OSS_PROFILING,
   RN_FB_DEV,
   RN_FB_PROD,
+  RN_FB_PROFILING,
 } = Bundles.bundleTypes;
 
 const requestedBundleTypes = (argv.type || '')
@@ -87,6 +89,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
   switch (bundleType) {
     case FB_WWW_DEV:
     case FB_WWW_PROD:
+    case FB_WWW_PROFILING:
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Minify invariant messages
@@ -100,6 +103,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
     case RN_OSS_PROFILING:
     case RN_FB_DEV:
     case RN_FB_PROD:
+    case RN_FB_PROFILING:
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
@@ -159,11 +163,13 @@ function getFormat(bundleType) {
     case NODE_PROFILING:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
+    case FB_WWW_PROFILING:
     case RN_OSS_DEV:
     case RN_OSS_PROD:
     case RN_OSS_PROFILING:
     case RN_FB_DEV:
     case RN_FB_PROD:
+    case RN_FB_PROFILING:
       return `cjs`;
   }
 }
@@ -190,6 +196,8 @@ function getFilename(name, globalName, bundleType) {
     case RN_OSS_PROD:
     case RN_FB_PROD:
       return `${globalName}-prod.js`;
+    case FB_WWW_PROFILING:
+    case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
       return `${globalName}-profiling.js`;
   }
@@ -207,9 +215,11 @@ function isProductionBundleType(bundleType) {
     case NODE_PROD:
     case NODE_PROFILING:
     case FB_WWW_PROD:
+    case FB_WWW_PROFILING:
     case RN_OSS_PROD:
     case RN_OSS_PROFILING:
     case RN_FB_PROD:
+    case RN_FB_PROFILING:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -229,12 +239,28 @@ function isProfilingBundleType(bundleType) {
     case UMD_DEV:
     case UMD_PROD:
       return false;
+    case FB_WWW_PROFILING:
     case NODE_PROFILING:
+    case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
   }
+}
+
+function blacklistFBJS() {
+  return {
+    name: 'blacklistFBJS',
+    resolveId(importee, importer) {
+      if (/^fbjs\//.test(importee)) {
+        throw new Error(
+          `Don't import ${importee} (found in ${importer}). ` +
+            `Use the utilities in packages/shared/ instead.`
+        );
+      }
+    },
+  };
 }
 
 function getPlugins(
@@ -252,14 +278,18 @@ function getPlugins(
   const forks = Modules.getForks(bundleType, entry, moduleType);
   const isProduction = isProductionBundleType(bundleType);
   const isProfiling = isProfilingBundleType(bundleType);
-  const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
-  const isFBBundle = bundleType === FB_WWW_DEV || bundleType === FB_WWW_PROD;
+  const isUMDBundle = bundleType === UMD_DEV || bundleType === UMD_PROD;
+  const isFBBundle =
+    bundleType === FB_WWW_DEV ||
+    bundleType === FB_WWW_PROD ||
+    bundleType === FB_WWW_PROFILING;
   const isRNBundle =
     bundleType === RN_OSS_DEV ||
     bundleType === RN_OSS_PROD ||
     bundleType === RN_OSS_PROFILING ||
     bundleType === RN_FB_DEV ||
-    bundleType === RN_FB_PROD;
+    bundleType === RN_FB_PROD ||
+    bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
   return [
     // Extract error codes from invariant() messages into a file.
@@ -271,6 +301,8 @@ function getPlugins(
     },
     // Shim any modules that need forking in this environment.
     useForks(forks),
+    // Ensure we don't try to bundle any fbjs modules.
+    blacklistFBJS(),
     // Use Node resolution mechanism.
     resolve({
       skip: externals,
@@ -309,7 +341,7 @@ function getPlugins(
         Object.assign({}, closureOptions, {
           // Don't let it create global variables in the browser.
           // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isInGlobalScope,
+          assume_function_wrapper: !isUMDBundle,
           // Works because `google-closure-compiler-js` is forked in Yarn lockfile.
           // We can remove this if GCC merges my PR:
           // https://github.com/google/closure-compiler/pull/2707
@@ -388,7 +420,11 @@ async function createBundle(bundle, bundleType) {
   const packageName = Packaging.getPackageName(bundle.entry);
 
   let resolvedEntry = require.resolve(bundle.entry);
-  if (bundleType === FB_WWW_DEV || bundleType === FB_WWW_PROD) {
+  if (
+    bundleType === FB_WWW_DEV ||
+    bundleType === FB_WWW_PROD ||
+    bundleType === FB_WWW_PROFILING
+  ) {
     const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
     if (fs.existsSync(resolvedFBEntry)) {
       resolvedEntry = resolvedFBEntry;
@@ -435,7 +471,10 @@ async function createBundle(bundle, bundleType) {
       bundle.modulesToStub
     ),
     // We can't use getters in www.
-    legacy: bundleType === FB_WWW_DEV || bundleType === FB_WWW_PROD,
+    legacy:
+      bundleType === FB_WWW_DEV ||
+      bundleType === FB_WWW_PROD ||
+      bundleType === FB_WWW_PROFILING,
   };
   const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
     bundleType,
@@ -547,11 +586,13 @@ async function buildEverything() {
     await createBundle(bundle, NODE_PROFILING);
     await createBundle(bundle, FB_WWW_DEV);
     await createBundle(bundle, FB_WWW_PROD);
+    await createBundle(bundle, FB_WWW_PROFILING);
     await createBundle(bundle, RN_OSS_DEV);
     await createBundle(bundle, RN_OSS_PROD);
     await createBundle(bundle, RN_OSS_PROFILING);
     await createBundle(bundle, RN_FB_DEV);
     await createBundle(bundle, RN_FB_PROD);
+    await createBundle(bundle, RN_FB_PROFILING);
   }
 
   await Packaging.copyAllShims();

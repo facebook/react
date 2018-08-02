@@ -17,10 +17,50 @@ let ReactDOMServer;
 let ReactCurrentOwner;
 let ReactTestUtils;
 let PropTypes;
-let shallowEqual;
-let shallowCompare;
 
 describe('ReactCompositeComponent', () => {
+  const hasOwnProperty = Object.prototype.hasOwnProperty;
+
+  /**
+   * Performs equality by iterating through keys on an object and returning false
+   * when any key has values which are not strictly equal between the arguments.
+   * Returns true when the values of all keys are strictly equal.
+   */
+  function shallowEqual(objA: mixed, objB: mixed): boolean {
+    if (Object.is(objA, objB)) {
+      return true;
+    }
+    if (
+      typeof objA !== 'object' ||
+      objA === null ||
+      typeof objB !== 'object' ||
+      objB === null
+    ) {
+      return false;
+    }
+    const keysA = Object.keys(objA);
+    const keysB = Object.keys(objB);
+    if (keysA.length !== keysB.length) {
+      return false;
+    }
+    for (let i = 0; i < keysA.length; i++) {
+      if (
+        !hasOwnProperty.call(objB, keysA[i]) ||
+        !Object.is(objA[keysA[i]], objB[keysA[i]])
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function shallowCompare(instance, nextProps, nextState) {
+    return (
+      !shallowEqual(instance.props, nextProps) ||
+      !shallowEqual(instance.state, nextState)
+    );
+  }
+
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -30,14 +70,6 @@ describe('ReactCompositeComponent', () => {
       .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
     ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
-    shallowEqual = require('fbjs/lib/shallowEqual');
-
-    shallowCompare = function(instance, nextProps, nextState) {
-      return (
-        !shallowEqual(instance.props, nextProps) ||
-        !shallowEqual(instance.state, nextState)
-      );
-    };
 
     MorphingComponent = class extends React.Component {
       state = {activated: false};
@@ -131,6 +163,7 @@ describe('ReactCompositeComponent', () => {
       'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
         'will stop working in React v17. Replace the ReactDOM.render() call ' +
         'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+      {withoutStack: true},
     );
 
     // New explicit API
@@ -247,6 +280,7 @@ describe('ReactCompositeComponent', () => {
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +
         'class property with the desired state in the MyComponent component.',
+      {withoutStack: true},
     );
 
     // No additional warning should be recorded
@@ -271,6 +305,7 @@ describe('ReactCompositeComponent', () => {
         'This is a no-op, but it might indicate a bug in your application. ' +
         'Instead, assign to `this.state` directly or define a `state = {};` ' +
         'class property with the desired state in the MyComponent component.',
+      {withoutStack: true},
     );
 
     // No additional warning should be recorded
@@ -433,6 +468,7 @@ describe('ReactCompositeComponent', () => {
       'Cannot update during an existing state transition (such as within ' +
         '`render`). Render methods should ' +
         'be a pure function of props and state.',
+      {withoutStack: true},
     );
 
     // The setState call is queued and then executed as a second pass. This
@@ -480,6 +516,7 @@ describe('ReactCompositeComponent', () => {
       instance = ReactDOM.render(<Component />, container);
     }).toWarnDev(
       'Warning: setState(...): Cannot call setState() inside getChildContext()',
+      {withoutStack: true},
     );
 
     expect(renderPasses).toBe(2);
@@ -556,6 +593,7 @@ describe('ReactCompositeComponent', () => {
     expect(() => instance.setState({bogus: true})).toWarnDev(
       'Warning: Component.shouldComponentUpdate(): Returned undefined instead of a ' +
         'boolean value. Make sure to return true or false.',
+      {withoutStack: true},
     );
   });
 
@@ -572,6 +610,7 @@ describe('ReactCompositeComponent', () => {
       'Warning: Component has a method called ' +
         'componentDidUnmount(). But there is no such lifecycle method. ' +
         'Did you mean componentWillUnmount()?',
+      {withoutStack: true},
     );
   });
 
@@ -590,6 +629,7 @@ describe('ReactCompositeComponent', () => {
         'If you meant to update the state in response to changing props, ' +
         'use componentWillReceiveProps(). If you meant to fetch data or ' +
         'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
+      {withoutStack: true},
     );
   });
 
@@ -608,6 +648,7 @@ describe('ReactCompositeComponent', () => {
     expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
       'Warning: Setting defaultProps as an instance property on Component is not supported ' +
         'and will be ignored. Instead, define defaultProps as a static property on Component.',
+      {withoutStack: true},
     );
   });
 
@@ -1098,6 +1139,7 @@ describe('ReactCompositeComponent', () => {
         'triggering nested component updates from render is not allowed. If ' +
         'necessary, trigger nested updates in componentDidUpdate.\n\nCheck the ' +
         'render method of Outer.',
+      {withoutStack: true},
     );
   });
 
@@ -1389,6 +1431,7 @@ describe('ReactCompositeComponent', () => {
     expect(() => ReactDOM.render(<Foo idx="qwe" />, container)).toWarnDev(
       'Foo(...): When calling super() in `Foo`, make sure to pass ' +
         "up the same props that your component's constructor was passed.",
+      {withoutStack: true},
     );
   });
 

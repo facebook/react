@@ -18,7 +18,6 @@ export const {
   enableGetDerivedStateFromCatch,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
-  enableProfilerTimer,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
@@ -31,6 +30,8 @@ export const warnAboutLegacyContextAPI = __DEV__;
 // experimental FB-only export, we call performance.mark/measure
 // as long as there is more than a single listener.
 export let enableUserTimingAPI = __DEV__;
+
+export const enableProfilerTimer = __PROFILE__;
 
 let refCount = 0;
 export function addUserTimingListener() {

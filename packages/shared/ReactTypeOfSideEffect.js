@@ -24,6 +24,9 @@ export const DidCapture = /*            */ 0b00001000000;
 export const Ref = /*                   */ 0b00010000000;
 export const Snapshot = /*              */ 0b00100000000;
 
+// Update & Callback & Ref & Snapshot
+export const LifecycleEffectMask = /*   */ 0b00110100100;
+
 // Union of all host effects
 export const HostEffectMask = /*        */ 0b00111111111;
 

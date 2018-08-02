@@ -18,7 +18,7 @@ import type {
 
 import {HostComponent, HostText, HostRoot} from 'shared/ReactTypeOfWork';
 import {Deletion, Placement} from 'shared/ReactTypeOfSideEffect';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import {createFiberFromHostInstanceForDeletion} from './ReactFiber';
 import {

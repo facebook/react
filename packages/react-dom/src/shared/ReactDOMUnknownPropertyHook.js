@@ -9,8 +9,7 @@ import {
   registrationNameModules,
   possibleRegistrationNames,
 } from 'events/EventPluginRegistry';
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
@@ -20,11 +19,6 @@ import {
 } from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
-
-function getStackAddendum() {
-  const stack = ReactDebugCurrentFrame.getStackAddendum();
-  return stack != null ? stack : '';
-}
 
 let validateProperty = () => {};
 
@@ -66,10 +60,9 @@ if (__DEV__) {
       if (registrationName != null) {
         warning(
           false,
-          'Invalid event handler property `%s`. Did you mean `%s`?%s',
+          'Invalid event handler property `%s`. Did you mean `%s`?',
           name,
           registrationName,
-          getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
@@ -77,9 +70,8 @@ if (__DEV__) {
       if (EVENT_NAME_REGEX.test(name)) {
         warning(
           false,
-          'Unknown event handler property `%s`. It will be ignored.%s',
+          'Unknown event handler property `%s`. It will be ignored.',
           name,
-          getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
@@ -92,9 +84,8 @@ if (__DEV__) {
         warning(
           false,
           'Invalid event handler property `%s`. ' +
-            'React events use the camelCase naming convention, for example `onClick`.%s',
+            'React events use the camelCase naming convention, for example `onClick`.',
           name,
-          getStackAddendum(),
         );
       }
       warnedProperties[name] = true;
@@ -135,9 +126,8 @@ if (__DEV__) {
       warning(
         false,
         'Received a `%s` for a string attribute `is`. If this is expected, cast ' +
-          'the value to a string.%s',
+          'the value to a string.',
         typeof value,
-        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -147,9 +137,8 @@ if (__DEV__) {
       warning(
         false,
         'Received NaN for the `%s` attribute. If this is expected, cast ' +
-          'the value to a string.%s',
+          'the value to a string.',
         name,
-        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -164,10 +153,9 @@ if (__DEV__) {
       if (standardName !== name) {
         warning(
           false,
-          'Invalid DOM property `%s`. Did you mean `%s`?%s',
+          'Invalid DOM property `%s`. Did you mean `%s`?',
           name,
           standardName,
-          getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
@@ -181,10 +169,9 @@ if (__DEV__) {
           'intentionally want it to appear in the DOM as a custom ' +
           'attribute, spell it as lowercase `%s` instead. ' +
           'If you accidentally passed it from a parent component, remove ' +
-          'it from the DOM element.%s',
+          'it from the DOM element.',
         name,
         lowerCasedName,
-        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -199,13 +186,12 @@ if (__DEV__) {
           false,
           'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
-            '%s="%s" or %s={value.toString()}.%s',
+            '%s="%s" or %s={value.toString()}.',
           value,
           name,
           name,
           value,
           name,
-          getStackAddendum(),
         );
       } else {
         warning(
@@ -214,7 +200,7 @@ if (__DEV__) {
             'If you want to write it to the DOM, pass a string instead: ' +
             '%s="%s" or %s={value.toString()}.\n\n' +
             'If you used to conditionally omit it with %s={condition && value}, ' +
-            'pass %s={condition ? value : undefined} instead.%s',
+            'pass %s={condition ? value : undefined} instead.',
           value,
           name,
           name,
@@ -222,7 +208,6 @@ if (__DEV__) {
           name,
           name,
           name,
-          getStackAddendum(),
         );
       }
       warnedProperties[name] = true;
@@ -262,20 +247,18 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
       false,
       'Invalid value for prop %s on <%s> tag. Either remove it from the element, ' +
         'or pass a string or number value to keep it in the DOM. ' +
-        'For details, see https://fb.me/react-attribute-behavior%s',
+        'For details, see https://fb.me/react-attribute-behavior',
       unknownPropString,
       type,
-      getStackAddendum(),
     );
   } else if (unknownProps.length > 1) {
     warning(
       false,
       'Invalid values for props %s on <%s> tag. Either remove them from the element, ' +
         'or pass a string or number value to keep them in the DOM. ' +
-        'For details, see https://fb.me/react-attribute-behavior%s',
+        'For details, see https://fb.me/react-attribute-behavior',
       unknownPropString,
       type,
-      getStackAddendum(),
     );
   }
 };

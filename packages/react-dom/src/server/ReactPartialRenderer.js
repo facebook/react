@@ -15,13 +15,14 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import emptyObject from 'fbjs/lib/emptyObject';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
+import getComponentName from 'shared/getComponentName';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -62,18 +63,25 @@ type FlatReactChildren = Array<null | ReactNode>;
 type toArrayType = (children: mixed) => FlatReactChildren;
 const toArray = ((React.Children.toArray: any): toArrayType);
 
-let currentDebugStack;
-let currentDebugElementStack;
+// This is only used in DEV.
+// Each entry is `this.stack` from a currently executing renderer instance.
+// (There may be more than one because ReactDOMServer is reentrant).
+// Each stack is an array of frames which may contain nested stacks of elements.
+let currentDebugStacks = [];
 
-let getStackAddendum = () => '';
+let ReactDebugCurrentFrame;
+let prevGetCurrentStackImpl = null;
+let getCurrentServerStackImpl = () => '';
 let describeStackFrame = element => '';
 
 let validatePropertiesInDevelopment = (type, props) => {};
-let setCurrentDebugStack = (stack: Array<Frame>) => {};
+let pushCurrentDebugStack = (stack: Array<Frame>) => {};
 let pushElementToDebugStack = (element: ReactElement) => {};
-let resetCurrentDebugStack = () => {};
+let popCurrentDebugStack = () => {};
 
 if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
   validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
@@ -88,34 +96,55 @@ if (__DEV__) {
     return describeComponentFrame(name, source, ownerName);
   };
 
-  currentDebugStack = null;
-  currentDebugElementStack = null;
-  setCurrentDebugStack = function(stack: Array<Frame>) {
-    const frame: Frame = stack[stack.length - 1];
-    currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
-    // We are about to enter a new composite stack, reset the array.
-    currentDebugElementStack.length = 0;
-    currentDebugStack = stack;
-    ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
-  };
-  pushElementToDebugStack = function(element: ReactElement) {
-    if (currentDebugElementStack !== null) {
-      currentDebugElementStack.push(element);
+  pushCurrentDebugStack = function(stack: Array<Frame>) {
+    currentDebugStacks.push(stack);
+
+    if (currentDebugStacks.length === 1) {
+      // We are entering a server renderer.
+      // Remember the previous (e.g. client) global stack implementation.
+      prevGetCurrentStackImpl = ReactDebugCurrentFrame.getCurrentStack;
+      ReactDebugCurrentFrame.getCurrentStack = getCurrentServerStackImpl;
     }
   };
-  resetCurrentDebugStack = function() {
-    currentDebugElementStack = null;
-    currentDebugStack = null;
-    ReactDebugCurrentFrame.getCurrentStack = null;
+
+  pushElementToDebugStack = function(element: ReactElement) {
+    // For the innermost executing ReactDOMServer call,
+    const stack = currentDebugStacks[currentDebugStacks.length - 1];
+    // Take the innermost executing frame (e.g. <Foo>),
+    const frame: Frame = stack[stack.length - 1];
+    // and record that it has one more element associated with it.
+    ((frame: any): FrameDev).debugElementStack.push(element);
+    // We only need this because we tail-optimize single-element
+    // children and directly handle them in an inner loop instead of
+    // creating separate frames for them.
   };
-  getStackAddendum = function(): null | string {
-    if (currentDebugStack === null) {
+
+  popCurrentDebugStack = function() {
+    currentDebugStacks.pop();
+
+    if (currentDebugStacks.length === 0) {
+      // We are exiting the server renderer.
+      // Restore the previous (e.g. client) global stack implementation.
+      ReactDebugCurrentFrame.getCurrentStack = prevGetCurrentStackImpl;
+      prevGetCurrentStackImpl = null;
+    }
+  };
+
+  getCurrentServerStackImpl = function(): string {
+    if (currentDebugStacks.length === 0) {
+      // Nothing is currently rendering.
       return '';
     }
+    // ReactDOMServer is reentrant so there may be multiple calls at the same time.
+    // Take the frames from the innermost call which is the last in the array.
+    let frames = currentDebugStacks[currentDebugStacks.length - 1];
     let stack = '';
-    let debugStack = currentDebugStack;
-    for (let i = debugStack.length - 1; i >= 0; i--) {
-      const frame: Frame = debugStack[i];
+    // Go through every frame in the stack from the innermost one.
+    for (let i = frames.length - 1; i >= 0; i--) {
+      const frame: Frame = frames[i];
+      // Every frame might have more than one debug element stack entry associated with it.
+      // This is because single-child nesting doesn't create materialized frames.
+      // Instead it would push them through `pushElementToDebugStack()`.
       let debugElementStack = ((frame: any): FrameDev).debugElementStack;
       for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
         stack += describeStackFrame(debugElementStack[ii]);
@@ -141,12 +170,6 @@ const newlineEatingTags = {
   pre: true,
   textarea: true,
 };
-
-function getComponentName(type) {
-  return typeof type === 'string'
-    ? type
-    : typeof type === 'function' ? type.displayName || type.name : null;
-}
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
@@ -181,7 +204,7 @@ function createMarkupForStyles(styles): string | null {
     const styleValue = styles[styleName];
     if (__DEV__) {
       if (!isCustomProperty) {
-        warnValidStyle(styleName, styleValue, getStackAddendum);
+        warnValidStyle(styleName, styleValue);
       }
     }
     if (styleValue != null) {
@@ -211,7 +234,7 @@ function warnNoop(
       return;
     }
 
-    warning(
+    warningWithoutStack(
       false,
       '%s(...): Can only update a mounting component. ' +
         'This usually means you called %s() outside componentWillMount() on the server. ' +
@@ -259,7 +282,10 @@ function flattenTopLevelChildren(children: mixed): FlatReactChildren {
   return [fragmentChildElement];
 }
 
-function flattenOptionChildren(children: mixed): string {
+function flattenOptionChildren(children: mixed): ?string {
+  if (children === undefined || children === null) {
+    return children;
+  }
   let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
@@ -273,7 +299,7 @@ function flattenOptionChildren(children: mixed): string {
       if (__DEV__) {
         if (!didWarnInvalidOptionChildren) {
           didWarnInvalidOptionChildren = true;
-          warning(
+          warningWithoutStack(
             false,
             'Only strings and numbers are supported as <option> children.',
           );
@@ -282,6 +308,11 @@ function flattenOptionChildren(children: mixed): string {
     }
   });
   return content;
+}
+
+const emptyObject = {};
+if (__DEV__) {
+  Object.freeze(emptyObject);
 }
 
 function maskContext(type, context) {
@@ -298,7 +329,13 @@ function maskContext(type, context) {
 
 function checkContextTypes(typeSpecs, values, location: string) {
   if (__DEV__) {
-    checkPropTypes(typeSpecs, values, location, 'Component', getStackAddendum);
+    checkPropTypes(
+      typeSpecs,
+      values,
+      location,
+      'Component',
+      getCurrentServerStackImpl,
+    );
   }
 }
 
@@ -312,6 +349,7 @@ function processContext(type, context) {
   return maskedContext;
 }
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 const STYLE = 'style';
 const RESERVED_PROPS = {
   children: null,
@@ -331,7 +369,7 @@ function createOpenTagMarkup(
   let ret = '<' + tagVerbatim;
 
   for (const propKey in props) {
-    if (!props.hasOwnProperty(propKey)) {
+    if (!hasOwnProperty.call(props, propKey)) {
       continue;
     }
     let propValue = props[propKey];
@@ -436,7 +474,7 @@ function resolve(
           if (inst.state === null || inst.state === undefined) {
             const componentName = getComponentName(Component) || 'Unknown';
             if (!didWarnAboutUninitializedState[componentName]) {
-              warning(
+              warningWithoutStack(
                 false,
                 '%s: Did not properly initialize state during construction. ' +
                   'Expected state to be an object, but it was %s.',
@@ -458,7 +496,7 @@ function resolve(
           if (partialState === undefined) {
             const componentName = getComponentName(Component) || 'Unknown';
             if (!didWarnAboutUndefinedDerivedState[componentName]) {
-              warning(
+              warningWithoutStack(
                 false,
                 '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
                   'You have returned undefined.',
@@ -482,7 +520,7 @@ function resolve(
           const componentName = getComponentName(Component) || 'Unknown';
 
           if (!didWarnAboutBadClass[componentName]) {
-            warning(
+            warningWithoutStack(
               false,
               "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
                 'This is likely to cause errors. Change %s to extend React.Component instead.',
@@ -609,7 +647,7 @@ function resolve(
           );
         }
       } else {
-        warning(
+        warningWithoutStack(
           false,
           '%s.getChildContext(): childContextTypes must be defined in order to ' +
             'use getChildContext().',
@@ -711,7 +749,7 @@ class ReactDOMServerRenderer {
   popProvider<T>(provider: ReactProvider<T>): void {
     const index = this.contextIndex;
     if (__DEV__) {
-      warning(
+      warningWithoutStack(
         index > -1 && provider === (this.contextProviderStack: any)[index],
         'Unexpected pop.',
       );
@@ -767,12 +805,18 @@ class ReactDOMServerRenderer {
       }
       const child = frame.children[frame.childIndex++];
       if (__DEV__) {
-        setCurrentDebugStack(this.stack);
-      }
-      out += this.render(child, frame.context, frame.domNamespace);
-      if (__DEV__) {
-        // TODO: Handle reentrant server render calls. This doesn't.
-        resetCurrentDebugStack();
+        pushCurrentDebugStack(this.stack);
+        // We're starting work on this frame, so reset its inner stack.
+        ((frame: any): FrameDev).debugElementStack.length = 0;
+        try {
+          // Be careful! Make sure this matches the PROD path below.
+          out += this.render(child, frame.context, frame.domNamespace);
+        } finally {
+          popCurrentDebugStack();
+        }
+      } else {
+        // Be careful! Make sure this matches the DEV path above.
+        out += this.render(child, frame.context, frame.domNamespace);
       }
     }
     return out;
@@ -995,11 +1039,7 @@ class ReactDOMServerRenderer {
     let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes(
-          'input',
-          props,
-          getStackAddendum,
-        );
+        ReactControlledValuePropTypes.checkPropTypes('input', props);
 
         if (
           props.checked !== undefined &&
@@ -1053,11 +1093,7 @@ class ReactDOMServerRenderer {
       );
     } else if (tag === 'textarea') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes(
-          'textarea',
-          props,
-          getStackAddendum,
-        );
+        ReactControlledValuePropTypes.checkPropTypes('textarea', props);
         if (
           props.value !== undefined &&
           props.defaultValue !== undefined &&
@@ -1114,11 +1150,7 @@ class ReactDOMServerRenderer {
       });
     } else if (tag === 'select') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes(
-          'select',
-          props,
-          getStackAddendum,
-        );
+        ReactControlledValuePropTypes.checkPropTypes('select', props);
 
         for (let i = 0; i < valuePropNames.length; i++) {
           const propName = valuePropNames[i];
@@ -1130,17 +1162,15 @@ class ReactDOMServerRenderer {
             warning(
               false,
               'The `%s` prop supplied to <select> must be an array if ' +
-                '`multiple` is true.%s',
+                '`multiple` is true.',
               propName,
-              '', // getDeclarationErrorAddendum(),
             );
           } else if (!props.multiple && isArray) {
             warning(
               false,
               'The `%s` prop supplied to <select> must be a scalar ' +
-                'value if `multiple` is false.%s',
+                'value if `multiple` is false.',
               propName,
-              '', // getDeclarationErrorAddendum(),
             );
           }
         }
@@ -1208,7 +1238,7 @@ class ReactDOMServerRenderer {
       validatePropertiesInDevelopment(tag, props);
     }
 
-    assertValidProps(tag, props, getStackAddendum);
+    assertValidProps(tag, props);
 
     let out = createOpenTagMarkup(
       element.type,

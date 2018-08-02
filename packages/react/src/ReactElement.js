@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -50,7 +50,7 @@ function defineKeyPropWarningGetter(props, displayName) {
   const warnAboutAccessingKey = function() {
     if (!specialPropKeyWarningShown) {
       specialPropKeyWarningShown = true;
-      warning(
+      warningWithoutStack(
         false,
         '%s: `key` is not a prop. Trying to access it will result ' +
           'in `undefined` being returned. If you need to access the same ' +
@@ -71,7 +71,7 @@ function defineRefPropWarningGetter(props, displayName) {
   const warnAboutAccessingRef = function() {
     if (!specialPropRefWarningShown) {
       specialPropRefWarningShown = true;
-      warning(
+      warningWithoutStack(
         false,
         '%s: `ref` is not a prop. Trying to access it will result ' +
           'in `undefined` being returned. If you need to access the same ' +
