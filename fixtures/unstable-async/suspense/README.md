@@ -12,14 +12,21 @@ No. The APIs being tested here are unstable and some of them have still not been
 
 ## How do I run this fixture?
 
+Clone the React repository.
+
+Open `packages/shared/ReactFeatureFlags.js` locally (make sure you didn't open a similarly named file!) and set [the `enableSuspense` flag](https://github.com/facebook/react/blob/d79238f1eeb6634ba7a3df23c3b2709b56cbb8b2/packages/shared/ReactFeatureFlags.js#L19) to `true`.
+
+Then follow these steps:
+
 ```shell
 # 1: Build react from source
 cd /path/to/react
-yarn build -- dom,core,interaction,simple-cache-provider type=NODE
+yarn
+yarn build dom,core,interaction,simple-cache-provider --type=NODE
 
 # 2: Install fixture dependencies
-cd ./fixtures/suspense/io/
-yarn install
+cd fixtures/unstable-async/suspense/
+yarn
 
 # 3: Run the app
 yarn start
