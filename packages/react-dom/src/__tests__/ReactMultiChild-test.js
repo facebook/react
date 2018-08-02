@@ -294,6 +294,27 @@ describe('ReactMultiChild', () => {
     );
   });
 
+  it('should warn for using generators as children', () => {
+    function* Foo() {
+      yield <h1 key="1">Hello</h1>;
+      yield <h1 key="2">World</h1>;
+    }
+
+    const div = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<Foo />, div);
+    }).toWarnDev(
+      'Using Generators as children is unsupported and will likely yield ' +
+        'unexpected results because enumerating a generator mutates it. You may ' +
+        'convert it to an array with `Array.from()` or the `[...spread]` operator ' +
+        'before rendering. Keep in mind you might need to polyfill these features for older browsers.\n' +
+        '    in Foo (at **)',
+    );
+
+    // Test de-duplication
+    ReactDOM.render(<Foo />, div);
+  });
+
   it('should reorder bailed-out children', () => {
     class LetterInner extends React.Component {
       render() {
