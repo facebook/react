@@ -46,6 +46,7 @@ import {
 import {StrictMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;
+let didWarnAboutGenerators;
 let didWarnAboutStringRefInStrictMode;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
@@ -53,6 +54,7 @@ let warnForMissingKey = (child: mixed) => {};
 
 if (__DEV__) {
   didWarnAboutMaps = false;
+  didWarnAboutGenerators = false;
   didWarnAboutStringRefInStrictMode = {};
 
   /**
@@ -903,6 +905,24 @@ function ChildReconciler(shouldTrackSideEffects) {
     );
 
     if (__DEV__) {
+      // We don't support rendering Generators because it's a mutation.
+      // See https://github.com/facebook/react/issues/12995
+      if (
+        typeof Symbol === 'function' &&
+        // $FlowFixMe Flow doesn't know about toStringTag
+        newChildrenIterable[Symbol.toStringTag] === 'Generator'
+      ) {
+        warning(
+          didWarnAboutGenerators,
+          'Using Generators as children is unsupported and will likely yield ' +
+            'unexpected results because enumerating a generator mutates it. ' +
+            'You may convert it to an array with `Array.from()` or the ' +
+            '`[...spread]` operator before rendering. Keep in mind ' +
+            'you might need to polyfill these features for older browsers.',
+        );
+        didWarnAboutGenerators = true;
+      }
+
       // Warn about using Maps as children
       if ((newChildrenIterable: any).entries === iteratorFn) {
         warning(

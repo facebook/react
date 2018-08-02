@@ -116,7 +116,12 @@ export function logError(boundary: Fiber, errorInfo: CapturedValue<mixed>) {
     // A cycle may still occur if logCapturedError renders a component that throws.
     const suppressLogging = e && e.suppressReactErrorLogging;
     if (!suppressLogging) {
-      console.error(e);
+      // Rethrow it from a clean stack because this function is assumed to never throw.
+      // We can't safely call console.error() here because it could *also* throw if overriden.
+      // https://github.com/facebook/react/issues/13188
+      setTimeout(() => {
+        throw e;
+      });
     }
   }
 }

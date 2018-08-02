@@ -1,0 +1,20 @@
+{
+  "name": "cpu-demo",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "glamor": "^2.20.40",
+    "react": "../../../build/node_modules/react",
+    "react-dom": "../../../build/node_modules/react-dom",
+    "react-markdown": "^3.2.0",
+    "react-scripts": "^1.1.4",
+    "simple-cache-provider": "../../../build/node_modules/simple-cache-provider",
+    "victory": "^0.25.6"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}

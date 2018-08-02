@@ -1469,4 +1469,26 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.flushDeferredPri();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
   });
+
+  it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
+    function Provider() {
+      return {
+        getChildContext() {
+          return {foo: 'bar'};
+        },
+        render() {
+          return 'Hi';
+        },
+      };
+    }
+    Provider.childContextTypes = {
+      x: () => {},
+    };
+    Provider.getDerivedStateFromProps = () => {
+      throw new Error('Oops!');
+    };
+
+    ReactNoop.render(<Provider />);
+    expect(() => ReactNoop.flush()).toThrow('Oops!');
+  });
 });

@@ -72,8 +72,10 @@ function getSelection(node) {
       start: node.selectionStart,
       end: node.selectionEnd,
     };
-  } else if (window.getSelection) {
-    const selection = window.getSelection();
+  } else {
+    const win =
+      (node.ownerDocument && node.ownerDocument.defaultView) || window;
+    const selection = win.getSelection();
     return {
       anchorNode: selection.anchorNode,
       anchorOffset: selection.anchorOffset,
@@ -84,9 +86,24 @@ function getSelection(node) {
 }
 
 /**
+ * Get document associated with the event target.
+ *
+ * @param {object} nativeEventTarget
+ * @return {Document}
+ */
+function getEventTargetDocument(eventTarget) {
+  return eventTarget.window === eventTarget
+    ? eventTarget.document
+    : eventTarget.nodeType === DOCUMENT_NODE
+      ? eventTarget
+      : eventTarget.ownerDocument;
+}
+
+/**
  * Poll selection to see whether it's changed.
  *
  * @param {object} nativeEvent
+ * @param {object} nativeEventTarget
  * @return {?SyntheticEvent}
  */
 function constructSelectEvent(nativeEvent, nativeEventTarget) {
@@ -94,10 +111,12 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
+  const doc = getEventTargetDocument(nativeEventTarget);
+
   if (
     mouseDown ||
     activeElement == null ||
-    activeElement !== getActiveElement()
+    activeElement !== getActiveElement(doc)
   ) {
     return null;
   }
@@ -148,12 +167,7 @@ const SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    const doc =
-      nativeEventTarget.window === nativeEventTarget
-        ? nativeEventTarget.document
-        : nativeEventTarget.nodeType === DOCUMENT_NODE
-          ? nativeEventTarget
-          : nativeEventTarget.ownerDocument;
+    const doc = getEventTargetDocument(nativeEventTarget);
     // Track whether all listeners exists for this plugin. If none exist, we do
     // not extract events. See #3639.
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {

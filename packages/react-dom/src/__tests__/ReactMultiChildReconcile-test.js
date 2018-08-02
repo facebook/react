@@ -248,7 +248,7 @@ function prepareChildrenArray(childrenArray) {
   return childrenArray;
 }
 
-function prepareChildrenIterable(childrenArray) {
+function prepareChildrenLegacyIterable(childrenArray) {
   return {
     '@@iterator': function*() {
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
@@ -259,9 +259,27 @@ function prepareChildrenIterable(childrenArray) {
   };
 }
 
+function prepareChildrenModernIterable(childrenArray) {
+  return {
+    [Symbol.iterator]: function*() {
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+      for (const child of childrenArray) {
+        yield child;
+      }
+    },
+  };
+}
+
 function testPropsSequence(sequence) {
   testPropsSequenceWithPreparedChildren(sequence, prepareChildrenArray);
-  testPropsSequenceWithPreparedChildren(sequence, prepareChildrenIterable);
+  testPropsSequenceWithPreparedChildren(
+    sequence,
+    prepareChildrenLegacyIterable,
+  );
+  testPropsSequenceWithPreparedChildren(
+    sequence,
+    prepareChildrenModernIterable,
+  );
 }
 
 describe('ReactMultiChildReconcile', () => {
@@ -311,7 +329,7 @@ describe('ReactMultiChildReconcile', () => {
     );
   });
 
-  it('should reset internal state if removed then readded in an iterable', () => {
+  it('should reset internal state if removed then readded in a legacy iterable', () => {
     // Test basics.
     const props = {
       usernameToStatus: {
@@ -323,7 +341,7 @@ describe('ReactMultiChildReconcile', () => {
     const parentInstance = ReactDOM.render(
       <FriendsStatusDisplay
         {...props}
-        prepareChildren={prepareChildrenIterable}
+        prepareChildren={prepareChildrenLegacyIterable}
       />,
       container,
     );
@@ -332,7 +350,7 @@ describe('ReactMultiChildReconcile', () => {
 
     // Now remove the child.
     ReactDOM.render(
-      <FriendsStatusDisplay prepareChildren={prepareChildrenIterable} />,
+      <FriendsStatusDisplay prepareChildren={prepareChildrenLegacyIterable} />,
       container,
     );
     statusDisplays = parentInstance.getStatusDisplays();
@@ -342,7 +360,49 @@ describe('ReactMultiChildReconcile', () => {
     ReactDOM.render(
       <FriendsStatusDisplay
         {...props}
-        prepareChildren={prepareChildrenIterable}
+        prepareChildren={prepareChildrenLegacyIterable}
+      />,
+      container,
+    );
+    statusDisplays = parentInstance.getStatusDisplays();
+    expect(statusDisplays.jcw).toBeTruthy();
+    expect(statusDisplays.jcw.getInternalState()).not.toBe(
+      startingInternalState,
+    );
+  });
+
+  it('should reset internal state if removed then readded in a modern iterable', () => {
+    // Test basics.
+    const props = {
+      usernameToStatus: {
+        jcw: 'jcwStatus',
+      },
+    };
+
+    const container = document.createElement('div');
+    const parentInstance = ReactDOM.render(
+      <FriendsStatusDisplay
+        {...props}
+        prepareChildren={prepareChildrenModernIterable}
+      />,
+      container,
+    );
+    let statusDisplays = parentInstance.getStatusDisplays();
+    const startingInternalState = statusDisplays.jcw.getInternalState();
+
+    // Now remove the child.
+    ReactDOM.render(
+      <FriendsStatusDisplay prepareChildren={prepareChildrenModernIterable} />,
+      container,
+    );
+    statusDisplays = parentInstance.getStatusDisplays();
+    expect(statusDisplays.jcw).toBeFalsy();
+
+    // Now reset the props that cause there to be a child
+    ReactDOM.render(
+      <FriendsStatusDisplay
+        {...props}
+        prepareChildren={prepareChildrenModernIterable}
       />,
       container,
     );

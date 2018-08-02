@@ -1,4 +1,4 @@
-const PropTypes = window.PropTypes;
+import PropTypes from 'prop-types';
 const React = window.React;
 
 const propTypes = {

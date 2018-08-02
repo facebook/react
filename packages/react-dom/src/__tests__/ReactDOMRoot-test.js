@@ -366,4 +366,12 @@ describe('ReactDOMRoot', () => {
     );
     expect(() => batch.commit()).toThrow('Element type is invalid');
   });
+
+  it('throws a good message on invalid containers', () => {
+    expect(() => {
+      ReactDOM.unstable_createRoot(<div>Hi</div>);
+    }).toThrow(
+      'unstable_createRoot(...): Target container is not a DOM element.',
+    );
+  });
 });

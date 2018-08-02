@@ -144,11 +144,10 @@ describe('ReactIncrementalErrorLogging', () => {
 
       expect(logCapturedErrorCalls.length).toBe(1);
 
-      // The error thrown in logCapturedError should also be logged
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0].message).toContain(
-        'logCapturedError error',
-      );
+      // The error thrown in logCapturedError should be rethrown with a clean stack
+      expect(() => {
+        jest.runAllTimers();
+      }).toThrow('logCapturedError error');
     } finally {
       jest.unmock('../ReactFiberErrorLogger');
     }

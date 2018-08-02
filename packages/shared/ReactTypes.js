@@ -82,7 +82,6 @@ export type ReactContext<T> = {
   unstable_read: () => T,
 
   _calculateChangedBits: ((a: T, b: T) => number) | null,
-  _defaultValue: T,
 
   _currentValue: T,
   _currentValue2: T,

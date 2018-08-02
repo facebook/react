@@ -6,6 +6,7 @@
  */
 
 import React from 'react';
+import ReactVersion from 'shared/ReactVersion';
 import * as ARTRenderer from 'react-reconciler/inline.art';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
@@ -130,6 +131,13 @@ class Text extends React.Component {
     );
   }
 }
+
+ARTRenderer.injectIntoDevTools({
+  findFiberByHostInstance: () => null,
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+  rendererPackageName: 'react-art',
+});
 
 /** API */
 

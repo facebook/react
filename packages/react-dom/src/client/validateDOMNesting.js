@@ -10,6 +10,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {getCurrentFiberStackInDev} from 'react-reconciler/src/ReactCurrentFiber';
 
 let validateDOMNesting = () => {};
+let updatedAncestorInfo = () => {};
 
 if (__DEV__) {
   // This validation code was written based on the HTML5 parsing spec:
@@ -158,9 +159,9 @@ if (__DEV__) {
     dlItemTagAutoclosing: null,
   };
 
-  const updatedAncestorInfo = function(oldInfo, tag, instance) {
+  updatedAncestorInfo = function(oldInfo, tag) {
     let ancestorInfo = {...(oldInfo || emptyAncestorInfo)};
-    let info = {tag: tag, instance: instance};
+    let info = {tag};
 
     if (inScopeTags.indexOf(tag) !== -1) {
       ancestorInfo.aTagInScope = null;
@@ -477,9 +478,6 @@ if (__DEV__) {
       );
     }
   };
-
-  // TODO: turn this into a named export
-  validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
 }
 
-export default validateDOMNesting;
+export {updatedAncestorInfo, validateDOMNesting};

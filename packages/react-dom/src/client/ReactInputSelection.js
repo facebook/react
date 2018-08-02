@@ -10,24 +10,8 @@ import getActiveElement from './getActiveElement';
 import * as ReactDOMSelection from './ReactDOMSelection';
 import {ELEMENT_NODE, TEXT_NODE} from '../shared/HTMLNodeType';
 
-// TODO: this code is originally inlined from fbjs.
-// It is likely that we don't actually need all these checks
-// for the particular use case in this file.
-function isNode(object) {
-  const doc = object ? object.ownerDocument || object : document;
-  const defaultView = doc.defaultView || window;
-  return !!(
-    object &&
-    (typeof defaultView.Node === 'function'
-      ? object instanceof defaultView.Node
-      : typeof object === 'object' &&
-        typeof object.nodeType === 'number' &&
-        typeof object.nodeName === 'string')
-  );
-}
-
-function isTextNode(object) {
-  return isNode(object) && object.nodeType === TEXT_NODE;
+function isTextNode(node) {
+  return node && node.nodeType === TEXT_NODE;
 }
 
 function containsNode(outerNode, innerNode) {
@@ -49,7 +33,27 @@ function containsNode(outerNode, innerNode) {
 }
 
 function isInDocument(node) {
-  return containsNode(document.documentElement, node);
+  return (
+    node &&
+    node.ownerDocument &&
+    containsNode(node.ownerDocument.documentElement, node)
+  );
+}
+
+function getActiveElementDeep() {
+  let win = window;
+  let element = getActiveElement();
+  while (element instanceof win.HTMLIFrameElement) {
+    // Accessing the contentDocument of a HTMLIframeElement can cause the browser
+    // to throw, e.g. if it has a cross-origin src attribute
+    try {
+      win = element.contentDocument.defaultView;
+    } catch (e) {
+      return element;
+    }
+    element = getActiveElement(win.document);
+  }
+  return element;
 }
 
 /**
@@ -80,7 +84,7 @@ export function hasSelectionCapabilities(elem) {
 }
 
 export function getSelectionInformation() {
-  const focusedElem = getActiveElement();
+  const focusedElem = getActiveElementDeep();
   return {
     focusedElem: focusedElem,
     selectionRange: hasSelectionCapabilities(focusedElem)
@@ -95,7 +99,7 @@ export function getSelectionInformation() {
  * nodes and place them back in, resulting in focus being lost.
  */
 export function restoreSelection(priorSelectionInformation) {
-  const curFocusedElem = getActiveElement();
+  const curFocusedElem = getActiveElementDeep();
   const priorFocusedElem = priorSelectionInformation.focusedElem;
   const priorSelectionRange = priorSelectionInformation.selectionRange;
   if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
