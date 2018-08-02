@@ -315,6 +315,26 @@ describe('ReactMultiChild', () => {
     ReactDOM.render(<Foo />, div);
   });
 
+  it('should not warn for using generators in iterables', () => {
+    const fooIterable = {
+      '@@iterator': function*() {
+        yield <h1 key="1">Hello</h1>;
+        yield <h1 key="2">World</h1>;
+      },
+    };
+
+    function Foo() {
+      return fooIterable;
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
+
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
+  });
+
   it('should reorder bailed-out children', () => {
     class LetterInner extends React.Component {
       render() {
