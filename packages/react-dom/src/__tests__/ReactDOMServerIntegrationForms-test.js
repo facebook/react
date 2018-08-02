@@ -414,20 +414,35 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
-      itRenders('an option with flattened children', async render => {
+      itRenders('a select option with flattened children', async render => {
         const e = await render(
-          <select readOnly={true} value="bar">
-            <option value="bar">
-              {['Bar', false, 'Foo', <div key="1" />, 'Baz']}
-            </option>
+          <select value="bar" readOnly={true}>
+            <option value="bar">A {'B'}</option>
           </select>,
-          1,
         );
-        expect(e.getAttribute('value')).toBe(null);
-        expect(e.getAttribute('defaultValue')).toBe(null);
-        expect(e.firstChild.innerHTML).toBe('BarFooBaz');
-        expect(e.firstChild.selected).toBe(true);
+        const option = e.options[0];
+        expect(option.childNodes.length).toBe(1);
+        expect(option.childNodes[0].nodeType).toBe(3);
+        expect(option.childNodes[0].nodeValue).toBe('A B');
       });
+
+      itRenders(
+        'a select option with flattened children and a warning',
+        async render => {
+          const e = await render(
+            <select readOnly={true} value="bar">
+              <option value="bar">
+                {['Bar', false, 'Foo', <div key="1" />, 'Baz']}
+              </option>
+            </select>,
+            1,
+          );
+          expect(e.getAttribute('value')).toBe(null);
+          expect(e.getAttribute('defaultValue')).toBe(null);
+          expect(e.firstChild.innerHTML).toBe('BarFooBaz');
+          expect(e.firstChild.selected).toBe(true);
+        },
+      );
     });
 
     describe('user interaction', function() {
