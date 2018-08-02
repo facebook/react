@@ -1223,12 +1223,10 @@ class ReactDOMServerRenderer {
         props = Object.assign(
           {
             selected: undefined,
-            children: undefined,
           },
           props,
           {
             selected: selected,
-            children: optionChildren,
           },
         );
       }
