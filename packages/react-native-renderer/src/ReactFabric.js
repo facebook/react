@@ -12,34 +12,36 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactFabricInjection';
 
+import * as ReactFabricRenderer from 'react-reconciler/inline.fabric';
+
 import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
-import * as ReactNativeComponentTree from './ReactNativeComponentTree';
-import ReactFabricRenderer from './ReactFabricRenderer';
+import * as ReactFabricComponentTree from './ReactFabricComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
-import warning from 'fbjs/lib/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const findHostInstance = ReactFabricRenderer.findHostInstance;
 
 function findNodeHandle(componentOrHandle: any): ?number {
   if (__DEV__) {
     const owner = ReactCurrentOwner.current;
     if (owner !== null && owner.stateNode !== null) {
-      warning(
+      warningWithoutStack(
         owner.stateNode._warnedAboutRefsInRender,
         '%s is accessing findNodeHandle inside its render(). ' +
           'render() should be a pure function of props and state. It should ' +
           'never access something that requires stale data from the previous ' +
           'render, such as refs. Move this logic to componentDidMount and ' +
           'componentDidUpdate instead.',
-        getComponentName(owner) || 'A component',
+        getComponentName(owner.type) || 'A component',
       );
 
       owner.stateNode._warnedAboutRefsInRender = true;
@@ -62,9 +64,11 @@ function findNodeHandle(componentOrHandle: any): ?number {
   if (hostInstance == null) {
     return hostInstance;
   }
-  if (hostInstance.canonical) {
+  // TODO: the code is right but the types here are wrong.
+  // https://github.com/facebook/react/pull/12863
+  if ((hostInstance: any).canonical) {
     // Fabric
-    return hostInstance.canonical._nativeTag;
+    return (hostInstance: any).canonical._nativeTag;
   }
   return hostInstance._nativeTag;
 }
@@ -113,35 +117,11 @@ const ReactFabric: ReactFabricType = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin: NativeMethodsMixin(findNodeHandle, findHostInstance),
-    // Used by react-native-github/Libraries/ components
-    ReactNativeComponentTree, // ScrollResponder
   },
 };
 
-if (__DEV__) {
-  // $FlowFixMe
-  Object.assign(
-    ReactFabric.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-    {
-      // TODO: none of these work since Fiber. Remove these dependencies.
-      // Used by RCTRenderingPerf, Systrace:
-      ReactDebugTool: {
-        addHook() {},
-        removeHook() {},
-      },
-      // Used by ReactPerfStallHandler, RCTRenderingPerf:
-      ReactPerf: {
-        start() {},
-        stop() {},
-        printInclusive() {},
-        printWasted() {},
-      },
-    },
-  );
-}
-
 ReactFabricRenderer.injectIntoDevTools({
-  findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
+  findFiberByHostInstance: ReactFabricComponentTree.getClosestInstanceFromNode,
   getInspectorDataForViewTag: getInspectorDataForViewTag,
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,

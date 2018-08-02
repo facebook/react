@@ -12,11 +12,7 @@ const UMD_PROD = bundleTypes.UMD_PROD;
 const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
 // const HAS_SIDE_EFFECTS_ON_IMPORT = true;
 const importSideEffects = Object.freeze({
-  'fbjs/lib/invariant': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'fbjs/lib/warning': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'fbjs/lib/camelizeStyleName': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'fbjs/lib/hyphenateStyleName': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
@@ -27,12 +23,12 @@ const knownGlobals = Object.freeze({
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
-function getPeerGlobals(externals, moduleType) {
+function getPeerGlobals(externals, bundleType) {
   const peerGlobals = {};
   externals.forEach(name => {
     if (
       !knownGlobals[name] &&
-      (moduleType === UMD_DEV || moduleType === UMD_PROD)
+      (bundleType === UMD_DEV || bundleType === UMD_PROD)
     ) {
       throw new Error('Cannot build UMD without a global name for: ' + name);
     }
@@ -56,11 +52,16 @@ function getDependencies(bundleType, entry) {
 }
 
 // Hijacks some modules for optimization and integration reasons.
-function getForks(bundleType, entry) {
+function getForks(bundleType, entry, moduleType) {
   const forksForBundle = {};
   Object.keys(forks).forEach(srcModule => {
     const dependencies = getDependencies(bundleType, entry);
-    const targetModule = forks[srcModule](bundleType, entry, dependencies);
+    const targetModule = forks[srcModule](
+      bundleType,
+      entry,
+      dependencies,
+      moduleType
+    );
     if (targetModule === null) {
       return;
     }

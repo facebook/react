@@ -149,14 +149,17 @@ describe('SimpleCacheProvider', () => {
     }
 
     if (__DEV__) {
-      expect(fn).toWarnDev([
-        'Invalid resourceType: Expected a symbol, object, or function, but ' +
-          'instead received: foo. Strings and numbers are not permitted as ' +
-          'resource types.',
-        'Invalid resourceType: Expected a symbol, object, or function, but ' +
-          'instead received: 123. Strings and numbers are not permitted as ' +
-          'resource types.',
-      ]);
+      expect(fn).toWarnDev(
+        [
+          'Invalid resourceType: Expected a symbol, object, or function, but ' +
+            'instead received: foo. Strings and numbers are not permitted as ' +
+            'resource types.',
+          'Invalid resourceType: Expected a symbol, object, or function, but ' +
+            'instead received: 123. Strings and numbers are not permitted as ' +
+            'resource types.',
+        ],
+        {withoutStack: true},
+      );
     } else {
       fn();
     }
@@ -179,14 +182,54 @@ describe('SimpleCacheProvider', () => {
     }
 
     if (__DEV__) {
-      expect(fn).toWarnDev([
-        'preload: Invalid key type. Expected a string, number, symbol, or ' +
-          'boolean, but instead received: 5,5\n\n' +
-          'To use non-primitive values as keys, you must pass a hash ' +
-          'function as the second argument to createResource().',
-      ]);
+      expect(fn).toWarnDev(
+        [
+          'preload: Invalid key type. Expected a string, number, symbol, or ' +
+            'boolean, but instead received: 5,5\n\n' +
+            'To use non-primitive values as keys, you must pass a hash ' +
+            'function as the second argument to createResource().',
+        ],
+        {withoutStack: true},
+      );
     } else {
       fn();
     }
+  });
+
+  it('stays within maximum capacity by evicting the least recently used record', async () => {
+    const {createCache, createResource} = SimpleCacheProvider;
+
+    function loadIntegerString(int) {
+      return Promise.resolve(int + '');
+    }
+    const IntegerStringResource = createResource(loadIntegerString);
+    const cache = createCache();
+
+    // TODO: This is hard-coded to a maximum size of 500. Make this configurable
+    // per resource.
+    for (let n = 1; n <= 500; n++) {
+      IntegerStringResource.preload(cache, n);
+    }
+
+    // Access 1, 2, and 3 again. The least recently used integer is now 4.
+    IntegerStringResource.preload(cache, 3);
+    IntegerStringResource.preload(cache, 2);
+    IntegerStringResource.preload(cache, 1);
+
+    // Evict older integers from the cache by adding new ones.
+    IntegerStringResource.preload(cache, 501);
+    IntegerStringResource.preload(cache, 502);
+    IntegerStringResource.preload(cache, 503);
+
+    await Promise.resolve();
+
+    // 1, 2, and 3 should be in the cache. 4, 5, and 6 should have been evicted.
+    expect(IntegerStringResource.read(cache, 1)).toEqual('1');
+    expect(IntegerStringResource.read(cache, 2)).toEqual('2');
+    expect(IntegerStringResource.read(cache, 3)).toEqual('3');
+
+    expect(() => IntegerStringResource.read(cache, 4)).toThrow(Promise);
+    expect(() => IntegerStringResource.read(cache, 5)).toThrow(Promise);
+    expect(() => IntegerStringResource.read(cache, 6)).toThrow(Promise);
   });
 });

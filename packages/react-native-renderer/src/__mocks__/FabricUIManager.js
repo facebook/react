@@ -9,7 +9,7 @@
 
 // Mock of the Native Hooks
 
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'shared/invariant';
 
 const roots = new Map();
 const allocatedTags = new Set();
@@ -65,7 +65,7 @@ const RCTFabricUIManager = {
       children: [],
     };
   }),
-  cloneNode: jest.fn(function cloneNode(node) {
+  cloneNode: jest.fn(function cloneNode(node, instanceHandle) {
     return {
       reactTag: node.reactTag,
       viewName: node.viewName,
@@ -73,7 +73,10 @@ const RCTFabricUIManager = {
       children: node.children,
     };
   }),
-  cloneNodeWithNewChildren: jest.fn(function cloneNodeWithNewChildren(node) {
+  cloneNodeWithNewChildren: jest.fn(function cloneNodeWithNewChildren(
+    node,
+    instanceHandle,
+  ) {
     return {
       reactTag: node.reactTag,
       viewName: node.viewName,
@@ -84,6 +87,7 @@ const RCTFabricUIManager = {
   cloneNodeWithNewProps: jest.fn(function cloneNodeWithNewProps(
     node,
     newPropsDiff,
+    instanceHandle,
   ) {
     return {
       reactTag: node.reactTag,
@@ -93,7 +97,11 @@ const RCTFabricUIManager = {
     };
   }),
   cloneNodeWithNewChildrenAndProps: jest.fn(
-    function cloneNodeWithNewChildrenAndProps(node, newPropsDiff) {
+    function cloneNodeWithNewChildrenAndProps(
+      node,
+      newPropsDiff,
+      instanceHandle,
+    ) {
       return {
         reactTag: node.reactTag,
         viewName: node.viewName,
@@ -117,6 +125,8 @@ const RCTFabricUIManager = {
   completeRoot: jest.fn(function completeRoot(rootTag, newChildSet) {
     roots.set(rootTag, newChildSet);
   }),
+
+  registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
 };
 
 module.exports = RCTFabricUIManager;

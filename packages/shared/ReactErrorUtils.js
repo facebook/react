@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 import invokeGuardedCallback from './invokeGuardedCallback';
 
 const ReactErrorUtils = {

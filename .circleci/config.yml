@@ -3,7 +3,7 @@ jobs:
   build:
 
     docker:
-      - image: circleci/node:8
+      - image: circleci/openjdk:8-jdk-node-browsers
 
     environment:
       TZ: /usr/share/zoneinfo/America/Los_Angeles
@@ -29,7 +29,7 @@ jobs:
 
       - run:
           name: Install Packages
-          command: yarn install
+          command: yarn install --frozen-lockfile
 
       - run:
           name: Test Packages

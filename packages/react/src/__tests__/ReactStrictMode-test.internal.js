@@ -12,6 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactTestRenderer;
+let PropTypes;
 
 describe('ReactStrictMode', () => {
   describe('debugRenderPhaseSideEffects', () => {
@@ -57,38 +58,64 @@ describe('ReactStrictMode', () => {
 
       const component = ReactTestRenderer.create(<ClassComponent />);
 
-      expect(log).toEqual([
-        'constructor',
-        'constructor',
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'render',
-        'render',
-        'componentDidMount',
-      ]);
+      if (__DEV__) {
+        expect(log).toEqual([
+          'constructor',
+          'constructor',
+          'getDerivedStateFromProps',
+          'getDerivedStateFromProps',
+          'render',
+          'render',
+          'componentDidMount',
+        ]);
+      } else {
+        expect(log).toEqual([
+          'constructor',
+          'getDerivedStateFromProps',
+          'render',
+          'componentDidMount',
+        ]);
+      }
 
       log = [];
       shouldComponentUpdate = true;
 
       component.update(<ClassComponent />);
-      expect(log).toEqual([
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'shouldComponentUpdate',
-        'render',
-        'render',
-        'componentDidUpdate',
-      ]);
+      if (__DEV__) {
+        expect(log).toEqual([
+          'getDerivedStateFromProps',
+          'getDerivedStateFromProps',
+          'shouldComponentUpdate',
+          'render',
+          'render',
+          'componentDidUpdate',
+        ]);
+      } else {
+        expect(log).toEqual([
+          'getDerivedStateFromProps',
+          'shouldComponentUpdate',
+          'render',
+          'componentDidUpdate',
+        ]);
+      }
 
       log = [];
       shouldComponentUpdate = false;
 
       component.update(<ClassComponent />);
-      expect(log).toEqual([
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'shouldComponentUpdate',
-      ]);
+
+      if (__DEV__) {
+        expect(log).toEqual([
+          'getDerivedStateFromProps',
+          'getDerivedStateFromProps',
+          'shouldComponentUpdate',
+        ]);
+      } else {
+        expect(log).toEqual([
+          'getDerivedStateFromProps',
+          'shouldComponentUpdate',
+        ]);
+      }
     });
 
     it('should invoke setState callbacks twice', () => {
@@ -112,8 +139,8 @@ describe('ReactStrictMode', () => {
         };
       });
 
-      // Callback should be invoked twice
-      expect(setStateCount).toBe(2);
+      // Callback should be invoked twice in DEV
+      expect(setStateCount).toBe(__DEV__ ? 2 : 1);
       // But each time `state` should be the previous value
       expect(instance.state.count).toBe(2);
     });
@@ -174,7 +201,7 @@ describe('ReactStrictMode', () => {
 
         const component = ReactTestRenderer.create(<Root />);
 
-        if (debugRenderPhaseSideEffectsForStrictMode) {
+        if (__DEV__ && debugRenderPhaseSideEffectsForStrictMode) {
           expect(log).toEqual([
             'constructor',
             'constructor',
@@ -197,7 +224,7 @@ describe('ReactStrictMode', () => {
         shouldComponentUpdate = true;
 
         component.update(<Root />);
-        if (debugRenderPhaseSideEffectsForStrictMode) {
+        if (__DEV__ && debugRenderPhaseSideEffectsForStrictMode) {
           expect(log).toEqual([
             'getDerivedStateFromProps',
             'getDerivedStateFromProps',
@@ -219,7 +246,7 @@ describe('ReactStrictMode', () => {
         shouldComponentUpdate = false;
 
         component.update(<Root />);
-        if (debugRenderPhaseSideEffectsForStrictMode) {
+        if (__DEV__ && debugRenderPhaseSideEffectsForStrictMode) {
           expect(log).toEqual([
             'getDerivedStateFromProps',
             'getDerivedStateFromProps',
@@ -263,7 +290,7 @@ describe('ReactStrictMode', () => {
 
         // Callback should be invoked twice (in DEV)
         expect(setStateCount).toBe(
-          debugRenderPhaseSideEffectsForStrictMode ? 2 : 1,
+          __DEV__ && debugRenderPhaseSideEffectsForStrictMode ? 2 : 1,
         );
         // But each time `state` should be the previous value
         expect(instance.state.count).toBe(2);
@@ -330,6 +357,7 @@ describe('ReactStrictMode', () => {
         rendered = ReactTestRenderer.create(<SyncRoot />);
       }).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot' +
@@ -387,6 +415,7 @@ describe('ReactStrictMode', () => {
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot, Parent' +
@@ -464,12 +493,14 @@ describe('ReactStrictMode', () => {
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev([
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in AsyncRootOne (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar, Foo',
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in AsyncRootTwo (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
@@ -510,6 +541,7 @@ describe('ReactStrictMode', () => {
         rendered = ReactTestRenderer.create(<AsyncRoot foo={true} />);
       }).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Foo' +
@@ -519,6 +551,7 @@ describe('ReactStrictMode', () => {
 
       expect(() => rendered.update(<AsyncRoot foo={false} />)).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in AsyncMode (at **)' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
@@ -569,6 +602,7 @@ describe('ReactStrictMode', () => {
 
       expect(() => ReactTestRenderer.create(<SyncRoot />)).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
+          '\n    in StrictMode (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillReceiveProps: Please update the following components ' +
           'to use static getDerivedStateFromProps instead: Bar, Foo' +
@@ -728,6 +762,7 @@ describe('ReactStrictMode', () => {
         'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
           'We recommend using createRef() instead.\n\n' +
+          '    in StrictMode (at **)\n' +
           '    in OuterComponent (at **)\n\n' +
           'Learn more about using refs safely here:\n' +
           'https://fb.me/react-strict-mode-string-ref',
@@ -770,6 +805,7 @@ describe('ReactStrictMode', () => {
           'String refs are a source of potential bugs and should be avoided. ' +
           'We recommend using createRef() instead.\n\n' +
           '    in InnerComponent (at **)\n' +
+          '    in StrictMode (at **)\n' +
           '    in OuterComponent (at **)\n\n' +
           'Learn more about using refs safely here:\n' +
           'https://fb.me/react-strict-mode-string-ref',
@@ -777,6 +813,102 @@ describe('ReactStrictMode', () => {
 
       // Dedup
       renderer.update(<OuterComponent />);
+    });
+  });
+
+  describe('context legacy', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      React = require('react');
+      ReactTestRenderer = require('react-test-renderer');
+      PropTypes = require('prop-types');
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.warnAboutLegacyContextAPI = true;
+    });
+
+    it('should warn if the legacy context API have been used in strict mode', () => {
+      class LegacyContextProvider extends React.Component {
+        getChildContext() {
+          return {color: 'purple'};
+        }
+
+        render() {
+          return (
+            <div>
+              <LegacyContextConsumer />
+              <FunctionalLegacyContextConsumer />
+              <FactoryLegacyContextConsumer />
+            </div>
+          );
+        }
+      }
+
+      function FunctionalLegacyContextConsumer() {
+        return null;
+      }
+
+      function FactoryLegacyContextConsumer() {
+        return {
+          render() {
+            return null;
+          },
+        };
+      }
+
+      LegacyContextProvider.childContextTypes = {
+        color: PropTypes.string,
+      };
+
+      class LegacyContextConsumer extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      const {StrictMode} = React;
+
+      class Root extends React.Component {
+        render() {
+          return (
+            <div>
+              <StrictMode>
+                <LegacyContextProvider />
+              </StrictMode>
+            </div>
+          );
+        }
+      }
+
+      LegacyContextConsumer.contextTypes = {
+        color: PropTypes.string,
+      };
+
+      FunctionalLegacyContextConsumer.contextTypes = {
+        color: PropTypes.string,
+      };
+
+      FactoryLegacyContextConsumer.contextTypes = {
+        color: PropTypes.string,
+      };
+
+      let rendered;
+
+      expect(() => {
+        rendered = ReactTestRenderer.create(<Root />);
+      }).toWarnDev(
+        'Warning: Legacy context API has been detected within a strict-mode tree: ' +
+          '\n    in StrictMode (at **)' +
+          '\n    in div (at **)' +
+          '\n    in Root (at **)' +
+          '\n\nPlease update the following components: FactoryLegacyContextConsumer, ' +
+          'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
+          '\n\nLearn more about this warning here:' +
+          '\nhttps://fb.me/react-strict-mode-warnings',
+      );
+
+      // Dedupe
+      rendered = ReactTestRenderer.create(<Root />);
+      rendered.update(<Root />);
     });
   });
 });

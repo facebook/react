@@ -200,9 +200,9 @@ describe('BeforeInputEventPlugin', () => {
             spyOnBeforeInput,
             spyOnCompositionStart,
           }) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
-            expect(spyOnCompositionStart.mock.calls.length).toBe(1);
+            expect(spyOnCompositionStart).toHaveBeenCalledTimes(1);
             expect(compositionStartEvent.type).toBe('compositionstart');
             expect(compositionStartEvent.data).toBe('test');
           },
@@ -214,116 +214,116 @@ describe('BeforeInputEventPlugin', () => {
             spyOnBeforeInput,
             spyOnCompositionUpdate,
           }) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
-            expect(spyOnCompositionUpdate.mock.calls.length).toBe(1);
+            expect(spyOnCompositionUpdate).toHaveBeenCalledTimes(1);
             expect(compositionUpdateEvent.type).toBe('compositionupdate');
             expect(compositionUpdateEvent.data).toBe('test string');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('compositionend');
             expect(beforeInputEvent.data).toBe('test string 3');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('textInput');
             expect(beforeInputEvent.data).toBe('abcß');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe(' ');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('textInput');
             expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
@@ -334,119 +334,119 @@ describe('BeforeInputEventPlugin', () => {
       assertions: [
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('a');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe(' ');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('c');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
@@ -457,122 +457,122 @@ describe('BeforeInputEventPlugin', () => {
       assertions: [
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('a');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe(' ');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('c');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keydown');
             expect(beforeInputEvent.data).toBe('bar');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keyup');
             expect(beforeInputEvent.data).toBe('BAR');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('Bar');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
@@ -583,120 +583,120 @@ describe('BeforeInputEventPlugin', () => {
       assertions: [
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('compositionend');
             expect(beforeInputEvent.data).toBe('test string 3');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('a');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe(' ');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('c');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(1);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
             expect(beforeInputEvent.type).toBe('keypress');
             expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
-            expect(spyOnBeforeInput.mock.calls.length).toBe(0);
+            expect(spyOnBeforeInput).toHaveBeenCalledTimes(0);
             expect(beforeInputEvent).toBeNull();
           },
         },

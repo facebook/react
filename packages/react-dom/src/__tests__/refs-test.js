@@ -10,6 +10,7 @@
 'use strict';
 
 let React = require('react');
+let ReactDOM = require('react-dom');
 let ReactTestUtils = require('react-dom/test-utils');
 
 /**
@@ -81,24 +82,6 @@ class TestRefsComponent extends React.Component {
   }
 }
 
-/**
- * Render a TestRefsComponent and ensure that the main refs are wired up.
- */
-const renderTestRefsComponent = function() {
-  const testRefsComponent = ReactTestUtils.renderIntoDocument(
-    <TestRefsComponent />,
-  );
-  expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
-
-  const generalContainer = testRefsComponent.refs.myContainer;
-  expect(generalContainer instanceof GeneralContainerComponent).toBe(true);
-
-  const counter = testRefsComponent.refs.myCounter;
-  expect(counter instanceof ClickCounter).toBe(true);
-
-  return testRefsComponent;
-};
-
 const expectClickLogsLengthToBe = function(instance, length) {
   const clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
     instance,
@@ -109,11 +92,39 @@ const expectClickLogsLengthToBe = function(instance, length) {
 };
 
 describe('reactiverefs', () => {
+  let container;
+
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
   });
+
+  afterEach(() => {
+    if (container) {
+      document.body.removeChild(container);
+      container = null;
+    }
+  });
+
+  /**
+   * Render a TestRefsComponent and ensure that the main refs are wired up.
+   */
+  const renderTestRefsComponent = function() {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    const testRefsComponent = ReactDOM.render(<TestRefsComponent />, container);
+    expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
+
+    const generalContainer = testRefsComponent.refs.myContainer;
+    expect(generalContainer instanceof GeneralContainerComponent).toBe(true);
+
+    const counter = testRefsComponent.refs.myCounter;
+    expect(counter instanceof ClickCounter).toBe(true);
+
+    return testRefsComponent;
+  };
 
   /**
    * Ensure that for every click log there is a corresponding ref (from the
@@ -129,18 +140,18 @@ describe('reactiverefs', () => {
     expectClickLogsLengthToBe(testRefsComponent, 1);
 
     // After clicking the reset, there should still only be one click log ref.
-    ReactTestUtils.Simulate.click(testRefsComponent.refs.resetDiv);
+    testRefsComponent.refs.resetDiv.click();
     expectClickLogsLengthToBe(testRefsComponent, 1);
 
     // Begin incrementing clicks (and therefore refs).
-    ReactTestUtils.Simulate.click(clickIncrementer);
+    clickIncrementer.click();
     expectClickLogsLengthToBe(testRefsComponent, 2);
 
-    ReactTestUtils.Simulate.click(clickIncrementer);
+    clickIncrementer.click();
     expectClickLogsLengthToBe(testRefsComponent, 3);
 
     // Now reset again
-    ReactTestUtils.Simulate.click(testRefsComponent.refs.resetDiv);
+    testRefsComponent.refs.resetDiv.click();
     expectClickLogsLengthToBe(testRefsComponent, 1);
   });
 });
@@ -168,6 +179,7 @@ describe('ref swapping', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
 
     RefHopsAround = class extends React.Component {
@@ -293,7 +305,6 @@ describe('ref swapping', () => {
 
 describe('root level refs', () => {
   it('attaches and detaches root refs', () => {
-    const ReactDOM = require('react-dom');
     let inst = null;
 
     // host node
@@ -399,5 +410,48 @@ describe('creating element with ref in constructor', () => {
         '3. You have multiple copies of React loaded\n' +
         'See https://fb.me/react-refs-must-have-owner for more information.',
     );
+  });
+});
+
+describe('strings refs across renderers', () => {
+  it('does not break', () => {
+    class Parent extends React.Component {
+      render() {
+        // This component owns both refs.
+        return (
+          <Indirection
+            child1={<div ref="child1" />}
+            child2={<div ref="child2" />}
+          />
+        );
+      }
+    }
+
+    class Indirection extends React.Component {
+      componentDidUpdate() {
+        // One ref is being rendered later using another renderer copy.
+        jest.resetModules();
+        const AnotherCopyOfReactDOM = require('react-dom');
+        AnotherCopyOfReactDOM.render(this.props.child2, div2);
+      }
+      render() {
+        // The other one is being rendered directly.
+        return this.props.child1;
+      }
+    }
+
+    const div1 = document.createElement('div');
+    const div2 = document.createElement('div');
+    const inst = ReactDOM.render(<Parent />, div1);
+    // Only the first ref has rendered yet.
+    expect(inst.refs.child1.tagName).toBe('DIV');
+    expect(inst.refs.child1).toBe(div1.firstChild);
+
+    // Now both refs should be rendered.
+    ReactDOM.render(<Parent />, div1);
+    expect(inst.refs.child1.tagName).toBe('DIV');
+    expect(inst.refs.child1).toBe(div1.firstChild);
+    expect(inst.refs.child2.tagName).toBe('DIV');
+    expect(inst.refs.child2).toBe(div2.firstChild);
   });
 });

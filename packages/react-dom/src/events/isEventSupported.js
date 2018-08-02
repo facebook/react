@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 /**
  * Checks if an event is supported in the current execution environment.
@@ -22,10 +22,7 @@ import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
  * @license Modernizr 3.0.0pre (Custom Build) | MIT
  */
 function isEventSupported(eventNameSuffix, capture) {
-  if (
-    !ExecutionEnvironment.canUseDOM ||
-    (capture && !('addEventListener' in document))
-  ) {
+  if (!canUseDOM || (capture && !('addEventListener' in document))) {
     return false;
   }
 

@@ -7,14 +7,11 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
+import invariant from 'shared/invariant';
+import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 
-const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 let didWarnValDefaultVal = false;
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
@@ -65,11 +62,7 @@ export function getHostProps(element: Element, props: Object) {
 export function initWrapperState(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   if (__DEV__) {
-    ReactControlledValuePropTypes.checkPropTypes(
-      'textarea',
-      props,
-      getCurrentFiberStackAddendum,
-    );
+    ReactControlledValuePropTypes.checkPropTypes('textarea', props);
     if (
       props.value !== undefined &&
       props.defaultValue !== undefined &&

@@ -267,5 +267,13 @@
   "265": "This unit of work tag cannot capture errors.  This error is likely caused by a bug in React. Please file an issue.",
   "266": "A subscription must return an unsubscribe function.",
   "267": "React.cloneElement(...): The argument must be a React element, but you passed %s.",
-  "268": "Argument appears to not be a ReactComponent. Keys: %s"
+  "268": "Argument appears to not be a ReactComponent. Keys: %s",
+  "269": "Profiler must specify an \"id\" string and \"onRender\" function as props",
+  "270": "The current renderer does not support persistence. This error is likely caused by a bug in React. Please file an issue.",
+  "271": "Failed to replay rendering after an error. This is likely caused by a bug in React. Please file an issue with a reproducing case to help us find it.",
+  "272": "The current renderer does not support hyration. This error is likely caused by a bug in React. Please file an issue.",
+  "273": "Nesting of <View> within <Text> is not currently supported.",
+  "274": "Text strings must be rendered within a <Text> component.",
+  "275": "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue.",
+  "276": "React depends on requestAnimationFrame. Make sure that you load a polyfill in older browsers. https://fb.me/react-polyfills"
 }

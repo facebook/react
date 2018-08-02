@@ -78,7 +78,7 @@ describe('ReactIdentity', () => {
 
     const instance = ReactDOM.render(<Wrapper />, container);
     const span = instance.refs.span;
-    expect(ReactDOM.findDOMNode(span)).not.toBe(null);
+    expect(span).not.toBe(null);
   }
 
   it('should allow any character as a key, in a detached parent', () => {

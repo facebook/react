@@ -36,9 +36,9 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUpdate.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUpdate).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -47,9 +47,9 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUpdate.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUpdate).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -58,9 +58,9 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUpdate.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUpdate).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
     });
 
     it('should replace children with different constructors', () => {
@@ -77,8 +77,8 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -87,8 +87,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -97,8 +97,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(1);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(1);
     });
 
     it('should NOT replace children with different owners', () => {
@@ -121,13 +121,13 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(<WrapperComponent />, container);
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <WrapperComponent>
@@ -136,8 +136,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
     });
 
     it('should replace children with different keys', () => {
@@ -154,8 +154,8 @@ describe('ReactMultiChild', () => {
         }
       }
 
-      expect(mockMount.mock.calls.length).toBe(0);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(0);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -164,8 +164,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(1);
-      expect(mockUnmount.mock.calls.length).toBe(0);
+      expect(mockMount).toHaveBeenCalledTimes(1);
+      expect(mockUnmount).toHaveBeenCalledTimes(0);
 
       ReactDOM.render(
         <div>
@@ -174,8 +174,8 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expect(mockMount.mock.calls.length).toBe(2);
-      expect(mockUnmount.mock.calls.length).toBe(1);
+      expect(mockMount).toHaveBeenCalledTimes(2);
+      expect(mockUnmount).toHaveBeenCalledTimes(1);
     });
 
     it('should warn for duplicated array keys with component stack info', () => {
@@ -209,8 +209,8 @@ describe('ReactMultiChild', () => {
           'Keys should be unique so that components maintain their identity ' +
           'across updates. Non-unique keys may cause children to be ' +
           'duplicated and/or omitted — the behavior is unsupported and ' +
-          'could change in a future version.',
-        '    in div (at **)\n' +
+          'could change in a future version.\n' +
+          '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',
@@ -269,8 +269,8 @@ describe('ReactMultiChild', () => {
           'Keys should be unique so that components maintain their identity ' +
           'across updates. Non-unique keys may cause children to be ' +
           'duplicated and/or omitted — the behavior is unsupported and ' +
-          'could change in a future version.',
-        '    in div (at **)\n' +
+          'could change in a future version.\n' +
+          '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',
@@ -292,6 +292,67 @@ describe('ReactMultiChild', () => {
         '    in div (at **)\n' +
         '    in Parent (at **)',
     );
+  });
+
+  it('should warn for using generators as children', () => {
+    function* Foo() {
+      yield <h1 key="1">Hello</h1>;
+      yield <h1 key="2">World</h1>;
+    }
+
+    const div = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<Foo />, div);
+    }).toWarnDev(
+      'Using Generators as children is unsupported and will likely yield ' +
+        'unexpected results because enumerating a generator mutates it. You may ' +
+        'convert it to an array with `Array.from()` or the `[...spread]` operator ' +
+        'before rendering. Keep in mind you might need to polyfill these features for older browsers.\n' +
+        '    in Foo (at **)',
+    );
+
+    // Test de-duplication
+    ReactDOM.render(<Foo />, div);
+  });
+
+  it('should not warn for using generators in legacy iterables', () => {
+    const fooIterable = {
+      '@@iterator': function*() {
+        yield <h1 key="1">Hello</h1>;
+        yield <h1 key="2">World</h1>;
+      },
+    };
+
+    function Foo() {
+      return fooIterable;
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
+
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
+  });
+
+  it('should not warn for using generators in modern iterables', () => {
+    const fooIterable = {
+      [Symbol.iterator]: function*() {
+        yield <h1 key="1">Hello</h1>;
+        yield <h1 key="2">World</h1>;
+      },
+    };
+
+    function Foo() {
+      return fooIterable;
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
+
+    ReactDOM.render(<Foo />, div);
+    expect(div.textContent).toBe('HelloWorld');
   });
 
   it('should reorder bailed-out children', () => {

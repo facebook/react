@@ -8,15 +8,10 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
-import warning from 'fbjs/lib/warning';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
-
-const {
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
-} = ReactDebugCurrentFiber;
 
 let didWarnValueDefaultValue;
 
@@ -32,7 +27,7 @@ type SelectWithWrapperState = HTMLSelectElement & {
 };
 
 function getDeclarationErrorAddendum() {
-  const ownerName = getCurrentFiberOwnerName();
+  const ownerName = getCurrentFiberOwnerNameInDevOrNull();
   if (ownerName) {
     return '\n\nCheck the render method of `' + ownerName + '`.';
   }
@@ -45,11 +40,7 @@ const valuePropNames = ['value', 'defaultValue'];
  * Validation function for `value` and `defaultValue`.
  */
 function checkSelectPropTypes(props) {
-  ReactControlledValuePropTypes.checkPropTypes(
-    'select',
-    props,
-    getCurrentFiberStackAddendum,
-  );
+  ReactControlledValuePropTypes.checkPropTypes('select', props);
 
   for (let i = 0; i < valuePropNames.length; i++) {
     const propName = valuePropNames[i];

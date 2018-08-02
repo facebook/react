@@ -225,6 +225,28 @@ describe('ReactContextValidator', () => {
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 'foo'}} />);
   });
 
+  it('warns of incorrect prop types on context provider', () => {
+    const TestContext = React.createContext();
+
+    TestContext.Provider.propTypes = {
+      value: PropTypes.string.isRequired,
+    };
+
+    ReactTestUtils.renderIntoDocument(<TestContext.Provider value="val" />);
+
+    class Component extends React.Component {
+      render() {
+        return <TestContext.Provider />;
+      }
+    }
+
+    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
+      'Warning: Failed prop type: The prop `value` is marked as required in ' +
+        '`Context.Provider`, but its value is `undefined`.\n' +
+        '    in Component (at **)',
+    );
+  });
+
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   it('should warn (but not error) if getChildContext method is missing', () => {
@@ -249,6 +271,7 @@ describe('ReactContextValidator', () => {
       'Warning: ComponentA.childContextTypes is specified but there is no ' +
         'getChildContext() method on the instance. You can either define ' +
         'getChildContext() on ComponentA or remove childContextTypes from it.',
+      {withoutStack: true},
     );
 
     // Warnings should be deduped by component type
@@ -258,6 +281,7 @@ describe('ReactContextValidator', () => {
       'Warning: ComponentB.childContextTypes is specified but there is no ' +
         'getChildContext() method on the instance. You can either define ' +
         'getChildContext() on ComponentB or remove childContextTypes from it.',
+      {withoutStack: true},
     );
   });
 
@@ -301,13 +325,16 @@ describe('ReactContextValidator', () => {
 
     expect(() =>
       ReactTestUtils.renderIntoDocument(<ParentContextProvider />),
-    ).toWarnDev([
-      'Warning: MiddleMissingContext.childContextTypes is specified but there is no getChildContext() method on the ' +
-        'instance. You can either define getChildContext() on MiddleMissingContext or remove childContextTypes from ' +
-        'it.',
-      'Warning: Failed context type: The context `bar` is marked as required in `ChildContextConsumer`, but its ' +
-        'value is `undefined`.',
-    ]);
+    ).toWarnDev(
+      [
+        'Warning: MiddleMissingContext.childContextTypes is specified but there is no ' +
+          'getChildContext() method on the instance. You can either define getChildContext() ' +
+          'on MiddleMissingContext or remove childContextTypes from it.',
+        'Warning: Failed context type: The context `bar` is marked as required ' +
+          'in `ChildContextConsumer`, but its value is `undefined`.',
+      ],
+      {withoutStack: 1},
+    );
     expect(childContext.bar).toBeUndefined();
     expect(childContext.foo).toBe('FOO');
   });

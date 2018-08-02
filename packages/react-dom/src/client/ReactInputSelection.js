@@ -5,11 +5,48 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import containsNode from 'fbjs/lib/containsNode';
-import getActiveElement from 'fbjs/lib/getActiveElement';
+import getActiveElement from './getActiveElement';
 
 import * as ReactDOMSelection from './ReactDOMSelection';
-import {ELEMENT_NODE} from '../shared/HTMLNodeType';
+import {ELEMENT_NODE, TEXT_NODE} from '../shared/HTMLNodeType';
+
+// TODO: this code is originally inlined from fbjs.
+// It is likely that we don't actually need all these checks
+// for the particular use case in this file.
+function isNode(object) {
+  const doc = object ? object.ownerDocument || object : document;
+  const defaultView = doc.defaultView || window;
+  return !!(
+    object &&
+    (typeof defaultView.Node === 'function'
+      ? object instanceof defaultView.Node
+      : typeof object === 'object' &&
+        typeof object.nodeType === 'number' &&
+        typeof object.nodeName === 'string')
+  );
+}
+
+function isTextNode(object) {
+  return isNode(object) && object.nodeType === TEXT_NODE;
+}
+
+function containsNode(outerNode, innerNode) {
+  if (!outerNode || !innerNode) {
+    return false;
+  } else if (outerNode === innerNode) {
+    return true;
+  } else if (isTextNode(outerNode)) {
+    return false;
+  } else if (isTextNode(innerNode)) {
+    return containsNode(outerNode, innerNode.parentNode);
+  } else if ('contains' in outerNode) {
+    return outerNode.contains(innerNode);
+  } else if (outerNode.compareDocumentPosition) {
+    return !!(outerNode.compareDocumentPosition(innerNode) & 16);
+  } else {
+    return false;
+  }
+}
 
 function isInDocument(node) {
   return containsNode(document.documentElement, node);
@@ -22,11 +59,21 @@ function isInDocument(node) {
  * Input selection module for React.
  */
 
+/**
+ * @hasSelectionCapabilities: we get the element types that support selection
+ * from https://html.spec.whatwg.org/#do-not-apply, looking at `selectionStart`
+ * and `selectionEnd` rows.
+ */
 export function hasSelectionCapabilities(elem) {
   const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName &&
-    ((nodeName === 'input' && elem.type === 'text') ||
+    ((nodeName === 'input' &&
+      (elem.type === 'text' ||
+        elem.type === 'search' ||
+        elem.type === 'tel' ||
+        elem.type === 'url' ||
+        elem.type === 'password')) ||
       nodeName === 'textarea' ||
       elem.contentEditable === 'true')
   );
@@ -52,7 +99,10 @@ export function restoreSelection(priorSelectionInformation) {
   const priorFocusedElem = priorSelectionInformation.focusedElem;
   const priorSelectionRange = priorSelectionInformation.selectionRange;
   if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
-    if (hasSelectionCapabilities(priorFocusedElem)) {
+    if (
+      priorSelectionRange !== null &&
+      hasSelectionCapabilities(priorFocusedElem)
+    ) {
       setSelection(priorFocusedElem, priorSelectionRange);
     }
 
@@ -69,7 +119,9 @@ export function restoreSelection(priorSelectionInformation) {
       }
     }
 
-    priorFocusedElem.focus();
+    if (typeof priorFocusedElem.focus === 'function') {
+      priorFocusedElem.focus();
+    }
 
     for (let i = 0; i < ancestors.length; i++) {
       const info = ancestors[i];

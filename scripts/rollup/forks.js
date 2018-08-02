@@ -1,15 +1,22 @@
 'use strict';
 
 const bundleTypes = require('./bundles').bundleTypes;
+const moduleTypes = require('./bundles').moduleTypes;
+const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
 const FB_WWW_DEV = bundleTypes.FB_WWW_DEV;
 const FB_WWW_PROD = bundleTypes.FB_WWW_PROD;
+const FB_WWW_PROFILING = bundleTypes.FB_WWW_PROFILING;
 const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
 const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
+const RN_OSS_PROFILING = bundleTypes.RN_OSS_PROFILING;
 const RN_FB_DEV = bundleTypes.RN_FB_DEV;
 const RN_FB_PROD = bundleTypes.RN_FB_PROD;
+const RN_FB_PROFILING = bundleTypes.RN_FB_PROFILING;
+const RENDERER = moduleTypes.RENDERER;
+const RECONCILER = moduleTypes.RECONCILER;
 
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
@@ -31,6 +38,28 @@ const forks = Object.freeze({
     return 'shared/forks/object-assign.umd.js';
   },
 
+  // Without this fork, importing `shared/ReactSharedInternals` inside
+  // the `react` package itself would not work due to a cyclical dependency.
+  'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
+    if (entry === 'react') {
+      return 'react/src/ReactSharedInternals';
+    }
+    if (dependencies.indexOf('react') === -1) {
+      // React internals are unavailable if we can't reference the package.
+      // We return an error because we only want to throw if this module gets used.
+      return new Error(
+        'Cannot use a module that depends on ReactSharedInternals ' +
+          'from "' +
+          entry +
+          '" because it does not declare "react" in the package ' +
+          'dependencies or peerDependencies. For example, this can happen if you use ' +
+          'warning() instead of warningWithoutStack() in a package that does not ' +
+          'depend on React.'
+      );
+    }
+    return null;
+  },
+
   // We have a few forks for different environments.
   'shared/ReactFeatureFlags': (bundleType, entry) => {
     switch (entry) {
@@ -38,9 +67,11 @@ const forks = Object.freeze({
         switch (bundleType) {
           case RN_FB_DEV:
           case RN_FB_PROD:
+          case RN_FB_PROFILING:
             return 'shared/forks/ReactFeatureFlags.native-fb.js';
           case RN_OSS_DEV:
           case RN_OSS_PROD:
+          case RN_OSS_PROFILING:
             return 'shared/forks/ReactFeatureFlags.native-oss.js';
           default:
             throw Error(
@@ -51,9 +82,11 @@ const forks = Object.freeze({
         switch (bundleType) {
           case RN_FB_DEV:
           case RN_FB_PROD:
+          case RN_FB_PROFILING:
             return 'shared/forks/ReactFeatureFlags.native-fabric-fb.js';
           case RN_OSS_DEV:
           case RN_OSS_PROD:
+          case RN_OSS_PROFILING:
             return 'shared/forks/ReactFeatureFlags.native-fabric-oss.js';
           default:
             throw Error(
@@ -63,15 +96,45 @@ const forks = Object.freeze({
       case 'react-reconciler/persistent':
         return 'shared/forks/ReactFeatureFlags.persistent.js';
       case 'react-test-renderer':
+        switch (bundleType) {
+          case FB_WWW_DEV:
+          case FB_WWW_PROD:
+          case FB_WWW_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.test-renderer.www.js';
+        }
         return 'shared/forks/ReactFeatureFlags.test-renderer.js';
       default:
         switch (bundleType) {
           case FB_WWW_DEV:
           case FB_WWW_PROD:
+          case FB_WWW_PROFILING:
             return 'shared/forks/ReactFeatureFlags.www.js';
         }
     }
     return null;
+  },
+
+  'shared/ReactScheduler': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
+        return 'shared/forks/ReactScheduler.www.js';
+      default:
+        return null;
+    }
+  },
+
+  // This logic is forked on www to fork the formatting function.
+  'shared/invariant': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
+        return 'shared/forks/invariant.www.js';
+      default:
+        return null;
+    }
   },
 
   // This logic is forked on www to blacklist warnings.
@@ -79,7 +142,20 @@ const forks = Object.freeze({
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
         return 'shared/forks/lowPriorityWarning.www.js';
+      default:
+        return null;
+    }
+  },
+
+  // This logic is forked on www to blacklist warnings.
+  'shared/warningWithoutStack': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_WWW_DEV:
+      case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
+        return 'shared/forks/warningWithoutStack.www.js';
       default:
         return null;
     }
@@ -91,6 +167,7 @@ const forks = Object.freeze({
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
         return 'react/src/forks/ReactCurrentOwner.www.js';
       default:
         return null;
@@ -102,6 +179,7 @@ const forks = Object.freeze({
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
         return 'shared/forks/invokeGuardedCallback.www.js';
       default:
         return null;
@@ -113,14 +191,18 @@ const forks = Object.freeze({
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
         // Use the www fork which shows an error dialog.
         return 'react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
       case RN_OSS_DEV:
       case RN_OSS_PROD:
+      case RN_OSS_PROFILING:
       case RN_FB_DEV:
       case RN_FB_PROD:
+      case RN_FB_PROFILING:
         switch (entry) {
           case 'react-native-renderer':
+          case 'react-native-renderer/fabric':
             // Use the RN fork which plays well with redbox.
             return 'react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
           default:
@@ -131,16 +213,52 @@ const forks = Object.freeze({
     }
   },
 
+  'react-reconciler/src/ReactFiberHostConfig': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType
+  ) => {
+    if (dependencies.indexOf('react-reconciler') !== -1) {
+      return null;
+    }
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let rendererInfo of inlinedHostConfigs) {
+      if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
+        return `react-reconciler/src/forks/ReactFiberHostConfig.${
+          rendererInfo.shortName
+        }.js`;
+      }
+    }
+    throw new Error(
+      'Expected ReactFiberHostConfig to always be replaced with a shim, but ' +
+        `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
+        'Did you mean to add it there to associate it with a specific renderer?'
+    );
+  },
+
   // We wrap top-level listeners into guards on www.
   'react-dom/src/events/EventListener': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
+      case FB_WWW_PROFILING:
         // Use the www fork which is integrated with TimeSlice profiling.
         return 'react-dom/src/events/forks/EventListener-www.js';
       default:
         return null;
     }
+  },
+
+  // React DOM uses different top level event names and supports mouse events.
+  'events/ResponderTopLevelEventTypes': (bundleType, entry) => {
+    if (entry === 'react-dom' || entry.startsWith('react-dom/')) {
+      return 'events/forks/ResponderTopLevelEventTypes.dom.js';
+    }
+    return null;
   },
 });
 

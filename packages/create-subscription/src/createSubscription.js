@@ -8,8 +8,8 @@
  */
 
 import React from 'react';
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 type Unsubscribe = () => void;
 
@@ -21,7 +21,7 @@ export function createSubscription<Property, Value>(
     getCurrentValue: (source: Property) => Value | void,
 
     // Setup a subscription for the subscribable value in props, and return an unsubscribe function.
-    // Return false to indicate the property cannot be unsubscribed from (e.g. native Promises).
+    // Return empty function if the property cannot be unsubscribed from (e.g. native Promises).
     // Due to the variety of change event types, subscribers should provide their own handlers.
     // Those handlers should not attempt to update state though;
     // They should call the callback() instead when a subscription changes.
@@ -36,11 +36,11 @@ export function createSubscription<Property, Value>(
 }> {
   const {getCurrentValue, subscribe} = config;
 
-  warning(
+  warningWithoutStack(
     typeof getCurrentValue === 'function',
     'Subscription must specify a getCurrentValue function',
   );
-  warning(
+  warningWithoutStack(
     typeof subscribe === 'function',
     'Subscription must specify a subscribe function',
   );
@@ -87,13 +87,13 @@ export function createSubscription<Property, Value>(
 
     componentDidUpdate(prevProps, prevState) {
       if (this.state.source !== prevState.source) {
-        this.unsubscribe(prevState);
+        this.unsubscribe();
         this.subscribe();
       }
     }
 
     componentWillUnmount() {
-      this.unsubscribe(this.state);
+      this.unsubscribe();
 
       // Track mounted to avoid calling setState after unmounting
       // For source like Promises that can't be unsubscribed from.
@@ -147,7 +147,7 @@ export function createSubscription<Property, Value>(
       }
     }
 
-    unsubscribe(state: State) {
+    unsubscribe() {
       if (typeof this._unsubscribe === 'function') {
         this._unsubscribe();
       }

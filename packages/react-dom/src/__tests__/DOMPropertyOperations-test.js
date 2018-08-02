@@ -79,7 +79,7 @@ describe('DOMPropertyOperations', () => {
 
     it('should not remove empty attributes for special properties', () => {
       const container = document.createElement('div');
-      ReactDOM.render(<input value="" />, container);
+      ReactDOM.render(<input value="" onChange={() => {}} />, container);
       expect(container.firstChild.getAttribute('value')).toBe('');
       expect(container.firstChild.value).toBe('');
     });
@@ -123,7 +123,7 @@ describe('DOMPropertyOperations', () => {
       spyOnDevAndProd(container.firstChild, 'setAttribute');
       ReactDOM.render(<progress value={30} />, container);
       ReactDOM.render(<progress value="30" />, container);
-      expect(container.firstChild.setAttribute.calls.count()).toBe(2);
+      expect(container.firstChild.setAttribute).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -154,6 +154,12 @@ describe('DOMPropertyOperations', () => {
       );
       expect(container.firstChild.getAttribute('value')).toBe('foo');
       expect(container.firstChild.value).toBe('foo');
+    });
+
+    it('should not remove attributes for custom component tag', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-icon size="5px" />, container);
+      expect(container.firstChild.getAttribute('size')).toBe('5px');
     });
   });
 });

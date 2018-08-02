@@ -14,14 +14,12 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
   jest.resetModuleRegistry();
   React = require('react');
   ReactDOM = require('react-dom');
-  ReactTestUtils = require('react-dom/test-utils');
   ReactDOMServer = require('react-dom/server');
 
   // Make them available to the helpers.
@@ -35,6 +33,7 @@ const {
   resetModules,
   itRenders,
   itClientRenders,
+  itThrowsWhenRendering,
   renderIntoDom,
   serverRender,
 } = ReactDOMServerIntegrationUtils(initModules);
@@ -328,6 +327,81 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders(
+        'a select with options that use dangerouslySetInnerHTML',
+        async render => {
+          const e = await render(
+            <select defaultValue="baz" value="bar" readOnly={true}>
+              <option
+                id="foo"
+                value="foo"
+                dangerouslySetInnerHTML={{
+                  __html: 'Foo',
+                }}>
+                {undefined}
+              </option>
+              <option
+                id="bar"
+                value="bar"
+                dangerouslySetInnerHTML={{
+                  __html: 'Bar',
+                }}>
+                {null}
+              </option>
+              <option
+                id="baz"
+                value="baz"
+                dangerouslySetInnerHTML={{
+                  __html: 'Baz',
+                }}
+              />
+            </select>,
+            1,
+          );
+          expectSelectValue(e, 'bar');
+        },
+      );
+
+      itThrowsWhenRendering(
+        'a select with option that uses dangerouslySetInnerHTML and 0 as child',
+        async render => {
+          await render(
+            <select defaultValue="baz" value="foo" readOnly={true}>
+              <option
+                id="foo"
+                value="foo"
+                dangerouslySetInnerHTML={{
+                  __html: 'Foo',
+                }}>
+                {0}
+              </option>
+            </select>,
+            1,
+          );
+        },
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+      );
+
+      itThrowsWhenRendering(
+        'a select with option that uses dangerouslySetInnerHTML and empty string as child',
+        async render => {
+          await render(
+            <select defaultValue="baz" value="foo" readOnly={true}>
+              <option
+                id="foo"
+                value="foo"
+                dangerouslySetInnerHTML={{
+                  __html: 'Foo',
+                }}>
+                {''}
+              </option>
+            </select>,
+            1,
+          );
+        },
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+      );
+
+      itRenders(
         'a select value overriding defaultValue no matter the prop order',
         async render => {
           const e = await render(
@@ -339,6 +413,36 @@ describe('ReactDOMServerIntegration', () => {
           expectSelectValue(e, 'bar');
         },
       );
+
+      itRenders('a select option with flattened children', async render => {
+        const e = await render(
+          <select value="bar" readOnly={true}>
+            <option value="bar">A {'B'}</option>
+          </select>,
+        );
+        const option = e.options[0];
+        expect(option.childNodes.length).toBe(1);
+        expect(option.childNodes[0].nodeType).toBe(3);
+        expect(option.childNodes[0].nodeValue).toBe('A B');
+      });
+
+      itRenders(
+        'a select option with flattened children and a warning',
+        async render => {
+          const e = await render(
+            <select readOnly={true} value="bar">
+              <option value="bar">
+                {['Bar', false, 'Foo', <div key="1" />, 'Baz']}
+              </option>
+            </select>,
+            1,
+          );
+          expect(e.getAttribute('value')).toBe(null);
+          expect(e.getAttribute('defaultValue')).toBe(null);
+          expect(e.firstChild.innerHTML).toBe('BarFooBaz');
+          expect(e.firstChild.selected).toBe(true);
+        },
+      );
     });
 
     describe('user interaction', function() {
@@ -348,9 +452,13 @@ describe('ReactDOMServerIntegration', () => {
         ControlledSelect;
       beforeEach(() => {
         ControlledInput = class extends React.Component {
+          static defaultProps = {
+            type: 'text',
+            initialValue: 'Hello',
+          };
           constructor() {
-            super();
-            this.state = {value: 'Hello'};
+            super(...arguments);
+            this.state = {value: this.props.initialValue};
           }
           handleChange(event) {
             if (this.props.onChange) {
@@ -361,6 +469,7 @@ describe('ReactDOMServerIntegration', () => {
           render() {
             return (
               <input
+                type={this.props.type}
                 value={this.state.value}
                 onChange={this.handleChange.bind(this)}
               />
@@ -438,35 +547,63 @@ describe('ReactDOMServerIntegration', () => {
 
       describe('user interaction with controlled inputs', function() {
         itClientRenders('a controlled text input', async render => {
+          const setUntrackedValue = Object.getOwnPropertyDescriptor(
+            HTMLInputElement.prototype,
+            'value',
+          ).set;
+
           let changeCount = 0;
           const e = await render(
             <ControlledInput onChange={() => changeCount++} />,
           );
-          expect(changeCount).toBe(0);
-          expect(e.value).toBe('Hello');
+          const container = e.parentNode;
+          document.body.appendChild(container);
 
-          // simulate a user typing.
-          e.value = 'Goodbye';
-          ReactTestUtils.Simulate.change(e);
+          try {
+            expect(changeCount).toBe(0);
+            expect(e.value).toBe('Hello');
 
-          expect(changeCount).toBe(1);
-          expect(e.value).toBe('Goodbye');
+            // simulate a user typing.
+            setUntrackedValue.call(e, 'Goodbye');
+            e.dispatchEvent(
+              new Event('input', {bubbles: true, cancelable: false}),
+            );
+
+            expect(changeCount).toBe(1);
+            expect(e.value).toBe('Goodbye');
+          } finally {
+            document.body.removeChild(container);
+          }
         });
 
         itClientRenders('a controlled textarea', async render => {
+          const setUntrackedValue = Object.getOwnPropertyDescriptor(
+            HTMLTextAreaElement.prototype,
+            'value',
+          ).set;
+
           let changeCount = 0;
           const e = await render(
             <ControlledTextArea onChange={() => changeCount++} />,
           );
-          expect(changeCount).toBe(0);
-          expect(e.value).toBe('Hello');
+          const container = e.parentNode;
+          document.body.appendChild(container);
 
-          // simulate a user typing.
-          e.value = 'Goodbye';
-          ReactTestUtils.Simulate.change(e);
+          try {
+            expect(changeCount).toBe(0);
+            expect(e.value).toBe('Hello');
 
-          expect(changeCount).toBe(1);
-          expect(e.value).toBe('Goodbye');
+            // simulate a user typing.
+            setUntrackedValue.call(e, 'Goodbye');
+            e.dispatchEvent(
+              new Event('input', {bubbles: true, cancelable: false}),
+            );
+
+            expect(changeCount).toBe(1);
+            expect(e.value).toBe('Goodbye');
+          } finally {
+            document.body.removeChild(container);
+          }
         });
 
         itClientRenders('a controlled checkbox', async render => {
@@ -474,31 +611,53 @@ describe('ReactDOMServerIntegration', () => {
           const e = await render(
             <ControlledCheckbox onChange={() => changeCount++} />,
           );
-          expect(changeCount).toBe(0);
-          expect(e.checked).toBe(true);
+          const container = e.parentNode;
+          document.body.appendChild(container);
 
-          // simulate a user typing.
-          e.checked = false;
-          ReactTestUtils.Simulate.change(e);
+          try {
+            expect(changeCount).toBe(0);
+            expect(e.checked).toBe(true);
 
-          expect(changeCount).toBe(1);
-          expect(e.checked).toBe(false);
+            // simulate a user clicking.
+            e.dispatchEvent(
+              new Event('click', {bubbles: true, cancelable: true}),
+            );
+
+            expect(changeCount).toBe(1);
+            expect(e.checked).toBe(false);
+          } finally {
+            document.body.removeChild(container);
+          }
         });
 
         itClientRenders('a controlled select', async render => {
+          const setUntrackedValue = Object.getOwnPropertyDescriptor(
+            HTMLSelectElement.prototype,
+            'value',
+          ).set;
+
           let changeCount = 0;
           const e = await render(
             <ControlledSelect onChange={() => changeCount++} />,
           );
-          expect(changeCount).toBe(0);
-          expect(e.value).toBe('Hello');
+          const container = e.parentNode;
+          document.body.appendChild(container);
 
-          // simulate a user typing.
-          e.value = 'Goodbye';
-          ReactTestUtils.Simulate.change(e);
+          try {
+            expect(changeCount).toBe(0);
+            expect(e.value).toBe('Hello');
 
-          expect(changeCount).toBe(1);
-          expect(e.value).toBe('Goodbye');
+            // simulate a user typing.
+            setUntrackedValue.call(e, 'Goodbye');
+            e.dispatchEvent(
+              new Event('change', {bubbles: true, cancelable: false}),
+            );
+
+            expect(changeCount).toBe(1);
+            expect(e.value).toBe('Goodbye');
+          } finally {
+            document.body.removeChild(container);
+          }
         });
       });
 
@@ -548,6 +707,27 @@ describe('ReactDOMServerIntegration', () => {
           // note that there's a strong argument to be made that the DOM revival
           // algorithm should notice that the user has changed the value and fire
           // an onChange. however, it does not now, so that's what this tests.
+          expect(changeCount).toBe(0);
+        });
+
+        it('should not blow away user-interaction on successful reconnect to an uncontrolled range input', () =>
+          testUserInteractionBeforeClientRender(
+            <input type="text" defaultValue="0.5" />,
+            '0.5',
+            '1',
+          ));
+
+        it('should not blow away user-interaction on successful reconnect to a controlled range input', async () => {
+          let changeCount = 0;
+          await testUserInteractionBeforeClientRender(
+            <ControlledInput
+              type="range"
+              initialValue="0.25"
+              onChange={() => changeCount++}
+            />,
+            '0.25',
+            '1',
+          );
           expect(changeCount).toBe(0);
         });
 

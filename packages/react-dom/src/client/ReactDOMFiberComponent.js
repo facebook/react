@@ -8,10 +8,10 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
-import emptyFunction from 'fbjs/lib/emptyFunction';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import * as ReactDOMFiberInput from './ReactDOMFiberInput';
@@ -21,8 +21,16 @@ import * as ReactDOMFiberTextarea from './ReactDOMFiberTextarea';
 import * as inputValueTracking from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
+import {
+  TOP_ERROR,
+  TOP_INVALID,
+  TOP_LOAD,
+  TOP_RESET,
+  TOP_SUBMIT,
+  TOP_TOGGLE,
+} from '../events/DOMTopLevelEventTypes';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
-import {mediaEventTypes} from '../events/BrowserEventConstants';
+import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
 import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
@@ -38,10 +46,6 @@ import {validateProperties as validateARIAProperties} from '../shared/ReactDOMIn
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
-const {
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
-} = ReactDebugCurrentFiber;
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
 
@@ -54,8 +58,6 @@ const STYLE = 'style';
 const HTML = '__html';
 
 const {html: HTML_NAMESPACE} = Namespaces;
-
-let getStack = emptyFunction.thatReturns('');
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
@@ -70,8 +72,6 @@ let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
 
 if (__DEV__) {
-  getStack = getCurrentFiberStackAddendum;
-
   warnedUnknownTags = {
     // Chrome is the only major browser not shipping <time>. But as of July
     // 2017 it intends to ship it due to widespread usage. We intentionally
@@ -80,6 +80,12 @@ if (__DEV__) {
     time: true,
     // There are working polyfills for <dialog>. Let people use it.
     dialog: true,
+    // Electron ships a custom <webview> tag to display external web content in
+    // an isolated frame and process.
+    // This tag is not present in non Electron environments such as JSDom which
+    // is often used for testing purposes.
+    // @see https://electronjs.org/docs/api/webview-tag
+    webview: true,
   };
 
   validatePropertiesInDevelopment = function(type, props) {
@@ -117,7 +123,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Text content did not match. Server: "%s" Client: "%s"',
       normalizedServerText,
@@ -143,7 +149,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Prop `%s` did not match. Server: %s Client: %s',
       propName,
@@ -161,7 +167,7 @@ if (__DEV__) {
     attributeNames.forEach(function(name) {
       names.push(name);
     });
-    warning(false, 'Extra attributes from the server: %s', names);
+    warningWithoutStack(false, 'Extra attributes from the server: %s', names);
   };
 
   warnForInvalidEventListener = function(registrationName, listener) {
@@ -170,19 +176,17 @@ if (__DEV__) {
         false,
         'Expected `%s` listener to be a function, instead got `false`.\n\n' +
           'If you used to conditionally omit it with %s={condition && value}, ' +
-          'pass %s={condition ? value : undefined} instead.%s',
+          'pass %s={condition ? value : undefined} instead.',
         registrationName,
         registrationName,
         registrationName,
-        getCurrentFiberStackAddendum(),
       );
     } else {
       warning(
         false,
-        'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
+        'Expected `%s` listener to be a function, instead got a value of `%s` type.',
         registrationName,
         typeof listener,
-        getCurrentFiberStackAddendum(),
       );
     }
   };
@@ -224,6 +228,8 @@ function getOwnerDocumentFromRootContainer(
     : rootContainerElement.ownerDocument;
 }
 
+function noop() {}
+
 function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
@@ -234,7 +240,7 @@ function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
   // TODO: Only do this for the relevant Safaris maybe?
-  node.onclick = emptyFunction;
+  node.onclick = noop;
 }
 
 function setInitialDOMProperties(
@@ -258,7 +264,7 @@ function setInitialDOMProperties(
         }
       }
       // Relies on `updateStylesByID` not mutating `styleUpdates`.
-      CSSPropertyOperations.setValueForStyles(domElement, nextProp, getStack);
+      CSSPropertyOperations.setValueForStyles(domElement, nextProp);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       const nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
@@ -314,7 +320,7 @@ function updateDOMProperties(
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
     if (propKey === STYLE) {
-      CSSPropertyOperations.setValueForStyles(domElement, propValue, getStack);
+      CSSPropertyOperations.setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {
@@ -424,12 +430,16 @@ export function setInitialProperties(
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, rawProps);
-    if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+    if (
+      isCustomComponentTag &&
+      !didWarnShadyDOM &&
+      (domElement: any).shadyRoot
+    ) {
       warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnShadyDOM = true;
     }
@@ -440,43 +450,41 @@ export function setInitialProperties(
   switch (tag) {
     case 'iframe':
     case 'object':
-      trapBubbledEvent('topLoad', 'load', domElement);
+      trapBubbledEvent(TOP_LOAD, domElement);
       props = rawProps;
       break;
     case 'video':
     case 'audio':
       // Create listener for each media event
-      for (const event in mediaEventTypes) {
-        if (mediaEventTypes.hasOwnProperty(event)) {
-          trapBubbledEvent(event, mediaEventTypes[event], domElement);
-        }
+      for (let i = 0; i < mediaEventTypes.length; i++) {
+        trapBubbledEvent(mediaEventTypes[i], domElement);
       }
       props = rawProps;
       break;
     case 'source':
-      trapBubbledEvent('topError', 'error', domElement);
+      trapBubbledEvent(TOP_ERROR, domElement);
       props = rawProps;
       break;
     case 'img':
     case 'image':
     case 'link':
-      trapBubbledEvent('topError', 'error', domElement);
-      trapBubbledEvent('topLoad', 'load', domElement);
+      trapBubbledEvent(TOP_ERROR, domElement);
+      trapBubbledEvent(TOP_LOAD, domElement);
       props = rawProps;
       break;
     case 'form':
-      trapBubbledEvent('topReset', 'reset', domElement);
-      trapBubbledEvent('topSubmit', 'submit', domElement);
+      trapBubbledEvent(TOP_RESET, domElement);
+      trapBubbledEvent(TOP_SUBMIT, domElement);
       props = rawProps;
       break;
     case 'details':
-      trapBubbledEvent('topToggle', 'toggle', domElement);
+      trapBubbledEvent(TOP_TOGGLE, domElement);
       props = rawProps;
       break;
     case 'input':
       ReactDOMFiberInput.initWrapperState(domElement, rawProps);
       props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -488,7 +496,7 @@ export function setInitialProperties(
     case 'select':
       ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
       props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -496,7 +504,7 @@ export function setInitialProperties(
     case 'textarea':
       ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
       props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -505,7 +513,7 @@ export function setInitialProperties(
       props = rawProps;
   }
 
-  assertValidProps(tag, props, getStack);
+  assertValidProps(tag, props);
 
   setInitialDOMProperties(
     tag,
@@ -520,7 +528,7 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
+      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, false);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
@@ -593,7 +601,7 @@ export function diffProperties(
       break;
   }
 
-  assertValidProps(tag, nextProps, getStack);
+  assertValidProps(tag, nextProps);
 
   let propKey;
   let styleName;
@@ -814,12 +822,16 @@ export function diffHydratedProperties(
     suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
     isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
-    if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
+    if (
+      isCustomComponentTag &&
+      !didWarnShadyDOM &&
+      (domElement: any).shadyRoot
+    ) {
       warning(
         false,
         '%s is using shady DOM. Using shady DOM with React can ' +
           'cause things to break subtly.',
-        getCurrentFiberOwnerName() || 'A component',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnShadyDOM = true;
     }
@@ -829,36 +841,34 @@ export function diffHydratedProperties(
   switch (tag) {
     case 'iframe':
     case 'object':
-      trapBubbledEvent('topLoad', 'load', domElement);
+      trapBubbledEvent(TOP_LOAD, domElement);
       break;
     case 'video':
     case 'audio':
       // Create listener for each media event
-      for (const event in mediaEventTypes) {
-        if (mediaEventTypes.hasOwnProperty(event)) {
-          trapBubbledEvent(event, mediaEventTypes[event], domElement);
-        }
+      for (let i = 0; i < mediaEventTypes.length; i++) {
+        trapBubbledEvent(mediaEventTypes[i], domElement);
       }
       break;
     case 'source':
-      trapBubbledEvent('topError', 'error', domElement);
+      trapBubbledEvent(TOP_ERROR, domElement);
       break;
     case 'img':
     case 'image':
     case 'link':
-      trapBubbledEvent('topError', 'error', domElement);
-      trapBubbledEvent('topLoad', 'load', domElement);
+      trapBubbledEvent(TOP_ERROR, domElement);
+      trapBubbledEvent(TOP_LOAD, domElement);
       break;
     case 'form':
-      trapBubbledEvent('topReset', 'reset', domElement);
-      trapBubbledEvent('topSubmit', 'submit', domElement);
+      trapBubbledEvent(TOP_RESET, domElement);
+      trapBubbledEvent(TOP_SUBMIT, domElement);
       break;
     case 'details':
-      trapBubbledEvent('topToggle', 'toggle', domElement);
+      trapBubbledEvent(TOP_TOGGLE, domElement);
       break;
     case 'input':
       ReactDOMFiberInput.initWrapperState(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -868,21 +878,21 @@ export function diffHydratedProperties(
       break;
     case 'select':
       ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'textarea':
       ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
-      trapBubbledEvent('topInvalid', 'invalid', domElement);
+      trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
       break;
   }
 
-  assertValidProps(tag, rawProps, getStack);
+  assertValidProps(tag, rawProps);
 
   if (__DEV__) {
     extraAttributeNames = new Set();
@@ -1065,7 +1075,7 @@ export function diffHydratedProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
+      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, true);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
@@ -1112,7 +1122,7 @@ export function warnForDeletedHydratableElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Did not expect server HTML to contain a <%s> in <%s>.',
       child.nodeName.toLowerCase(),
@@ -1130,7 +1140,7 @@ export function warnForDeletedHydratableText(
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Did not expect server HTML to contain the text node "%s" in <%s>.',
       child.nodeValue,
@@ -1149,7 +1159,7 @@ export function warnForInsertedHydratedElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Expected server HTML to contain a matching <%s> in <%s>.',
       tag,
@@ -1174,7 +1184,7 @@ export function warnForInsertedHydratedText(
       return;
     }
     didWarnInvalidHydration = true;
-    warning(
+    warningWithoutStack(
       false,
       'Expected server HTML to contain a matching text node for "%s" in <%s>.',
       text,

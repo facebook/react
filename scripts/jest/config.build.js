@@ -2,12 +2,17 @@
 
 const {readdirSync, statSync} = require('fs');
 const {join} = require('path');
-const sourceConfig = require('./config.source');
+const baseConfig = require('./config.base');
 
 // Find all folders in packages/* with package.json
 const packagesRoot = join(__dirname, '..', '..', 'packages');
 const packages = readdirSync(packagesRoot).filter(dir => {
   if (dir.charAt(0) === '.') {
+    return false;
+  }
+  if (dir === 'events') {
+    // There's an actual Node package called "events"
+    // that's used by jsdom so we don't want to alias that.
     return false;
   }
   const packagePath = join(packagesRoot, dir, 'package.json');
@@ -24,7 +29,7 @@ packages.forEach(name => {
   ] = `<rootDir>/build/node_modules/${name}/$1`;
 });
 
-module.exports = Object.assign({}, sourceConfig, {
+module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
   moduleNameMapper,
   // Don't run bundle tests on blacklisted -test.internal.* files

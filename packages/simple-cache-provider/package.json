@@ -1,7 +1,7 @@
 {
   "name": "simple-cache-provider",
   "description": "A basic cache for React applications",
-  "version": "0.5.0",
+  "version": "0.7.0",
   "repository": "facebook/react",
   "files": [
     "LICENSE",
@@ -9,9 +9,6 @@
     "index.js",
     "cjs/"
   ],
-  "dependencies": {
-    "fbjs": "^0.8.16"
-  },
   "peerDependencies": {
     "react": "^16.3.0-alpha.1"
   }

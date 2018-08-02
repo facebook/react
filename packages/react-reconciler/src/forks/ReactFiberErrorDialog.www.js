@@ -9,7 +9,7 @@
 
 import type {CapturedError} from '../ReactCapturedValue';
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 // Provided by www
 const ReactFiberErrorDialogWWW = require('ReactFiberErrorDialog');

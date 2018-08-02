@@ -16,8 +16,6 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  CallComponent,
-  ReturnComponent,
   Fragment,
   ContextProvider,
   ContextConsumer,
@@ -123,7 +121,7 @@ const beginFiberMark = (
   fiber: Fiber,
   phase: MeasurementPhase | null,
 ): boolean => {
-  const componentName = getComponentName(fiber) || 'Unknown';
+  const componentName = getComponentName(fiber.type) || 'Unknown';
   const debugID = ((fiber._debugID: any): number);
   const isMounted = fiber.alternate !== null;
   const label = getFiberLabel(componentName, isMounted, phase);
@@ -142,7 +140,7 @@ const beginFiberMark = (
 };
 
 const clearFiberMark = (fiber: Fiber, phase: MeasurementPhase | null) => {
-  const componentName = getComponentName(fiber) || 'Unknown';
+  const componentName = getComponentName(fiber.type) || 'Unknown';
   const debugID = ((fiber._debugID: any): number);
   const isMounted = fiber.alternate !== null;
   const label = getFiberLabel(componentName, isMounted, phase);
@@ -155,7 +153,7 @@ const endFiberMark = (
   phase: MeasurementPhase | null,
   warning: string | null,
 ) => {
-  const componentName = getComponentName(fiber) || 'Unknown';
+  const componentName = getComponentName(fiber.type) || 'Unknown';
   const debugID = ((fiber._debugID: any): number);
   const isMounted = fiber.alternate !== null;
   const label = getFiberLabel(componentName, isMounted, phase);
@@ -171,8 +169,6 @@ const shouldIgnoreFiber = (fiber: Fiber): boolean => {
     case HostComponent:
     case HostText:
     case HostPortal:
-    case CallComponent:
-    case ReturnComponent:
     case Fragment:
     case ContextProvider:
     case ContextConsumer:
@@ -382,7 +378,7 @@ export function stopWorkLoopTimer(
       if (interruptedBy.tag === HostRoot) {
         warning = 'A top-level update interrupted the previous render';
       } else {
-        const componentName = getComponentName(interruptedBy) || 'Unknown';
+        const componentName = getComponentName(interruptedBy.type) || 'Unknown';
         warning = `An update to ${componentName} interrupted the previous render`;
       }
     } else if (commitCountInCurrentWorkLoop > 1) {

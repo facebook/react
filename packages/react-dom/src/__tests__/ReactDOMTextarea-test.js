@@ -9,7 +9,7 @@
 
 'use strict';
 
-const emptyFunction = require('fbjs/lib/emptyFunction');
+function emptyFunction() {}
 
 describe('ReactDOMTextarea', () => {
   let React;
@@ -97,7 +97,7 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should display `value` of number 0', () => {
-    const stub = <textarea value={0} />;
+    const stub = <textarea value={0} onChange={emptyFunction} />;
     const node = renderTextarea(stub);
 
     expect(node.value).toBe('0');
@@ -218,7 +218,7 @@ describe('ReactDOMTextarea', () => {
 
     const node = container.firstChild;
     let nodeValue = 'a';
-    const nodeValueSetter = jest.genMockFn();
+    const nodeValueSetter = jest.fn();
     Object.defineProperty(node, 'value', {
       get: function() {
         return nodeValue;
@@ -229,19 +229,33 @@ describe('ReactDOMTextarea', () => {
     });
 
     ReactDOM.render(<textarea value="a" onChange={emptyFunction} />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(0);
+    expect(nodeValueSetter).toHaveBeenCalledTimes(0);
 
     ReactDOM.render(<textarea value="b" onChange={emptyFunction} />, container);
-    expect(nodeValueSetter.mock.calls.length).toBe(1);
+    expect(nodeValueSetter).toHaveBeenCalledTimes(1);
   });
 
   it('should properly control a value of number `0`', () => {
     const stub = <textarea value={0} onChange={emptyFunction} />;
-    const node = renderTextarea(stub);
+    const setUntrackedValue = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      'value',
+    ).set;
 
-    node.value = 'giraffe';
-    ReactTestUtils.Simulate.change(node);
-    expect(node.value).toBe('0');
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    try {
+      const node = renderTextarea(stub, container);
+
+      setUntrackedValue.call(node, 'giraffe');
+      node.dispatchEvent(
+        new Event('input', {bubbles: true, cancelable: false}),
+      );
+      expect(node.value).toBe('0');
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 
   it('should treat children like `defaultValue`', () => {
@@ -401,5 +415,12 @@ describe('ReactDOMTextarea', () => {
     ReactTestUtils.renderIntoDocument(
       <textarea value="foo" defaultValue="bar" readOnly={true} />,
     );
+  });
+
+  it('should not warn about missing onChange in uncontrolled textareas', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(<textarea />, container);
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<textarea value={undefined} />, container);
   });
 });

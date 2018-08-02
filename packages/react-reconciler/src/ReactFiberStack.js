@@ -9,106 +9,94 @@
 
 import type {Fiber} from './ReactFiber';
 
-import warning from 'fbjs/lib/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 export type StackCursor<T> = {
   current: T,
 };
 
-export type Stack = {
-  createCursor<T>(defaultValue: T): StackCursor<T>,
-  isEmpty(): boolean,
-  push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber): void,
-  pop<T>(cursor: StackCursor<T>, fiber: Fiber): void,
+const valueStack: Array<any> = [];
 
-  // DEV only
-  checkThatStackIsEmpty(): void,
-  resetStackAfterFatalErrorInDev(): void,
-};
+let fiberStack: Array<Fiber | null>;
 
-export default function(): Stack {
-  const valueStack: Array<any> = [];
+if (__DEV__) {
+  fiberStack = [];
+}
 
-  let fiberStack: Array<Fiber | null>;
+let index = -1;
 
-  if (__DEV__) {
-    fiberStack = [];
-  }
-
-  let index = -1;
-
-  function createCursor<T>(defaultValue: T): StackCursor<T> {
-    return {
-      current: defaultValue,
-    };
-  }
-
-  function isEmpty(): boolean {
-    return index === -1;
-  }
-
-  function pop<T>(cursor: StackCursor<T>, fiber: Fiber): void {
-    if (index < 0) {
-      if (__DEV__) {
-        warning(false, 'Unexpected pop.');
-      }
-      return;
-    }
-
-    if (__DEV__) {
-      if (fiber !== fiberStack[index]) {
-        warning(false, 'Unexpected Fiber popped.');
-      }
-    }
-
-    cursor.current = valueStack[index];
-
-    valueStack[index] = null;
-
-    if (__DEV__) {
-      fiberStack[index] = null;
-    }
-
-    index--;
-  }
-
-  function push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber): void {
-    index++;
-
-    valueStack[index] = cursor.current;
-
-    if (__DEV__) {
-      fiberStack[index] = fiber;
-    }
-
-    cursor.current = value;
-  }
-
-  function checkThatStackIsEmpty() {
-    if (__DEV__) {
-      if (index !== -1) {
-        warning(
-          false,
-          'Expected an empty stack. Something was not reset properly.',
-        );
-      }
-    }
-  }
-
-  function resetStackAfterFatalErrorInDev() {
-    if (__DEV__) {
-      index = -1;
-      valueStack.length = 0;
-      fiberStack.length = 0;
-    }
-  }
-
+function createCursor<T>(defaultValue: T): StackCursor<T> {
   return {
-    createCursor,
-    isEmpty,
-    pop,
-    push,
-    checkThatStackIsEmpty,
-    resetStackAfterFatalErrorInDev,
+    current: defaultValue,
   };
 }
+
+function isEmpty(): boolean {
+  return index === -1;
+}
+
+function pop<T>(cursor: StackCursor<T>, fiber: Fiber): void {
+  if (index < 0) {
+    if (__DEV__) {
+      warningWithoutStack(false, 'Unexpected pop.');
+    }
+    return;
+  }
+
+  if (__DEV__) {
+    if (fiber !== fiberStack[index]) {
+      warningWithoutStack(false, 'Unexpected Fiber popped.');
+    }
+  }
+
+  cursor.current = valueStack[index];
+
+  valueStack[index] = null;
+
+  if (__DEV__) {
+    fiberStack[index] = null;
+  }
+
+  index--;
+}
+
+function push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber): void {
+  index++;
+
+  valueStack[index] = cursor.current;
+
+  if (__DEV__) {
+    fiberStack[index] = fiber;
+  }
+
+  cursor.current = value;
+}
+
+function checkThatStackIsEmpty() {
+  if (__DEV__) {
+    if (index !== -1) {
+      warningWithoutStack(
+        false,
+        'Expected an empty stack. Something was not reset properly.',
+      );
+    }
+  }
+}
+
+function resetStackAfterFatalErrorInDev() {
+  if (__DEV__) {
+    index = -1;
+    valueStack.length = 0;
+    fiberStack.length = 0;
+  }
+}
+
+export {
+  createCursor,
+  isEmpty,
+  pop,
+  push,
+  // DEV only:
+  checkThatStackIsEmpty,
+  resetStackAfterFatalErrorInDev,
+};

@@ -1,0 +1,26 @@
+{
+  "name": "react-scheduler",
+  "version": "0.1.0-alpha-1",
+  "private": true,
+  "description": "unstable scheduling helper for coordinating React and other JS libraries",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "license": "MIT",
+  "keywords": [
+    "react"
+  ],
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://reactjs.org/",
+  "dependencies": {
+    "object-assign": "^4.1.1"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "cjs/",
+    "umd/"
+  ]
+}

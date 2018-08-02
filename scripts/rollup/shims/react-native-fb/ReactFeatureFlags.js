@@ -4,7 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFeatureFlags
+ * @format
+ * @flow
  */
 
 'use strict';
@@ -13,6 +14,7 @@ const ReactFeatureFlags = {
   debugRenderPhaseSideEffects: false,
   debugRenderPhaseSideEffectsForStrictMode: false,
   warnAboutDeprecatedLifecycles: true,
+  warnAboutLegacyContextAPI: true,
 };
 
 module.exports = ReactFeatureFlags;

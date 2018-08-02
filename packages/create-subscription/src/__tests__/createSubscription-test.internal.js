@@ -264,7 +264,6 @@ describe('createSubscription', () => {
 
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
     const log = [];
-    let parentInstance;
 
     function Child({value}) {
       ReactNoop.yield('Child: ' + value);
@@ -301,8 +300,6 @@ describe('createSubscription', () => {
       }
 
       render() {
-        parentInstance = this;
-
         return (
           <Subscription source={this.state.observed}>
             {(value = 'default') => {
@@ -331,8 +328,8 @@ describe('createSubscription', () => {
     observableB.next('b-2');
     observableB.next('b-3');
 
-    // Mimic a higher-priority interruption
-    parentInstance.setState({observed: observableA});
+    // Update again
+    ReactNoop.render(<Parent observed={observableA} />);
 
     // Flush everything and ensure that the correct subscribable is used
     // We expect the last emitted update to be rendered (because of the commit phase value check)
@@ -354,7 +351,6 @@ describe('createSubscription', () => {
 
   it('should not drop values emitted between updates', () => {
     const log = [];
-    let parentInstance;
 
     function Child({value}) {
       ReactNoop.yield('Child: ' + value);
@@ -391,8 +387,6 @@ describe('createSubscription', () => {
       }
 
       render() {
-        parentInstance = this;
-
         return (
           <Subscription source={this.state.observed}>
             {(value = 'default') => {
@@ -420,8 +414,8 @@ describe('createSubscription', () => {
     observableA.next('a-1');
     observableA.next('a-2');
 
-    // Mimic a higher-priority interruption
-    parentInstance.setState({observed: observableA});
+    // Update again
+    ReactNoop.render(<Parent observed={observableA} />);
 
     // Flush everything and ensure that the correct subscribable is used
     // We expect the new subscribable to finish rendering,
@@ -456,7 +450,9 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a getCurrentValue function');
+      }).toWarnDev('Subscription must specify a getCurrentValue function', {
+        withoutStack: true,
+      });
     });
 
     it('should warn for invalid missing subscribe', () => {
@@ -467,7 +463,9 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a subscribe function');
+      }).toWarnDev('Subscription must specify a subscribe function', {
+        withoutStack: true,
+      });
     });
 
     it('should warn if subscribe does not return an unsubscribe method', () => {

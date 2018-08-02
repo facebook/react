@@ -6,12 +6,17 @@
  */
 
 import checkPropTypes from 'prop-types/checkPropTypes';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+let ReactDebugCurrentFrame = null;
 
 const ReactControlledValuePropTypes = {
   checkPropTypes: null,
 };
 
 if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+
   const hasReadOnlyValue = {
     button: true,
     checkbox: true,
@@ -25,11 +30,11 @@ if (__DEV__) {
   const propTypes = {
     value: function(props, propName, componentName) {
       if (
-        !props[propName] ||
         hasReadOnlyValue[props.type] ||
         props.onChange ||
         props.readOnly ||
-        props.disabled
+        props.disabled ||
+        props[propName] == null
       ) {
         return null;
       }
@@ -42,10 +47,10 @@ if (__DEV__) {
     },
     checked: function(props, propName, componentName) {
       if (
-        !props[propName] ||
         props.onChange ||
         props.readOnly ||
-        props.disabled
+        props.disabled ||
+        props[propName] == null
       ) {
         return null;
       }
@@ -62,12 +67,14 @@ if (__DEV__) {
    * Provide a linked `value` attribute for controlled forms. You should not use
    * this outside of the ReactDOM controlled form components.
    */
-  ReactControlledValuePropTypes.checkPropTypes = function(
-    tagName,
-    props,
-    getStack,
-  ) {
-    checkPropTypes(propTypes, props, 'prop', tagName, getStack);
+  ReactControlledValuePropTypes.checkPropTypes = function(tagName, props) {
+    checkPropTypes(
+      propTypes,
+      props,
+      'prop',
+      tagName,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
   };
 }
 
