@@ -13,6 +13,7 @@ import CustomElementFixtures from './custom-elements';
 import MediaEventsFixtures from './media-events';
 import PointerEventsFixtures from './pointer-events';
 import MouseEventsFixtures from './mouse-events';
+import SelectionEventsFixtures from './selection-events';
 
 const React = window.React;
 
@@ -52,6 +53,8 @@ function FixturesPage() {
       return <PointerEventsFixtures />;
     case '/mouse-events':
       return <MouseEventsFixtures />;
+    case '/selection-events':
+      return <SelectionEventsFixtures />;
     default:
       return <p>Please select a test fixture.</p>;
   }
