@@ -44,12 +44,12 @@ class Bad extends React.Component {
   }
 }
 
-describe('ReactNestedUpdateBug', () => {
+describe('ReactErrorLoggingRecovery', () => {
   let originalConsoleError = console.error;
 
   beforeEach(() => {
     console.error = error => {
-      throw new Error(error);
+      throw new Error('Buggy console.error');
     };
   });
 
@@ -57,7 +57,7 @@ describe('ReactNestedUpdateBug', () => {
     console.error = originalConsoleError;
   });
 
-  it('should mount', function() {
+  it('should recover from errors in console.error', function() {
     const div = document.createElement('div');
     let didCatch = false;
     try {
@@ -70,5 +70,10 @@ describe('ReactNestedUpdateBug', () => {
     expect(didCatch).toBe(true);
     ReactDOM.render(<span>Hello</span>, div);
     expect(div.firstChild.textContent).toBe('Hello');
+
+    // Verify the console.error bug is surfaced
+    expect(() => {
+      jest.runAllTimers();
+    }).toThrow('Buggy console.error');
   });
 });
