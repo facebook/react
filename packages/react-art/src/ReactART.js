@@ -136,7 +136,7 @@ ARTRenderer.injectIntoDevTools({
   findFiberByHostInstance: () => null,
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
-  rendererPackageName: 'react-art-renderer',
+  rendererPackageName: 'react-art',
 });
 
 /** API */
