@@ -5,8 +5,9 @@ init:
   - git config --global core.autocrlf input
 
 environment:
-  nodejs_version: 8
   JAVA_HOME: C:\Program Files\Java\jdk1.8.0
+  matrix:
+    - nodejs_version: 10
 
 # Finish on first failed build
 matrix:
