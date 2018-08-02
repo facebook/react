@@ -30,7 +30,6 @@ if (__DEV__) {
   const propTypes = {
     value: function(props, propName, componentName) {
       if (
-        !(propName in props) ||
         hasReadOnlyValue[props.type] ||
         props.onChange ||
         props.readOnly ||
@@ -48,7 +47,6 @@ if (__DEV__) {
     },
     checked: function(props, propName, componentName) {
       if (
-        !(propName in props) ||
         props.onChange ||
         props.readOnly ||
         props.disabled ||
