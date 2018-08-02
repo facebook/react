@@ -909,6 +909,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       // See https://github.com/facebook/react/issues/12995
       if (
         typeof Symbol === 'function' &&
+        // $FlowFixMe Flow doesn't know about toStringTag
         newChildrenIterable[Symbol.toStringTag] === 'Generator'
       ) {
         warning(
