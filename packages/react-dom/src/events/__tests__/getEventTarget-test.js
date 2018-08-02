@@ -60,8 +60,13 @@ describe('getEventTarget', () => {
           render() {
             return (
               <svg>
-                <circle id="circleElement" cx="5" cy="5" r="4"
-                  onClick={e => (target = e.target)} />
+                <circle
+                  id="circleElement"
+                  cx="5"
+                  cy="5"
+                  r="4"
+                  onClick={e => (target = e.target)}
+                />
                 <use
                   id="useElement"
                   href="#circleElement"
@@ -89,7 +94,6 @@ describe('getEventTarget', () => {
         expect(target).toEqual(null);
         useElement.dispatchEvent(nativeEvent);
         expect(target).toEqual(circleElement);
-
       });
     });
 
