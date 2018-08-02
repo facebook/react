@@ -10,6 +10,11 @@ const packages = readdirSync(packagesRoot).filter(dir => {
   if (dir.charAt(0) === '.') {
     return false;
   }
+  if (dir === 'events') {
+    // There's an actual Node package called "events"
+    // that's used by jsdom so we don't want to alias that.
+    return false;
+  }
   const packagePath = join(packagesRoot, dir, 'package.json');
   return statSync(packagePath).isFile();
 });
