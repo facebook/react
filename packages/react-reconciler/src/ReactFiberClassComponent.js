@@ -505,7 +505,7 @@ function constructClassInstance(
         didWarnAboutUninitializedState.add(componentName);
         warningWithoutStack(
           false,
-          '%s: Did not properly initialize state during construction. ' +
+          '%s: Component state must be properly initialized when using getDerivedStateFromProps. ' +
             'Expected state to be an object, but it was %s.',
           componentName,
           instance.state === null ? 'null' : 'undefined',
