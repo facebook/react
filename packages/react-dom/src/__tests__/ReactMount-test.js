@@ -679,7 +679,9 @@ describe('ReactMount', () => {
       render() {
         return (
           <React.Fragment>
-            <div data-ssr-mismatch-padding-before="1" />
+            <div data-ssr-mismatch-padding-before="1">
+              <span />
+            </div>
             <TestPaddingBeforeInnerComponent />
             <div data-ssr-mismatch-padding-before="4" />
             <div data-ssr-mismatch-padding-before="5" />
@@ -739,7 +741,7 @@ describe('ReactMount', () => {
     ).toWarnDev(
       'Warning: Expected server HTML to contain a matching <h2> in <div>.\n\n' +
         '  <div data-reactroot="">\n' +
-        '    <div data-ssr-mismatch-padding-before="1"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="1"><span></span></div>\n' +
         '    <div data-ssr-mismatch-padding-before="2"></div>\n' +
         '    <div data-ssr-mismatch-padding-before="3"></div>\n' +
         '    <div data-ssr-mismatch-padding-before="4"></div>\n' +
@@ -910,15 +912,15 @@ describe('ReactMount', () => {
 
     class TestPaddingBeforeInnerInnerComponent extends React.Component {
       render() {
-        return <div data-ssr-mismatch-padding-before="6" />;
+        return <div data-ssr-mismatch-padding-before="8" />;
       }
     }
     class TestPaddingBeforeInnerComponent extends React.Component {
       render() {
         return (
           <React.Fragment>
-            <div data-ssr-mismatch-padding-before="4" />
-            <div data-ssr-mismatch-padding-before="5" />
+            <div data-ssr-mismatch-padding-before="6" />
+            <div data-ssr-mismatch-padding-before="7" />
             <TestPaddingBeforeInnerInnerComponent />
           </React.Fragment>
         );
@@ -928,12 +930,11 @@ describe('ReactMount', () => {
       render() {
         return (
           <React.Fragment>
-            <div data-ssr-mismatch-padding-before="2" />
-            <div data-ssr-mismatch-padding-before="3" />
+            <div data-ssr-mismatch-padding-before="4" />
+            <div data-ssr-mismatch-padding-before="5" />
             <TestPaddingBeforeInnerComponent />
-            <div data-ssr-mismatch-padding-before="7" />
-            <div data-ssr-mismatch-padding-before="8" />
             <div data-ssr-mismatch-padding-before="9" />
+            <div data-ssr-mismatch-padding-before="10" />
           </React.Fragment>
         );
       }
@@ -942,11 +943,15 @@ describe('ReactMount', () => {
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
       <div>
-        <div data-ssr-mismatch-padding-before="1" />
+        <div data-ssr-mismatch-padding-before="1">
+          <span />
+        </div>
+        <div data-ssr-mismatch-padding-before="2" />
+        <div data-ssr-mismatch-padding-before="3" />
         <TestPaddingBeforeComponent />
-        <div data-ssr-mismatch-padding-before="10" />
         <div data-ssr-mismatch-padding-before="11" />
         <div data-ssr-mismatch-padding-before="12" />
+        <div data-ssr-mismatch-padding-before="13" />
       </div>,
     );
     div.innerHTML = markup;
@@ -954,12 +959,16 @@ describe('ReactMount', () => {
     expect(() =>
       ReactDOM.hydrate(
         <div>
-          <div data-ssr-mismatch-padding-before="1" />
+          <div data-ssr-mismatch-padding-before="1">
+            <span />
+          </div>
+          <div data-ssr-mismatch-padding-before="2" />
+          <div data-ssr-mismatch-padding-before="3" />
           <TestPaddingBeforeComponent />
-          <div data-ssr-mismatch-padding-before="10" />
           <div data-ssr-mismatch-padding-before="11" />
           <div data-ssr-mismatch-padding-before="12" />
-          SSRMismatchTest client text
+          <div data-ssr-mismatch-padding-before="13" />
+          {'SSRMismatchTest client text'}
         </div>,
         div,
       ),
@@ -967,7 +976,7 @@ describe('ReactMount', () => {
       'Warning: Expected server HTML to contain a matching text node' +
         " for {'SSRMismatchTest client text'} in <div>.\n\n" +
         '  <div data-reactroot="">\n' +
-        '    <div data-ssr-mismatch-padding-before="1"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="1"><span></span></div>\n' +
         '    <div data-ssr-mismatch-padding-before="2"></div>\n' +
         '    <div data-ssr-mismatch-padding-before="3"></div>\n' +
         '    <div data-ssr-mismatch-padding-before="4"></div>\n' +
@@ -979,6 +988,7 @@ describe('ReactMount', () => {
         '    <div data-ssr-mismatch-padding-before="10"></div>\n' +
         '    <div data-ssr-mismatch-padding-before="11"></div>\n' +
         '    <div data-ssr-mismatch-padding-before="12"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="13"></div>\n' +
         "+   {'SSRMismatchTest client text'}\n" +
         '  </div>\n\n' +
         '    in div (at **)',

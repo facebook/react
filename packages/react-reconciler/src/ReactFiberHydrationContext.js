@@ -16,7 +16,12 @@ import type {
   HostContext,
 } from './ReactFiberHostConfig';
 
-import {HostComponent, HostText, HostRoot} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  HostText,
+  HostRoot,
+  HostPortal,
+} from 'shared/ReactWorkTags';
 import {Deletion, Placement} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
@@ -108,24 +113,29 @@ function insertNonHydratedInstance(
   if (__DEV__) {
     let hydrationWarningHostInstanceIndex = 0;
     {
-      // Count rendered host nodes by traversing `returnFiber` subtree until `fiber` is found.
-      let node = returnFiber.child;
-      const nextNodeStack = [];
-      while (node && node !== fiber) {
+      // Find index of `fiber`, the place where hydration failed, among immediate children host nodes of `returnFiber`.
+      const startNode = returnFiber.child;
+      let node: Fiber | null = startNode;
+      search: while (node && node !== fiber) {
         if (node.tag === HostComponent || node.tag === HostText) {
           ++hydrationWarningHostInstanceIndex;
-        }
-        // Depth-first traversal.
-        if (node.child) {
-          if (node.sibling) {
-            // Remember where to continue on this tree level, then go deeper.
-            nextNodeStack.push(node.sibling);
-          }
+        } else if (node.tag === HostPortal) {
+          // Do not count HostPortal and do not descend into them as they do not affect the index within the parent.
+        } else if (node.child !== null) {
+          // Do not descend into HostComponent or HostText as they do not affect the index within the parent.
+          node.child.return = node;
           node = node.child;
-        } else if (node.sibling) {
+          continue;
+        }
+        while (node && node.sibling === null) {
+          if (node.return === null || node.return === startNode) {
+            break search;
+          }
+          node = node.return;
+        }
+        if (node && node.sibling) {
+          node.sibling.return = node.return;
           node = node.sibling;
-        } else {
-          node = nextNodeStack.pop();
         }
       }
     }
