@@ -6,6 +6,7 @@ Array [
   "animationEnd",
   "animationIteration",
   "animationStart",
+  "auxClick",
   "beforeInput",
   "blur",
   "canPlay",
