@@ -50,7 +50,7 @@ import {
   popContextProvider as popLegacyContextProvider,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
-import {popProvider} from './ReactFiberNewContext';
+import {popProvider, popRootContexts} from './ReactFiberNewContext';
 import {
   renderDidSuspend,
   renderDidError,
@@ -391,6 +391,7 @@ function unwindWork(
     case HostRoot: {
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
+      popRootContexts(workInProgress);
       const effectTag = workInProgress.effectTag;
       invariant(
         (effectTag & DidCapture) === NoEffect,
@@ -432,6 +433,7 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     case HostRoot: {
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
+      popRootContexts(interruptedWork);
       break;
     }
     case HostComponent: {

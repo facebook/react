@@ -456,7 +456,14 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
-      const rootID = DEFAULT_ROOT_ID;
+      ReactNoop.renderLegacySyncRootWithID(element, DEFAULT_ROOT_ID, callback);
+    },
+
+    renderLegacySyncRootWithID(
+      element: React$Element<any>,
+      rootID: string,
+      callback: ?Function,
+    ) {
       const isAsync = false;
       const container = ReactNoop.getOrCreateRootContainer(rootID, isAsync);
       const root = roots.get(container.rootID);
