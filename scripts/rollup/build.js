@@ -2,7 +2,7 @@
 
 const {rollup} = require('rollup');
 const babel = require('rollup-plugin-babel');
-const closure = require('./plugins/closure-plugin');
+const closure = require('@ampproject/rollup-plugin-closure-compiler');
 const commonjs = require('rollup-plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
@@ -24,6 +24,7 @@ const Packaging = require('./packaging');
 const {asyncCopyTo, asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
+const Entries = require('./entries');
 
 // Errors in promises should be fatal.
 let loggedErrors = new Set();
@@ -38,6 +39,8 @@ process.on('unhandledRejection', err => {
 const {
   UMD_DEV,
   UMD_PROD,
+  ESM_DEV,
+  ESM_PROD,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -68,10 +71,7 @@ const errorCodeOpts = {
 
 const closureOptions = {
   compilation_level: 'SIMPLE',
-  language_in: 'ECMASCRIPT5_STRICT',
-  language_out: 'ECMASCRIPT5_STRICT',
   env: 'CUSTOM',
-  warning_level: 'QUIET',
   apply_input_source_maps: false,
   use_types_for_optimization: false,
   process_common_js_modules: false,
@@ -113,6 +113,8 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
       });
     case UMD_DEV:
     case UMD_PROD:
+    case ESM_DEV:
+    case ESM_PROD:
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
@@ -159,6 +161,9 @@ function getFormat(bundleType) {
     case UMD_DEV:
     case UMD_PROD:
       return `umd`;
+    case ESM_DEV:
+    case ESM_PROD:
+      return `es`;
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
@@ -183,6 +188,10 @@ function getFilename(name, globalName, bundleType) {
       return `${name}.development.js`;
     case UMD_PROD:
       return `${name}.production.min.js`;
+    case ESM_DEV:
+      return `${name}.development.mjs`;
+    case ESM_PROD:
+      return `${name}.production.min.mjs`;
     case NODE_DEV:
       return `${name}.development.js`;
     case NODE_PROD:
@@ -207,12 +216,14 @@ function getFilename(name, globalName, bundleType) {
 function isProductionBundleType(bundleType) {
   switch (bundleType) {
     case UMD_DEV:
+    case ESM_DEV:
     case NODE_DEV:
     case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return false;
     case UMD_PROD:
+    case ESM_PROD:
     case NODE_PROD:
     case NODE_PROFILING:
     case FB_WWW_PROD:
@@ -239,6 +250,8 @@ function isProfilingBundleType(bundleType) {
     case RN_OSS_PROD:
     case UMD_DEV:
     case UMD_PROD:
+    case ESM_DEV:
+    case ESM_PROD:
       return false;
     case FB_WWW_PROFILING:
     case NODE_PROFILING:
@@ -266,7 +279,6 @@ function blacklistFBJS() {
 
 function getPlugins(
   entry,
-  externals,
   updateBabelOptions,
   filename,
   packageName,
@@ -306,9 +318,7 @@ function getPlugins(
     // Ensure we don't try to bundle any fbjs modules.
     blacklistFBJS(),
     // Use Node resolution mechanism.
-    resolve({
-      skip: externals,
-    }),
+    resolve(),
     // Remove license headers from individual modules
     stripBanner({
       exclude: 'node_modules/**/*',
@@ -467,7 +477,6 @@ async function createBundle(bundle, bundleType) {
     onwarn: handleRollupWarning,
     plugins: getPlugins(
       bundle.entry,
-      externals,
       bundle.babel,
       filename,
       packageName,
@@ -477,11 +486,6 @@ async function createBundle(bundle, bundleType) {
       bundle.modulesToStub,
       pureExternalModules
     ),
-    // We can't use getters in www.
-    legacy:
-      bundleType === FB_WWW_DEV ||
-      bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING,
   };
   const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
     bundleType,
@@ -500,6 +504,13 @@ async function createBundle(bundle, bundleType) {
   try {
     const result = await rollup(rollupConfig);
     await result.write(rollupOutputOptions);
+
+    if (bundleType === ESM_DEV) {
+      fs.writeFileSync(
+        path.join(Packaging.getPackageOutputPath(packageName), 'index.mjs'),
+        Entries.generateESMEntryPoint(packageName, result.exports)
+      );
+    }
   } catch (error) {
     console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
     handleRollupError(error);
@@ -511,7 +522,7 @@ async function createBundle(bundle, bundleType) {
   console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
 }
 
-function handleRollupWarning(warning) {
+function handleRollupWarning(warning, warn) {
   if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
     const match = warning.message.match(/external module '([^']+)'/);
     if (!match || typeof match[1] !== 'string') {
@@ -532,6 +543,10 @@ function handleRollupWarning(warning) {
     }
     // Don't warn. We will remove side effectless require() in a later pass.
     return;
+  }
+
+  if (warning.code === 'CIRCULAR_DEPENDENCY') {
+    return warn(warning);
   }
 
   if (typeof warning.code === 'string') {
@@ -588,6 +603,8 @@ async function buildEverything() {
   for (const bundle of Bundles.bundles) {
     await createBundle(bundle, UMD_DEV);
     await createBundle(bundle, UMD_PROD);
+    await createBundle(bundle, ESM_DEV);
+    await createBundle(bundle, ESM_PROD);
     await createBundle(bundle, NODE_DEV);
     await createBundle(bundle, NODE_PROD);
     await createBundle(bundle, NODE_PROFILING);

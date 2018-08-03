@@ -5,6 +5,8 @@ const reactVersion = require('../../package.json').version;
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
+const ESM_DEV = Bundles.bundleTypes.ESM_DEV;
+const ESM_PROD = Bundles.bundleTypes.ESM_PROD;
 const NODE_DEV = Bundles.bundleTypes.NODE_DEV;
 const NODE_PROD = Bundles.bundleTypes.NODE_PROD;
 const NODE_PROFILING = Bundles.bundleTypes.NODE_PROFILING;
@@ -41,6 +43,29 @@ ${source}`;
 
   /***************** UMD_PROD *****************/
   [UMD_PROD](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
+${source}`;
+  },
+
+  /***************** ESM_DEV *****************/
+  [ESM_DEV](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
+
+'use strict';
+
+${source}`;
+  },
+
+  /***************** ESM_PROD *****************/
+  [ESM_PROD](source, globalName, filename, moduleType) {
     return `/** @license React v${reactVersion}
  * ${filename}
  *

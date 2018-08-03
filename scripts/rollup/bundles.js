@@ -3,6 +3,8 @@
 const bundleTypes = {
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
+  ESM_DEV: 'ESM_DEV',
+  ESM_PROD: 'ESM_PROD',
   NODE_DEV: 'NODE_DEV',
   NODE_PROD: 'NODE_PROD',
   NODE_PROFILING: 'NODE_PROFILING',
@@ -19,6 +21,8 @@ const bundleTypes = {
 
 const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
+const ESM_DEV = bundleTypes.ESM_DEV;
+const ESM_PROD = bundleTypes.ESM_PROD;
 const NODE_DEV = bundleTypes.NODE_DEV;
 const NODE_PROD = bundleTypes.NODE_PROD;
 const NODE_PROFILING = bundleTypes.NODE_PROFILING;
@@ -353,6 +357,8 @@ const bundles = [
       FB_WWW_PROD,
       UMD_DEV,
       UMD_PROD,
+      ESM_DEV,
+      ESM_PROD,
     ],
     moduleType: ISOMORPHIC,
     entry: 'react-is',
