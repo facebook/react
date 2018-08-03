@@ -710,8 +710,20 @@ function resetChildExpirationTime(
   // Bubble up the earliest expiration time.
   if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
     // We're in profiling mode.
-    // Let's use this same traversal to update the render times.
+    // Let's use this same traversal to update the render durations.
+    let actualDuration = workInProgress.actualDuration;
     let treeBaseDuration = workInProgress.selfBaseDuration;
+
+    // When a fiber is cloned, its actualDuration is reset to 0.
+    // This value will only be updated if work is done on the fiber (i.e. it doesn't bailout).
+    // When work is done, it should bubble to the parent's actualDuration.
+    // If the fiber has not been cloned though, (meaning no work was done),
+    // Then this value will reflect the amount of time spent working on a previous render.
+    // In that case it should not bubble.
+    // We determine whether it was cloned by comparing the child pointer.
+    const shouldBubbleActualDurations =
+      workInProgress.alternate === null ||
+      workInProgress.child !== workInProgress.alternate.child;
 
     let child = workInProgress.child;
     while (child !== null) {
@@ -731,9 +743,13 @@ function resetChildExpirationTime(
       ) {
         newChildExpirationTime = childChildExpirationTime;
       }
+      if (shouldBubbleActualDurations) {
+        actualDuration += child.actualDuration;
+      }
       treeBaseDuration += child.treeBaseDuration;
       child = child.sibling;
     }
+    workInProgress.actualDuration = actualDuration;
     workInProgress.treeBaseDuration = treeBaseDuration;
   } else {
     let child = workInProgress.child;
@@ -794,18 +810,6 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
         if (workInProgress.mode & ProfileMode) {
           // Update render duration assuming we didn't error.
           stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
-        }
-
-        // If we've done new work, then the parent's render duration should include this work.
-        // Unlike with tree base times, render durations bubble upwards this way due to bailouts.
-        // Child render durations will not get reset if they bailed out,
-        // And so it isn't safe to accumulate child base times during the complete phase.
-        if (
-          workInProgress.actualDuration !== 0 &&
-          workInProgress.return !== null &&
-          workInProgress.return.mode & ProfileMode
-        ) {
-          workInProgress.return.actualDuration += workInProgress.actualDuration;
         }
       } else {
         nextUnitOfWork = completeWork(
@@ -884,6 +888,11 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
         return null;
       }
     } else {
+      if (workInProgress.mode & ProfileMode) {
+        // Record the render duration for the fiber that errored.
+        stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
+      }
+
       // This fiber did not complete because something threw. Pop values off
       // the stack without entering the complete phase. If this is a boundary,
       // capture values if possible.
@@ -904,6 +913,19 @@ function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
         stopWorkTimer(workInProgress);
         if (__DEV__ && ReactFiberInstrumentation.debugTool) {
           ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
+        }
+
+        if (enableProfilerTimer) {
+          // Include the time spent working on failed children before continuing.
+          if (next.mode & ProfileMode) {
+            let actualDuration = next.actualDuration;
+            let child = next.child;
+            while (child !== null) {
+              actualDuration += child.actualDuration;
+              child = child.sibling;
+            }
+            next.actualDuration = actualDuration;
+          }
         }
 
         // If completing this work spawned new work, do that next. We'll come
@@ -972,7 +994,7 @@ function performUnitOfWork(workInProgress: Fiber): Fiber | null {
     next = beginWork(current, workInProgress, nextRenderExpirationTime);
 
     if (workInProgress.mode & ProfileMode) {
-      // Update render duration assuming we didn't bailout (or error).
+      // Record the render duration assuming we didn't bailout (or error).
       stopProfilerTimerIfRunningAndRecordDelta(workInProgress, true);
     }
   } else {
@@ -1068,24 +1090,6 @@ function renderRoot(
           // Reset global debug state
           // We assume this is defined in DEV
           (resetCurrentlyProcessingQueue: any)();
-        }
-
-        if (enableProfilerTimer) {
-          // Record elapsed render time in the event of an error.
-          stopProfilerTimerIfRunningAndRecordDelta(nextUnitOfWork, false);
-
-          // If we've done new work, then the parent's render duration should include this work.
-          // Unlike with tree base times, render durations bubble upwards this way due to bailouts.
-          // Child render durations will not get reset if they bailed out,
-          // And so it isn't safe to accumulate child base times during the complete phase.
-          if (
-            nextUnitOfWork.actualDuration !== 0 &&
-            nextUnitOfWork.return !== null &&
-            nextUnitOfWork.return.mode & ProfileMode
-          ) {
-            nextUnitOfWork.return.actualDuration +=
-              nextUnitOfWork.actualDuration;
-          }
         }
 
         const failedUnitOfWork: Fiber = nextUnitOfWork;

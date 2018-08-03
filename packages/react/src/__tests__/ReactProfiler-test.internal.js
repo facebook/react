@@ -57,7 +57,7 @@ describe('Profiler', () => {
 
         // This will throw in production too,
         // But the test is only interested in verifying the DEV error message.
-        if (__DEV__) {
+        if (__PROFILE__) {
           it('should warn if required params are missing', () => {
             expect(() => {
               ReactTestRenderer.create(<React.unstable_Profiler />);
@@ -855,7 +855,7 @@ describe('Profiler', () => {
             const callback = jest.fn();
 
             const ThrowsError = () => {
-              advanceTimeBy(10);
+              advanceTimeBy(3);
               throw Error('expected error');
             };
 
@@ -879,7 +879,7 @@ describe('Profiler', () => {
             ReactTestRenderer.create(
               <React.unstable_Profiler id="test" onRender={callback}>
                 <ErrorBoundary>
-                  <AdvanceTime byAmount={5} />
+                  <AdvanceTime byAmount={9} />
                   <ThrowsError />
                 </ErrorBoundary>
               </React.unstable_Profiler>,
@@ -890,18 +890,19 @@ describe('Profiler', () => {
             // Callbacks bubble (reverse order).
             let [mountCall, updateCall] = callback.mock.calls;
 
-            // The initial mount only includes the ErrorBoundary (which takes 2ms)
+            // The initial mount only includes the ErrorBoundary (which takes 2)
             // But it spends time rendering all of the failed subtree also.
             expect(mountCall[1]).toBe('mount');
-            // actual time includes: 2 (ErrorBoundary) + 5 (AdvanceTime) + 10 (ThrowsError)
-            // We don't count the time spent in replaying the failed unit of work (ThrowsError)
-            expect(mountCall[2]).toBe(17);
+            // actual time includes: 2 (ErrorBoundary) + 9 (AdvanceTime) + 3 (ThrowsError)
+            // If replayFailedUnitOfWorkWithInvokeGuardedCallback is enbaled, ThrowsError is replayed.
+            expect(mountCall[2]).toBe(14);
             // base time includes: 2 (ErrorBoundary)
             expect(mountCall[3]).toBe(2);
             // start time
             expect(mountCall[4]).toBe(5);
-            // commit time
-            expect(mountCall[5]).toBe(flagEnabled && __DEV__ ? 32 : 22);
+            // commit time: 5 initially + 14 of work
+            // Add an additional 3 (ThrowsError) if we replaced the failed work
+            expect(mountCall[5]).toBe(flagEnabled && __PROFILE__ ? 22 : 19);
 
             // The update includes the ErrorBoundary and its fallback child
             expect(updateCall[1]).toBe('update');
@@ -910,9 +911,10 @@ describe('Profiler', () => {
             // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
             expect(updateCall[3]).toBe(22);
             // start time
-            expect(updateCall[4]).toBe(flagEnabled && __DEV__ ? 32 : 22);
-            // commit time
-            expect(updateCall[5]).toBe(flagEnabled && __DEV__ ? 54 : 44);
+            expect(updateCall[4]).toBe(flagEnabled && __PROFILE__ ? 22 : 19);
+            // commit time: 19 (startTime) + 2 (ErrorBoundary) + 20 (AdvanceTime)
+            // Add an additional 3 (ThrowsError) if we replaced the failed work
+            expect(updateCall[5]).toBe(flagEnabled && __PROFILE__ ? 44 : 41);
           });
 
           it('should accumulate actual time after an error handled by getDerivedStateFromCatch()', () => {
@@ -966,7 +968,7 @@ describe('Profiler', () => {
             // start time
             expect(mountCall[4]).toBe(5);
             // commit time
-            expect(mountCall[5]).toBe(flagEnabled && __DEV__ ? 54 : 44);
+            expect(mountCall[5]).toBe(flagEnabled && __PROFILE__ ? 54 : 44);
           });
 
           it('should reset the fiber stack correct after a "complete" phase error', () => {
