@@ -18,6 +18,7 @@ import type {
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
@@ -61,6 +62,8 @@ import {
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
+
+const {ReactRootList} = ReactSharedInternals;
 
 type OpaqueRoot = FiberRoot;
 
@@ -157,6 +160,22 @@ function scheduleRootUpdate(
   return expirationTime;
 }
 
+function unmountRootFromGlobalList(root) {
+  // This root is no longer mounted. Remove it from the global list.
+  const previous = root.previousGlobalRoot;
+  const next = root.nextGlobalRoot;
+  if (previous !== null) {
+    previous.nextGlobalRoot = next;
+  } else {
+    ReactRootList.first = next;
+  }
+  if (next !== null) {
+    next.previousGlobalRoot = previous;
+  } else {
+    ReactRootList.last = previous;
+  }
+}
+
 export function updateContainerAtExpirationTime(
   element: ReactNodeList,
   container: OpaqueRoot,
@@ -179,6 +198,25 @@ export function updateContainerAtExpirationTime(
     }
   }
 
+  let wrappedCallback;
+  if (element === null) {
+    // Assume this is an unmount and mark the root for clean-up from the
+    // global list.
+    // TODO: Add an explicit API for unmounting to the reconciler API, instead
+    // of inferring based on the children.
+    if (callback !== null && callback !== undefined) {
+      const cb = callback;
+      wrappedCallback = function() {
+        unmountRootFromGlobalList(container);
+        return cb.call(this);
+      };
+    } else {
+      wrappedCallback = unmountRootFromGlobalList.bind(null, container);
+    }
+  } else {
+    wrappedCallback = callback;
+  }
+
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {
     container.context = context;
@@ -186,7 +224,7 @@ export function updateContainerAtExpirationTime(
     container.pendingContext = context;
   }
 
-  return scheduleRootUpdate(current, element, expirationTime, callback);
+  return scheduleRootUpdate(current, element, expirationTime, wrappedCallback);
 }
 
 function findHostInstance(component: Object): PublicInstance | null {

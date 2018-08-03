@@ -7,10 +7,12 @@
 
 import assign from 'object-assign';
 import ReactCurrentOwner from './ReactCurrentOwner';
+import ReactRootList from './ReactRootList';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 const ReactSharedInternals = {
   ReactCurrentOwner,
+  ReactRootList,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
 };

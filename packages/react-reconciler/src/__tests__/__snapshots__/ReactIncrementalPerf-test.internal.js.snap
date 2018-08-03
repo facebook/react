@@ -38,9 +38,9 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Committing Host Effects: 2 Total)
     ⚛ AllLifecycles.componentWillUnmount
-  ⚛ (Calling Lifecycle Methods: 0 Total)
+  ⚛ (Calling Lifecycle Methods: 1 Total)
 "
 `;
 
@@ -203,8 +203,8 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 1 Total)
-  ⚛ (Calling Lifecycle Methods: 0 Total)
+  ⚛ (Committing Host Effects: 2 Total)
+  ⚛ (Calling Lifecycle Methods: 1 Total)
 "
 `;
 

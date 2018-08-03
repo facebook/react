@@ -18,6 +18,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
+import type {UpdateQueue} from './ReactUpdateQueue';
 
 import {enableProfilerTimer, enableSuspense} from 'shared/ReactFeatureFlags';
 import {
@@ -275,7 +276,9 @@ function commitLifeCycles(
       return;
     }
     case HostRoot: {
-      const updateQueue = finishedWork.updateQueue;
+      const updateQueue: UpdateQueue<
+        any,
+      > | null = (finishedWork.updateQueue: any);
       if (updateQueue !== null) {
         let instance = null;
         if (finishedWork.child !== null) {
@@ -295,6 +298,9 @@ function commitLifeCycles(
           instance,
           committedExpirationTime,
         );
+        if (updateQueue.firstUpdate === null) {
+          finishedWork.memoizedState.contexts = updateQueue.baseState.contexts = new Map();
+        }
       }
       return;
     }

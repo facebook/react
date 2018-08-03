@@ -291,6 +291,47 @@ describe('ReactNewContext', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Result: 12')]);
       });
 
+      it('a change in an ancestor provider does not update consumers within a nested provider', () => {
+        const ThemeContext = React.createContext('light');
+        const ThemeConsumer = getConsumer(ThemeContext);
+        class Parent extends React.Component {
+          state = {theme: 'light'};
+          render() {
+            return (
+              <ThemeContext.Provider value={this.state.theme}>
+                <ThemedText />
+                <ThemeContext.Provider value="blue">
+                  <Child />
+                </ThemeContext.Provider>
+              </ThemeContext.Provider>
+            );
+          }
+        }
+
+        class Child extends React.PureComponent {
+          render() {
+            return <ThemedText />;
+          }
+        }
+
+        function ThemedText(props) {
+          return (
+            <ThemeConsumer>{theme => <Text text={theme} />}</ThemeConsumer>
+          );
+        }
+
+        const parent = React.createRef(null);
+        ReactNoop.render(<Parent ref={parent} />);
+        expect(ReactNoop.flush()).toEqual(['light', 'blue']);
+        expect(ReactNoop.getChildren()).toEqual([span('light'), span('blue')]);
+
+        parent.current.setState({theme: 'dark'});
+        // Only one of the consumers should re-render. The one nested inside
+        // a provider does not need to update.
+        expect(ReactNoop.flush()).toEqual(['dark']);
+        expect(ReactNoop.getChildren()).toEqual([span('dark'), span('blue')]);
+      });
+
       it('should provide the correct (default) values to consumers outside of a provider', () => {
         const FooContext = React.createContext({value: 'foo-initial'});
         const BarContext = React.createContext({value: 'bar-initial'});
