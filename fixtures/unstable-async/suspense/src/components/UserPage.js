@@ -1,4 +1,4 @@
-import React, {Fragment, Placeholder} from 'react';
+import React, {Placeholder} from 'react';
 import {createResource} from 'simple-cache-provider';
 import Spinner from './Spinner';
 import {cache} from '../cache';
@@ -112,8 +112,8 @@ const ImageResource = createResource(
     })
 );
 
-function Img({src, ...rest}) {
-  return <img src={ImageResource.read(cache, src)} {...rest} />;
+function Img({src, alt, ...rest}) {
+  return <img src={ImageResource.read(cache, src)} alt={alt} {...rest} />;
 }
 
 function UserPicture({source}) {
