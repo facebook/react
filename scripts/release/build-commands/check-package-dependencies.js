@@ -39,7 +39,7 @@ const check = async ({cwd, packages}) => {
     });
   };
 
-  await Promise.all(dependencies.map(checkModule));
+  dependencies.map(checkModule);
 
   if (invalidDependencies.length) {
     throw Error(
