@@ -144,7 +144,7 @@ function Repositories({id}) {
         padding: 0,
         margin: 0,
       }}>
-      {reviews.map(review => <Repository key={review.id} {...review} />)}
+      {reviews.map(review => <Repository key={review.name} {...review} />)}
     </ul>
   );
 }
