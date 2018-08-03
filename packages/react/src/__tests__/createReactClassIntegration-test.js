@@ -510,9 +510,12 @@ describe('create-react-class-integration', () => {
     });
     expect(() =>
       ReactDOM.render(<Component />, document.createElement('div')),
-    ).toWarnDev('Component state must be properly initialized when using getDerivedStateFromProps.', {
-      withoutStack: true,
-    });
+    ).toWarnDev(
+      'Component state must be properly initialized when using getDerivedStateFromProps.',
+      {
+        withoutStack: true,
+      },
+    );
   });
 
   it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
