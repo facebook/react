@@ -64,6 +64,7 @@ const interactiveEventTypeNames: Array<EventTuple> = [
   [DOMTopLevelEventTypes.TOP_CONTEXT_MENU, 'contextMenu'],
   [DOMTopLevelEventTypes.TOP_COPY, 'copy'],
   [DOMTopLevelEventTypes.TOP_CUT, 'cut'],
+  [DOMTopLevelEventTypes.TOP_AUX_CLICK, 'auxClick'],
   [DOMTopLevelEventTypes.TOP_DOUBLE_CLICK, 'doubleClick'],
   [DOMTopLevelEventTypes.TOP_DRAG_END, 'dragEnd'],
   [DOMTopLevelEventTypes.TOP_DRAG_START, 'dragStart'],
