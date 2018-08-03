@@ -165,7 +165,7 @@ class SelectFixture extends React.Component {
           </TestCase.ExpectedResult>
 
           <div className="test-fixture">
-            <form ref={n => (this._multipleFormDOMNode = n)}>
+            <form>
               <select multiple defaultValue={['tiger']}>
                 <option value="gorilla">gorilla</option>
                 <option value="giraffe">giraffe</option>
