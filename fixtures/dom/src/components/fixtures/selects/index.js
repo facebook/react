@@ -159,6 +159,25 @@ class SelectFixture extends React.Component {
           </div>
         </TestCase>
 
+        <TestCase title="A multiple select being scrolled to first selected option">
+          <TestCase.ExpectedResult>
+            First selected option should be visible
+          </TestCase.ExpectedResult>
+
+          <div className="test-fixture">
+            <form>
+              <select multiple defaultValue={['tiger']}>
+                <option value="gorilla">gorilla</option>
+                <option value="giraffe">giraffe</option>
+                <option value="monkey">monkey</option>
+                <option value="lion">lion</option>
+                <option value="mongoose">mongoose</option>
+                <option value="tiger">tiget</option>
+              </select>
+            </form>
+          </div>
+        </TestCase>
+
         <TestCase
           title="An option which contains conditional render fails"
           relatedIssues="11911">
