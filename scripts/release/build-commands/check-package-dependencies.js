@@ -39,7 +39,7 @@ const check = async ({cwd, packages}) => {
     });
   };
 
-  dependencies.map(checkModule);
+  dependencies.forEach(checkModule);
 
   if (invalidDependencies.length) {
     throw Error(
