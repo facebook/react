@@ -190,7 +190,7 @@ describe('ReactES6Class', () => {
       }
     }
     expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
-      'Foo: Did not properly initialize state during construction. ' +
+      'Foo: Component state must be properly initialized when using getDerivedStateFromProps. ' +
         'Expected state to be an object, but it was undefined.',
       {withoutStack: true},
     );

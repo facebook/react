@@ -201,7 +201,7 @@ describe('ReactDOMServerLifecycles', () => {
     }
 
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
-      'Component: Did not properly initialize state during construction. ' +
+      'Component: Component state must be properly initialized when using getDerivedStateFromProps. ' +
         'Expected state to be an object, but it was undefined.',
       {withoutStack: true},
     );

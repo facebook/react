@@ -163,7 +163,7 @@ describe 'ReactCoffeeScriptClass', ->
       }
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: Did not properly initialize state during construction. Expected state to be an object, but it was undefined.', {withoutStack: true}
+    ).toWarnDev 'Foo: Component state must be properly initialized when using getDerivedStateFromProps. Expected state to be an object, but it was undefined.', {withoutStack: true}
     undefined
 
   it 'updates initial state with values returned by static getDerivedStateFromProps', ->

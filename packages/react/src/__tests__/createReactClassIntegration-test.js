@@ -510,7 +510,7 @@ describe('create-react-class-integration', () => {
     });
     expect(() =>
       ReactDOM.render(<Component />, document.createElement('div')),
-    ).toWarnDev('Did not properly initialize state during construction.', {
+    ).toWarnDev('Component state must be properly initialized when using getDerivedStateFromProps.', {
       withoutStack: true,
     });
   });

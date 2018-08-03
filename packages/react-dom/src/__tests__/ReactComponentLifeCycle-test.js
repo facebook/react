@@ -1003,7 +1003,7 @@ describe('ReactComponentLifeCycle', () => {
 
     const div = document.createElement('div');
     expect(() => ReactDOM.render(<MyComponent />, div)).toWarnDev(
-      'MyComponent: Did not properly initialize state during construction. ' +
+      'MyComponent: Component state must be properly initialized when using getDerivedStateFromProps. ' +
         'Expected state to be an object, but it was undefined.',
       {withoutStack: true},
     );
