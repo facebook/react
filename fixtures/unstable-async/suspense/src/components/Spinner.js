@@ -29,7 +29,7 @@ export default function Spinner({size = 'small'}) {
   const containerClassName = `SpinnerContainer SpinnerContainer-${size}`;
 
   return (
-    <div class={containerClassName}>
+    <div className={containerClassName}>
       <svg
         className={className}
         width={baseSize}
