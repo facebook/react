@@ -512,7 +512,7 @@ describe('create-react-class-integration', () => {
       ReactDOM.render(<Component />, document.createElement('div')),
     ).toWarnDev(
       '`Component` uses `getDerivedStateFromProps` but its initial state is ' +
-        'undefined. This is not recommended. Instead, define the initial state by ' +
+        'null. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `Component`. ' +
         'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
       {
