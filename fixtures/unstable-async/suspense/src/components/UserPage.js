@@ -135,7 +135,7 @@ function UserPicture({source}) {
 const UserRepositoriesResource = createResource(fetchUserRepositoriesListJSON);
 
 function Repositories({id}) {
-  const reviews = UserRepositoriesResource.read(cache, id);
+  const repos = UserRepositoriesResource.read(cache, id);
   return (
     <ul
       style={{
@@ -144,7 +144,7 @@ function Repositories({id}) {
         padding: 0,
         margin: 0,
       }}>
-      {reviews.map(review => <Repository key={review.id} {...review} />)}
+      {repos.map(review => <Repository key={repo.name} {...repo} />)}
     </ul>
   );
 }
