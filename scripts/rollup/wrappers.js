@@ -59,8 +59,6 @@ ${source}`;
 ${license}
  */
 
-'use strict';
-
 ${source}`;
   },
 
