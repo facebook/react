@@ -26,23 +26,26 @@ export default function Spinner({size = 'small'}) {
   const strokeWidth = STROKE_WIDTHS[size];
   const pathRadius = `${baseSize / 2 - strokeWidth}px`;
   const className = PATH_CLASS_NAMES[size];
+  const containerClassName = `SpinnerContainer SpinnerContainer-${size}`;
 
   return (
-    <svg
-      className={className}
-      width={baseSize}
-      height={baseSize}
-      viewBox={`0 0 ${baseSize} ${baseSize}`}>
-      <circle
-        className="SpinnerPath"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        cx={pathSize}
-        cy={pathSize}
-        r={pathRadius}
-      />
-    </svg>
+    <div class={containerClassName}>
+      <svg
+        className={className}
+        width={baseSize}
+        height={baseSize}
+        viewBox={`0 0 ${baseSize} ${baseSize}`}>
+        <circle
+          className="SpinnerPath"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          cx={pathSize}
+          cy={pathSize}
+          r={pathRadius}
+        />
+      </svg>
+    </div>
   );
 }
