@@ -190,8 +190,10 @@ describe('ReactES6Class', () => {
       }
     }
     expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
-      'Foo: Component state must be properly initialized when using getDerivedStateFromProps. ' +
-        'Expected state to be an object, but it was undefined.',
+      '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
+        'undefined. This is not recommended. Instead, define the initial state by ' +
+        'assigning an object to `this.state` in the constructor of `Foo`. ' +
+        'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
       {withoutStack: true},
     );
   });
