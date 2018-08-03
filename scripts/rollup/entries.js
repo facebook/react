@@ -2,8 +2,8 @@
 
 function generateESMEntryPoint(packageName, exports) {
   return [
-    `import * as dev from "esm/${packageName}.development.mjs";`,
-    `import * as prod from "esm/${packageName}.production.min.mjs";`,
+    `import * as dev from "./esm/${packageName}.development.mjs";`,
+    `import * as prod from "./esm/${packageName}.production.min.mjs";`,
     `\n`,
     ...exports.map(
       name =>
