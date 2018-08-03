@@ -390,7 +390,8 @@ export function createElement(
       // `select` elements automatically pick the first item.
       // See https://github.com/facebook/react/issues/13222
       if (type === 'select' && props.multiple) {
-        domElement.setAttribute('multiple', 'true');
+        const node = ((domElement: any): HTMLSelectElement);
+        node.multiple = true;
       }
     }
   } else {
