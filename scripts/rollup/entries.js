@@ -1,3 +1,5 @@
+'use strict';
+
 function generateESMEntryPoint(packageName, exports) {
   return [
     `import * as dev from "esm/${packageName}.development.mjs";`,
