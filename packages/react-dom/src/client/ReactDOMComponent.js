@@ -12,7 +12,6 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import warningWithoutStack from 'shared/warningWithoutStack';
 import type {ReactEventResponderEventType} from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
@@ -176,7 +175,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       false,
       'Text content did not match. Server: "%s" Client: "%s"',
       normalizedServerText,
@@ -202,7 +201,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       false,
       'Prop `%s` did not match. Server: %s Client: %s',
       propName,
@@ -220,7 +219,7 @@ if (__DEV__) {
     attributeNames.forEach(function(name) {
       names.push(name);
     });
-    warningWithoutStack(false, 'Extra attributes from the server: %s', names);
+    warning(false, 'Extra attributes from the server: %s', names);
   };
 
   warnForInvalidEventListener = function(registrationName, listener) {
@@ -1189,7 +1188,7 @@ export function warnForDeletedHydratableElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       false,
       'Did not expect server HTML to contain a <%s> in <%s>.',
       child.nodeName.toLowerCase(),
@@ -1207,7 +1206,7 @@ export function warnForDeletedHydratableText(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       false,
       'Did not expect server HTML to contain the text node "%s" in <%s>.',
       child.nodeValue,
@@ -1226,7 +1225,7 @@ export function warnForInsertedHydratedElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       false,
       'Expected server HTML to contain a matching <%s> in <%s>.',
       tag,
@@ -1251,7 +1250,7 @@ export function warnForInsertedHydratedText(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
+    warning(
       false,
       'Expected server HTML to contain a matching text node for "%s" in <%s>.',
       text,

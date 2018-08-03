@@ -274,7 +274,6 @@ describe('ReactDOMServerHydration', () => {
       'Warning: Prop `style` did not match. Server: ' +
         '"text-decoration:none;color:black;height:10px" Client: ' +
         '"text-decoration:none;color:white;height:10px"',
-      {withoutStack: true},
     );
   });
 
@@ -322,7 +321,6 @@ describe('ReactDOMServerHydration', () => {
       'Warning: Prop `style` did not match. Server: ' +
         '"text-decoration: none; color: black; height: 10px;" Client: ' +
         '"text-decoration:none;color:black;height:10px"',
-      {withoutStack: true},
     );
   });
 
