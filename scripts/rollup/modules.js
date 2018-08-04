@@ -20,6 +20,7 @@ const importSideEffects = Object.freeze({
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
+  'interaction-tracking': 'InteractionTracking',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.

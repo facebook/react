@@ -1,0 +1,13 @@
+{
+  "name": "interaction-tracking",
+  "description": "utility for tracking interaction events",
+  "version": "0.0.1",
+  "repository": "facebook/react",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "cjs/",
+    "umd/"
+  ]
+}

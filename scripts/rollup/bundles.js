@@ -85,7 +85,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom',
     global: 'ReactDOM',
-    externals: ['react'],
+    externals: ['react', 'interaction-tracking'],
   },
 
   //******* Test Utils *******/
@@ -180,6 +180,7 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
       'ReactNativeViewConfigRegistry',
+      'interaction-tracking',
     ],
   },
 
@@ -200,6 +201,7 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
       'ReactNativeViewConfigRegistry',
+      'interaction-tracking',
     ],
   },
 
@@ -222,6 +224,7 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
       'ReactNativeViewConfigRegistry',
+      'interaction-tracking',
     ],
   },
 
@@ -243,6 +246,7 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
       'ReactNativeViewConfigRegistry',
+      'interaction-tracking',
     ],
   },
 
@@ -253,7 +257,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
-    externals: ['react'],
+    externals: ['react', 'interaction-tracking'],
   },
 
   {
@@ -392,6 +396,16 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-scheduler',
     global: 'ReactScheduler',
+    externals: [],
+  },
+
+  /******* interaction-tracking (experimental) *******/
+  {
+    label: 'interaction-tracking',
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'interaction-tracking',
+    global: 'InteractionTracking',
     externals: [],
   },
 ];
