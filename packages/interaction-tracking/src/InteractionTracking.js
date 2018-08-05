@@ -7,7 +7,6 @@
  * @flow
  */
 
-import warning from 'shared/warning';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {
   __onInteractionsScheduled,
@@ -107,10 +106,9 @@ export function startContinuations(continuations: Continuations): void {
   }
 
   if (__DEV__) {
-    warning(
-      ((startedContinuations: any): Continuations).size === 0,
-      'Only one batch of continuations can be active at a time.',
-    );
+    if (((startedContinuations: any): Continuations).size !== 0) {
+      console.error('Only one batch of continuations can be active at a time.');
+    }
   }
 
   const continuationInteractions = new Set();
@@ -120,11 +118,12 @@ export function startContinuations(continuations: Continuations): void {
     const [executionID: number, interaction: Interaction] = entries[index];
 
     if (__DEV__) {
-      warning(
-        ((scheduledContinuations: any): Continuations).get(executionID) ===
-          interaction,
-        'Cannot run an unscheduled continuation.',
-      );
+      if (
+        ((scheduledContinuations: any): Continuations).get(executionID) !==
+        interaction
+      ) {
+        console.error('Cannot run an unscheduled continuation.');
+      }
 
       ((scheduledContinuations: any): Continuations).delete(executionID);
       ((startedContinuations: any): Continuations).set(
@@ -155,11 +154,12 @@ export function stopContinuations(continuations: Continuations): void {
     const [executionID: number, interaction: Interaction] = entries[index];
 
     if (__DEV__) {
-      warning(
-        ((startedContinuations: any): Continuations).get(executionID) ===
-          interaction,
-        'Cannot stop an inactive continuation.',
-      );
+      if (
+        ((startedContinuations: any): Continuations).get(executionID) !==
+        interaction
+      ) {
+        console.error('Cannot stop an inactive continuation.');
+      }
 
       ((startedContinuations: any): Continuations).delete(executionID);
     }
