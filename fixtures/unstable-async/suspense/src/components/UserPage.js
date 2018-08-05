@@ -144,7 +144,7 @@ function Repositories({id}) {
         padding: 0,
         margin: 0,
       }}>
-      {repos.map(review => <Repository key={repo.name} {...repo} />)}
+      {repos.map(repo => <Repository key={repo.name} {...repo} />)}
     </ul>
   );
 }
