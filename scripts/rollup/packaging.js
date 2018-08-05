@@ -80,10 +80,6 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
   }
 }
 
-function getPackageOutputPath(packageName) {
-  return `build/node_modules/${packageName}`;
-}
-
 async function copyWWWShims() {
   await asyncCopyTo(
     `${__dirname}/shims/facebook-www`,
@@ -166,6 +162,5 @@ module.exports = {
   copyAllShims,
   getPackageName,
   getBundleOutputPaths,
-  getPackageOutputPath,
   prepareNpmPackages,
 };

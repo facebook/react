@@ -11,6 +11,7 @@ const currentBuildResults = {
   // Mutated inside build.js during a build run.
   // We make a copy so that partial rebuilds don't erase other stats.
   bundleSizes: [...prevBuildResults.bundleSizes],
+  treeshakedSizes: [...prevBuildResults.treeshakedSizes],
 };
 
 function saveResults() {

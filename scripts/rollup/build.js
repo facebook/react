@@ -25,6 +25,7 @@ const {asyncCopyTo, asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
 const Entries = require('./entries');
+const Treeshake = require('./treeshake');
 
 // Errors in promises should be fatal.
 let loggedErrors = new Set();
@@ -501,17 +502,11 @@ async function createBundle(bundle, bundleType) {
     bundleType
   );
 
+  let result;
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
   try {
-    const result = await rollup(rollupConfig);
-    await result.write(rollupOutputOptions);
-
-    if (bundleType === ESM_DEV) {
-      fs.writeFileSync(
-        path.join(Packaging.getPackageOutputPath(packageName), 'index.mjs'),
-        Entries.generateESMEntryPoint(packageName, result.exports)
-      );
-    }
+    result = await rollup(rollupConfig);
+    result = await result.write(rollupOutputOptions);
   } catch (error) {
     console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
     handleRollupError(error);
@@ -521,6 +516,7 @@ async function createBundle(bundle, bundleType) {
     await asyncCopyTo(mainOutputPath, otherOutputPaths[i]);
   }
   console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
+  return result;
 }
 
 function handleRollupWarning(warning) {
@@ -609,7 +605,7 @@ async function buildEverything() {
     await createBundle(bundle, UMD_DEV);
     await createBundle(bundle, UMD_PROD);
     await createBundle(bundle, ESM_DEV);
-    await createBundle(bundle, ESM_PROD);
+    const esmResult = await createBundle(bundle, ESM_PROD);
     await createBundle(bundle, NODE_DEV);
     await createBundle(bundle, NODE_PROD);
     await createBundle(bundle, NODE_PROFILING);
@@ -622,6 +618,38 @@ async function buildEverything() {
     await createBundle(bundle, RN_FB_DEV);
     await createBundle(bundle, RN_FB_PROD);
     await createBundle(bundle, RN_FB_PROFILING);
+
+    if (
+      !shouldSkipBundle(bundle, ESM_DEV) &&
+      !shouldSkipBundle(bundle, ESM_PROD) &&
+      esmResult
+    ) {
+      const [packageName, entry] = bundle.entry.split('/');
+      const filename = entry == null ? 'index.mjs' : entry + '.mjs';
+      const filepath = path.resolve(
+        `build/node_modules/${packageName}`,
+        filename
+      );
+      // write esm entry point
+      fs.writeFileSync(
+        filepath,
+        Entries.generateESMEntryPoint(packageName, esmResult.exports)
+      );
+      // bundle esm entry point importing nothing
+      const {size} = await Treeshake.treeshakeProductionModule(filepath);
+      const treeshakedSizes = Stats.currentBuildResults.treeshakedSizes;
+      const recordIndex = treeshakedSizes.findIndex(
+        record =>
+          record.packageName === packageName && record.filename === filename
+      );
+      const index = recordIndex !== -1 ? recordIndex : treeshakedSizes.length;
+      Stats.currentBuildResults.treeshakedSizes[index] = {
+        filename,
+        packageName,
+        treeshakedSize: size,
+        productionSize: esmResult.code.length,
+      };
+    }
   }
 
   await Packaging.copyAllShims();

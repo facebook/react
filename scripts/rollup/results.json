@@ -784,5 +784,13 @@
       "size": 3410,
       "gzip": 1187
     }
+  ],
+  "treeshakedSizes": [
+    {
+      "filename": "index.mjs",
+      "packageName": "react-is",
+      "treeshakedSize": 1874,
+      "productionSize": 3410
+    }
   ]
 }
