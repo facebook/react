@@ -7,9 +7,7 @@
  * @flow
  */
 
-import type {Interaction} from './InteractionTracking';
-
-type Interactions = Array<Interaction>;
+import type {Interactions} from './InteractionTracking';
 
 export type InteractionObserver = {
   onInteractionsScheduled: (

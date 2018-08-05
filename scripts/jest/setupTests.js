@@ -43,6 +43,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   }
 
   expect.extend({
+    ...require('./matchers/interactionTracking'),
     ...require('./matchers/toWarnDev'),
     ...require('./matchers/testRenderer'),
   });
