@@ -8,6 +8,7 @@
  */
 
 import warning from 'shared/warning';
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {
   __onInteractionsScheduled,
   __onInteractionsStarting,
@@ -69,7 +70,7 @@ if (__DEV__) {
 }
 
 export function getCurrent(): Interactions | null {
-  if (!__PROFILE__) {
+  if (!enableProfilerTimer) {
     return null;
   } else {
     return interactions;
@@ -82,7 +83,7 @@ export function getCurrent(): Interactions | null {
 // This is done by calling startContinuations() before processing the delayed work,
 // And stopContinuations() to indicate that the work has been completed.
 export function reserveContinuation(interaction: Interaction): number {
-  if (!__PROFILE__) {
+  if (!enableProfilerTimer) {
     return 0;
   }
 
@@ -101,7 +102,7 @@ export function reserveContinuation(interaction: Interaction): number {
 }
 
 export function startContinuations(continuations: Continuations): void {
-  if (!__PROFILE__) {
+  if (!enableProfilerTimer) {
     return;
   }
 
@@ -144,7 +145,7 @@ export function startContinuations(continuations: Continuations): void {
 }
 
 export function stopContinuations(continuations: Continuations): void {
-  if (!__PROFILE__) {
+  if (!enableProfilerTimer) {
     return;
   }
 
@@ -172,7 +173,7 @@ export function stopContinuations(continuations: Continuations): void {
 }
 
 export function track(name: string, callback: Function): void {
-  if (!__PROFILE__) {
+  if (!enableProfilerTimer) {
     callback();
     return;
   }
@@ -205,7 +206,7 @@ export function track(name: string, callback: Function): void {
 }
 
 export function wrap(callback: Function): Function {
-  if (!__PROFILE__) {
+  if (!enableProfilerTimer) {
     return callback;
   }
 
