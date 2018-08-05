@@ -72,6 +72,7 @@ const errorCodeOpts = {
 const closureOptions = {
   compilation_level: 'SIMPLE',
   env: 'CUSTOM',
+  language_out: 'ECMASCRIPT5_STRICT',
   apply_input_source_maps: false,
   use_types_for_optimization: false,
   process_common_js_modules: false,
@@ -522,7 +523,7 @@ async function createBundle(bundle, bundleType) {
   console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
 }
 
-function handleRollupWarning(warning, warn) {
+function handleRollupWarning(warning) {
   if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
     const match = warning.message.match(/external module '([^']+)'/);
     if (!match || typeof match[1] !== 'string') {
@@ -545,8 +546,12 @@ function handleRollupWarning(warning, warn) {
     return;
   }
 
-  if (warning.code === 'CIRCULAR_DEPENDENCY') {
-    return warn(warning);
+  // Fix react-reconciler circular dependency later
+  if (
+    warning.code === 'CIRCULAR_DEPENDENCY' &&
+    warning.importer.includes('react-reconciler')
+  ) {
+    return;
   }
 
   if (typeof warning.code === 'string') {
