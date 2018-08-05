@@ -350,7 +350,7 @@ function getPlugins(
         })
       ),
     // Add the whitespace back if necessary.
-    shouldStayReadable && prettier(),
+    shouldStayReadable && prettier({parser: 'babylon'}),
     // License and haste headers, top-level `if` blocks.
     {
       transformBundle(source) {
