@@ -27,11 +27,11 @@ describe('InteractionTracking', () => {
     InteractionTracking = require('interaction-tracking');
   });
 
-  it('should return an empty set when outside of a tracked event', () => {
-    expect(InteractionTracking.getCurrent()).toContainNoInteractions();
-  });
-
   if (__PROFILE__) {
+    it('should return an empty set when outside of a tracked event', () => {
+      expect(InteractionTracking.getCurrent()).toContainNoInteractions();
+    });
+
     describe('profiling bundle', () => {
       it('should report the tracked name from within the track callback', done => {
         advanceTimeBy(100);
@@ -595,9 +595,13 @@ describe('InteractionTracking', () => {
     });
   } else {
     describe('production bundle', () => {
+      it('should return null for tracked interactions', () => {
+        expect(InteractionTracking.getCurrent()).toBe(null);
+      });
+
       it('should execute tracked callbacks', done => {
         InteractionTracking.track('some event', () => {
-          expect(InteractionTracking.getCurrent()).toContainNoInteractions();
+          expect(InteractionTracking.getCurrent()).toBe(null);
 
           done();
         });
@@ -605,7 +609,7 @@ describe('InteractionTracking', () => {
 
       it('should execute wrapped callbacks', done => {
         const wrappedCallback = InteractionTracking.wrap(() => {
-          expect(InteractionTracking.getCurrent()).toContainNoInteractions();
+          expect(InteractionTracking.getCurrent()).toBe(null);
 
           done();
         });
