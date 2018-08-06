@@ -894,7 +894,7 @@ describe('Profiler', () => {
             // But it spends time rendering all of the failed subtree also.
             expect(mountCall[1]).toBe('mount');
             // actual time includes: 2 (ErrorBoundary) + 9 (AdvanceTime) + 3 (ThrowsError)
-            // If replayFailedUnitOfWorkWithInvokeGuardedCallback is enbaled, ThrowsError is replayed.
+            // We don't count the time spent in replaying the failed unit of work (ThrowsError)
             expect(mountCall[2]).toBe(14);
             // base time includes: 2 (ErrorBoundary)
             expect(mountCall[3]).toBe(2);
