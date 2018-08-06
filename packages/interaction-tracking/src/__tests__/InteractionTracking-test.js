@@ -10,10 +10,11 @@
 
 describe('InteractionTracking', () => {
   let InteractionTracking;
+  let ReactFeatureFlags;
 
   let advanceTimeBy;
 
-  beforeEach(function() {
+  function loadModules({enableProfilerTimer}) {
     jest.resetModules();
     jest.useFakeTimers();
 
@@ -24,10 +25,14 @@ describe('InteractionTracking', () => {
       currentTime += amount;
     };
 
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
     InteractionTracking = require('interaction-tracking');
-  });
+  }
 
-  if (__PROFILE__) {
+  describe('enableProfilerTimer enabled', () => {
+    beforeEach(() => loadModules({enableProfilerTimer: true}));
+
     it('should return an empty set when outside of a tracked event', () => {
       expect(InteractionTracking.getCurrent()).toContainNoInteractions();
     });
@@ -593,7 +598,11 @@ describe('InteractionTracking', () => {
         });
       });
     });
-  } else {
+  });
+
+  describe('enableProfilerTimer disabled', () => {
+    beforeEach(() => loadModules({enableProfilerTimer: false}));
+
     describe('production bundle', () => {
       it('should return null for tracked interactions', () => {
         expect(InteractionTracking.getCurrent()).toBe(null);
@@ -617,5 +626,5 @@ describe('InteractionTracking', () => {
         wrappedCallback();
       });
     });
-  }
+  });
 });
