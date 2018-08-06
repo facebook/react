@@ -1,4 +1,5 @@
-const fs = require('fs');
+'use strict';
+
 const {rollup} = require('rollup');
 const replace = require('rollup-plugin-replace');
 
@@ -18,8 +19,6 @@ const resolvePlugin = ({input}) => ({
 });
 
 function treeshakeProductionModule(input) {
-  const code = fs.readFileSync(input, 'utf-8');
-
   const config = {
     input: fakeInput,
     onwarn() {},
