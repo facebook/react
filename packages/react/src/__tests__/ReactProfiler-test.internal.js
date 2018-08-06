@@ -57,7 +57,7 @@ describe('Profiler', () => {
 
         // This will throw in production too,
         // But the test is only interested in verifying the DEV error message.
-        if (__PROFILE__) {
+        if (__DEV__ && flagEnabled) {
           it('should warn if required params are missing', () => {
             expect(() => {
               ReactTestRenderer.create(<React.unstable_Profiler />);
@@ -902,7 +902,7 @@ describe('Profiler', () => {
             expect(mountCall[4]).toBe(5);
             // commit time: 5 initially + 14 of work
             // Add an additional 3 (ThrowsError) if we replaced the failed work
-            expect(mountCall[5]).toBe(flagEnabled && __PROFILE__ ? 22 : 19);
+            expect(mountCall[5]).toBe(__DEV__ && flagEnabled ? 22 : 19);
 
             // The update includes the ErrorBoundary and its fallback child
             expect(updateCall[1]).toBe('update');
@@ -911,10 +911,10 @@ describe('Profiler', () => {
             // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
             expect(updateCall[3]).toBe(22);
             // start time
-            expect(updateCall[4]).toBe(flagEnabled && __PROFILE__ ? 22 : 19);
+            expect(updateCall[4]).toBe(__DEV__ && flagEnabled ? 22 : 19);
             // commit time: 19 (startTime) + 2 (ErrorBoundary) + 20 (AdvanceTime)
             // Add an additional 3 (ThrowsError) if we replaced the failed work
-            expect(updateCall[5]).toBe(flagEnabled && __PROFILE__ ? 44 : 41);
+            expect(updateCall[5]).toBe(__DEV__ && flagEnabled ? 44 : 41);
           });
 
           it('should accumulate actual time after an error handled by getDerivedStateFromCatch()', () => {
@@ -968,7 +968,7 @@ describe('Profiler', () => {
             // start time
             expect(mountCall[4]).toBe(5);
             // commit time
-            expect(mountCall[5]).toBe(flagEnabled && __PROFILE__ ? 54 : 44);
+            expect(mountCall[5]).toBe(__DEV__ && flagEnabled ? 54 : 44);
           });
 
           it('should reset the fiber stack correct after a "complete" phase error', () => {
