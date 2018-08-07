@@ -277,9 +277,9 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `action=(string)`| (changed)| `"https://reactjs.com/"` |
-| `action=(empty string)`| (changed)| `"http://localhost:3000/"` |
+| `action=(empty string)`| (initial)| `"http://localhost:3000/"` |
 | `action=(array with string)`| (changed)| `"https://reactjs.com/"` |
-| `action=(empty array)`| (changed)| `"http://localhost:3000/"` |
+| `action=(empty array)`| (initial)| `"http://localhost:3000/"` |
 | `action=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
 | `action=(numeric string)`| (changed)| `"http://localhost:3000/42"` |
 | `action=(-1)`| (changed)| `"http://localhost:3000/-1"` |
@@ -287,16 +287,16 @@
 | `action=(integer)`| (changed)| `"http://localhost:3000/1"` |
 | `action=(NaN)`| (changed, warning)| `"http://localhost:3000/NaN"` |
 | `action=(float)`| (changed)| `"http://localhost:3000/99.99"` |
-| `action=(true)`| (initial, warning)| `<empty string>` |
-| `action=(false)`| (initial, warning)| `<empty string>` |
+| `action=(true)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(false)`| (initial, warning)| `"http://localhost:3000/"` |
 | `action=(string 'true')`| (changed)| `"http://localhost:3000/true"` |
 | `action=(string 'false')`| (changed)| `"http://localhost:3000/false"` |
 | `action=(string 'on')`| (changed)| `"http://localhost:3000/on"` |
 | `action=(string 'off')`| (changed)| `"http://localhost:3000/off"` |
-| `action=(symbol)`| (initial, warning)| `<empty string>` |
-| `action=(function)`| (initial, warning)| `<empty string>` |
-| `action=(null)`| (initial)| `<empty string>` |
-| `action=(undefined)`| (initial)| `<empty string>` |
+| `action=(symbol)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(function)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(null)`| (initial)| `"http://localhost:3000/"` |
+| `action=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
 ## `additive` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
@@ -802,26 +802,26 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoCapitalize=(string)`| (changed)| `"words"` |
-| `autoCapitalize=(empty string)`| (initial)| `"sentences"` |
+| `autoCapitalize=(empty string)`| (initial)| `<empty string>` |
 | `autoCapitalize=(array with string)`| (changed)| `"words"` |
-| `autoCapitalize=(empty array)`| (initial)| `"sentences"` |
-| `autoCapitalize=(object)`| (initial)| `"sentences"` |
-| `autoCapitalize=(numeric string)`| (initial)| `"sentences"` |
-| `autoCapitalize=(-1)`| (initial)| `"sentences"` |
-| `autoCapitalize=(0)`| (initial)| `"sentences"` |
-| `autoCapitalize=(integer)`| (initial)| `"sentences"` |
-| `autoCapitalize=(NaN)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(float)`| (initial)| `"sentences"` |
-| `autoCapitalize=(true)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(false)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(string 'true')`| (initial)| `"sentences"` |
-| `autoCapitalize=(string 'false')`| (initial)| `"sentences"` |
-| `autoCapitalize=(string 'on')`| (initial)| `"sentences"` |
+| `autoCapitalize=(empty array)`| (initial)| `<empty string>` |
+| `autoCapitalize=(object)`| (changed)| `"sentences"` |
+| `autoCapitalize=(numeric string)`| (changed)| `"sentences"` |
+| `autoCapitalize=(-1)`| (changed)| `"sentences"` |
+| `autoCapitalize=(0)`| (changed)| `"sentences"` |
+| `autoCapitalize=(integer)`| (changed)| `"sentences"` |
+| `autoCapitalize=(NaN)`| (changed, warning)| `"sentences"` |
+| `autoCapitalize=(float)`| (changed)| `"sentences"` |
+| `autoCapitalize=(true)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(false)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(string 'true')`| (changed)| `"sentences"` |
+| `autoCapitalize=(string 'false')`| (changed)| `"sentences"` |
+| `autoCapitalize=(string 'on')`| (changed)| `"sentences"` |
 | `autoCapitalize=(string 'off')`| (changed)| `"none"` |
-| `autoCapitalize=(symbol)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(function)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(null)`| (initial)| `"sentences"` |
-| `autoCapitalize=(undefined)`| (initial)| `"sentences"` |
+| `autoCapitalize=(symbol)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(function)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(null)`| (initial)| `<empty string>` |
+| `autoCapitalize=(undefined)`| (initial)| `<empty string>` |
 
 ## `autoComplete` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
@@ -7076,23 +7076,23 @@
 ## `muted` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `muted=(string)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(string)`| (changed)| `<boolean: true>` |
 | `muted=(empty string)`| (initial)| `<boolean: false>` |
-| `muted=(array with string)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(empty array)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(object)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(numeric string)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(-1)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(array with string)`| (changed)| `<boolean: true>` |
+| `muted=(empty array)`| (changed)| `<boolean: true>` |
+| `muted=(object)`| (changed)| `<boolean: true>` |
+| `muted=(numeric string)`| (changed)| `<boolean: true>` |
+| `muted=(-1)`| (changed)| `<boolean: true>` |
 | `muted=(0)`| (initial)| `<boolean: false>` |
-| `muted=(integer)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(integer)`| (changed)| `<boolean: true>` |
 | `muted=(NaN)`| (initial, warning)| `<boolean: false>` |
-| `muted=(float)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(true)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(float)`| (changed)| `<boolean: true>` |
+| `muted=(true)`| (changed)| `<boolean: true>` |
 | `muted=(false)`| (initial)| `<boolean: false>` |
-| `muted=(string 'true')`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(string 'false')`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(string 'on')`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(string 'off')`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(string 'true')`| (changed)| `<boolean: true>` |
+| `muted=(string 'false')`| (changed)| `<boolean: true>` |
+| `muted=(string 'on')`| (changed)| `<boolean: true>` |
+| `muted=(string 'off')`| (changed)| `<boolean: true>` |
 | `muted=(symbol)`| (initial, warning)| `<boolean: false>` |
 | `muted=(function)`| (initial, warning)| `<boolean: false>` |
 | `muted=(null)`| (initial)| `<boolean: false>` |
@@ -8227,26 +8227,26 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `preload=(string)`| (changed)| `"none"` |
-| `preload=(empty string)`| (initial)| `"auto"` |
+| `preload=(empty string)`| (changed)| `"auto"` |
 | `preload=(array with string)`| (changed)| `"none"` |
-| `preload=(empty array)`| (initial)| `"auto"` |
-| `preload=(object)`| (initial)| `"auto"` |
-| `preload=(numeric string)`| (initial)| `"auto"` |
-| `preload=(-1)`| (initial)| `"auto"` |
-| `preload=(0)`| (initial)| `"auto"` |
-| `preload=(integer)`| (initial)| `"auto"` |
-| `preload=(NaN)`| (initial, warning)| `"auto"` |
-| `preload=(float)`| (initial)| `"auto"` |
-| `preload=(true)`| (initial, warning)| `"auto"` |
-| `preload=(false)`| (initial, warning)| `"auto"` |
-| `preload=(string 'true')`| (initial)| `"auto"` |
-| `preload=(string 'false')`| (initial)| `"auto"` |
-| `preload=(string 'on')`| (initial)| `"auto"` |
-| `preload=(string 'off')`| (initial)| `"auto"` |
-| `preload=(symbol)`| (initial, warning)| `"auto"` |
-| `preload=(function)`| (initial, warning)| `"auto"` |
-| `preload=(null)`| (initial)| `"auto"` |
-| `preload=(undefined)`| (initial)| `"auto"` |
+| `preload=(empty array)`| (changed)| `"auto"` |
+| `preload=(object)`| (initial)| `"metadata"` |
+| `preload=(numeric string)`| (initial)| `"metadata"` |
+| `preload=(-1)`| (initial)| `"metadata"` |
+| `preload=(0)`| (initial)| `"metadata"` |
+| `preload=(integer)`| (initial)| `"metadata"` |
+| `preload=(NaN)`| (initial, warning)| `"metadata"` |
+| `preload=(float)`| (initial)| `"metadata"` |
+| `preload=(true)`| (initial, warning)| `"metadata"` |
+| `preload=(false)`| (initial, warning)| `"metadata"` |
+| `preload=(string 'true')`| (initial)| `"metadata"` |
+| `preload=(string 'false')`| (initial)| `"metadata"` |
+| `preload=(string 'on')`| (initial)| `"metadata"` |
+| `preload=(string 'off')`| (initial)| `"metadata"` |
+| `preload=(symbol)`| (initial, warning)| `"metadata"` |
+| `preload=(function)`| (initial, warning)| `"metadata"` |
+| `preload=(null)`| (initial)| `"metadata"` |
+| `preload=(undefined)`| (initial)| `"metadata"` |
 
 ## `preserveAlpha` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
@@ -8983,7 +8983,7 @@
 | `rowSpan=(object)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(numeric string)`| (changed, ssr error, ssr mismatch)| `<number: 42>` |
 | `rowSpan=(-1)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
-| `rowSpan=(0)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
+| `rowSpan=(0)`| (changed, ssr error, ssr mismatch)| `<number: 0>` |
 | `rowSpan=(integer)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(NaN)`| (initial, warning, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(float)`| (changed, ssr error, ssr mismatch)| `<number: 99>` |
