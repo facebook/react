@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {getHostSibling} from 'react-reconciler/reflection';
 import * as ReactScheduler from 'shared/ReactScheduler';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
@@ -353,11 +354,46 @@ export function appendChildToContainer(
   }
 }
 
+function findNodeOccupyingDetachedPosition(parentNode, detachedNode) {
+  let node = detachedNode;
+  let offset = 0;
+  // Find the closest sibling that isn't detached.
+  while (true) {
+    const fiber = ReactDOMComponentTree.getInstanceFromNode(node);
+    const sibling = getHostSibling(fiber);
+    node = sibling;
+    if (!node) {
+      node = parentNode.lastChild;
+      break;
+    }
+    offset++;
+    if (node.parentNode === parentNode) {
+      break;
+    }
+  }
+  // Walk back and assume that's the node we're looking for.
+  while (offset > 0) {
+    node = node.previousSibling;
+    offset--;
+  }
+  if (ReactDOMComponentTree.getInstanceFromNode(node)) {
+    // Bail out if the found node is managed by React.
+    return null;
+  }
+  return node;
+}
+
 export function insertBefore(
   parentInstance: Instance,
   child: Instance | TextInstance,
   beforeChild: Instance | TextInstance,
 ): void {
+  if (beforeChild.parentNode === null) {
+    beforeChild = findNodeOccupyingDetachedPosition(
+      parentInstance,
+      beforeChild,
+    );
+  }
   parentInstance.insertBefore(child, beforeChild);
 }
 
@@ -377,6 +413,9 @@ export function removeChild(
   parentInstance: Instance,
   child: Instance | TextInstance,
 ): void {
+  if (child.parentNode === null) {
+    child = findNodeOccupyingDetachedPosition(parentInstance, child);
+  }
   parentInstance.removeChild(child);
 }
 
