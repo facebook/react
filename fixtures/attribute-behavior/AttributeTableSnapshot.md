@@ -3587,8 +3587,8 @@
 | `focusable=(integer)`| (changed)| `"1"` |
 | `focusable=(NaN)`| (changed, warning)| `"NaN"` |
 | `focusable=(float)`| (changed)| `"99.99"` |
-| `focusable=(true)`| (initial, warning)| `<null>` |
-| `focusable=(false)`| (initial, warning)| `<null>` |
+| `focusable=(true)`| (changed)| `"true"` |
+| `focusable=(false)`| (changed)| `"false"` |
 | `focusable=(string 'true')`| (changed)| `"true"` |
 | `focusable=(string 'false')`| (changed)| `"false"` |
 | `focusable=(string 'on')`| (changed)| `"on"` |
