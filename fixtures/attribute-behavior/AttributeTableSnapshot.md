@@ -1401,23 +1401,23 @@
 ## `Checked` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `Checked=(string)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(empty string)`| (changed, warning)| `<empty string>` |
-| `Checked=(array with string)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(empty array)`| (changed, warning)| `<empty string>` |
-| `Checked=(object)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(numeric string)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(-1)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(0)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(integer)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(NaN)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(float)`| (changed, warning, ssr mismatch)| `<empty string>` |
+| `Checked=(string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(empty string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(array with string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(empty array)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(object)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(numeric string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(-1)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(0)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(integer)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(NaN)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(float)`| (initial, warning, ssr mismatch)| `<null>` |
 | `Checked=(true)`| (initial, warning)| `<null>` |
 | `Checked=(false)`| (initial, warning)| `<null>` |
-| `Checked=(string 'true')`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(string 'false')`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(string 'on')`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(string 'off')`| (changed, warning, ssr mismatch)| `<empty string>` |
+| `Checked=(string 'true')`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(string 'false')`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(string 'on')`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(string 'off')`| (initial, warning, ssr mismatch)| `<null>` |
 | `Checked=(symbol)`| (initial, warning)| `<null>` |
 | `Checked=(function)`| (initial, warning)| `<null>` |
 | `Checked=(null)`| (initial, warning)| `<null>` |
@@ -2551,25 +2551,25 @@
 ## `defaultChecked` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `defaultChecked=(string)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(string)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(empty string)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(array with string)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(empty array)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(object)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(numeric string)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(-1)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(array with string)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(empty array)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(object)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(numeric string)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(-1)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(0)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(integer)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(integer)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(NaN)`| (initial, warning, ssr warning)| `<boolean: false>` |
-| `defaultChecked=(float)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(true)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(float)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(true)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(false)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(string 'true')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(string 'false')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(string 'on')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(string 'off')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(symbol)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(function)`| (initial)| `<boolean: false>` |
+| `defaultChecked=(string 'true')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'false')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'on')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'off')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(symbol)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `defaultChecked=(function)`| (changed, ssr mismatch)| `<boolean: true>` |
 | `defaultChecked=(null)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(undefined)`| (initial)| `<boolean: false>` |
 
