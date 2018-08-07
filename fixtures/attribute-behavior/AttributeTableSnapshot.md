@@ -7148,31 +7148,6 @@
 | `name=(null)`| (initial)| `<null>` |
 | `name=(undefined)`| (initial)| `<null>` |
 
-## `nonce` (on `<div>` inside `<div>`)
-| Test Case | Flags | Result |
-| --- | --- | --- |
-| `nonce=(string)`| (changed)| `"a string"` |
-| `nonce=(empty string)`| (changed)| `<empty string>` |
-| `nonce=(array with string)`| (changed)| `"string"` |
-| `nonce=(empty array)`| (changed)| `<empty string>` |
-| `nonce=(object)`| (changed)| `"result of toString()"` |
-| `nonce=(numeric string)`| (changed)| `"42"` |
-| `nonce=(-1)`| (changed)| `"-1"` |
-| `nonce=(0)`| (changed)| `"0"` |
-| `nonce=(integer)`| (changed)| `"1"` |
-| `nonce=(NaN)`| (changed, warning)| `"NaN"` |
-| `nonce=(float)`| (changed)| `"99.99"` |
-| `nonce=(true)`| (initial, warning)| `<null>` |
-| `nonce=(false)`| (initial, warning)| `<null>` |
-| `nonce=(string 'true')`| (changed)| `"true"` |
-| `nonce=(string 'false')`| (changed)| `"false"` |
-| `nonce=(string 'on')`| (changed)| `"on"` |
-| `nonce=(string 'off')`| (changed)| `"off"` |
-| `nonce=(symbol)`| (initial, warning)| `<null>` |
-| `nonce=(function)`| (initial, warning)| `<null>` |
-| `nonce=(null)`| (initial)| `<null>` |
-| `nonce=(undefined)`| (initial)| `<null>` |
-
 ## `noModule` (on `<script>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
@@ -7197,6 +7172,31 @@
 | `noModule=(function)`| (initial, warning)| `<boolean: false>` |
 | `noModule=(null)`| (initial)| `<boolean: false>` |
 | `noModule=(undefined)`| (initial)| `<boolean: false>` |
+
+## `nonce` (on `<div>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `nonce=(string)`| (changed)| `"a string"` |
+| `nonce=(empty string)`| (changed)| `<empty string>` |
+| `nonce=(array with string)`| (changed)| `"string"` |
+| `nonce=(empty array)`| (changed)| `<empty string>` |
+| `nonce=(object)`| (changed)| `"result of toString()"` |
+| `nonce=(numeric string)`| (changed)| `"42"` |
+| `nonce=(-1)`| (changed)| `"-1"` |
+| `nonce=(0)`| (changed)| `"0"` |
+| `nonce=(integer)`| (changed)| `"1"` |
+| `nonce=(NaN)`| (changed, warning)| `"NaN"` |
+| `nonce=(float)`| (changed)| `"99.99"` |
+| `nonce=(true)`| (initial, warning)| `<null>` |
+| `nonce=(false)`| (initial, warning)| `<null>` |
+| `nonce=(string 'true')`| (changed)| `"true"` |
+| `nonce=(string 'false')`| (changed)| `"false"` |
+| `nonce=(string 'on')`| (changed)| `"on"` |
+| `nonce=(string 'off')`| (changed)| `"off"` |
+| `nonce=(symbol)`| (initial, warning)| `<null>` |
+| `nonce=(function)`| (initial, warning)| `<null>` |
+| `nonce=(null)`| (initial)| `<null>` |
+| `nonce=(undefined)`| (initial)| `<null>` |
 
 ## `noValidate` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
