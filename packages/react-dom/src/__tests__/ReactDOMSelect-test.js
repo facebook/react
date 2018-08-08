@@ -792,4 +792,20 @@ describe('ReactDOMSelect', () => {
 
     document.body.removeChild(container);
   });
+
+  it('should not select first option by default when multiple is set and no defaultValue is set', () => {
+    const stub = (
+      <select multiple={true} onChange={noop}>
+        <option value="a">a</option>
+        <option value="b">b</option>
+        <option value="c">c</option>
+      </select>
+    );
+    const container = document.createElement('div');
+    const node = ReactDOM.render(stub, container);
+
+    expect(node.options[0].selected).toBe(false); // a
+    expect(node.options[1].selected).toBe(false); // b
+    expect(node.options[2].selected).toBe(false); // c
+  });
 });
