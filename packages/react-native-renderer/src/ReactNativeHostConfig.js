@@ -451,3 +451,22 @@ export function removeChildFromContainer(
 export function resetTextContent(instance: Instance): void {
   // Noop
 }
+
+export function hideInstance(instance: Instance): void {
+  throw new Error('Not yet implemented.');
+}
+
+export function hideTextInstance(textInstance: TextInstance): void {
+  throw new Error('Not yet implemented.');
+}
+
+export function unhideInstance(instance: Instance, props: Props): void {
+  throw new Error('Not yet implemented.');
+}
+
+export function unhideTextInstance(
+  textInstance: TextInstance,
+  text: string,
+): void {
+  throw new Error('Not yet implemented.');
+}

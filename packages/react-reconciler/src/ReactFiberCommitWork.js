@@ -64,6 +64,10 @@ import {
   removeChildFromContainer,
   replaceContainerChildren,
   createContainerChildSet,
+  hideInstance,
+  hideTextInstance,
+  unhideInstance,
+  unhideTextInstance,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -71,6 +75,7 @@ import {
   scheduleWork,
 } from './ReactFiberScheduler';
 import {StrictMode} from './ReactTypeOfMode';
+import {PlaceholderFallback} from './ReactFiberPlaceholder';
 
 const {
   invokeGuardedCallback,
@@ -329,7 +334,28 @@ function commitLifeCycles(
     }
     case PlaceholderComponent: {
       if (enableSuspense) {
-        if ((finishedWork.mode & StrictMode) === NoEffect) {
+        const isInStrictMode = (finishedWork.mode & StrictMode) !== NoEffect;
+
+        if (isInStrictMode) {
+          // In strict mode, the Update effect is used to record the time at
+          // which the placeholder timed out.
+          const currentTime = requestCurrentTime();
+          finishedWork.stateNode = {timedOutAt: currentTime};
+        }
+
+        const newIsHidden = finishedWork.memoizedState;
+        if (current !== null && current.memoizedState !== newIsHidden) {
+          // The placeholder either just timed out or switched back to the
+          // normal children after having previously timed out. Toggle the
+          // visibility of the direct host children.
+          let child = finishedWork.child;
+          while (child !== null && child.type !== PlaceholderFallback) {
+            // Find the nearest host children and update their visibility. But
+            // skip over the fallback children.
+            hideOrUnhideAllChildren(child, newIsHidden);
+            child = child.sibling;
+          }
+        } else if (!isInStrictMode) {
           // In loose mode, a placeholder times out by scheduling a synchronous
           // update in the commit phase. Use `updateQueue` field to signal that
           // the Timeout needs to switch to the placeholder. We don't need an
@@ -337,11 +363,6 @@ function commitLifeCycles(
           // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
           finishedWork.updateQueue = emptyObject;
           scheduleWork(finishedWork, Sync);
-        } else {
-          // In strict mode, the Update effect is used to record the time at
-          // which the placeholder timed out.
-          const currentTime = requestCurrentTime();
-          finishedWork.stateNode = {timedOutAt: currentTime};
         }
       }
       return;
@@ -352,6 +373,46 @@ function commitLifeCycles(
         'This unit of work tag should not have side-effects. This error is ' +
           'likely caused by a bug in React. Please file an issue.',
       );
+    }
+  }
+}
+
+function hideOrUnhideAllChildren(finishedWork, isHidden) {
+  if (supportsMutation) {
+    // We only have the top Fiber that was inserted but we need recurse down its
+    // children to find all the terminal nodes.
+    let node: Fiber = finishedWork;
+    while (true) {
+      if (node.tag === HostComponent) {
+        const instance = node.stateNode;
+        if (isHidden) {
+          hideInstance(instance);
+        } else {
+          unhideInstance(node.stateNode, node.memoizedProps);
+        }
+      } else if (node.tag === HostText) {
+        const instance = node.stateNode;
+        if (isHidden) {
+          hideTextInstance(instance);
+        } else {
+          unhideTextInstance(instance, node.memoizedProps);
+        }
+      } else if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === finishedWork) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === finishedWork) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
     }
   }
 }
@@ -517,6 +578,9 @@ function commitContainer(finishedWork: Fiber) {
         finishedWork.stateNode;
       const {containerInfo, pendingChildren} = portalOrRoot;
       replaceContainerChildren(containerInfo, pendingChildren);
+      return;
+    }
+    case PlaceholderComponent: {
       return;
     }
     default: {

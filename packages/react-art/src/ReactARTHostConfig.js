@@ -406,3 +406,23 @@ export function commitUpdate(
 ) {
   instance._applyProps(instance, newProps, oldProps);
 }
+
+export function hideInstance(instance) {
+  instance.hide();
+}
+
+export function hideTextInstance(textInstance) {
+  // Noop
+}
+
+export function unhideInstance(instance, props) {
+  if (props.visible == null || props.visible) {
+    instance.show();
+  } else {
+    instance.hide();
+  }
+}
+
+export function unhideTextInstance(textInstance, text): void {
+  // Noop
+}

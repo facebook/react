@@ -44,12 +44,15 @@ import invariant from 'shared/invariant';
 import {
   createInstance,
   createTextInstance,
+  createHiddenTextInstance,
   appendInitialChild,
   finalizeInitialChildren,
   prepareUpdate,
   supportsMutation,
   supportsPersistence,
   cloneInstance,
+  cloneHiddenInstance,
+  cloneUnhiddenInstance,
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
@@ -71,6 +74,8 @@ import {
   prepareToHydrateHostTextInstance,
   popHydrationState,
 } from './ReactFiberHydrationContext';
+import {NoWork, Never} from './ReactFiberExpirationTime';
+import {PlaceholderFallback} from './ReactFiberPlaceholder';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -82,17 +87,89 @@ function markRef(workInProgress: Fiber) {
   workInProgress.effectTag |= Ref;
 }
 
-function appendAllChildren(parent: Instance, workInProgress: Fiber) {
+function appendAllChildren(
+  parent: Instance,
+  workInProgress: Fiber,
+  needsVisibilityToggle: boolean,
+  isHidden: boolean,
+) {
   // We only have the top Fiber that was created but we need recurse down its
   // children to find all the terminal nodes.
   let node = workInProgress.child;
-  while (node !== null) {
-    if (node.tag === HostComponent || node.tag === HostText) {
-      appendInitialChild(parent, node.stateNode);
+  outer: while (node !== null) {
+    if (node.tag === HostComponent) {
+      let instance = node.stateNode;
+      if (supportsPersistence && needsVisibilityToggle) {
+        const props = node.memoizedProps;
+        const type = node.type;
+        if (isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          instance = cloneHiddenInstance(instance, type, props, node);
+        } else {
+          // This child was previously inside a timed out tree. If it was not
+          // updated during this render, it may need to be unhidden. Clone
+          // again to be sure.
+          instance = cloneUnhiddenInstance(instance, type, props, node);
+        }
+        node.stateNode = instance;
+      }
+      appendInitialChild(parent, instance);
+    } else if (node.tag === HostText) {
+      let instance = node.stateNode;
+      if (supportsPersistence && needsVisibilityToggle) {
+        const text = node.memoizedProps;
+        const rootContainerInstance = getRootHostContainer();
+        const currentHostContext = getHostContext();
+        if (isHidden) {
+          instance = createHiddenTextInstance(
+            text,
+            rootContainerInstance,
+            currentHostContext,
+            workInProgress,
+          );
+        } else {
+          instance = createTextInstance(
+            text,
+            rootContainerInstance,
+            currentHostContext,
+            workInProgress,
+          );
+        }
+        node.stateNode = instance;
+      }
+      appendInitialChild(parent, instance);
     } else if (node.tag === HostPortal) {
       // If we have a portal child, then we don't want to traverse
       // down its children. Instead, we'll get insertions from each child in
       // the portal directly.
+    } else if (
+      node.tag === PlaceholderComponent &&
+      node.memoizedState !== isHidden
+    ) {
+      const current = node.alternate;
+      const newIsHidden = node.memoizedState;
+      if (current !== null && current.memoizedState !== newIsHidden) {
+        // The placeholder either just timed out or switched back to the normal
+        // children after having previously timed out. Toggle the visibility of
+        // the direct host children.
+        let placeholderChild = node.child;
+        while (placeholderChild !== null) {
+          if (placeholderChild.type !== PlaceholderFallback) {
+            appendAllChildren(parent, placeholderChild, true, newIsHidden);
+          } else {
+            // Continue traversing like normal
+            placeholderChild.return = node;
+            node = placeholderChild;
+            continue outer;
+          }
+          placeholderChild = placeholderChild.sibling;
+        }
+      } else if (node.child !== null) {
+        // Continue traversing like normal
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
     } else if (node.child !== null) {
       node.child.return = node;
       node = node.child;
@@ -157,17 +234,91 @@ if (supportsMutation) {
   const appendAllChildrenToContainer = function(
     containerChildSet: ChildSet,
     workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
   ) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
-    while (node !== null) {
-      if (node.tag === HostComponent || node.tag === HostText) {
-        appendChildToContainerChildSet(containerChildSet, node.stateNode);
+    outer: while (node !== null) {
+      if (node.tag === HostComponent) {
+        let instance = node.stateNode;
+        if (supportsPersistence && needsVisibilityToggle) {
+          const props = node.memoizedProps;
+          const type = node.type;
+          if (isHidden) {
+            // This child is inside a timed out tree. Hide it.
+            instance = cloneHiddenInstance(instance, type, props, node);
+          } else {
+            // This child was previously inside a timed out tree. If it was not
+            // updated during this render, it may need to be unhidden. Clone
+            // again to be sure.
+            instance = cloneUnhiddenInstance(instance, type, props, node);
+          }
+          node.stateNode = instance;
+        }
+        appendChildToContainerChildSet(containerChildSet, instance);
+      } else if (node.tag === HostText) {
+        let instance = node.stateNode;
+        if (supportsPersistence && needsVisibilityToggle) {
+          const text = node.memoizedProps;
+          const rootContainerInstance = getRootHostContainer();
+          const currentHostContext = getHostContext();
+          if (isHidden) {
+            instance = createHiddenTextInstance(
+              text,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+          } else {
+            instance = createTextInstance(
+              text,
+              rootContainerInstance,
+              currentHostContext,
+              workInProgress,
+            );
+          }
+          node.stateNode = instance;
+        }
+        appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
+      } else if (
+        node.tag === PlaceholderComponent &&
+        node.memoizedState !== isHidden
+      ) {
+        const current = node.alternate;
+        const newIsHidden = node.memoizedState;
+        if (current !== null && current.memoizedState !== newIsHidden) {
+          // The placeholder either just timed out or switched back to the normal
+          // children after having previously timed out. Toggle the visibility of
+          // the direct host children.
+          let placeholderChild = node.child;
+          while (placeholderChild !== null) {
+            if (placeholderChild.type !== PlaceholderFallback) {
+              appendAllChildrenToContainer(
+                containerChildSet,
+                placeholderChild,
+                true,
+                newIsHidden,
+              );
+            } else {
+              // Continue traversing like normal
+              placeholderChild.return = node;
+              node = placeholderChild;
+              continue outer;
+            }
+            placeholderChild = placeholderChild.sibling;
+          }
+        } else if (node.child !== null) {
+          // Continue traversing like normal
+          node.child.return = node;
+          node = node.child;
+          continue;
+        }
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -199,7 +350,7 @@ if (supportsMutation) {
       const container = portalOrRoot.containerInfo;
       let newChildSet = createContainerChildSet(container);
       // If children might have changed, we have to add them all to the set.
-      appendAllChildrenToContainer(newChildSet, workInProgress);
+      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
       portalOrRoot.pendingChildren = newChildSet;
       // Schedule an update on the container to swap out the container.
       markUpdate(workInProgress);
@@ -255,7 +406,7 @@ if (supportsMutation) {
         markUpdate(workInProgress);
       } else {
         // If children might have changed, we have to add them all to the set.
-        appendAllChildren(newInstance, workInProgress);
+        appendAllChildren(newInstance, workInProgress, false, false);
       }
     }
   };
@@ -314,6 +465,67 @@ function completeWork(
 ): Fiber | null {
   const newProps = workInProgress.pendingProps;
 
+  // Reset the child expiration time by bubbling it from the children. Skip
+  // if the children are hidden and we're not rendering at hidden priority.
+  if (
+    workInProgress.childExpirationTime !== Never ||
+    renderExpirationTime === Never
+  ) {
+    let newChildExpirationTime = NoWork;
+
+    // Bubble up the earliest expiration time.
+    if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+      // We're in profiling mode. Let's use this same traversal to update the
+      // "base" render times.
+      let treeBaseDuration = workInProgress.selfBaseDuration;
+      let child = workInProgress.child;
+      while (child !== null) {
+        const childUpdateExpirationTime = child.expirationTime;
+        const childChildExpirationTime = child.childExpirationTime;
+        if (
+          newChildExpirationTime === NoWork ||
+          (childUpdateExpirationTime !== NoWork &&
+            childUpdateExpirationTime < newChildExpirationTime)
+        ) {
+          newChildExpirationTime = childUpdateExpirationTime;
+        }
+        if (
+          newChildExpirationTime === NoWork ||
+          (childChildExpirationTime !== NoWork &&
+            childChildExpirationTime < newChildExpirationTime)
+        ) {
+          newChildExpirationTime = childChildExpirationTime;
+        }
+        treeBaseDuration += child.treeBaseDuration;
+        child = child.sibling;
+      }
+      workInProgress.treeBaseDuration = treeBaseDuration;
+    } else {
+      let child = workInProgress.child;
+      while (child !== null) {
+        const childUpdateExpirationTime = child.expirationTime;
+        const childChildExpirationTime = child.childExpirationTime;
+        if (
+          newChildExpirationTime === NoWork ||
+          (childUpdateExpirationTime !== NoWork &&
+            childUpdateExpirationTime < newChildExpirationTime)
+        ) {
+          newChildExpirationTime = childUpdateExpirationTime;
+        }
+        if (
+          newChildExpirationTime === NoWork ||
+          (childChildExpirationTime !== NoWork &&
+            childChildExpirationTime < newChildExpirationTime)
+        ) {
+          newChildExpirationTime = childChildExpirationTime;
+        }
+        child = child.sibling;
+      }
+    }
+
+    workInProgress.childExpirationTime = newChildExpirationTime;
+  }
+
   switch (workInProgress.tag) {
     case FunctionalComponent:
       break;
@@ -323,6 +535,7 @@ function completeWork(
       break;
     }
     case HostRoot: {
+      updateHostContainer(workInProgress);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
@@ -338,7 +551,6 @@ function completeWork(
         // TODO: Delete this when we delete isMounted and findDOMNode.
         workInProgress.effectTag &= ~Placement;
       }
-      updateHostContainer(workInProgress);
       break;
     }
     case HostComponent: {
@@ -421,7 +633,7 @@ function completeWork(
             workInProgress,
           );
 
-          appendAllChildren(instance, workInProgress);
+          appendAllChildren(instance, workInProgress, false, false);
 
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -483,8 +695,46 @@ function completeWork(
     }
     case ForwardRef:
       break;
-    case PlaceholderComponent:
+    case PlaceholderComponent: {
+      const prevDidTimeout = current !== null && current.memoizedState;
+      const nextDidTimeout = workInProgress.memoizedState;
+      if (workInProgress.memoizedState === true) {
+        let newChildExpirationTime = workInProgress.expirationTime;
+        let child = workInProgress.child;
+        while (child !== null) {
+          if (child.type === PlaceholderFallback) {
+            const placeholderUpdateExpirationTIme = child.expirationTime;
+            const placeholderChildExpirationTime = child.childExpirationTime;
+            if (
+              newChildExpirationTime === NoWork ||
+              (placeholderUpdateExpirationTIme !== NoWork &&
+                placeholderUpdateExpirationTIme < newChildExpirationTime)
+            ) {
+              newChildExpirationTime = placeholderUpdateExpirationTIme;
+            }
+            if (
+              newChildExpirationTime === NoWork ||
+              (placeholderChildExpirationTime !== NoWork &&
+                placeholderChildExpirationTime < newChildExpirationTime)
+            ) {
+              newChildExpirationTime = placeholderChildExpirationTime;
+            }
+          }
+          child = child.sibling;
+        }
+        workInProgress.childExpirationTime = newChildExpirationTime;
+      }
+
+      if (supportsMutation) {
+        if (prevDidTimeout !== nextDidTimeout) {
+          // The placeholder either just timed out or switched back to the
+          // normal children after having previously timed out. Schedule an
+          // effect to toggle the visibility of the direct host children.
+          workInProgress.effectTag |= Update;
+        }
+      }
       break;
+    }
     case Fragment:
       break;
     case Mode:
@@ -521,9 +771,10 @@ function completeWork(
   if (enableProfilerTimer) {
     if (workInProgress.mode & ProfileMode) {
       // Don't record elapsed time unless the "complete" phase has succeeded.
-      // Certain renderers may error during this phase (i.e. ReactNative View/Text nesting validation).
-      // If an error occurs, we'll mark the time while unwinding.
-      // This simplifies the unwinding logic and ensures consistency.
+      // Certain renderers may error during this phase (i.e. ReactNative
+      // View/Text nesting validation). If an error occurs, we'll mark the time
+      // while unwinding. This simplifies the unwinding logic and ensures
+      // consistency.
       recordElapsedActualRenderTime(workInProgress);
     }
   }
