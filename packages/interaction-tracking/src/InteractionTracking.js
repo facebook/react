@@ -15,6 +15,7 @@ export type Interaction = {|
   name: string,
   timestamp: number,
 |};
+
 export type InteractionObserver = {
   onInteractionEnded: (interaction: Interaction) => void,
   onInteractionStarting: (interaction: Interaction) => void,
@@ -35,7 +36,8 @@ if (typeof performance === 'object' && typeof performance.now === 'function') {
 // Counter used to generate unique ID for all interactions.
 let idCounter: number = 0;
 
-const interactionPendingWorkCounts: Map<Interaction, number> = new Map();
+// Listener(s) to notify when interactions begin and end.
+const interactionObservers: Set<InteractionObserver> = new Set();
 
 // Set of currently tracked interactions.
 // Interactions "stack"–
@@ -50,8 +52,10 @@ let interactions: Set<Interaction> = new Set();
 // We could change this to a stack structure in the future if this requirement changed.
 let interactionsMaskedByContinuation: Set<Interaction> | null = null;
 
-// Listener(s) to notify when interactions begin and end.
-const interactionObservers: Set<InteractionObserver> = new Set();
+// Tracks the number of async operations scheduled for each interaction.
+// Once the number of scheduled operations drops to 0,
+// Interaction observers will be notified that the interaction has ended.
+const interactionScheduledAsyncWorkCounts: Map<Interaction, number> = new Map();
 
 export function getCurrent(): Set<Interaction> | null {
   if (!enableProfilerTimer) {
@@ -94,7 +98,7 @@ export function track(name: string, callback: Function): any {
   // So that if it's processed synchronously,
   // And __startAsyncWork/__stopAsyncWork are called,
   // We won't accidentally call onInteractionEnded() more than once.
-  interactionPendingWorkCounts.set(interaction, 1);
+  interactionScheduledAsyncWorkCounts.set(interaction, 1);
 
   try {
     interactionObservers.forEach(observer =>
@@ -105,19 +109,19 @@ export function track(name: string, callback: Function): any {
   } finally {
     interactions = prevInteractions;
 
-    const count = ((interactionPendingWorkCounts.get(
+    const count = ((interactionScheduledAsyncWorkCounts.get(
       interaction,
     ): any): number);
 
     // If no async work was scheduled for this interaction,
     // We can mark it as completed.
     if (count === 1) {
-      interactionPendingWorkCounts.delete(interaction);
+      interactionScheduledAsyncWorkCounts.delete(interaction);
       interactionObservers.forEach(observer =>
         observer.onInteractionEnded(interaction),
       );
     } else {
-      interactionPendingWorkCounts.set(interaction, count - 1);
+      interactionScheduledAsyncWorkCounts.set(interaction, count - 1);
     }
   }
 }
@@ -131,11 +135,11 @@ export function wrap(callback: Function): Function {
 
   // Update the pending async work count for the current interactions.
   wrappedInteractions.forEach(interaction => {
-    const count = interactionPendingWorkCounts.get(interaction) || 0;
+    const count = interactionScheduledAsyncWorkCounts.get(interaction) || 0;
     if (count > 0) {
-      interactionPendingWorkCounts.set(interaction, count + 1);
+      interactionScheduledAsyncWorkCounts.set(interaction, count + 1);
     } else {
-      interactionPendingWorkCounts.set(interaction, 1);
+      interactionScheduledAsyncWorkCounts.set(interaction, 1);
     }
   });
 
@@ -152,11 +156,11 @@ export function wrap(callback: Function): Function {
       // If this was the last scheduled async work for any of them,
       // Mark them as completed.
       wrappedInteractions.forEach(interaction => {
-        const count = interactionPendingWorkCounts.get(interaction) || 0;
+        const count = interactionScheduledAsyncWorkCounts.get(interaction) || 0;
         if (count > 1) {
-          interactionPendingWorkCounts.set(interaction, count - 1);
+          interactionScheduledAsyncWorkCounts.set(interaction, count - 1);
         } else {
-          interactionPendingWorkCounts.delete(interaction);
+          interactionScheduledAsyncWorkCounts.delete(interaction);
           interactionObservers.forEach(observer =>
             observer.onInteractionEnded(interaction),
           );
@@ -170,11 +174,11 @@ export function wrap(callback: Function): Function {
     // If this was the last scheduled async work for any of them,
     // Mark them as completed.
     wrappedInteractions.forEach(interaction => {
-      const count = interactionPendingWorkCounts.get(interaction) || 0;
+      const count = interactionScheduledAsyncWorkCounts.get(interaction) || 0;
       if (count > 1) {
-        interactionPendingWorkCounts.set(interaction, count - 1);
+        interactionScheduledAsyncWorkCounts.set(interaction, count - 1);
       } else {
-        interactionPendingWorkCounts.delete(interaction);
+        interactionScheduledAsyncWorkCounts.delete(interaction);
         interactionObservers.forEach(observer =>
           observer.onInteractionEnded(interaction),
         );
@@ -194,8 +198,8 @@ export function __scheduleAsyncWork(
 
   // Update the pending async work count for the current interactions.
   asyncInteractions.forEach(interaction => {
-    const count = interactionPendingWorkCounts.get(interaction) || 0;
-    interactionPendingWorkCounts.set(interaction, count + 1);
+    const count = interactionScheduledAsyncWorkCounts.get(interaction) || 0;
+    interactionScheduledAsyncWorkCounts.set(interaction, count + 1);
   });
 }
 
@@ -216,7 +220,7 @@ export function __startAsyncWork(asyncInteractions: Array<Interaction>): void {
 
   if (__DEV__) {
     asyncInteractions.forEach(interaction => {
-      const count = interactionPendingWorkCounts.get(interaction) || 0;
+      const count = interactionScheduledAsyncWorkCounts.get(interaction) || 0;
       warningWithoutStack(count > 0, 'An unscheduled interaction was started.');
     });
   }
@@ -248,7 +252,7 @@ export function __stopAsyncWork(
 
   if (isAsyncWorkComplete) {
     asyncInteractions.forEach(interaction => {
-      const count = interactionPendingWorkCounts.get(interaction) || 0;
+      const count = interactionScheduledAsyncWorkCounts.get(interaction) || 0;
 
       if (__DEV__) {
         warningWithoutStack(
@@ -258,9 +262,9 @@ export function __stopAsyncWork(
       }
 
       if (count > 1) {
-        interactionPendingWorkCounts.set(interaction, count - 1);
+        interactionScheduledAsyncWorkCounts.set(interaction, count - 1);
       } else {
-        interactionPendingWorkCounts.delete(interaction);
+        interactionScheduledAsyncWorkCounts.delete(interaction);
         interactionObservers.forEach(observer =>
           observer.onInteractionEnded(interaction),
         );
