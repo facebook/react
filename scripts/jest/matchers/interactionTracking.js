@@ -43,50 +43,7 @@ function toMatchInteractions(actualSet, expectedArray) {
   return {pass: true};
 }
 
-function toHaveBeenCalledWithInteractions(
-  fn,
-  index,
-  expectedArray,
-  expectedExecutionID
-) {
-  if (fn.mock.calls.length <= index) {
-    return {
-      message: () =>
-        `Expected mock function to have been called at least ${index +
-          1} times but it was only called ${fn.mock.calls.length} times.`,
-      pass: false,
-    };
-  }
-
-  const [actualSet, actualExecutionID] = fn.mock.calls[index];
-
-  if (actualExecutionID !== expectedExecutionID) {
-    return {
-      message: () =>
-        `Expected execution ID ${expectedExecutionID} but was ${actualExecutionID}`,
-      pass: false,
-    };
-  }
-
-  return toMatchInteractions(actualSet, expectedArray);
-}
-
-function toHaveBeenLastCalledWithInteractions(
-  fn,
-  expectedArray,
-  expectedExecutionID
-) {
-  return toHaveBeenCalledWithInteractions(
-    fn,
-    fn.mock.calls.length - 1,
-    expectedArray,
-    expectedExecutionID
-  );
-}
-
 module.exports = {
   toContainNoInteractions,
-  toHaveBeenCalledWithInteractions,
-  toHaveBeenLastCalledWithInteractions,
   toMatchInteractions,
 };

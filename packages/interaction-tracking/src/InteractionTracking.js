@@ -9,25 +9,16 @@
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {
-  __onInteractionsScheduled,
-  __onInteractionsStarting,
-  __onInteractionsEnded,
-} from './InteractionEmitter';
 
-export {registerInteractionObserver} from './InteractionEmitter';
-
-// Maps execution ID to Interactions for all scheduled continuations.
-// We key off of ID because Interactions may be scheduled for multiple continuations.
-// For example, an Interaction may schedule work with React at multiple priorities.
-// Each priority would reserve a continuation (since they may be processed separately).
-export type Continuations = Map<number, Interaction>;
 export type Interaction = {|
   id: number,
   name: string,
   timestamp: number,
 |};
-export type Interactions = Set<Interaction>;
+export type InteractionObserver = {
+  onInteractionEnded: (interaction: Interaction) => void,
+  onInteractionStarting: (interaction: Interaction) => void,
+};
 
 // Normally we would use the current renderer HostConfig's "now" method,
 // But since interaction-tracking will be a separate package,
@@ -41,35 +32,28 @@ if (typeof performance === 'object' && typeof performance.now === 'function') {
   now = () => localDate.now();
 }
 
-// Counters used to generate unique IDs for all interactions,
-// And InteractionObserver executions (including continuations).
-let executionIDCounter: number = 0;
-let interactionIDCounter: number = 0;
+// Counter used to generate unique ID for all interactions.
+let idCounter: number = 0;
+
+const interactionPendingWorkCounts: Map<Interaction, number> = new Map();
 
 // Set of currently tracked interactions.
 // Interactions "stack"–
 // Meaning that newly tracked interactions are appended to the previously active set.
 // When an interaction goes out of scope, the previous set (if any) is restored.
-let interactions: Interactions = new Set();
+let interactions: Set<Interaction> = new Set();
 
 // Temporarily holds the Set of interactions masked by an active "continuation".
 // This is necessary since continuations are started/stopped externally.
 // This value enables previous interactions to be restored when the continuation ends.
 // This implementation supports only one active continuation at any time.
 // We could change this to a stack structure in the future if this requirement changed.
-let interactionsMaskedByContinuation: Interactions = interactions;
+let interactionsMaskedByContinuation: Set<Interaction> | null = null;
 
-// Map continuation (execution) UIDs to interaction UIDs.
-// These Maps are only used for DEV mode validation.
-// Ideally we can replace these Maps with WeakMaps at some point.
-let scheduledContinuations: Continuations | null = null;
-let startedContinuations: Continuations | null = null;
-if (__DEV__) {
-  scheduledContinuations = new Map();
-  startedContinuations = new Map();
-}
+// Listener(s) to notify when interactions begin and end.
+const interactionObservers: Set<InteractionObserver> = new Set();
 
-export function getCurrent(): Interactions | null {
+export function getCurrent(): Set<Interaction> | null {
   if (!enableProfilerTimer) {
     return null;
   } else {
@@ -77,114 +61,27 @@ export function getCurrent(): Interactions | null {
   }
 }
 
-// A "continuation" signifies that an interaction is not completed when its callback finish running.
-// This is useful for React, since scheduled work may be batched and processed asynchronously.
-// Continuations have a unique execution ID which must later be used to restore the interaction.
-// This is done by calling startContinuations() before processing the delayed work,
-// And stopContinuations() to indicate that the work has been completed.
-export function reserveContinuation(interaction: Interaction): number {
-  if (!enableProfilerTimer) {
-    return 0;
-  }
-
-  const executionID = executionIDCounter++;
-
-  __onInteractionsScheduled(new Set([interaction]), executionID);
-
-  if (__DEV__) {
-    ((scheduledContinuations: any): Continuations).set(
-      executionID,
-      interaction,
-    );
-  }
-
-  return executionID;
-}
-
-export function startContinuations(continuations: Continuations): void {
+export function registerInteractionObserver(
+  observer: InteractionObserver,
+): void {
   if (!enableProfilerTimer) {
     return;
   }
 
-  if (__DEV__) {
-    warningWithoutStack(
-      ((startedContinuations: any): Continuations).size === 0,
-      'Only one batch of continuations can be active at a time.',
-    );
-  }
-
-  const continuationInteractions = new Set();
-
-  const entries = Array.from(continuations);
-  for (let index = 0; index < entries.length; index++) {
-    const [executionID: number, interaction: Interaction] = entries[index];
-
-    if (__DEV__) {
-      warningWithoutStack(
-        ((scheduledContinuations: any): Continuations).get(executionID) ===
-          interaction,
-        'Cannot run an unscheduled continuation.',
-      );
-
-      ((scheduledContinuations: any): Continuations).delete(executionID);
-      ((startedContinuations: any): Continuations).set(
-        executionID,
-        interaction,
-      );
-    }
-
-    __onInteractionsStarting(new Set([interaction]), executionID);
-
-    continuationInteractions.add(interaction);
-  }
-
-  // Continuations should mask (rather than extend) any current interactions.
-  // Upon completion of a continuation, previous interactions will be restored.
-  interactionsMaskedByContinuation = interactions;
-  interactions = continuationInteractions;
+  interactionObservers.add(observer);
 }
 
-export function stopContinuations(continuations: Continuations): void {
+export function track(name: string, callback: Function): any {
   if (!enableProfilerTimer) {
-    return;
-  }
-
-  // Stop interactions in the reverse order they were started.
-  const entries = Array.from(continuations);
-  for (let index = entries.length - 1; index >= 0; index--) {
-    const [executionID: number, interaction: Interaction] = entries[index];
-
-    if (__DEV__) {
-      warningWithoutStack(
-        ((startedContinuations: any): Continuations).get(executionID) ===
-          interaction,
-        'Cannot stop an inactive continuation.',
-      );
-
-      ((startedContinuations: any): Continuations).delete(executionID);
-    }
-
-    __onInteractionsEnded(new Set([interaction]), executionID);
-  }
-
-  // Restore previous interactions.
-  interactions = interactionsMaskedByContinuation;
-  interactionsMaskedByContinuation = interactions;
-}
-
-export function track(name: string, callback: Function): void {
-  if (!enableProfilerTimer) {
-    callback();
-    return;
+    return callback();
   }
 
   const interaction: Interaction = {
-    id: interactionIDCounter++,
+    id: idCounter++,
     name,
     timestamp: now(),
   };
 
-  const executionID = executionIDCounter++;
   const prevInteractions = interactions;
 
   // Tracked interactions should stack/accumulate.
@@ -193,15 +90,35 @@ export function track(name: string, callback: Function): void {
   interactions = new Set(interactions);
   interactions.add(interaction);
 
+  // Initialize the pending async count for this interaction,
+  // So that if it's processed synchronously,
+  // And __startAsyncWork/__stopAsyncWork are called,
+  // We won't accidentally call onInteractionEnded() more than once.
+  interactionPendingWorkCounts.set(interaction, 1);
+
   try {
-    __onInteractionsScheduled(interactions, executionID);
-    __onInteractionsStarting(interactions, executionID);
+    interactionObservers.forEach(observer =>
+      observer.onInteractionStarting(interaction),
+    );
 
-    callback();
+    return callback();
   } finally {
-    __onInteractionsEnded(interactions, executionID);
-
     interactions = prevInteractions;
+
+    const count = ((interactionPendingWorkCounts.get(
+      interaction,
+    ): any): number);
+
+    // If no async work was scheduled for this interaction,
+    // We can mark it as completed.
+    if (count === 1) {
+      interactionPendingWorkCounts.delete(interaction);
+      interactionObservers.forEach(observer =>
+        observer.onInteractionEnded(interaction),
+      );
+    } else {
+      interactionPendingWorkCounts.set(interaction, count - 1);
+    }
   }
 }
 
@@ -210,27 +127,144 @@ export function wrap(callback: Function): Function {
     return callback;
   }
 
-  if (interactions === null) {
-    return callback;
-  }
-
-  const executionID = executionIDCounter++;
   const wrappedInteractions = interactions;
 
-  __onInteractionsScheduled(wrappedInteractions, executionID);
+  // Update the pending async work count for the current interactions.
+  wrappedInteractions.forEach(interaction => {
+    const count = interactionPendingWorkCounts.get(interaction) || 0;
+    if (count > 0) {
+      interactionPendingWorkCounts.set(interaction, count + 1);
+    } else {
+      interactionPendingWorkCounts.set(interaction, 1);
+    }
+  });
 
-  return (...args) => {
+  const wrapped = (...args) => {
     const prevInteractions = interactions;
     interactions = wrappedInteractions;
 
     try {
-      __onInteractionsStarting(interactions, executionID);
-
-      callback(...args);
+      return callback(...args);
     } finally {
-      __onInteractionsEnded(interactions, executionID);
-
       interactions = prevInteractions;
+
+      // Update pending async counts for all wrapped interactions.
+      // If this was the last scheduled async work for any of them,
+      // Mark them as completed.
+      wrappedInteractions.forEach(interaction => {
+        const count = interactionPendingWorkCounts.get(interaction) || 0;
+        if (count > 1) {
+          interactionPendingWorkCounts.set(interaction, count - 1);
+        } else {
+          interactionPendingWorkCounts.delete(interaction);
+          interactionObservers.forEach(observer =>
+            observer.onInteractionEnded(interaction),
+          );
+        }
+      });
     }
   };
+
+  wrapped.cancel = () => {
+    // Update pending async counts for all wrapped interactions.
+    // If this was the last scheduled async work for any of them,
+    // Mark them as completed.
+    wrappedInteractions.forEach(interaction => {
+      const count = interactionPendingWorkCounts.get(interaction) || 0;
+      if (count > 1) {
+        interactionPendingWorkCounts.set(interaction, count - 1);
+      } else {
+        interactionPendingWorkCounts.delete(interaction);
+        interactionObservers.forEach(observer =>
+          observer.onInteractionEnded(interaction),
+        );
+      }
+    });
+  };
+
+  return wrapped;
+}
+
+export function __scheduleAsyncWork(
+  asyncInteractions: Array<Interaction>,
+): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+
+  // Update the pending async work count for the current interactions.
+  asyncInteractions.forEach(interaction => {
+    const count = interactionPendingWorkCounts.get(interaction) || 0;
+    interactionPendingWorkCounts.set(interaction, count + 1);
+  });
+}
+
+export function __startAsyncWork(asyncInteractions: Array<Interaction>): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+
+  if (interactionsMaskedByContinuation !== null) {
+    if (__DEV__) {
+      warningWithoutStack(
+        false,
+        'Can only restore one batch of async interactions at a time.',
+      );
+    }
+    return;
+  }
+
+  if (__DEV__) {
+    asyncInteractions.forEach(interaction => {
+      const count = interactionPendingWorkCounts.get(interaction) || 0;
+      warningWithoutStack(count > 0, 'An unscheduled interaction was started.');
+    });
+  }
+
+  // Continuations should mask (rather than extend) any current interactions.
+  // Upon completion of a continuation, previous interactions will be restored.
+  interactionsMaskedByContinuation = interactions;
+  interactions = new Set(asyncInteractions);
+}
+
+export function __stopAsyncWork(
+  asyncInteractions: Array<Interaction>,
+  isAsyncWorkComplete: boolean,
+): void {
+  if (!enableProfilerTimer) {
+    return;
+  }
+
+  if (interactionsMaskedByContinuation === null) {
+    if (__DEV__) {
+      warningWithoutStack(false, 'Cannot stop inactive async interactions.');
+    }
+    return;
+  }
+
+  // Restore previous interactions.
+  interactions = ((interactionsMaskedByContinuation: any): Set<Interaction>);
+  interactionsMaskedByContinuation = null;
+
+  if (isAsyncWorkComplete) {
+    asyncInteractions.forEach(interaction => {
+      const count = interactionPendingWorkCounts.get(interaction) || 0;
+
+      if (__DEV__) {
+        warningWithoutStack(
+          count > 0,
+          'An unscheduled interaction was stopped.',
+        );
+      }
+
+      if (count > 1) {
+        interactionPendingWorkCounts.set(interaction, count - 1);
+      } else {
+        interactionPendingWorkCounts.delete(interaction);
+        interactionObservers.forEach(observer =>
+          observer.onInteractionEnded(interaction),
+        );
+      }
+    });
+  }
 }
