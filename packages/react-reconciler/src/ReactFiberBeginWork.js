@@ -62,7 +62,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
+import {AsyncMode, StrictMode} from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
@@ -75,10 +75,7 @@ import {
   prepareToReadContext,
   calculateChangedBits,
 } from './ReactFiberNewContext';
-import {
-  markActualRenderTimeStarted,
-  stopBaseRenderTimerIfRunning,
-} from './ReactProfilerTimer';
+import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
   getUnmaskedContext,
@@ -379,7 +376,7 @@ function finishClassComponent(
     nextChildren = null;
 
     if (enableProfilerTimer) {
-      stopBaseRenderTimerIfRunning();
+      stopProfilerTimerIfRunning(workInProgress);
     }
   } else {
     if (__DEV__) {
@@ -954,7 +951,7 @@ function bailoutOnAlreadyFinishedWork(
 
   if (enableProfilerTimer) {
     // Don't update "base" render times for bailouts.
-    stopBaseRenderTimerIfRunning();
+    stopProfilerTimerIfRunning(workInProgress);
   }
 
   // Check if the children have any pending work.
@@ -991,12 +988,6 @@ function beginWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
-  if (enableProfilerTimer) {
-    if (workInProgress.mode & ProfileMode) {
-      markActualRenderTimeStarted(workInProgress);
-    }
-  }
-
   const updateExpirationTime = workInProgress.expirationTime;
   if (
     !hasLegacyContextChanged() &&

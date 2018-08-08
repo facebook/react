@@ -20,7 +20,6 @@ import type {
   HostContext,
 } from './ReactFiberHostConfig';
 
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
   FunctionalComponent,
@@ -38,7 +37,6 @@ import {
   PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
-import {ProfileMode} from './ReactTypeOfMode';
 import invariant from 'shared/invariant';
 
 import {
@@ -60,7 +58,6 @@ import {
   getHostContext,
   popHostContainer,
 } from './ReactFiberHostContext';
-import {recordElapsedActualRenderTime} from './ReactProfilerTimer';
 import {
   popContextProvider as popLegacyContextProvider,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
@@ -516,16 +513,6 @@ function completeWork(
         'Unknown unit of work tag. This error is likely caused by a bug in ' +
           'React. Please file an issue.',
       );
-  }
-
-  if (enableProfilerTimer) {
-    if (workInProgress.mode & ProfileMode) {
-      // Don't record elapsed time unless the "complete" phase has succeeded.
-      // Certain renderers may error during this phase (i.e. ReactNative View/Text nesting validation).
-      // If an error occurs, we'll mark the time while unwinding.
-      // This simplifies the unwinding logic and ensures consistency.
-      recordElapsedActualRenderTime(workInProgress);
-    }
   }
 
   return null;
