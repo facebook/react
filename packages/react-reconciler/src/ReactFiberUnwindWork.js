@@ -34,10 +34,9 @@ import {
 } from 'shared/ReactTypeOfSideEffect';
 import {
   enableGetDerivedStateFromCatch,
-  enableProfilerTimer,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
-import {ProfileMode, StrictMode, AsyncMode} from './ReactTypeOfMode';
+import {StrictMode, AsyncMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -52,7 +51,6 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
-import {recordElapsedActualRenderTime} from './ReactProfilerTimer';
 import {
   renderDidSuspend,
   renderDidError,
@@ -380,12 +378,6 @@ function unwindWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  if (enableProfilerTimer) {
-    if (workInProgress.mode & ProfileMode) {
-      recordElapsedActualRenderTime(workInProgress);
-    }
-  }
-
   switch (workInProgress.tag) {
     case ClassComponent: {
       popLegacyContextProvider(workInProgress);
@@ -432,12 +424,6 @@ function unwindWork(
 }
 
 function unwindInterruptedWork(interruptedWork: Fiber) {
-  if (enableProfilerTimer) {
-    if (interruptedWork.mode & ProfileMode) {
-      recordElapsedActualRenderTime(interruptedWork);
-    }
-  }
-
   switch (interruptedWork.tag) {
     case ClassComponent: {
       popLegacyContextProvider(interruptedWork);
