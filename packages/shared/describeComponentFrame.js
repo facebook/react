@@ -18,14 +18,17 @@ export default function(
   if (source) {
     let path = source.fileName;
     let fileName = path.replace(BEFORE_SLASH_RE, '');
-    if (/^index\./.test(fileName)) {
-      // Special case: include closest folder name for `index.*` filenames.
-      const match = path.match(BEFORE_SLASH_RE);
-      if (match) {
-        const pathBeforeSlash = match[1];
-        if (pathBeforeSlash) {
-          const folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, '');
-          fileName = folderName + '/' + fileName;
+    if (__DEV__) {
+      // In DEV, include code for a common special case:
+      // prefer "folder/index.js" instead of just "index.js".
+      if (/^index\./.test(fileName)) {
+        const match = path.match(BEFORE_SLASH_RE);
+        if (match) {
+          const pathBeforeSlash = match[1];
+          if (pathBeforeSlash) {
+            const folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, '');
+            fileName = folderName + '/' + fileName;
+          }
         }
       }
     }
