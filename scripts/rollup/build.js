@@ -335,6 +335,16 @@ function getPlugins(
           .replace(/require\(['"]react-is['"]\)/g, "require('ReactIs')");
       },
     },
+    // We can't use getters in www.
+    isFBBundle && {
+      transformBundle(source) {
+        // Transform `get prop() { return variable; }` into `prop: variable`
+        return source.replace(
+          /get ([^\s]+)\s*\(\)\s*{\s*return\s*([^\s;]+);\s*}/g,
+          '$1: $2'
+        );
+      },
+    },
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(
@@ -470,11 +480,6 @@ async function createBundle(bundle, bundleType) {
       bundle.moduleType,
       bundle.modulesToStub
     ),
-    // We can't use getters in www.
-    legacy:
-      bundleType === FB_WWW_DEV ||
-      bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING,
   };
   const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
     bundleType,
