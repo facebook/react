@@ -424,6 +424,28 @@ describe('ReactDOMServerIntegration', () => {
         <div dangerouslySetInnerHTML={{__html: 20}} />,
       ));
 
+    it('should error reconnecting a div with different object dangerouslySetInnerHTML', () =>
+      expectMarkupMismatch(
+        <div
+          dangerouslySetInnerHTML={{
+            __html: {
+              toString() {
+                return 'hi';
+              },
+            },
+          }}
+        />,
+        <div
+          dangerouslySetInnerHTML={{
+            __html: {
+              toString() {
+                return 'bye';
+              },
+            },
+          }}
+        />,
+      ));
+
     it('can explicitly ignore reconnecting a div with different dangerouslySetInnerHTML', () =>
       expectMarkupMatch(
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
