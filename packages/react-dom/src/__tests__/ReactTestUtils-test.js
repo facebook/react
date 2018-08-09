@@ -281,6 +281,62 @@ describe('ReactTestUtils', () => {
     expect(hrs.length).toBe(2);
   });
 
+  it('provides a clear error when passing invalid objects to scry', () => {
+    // This is probably too relaxed but it's existing behavior.
+    ReactTestUtils.findAllInRenderedTree(null, 'span');
+    ReactTestUtils.findAllInRenderedTree(undefined, 'span');
+    ReactTestUtils.findAllInRenderedTree('', 'span');
+    ReactTestUtils.findAllInRenderedTree(0, 'span');
+    ReactTestUtils.findAllInRenderedTree(false, 'span');
+
+    expect(() => {
+      ReactTestUtils.findAllInRenderedTree([], 'span');
+    }).toThrow(
+      'findAllInRenderedTree(...): the first argument must be a React class instance. ' +
+        'Instead received: an array.',
+    );
+    expect(() => {
+      ReactTestUtils.scryRenderedDOMComponentsWithClass(10, 'button');
+    }).toThrow(
+      'scryRenderedDOMComponentsWithClass(...): the first argument must be a React class instance. ' +
+        'Instead received: 10.',
+    );
+    expect(() => {
+      ReactTestUtils.findRenderedDOMComponentWithClass('hello', 'button');
+    }).toThrow(
+      'findRenderedDOMComponentWithClass(...): the first argument must be a React class instance. ' +
+        'Instead received: hello.',
+    );
+    expect(() => {
+      ReactTestUtils.scryRenderedDOMComponentsWithTag(
+        {x: true, y: false},
+        'span',
+      );
+    }).toThrow(
+      'scryRenderedDOMComponentsWithTag(...): the first argument must be a React class instance. ' +
+        'Instead received: object with keys {x, y}.',
+    );
+    const div = document.createElement('div');
+    expect(() => {
+      ReactTestUtils.findRenderedDOMComponentWithTag(div, 'span');
+    }).toThrow(
+      'findRenderedDOMComponentWithTag(...): the first argument must be a React class instance. ' +
+        'Instead received: a DOM node.',
+    );
+    expect(() => {
+      ReactTestUtils.scryRenderedComponentsWithType(true, 'span');
+    }).toThrow(
+      'scryRenderedComponentsWithType(...): the first argument must be a React class instance. ' +
+        'Instead received: true.',
+    );
+    expect(() => {
+      ReactTestUtils.findRenderedComponentWithType(true, 'span');
+    }).toThrow(
+      'findRenderedComponentWithType(...): the first argument must be a React class instance. ' +
+        'Instead received: true.',
+    );
+  });
+
   describe('Simulate', () => {
     it('should change the value of an input field', () => {
       const obj = {

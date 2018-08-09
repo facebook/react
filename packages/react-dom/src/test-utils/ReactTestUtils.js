@@ -107,6 +107,35 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   }
 }
 
+function validateClassInstance(inst, methodName) {
+  if (!inst) {
+    // This is probably too relaxed but it's existing behavior.
+    return;
+  }
+  if (ReactInstanceMap.get(inst)) {
+    // This is a public instance indeed.
+    return;
+  }
+  let received;
+  const stringified = '' + inst;
+  if (Array.isArray(inst)) {
+    received = 'an array';
+  } else if (inst && inst.nodeType === 1 && inst.tagName) {
+    received = 'a DOM node';
+  } else if (stringified === '[object Object]') {
+    received = 'object with keys {' + Object.keys(inst).join(', ') + '}';
+  } else {
+    received = stringified;
+  }
+  invariant(
+    false,
+    '%s(...): the first argument must be a React class instance. ' +
+      'Instead received: %s.',
+    methodName,
+    received,
+  );
+}
+
 /**
  * Utilities for making it easy to test React components.
  *
@@ -166,13 +195,10 @@ const ReactTestUtils = {
   },
 
   findAllInRenderedTree: function(inst, test) {
+    validateClassInstance(inst, 'findAllInRenderedTree');
     if (!inst) {
       return [];
     }
-    invariant(
-      ReactTestUtils.isCompositeComponent(inst),
-      'findAllInRenderedTree(...): instance must be a composite component',
-    );
     const internalInstance = ReactInstanceMap.get(inst);
     return findAllInRenderedFiberTreeInternal(internalInstance, test);
   },
@@ -183,6 +209,7 @@ const ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithClass: function(root, classNames) {
+    validateClassInstance(root, 'scryRenderedDOMComponentsWithClass');
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
         let className = inst.className;
@@ -215,6 +242,7 @@ const ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithClass: function(root, className) {
+    validateClassInstance(root, 'findRenderedDOMComponentWithClass');
     const all = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       root,
       className,
@@ -237,6 +265,7 @@ const ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithTag: function(root, tagName) {
+    validateClassInstance(root, 'scryRenderedDOMComponentsWithTag');
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       return (
         ReactTestUtils.isDOMComponent(inst) &&
@@ -252,6 +281,7 @@ const ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithTag: function(root, tagName) {
+    validateClassInstance(root, 'findRenderedDOMComponentWithTag');
     const all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
       throw new Error(
@@ -270,6 +300,7 @@ const ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedComponentsWithType: function(root, componentType) {
+    validateClassInstance(root, 'scryRenderedComponentsWithType');
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       return ReactTestUtils.isCompositeComponentWithType(inst, componentType);
     });
@@ -282,6 +313,7 @@ const ReactTestUtils = {
    * @return {!ReactComponent} The one match.
    */
   findRenderedComponentWithType: function(root, componentType) {
+    validateClassInstance(root, 'findRenderedComponentWithType');
     const all = ReactTestUtils.scryRenderedComponentsWithType(
       root,
       componentType,
