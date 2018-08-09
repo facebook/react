@@ -12,17 +12,17 @@ export default function(
   source: any,
   ownerName: null | string,
 ) {
-  return (
-    '\n    in ' +
-    (name || 'Unknown') +
-    (source
-      ? ' (at ' +
-        source.fileName.replace(/^.*[\\\/]/, '') +
-        ':' +
-        source.lineNumber +
-        ')'
-      : ownerName
-        ? ' (created by ' + ownerName + ')'
-        : '')
-  );
+  let sourceInfo = '';
+  if (source) {
+    sourceInfo =
+      ' (at ' +
+      source.fileName.replace(/^.*[\\\/]/, '') +
+      ':' +
+      source.lineNumber +
+      ')';
+  } else if (ownerName) {
+    sourceInfo = ' (created by ' + ownerName + ')';
+  }
+
+  return '\n    in ' + (name || 'Unknown') + sourceInfo;
 }
