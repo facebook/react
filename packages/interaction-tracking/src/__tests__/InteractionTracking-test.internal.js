@@ -14,7 +14,10 @@ describe('InteractionTracking', () => {
 
   let advanceTimeBy;
 
-  function loadModules({enableProfilerTimer}) {
+  function loadModules({
+    enableInteractionTracking,
+    enableInteractionTrackingObserver,
+  }) {
     jest.resetModules();
     jest.useFakeTimers();
 
@@ -26,12 +29,14 @@ describe('InteractionTracking', () => {
     };
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
+    ReactFeatureFlags.enableInteractionTracking = enableInteractionTracking;
+    ReactFeatureFlags.enableInteractionTrackingObserver = enableInteractionTrackingObserver;
+
     InteractionTracking = require('interaction-tracking');
   }
 
-  describe('enableProfilerTimer enabled', () => {
-    beforeEach(() => loadModules({enableProfilerTimer: true}));
+  describe('enableInteractionTracking enabled', () => {
+    beforeEach(() => loadModules({enableInteractionTracking: true}));
 
     it('should return the value of a tracked function', () => {
       expect(InteractionTracking.track('arbitrary', () => 123)).toBe(123);
@@ -187,36 +192,37 @@ describe('InteractionTracking', () => {
         });
       });
 
-      it('should warn if an unscheduled interaction is started or stopped', () => {
-        let interactions;
-        InteractionTracking.track('some earlier event', () => {
-          interactions = InteractionTracking.getCurrent();
-        });
-
-        expect(() => {
-          InteractionTracking.__startAsyncWork(interactions);
-        }).toWarnDev(['An unscheduled interaction was started.'], {
-          withoutStack: true,
-        });
-
-        expect(() => {
-          InteractionTracking.__stopAsyncWork(interactions, true);
-        }).toWarnDev(['An unscheduled interaction was stopped.'], {
-          withoutStack: true,
-        });
-      });
-
       it('should error if async work overlaps', () => {
-        InteractionTracking.__startAsyncWork(new Set());
+        let asyncInteractions;
+        InteractionTracking.track('old event', () => {
+          asyncInteractions = InteractionTracking.getCurrent();
+          InteractionTracking.__scheduleAsyncWork(asyncInteractions);
+        });
 
-        expect(() => {
-          InteractionTracking.__startAsyncWork(new Set());
-        }).toWarnDev(
-          ['Can only restore one batch of async interactions at a time.'],
-          {
-            withoutStack: true,
-          },
-        );
+        InteractionTracking.track('new event', () => {
+          InteractionTracking.__startAsyncWork(asyncInteractions);
+
+          expect(() => {
+            InteractionTracking.__startAsyncWork(asyncInteractions);
+          }).toWarnDev(
+            ['Can only restore one batch of async interactions at a time.'],
+            {
+              withoutStack: true,
+            },
+          );
+
+          // It should preserve the original continuation though.
+          expect(InteractionTracking.getCurrent()).toMatchInteractions([
+            {name: 'old event'},
+          ]);
+
+          InteractionTracking.__stopAsyncWork(asyncInteractions);
+
+          // And should restore the original tracked interactions afterward
+          expect(InteractionTracking.getCurrent()).toMatchInteractions([
+            {name: 'new event'},
+          ]);
+        });
       });
 
       it('should error if inactive async work is stopped', () => {
@@ -376,7 +382,7 @@ describe('InteractionTracking', () => {
       });
     });
 
-    describe('interaction observers', () => {
+    describe('interaction observers enabled', () => {
       let onInteractionEnded;
       let onInteractionStarting;
 
@@ -386,188 +392,200 @@ describe('InteractionTracking', () => {
       beforeEach(() => {
         onInteractionEnded = jest.fn();
         onInteractionStarting = jest.fn();
-
-        InteractionTracking.registerInteractionObserver({
-          onInteractionEnded,
-          onInteractionStarting,
-        });
       });
 
-      it('calls lifecycle methods for track', () => {
-        expect(onInteractionStarting).not.toHaveBeenCalled();
-        expect(onInteractionEnded).not.toHaveBeenCalled();
+      describe('enableInteractionTrackingObserver enabled', () => {
+        beforeEach(() => {
+          loadModules({
+            enableInteractionTracking: true,
+            enableInteractionTrackingObserver: true,
+          });
 
-        InteractionTracking.track(firstEvent.name, () => {
-          expect(onInteractionStarting).toHaveBeenCalledTimes(1);
+          InteractionTracking.registerInteractionObserver({
+            onInteractionEnded,
+            onInteractionStarting,
+          });
+        });
+
+        it('should warn if an unscheduled interaction is started or stopped', () => {
+          let interactions;
+          InteractionTracking.track('some earlier event', () => {
+            interactions = InteractionTracking.getCurrent();
+          });
+
+          expect(() => {
+            InteractionTracking.__startAsyncWork(interactions);
+          }).toWarnDev(['An unscheduled interaction was started.'], {
+            withoutStack: true,
+          });
+
+          expect(() => {
+            InteractionTracking.__stopAsyncWork(interactions, true);
+          }).toWarnDev(['An unscheduled interaction was stopped.'], {
+            withoutStack: true,
+          });
+        });
+
+        it('calls lifecycle methods for track', () => {
+          expect(onInteractionStarting).not.toHaveBeenCalled();
           expect(onInteractionEnded).not.toHaveBeenCalled();
-          expect(onInteractionStarting).toHaveBeenLastCalledWith(firstEvent);
 
-          InteractionTracking.track(secondEvent.name, () => {
+          InteractionTracking.track(firstEvent.name, () => {
+            expect(onInteractionStarting).toHaveBeenCalledTimes(1);
+            expect(onInteractionEnded).not.toHaveBeenCalled();
+            expect(onInteractionStarting).toHaveBeenLastCalledWith(firstEvent);
+
+            InteractionTracking.track(secondEvent.name, () => {
+              expect(onInteractionStarting).toHaveBeenCalledTimes(2);
+              expect(onInteractionEnded).not.toHaveBeenCalled();
+              expect(onInteractionStarting).toHaveBeenLastCalledWith(
+                secondEvent,
+              );
+            });
+
+            expect(onInteractionEnded).toHaveBeenCalledTimes(1);
+            expect(onInteractionEnded).toHaveBeenLastCalledWith(secondEvent);
+          });
+
+          expect(onInteractionEnded).toHaveBeenCalledTimes(2);
+          expect(onInteractionEnded).toHaveBeenLastCalledWith(firstEvent);
+        });
+
+        it('calls lifecycle methods for wrap', () => {
+          let wrappedFn;
+          InteractionTracking.track(firstEvent.name, () => {
+            expect(onInteractionStarting).toHaveBeenCalledTimes(1);
+
+            InteractionTracking.track(secondEvent.name, () => {
+              expect(onInteractionStarting).toHaveBeenCalledTimes(2);
+
+              wrappedFn = InteractionTracking.wrap(fn => fn());
+            });
+          });
+
+          expect(onInteractionStarting.mock.calls).toEqual([
+            [firstEvent],
+            [secondEvent],
+          ]);
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+
+          wrappedFn(() => {
             expect(onInteractionStarting).toHaveBeenCalledTimes(2);
             expect(onInteractionEnded).not.toHaveBeenCalled();
-            expect(onInteractionStarting).toHaveBeenLastCalledWith(secondEvent);
           });
+
+          expect(onInteractionEnded.mock.calls).toEqual([
+            [firstEvent],
+            [secondEvent],
+          ]);
+        });
+
+        it('calls lifecycle methods for start/stop continuation', () => {
+          let asyncInteractions;
+          InteractionTracking.track(firstEvent.name, () => {
+            InteractionTracking.track(secondEvent.name, () => {
+              asyncInteractions = InteractionTracking.getCurrent();
+              InteractionTracking.__scheduleAsyncWork(asyncInteractions);
+            });
+          });
+          expect(onInteractionStarting.mock.calls).toEqual([
+            [firstEvent],
+            [secondEvent],
+          ]);
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+
+          InteractionTracking.__startAsyncWork(asyncInteractions);
+          expect(onInteractionStarting).toHaveBeenCalledTimes(2);
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+
+          InteractionTracking.__stopAsyncWork(asyncInteractions, true);
+          expect(onInteractionStarting).toHaveBeenCalledTimes(2);
+          expect(onInteractionEnded.mock.calls).toEqual([
+            [firstEvent],
+            [secondEvent],
+          ]);
+        });
+
+        it('calls lifecycle methods for batched continuations', () => {
+          let asyncInteractionBatchOne;
+          InteractionTracking.track(firstEvent.name, () => {
+            asyncInteractionBatchOne = InteractionTracking.getCurrent();
+            InteractionTracking.__scheduleAsyncWork(asyncInteractionBatchOne);
+          });
+
+          expect(onInteractionStarting).toHaveBeenCalledTimes(1);
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+
+          let asyncInteractionBatchTwo;
+          InteractionTracking.track(secondEvent.name, () => {
+            asyncInteractionBatchTwo = InteractionTracking.getCurrent();
+            InteractionTracking.__scheduleAsyncWork(asyncInteractionBatchTwo);
+          });
+
+          expect(onInteractionStarting).toHaveBeenCalledTimes(2);
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+
+          expect(InteractionTracking.getCurrent()).toContainNoInteractions();
+
+          const asyncInteractions = new Set([
+            ...Array.from(asyncInteractionBatchOne),
+            ...Array.from(asyncInteractionBatchTwo),
+          ]);
+          InteractionTracking.__startAsyncWork(asyncInteractions);
+          expect(onInteractionStarting.mock.calls).toEqual([
+            [firstEvent],
+            [secondEvent],
+          ]);
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+
+          // Ended lifecycle should not be called if there is more work to be done,
+          // i.e. if true is passed as the second param to __stopAsyncWork().
+          InteractionTracking.__stopAsyncWork(asyncInteractions, false);
+          expect(onInteractionStarting).toHaveBeenCalledTimes(2);
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+
+          InteractionTracking.__startAsyncWork(asyncInteractions);
+          expect(onInteractionStarting).toHaveBeenCalledTimes(2);
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+
+          InteractionTracking.__stopAsyncWork(asyncInteractions, true);
+          expect(onInteractionStarting).toHaveBeenCalledTimes(2);
+          expect(onInteractionEnded.mock.calls).toEqual([
+            [firstEvent],
+            [secondEvent],
+          ]);
+        });
+
+        it('cancelled work should call the correct interaction observer methods', () => {
+          const fnOne = jest.fn();
+          const fnTwo = jest.fn();
+          let wrappedOne, wrappedTwo;
+          InteractionTracking.track(firstEvent.name, () => {
+            wrappedOne = InteractionTracking.wrap(fnOne);
+            InteractionTracking.track(secondEvent.name, () => {
+              wrappedTwo = InteractionTracking.wrap(fnTwo);
+            });
+          });
+
+          expect(onInteractionStarting).toHaveBeenCalledTimes(2);
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+
+          wrappedTwo.cancel();
 
           expect(onInteractionEnded).toHaveBeenCalledTimes(1);
           expect(onInteractionEnded).toHaveBeenLastCalledWith(secondEvent);
+
+          wrappedOne.cancel();
+
+          expect(onInteractionEnded).toHaveBeenCalledTimes(2);
+          expect(onInteractionEnded).toHaveBeenLastCalledWith(firstEvent);
+
+          expect(fnOne).not.toHaveBeenCalled();
+          expect(fnTwo).not.toHaveBeenCalled();
         });
 
-        expect(onInteractionEnded).toHaveBeenCalledTimes(2);
-        expect(onInteractionEnded).toHaveBeenLastCalledWith(firstEvent);
-      });
-
-      it('calls lifecycle methods for wrap', () => {
-        let wrappedFn;
-        InteractionTracking.track(firstEvent.name, () => {
-          expect(onInteractionStarting).toHaveBeenCalledTimes(1);
-
-          InteractionTracking.track(secondEvent.name, () => {
-            expect(onInteractionStarting).toHaveBeenCalledTimes(2);
-
-            wrappedFn = InteractionTracking.wrap(fn => fn());
-          });
-        });
-
-        expect(onInteractionStarting.mock.calls).toEqual([
-          [firstEvent],
-          [secondEvent],
-        ]);
-        expect(onInteractionEnded).not.toHaveBeenCalled();
-
-        wrappedFn(() => {
-          expect(onInteractionStarting).toHaveBeenCalledTimes(2);
-          expect(onInteractionEnded).not.toHaveBeenCalled();
-        });
-
-        expect(onInteractionEnded.mock.calls).toEqual([
-          [firstEvent],
-          [secondEvent],
-        ]);
-      });
-
-      it('calls lifecycle methods for start/stop continuation', () => {
-        let asyncInteractions;
-        InteractionTracking.track(firstEvent.name, () => {
-          InteractionTracking.track(secondEvent.name, () => {
-            asyncInteractions = InteractionTracking.getCurrent();
-            InteractionTracking.__scheduleAsyncWork(asyncInteractions);
-          });
-        });
-        expect(onInteractionStarting.mock.calls).toEqual([
-          [firstEvent],
-          [secondEvent],
-        ]);
-        expect(onInteractionEnded).not.toHaveBeenCalled();
-
-        InteractionTracking.__startAsyncWork(asyncInteractions);
-        expect(onInteractionStarting).toHaveBeenCalledTimes(2);
-        expect(onInteractionEnded).not.toHaveBeenCalled();
-
-        InteractionTracking.__stopAsyncWork(asyncInteractions, true);
-        expect(onInteractionStarting).toHaveBeenCalledTimes(2);
-        expect(onInteractionEnded.mock.calls).toEqual([
-          [firstEvent],
-          [secondEvent],
-        ]);
-      });
-
-      it('calls lifecycle methods for batched continuations', () => {
-        let asyncInteractionBatchOne;
-        InteractionTracking.track(firstEvent.name, () => {
-          asyncInteractionBatchOne = InteractionTracking.getCurrent();
-          InteractionTracking.__scheduleAsyncWork(asyncInteractionBatchOne);
-        });
-
-        expect(onInteractionStarting).toHaveBeenCalledTimes(1);
-        expect(onInteractionEnded).not.toHaveBeenCalled();
-
-        let asyncInteractionBatchTwo;
-        InteractionTracking.track(secondEvent.name, () => {
-          asyncInteractionBatchTwo = InteractionTracking.getCurrent();
-          InteractionTracking.__scheduleAsyncWork(asyncInteractionBatchTwo);
-        });
-
-        expect(onInteractionStarting).toHaveBeenCalledTimes(2);
-        expect(onInteractionEnded).not.toHaveBeenCalled();
-
-        expect(InteractionTracking.getCurrent()).toContainNoInteractions();
-
-        const asyncInteractions = new Set([
-          ...Array.from(asyncInteractionBatchOne),
-          ...Array.from(asyncInteractionBatchTwo),
-        ]);
-        InteractionTracking.__startAsyncWork(asyncInteractions);
-        expect(onInteractionStarting.mock.calls).toEqual([
-          [firstEvent],
-          [secondEvent],
-        ]);
-        expect(onInteractionEnded).not.toHaveBeenCalled();
-
-        // Ended lifecycle should not be called if there is more work to be done,
-        // i.e. if true is passed as the second param to __stopAsyncWork().
-        InteractionTracking.__stopAsyncWork(asyncInteractions, false);
-        expect(onInteractionStarting).toHaveBeenCalledTimes(2);
-        expect(onInteractionEnded).not.toHaveBeenCalled();
-
-        InteractionTracking.__startAsyncWork(asyncInteractions);
-        expect(onInteractionStarting).toHaveBeenCalledTimes(2);
-        expect(onInteractionEnded).not.toHaveBeenCalled();
-
-        InteractionTracking.__stopAsyncWork(asyncInteractions, true);
-        expect(onInteractionStarting).toHaveBeenCalledTimes(2);
-        expect(onInteractionEnded.mock.calls).toEqual([
-          [firstEvent],
-          [secondEvent],
-        ]);
-      });
-
-      it('cancelled work should call the correct interaction observer methods', () => {
-        const fnOne = jest.fn();
-        const fnTwo = jest.fn();
-        let wrappedOne, wrappedTwo;
-        InteractionTracking.track(firstEvent.name, () => {
-          wrappedOne = InteractionTracking.wrap(fnOne);
-          InteractionTracking.track(secondEvent.name, () => {
-            wrappedTwo = InteractionTracking.wrap(fnTwo);
-          });
-        });
-
-        expect(onInteractionStarting).toHaveBeenCalledTimes(2);
-        expect(onInteractionEnded).not.toHaveBeenCalled();
-
-        wrappedTwo.cancel();
-
-        expect(onInteractionEnded).toHaveBeenCalledTimes(1);
-        expect(onInteractionEnded).toHaveBeenLastCalledWith(secondEvent);
-
-        wrappedOne.cancel();
-
-        expect(onInteractionEnded).toHaveBeenCalledTimes(2);
-        expect(onInteractionEnded).toHaveBeenLastCalledWith(firstEvent);
-
-        expect(fnOne).not.toHaveBeenCalled();
-        expect(fnTwo).not.toHaveBeenCalled();
-      });
-
-      it('should not end work twice if __start/__stop are called within track', () => {
-        InteractionTracking.track(firstEvent.name, () => {
-          const interactions = InteractionTracking.getCurrent();
-
-          InteractionTracking.__scheduleAsyncWork(interactions);
-          InteractionTracking.__startAsyncWork(interactions);
-          InteractionTracking.__stopAsyncWork(interactions, true);
-
-          expect(onInteractionEnded).not.toHaveBeenCalled();
-        });
-
-        expect(onInteractionEnded).toHaveBeenCalledTimes(1);
-        expect(onInteractionEnded).toHaveBeenLastCalledWith(firstEvent);
-      });
-
-      it('should not end work twice if __start/__stop are called within wrap', () => {
-        let wrapped;
-        InteractionTracking.track(firstEvent.name, () => {
-          wrapped = InteractionTracking.wrap(() => {
+        it('should not end work twice if __start/__stop are called within track', () => {
+          InteractionTracking.track(firstEvent.name, () => {
             const interactions = InteractionTracking.getCurrent();
 
             InteractionTracking.__scheduleAsyncWork(interactions);
@@ -576,18 +594,73 @@ describe('InteractionTracking', () => {
 
             expect(onInteractionEnded).not.toHaveBeenCalled();
           });
+
+          expect(onInteractionEnded).toHaveBeenCalledTimes(1);
+          expect(onInteractionEnded).toHaveBeenLastCalledWith(firstEvent);
         });
 
-        wrapped();
+        it('should not end work twice if __start/__stop are called within wrap', () => {
+          let wrapped;
+          InteractionTracking.track(firstEvent.name, () => {
+            wrapped = InteractionTracking.wrap(() => {
+              const interactions = InteractionTracking.getCurrent();
 
-        expect(onInteractionEnded).toHaveBeenCalledTimes(1);
-        expect(onInteractionEnded).toHaveBeenLastCalledWith(firstEvent);
+              InteractionTracking.__scheduleAsyncWork(interactions);
+              InteractionTracking.__startAsyncWork(interactions);
+              InteractionTracking.__stopAsyncWork(interactions, true);
+
+              expect(onInteractionEnded).not.toHaveBeenCalled();
+            });
+          });
+
+          wrapped();
+
+          expect(onInteractionEnded).toHaveBeenCalledTimes(1);
+          expect(onInteractionEnded).toHaveBeenLastCalledWith(firstEvent);
+        });
+      });
+
+      describe('enableInteractionTrackingObserver disabled', () => {
+        beforeEach(() => {
+          loadModules({
+            enableInteractionTracking: true,
+            enableInteractionTrackingObserver: false,
+          });
+
+          InteractionTracking.registerInteractionObserver({
+            onInteractionEnded,
+            onInteractionStarting,
+          });
+        });
+
+        it('should not call registerted observers', () => {
+          const unwrapped = jest.fn();
+
+          let asyncInteractions;
+          let wrapped;
+
+          InteractionTracking.track(firstEvent.name, () => {
+            wrapped = InteractionTracking.wrap(unwrapped);
+            asyncInteractions = InteractionTracking.getCurrent();
+
+            InteractionTracking.__scheduleAsyncWork(asyncInteractions);
+          });
+
+          wrapped();
+          expect(unwrapped).toHaveBeenCalled();
+
+          InteractionTracking.__startAsyncWork(asyncInteractions);
+          InteractionTracking.__stopAsyncWork(asyncInteractions, true);
+
+          expect(onInteractionStarting).not.toHaveBeenCalled();
+          expect(onInteractionEnded).not.toHaveBeenCalled();
+        });
       });
     });
   });
 
-  describe('enableProfilerTimer disabled', () => {
-    beforeEach(() => loadModules({enableProfilerTimer: false}));
+  describe('enableInteractionTracking disabled', () => {
+    beforeEach(() => loadModules({enableInteractionTracking: false}));
 
     it('should return the value of a tracked function', () => {
       expect(InteractionTracking.track('arbitrary', () => 123)).toBe(123);
