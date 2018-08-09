@@ -387,6 +387,27 @@ describe('ReactMultiChild', () => {
     expect(container.textContent).toBe('EHCjpdTUuiybDvhRJwZt');
   });
 
+  it('should reorder children with duplicate keys', () => {
+    class Letters extends React.Component {
+      render() {
+        const letters = this.props.letters.split('');
+        return <div>{letters.map(c => <span key={c}>{c}</span>)}</div>;
+      }
+    }
+
+    // Ignore warnings about duplicate keys
+    spyOnDev(console, 'error');
+    const container = document.createElement('div');
+
+    // Two random strings *with duplicates* -- we don't guarantee the ways in
+    // which state is preserved but it would be nice if we don't give totally
+    // wrong output (like by failing to remove old elements)
+    ReactDOM.render(<Letters letters="uhimxkxtsnsdakapkeam" />, container);
+    expect(container.textContent).toBe('uhimxkxtsnsdakapkeam');
+    ReactDOM.render(<Letters letters="jqvrhtlpxjhpeuyolwnr" />, container);
+    expect(container.textContent).toBe('jqvrhtlpxjhpeuyolwnr');
+  });
+
   it('prepares new children before unmounting old', () => {
     const log = [];
 
