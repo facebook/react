@@ -14,7 +14,7 @@ describe('ReactIncrementalErrorReplay-test', () => {
     // Note: this test is fragile and relies on internals.
     // We almost always try to avoid such tests, but here the cost of
     // the list getting out of sync (and causing subtle bugs in rare cases)
-    // is higher than the cost of maintaing the test.
+    // is higher than the cost of maintaining the test.
     const {
       // Any Fiber factory function will do.
       createHostRootFiber,
