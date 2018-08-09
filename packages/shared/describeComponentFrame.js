@@ -17,9 +17,7 @@ export default function(
     (name || 'Unknown') +
     (source
       ? ' (at ' +
-        // Extract filename, or folder/filename in the case of an
-        // index file, e.g. "Foo.js", or "Bar/index.js"
-        source.fileName.match(/[^\\\/]*([\\\/]index\.[^\\\/]+)?$/)[0] +
+        source.fileName.replace(/^.*[\\\/]/, '') +
         ':' +
         source.lineNumber +
         ')'
