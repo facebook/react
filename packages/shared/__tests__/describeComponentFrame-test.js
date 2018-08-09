@@ -10,13 +10,12 @@
 'use strict';
 
 let React;
-let ReactTestUtils;
+let ReactDOM;
 
 describe('Component stack trace displaying', () => {
   beforeEach(() => {
     React = require('react');
-    ReactTestUtils = require('react-dom/test-utils');
-    spyOnDev(console, 'error');
+    ReactDOM = require('react-dom');
   });
 
   it('should provide stack trace to closest directory and index.js', () => {
@@ -26,19 +25,20 @@ describe('Component stack trace displaying', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(
+    spyOnDev(console, 'error');
+    const container = document.createElement('div');
+    ReactDOM.render(
       <Component
         __source={{fileName: 'Foo/Bar/Baz/index.js', lineNumber: 25}}
       />,
+      container,
     );
 
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Each child in an array or iterator should have a unique "key" prop. ' +
-          'See https://fb.me/react-warning-keys for more information.\n' +
-          '    in Component (at Baz/index.js:25)',
-      );
+      const args = console.error.calls.argsFor(0);
+      const stack = args[args.length - 1];
+      expect(stack).toBe('\n    in Component (at Baz/index.js:25)');
     }
   });
 
@@ -49,17 +49,17 @@ describe('Component stack trace displaying', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(
+    spyOnDev(console, 'error');
+    const container = document.createElement('div');
+    ReactDOM.render(
       <Component __source={{fileName: 'Foo/Bar/Foo.js', lineNumber: 25}} />,
+      container,
     );
 
     if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Each child in an array or iterator should have a unique "key" prop. ' +
-          'See https://fb.me/react-warning-keys for more information.\n' +
-          '    in Component (at Foo.js:25)',
-      );
+      const args = console.error.calls.argsFor(0);
+      const stack = args[args.length - 1];
+      expect(stack).toBe('\n    in Component (at Foo.js:25)');
     }
   });
 });
