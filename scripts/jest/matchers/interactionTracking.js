@@ -12,6 +12,67 @@ function toContainNoInteractions(actualSet) {
   };
 }
 
+function toHaveBeenLastNotifiedOfInteraction(
+  mockFunction,
+  expectedInteraction
+) {
+  const calls = mockFunction.mock.calls;
+  if (calls.length === 0) {
+    return {
+      message: () => 'Mock function was not called',
+      pass: false,
+    };
+  }
+
+  const [actualInteraction] = calls[calls.length - 1];
+
+  return toMatchInteraction(actualInteraction, expectedInteraction);
+}
+
+function toHaveBeenLastNotifiedOfWork(
+  mockFunction,
+  expectedInteractions,
+  expectedThreadID = undefined
+) {
+  const calls = mockFunction.mock.calls;
+  if (calls.length === 0) {
+    return {
+      message: () => 'Mock function was not called',
+      pass: false,
+    };
+  }
+
+  const [actualInteractions, actualThreadID] = calls[calls.length - 1];
+
+  if (expectedThreadID !== undefined) {
+    if (expectedThreadID !== actualThreadID) {
+      return {
+        message: () => jestDiff(expectedThreadID + '', actualThreadID + ''),
+        pass: false,
+      };
+    }
+  }
+
+  return toMatchInteractions(
+    actualInteractions,
+    Array.from(expectedInteractions)
+  );
+}
+
+function toMatchInteraction(actual, expected) {
+  let attribute;
+  for (attribute in expected) {
+    if (actual[attribute] !== expected[attribute]) {
+      return {
+        message: () => jestDiff(expected, actual),
+        pass: false,
+      };
+    }
+  }
+
+  return {pass: true};
+}
+
 function toMatchInteractions(actualSet, expectedArray) {
   if (actualSet.size !== expectedArray.length) {
     return {
@@ -25,18 +86,10 @@ function toMatchInteractions(actualSet, expectedArray) {
 
   const actualArray = Array.from(actualSet);
 
-  let actual, expected, attribute;
   for (let i = 0; i < actualArray.length; i++) {
-    actual = actualArray[i];
-    expected = expectedArray[i];
-
-    for (attribute in expected) {
-      if (actual[attribute] !== expected[attribute]) {
-        return {
-          message: () => jestDiff(expected, actual),
-          pass: false,
-        };
-      }
+    const match = toMatchInteraction(actualArray[i], expectedArray[i]);
+    if (match.pass === false) {
+      return match;
     }
   }
 
@@ -45,5 +98,8 @@ function toMatchInteractions(actualSet, expectedArray) {
 
 module.exports = {
   toContainNoInteractions,
+  toHaveBeenLastNotifiedOfInteraction,
+  toHaveBeenLastNotifiedOfWork,
+  toMatchInteraction,
   toMatchInteractions,
 };

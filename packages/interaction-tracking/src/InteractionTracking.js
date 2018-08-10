@@ -14,6 +14,7 @@ import {
 import now from './InteractionTrackingNow';
 
 export type Interaction = {|
+  __count?: number,
   id: number,
   name: string,
   timestamp: number,
@@ -73,30 +74,18 @@ let interactionsRef: InteractionsRef | null = null;
 // Note that subscribers are only supported when enableInteractionTrackingObserver is enabled.
 let subscribers: Subscribers | null = null;
 
-// Tracks the number of async operations scheduled for each interaction.
-// Once the number of scheduled operations drops to 0,
-// Interaction subscribers will be notified that the interaction has ended.
-// Note that pending counts are only tracked when enableInteractionTrackingObserver is enabled.
-let scheduledAsyncWorkCounts: ScheduledAsyncWorkCounts | null = null;
-
 if (enableInteractionTracking) {
   interactionsRef = {
     current: new Set(),
   };
-
   if (enableInteractionTrackingObserver) {
     subscribers = new Set();
-    scheduledAsyncWorkCounts = new Map();
   }
 }
 
 // These values are exported for libraries with advanced use cases (i.e. React).
 // They should not typically be accessed directly.
-export {
-  interactionsRef as __interactionsRef,
-  subscribers as __subscribers,
-  scheduledAsyncWorkCounts as __scheduledAsyncWorkCounts,
-};
+export {interactionsRef as __interactionsRef, subscribers as __subscribers};
 
 export function getCurrent(): Set<Interaction> | null {
   if (!enableInteractionTracking) {
@@ -142,14 +131,7 @@ export function track(
 
   try {
     if (enableInteractionTrackingObserver) {
-      // Initialize the pending async count for this interaction,
-      // So that if it's processed synchronously,
-      // And __startAsyncWork/__stopAsyncWork are called,
-      // We won't accidentally call onInteractionScheduledWorkCompleted more than once.
-      ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
-        interaction,
-        1,
-      );
+      interaction.__count = 1;
 
       ((subscribers: any): Subscribers).forEach(subscriber => {
         subscriber.onInteractionTracked(interaction);
@@ -166,23 +148,13 @@ export function track(
         subscriber.onWorkStopped(interactions, threadID),
       );
 
-      const count = ((((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
-        interaction,
-      ): any): number);
+      interaction.__count = ((interaction.__count: any): number) - 1;
 
       // If no async work was scheduled for this interaction,
       // Notify subscribers that it's completed.
-      if (count === 1) {
-        ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
-          interaction,
-        );
+      if (((interaction.__count: any): number) === 0) {
         ((subscribers: any): Subscribers).forEach(subscriber =>
           subscriber.onInteractionScheduledWorkCompleted(interaction),
-        );
-      } else {
-        ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
-          interaction,
-          count - 1,
         );
       }
     }
@@ -208,21 +180,7 @@ export function wrap(
   if (enableInteractionTrackingObserver) {
     // Update the pending async work count for the current interactions.
     wrappedInteractions.forEach(interaction => {
-      const count =
-        ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
-          interaction,
-        ) || 0;
-      if (count > 0) {
-        ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
-          interaction,
-          count + 1,
-        );
-      } else {
-        ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
-          interaction,
-          1,
-        );
-      }
+      interaction.__count = ((interaction.__count: any): number) + 1;
     });
 
     ((subscribers: any): Subscribers).forEach(subscriber =>
@@ -254,19 +212,9 @@ export function wrap(
         // If this was the last scheduled async work for any of them,
         // Mark them as completed.
         wrappedInteractions.forEach(interaction => {
-          const count =
-            ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
-              interaction,
-            ) || 0;
-          if (count > 1) {
-            ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
-              interaction,
-              count - 1,
-            );
-          } else {
-            ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
-              interaction,
-            );
+          interaction.__count = ((interaction.__count: any): number) - 1;
+
+          if (((interaction.__count: any): number) === 0) {
             ((subscribers: any): Subscribers).forEach(subscriber =>
               subscriber.onInteractionScheduledWorkCompleted(interaction),
             );
@@ -286,19 +234,9 @@ export function wrap(
       // If this was the last scheduled async work for any of them,
       // Mark them as completed.
       wrappedInteractions.forEach(interaction => {
-        const count =
-          ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
-            interaction,
-          ) || 0;
-        if (count > 1) {
-          ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
-            interaction,
-            count - 1,
-          );
-        } else {
-          ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
-            interaction,
-          );
+        interaction.__count = ((interaction.__count: any): number) - 1;
+
+        if (((interaction.__count: any): number) === 0) {
           ((subscribers: any): Subscribers).forEach(subscriber =>
             subscriber.onInteractionScheduledWorkCompleted(interaction),
           );

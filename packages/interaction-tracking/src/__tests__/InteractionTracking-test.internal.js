@@ -273,12 +273,14 @@ describe('InteractionTracking', () => {
             firstEvent.name,
             () => {
               expect(onInteractionTracked).toHaveBeenCalledTimes(1);
-              expect(onInteractionTracked).toHaveBeenLastCalledWith(firstEvent);
+              expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
+                firstEvent,
+              );
               expect(
                 onInteractionScheduledWorkCompleted,
               ).not.toHaveBeenCalled();
               expect(onWorkStarted).toHaveBeenCalledTimes(1);
-              expect(onWorkStarted).toHaveBeenLastCalledWith(
+              expect(onWorkStarted).toHaveBeenLastNotifiedOfWork(
                 new Set([firstEvent]),
                 threadID,
               );
@@ -288,14 +290,14 @@ describe('InteractionTracking', () => {
                 secondEvent.name,
                 () => {
                   expect(onInteractionTracked).toHaveBeenCalledTimes(2);
-                  expect(onInteractionTracked).toHaveBeenLastCalledWith(
-                    secondEvent,
-                  );
+                  expect(
+                    onInteractionTracked,
+                  ).toHaveBeenLastNotifiedOfInteraction(secondEvent);
                   expect(
                     onInteractionScheduledWorkCompleted,
                   ).not.toHaveBeenCalled();
                   expect(onWorkStarted).toHaveBeenCalledTimes(2);
-                  expect(onWorkStarted).toHaveBeenLastCalledWith(
+                  expect(onWorkStarted).toHaveBeenLastNotifiedOfWork(
                     new Set([firstEvent, secondEvent]),
                     threadID,
                   );
@@ -309,9 +311,9 @@ describe('InteractionTracking', () => {
               );
               expect(
                 onInteractionScheduledWorkCompleted,
-              ).toHaveBeenLastCalledWith(secondEvent);
+              ).toHaveBeenLastNotifiedOfInteraction(secondEvent);
               expect(onWorkStopped).toHaveBeenCalledTimes(1);
-              expect(onWorkStopped).toHaveBeenLastCalledWith(
+              expect(onWorkStopped).toHaveBeenLastNotifiedOfWork(
                 new Set([firstEvent, secondEvent]),
                 threadID,
               );
@@ -320,14 +322,14 @@ describe('InteractionTracking', () => {
           );
 
           expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
-          expect(onInteractionScheduledWorkCompleted).toHaveBeenLastCalledWith(
-            firstEvent,
-          );
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
           expect(onWorkScheduled).not.toHaveBeenCalled();
           expect(onWorkCancelled).not.toHaveBeenCalled();
           expect(onWorkStarted).toHaveBeenCalledTimes(2);
           expect(onWorkStopped).toHaveBeenCalledTimes(2);
-          expect(onWorkStopped).toHaveBeenLastCalledWith(
+          expect(onWorkStopped).toHaveBeenLastNotifiedOfWork(
             new Set([firstEvent]),
             threadID,
           );
@@ -339,17 +341,19 @@ describe('InteractionTracking', () => {
 
           InteractionTracking.track(firstEvent.name, () => {
             expect(onInteractionTracked).toHaveBeenCalledTimes(1);
-            expect(onInteractionTracked).toHaveBeenLastCalledWith(firstEvent);
+            expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
+              firstEvent,
+            );
 
             InteractionTracking.track(secondEvent.name, () => {
               expect(onInteractionTracked).toHaveBeenCalledTimes(2);
-              expect(onInteractionTracked).toHaveBeenLastCalledWith(
+              expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
                 secondEvent,
               );
 
               wrapped = InteractionTracking.wrap(unwrapped, threadID);
               expect(onWorkScheduled).toHaveBeenCalledTimes(1);
-              expect(onWorkScheduled).toHaveBeenLastCalledWith(
+              expect(onWorkScheduled).toHaveBeenLastNotifiedOfWork(
                 new Set([firstEvent, secondEvent]),
                 threadID,
               );
@@ -365,20 +369,22 @@ describe('InteractionTracking', () => {
           expect(onWorkScheduled).toHaveBeenCalledTimes(1);
           expect(onWorkCancelled).not.toHaveBeenCalled();
           expect(onWorkStarted).toHaveBeenCalledTimes(3);
-          expect(onWorkStarted).toHaveBeenLastCalledWith(
+          expect(onWorkStarted).toHaveBeenLastNotifiedOfWork(
             new Set([firstEvent, secondEvent]),
             threadID,
           );
           expect(onWorkStopped).toHaveBeenCalledTimes(3);
-          expect(onWorkStopped).toHaveBeenLastCalledWith(
+          expect(onWorkStopped).toHaveBeenLastNotifiedOfWork(
             new Set([firstEvent, secondEvent]),
             threadID,
           );
 
-          expect(onInteractionScheduledWorkCompleted.mock.calls).toEqual([
-            [firstEvent],
-            [secondEvent],
-          ]);
+          expect(
+            onInteractionScheduledWorkCompleted.mock.calls[0][0],
+          ).toMatchInteraction(firstEvent);
+          expect(
+            onInteractionScheduledWorkCompleted.mock.calls[1][0],
+          ).toMatchInteraction(secondEvent);
         });
 
         it('should call the correct interaction observer methods when a wrapped callback is cancelled', () => {
@@ -401,11 +407,11 @@ describe('InteractionTracking', () => {
           wrappedTwo.cancel();
 
           expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-          expect(onInteractionScheduledWorkCompleted).toHaveBeenLastCalledWith(
-            secondEvent,
-          );
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(secondEvent);
           expect(onWorkCancelled).toHaveBeenCalledTimes(1);
-          expect(onWorkCancelled).toHaveBeenLastCalledWith(
+          expect(onWorkCancelled).toHaveBeenLastNotifiedOfWork(
             new Set([firstEvent, secondEvent]),
             threadID,
           );
@@ -413,11 +419,11 @@ describe('InteractionTracking', () => {
           wrappedOne.cancel();
 
           expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
-          expect(onInteractionScheduledWorkCompleted).toHaveBeenLastCalledWith(
-            firstEvent,
-          );
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
           expect(onWorkCancelled).toHaveBeenCalledTimes(2);
-          expect(onWorkCancelled).toHaveBeenLastCalledWith(
+          expect(onWorkCancelled).toHaveBeenLastNotifiedOfWork(
             new Set([firstEvent]),
             threadID,
           );
@@ -448,9 +454,9 @@ describe('InteractionTracking', () => {
 
           expect(onInteractionTracked).toHaveBeenCalledTimes(1);
           expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-          expect(onInteractionScheduledWorkCompleted).toHaveBeenLastCalledWith(
-            firstEvent,
-          );
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
         });
 
         it('should unsubscribe', () => {
@@ -470,25 +476,6 @@ describe('InteractionTracking', () => {
           it('should expose the current set of interaction observers to be called externally', () => {
             const observer = Array.from(InteractionTracking.__subscribers)[0];
             expect(observer.onInteractionTracked).toBe(onInteractionTracked);
-          });
-
-          it('should expose the count of pending scheduled async work for external manipulation', () => {
-            expect(
-              Array.from(InteractionTracking.__scheduledAsyncWorkCounts),
-            ).toHaveLength(0);
-
-            let interactions;
-            InteractionTracking.track('some event', () => {
-              InteractionTracking.wrap(jest.fn());
-              interactions = InteractionTracking.getCurrent();
-            });
-
-            expect(
-              Array.from(InteractionTracking.__scheduledAsyncWorkCounts),
-            ).toHaveLength(1);
-            expect(
-              Array.from(InteractionTracking.__scheduledAsyncWorkCounts.keys()),
-            ).toEqual(Array.from(interactions));
           });
         });
       });
@@ -524,7 +511,6 @@ describe('InteractionTracking', () => {
         describe('advanced integration', () => {
           it('should not create unnecessary objects', () => {
             expect(InteractionTracking.__subscribers).toBe(null);
-            expect(InteractionTracking.__scheduledAsyncWorkCounts).toBe(null);
           });
         });
       });
