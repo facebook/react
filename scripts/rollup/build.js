@@ -2,6 +2,7 @@
 
 const {rollup} = require('rollup');
 const babel = require('rollup-plugin-babel');
+const babelCore = require('babel-core');
 const closure = require('./plugins/closure-plugin');
 const commonjs = require('rollup-plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
@@ -335,16 +336,6 @@ function getPlugins(
           .replace(/require\(['"]react-is['"]\)/g, "require('ReactIs')");
       },
     },
-    // We can't use getters in www.
-    isFBBundle && {
-      transformBundle(source) {
-        // Transform `get prop() { return variable; }` into `prop: variable`
-        return source.replace(
-          /get ([^\s]+)\s*\(\)\s*{\s*return\s*([^\s;]+);\s*}/g,
-          '$1: $2'
-        );
-      },
-    },
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(
@@ -430,11 +421,11 @@ async function createBundle(bundle, bundleType) {
   const packageName = Packaging.getPackageName(bundle.entry);
 
   let resolvedEntry = require.resolve(bundle.entry);
-  if (
+  const isFBBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING
-  ) {
+    bundleType === FB_WWW_PROFILING;
+  if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
     if (fs.existsSync(resolvedFBEntry)) {
       resolvedEntry = resolvedFBEntry;
@@ -503,6 +494,24 @@ async function createBundle(bundle, bundleType) {
     handleRollupError(error);
     throw error;
   }
+
+  if (isFBBundle) {
+    // Run a final Babel pass after Rollup bundle.
+    const bundleCode = fs.readFileSync(mainOutputPath).toString();
+    const babelOptions = {
+      ast: false,
+      babelrc: false,
+      compact: false,
+      plugins: [
+        // This is needed because Rollup outputs getters, but we can't use
+        // getters in www.
+        require('../babel/remove-getters'),
+      ],
+    };
+    const result = babelCore.transform(bundleCode, babelOptions);
+    fs.writeFileSync(mainOutputPath, result.code, 'utf8');
+  }
+
   for (let i = 0; i < otherOutputPaths.length; i++) {
     await asyncCopyTo(mainOutputPath, otherOutputPaths[i]);
   }
