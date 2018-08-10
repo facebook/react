@@ -468,9 +468,7 @@ describe('InteractionTracking', () => {
           });
 
           it('should expose the current set of interaction observers to be called externally', () => {
-            const observer = Array.from(
-              InteractionTracking.__subscribers,
-            )[0];
+            const observer = Array.from(InteractionTracking.__subscribers)[0];
             expect(observer.onInteractionTracked).toBe(onInteractionTracked);
           });
 
