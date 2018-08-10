@@ -11,6 +11,7 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import getSafeValue from './getSafeValue';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 
 let didWarnValDefaultVal = false;
@@ -110,7 +111,7 @@ export function initWrapperState(element: Element, props: Object) {
         children = children[0];
       }
 
-      defaultValue = '' + children;
+      defaultValue = getSafeValue(children);
     }
     if (defaultValue == null) {
       defaultValue = '';
@@ -119,7 +120,9 @@ export function initWrapperState(element: Element, props: Object) {
   }
 
   node._wrapperState = {
-    initialValue: '' + initialValue,
+    initialValue: getSafeValue(
+      props.value != null ? props.value : initialValue,
+    ),
   };
 }
 
@@ -129,7 +132,7 @@ export function updateWrapper(element: Element, props: Object) {
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
-    const newValue = '' + value;
+    const newValue = getSafeValue(value);
 
     // To avoid side effects (such as losing text selection), only set value if changed
     if (newValue !== node.value) {
@@ -140,7 +143,7 @@ export function updateWrapper(element: Element, props: Object) {
     }
   }
   if (props.defaultValue != null) {
-    node.defaultValue = props.defaultValue;
+    node.defaultValue = getSafeValue(props.defaultValue);
   }
 }
 
