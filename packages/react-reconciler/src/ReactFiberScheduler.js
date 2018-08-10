@@ -1250,7 +1250,7 @@ function renderRoot(
     let msUntilTimeout = nextLatestAbsoluteTimeoutMs - currentTimeMs;
     msUntilTimeout = msUntilTimeout < 0 ? 0 : msUntilTimeout;
 
-    // TODO: Account for the Just Noticable Difference
+    // TODO: Account for the Just Noticeable Difference
 
     const rootExpirationTime = root.expirationTime;
     onSuspend(
