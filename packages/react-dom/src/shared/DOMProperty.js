@@ -51,6 +51,7 @@ export type PropertyInfo = {|
   +mustUseProperty: boolean,
   +propertyName: string,
   +type: PropertyType,
+  +shouldWarnInDev: boolean,
 |};
 
 /* eslint-disable max-len */
@@ -120,7 +121,7 @@ export function shouldRemoveAttributeWithWarning(
   if (
     propertyInfo !== null &&
     propertyInfo.type === RESERVED &&
-    propertyInfo.attributeName !== 'defaultValue'
+    !propertyInfo.shouldWarnInDev
   ) {
     return false;
   }
@@ -192,6 +193,7 @@ function PropertyInfoRecord(
   mustUseProperty: boolean,
   attributeName: string,
   attributeNamespace: string | null,
+  shouldWarnInDev: boolean = false,
 ) {
   this.acceptsBooleans =
     type === BOOLEANISH_STRING ||
@@ -202,6 +204,7 @@ function PropertyInfoRecord(
   this.mustUseProperty = mustUseProperty;
   this.propertyName = name;
   this.type = type;
+  this.shouldWarnInDev = shouldWarnInDev;
 }
 
 // When adding attributes to this list, be sure to also add them to
@@ -229,6 +232,7 @@ const properties = {};
     false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
+    name === 'defaultValue', // shouldWarnInDev
   );
 });
 
