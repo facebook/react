@@ -1640,7 +1640,7 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('');
     });
 
-    fit('treats initial Symbol defaultValue as an empty string', function() {
+    it('treats initial Symbol defaultValue as an empty string', function() {
       expect(() =>
         ReactDOM.render(
           <input defaultValue={Symbol('foobar')} />,
