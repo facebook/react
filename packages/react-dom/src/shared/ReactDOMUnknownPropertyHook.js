@@ -214,6 +214,16 @@ if (__DEV__) {
       return true;
     }
 
+    // Ignore the reservation of the `defaultValue` prop for warnings
+    if (
+      typeof value === 'symbol' || typeof value === 'function' &&
+      tagName === 'input' &&
+      name === 'defaultValue'
+    ) {
+      warnedProperties[name] = true;
+      return false;
+    }
+
     // Now that we've validated casing, do not validate
     // data types for reserved props
     if (isReserved) {

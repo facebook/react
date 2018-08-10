@@ -1640,23 +1640,29 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('');
     });
 
-    it('treats initial Symbol defaultValue as an empty string', function() {
-      ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
+    fit('treats initial Symbol defaultValue as an empty string', function() {
+      expect(() =>
+        ReactDOM.render(
+          <input defaultValue={Symbol('foobar')} />,
+          container
+        ),
+      ).toWarnDev('Invalid value for prop `defaultValue`');
+
       const node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
-      // TODO: we should warn here.
     });
 
     it('treats updated Symbol defaultValue as an empty string', function() {
       ReactDOM.render(<input defaultValue="foo" />, container);
-      ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
+      expect(() =>
+        ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container),
+      ).toWarnDev('Invalid value for prop `defaultValue`');
       const node = container.firstChild;
 
       expect(node.value).toBe('foo');
       expect(node.getAttribute('value')).toBe('');
-      // TODO: we should warn here.
     });
   });
 
@@ -1689,22 +1695,24 @@ describe('ReactDOMInput', () => {
     });
 
     it('treats initial function defaultValue as an empty string', function() {
-      ReactDOM.render(<input defaultValue={() => {}} />, container);
+      expect(() =>
+        ReactDOM.render(<input defaultValue={() => {}} />, container),
+      ).toWarnDev('Invalid value for prop `defaultValue`');
       const node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
-      // TODO: we should warn here.
     });
 
     it('treats updated function defaultValue as an empty string', function() {
       ReactDOM.render(<input defaultValue="foo" />, container);
-      ReactDOM.render(<input defaultValue={() => {}} />, container);
+      expect(() =>
+        ReactDOM.render(<input defaultValue={() => {}} />, container),
+      ).toWarnDev('Invalid value for prop `defaultValue`');
       const node = container.firstChild;
 
       expect(node.value).toBe('foo');
       expect(node.getAttribute('value')).toBe('');
-      // TODO: we should warn here.
     });
   });
 
