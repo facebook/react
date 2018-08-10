@@ -249,7 +249,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
     typeof props.children === 'number' ||
     (typeof props.dangerouslySetInnerHTML === 'object' &&
       props.dangerouslySetInnerHTML !== null &&
-      typeof props.dangerouslySetInnerHTML.__html === 'string')
+      props.dangerouslySetInnerHTML.__html != null)
   );
 }
 

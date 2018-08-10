@@ -286,8 +286,8 @@ function throwException(
               // time. First, find the earliest uncommitted expiration time in the
               // tree, including work that is suspended. Then subtract the offset
               // used to compute an async update's expiration time. This will cause
-              // high priority (interactive) work to expire earlier than neccessary,
-              // but we can account for this by adjusting for the Just Noticable
+              // high priority (interactive) work to expire earlier than necessary,
+              // but we can account for this by adjusting for the Just Noticeable
               // Difference.
               const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
                 root,

@@ -987,9 +987,12 @@ export function diffHydratedProperties(
       ) {
         // Noop
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-        const rawHtml = nextProp ? nextProp[HTML] || '' : '';
         const serverHTML = domElement.innerHTML;
-        const expectedHTML = normalizeHTML(domElement, rawHtml);
+        const nextHtml = nextProp ? nextProp[HTML] : undefined;
+        const expectedHTML = normalizeHTML(
+          domElement,
+          nextHtml != null ? nextHtml : '',
+        );
         if (expectedHTML !== serverHTML) {
           warnForPropDifference(propKey, serverHTML, expectedHTML);
         }
