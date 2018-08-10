@@ -54,8 +54,8 @@ export type InteractionsRef = {
   current: Set<Interaction>,
 };
 
-type Subscribers = Set<Subscriber>;
-type ScheduledAsyncWorkCounts = Map<Interaction, number>;
+export type Subscribers = Set<Subscriber>;
+export type ScheduledAsyncWorkCounts = Map<Interaction, number>;
 
 const DEFAULT_THREAD_ID = 0;
 
