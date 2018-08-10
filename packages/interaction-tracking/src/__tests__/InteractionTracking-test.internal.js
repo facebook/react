@@ -231,6 +231,7 @@ describe('InteractionTracking', () => {
       let onWorkScheduled;
       let onWorkStarted;
       let onWorkStopped;
+      let subscriber;
 
       const firstEvent = {id: 0, name: 'first', timestamp: 0};
       const secondEvent = {id: 1, name: 'second', timestamp: 0};
@@ -252,14 +253,16 @@ describe('InteractionTracking', () => {
             enableInteractionTrackingObserver: true,
           });
 
-          InteractionTracking.registerInteractionObserver({
+          subscriber = {
             onInteractionScheduledWorkCompleted,
             onInteractionTracked,
             onWorkCancelled,
             onWorkScheduled,
             onWorkStarted,
             onWorkStopped,
-          });
+          };
+
+          InteractionTracking.subscribe(subscriber);
         });
 
         it('calls lifecycle methods for track', () => {
@@ -450,6 +453,13 @@ describe('InteractionTracking', () => {
           );
         });
 
+        it('should unsubscribe', () => {
+          InteractionTracking.unsubscribe(subscriber);
+          InteractionTracking.track(firstEvent.name, () => {});
+
+          expect(onInteractionTracked).not.toHaveBeenCalled();
+        });
+
         describe('advanced integration', () => {
           it('should return a unique threadID per request', () => {
             expect(InteractionTracking.getThreadID()).not.toBe(
@@ -492,14 +502,7 @@ describe('InteractionTracking', () => {
             enableInteractionTrackingObserver: false,
           });
 
-          InteractionTracking.registerInteractionObserver({
-            onInteractionScheduledWorkCompleted,
-            onInteractionTracked,
-            onWorkCancelled,
-            onWorkScheduled,
-            onWorkStarted,
-            onWorkStopped,
-          });
+          InteractionTracking.subscribe(subscriber);
         });
 
         it('should not call registerted observers', () => {

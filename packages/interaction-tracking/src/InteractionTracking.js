@@ -19,7 +19,7 @@ export type Interaction = {|
   timestamp: number,
 |};
 
-export type InteractionObserver = {
+export type InteractionSubscriber = {
   // A new interaction has been created via the track() method.
   onInteractionTracked: (interaction: Interaction) => void,
 
@@ -28,7 +28,7 @@ export type InteractionObserver = {
 
   // New async work has been scheduled for a set of interactions.
   // When this work is later run, onWorkStarted/onWorkStopped will be called.
-  // A batch of async/yieldy work may be scheduled multiple times before completing,
+  // A batch of async/yieldy work may be scheduled multiple times before completing.
   // In that case, onWorkScheduled may be called more than once before onWorkStopped.
   // Work is scheduled by a "thread" which is identified by a unique ID.
   onWorkScheduled: (interactions: Set<Interaction>, threadID: number) => void,
@@ -40,7 +40,7 @@ export type InteractionObserver = {
   // A batch of work has started for a set of interactions.
   // When this work is complete, onWorkStopped will be called.
   // Work is not always completed synchronously; yielding may occur in between.
-  // A batch of async/yieldy work may also be re-started before completing,
+  // A batch of async/yieldy work may also be re-started before completing.
   // In that case, onWorkStarted may be called more than once before onWorkStopped.
   // Work is done by a "thread" which is identified by a unique ID.
   onWorkStarted: (interactions: Set<Interaction>, threadID: number) => void,
@@ -54,7 +54,7 @@ export type InteractionsRef = {
   current: Set<Interaction>,
 };
 
-type InteractionObservers = Set<InteractionObserver>;
+type InteractionSubscribers = Set<InteractionSubscriber>;
 type ScheduledAsyncWorkCounts = Map<Interaction, number>;
 
 const DEFAULT_THREAD_ID = 0;
@@ -70,12 +70,12 @@ let threadIDCounter: number = 0;
 let interactionsRef: InteractionsRef | null = null;
 
 // Listener(s) to notify when interactions begin and end.
-// Note that observers are only supported when enableInteractionTrackingObserver is enabled.
-let interactionObservers: InteractionObservers | null = null;
+// Note that subscribers are only supported when enableInteractionTrackingObserver is enabled.
+let interactionObservers: InteractionSubscribers | null = null;
 
 // Tracks the number of async operations scheduled for each interaction.
 // Once the number of scheduled operations drops to 0,
-// Interaction observers will be notified that the interaction has ended.
+// Interaction subscribers will be notified that the interaction has ended.
 // Note that pending counts are only tracked when enableInteractionTrackingObserver is enabled.
 let scheduledAsyncWorkCounts: ScheduledAsyncWorkCounts | null = null;
 
@@ -110,11 +110,9 @@ export function getThreadID(): number {
   return ++threadIDCounter;
 }
 
-export function registerInteractionObserver(
-  observer: InteractionObserver,
-): void {
+export function subscribe(subscriber: InteractionSubscriber): void {
   if (enableInteractionTracking && enableInteractionTrackingObserver) {
-    ((interactionObservers: any): InteractionObservers).add(observer);
+    ((interactionObservers: any): InteractionSubscribers).add(subscriber);
   }
 }
 
@@ -153,10 +151,12 @@ export function track(
         1,
       );
 
-      ((interactionObservers: any): InteractionObservers).forEach(observer => {
-        observer.onInteractionTracked(interaction);
-        observer.onWorkStarted(interactions, threadID);
-      });
+      ((interactionObservers: any): InteractionSubscribers).forEach(
+        subscriber => {
+          subscriber.onInteractionTracked(interaction);
+          subscriber.onWorkStarted(interactions, threadID);
+        },
+      );
     }
 
     return callback();
@@ -164,8 +164,8 @@ export function track(
     ((interactionsRef: any): InteractionsRef).current = prevInteractions;
 
     if (enableInteractionTrackingObserver) {
-      ((interactionObservers: any): InteractionObservers).forEach(observer =>
-        observer.onWorkStopped(interactions, threadID),
+      ((interactionObservers: any): InteractionSubscribers).forEach(
+        subscriber => subscriber.onWorkStopped(interactions, threadID),
       );
 
       const count = ((((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
@@ -173,13 +173,14 @@ export function track(
       ): any): number);
 
       // If no async work was scheduled for this interaction,
-      // Notify observers that it's completed.
+      // Notify subscribers that it's completed.
       if (count === 1) {
         ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
           interaction,
         );
-        ((interactionObservers: any): InteractionObservers).forEach(observer =>
-          observer.onInteractionScheduledWorkCompleted(interaction),
+        ((interactionObservers: any): InteractionSubscribers).forEach(
+          subscriber =>
+            subscriber.onInteractionScheduledWorkCompleted(interaction),
         );
       } else {
         ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
@@ -188,6 +189,12 @@ export function track(
         );
       }
     }
+  }
+}
+
+export function unsubscribe(subscriber: InteractionSubscriber): void {
+  if (enableInteractionTracking && enableInteractionTrackingObserver) {
+    ((interactionObservers: any): InteractionSubscribers).delete(subscriber);
   }
 }
 
@@ -221,8 +228,8 @@ export function wrap(
       }
     });
 
-    ((interactionObservers: any): InteractionObservers).forEach(observer =>
-      observer.onWorkScheduled(wrappedInteractions, threadID),
+    ((interactionObservers: any): InteractionSubscribers).forEach(subscriber =>
+      subscriber.onWorkScheduled(wrappedInteractions, threadID),
     );
   }
 
@@ -232,8 +239,8 @@ export function wrap(
 
     try {
       if (enableInteractionTrackingObserver) {
-        ((interactionObservers: any): InteractionObservers).forEach(observer =>
-          observer.onWorkStarted(wrappedInteractions, threadID),
+        ((interactionObservers: any): InteractionSubscribers).forEach(
+          subscriber => subscriber.onWorkStarted(wrappedInteractions, threadID),
         );
       }
 
@@ -242,8 +249,8 @@ export function wrap(
       ((interactionsRef: any): InteractionsRef).current = prevInteractions;
 
       if (enableInteractionTrackingObserver) {
-        ((interactionObservers: any): InteractionObservers).forEach(observer =>
-          observer.onWorkStopped(wrappedInteractions, threadID),
+        ((interactionObservers: any): InteractionSubscribers).forEach(
+          subscriber => subscriber.onWorkStopped(wrappedInteractions, threadID),
         );
 
         // Update pending async counts for all wrapped interactions.
@@ -263,9 +270,9 @@ export function wrap(
             ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
               interaction,
             );
-            ((interactionObservers: any): InteractionObservers).forEach(
-              observer =>
-                observer.onInteractionScheduledWorkCompleted(interaction),
+            ((interactionObservers: any): InteractionSubscribers).forEach(
+              subscriber =>
+                subscriber.onInteractionScheduledWorkCompleted(interaction),
             );
           }
         });
@@ -275,8 +282,8 @@ export function wrap(
 
   wrapped.cancel = () => {
     if (enableInteractionTrackingObserver) {
-      ((interactionObservers: any): InteractionObservers).forEach(observer =>
-        observer.onWorkCancelled(wrappedInteractions, threadID),
+      ((interactionObservers: any): InteractionSubscribers).forEach(
+        subscriber => subscriber.onWorkCancelled(wrappedInteractions, threadID),
       );
 
       // Update pending async counts for all wrapped interactions.
@@ -296,9 +303,9 @@ export function wrap(
           ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
             interaction,
           );
-          ((interactionObservers: any): InteractionObservers).forEach(
-            observer =>
-              observer.onInteractionScheduledWorkCompleted(interaction),
+          ((interactionObservers: any): InteractionSubscribers).forEach(
+            subscriber =>
+              subscriber.onInteractionScheduledWorkCompleted(interaction),
           );
         }
       });
