@@ -460,6 +460,7 @@ describe('ReactDOMTextarea', () => {
       ReactDOM.render(<textarea defaultValue={Symbol('foobar')} />, container);
       const node = container.firstChild;
 
+      // TODO: add warnings once defaultValue is compatible for them
       expect(node.value).toBe('');
     });
 
@@ -469,6 +470,7 @@ describe('ReactDOMTextarea', () => {
       ReactDOM.render(<textarea defaultValue={Symbol('foobar')} />, container);
       const node = container.firstChild;
 
+      // TODO: add warnings once defaultValue is compatible for them
       expect(node.value).toBe('foo');
     });
   });
@@ -519,6 +521,7 @@ describe('ReactDOMTextarea', () => {
       ReactDOM.render(<textarea defaultValue={() => {}} />, container);
       const node = container.firstChild;
 
+      // TODO: add warnings once defaultValue is compatible for them
       expect(node.value).toBe('');
     });
 
@@ -528,6 +531,7 @@ describe('ReactDOMTextarea', () => {
       ReactDOM.render(<textarea defaultValue={() => {}} />, container);
       const node = container.firstChild;
 
+      // TODO: add warnings once defaultValue is compatible for them
       expect(node.value).toBe('foo');
     });
   });
