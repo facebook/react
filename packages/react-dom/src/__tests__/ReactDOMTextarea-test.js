@@ -63,7 +63,10 @@ describe('ReactDOMTextarea', () => {
 
   it('should display "false" for `defaultValue` of `false`', () => {
     const stub = <textarea defaultValue={false} />;
-    const node = renderTextarea(stub);
+    let node;
+    expect(() => (node = renderTextarea(stub))).toWarnDev(
+      'Received `false` for a non-boolean attribute `defaultValue`',
+    );
 
     expect(node.value).toBe('false');
   });

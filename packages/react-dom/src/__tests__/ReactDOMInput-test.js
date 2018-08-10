@@ -400,14 +400,20 @@ describe('ReactDOMInput', () => {
 
   it('should display "true" for `defaultValue` of `true`', () => {
     let stub = <input type="text" defaultValue={true} />;
-    const node = ReactDOM.render(stub, container);
+    let node;
+    expect(() => (node = ReactDOM.render(stub, container))).toWarnDev(
+      'Received `true` for a non-boolean attribute `defaultValue`',
+    );
 
     expect(node.value).toBe('true');
   });
 
   it('should display "false" for `defaultValue` of `false`', () => {
     let stub = <input type="text" defaultValue={false} />;
-    const node = ReactDOM.render(stub, container);
+    let node;
+    expect(() => (node = ReactDOM.render(stub, container))).toWarnDev(
+      'Received `false` for a non-boolean attribute `defaultValue`',
+    );
 
     expect(node.value).toBe('false');
   });

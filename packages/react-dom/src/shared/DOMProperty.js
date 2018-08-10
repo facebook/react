@@ -115,7 +115,13 @@ export function shouldRemoveAttributeWithWarning(
   propertyInfo: PropertyInfo | null,
   isCustomComponentTag: boolean,
 ): boolean {
-  if (propertyInfo !== null && propertyInfo.type === RESERVED) {
+  // Do not validate data types for reserved props
+  // (excluding defaultValue)
+  if (
+    propertyInfo !== null &&
+    propertyInfo.type === RESERVED &&
+    propertyInfo.attributeName !== 'defaultValue'
+  ) {
     return false;
   }
   switch (typeof value) {
