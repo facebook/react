@@ -1642,10 +1642,7 @@ describe('ReactDOMInput', () => {
 
     it('treats initial Symbol defaultValue as an empty string', function() {
       expect(() =>
-        ReactDOM.render(
-          <input defaultValue={Symbol('foobar')} />,
-          container
-        ),
+        ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container),
       ).toWarnDev('Invalid value for prop `defaultValue`');
 
       const node = container.firstChild;
