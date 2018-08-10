@@ -202,6 +202,18 @@ describe('ReactDOMTextarea', () => {
     expect(node.value).toBe('0');
   });
 
+  it('should take updates to children in lieu of `defaultValue` for uncontrolled textarea', () => {
+    const container = document.createElement('div');
+
+    const node = ReactDOM.render(<textarea defaultValue="0" />, container);
+
+    expect(node.value).toBe('0');
+
+    ReactDOM.render(<textarea>1</textarea>, container);
+
+    expect(node.value).toBe('0');
+  });
+
   it('should not incur unnecessary DOM mutations', () => {
     const container = document.createElement('div');
     ReactDOM.render(<textarea value="a" onChange={emptyFunction} />, container);
