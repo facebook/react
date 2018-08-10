@@ -404,7 +404,8 @@ describe('ReactDOMTextarea', () => {
         <textarea value="foo" defaultValue="bar" readOnly={true} />,
       ),
     ).toWarnDev(
-      'Textarea elements must be either controlled or uncontrolled ' +
+      'A component contains an textarea with both value and defaultValue props. ' +
+        'Textarea elements must be either controlled or uncontrolled ' +
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled textarea ' +
         'and remove one of these props. More info: ' +
