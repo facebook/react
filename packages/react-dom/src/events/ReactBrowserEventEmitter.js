@@ -14,9 +14,7 @@ import {
   TOP_CLOSE,
   TOP_FOCUS,
   TOP_INVALID,
-  TOP_RESET,
   TOP_SCROLL,
-  TOP_SUBMIT,
   getRawEventName,
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
@@ -153,8 +151,6 @@ export function listenTo(
           }
           break;
         case TOP_INVALID:
-        case TOP_SUBMIT:
-        case TOP_RESET:
           // We listen to them on the target DOM elements.
           // Some of them bubble so we don't want them to fire twice.
           break;
