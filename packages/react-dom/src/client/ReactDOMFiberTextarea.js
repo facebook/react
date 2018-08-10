@@ -120,9 +120,7 @@ export function initWrapperState(element: Element, props: Object) {
   }
 
   node._wrapperState = {
-    initialValue: getSafeValue(
-      props.value != null ? props.value : initialValue,
-    ),
+    initialValue: getSafeValue(initialValue),
   };
 }
 
