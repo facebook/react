@@ -469,7 +469,7 @@ describe('InteractionTracking', () => {
 
           it('should expose the current set of interaction observers to be called externally', () => {
             const observer = Array.from(
-              InteractionTracking.__interactionObservers,
+              InteractionTracking.__subscribers,
             )[0];
             expect(observer.onInteractionTracked).toBe(onInteractionTracked);
           });
@@ -525,7 +525,7 @@ describe('InteractionTracking', () => {
 
         describe('advanced integration', () => {
           it('should not create unnecessary objects', () => {
-            expect(InteractionTracking.__interactionObservers).toBe(null);
+            expect(InteractionTracking.__subscribers).toBe(null);
             expect(InteractionTracking.__scheduledAsyncWorkCounts).toBe(null);
           });
         });

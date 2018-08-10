@@ -19,7 +19,7 @@ export type Interaction = {|
   timestamp: number,
 |};
 
-export type InteractionSubscriber = {
+export type Subscriber = {
   // A new interaction has been created via the track() method.
   onInteractionTracked: (interaction: Interaction) => void,
 
@@ -54,7 +54,7 @@ export type InteractionsRef = {
   current: Set<Interaction>,
 };
 
-type InteractionSubscribers = Set<InteractionSubscriber>;
+type Subscribers = Set<Subscriber>;
 type ScheduledAsyncWorkCounts = Map<Interaction, number>;
 
 const DEFAULT_THREAD_ID = 0;
@@ -71,7 +71,7 @@ let interactionsRef: InteractionsRef | null = null;
 
 // Listener(s) to notify when interactions begin and end.
 // Note that subscribers are only supported when enableInteractionTrackingObserver is enabled.
-let interactionObservers: InteractionSubscribers | null = null;
+let subscribers: Subscribers | null = null;
 
 // Tracks the number of async operations scheduled for each interaction.
 // Once the number of scheduled operations drops to 0,
@@ -85,7 +85,7 @@ if (enableInteractionTracking) {
   };
 
   if (enableInteractionTrackingObserver) {
-    interactionObservers = new Set();
+    subscribers = new Set();
     scheduledAsyncWorkCounts = new Map();
   }
 }
@@ -94,7 +94,7 @@ if (enableInteractionTracking) {
 // They should not typically be accessed directly.
 export {
   interactionsRef as __interactionsRef,
-  interactionObservers as __interactionObservers,
+  subscribers as __subscribers,
   scheduledAsyncWorkCounts as __scheduledAsyncWorkCounts,
 };
 
@@ -110,9 +110,9 @@ export function getThreadID(): number {
   return ++threadIDCounter;
 }
 
-export function subscribe(subscriber: InteractionSubscriber): void {
+export function subscribe(subscriber: Subscriber): void {
   if (enableInteractionTracking && enableInteractionTrackingObserver) {
-    ((interactionObservers: any): InteractionSubscribers).add(subscriber);
+    ((subscribers: any): Subscribers).add(subscriber);
   }
 }
 
@@ -151,12 +151,10 @@ export function track(
         1,
       );
 
-      ((interactionObservers: any): InteractionSubscribers).forEach(
-        subscriber => {
-          subscriber.onInteractionTracked(interaction);
-          subscriber.onWorkStarted(interactions, threadID);
-        },
-      );
+      ((subscribers: any): Subscribers).forEach(subscriber => {
+        subscriber.onInteractionTracked(interaction);
+        subscriber.onWorkStarted(interactions, threadID);
+      });
     }
 
     return callback();
@@ -164,8 +162,8 @@ export function track(
     ((interactionsRef: any): InteractionsRef).current = prevInteractions;
 
     if (enableInteractionTrackingObserver) {
-      ((interactionObservers: any): InteractionSubscribers).forEach(
-        subscriber => subscriber.onWorkStopped(interactions, threadID),
+      ((subscribers: any): Subscribers).forEach(subscriber =>
+        subscriber.onWorkStopped(interactions, threadID),
       );
 
       const count = ((((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
@@ -178,9 +176,8 @@ export function track(
         ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
           interaction,
         );
-        ((interactionObservers: any): InteractionSubscribers).forEach(
-          subscriber =>
-            subscriber.onInteractionScheduledWorkCompleted(interaction),
+        ((subscribers: any): Subscribers).forEach(subscriber =>
+          subscriber.onInteractionScheduledWorkCompleted(interaction),
         );
       } else {
         ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
@@ -192,9 +189,9 @@ export function track(
   }
 }
 
-export function unsubscribe(subscriber: InteractionSubscriber): void {
+export function unsubscribe(subscriber: Subscriber): void {
   if (enableInteractionTracking && enableInteractionTrackingObserver) {
-    ((interactionObservers: any): InteractionSubscribers).delete(subscriber);
+    ((subscribers: any): Subscribers).delete(subscriber);
   }
 }
 
@@ -228,7 +225,7 @@ export function wrap(
       }
     });
 
-    ((interactionObservers: any): InteractionSubscribers).forEach(subscriber =>
+    ((subscribers: any): Subscribers).forEach(subscriber =>
       subscriber.onWorkScheduled(wrappedInteractions, threadID),
     );
   }
@@ -239,8 +236,8 @@ export function wrap(
 
     try {
       if (enableInteractionTrackingObserver) {
-        ((interactionObservers: any): InteractionSubscribers).forEach(
-          subscriber => subscriber.onWorkStarted(wrappedInteractions, threadID),
+        ((subscribers: any): Subscribers).forEach(subscriber =>
+          subscriber.onWorkStarted(wrappedInteractions, threadID),
         );
       }
 
@@ -249,8 +246,8 @@ export function wrap(
       ((interactionsRef: any): InteractionsRef).current = prevInteractions;
 
       if (enableInteractionTrackingObserver) {
-        ((interactionObservers: any): InteractionSubscribers).forEach(
-          subscriber => subscriber.onWorkStopped(wrappedInteractions, threadID),
+        ((subscribers: any): Subscribers).forEach(subscriber =>
+          subscriber.onWorkStopped(wrappedInteractions, threadID),
         );
 
         // Update pending async counts for all wrapped interactions.
@@ -270,9 +267,8 @@ export function wrap(
             ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
               interaction,
             );
-            ((interactionObservers: any): InteractionSubscribers).forEach(
-              subscriber =>
-                subscriber.onInteractionScheduledWorkCompleted(interaction),
+            ((subscribers: any): Subscribers).forEach(subscriber =>
+              subscriber.onInteractionScheduledWorkCompleted(interaction),
             );
           }
         });
@@ -282,8 +278,8 @@ export function wrap(
 
   wrapped.cancel = () => {
     if (enableInteractionTrackingObserver) {
-      ((interactionObservers: any): InteractionSubscribers).forEach(
-        subscriber => subscriber.onWorkCancelled(wrappedInteractions, threadID),
+      ((subscribers: any): Subscribers).forEach(subscriber =>
+        subscriber.onWorkCancelled(wrappedInteractions, threadID),
       );
 
       // Update pending async counts for all wrapped interactions.
@@ -303,9 +299,8 @@ export function wrap(
           ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
             interaction,
           );
-          ((interactionObservers: any): InteractionSubscribers).forEach(
-            subscriber =>
-              subscriber.onInteractionScheduledWorkCompleted(interaction),
+          ((subscribers: any): Subscribers).forEach(subscriber =>
+            subscriber.onInteractionScheduledWorkCompleted(interaction),
           );
         }
       });
