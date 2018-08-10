@@ -11,7 +11,7 @@ import {
   enableInteractionTracking,
   enableInteractionTrackingObserver,
 } from 'shared/ReactFeatureFlags';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import now from './InteractionTrackingNow';
 
 export type Interaction = {|
   id: number,
@@ -20,44 +20,58 @@ export type Interaction = {|
 |};
 
 export type InteractionObserver = {
-  onInteractionEnded: (interaction: Interaction) => void,
-  onInteractionStarting: (interaction: Interaction) => void,
+  // A new interaction has been created via the track() method.
+  onInteractionTracked: (interaction: Interaction) => void,
+
+  // All scheduled async work for an interaction has finished.
+  onInteractionScheduledWorkCompleted: (interaction: Interaction) => void,
+
+  // New async work has been scheduled for a set of interactions.
+  // When this work is later run, onWorkStarted/onWorkStopped will be called.
+  // A batch of async/yieldy work may be scheduled multiple times before completing,
+  // In that case, onWorkScheduled may be called more than once before onWorkStopped.
+  // Work is scheduled by a "thread" which is identified by a unique ID.
+  onWorkScheduled: (interactions: Set<Interaction>, threadID: number) => void,
+
+  // A batch of scheduled work has been cancelled.
+  // Work is done by a "thread" which is identified by a unique ID.
+  onWorkCancelled: (interactions: Set<Interaction>, threadID: number) => void,
+
+  // A batch of work has started for a set of interactions.
+  // When this work is complete, onWorkStopped will be called.
+  // Work is not always completed synchronously; yielding may occur in between.
+  // A batch of async/yieldy work may also be re-started before completing,
+  // In that case, onWorkStarted may be called more than once before onWorkStopped.
+  // Work is done by a "thread" which is identified by a unique ID.
+  onWorkStarted: (interactions: Set<Interaction>, threadID: number) => void,
+
+  // A batch of work has completed for a set of interactions.
+  // Work is done by a "thread" which is identified by a unique ID.
+  onWorkStopped: (interactions: Set<Interaction>, threadID: number) => void,
+};
+
+export type InteractionsRef = {
+  current: Set<Interaction>,
 };
 
 type InteractionObservers = Set<InteractionObserver>;
 type ScheduledAsyncWorkCounts = Map<Interaction, number>;
 
-// Normally we would use the current renderer HostConfig's "now" method,
-// But since interaction-tracking will be a separate package,
-// I instead just copied the approach used by ReactScheduler.
-let now;
-if (typeof performance === 'object' && typeof performance.now === 'function') {
-  const localPerformance = performance;
-  now = () => localPerformance.now();
-} else {
-  const localDate = Date;
-  now = () => localDate.now();
-}
+const DEFAULT_THREAD_ID = 0;
 
-// Counter used to generate unique ID for all interactions.
-let idCounter: number = 0;
-
-// Listener(s) to notify when interactions begin and end.
-// Note that observers are only supported when enableInteractionTrackingObserver is enabled.
-let interactionObservers: InteractionObservers | null = null;
+// Counters used to generate unique IDs.
+let interactionIDCounter: number = 0;
+let threadIDCounter: number = 0;
 
 // Set of currently tracked interactions.
 // Interactions "stack"–
 // Meaning that newly tracked interactions are appended to the previously active set.
 // When an interaction goes out of scope, the previous set (if any) is restored.
-let interactions: Set<Interaction> = new Set();
+let interactionsRef: InteractionsRef | null = null;
 
-// Temporarily holds the Set of interactions masked by an active "continuation".
-// This is necessary since continuations are started/stopped externally.
-// This value enables previous interactions to be restored when the continuation ends.
-// This implementation supports only one active continuation at any time.
-// We could change this to a stack structure in the future if this requirement changed.
-let interactionsMaskedByContinuation: Set<Interaction> | null = null;
+// Listener(s) to notify when interactions begin and end.
+// Note that observers are only supported when enableInteractionTrackingObserver is enabled.
+let interactionObservers: InteractionObservers | null = null;
 
 // Tracks the number of async operations scheduled for each interaction.
 // Once the number of scheduled operations drops to 0,
@@ -65,81 +79,107 @@ let interactionsMaskedByContinuation: Set<Interaction> | null = null;
 // Note that pending counts are only tracked when enableInteractionTrackingObserver is enabled.
 let scheduledAsyncWorkCounts: ScheduledAsyncWorkCounts | null = null;
 
-if (enableInteractionTrackingObserver) {
-  interactionObservers = new Set();
-  scheduledAsyncWorkCounts = new Map();
+if (enableInteractionTracking) {
+  interactionsRef = {
+    current: new Set(),
+  };
+
+  if (enableInteractionTrackingObserver) {
+    interactionObservers = new Set();
+    scheduledAsyncWorkCounts = new Map();
+  }
 }
+
+// These values are exported for libraries with advanced use cases (i.e. React).
+// They should not typically be accessed directly.
+export {
+  interactionsRef as __interactionsRef,
+  interactionObservers as __interactionObservers,
+  scheduledAsyncWorkCounts as __scheduledAsyncWorkCounts,
+};
 
 export function getCurrent(): Set<Interaction> | null {
   if (!enableInteractionTracking) {
     return null;
   } else {
-    return interactions;
+    return ((interactionsRef: any): InteractionsRef).current;
   }
+}
+
+export function getThreadID(): number {
+  return ++threadIDCounter;
 }
 
 export function registerInteractionObserver(
   observer: InteractionObserver,
 ): void {
-  if (!enableInteractionTrackingObserver) {
-    return;
+  if (enableInteractionTracking && enableInteractionTrackingObserver) {
+    ((interactionObservers: any): InteractionObservers).add(observer);
   }
-
-  ((interactionObservers: any): InteractionObservers).add(observer);
 }
 
-export function track(name: string, callback: Function): any {
+export function track(
+  name: string,
+  callback: Function,
+  threadID: number = DEFAULT_THREAD_ID,
+): any {
   if (!enableInteractionTracking) {
     return callback();
   }
 
   const interaction: Interaction = {
-    id: idCounter++,
+    id: interactionIDCounter++,
     name,
     timestamp: now(),
   };
 
-  const prevInteractions = interactions;
+  const prevInteractions = ((interactionsRef: any): InteractionsRef).current;
 
   // Tracked interactions should stack/accumulate.
   // To do that, clone the current interactions array.
   // The previous interactions array will be restored upon completion.
-  interactions = new Set(interactions);
+  const interactions = new Set(prevInteractions);
   interactions.add(interaction);
+  ((interactionsRef: any): InteractionsRef).current = interactions;
 
   try {
     if (enableInteractionTrackingObserver) {
       // Initialize the pending async count for this interaction,
       // So that if it's processed synchronously,
       // And __startAsyncWork/__stopAsyncWork are called,
-      // We won't accidentally call onInteractionEnded() more than once.
+      // We won't accidentally call onInteractionScheduledWorkCompleted more than once.
       ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
         interaction,
         1,
       );
 
-      ((interactionObservers: any): InteractionObservers).forEach(observer =>
-        observer.onInteractionStarting(interaction),
-      );
+      ((interactionObservers: any): InteractionObservers).forEach(observer => {
+        observer.onInteractionTracked(interaction);
+        observer.onWorkStarted(interactions, threadID);
+      });
     }
 
     return callback();
   } finally {
-    interactions = prevInteractions;
+    ((interactionsRef: any): InteractionsRef).current = prevInteractions;
 
     if (enableInteractionTrackingObserver) {
+      ((interactionObservers: any): InteractionObservers).forEach(observer =>
+        observer.onWorkStopped(interactions, threadID),
+      );
+
       const count = ((((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
         interaction,
       ): any): number);
 
       // If no async work was scheduled for this interaction,
-      // We can mark it as completed.
+      // Notify observers that it's completed.
       if (count === 1) {
         ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
           interaction,
         );
         ((interactionObservers: any): InteractionObservers).forEach(observer =>
-          observer.onInteractionEnded(interaction),
+          observer.onInteractionScheduledWorkCompleted(interaction),
         );
       } else {
         ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
@@ -151,12 +191,15 @@ export function track(name: string, callback: Function): any {
   }
 }
 
-export function wrap(callback: Function): Function {
+export function wrap(
+  callback: Function,
+  threadID: number = DEFAULT_THREAD_ID,
+): Function {
   if (!enableInteractionTracking) {
     return callback;
   }
 
-  const wrappedInteractions = interactions;
+  const wrappedInteractions = ((interactionsRef: any): InteractionsRef).current;
 
   if (enableInteractionTrackingObserver) {
     // Update the pending async work count for the current interactions.
@@ -177,18 +220,32 @@ export function wrap(callback: Function): Function {
         );
       }
     });
+
+    ((interactionObservers: any): InteractionObservers).forEach(observer =>
+      observer.onWorkScheduled(wrappedInteractions, threadID),
+    );
   }
 
   const wrapped = (...args) => {
-    const prevInteractions = interactions;
-    interactions = wrappedInteractions;
+    const prevInteractions = ((interactionsRef: any): InteractionsRef).current;
+    ((interactionsRef: any): InteractionsRef).current = wrappedInteractions;
 
     try {
+      if (enableInteractionTrackingObserver) {
+        ((interactionObservers: any): InteractionObservers).forEach(observer =>
+          observer.onWorkStarted(wrappedInteractions, threadID),
+        );
+      }
+
       return callback(...args);
     } finally {
-      interactions = prevInteractions;
+      ((interactionsRef: any): InteractionsRef).current = prevInteractions;
 
       if (enableInteractionTrackingObserver) {
+        ((interactionObservers: any): InteractionObservers).forEach(observer =>
+          observer.onWorkStopped(wrappedInteractions, threadID),
+        );
+
         // Update pending async counts for all wrapped interactions.
         // If this was the last scheduled async work for any of them,
         // Mark them as completed.
@@ -207,7 +264,8 @@ export function wrap(callback: Function): Function {
               interaction,
             );
             ((interactionObservers: any): InteractionObservers).forEach(
-              observer => observer.onInteractionEnded(interaction),
+              observer =>
+                observer.onInteractionScheduledWorkCompleted(interaction),
             );
           }
         });
@@ -215,8 +273,12 @@ export function wrap(callback: Function): Function {
     }
   };
 
-  if (enableInteractionTrackingObserver) {
-    wrapped.cancel = () => {
+  wrapped.cancel = () => {
+    if (enableInteractionTrackingObserver) {
+      ((interactionObservers: any): InteractionObservers).forEach(observer =>
+        observer.onWorkCancelled(wrappedInteractions, threadID),
+      );
+
       // Update pending async counts for all wrapped interactions.
       // If this was the last scheduled async work for any of them,
       // Mark them as completed.
@@ -235,120 +297,13 @@ export function wrap(callback: Function): Function {
             interaction,
           );
           ((interactionObservers: any): InteractionObservers).forEach(
-            observer => observer.onInteractionEnded(interaction),
+            observer =>
+              observer.onInteractionScheduledWorkCompleted(interaction),
           );
         }
       });
-    };
-  }
+    }
+  };
 
   return wrapped;
-}
-
-export function __scheduleAsyncWork(
-  asyncInteractions: Array<Interaction>,
-): void {
-  if (!enableInteractionTrackingObserver) {
-    return;
-  }
-
-  // Update the pending async work count for the current interactions.
-  asyncInteractions.forEach(interaction => {
-    const count =
-      ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
-        interaction,
-      ) || 0;
-    ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
-      interaction,
-      count + 1,
-    );
-  });
-}
-
-export function __startAsyncWork(asyncInteractions: Array<Interaction>): void {
-  if (!enableInteractionTracking) {
-    return;
-  }
-
-  if (interactionsMaskedByContinuation !== null) {
-    if (__DEV__) {
-      warningWithoutStack(
-        false,
-        'Can only restore one batch of async interactions at a time.',
-      );
-    }
-    return;
-  }
-
-  if (enableInteractionTrackingObserver) {
-    if (__DEV__) {
-      asyncInteractions.forEach(interaction => {
-        const count =
-          ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
-            interaction,
-          ) || 0;
-        warningWithoutStack(
-          count > 0,
-          'An unscheduled interaction was started.',
-        );
-      });
-    }
-  }
-
-  // Continuations should mask (rather than extend) any current interactions.
-  // Upon completion of a continuation, previous interactions will be restored.
-  interactionsMaskedByContinuation = interactions;
-  interactions = new Set(asyncInteractions);
-}
-
-export function __stopAsyncWork(
-  asyncInteractions: Array<Interaction>,
-  isAsyncWorkComplete: boolean,
-): void {
-  if (!enableInteractionTracking) {
-    return;
-  }
-
-  if (interactionsMaskedByContinuation === null) {
-    if (__DEV__) {
-      warningWithoutStack(false, 'Cannot stop inactive async interactions.');
-    }
-    return;
-  }
-
-  // Restore previous interactions.
-  interactions = ((interactionsMaskedByContinuation: any): Set<Interaction>);
-  interactionsMaskedByContinuation = null;
-
-  if (enableInteractionTrackingObserver) {
-    if (isAsyncWorkComplete) {
-      asyncInteractions.forEach(interaction => {
-        const count =
-          ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).get(
-            interaction,
-          ) || 0;
-
-        if (__DEV__) {
-          warningWithoutStack(
-            count > 0,
-            'An unscheduled interaction was stopped.',
-          );
-        }
-
-        if (count > 1) {
-          ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).set(
-            interaction,
-            count - 1,
-          );
-        } else {
-          ((scheduledAsyncWorkCounts: any): ScheduledAsyncWorkCounts).delete(
-            interaction,
-          );
-          ((interactionObservers: any): InteractionObservers).forEach(
-            observer => observer.onInteractionEnded(interaction),
-          );
-        }
-      });
-    }
-  }
 }
