@@ -10,28 +10,20 @@
 'use strict';
 
 let React;
-let ReactDOM;
 let ReactTestUtils;
-let ReactDOMComponentTree;
 let ReactBrowserEventEmitter;
-let EventPluginHub;
-// let EventPluginRegistry;
-// let TapEventPlugin;
 
 let CHILD, PARENT, GRANDPARENT;
-let CHILD_PROPS = {},
-  PARENT_PROPS = {},
-  GRANDPARENT_PROPS = {};
-
-let tapMoveThreshold;
+let CHILD_PROPS = {};
+let PARENT_PROPS = {};
+let GRANDPARENT_PROPS = {};
 
 let container;
 let idCallOrder;
 
 const LISTENER = jest.fn();
 const ON_CLICK_KEY = 'onClick';
-const ON_CHANGE_KEY = 'onChange';
-const ON_TOUCH_TAP_KEY = 'onTouchTap';
+// const ON_CHANGE_KEY = 'onChange';
 const ON_MOUSE_ENTER_KEY = 'onMouseEnter';
 
 let putListener;
@@ -61,24 +53,16 @@ describe('ReactBrowserEventEmitter', () => {
     jest.resetModules();
     LISTENER.mockClear();
 
-    EventPluginHub = require('events/EventPluginHub');
-    // EventPluginRegistry = require('events/EventPluginRegistry');
     React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
     ReactBrowserEventEmitter = require('react-dom/src/events/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
-    /**
-     * used ../events/TapEventPlugin by origin test,
-     * change it to use the public modules react-dom/src/events/TapEventPlugin
-     * to instead.
-     */
-    // TapEventPlugin = require('react-dom/src/events/TapEventPlugin').default;
 
     container = document.createElement('div');
 
+    let instance;
+
     function Child(props) {
-      return <div ref={c => (CHILD = c)} {...props} />;
+      return <div ref={node => (CHILD = node)} {...props} />;
     }
 
     class ChildWrapper extends React.PureComponent {
@@ -87,15 +71,20 @@ describe('ReactBrowserEventEmitter', () => {
       }
     }
 
-    function renderTree() {
-      ReactDOM.render(
-        <div ref={c => (GRANDPARENT = c)} {...GRANDPARENT_PROPS}>
-          <div ref={c => (PARENT = c)} {...PARENT_PROPS}>
-            <ChildWrapper {...CHILD_PROPS} />
+    class CommonComponent extends React.Component {
+      render() {
+        return (
+          <div ref={c => (GRANDPARENT = c)} {...GRANDPARENT_PROPS}>
+            <div ref={c => (PARENT = c)} {...PARENT_PROPS}>
+              <ChildWrapper {...CHILD_PROPS} />
+            </div>
           </div>
-        </div>,
-        container
-      );
+        );
+      }
+    }
+
+    function renderTree() {
+      instance = ReactTestUtils.renderIntoDocument(<CommonComponent />);
     }
     renderTree();
 
@@ -130,28 +119,15 @@ describe('ReactBrowserEventEmitter', () => {
     };
 
     getListener = function(node, eventName) {
-      const inst = ReactDOMComponentTree.getInstanceFromNode(node);
-      return EventPluginHub.getListener(inst, eventName);
+      const trees = ReactTestUtils.findAllInRenderedTree(instance, () => true);
+      return trees[3].props[eventName];
     };
 
     idCallOrder = [];
-    // tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    // spyOnDev(console, 'warn');
-    // EventPluginHub.injection.injectEventPluginsByName({
-    //   TapEventPlugin: TapEventPlugin
-    // });
   });
 
   afterEach(() => {
-    container = null;
     idCallOrder = [];
-
-    // if (__DEV__) {
-    //   expect(console.warn.calls.count()).toBe(1);
-    //   expect(console.warn.calls.argsFor(0)[0]).toContain(
-    //     'Injecting custom event plugins (TapEventPlugin) is deprecated'
-    //   );
-    // }
   });
 
   it('should store a listener correctly', () => {
@@ -200,9 +176,9 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    expect(idCallOrder[0]).toEqual(CHILD);
+    expect(idCallOrder[1]).toEqual(PARENT);
+    expect(idCallOrder[2]).toEqual(GRANDPARENT);
   });
 
   it('should bubble to the right handler after an update', () => {
@@ -218,7 +194,7 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(
       GRANDPARENT,
       ON_CLICK_KEY,
-      recordID.bind(null, 'UPDATED_GRANDPARENT')
+      recordID.bind(null, 'UPDATED_GRANDPARENT'),
     );
 
     ReactTestUtils.Simulate.click(CHILD);
@@ -236,9 +212,9 @@ describe('ReactBrowserEventEmitter', () => {
       ReactTestUtils.Simulate.click(CHILD);
     }).toThrow();
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    expect(idCallOrder[0]).toEqual(CHILD);
+    expect(idCallOrder[1]).toEqual(PARENT);
+    expect(idCallOrder[2]).toEqual(GRANDPARENT);
   });
 
   it('should set currentTarget', () => {
@@ -256,9 +232,9 @@ describe('ReactBrowserEventEmitter', () => {
     });
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    expect(idCallOrder[0]).toEqual(CHILD);
+    expect(idCallOrder[1]).toEqual(PARENT);
+    expect(idCallOrder[2]).toEqual(GRANDPARENT);
   });
 
   it('should support stopPropagation()', () => {
@@ -266,13 +242,13 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(
       PARENT,
       ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, PARENT)
+      recordIDAndStopPropagation.bind(null, PARENT),
     );
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(2);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
+    expect(idCallOrder[0]).toEqual(CHILD);
+    expect(idCallOrder[1]).toEqual(PARENT);
   });
 
   it('should support overriding .isPropagationStopped()', () => {
@@ -286,21 +262,21 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(2);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
+    expect(idCallOrder[0]).toEqual(CHILD);
+    expect(idCallOrder[1]).toEqual(PARENT);
   });
 
   it('should stop after first dispatch if stopPropagation', () => {
     putListener(
       CHILD,
       ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, CHILD)
+      recordIDAndStopPropagation.bind(null, CHILD),
     );
     putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toBe(CHILD);
+    expect(idCallOrder[0]).toEqual(CHILD);
   });
 
   it('should not stopPropagation if false is returned', () => {
@@ -310,9 +286,9 @@ describe('ReactBrowserEventEmitter', () => {
     spyOnDev(console, 'error');
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    expect(idCallOrder[0]).toEqual(CHILD);
+    expect(idCallOrder[1]).toEqual(PARENT);
+    expect(idCallOrder[2]).toEqual(GRANDPARENT);
     if (__DEV__) {
       expect(console.error.calls.count()).toEqual(0);
     }
@@ -352,71 +328,25 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(CHILD, ON_MOUSE_ENTER_KEY, recordID.bind(null, CHILD));
     ReactTestUtils.Simulate.mouseEnter(CHILD);
     expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toBe(CHILD);
+    expect(idCallOrder[0]).toEqual(CHILD);
   });
 
-  /**
-   * The onTouchTap inject is ignore future,
-   * we should always test the deprecated message correct.
-   * See https://github.com/facebook/react/issues/11689
-   */
-  // it('should infer onTouchTap from a touchStart/End', () => {
-  //   putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
-  //   ReactTestUtils.SimulateNative.touchStart(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, 0)
-  //   );
-  //   ReactTestUtils.SimulateNative.touchEnd(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, 0)
-  //   );
-  //   expect(idCallOrder.length).toBe(1);
-  //   expect(idCallOrder[0]).toBe(CHILD);
-  // });
+  it('should listen to events only once', () => {
+    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, container);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, container);
+    expect(EventTarget.prototype.addEventListener.calls.count()).toBe(1);
+  });
 
-  // it('should infer onTouchTap from when dragging below threshold', () => {
-  //   putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
-  //   ReactTestUtils.SimulateNative.touchStart(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, 0)
-  //   );
-  //   ReactTestUtils.SimulateNative.touchEnd(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1)
-  //   );
-  //   expect(idCallOrder.length).toBe(1);
-  //   expect(idCallOrder[0]).toBe(CHILD);
-  // });
+  it('should work with event plugins without dependencies', () => {
+    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
 
-  // it('should not onTouchTap from when dragging beyond threshold', () => {
-  //   putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
-  //   ReactTestUtils.SimulateNative.touchStart(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, 0)
-  //   );
-  //   ReactTestUtils.SimulateNative.touchEnd(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1)
-  //   );
-  //   expect(idCallOrder.length).toBe(0);
-  // });
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, container);
 
-  // it('should listen to events only once', () => {
-  //   spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-  //   ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-  //   ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-  //   expect(EventTarget.prototype.addEventListener.calls.count()).toBe(1);
-  // });
-
-  // it('should work with event plugins without dependencies', () => {
-  //   spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-
-  //   ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-
-  //   expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
-  //     'click'
-  //   );
-  // });
+    expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
+      'click',
+    );
+  });
 
   // it('should work with event plugins with dependencies', () => {
   //   spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
@@ -436,27 +366,5 @@ describe('ReactBrowserEventEmitter', () => {
   //   for (i = 0; i < setEventListeners.length; i++) {
   //     expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
   //   }
-  // });
-
-  // it('should bubble onTouchTap', () => {
-  //   putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
-  //   putListener(PARENT, ON_TOUCH_TAP_KEY, recordID.bind(null, PARENT));
-  //   putListener(
-  //     GRANDPARENT,
-  //     ON_TOUCH_TAP_KEY,
-  //     recordID.bind(null, GRANDPARENT)
-  //   );
-  //   ReactTestUtils.SimulateNative.touchStart(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, 0)
-  //   );
-  //   ReactTestUtils.SimulateNative.touchEnd(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, 0)
-  //   );
-  //   expect(idCallOrder.length).toBe(3);
-  //   expect(idCallOrder[0] === CHILD).toBe(true);
-  //   expect(idCallOrder[1] === PARENT).toBe(true);
-  //   expect(idCallOrder[2] === GRANDPARENT).toBe(true);
   // });
 });
