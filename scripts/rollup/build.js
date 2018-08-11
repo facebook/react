@@ -336,6 +336,23 @@ function getPlugins(
           .replace(/require\(['"]react-is['"]\)/g, "require('ReactIs')");
       },
     },
+    isFBBundle && {
+      transformBundle(source) {
+        // Run a final Babel pass after Rollup bundle.
+        const babelOptions = {
+          ast: false,
+          babelrc: false,
+          compact: false,
+          plugins: [
+            // This is needed because Rollup outputs getters, but we can't use
+            // getters in www.
+            require('../babel/remove-getters'),
+          ],
+        };
+        const result = babelCore.transform(source, babelOptions);
+        return result.code;
+      },
+    },
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(
@@ -494,24 +511,6 @@ async function createBundle(bundle, bundleType) {
     handleRollupError(error);
     throw error;
   }
-
-  if (isFBBundle) {
-    // Run a final Babel pass after Rollup bundle.
-    const bundleCode = fs.readFileSync(mainOutputPath).toString();
-    const babelOptions = {
-      ast: false,
-      babelrc: false,
-      compact: false,
-      plugins: [
-        // This is needed because Rollup outputs getters, but we can't use
-        // getters in www.
-        require('../babel/remove-getters'),
-      ],
-    };
-    const result = babelCore.transform(bundleCode, babelOptions);
-    fs.writeFileSync(mainOutputPath, result.code, 'utf8');
-  }
-
   for (let i = 0; i < otherOutputPaths.length; i++) {
     await asyncCopyTo(mainOutputPath, otherOutputPaths[i]);
   }
