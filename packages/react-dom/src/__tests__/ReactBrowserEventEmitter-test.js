@@ -136,36 +136,52 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
-    createInitialInstance();
-    let node;
-    node = ReactDOM.findDOMNode(CHILD);
-    updateInstance({
-      parentProps: {},
-      childProps: {
-        isUnmount: true,
-      },
-    });
-    node.dispatchEvent(
-      new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
-    expect(LISTENER.mock.calls.length).toBe(0);
-    updateInstance({
-      parentProps: {},
-      childProps: {
-        onClick: LISTENER,
-      },
-    });
-    node = ReactDOM.findDOMNode(CHILD);
-    node.dispatchEvent(
-      new MouseEvent('click', {
-        bubbles: true,
-        cancelable: true,
-      }),
-    );
+    const willUnmountCalls = jest.fn();
+    class UnmountComponent extends React.Component {
+      constructor() {
+        super();
+        this.node = null;
+      }
+      // when mount trigger event onClick
+      componentDidMount() {
+        this.node.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }
+      // Don't trigger event in willmount
+      componentWillUnmount() {
+        willUnmountCalls();
+        this.node.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }
+      render() {
+        return <div ref={node => (this.node = node)} onClick={LISTENER} />;
+      }
+    }
+    class App extends React.Component {
+      render() {
+        return this.props.isUnmount ? null : <UnmountComponent />;
+      }
+    }
+
+    // mount first
+    ReactDOM.render(<App />, container);
+
+    // re-render
+    ReactDOM.render(<App isUnmount />, container);
     expect(LISTENER.mock.calls.length).toBe(1);
+    expect(willUnmountCalls.mock.calls.length).toBe(1);
+
+    // re-render
+    ReactDOM.render(<App />, container);
+    expect(LISTENER.mock.calls.length).toBe(2);
   });
 
   it('should bubble simply', () => {
