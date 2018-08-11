@@ -14,7 +14,7 @@ import warning from 'shared/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
-import {getSafeValue, safeValueToString} from './safeValue';
+import {getSafeValue, safeValueToString} from './SafeValue';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import * as inputValueTracking from './inputValueTracking';
 
