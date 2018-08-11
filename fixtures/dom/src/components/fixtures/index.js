@@ -36,19 +36,27 @@ class FixturesPage extends React.Component {
   }
 
   render() {
-    const {fixturePath} = this.props;
     const {Fixture, error, isLoading} = this.state;
 
     if (isLoading) {
-      return <p>Awaiting fixture...</p>;
+      return null;
     }
 
     if (error) {
-      return <p>Fixture at path {fixturePath} could not be loaded.</p>;
+      return <FixtureError error={error} />;
     }
 
     return <Fixture />;
   }
+}
+
+function FixtureError({error}) {
+  return (
+    <section>
+      <h2>Error loading fixture</h2>
+      <p>{error.message}</p>
+    </section>
+  );
 }
 
 export default FixturesPage;
