@@ -13,6 +13,7 @@ import warning from 'shared/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
+  BOOLEAN,
   RESERVED,
   shouldRemoveAttributeWithWarning,
   getPropertyInfo,
@@ -224,6 +225,25 @@ if (__DEV__) {
     if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
       warnedProperties[name] = true;
       return false;
+    }
+
+    // Warn when passing the string 'false' into a boolean prop
+    if (
+      propertyInfo !== null &&
+      propertyInfo.type === BOOLEAN &&
+      typeof value === 'string' &&
+      value.toLowerCase() === 'false'
+    ) {
+      warning(
+        false,
+        'Received the string `%s` for the boolean attribute `%s`. ' +
+          'Did you mean %s={false}?',
+        value,
+        name,
+        name,
+      );
+      warnedProperties[name] = true;
+      return true;
     }
 
     return true;
