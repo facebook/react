@@ -12,8 +12,9 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
-let ReactBrowserEventEmitter;
 let LISTENER = jest.fn();
+
+let container;
 
 let createInitialInstance;
 
@@ -22,15 +23,12 @@ let updateInstance;
 let CHILD, PARENT;
 
 describe('ReactBrowserEventEmitter', () => {
-  let container;
-
   beforeEach(() => {
     jest.resetModules();
     LISTENER.mockClear();
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactBrowserEventEmitter = require('react-dom/src/events/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
 
     container = document.createElement('div');
@@ -46,7 +44,9 @@ describe('ReactBrowserEventEmitter', () => {
       render() {
         return (
           <div {...this.props.parentProps}>
-            <Child ref={n => (CHILD = n)} {...this.props.childProps} />
+            {this.props.childProps.isUnmount ? null : (
+              <Child ref={n => (CHILD = n)} {...this.props.childProps} />
+            )}
           </div>
         );
       }
@@ -89,6 +89,7 @@ describe('ReactBrowserEventEmitter', () => {
     container = null;
     CHILD = null;
     PARENT = null;
+    jest.resetModules();
   });
 
   it('should store a listener correctly', () => {
@@ -134,15 +135,16 @@ describe('ReactBrowserEventEmitter', () => {
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
-  /**
-   * used ../events/ReactBrowserEventEmitter by origin test,
-   * change it to use the public modules react-dom/src/events/ReactBrowserEventEmitter
-   * to instead.
-   */
   it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
     createInitialInstance();
-    ReactBrowserEventEmitter.setEnabled(false);
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node;
+    node = ReactDOM.findDOMNode(CHILD);
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        isUnmount: true,
+      },
+    });
     node.dispatchEvent(
       new MouseEvent('click', {
         bubbles: true,
@@ -150,7 +152,13 @@ describe('ReactBrowserEventEmitter', () => {
       }),
     );
     expect(LISTENER.mock.calls.length).toBe(0);
-    ReactBrowserEventEmitter.setEnabled(true);
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        onClick: LISTENER,
+      },
+    });
+    node = ReactDOM.findDOMNode(CHILD);
     node.dispatchEvent(
       new MouseEvent('click', {
         bubbles: true,
@@ -421,14 +429,14 @@ describe('ReactBrowserEventEmitter', () => {
     }
   });
 
-  /**
-   * The entire event registration state of the world should be "locked-in" at
-   * the time the event occurs. This is to resolve many edge cases that come
-   * about from a listener on a lower-in-DOM node causing structural changes at
-   * places higher in the DOM. If this lower-in-DOM node causes new content to
-   * be rendered at a place higher-in-DOM, we need to be careful not to invoke
-   * these new listeners.
-   */
+  // /**
+  //  * The entire event registration state of the world should be "locked-in" at
+  //  * the time the event occurs. This is to resolve many edge cases that come
+  //  * about from a listener on a lower-in-DOM node causing structural changes at
+  //  * places higher in the DOM. If this lower-in-DOM node causes new content to
+  //  * be rendered at a place higher-in-DOM, we need to be careful not to invoke
+  //  * these new listeners.
+  //  */
 
   it('should invoke handlers that were removed while bubbling', () => {
     let parentMockFn = jest.fn();
@@ -513,26 +521,42 @@ describe('ReactBrowserEventEmitter', () => {
         onMouseEnter: childCall,
       },
     });
+    const event = document.createEvent('Event');
+    event.initEvent('mouseover', true, true);
     let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(event);
+
+    expect(targets[0]).toBe(node);
+  });
+
+  // /**
+  //  * add twice onClick props in Child component,
+  //  * but should only called once.
+  //  */
+  it('should listen to events only once', () => {
+    createInitialInstance();
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        onClick: LISTENER,
+        onClick: LISTENER,
+      },
+    });
+    const node = ReactDOM.findDOMNode(CHILD);
     node.dispatchEvent(
-      new MouseEvent('mouseover', {
+      new MouseEvent('click', {
         bubbles: true,
         cancelable: true,
       }),
     );
-    expect(targets[0]).toBe(node);
-  });
-
-  it('should listen to events only once', () => {
-    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    ReactBrowserEventEmitter.listenTo('onClick', document);
-    ReactBrowserEventEmitter.listenTo('onClick', document);
-    expect(EventTarget.prototype.addEventListener.calls.count()).toBe(1);
+    expect(LISTENER.mock.calls.length).toBe(1);
   });
 
   it('should work with event plugins without dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    ReactBrowserEventEmitter.listenTo('onClick', document);
+    // const SimpleComponent = () => <div onClick={LISTENER} />;
+    // ReactDOM.render(<SimpleComponent />, container);
+    document.addEventListener('click', LISTENER);
     expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
       'click',
     );
