@@ -53,10 +53,7 @@ function toHaveBeenLastNotifiedOfWork(
     }
   }
 
-  return toMatchInteractions(
-    actualInteractions,
-    Array.from(expectedInteractions)
-  );
+  return toMatchInteractions(actualInteractions, expectedInteractions);
 }
 
 function toMatchInteraction(actual, expected) {
@@ -73,23 +70,24 @@ function toMatchInteraction(actual, expected) {
   return {pass: true};
 }
 
-function toMatchInteractions(actualSet, expectedArray) {
-  if (actualSet.size !== expectedArray.length) {
+function toMatchInteractions(actualSetOrArray, expectedSetOrArray) {
+  const actualArray = Array.from(actualSetOrArray);
+  const expectedArray = Array.from(expectedSetOrArray);
+
+  if (actualArray.length !== expectedArray.length) {
     return {
       message: () =>
         `Expected ${expectedArray.length} interactions but there were ${
-          actualSet.size
+          actualArray.length
         }`,
       pass: false,
     };
   }
 
-  const actualArray = Array.from(actualSet);
-
   for (let i = 0; i < actualArray.length; i++) {
-    const match = toMatchInteraction(actualArray[i], expectedArray[i]);
-    if (match.pass === false) {
-      return match;
+    const result = toMatchInteraction(actualArray[i], expectedArray[i]);
+    if (result.pass === false) {
+      return result;
     }
   }
 
