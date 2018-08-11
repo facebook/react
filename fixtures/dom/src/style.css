@@ -13,6 +13,9 @@ body {
   line-height: 24px;
   margin: 0;
   padding: 0;
+  /* background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.15) 0, transparent 1px), linear-gradient(0deg, rgba(0, 0, 0, 0.15) 0, transparent 1px);
+     background-size: 8px 8px;
+     background-repeat: repeat; */
 }
 
 button {
@@ -37,12 +40,12 @@ h6 {
 
 h1 {
   font-size: 32px;
-  margin: 24px 0;
+  margin: 16px 0 24px;
 }
 
 h2 {
   font-size: 24px;
-  margin: 24px 0 16px;
+  margin: 16px 0 16px;
 }
 
 h3 {
