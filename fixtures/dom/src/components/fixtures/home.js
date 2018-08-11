@@ -81,7 +81,7 @@ export default function Home() {
         <p>
           These services cost money, however a few maintainers have access to a
           subscription. There is no obligation to subscribe to these services;
-          feel free to ping a maintainer or mention that need more testing is
+          feel free to ping a maintainer or mention that more testing is
           required.
         </p>
       </section>
