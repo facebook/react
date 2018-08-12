@@ -11,14 +11,15 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
-import getSafeValue from './getSafeValue';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import {getSafeValue, safeValueToString} from './SafeValue';
+import type {SafeValue} from './SafeValue';
 
 let didWarnValDefaultVal = false;
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {
-    initialValue: string,
+    initialValue: SafeValue,
   },
 };
 
@@ -55,7 +56,7 @@ export function getHostProps(element: Element, props: Object) {
     ...props,
     value: undefined,
     defaultValue: undefined,
-    children: '' + node._wrapperState.initialValue,
+    children: safeValueToString(getSafeValue(node._wrapperState.initialValue)),
   };
 
   return hostProps;
@@ -126,22 +127,18 @@ export function initWrapperState(element: Element, props: Object) {
 
 export function updateWrapper(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
-  const value = props.value;
+  const value = getSafeValue(props.value);
   if (value != null) {
-    // Cast `value` to a string to ensure the value is set correctly. While
-    // browsers typically do this as necessary, jsdom doesn't.
-    const newValue = getSafeValue(value);
-
     // To avoid side effects (such as losing text selection), only set value if changed
-    if (newValue !== node.value) {
-      node.value = newValue;
+    if ((value: any) !== node.value) {
+      node.value = safeValueToString(value);
     }
     if (props.defaultValue == null) {
-      node.defaultValue = newValue;
+      node.defaultValue = safeValueToString(value);
     }
   }
   if (props.defaultValue != null) {
-    node.defaultValue = getSafeValue(props.defaultValue);
+    node.defaultValue = safeValueToString(getSafeValue(props.defaultValue));
   }
 }
 

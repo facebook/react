@@ -17,7 +17,6 @@ import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import * as inputValueTracking from './inputValueTracking';
-import getSafeValue from './getSafeValue';
 
 import type {ToStringValue} from './ToStringValue';
 
