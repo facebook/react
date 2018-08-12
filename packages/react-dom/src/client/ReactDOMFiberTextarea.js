@@ -129,12 +129,15 @@ export function updateWrapper(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
   const value = getSafeValue(props.value);
   if (value != null) {
+    // Cast `value` to a string to ensure the value is set correctly. While
+    // browsers typically do this as necessary, jsdom doesn't.
+    const newValue = safeValueToString(value);
     // To avoid side effects (such as losing text selection), only set value if changed
-    if ((value: any) !== node.value) {
-      node.value = safeValueToString(value);
+    if (newValue !== node.value) {
+      node.value = newValue;
     }
     if (props.defaultValue == null) {
-      node.defaultValue = safeValueToString(value);
+      node.defaultValue = newValue;
     }
   }
   if (props.defaultValue != null) {
