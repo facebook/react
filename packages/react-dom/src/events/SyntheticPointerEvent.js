@@ -16,8 +16,10 @@ const SyntheticPointerEvent = SyntheticMouseEvent.extend({
   width: null,
   height: null,
   pressure: null,
+  tangentialPressure: null,
   tiltX: null,
   tiltY: null,
+  twist: null,
   pointerType: null,
   isPrimary: null,
 });
