@@ -26,7 +26,9 @@ module.exports = ({types: t}) => {
         const keyNode = path.node.key;
         const isValidKey = t.isIdentifier(keyNode);
         if (!isValidKey) {
-          return;
+          throw path.buildCodeFrameError(
+            'Getter key format not supported. Expected identifier.'
+          );
         }
 
         const bodyNode = path.node.body;
@@ -35,7 +37,9 @@ module.exports = ({types: t}) => {
           t.isReturnStatement(bodyNode.body[0]) &&
           t.isIdentifier(bodyNode.body[0].argument);
         if (!isValidBody) {
-          return;
+          throw path.buildCodeFrameError(
+            'Getter body format not supported. Expected return of identifier.'
+          );
         }
 
         const prop = keyNode.name;
