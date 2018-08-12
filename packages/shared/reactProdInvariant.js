@@ -17,11 +17,10 @@ import invariant from 'shared/invariant';
  * and will _only_ be required by the corresponding babel pass.
  * It always throws.
  */
-function reactProdInvariant(code: string): void {
-  const argCount = arguments.length - 1;
+function reactProdInvariant(code: string, args: Array<string>): void {
   let url = 'https://reactjs.org/docs/error-decoder.html?invariant=' + code;
-  for (let argIdx = 0; argIdx < argCount; argIdx++) {
-    url += '&args[]=' + encodeURIComponent(arguments[argIdx + 1]);
+  for (let argIdx = 0; argIdx < args.length; argIdx++) {
+    url += '&args[]=' + encodeURIComponent(args[argIdx]);
   }
   // Rename it so that our build transform doesn't atttempt
   // to replace this invariant() call with reactProdInvariant().
