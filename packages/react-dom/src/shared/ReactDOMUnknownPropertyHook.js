@@ -229,10 +229,9 @@ if (__DEV__) {
 
     // Warn when passing the string 'false' into a boolean prop
     if (
+      value === 'false' &&
       propertyInfo !== null &&
-      propertyInfo.type === BOOLEAN &&
-      typeof value === 'string' &&
-      value.toLowerCase() === 'false'
+      propertyInfo.type === BOOLEAN
     ) {
       warning(
         false,
