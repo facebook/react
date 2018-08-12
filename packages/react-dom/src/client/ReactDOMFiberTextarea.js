@@ -56,7 +56,7 @@ export function getHostProps(element: Element, props: Object) {
     ...props,
     value: undefined,
     defaultValue: undefined,
-    children: safeValueToString(getSafeValue(node._wrapperState.initialValue)),
+    children: safeValueToString(node._wrapperState.initialValue),
   };
 
   return hostProps;
