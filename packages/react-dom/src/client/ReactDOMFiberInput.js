@@ -14,12 +14,15 @@ import warning from 'shared/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
+import {getSafeValue, safeValueToString} from './SafeValue';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import * as inputValueTracking from './inputValueTracking';
 
+import type {SafeValue} from './SafeValue';
+
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
-    initialValue: string,
+    initialValue: SafeValue,
     initialChecked: ?boolean,
     controlled?: boolean,
   },
@@ -174,13 +177,14 @@ export function updateWrapper(element: Element, props: Object) {
     if (props.type === 'number') {
       if (
         (value === 0 && node.value === '') ||
+        // We explicitly want to coerce to number here if possible.
         // eslint-disable-next-line
-        node.value != value
+        node.value != (value: any)
       ) {
-        node.value = '' + value;
+        node.value = safeValueToString(value);
       }
-    } else if (node.value !== '' + value) {
-      node.value = '' + value;
+    } else if (node.value !== safeValueToString(value)) {
+      node.value = safeValueToString(value);
     }
   }
 
@@ -203,7 +207,7 @@ export function postMountWrapper(
   const node = ((element: any): InputWithWrapperState);
 
   if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
-    const initialValue = '' + node._wrapperState.initialValue;
+    const initialValue = safeValueToString(node._wrapperState.initialValue);
     const currentValue = node.value;
 
     // Do not assign value if it is already set. This prevents user text input
@@ -312,23 +316,9 @@ export function setDefaultValue(
     node.ownerDocument.activeElement !== node
   ) {
     if (value == null) {
-      node.defaultValue = '' + node._wrapperState.initialValue;
-    } else if (node.defaultValue !== '' + value) {
-      node.defaultValue = '' + value;
+      node.defaultValue = safeValueToString(node._wrapperState.initialValue);
+    } else if (node.defaultValue !== safeValueToString(value)) {
+      node.defaultValue = safeValueToString(value);
     }
-  }
-}
-
-function getSafeValue(value: *): * {
-  switch (typeof value) {
-    case 'boolean':
-    case 'number':
-    case 'object':
-    case 'string':
-    case 'undefined':
-      return value;
-    default:
-      // function, symbol are assigned as empty strings
-      return '';
   }
 }
