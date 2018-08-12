@@ -236,9 +236,13 @@ if (__DEV__) {
       warning(
         false,
         'Received the string `%s` for the boolean attribute `%s`. ' +
+          '%s ' +
           'Did you mean %s={%s}?',
         value,
         name,
+        value === 'false'
+          ? 'The browser will interpret it as a truthy value.'
+          : 'Although this works, it will not work as expected if you pass the string "false".',
         name,
         value,
       );

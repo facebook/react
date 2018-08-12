@@ -2513,6 +2513,7 @@ describe('ReactDOMComponent', () => {
         el = ReactTestUtils.renderIntoDocument(<div hidden="false" />);
       }).toWarnDev(
         'Received the string `false` for the boolean attribute `hidden`. ' +
+          'The browser will interpret it as a truthy value. ' +
           'Did you mean hidden={false}?',
       );
 
@@ -2525,6 +2526,7 @@ describe('ReactDOMComponent', () => {
         el = ReactTestUtils.renderIntoDocument(<div hidden="true" />);
       }).toWarnDev(
         'Received the string `true` for the boolean attribute `hidden`. ' +
+          'Although this works, it will not work as expected if you pass the string "false". ' +
           'Did you mean hidden={true}?',
       );
 
