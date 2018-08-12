@@ -2518,6 +2518,18 @@ describe('ReactDOMComponent', () => {
 
       expect(el.getAttribute('hidden')).toBe('');
     });
+
+    it('warns on the potentially-ambiguous string value "true"', function() {
+      let el;
+      expect(() => {
+        el = ReactTestUtils.renderIntoDocument(<div hidden="true" />);
+      }).toWarnDev(
+        'Received the string `true` for the boolean attribute `hidden`. ' +
+          'Did you mean hidden={true}?',
+      );
+
+      expect(el.getAttribute('hidden')).toBe('');
+    });
   });
 
   describe('Hyphenated SVG elements', function() {

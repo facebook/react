@@ -227,19 +227,20 @@ if (__DEV__) {
       return false;
     }
 
-    // Warn when passing the string 'false' into a boolean prop
+    // Warn when passing the strings 'false' or 'true' into a boolean prop
     if (
-      value === 'false' &&
+      (value === 'false' || value === 'true') &&
       propertyInfo !== null &&
       propertyInfo.type === BOOLEAN
     ) {
       warning(
         false,
         'Received the string `%s` for the boolean attribute `%s`. ' +
-          'Did you mean %s={false}?',
+          'Did you mean %s={%s}?',
         value,
         name,
         name,
+        value,
       );
       warnedProperties[name] = true;
       return true;
