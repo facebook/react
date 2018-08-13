@@ -11,6 +11,7 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 
 let didWarnValDefaultVal = false;
 
@@ -70,11 +71,13 @@ export function initWrapperState(element: Element, props: Object) {
     ) {
       warning(
         false,
-        'Textarea elements must be either controlled or uncontrolled ' +
+        '%s contains a textarea with both value and defaultValue props. ' +
+          'Textarea elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled textarea ' +
           'and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnValDefaultVal = true;
     }
