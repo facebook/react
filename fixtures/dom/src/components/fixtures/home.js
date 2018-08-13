@@ -15,75 +15,102 @@ export default function Home() {
             <tr>
               <th>Browser</th>
               <th>Versions</th>
-              <th>Why/Notes</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>Chrome - Desktop</td>
-              <td>49, Latest</td>
-              <td>49 is the last release for Windows XP</td>
+              <td>
+                49<sup>*</sup>, Latest
+              </td>
             </tr>
             <tr>
               <td>Chrome - Android</td>
               <td>Latest</td>
-              <td>N/A</td>
             </tr>
             <tr>
               <td>Firefox Desktop</td>
               <td>
                 <a href="https://www.mozilla.org/en-US/firefox/organizations/">
-                  ESR
+                  ESR<sup>†</sup>
                 </a>, Latest
-              </td>
-              <td>
-                The long term support release is used by many institutions
               </td>
             </tr>
             <tr>
               <td>Internet Explorer</td>
               <td>9, 10, 11</td>
-              <td>N/A</td>
             </tr>
             <tr>
               <td>Microsoft Edge</td>
               <td>14, Latest</td>
-              <td>N/A</td>
             </tr>
             <tr>
               <td>Safari - Desktop</td>
               <td>7, Latest</td>
-              <td>N/A</td>
             </tr>
             <tr>
               <td>Safari - iOS</td>
               <td>7, Latest</td>
-              <td>N/A</td>
             </tr>
           </tbody>
         </table>
+        <footer>
+          <small>* Chrome 49 is the last release for Windows XP.</small>
+          <br />
+          <small>
+            † Firefox Extended Support Release (ESR) is used by many
+            institutions.
+          </small>
+        </footer>
       </section>
       <section>
         <h2>How do I test browsers I don't have access to?</h2>
         <p>
-          Getting test coverage across all of these browsers can be tricky.
-          Particularly for older versions of evergreen browsers. Fortunately
-          there are a handful of services that make browser testing easy:
+          Getting test coverage across all of these browsers can be difficult,
+          particularly for older versions of evergreen browsers. Fortunately
+          there are a handful of tools that make browser testing easy.
         </p>
-        <ul>
-          <li>
-            <a href="https://browserstack.com">BrowserStack</a>
-          </li>
-          <li>
-            <a href="https://saucelabs.com">Sauce Labs</a>
-          </li>
-        </ul>
-        <p>
-          These services cost money, however a few maintainers have access to a
-          subscription. There is no obligation to subscribe to these services;
-          feel free to ping a maintainer or mention that more testing is
-          required.
-        </p>
+        <section>
+          <h3>Paid services</h3>
+          <ul>
+            <li>
+              <a href="https://browserstack.com">BrowserStack</a>
+            </li>
+            <li>
+              <a href="https://saucelabs.com">Sauce Labs</a>
+            </li>
+            <li>
+              <a href="https://crossbrowsertesting.com/">CrossBrowserTesting</a>
+            </li>
+          </ul>
+          <p>
+            These services provide access to all browsers we test, however they
+            cost money. There is no obligation to pay for them. A few
+            maintainers have access to a subscription; feel free to contact a
+            maintainer or mention browsers where extra testing is required.
+          </p>
+        </section>
+        <section>
+          <h3>Browser downloads</h3>
+          <p>A handful of browsers are available for download directly:</p>
+          <ul>
+            <li>
+              <a href="https://developer.microsoft.com/en-us/microsoft-edge/tools/vms/">
+                Internet Explorer (9-11) and MS Edge virtual machines
+              </a>
+            </li>
+            <li>
+              <a href="https://www.chromium.org/getting-involved/download-chromium#TOC-Downloading-old-builds-of-Chrome-Chromium">
+                Chromium snapshots (for older versions of Chrome)
+              </a>
+            </li>
+            <li>
+              <a href="https://www.mozilla.org/en-US/firefox/organizations/">
+                Firefox Extended Support Release (ESR)
+              </a>
+            </li>
+          </ul>
+        </section>
       </section>
     </main>
   );

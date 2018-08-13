@@ -37,12 +37,12 @@ h6 {
 
 h1 {
   font-size: 32px;
-  margin: 16px 0 24px;
+  margin: 24px 0;
 }
 
 h2 {
   font-size: 24px;
-  margin: 16px 0 16px;
+  margin: 24px 0 16px;
 }
 
 h3 {
@@ -53,6 +53,19 @@ h3 {
 h4, h4, h5, h6 {
   font-size: 16px;
   margin: 0 0 16px;
+}
+
+code {
+  font-size: 90%;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:link:hover,
+a:link:focus {
+  text-decoration: underline;
 }
 
 textarea {
@@ -273,7 +286,7 @@ table {
   border: 1px solid #d9d9d9;
   border-width: 1px 1px 1px 0;
   border-collapse: collapse;
-  margin: 16px 0 32px;
+  margin: 16px 0;
   font-size: 14px;
   line-height: 20px;
   width: 100%;
