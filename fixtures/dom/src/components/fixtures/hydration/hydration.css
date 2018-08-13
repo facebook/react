@@ -31,16 +31,23 @@
 }
 
 .hydration-code {
+  overflow: auto;
+  width: 100%;
+}
+
+.hydration-code textarea {
   background: transparent;
-  border-radius: 0;
   border: 0;
   color: #fefefe;
+  font-size: 12px;
   line-height: 20px;
   min-height: 350px;
   height: calc(100vh - 150px);
   padding: 8px 12px;
+  top: 0;
   resize: vertical;
-  width: 100%;
+  white-space: nowrap;
+  min-width: 100%;
 }
 
 .hydration-frame {

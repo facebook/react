@@ -1,5 +1,6 @@
 import './hydration.css';
 import {SAMPLE_CODE} from './data';
+import * as buble from 'buble';
 
 const React = window.React;
 
@@ -22,7 +23,9 @@ class Hydration extends React.Component {
   render() {
     const {code, hydrate} = this.state;
 
-    const src = `/renderer.html?code=${escape(code)}&hydrate=${hydrate}`;
+    const src = `/renderer.html?code=${escape(
+      buble.transform(code).code
+    )}&hydrate=${hydrate}`;
 
     return (
       <div className="hydration">
@@ -39,14 +42,16 @@ class Hydration extends React.Component {
               Hydrate
             </label>
           </header>
-          <textarea
-            className="hydration-code"
-            name="code"
-            value={code}
-            onChange={this.setInput}
-          />
+
+          <div className="hydration-code">
+            <textarea onChange={this.setInput} value={code} />
+          </div>
         </section>
-        <iframe className="hydration-frame" title="renderer" src={src} />
+        <iframe
+          className="hydration-frame"
+          title="Hydration Preview"
+          src={src}
+        />
       </div>
     );
   }

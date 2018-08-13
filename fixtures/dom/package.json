@@ -6,12 +6,14 @@
     "react-scripts": "^1.0.11"
   },
   "dependencies": {
+    "buble": "^0.19.3",
     "classnames": "^2.2.5",
     "core-js": "^2.4.1",
     "prop-types": "^15.6.0",
     "query-string": "^4.2.3",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
+    "react-prism": "^4.3.2",
     "semver": "^5.5.0"
   },
   "scripts": {
