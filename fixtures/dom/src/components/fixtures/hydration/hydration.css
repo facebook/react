@@ -9,6 +9,7 @@
   background: #223;
   border-bottom-left-radius: 2px;
   float: left;
+  position: relative;
   width: 50%;
 }
 
@@ -31,23 +32,11 @@
 }
 
 .hydration-code {
+  font-size: 13px;
+  height: calc(100vh - 150px);
+  min-height: 350px;
   overflow: auto;
   width: 100%;
-}
-
-.hydration-code textarea {
-  background: transparent;
-  border: 0;
-  color: #fefefe;
-  font-size: 12px;
-  line-height: 20px;
-  min-height: 350px;
-  height: calc(100vh - 150px);
-  padding: 8px 12px;
-  top: 0;
-  resize: vertical;
-  white-space: nowrap;
-  min-width: 100%;
 }
 
 .hydration-frame {
@@ -59,4 +48,15 @@
   height: 100%;
   top: 0;
   width: 50%;
+}
+
+.hydration-code-error {
+  background: #df3f3f;
+  color: white;
+  padding: 12px 16px;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 50%;
+  overflow: auto;
 }
