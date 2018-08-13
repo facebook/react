@@ -9,6 +9,8 @@
 
 import type {CapturedError} from './ReactCapturedValue';
 
+import ReactErrorUtils from 'shared/ReactErrorUtils';
+
 import {showErrorDialog} from './ReactFiberErrorDialog';
 
 export function logCapturedError(capturedError: CapturedError): void {
@@ -34,6 +36,22 @@ export function logCapturedError(capturedError: CapturedError): void {
       errorBoundaryFound,
       willRetry,
     } = capturedError;
+
+    // Browsers support silencing uncaught errors by calling
+    // `preventDefault()` in window `error` handler.
+    if ((ReactErrorUtils: any).isErrorSuppressedInDEV(error)) {
+      if (errorBoundaryFound && willRetry) {
+        // The error is recoverable and was silenced.
+        // Ignore it and print the stack addendum.
+        // This is handy for testing error boundaries without noise.
+        return;
+      }
+      // The error is fatal. Since the silencing might have
+      // been accidental, we'll surface it anyway.
+      // However, the browser would have silenced the original error
+      // so we'll print it first, and then print the stack addendum.
+      console.error(error);
+    }
 
     const componentNameMessage = componentName
       ? `The above error occurred in the <${componentName}> component:`

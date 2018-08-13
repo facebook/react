@@ -42,8 +42,8 @@ const ReactErrorUtils = {
     d: D,
     e: E,
     f: F,
-  ): void {
-    invokeGuardedCallback.apply(ReactErrorUtils, arguments);
+  ): boolean | void {
+    return invokeGuardedCallback.apply(ReactErrorUtils, arguments);
   },
 
   /**
@@ -104,6 +104,32 @@ const ReactErrorUtils = {
     }
   },
 };
+
+if (__DEV__) {
+  (ReactErrorUtils: any)._suppressedErrorsInDEV =
+    typeof WeakSet === 'function' ? new WeakSet() : null;
+
+  (ReactErrorUtils: any).markErrorAsSuppressedInDEV = function(error: any) {
+    const suppressedErrors = (ReactErrorUtils: any)._suppressedErrorsInDEV;
+    if (
+      suppressedErrors != null &&
+      error != null &&
+      typeof error === 'object'
+    ) {
+      suppressedErrors.add(error);
+    }
+  };
+
+  (ReactErrorUtils: any).isErrorSuppressedInDEV = function(
+    error: any,
+  ): boolean {
+    const suppressedErrors = (ReactErrorUtils: any)._suppressedErrorsInDEV;
+    if (suppressedErrors != null) {
+      return suppressedErrors.has(error);
+    }
+    return false;
+  };
+}
 
 let rethrowCaughtError = function() {
   if (ReactErrorUtils._hasRethrowError) {

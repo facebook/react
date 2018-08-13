@@ -301,7 +301,17 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     // Replay the begin phase.
     isReplayingFailedUnitOfWork = true;
     originalReplayError = thrownValue;
-    invokeGuardedCallback(null, workLoop, null, isYieldy);
+    const didSuppressError = invokeGuardedCallback(
+      null,
+      workLoop,
+      null,
+      isYieldy,
+    );
+    if (didSuppressError) {
+      // If logging of the replayed error was suppressed,
+      // we'll also remember that for the original error.
+      (ReactErrorUtils: any).markErrorAsSuppressedInDEV(thrownValue);
+    }
     isReplayingFailedUnitOfWork = false;
     originalReplayError = null;
     if (hasCaughtError()) {
