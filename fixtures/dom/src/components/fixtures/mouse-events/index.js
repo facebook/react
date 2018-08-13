@@ -6,7 +6,7 @@ const React = window.React;
 class MouseEvents extends React.Component {
   render() {
     return (
-      <FixtureSet title="Mouse Events" description="">
+      <FixtureSet title="Mouse Events">
         <MouseMovement />
       </FixtureSet>
     );

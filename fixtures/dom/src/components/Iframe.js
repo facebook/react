@@ -32,6 +32,7 @@ class IframePortal extends React.Component {
     return (
       <div>
         <iframe
+          title="Iframe portal"
           style={{border: 'none', height: this.props.height}}
           ref={this.handleRef}
         />

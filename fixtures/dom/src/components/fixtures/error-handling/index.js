@@ -87,7 +87,7 @@ class TriggerErrorAndCatch extends React.Component {
 export default class ErrorHandlingTestCases extends React.Component {
   render() {
     return (
-      <FixtureSet title="Error handling" description="">
+      <FixtureSet title="Error handling">
         <TestCase
           title="Break on uncaught exceptions"
           description="In DEV, errors should be treated as uncaught, even though React catches them internally">
