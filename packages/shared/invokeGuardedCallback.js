@@ -124,10 +124,9 @@ if (__DEV__) {
       let error;
       // Use this to track whether the error event is ever called.
       let didSetError = false;
-      let didSuppressError = false;
       let isCrossOriginError = false;
 
-      const onError = event => {
+      function onError(event) {
         error = event.error;
         didSetError = true;
         if (error === null && event.colno === 0 && event.lineno === 0) {
@@ -137,10 +136,15 @@ if (__DEV__) {
           // Some other error handler has prevented default.
           // Browsers silence the error report if this happens.
           // We'll remember this to later decide whether to log it or not.
-          this.markErrorAsSuppressedInDEV(error);
-          didSuppressError = true;
+          if (error != null && typeof error === 'object') {
+            try {
+              error._suppressLogging = true;
+            } catch (inner) {
+              // Ignore.
+            }
+          }
         }
-      };
+      }
 
       // Create a fake event type.
       const evtType = `react-${name ? name : 'invokeguardedcallback'}`;
@@ -183,8 +187,6 @@ if (__DEV__) {
 
       // Remove our event listeners
       window.removeEventListener('error', onError);
-
-      return didSuppressError;
     };
 
     invokeGuardedCallback = invokeGuardedCallbackDev;

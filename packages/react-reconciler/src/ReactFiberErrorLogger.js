@@ -9,8 +9,6 @@
 
 import type {CapturedError} from './ReactCapturedValue';
 
-import ReactErrorUtils from 'shared/ReactErrorUtils';
-
 import {showErrorDialog} from './ReactFiberErrorDialog';
 
 export function logCapturedError(capturedError: CapturedError): void {
@@ -39,7 +37,8 @@ export function logCapturedError(capturedError: CapturedError): void {
 
     // Browsers support silencing uncaught errors by calling
     // `preventDefault()` in window `error` handler.
-    if ((ReactErrorUtils: any).isErrorSuppressedInDEV(error)) {
+    // We record this information as an expando on the error.
+    if (error != null && error._suppressLogging) {
       if (errorBoundaryFound && willRetry) {
         // The error is recoverable and was silenced.
         // Ignore it and print the stack addendum.

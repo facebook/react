@@ -313,9 +313,8 @@ export default class ErrorHandlingTestCases extends React.Component {
             <li>Uncheck the "Silence errors" checkbox</li>
           </TestCase.Steps>
           <TestCase.ExpectedResult>
-            Open the console. "Uncaught Error: Caught error" should have been
-            logged by React. You should also see our addendum ("The above
-            error...").
+            Open the console. "Error: Caught error" should have been logged by
+            React. You should also see our addendum ("The above error...").
           </TestCase.ExpectedResult>
           <TrySilenceFatalError />
         </TestCase>
