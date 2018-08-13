@@ -86,7 +86,7 @@ export default function Home() {
           <p>
             These services provide access to all browsers we test, however they
             cost money. There is no obligation to pay for them. Maintainers have
-            access to BrowserStack subscription; feel free to contact a
+            access to a BrowserStack subscription; feel free to contact a
             maintainer or mention browsers where extra testing is required.
           </p>
         </section>
