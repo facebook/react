@@ -46,7 +46,7 @@ class SelectFixture extends React.Component {
 
   render() {
     return (
-      <FixtureSet title="Selects" description="">
+      <FixtureSet title="Selects">
         <form className="field-group">
           <fieldset>
             <legend>Controlled</legend>

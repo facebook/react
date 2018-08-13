@@ -6,7 +6,7 @@ const React = window.React;
 
 function NumberInputs() {
   return (
-    <FixtureSet title="Password inputs" description="">
+    <FixtureSet title="Password inputs">
       <TestCase
         title="The show password icon"
         description={`
