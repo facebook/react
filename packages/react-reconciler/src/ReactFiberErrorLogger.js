@@ -41,7 +41,7 @@ export function logCapturedError(capturedError: CapturedError): void {
     if (error != null && error._suppressLogging) {
       if (errorBoundaryFound && willRetry) {
         // The error is recoverable and was silenced.
-        // Ignore it and print the stack addendum.
+        // Ignore it and don't print the stack addendum.
         // This is handy for testing error boundaries without noise.
         return;
       }
@@ -50,6 +50,8 @@ export function logCapturedError(capturedError: CapturedError): void {
       // However, the browser would have silenced the original error
       // so we'll print it first, and then print the stack addendum.
       console.error(error);
+      // For a more detailed description of this block, see:
+      // https://github.com/facebook/react/pull/13384
     }
 
     const componentNameMessage = componentName
