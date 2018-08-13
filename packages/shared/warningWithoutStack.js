@@ -27,8 +27,7 @@ if (__DEV__) {
     }
 
     let argIndex = 0;
-    const message =
-      'Warning: ' + format.replace(/%s/g, () => `${args[argIndex++]}`);
+    const message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
 
     if (typeof console !== 'undefined') {
       console.error(message);
