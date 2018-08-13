@@ -26,8 +26,8 @@ if (__DEV__) {
       return;
     }
     if (typeof console !== 'undefined') {
-      const strings = args.map(item => '' + item);
-      console.error('Warning: ' + format, ...strings);
+      const stringArgs = args.map(item => '' + item);
+      console.error('Warning: ' + format, ...stringArgs);
     }
     try {
       // --- Welcome to debugging React ---
