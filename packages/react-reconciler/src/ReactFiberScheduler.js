@@ -305,7 +305,19 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     isReplayingFailedUnitOfWork = false;
     originalReplayError = null;
     if (hasCaughtError()) {
-      clearCaughtError();
+      const replayError = clearCaughtError();
+      if (replayError != null && thrownValue != null) {
+        try {
+          // Reading the expando property is intentionally
+          // inside `try` because it might be a getter or Proxy.
+          if (replayError._suppressLogging) {
+            // Also suppress logging for the original error.
+            (thrownValue: any)._suppressLogging = true;
+          }
+        } catch (inner) {
+          // Ignore.
+        }
+      }
     } else {
       // If the begin phase did not fail the second time, set this pointer
       // back to the original value.

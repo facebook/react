@@ -7,9 +7,21 @@ const ReactDOM = window.ReactDOM;
 function BadRender(props) {
   props.doThrow();
 }
+
+class BadDidMount extends React.Component {
+  componentDidMount() {
+    this.props.doThrow();
+  }
+
+  render() {
+    return null;
+  }
+}
+
 class ErrorBoundary extends React.Component {
   static defaultProps = {
     buttonText: 'Trigger error',
+    badChildType: BadRender,
   };
   state = {
     shouldThrow: false,
@@ -33,7 +45,8 @@ class ErrorBoundary extends React.Component {
       }
     }
     if (this.state.shouldThrow) {
-      return <BadRender doThrow={this.props.doThrow} />;
+      const BadChild = this.props.badChildType;
+      return <BadChild doThrow={this.props.doThrow} />;
     }
     return <button onClick={this.triggerError}>{this.props.buttonText}</button>;
   }
@@ -84,6 +97,112 @@ class TriggerErrorAndCatch extends React.Component {
   }
 }
 
+function silenceWindowError(event) {
+  event.preventDefault();
+}
+
+class SilenceErrors extends React.Component {
+  state = {
+    silenceErrors: false,
+  };
+  componentDidMount() {
+    if (this.state.silenceErrors) {
+      window.addEventListener('error', silenceWindowError);
+    }
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (!prevState.silenceErrors && this.state.silenceErrors) {
+      window.addEventListener('error', silenceWindowError);
+    } else if (prevState.silenceErrors && !this.state.silenceErrors) {
+      window.removeEventListener('error', silenceWindowError);
+    }
+  }
+  componentWillUnmount() {
+    if (this.state.silenceErrors) {
+      window.removeEventListener('error', silenceWindowError);
+    }
+  }
+  render() {
+    return (
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            value={this.state.silenceErrors}
+            onChange={() =>
+              this.setState(state => ({
+                silenceErrors: !state.silenceErrors,
+              }))
+            }
+          />
+          Silence errors
+        </label>
+        {this.state.silenceErrors && (
+          <div>
+            {this.props.children}
+            <br />
+            <hr />
+            <b style={{color: 'red'}}>
+              Don't forget to uncheck "Silence errors" when you're done with
+              this test!
+            </b>
+          </div>
+        )}
+      </div>
+    );
+  }
+}
+
+class SilenceRecoverableError extends React.Component {
+  render() {
+    return (
+      <SilenceErrors>
+        <ErrorBoundary
+          badChildType={BadRender}
+          buttonText={'Throw (render phase)'}
+          doThrow={() => {
+            throw new Error('Silenced error (render phase)');
+          }}
+        />
+        <ErrorBoundary
+          badChildType={BadDidMount}
+          buttonText={'Throw (commit phase)'}
+          doThrow={() => {
+            throw new Error('Silenced error (commit phase)');
+          }}
+        />
+      </SilenceErrors>
+    );
+  }
+}
+
+class TrySilenceFatalError extends React.Component {
+  container = document.createElement('div');
+
+  triggerErrorAndCatch = () => {
+    try {
+      ReactDOM.flushSync(() => {
+        ReactDOM.render(
+          <BadRender
+            doThrow={() => {
+              throw new Error('Caught error');
+            }}
+          />,
+          this.container
+        );
+      });
+    } catch (e) {}
+  };
+
+  render() {
+    return (
+      <SilenceErrors>
+        <button onClick={this.triggerErrorAndCatch}>Throw fatal error</button>
+      </SilenceErrors>
+    );
+  }
+}
+
 export default class ErrorHandlingTestCases extends React.Component {
   render() {
     return (
@@ -103,6 +222,12 @@ export default class ErrorHandlingTestCases extends React.Component {
             the BadRender component. After resuming, the "Trigger error" button
             should be replaced with "Captured an error: Oops!" Clicking reset
             should reset the test case.
+            <br />
+            <br />
+            In the console, you should see <b>two</b> messages: the actual error
+            ("Oops") printed natively by the browser with its JavaScript stack,
+            and our addendum ("The above error occurred in BadRender component")
+            with a React component stack.
           </TestCase.ExpectedResult>
           <Example
             doThrow={() => {
@@ -155,9 +280,43 @@ export default class ErrorHandlingTestCases extends React.Component {
           </TestCase.Steps>
           <TestCase.ExpectedResult>
             Open the console. "Uncaught Error: Caught error" should have been
-            logged by the browser.
+            logged by the browser. You should also see our addendum ("The above
+            error...").
           </TestCase.ExpectedResult>
           <TriggerErrorAndCatch />
+        </TestCase>
+        <TestCase
+          title="Recoverable errors can be silenced with preventDefault (development mode only)"
+          description="">
+          <TestCase.Steps>
+            <li>Check the "Silence errors" checkbox below</li>
+            <li>Click the "Throw (render phase)" button</li>
+            <li>Click the "Throw (commit phase)" button</li>
+            <li>Uncheck the "Silence errors" checkbox</li>
+          </TestCase.Steps>
+          <TestCase.ExpectedResult>
+            Open the console. You shouldn't see <b>any</b> messages in the
+            console: neither the browser error, nor our "The above error"
+            addendum, from either of the buttons. The buttons themselves should
+            get replaced by two labels: "Captured an error: Silenced error
+            (render phase)" and "Captured an error: Silenced error (commit
+            phase)".
+          </TestCase.ExpectedResult>
+          <SilenceRecoverableError />
+        </TestCase>
+        <TestCase
+          title="Fatal errors cannot be silenced with preventDefault (development mode only)"
+          description="">
+          <TestCase.Steps>
+            <li>Check the "Silence errors" checkbox below</li>
+            <li>Click the "Throw fatal error" button</li>
+            <li>Uncheck the "Silence errors" checkbox</li>
+          </TestCase.Steps>
+          <TestCase.ExpectedResult>
+            Open the console. "Error: Caught error" should have been logged by
+            React. You should also see our addendum ("The above error...").
+          </TestCase.ExpectedResult>
+          <TrySilenceFatalError />
         </TestCase>
       </FixtureSet>
     );
