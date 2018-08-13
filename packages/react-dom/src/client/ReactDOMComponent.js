@@ -179,7 +179,7 @@ if (__DEV__) {
     attributeNames.forEach(function(name) {
       names.push(name);
     });
-    warningWithoutStack(false, 'Extra attributes from the server: %s', names);
+    warningWithoutStack(false, 'Extra attributes from the server: %s', names.join(', '));
   };
 
   warnForInvalidEventListener = function(registrationName, listener) {
