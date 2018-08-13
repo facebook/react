@@ -12,14 +12,14 @@ import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import {getSafeValue, safeValueToString} from './SafeValue';
-import type {SafeValue} from './SafeValue';
+import {getToStringValue, toString} from './ToStringValue';
+import type {ToStringValue} from './ToStringValue';
 
 let didWarnValDefaultVal = false;
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {
-    initialValue: SafeValue,
+    initialValue: ToStringValue,
   },
 };
 
@@ -56,7 +56,7 @@ export function getHostProps(element: Element, props: Object) {
     ...props,
     value: undefined,
     defaultValue: undefined,
-    children: safeValueToString(node._wrapperState.initialValue),
+    children: toString(node._wrapperState.initialValue),
   };
 
   return hostProps;
@@ -112,7 +112,7 @@ export function initWrapperState(element: Element, props: Object) {
         children = children[0];
       }
 
-      defaultValue = getSafeValue(children);
+      defaultValue = getToStringValue(children);
     }
     if (defaultValue == null) {
       defaultValue = '';
@@ -121,17 +121,17 @@ export function initWrapperState(element: Element, props: Object) {
   }
 
   node._wrapperState = {
-    initialValue: getSafeValue(initialValue),
+    initialValue: getToStringValue(initialValue),
   };
 }
 
 export function updateWrapper(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
-  const value = getSafeValue(props.value);
+  const value = getToStringValue(props.value);
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
-    const newValue = safeValueToString(value);
+    const newValue = toString(value);
     // To avoid side effects (such as losing text selection), only set value if changed
     if (newValue !== node.value) {
       node.value = newValue;
@@ -141,7 +141,7 @@ export function updateWrapper(element: Element, props: Object) {
     }
   }
   if (props.defaultValue != null) {
-    node.defaultValue = safeValueToString(getSafeValue(props.defaultValue));
+    node.defaultValue = toString(getToStringValue(props.defaultValue));
   }
 }
 
