@@ -132,6 +132,18 @@ if (__DEV__) {
         if (error === null && event.colno === 0 && event.lineno === 0) {
           isCrossOriginError = true;
         }
+        if (event.defaultPrevented) {
+          // Some other error handler has prevented default.
+          // Browsers silence the error report if this happens.
+          // We'll remember this to later decide whether to log it or not.
+          if (error != null && typeof error === 'object') {
+            try {
+              error._suppressLogging = true;
+            } catch (inner) {
+              // Ignore.
+            }
+          }
+        }
       }
 
       // Create a fake event type.
