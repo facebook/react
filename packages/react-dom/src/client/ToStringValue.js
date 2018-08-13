@@ -7,16 +7,22 @@
  * @flow
  */
 
-export opaque type SafeValue = boolean | number | Object | string | null | void;
+export opaque type ToStringValue =
+  | boolean
+  | number
+  | Object
+  | string
+  | null
+  | void;
 
 // Flow does not allow string concatenation of most non-string types. To work
 // around this limitation, we use an opaque type that can only be obtained by
-// passing the value through getSafeValue first.
-export function safeValueToString(value: SafeValue): string {
+// passing the value through getToStringValue first.
+export function toString(value: ToStringValue): string {
   return '' + (value: any);
 }
 
-export function getSafeValue(value: mixed): SafeValue {
+export function getToStringValue(value: mixed): ToStringValue {
   switch (typeof value) {
     case 'boolean':
     case 'number':
