@@ -306,14 +306,14 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     originalReplayError = null;
     if (hasCaughtError()) {
       const replayError = clearCaughtError();
-      if (
-        replayError != null &&
-        thrownValue != null &&
-        replayError._suppressLogging
-      ) {
-        // Also suppress logging for the original error.
+      if (replayError != null && thrownValue != null) {
         try {
-          (thrownValue: any)._suppressLogging = true;
+          // Reading the expando property is intentionally
+          // inside `try` because it might be a getter or Proxy.
+          if (replayError._suppressLogging) {
+            // Also suppress logging for the original error.
+            (thrownValue: any)._suppressLogging = true;
+          }
         } catch (inner) {
           // Ignore.
         }
