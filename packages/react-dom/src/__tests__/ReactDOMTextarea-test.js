@@ -399,12 +399,14 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should warn if value and defaultValue are specified', () => {
+    const InvalidComponent = () => (
+      <textarea value="foo" defaultValue="bar" readOnly={true} />
+    );
     expect(() =>
-      ReactTestUtils.renderIntoDocument(
-        <textarea value="foo" defaultValue="bar" readOnly={true} />,
-      ),
+      ReactTestUtils.renderIntoDocument(<InvalidComponent />),
     ).toWarnDev(
-      'Textarea elements must be either controlled or uncontrolled ' +
+      'InvalidComponent contains a textarea with both value and defaultValue props. ' +
+        'Textarea elements must be either controlled or uncontrolled ' +
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled textarea ' +
         'and remove one of these props. More info: ' +
@@ -412,9 +414,7 @@ describe('ReactDOMTextarea', () => {
     );
 
     // No additional warnings are expected
-    ReactTestUtils.renderIntoDocument(
-      <textarea value="foo" defaultValue="bar" readOnly={true} />,
-    );
+    ReactTestUtils.renderIntoDocument(<InvalidComponent />);
   });
 
   it('should not warn about missing onChange in uncontrolled textareas', () => {
