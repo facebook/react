@@ -86,6 +86,21 @@ if (enableInteractionTracking) {
 // They should not typically be accessed directly.
 export {interactionsRef as __interactionsRef, subscribers as __subscribers};
 
+export function clear(callback: Function): any {
+  if (!enableInteractionTracking) {
+    return callback();
+  }
+
+  const prevInteractions = ((interactionsRef: any): InteractionsRef).current;
+  ((interactionsRef: any): InteractionsRef).current = new Set();
+
+  try {
+    return callback();
+  } finally {
+    ((interactionsRef: any): InteractionsRef).current = prevInteractions;
+  }
+}
+
 export function getCurrent(): Set<Interaction> | null {
   if (!enableInteractionTracking) {
     return null;

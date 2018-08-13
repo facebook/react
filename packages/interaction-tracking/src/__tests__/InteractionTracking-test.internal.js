@@ -42,6 +42,10 @@ describe('InteractionTracking', () => {
       expect(InteractionTracking.track('arbitrary', () => 123)).toBe(123);
     });
 
+    it('should return the value of a clear function', () => {
+      expect(InteractionTracking.clear(() => 123)).toBe(123);
+    });
+
     it('should return the value of a wrapped function', () => {
       let wrapped;
       InteractionTracking.track('arbitrary', () => {
@@ -88,6 +92,69 @@ describe('InteractionTracking', () => {
       advanceTimeBy(50);
 
       wrappedIndirection();
+    });
+
+    it('should clear the interaction stack for tracked callbacks', () => {
+      let innerTestReached = false;
+
+      InteractionTracking.track('outer event', () => {
+        expect(InteractionTracking.getCurrent()).toMatchInteractions([
+          {name: 'outer event'},
+        ]);
+
+        InteractionTracking.clear(() => {
+          expect(InteractionTracking.getCurrent()).toMatchInteractions([]);
+
+          InteractionTracking.track('inner event', () => {
+            expect(InteractionTracking.getCurrent()).toMatchInteractions([
+              {name: 'inner event'},
+            ]);
+
+            innerTestReached = true;
+          });
+        });
+
+        expect(InteractionTracking.getCurrent()).toMatchInteractions([
+          {name: 'outer event'},
+        ]);
+      });
+
+      expect(innerTestReached).toBe(true);
+    });
+
+    it('should clear the interaction stack for wrapped callbacks', () => {
+      let innerTestReached = false;
+      let wrappedIndirection;
+
+      const indirection = jest.fn(() => {
+        expect(InteractionTracking.getCurrent()).toMatchInteractions([
+          {name: 'outer event'},
+        ]);
+
+        InteractionTracking.clear(() => {
+          expect(InteractionTracking.getCurrent()).toMatchInteractions([]);
+
+          InteractionTracking.track('inner event', () => {
+            expect(InteractionTracking.getCurrent()).toMatchInteractions([
+              {name: 'inner event'},
+            ]);
+
+            innerTestReached = true;
+          });
+        });
+
+        expect(InteractionTracking.getCurrent()).toMatchInteractions([
+          {name: 'outer event'},
+        ]);
+      });
+
+      InteractionTracking.track('outer event', () => {
+        wrappedIndirection = InteractionTracking.wrap(indirection);
+      });
+
+      wrappedIndirection();
+
+      expect(innerTestReached).toBe(true);
     });
 
     it('should support nested tracked events', done => {
@@ -542,6 +609,10 @@ describe('InteractionTracking', () => {
 
         done();
       });
+    });
+
+    it('should return the value of a clear function', () => {
+      expect(InteractionTracking.clear(() => 123)).toBe(123);
     });
 
     it('should execute wrapped callbacks', done => {
