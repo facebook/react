@@ -8,7 +8,7 @@ const React = window.React;
 class DateInputFixtures extends React.Component {
   render() {
     return (
-      <FixtureSet title="Dates" description="">
+      <FixtureSet title="Dates">
         <TestCase title="Switching between date and datetime-local">
           <TestCase.Steps>
             <li>Type a date into the date picker</li>

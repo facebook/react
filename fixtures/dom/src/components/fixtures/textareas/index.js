@@ -10,7 +10,7 @@ export default class TextAreaFixtures extends React.Component {
   };
   render() {
     return (
-      <FixtureSet title="Textareas" description="">
+      <FixtureSet title="Textareas">
         <TestCase
           title="Kitchen Sink"
           description="Verify that the controlled textarea displays its value under 'Controlled Output', and that both textareas can be typed in">
