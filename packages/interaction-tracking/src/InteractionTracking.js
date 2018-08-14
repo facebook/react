@@ -137,8 +137,8 @@ export function track(
   const prevInteractions = ((interactionsRef: any): InteractionsRef).current;
 
   // Tracked interactions should stack/accumulate.
-  // To do that, clone the current interactions array.
-  // The previous interactions array will be restored upon completion.
+  // To do that, clone the current interactions.
+  // The previous set will be restored upon completion.
   const interactions = new Set(prevInteractions);
   interactions.add(interaction);
   ((interactionsRef: any): InteractionsRef).current = interactions;
