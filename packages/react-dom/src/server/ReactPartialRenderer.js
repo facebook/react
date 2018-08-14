@@ -1043,10 +1043,6 @@ class ReactDOMServerRenderer {
 
     validateDangerousTag(tag);
 
-    if (__DEV__) {
-      validatePropertiesInDevelopment(tag, props);
-    }
-
     if (tag === 'input') {
       if (__DEV__) {
         ReactControlledValuePropTypes.checkPropTypes('input', props);
@@ -1101,6 +1097,10 @@ class ReactDOMServerRenderer {
           checked: props.checked != null ? props.checked : props.defaultChecked,
         },
       );
+
+      if (__DEV__) {
+        validatePropertiesInDevelopment(tag, props);
+      }
     } else if (tag === 'textarea') {
       if (__DEV__) {
         ReactControlledValuePropTypes.checkPropTypes('textarea', props);
@@ -1154,6 +1154,10 @@ class ReactDOMServerRenderer {
         initialValue = defaultValue;
       }
 
+      if (__DEV__) {
+        validatePropertiesInDevelopment(tag, props);
+      }
+
       props = Object.assign({}, props, {
         value: undefined,
         children: toString(getToStringValue(initialValue)),
@@ -1200,13 +1204,21 @@ class ReactDOMServerRenderer {
           );
           didWarnDefaultSelectValue = true;
         }
+
+        validatePropertiesInDevelopment(tag, props);
       }
+
       this.currentSelectValue =
         props.value != null ? props.value : props.defaultValue;
+
       props = Object.assign({}, props, {
         value: undefined,
       });
     } else if (tag === 'option') {
+      if (__DEV__) {
+        validatePropertiesInDevelopment(tag, props);
+      }
+
       let selected = null;
       const selectValue = this.currentSelectValue;
       const optionChildren = flattenOptionChildren(props.children);
@@ -1242,6 +1254,8 @@ class ReactDOMServerRenderer {
           },
         );
       }
+    } else if (__DEV__) {
+      validatePropertiesInDevelopment(tag, props);
     }
 
     assertValidProps(tag, props);
