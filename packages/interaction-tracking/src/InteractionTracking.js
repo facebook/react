@@ -159,7 +159,7 @@ export function track(
 
     let caughtError = null;
     let returnValue;
-    let subscriber = ((subscriberRef: any): SubscriberRef).current;
+    const subscriber = ((subscriberRef: any): SubscriberRef).current;
 
     if (subscriber !== null) {
       try {
