@@ -24,7 +24,7 @@ class FixturesPage extends React.Component {
     const {fixturePath} = this.props;
 
     try {
-      let module = await import(`.${fixturePath}`);
+      const module = await import(`.${fixturePath}`);
 
       this.setState({Fixture: module.default});
     } catch (error) {
