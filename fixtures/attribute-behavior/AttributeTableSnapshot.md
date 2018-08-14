@@ -13547,4 +13547,3 @@
 | `zoomAndPan=(function)`| (initial, warning)| `<number: 2>` |
 | `zoomAndPan=(null)`| (initial)| `<number: 2>` |
 | `zoomAndPan=(undefined)`| (initial)| `<number: 2>` |
-
