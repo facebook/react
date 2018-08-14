@@ -206,13 +206,8 @@ export function propagateContextChange(
             }
             node = node.return;
           }
-          // Don't scan deeper than a matching consumer. When we render the
-          // consumer, we'll continue scanning from that point. This way the
-          // scanning work is time-sliced.
-          nextFiber = null;
-        } else {
-          nextFiber = fiber.child;
         }
+        nextFiber = fiber.child;
         dependency = dependency.next;
       } while (dependency !== null);
     } else if (fiber.tag === ContextProvider) {
@@ -263,9 +258,8 @@ export function prepareToReadContext(
     // Reset the work-in-progress list
     workInProgress.firstContextDependency = null;
 
-    // Iterate through the context dependencies and see if there were any
-    // changes. If so, continue propagating the context change by scanning
-    // the child subtree.
+    // Iterate through the context dependencies to see if there were
+    // any changes.
     let dependency = firstContextDependency;
     let hasPendingContext = false;
     do {
@@ -273,19 +267,8 @@ export function prepareToReadContext(
       const changedBits = isPrimaryRenderer
         ? context._changedBits
         : context._changedBits2;
-      if (changedBits !== 0) {
-        // Resume context change propagation. We need to call this even if
-        // this fiber bails out, in case deeply nested consumers observe more
-        // bits than this one.
-        propagateContextChange(
-          workInProgress,
-          context,
-          changedBits,
-          renderExpirationTime,
-        );
-        if ((changedBits & dependency.observedBits) !== 0) {
-          hasPendingContext = true;
-        }
+      if (changedBits !== 0 && (changedBits & dependency.observedBits) !== 0) {
+        hasPendingContext = true;
       }
       dependency = dependency.next;
     } while (dependency !== null);
