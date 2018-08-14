@@ -23,14 +23,18 @@ import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import maxSigned31BitInt from './maxSigned31BitInt';
 import {NoWork} from './ReactFiberExpirationTime';
-import {ContextProvider} from 'shared/ReactTypeOfWork';
+import {ContextProvider, ClassComponent} from 'shared/ReactTypeOfWork';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
+import {
+  createUpdate,
+  enqueueUpdate,
+  ForceUpdate,
+} from 'react-reconciler/src/ReactUpdateQueue';
 
 import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 const valueCursor: StackCursor<mixed> = createCursor(null);
-const changedBitsCursor: StackCursor<number> = createCursor(0);
 
 let rendererSigil;
 if (__DEV__) {
@@ -50,15 +54,13 @@ export function resetContextDependences(): void {
   lastContextWithAllBitsObserved = null;
 }
 
-export function pushProvider(providerFiber: Fiber, changedBits: number): void {
-  const context: ReactContext<any> = providerFiber.type._context;
+export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
+  const context: ReactContext<T> = providerFiber.type._context;
 
   if (isPrimaryRenderer) {
-    push(changedBitsCursor, context._changedBits, providerFiber);
     push(valueCursor, context._currentValue, providerFiber);
 
-    context._currentValue = providerFiber.pendingProps.value;
-    context._changedBits = changedBits;
+    context._currentValue = nextValue;
     if (__DEV__) {
       warningWithoutStack(
         context._currentRenderer === undefined ||
@@ -70,11 +72,9 @@ export function pushProvider(providerFiber: Fiber, changedBits: number): void {
       context._currentRenderer = rendererSigil;
     }
   } else {
-    push(changedBitsCursor, context._changedBits2, providerFiber);
     push(valueCursor, context._currentValue2, providerFiber);
 
-    context._currentValue2 = providerFiber.pendingProps.value;
-    context._changedBits2 = changedBits;
+    context._currentValue2 = nextValue;
     if (__DEV__) {
       warningWithoutStack(
         context._currentRenderer2 === undefined ||
@@ -89,19 +89,15 @@ export function pushProvider(providerFiber: Fiber, changedBits: number): void {
 }
 
 export function popProvider(providerFiber: Fiber): void {
-  const changedBits = changedBitsCursor.current;
   const currentValue = valueCursor.current;
 
   pop(valueCursor, providerFiber);
-  pop(changedBitsCursor, providerFiber);
 
   const context: ReactContext<any> = providerFiber.type._context;
   if (isPrimaryRenderer) {
     context._currentValue = currentValue;
-    context._changedBits = changedBits;
   } else {
     context._currentValue2 = currentValue;
-    context._changedBits2 = changedBits;
   }
 }
 
@@ -162,6 +158,18 @@ export function propagateContextChange(
           (dependency.observedBits & changedBits) !== 0
         ) {
           // Match! Schedule an update on this fiber.
+
+          if (fiber.tag === ClassComponent) {
+            // Schedule a force update on the work-in-progress.
+            const update = createUpdate(renderExpirationTime);
+            update.tag = ForceUpdate;
+            // TODO: Because we don't have a work-in-progress, this will add the
+            // update to the current fiber, too, which means it will persist even if
+            // this render is thrown away. Since it's a race condition, not sure it's
+            // worth fixing.
+            enqueueUpdate(fiber, update);
+          }
+
           if (
             fiber.expirationTime === NoWork ||
             fiber.expirationTime > renderExpirationTime
@@ -248,34 +256,13 @@ export function propagateContextChange(
 export function prepareToReadContext(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
-): boolean {
+): void {
   currentlyRenderingFiber = workInProgress;
   lastContextDependency = null;
   lastContextWithAllBitsObserved = null;
 
-  const firstContextDependency = workInProgress.firstContextDependency;
-  if (firstContextDependency !== null) {
-    // Reset the work-in-progress list
-    workInProgress.firstContextDependency = null;
-
-    // Iterate through the context dependencies to see if there were
-    // any changes.
-    let dependency = firstContextDependency;
-    let hasPendingContext = false;
-    do {
-      const context = dependency.context;
-      const changedBits = isPrimaryRenderer
-        ? context._changedBits
-        : context._changedBits2;
-      if (changedBits !== 0 && (changedBits & dependency.observedBits) !== 0) {
-        hasPendingContext = true;
-      }
-      dependency = dependency.next;
-    } while (dependency !== null);
-    return hasPendingContext;
-  } else {
-    return false;
-  }
+  // Reset the work-in-progress list
+  workInProgress.firstContextDependency = null;
 }
 
 export function readContext<T>(
