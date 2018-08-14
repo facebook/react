@@ -152,6 +152,44 @@ class SilenceErrors extends React.Component {
     );
   }
 }
+class GetEventTypeDuringUpdate extends React.Component {
+  state = {};
+
+  onClick = () => {
+    this.expectUpdate = true;
+    this.forceUpdate();
+  };
+
+  componentDidUpdate() {
+    if (this.expectUpdate) {
+      this.expectUpdate = false;
+      this.setState({eventType: window.event.type});
+      setTimeout(() => {
+        this.setState({cleared: !window.event});
+      });
+    }
+  }
+
+  render() {
+    return (
+      <div className="test-fixture">
+        <button onClick={this.onClick}>Trigger callback in event.</button>
+        {this.state.eventType ? (
+          <p>
+            Got <b>{this.state.eventType}</b> event.
+          </p>
+        ) : (
+          <p>Got no event</p>
+        )}
+        {this.state.cleared ? (
+          <p>Event cleared correctly.</p>
+        ) : (
+          <p>Event failed to clear.</p>
+        )}
+      </div>
+    );
+  }
+}
 
 class SilenceRecoverableError extends React.Component {
   render() {
@@ -318,6 +356,21 @@ export default class ErrorHandlingTestCases extends React.Component {
           </TestCase.ExpectedResult>
           <TrySilenceFatalError />
         </TestCase>
+
+        {window.hasOwnProperty('event') ? (
+          <TestCase
+            title="Error handling does not interfere with window.event"
+            description="">
+            <TestCase.Steps>
+              <li>Click the "Trigger callback in event" button</li>
+            </TestCase.Steps>
+            <TestCase.ExpectedResult>
+              You should see "Got <b>click</b> event" and "Event cleared
+              successfully" below.
+            </TestCase.ExpectedResult>
+            <GetEventTypeDuringUpdate />
+          </TestCase>
+        ) : null}
       </FixtureSet>
     );
   }

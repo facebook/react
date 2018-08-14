@@ -96,6 +96,11 @@ if (__DEV__) {
       // the error event at all.
       let didError = true;
 
+      // Keeps track of the value of window.event so that we can reset it
+      // during the callback to let user code access window.event in the
+      // browsers that support it.
+      let windowEvent = window.event;
+
       // Create an event handler for our fake event. We will synchronously
       // dispatch our fake event using `dispatchEvent`. Inside the handler, we
       // call the user-provided callback.
@@ -106,6 +111,18 @@ if (__DEV__) {
         // nested call would trigger the fake event handlers of any call higher
         // in the stack.
         fakeNode.removeEventListener(evtType, callCallback, false);
+
+        // We check for window.hasOwnProperty('event') to prevent the
+        // window.event assignment in both IE <= 10 as they throw an error
+        // "Member not found" in strict mode, and in Firefox which does not
+        // support window.event.
+        if (
+          typeof window.event !== 'undefined' &&
+          window.hasOwnProperty('event')
+        ) {
+          window.event = windowEvent;
+        }
+
         func.apply(context, funcArgs);
         didError = false;
       }
