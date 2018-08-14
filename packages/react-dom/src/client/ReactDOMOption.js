@@ -9,7 +9,7 @@
 
 import React from 'react';
 import warning from 'shared/warning';
-import {getToStringValue, toString} from './ToStringValue';
+import {getToStringValue, toString} from '../shared/ToStringValue';
 
 let didWarnSelectedSetOnOption = false;
 let didWarnInvalidChild = false;

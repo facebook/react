@@ -36,10 +36,12 @@ const {
 } = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegrationSelect', () => {
-  let options;
   beforeEach(() => {
     resetModules();
+  });
 
+  let options;
+  beforeEach(function() {
     options = [
       <option key={1} value="foo" id="foo">
         Foo
@@ -245,6 +247,83 @@ describe('ReactDOMServerIntegrationSelect', () => {
       expect(e.getAttribute('defaultValue')).toBe(null);
       expect(e.firstChild.innerHTML).toBe('BarFoo[object Object]Baz');
       expect(e.firstChild.selected).toBe(true);
+    },
+  );
+
+  itRenders('a select with Symbol value with a warning', async render => {
+    const e = await render(
+      <select value={Symbol('test')} readOnly={true} />,
+      1,
+    );
+    expect(e.hasAttribute('value')).toBe(false);
+  });
+
+  itRenders('an option with Symbol value with a warning', async render => {
+    const e = await render(
+      <select readOnly={true} value={Symbol('test')}>
+        <option value={Symbol('test')} />
+      </select>,
+      1,
+    );
+    expect(e.value).toBe('');
+    expect(e.firstChild.value).toBe('');
+  });
+
+  itRenders('a select with NaN value with a warning', async render => {
+    const e = await render(
+      <select value={NaN} readOnly={true}>
+        <option value="NaN">NaN</option>
+      </select>,
+      1,
+    );
+    expect(e.value).toBe('NaN');
+  });
+
+  itRenders('a select with NaN defaultValue with a warning', async render => {
+    const e = await render(
+      <select defaultValue={NaN} readOnly={true}>
+        <option value="NaN">NaN</option>
+      </select>,
+      1,
+    );
+    expect(e.value).toBe('NaN');
+  });
+
+  itRenders('a select with function value with a warning', async render => {
+    const e = await render(
+      <select value={() => {}} readOnly={true}>
+        <option>First option</option>
+        <option value={(() => {}).toString()} />
+      </select>,
+      1,
+    );
+    expect(e.value).toBe('First option');
+  });
+
+  itRenders(
+    'a select with function defaultValue with a warning',
+    async render => {
+      const e = await render(
+        <select defaultValue={() => {}} readOnly={true}>
+          <option>First option</option>
+          <option value={(() => {}).toString()} />
+        </select>,
+        1,
+      );
+      expect(e.value).toBe('First option');
+    },
+  );
+
+  itRenders(
+    'selects the correct option even with a type mismatch',
+    async render => {
+      const e = await render(
+        <select value={3} readOnly={true}>
+          <option>None</option>
+          <option value="3">3</option>
+        </select>,
+      );
+      expect(e.options[1].selected).toBe(true);
     },
   );
 });

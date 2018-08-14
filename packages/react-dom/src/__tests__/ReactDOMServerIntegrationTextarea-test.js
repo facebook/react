@@ -31,13 +31,11 @@ function initModules() {
 
 const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
 
-describe('ReactDOMServerIntegrationTextarea', () => {
+describe('ReactDOMServerIntegrationTextareas', () => {
   beforeEach(() => {
     resetModules();
   });
 
-  // textareas
-  // ---------
   itRenders('a textarea with a value and an onChange', async render => {
     const e = await render(<textarea value="foo" onChange={() => {}} />);
     // textarea DOM elements don't have a value **attribute**, the text is
@@ -94,4 +92,71 @@ describe('ReactDOMServerIntegrationTextarea', () => {
       expect(e.value).toBe('foo');
     },
   );
+
+  itRenders('a textarea with Symbol value with a warning', async render => {
+    const e = await render(
+      <textarea value={Symbol('test')} readOnly={true} />,
+      1,
+    );
+    expect(e.value).toBe('');
+  });
+
+  itRenders(
+    'a textarea with Symbol defaultValue with a warning',
+    async render => {
+      const e = await render(
+        <textarea defaultValue={Symbol('test')} readOnly={true} />,
+        1,
+      );
+      expect(e.value).toBe('');
+    },
+  );
+
+  itRenders('a textarea with NaN value with a warning', async render => {
+    const e = await render(<textarea value={NaN} readOnly={true} />, 1);
+    expect(e.value).toBe('NaN');
+  });
+
+  itRenders('a textarea with NaN defaultValue with a warning', async render => {
+    const e = await render(<textarea defaultValue={NaN} readOnly={true} />, 1);
+    expect(e.value).toBe('NaN');
+  });
+
+  itRenders('a textarea with function value with a warning', async render => {
+    const e = await render(<textarea value={() => {}} readOnly={true} />, 1);
+    expect(e.value).toBe('');
+  });
+
+  itRenders(
+    'a textarea with function defaultValue with a warning',
+    async render => {
+      const e = await render(
+        <textarea defaultValue={() => {}} readOnly={true} />,
+        1,
+      );
+      expect(e.value).toBe('');
+    },
+  );
+
+  itRenders('a textarea with Object value with a warning', async render => {
+    const value = {
+      toString() {
+        return 'result of toString()';
+      },
+    };
+
+    const e = await render(<textarea value={value} readOnly={true} />, 0);
+
+    expect(e.value).toBe('result of toString()');
+  });
+
+  itRenders('a textarea with true value with a warning', async render => {
+    const e = await render(<textarea value={true} readOnly={true} />, 0);
+    expect(e.value).toBe('true');
+  });
+
+  itRenders('a textarea with false value with a warning', async render => {
+    const e = await render(<textarea value={false} readOnly={true} />, 0);
+    expect(e.value).toBe('false');
+  });
 });

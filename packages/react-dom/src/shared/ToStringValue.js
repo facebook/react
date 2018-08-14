@@ -31,7 +31,11 @@ export function getToStringValue(value: mixed): ToStringValue {
     case 'undefined':
       return value;
     default:
-      // function, symbol are assigned as empty strings
+      // function and symbol are assigned as empty strings
       return '';
   }
+}
+
+export function isSameStringValue(a: mixed, b: mixed): boolean {
+  return toString(getToStringValue(a)) === toString(getToStringValue(b));
 }

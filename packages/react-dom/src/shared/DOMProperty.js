@@ -207,11 +207,6 @@ const properties = {};
 [
   'children',
   'dangerouslySetInnerHTML',
-  // TODO: This prevents the assignment of defaultValue to regular
-  // elements (not just inputs). Now that ReactDOMInput assigns to the
-  // defaultValue property -- do we need this?
-  'defaultValue',
-  'defaultChecked',
   'innerHTML',
   'suppressContentEditableWarning',
   'suppressHydrationWarning',
@@ -255,6 +250,15 @@ const properties = {};
     null, // attributeNamespace
   );
 });
+
+// defaultValue is the property version of the value attribute
+properties.defaultValue = new PropertyInfoRecord(
+  'defaultValue',
+  BOOLEANISH_STRING,
+  false,
+  'value',
+  null,
+);
 
 // These are "enumerated" SVG attributes that accept "true" and "false".
 // In React, we let users pass `true` and `false` even though technically
@@ -352,6 +356,15 @@ const properties = {};
     null, // attributeNamespace
   );
 });
+
+// defaultChecked is the property version of the checked attribute
+properties.defaultChecked = new PropertyInfoRecord(
+  'defaultChecked',
+  BOOLEAN,
+  false,
+  'checked',
+  null,
+);
 
 // These are HTML attributes that must be positive numbers.
 [

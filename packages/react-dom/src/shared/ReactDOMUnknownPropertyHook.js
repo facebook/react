@@ -215,12 +215,6 @@ if (__DEV__) {
       return true;
     }
 
-    // Now that we've validated casing, do not validate
-    // data types for reserved props
-    if (isReserved) {
-      return true;
-    }
-
     // Warn when a known attribute is a bad type
     if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
       warnedProperties[name] = true;

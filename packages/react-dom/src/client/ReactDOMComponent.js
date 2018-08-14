@@ -860,6 +860,7 @@ export function diffHydratedProperties(
     }
   }
 
+  let props = rawProps;
   // TODO: Make sure that we check isMounted before firing any of these events.
   switch (tag) {
     case 'iframe':
@@ -891,6 +892,7 @@ export function diffHydratedProperties(
       break;
     case 'input':
       ReactDOMInput.initWrapperState(domElement, rawProps);
+      props = ReactDOMInput.getHostProps(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
@@ -898,9 +900,11 @@ export function diffHydratedProperties(
       break;
     case 'option':
       ReactDOMOption.validateProps(domElement, rawProps);
+      props = ReactDOMOption.getHostProps(domElement, rawProps);
       break;
     case 'select':
       ReactDOMSelect.initWrapperState(domElement, rawProps);
+      props = ReactDOMSelect.getHostProps(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
@@ -908,6 +912,7 @@ export function diffHydratedProperties(
       break;
     case 'textarea':
       ReactDOMTextarea.initWrapperState(domElement, rawProps);
+      props = ReactDOMTextarea.getHostProps(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
@@ -915,7 +920,7 @@ export function diffHydratedProperties(
       break;
   }
 
-  assertValidProps(tag, rawProps);
+  assertValidProps(tag, props);
 
   if (__DEV__) {
     extraAttributeNames = new Set();
@@ -943,11 +948,11 @@ export function diffHydratedProperties(
   }
 
   let updatePayload = null;
-  for (const propKey in rawProps) {
-    if (!rawProps.hasOwnProperty(propKey)) {
+  for (const propKey in props) {
+    if (!props.hasOwnProperty(propKey)) {
       continue;
     }
-    const nextProp = rawProps[propKey];
+    const nextProp = props[propKey];
     if (propKey === CHILDREN) {
       // For text content children we compare against textContent. This
       // might match additional HTML that is hidden when we read it using
