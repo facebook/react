@@ -85,7 +85,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom',
     global: 'ReactDOM',
-    externals: ['react', 'interaction-tracking'],
+    externals: ['react'],
   },
 
   //******* Test Utils *******/
@@ -180,7 +180,6 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
       'ReactNativeViewConfigRegistry',
-      'interaction-tracking',
     ],
   },
 
@@ -201,7 +200,6 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
       'ReactNativeViewConfigRegistry',
-      'interaction-tracking',
     ],
   },
 
@@ -224,7 +222,6 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
       'ReactNativeViewConfigRegistry',
-      'interaction-tracking',
     ],
   },
 
@@ -246,7 +243,6 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
       'ReactNativeViewConfigRegistry',
-      'interaction-tracking',
     ],
   },
 
@@ -257,7 +253,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
-    externals: ['react', 'interaction-tracking'],
+    externals: ['react'],
   },
 
   {
