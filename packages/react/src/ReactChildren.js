@@ -53,25 +53,25 @@ function escapeUserProvidedKey(text) {
 const POOL_SIZE = 10;
 const traverseContextPool = [];
 function getPooledTraverseContext(
-  mapResult,
+  result,
   keyPrefix,
-  mapFunction,
-  mapContext,
+  func,
+  context,
 ) {
   if (traverseContextPool.length) {
     const traverseContext = traverseContextPool.pop();
-    traverseContext.result = mapResult;
+    traverseContext.result = result;
     traverseContext.keyPrefix = keyPrefix;
-    traverseContext.func = mapFunction;
-    traverseContext.context = mapContext;
+    traverseContext.func = func;
+    traverseContext.context = context;
     traverseContext.count = 0;
     return traverseContext;
   } else {
     return {
-      result: mapResult,
-      keyPrefix: keyPrefix,
-      func: mapFunction,
-      context: mapContext,
+      result,
+      keyPrefix,
+      func,
+      context,
       count: 0,
     };
   }
