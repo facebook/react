@@ -112,7 +112,7 @@ export function initWrapperState(element: Element, props: Object) {
         children = children[0];
       }
 
-      defaultValue = getToStringValue(children);
+      defaultValue = children;
     }
     if (defaultValue == null) {
       defaultValue = '';
