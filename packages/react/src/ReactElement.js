@@ -300,7 +300,18 @@ export function cloneElement(element, config, children) {
   let propName;
 
   // Original props are copied
-  const props = Object.assign({}, element.props);
+  const origProps = Object.assign({}, element.props);
+  let propsToAdd = {};
+
+  for (propName in origProps) {
+    if (typeof origProps[propName] === 'undefined') {
+    } else {
+      propsToAdd[propName] = origProps[propName];
+    }
+  }
+
+  //Add only the props that are not undefined
+  const props = propsToAdd;
 
   // Reserved names are extracted
   let key = element.key;
