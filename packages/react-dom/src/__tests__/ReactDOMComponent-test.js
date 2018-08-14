@@ -2506,6 +2506,34 @@ describe('ReactDOMComponent', () => {
     });
   });
 
+  describe('Boolean attributes', function() {
+    it('warns on the ambiguous string value "false"', function() {
+      let el;
+      expect(() => {
+        el = ReactTestUtils.renderIntoDocument(<div hidden="false" />);
+      }).toWarnDev(
+        'Received the string `false` for the boolean attribute `hidden`. ' +
+          'The browser will interpret it as a truthy value. ' +
+          'Did you mean hidden={false}?',
+      );
+
+      expect(el.getAttribute('hidden')).toBe('');
+    });
+
+    it('warns on the potentially-ambiguous string value "true"', function() {
+      let el;
+      expect(() => {
+        el = ReactTestUtils.renderIntoDocument(<div hidden="true" />);
+      }).toWarnDev(
+        'Received the string `true` for the boolean attribute `hidden`. ' +
+          'Although this works, it will not work as expected if you pass the string "false". ' +
+          'Did you mean hidden={true}?',
+      );
+
+      expect(el.getAttribute('hidden')).toBe('');
+    });
+  });
+
   describe('Hyphenated SVG elements', function() {
     it('the font-face element is not a custom element', function() {
       let el;

@@ -444,7 +444,7 @@ describe('ReactDOMInput', () => {
 
   it('should take `defaultValue` when changing to uncontrolled input', () => {
     const node = ReactDOM.render(
-      <input type="text" value="0" readOnly="true" />,
+      <input type="text" value="0" readOnly={true} />,
       container,
     );
     expect(node.value).toBe('0');
