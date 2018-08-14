@@ -52,12 +52,7 @@ function escapeUserProvidedKey(text) {
 
 const POOL_SIZE = 10;
 const traverseContextPool = [];
-function getPooledTraverseContext(
-  result,
-  keyPrefix,
-  func,
-  context,
-) {
+function getPooledTraverseContext(result, keyPrefix, func, context) {
   if (traverseContextPool.length) {
     const traverseContext = traverseContextPool.pop();
     traverseContext.result = result;
