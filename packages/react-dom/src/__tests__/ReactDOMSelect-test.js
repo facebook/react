@@ -808,4 +808,176 @@ describe('ReactDOMSelect', () => {
     expect(node.options[1].selected).toBe(false); // b
     expect(node.options[2].selected).toBe(false); // c
   });
+
+  describe('When given a Symbol value', () => {
+    it('treats initial Symbol value as an empty string', () => {
+      let node;
+
+      expect(() => {
+        node = ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={Symbol('foobar')}>
+            <option value={Symbol('foobar')}>A Symbol!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      }).toWarnDev('Invalid value for prop `value`');
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats updated Symbol value as an empty string', () => {
+      let node;
+
+      expect(() => {
+        node = ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value="monkey">
+            <option value={Symbol('foobar')}>A Symbol!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      }).toWarnDev('Invalid value for prop `value`');
+
+      expect(node.value).toBe('monkey');
+
+      node = ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} value={Symbol('foobar')}>
+          <option value={Symbol('foobar')}>A Symbol!</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats initial Symbol defaultValue as an empty string', () => {
+      let node;
+
+      expect(() => {
+        node = ReactTestUtils.renderIntoDocument(
+          <select defaultValue={Symbol('foobar')}>
+            <option value={Symbol('foobar')}>A Symbol!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      }).toWarnDev('Invalid value for prop `value`');
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats updated Symbol defaultValue as an empty string', () => {
+      let node;
+
+      expect(() => {
+        node = ReactTestUtils.renderIntoDocument(
+          <select defaultValue="monkey">
+            <option value={Symbol('foobar')}>A Symbol!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      }).toWarnDev('Invalid value for prop `value`');
+
+      expect(node.value).toBe('monkey');
+
+      node = ReactTestUtils.renderIntoDocument(
+        <select defaultValue={Symbol('foobar')}>
+          <option value={Symbol('foobar')}>A Symbol!</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+
+      expect(node.value).toBe('');
+    });
+  });
+
+  describe('When given a function value', () => {
+    it('treats initial function value as an empty string', () => {
+      let node;
+
+      expect(() => {
+        node = ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value={() => {}}>
+            <option value={() => {}}>A function!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      }).toWarnDev('Invalid value for prop `value`');
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats initial function defaultValue as an empty string', () => {
+      let node;
+
+      expect(() => {
+        node = ReactTestUtils.renderIntoDocument(
+          <select defaultValue={() => {}}>
+            <option value={() => {}}>A function!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      }).toWarnDev('Invalid value for prop `value`');
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats updated function value as an empty string', () => {
+      let node;
+
+      expect(() => {
+        node = ReactTestUtils.renderIntoDocument(
+          <select onChange={noop} value="monkey">
+            <option value={() => {}}>A function!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      }).toWarnDev('Invalid value for prop `value`');
+
+      expect(node.value).toBe('monkey');
+
+      node = ReactTestUtils.renderIntoDocument(
+        <select onChange={noop} value={() => {}}>
+          <option value={() => {}}>A function!</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats updated function defaultValue as an empty string', () => {
+      let node;
+
+      expect(() => {
+        node = ReactTestUtils.renderIntoDocument(
+          <select defaultValue="monkey">
+            <option value={() => {}}>A function!</option>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+          </select>,
+        );
+      }).toWarnDev('Invalid value for prop `value`');
+
+      expect(node.value).toBe('monkey');
+
+      node = ReactTestUtils.renderIntoDocument(
+        <select defaultValue={() => {}}>
+          <option value={() => {}}>A function!</option>
+          <option value="monkey">A monkey!</option>
+          <option value="giraffe">A giraffe!</option>
+        </select>,
+      );
+
+      expect(node.value).toBe('');
+    });
+  });
 });
