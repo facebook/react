@@ -4,14 +4,13 @@
   box-sizing: border-box;
 }
 
-html {
-  font-size: 10px;
-}
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+  color: #333;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Arimo", "Roboto", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
-  font-size: 1.4rem;
+  font-size: 15px;
+  line-height: 24px;
   margin: 0;
   padding: 0;
 }
@@ -26,17 +25,78 @@ button {
   padding: 6px 8px;
 }
 
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #171717;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 32px;
+  margin: 24px 0;
+}
+
+h2 {
+  font-size: 24px;
+  margin: 24px 0 16px;
+}
+
+h3 {
+  font-size: 18px;
+  margin: 8px 0 16px;
+}
+
+h4, h4, h5, h6 {
+  font-size: 16px;
+  margin: 0 0 16px;
+}
+
+code {
+  font-size: 90%;
+}
+
+a {
+  text-decoration: none;
+}
+
+a:link:hover,
+a:link:focus {
+  text-decoration: underline;
+}
+
+textarea {
+  border-radius: 2px;
+  border: 1px solid #d9d9d9;
+  font-size: 12px;
+  min-height: 100px;
+  min-width: 300px;
+  padding: 8px;
+}
+
 .header {
-  background: #222;
+  background: #171717;
   box-shadow: inset 0 -1px 3px #000;
-  font-size: 1.6rem;
-  line-height: 3.2rem;
   overflow: hidden;
-  padding: .8rem 1.6rem;
+  padding: 8px;
+}
+
+.header a {
+  text-decoration: none;
+  color: white;
+}
+
+.header a:hover,
+.header a:focus{
+  text-decoration: underline;
 }
 
 .header select {
-  width: 12rem;
+  margin-left: 8px;
+  max-width: 150px;
 }
 
 .header__inner {
@@ -108,11 +168,11 @@ fieldset {
 
 ul,
 ol {
-  margin: 0 0 2rem 0;
+  margin: 0 0 16px 0;
 }
 
-li {
-  margin-bottom: 0.4rem;
+p {
+  margin: 16px 0;
 }
 
 .type-subheading {
@@ -130,11 +190,10 @@ li {
 .footnote {
   border-left: 4px solid #aaa;
   color: #444;
+  font-size: 14px;
   font-style: italic;
-  line-height: 1.5;
-  margin-bottom: 2.4rem;
-  margin-left: 0.4rem;
-  padding-left: 1.6rem;
+  margin-left: 8px;
+  padding-left: 16px;
 }
 
 .test-case {
@@ -221,4 +280,25 @@ li {
 
 .field-group {
   overflow: hidden;
+}
+
+table {
+  border: 1px solid #d9d9d9;
+  border-width: 1px 1px 1px 0;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+  line-height: 20px;
+  width: 100%;
+}
+
+td,
+th {
+  text-align: left;
+  border: 1px solid #d9d9d9;
+  padding: 6px;
+}
+
+tbody tr:nth-child(even) {
+  background: #f0f0f0;
 }

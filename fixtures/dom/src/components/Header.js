@@ -35,11 +35,11 @@ class Header extends React.Component {
           <span className="header__logo">
             <img
               src={process.env.PUBLIC_URL + '/react-logo.svg'}
-              alt=""
-              width="32"
-              height="32"
+              alt="React"
+              width="20"
+              height="20"
             />
-            React Sandbox (v{React.version})
+            <a href="/">DOM Test Fixtures (v{React.version})</a>
           </span>
 
           <div className="header-controls">
