@@ -299,18 +299,55 @@ describe('InteractionTracking', () => {
       let onWorkStarted;
       let onWorkStopped;
       let subscriber;
+      let throwInOnInteractionScheduledWorkCompleted;
+      let throwInOnInteractionTracked;
+      let throwInOnWorkCanceled;
+      let throwInOnWorkScheduled;
+      let throwInOnWorkStarted;
+      let throwInOnWorkStopped;
 
       const firstEvent = {id: 0, name: 'first', timestamp: 0};
       const secondEvent = {id: 1, name: 'second', timestamp: 0};
       const threadID = 123;
 
       beforeEach(() => {
-        onInteractionScheduledWorkCompleted = jest.fn();
-        onInteractionTracked = jest.fn();
-        onWorkCanceled = jest.fn();
-        onWorkScheduled = jest.fn();
-        onWorkStarted = jest.fn();
-        onWorkStopped = jest.fn();
+        throwInOnInteractionScheduledWorkCompleted = false;
+        throwInOnInteractionTracked = false;
+        throwInOnWorkCanceled = false;
+        throwInOnWorkScheduled = false;
+        throwInOnWorkStarted = false;
+        throwInOnWorkStopped = false;
+
+        onInteractionScheduledWorkCompleted = jest.fn(() => {
+          if (throwInOnInteractionScheduledWorkCompleted) {
+            throw Error('Expected error');
+          }
+        });
+        onInteractionTracked = jest.fn(() => {
+          if (throwInOnInteractionTracked) {
+            throw Error('Expected error');
+          }
+        });
+        onWorkCanceled = jest.fn(() => {
+          if (throwInOnWorkCanceled) {
+            throw Error('Expected error');
+          }
+        });
+        onWorkScheduled = jest.fn(() => {
+          if (throwInOnWorkScheduled) {
+            throw Error('Expected error');
+          }
+        });
+        onWorkStarted = jest.fn(() => {
+          if (throwInOnWorkStarted) {
+            throw Error('Expected error');
+          }
+        });
+        onWorkStopped = jest.fn(() => {
+          if (throwInOnWorkStopped) {
+            throw Error('Expected error');
+          }
+        });
       });
 
       describe('enableInteractionTrackingObserver enabled', () => {
@@ -330,6 +367,173 @@ describe('InteractionTracking', () => {
           };
 
           InteractionTracking.subscribe(subscriber);
+        });
+
+        it('should return the value of a tracked function', () => {
+          expect(InteractionTracking.track('arbitrary', () => 123)).toBe(123);
+        });
+
+        it('should return the value of a wrapped function', () => {
+          let wrapped;
+          InteractionTracking.track('arbitrary', () => {
+            wrapped = InteractionTracking.wrap(() => 123);
+          });
+          expect(wrapped()).toBe(123);
+        });
+
+        describe('error handling', () => {
+          it('should cover onInteractionTracked/onWorkStarted within', done => {
+            InteractionTracking.track(firstEvent.name, () => {
+              const mock = jest.fn();
+
+              // It should call the callback before re-throwing
+              throwInOnInteractionTracked = true;
+              expect(() =>
+                InteractionTracking.track(secondEvent.name, mock, threadID),
+              ).toThrow('Expected error');
+              expect(mock).toHaveBeenCalledTimes(1);
+
+              throwInOnWorkStarted = true;
+              expect(() =>
+                InteractionTracking.track(secondEvent.name, mock, threadID),
+              ).toThrow('Expected error');
+              expect(mock).toHaveBeenCalledTimes(2);
+
+              // It should restore the previous/outer interactions
+              expect(InteractionTracking.getCurrent()).toMatchInteractions([
+                firstEvent,
+              ]);
+
+              done();
+            });
+          });
+
+          it('should cover onWorkStopped within track', done => {
+            InteractionTracking.track(firstEvent.name, () => {
+              let innerInteraction;
+              const mock = jest.fn(() => {
+                innerInteraction = Array.from(
+                  InteractionTracking.getCurrent(),
+                )[1];
+              });
+
+              throwInOnWorkStopped = true;
+              expect(() =>
+                InteractionTracking.track(secondEvent.name, mock),
+              ).toThrow('Expected error');
+              throwInOnWorkStopped = false;
+
+              // It should restore the previous/outer interactions
+              expect(InteractionTracking.getCurrent()).toMatchInteractions([
+                firstEvent,
+              ]);
+
+              // It should update the interaction count so as not to interfere with subsequent calls
+              expect(innerInteraction.__count).toBe(0);
+
+              done();
+            });
+          });
+
+          it('should cover onWorkScheduled within wrap', done => {
+            InteractionTracking.track(firstEvent.name, () => {
+              const interaction = Array.from(
+                InteractionTracking.getCurrent(),
+              )[0];
+              const beforeCount = interaction.__count;
+
+              throwInOnWorkScheduled = true;
+              expect(() => InteractionTracking.wrap(() => {})).toThrow(
+                'Expected error',
+              );
+
+              // It should not update the interaction count so as not to interfere with subsequent calls
+              expect(interaction.__count).toBe(beforeCount);
+
+              done();
+            });
+          });
+
+          it('should cover onWorkStarted within wrap', () => {
+            const mock = jest.fn();
+            let interaction, wrapped;
+            InteractionTracking.track(firstEvent.name, () => {
+              interaction = Array.from(InteractionTracking.getCurrent())[0];
+              wrapped = InteractionTracking.wrap(mock);
+            });
+            expect(interaction.__count).toBe(1);
+
+            throwInOnWorkStarted = true;
+            expect(wrapped).toThrow('Expected error');
+
+            // It should call the callback before re-throwing
+            expect(mock).toHaveBeenCalledTimes(1);
+
+            // It should update the interaction count so as not to interfere with subsequent calls
+            expect(interaction.__count).toBe(0);
+          });
+
+          it('should cover onWorkStopped within wrap', done => {
+            InteractionTracking.track(firstEvent.name, () => {
+              const outerInteraction = Array.from(
+                InteractionTracking.getCurrent(),
+              )[0];
+              expect(outerInteraction.__count).toBe(1);
+
+              let wrapped;
+              let innerInteraction;
+
+              InteractionTracking.track(secondEvent.name, () => {
+                innerInteraction = Array.from(
+                  InteractionTracking.getCurrent(),
+                )[1];
+                expect(outerInteraction.__count).toBe(1);
+                expect(innerInteraction.__count).toBe(1);
+
+                wrapped = InteractionTracking.wrap(jest.fn());
+                expect(outerInteraction.__count).toBe(2);
+                expect(innerInteraction.__count).toBe(2);
+              });
+
+              expect(outerInteraction.__count).toBe(2);
+              expect(innerInteraction.__count).toBe(1);
+
+              throwInOnWorkStopped = true;
+              expect(wrapped).toThrow('Expected error');
+              throwInOnWorkStopped = false;
+
+              // It should restore the previous interactions
+              expect(InteractionTracking.getCurrent()).toMatchInteractions([
+                outerInteraction,
+              ]);
+
+              // It should update the interaction count so as not to interfere with subsequent calls
+              expect(outerInteraction.__count).toBe(1);
+              expect(innerInteraction.__count).toBe(0);
+
+              done();
+            });
+          });
+
+          it('should cover onWorkCanceled within wrap', () => {
+            let interaction, wrapped;
+            InteractionTracking.track(firstEvent.name, () => {
+              interaction = Array.from(InteractionTracking.getCurrent())[0];
+              wrapped = InteractionTracking.wrap(jest.fn());
+            });
+            expect(interaction.__count).toBe(1);
+
+            throwInOnWorkCanceled = true;
+            expect(wrapped.cancel).toThrow('Expected error');
+
+            expect(onWorkCanceled).toHaveBeenCalledTimes(1);
+
+            // It should update the interaction count so as not to interfere with subsequent calls
+            expect(interaction.__count).toBe(0);
+            expect(
+              onInteractionScheduledWorkCompleted,
+            ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
+          });
         });
 
         it('calls lifecycle methods for track', () => {

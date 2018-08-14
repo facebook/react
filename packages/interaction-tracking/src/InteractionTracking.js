@@ -143,34 +143,62 @@ export function track(
   interactions.add(interaction);
   ((interactionsRef: any): InteractionsRef).current = interactions;
 
-  try {
-    if (enableInteractionTrackingObserver) {
-      interaction.__count = 1;
+  if (enableInteractionTrackingObserver) {
+    // Update before calling callback in case it schedules follow-up work.
+    interaction.__count = 1;
 
+    let caughtError = null;
+    let returnValue;
+
+    try {
       ((subscribers: any): Subscribers).forEach(subscriber => {
         subscriber.onInteractionTracked(interaction);
         subscriber.onWorkStarted(interactions, threadID);
       });
+    } catch (error) {
+      caughtError = caughtError || error;
     }
 
-    return callback();
-  } finally {
+    try {
+      returnValue = callback();
+    } catch (error) {
+      caughtError = caughtError || error;
+    }
+
     ((interactionsRef: any): InteractionsRef).current = prevInteractions;
 
-    if (enableInteractionTrackingObserver) {
+    try {
       ((subscribers: any): Subscribers).forEach(subscriber =>
         subscriber.onWorkStopped(interactions, threadID),
       );
+    } catch (error) {
+      caughtError = caughtError || error;
+    }
 
-      interaction.__count = ((interaction.__count: any): number) - 1;
+    interaction.__count = ((interaction.__count: any): number) - 1;
 
-      // If no async work was scheduled for this interaction,
-      // Notify subscribers that it's completed.
-      if (((interaction.__count: any): number) === 0) {
+    // If no async work was scheduled for this interaction,
+    // Notify subscribers that it's completed.
+    if (((interaction.__count: any): number) === 0) {
+      try {
         ((subscribers: any): Subscribers).forEach(subscriber =>
           subscriber.onInteractionScheduledWorkCompleted(interaction),
         );
+      } catch (error) {
+        caughtError = caughtError || error;
       }
+    }
+
+    if (caughtError !== null) {
+      throw caughtError;
+    } else {
+      return returnValue;
+    }
+  } else {
+    try {
+      return callback();
+    } finally {
+      ((interactionsRef: any): InteractionsRef).current = prevInteractions;
     }
   }
 }
@@ -192,36 +220,56 @@ export function wrap(
   const wrappedInteractions = ((interactionsRef: any): InteractionsRef).current;
 
   if (enableInteractionTrackingObserver) {
-    // Update the pending async work count for the current interactions.
-    wrappedInteractions.forEach(interaction => {
-      interaction.__count = ((interaction.__count: any): number) + 1;
-    });
-
     ((subscribers: any): Subscribers).forEach(subscriber =>
       subscriber.onWorkScheduled(wrappedInteractions, threadID),
     );
+
+    // Update the pending async work count for the current interactions.
+    // Update after calling subscribers in case of error.
+    wrappedInteractions.forEach(interaction => {
+      interaction.__count = ((interaction.__count: any): number) + 1;
+    });
   }
 
   const wrapped = (...args) => {
     const prevInteractions = ((interactionsRef: any): InteractionsRef).current;
     ((interactionsRef: any): InteractionsRef).current = wrappedInteractions;
 
-    try {
-      if (enableInteractionTrackingObserver) {
-        ((subscribers: any): Subscribers).forEach(subscriber =>
-          subscriber.onWorkStarted(wrappedInteractions, threadID),
-        );
-      }
+    if (enableInteractionTrackingObserver) {
+      try {
+        let caughtError = null;
+        let returnValue;
 
-      return callback(...args);
-    } finally {
-      ((interactionsRef: any): InteractionsRef).current = prevInteractions;
+        try {
+          ((subscribers: any): Subscribers).forEach(subscriber =>
+            subscriber.onWorkStarted(wrappedInteractions, threadID),
+          );
+        } catch (error) {
+          caughtError = caughtError || error;
+        }
 
-      if (enableInteractionTrackingObserver) {
-        ((subscribers: any): Subscribers).forEach(subscriber =>
-          subscriber.onWorkStopped(wrappedInteractions, threadID),
-        );
+        try {
+          returnValue = callback(...args);
+        } catch (error) {
+          caughtError = caughtError || error;
+        }
 
+        ((interactionsRef: any): InteractionsRef).current = prevInteractions;
+
+        try {
+          ((subscribers: any): Subscribers).forEach(subscriber =>
+            subscriber.onWorkStopped(wrappedInteractions, threadID),
+          );
+        } catch (error) {
+          caughtError = caughtError || error;
+        }
+
+        if (caughtError !== null) {
+          throw caughtError;
+        } else {
+          return returnValue;
+        }
+      } finally {
         // Update pending async counts for all wrapped interactions.
         // If this was the last scheduled async work for any of them,
         // Mark them as completed.
@@ -235,29 +283,37 @@ export function wrap(
           }
         });
       }
+    } else {
+      try {
+        return callback(...args);
+      } finally {
+        ((interactionsRef: any): InteractionsRef).current = prevInteractions;
+      }
     }
   };
 
-  wrapped.cancel = () => {
-    if (enableInteractionTrackingObserver) {
-      ((subscribers: any): Subscribers).forEach(subscriber =>
-        subscriber.onWorkCanceled(wrappedInteractions, threadID),
-      );
+  if (enableInteractionTrackingObserver) {
+    wrapped.cancel = () => {
+      try {
+        ((subscribers: any): Subscribers).forEach(subscriber =>
+          subscriber.onWorkCanceled(wrappedInteractions, threadID),
+        );
+      } finally {
+        // Update pending async counts for all wrapped interactions.
+        // If this was the last scheduled async work for any of them,
+        // Mark them as completed.
+        wrappedInteractions.forEach(interaction => {
+          interaction.__count = ((interaction.__count: any): number) - 1;
 
-      // Update pending async counts for all wrapped interactions.
-      // If this was the last scheduled async work for any of them,
-      // Mark them as completed.
-      wrappedInteractions.forEach(interaction => {
-        interaction.__count = ((interaction.__count: any): number) - 1;
-
-        if (((interaction.__count: any): number) === 0) {
-          ((subscribers: any): Subscribers).forEach(subscriber =>
-            subscriber.onInteractionScheduledWorkCompleted(interaction),
-          );
-        }
-      });
-    }
-  };
+          if (((interaction.__count: any): number) === 0) {
+            ((subscribers: any): Subscribers).forEach(subscriber =>
+              subscriber.onInteractionScheduledWorkCompleted(interaction),
+            );
+          }
+        });
+      }
+    };
+  }
 
   return wrapped;
 }
