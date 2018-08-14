@@ -11855,22 +11855,22 @@
 | `value=(empty string)`| (initial)| `<empty string>` |
 | `value=(array with string)`| (changed)| `"string"` |
 | `value=(empty array)`| (initial)| `<empty string>` |
-| `value=(object)`| (changed)| `"result of toString()"` |
+| `value=(object)`| (changed, ssr error, ssr mismatch)| `"result of toString()"` |
 | `value=(numeric string)`| (changed)| `"42"` |
 | `value=(-1)`| (changed)| `"-1"` |
 | `value=(0)`| (changed)| `"0"` |
 | `value=(integer)`| (changed)| `"1"` |
 | `value=(NaN)`| (changed, warning)| `"NaN"` |
 | `value=(float)`| (changed)| `"99.99"` |
-| `value=(true)`| (changed)| `"true"` |
-| `value=(false)`| (changed)| `"false"` |
+| `value=(true)`| (changed, ssr mismatch)| `"true"` |
+| `value=(false)`| (changed, ssr mismatch)| `"false"` |
 | `value=(string 'true')`| (changed)| `"true"` |
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
 | `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
-| `value=(null)`| (initial, warning)| `<empty string>` |
+| `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<option>` inside `<select>`)
@@ -13547,3 +13547,4 @@
 | `zoomAndPan=(function)`| (initial, warning)| `<number: 2>` |
 | `zoomAndPan=(null)`| (initial)| `<number: 2>` |
 | `zoomAndPan=(undefined)`| (initial)| `<number: 2>` |
+

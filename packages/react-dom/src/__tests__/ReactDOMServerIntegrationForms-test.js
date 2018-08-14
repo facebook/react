@@ -231,16 +231,10 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.value).toBe('');
       });
 
-      itRenders(
-        'a textarea with Symbol children with a warning',
-        async render => {
-          const e = await render(
-            <textarea readOnly={true}>{Symbol('test')}</textarea>,
-            1,
-          );
-          expect(e.value).toBe('');
-        },
-      );
+      itRenders('a textarea with NaN value with a warning', async render => {
+        const e = await render(<textarea value={NaN} readOnly={true} />, 1);
+        expect(e.value).toBe('NaN');
+      });
     });
 
     describe('selects', function() {
@@ -473,12 +467,23 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('an option with Symbol value with a warning', async render => {
         const e = await render(
-          <select readOnly={true}>
+          <select readOnly={true} value={Symbol('test')}>
             <option value={Symbol('test')} />
           </select>,
           1,
         );
+        expect(e.value).toBe('');
         expect(e.firstChild.value).toBe('');
+      });
+
+      itRenders('a select with NaN value with a warning', async render => {
+        const e = await render(
+          <select value={NaN} readOnly={true}>
+            <option value={NaN}>NaN</option>
+          </select>,
+          1,
+        );
+        expect(e.value).toBe('NaN');
       });
     });
 
