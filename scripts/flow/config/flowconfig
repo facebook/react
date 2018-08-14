@@ -13,14 +13,12 @@
 .*/__tests__/.*
 
 [include]
-../../../node_modules/
-../../../packages/
-../../../scripts/
+# Substituted by flowConfig.js:
+%FLOW_INCLUDE%
 
 [libs]
-../../../node_modules/fbjs/flow/lib/dev.js
-../environment.js
-../react-native-host-hooks.js
+# Substituted by flowConfig.js:
+%FLOW_LIBS%
 
 [lints]
 untyped-type-import=error
@@ -29,7 +27,7 @@ untyped-type-import=error
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 
-# Substituted by createFlowConfig.js:
+# Substituted by flowConfig.js:
 %REACT_RENDERER_FLOW_OPTIONS%
 
 munge_underscores=false

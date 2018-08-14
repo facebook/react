@@ -94,7 +94,7 @@
   },
   "scripts": {
     "build": "npm run version-check && node ./scripts/rollup/build.js",
-    "flow-coverage": "flow-coverage-report --config ./.flowcoverage",
+    "flow-coverage": "node ./scripts/tasks/flow-coverage.js",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
