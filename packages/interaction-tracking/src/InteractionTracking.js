@@ -157,7 +157,8 @@ export function track(
     // Update before calling callback in case it schedules follow-up work.
     interaction.__count = 1;
 
-    let caughtError = null;
+    let caughtError;
+    let didCatch = false;
     let returnValue;
     const subscriber = ((subscriberRef: any): SubscriberRef).current;
 
@@ -166,6 +167,7 @@ export function track(
         subscriber.onInteractionTracked(interaction);
         subscriber.onWorkStarted(interactions, threadID);
       } catch (error) {
+        didCatch = true;
         caughtError = caughtError || error;
       }
     }
@@ -173,6 +175,7 @@ export function track(
     try {
       returnValue = callback();
     } catch (error) {
+      didCatch = true;
       caughtError = caughtError || error;
     }
 
@@ -182,6 +185,7 @@ export function track(
       try {
         subscriber.onWorkStopped(interactions, threadID);
       } catch (error) {
+        didCatch = true;
         caughtError = caughtError || error;
       }
     }
@@ -194,11 +198,12 @@ export function track(
       try {
         subscriber.onInteractionScheduledWorkCompleted(interaction);
       } catch (error) {
+        didCatch = true;
         caughtError = caughtError || error;
       }
     }
 
-    if (caughtError !== null) {
+    if (didCatch) {
       throw caughtError;
     } else {
       return returnValue;
@@ -249,7 +254,8 @@ export function wrap(
       const subscriber = ((subscriberRef: any): SubscriberRef).current;
 
       try {
-        let caughtError = null;
+        let caughtError;
+        let didCatch = false;
         let returnValue;
 
         try {
@@ -257,12 +263,14 @@ export function wrap(
             subscriber.onWorkStarted(wrappedInteractions, threadID);
           }
         } catch (error) {
+          didCatch = true;
           caughtError = caughtError || error;
         }
 
         try {
           returnValue = callback(...args);
         } catch (error) {
+          didCatch = true;
           caughtError = caughtError || error;
         }
 
@@ -273,10 +281,11 @@ export function wrap(
             subscriber.onWorkStopped(wrappedInteractions, threadID);
           }
         } catch (error) {
+          didCatch = true;
           caughtError = caughtError || error;
         }
 
-        if (caughtError !== null) {
+        if (didCatch) {
           throw caughtError;
         } else {
           return returnValue;
