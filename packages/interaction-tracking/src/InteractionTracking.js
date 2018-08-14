@@ -34,9 +34,9 @@ export type Subscriber = {
   // Work is scheduled by a "thread" which is identified by a unique ID.
   onWorkScheduled: (interactions: Set<Interaction>, threadID: number) => void,
 
-  // A batch of scheduled work has been cancelled.
+  // A batch of scheduled work has been canceled.
   // Work is done by a "thread" which is identified by a unique ID.
-  onWorkCancelled: (interactions: Set<Interaction>, threadID: number) => void,
+  onWorkCanceled: (interactions: Set<Interaction>, threadID: number) => void,
 
   // A batch of work has started for a set of interactions.
   // When this work is complete, onWorkStopped will be called.
@@ -241,7 +241,7 @@ export function wrap(
   wrapped.cancel = () => {
     if (enableInteractionTrackingObserver) {
       ((subscribers: any): Subscribers).forEach(subscriber =>
-        subscriber.onWorkCancelled(wrappedInteractions, threadID),
+        subscriber.onWorkCanceled(wrappedInteractions, threadID),
       );
 
       // Update pending async counts for all wrapped interactions.

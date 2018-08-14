@@ -294,7 +294,7 @@ describe('InteractionTracking', () => {
     describe('interaction observers enabled', () => {
       let onInteractionScheduledWorkCompleted;
       let onInteractionTracked;
-      let onWorkCancelled;
+      let onWorkCanceled;
       let onWorkScheduled;
       let onWorkStarted;
       let onWorkStopped;
@@ -307,7 +307,7 @@ describe('InteractionTracking', () => {
       beforeEach(() => {
         onInteractionScheduledWorkCompleted = jest.fn();
         onInteractionTracked = jest.fn();
-        onWorkCancelled = jest.fn();
+        onWorkCanceled = jest.fn();
         onWorkScheduled = jest.fn();
         onWorkStarted = jest.fn();
         onWorkStopped = jest.fn();
@@ -323,7 +323,7 @@ describe('InteractionTracking', () => {
           subscriber = {
             onInteractionScheduledWorkCompleted,
             onInteractionTracked,
-            onWorkCancelled,
+            onWorkCanceled,
             onWorkScheduled,
             onWorkStarted,
             onWorkStopped,
@@ -393,7 +393,7 @@ describe('InteractionTracking', () => {
             onInteractionScheduledWorkCompleted,
           ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
           expect(onWorkScheduled).not.toHaveBeenCalled();
-          expect(onWorkCancelled).not.toHaveBeenCalled();
+          expect(onWorkCanceled).not.toHaveBeenCalled();
           expect(onWorkStarted).toHaveBeenCalledTimes(2);
           expect(onWorkStopped).toHaveBeenCalledTimes(2);
           expect(onWorkStopped).toHaveBeenLastNotifiedOfWork(
@@ -434,7 +434,7 @@ describe('InteractionTracking', () => {
           expect(unwrapped).toHaveBeenCalled();
 
           expect(onWorkScheduled).toHaveBeenCalledTimes(1);
-          expect(onWorkCancelled).not.toHaveBeenCalled();
+          expect(onWorkCanceled).not.toHaveBeenCalled();
           expect(onWorkStarted).toHaveBeenCalledTimes(3);
           expect(onWorkStarted).toHaveBeenLastNotifiedOfWork(
             new Set([firstEvent, secondEvent]),
@@ -454,7 +454,7 @@ describe('InteractionTracking', () => {
           ).toMatchInteraction(secondEvent);
         });
 
-        it('should call the correct interaction observer methods when a wrapped callback is cancelled', () => {
+        it('should call the correct interaction observer methods when a wrapped callback is canceled', () => {
           const fnOne = jest.fn();
           const fnTwo = jest.fn();
           let wrappedOne, wrappedTwo;
@@ -467,7 +467,7 @@ describe('InteractionTracking', () => {
 
           expect(onInteractionTracked).toHaveBeenCalledTimes(2);
           expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-          expect(onWorkCancelled).not.toHaveBeenCalled();
+          expect(onWorkCanceled).not.toHaveBeenCalled();
           expect(onWorkStarted).toHaveBeenCalledTimes(2);
           expect(onWorkStopped).toHaveBeenCalledTimes(2);
 
@@ -477,8 +477,8 @@ describe('InteractionTracking', () => {
           expect(
             onInteractionScheduledWorkCompleted,
           ).toHaveBeenLastNotifiedOfInteraction(secondEvent);
-          expect(onWorkCancelled).toHaveBeenCalledTimes(1);
-          expect(onWorkCancelled).toHaveBeenLastNotifiedOfWork(
+          expect(onWorkCanceled).toHaveBeenCalledTimes(1);
+          expect(onWorkCanceled).toHaveBeenLastNotifiedOfWork(
             new Set([firstEvent, secondEvent]),
             threadID,
           );
@@ -489,8 +489,8 @@ describe('InteractionTracking', () => {
           expect(
             onInteractionScheduledWorkCompleted,
           ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
-          expect(onWorkCancelled).toHaveBeenCalledTimes(2);
-          expect(onWorkCancelled).toHaveBeenLastNotifiedOfWork(
+          expect(onWorkCanceled).toHaveBeenCalledTimes(2);
+          expect(onWorkCanceled).toHaveBeenLastNotifiedOfWork(
             new Set([firstEvent]),
             threadID,
           );
@@ -569,7 +569,7 @@ describe('InteractionTracking', () => {
 
           expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
           expect(onInteractionTracked).not.toHaveBeenCalled();
-          expect(onWorkCancelled).not.toHaveBeenCalled();
+          expect(onWorkCanceled).not.toHaveBeenCalled();
           expect(onWorkScheduled).not.toHaveBeenCalled();
           expect(onWorkStarted).not.toHaveBeenCalled();
           expect(onWorkStopped).not.toHaveBeenCalled();
