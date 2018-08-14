@@ -8,7 +8,7 @@
  */
 
 // Relying on the `invariant()` implementation lets us
-// have preserve the format and params in the www builds.
+// preserve the format and params in the www builds.
 import invariant from 'shared/invariant';
 
 /**
