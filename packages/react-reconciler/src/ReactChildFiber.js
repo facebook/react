@@ -377,7 +377,14 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (current !== null && current.type === element.type) {
+    const elementType = element.type;
+    if (
+      current !== null &&
+      (current.type === elementType ||
+        (elementType !== null &&
+          elementType !== undefined &&
+          current.type === elementType._reactResult))
+    ) {
       // Move based on index
       const existing = useFiber(current, element.props, expirationTime);
       existing.ref = coerceRef(returnFiber, current, element);
@@ -1111,21 +1118,26 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
+    const elementType = element.type;
     const key = element.key;
     let child = currentFirstChild;
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
+        const childType = child.type;
         if (
           child.tag === Fragment
-            ? element.type === REACT_FRAGMENT_TYPE
-            : child.type === element.type
+            ? elementType === REACT_FRAGMENT_TYPE
+            : childType === elementType ||
+              (elementType !== null &&
+                elementType !== undefined &&
+                childType === elementType._reactResult)
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
             child,
-            element.type === REACT_FRAGMENT_TYPE
+            elementType === REACT_FRAGMENT_TYPE
               ? element.props.children
               : element.props,
             expirationTime,
@@ -1147,7 +1159,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       child = child.sibling;
     }
 
-    if (element.type === REACT_FRAGMENT_TYPE) {
+    if (elementType === REACT_FRAGMENT_TYPE) {
       const created = createFiberFromFragment(
         element.props.children,
         returnFiber.mode,

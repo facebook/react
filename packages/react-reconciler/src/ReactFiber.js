@@ -388,9 +388,13 @@ export function createFiberFromElement(
   }
 
   let fiber;
-  const type = element.type;
+  let type = element.type;
   const key = element.key;
-  let pendingProps = element.props;
+  const pendingProps = element.props;
+
+  if (type !== null && type !== undefined && typeof type.then === 'function') {
+    type = resolveThenableType(type);
+  }
 
   let fiberTag;
   if (typeof type === 'function') {
@@ -435,6 +439,53 @@ export function createFiberFromElement(
   }
 
   return fiber;
+}
+
+export const Pending = 0;
+const Resolved = 1;
+const Rejected = 2;
+
+function UnresolvedComponent(thenable) {
+  thenable.then(
+    resolvedValue => {
+      if (thenable._reactStatus === Pending) {
+        thenable._reactStatus = Resolved;
+        // If the default value is not empty, assume it's the result of
+        // an async import() and use that. Otherwise, use resolved value.
+        const defaultExport = resolvedValue.default;
+        thenable._reactResult =
+          defaultExport !== null && defaultExport !== undefined
+            ? defaultExport
+            : resolvedValue;
+      }
+    },
+    error => {
+      if (thenable._reactStatus === Pending) {
+        thenable._reactStatus = Rejected;
+        thenable._reactResult = error;
+      }
+    },
+  );
+  throw thenable;
+}
+
+function RejectedComponent(error) {
+  throw error;
+}
+
+function resolveThenableType(type) {
+  const result = type._reactResult;
+  switch (type._reactStatus) {
+    case Pending:
+      return UnresolvedComponent.bind(null, type);
+    case Resolved:
+      return result;
+    case Rejected:
+      return RejectedComponent.bind(null, result);
+    default:
+      type._reactStatus = Pending;
+      return UnresolvedComponent.bind(null, type);
+  }
 }
 
 function getFiberTagFromObjectType(type, owner): TypeOfWork {
