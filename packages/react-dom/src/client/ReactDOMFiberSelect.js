@@ -23,7 +23,7 @@ if (__DEV__) {
 
 type SelectWithWrapperState = HTMLSelectElement & {
   _wrapperState: {
-    initialValue: ToStringValue | void,
+    initialValue: ?ToStringValue,
     wasMultiple: boolean,
   },
 };
