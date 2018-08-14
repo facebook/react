@@ -13,6 +13,7 @@ import warning from 'shared/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
+  BOOLEAN,
   RESERVED,
   shouldRemoveAttributeWithWarning,
   getPropertyInfo,
@@ -224,6 +225,29 @@ if (__DEV__) {
     if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
       warnedProperties[name] = true;
       return false;
+    }
+
+    // Warn when passing the strings 'false' or 'true' into a boolean prop
+    if (
+      (value === 'false' || value === 'true') &&
+      propertyInfo !== null &&
+      propertyInfo.type === BOOLEAN
+    ) {
+      warning(
+        false,
+        'Received the string `%s` for the boolean attribute `%s`. ' +
+          '%s ' +
+          'Did you mean %s={%s}?',
+        value,
+        name,
+        value === 'false'
+          ? 'The browser will interpret it as a truthy value.'
+          : 'Although this works, it will not work as expected if you pass the string "false".',
+        name,
+        value,
+      );
+      warnedProperties[name] = true;
+      return true;
     }
 
     return true;
