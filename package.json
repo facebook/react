@@ -55,7 +55,6 @@
     "fbjs-scripts": "^0.8.3",
     "filesize": "^3.5.6",
     "flow-bin": "^0.72.0",
-    "flow-coverage-report": "^0.4.0",
     "glob": "^6.0.4",
     "glob-stream": "^6.1.0",
     "google-closure-compiler": "20180506.0.0",
@@ -94,7 +93,6 @@
   },
   "scripts": {
     "build": "npm run version-check && node ./scripts/rollup/build.js",
-    "flow-coverage": "flow-coverage-report --config ./.flowcoverage",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
