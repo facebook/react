@@ -900,18 +900,6 @@ describe('ReactDOMSelect', () => {
   });
 
   describe('When given a function value', () => {
-    let setUntrackedValue;
-    function dispatchEventOnNode(node, type) {
-      node.dispatchEvent(new Event(type, {bubbles: true, cancelable: true}));
-    }
-
-    beforeEach(() => {
-      setUntrackedValue = Object.getOwnPropertyDescriptor(
-        HTMLSelectElement.prototype,
-        'value',
-      ).set;
-    });
-
     it('treats initial function value as an empty string', () => {
       let node;
 
@@ -998,78 +986,6 @@ describe('ReactDOMSelect', () => {
       );
 
       expect(node.value).toBe('');
-    });
-
-    it('treats controlled function value as an empty string', () => {
-      let selectNode;
-
-      class Form extends React.Component {
-        state = {
-          value: 'giraffe',
-        };
-
-        handleChange = e => this.setState({value: e.target.value});
-
-        render() {
-          return (
-            <select
-              onChange={this.handleChange}
-              value={this.state.value}
-              ref={x => (selectNode = x)}>
-              <option value={() => {}}>A Function!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>
-          );
-        }
-      }
-
-      expect(() => ReactTestUtils.renderIntoDocument(<Form />)).toWarnDev(
-        'Invalid value for prop `value`',
-      );
-
-      expect(selectNode.value).toBe('giraffe');
-
-      setUntrackedValue.call(selectNode, () => {});
-      dispatchEventOnNode(selectNode, 'change');
-
-      expect(selectNode.value).toBe('');
-    });
-
-    it('treats controlled function value as an empty string', () => {
-      let selectNode;
-
-      class Form extends React.Component {
-        state = {
-          value: 'giraffe',
-        };
-
-        handleChange = e => this.setState({value: e.target.value});
-
-        render() {
-          return (
-            <select
-              onChange={this.handleChange}
-              value={this.state.value}
-              ref={x => (selectNode = x)}>
-              <option value={() => {}}>A Function!</option>
-              <option value="monkey">A monkey!</option>
-              <option value="giraffe">A giraffe!</option>
-            </select>
-          );
-        }
-      }
-
-      expect(() => ReactTestUtils.renderIntoDocument(<Form />)).toWarnDev(
-        'Invalid value for prop `value`',
-      );
-
-      expect(selectNode.value).toBe('giraffe');
-
-      setUntrackedValue.call(selectNode, () => {});
-      dispatchEventOnNode(selectNode, 'change');
-
-      expect(selectNode.value).toBe('');
     });
   });
 });
