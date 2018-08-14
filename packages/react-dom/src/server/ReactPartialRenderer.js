@@ -24,7 +24,6 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
-
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -1039,10 +1038,9 @@ class ReactDOMServerRenderer {
       }
     }
 
-    let props = element.props;
-
     validateDangerousTag(tag);
 
+    let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
         ReactControlledValuePropTypes.checkPropTypes('input', props);
@@ -1202,8 +1200,6 @@ class ReactDOMServerRenderer {
           );
           didWarnDefaultSelectValue = true;
         }
-
-        validatePropertiesInDevelopment(tag, props);
       }
 
       this.currentSelectValue =
