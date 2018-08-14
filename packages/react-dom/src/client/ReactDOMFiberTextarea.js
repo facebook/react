@@ -12,8 +12,8 @@ import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import {getToStringValue, toString} from './ToStringValue';
-import type {ToStringValue} from './ToStringValue';
+import {getToStringValue, toString} from '../shared/ToStringValue';
+import type {ToStringValue} from '../shared/ToStringValue';
 
 let didWarnValDefaultVal = false;
 

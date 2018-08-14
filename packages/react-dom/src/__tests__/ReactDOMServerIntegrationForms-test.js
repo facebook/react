@@ -222,6 +222,25 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.value).toBe('foo');
         },
       );
+
+      itRenders('a textarea with Symbol value with a warning', async render => {
+        const e = await render(
+          <textarea value={Symbol('test')} readOnly={true} />,
+          1,
+        );
+        expect(e.value).toBe('');
+      });
+
+      itRenders(
+        'a textarea with Symbol children with a warning',
+        async render => {
+          const e = await render(
+            <textarea readOnly={true}>{Symbol('test')}</textarea>,
+            1,
+          );
+          expect(e.value).toBe('');
+        },
+      );
     });
 
     describe('selects', function() {
@@ -443,6 +462,24 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.firstChild.selected).toBe(true);
         },
       );
+
+      itRenders('a select with Symbol value with a warning', async render => {
+        const e = await render(
+          <select value={Symbol('test')} readOnly={true} />,
+          1,
+        );
+        expect(e.hasAttribute('value')).toBe(false);
+      });
+
+      itRenders('an option with Symbol value with a warning', async render => {
+        const e = await render(
+          <select readOnly={true}>
+            <option value={Symbol('test')} />
+          </select>,
+          1,
+        );
+        expect(e.firstChild.value).toBe('');
+      });
     });
 
     describe('user interaction', function() {

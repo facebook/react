@@ -12,7 +12,7 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
-import {getToStringValue, toString} from './ToStringValue';
+import {getToStringValue, toString} from '../shared/ToStringValue';
 
 let didWarnValueDefaultValue;
 

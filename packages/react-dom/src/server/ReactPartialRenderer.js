@@ -24,6 +24,7 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
+
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -56,6 +57,8 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import {getToStringValue, toString} from '../shared/ToStringValue';
+import type {ToStringValue} from '../shared/ToStringValue';
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -681,8 +684,7 @@ type FrameDev = Frame & {
 class ReactDOMServerRenderer {
   stack: Array<Frame>;
   exhausted: boolean;
-  // TODO: type this more strictly:
-  currentSelectValue: any;
+  currentSelectValue: ?ToStringValue;
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
 
@@ -831,7 +833,7 @@ class ReactDOMServerRenderer {
     parentNamespace: string,
   ): string {
     if (typeof child === 'string' || typeof child === 'number') {
-      const text = '' + child;
+      const text = toString(getToStringValue(child));
       if (text === '') {
         return '';
       }
@@ -1037,9 +1039,14 @@ class ReactDOMServerRenderer {
       }
     }
 
+    let props = element.props;
+
     validateDangerousTag(tag);
 
-    let props = element.props;
+    if (__DEV__) {
+      validatePropertiesInDevelopment(tag, props);
+    }
+
     if (tag === 'input') {
       if (__DEV__) {
         ReactControlledValuePropTypes.checkPropTypes('input', props);
@@ -1139,7 +1146,7 @@ class ReactDOMServerRenderer {
             textareaChildren = textareaChildren[0];
           }
 
-          defaultValue = '' + textareaChildren;
+          defaultValue = toString(getToStringValue(textareaChildren));
         }
         if (defaultValue == null) {
           defaultValue = '';
@@ -1149,7 +1156,7 @@ class ReactDOMServerRenderer {
 
       props = Object.assign({}, props, {
         value: undefined,
-        children: '' + initialValue,
+        children: toString(getToStringValue(initialValue)),
       });
     } else if (tag === 'select') {
       if (__DEV__) {
@@ -1206,21 +1213,21 @@ class ReactDOMServerRenderer {
       if (selectValue != null) {
         let value;
         if (props.value != null) {
-          value = props.value + '';
+          value = getToStringValue(props.value);
         } else {
-          value = optionChildren;
+          value = getToStringValue(optionChildren);
         }
         selected = false;
         if (Array.isArray(selectValue)) {
           // multiple
           for (let j = 0; j < selectValue.length; j++) {
-            if ('' + selectValue[j] === value) {
+            if (getToStringValue(selectValue[j]) === value) {
               selected = true;
               break;
             }
           }
         } else {
-          selected = '' + selectValue === value;
+          selected = getToStringValue(selectValue) === value;
         }
 
         props = Object.assign(
@@ -1235,10 +1242,6 @@ class ReactDOMServerRenderer {
           },
         );
       }
-    }
-
-    if (__DEV__) {
-      validatePropertiesInDevelopment(tag, props);
     }
 
     assertValidProps(tag, props);

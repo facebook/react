@@ -10,7 +10,7 @@
 import React from 'react';
 import warning from 'shared/warning';
 import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
-import {getToStringValue, toString} from './ToStringValue';
+import {getToStringValue, toString} from '../shared/ToStringValue';
 
 let didWarnSelectedSetOnOption = false;
 
