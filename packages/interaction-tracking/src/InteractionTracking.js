@@ -7,6 +7,7 @@
  * @flow
  */
 
+import invariant from 'shared/invariant';
 import {
   enableInteractionTracking,
   enableInteractionTrackingObserver,
@@ -55,7 +56,9 @@ export type InteractionsRef = {
   current: Set<Interaction>,
 };
 
-export type Subscribers = Set<Subscriber>;
+export type SubscriberRef = {
+  current: Subscriber | null,
+};
 
 const DEFAULT_THREAD_ID = 0;
 
@@ -71,20 +74,22 @@ let interactionsRef: InteractionsRef | null = null;
 
 // Listener(s) to notify when interactions begin and end.
 // Note that subscribers are only supported when enableInteractionTrackingObserver is enabled.
-let subscribers: Subscribers | null = null;
+let subscriberRef: SubscriberRef | null = null;
 
 if (enableInteractionTracking) {
   interactionsRef = {
     current: new Set(),
   };
   if (enableInteractionTrackingObserver) {
-    subscribers = new Set();
+    subscriberRef = {
+      current: null,
+    };
   }
 }
 
 // These values are exported for libraries with advanced use cases (i.e. React).
 // They should not typically be accessed directly.
-export {interactionsRef as __interactionsRef, subscribers as __subscribers};
+export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
 
 export function clear(callback: Function): any {
   if (!enableInteractionTracking) {
@@ -115,7 +120,12 @@ export function getThreadID(): number {
 
 export function subscribe(subscriber: Subscriber): void {
   if (enableInteractionTracking && enableInteractionTrackingObserver) {
-    ((subscribers: any): Subscribers).add(subscriber);
+    invariant(
+      ((subscriberRef: any): SubscriberRef).current === null ||
+        ((subscriberRef: any): SubscriberRef).current === subscriber,
+      'Only one interactions subscriber may be registered at a time.',
+    );
+    ((subscriberRef: any): SubscriberRef).current = subscriber;
   }
 }
 
@@ -149,14 +159,15 @@ export function track(
 
     let caughtError = null;
     let returnValue;
+    let subscriber = ((subscriberRef: any): SubscriberRef).current;
 
-    try {
-      ((subscribers: any): Subscribers).forEach(subscriber => {
+    if (subscriber !== null) {
+      try {
         subscriber.onInteractionTracked(interaction);
         subscriber.onWorkStarted(interactions, threadID);
-      });
-    } catch (error) {
-      caughtError = caughtError || error;
+      } catch (error) {
+        caughtError = caughtError || error;
+      }
     }
 
     try {
@@ -167,23 +178,21 @@ export function track(
 
     ((interactionsRef: any): InteractionsRef).current = prevInteractions;
 
-    try {
-      ((subscribers: any): Subscribers).forEach(subscriber =>
-        subscriber.onWorkStopped(interactions, threadID),
-      );
-    } catch (error) {
-      caughtError = caughtError || error;
+    if (subscriber !== null) {
+      try {
+        subscriber.onWorkStopped(interactions, threadID);
+      } catch (error) {
+        caughtError = caughtError || error;
+      }
     }
 
     interaction.__count = ((interaction.__count: any): number) - 1;
 
     // If no async work was scheduled for this interaction,
     // Notify subscribers that it's completed.
-    if (((interaction.__count: any): number) === 0) {
+    if (subscriber !== null && ((interaction.__count: any): number) === 0) {
       try {
-        ((subscribers: any): Subscribers).forEach(subscriber =>
-          subscriber.onInteractionScheduledWorkCompleted(interaction),
-        );
+        subscriber.onInteractionScheduledWorkCompleted(interaction);
       } catch (error) {
         caughtError = caughtError || error;
       }
@@ -205,7 +214,7 @@ export function track(
 
 export function unsubscribe(subscriber: Subscriber): void {
   if (enableInteractionTracking && enableInteractionTrackingObserver) {
-    ((subscribers: any): Subscribers).delete(subscriber);
+    ((subscriberRef: any): SubscriberRef).current = null;
   }
 }
 
@@ -220,9 +229,10 @@ export function wrap(
   const wrappedInteractions = ((interactionsRef: any): InteractionsRef).current;
 
   if (enableInteractionTrackingObserver) {
-    ((subscribers: any): Subscribers).forEach(subscriber =>
-      subscriber.onWorkScheduled(wrappedInteractions, threadID),
-    );
+    const subscriber = ((subscriberRef: any): SubscriberRef).current;
+    if (subscriber !== null) {
+      subscriber.onWorkScheduled(wrappedInteractions, threadID);
+    }
 
     // Update the pending async work count for the current interactions.
     // Update after calling subscribers in case of error.
@@ -236,14 +246,16 @@ export function wrap(
     ((interactionsRef: any): InteractionsRef).current = wrappedInteractions;
 
     if (enableInteractionTrackingObserver) {
+      const subscriber = ((subscriberRef: any): SubscriberRef).current;
+
       try {
         let caughtError = null;
         let returnValue;
 
         try {
-          ((subscribers: any): Subscribers).forEach(subscriber =>
-            subscriber.onWorkStarted(wrappedInteractions, threadID),
-          );
+          if (subscriber !== null) {
+            subscriber.onWorkStarted(wrappedInteractions, threadID);
+          }
         } catch (error) {
           caughtError = caughtError || error;
         }
@@ -257,9 +269,9 @@ export function wrap(
         ((interactionsRef: any): InteractionsRef).current = prevInteractions;
 
         try {
-          ((subscribers: any): Subscribers).forEach(subscriber =>
-            subscriber.onWorkStopped(wrappedInteractions, threadID),
-          );
+          if (subscriber !== null) {
+            subscriber.onWorkStopped(wrappedInteractions, threadID);
+          }
         } catch (error) {
           caughtError = caughtError || error;
         }
@@ -276,10 +288,11 @@ export function wrap(
         wrappedInteractions.forEach(interaction => {
           interaction.__count = ((interaction.__count: any): number) - 1;
 
-          if (((interaction.__count: any): number) === 0) {
-            ((subscribers: any): Subscribers).forEach(subscriber =>
-              subscriber.onInteractionScheduledWorkCompleted(interaction),
-            );
+          if (
+            subscriber !== null &&
+            ((interaction.__count: any): number) === 0
+          ) {
+            subscriber.onInteractionScheduledWorkCompleted(interaction);
           }
         });
       }
@@ -294,10 +307,12 @@ export function wrap(
 
   if (enableInteractionTrackingObserver) {
     wrapped.cancel = () => {
+      const subscriber = ((subscriberRef: any): SubscriberRef).current;
+
       try {
-        ((subscribers: any): Subscribers).forEach(subscriber =>
-          subscriber.onWorkCanceled(wrappedInteractions, threadID),
-        );
+        if (subscriber !== null) {
+          subscriber.onWorkCanceled(wrappedInteractions, threadID);
+        }
       } finally {
         // Update pending async counts for all wrapped interactions.
         // If this was the last scheduled async work for any of them,
@@ -305,10 +320,8 @@ export function wrap(
         wrappedInteractions.forEach(interaction => {
           interaction.__count = ((interaction.__count: any): number) - 1;
 
-          if (((interaction.__count: any): number) === 0) {
-            ((subscribers: any): Subscribers).forEach(subscriber =>
-              subscriber.onInteractionScheduledWorkCompleted(interaction),
-            );
+          if (subscriber && ((interaction.__count: any): number) === 0) {
+            subscriber.onInteractionScheduledWorkCompleted(interaction);
           }
         });
       }

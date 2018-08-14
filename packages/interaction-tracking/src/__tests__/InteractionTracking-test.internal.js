@@ -291,7 +291,7 @@ describe('InteractionTracking', () => {
       });
     });
 
-    describe('interaction observers enabled', () => {
+    describe('interaction subscribers enabled', () => {
       let onInteractionScheduledWorkCompleted;
       let onInteractionTracked;
       let onWorkCanceled;
@@ -382,6 +382,25 @@ describe('InteractionTracking', () => {
         });
 
         describe('error handling', () => {
+          it('should error if a second subscriber is registerted', () => {
+            // Re-registering the current subscriber is fine.
+            InteractionTracking.subscribe(subscriber);
+
+            const newSubscriber = {
+              onInteractionScheduledWorkCompleted,
+              onInteractionTracked,
+              onWorkCanceled,
+              onWorkScheduled,
+              onWorkStarted,
+              onWorkStopped,
+            };
+
+            // Registering a new one should fail.
+            expect(() => InteractionTracking.subscribe(newSubscriber)).toThrow(
+              'Only one interactions subscriber may be registered at a time.',
+            );
+          });
+
           it('should cover onInteractionTracked/onWorkStarted within', done => {
             InteractionTracking.track(firstEvent.name, () => {
               const mock = jest.fn();
@@ -658,7 +677,7 @@ describe('InteractionTracking', () => {
           ).toMatchInteraction(secondEvent);
         });
 
-        it('should call the correct interaction observer methods when a wrapped callback is canceled', () => {
+        it('should call the correct interaction subscriber methods when a wrapped callback is canceled', () => {
           const fnOne = jest.fn();
           const fnTwo = jest.fn();
           let wrappedOne, wrappedTwo;
@@ -744,9 +763,10 @@ describe('InteractionTracking', () => {
             );
           });
 
-          it('should expose the current set of interaction observers to be called externally', () => {
-            const observer = Array.from(InteractionTracking.__subscribers)[0];
-            expect(observer.onInteractionTracked).toBe(onInteractionTracked);
+          it('should expose the current set of interaction subscribers to be called externally', () => {
+            expect(
+              InteractionTracking.__subscriberRef.current.onInteractionTracked,
+            ).toBe(onInteractionTracked);
           });
         });
       });
@@ -761,7 +781,7 @@ describe('InteractionTracking', () => {
           InteractionTracking.subscribe(subscriber);
         });
 
-        it('should not call registerted observers', () => {
+        it('should not call registerted subscribers', () => {
           const unwrapped = jest.fn();
           let wrapped;
           InteractionTracking.track(firstEvent.name, () => {
@@ -781,7 +801,7 @@ describe('InteractionTracking', () => {
 
         describe('advanced integration', () => {
           it('should not create unnecessary objects', () => {
-            expect(InteractionTracking.__subscribers).toBe(null);
+            expect(InteractionTracking.__subscriberRef).toBe(null);
           });
         });
       });
