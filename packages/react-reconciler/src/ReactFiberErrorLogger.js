@@ -21,11 +21,6 @@ export function logCapturedError(capturedError: CapturedError): void {
   }
 
   const error = (capturedError.error: any);
-  const suppressLogging = error && error.suppressReactErrorLogging;
-  if (suppressLogging) {
-    return;
-  }
-
   if (__DEV__) {
     const {
       componentName,
