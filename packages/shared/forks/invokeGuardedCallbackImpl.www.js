@@ -34,8 +34,6 @@ let invokeGuardedCallbackImpl = function<A, B, C, D, E, F, Context>(
   // The www version doesn't take the `onError` callback on context.
   // Instead, it writes the result to fields on context.
   // TODO: change the www function API so we can re-export it directly.
-  result._hasCaughtError = false;
-  result._caughtError = null;
   ReactFbErrorUtils.invokeGuardedCallback.apply(result, arguments);
   if (result._hasCaughtError) {
     this.onError(result._caughtError);
