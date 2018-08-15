@@ -599,19 +599,17 @@ export function commitUpdateQueue<State>(
   }
 
   // Commit the effects
-  let effect = finishedQueue.firstEffect;
+  commitUpdateEffects(finishedQueue.firstEffect, instance);
   finishedQueue.firstEffect = finishedQueue.lastEffect = null;
-  while (effect !== null) {
-    const callback = effect.callback;
-    if (callback !== null) {
-      effect.callback = null;
-      callCallback(callback, instance);
-    }
-    effect = effect.nextEffect;
-  }
 
-  effect = finishedQueue.firstCapturedEffect;
+  commitUpdateEffects(finishedQueue.firstCapturedEffect, instance);
   finishedQueue.firstCapturedEffect = finishedQueue.lastCapturedEffect = null;
+}
+
+function commitUpdateEffects<State>(
+  effect: Update<State> | null,
+  instance: any,
+): void {
   while (effect !== null) {
     const callback = effect.callback;
     if (callback !== null) {
