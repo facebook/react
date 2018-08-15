@@ -198,7 +198,7 @@ function updateForwardRefLazy(
 ) {
   const props = workInProgress.pendingProps;
   const resolvedProps = resolveDefaultProps(Component, props);
-  if (resolvedProps !== null) {
+  if (resolvedProps !== props) {
     workInProgress.pendingProps = resolvedProps;
     const child = updateForwardRef(
       current,
@@ -322,7 +322,7 @@ function updateFunctionalComponentLazy(
 ) {
   const props = workInProgress.pendingProps;
   const resolvedProps = resolveDefaultProps(Component, props);
-  if (resolvedProps !== null) {
+  if (resolvedProps !== props) {
     workInProgress.pendingProps = resolvedProps;
     const child = updateFunctionalComponent(
       current,
@@ -501,7 +501,7 @@ function updateClassComponentLazy(
 ) {
   const props = workInProgress.pendingProps;
   const resolvedProps = resolveDefaultProps(Component, props);
-  if (resolvedProps !== null) {
+  if (resolvedProps !== props) {
     workInProgress.pendingProps = resolvedProps;
     const child = updateClassComponent(
       current,
@@ -682,7 +682,7 @@ function resolveDefaultProps(Component, baseProps) {
     }
     return props;
   }
-  return null;
+  return baseProps;
 }
 
 function mountIndeterminateComponent(
