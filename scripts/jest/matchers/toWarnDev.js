@@ -2,6 +2,7 @@
 
 const jestDiff = require('jest-diff');
 const util = require('util');
+const shouldIgnoreConsoleError = require('../shouldIgnoreConsoleError');
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
@@ -53,7 +54,13 @@ const createMatcherFor = consoleMethod =>
       const isLikelyAComponentStack = message =>
         typeof message === 'string' && message.includes('\n    in ');
 
-      const consoleSpy = (format, ...args) => {
+      const createConsoleSpy = methodName => (format, ...args) => {
+        // Ignore uncaught errors reported by jsdom
+        // and React addendums because they're too noisy.
+        if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
+          return;
+        }
+
         const message = util.format(format, ...args);
         const normalizedMessage = normalizeCodeLocInfo(message);
 
@@ -125,7 +132,7 @@ const createMatcherFor = consoleMethod =>
       const originalMethod = console[consoleMethod];
 
       // Avoid using Jest's built-in spy since it can't be removed.
-      console[consoleMethod] = consoleSpy;
+      console[consoleMethod] = createConsoleSpy(consoleMethod);
 
       try {
         callback();

@@ -2,6 +2,7 @@
 
 const chalk = require('chalk');
 const util = require('util');
+const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
@@ -66,6 +67,12 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   ['error', 'warn'].forEach(methodName => {
     const unexpectedConsoleCallStacks = [];
     const newMethod = function(format, ...args) {
+      // Ignore uncaught errors reported by jsdom
+      // and React addendums because they're too noisy.
+      if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
+        return;
+      }
+
       // Capture the call stack now so we can warn about it later.
       // The call stack has helpful information for the test author.
       // Don't throw yet though b'c it might be accidentally caught and suppressed.
