@@ -23,19 +23,15 @@ export function toString(value: ToStringValue): string {
 }
 
 export function getToStringValue(value: mixed): ToStringValue {
-  return isStringifiableValue(value) ? value : '';
-}
-
-export function isStringifiableValue(value: mixed): boolean {
   switch (typeof value) {
     case 'boolean':
     case 'number':
     case 'object':
     case 'string':
     case 'undefined':
-      return true;
+      return value;
     default:
       // function, symbol are not stringified
-      return false;
+      return '';
   }
 }
