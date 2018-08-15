@@ -175,7 +175,7 @@ function coerceRef(
     } else {
       invariant(
         typeof mixedRef === 'string',
-        'Expected ref to be a function or a string.',
+        'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
       );
       invariant(
         element._owner,
