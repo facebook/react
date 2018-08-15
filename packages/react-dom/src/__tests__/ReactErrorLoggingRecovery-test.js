@@ -19,12 +19,6 @@ if (global.window) {
 const React = require('react');
 const ReactDOM = require('react-dom');
 
-// Unlike other tests, we want to enable error logging.
-// Note this is not a real Error prototype property,
-// it's only set in our Jest environment.
-// eslint-disable-next-line no-extend-native
-Error.prototype.suppressReactErrorLogging = false;
-
 // Initialize JSDOM separately.
 // We don't use our normal JSDOM setup because we want to load React first.
 const {JSDOM} = require('jsdom');
