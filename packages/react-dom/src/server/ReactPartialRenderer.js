@@ -56,7 +56,7 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {toString, isStringifiableValue} from '../shared/ToStringValue';
+import {toString, getToStringValue} from '../shared/ToStringValue';
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -832,7 +832,7 @@ class ReactDOMServerRenderer {
     parentNamespace: string,
   ): string {
     if (typeof child === 'string' || typeof child === 'number') {
-      const text = toString(child);
+      const text = '' + child;
       if (text === '') {
         return '';
       }
@@ -1041,6 +1041,11 @@ class ReactDOMServerRenderer {
     validateDangerousTag(tag);
 
     let props = element.props;
+
+    if (__DEV__) {
+      validatePropertiesInDevelopment(tag, props);
+    }
+
     if (tag === 'input') {
       if (__DEV__) {
         ReactControlledValuePropTypes.checkPropTypes('input', props);
@@ -1146,23 +1151,9 @@ class ReactDOMServerRenderer {
           defaultValue = '';
         }
         initialValue = defaultValue;
-      } else {
-        // Validate the value prop, otherwise it gets passed through
-        // as children and does not receive the same validations
-        if (__DEV__ && !isStringifiableValue(initialValue)) {
-          validatePropertiesInDevelopment(tag, {value: initialValue});
-        }
       }
 
-      // Unless the value will raise a warning, stringify it
-      // Avoid numbers because the always stringify correctly and
-      // We do not want to stringify NaN
-      if (
-        typeof initialValue !== 'number' &&
-        isStringifiableValue(initialValue)
-      ) {
-        initialValue = toString(initialValue);
-      }
+      initialValue = toString(getToStringValue(initialValue));
 
       props = Object.assign({}, props, {
         value: undefined,
@@ -1210,13 +1201,6 @@ class ReactDOMServerRenderer {
           );
           didWarnDefaultSelectValue = true;
         }
-
-        // Validate the value prop, otherwise it gets passed through
-        // as children and does not receive the same validations
-        validatePropertiesInDevelopment(tag, {
-          value: props.value,
-          defaultValue: props.defaultValue,
-        });
       }
       this.currentSelectValue =
         props.value != null ? props.value : props.defaultValue;
@@ -1259,10 +1243,6 @@ class ReactDOMServerRenderer {
           },
         );
       }
-    }
-
-    if (__DEV__) {
-      validatePropertiesInDevelopment(tag, props);
     }
 
     assertValidProps(tag, props);

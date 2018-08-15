@@ -2560,7 +2560,7 @@
 | `defaultChecked=(-1)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(0)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(integer)`| (changed)| `<boolean: true>` |
-| `defaultChecked=(NaN)`| (initial, warning, ssr warning)| `<boolean: false>` |
+| `defaultChecked=(NaN)`| (initial, warning)| `<boolean: false>` |
 | `defaultChecked=(float)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(true)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(false)`| (initial)| `<boolean: false>` |
@@ -2593,9 +2593,9 @@
 | `defaultValue=(string 'false')`| (changed)| `"false"` |
 | `defaultValue=(string 'on')`| (changed)| `"on"` |
 | `defaultValue=(string 'off')`| (changed)| `"off"` |
-| `defaultValue=(symbol)`| (initial, ssr warning)| `<empty string>` |
-| `defaultValue=(function)`| (initial, ssr warning)| `<empty string>` |
-| `defaultValue=(null)`| (initial, ssr warning)| `<empty string>` |
+| `defaultValue=(symbol)`| (initial)| `<empty string>` |
+| `defaultValue=(function)`| (initial)| `<empty string>` |
+| `defaultValue=(null)`| (initial)| `<empty string>` |
 | `defaultValue=(undefined)`| (initial)| `<empty string>` |
 
 ## `defaultValuE` (on `<input>` inside `<div>`)
@@ -11785,7 +11785,7 @@
 | `value=(-1)`| (changed)| `"-1"` |
 | `value=(0)`| (changed)| `"0"` |
 | `value=(integer)`| (changed)| `"1"` |
-| `value=(NaN)`| (changed, warning, ssr warning)| `"NaN"` |
+| `value=(NaN)`| (changed, warning)| `"NaN"` |
 | `value=(float)`| (changed)| `"99.99"` |
 | `value=(true)`| (changed)| `"true"` |
 | `value=(false)`| (changed)| `"false"` |
@@ -11793,9 +11793,9 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr warning)| `<empty string>` |
-| `value=(function)`| (initial, warning, ssr warning)| `<empty string>` |
-| `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
+| `value=(function)`| (initial, warning)| `<empty string>` |
+| `value=(null)`| (initial, warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<input>` inside `<div>`)
@@ -11820,7 +11820,7 @@
 | `value=(string 'off')`| (changed)| `"off"` |
 | `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
-| `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(null)`| (initial, warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<input>` inside `<div>`)
@@ -11845,7 +11845,7 @@
 | `value=(string 'off')`| (initial)| `<empty string>` |
 | `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
-| `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(null)`| (initial, warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<textarea>` inside `<div>`)
@@ -11870,7 +11870,7 @@
 | `value=(string 'off')`| (changed)| `"off"` |
 | `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
-| `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(null)`| (initial, warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
 ## `value` (on `<option>` inside `<select>`)
