@@ -175,12 +175,12 @@ const forks = Object.freeze({
   },
 
   // Different wrapping/reporting for caught errors.
-  'shared/invokeGuardedCallback': (bundleType, entry) => {
+  'shared/invokeGuardedCallbackImpl': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-        return 'shared/forks/invokeGuardedCallback.www.js';
+        return 'shared/forks/invokeGuardedCallbackImpl.www.js';
       default:
         return null;
     }

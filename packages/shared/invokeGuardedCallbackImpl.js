@@ -9,7 +9,7 @@
 
 import invariant from 'shared/invariant';
 
-let invokeGuardedCallback = function<A, B, C, D, E, F, Context>(
+let invokeGuardedCallbackImpl = function<A, B, C, D, E, F, Context>(
   name: string | null,
   func: (a: A, b: B, c: C, d: D, e: E, f: F) => mixed,
   context: Context,
@@ -20,14 +20,11 @@ let invokeGuardedCallback = function<A, B, C, D, E, F, Context>(
   e: E,
   f: F,
 ) {
-  this._hasCaughtError = false;
-  this._caughtError = null;
   const funcArgs = Array.prototype.slice.call(arguments, 3);
   try {
     func.apply(context, funcArgs);
   } catch (error) {
-    this._caughtError = error;
-    this._hasCaughtError = true;
+    this.onError(error);
   }
 };
 
@@ -143,7 +140,7 @@ if (__DEV__) {
       let didSetError = false;
       let isCrossOriginError = false;
 
-      function onError(event) {
+      function handleWindowError(event) {
         error = event.error;
         didSetError = true;
         if (error === null && event.colno === 0 && event.lineno === 0) {
@@ -167,7 +164,7 @@ if (__DEV__) {
       const evtType = `react-${name ? name : 'invokeguardedcallback'}`;
 
       // Attach our event handlers
-      window.addEventListener('error', onError);
+      window.addEventListener('error', handleWindowError);
       fakeNode.addEventListener(evtType, callCallback, false);
 
       // Synchronously dispatch our fake event. If the user-provided function
@@ -195,19 +192,15 @@ if (__DEV__) {
               'See https://fb.me/react-crossorigin-error for more information.',
           );
         }
-        this._hasCaughtError = true;
-        this._caughtError = error;
-      } else {
-        this._hasCaughtError = false;
-        this._caughtError = null;
+        this.onError(error);
       }
 
       // Remove our event listeners
-      window.removeEventListener('error', onError);
+      window.removeEventListener('error', handleWindowError);
     };
 
-    invokeGuardedCallback = invokeGuardedCallbackDev;
+    invokeGuardedCallbackImpl = invokeGuardedCallbackDev;
   }
 }
 
-export default invokeGuardedCallback;
+export default invokeGuardedCallbackImpl;

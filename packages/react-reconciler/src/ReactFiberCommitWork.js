@@ -29,7 +29,11 @@ import {
   Profiler,
   PlaceholderComponent,
 } from 'shared/ReactTypeOfWork';
-import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} from 'shared/ReactErrorUtils';
 import {
   NoEffect,
   ContentReset,
@@ -71,12 +75,6 @@ import {
   scheduleWork,
 } from './ReactFiberScheduler';
 import {StrictMode} from './ReactTypeOfMode';
-
-const {
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} = ReactErrorUtils;
 
 const emptyObject = {};
 
