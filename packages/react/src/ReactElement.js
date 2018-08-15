@@ -187,8 +187,8 @@ export function createElement(type, config, children) {
       key = '' + config.key;
     }
 
-    self = config.__self || null;
-    source = config.__source || null;
+    self = config.__self === undefined ? null : config.__self;
+    source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
     for (propName in config) {
       if (
