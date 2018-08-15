@@ -93,7 +93,7 @@ import {
   ShouldCapture,
   DidCapture,
 } from 'shared/ReactTypeOfSideEffect';
-import {ClassComponent} from 'shared/ReactTypeOfWork';
+import {ClassComponent, ClassComponentLazy} from 'shared/ReactTypeOfWork';
 
 import {
   debugRenderPhaseSideEffects,
@@ -275,7 +275,7 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
 
   if (__DEV__) {
     if (
-      fiber.tag === ClassComponent &&
+      (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy) &&
       (currentlyProcessingQueue === queue1 ||
         (queue2 !== null && currentlyProcessingQueue === queue2)) &&
       !didWarnUpdateInsideUpdate

@@ -23,6 +23,7 @@ import {
 import {
   FunctionalComponent,
   ClassComponent,
+  ClassComponentLazy,
   HostText,
   HostPortal,
   Fragment,
@@ -117,7 +118,7 @@ function coerceRef(
         if (!didWarnAboutStringRefInStrictMode[componentName]) {
           warningWithoutStack(
             false,
-            'A string ref, "%s", has been found within a strict mode tree. ' +
+            'A string ref, "%s", has been found within a strict mode tree. ' +
               'String refs are a source of potential bugs and should be avoided. ' +
               'We recommend using createRef() instead.' +
               '\n%s' +
@@ -137,7 +138,8 @@ function coerceRef(
       if (owner) {
         const ownerFiber = ((owner: any): Fiber);
         invariant(
-          ownerFiber.tag === ClassComponent,
+          ownerFiber.tag === ClassComponent ||
+            ownerFiber.tag === ClassComponentLazy,
           'Stateless function components cannot have refs.',
         );
         inst = ownerFiber.stateNode;
@@ -377,14 +379,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    const elementType = element.type;
-    if (
-      current !== null &&
-      (current.type === elementType ||
-        (elementType !== null &&
-          elementType !== undefined &&
-          current.type === elementType._reactResult))
-    ) {
+    if (current !== null && current.type === element.type) {
       // Move based on index
       const existing = useFiber(current, element.props, expirationTime);
       existing.ref = coerceRef(returnFiber, current, element);
@@ -1118,26 +1113,21 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    const elementType = element.type;
     const key = element.key;
     let child = currentFirstChild;
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        const childType = child.type;
         if (
           child.tag === Fragment
-            ? elementType === REACT_FRAGMENT_TYPE
-            : childType === elementType ||
-              (elementType !== null &&
-                elementType !== undefined &&
-                childType === elementType._reactResult)
+            ? element.type === REACT_FRAGMENT_TYPE
+            : child.type === element.type
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
             child,
-            elementType === REACT_FRAGMENT_TYPE
+            element.type === REACT_FRAGMENT_TYPE
               ? element.props.children
               : element.props,
             expirationTime,
@@ -1159,7 +1149,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       child = child.sibling;
     }
 
-    if (elementType === REACT_FRAGMENT_TYPE) {
+    if (element.type === REACT_FRAGMENT_TYPE) {
       const created = createFiberFromFragment(
         element.props.children,
         returnFiber.mode,
@@ -1319,7 +1309,8 @@ function ChildReconciler(shouldTrackSideEffects) {
       // component, throw an error. If Fiber return types are disabled,
       // we already threw above.
       switch (returnFiber.tag) {
-        case ClassComponent: {
+        case ClassComponent:
+        case ClassComponentLazy: {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
             if (instance.render._isMockFunction) {

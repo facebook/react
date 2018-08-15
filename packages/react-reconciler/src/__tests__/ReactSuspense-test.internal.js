@@ -1414,8 +1414,8 @@ describe('ReactSuspense', () => {
                   <LazyChildA key="A" label="A" />,
                 ]
               : [
-                  <LazyChildB key="A" label="A" />,
-                  <LazyChildA key="B" label="B" />,
+                  <LazyChildA key="A" label="A" />,
+                  <LazyChildB key="B" label="B" />,
                 ]}
           </Placeholder>
         );

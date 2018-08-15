@@ -23,7 +23,11 @@ import {
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {HostComponent} from 'shared/ReactTypeOfWork';
+import {
+  HostComponent,
+  ClassComponent,
+  ClassComponentLazy,
+} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -31,7 +35,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
-  isContextProvider,
   processChildContext,
   emptyContextObject,
 } from './ReactFiberContext';
@@ -56,6 +59,7 @@ import {
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
+import {getLazyComponentTypeIfResolved} from 'react-reconciler/src/ReactFiberLazyComponent';
 
 type OpaqueRoot = FiberRoot;
 
@@ -91,9 +95,24 @@ function getContextForSubtree(
 
   const fiber = ReactInstanceMap.get(parentComponent);
   const parentContext = findCurrentUnmaskedContext(fiber);
-  return isContextProvider(fiber)
-    ? processChildContext(fiber, parentContext)
-    : parentContext;
+
+  if (fiber.tag === ClassComponent) {
+    const type = fiber.type;
+    const childContextTypes = type.childContextTypes;
+    if (childContextTypes !== undefined && childContextTypes !== null) {
+      return processChildContext(fiber, type, parentContext);
+    }
+  } else if (fiber.tag === ClassComponentLazy) {
+    const type = getLazyComponentTypeIfResolved(fiber.type);
+    if (type !== null) {
+      const childContextTypes = type.childContextTypes;
+      if (childContextTypes !== undefined && childContextTypes !== null) {
+        return processChildContext(fiber, type, parentContext);
+      }
+    }
+  }
+
+  return parentContext;
 }
 
 function scheduleRootUpdate(

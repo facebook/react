@@ -19,6 +19,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
+import {Resolved, Rejected} from 'react-reconciler/src/ReactFiberLazyComponent';
 
 function getComponentName(type: mixed): string | null {
   if (type == null) {
@@ -66,6 +67,12 @@ function getComponentName(type: mixed): string | null {
         return functionName !== ''
           ? `ForwardRef(${functionName})`
           : 'ForwardRef';
+    }
+    if (typeof type.then === 'function') {
+      const status = type._reactStatus;
+      if (status === Resolved || status === Rejected) {
+        return getComponentName(type._reactResult);
+      }
     }
   }
   return null;

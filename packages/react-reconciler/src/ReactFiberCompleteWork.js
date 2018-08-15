@@ -23,7 +23,9 @@ import type {
 import {
   IndeterminateComponent,
   FunctionalComponent,
+  FunctionalComponentLazy,
   ClassComponent,
+  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,
@@ -35,6 +37,7 @@ import {
   Mode,
   Profiler,
   PlaceholderComponent,
+  ForwardRefLazy,
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'shared/invariant';
@@ -59,7 +62,7 @@ import {
   popHostContainer,
 } from './ReactFiberHostContext';
 import {
-  popContextProvider as popLegacyContextProvider,
+  popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
@@ -313,10 +316,23 @@ function completeWork(
 
   switch (workInProgress.tag) {
     case FunctionalComponent:
+    case FunctionalComponentLazy:
       break;
     case ClassComponent: {
       // We are leaving this subtree, so pop context if any.
-      popLegacyContextProvider(workInProgress);
+      const childContextTypes = workInProgress.type.childContextTypes;
+      if (childContextTypes !== null && childContextTypes !== undefined) {
+        popLegacyContext(workInProgress);
+      }
+      break;
+    }
+    case ClassComponentLazy: {
+      // We are leaving this subtree, so pop context if any.
+      const childContextTypes =
+        workInProgress.type._reactResult.childContextTypes;
+      if (childContextTypes !== null && childContextTypes !== undefined) {
+        popLegacyContext(workInProgress);
+      }
       break;
     }
     case HostRoot: {
@@ -479,6 +495,7 @@ function completeWork(
       break;
     }
     case ForwardRef:
+    case ForwardRefLazy:
       break;
     case PlaceholderComponent:
       break;

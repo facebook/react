@@ -11,7 +11,11 @@ import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 
 import {isFiberMounted} from 'react-reconciler/reflection';
-import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
+import {
+  ClassComponent,
+  HostRoot,
+  ClassComponentLazy,
+} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -20,6 +24,7 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
+import {getLazyComponentTypeIfResolved} from 'react-reconciler/src/ReactFiberLazyComponent';
 
 let warnedAboutMissingGetChildContext;
 
@@ -113,19 +118,23 @@ function hasContextChanged(): boolean {
   return didPerformWorkStackCursor.current;
 }
 
-function isContextConsumer(fiber: Fiber): boolean {
-  return fiber.tag === ClassComponent && fiber.type.contextTypes != null;
-}
-
 function isContextProvider(fiber: Fiber): boolean {
-  return fiber.tag === ClassComponent && fiber.type.childContextTypes != null;
+  let type;
+  if (fiber.tag === ClassComponent) {
+    type = fiber.type;
+  } else if (fiber.tag === ClassComponentLazy) {
+    type = getLazyComponentTypeIfResolved(fiber.type);
+    if (type === null) {
+      return false;
+    }
+  } else {
+    return false;
+  }
+  const childContextTypes = type.childContextTypes;
+  return childContextTypes !== null && childContextTypes !== undefined;
 }
 
-function popContextProvider(fiber: Fiber): void {
-  if (!isContextProvider(fiber)) {
-    return;
-  }
-
+function popContext(fiber: Fiber): void {
   pop(didPerformWorkStackCursor, fiber);
   pop(contextStackCursor, fiber);
 }
@@ -150,9 +159,12 @@ function pushTopLevelContextObject(
   push(didPerformWorkStackCursor, didChange, fiber);
 }
 
-function processChildContext(fiber: Fiber, parentContext: Object): Object {
+function processChildContext(
+  fiber: Fiber,
+  type: any,
+  parentContext: Object,
+): Object {
   const instance = fiber.stateNode;
-  const type = fiber.type;
   const childContextTypes = type.childContextTypes;
 
   // TODO (bvaughn) Replace this behavior with an invariant() in the future.
@@ -241,6 +253,7 @@ function pushContextProvider(workInProgress: Fiber): boolean {
 
 function invalidateContextProvider(
   workInProgress: Fiber,
+  type: any,
   didChange: boolean,
 ): void {
   const instance = workInProgress.stateNode;
@@ -254,7 +267,11 @@ function invalidateContextProvider(
     // Merge parent and own context.
     // Skip this if we're not updating due to sCU.
     // This avoids unnecessarily recomputing memoized values.
-    const mergedContext = processChildContext(workInProgress, previousContext);
+    const mergedContext = processChildContext(
+      workInProgress,
+      type,
+      previousContext,
+    );
     instance.__reactInternalMemoizedMergedChildContext = mergedContext;
 
     // Replace the old (or empty) context with the new one.
@@ -274,7 +291,8 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
   // Currently this is only used with renderSubtreeIntoContainer; not sure if it
   // makes sense elsewhere
   invariant(
-    isFiberMounted(fiber) && fiber.tag === ClassComponent,
+    isFiberMounted(fiber) &&
+      (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy),
     'Expected subtree parent to be a mounted class component. ' +
       'This error is likely caused by a bug in React. Please file an issue.',
   );
@@ -300,9 +318,7 @@ export {
   cacheContext,
   getMaskedContext,
   hasContextChanged,
-  isContextConsumer,
-  isContextProvider,
-  popContextProvider,
+  popContext,
   popTopLevelContextObject,
   pushTopLevelContextObject,
   processChildContext,

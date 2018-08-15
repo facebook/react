@@ -278,7 +278,7 @@ const createFiber = function(
   return new FiberNode(tag, pendingProps, key, mode);
 };
 
-function shouldConstruct(Component) {
+export function shouldConstruct(Component: Function) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
 
@@ -392,10 +392,6 @@ export function createFiberFromElement(
   const key = element.key;
   const pendingProps = element.props;
 
-  if (type !== null && type !== undefined && typeof type.then === 'function') {
-    type = resolveThenableType(type);
-  }
-
   let fiberTag;
   if (typeof type === 'function') {
     fiberTag = shouldConstruct(type) ? ClassComponent : IndeterminateComponent;
@@ -441,53 +437,6 @@ export function createFiberFromElement(
   return fiber;
 }
 
-export const Pending = 0;
-const Resolved = 1;
-const Rejected = 2;
-
-function UnresolvedComponent(thenable) {
-  thenable.then(
-    resolvedValue => {
-      if (thenable._reactStatus === Pending) {
-        thenable._reactStatus = Resolved;
-        // If the default value is not empty, assume it's the result of
-        // an async import() and use that. Otherwise, use resolved value.
-        const defaultExport = resolvedValue.default;
-        thenable._reactResult =
-          defaultExport !== null && defaultExport !== undefined
-            ? defaultExport
-            : resolvedValue;
-      }
-    },
-    error => {
-      if (thenable._reactStatus === Pending) {
-        thenable._reactStatus = Rejected;
-        thenable._reactResult = error;
-      }
-    },
-  );
-  throw thenable;
-}
-
-function RejectedComponent(error) {
-  throw error;
-}
-
-function resolveThenableType(type) {
-  const result = type._reactResult;
-  switch (type._reactStatus) {
-    case Pending:
-      return UnresolvedComponent.bind(null, type);
-    case Resolved:
-      return result;
-    case Rejected:
-      return RejectedComponent.bind(null, result);
-    default:
-      type._reactStatus = Pending;
-      return UnresolvedComponent.bind(null, type);
-  }
-}
-
 function getFiberTagFromObjectType(type, owner): TypeOfWork {
   const $$typeof =
     typeof type === 'object' && type !== null ? type.$$typeof : null;
@@ -501,6 +450,13 @@ function getFiberTagFromObjectType(type, owner): TypeOfWork {
     case REACT_FORWARD_REF_TYPE:
       return ForwardRef;
     default: {
+      if (
+        type !== undefined &&
+        type !== null &&
+        typeof type.then === 'function'
+      ) {
+        return IndeterminateComponent;
+      }
       let info = '';
       if (__DEV__) {
         if (

@@ -16,12 +16,15 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import {
   IndeterminateComponent,
   FunctionalComponent,
+  FunctionalComponentLazy,
   ClassComponent,
+  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
   ForwardRef,
+  ForwardRefLazy,
   Fragment,
   Mode,
   ContextProvider,
@@ -96,6 +99,8 @@ import {
   resumeMountClassInstance,
   updateClassInstance,
 } from './ReactFiberClassComponent';
+import {readLazyComponentType} from './ReactFiberLazyComponent';
+import {shouldConstruct} from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -145,9 +150,10 @@ export function reconcileChildren(
 function updateForwardRef(
   current: Fiber | null,
   workInProgress: Fiber,
+  type: any,
   renderExpirationTime: ExpirationTime,
 ) {
-  const render = workInProgress.type.render;
+  const render = type.render;
   const nextProps = workInProgress.pendingProps;
   const ref = workInProgress.ref;
   if (hasLegacyContextChanged()) {
@@ -250,9 +256,9 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
 function updateFunctionalComponent(
   current,
   workInProgress,
+  Component,
   renderExpirationTime,
 ) {
-  const fn = workInProgress.type;
   const nextProps = workInProgress.pendingProps;
   const unmaskedContext = getUnmaskedContext(workInProgress);
   const context = getMaskedContext(workInProgress, unmaskedContext);
@@ -262,10 +268,10 @@ function updateFunctionalComponent(
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     ReactCurrentFiber.setCurrentPhase('render');
-    nextChildren = fn(nextProps, context);
+    nextChildren = Component(nextProps, context);
     ReactCurrentFiber.setCurrentPhase(null);
   } else {
-    nextChildren = fn(nextProps, context);
+    nextChildren = Component(nextProps, context);
   }
 
   // React DevTools reads this flag.
@@ -283,6 +289,7 @@ function updateFunctionalComponent(
 function updateClassComponent(
   current: Fiber | null,
   workInProgress: Fiber,
+  Component: any,
   renderExpirationTime: ExpirationTime,
 ) {
   // Push context providers early to prevent context stack mismatches.
@@ -297,16 +304,18 @@ function updateClassComponent(
       // In the initial pass we might need to construct the instance.
       constructClassInstance(
         workInProgress,
+        Component,
         workInProgress.pendingProps,
         renderExpirationTime,
       );
-      mountClassInstance(workInProgress, renderExpirationTime);
+      mountClassInstance(workInProgress, Component, renderExpirationTime);
 
       shouldUpdate = true;
     } else {
       // In a resume, we'll already have an instance we can reuse.
       shouldUpdate = resumeMountClassInstance(
         workInProgress,
+        Component,
         renderExpirationTime,
       );
     }
@@ -314,12 +323,14 @@ function updateClassComponent(
     shouldUpdate = updateClassInstance(
       current,
       workInProgress,
+      Component,
       renderExpirationTime,
     );
   }
   return finishClassComponent(
     current,
     workInProgress,
+    Component,
     shouldUpdate,
     hasContext,
     renderExpirationTime,
@@ -329,6 +340,7 @@ function updateClassComponent(
 function finishClassComponent(
   current: Fiber | null,
   workInProgress: Fiber,
+  Component: any,
   shouldUpdate: boolean,
   hasContext: boolean,
   renderExpirationTime: ExpirationTime,
@@ -341,7 +353,7 @@ function finishClassComponent(
   if (!shouldUpdate && !didCaptureError) {
     // Context providers should defer to sCU for rendering
     if (hasContext) {
-      invalidateContextProvider(workInProgress, false);
+      invalidateContextProvider(workInProgress, Component, false);
     }
 
     return bailoutOnAlreadyFinishedWork(
@@ -351,7 +363,6 @@ function finishClassComponent(
     );
   }
 
-  const ctor = workInProgress.type;
   const instance = workInProgress.stateNode;
 
   // Rerender
@@ -360,7 +371,7 @@ function finishClassComponent(
   if (
     didCaptureError &&
     (!enableGetDerivedStateFromCatch ||
-      typeof ctor.getDerivedStateFromCatch !== 'function')
+      typeof Component.getDerivedStateFromCatch !== 'function')
   ) {
     // If we captured an error, but getDerivedStateFrom catch is not defined,
     // unmount all the children. componentDidCatch will schedule an update to
@@ -413,7 +424,7 @@ function finishClassComponent(
 
   // The context might have changed so we need to recalculate it.
   if (hasContext) {
-    invalidateContextProvider(workInProgress, true);
+    invalidateContextProvider(workInProgress, Component, true);
   }
 
   return workInProgress.child;
@@ -571,6 +582,7 @@ function updateHostText(current, workInProgress) {
 function mountIndeterminateComponent(
   current,
   workInProgress,
+  Component,
   renderExpirationTime,
 ) {
   invariant(
@@ -578,7 +590,50 @@ function mountIndeterminateComponent(
     'An indeterminate component should never have mounted. This error is ' +
       'likely caused by a bug in React. Please file an issue.',
   );
-  const fn = workInProgress.type;
+
+  if (
+    Component !== null &&
+    Component !== undefined &&
+    typeof Component.then === 'function'
+  ) {
+    Component = readLazyComponentType(Component);
+    if (typeof Component === 'function') {
+      if (shouldConstruct(Component)) {
+        workInProgress.tag = ClassComponentLazy;
+        return updateClassComponent(
+          current,
+          workInProgress,
+          Component,
+          renderExpirationTime,
+        );
+      } else {
+        const child = mountIndeterminateComponent(
+          current,
+          workInProgress,
+          Component,
+          renderExpirationTime,
+        );
+        workInProgress.tag =
+          workInProgress.tag === FunctionalComponent
+            ? FunctionalComponentLazy
+            : ClassComponentLazy;
+        return child;
+      }
+    } else if (
+      Component !== undefined &&
+      Component !== null &&
+      Component.$$typeof
+    ) {
+      workInProgress.tag = ForwardRefLazy;
+      return updateForwardRef(
+        current,
+        workInProgress,
+        Component,
+        renderExpirationTime,
+      );
+    }
+  }
+
   const props = workInProgress.pendingProps;
   const unmaskedContext = getUnmaskedContext(workInProgress);
   const context = getMaskedContext(workInProgress, unmaskedContext);
@@ -588,8 +643,11 @@ function mountIndeterminateComponent(
   let value;
 
   if (__DEV__) {
-    if (fn.prototype && typeof fn.prototype.render === 'function') {
-      const componentName = getComponentName(fn) || 'Unknown';
+    if (
+      Component.prototype &&
+      typeof Component.prototype.render === 'function'
+    ) {
+      const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutBadClass[componentName]) {
         warningWithoutStack(
@@ -608,9 +666,9 @@ function mountIndeterminateComponent(
     }
 
     ReactCurrentOwner.current = workInProgress;
-    value = fn(props, context);
+    value = Component(props, context);
   } else {
-    value = fn(props, context);
+    value = Component(props, context);
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
@@ -621,8 +679,6 @@ function mountIndeterminateComponent(
     typeof value.render === 'function' &&
     value.$$typeof === undefined
   ) {
-    const Component = workInProgress.type;
-
     // Proceed under the assumption that this is a class instance
     workInProgress.tag = ClassComponent;
 
@@ -638,16 +694,18 @@ function mountIndeterminateComponent(
     if (typeof getDerivedStateFromProps === 'function') {
       applyDerivedStateFromProps(
         workInProgress,
+        Component,
         getDerivedStateFromProps,
         props,
       );
     }
 
     adoptClassInstance(workInProgress, value);
-    mountClassInstance(workInProgress, renderExpirationTime);
+    mountClassInstance(workInProgress, Component, renderExpirationTime);
     return finishClassComponent(
       current,
       workInProgress,
+      Component,
       true,
       hasContext,
       renderExpirationTime,
@@ -656,8 +714,6 @@ function mountIndeterminateComponent(
     // Proceed under the assumption that this is a functional component
     workInProgress.tag = FunctionalComponent;
     if (__DEV__) {
-      const Component = workInProgress.type;
-
       if (Component) {
         warningWithoutStack(
           !Component.childContextTypes,
@@ -688,8 +744,8 @@ function mountIndeterminateComponent(
         }
       }
 
-      if (typeof fn.getDerivedStateFromProps === 'function') {
-        const componentName = getComponentName(fn) || 'Unknown';
+      if (typeof Component.getDerivedStateFromProps === 'function') {
+        const componentName = getComponentName(Component) || 'Unknown';
 
         if (!didWarnAboutGetDerivedStateOnFunctionalComponent[componentName]) {
           warningWithoutStack(
@@ -995,6 +1051,7 @@ function beginWork(
         pushHostContext(workInProgress);
         break;
       case ClassComponent:
+      case ClassComponentLazy:
         pushLegacyContextProvider(workInProgress);
         break;
       case HostPortal:
@@ -1025,24 +1082,53 @@ function beginWork(
   workInProgress.expirationTime = NoWork;
 
   switch (workInProgress.tag) {
-    case IndeterminateComponent:
+    case IndeterminateComponent: {
+      const Component = workInProgress.type;
       return mountIndeterminateComponent(
         current,
         workInProgress,
+        Component,
         renderExpirationTime,
       );
-    case FunctionalComponent:
+    }
+    case FunctionalComponent: {
+      const Component = workInProgress.type;
       return updateFunctionalComponent(
         current,
         workInProgress,
+        Component,
         renderExpirationTime,
       );
-    case ClassComponent:
+    }
+    case FunctionalComponentLazy: {
+      const thenable = workInProgress.type;
+      const Component = (thenable._reactResult: any);
+      return updateFunctionalComponent(
+        current,
+        workInProgress,
+        Component,
+        renderExpirationTime,
+      );
+    }
+    case ClassComponent: {
+      const Component = workInProgress.type;
       return updateClassComponent(
         current,
         workInProgress,
+        Component,
         renderExpirationTime,
       );
+    }
+    case ClassComponentLazy: {
+      const thenable = workInProgress.type;
+      const Component = (thenable._reactResult: any);
+      return updateClassComponent(
+        current,
+        workInProgress,
+        Component,
+        renderExpirationTime,
+      );
+    }
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderExpirationTime);
     case HostComponent:
@@ -1061,8 +1147,24 @@ function beginWork(
         workInProgress,
         renderExpirationTime,
       );
-    case ForwardRef:
-      return updateForwardRef(current, workInProgress, renderExpirationTime);
+    case ForwardRef: {
+      const type = workInProgress.type;
+      return updateForwardRef(
+        current,
+        workInProgress,
+        type,
+        renderExpirationTime,
+      );
+    }
+    case ForwardRefLazy:
+      const thenable = workInProgress.type;
+      const Component = (thenable._reactResult: any);
+      return updateForwardRef(
+        current,
+        workInProgress,
+        Component,
+        renderExpirationTime,
+      );
     case Fragment:
       return updateFragment(current, workInProgress, renderExpirationTime);
     case Mode:

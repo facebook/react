@@ -11,7 +11,9 @@ import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {
   ClassComponent,
+  ClassComponentLazy,
   FunctionalComponent,
+  FunctionalComponentLazy,
   HostComponent,
   HostText,
 } from 'shared/ReactTypeOfWork';
@@ -81,7 +83,9 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === HostComponent ||
       node.tag === HostText ||
       node.tag === ClassComponent ||
-      node.tag === FunctionalComponent
+      node.tag === ClassComponentLazy ||
+      node.tag === FunctionalComponent ||
+      node.tag === FunctionalComponentLazy
     ) {
       const publicInst = node.stateNode;
       if (test(publicInst)) {
