@@ -54,10 +54,13 @@ const createMatcherFor = consoleMethod =>
       const isLikelyAComponentStack = message =>
         typeof message === 'string' && message.includes('\n    in ');
 
-      const createConsoleSpy = methodName => (format, ...args) => {
+      const consoleSpy = (format, ...args) => {
         // Ignore uncaught errors reported by jsdom
         // and React addendums because they're too noisy.
-        if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
+        if (
+          consoleMethod === 'error' &&
+          shouldIgnoreConsoleError(format, args)
+        ) {
           return;
         }
 
@@ -132,7 +135,7 @@ const createMatcherFor = consoleMethod =>
       const originalMethod = console[consoleMethod];
 
       // Avoid using Jest's built-in spy since it can't be removed.
-      console[consoleMethod] = createConsoleSpy(consoleMethod);
+      console[consoleMethod] = consoleSpy;
 
       try {
         callback();
