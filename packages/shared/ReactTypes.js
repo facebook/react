@@ -85,8 +85,6 @@ export type ReactContext<T> = {
 
   _currentValue: T,
   _currentValue2: T,
-  _changedBits: number,
-  _changedBits2: number,
 
   // DEV only
   _currentRenderer?: Object | null,

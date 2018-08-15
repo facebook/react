@@ -96,7 +96,6 @@ import {
   resumeMountClassInstance,
   updateClassInstance,
 } from './ReactFiberClassComponent';
-import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -290,10 +289,7 @@ function updateClassComponent(
   // During mounting we don't know the child context yet as the instance doesn't exist.
   // We will invalidate the child context in finishClassComponent() right after rendering.
   const hasContext = pushLegacyContextProvider(workInProgress);
-  const hasPendingNewContext = prepareToReadContext(
-    workInProgress,
-    renderExpirationTime,
-  );
+  prepareToReadContext(workInProgress, renderExpirationTime);
 
   let shouldUpdate;
   if (current === null) {
@@ -311,7 +307,6 @@ function updateClassComponent(
       // In a resume, we'll already have an instance we can reuse.
       shouldUpdate = resumeMountClassInstance(
         workInProgress,
-        hasPendingNewContext,
         renderExpirationTime,
       );
     }
@@ -319,7 +314,6 @@ function updateClassComponent(
     shouldUpdate = updateClassInstance(
       current,
       workInProgress,
-      hasPendingNewContext,
       renderExpirationTime,
     );
   }
@@ -841,20 +835,17 @@ function updateContextProvider(
     }
   }
 
-  let changedBits: number;
-  if (oldProps === null) {
-    // Initial render
-    changedBits = MAX_SIGNED_31_BIT_INT;
-  } else {
+  pushProvider(workInProgress, newValue);
+
+  if (oldProps !== null) {
     const oldValue = oldProps.value;
-    changedBits = calculateChangedBits(context, newValue, oldValue);
+    const changedBits = calculateChangedBits(context, newValue, oldValue);
     if (changedBits === 0) {
       // No change. Bailout early if children are the same.
       if (
         oldProps.children === newProps.children &&
         !hasLegacyContextChanged()
       ) {
-        pushProvider(workInProgress, 0);
         return bailoutOnAlreadyFinishedWork(
           current,
           workInProgress,
@@ -872,8 +863,6 @@ function updateContextProvider(
       );
     }
   }
-
-  pushProvider(workInProgress, changedBits);
 
   const newChildren = newProps.children;
   reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
@@ -1014,9 +1003,11 @@ function beginWork(
           workInProgress.stateNode.containerInfo,
         );
         break;
-      case ContextProvider:
-        pushProvider(workInProgress, 0);
+      case ContextProvider: {
+        const newValue = workInProgress.memoizedProps.value;
+        pushProvider(workInProgress, newValue);
         break;
+      }
       case Profiler:
         if (enableProfilerTimer) {
           workInProgress.effectTag |= Update;
