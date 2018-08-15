@@ -235,6 +235,28 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<textarea value={NaN} readOnly={true} />, 1);
         expect(e.value).toBe('NaN');
       });
+
+      itRenders('a textarea with Object value with a warning', async render => {
+        const value = {
+          toString() {
+            return 'result of toString()';
+          },
+        };
+
+        const e = await render(<textarea value={value} readOnly={true} />, 0);
+
+        expect(e.value).toBe('result of toString()');
+      });
+
+      itRenders('a textarea with true value with a warning', async render => {
+        const e = await render(<textarea value={true} readOnly={true} />, 0);
+        expect(e.value).toBe('true');
+      });
+
+      itRenders('a textarea with false value with a warning', async render => {
+        const e = await render(<textarea value={false} readOnly={true} />, 0);
+        expect(e.value).toBe('false');
+      });
     });
 
     describe('selects', function() {

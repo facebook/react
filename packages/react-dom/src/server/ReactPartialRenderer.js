@@ -56,7 +56,7 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {isStringifiableValue} from '../shared/ToStringValue';
+import {toString, isStringifiableValue} from '../shared/ToStringValue';
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -832,7 +832,7 @@ class ReactDOMServerRenderer {
     parentNamespace: string,
   ): string {
     if (typeof child === 'string' || typeof child === 'number') {
-      const text = '' + child;
+      const text = toString(child);
       if (text === '') {
         return '';
       }
@@ -1154,6 +1154,16 @@ class ReactDOMServerRenderer {
         }
       }
 
+      // Unless the value will raise a warning, stringify it
+      // Avoid numbers because the always stringify correctly and
+      // We do not want to stringify NaN
+      if (
+        typeof initialValue !== 'number' &&
+        isStringifiableValue(initialValue)
+      ) {
+        initialValue = toString(initialValue);
+      }
+
       props = Object.assign({}, props, {
         value: undefined,
         children: initialValue,
@@ -1200,11 +1210,16 @@ class ReactDOMServerRenderer {
           );
           didWarnDefaultSelectValue = true;
         }
-      }
 
+        // Validate the value prop, otherwise it gets passed through
+        // as children and does not receive the same validations
+        validatePropertiesInDevelopment(tag, {
+          value: props.value,
+          defaultValue: props.defaultValue,
+        });
+      }
       this.currentSelectValue =
         props.value != null ? props.value : props.defaultValue;
-
       props = Object.assign({}, props, {
         value: undefined,
       });
