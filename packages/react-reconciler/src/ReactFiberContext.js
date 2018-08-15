@@ -24,7 +24,6 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
-import {getLazyComponentTypeIfResolved} from 'react-reconciler/src/ReactFiberLazyComponent';
 
 let warnedAboutMissingGetChildContext;
 
@@ -123,7 +122,7 @@ function isContextProvider(fiber: Fiber): boolean {
   if (fiber.tag === ClassComponent) {
     type = fiber.type;
   } else if (fiber.tag === ClassComponentLazy) {
-    type = getLazyComponentTypeIfResolved(fiber.type);
+    type = fiber.type._reactResult;
     if (type === null) {
       return false;
     }

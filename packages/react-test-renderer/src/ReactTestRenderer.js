@@ -14,7 +14,6 @@ import type {Instance, TextInstance} from './ReactTestHostConfig';
 import * as TestRenderer from 'react-reconciler/inline.test';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
-import {getLazyComponentTypeIfResolved} from 'react-reconciler/src/ReactFiberLazyComponent';
 import {
   Fragment,
   FunctionalComponent,
@@ -154,7 +153,7 @@ function toTree(node: ?Fiber) {
       };
     case ClassComponentLazy: {
       const thenable = node.type;
-      const type = getLazyComponentTypeIfResolved(thenable);
+      const type = thenable._reactResult;
       return {
         nodeType: 'component',
         type,
@@ -173,7 +172,7 @@ function toTree(node: ?Fiber) {
       };
     case FunctionalComponentLazy: {
       const thenable = node.type;
-      const type = getLazyComponentTypeIfResolved(thenable);
+      const type = thenable._reactResult;
       return {
         nodeType: 'component',
         type: type,

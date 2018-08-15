@@ -17,12 +17,6 @@ export const Pending = 0;
 export const Resolved = 1;
 export const Rejected = 2;
 
-export function getLazyComponentTypeIfResolved<T>(
-  thenable: Thenable<T>,
-): T | null {
-  return thenable._reactStatus === Resolved ? thenable._reactResult : null;
-}
-
 export function readLazyComponentType<T>(thenable: Thenable<T>): T {
   const status = thenable._reactStatus;
   switch (status) {
