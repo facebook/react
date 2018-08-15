@@ -100,7 +100,7 @@ import {
   updateClassInstance,
 } from './ReactFiberClassComponent';
 import {readLazyComponentType} from './ReactFiberLazyComponent';
-import {shouldConstruct} from './ReactFiber';
+import {reassignLazyComponentTag} from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -699,41 +699,44 @@ function mountIndeterminateComponent(
 
   const props = workInProgress.pendingProps;
   if (
+    typeof Component === 'object' &&
     Component !== null &&
-    Component !== undefined &&
     typeof Component.then === 'function'
   ) {
     Component = readLazyComponentType(Component);
-    if (typeof Component === 'function') {
-      if (shouldConstruct(Component)) {
-        workInProgress.tag = ClassComponentLazy;
-        return updateClassComponentLazy(
-          current,
-          workInProgress,
-          Component,
-          renderExpirationTime,
-        );
-      } else {
-        workInProgress.tag = FunctionalComponentLazy;
+    reassignLazyComponentTag(workInProgress, Component);
+    switch (workInProgress.tag) {
+      case FunctionalComponentLazy:
         return updateFunctionalComponentLazy(
           current,
           workInProgress,
           Component,
           renderExpirationTime,
         );
-      }
-    } else if (
-      Component !== undefined &&
-      Component !== null &&
-      Component.$$typeof
-    ) {
-      workInProgress.tag = ForwardRefLazy;
-      return updateForwardRefLazy(
-        current,
-        workInProgress,
-        Component,
-        renderExpirationTime,
-      );
+
+      case ClassComponentLazy:
+        return updateClassComponentLazy(
+          current,
+          workInProgress,
+          Component,
+          renderExpirationTime,
+        );
+      case ForwardRefLazy:
+        return updateForwardRefLazy(
+          current,
+          workInProgress,
+          Component,
+          renderExpirationTime,
+        );
+      default:
+        // This message intentionally doesn't metion ForwardRef because the
+        // fact that it's a separate type of work is an implementation detail.
+        invariant(
+          false,
+          'Element type is invalid. Received a promise that resolves to: %s. ' +
+            'Promise elements must resolve to a class or function.',
+          Component,
+        );
     }
   }
 

@@ -33,6 +33,9 @@ import {
   ContextConsumer,
   Profiler,
   PlaceholderComponent,
+  FunctionalComponentLazy,
+  ClassComponentLazy,
+  ForwardRefLazy,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
@@ -278,8 +281,31 @@ const createFiber = function(
   return new FiberNode(tag, pendingProps, key, mode);
 };
 
-export function shouldConstruct(Component: Function) {
-  return !!(Component.prototype && Component.prototype.isReactComponent);
+function shouldConstruct(Component: Function) {
+  const prototype = Component.prototype;
+  return (
+    typeof prototype === 'object' &&
+    prototype !== null &&
+    typeof prototype.isReactComponent === 'object' &&
+    prototype.isReactComponent !== null
+  );
+}
+
+export function reassignLazyComponentTag(
+  fiber: Fiber,
+  Component: Function,
+): void {
+  if (typeof Component === 'function') {
+    fiber.tag = shouldConstruct(Component)
+      ? ClassComponentLazy
+      : FunctionalComponentLazy;
+  } else if (
+    Component !== undefined &&
+    Component !== null &&
+    Component.$$typeof
+  ) {
+    fiber.tag = ForwardRefLazy;
+  }
 }
 
 // This is used to create an alternate fiber to do work on.
@@ -388,7 +414,7 @@ export function createFiberFromElement(
   }
 
   let fiber;
-  let type = element.type;
+  const type = element.type;
   const key = element.key;
   const pendingProps = element.props;
 
