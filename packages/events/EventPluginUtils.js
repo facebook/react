@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
@@ -67,12 +67,7 @@ if (__DEV__) {
 function executeDispatch(event, simulated, listener, inst) {
   const type = event.type || 'unknown-event';
   event.currentTarget = getNodeFromInstance(inst);
-  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
-    type,
-    listener,
-    undefined,
-    event,
-  );
+  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
   event.currentTarget = null;
 }
 
