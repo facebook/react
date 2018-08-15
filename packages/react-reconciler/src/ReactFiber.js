@@ -398,7 +398,7 @@ export function createFiberFromElement(
   } else if (typeof type === 'string') {
     fiberTag = HostComponent;
   } else {
-    switch (type) {
+    getTag: switch (type) {
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(
           pendingProps.children,
@@ -419,9 +419,54 @@ export function createFiberFromElement(
       case REACT_PLACEHOLDER_TYPE:
         fiberTag = PlaceholderComponent;
         break;
-      default:
-        fiberTag = getFiberTagFromObjectType(type, owner);
-        break;
+      default: {
+        if (typeof type === 'object' && type !== null) {
+          switch (type.$$typeof) {
+            case REACT_PROVIDER_TYPE:
+              fiberTag = ContextProvider;
+              break getTag;
+            case REACT_CONTEXT_TYPE:
+              // This is a consumer
+              fiberTag = ContextConsumer;
+              break getTag;
+            case REACT_FORWARD_REF_TYPE:
+              fiberTag = ForwardRef;
+              break getTag;
+            default: {
+              if (typeof type.then === 'function') {
+                fiberTag = IndeterminateComponent;
+                break getTag;
+              }
+            }
+          }
+        }
+        let info = '';
+        if (__DEV__) {
+          if (
+            type === undefined ||
+            (typeof type === 'object' &&
+              type !== null &&
+              Object.keys(type).length === 0)
+          ) {
+            info +=
+              ' You likely forgot to export your component from the file ' +
+              "it's defined in, or you might have mixed up default and " +
+              'named imports.';
+          }
+          const ownerName = owner ? getComponentName(owner.type) : null;
+          if (ownerName) {
+            info += '\n\nCheck the render method of `' + ownerName + '`.';
+          }
+        }
+        invariant(
+          false,
+          'Element type is invalid: expected a string (for built-in ' +
+            'components) or a class/function (for composite components) ' +
+            'but got: %s.%s',
+          type == null ? type : typeof type,
+          info,
+        );
+      }
     }
   }
 
@@ -435,56 +480,6 @@ export function createFiberFromElement(
   }
 
   return fiber;
-}
-
-function getFiberTagFromObjectType(type, owner): TypeOfWork {
-  const $$typeof =
-    typeof type === 'object' && type !== null ? type.$$typeof : null;
-
-  switch ($$typeof) {
-    case REACT_PROVIDER_TYPE:
-      return ContextProvider;
-    case REACT_CONTEXT_TYPE:
-      // This is a consumer
-      return ContextConsumer;
-    case REACT_FORWARD_REF_TYPE:
-      return ForwardRef;
-    default: {
-      if (
-        type !== undefined &&
-        type !== null &&
-        typeof type.then === 'function'
-      ) {
-        return IndeterminateComponent;
-      }
-      let info = '';
-      if (__DEV__) {
-        if (
-          type === undefined ||
-          (typeof type === 'object' &&
-            type !== null &&
-            Object.keys(type).length === 0)
-        ) {
-          info +=
-            ' You likely forgot to export your component from the file ' +
-            "it's defined in, or you might have mixed up default and " +
-            'named imports.';
-        }
-        const ownerName = owner ? getComponentName(owner.type) : null;
-        if (ownerName) {
-          info += '\n\nCheck the render method of `' + ownerName + '`.';
-        }
-      }
-      invariant(
-        false,
-        'Element type is invalid: expected a string (for built-in ' +
-          'components) or a class/function (for composite components) ' +
-          'but got: %s.%s',
-        type == null ? type : typeof type,
-        info,
-      );
-    }
-  }
 }
 
 export function createFiberFromFragment(
