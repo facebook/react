@@ -301,6 +301,45 @@ describe('ref swapping', () => {
     const a = ReactTestUtils.renderIntoDocument(<A />);
     expect(a.refs[1].nodeName).toBe('DIV');
   });
+
+  it('provides an error for invalid refs', () => {
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<div ref={10} />);
+    }).toThrow(
+      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+    );
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<div ref={true} />);
+    }).toThrow(
+      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+    );
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<div ref={Symbol('foo')} />);
+    }).toThrow(
+      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+    );
+    // This works
+    ReactTestUtils.renderIntoDocument(<div ref={undefined} />);
+    ReactTestUtils.renderIntoDocument({
+      $$typeof: Symbol.for('react.element'),
+      type: 'div',
+      props: {},
+      key: null,
+      ref: null,
+    });
+    // But this doesn't
+    expect(() => {
+      ReactTestUtils.renderIntoDocument({
+        $$typeof: Symbol.for('react.element'),
+        type: 'div',
+        props: {},
+        key: null,
+        ref: undefined,
+      });
+    }).toThrow(
+      'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
+    );
+  });
 });
 
 describe('root level refs', () => {
