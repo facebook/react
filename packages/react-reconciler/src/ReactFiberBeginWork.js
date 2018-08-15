@@ -351,7 +351,14 @@ function updateClassComponent(
   // Push context providers early to prevent context stack mismatches.
   // During mounting we don't know the child context yet as the instance doesn't exist.
   // We will invalidate the child context in finishClassComponent() right after rendering.
-  const hasContext = pushLegacyContextProvider(workInProgress);
+  let hasContext;
+  const childContextTypes = Component.childContextTypes;
+  if (childContextTypes !== null && childContextTypes !== undefined) {
+    hasContext = true;
+    pushLegacyContextProvider(workInProgress);
+  } else {
+    hasContext = false;
+  }
   prepareToReadContext(workInProgress, renderExpirationTime);
 
   let shouldUpdate;
@@ -780,7 +787,14 @@ function mountIndeterminateComponent(
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
-    const hasContext = pushLegacyContextProvider(workInProgress);
+    let hasContext = false;
+    const childContextTypes = Component.childContextTypes;
+    if (childContextTypes !== null && childContextTypes !== undefined) {
+      hasContext = true;
+      pushLegacyContextProvider(workInProgress);
+    } else {
+      hasContext = false;
+    }
 
     workInProgress.memoizedState =
       value.state !== null && value.state !== undefined ? value.state : null;
@@ -1145,10 +1159,23 @@ function beginWork(
       case HostComponent:
         pushHostContext(workInProgress);
         break;
-      case ClassComponent:
-      case ClassComponentLazy:
-        pushLegacyContextProvider(workInProgress);
+      case ClassComponent: {
+        const Component = workInProgress.type;
+        const childContextTypes = Component.childContextTypes;
+        if (childContextTypes !== null && childContextTypes !== undefined) {
+          pushLegacyContextProvider(workInProgress);
+        }
         break;
+      }
+      case ClassComponentLazy: {
+        const thenable = workInProgress.type;
+        const Component = (thenable._reactResult: any);
+        const childContextTypes = Component.childContextTypes;
+        if (childContextTypes !== null && childContextTypes !== undefined) {
+          pushLegacyContextProvider(workInProgress);
+        }
+        break;
+      }
       case HostPortal:
         pushHostContainer(
           workInProgress,
