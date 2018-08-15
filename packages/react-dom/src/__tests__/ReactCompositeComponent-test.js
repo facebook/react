@@ -945,6 +945,87 @@ describe('ReactCompositeComponent', () => {
     expect(childInstance.context).toEqual({foo: 'bar', depth: 0});
   });
 
+  // Regression test for https://github.com/facebook/react/issues/11508
+  it('should respect middle component bailout even with legacy context', () => {
+    let parentInst;
+    let deepChildInst;
+
+    class DeepChild extends React.Component {
+      renderCalls = 0;
+      render() {
+        deepChildInst = this;
+        return <div>deep: {++this.renderCalls}</div>;
+      }
+    }
+
+    class BlockerChild extends React.Component {
+      renderCalls = 0;
+      render() {
+        return (
+          <div>
+            child: {++this.renderCalls} {this.props.children}
+          </div>
+        );
+      }
+    }
+
+    class Blocker extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    class Parent extends React.Component {
+      static childContextTypes = {
+        foo: PropTypes.string,
+      };
+
+      renderCalls = 0;
+
+      getChildContext() {
+        return {
+          foo: 'bar',
+        };
+      }
+
+      render() {
+        parentInst = this;
+        return (
+          <div>
+            parent: {++this.renderCalls}{' '}
+            <Blocker>
+              <BlockerChild>
+                <DeepChild />
+              </BlockerChild>
+            </Blocker>
+          </div>
+        );
+      }
+    }
+
+    const div = document.createElement('div');
+    ReactDOM.render(<Parent />, div);
+    expect(div.textContent).toBe('parent: 1 child: 1 deep: 1');
+    // Update doesn't render deeper than Blocker:
+    ReactDOM.render(<Parent />, div);
+    expect(div.textContent).toBe('parent: 2 child: 1 deep: 1');
+    // setState() on parent works the same way.
+    parentInst.setState({});
+    expect(div.textContent).toBe('parent: 3 child: 1 deep: 1');
+    // setState() on the deep child should render it alone.
+    deepChildInst.setState({});
+    expect(div.textContent).toBe('parent: 3 child: 1 deep: 2');
+    // setState() on *both* deep child and parent should still skip the child.
+    ReactDOM.unstable_batchedUpdates(() => {
+      parentInst.setState({});
+      deepChildInst.setState({});
+    });
+    expect(div.textContent).toBe('parent: 4 child: 1 deep: 3');
+  });
+
   it('unmasked context propagates through updates', () => {
     class Leaf extends React.Component {
       static contextTypes = {
