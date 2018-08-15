@@ -190,6 +190,34 @@ function updateForwardRef(
   return workInProgress.child;
 }
 
+function updateForwardRefLazy(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: any,
+  renderExpirationTime: ExpirationTime,
+) {
+  const props = workInProgress.pendingProps;
+  const resolvedProps = resolveDefaultProps(Component, props);
+  if (resolvedProps !== null) {
+    workInProgress.pendingProps = resolvedProps;
+    const child = updateForwardRef(
+      current,
+      workInProgress,
+      Component,
+      renderExpirationTime,
+    );
+    workInProgress.pendingProps = workInProgress.memoizedProps = props;
+    return child;
+  } else {
+    return updateForwardRef(
+      current,
+      workInProgress,
+      Component,
+      renderExpirationTime,
+    );
+  }
+}
+
 function updateFragment(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -284,6 +312,34 @@ function updateFunctionalComponent(
   );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
+}
+
+function updateFunctionalComponentLazy(
+  current,
+  workInProgress,
+  Component,
+  renderExpirationTime,
+) {
+  const props = workInProgress.pendingProps;
+  const resolvedProps = resolveDefaultProps(Component, props);
+  if (resolvedProps !== null) {
+    workInProgress.pendingProps = resolvedProps;
+    const child = updateFunctionalComponent(
+      current,
+      workInProgress,
+      Component,
+      renderExpirationTime,
+    );
+    workInProgress.pendingProps = workInProgress.memoizedProps = props;
+    return child;
+  } else {
+    return updateFunctionalComponent(
+      current,
+      workInProgress,
+      Component,
+      renderExpirationTime,
+    );
+  }
 }
 
 function updateClassComponent(
@@ -428,6 +484,34 @@ function finishClassComponent(
   }
 
   return workInProgress.child;
+}
+
+function updateClassComponentLazy(
+  current,
+  workInProgress,
+  Component,
+  renderExpirationTime,
+) {
+  const props = workInProgress.pendingProps;
+  const resolvedProps = resolveDefaultProps(Component, props);
+  if (resolvedProps !== null) {
+    workInProgress.pendingProps = resolvedProps;
+    const child = updateClassComponent(
+      current,
+      workInProgress,
+      Component,
+      renderExpirationTime,
+    );
+    workInProgress.pendingProps = workInProgress.memoizedProps = props;
+    return child;
+  } else {
+    return updateClassComponent(
+      current,
+      workInProgress,
+      Component,
+      renderExpirationTime,
+    );
+  }
 }
 
 function pushHostRootContext(workInProgress) {
@@ -579,6 +663,21 @@ function updateHostText(current, workInProgress) {
   return null;
 }
 
+function resolveDefaultProps(Component, baseProps) {
+  if (Component && Component.defaultProps) {
+    // Resolve default props. Taken from ReactElement
+    const props = Object.assign({}, baseProps);
+    const defaultProps = Component.defaultProps;
+    for (let propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+    return props;
+  }
+  return null;
+}
+
 function mountIndeterminateComponent(
   current,
   workInProgress,
@@ -591,6 +690,7 @@ function mountIndeterminateComponent(
       'likely caused by a bug in React. Please file an issue.',
   );
 
+  const props = workInProgress.pendingProps;
   if (
     Component !== null &&
     Component !== undefined &&
@@ -600,24 +700,20 @@ function mountIndeterminateComponent(
     if (typeof Component === 'function') {
       if (shouldConstruct(Component)) {
         workInProgress.tag = ClassComponentLazy;
-        return updateClassComponent(
+        return updateClassComponentLazy(
           current,
           workInProgress,
           Component,
           renderExpirationTime,
         );
       } else {
-        const child = mountIndeterminateComponent(
+        workInProgress.tag = FunctionalComponentLazy;
+        return updateFunctionalComponentLazy(
           current,
           workInProgress,
           Component,
           renderExpirationTime,
         );
-        workInProgress.tag =
-          workInProgress.tag === FunctionalComponent
-            ? FunctionalComponentLazy
-            : ClassComponentLazy;
-        return child;
       }
     } else if (
       Component !== undefined &&
@@ -625,7 +721,7 @@ function mountIndeterminateComponent(
       Component.$$typeof
     ) {
       workInProgress.tag = ForwardRefLazy;
-      return updateForwardRef(
+      return updateForwardRefLazy(
         current,
         workInProgress,
         Component,
@@ -634,7 +730,6 @@ function mountIndeterminateComponent(
     }
   }
 
-  const props = workInProgress.pendingProps;
   const unmaskedContext = getUnmaskedContext(workInProgress);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
@@ -1103,7 +1198,7 @@ function beginWork(
     case FunctionalComponentLazy: {
       const thenable = workInProgress.type;
       const Component = (thenable._reactResult: any);
-      return updateFunctionalComponent(
+      return updateFunctionalComponentLazy(
         current,
         workInProgress,
         Component,
@@ -1122,7 +1217,7 @@ function beginWork(
     case ClassComponentLazy: {
       const thenable = workInProgress.type;
       const Component = (thenable._reactResult: any);
-      return updateClassComponent(
+      return updateClassComponentLazy(
         current,
         workInProgress,
         Component,
@@ -1159,7 +1254,7 @@ function beginWork(
     case ForwardRefLazy:
       const thenable = workInProgress.type;
       const Component = (thenable._reactResult: any);
-      return updateForwardRef(
+      return updateForwardRefLazy(
         current,
         workInProgress,
         Component,

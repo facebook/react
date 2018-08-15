@@ -1472,6 +1472,77 @@ describe('ReactSuspense', () => {
       expect(ReactNoop.flush()).toEqual(['Hi again']);
       expect(ReactNoop.getChildren()).toEqual([span('Hi again')]);
     });
+
+    it('resolves defaultProps, on mount and update', async () => {
+      function T(props) {
+        return <Text {...props} />;
+      }
+      T.defaultProps = {text: 'Hi'};
+      const LazyText = Promise.resolve(T);
+
+      ReactNoop.render(
+        <Placeholder fallback={<Text text="Loading..." />}>
+          <LazyText />
+        </Placeholder>,
+      );
+      expect(ReactNoop.flush()).toEqual(['Loading...']);
+      expect(ReactNoop.getChildren()).toEqual([]);
+
+      await LazyText;
+
+      expect(ReactNoop.flush()).toEqual(['Hi']);
+      expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
+
+      T.defaultProps = {text: 'Hi again'};
+
+      ReactNoop.render(
+        <Placeholder fallback={<Text text="Loading..." />}>
+          <LazyText text="Hi again" />
+        </Placeholder>,
+      );
+      expect(ReactNoop.flush()).toEqual(['Hi again']);
+      expect(ReactNoop.getChildren()).toEqual([span('Hi again')]);
+    });
+
+    it('resolves defaultProps without breaking memoization', async () => {
+      function LazyImpl(props) {
+        ReactNoop.yield('Lazy');
+        return (
+          <Fragment>
+            <Text text={props.siblingText} />
+            {props.children}
+          </Fragment>
+        );
+      }
+      LazyImpl.defaultProps = {siblingText: 'Sibling'};
+      const Lazy = Promise.resolve(LazyImpl);
+
+      class Stateful extends React.Component {
+        state = {text: 'A'};
+        render() {
+          return <Text text={this.state.text} />;
+        }
+      }
+
+      const stateful = React.createRef(null);
+      ReactNoop.render(
+        <Placeholder fallback={<Text text="Loading..." />}>
+          <Lazy>
+            <Stateful ref={stateful} />
+          </Lazy>
+        </Placeholder>,
+      );
+      expect(ReactNoop.flush()).toEqual(['Loading...']);
+      expect(ReactNoop.getChildren()).toEqual([]);
+      await Lazy;
+      expect(ReactNoop.flush()).toEqual(['Lazy', 'Sibling', 'A']);
+      expect(ReactNoop.getChildren()).toEqual([span('Sibling'), span('A')]);
+
+      // Lazy should not have re-rendered
+      stateful.current.setState({text: 'B'});
+      expect(ReactNoop.flush()).toEqual(['B']);
+      expect(ReactNoop.getChildren()).toEqual([span('Sibling'), span('B')]);
+    });
   });
 
   it('does not call lifecycles of a suspended component', async () => {
