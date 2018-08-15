@@ -98,7 +98,7 @@ describe('ReactDOMServerIntegration', () => {
       // that the boolean property is present. however, it is how the current code
       // behaves, so the test is included here.
       itRenders('boolean prop with "" value', async render => {
-        const e = await render(<div hidden="" />);
+        const e = await render(<div hidden="" />, 1);
         expect(e.getAttribute('hidden')).toBe(null);
       });
 

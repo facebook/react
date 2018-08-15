@@ -2532,6 +2532,45 @@ describe('ReactDOMComponent', () => {
 
       expect(el.getAttribute('hidden')).toBe('');
     });
+
+    it('warns on the ambiguous string value "" when it means false', function() {
+      let el;
+      expect(() => {
+        el = ReactTestUtils.renderIntoDocument(<div hidden="" />);
+      }).toWarnDev(
+        'Received the string "" for the boolean attribute `hidden`. ' +
+          'This value can mean `true` or `false`, depending on the attribute. ' +
+          'Did you mean hidden={false}?',
+      );
+
+      expect(el.hasAttribute('hidden')).toBe(false);
+    });
+
+    it('warns on the ambiguous string value "" when it means true', function() {
+      let el;
+      expect(() => {
+        el = ReactTestUtils.renderIntoDocument(<div spellCheck="" />);
+      }).toWarnDev(
+        'Received the string "" for the boolean attribute `spellCheck`. ' +
+          'This value can mean `true` or `false`, depending on the attribute. ' +
+          'Did you mean spellCheck={true}?',
+      );
+
+      expect(el.getAttribute('spellCheck')).toBe('');
+    });
+
+    it('warns on the ambiguous string value "" in an overloaded boolean prop', function() {
+      let el;
+      expect(() => {
+        el = ReactTestUtils.renderIntoDocument(<input capture="" />);
+      }).toWarnDev(
+        'Received the string "" for the boolean attribute `capture`. ' +
+          'This value can mean `true` or `false`, depending on the attribute. ' +
+          'Did you mean capture={true}?',
+      );
+
+      expect(el.getAttribute('capture')).toBe('');
+    });
   });
 
   describe('Hyphenated SVG elements', function() {

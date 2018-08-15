@@ -14,6 +14,8 @@ import warning from 'shared/warning';
 import {
   ATTRIBUTE_NAME_CHAR,
   BOOLEAN,
+  BOOLEANISH_STRING,
+  OVERLOADED_BOOLEAN,
   RESERVED,
   shouldRemoveAttributeWithWarning,
   getPropertyInfo,
@@ -227,7 +229,7 @@ if (__DEV__) {
       return false;
     }
 
-    // Warn when passing the strings 'false' or 'true' into a boolean prop
+    // Warn about passing the strings 'false' or 'true' into a boolean prop
     if (
       (value === 'false' || value === 'true') &&
       propertyInfo !== null &&
@@ -245,6 +247,30 @@ if (__DEV__) {
           : 'Although this works, it will not work as expected if you pass the string "false".',
         name,
         value,
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+
+    // Warn about passing an empty string into any kind of boolean prop, except
+    // 'value' which is modeled as a "booleanish string"
+    if (
+      value === '' &&
+      name !== 'value' &&
+      propertyInfo !== null &&
+      (propertyInfo.type === BOOLEAN ||
+        propertyInfo.type === BOOLEANISH_STRING ||
+        propertyInfo.type === OVERLOADED_BOOLEAN)
+    ) {
+      const isBoolean = propertyInfo.type === BOOLEAN;
+      warning(
+        false,
+        'Received the string "" for the boolean attribute `%s`. ' +
+          'This value can mean `true` or `false`, depending on the attribute. ' +
+          'Did you mean %s={%s}?',
+        name,
+        name,
+        isBoolean ? 'false' : 'true',
       );
       warnedProperties[name] = true;
       return true;
