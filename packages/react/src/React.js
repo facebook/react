@@ -25,6 +25,7 @@ import {
   isValidElement,
 } from './ReactElement';
 import {createContext} from './ReactContext';
+import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import {
   createElementWithValidation,
@@ -66,6 +67,7 @@ const React = {
 
 if (enableSuspense) {
   React.Placeholder = REACT_PLACEHOLDER_TYPE;
+  React.lazy = lazy;
 }
 
 export default React;
