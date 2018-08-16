@@ -49,7 +49,7 @@ export function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
   if (
     maybeIterable === null ||
     typeof maybeIterable === 'undefined' ||
-    typeof maybeIterable === 'function'
+    typeof maybeIterable !== 'object'
   ) {
     return null;
   }
