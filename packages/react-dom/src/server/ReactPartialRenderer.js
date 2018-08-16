@@ -56,7 +56,11 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {toString, getToStringValue} from '../shared/ToStringValue';
+import {
+  toString,
+  getToStringValue,
+  isSameStringValue,
+} from '../shared/ToStringValue';
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -1203,8 +1207,10 @@ class ReactDOMServerRenderer {
           didWarnDefaultSelectValue = true;
         }
       }
+
       this.currentSelectValue =
         props.value != null ? props.value : props.defaultValue;
+
       props = Object.assign({}, props, {
         value: undefined,
         defaultValue: undefined,
@@ -1220,23 +1226,24 @@ class ReactDOMServerRenderer {
         } else {
           value = optionChildren;
         }
+
         selected = false;
         if (Array.isArray(selectValue)) {
           // multiple
           for (let j = 0; j < selectValue.length; j++) {
-            if (selectValue[j] === value) {
+            if (isSameStringValue(selectValue[j], value)) {
               selected = true;
               break;
             }
           }
         } else {
-          selected = selectValue === value;
+          selected = isSameStringValue(selectValue, value);
         }
 
         props = Object.assign(
           {
-            selected: undefined,
             children: undefined,
+            selected: undefined,
           },
           props,
           {

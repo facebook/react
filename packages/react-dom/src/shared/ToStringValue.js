@@ -35,3 +35,7 @@ export function getToStringValue(value: mixed): ToStringValue {
       return '';
   }
 }
+
+export function isSameStringValue(a: mixed, b: mixed): boolean {
+  return toString(getToStringValue(a)) === toString(getToStringValue(b));
+}

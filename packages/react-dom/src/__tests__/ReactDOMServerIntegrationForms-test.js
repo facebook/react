@@ -589,6 +589,19 @@ describe('ReactDOMServerIntegrationForms', () => {
           expect(e.value).toBe('First option');
         },
       );
+
+      itRenders(
+        'selects the correct option even with a type mismatch',
+        async render => {
+          const e = await render(
+            <select value={3} readOnly={true}>
+              <option>None</option>
+              <option value="3">3</option>
+            </select>,
+          );
+          expect(e.options[1].selected).toBe(true);
+        },
+      );
     });
 
     describe('user interaction', function() {
