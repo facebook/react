@@ -36,6 +36,7 @@ import {
 import {
   HostRoot,
   ClassComponent,
+  ClassComponentLazy,
   HostComponent,
   ContextProvider,
   HostPortal,
@@ -51,6 +52,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {
   scheduleTimeout,
@@ -110,8 +112,9 @@ import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
+  isContextProvider as isLegacyContextProvider,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
-  popContextProvider as popLegacyContextProvider,
+  popContext as popLegacyContext,
 } from './ReactFiberContext';
 import {popProvider, resetContextDependences} from './ReactFiberNewContext';
 import {popHostContext, popHostContainer} from './ReactFiberHostContext';
@@ -287,9 +290,20 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       case HostComponent:
         popHostContext(failedUnitOfWork);
         break;
-      case ClassComponent:
-        popLegacyContextProvider(failedUnitOfWork);
+      case ClassComponent: {
+        const Component = failedUnitOfWork.type;
+        if (isLegacyContextProvider(Component)) {
+          popLegacyContext(failedUnitOfWork);
+        }
         break;
+      }
+      case ClassComponentLazy: {
+        const Component = getResultFromResolvedThenable(failedUnitOfWork.type);
+        if (isLegacyContextProvider(Component)) {
+          popLegacyContext(failedUnitOfWork);
+        }
+        break;
+      }
       case HostPortal:
         popHostContainer(failedUnitOfWork);
         break;
@@ -1292,6 +1306,7 @@ function dispatch(
   while (fiber !== null) {
     switch (fiber.tag) {
       case ClassComponent:
+      case ClassComponentLazy:
         const ctor = fiber.type;
         const instance = fiber.stateNode;
         if (
@@ -1499,7 +1514,7 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
   recordScheduleUpdate();
 
   if (__DEV__) {
-    if (fiber.tag === ClassComponent) {
+    if (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy) {
       const instance = fiber.stateNode;
       warnAboutInvalidUpdates(instance);
     }
@@ -1507,7 +1522,10 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
 
   const root = scheduleWorkToRoot(fiber, expirationTime);
   if (root === null) {
-    if (__DEV__ && fiber.tag === ClassComponent) {
+    if (
+      __DEV__ &&
+      (fiber.tag === ClassComponent || fiber.tag === ClassComponentLazy)
+    ) {
       warnAboutUpdateOnUnmounted(fiber);
     }
     return;

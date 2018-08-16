@@ -16,12 +16,15 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import {
   IndeterminateComponent,
   FunctionalComponent,
+  FunctionalComponentLazy,
   ClassComponent,
+  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
   ForwardRef,
+  ForwardRefLazy,
   Fragment,
   Mode,
   ContextProvider,
@@ -81,6 +84,7 @@ import {
   getUnmaskedContext,
   hasContextChanged as hasLegacyContextChanged,
   pushContextProvider as pushLegacyContextProvider,
+  isContextProvider as isLegacyContextProvider,
   pushTopLevelContextObject,
   invalidateContextProvider,
 } from './ReactFiberContext';
@@ -96,6 +100,9 @@ import {
   resumeMountClassInstance,
   updateClassInstance,
 } from './ReactFiberClassComponent';
+import {readLazyComponentType} from './ReactFiberLazyComponent';
+import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
+import {resolveLazyComponentTag} from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -145,10 +152,11 @@ export function reconcileChildren(
 function updateForwardRef(
   current: Fiber | null,
   workInProgress: Fiber,
+  type: any,
+  nextProps: any,
   renderExpirationTime: ExpirationTime,
 ) {
-  const render = workInProgress.type.render;
-  const nextProps = workInProgress.pendingProps;
+  const render = type.render;
   const ref = workInProgress.ref;
   if (hasLegacyContextChanged()) {
     // Normally we can bail out on props equality but if context has changed
@@ -250,11 +258,11 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
 function updateFunctionalComponent(
   current,
   workInProgress,
+  Component,
+  nextProps: any,
   renderExpirationTime,
 ) {
-  const fn = workInProgress.type;
-  const nextProps = workInProgress.pendingProps;
-  const unmaskedContext = getUnmaskedContext(workInProgress);
+  const unmaskedContext = getUnmaskedContext(workInProgress, Component);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   let nextChildren;
@@ -262,10 +270,10 @@ function updateFunctionalComponent(
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     ReactCurrentFiber.setCurrentPhase('render');
-    nextChildren = fn(nextProps, context);
+    nextChildren = Component(nextProps, context);
     ReactCurrentFiber.setCurrentPhase(null);
   } else {
-    nextChildren = fn(nextProps, context);
+    nextChildren = Component(nextProps, context);
   }
 
   // React DevTools reads this flag.
@@ -283,12 +291,20 @@ function updateFunctionalComponent(
 function updateClassComponent(
   current: Fiber | null,
   workInProgress: Fiber,
+  Component: any,
+  nextProps,
   renderExpirationTime: ExpirationTime,
 ) {
   // Push context providers early to prevent context stack mismatches.
   // During mounting we don't know the child context yet as the instance doesn't exist.
   // We will invalidate the child context in finishClassComponent() right after rendering.
-  const hasContext = pushLegacyContextProvider(workInProgress);
+  let hasContext;
+  if (isLegacyContextProvider(Component)) {
+    hasContext = true;
+    pushLegacyContextProvider(workInProgress);
+  } else {
+    hasContext = false;
+  }
   prepareToReadContext(workInProgress, renderExpirationTime);
 
   let shouldUpdate;
@@ -297,16 +313,23 @@ function updateClassComponent(
       // In the initial pass we might need to construct the instance.
       constructClassInstance(
         workInProgress,
-        workInProgress.pendingProps,
+        Component,
+        nextProps,
         renderExpirationTime,
       );
-      mountClassInstance(workInProgress, renderExpirationTime);
-
+      mountClassInstance(
+        workInProgress,
+        Component,
+        nextProps,
+        renderExpirationTime,
+      );
       shouldUpdate = true;
     } else {
       // In a resume, we'll already have an instance we can reuse.
       shouldUpdate = resumeMountClassInstance(
         workInProgress,
+        Component,
+        nextProps,
         renderExpirationTime,
       );
     }
@@ -314,12 +337,15 @@ function updateClassComponent(
     shouldUpdate = updateClassInstance(
       current,
       workInProgress,
+      Component,
+      nextProps,
       renderExpirationTime,
     );
   }
   return finishClassComponent(
     current,
     workInProgress,
+    Component,
     shouldUpdate,
     hasContext,
     renderExpirationTime,
@@ -329,6 +355,7 @@ function updateClassComponent(
 function finishClassComponent(
   current: Fiber | null,
   workInProgress: Fiber,
+  Component: any,
   shouldUpdate: boolean,
   hasContext: boolean,
   renderExpirationTime: ExpirationTime,
@@ -341,7 +368,7 @@ function finishClassComponent(
   if (!shouldUpdate && !didCaptureError) {
     // Context providers should defer to sCU for rendering
     if (hasContext) {
-      invalidateContextProvider(workInProgress, false);
+      invalidateContextProvider(workInProgress, Component, false);
     }
 
     return bailoutOnAlreadyFinishedWork(
@@ -351,7 +378,6 @@ function finishClassComponent(
     );
   }
 
-  const ctor = workInProgress.type;
   const instance = workInProgress.stateNode;
 
   // Rerender
@@ -360,7 +386,7 @@ function finishClassComponent(
   if (
     didCaptureError &&
     (!enableGetDerivedStateFromCatch ||
-      typeof ctor.getDerivedStateFromCatch !== 'function')
+      typeof Component.getDerivedStateFromCatch !== 'function')
   ) {
     // If we captured an error, but getDerivedStateFrom catch is not defined,
     // unmount all the children. componentDidCatch will schedule an update to
@@ -413,7 +439,7 @@ function finishClassComponent(
 
   // The context might have changed so we need to recalculate it.
   if (hasContext) {
-    invalidateContextProvider(workInProgress, true);
+    invalidateContextProvider(workInProgress, Component, true);
   }
 
   return workInProgress.child;
@@ -568,9 +594,25 @@ function updateHostText(current, workInProgress) {
   return null;
 }
 
+function resolveDefaultProps(Component, baseProps) {
+  if (Component && Component.defaultProps) {
+    // Resolve default props. Taken from ReactElement
+    const props = Object.assign({}, baseProps);
+    const defaultProps = Component.defaultProps;
+    for (let propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+    return props;
+  }
+  return baseProps;
+}
+
 function mountIndeterminateComponent(
   current,
   workInProgress,
+  Component,
   renderExpirationTime,
 ) {
   invariant(
@@ -578,9 +620,61 @@ function mountIndeterminateComponent(
     'An indeterminate component should never have mounted. This error is ' +
       'likely caused by a bug in React. Please file an issue.',
   );
-  const fn = workInProgress.type;
+
   const props = workInProgress.pendingProps;
-  const unmaskedContext = getUnmaskedContext(workInProgress);
+  if (
+    typeof Component === 'object' &&
+    Component !== null &&
+    typeof Component.then === 'function'
+  ) {
+    Component = readLazyComponentType(Component);
+    const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(
+      workInProgress,
+      Component,
+    ));
+    const resolvedProps = resolveDefaultProps(Component, props);
+    switch (resolvedTag) {
+      case FunctionalComponentLazy: {
+        return updateFunctionalComponent(
+          current,
+          workInProgress,
+          Component,
+          resolvedProps,
+          renderExpirationTime,
+        );
+      }
+      case ClassComponentLazy: {
+        return updateClassComponent(
+          current,
+          workInProgress,
+          Component,
+          resolvedProps,
+          renderExpirationTime,
+        );
+      }
+      case ForwardRefLazy: {
+        return updateForwardRef(
+          current,
+          workInProgress,
+          Component,
+          resolvedProps,
+          renderExpirationTime,
+        );
+      }
+      default: {
+        // This message intentionally doesn't metion ForwardRef because the
+        // fact that it's a separate type of work is an implementation detail.
+        invariant(
+          false,
+          'Element type is invalid. Received a promise that resolves to: %s. ' +
+            'Promise elements must resolve to a class or function.',
+          Component,
+        );
+      }
+    }
+  }
+
+  const unmaskedContext = getUnmaskedContext(workInProgress, Component);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
@@ -588,8 +682,11 @@ function mountIndeterminateComponent(
   let value;
 
   if (__DEV__) {
-    if (fn.prototype && typeof fn.prototype.render === 'function') {
-      const componentName = getComponentName(fn) || 'Unknown';
+    if (
+      Component.prototype &&
+      typeof Component.prototype.render === 'function'
+    ) {
+      const componentName = getComponentName(Component) || 'Unknown';
 
       if (!didWarnAboutBadClass[componentName]) {
         warningWithoutStack(
@@ -608,9 +705,9 @@ function mountIndeterminateComponent(
     }
 
     ReactCurrentOwner.current = workInProgress;
-    value = fn(props, context);
+    value = Component(props, context);
   } else {
-    value = fn(props, context);
+    value = Component(props, context);
   }
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
@@ -621,15 +718,19 @@ function mountIndeterminateComponent(
     typeof value.render === 'function' &&
     value.$$typeof === undefined
   ) {
-    const Component = workInProgress.type;
-
     // Proceed under the assumption that this is a class instance
     workInProgress.tag = ClassComponent;
 
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
-    const hasContext = pushLegacyContextProvider(workInProgress);
+    let hasContext = false;
+    if (isLegacyContextProvider(Component)) {
+      hasContext = true;
+      pushLegacyContextProvider(workInProgress);
+    } else {
+      hasContext = false;
+    }
 
     workInProgress.memoizedState =
       value.state !== null && value.state !== undefined ? value.state : null;
@@ -638,16 +739,18 @@ function mountIndeterminateComponent(
     if (typeof getDerivedStateFromProps === 'function') {
       applyDerivedStateFromProps(
         workInProgress,
+        Component,
         getDerivedStateFromProps,
         props,
       );
     }
 
     adoptClassInstance(workInProgress, value);
-    mountClassInstance(workInProgress, renderExpirationTime);
+    mountClassInstance(workInProgress, Component, props, renderExpirationTime);
     return finishClassComponent(
       current,
       workInProgress,
+      Component,
       true,
       hasContext,
       renderExpirationTime,
@@ -656,8 +759,6 @@ function mountIndeterminateComponent(
     // Proceed under the assumption that this is a functional component
     workInProgress.tag = FunctionalComponent;
     if (__DEV__) {
-      const Component = workInProgress.type;
-
       if (Component) {
         warningWithoutStack(
           !Component.childContextTypes,
@@ -688,8 +789,8 @@ function mountIndeterminateComponent(
         }
       }
 
-      if (typeof fn.getDerivedStateFromProps === 'function') {
-        const componentName = getComponentName(fn) || 'Unknown';
+      if (typeof Component.getDerivedStateFromProps === 'function') {
+        const componentName = getComponentName(Component) || 'Unknown';
 
         if (!didWarnAboutGetDerivedStateOnFunctionalComponent[componentName]) {
           warningWithoutStack(
@@ -994,9 +1095,21 @@ function beginWork(
       case HostComponent:
         pushHostContext(workInProgress);
         break;
-      case ClassComponent:
-        pushLegacyContextProvider(workInProgress);
+      case ClassComponent: {
+        const Component = workInProgress.type;
+        if (isLegacyContextProvider(Component)) {
+          pushLegacyContextProvider(workInProgress);
+        }
         break;
+      }
+      case ClassComponentLazy: {
+        const thenable = workInProgress.type;
+        const Component = getResultFromResolvedThenable(thenable);
+        if (isLegacyContextProvider(Component)) {
+          pushLegacyContextProvider(workInProgress);
+        }
+        break;
+      }
       case HostPortal:
         pushHostContainer(
           workInProgress,
@@ -1025,24 +1138,65 @@ function beginWork(
   workInProgress.expirationTime = NoWork;
 
   switch (workInProgress.tag) {
-    case IndeterminateComponent:
+    case IndeterminateComponent: {
+      const Component = workInProgress.type;
       return mountIndeterminateComponent(
         current,
         workInProgress,
+        Component,
         renderExpirationTime,
       );
-    case FunctionalComponent:
+    }
+    case FunctionalComponent: {
+      const Component = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
       return updateFunctionalComponent(
         current,
         workInProgress,
+        Component,
+        unresolvedProps,
         renderExpirationTime,
       );
-    case ClassComponent:
+    }
+    case FunctionalComponentLazy: {
+      const thenable = workInProgress.type;
+      const Component = getResultFromResolvedThenable(thenable);
+      const unresolvedProps = workInProgress.pendingProps;
+      const child = updateFunctionalComponent(
+        current,
+        workInProgress,
+        Component,
+        resolveDefaultProps(Component, unresolvedProps),
+        renderExpirationTime,
+      );
+      workInProgress.memoizedProps = unresolvedProps;
+      return child;
+    }
+    case ClassComponent: {
+      const Component = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
       return updateClassComponent(
         current,
         workInProgress,
+        Component,
+        unresolvedProps,
         renderExpirationTime,
       );
+    }
+    case ClassComponentLazy: {
+      const thenable = workInProgress.type;
+      const Component = getResultFromResolvedThenable(thenable);
+      const unresolvedProps = workInProgress.pendingProps;
+      const child = updateClassComponent(
+        current,
+        workInProgress,
+        Component,
+        resolveDefaultProps(Component, unresolvedProps),
+        renderExpirationTime,
+      );
+      workInProgress.memoizedProps = unresolvedProps;
+      return child;
+    }
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderExpirationTime);
     case HostComponent:
@@ -1061,8 +1215,29 @@ function beginWork(
         workInProgress,
         renderExpirationTime,
       );
-    case ForwardRef:
-      return updateForwardRef(current, workInProgress, renderExpirationTime);
+    case ForwardRef: {
+      const type = workInProgress.type;
+      return updateForwardRef(
+        current,
+        workInProgress,
+        type,
+        workInProgress.pendingProps,
+        renderExpirationTime,
+      );
+    }
+    case ForwardRefLazy:
+      const thenable = workInProgress.type;
+      const Component = getResultFromResolvedThenable(thenable);
+      const unresolvedProps = workInProgress.pendingProps;
+      const child = updateForwardRef(
+        current,
+        workInProgress,
+        Component,
+        resolveDefaultProps(Component, unresolvedProps),
+        renderExpirationTime,
+      );
+      workInProgress.memoizedProps = unresolvedProps;
+      return child;
     case Fragment:
       return updateFragment(current, workInProgress, renderExpirationTime);
     case Mode:

@@ -41,7 +41,6 @@ import {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
-  isContextConsumer,
   hasContextChanged,
   emptyContextObject,
 } from './ReactFiberContext';
@@ -131,6 +130,7 @@ if (__DEV__) {
 
 export function applyDerivedStateFromProps(
   workInProgress: Fiber,
+  ctor: any,
   getDerivedStateFromProps: (props: any, state: any) => any,
   nextProps: any,
 ) {
@@ -150,7 +150,7 @@ export function applyDerivedStateFromProps(
   const partialState = getDerivedStateFromProps(nextProps, prevState);
 
   if (__DEV__) {
-    warnOnUndefinedDerivedState(workInProgress.type, partialState);
+    warnOnUndefinedDerivedState(ctor, partialState);
   }
   // Merge the partial state and the previous state.
   const memoizedState =
@@ -227,6 +227,7 @@ const classComponentUpdater = {
 
 function checkShouldComponentUpdate(
   workInProgress,
+  ctor,
   oldProps,
   newProps,
   oldState,
@@ -234,7 +235,6 @@ function checkShouldComponentUpdate(
   nextLegacyContext,
 ) {
   const instance = workInProgress.stateNode;
-  const ctor = workInProgress.type;
   if (typeof instance.shouldComponentUpdate === 'function') {
     startPhaseTimer(workInProgress, 'shouldComponentUpdate');
     const shouldUpdate = instance.shouldComponentUpdate(
@@ -265,15 +265,14 @@ function checkShouldComponentUpdate(
   return true;
 }
 
-function checkClassInstance(workInProgress: Fiber) {
+function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
   const instance = workInProgress.stateNode;
-  const type = workInProgress.type;
   if (__DEV__) {
-    const name = getComponentName(type) || 'Component';
+    const name = getComponentName(ctor) || 'Component';
     const renderPresent = instance.render;
 
     if (!renderPresent) {
-      if (type.prototype && typeof type.prototype.render === 'function') {
+      if (ctor.prototype && typeof ctor.prototype.render === 'function') {
         warningWithoutStack(
           false,
           '%s(...): No `render` method found on the returned component ' +
@@ -336,8 +335,8 @@ function checkClassInstance(workInProgress: Fiber) {
       name,
     );
     if (
-      type.prototype &&
-      type.prototype.isPureReactComponent &&
+      ctor.prototype &&
+      ctor.prototype.isPureReactComponent &&
       typeof instance.shouldComponentUpdate !== 'undefined'
     ) {
       warningWithoutStack(
@@ -345,7 +344,7 @@ function checkClassInstance(workInProgress: Fiber) {
         '%s has a method called shouldComponentUpdate(). ' +
           'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
           'Please extend React.Component if shouldComponentUpdate is used.',
-        getComponentName(type) || 'A pure component',
+        getComponentName(ctor) || 'A pure component',
       );
     }
     const noComponentDidUnmount =
@@ -384,7 +383,7 @@ function checkClassInstance(workInProgress: Fiber) {
         'UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?',
       name,
     );
-    const hasMutatedProps = instance.props !== workInProgress.pendingProps;
+    const hasMutatedProps = instance.props !== newProps;
     warningWithoutStack(
       instance.props === undefined || !hasMutatedProps,
       '%s(...): When calling super() in `%s`, make sure to pass ' +
@@ -404,14 +403,14 @@ function checkClassInstance(workInProgress: Fiber) {
     if (
       typeof instance.getSnapshotBeforeUpdate === 'function' &&
       typeof instance.componentDidUpdate !== 'function' &&
-      !didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(type)
+      !didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(ctor)
     ) {
-      didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(type);
+      didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(ctor);
       warningWithoutStack(
         false,
         '%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
           'This component defines getSnapshotBeforeUpdate() only.',
-        getComponentName(type),
+        getComponentName(ctor),
       );
     }
 
@@ -432,7 +431,7 @@ function checkClassInstance(workInProgress: Fiber) {
       name,
     );
     const noStaticGetSnapshotBeforeUpdate =
-      typeof type.getSnapshotBeforeUpdate !== 'function';
+      typeof ctor.getSnapshotBeforeUpdate !== 'function';
     warningWithoutStack(
       noStaticGetSnapshotBeforeUpdate,
       '%s: getSnapshotBeforeUpdate() is defined as a static method ' +
@@ -449,7 +448,7 @@ function checkClassInstance(workInProgress: Fiber) {
     }
     if (typeof instance.getChildContext === 'function') {
       warningWithoutStack(
-        typeof type.childContextTypes === 'object',
+        typeof ctor.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
           'use getChildContext().',
         name,
@@ -470,13 +469,14 @@ function adoptClassInstance(workInProgress: Fiber, instance: any): void {
 
 function constructClassInstance(
   workInProgress: Fiber,
+  ctor: any,
   props: any,
   renderExpirationTime: ExpirationTime,
 ): any {
-  const ctor = workInProgress.type;
-  const unmaskedContext = getUnmaskedContext(workInProgress);
-  const needsContext = isContextConsumer(workInProgress);
-  const context = needsContext
+  const unmaskedContext = getUnmaskedContext(workInProgress, ctor);
+  const contextTypes = ctor.contextTypes;
+  const isContextConsumer = contextTypes !== null && contextTypes !== undefined;
+  const context = isContextConsumer
     ? getMaskedContext(workInProgress, unmaskedContext)
     : emptyContextObject;
 
@@ -585,7 +585,7 @@ function constructClassInstance(
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
   // ReactFiberContext usually updates this cache but can't for newly-created instances.
-  if (needsContext) {
+  if (isContextConsumer) {
     cacheContext(workInProgress, unmaskedContext, context);
   }
 
@@ -657,19 +657,18 @@ function callComponentWillReceiveProps(
 // Invokes the mount life-cycles on a previously never rendered instance.
 function mountClassInstance(
   workInProgress: Fiber,
+  ctor: any,
+  newProps: any,
   renderExpirationTime: ExpirationTime,
 ): void {
-  const ctor = workInProgress.type;
-
   if (__DEV__) {
-    checkClassInstance(workInProgress);
+    checkClassInstance(workInProgress, ctor, newProps);
   }
 
   const instance = workInProgress.stateNode;
-  const props = workInProgress.pendingProps;
-  const unmaskedContext = getUnmaskedContext(workInProgress);
+  const unmaskedContext = getUnmaskedContext(workInProgress, ctor);
 
-  instance.props = props;
+  instance.props = newProps;
   instance.state = workInProgress.memoizedState;
   instance.refs = emptyRefsObject;
   instance.context = getMaskedContext(workInProgress, unmaskedContext);
@@ -700,7 +699,7 @@ function mountClassInstance(
     processUpdateQueue(
       workInProgress,
       updateQueue,
-      props,
+      newProps,
       instance,
       renderExpirationTime,
     );
@@ -709,7 +708,12 @@ function mountClassInstance(
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   if (typeof getDerivedStateFromProps === 'function') {
-    applyDerivedStateFromProps(workInProgress, getDerivedStateFromProps, props);
+    applyDerivedStateFromProps(
+      workInProgress,
+      ctor,
+      getDerivedStateFromProps,
+      newProps,
+    );
     instance.state = workInProgress.memoizedState;
   }
 
@@ -729,7 +733,7 @@ function mountClassInstance(
       processUpdateQueue(
         workInProgress,
         updateQueue,
-        props,
+        newProps,
         instance,
         renderExpirationTime,
       );
@@ -744,17 +748,17 @@ function mountClassInstance(
 
 function resumeMountClassInstance(
   workInProgress: Fiber,
+  ctor: any,
+  newProps: any,
   renderExpirationTime: ExpirationTime,
 ): boolean {
-  const ctor = workInProgress.type;
   const instance = workInProgress.stateNode;
 
   const oldProps = workInProgress.memoizedProps;
-  const newProps = workInProgress.pendingProps;
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
+  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress, ctor);
   const nextLegacyContext = getMaskedContext(
     workInProgress,
     nextLegacyUnmaskedContext,
@@ -818,6 +822,7 @@ function resumeMountClassInstance(
   if (typeof getDerivedStateFromProps === 'function') {
     applyDerivedStateFromProps(
       workInProgress,
+      ctor,
       getDerivedStateFromProps,
       newProps,
     );
@@ -828,6 +833,7 @@ function resumeMountClassInstance(
     checkHasForceUpdateAfterProcessing() ||
     checkShouldComponentUpdate(
       workInProgress,
+      ctor,
       oldProps,
       newProps,
       oldState,
@@ -881,17 +887,17 @@ function resumeMountClassInstance(
 function updateClassInstance(
   current: Fiber,
   workInProgress: Fiber,
+  ctor: any,
+  newProps: any,
   renderExpirationTime: ExpirationTime,
 ): boolean {
-  const ctor = workInProgress.type;
   const instance = workInProgress.stateNode;
 
   const oldProps = workInProgress.memoizedProps;
-  const newProps = workInProgress.pendingProps;
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
+  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress, ctor);
   const nextLegacyContext = getMaskedContext(
     workInProgress,
     nextLegacyUnmaskedContext,
@@ -969,6 +975,7 @@ function updateClassInstance(
   if (typeof getDerivedStateFromProps === 'function') {
     applyDerivedStateFromProps(
       workInProgress,
+      ctor,
       getDerivedStateFromProps,
       newProps,
     );
@@ -979,6 +986,7 @@ function updateClassInstance(
     checkHasForceUpdateAfterProcessing() ||
     checkShouldComponentUpdate(
       workInProgress,
+      ctor,
       oldProps,
       newProps,
       oldState,

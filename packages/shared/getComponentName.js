@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Thenable} from 'shared/ReactLazyComponent';
+
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   REACT_ASYNC_MODE_TYPE,
@@ -19,6 +21,10 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
+import {
+  getResultFromResolvedThenable,
+  refineResolvedThenable,
+} from 'shared/ReactLazyComponent';
 
 function getComponentName(type: mixed): string | null {
   if (type == null) {
@@ -66,6 +72,14 @@ function getComponentName(type: mixed): string | null {
         return functionName !== ''
           ? `ForwardRef(${functionName})`
           : 'ForwardRef';
+    }
+    if (typeof type.then === 'function') {
+      const thenable: Thenable<mixed> = (type: any);
+      const resolvedThenable = refineResolvedThenable(thenable);
+      if (resolvedThenable) {
+        const Component = getResultFromResolvedThenable(resolvedThenable);
+        return getComponentName(Component);
+      }
     }
   }
   return null;

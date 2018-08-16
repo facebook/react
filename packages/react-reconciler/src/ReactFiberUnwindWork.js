@@ -18,6 +18,7 @@ import {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
+  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostPortal,
@@ -47,7 +48,8 @@ import {
 import {logError} from './ReactFiberCommitWork';
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
 import {
-  popContextProvider as popLegacyContextProvider,
+  isContextProvider as isLegacyContextProvider,
+  popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
@@ -249,7 +251,10 @@ function throwException(
               sourceFiber.tag = FunctionalComponent;
             }
 
-            if (sourceFiber.tag === ClassComponent) {
+            if (
+              sourceFiber.tag === ClassComponent ||
+              sourceFiber.tag === ClassComponentLazy
+            ) {
               // We're going to commit this fiber even though it didn't
               // complete. But we shouldn't call any lifecycle methods or
               // callbacks. Remove all lifecycle effect tags.
@@ -343,6 +348,7 @@ function throwException(
         return;
       }
       case ClassComponent:
+      case ClassComponentLazy:
         // Capture and retry
         const errorInfo = value;
         const ctor = workInProgress.type;
@@ -380,7 +386,22 @@ function unwindWork(
 ) {
   switch (workInProgress.tag) {
     case ClassComponent: {
-      popLegacyContextProvider(workInProgress);
+      const Component = workInProgress.type;
+      if (isLegacyContextProvider(Component)) {
+        popLegacyContext(workInProgress);
+      }
+      const effectTag = workInProgress.effectTag;
+      if (effectTag & ShouldCapture) {
+        workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+        return workInProgress;
+      }
+      return null;
+    }
+    case ClassComponentLazy: {
+      const Component = workInProgress.type._reactResult;
+      if (isLegacyContextProvider(Component)) {
+        popLegacyContext(workInProgress);
+      }
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -426,7 +447,18 @@ function unwindWork(
 function unwindInterruptedWork(interruptedWork: Fiber) {
   switch (interruptedWork.tag) {
     case ClassComponent: {
-      popLegacyContextProvider(interruptedWork);
+      const childContextTypes = interruptedWork.type.childContextTypes;
+      if (childContextTypes !== null && childContextTypes !== undefined) {
+        popLegacyContext(interruptedWork);
+      }
+      break;
+    }
+    case ClassComponentLazy: {
+      const childContextTypes =
+        interruptedWork.type._reactResult.childContextTypes;
+      if (childContextTypes !== null && childContextTypes !== undefined) {
+        popLegacyContext(interruptedWork);
+      }
       break;
     }
     case HostRoot: {

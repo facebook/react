@@ -23,6 +23,7 @@ import {
 import {
   FunctionalComponent,
   ClassComponent,
+  ClassComponentLazy,
   HostText,
   HostPortal,
   Fragment,
@@ -117,7 +118,7 @@ function coerceRef(
         if (!didWarnAboutStringRefInStrictMode[componentName]) {
           warningWithoutStack(
             false,
-            'A string ref, "%s", has been found within a strict mode tree. ' +
+            'A string ref, "%s", has been found within a strict mode tree. ' +
               'String refs are a source of potential bugs and should be avoided. ' +
               'We recommend using createRef() instead.' +
               '\n%s' +
@@ -137,7 +138,8 @@ function coerceRef(
       if (owner) {
         const ownerFiber = ((owner: any): Fiber);
         invariant(
-          ownerFiber.tag === ClassComponent,
+          ownerFiber.tag === ClassComponent ||
+            ownerFiber.tag === ClassComponentLazy,
           'Stateless function components cannot have refs.',
         );
         inst = ownerFiber.stateNode;
@@ -1307,7 +1309,8 @@ function ChildReconciler(shouldTrackSideEffects) {
       // component, throw an error. If Fiber return types are disabled,
       // we already threw above.
       switch (returnFiber.tag) {
-        case ClassComponent: {
+        case ClassComponent:
+        case ClassComponentLazy: {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
             if (instance.render._isMockFunction) {
