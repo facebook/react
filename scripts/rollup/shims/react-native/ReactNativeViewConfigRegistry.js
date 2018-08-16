@@ -90,11 +90,16 @@ exports.get = function(name: string): ReactNativeBaseComponentViewConfig {
   let viewConfig;
   if (!viewConfigs.has(name)) {
     const callback = viewConfigCallbacks.get(name);
-    invariant(
-      typeof callback === 'function',
-      'View config not found for name %s',
-      name,
-    );
+    if (typeof callback !== 'function') {
+      invariant(
+        false,
+        'View config not found for name %s.%s',
+        name,
+        typeof name[0] === 'string' && /[a-z]/.test(name[0])
+          ? ' Make sure to start component names with a capital letter.'
+          : '',
+      );
+    }
     viewConfigCallbacks.set(name, null);
     viewConfig = callback();
     processEventTypes(viewConfig);
