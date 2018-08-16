@@ -223,7 +223,7 @@ const properties = {};
 
 // defaultValue stringifies boolean values for backward compatability
 // from when it was treated as a reserved property. Reserved
-// properties skip most property validation
+// properties skip most property validation.
 properties.defaultValue = new PropertyInfoRecord(
   'defaultValue',
   OVERLOADED_BOOLEAN,
