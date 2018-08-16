@@ -10,6 +10,7 @@
 import React from 'react';
 import warning from 'shared/warning';
 import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
+import {getToStringValue, toString} from './ToStringValue';
 
 let didWarnSelectedSetOnOption = false;
 
@@ -73,7 +74,7 @@ export function validateProps(element: Element, props: Object) {
 export function postMountWrapper(element: Element, props: Object) {
   // value="" should make a value attribute (#6219)
   if (props.value != null) {
-    element.setAttribute('value', props.value);
+    element.setAttribute('value', toString(getToStringValue(props.value)));
   }
 }
 

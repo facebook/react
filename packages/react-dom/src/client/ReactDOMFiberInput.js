@@ -14,12 +14,15 @@ import warning from 'shared/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
+import {getToStringValue, toString} from './ToStringValue';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import * as inputValueTracking from './inputValueTracking';
 
+import type {ToStringValue} from './ToStringValue';
+
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
-    initialValue: string,
+    initialValue: ToStringValue,
     initialChecked: ?boolean,
     controlled?: boolean,
   },
@@ -114,7 +117,7 @@ export function initWrapperState(element: Element, props: Object) {
   node._wrapperState = {
     initialChecked:
       props.checked != null ? props.checked : props.defaultChecked,
-    initialValue: getSafeValue(
+    initialValue: getToStringValue(
       props.value != null ? props.value : defaultValue,
     ),
     controlled: isControlled(props),
@@ -168,20 +171,21 @@ export function updateWrapper(element: Element, props: Object) {
 
   updateChecked(element, props);
 
-  const value = getSafeValue(props.value);
+  const value = getToStringValue(props.value);
   const type = props.type;
 
   if (value != null) {
     if (type === 'number') {
       if (
         (value === 0 && node.value === '') ||
+        // We explicitly want to coerce to number here if possible.
         // eslint-disable-next-line
-        node.value != value
+        node.value != (value: any)
       ) {
-        node.value = '' + value;
+        node.value = toString(value);
       }
-    } else if (node.value !== '' + value) {
-      node.value = '' + value;
+    } else if (node.value !== toString(value)) {
+      node.value = toString(value);
     }
   } else if (type === 'submit' || type === 'reset') {
     // Submit/reset inputs need the attribute removed completely to avoid
@@ -193,7 +197,7 @@ export function updateWrapper(element: Element, props: Object) {
   if (props.hasOwnProperty('value')) {
     setDefaultValue(node, props.type, value);
   } else if (props.hasOwnProperty('defaultValue')) {
-    setDefaultValue(node, props.type, getSafeValue(props.defaultValue));
+    setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
   }
 
   if (props.checked == null && props.defaultChecked != null) {
@@ -219,7 +223,7 @@ export function postMountWrapper(
       return;
     }
 
-    const initialValue = '' + node._wrapperState.initialValue;
+    const initialValue = toString(node._wrapperState.initialValue);
     const currentValue = node.value;
 
     // Do not assign value if it is already set. This prevents user text input
@@ -328,23 +332,9 @@ export function setDefaultValue(
     node.ownerDocument.activeElement !== node
   ) {
     if (value == null) {
-      node.defaultValue = '' + node._wrapperState.initialValue;
-    } else if (node.defaultValue !== '' + value) {
-      node.defaultValue = '' + value;
+      node.defaultValue = toString(node._wrapperState.initialValue);
+    } else if (node.defaultValue !== toString(value)) {
+      node.defaultValue = toString(value);
     }
-  }
-}
-
-function getSafeValue(value: *): * {
-  switch (typeof value) {
-    case 'boolean':
-    case 'number':
-    case 'object':
-    case 'string':
-    case 'undefined':
-      return value;
-    default:
-      // function, symbol are assigned as empty strings
-      return '';
   }
 }

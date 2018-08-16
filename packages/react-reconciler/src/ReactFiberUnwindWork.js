@@ -34,10 +34,9 @@ import {
 } from 'shared/ReactTypeOfSideEffect';
 import {
   enableGetDerivedStateFromCatch,
-  enableProfilerTimer,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
-import {ProfileMode, StrictMode, AsyncMode} from './ReactTypeOfMode';
+import {StrictMode, AsyncMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -52,7 +51,6 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
-import {recordElapsedActualRenderTime} from './ReactProfilerTimer';
 import {
   renderDidSuspend,
   renderDidError,
@@ -288,8 +286,8 @@ function throwException(
               // time. First, find the earliest uncommitted expiration time in the
               // tree, including work that is suspended. Then subtract the offset
               // used to compute an async update's expiration time. This will cause
-              // high priority (interactive) work to expire earlier than neccessary,
-              // but we can account for this by adjusting for the Just Noticable
+              // high priority (interactive) work to expire earlier than necessary,
+              // but we can account for this by adjusting for the Just Noticeable
               // Difference.
               const earliestExpirationTime = findEarliestOutstandingPriorityLevel(
                 root,
@@ -380,12 +378,6 @@ function unwindWork(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  if (enableProfilerTimer) {
-    if (workInProgress.mode & ProfileMode) {
-      recordElapsedActualRenderTime(workInProgress);
-    }
-  }
-
   switch (workInProgress.tag) {
     case ClassComponent: {
       popLegacyContextProvider(workInProgress);
@@ -432,12 +424,6 @@ function unwindWork(
 }
 
 function unwindInterruptedWork(interruptedWork: Fiber) {
-  if (enableProfilerTimer) {
-    if (interruptedWork.mode & ProfileMode) {
-      recordElapsedActualRenderTime(interruptedWork);
-    }
-  }
-
   switch (interruptedWork.tag) {
     case ClassComponent: {
       popLegacyContextProvider(interruptedWork);

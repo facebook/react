@@ -56,6 +56,7 @@ export const TOP_CONTEXT_MENU = unsafeCastStringToDOMTopLevelType(
 export const TOP_COPY = unsafeCastStringToDOMTopLevelType('copy');
 export const TOP_CUT = unsafeCastStringToDOMTopLevelType('cut');
 export const TOP_DOUBLE_CLICK = unsafeCastStringToDOMTopLevelType('dblclick');
+export const TOP_AUX_CLICK = unsafeCastStringToDOMTopLevelType('auxclick');
 export const TOP_DRAG = unsafeCastStringToDOMTopLevelType('drag');
 export const TOP_DRAG_END = unsafeCastStringToDOMTopLevelType('dragend');
 export const TOP_DRAG_ENTER = unsafeCastStringToDOMTopLevelType('dragenter');

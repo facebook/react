@@ -6,7 +6,7 @@
  * @flow
  */
 
-import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {rethrowCaughtError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
 
 import {
@@ -224,7 +224,7 @@ export function runEventsInBatch(
       'an event queue. Support for this has not yet been implemented.',
   );
   // This would be a good time to rethrow if any of the event handlers threw.
-  ReactErrorUtils.rethrowCaughtError();
+  rethrowCaughtError();
 }
 
 export function runExtractedEventsInBatch(

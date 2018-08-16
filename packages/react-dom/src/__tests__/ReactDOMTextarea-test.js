@@ -20,6 +20,8 @@ describe('ReactDOMTextarea', () => {
   let renderTextarea;
 
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -399,12 +401,14 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should warn if value and defaultValue are specified', () => {
+    const InvalidComponent = () => (
+      <textarea value="foo" defaultValue="bar" readOnly={true} />
+    );
     expect(() =>
-      ReactTestUtils.renderIntoDocument(
-        <textarea value="foo" defaultValue="bar" readOnly={true} />,
-      ),
+      ReactTestUtils.renderIntoDocument(<InvalidComponent />),
     ).toWarnDev(
-      'Textarea elements must be either controlled or uncontrolled ' +
+      'InvalidComponent contains a textarea with both value and defaultValue props. ' +
+        'Textarea elements must be either controlled or uncontrolled ' +
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled textarea ' +
         'and remove one of these props. More info: ' +
@@ -412,9 +416,7 @@ describe('ReactDOMTextarea', () => {
     );
 
     // No additional warnings are expected
-    ReactTestUtils.renderIntoDocument(
-      <textarea value="foo" defaultValue="bar" readOnly={true} />,
-    );
+    ReactTestUtils.renderIntoDocument(<InvalidComponent />);
   });
 
   it('should not warn about missing onChange in uncontrolled textareas', () => {
@@ -422,5 +424,127 @@ describe('ReactDOMTextarea', () => {
     ReactDOM.render(<textarea />, container);
     ReactDOM.unmountComponentAtNode(container);
     ReactDOM.render(<textarea value={undefined} />, container);
+  });
+
+  describe('When given a Symbol value', () => {
+    it('treats initial Symbol value as an empty string', () => {
+      const container = document.createElement('div');
+      expect(() =>
+        ReactDOM.render(
+          <textarea value={Symbol('foobar')} onChange={() => {}} />,
+          container,
+        ),
+      ).toWarnDev('Invalid value for prop `value`');
+      const node = container.firstChild;
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats initial Symbol children as an empty string', () => {
+      const container = document.createElement('div');
+      expect(() =>
+        ReactDOM.render(
+          <textarea onChange={() => {}}>{Symbol('foo')}</textarea>,
+          container,
+        ),
+      ).toWarnDev('Use the `defaultValue` or `value` props');
+      const node = container.firstChild;
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats updated Symbol value as an empty string', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<textarea value="foo" onChange={() => {}} />, container);
+      expect(() =>
+        ReactDOM.render(
+          <textarea value={Symbol('foo')} onChange={() => {}} />,
+          container,
+        ),
+      ).toWarnDev('Invalid value for prop `value`');
+      const node = container.firstChild;
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats initial Symbol defaultValue as an empty string', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<textarea defaultValue={Symbol('foobar')} />, container);
+      const node = container.firstChild;
+
+      // TODO: defaultValue is a reserved prop and is not validated. Check warnings when they are.
+      expect(node.value).toBe('');
+    });
+
+    it('treats updated Symbol defaultValue as an empty string', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<textarea defaultValue="foo" />, container);
+      ReactDOM.render(<textarea defaultValue={Symbol('foobar')} />, container);
+      const node = container.firstChild;
+
+      // TODO: defaultValue is a reserved prop and is not validated. Check warnings when they are.
+      expect(node.value).toBe('foo');
+    });
+  });
+
+  describe('When given a function value', () => {
+    it('treats initial function value as an empty string', () => {
+      const container = document.createElement('div');
+      expect(() =>
+        ReactDOM.render(
+          <textarea value={() => {}} onChange={() => {}} />,
+          container,
+        ),
+      ).toWarnDev('Invalid value for prop `value`');
+      const node = container.firstChild;
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats initial function children as an empty string', () => {
+      const container = document.createElement('div');
+      expect(() =>
+        ReactDOM.render(
+          <textarea onChange={() => {}}>{() => {}}</textarea>,
+          container,
+        ),
+      ).toWarnDev('Use the `defaultValue` or `value` props');
+      const node = container.firstChild;
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats updated function value as an empty string', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<textarea value="foo" onChange={() => {}} />, container);
+      expect(() =>
+        ReactDOM.render(
+          <textarea value={() => {}} onChange={() => {}} />,
+          container,
+        ),
+      ).toWarnDev('Invalid value for prop `value`');
+      const node = container.firstChild;
+
+      expect(node.value).toBe('');
+    });
+
+    it('treats initial function defaultValue as an empty string', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<textarea defaultValue={() => {}} />, container);
+      const node = container.firstChild;
+
+      // TODO: defaultValue is a reserved prop and is not validated. Check warnings when they are.
+      expect(node.value).toBe('');
+    });
+
+    it('treats updated function defaultValue as an empty string', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<textarea defaultValue="foo" />, container);
+      ReactDOM.render(<textarea defaultValue={() => {}} />, container);
+      const node = container.firstChild;
+
+      // TODO: defaultValue is a reserved prop and is not validated. Check warnings when they are.
+      expect(node.value).toBe('foo');
+    });
   });
 });

@@ -46,7 +46,7 @@ class SelectFixture extends React.Component {
 
   render() {
     return (
-      <FixtureSet title="Selects" description="">
+      <FixtureSet title="Selects">
         <form className="field-group">
           <fieldset>
             <legend>Controlled</legend>
@@ -155,6 +155,25 @@ class SelectFixture extends React.Component {
                 <option value="baz">baz</option>
               </select>
               <button onClick={this.resetMultipleOptionForm}>Reset</button>
+            </form>
+          </div>
+        </TestCase>
+
+        <TestCase title="A multiple select being scrolled to first selected option">
+          <TestCase.ExpectedResult>
+            First selected option should be visible
+          </TestCase.ExpectedResult>
+
+          <div className="test-fixture">
+            <form>
+              <select multiple defaultValue={['tiger']}>
+                <option value="gorilla">gorilla</option>
+                <option value="giraffe">giraffe</option>
+                <option value="monkey">monkey</option>
+                <option value="lion">lion</option>
+                <option value="mongoose">mongoose</option>
+                <option value="tiger">tiget</option>
+              </select>
             </form>
           </div>
         </TestCase>

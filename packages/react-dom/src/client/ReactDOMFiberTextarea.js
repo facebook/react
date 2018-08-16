@@ -11,12 +11,15 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import {getToStringValue, toString} from './ToStringValue';
+import type {ToStringValue} from './ToStringValue';
 
 let didWarnValDefaultVal = false;
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {
-    initialValue: string,
+    initialValue: ToStringValue,
   },
 };
 
@@ -53,7 +56,7 @@ export function getHostProps(element: Element, props: Object) {
     ...props,
     value: undefined,
     defaultValue: undefined,
-    children: '' + node._wrapperState.initialValue,
+    children: toString(node._wrapperState.initialValue),
   };
 
   return hostProps;
@@ -70,11 +73,13 @@ export function initWrapperState(element: Element, props: Object) {
     ) {
       warning(
         false,
-        'Textarea elements must be either controlled or uncontrolled ' +
+        '%s contains a textarea with both value and defaultValue props. ' +
+          'Textarea elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled textarea ' +
           'and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnValDefaultVal = true;
     }
@@ -107,7 +112,7 @@ export function initWrapperState(element: Element, props: Object) {
         children = children[0];
       }
 
-      defaultValue = '' + children;
+      defaultValue = children;
     }
     if (defaultValue == null) {
       defaultValue = '';
@@ -116,18 +121,17 @@ export function initWrapperState(element: Element, props: Object) {
   }
 
   node._wrapperState = {
-    initialValue: '' + initialValue,
+    initialValue: getToStringValue(initialValue),
   };
 }
 
 export function updateWrapper(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
-  const value = props.value;
+  const value = getToStringValue(props.value);
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
-    const newValue = '' + value;
-
+    const newValue = toString(value);
     // To avoid side effects (such as losing text selection), only set value if changed
     if (newValue !== node.value) {
       node.value = newValue;
@@ -137,7 +141,7 @@ export function updateWrapper(element: Element, props: Object) {
     }
   }
   if (props.defaultValue != null) {
-    node.defaultValue = props.defaultValue;
+    node.defaultValue = toString(getToStringValue(props.defaultValue));
   }
 }
 

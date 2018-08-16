@@ -3,7 +3,7 @@ const React = window.React;
 
 const propTypes = {
   title: PropTypes.node.isRequired,
-  description: PropTypes.node.isRequired,
+  description: PropTypes.node,
 };
 
 class FixtureSet extends React.Component {

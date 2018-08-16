@@ -1,4 +1,4 @@
-import React, {Fragment, Placeholder} from 'react';
+import React, {Placeholder} from 'react';
 import {createResource} from 'simple-cache-provider';
 import Spinner from './Spinner';
 import {cache} from '../cache';
@@ -112,8 +112,8 @@ const ImageResource = createResource(
     })
 );
 
-function Img({src, ...rest}) {
-  return <img src={ImageResource.read(cache, src)} {...rest} />;
+function Img({src, alt, ...rest}) {
+  return <img src={ImageResource.read(cache, src)} alt={alt} {...rest} />;
 }
 
 function UserPicture({source}) {
@@ -135,7 +135,7 @@ function UserPicture({source}) {
 const UserRepositoriesResource = createResource(fetchUserRepositoriesListJSON);
 
 function Repositories({id}) {
-  const reviews = UserRepositoriesResource.read(cache, id);
+  const repos = UserRepositoriesResource.read(cache, id);
   return (
     <ul
       style={{
@@ -144,7 +144,7 @@ function Repositories({id}) {
         padding: 0,
         margin: 0,
       }}>
-      {reviews.map(review => <Repository key={review.id} {...review} />)}
+      {repos.map(repo => <Repository key={repo.name} {...repo} />)}
     </ul>
   );
 }

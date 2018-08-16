@@ -505,10 +505,13 @@ function constructClassInstance(
         didWarnAboutUninitializedState.add(componentName);
         warningWithoutStack(
           false,
-          '%s: Did not properly initialize state during construction. ' +
-            'Expected state to be an object, but it was %s.',
+          '`%s` uses `getDerivedStateFromProps` but its initial state is ' +
+            '%s. This is not recommended. Instead, define the initial state by ' +
+            'assigning an object to `this.state` in the constructor of `%s`. ' +
+            'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
           componentName,
           instance.state === null ? 'null' : 'undefined',
+          componentName,
         );
       }
     }
@@ -741,7 +744,6 @@ function mountClassInstance(
 
 function resumeMountClassInstance(
   workInProgress: Fiber,
-  hasPendingNewContext: boolean,
   renderExpirationTime: ExpirationTime,
 ): boolean {
   const ctor = workInProgress.type;
@@ -803,7 +805,6 @@ function resumeMountClassInstance(
     oldProps === newProps &&
     oldState === newState &&
     !hasContextChanged() &&
-    !hasPendingNewContext &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -825,7 +826,6 @@ function resumeMountClassInstance(
 
   const shouldUpdate =
     checkHasForceUpdateAfterProcessing() ||
-    hasPendingNewContext ||
     checkShouldComponentUpdate(
       workInProgress,
       oldProps,
@@ -881,7 +881,6 @@ function resumeMountClassInstance(
 function updateClassInstance(
   current: Fiber,
   workInProgress: Fiber,
-  hasPendingNewContext: boolean,
   renderExpirationTime: ExpirationTime,
 ): boolean {
   const ctor = workInProgress.type;
@@ -944,7 +943,6 @@ function updateClassInstance(
     oldProps === newProps &&
     oldState === newState &&
     !hasContextChanged() &&
-    !hasPendingNewContext &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -979,7 +977,6 @@ function updateClassInstance(
 
   const shouldUpdate =
     checkHasForceUpdateAfterProcessing() ||
-    hasPendingNewContext ||
     checkShouldComponentUpdate(
       workInProgress,
       oldProps,

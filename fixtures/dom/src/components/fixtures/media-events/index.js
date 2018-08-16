@@ -60,7 +60,7 @@ export default class MediaEvents extends React.Component {
     }, {});
 
     return (
-      <FixtureSet title="Media Events" description="">
+      <FixtureSet title="Media Events">
         <TestCase
           title="Event bubbling"
           description="Media events should synthetically bubble">

@@ -25,8 +25,6 @@ import {
   TOP_ERROR,
   TOP_INVALID,
   TOP_LOAD,
-  TOP_RESET,
-  TOP_SUBMIT,
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
@@ -384,6 +382,15 @@ export function createElement(
       // See discussion in https://github.com/facebook/react/pull/6896
       // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
       domElement = ownerDocument.createElement(type);
+      // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple`
+      // attribute on `select`s needs to be added before `option`s are inserted. This prevents
+      // a bug where the `select` does not scroll to the correct option because singular
+      // `select` elements automatically pick the first item.
+      // See https://github.com/facebook/react/issues/13222
+      if (type === 'select' && props.multiple) {
+        const node = ((domElement: any): HTMLSelectElement);
+        node.multiple = true;
+      }
     }
   } else {
     domElement = ownerDocument.createElementNS(namespaceURI, type);
@@ -470,11 +477,6 @@ export function setInitialProperties(
     case 'link':
       trapBubbledEvent(TOP_ERROR, domElement);
       trapBubbledEvent(TOP_LOAD, domElement);
-      props = rawProps;
-      break;
-    case 'form':
-      trapBubbledEvent(TOP_RESET, domElement);
-      trapBubbledEvent(TOP_SUBMIT, domElement);
       props = rawProps;
       break;
     case 'details':
@@ -859,10 +861,6 @@ export function diffHydratedProperties(
       trapBubbledEvent(TOP_ERROR, domElement);
       trapBubbledEvent(TOP_LOAD, domElement);
       break;
-    case 'form':
-      trapBubbledEvent(TOP_RESET, domElement);
-      trapBubbledEvent(TOP_SUBMIT, domElement);
-      break;
     case 'details':
       trapBubbledEvent(TOP_TOGGLE, domElement);
       break;
@@ -978,9 +976,12 @@ export function diffHydratedProperties(
       ) {
         // Noop
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-        const rawHtml = nextProp ? nextProp[HTML] || '' : '';
         const serverHTML = domElement.innerHTML;
-        const expectedHTML = normalizeHTML(domElement, rawHtml);
+        const nextHtml = nextProp ? nextProp[HTML] : undefined;
+        const expectedHTML = normalizeHTML(
+          domElement,
+          nextHtml != null ? nextHtml : '',
+        );
         if (expectedHTML !== serverHTML) {
           warnForPropDifference(propKey, serverHTML, expectedHTML);
         }

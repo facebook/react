@@ -12,6 +12,8 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import {getToStringValue, toString} from './ToStringValue';
+import type {ToStringValue} from './ToStringValue';
 
 let didWarnValueDefaultValue;
 
@@ -21,7 +23,7 @@ if (__DEV__) {
 
 type SelectWithWrapperState = HTMLSelectElement & {
   _wrapperState: {
-    initialValue: ?string,
+    initialValue: ?ToStringValue,
     wasMultiple: boolean,
   },
 };
@@ -98,7 +100,7 @@ function updateOptions(
   } else {
     // Do not set `select.value` as exact behavior isn't consistent across all
     // browsers for all cases.
-    let selectedValue = '' + (propValue: string);
+    let selectedValue = toString(getToStringValue((propValue: any)));
     let defaultSelected = null;
     for (let i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {
