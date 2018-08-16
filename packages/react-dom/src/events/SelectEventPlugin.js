@@ -14,6 +14,7 @@ import shallowEqual from 'shared/shallowEqual';
 import {
   TOP_BLUR,
   TOP_CONTEXT_MENU,
+  TOP_DRAG_END,
   TOP_FOCUS,
   TOP_KEY_DOWN,
   TOP_KEY_UP,
@@ -39,6 +40,7 @@ const eventTypes = {
     dependencies: [
       TOP_BLUR,
       TOP_CONTEXT_MENU,
+      TOP_DRAG_END,
       TOP_FOCUS,
       TOP_KEY_DOWN,
       TOP_KEY_UP,
@@ -200,6 +202,7 @@ const SelectEventPlugin = {
         break;
       case TOP_CONTEXT_MENU:
       case TOP_MOUSE_UP:
+      case TOP_DRAG_END:
         mouseDown = false;
         return constructSelectEvent(nativeEvent, nativeEventTarget);
       // Chrome and IE fire non-standard event when selection is changed (and
