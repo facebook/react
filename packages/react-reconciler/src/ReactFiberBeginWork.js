@@ -100,10 +100,8 @@ import {
   resumeMountClassInstance,
   updateClassInstance,
 } from './ReactFiberClassComponent';
-import {
-  readLazyComponentType,
-  getResultFromResolvedThenable,
-} from './ReactFiberLazyComponent';
+import {readLazyComponentType} from './ReactFiberLazyComponent';
+import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 import {reassignLazyComponentTag} from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;

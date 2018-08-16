@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'react-reconciler/src/ReactFiberLazyComponent';
+import type {Thenable} from 'shared/ReactLazyComponent';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -22,9 +22,9 @@ import {
   REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
 import {
-  refineResolvedThenable,
   getResultFromResolvedThenable,
-} from 'react-reconciler/src/ReactFiberLazyComponent';
+  refineResolvedThenable,
+} from 'shared/ReactLazyComponent';
 
 function getComponentName(type: mixed): string | null {
   if (type == null) {

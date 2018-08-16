@@ -31,6 +31,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -60,7 +61,6 @@ import {
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
-import {getResultFromResolvedThenable} from './ReactFiberLazyComponent';
 
 type OpaqueRoot = FiberRoot;
 

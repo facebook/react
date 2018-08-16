@@ -20,11 +20,11 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
+import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
-import {getResultFromResolvedThenable} from './ReactFiberLazyComponent';
 
 let warnedAboutMissingGetChildContext;
 

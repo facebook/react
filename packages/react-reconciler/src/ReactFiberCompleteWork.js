@@ -41,6 +41,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'shared/invariant';
+import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {
   createInstance,
@@ -72,7 +73,6 @@ import {
   prepareToHydrateHostTextInstance,
   popHydrationState,
 } from './ReactFiberHydrationContext';
-import {getResultFromResolvedThenable} from './ReactFiberLazyComponent';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
