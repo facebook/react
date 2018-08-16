@@ -55,7 +55,7 @@ describe('ReactChildReconciler', () => {
     return fn;
   }
 
-  fit('does not treat functions as iterables', () => {
+  it('does not treat functions as iterables', () => {
     let node;
     const iterableFunction = makeIterableFunction('foo');
 
@@ -68,15 +68,6 @@ describe('ReactChildReconciler', () => {
     }).toWarnDev('Functions are not valid as a React child');
 
     expect(node.innerHTML).toContain(''); // h1
-  });
-
-  it('renders iterable functions', () => {
-    class Component extends React.Component {
-      render() {
-        return <div>{createIterable([<div key="1" />, <div key="2" />])}</div>;
-      }
-    }
-    ReactTestUtils.renderIntoDocument(<Component />);
   });
 
   it('warns for duplicated array keys', () => {
