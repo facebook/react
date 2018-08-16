@@ -291,12 +291,12 @@ function shouldConstruct(Component: Function) {
   );
 }
 
-export function reassignLazyComponentTag(
+export function resolveLazyComponentTag(
   fiber: Fiber,
   Component: Function,
 ): void {
   if (typeof Component === 'function') {
-    fiber.tag = shouldConstruct(Component)
+    return shouldConstruct(Component)
       ? ClassComponentLazy
       : FunctionalComponentLazy;
   } else if (
@@ -304,8 +304,9 @@ export function reassignLazyComponentTag(
     Component !== null &&
     Component.$$typeof
   ) {
-    fiber.tag = ForwardRefLazy;
+    return ForwardRefLazy;
   }
+  return IndeterminateComponent;
 }
 
 // This is used to create an alternate fiber to do work on.

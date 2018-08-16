@@ -102,7 +102,7 @@ import {
 } from './ReactFiberClassComponent';
 import {readLazyComponentType} from './ReactFiberLazyComponent';
 import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
-import {reassignLazyComponentTag} from './ReactFiber';
+import {resolveLazyComponentTag} from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -628,9 +628,12 @@ function mountIndeterminateComponent(
     typeof Component.then === 'function'
   ) {
     Component = readLazyComponentType(Component);
-    reassignLazyComponentTag(workInProgress, Component);
+    const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(
+      workInProgress,
+      Component,
+    ));
     const resolvedProps = resolveDefaultProps(Component, props);
-    switch (workInProgress.tag) {
+    switch (resolvedTag) {
       case FunctionalComponentLazy: {
         return updateFunctionalComponent(
           current,
