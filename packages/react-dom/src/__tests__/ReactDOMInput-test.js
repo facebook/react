@@ -810,6 +810,62 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe('banana');
   });
 
+  it('should not set an undefined value on a submit input', () => {
+    let stub = <input type="submit" value={undefined} />;
+    ReactDOM.render(stub, container);
+    const node = container.firstChild;
+
+    // Note: it shouldn't be an empty string
+    // because that would erase the "submit" label.
+    expect(node.getAttribute('value')).toBe(null);
+
+    ReactDOM.render(stub, container);
+    expect(node.getAttribute('value')).toBe(null);
+  });
+
+  it('should not set an undefined value on a reset input', () => {
+    let stub = <input type="reset" value={undefined} />;
+    ReactDOM.render(stub, container);
+    const node = container.firstChild;
+
+    // Note: it shouldn't be an empty string
+    // because that would erase the "reset" label.
+    expect(node.getAttribute('value')).toBe(null);
+
+    ReactDOM.render(stub, container);
+    expect(node.getAttribute('value')).toBe(null);
+  });
+
+  it('should not set a null value on a submit input', () => {
+    let stub = <input type="submit" value={null} />;
+    expect(() => {
+      ReactDOM.render(stub, container);
+    }).toWarnDev('`value` prop on `input` should not be null');
+    const node = container.firstChild;
+
+    // Note: it shouldn't be an empty string
+    // because that would erase the "submit" label.
+    expect(node.getAttribute('value')).toBe(null);
+
+    ReactDOM.render(stub, container);
+    expect(node.getAttribute('value')).toBe(null);
+  });
+
+  it('should not set a null value on a reset input', () => {
+    let stub = <input type="reset" value={null} />;
+    expect(() => {
+      ReactDOM.render(stub, container);
+    }).toWarnDev('`value` prop on `input` should not be null');
+    const node = container.firstChild;
+
+    // Note: it shouldn't be an empty string
+    // because that would erase the "reset" label.
+    expect(node.getAttribute('value')).toBe(null);
+
+    ReactDOM.render(stub, container);
+    expect(node.getAttribute('value')).toBe(null);
+  });
+
   it('should set a value on a reset input', () => {
     let stub = <input type="reset" value="banana" />;
     ReactDOM.render(stub, container);
