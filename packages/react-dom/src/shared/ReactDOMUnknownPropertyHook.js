@@ -13,8 +13,8 @@ import warning from 'shared/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
-  BOOLEAN,
   RESERVED,
+  BOOLEAN,
   shouldRemoveAttributeWithWarning,
   getPropertyInfo,
 } from './DOMProperty';
@@ -212,12 +212,6 @@ if (__DEV__) {
         );
       }
       warnedProperties[name] = true;
-      return true;
-    }
-
-    // Now that we've validated casing, do not validate
-    // data types for reserved props
-    if (isReserved) {
       return true;
     }
 

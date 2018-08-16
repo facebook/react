@@ -2568,8 +2568,8 @@
 | `defaultChecked=(string 'false')`| (changed)| `<boolean: true>` |
 | `defaultChecked=(string 'on')`| (changed)| `<boolean: true>` |
 | `defaultChecked=(string 'off')`| (changed)| `<boolean: true>` |
-| `defaultChecked=(symbol)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `defaultChecked=(function)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `defaultChecked=(symbol)`| (changed, warning, ssr mismatch)| `<boolean: true>` |
+| `defaultChecked=(function)`| (changed, warning, ssr mismatch)| `<boolean: true>` |
 | `defaultChecked=(null)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -2593,8 +2593,8 @@
 | `defaultValue=(string 'false')`| (changed)| `"false"` |
 | `defaultValue=(string 'on')`| (changed)| `"on"` |
 | `defaultValue=(string 'off')`| (changed)| `"off"` |
-| `defaultValue=(symbol)`| (initial)| `<empty string>` |
-| `defaultValue=(function)`| (initial)| `<empty string>` |
+| `defaultValue=(symbol)`| (initial, warning)| `<empty string>` |
+| `defaultValue=(function)`| (initial, warning)| `<empty string>` |
 | `defaultValue=(null)`| (initial)| `<empty string>` |
 | `defaultValue=(undefined)`| (initial)| `<empty string>` |
 

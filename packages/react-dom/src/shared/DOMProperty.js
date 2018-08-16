@@ -207,11 +207,6 @@ const properties = {};
 [
   'children',
   'dangerouslySetInnerHTML',
-  // TODO: This prevents the assignment of defaultValue to regular
-  // elements (not just inputs). Now that ReactDOMInput assigns to the
-  // defaultValue property -- do we need this?
-  'defaultValue',
-  'defaultChecked',
   'innerHTML',
   'suppressContentEditableWarning',
   'suppressHydrationWarning',
@@ -220,6 +215,20 @@ const properties = {};
   properties[name] = new PropertyInfoRecord(
     name,
     RESERVED,
+    false, // mustUseProperty
+    name, // attributeName
+    null, // attributeNamespace
+  );
+});
+
+[
+  // For legacy purposes, defaultValue stringifies boolean values
+  'defaultValue',
+  'defaultChecked',
+].forEach(function(name) {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    BOOLEANISH_STRING,
     false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace

@@ -38,7 +38,7 @@ const {
   serverRender,
 } = ReactDOMServerIntegrationUtils(initModules);
 
-describe('ReactDOMServerIntegration', () => {
+describe('ReactDOMServerIntegrationForms', () => {
   beforeEach(() => {
     resetModules();
   });
@@ -231,10 +231,54 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.value).toBe('');
       });
 
+      itRenders(
+        'a textarea with Symbol defaultValue with a warning',
+        async render => {
+          const e = await render(
+            <textarea defaultValue={Symbol('test')} readOnly={true} />,
+            1,
+          );
+          expect(e.value).toBe('');
+        },
+      );
+
       itRenders('a textarea with NaN value with a warning', async render => {
         const e = await render(<textarea value={NaN} readOnly={true} />, 1);
         expect(e.value).toBe('NaN');
       });
+
+      itRenders(
+        'a textarea with NaN defaultValue with a warning',
+        async render => {
+          const e = await render(
+            <textarea defaultValue={NaN} readOnly={true} />,
+            1,
+          );
+          expect(e.value).toBe('NaN');
+        },
+      );
+
+      itRenders(
+        'a textarea with function value with a warning',
+        async render => {
+          const e = await render(
+            <textarea value={() => {}} readOnly={true} />,
+            1,
+          );
+          expect(e.value).toBe('');
+        },
+      );
+
+      itRenders(
+        'a textarea with function defaultValue with a warning',
+        async render => {
+          const e = await render(
+            <textarea defaultValue={() => {}} readOnly={true} />,
+            1,
+          );
+          expect(e.value).toBe('');
+        },
+      );
 
       itRenders('a textarea with Object value with a warning', async render => {
         const value = {
@@ -501,12 +545,50 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('a select with NaN value with a warning', async render => {
         const e = await render(
           <select value={NaN} readOnly={true}>
-            <option value={NaN}>NaN</option>
+            <option value="NaN">NaN</option>
           </select>,
           1,
         );
         expect(e.value).toBe('NaN');
       });
+
+      itRenders(
+        'a select with NaN defaultValue with a warning',
+        async render => {
+          const e = await render(
+            <select defaultValue={NaN} readOnly={true}>
+              <option value="NaN">NaN</option>
+            </select>,
+            1,
+          );
+          expect(e.value).toBe('NaN');
+        },
+      );
+
+      itRenders('a select with function value with a warning', async render => {
+        const e = await render(
+          <select value={() => {}} readOnly={true}>
+            <option>First option</option>
+            <option value={(() => {}).toString()} />
+          </select>,
+          1,
+        );
+        expect(e.value).toBe('First option');
+      });
+
+      itRenders(
+        'a select with function defaultValue with a warning',
+        async render => {
+          const e = await render(
+            <select defaultValue={() => {}} readOnly={true}>
+              <option>First option</option>
+              <option value={(() => {}).toString()} />
+            </select>,
+            1,
+          );
+          expect(e.value).toBe('First option');
+        },
+      );
     });
 
     describe('user interaction', function() {
