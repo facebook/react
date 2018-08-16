@@ -100,7 +100,10 @@ import {
   resumeMountClassInstance,
   updateClassInstance,
 } from './ReactFiberClassComponent';
-import {readLazyComponentType} from './ReactFiberLazyComponent';
+import {
+  readLazyComponentType,
+  getResultFromResolvedThenable,
+} from './ReactFiberLazyComponent';
 import {reassignLazyComponentTag} from './ReactFiber';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -1100,7 +1103,7 @@ function beginWork(
       }
       case ClassComponentLazy: {
         const thenable = workInProgress.type;
-        const Component = (thenable._reactResult: any);
+        const Component = getResultFromResolvedThenable(thenable);
         if (isLegacyContextProvider(Component)) {
           pushLegacyContextProvider(workInProgress);
         }
@@ -1145,17 +1148,18 @@ function beginWork(
     }
     case FunctionalComponent: {
       const Component = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
       return updateFunctionalComponent(
         current,
         workInProgress,
         Component,
-        workInProgress.pendingProps,
+        unresolvedProps,
         renderExpirationTime,
       );
     }
     case FunctionalComponentLazy: {
       const thenable = workInProgress.type;
-      const Component = (thenable._reactResult: any);
+      const Component = getResultFromResolvedThenable(thenable);
       const unresolvedProps = workInProgress.pendingProps;
       const child = updateFunctionalComponent(
         current,
@@ -1169,17 +1173,18 @@ function beginWork(
     }
     case ClassComponent: {
       const Component = workInProgress.type;
+      const unresolvedProps = workInProgress.pendingProps;
       return updateClassComponent(
         current,
         workInProgress,
         Component,
-        workInProgress.pendingProps,
+        unresolvedProps,
         renderExpirationTime,
       );
     }
     case ClassComponentLazy: {
       const thenable = workInProgress.type;
-      const Component = (thenable._reactResult: any);
+      const Component = getResultFromResolvedThenable(thenable);
       const unresolvedProps = workInProgress.pendingProps;
       const child = updateClassComponent(
         current,
@@ -1221,7 +1226,7 @@ function beginWork(
     }
     case ForwardRefLazy:
       const thenable = workInProgress.type;
-      const Component = (thenable._reactResult: any);
+      const Component = getResultFromResolvedThenable(thenable);
       const unresolvedProps = workInProgress.pendingProps;
       const child = updateForwardRef(
         current,

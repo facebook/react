@@ -146,6 +146,7 @@ import {
   commitDetachRef,
 } from './ReactFiberCommitWork';
 import {Dispatcher} from './ReactFiberDispatcher';
+import {getResultFromResolvedThenable} from './ReactFiberLazyComponent';
 
 export type Deadline = {
   timeRemaining: () => number,
@@ -297,7 +298,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         break;
       }
       case ClassComponentLazy: {
-        const Component = failedUnitOfWork.type._reactResult;
+        const Component = getResultFromResolvedThenable(failedUnitOfWork.type);
         if (isLegacyContextProvider(Component)) {
           popLegacyContext(failedUnitOfWork);
         }

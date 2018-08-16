@@ -60,6 +60,7 @@ import {
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
+import {getResultFromResolvedThenable} from './ReactFiberLazyComponent';
 
 type OpaqueRoot = FiberRoot;
 
@@ -102,7 +103,7 @@ function getContextForSubtree(
       return processChildContext(fiber, Component, parentContext);
     }
   } else if (fiber.tag === ClassComponentLazy) {
-    const Component = fiber.type._reactResult;
+    const Component = getResultFromResolvedThenable(fiber.type);
     if (isLegacyContextProvider(Component)) {
       return processChildContext(fiber, Component, parentContext);
     }

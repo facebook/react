@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {Thenable} from 'react-reconciler/src/ReactFiberLazyComponent';
+
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   REACT_ASYNC_MODE_TYPE,
@@ -19,7 +21,10 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
-import {Resolved, Rejected} from 'react-reconciler/src/ReactFiberLazyComponent';
+import {
+  refineResolvedThenable,
+  getResultFromResolvedThenable,
+} from 'react-reconciler/src/ReactFiberLazyComponent';
 
 function getComponentName(type: mixed): string | null {
   if (type == null) {
@@ -69,9 +74,11 @@ function getComponentName(type: mixed): string | null {
           : 'ForwardRef';
     }
     if (typeof type.then === 'function') {
-      const status = type._reactStatus;
-      if (status === Resolved || status === Rejected) {
-        return getComponentName(type._reactResult);
+      const thenable: Thenable<mixed> = (type: any);
+      const resolvedThenable = refineResolvedThenable(thenable);
+      if (resolvedThenable) {
+        const Component = getResultFromResolvedThenable(resolvedThenable);
+        return getComponentName(Component);
       }
     }
   }

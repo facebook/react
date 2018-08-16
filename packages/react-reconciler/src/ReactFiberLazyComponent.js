@@ -7,15 +7,33 @@
  * @flow
  */
 
-type Thenable<T> = {
+export type Thenable<T> = {
   then(resolve: (T) => mixed, reject: (mixed) => mixed): mixed,
   _reactStatus?: 0 | 1 | 2,
   _reactResult: any,
 };
 
+type ResolvedThenable<T> = {
+  then(resolve: (T) => mixed, reject: (mixed) => mixed): mixed,
+  _reactStatus?: 1,
+  _reactResult: T,
+};
+
 export const Pending = 0;
 export const Resolved = 1;
 export const Rejected = 2;
+
+export function getResultFromResolvedThenable<T>(
+  thenable: ResolvedThenable<T>,
+): T {
+  return thenable._reactResult;
+}
+
+export function refineResolvedThenable<T>(
+  thenable: Thenable<T>,
+): ResolvedThenable<T> | null {
+  return thenable._reactStatus === Resolved ? thenable._reactResult : null;
+}
 
 export function readLazyComponentType<T>(thenable: Thenable<T>): T {
   const status = thenable._reactStatus;

@@ -72,6 +72,7 @@ import {
   prepareToHydrateHostTextInstance,
   popHydrationState,
 } from './ReactFiberHydrationContext';
+import {getResultFromResolvedThenable} from './ReactFiberLazyComponent';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -327,7 +328,7 @@ function completeWork(
       break;
     }
     case ClassComponentLazy: {
-      const Component = workInProgress.type._reactResult;
+      const Component = getResultFromResolvedThenable(workInProgress.type);
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }

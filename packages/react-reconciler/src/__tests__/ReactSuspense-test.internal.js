@@ -1538,7 +1538,7 @@ describe('ReactSuspense', () => {
       expect(ReactNoop.flush()).toEqual(['Lazy', 'Sibling', 'A']);
       expect(ReactNoop.getChildren()).toEqual([span('Sibling'), span('A')]);
 
-      // Lazy should not have re-rendered
+      // Lazy should not re-render
       stateful.current.setState({text: 'B'});
       expect(ReactNoop.flush()).toEqual(['B']);
       expect(ReactNoop.getChildren()).toEqual([span('Sibling'), span('B')]);

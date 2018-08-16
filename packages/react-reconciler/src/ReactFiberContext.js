@@ -24,6 +24,7 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {createCursor, push, pop} from './ReactFiberStack';
+import {getResultFromResolvedThenable} from './ReactFiberLazyComponent';
 
 let warnedAboutMissingGetChildContext;
 
@@ -297,7 +298,7 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
         break;
       }
       case ClassComponentLazy: {
-        const Component = node.type._reactResult;
+        const Component = getResultFromResolvedThenable(node.type);
         if (isContextProvider(Component)) {
           return node.stateNode.__reactInternalMemoizedMergedChildContext;
         }
