@@ -13,7 +13,6 @@ import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import {getToStringValue, toString} from './ToStringValue';
-import type {ToStringValue} from './ToStringValue';
 
 let didWarnValueDefaultValue;
 
@@ -23,7 +22,6 @@ if (__DEV__) {
 
 type SelectWithWrapperState = HTMLSelectElement & {
   _wrapperState: {
-    initialValue: ?ToStringValue,
     wasMultiple: boolean,
   },
 };
@@ -148,9 +146,7 @@ export function initWrapperState(element: Element, props: Object) {
     checkSelectPropTypes(props);
   }
 
-  const value = props.value;
   node._wrapperState = {
-    initialValue: value != null ? value : props.defaultValue,
     wasMultiple: !!props.multiple,
   };
 
@@ -186,10 +182,6 @@ export function postMountWrapper(element: Element, props: Object) {
 
 export function postUpdateWrapper(element: Element, props: Object) {
   const node = ((element: any): SelectWithWrapperState);
-  // After the initial mount, we control selected-ness manually so don't pass
-  // this value down
-  node._wrapperState.initialValue = undefined;
-
   const wasMultiple = node._wrapperState.wasMultiple;
   node._wrapperState.wasMultiple = !!props.multiple;
 
