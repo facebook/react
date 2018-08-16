@@ -315,40 +315,6 @@ if (__DEV__) {
   Object.freeze(emptyObject);
 }
 
-function maskContext(type, context) {
-  const contextTypes = type.contextTypes;
-  if (!contextTypes) {
-    return emptyObject;
-  }
-  const maskedContext = {};
-  for (const contextName in contextTypes) {
-    maskedContext[contextName] = context[contextName];
-  }
-  return maskedContext;
-}
-
-function checkContextTypes(typeSpecs, values, location: string) {
-  if (__DEV__) {
-    checkPropTypes(
-      typeSpecs,
-      values,
-      location,
-      'Component',
-      getCurrentServerStackImpl,
-    );
-  }
-}
-
-function processContext(type, context) {
-  const maskedContext = maskContext(type, context);
-  if (__DEV__) {
-    if (type.contextTypes) {
-      checkContextTypes(type.contextTypes, maskedContext, 'context');
-    }
-  }
-  return maskedContext;
-}
-
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 const STYLE = 'style';
 const RESERVED_PROPS = {
@@ -416,13 +382,7 @@ function validateRenderResult(child, type) {
   }
 }
 
-function resolve(
-  child: mixed,
-  context: Object,
-): {|
-  child: mixed,
-  context: Object,
-|} {
+function resolve(child: mixed): mixed {
   while (React.isValidElement(child)) {
     // Safe because we just checked it's an element.
     let element: ReactElement = (child: any);
@@ -438,8 +398,6 @@ function resolve(
 
   // Extra closure so queue and replace can be captured properly
   function processChild(element, Component) {
-    let publicContext = processContext(Component, context);
-
     let queue = [];
     let replace = false;
     let updater = {
@@ -467,7 +425,7 @@ function resolve(
 
     let inst;
     if (shouldConstruct(Component)) {
-      inst = new Component(element.props, publicContext, updater);
+      inst = new Component(element.props, emptyObject, updater);
 
       if (typeof Component.getDerivedStateFromProps === 'function') {
         if (__DEV__) {
@@ -534,7 +492,7 @@ function resolve(
           }
         }
       }
-      inst = Component(element.props, publicContext, updater);
+      inst = Component(element.props, emptyObject, updater);
       if (inst == null || inst.render == null) {
         child = inst;
         validateRenderResult(child, Component);
@@ -543,7 +501,6 @@ function resolve(
     }
 
     inst.props = element.props;
-    inst.context = publicContext;
     inst.updater = updater;
 
     let initialState = inst.state;
@@ -608,7 +565,7 @@ function resolve(
             let partial = oldQueue[i];
             let partialState =
               typeof partial === 'function'
-                ? partial.call(inst, nextState, element.props, publicContext)
+                ? partial.call(inst, nextState, element.props)
                 : partial;
             if (partialState != null) {
               if (dontMutate) {
@@ -635,34 +592,8 @@ function resolve(
       }
     }
     validateRenderResult(child, Component);
-
-    let childContext;
-    if (typeof inst.getChildContext === 'function') {
-      let childContextTypes = Component.childContextTypes;
-      if (typeof childContextTypes === 'object') {
-        childContext = inst.getChildContext();
-        for (let contextKey in childContext) {
-          invariant(
-            contextKey in childContextTypes,
-            '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-            getComponentName(Component) || 'Unknown',
-            contextKey,
-          );
-        }
-      } else {
-        warningWithoutStack(
-          false,
-          '%s.getChildContext(): childContextTypes must be defined in order to ' +
-            'use getChildContext().',
-          getComponentName(Component) || 'Unknown',
-        );
-      }
-    }
-    if (childContext) {
-      context = Object.assign({}, context, childContext);
-    }
   }
-  return {child, context};
+  return child;
 }
 
 type Frame = {
@@ -670,7 +601,6 @@ type Frame = {
   domNamespace: string,
   children: FlatReactChildren,
   childIndex: number,
-  context: Object,
   footer: string,
 };
 
@@ -701,7 +631,6 @@ class ReactDOMServerRenderer {
       domNamespace: Namespaces.html,
       children: flatChildren,
       childIndex: 0,
-      context: emptyObject,
       footer: '',
     };
     if (__DEV__) {
@@ -813,23 +742,19 @@ class ReactDOMServerRenderer {
         ((frame: any): FrameDev).debugElementStack.length = 0;
         try {
           // Be careful! Make sure this matches the PROD path below.
-          out += this.render(child, frame.context, frame.domNamespace);
+          out += this.render(child, frame.domNamespace);
         } finally {
           popCurrentDebugStack();
         }
       } else {
         // Be careful! Make sure this matches the DEV path above.
-        out += this.render(child, frame.context, frame.domNamespace);
+        out += this.render(child, frame.domNamespace);
       }
     }
     return out;
   }
 
-  render(
-    child: ReactNode | null,
-    context: Object,
-    parentNamespace: string,
-  ): string {
+  render(child: ReactNode | null, parentNamespace: string): string {
     if (typeof child === 'string' || typeof child === 'number') {
       const text = '' + child;
       if (text === '') {
@@ -844,8 +769,7 @@ class ReactDOMServerRenderer {
       this.previousWasTextNode = true;
       return escapeTextForBrowser(text);
     } else {
-      let nextChild;
-      ({child: nextChild, context} = resolve(child, context));
+      let nextChild = resolve(child);
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
@@ -871,7 +795,6 @@ class ReactDOMServerRenderer {
           domNamespace: parentNamespace,
           children: nextChildren,
           childIndex: 0,
-          context: context,
           footer: '',
         };
         if (__DEV__) {
@@ -885,7 +808,7 @@ class ReactDOMServerRenderer {
       const elementType = nextElement.type;
 
       if (typeof elementType === 'string') {
-        return this.renderDOM(nextElement, context, parentNamespace);
+        return this.renderDOM(nextElement, parentNamespace);
       }
 
       switch (elementType) {
@@ -901,7 +824,6 @@ class ReactDOMServerRenderer {
             domNamespace: parentNamespace,
             children: nextChildren,
             childIndex: 0,
-            context: context,
             footer: '',
           };
           if (__DEV__) {
@@ -926,7 +848,6 @@ class ReactDOMServerRenderer {
               domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
-              context: context,
               footer: '',
             };
             if (__DEV__) {
@@ -944,7 +865,6 @@ class ReactDOMServerRenderer {
               domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
-              context: context,
               footer: '',
             };
             if (__DEV__) {
@@ -967,7 +887,6 @@ class ReactDOMServerRenderer {
               domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
-              context: context,
               footer: '',
             };
             if (__DEV__) {
@@ -1011,11 +930,7 @@ class ReactDOMServerRenderer {
     }
   }
 
-  renderDOM(
-    element: ReactElement,
-    context: Object,
-    parentNamespace: string,
-  ): string {
+  renderDOM(element: ReactElement, parentNamespace: string): string {
     const tag = element.type.toLowerCase();
 
     let namespace = parentNamespace;
@@ -1284,7 +1199,6 @@ class ReactDOMServerRenderer {
       type: tag,
       children,
       childIndex: 0,
-      context: context,
       footer: footer,
     };
     if (__DEV__) {
