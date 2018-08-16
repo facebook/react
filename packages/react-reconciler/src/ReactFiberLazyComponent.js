@@ -27,13 +27,19 @@ export function readLazyComponentType<T>(thenable: Thenable<T>): T {
         resolvedValue => {
           if (thenable._reactStatus === Pending) {
             thenable._reactStatus = Resolved;
-            // If the default value is not empty, assume it's the result of
-            // an async import() and use that. Otherwise, use resolved value.
-            const defaultExport = (resolvedValue: any).default;
-            thenable._reactResult =
-              defaultExport !== null && defaultExport !== undefined
-                ? defaultExport
-                : resolvedValue;
+            if (typeof resolvedValue === 'object' && resolvedValue !== null) {
+              // If the `default` property is not empty, assume it's the result
+              // of an async import() and use that. Otherwise, use the
+              // resolved value itself.
+              const defaultExport = (resolvedValue: any).default;
+              resolvedValue =
+                typeof defaultExport !== undefined && defaultExport !== null
+                  ? defaultExport
+                  : resolvedValue;
+            } else {
+              resolvedValue = resolvedValue;
+            }
+            thenable._reactResult = resolvedValue;
           }
         },
         error => {
