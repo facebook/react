@@ -9,7 +9,6 @@
 
 'use strict';
 
-let PropTypes;
 let React;
 let ReactDOM;
 let ReactTestUtils;
@@ -18,7 +17,6 @@ let createReactClass;
 describe('create-react-class-integration', () => {
   beforeEach(() => {
     jest.resetModules();
-    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
@@ -65,42 +63,6 @@ describe('create-react-class-integration', () => {
       }),
     ).toWarnDev(
       'Warning: Component: prop type `prop` is invalid; ' +
-        'it must be a function, usually from React.PropTypes.',
-      {withoutStack: true},
-    );
-  });
-
-  it('should warn on invalid context types', () => {
-    expect(() =>
-      createReactClass({
-        displayName: 'Component',
-        contextTypes: {
-          prop: null,
-        },
-        render: function() {
-          return <span>{this.props.prop}</span>;
-        },
-      }),
-    ).toWarnDev(
-      'Warning: Component: context type `prop` is invalid; ' +
-        'it must be a function, usually from React.PropTypes.',
-      {withoutStack: true},
-    );
-  });
-
-  it('should throw on invalid child context types', () => {
-    expect(() =>
-      createReactClass({
-        displayName: 'Component',
-        childContextTypes: {
-          prop: null,
-        },
-        render: function() {
-          return <span>{this.props.prop}</span>;
-        },
-      }),
-    ).toWarnDev(
-      'Warning: Component: child context type `prop` is invalid; ' +
         'it must be a function, usually from React.PropTypes.',
       {withoutStack: true},
     );
@@ -198,36 +160,6 @@ describe('create-react-class-integration', () => {
     );
   });
 
-  // TODO: Consider actually moving these to statics or drop this unit test.
-  xit('should warn when using deprecated non-static spec keys', () => {
-    expect(() =>
-      createReactClass({
-        mixins: [{}],
-        propTypes: {
-          foo: PropTypes.string,
-        },
-        contextTypes: {
-          foo: PropTypes.string,
-        },
-        childContextTypes: {
-          foo: PropTypes.string,
-        },
-        render: function() {
-          return <div />;
-        },
-      }),
-    ).toWarnDev([
-      'createClass(...): `mixins` is now a static property and should ' +
-        'be defined inside "statics".',
-      'createClass(...): `propTypes` is now a static property and should ' +
-        'be defined inside "statics".',
-      'createClass(...): `contextTypes` is now a static property and ' +
-        'should be defined inside "statics".',
-      'createClass(...): `childContextTypes` is now a static property and ' +
-        'should be defined inside "statics".',
-    ]);
-  });
-
   it('should support statics', () => {
     const Component = createReactClass({
       statics: {
@@ -289,36 +221,6 @@ describe('create-react-class-integration', () => {
     let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.occupation).toEqual('clown');
-  });
-
-  it('renders based on context getInitialState', () => {
-    const Foo = createReactClass({
-      contextTypes: {
-        className: PropTypes.string,
-      },
-      getInitialState() {
-        return {className: this.context.className};
-      },
-      render() {
-        return <span className={this.state.className} />;
-      },
-    });
-
-    const Outer = createReactClass({
-      childContextTypes: {
-        className: PropTypes.string,
-      },
-      getChildContext() {
-        return {className: 'foo'};
-      },
-      render() {
-        return <Foo />;
-      },
-    });
-
-    const container = document.createElement('div');
-    ReactDOM.render(<Outer />, container);
-    expect(container.firstChild.className).toBe('foo');
   });
 
   it('should throw with non-object getInitialState() return values', () => {

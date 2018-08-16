@@ -12,7 +12,6 @@
 
 let React;
 let ReactDOMServer;
-let PropTypes;
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -22,7 +21,6 @@ describe('ReactDOMServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    PropTypes = require('prop-types');
     ReactDOMServer = require('react-dom/server');
   });
 
@@ -352,45 +350,6 @@ describe('ReactDOMServer', () => {
 
       const markup = ReactDOMServer.renderToString(
         <Component text="hello, world" />,
-      );
-      expect(markup).toContain('hello, world');
-    });
-
-    it('renders with context when using custom constructor', () => {
-      class Component extends React.Component {
-        constructor() {
-          super();
-        }
-
-        render() {
-          return <div>{this.context.text}</div>;
-        }
-      }
-
-      Component.contextTypes = {
-        text: PropTypes.string.isRequired,
-      };
-
-      class ContextProvider extends React.Component {
-        getChildContext() {
-          return {
-            text: 'hello, world',
-          };
-        }
-
-        render() {
-          return this.props.children;
-        }
-      }
-
-      ContextProvider.childContextTypes = {
-        text: PropTypes.string,
-      };
-
-      const markup = ReactDOMServer.renderToString(
-        <ContextProvider>
-          <Component />
-        </ContextProvider>,
       );
       expect(markup).toContain('hello, world');
     });

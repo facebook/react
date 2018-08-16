@@ -12,7 +12,6 @@
 let React;
 let ReactFeatureFlags;
 let ReactTestRenderer;
-let PropTypes;
 
 describe('ReactStrictMode', () => {
   describe('debugRenderPhaseSideEffects', () => {
@@ -813,102 +812,6 @@ describe('ReactStrictMode', () => {
 
       // Dedup
       renderer.update(<OuterComponent />);
-    });
-  });
-
-  describe('context legacy', () => {
-    beforeEach(() => {
-      jest.resetModules();
-      React = require('react');
-      ReactTestRenderer = require('react-test-renderer');
-      PropTypes = require('prop-types');
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.warnAboutLegacyContextAPI = true;
-    });
-
-    it('should warn if the legacy context API have been used in strict mode', () => {
-      class LegacyContextProvider extends React.Component {
-        getChildContext() {
-          return {color: 'purple'};
-        }
-
-        render() {
-          return (
-            <div>
-              <LegacyContextConsumer />
-              <FunctionalLegacyContextConsumer />
-              <FactoryLegacyContextConsumer />
-            </div>
-          );
-        }
-      }
-
-      function FunctionalLegacyContextConsumer() {
-        return null;
-      }
-
-      function FactoryLegacyContextConsumer() {
-        return {
-          render() {
-            return null;
-          },
-        };
-      }
-
-      LegacyContextProvider.childContextTypes = {
-        color: PropTypes.string,
-      };
-
-      class LegacyContextConsumer extends React.Component {
-        render() {
-          return null;
-        }
-      }
-
-      const {StrictMode} = React;
-
-      class Root extends React.Component {
-        render() {
-          return (
-            <div>
-              <StrictMode>
-                <LegacyContextProvider />
-              </StrictMode>
-            </div>
-          );
-        }
-      }
-
-      LegacyContextConsumer.contextTypes = {
-        color: PropTypes.string,
-      };
-
-      FunctionalLegacyContextConsumer.contextTypes = {
-        color: PropTypes.string,
-      };
-
-      FactoryLegacyContextConsumer.contextTypes = {
-        color: PropTypes.string,
-      };
-
-      let rendered;
-
-      expect(() => {
-        rendered = ReactTestRenderer.create(<Root />);
-      }).toWarnDev(
-        'Warning: Legacy context API has been detected within a strict-mode tree: ' +
-          '\n    in StrictMode (at **)' +
-          '\n    in div (at **)' +
-          '\n    in Root (at **)' +
-          '\n\nPlease update the following components: FactoryLegacyContextConsumer, ' +
-          'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-strict-mode-warnings',
-      );
-
-      // Dedupe
-      rendered = ReactTestRenderer.create(<Root />);
-      rendered.update(<Root />);
     });
   });
 });

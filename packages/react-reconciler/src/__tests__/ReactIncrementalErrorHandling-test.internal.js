@@ -10,7 +10,6 @@
 
 'use strict';
 
-let PropTypes;
 let ReactFeatureFlags;
 let React;
 let ReactNoop;
@@ -22,7 +21,6 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-    PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
@@ -948,64 +946,6 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren('f')).toEqual(null);
   });
 
-  it('unwinds the context stack correctly on error', () => {
-    class Provider extends React.Component {
-      static childContextTypes = {message: PropTypes.string};
-      static contextTypes = {message: PropTypes.string};
-      getChildContext() {
-        return {
-          message: (this.context.message || '') + this.props.message,
-        };
-      }
-      render() {
-        return this.props.children;
-      }
-    }
-
-    function Connector(props, context) {
-      return <span prop={context.message} />;
-    }
-
-    Connector.contextTypes = {
-      message: PropTypes.string,
-    };
-
-    function BadRender() {
-      throw new Error('render error');
-    }
-
-    class Boundary extends React.Component {
-      state = {error: null};
-      componentDidCatch(error) {
-        this.setState({error});
-      }
-      render() {
-        return (
-          <Provider message="b">
-            <Provider message="c">
-              <Provider message="d">
-                <Provider message="e">
-                  {!this.state.error && <BadRender />}
-                </Provider>
-              </Provider>
-            </Provider>
-          </Provider>
-        );
-      }
-    }
-
-    ReactNoop.render(
-      <Provider message="a">
-        <Boundary />
-        <Connector />
-      </Provider>,
-    );
-    ReactNoop.flush();
-
-    // If the context stack does not unwind, span will get 'abcde'
-    expect(ReactNoop.getChildren()).toEqual([span('a')]);
-  });
-
   it('catches reconciler errors in a boundary during mounting', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -1468,27 +1408,5 @@ describe('ReactIncrementalErrorHandling', () => {
     );
     ReactNoop.flushDeferredPri();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
-  });
-
-  it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', () => {
-    function Provider() {
-      return {
-        getChildContext() {
-          return {foo: 'bar'};
-        },
-        render() {
-          return 'Hi';
-        },
-      };
-    }
-    Provider.childContextTypes = {
-      x: () => {},
-    };
-    Provider.getDerivedStateFromProps = () => {
-      throw new Error('Oops!');
-    };
-
-    ReactNoop.render(<Provider />);
-    expect(() => ReactNoop.flush()).toThrow('Oops!');
   });
 });

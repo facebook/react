@@ -82,35 +82,6 @@ class StateBasedOnProps extends React.Component {
   }
 }
 
-// it renders based on context in the constructor
-class StateBasedOnContext extends React.Component {
-  static contextTypes = {
-    tag: PropTypes.string,
-    className: PropTypes.string,
-  };
-  state = {
-    tag: this.context.tag,
-    className: this.context.className,
-  };
-  render() {
-    const Tag = this.state.tag;
-    return React.createElement(Tag, {className: this.state.className});
-  }
-}
-
-class ProvideChildContextTypes extends React.Component {
-  static childContextTypes = {
-    tag: PropTypes.string,
-    className: PropTypes.string,
-  };
-  getChildContext() {
-    return {tag: 'span', className: 'foo'};
-  }
-  render() {
-    return React.createElement(StateBasedOnContext);
-  }
-}
-
 // it renders only once when setting state in componentWillMount
 let renderCount = 0;
 class RenderOnce extends React.Component {
@@ -238,7 +209,6 @@ class NormalLifeCycles extends React.Component {
 let getInitialStateWasCalled = false;
 let getDefaultPropsWasCalled = false;
 class ClassicProperties extends React.Component {
-  contextTypes = {};
   propTypes = {};
   getDefaultProps() {
     getDefaultPropsWasCalled = true;
@@ -280,23 +250,6 @@ class MisspelledComponent3 extends React.Component {
   }
   render() {
     return React.createElement('span', {className: 'foo'});
-  }
-}
-
-// it supports this.context passed via getChildContext
-class ReadContext extends React.Component {
-  static contextTypes = {bar: PropTypes.string};
-  render() {
-    return React.createElement('div', {className: this.context.bar});
-  }
-}
-class ProvideContext extends React.Component {
-  static childContextTypes = {bar: PropTypes.string};
-  getChildContext() {
-    return {bar: 'bar-through-context'};
-  }
-  render() {
-    return React.createElement(ReadContext);
   }
 }
 
@@ -497,10 +450,6 @@ describe('ReactTypeScriptClass', function() {
     test(React.createElement(Foo, {update: true}), 'DIV', 'updated');
   });
 
-  it('renders based on context in the constructor', function() {
-    test(React.createElement(ProvideChildContextTypes), 'SPAN', 'foo');
-  });
-
   it('renders only once when setting state in componentWillMount', function() {
     renderCount = 0;
     test(React.createElement(RenderOnce, {initialValue: 'foo'}), 'SPAN', 'bar');
@@ -593,7 +542,6 @@ describe('ReactTypeScriptClass', function() {
         'getDefaultProps was defined on ClassicProperties, ' +
           'a plain JavaScript class.',
         'propTypes was defined as an instance property on ClassicProperties.',
-        'contextTypes was defined as an instance property on ClassicProperties.',
       ], {withoutStack: true});
       expect(getInitialStateWasCalled).toBe(false);
       expect(getDefaultPropsWasCalled).toBe(false);
@@ -670,10 +618,6 @@ describe('ReactTypeScriptClass', function() {
       'isMounted(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true}
     );
-  });
-
-  it('supports this.context passed via getChildContext', function() {
-    test(React.createElement(ProvideContext), 'DIV', 'bar-through-context');
   });
 
   it('supports classic refs', function() {

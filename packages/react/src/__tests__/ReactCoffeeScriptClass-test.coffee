@@ -173,8 +173,8 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'updates initial state with values returned by static getDerivedStateFromProps', ->
     class Foo extends React.Component
-      constructor: (props, context) ->
-        super props, context
+      constructor: (props) ->
+        super props
         @state =
           foo: 'foo'
           bar: 'bar'
@@ -190,8 +190,8 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'renders updated state with values returned by static getDerivedStateFromProps', ->
     class Foo extends React.Component
-      constructor: (props, context) ->
-        super props, context
+      constructor: (props) ->
+        super props
         @state =
           value: 'initial'
       render: ->
@@ -205,38 +205,6 @@ describe 'ReactCoffeeScriptClass', ->
       return null
     test React.createElement(Foo, update: false), 'DIV', 'initial'
     test React.createElement(Foo, update: true), 'DIV', 'updated'
-    undefined
-
-  it 'renders based on context in the constructor', ->
-    class Foo extends React.Component
-      @contextTypes:
-        tag: PropTypes.string
-        className: PropTypes.string
-
-      constructor: (props, context) ->
-        super props, context
-        @state =
-          tag: context.tag
-          className: @context.className
-
-      render: ->
-        Tag = @state.tag
-        React.createElement Tag,
-          className: @state.className
-
-    class Outer extends React.Component
-      @childContextTypes:
-        tag: PropTypes.string
-        className: PropTypes.string
-
-      getChildContext: ->
-        tag: 'span'
-        className: 'foo'
-
-      render: ->
-        React.createElement Foo
-
-    test React.createElement(Outer), 'SPAN', 'foo'
     undefined
 
   it 'renders only once when setting state in componentWillMount', ->
@@ -391,7 +359,6 @@ describe 'ReactCoffeeScriptClass', ->
     getDefaultPropsWasCalled = false
     class Foo extends React.Component
       constructor: ->
-        @contextTypes = {}
         @propTypes = {}
 
       getInitialState: ->
@@ -412,7 +379,6 @@ describe 'ReactCoffeeScriptClass', ->
       'getInitialState was defined on Foo, a plain JavaScript class.',
       'getDefaultProps was defined on Foo, a plain JavaScript class.',
       'propTypes was defined as an instance property on Foo.',
-      'contextTypes was defined as an instance property on Foo.',
     ], {withoutStack: true})
     expect(getInitialStateWasCalled).toBe false
     expect(getDefaultPropsWasCalled).toBe false
@@ -505,24 +471,6 @@ describe 'ReactCoffeeScriptClass', ->
       'isMounted(...) is deprecated in plain JavaScript React classes',
       {withoutStack: true}
     )
-    undefined
-
-  it 'supports this.context passed via getChildContext', ->
-    class Bar extends React.Component
-      @contextTypes:
-        bar: PropTypes.string
-      render: ->
-        div className: @context.bar
-
-    class Foo extends React.Component
-      @childContextTypes:
-        bar: PropTypes.string
-      getChildContext: ->
-        bar: 'bar-through-context'
-      render: ->
-        React.createElement Bar
-
-    test React.createElement(Foo), 'DIV', 'bar-through-context'
     undefined
 
   it 'supports classic refs', ->

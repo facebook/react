@@ -10,7 +10,6 @@
 
 'use strict';
 
-let PropTypes;
 let RCTEventEmitter;
 let React;
 let ReactNative;
@@ -63,7 +62,6 @@ const fakeRequireNativeComponent = (uiViewClassName, validAttributes) => {
 beforeEach(() => {
   jest.resetModules();
 
-  PropTypes = require('prop-types');
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('react');
   ReactNative = require('react-native-renderer');
@@ -155,36 +153,24 @@ it('handles events on text nodes', () => {
   const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
   const Text = fakeRequireNativeComponent('RCTText', {});
 
-  class ContextHack extends React.Component {
-    static childContextTypes = {isInAParentText: PropTypes.bool};
-    getChildContext() {
-      return {isInAParentText: true};
-    }
-    render() {
-      return this.props.children;
-    }
-  }
-
   const log = [];
   ReactNative.render(
-    <ContextHack>
-      <Text>
-        <Text
-          onTouchEnd={() => log.push('string touchend')}
-          onTouchEndCapture={() => log.push('string touchend capture')}
-          onTouchStart={() => log.push('string touchstart')}
-          onTouchStartCapture={() => log.push('string touchstart capture')}>
-          Text Content
-        </Text>
-        <Text
-          onTouchEnd={() => log.push('number touchend')}
-          onTouchEndCapture={() => log.push('number touchend capture')}
-          onTouchStart={() => log.push('number touchstart')}
-          onTouchStartCapture={() => log.push('number touchstart capture')}>
-          {123}
-        </Text>
+    <Text>
+      <Text
+        onTouchEnd={() => log.push('string touchend')}
+        onTouchEndCapture={() => log.push('string touchend capture')}
+        onTouchStart={() => log.push('string touchstart')}
+        onTouchStartCapture={() => log.push('string touchstart capture')}>
+        Text Content
       </Text>
-    </ContextHack>,
+      <Text
+        onTouchEnd={() => log.push('number touchend')}
+        onTouchEndCapture={() => log.push('number touchend capture')}
+        onTouchStart={() => log.push('number touchstart')}
+        onTouchStartCapture={() => log.push('number touchstart capture')}>
+        {123}
+      </Text>
+    </Text>,
     1,
   );
 

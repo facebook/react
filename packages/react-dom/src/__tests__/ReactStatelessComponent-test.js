@@ -59,45 +59,6 @@ describe('ReactStatelessComponent', () => {
     expect(container.textContent).toBe('');
   });
 
-  it('should pass context thru stateless component', () => {
-    class Child extends React.Component {
-      static contextTypes = {
-        test: PropTypes.string.isRequired,
-      };
-
-      render() {
-        return <div>{this.context.test}</div>;
-      }
-    }
-
-    function Parent() {
-      return <Child />;
-    }
-
-    class GrandParent extends React.Component {
-      static childContextTypes = {
-        test: PropTypes.string.isRequired,
-      };
-
-      getChildContext() {
-        return {test: this.props.test};
-      }
-
-      render() {
-        return <Parent />;
-      }
-    }
-
-    const el = document.createElement('div');
-    ReactDOM.render(<GrandParent test="test" />, el);
-
-    expect(el.textContent).toBe('test');
-
-    ReactDOM.render(<GrandParent test="mest" />, el);
-
-    expect(el.textContent).toBe('mest');
-  });
-
   it('should warn for getDerivedStateFromProps on a functional component', () => {
     function StatelessComponentWithChildContext() {
       return null;
@@ -111,29 +72,6 @@ describe('ReactStatelessComponent', () => {
     ).toWarnDev(
       'StatelessComponentWithChildContext: Stateless ' +
         'functional components do not support getDerivedStateFromProps.',
-      {withoutStack: true},
-    );
-  });
-
-  it('should warn for childContextTypes on a functional component', () => {
-    function StatelessComponentWithChildContext(props) {
-      return <div>{props.name}</div>;
-    }
-
-    StatelessComponentWithChildContext.childContextTypes = {
-      foo: PropTypes.string,
-    };
-
-    const container = document.createElement('div');
-
-    expect(() =>
-      ReactDOM.render(
-        <StatelessComponentWithChildContext name="A" />,
-        container,
-      ),
-    ).toWarnDev(
-      'StatelessComponentWithChildContext(...): childContextTypes cannot ' +
-        'be defined on a functional component.',
       {withoutStack: true},
     );
   });
@@ -312,39 +250,6 @@ describe('ReactStatelessComponent', () => {
     ReactTestUtils.renderIntoDocument(<NamedParentNotUsingJSX />);
   });
 
-  // This guards against a regression caused by clearing the current debug fiber.
-  // https://github.com/facebook/react/issues/10831
-  it('should warn when giving a function ref with context', () => {
-    function Child() {
-      return null;
-    }
-    Child.contextTypes = {
-      foo: PropTypes.string,
-    };
-
-    class Parent extends React.Component {
-      static childContextTypes = {
-        foo: PropTypes.string,
-      };
-      getChildContext() {
-        return {
-          foo: 'bar',
-        };
-      }
-      render() {
-        return <Child ref={function() {}} />;
-      }
-    }
-
-    expect(() => ReactTestUtils.renderIntoDocument(<Parent />)).toWarnDev(
-      'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n\nCheck the render method ' +
-        'of `Parent`.\n' +
-        '    in Child (at **)\n' +
-        '    in Parent (at **)',
-    );
-  });
-
   it('should provide a null ref', () => {
     function Child() {
       return <div />;
@@ -377,31 +282,6 @@ describe('ReactStatelessComponent', () => {
         'supplied to `Child`, expected `string`.\n' +
         '    in Child (at **)',
     );
-  });
-
-  it('should receive context', () => {
-    class Parent extends React.Component {
-      static childContextTypes = {
-        lang: PropTypes.string,
-      };
-
-      getChildContext() {
-        return {lang: 'en'};
-      }
-
-      render() {
-        return <Child />;
-      }
-    }
-
-    function Child(props, context) {
-      return <div>{context.lang}</div>;
-    }
-    Child.contextTypes = {lang: PropTypes.string};
-
-    const el = document.createElement('div');
-    ReactDOM.render(<Parent />, el);
-    expect(el.textContent).toBe('en');
   });
 
   it('should work with arrow functions', () => {

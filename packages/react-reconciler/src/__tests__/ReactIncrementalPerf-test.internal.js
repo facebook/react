@@ -13,7 +13,6 @@
 describe('ReactDebugFiberPerf', () => {
   let React;
   let ReactNoop;
-  let PropTypes;
 
   let root;
   let activeMeasure;
@@ -121,7 +120,6 @@ describe('ReactDebugFiberPerf', () => {
     // Import after the polyfill is set up:
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    PropTypes = require('prop-types');
   });
 
   afterEach(() => {
@@ -335,14 +333,8 @@ describe('ReactDebugFiberPerf', () => {
 
   it('captures all lifecycles', () => {
     class AllLifecycles extends React.Component {
-      static childContextTypes = {
-        foo: PropTypes.any,
-      };
       shouldComponentUpdate() {
         return true;
-      }
-      getChildContext() {
-        return {foo: 42};
       }
       UNSAFE_componentWillMount() {}
       componentDidMount() {}

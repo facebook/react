@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
-let PropTypes;
 
 const clone = function(o) {
   return JSON.parse(JSON.stringify(o));
@@ -91,7 +90,6 @@ describe('ReactComponentLifeCycle', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    PropTypes = require('prop-types');
   });
 
   it('should not reuse an instance when it has been unmounted', () => {
@@ -918,57 +916,6 @@ describe('ReactComponentLifeCycle', () => {
         'https://fb.me/react-async-component-lifecycle-hooks',
       {withoutStack: true},
     );
-  });
-
-  it('calls effects on module-pattern component', function() {
-    const log = [];
-
-    function Parent() {
-      return {
-        render() {
-          expect(typeof this.props).toBe('object');
-          log.push('render');
-          return <Child />;
-        },
-        UNSAFE_componentWillMount() {
-          log.push('will mount');
-        },
-        componentDidMount() {
-          log.push('did mount');
-        },
-        componentDidUpdate() {
-          log.push('did update');
-        },
-        getChildContext() {
-          return {x: 2};
-        },
-      };
-    }
-    Parent.childContextTypes = {
-      x: PropTypes.number,
-    };
-    function Child(props, context) {
-      expect(context.x).toBe(2);
-      return <div />;
-    }
-    Child.contextTypes = {
-      x: PropTypes.number,
-    };
-
-    const div = document.createElement('div');
-    ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
-    ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
-
-    expect(log).toEqual([
-      'will mount',
-      'render',
-      'did mount',
-      'ref',
-
-      'render',
-      'did update',
-      'ref',
-    ]);
   });
 
   it('should warn if getDerivedStateFromProps returns undefined', () => {

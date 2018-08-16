@@ -306,23 +306,6 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('should warn on invalid context types', () => {
-    class NullContextTypeComponent extends React.Component {
-      render() {
-        return <span>{this.props.prop}</span>;
-      }
-    }
-    NullContextTypeComponent.contextTypes = {
-      prop: null,
-    };
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<NullContextTypeComponent />),
-    ).toWarnDev(
-      'NullContextTypeComponent: context type `prop` is invalid; it must ' +
-        'be a function, usually from the `prop-types` package,',
-    );
-  });
-
   it('should warn if getDefaultProps is specificed on the class', () => {
     class GetDefaultPropsComponent extends React.Component {
       render() {

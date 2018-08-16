@@ -11,7 +11,6 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
-const PropTypes = require('prop-types');
 
 describe('ReactDOMFiber', () => {
   let container;
@@ -701,124 +700,6 @@ describe('ReactDOMFiber', () => {
         {usePortal(<div {...expectHTML} />)}
       </svg>,
     );
-  });
-
-  it('should pass portal context when rendering subtree elsewhere', () => {
-    const portalContainer = document.createElement('div');
-
-    class Component extends React.Component {
-      static contextTypes = {
-        foo: PropTypes.string.isRequired,
-      };
-
-      render() {
-        return <div>{this.context.foo}</div>;
-      }
-    }
-
-    class Parent extends React.Component {
-      static childContextTypes = {
-        foo: PropTypes.string.isRequired,
-      };
-
-      getChildContext() {
-        return {
-          foo: 'bar',
-        };
-      }
-
-      render() {
-        return ReactDOM.createPortal(<Component />, portalContainer);
-      }
-    }
-
-    ReactDOM.render(<Parent />, container);
-    expect(container.innerHTML).toBe('');
-    expect(portalContainer.innerHTML).toBe('<div>bar</div>');
-  });
-
-  it('should update portal context if it changes due to setState', () => {
-    const portalContainer = document.createElement('div');
-
-    class Component extends React.Component {
-      static contextTypes = {
-        foo: PropTypes.string.isRequired,
-        getFoo: PropTypes.func.isRequired,
-      };
-
-      render() {
-        return <div>{this.context.foo + '-' + this.context.getFoo()}</div>;
-      }
-    }
-
-    class Parent extends React.Component {
-      static childContextTypes = {
-        foo: PropTypes.string.isRequired,
-        getFoo: PropTypes.func.isRequired,
-      };
-
-      state = {
-        bar: 'initial',
-      };
-
-      getChildContext() {
-        return {
-          foo: this.state.bar,
-          getFoo: () => this.state.bar,
-        };
-      }
-
-      render() {
-        return ReactDOM.createPortal(<Component />, portalContainer);
-      }
-    }
-
-    const instance = ReactDOM.render(<Parent />, container);
-    expect(portalContainer.innerHTML).toBe('<div>initial-initial</div>');
-    expect(container.innerHTML).toBe('');
-    instance.setState({bar: 'changed'});
-    expect(portalContainer.innerHTML).toBe('<div>changed-changed</div>');
-    expect(container.innerHTML).toBe('');
-  });
-
-  it('should update portal context if it changes due to re-render', () => {
-    const portalContainer = document.createElement('div');
-
-    class Component extends React.Component {
-      static contextTypes = {
-        foo: PropTypes.string.isRequired,
-        getFoo: PropTypes.func.isRequired,
-      };
-
-      render() {
-        return <div>{this.context.foo + '-' + this.context.getFoo()}</div>;
-      }
-    }
-
-    class Parent extends React.Component {
-      static childContextTypes = {
-        foo: PropTypes.string.isRequired,
-        getFoo: PropTypes.func.isRequired,
-      };
-
-      getChildContext() {
-        return {
-          foo: this.props.bar,
-          getFoo: () => this.props.bar,
-        };
-      }
-
-      render() {
-        return ReactDOM.createPortal(<Component />, portalContainer);
-      }
-    }
-
-    ReactDOM.render(<Parent bar="initial" />, container);
-    expect(portalContainer.innerHTML).toBe('<div>initial-initial</div>');
-    expect(container.innerHTML).toBe('');
-    ReactDOM.render(<Parent bar="changed" />, container);
-    expect(portalContainer.innerHTML).toBe('<div>changed-changed</div>');
-    expect(container.innerHTML).toBe('');
   });
 
   it('findDOMNode should find dom element after expanding a fragment', () => {
