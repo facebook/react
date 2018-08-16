@@ -47,7 +47,6 @@ function hasValidKey(config) {
 }
 
 function checkPropsForNull(props) {
-
   const origProps = Object.assign({}, props);
   let propsToAdd = {};
 
