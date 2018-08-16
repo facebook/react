@@ -47,12 +47,11 @@ function hasValidKey(config) {
 }
 
 function checkPropsForNull(props) {
-  let propName;
 
   const origProps = Object.assign({}, props);
   let propsToAdd = {};
 
-  for (propName in origProps) {
+  for (let propName in origProps) {
     if (typeof origProps[propName] === 'undefined') {
     } else {
       propsToAdd[propName] = origProps[propName];
