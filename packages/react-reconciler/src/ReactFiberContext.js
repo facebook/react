@@ -45,8 +45,11 @@ let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
 // pushed the next context provider, and now need to merge their contexts.
 let previousContext: Object = emptyContextObject;
 
-function getUnmaskedContext(workInProgress: Fiber): Object {
-  const hasOwnContext = isContextProvider(workInProgress);
+function getUnmaskedContext(
+  workInProgress: Fiber,
+  Component: Function,
+): Object {
+  const hasOwnContext = isContextProvider(Component);
   if (hasOwnContext) {
     // If the fiber is a context provider itself, when we read its context
     // we have already pushed its own child context on the stack. A context
@@ -117,18 +120,7 @@ function hasContextChanged(): boolean {
   return didPerformWorkStackCursor.current;
 }
 
-function isContextProvider(fiber: Fiber): boolean {
-  let type;
-  if (fiber.tag === ClassComponent) {
-    type = fiber.type;
-  } else if (fiber.tag === ClassComponentLazy) {
-    type = fiber.type._reactResult;
-    if (type === null) {
-      return false;
-    }
-  } else {
-    return false;
-  }
+function isContextProvider(type: Function): boolean {
   const childContextTypes = type.childContextTypes;
   return childContextTypes !== null && childContextTypes !== undefined;
 }
@@ -225,10 +217,6 @@ function processChildContext(
 }
 
 function pushContextProvider(workInProgress: Fiber): boolean {
-  if (!isContextProvider(workInProgress)) {
-    return false;
-  }
-
   const instance = workInProgress.stateNode;
   // We push the context as early as possible to ensure stack integrity.
   // If the instance does not exist yet, we will push null at first,
@@ -296,20 +284,33 @@ function findCurrentUnmaskedContext(fiber: Fiber): Object {
       'This error is likely caused by a bug in React. Please file an issue.',
   );
 
-  let node: Fiber = fiber;
-  while (node.tag !== HostRoot) {
-    if (isContextProvider(node)) {
-      return node.stateNode.__reactInternalMemoizedMergedChildContext;
+  let node = fiber;
+  do {
+    switch (node.tag) {
+      case HostRoot:
+        return node.stateNode.context;
+      case ClassComponent: {
+        const Component = node.type;
+        if (isContextProvider(Component)) {
+          return node.stateNode.__reactInternalMemoizedMergedChildContext;
+        }
+        break;
+      }
+      case ClassComponentLazy: {
+        const Component = node.type._reactResult;
+        if (isContextProvider(Component)) {
+          return node.stateNode.__reactInternalMemoizedMergedChildContext;
+        }
+        break;
+      }
     }
-    const parent = node.return;
-    invariant(
-      parent,
-      'Found unexpected detached subtree parent. ' +
-        'This error is likely caused by a bug in React. Please file an issue.',
-    );
-    node = parent;
-  }
-  return node.stateNode.context;
+    node = node.return;
+  } while (node !== null);
+  invariant(
+    false,
+    'Found unexpected detached subtree parent. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
+  );
 }
 
 export {
@@ -321,6 +322,7 @@ export {
   popTopLevelContextObject,
   pushTopLevelContextObject,
   processChildContext,
+  isContextProvider,
   pushContextProvider,
   invalidateContextProvider,
   findCurrentUnmaskedContext,

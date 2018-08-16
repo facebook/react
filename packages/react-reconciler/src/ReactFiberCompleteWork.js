@@ -62,6 +62,7 @@ import {
   popHostContainer,
 } from './ReactFiberHostContext';
 import {
+  isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
@@ -319,18 +320,15 @@ function completeWork(
     case FunctionalComponentLazy:
       break;
     case ClassComponent: {
-      // We are leaving this subtree, so pop context if any.
-      const childContextTypes = workInProgress.type.childContextTypes;
-      if (childContextTypes !== null && childContextTypes !== undefined) {
+      const Component = workInProgress.type;
+      if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
       break;
     }
     case ClassComponentLazy: {
-      // We are leaving this subtree, so pop context if any.
-      const childContextTypes =
-        workInProgress.type._reactResult.childContextTypes;
-      if (childContextTypes !== null && childContextTypes !== undefined) {
+      const Component = workInProgress.type._reactResult;
+      if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
       break;

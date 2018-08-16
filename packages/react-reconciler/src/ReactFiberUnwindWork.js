@@ -48,6 +48,7 @@ import {
 import {logError} from './ReactFiberCommitWork';
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
 import {
+  isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
@@ -385,8 +386,8 @@ function unwindWork(
 ) {
   switch (workInProgress.tag) {
     case ClassComponent: {
-      const childContextTypes = workInProgress.type.childContextTypes;
-      if (childContextTypes !== null && childContextTypes !== undefined) {
+      const Component = workInProgress.type;
+      if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
       const effectTag = workInProgress.effectTag;
@@ -397,12 +398,10 @@ function unwindWork(
       return null;
     }
     case ClassComponentLazy: {
-      const childContextTypes =
-        workInProgress.type._reactResult.childContextTypes;
-      if (childContextTypes !== null && childContextTypes !== undefined) {
+      const Component = workInProgress.type._reactResult;
+      if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
-      popLegacyContext(workInProgress);
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;

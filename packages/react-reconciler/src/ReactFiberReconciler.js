@@ -37,6 +37,7 @@ import {
   findCurrentUnmaskedContext,
   processChildContext,
   emptyContextObject,
+  isContextProvider as isLegacyContextProvider,
 } from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
@@ -96,18 +97,14 @@ function getContextForSubtree(
   const parentContext = findCurrentUnmaskedContext(fiber);
 
   if (fiber.tag === ClassComponent) {
-    const type = fiber.type;
-    const childContextTypes = type.childContextTypes;
-    if (childContextTypes !== undefined && childContextTypes !== null) {
-      return processChildContext(fiber, type, parentContext);
+    const Component = fiber.type;
+    if (isLegacyContextProvider(Component)) {
+      return processChildContext(fiber, Component, parentContext);
     }
   } else if (fiber.tag === ClassComponentLazy) {
-    const type = fiber.type._reactResult;
-    if (type !== undefined) {
-      const childContextTypes = type.childContextTypes;
-      if (childContextTypes !== undefined && childContextTypes !== null) {
-        return processChildContext(fiber, type, parentContext);
-      }
+    const Component = fiber.type._reactResult;
+    if (isLegacyContextProvider(Component)) {
+      return processChildContext(fiber, Component, parentContext);
     }
   }
 

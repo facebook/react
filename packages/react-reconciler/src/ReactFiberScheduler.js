@@ -111,6 +111,7 @@ import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
+  isContextProvider as isLegacyContextProvider,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
   popContext as popLegacyContext,
 } from './ReactFiberContext';
@@ -289,16 +290,15 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         popHostContext(failedUnitOfWork);
         break;
       case ClassComponent: {
-        const childContextTypes = failedUnitOfWork.type.childContextTypes;
-        if (childContextTypes !== null && childContextTypes !== undefined) {
+        const Component = failedUnitOfWork.type;
+        if (isLegacyContextProvider(Component)) {
           popLegacyContext(failedUnitOfWork);
         }
         break;
       }
       case ClassComponentLazy: {
-        const childContextTypes =
-          failedUnitOfWork.type._reactResult.childContextTypes;
-        if (childContextTypes !== null && childContextTypes !== undefined) {
+        const Component = failedUnitOfWork.type._reactResult;
+        if (isLegacyContextProvider(Component)) {
           popLegacyContext(failedUnitOfWork);
         }
         break;

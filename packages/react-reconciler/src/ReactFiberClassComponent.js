@@ -473,7 +473,7 @@ function constructClassInstance(
   props: any,
   renderExpirationTime: ExpirationTime,
 ): any {
-  const unmaskedContext = getUnmaskedContext(workInProgress);
+  const unmaskedContext = getUnmaskedContext(workInProgress, ctor);
   const contextTypes = ctor.contextTypes;
   const isContextConsumer = contextTypes !== null && contextTypes !== undefined;
   const context = isContextConsumer
@@ -666,7 +666,7 @@ function mountClassInstance(
   }
 
   const instance = workInProgress.stateNode;
-  const unmaskedContext = getUnmaskedContext(workInProgress);
+  const unmaskedContext = getUnmaskedContext(workInProgress, ctor);
 
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
@@ -758,7 +758,7 @@ function resumeMountClassInstance(
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
+  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress, ctor);
   const nextLegacyContext = getMaskedContext(
     workInProgress,
     nextLegacyUnmaskedContext,
@@ -897,7 +897,7 @@ function updateClassInstance(
   instance.props = oldProps;
 
   const oldContext = instance.context;
-  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress);
+  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress, ctor);
   const nextLegacyContext = getMaskedContext(
     workInProgress,
     nextLegacyUnmaskedContext,

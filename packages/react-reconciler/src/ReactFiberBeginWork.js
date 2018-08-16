@@ -84,6 +84,7 @@ import {
   getUnmaskedContext,
   hasContextChanged as hasLegacyContextChanged,
   pushContextProvider as pushLegacyContextProvider,
+  isContextProvider as isLegacyContextProvider,
   pushTopLevelContextObject,
   invalidateContextProvider,
 } from './ReactFiberContext';
@@ -260,7 +261,7 @@ function updateFunctionalComponent(
   nextProps: any,
   renderExpirationTime,
 ) {
-  const unmaskedContext = getUnmaskedContext(workInProgress);
+  const unmaskedContext = getUnmaskedContext(workInProgress, Component);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   let nextChildren;
@@ -297,8 +298,7 @@ function updateClassComponent(
   // During mounting we don't know the child context yet as the instance doesn't exist.
   // We will invalidate the child context in finishClassComponent() right after rendering.
   let hasContext;
-  const childContextTypes = Component.childContextTypes;
-  if (childContextTypes !== null && childContextTypes !== undefined) {
+  if (isLegacyContextProvider(Component)) {
     hasContext = true;
     pushLegacyContextProvider(workInProgress);
   } else {
@@ -629,37 +629,33 @@ function mountIndeterminateComponent(
     Component = readLazyComponentType(Component);
     reassignLazyComponentTag(workInProgress, Component);
     const resolvedProps = resolveDefaultProps(Component, props);
-    let child;
     switch (workInProgress.tag) {
       case FunctionalComponentLazy: {
-        child = updateFunctionalComponent(
+        return updateFunctionalComponent(
           current,
           workInProgress,
           Component,
           resolvedProps,
           renderExpirationTime,
         );
-        break;
       }
       case ClassComponentLazy: {
-        child = updateClassComponent(
+        return updateClassComponent(
           current,
           workInProgress,
           Component,
           resolvedProps,
           renderExpirationTime,
         );
-        break;
       }
       case ForwardRefLazy: {
-        child = updateForwardRef(
+        return updateForwardRef(
           current,
           workInProgress,
           Component,
           resolvedProps,
           renderExpirationTime,
         );
-        break;
       }
       default: {
         // This message intentionally doesn't metion ForwardRef because the
@@ -672,11 +668,9 @@ function mountIndeterminateComponent(
         );
       }
     }
-    workInProgress.pendingProps = props;
-    return child;
   }
 
-  const unmaskedContext = getUnmaskedContext(workInProgress);
+  const unmaskedContext = getUnmaskedContext(workInProgress, Component);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
@@ -727,8 +721,7 @@ function mountIndeterminateComponent(
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
     let hasContext = false;
-    const childContextTypes = Component.childContextTypes;
-    if (childContextTypes !== null && childContextTypes !== undefined) {
+    if (isLegacyContextProvider(Component)) {
       hasContext = true;
       pushLegacyContextProvider(workInProgress);
     } else {
@@ -1100,8 +1093,7 @@ function beginWork(
         break;
       case ClassComponent: {
         const Component = workInProgress.type;
-        const childContextTypes = Component.childContextTypes;
-        if (childContextTypes !== null && childContextTypes !== undefined) {
+        if (isLegacyContextProvider(Component)) {
           pushLegacyContextProvider(workInProgress);
         }
         break;
@@ -1109,8 +1101,7 @@ function beginWork(
       case ClassComponentLazy: {
         const thenable = workInProgress.type;
         const Component = (thenable._reactResult: any);
-        const childContextTypes = Component.childContextTypes;
-        if (childContextTypes !== null && childContextTypes !== undefined) {
+        if (isLegacyContextProvider(Component)) {
           pushLegacyContextProvider(workInProgress);
         }
         break;
