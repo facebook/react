@@ -381,7 +381,6 @@ function unwindWork(
 ) {
   switch (workInProgress.tag) {
     case ClassComponent: {
-      const Component = workInProgress.type;
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -390,7 +389,6 @@ function unwindWork(
       return null;
     }
     case ClassComponentLazy: {
-      const Component = workInProgress.type._reactResult;
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;

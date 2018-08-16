@@ -51,7 +51,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
@@ -1021,14 +1020,10 @@ function beginWork(
       case HostComponent:
         pushHostContext(workInProgress);
         break;
-      case ClassComponent: {
+      case ClassComponent:
         break;
-      }
-      case ClassComponentLazy: {
-        const thenable = workInProgress.type;
-        const Component = getResultFromResolvedThenable(thenable);
+      case ClassComponentLazy:
         break;
-      }
       case HostPortal:
         pushHostContainer(
           workInProgress,

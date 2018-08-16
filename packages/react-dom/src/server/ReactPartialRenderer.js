@@ -20,7 +20,6 @@ import getComponentName from 'shared/getComponentName';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';

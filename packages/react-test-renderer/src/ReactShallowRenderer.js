@@ -8,11 +8,8 @@
 
 import React from 'react';
 import {isForwardRef} from 'react-is';
-import describeComponentFrame from 'shared/describeComponentFrame';
-import getComponentName from 'shared/getComponentName';
 import shallowEqual from 'shared/shallowEqual';
 import invariant from 'shared/invariant';
-import checkPropTypes from 'prop-types/checkPropTypes';
 
 const emptyObject = {};
 if (__DEV__) {
@@ -295,45 +292,6 @@ class Updater {
 
     this._renderer.render(this._renderer._element);
   }
-}
-
-let currentlyValidatingElement = null;
-
-function getDisplayName(element) {
-  if (element == null) {
-    return '#empty';
-  } else if (typeof element === 'string' || typeof element === 'number') {
-    return '#text';
-  } else if (typeof element.type === 'string') {
-    return element.type;
-  } else {
-    return element.type.displayName || element.type.name || 'Unknown';
-  }
-}
-
-function getStackAddendum() {
-  let stack = '';
-  if (currentlyValidatingElement) {
-    const name = getDisplayName(currentlyValidatingElement);
-    const owner = currentlyValidatingElement._owner;
-    stack += describeComponentFrame(
-      name,
-      currentlyValidatingElement._source,
-      owner && getComponentName(owner.type),
-    );
-  }
-  return stack;
-}
-
-function getName(type, instance) {
-  const constructor = instance && instance.constructor;
-  return (
-    type.displayName ||
-    (constructor && constructor.displayName) ||
-    type.name ||
-    (constructor && constructor.name) ||
-    null
-  );
 }
 
 function shouldConstruct(Component) {

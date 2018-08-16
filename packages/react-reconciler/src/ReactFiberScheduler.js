@@ -51,7 +51,6 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {
   scheduleTimeout,

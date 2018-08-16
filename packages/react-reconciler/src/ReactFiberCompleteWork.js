@@ -9,7 +9,6 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {FiberRoot} from './ReactFiberRoot';
 import type {
   Instance,
   Type,
@@ -41,7 +40,6 @@ import {
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'shared/invariant';
-import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {
   createInstance,
@@ -321,7 +319,6 @@ function completeWork(
       break;
     case HostRoot: {
       popHostContainer(workInProgress);
-      const fiberRoot = (workInProgress.stateNode: FiberRoot);
       if (current === null || current.child === null) {
         // If we hydrated, pop so that we can delete any remaining children
         // that weren't hydrated.

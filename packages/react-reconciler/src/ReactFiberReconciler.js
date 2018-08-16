@@ -23,15 +23,10 @@ import {
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {
-  HostComponent,
-  ClassComponent,
-  ClassComponentLazy,
-} from 'shared/ReactTypeOfWork';
+import {HostComponent} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {createFiberRoot} from './ReactFiberRoot';

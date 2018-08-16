@@ -22,8 +22,6 @@ type LIFECYCLE =
   | 'UNSAFE_componentWillUpdate';
 type LifecycleToComponentsMap = {[lifecycle: LIFECYCLE]: Array<Fiber>};
 type FiberToLifecycleMap = Map<Fiber, LifecycleToComponentsMap>;
-type FiberArray = Array<Fiber>;
-type FiberToFiberComponentsMap = Map<Fiber, FiberArray>;
 
 const ReactStrictModeWarnings = {
   discardPendingWarnings(): void {},
