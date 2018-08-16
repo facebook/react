@@ -6,6 +6,7 @@ let SimpleCacheProvider;
 let Placeholder;
 let StrictMode;
 let AsyncMode;
+let lazy;
 
 let cache;
 let TextResource;
@@ -25,6 +26,7 @@ describe('ReactSuspense', () => {
     Placeholder = React.Placeholder;
     StrictMode = React.StrictMode;
     AsyncMode = React.unstable_AsyncMode;
+    lazy = React.lazy;
 
     function invalidateCache() {
       cache = SimpleCacheProvider.createCache(invalidateCache);
@@ -1542,6 +1544,37 @@ describe('ReactSuspense', () => {
       stateful.current.setState({text: 'B'});
       expect(ReactNoop.flush()).toEqual(['B']);
       expect(ReactNoop.getChildren()).toEqual([span('Sibling'), span('B')]);
+    });
+
+    it('lazy-load using React.lazy', async () => {
+      const LazyText = lazy(() => {
+        ReactNoop.yield('Started loading');
+        return Promise.resolve(Text);
+      });
+
+      ReactNoop.render(
+        <Placeholder fallback={<Text text="Loading..." />}>
+          <Text text="A" />
+          <Text text="B" />
+          <LazyText text="C" />
+        </Placeholder>,
+      );
+      // Render first two siblings. The lazy component should not have
+      // started loading yet.
+      ReactNoop.flushThrough(['A', 'B']);
+
+      // Flush the rest.
+      expect(ReactNoop.flush()).toEqual(['Started loading', 'Loading...']);
+      expect(ReactNoop.getChildren()).toEqual([]);
+
+      await LazyText;
+
+      expect(ReactNoop.flush()).toEqual(['A', 'B', 'C']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('A'),
+        span('B'),
+        span('C'),
+      ]);
     });
   });
 
