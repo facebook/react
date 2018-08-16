@@ -25,7 +25,6 @@ class ReactShallowRenderer {
   };
 
   constructor() {
-    this._context = null;
     this._element = null;
     this._instance = null;
     this._newState = null;
@@ -43,7 +42,7 @@ class ReactShallowRenderer {
     return this._rendered;
   }
 
-  render(element, context = emptyObject) {
+  render(element) {
     invariant(
       React.isValidElement(element),
       'ReactShallowRenderer render(): Invalid component element.%s',
@@ -77,43 +76,19 @@ class ReactShallowRenderer {
 
     this._rendering = true;
     this._element = element;
-    this._context = getMaskedContext(element.type.contextTypes, context);
 
     if (this._instance) {
-      this._updateClassComponent(element, this._context);
+      this._updateClassComponent(element);
     } else {
       if (isForwardRef(element)) {
         this._rendered = element.type.render(element.props, element.ref);
       } else if (shouldConstruct(element.type)) {
-        this._instance = new element.type(
-          element.props,
-          this._context,
-          this._updater,
-        );
+        this._instance = new element.type(element.props);
 
         this._updateStateFromStaticLifecycle(element.props);
-
-        if (element.type.hasOwnProperty('contextTypes')) {
-          currentlyValidatingElement = element;
-
-          checkPropTypes(
-            element.type.contextTypes,
-            this._context,
-            'context',
-            getName(element.type, this._instance),
-            getStackAddendum,
-          );
-
-          currentlyValidatingElement = null;
-        }
-
-        this._mountClassComponent(element, this._context);
+        this._mountClassComponent(element);
       } else {
-        this._rendered = element.type.call(
-          undefined,
-          element.props,
-          this._context,
-        );
+        this._rendered = element.type.call(undefined, element.props);
       }
     }
 
@@ -130,15 +105,13 @@ class ReactShallowRenderer {
       }
     }
 
-    this._context = null;
     this._element = null;
     this._newState = null;
     this._rendered = null;
     this._instance = null;
   }
 
-  _mountClassComponent(element, context) {
-    this._instance.context = context;
+  _mountClassComponent(element) {
     this._instance.props = element.props;
     this._instance.state = this._instance.state || null;
     this._instance.updater = this._updater;
@@ -174,7 +147,7 @@ class ReactShallowRenderer {
     // because DOM refs are not available.
   }
 
-  _updateClassComponent(element, context) {
+  _updateClassComponent(element) {
     const {props, type} = element;
 
     const oldState = this._instance.state || emptyObject;
@@ -188,12 +161,12 @@ class ReactShallowRenderer {
         typeof this._instance.getSnapshotBeforeUpdate !== 'function'
       ) {
         if (typeof this._instance.componentWillReceiveProps === 'function') {
-          this._instance.componentWillReceiveProps(props, context);
+          this._instance.componentWillReceiveProps(props);
         }
         if (
           typeof this._instance.UNSAFE_componentWillReceiveProps === 'function'
         ) {
-          this._instance.UNSAFE_componentWillReceiveProps(props, context);
+          this._instance.UNSAFE_componentWillReceiveProps(props);
         }
       }
     }
@@ -207,11 +180,7 @@ class ReactShallowRenderer {
       shouldUpdate = true;
       this._forcedUpdate = false;
     } else if (typeof this._instance.shouldComponentUpdate === 'function') {
-      shouldUpdate = !!this._instance.shouldComponentUpdate(
-        props,
-        state,
-        context,
-      );
+      shouldUpdate = !!this._instance.shouldComponentUpdate(props, state);
     } else if (type.prototype && type.prototype.isPureReactComponent) {
       shouldUpdate =
         !shallowEqual(oldProps, props) || !shallowEqual(oldState, state);
@@ -225,15 +194,14 @@ class ReactShallowRenderer {
         typeof this._instance.getSnapshotBeforeUpdate !== 'function'
       ) {
         if (typeof this._instance.componentWillUpdate === 'function') {
-          this._instance.componentWillUpdate(props, state, context);
+          this._instance.componentWillUpdate(props, state);
         }
         if (typeof this._instance.UNSAFE_componentWillUpdate === 'function') {
-          this._instance.UNSAFE_componentWillUpdate(props, state, context);
+          this._instance.UNSAFE_componentWillUpdate(props, state);
         }
       }
     }
 
-    this._instance.context = context;
     this._instance.props = props;
     this._instance.state = state;
 
@@ -294,13 +262,13 @@ class Updater {
   enqueueForceUpdate(publicInstance, callback, callerName) {
     this._enqueueCallback(callback, publicInstance);
     this._renderer._forcedUpdate = true;
-    this._renderer.render(this._renderer._element, this._renderer._context);
+    this._renderer.render(this._renderer._element);
   }
 
   enqueueReplaceState(publicInstance, completeState, callback, callerName) {
     this._enqueueCallback(callback, publicInstance);
     this._renderer._newState = completeState;
-    this._renderer.render(this._renderer._element, this._renderer._context);
+    this._renderer.render(this._renderer._element);
   }
 
   enqueueSetState(publicInstance, partialState, callback, callerName) {
@@ -325,7 +293,7 @@ class Updater {
       ...partialState,
     };
 
-    this._renderer.render(this._renderer._element, this._renderer._context);
+    this._renderer.render(this._renderer._element);
   }
 }
 
@@ -370,17 +338,6 @@ function getName(type, instance) {
 
 function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
-}
-
-function getMaskedContext(contextTypes, unmaskedContext) {
-  if (!contextTypes) {
-    return emptyObject;
-  }
-  const context = {};
-  for (let key in contextTypes) {
-    context[key] = unmaskedContext[key];
-  }
-  return context;
 }
 
 export default ReactShallowRenderer;
