@@ -2564,8 +2564,8 @@
 | `defaultChecked=(float)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(true)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(false)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(string 'true')`| (changed)| `<boolean: true>` |
-| `defaultChecked=(string 'false')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `defaultChecked=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `defaultChecked=(string 'on')`| (changed)| `<boolean: true>` |
 | `defaultChecked=(string 'off')`| (changed)| `<boolean: true>` |
 | `defaultChecked=(symbol)`| (changed, warning, ssr mismatch)| `<boolean: true>` |

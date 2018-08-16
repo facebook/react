@@ -221,19 +221,22 @@ const properties = {};
   );
 });
 
-[
-  // For legacy purposes, defaultValue stringifies boolean values
+// For legacy purposes, defaultValue stringifies boolean values
+properties.defaultValue = new PropertyInfoRecord(
   'defaultValue',
+  OVERLOADED_BOOLEAN,
+  false,
+  'value',
+  null,
+);
+
+properties.defaultChecked = new PropertyInfoRecord(
   'defaultChecked',
-].forEach(function(name) {
-  properties[name] = new PropertyInfoRecord(
-    name,
-    BOOLEANISH_STRING,
-    false, // mustUseProperty
-    name, // attributeName
-    null, // attributeNamespace
-  );
-});
+  BOOLEAN,
+  false,
+  'checked',
+  null,
+);
 
 // A few React string attributes have a different name.
 // This is a mapping from React prop names to the attribute names.
