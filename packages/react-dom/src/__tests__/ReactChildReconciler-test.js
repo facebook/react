@@ -41,6 +41,44 @@ describe('ReactChildReconciler', () => {
     };
   }
 
+  function makeIterableFunction(value) {
+    const fn = () => {};
+    fn['@@iterator'] = function iterator() {
+      let timesCalled = 0;
+      return {
+        next() {
+          const done = timesCalled++ > 0;
+          return {done, value: done ? undefined : value};
+        },
+      };
+    };
+    return fn;
+  }
+
+  fit('does not treat functions as iterables', () => {
+    let node;
+    const iterableFunction = makeIterableFunction('foo');
+
+    expect(() => {
+      node = ReactTestUtils.renderIntoDocument(
+        <div>
+          <h1>{iterableFunction}</h1>
+        </div>,
+      );
+    }).toWarnDev('Functions are not valid as a React child');
+
+    expect(node.innerHTML).toContain(''); // h1
+  });
+
+  it('renders iterable functions', () => {
+    class Component extends React.Component {
+      render() {
+        return <div>{createIterable([<div key="1" />, <div key="2" />])}</div>;
+      }
+    }
+    ReactTestUtils.renderIntoDocument(<Component />);
+  });
+
   it('warns for duplicated array keys', () => {
     class Component extends React.Component {
       render() {
