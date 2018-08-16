@@ -211,8 +211,9 @@ export function postMountWrapper(
   if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
     // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
+    const type = props.type;
     if (
-      (props.type === 'submit' || props.type === 'reset') &&
+      (type === 'submit' || type === 'reset') &&
       (props.value === undefined || props.value === null)
     ) {
       return;
