@@ -23,17 +23,22 @@ import {
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {HostComponent} from 'shared/ReactTypeOfWork';
+import {
+  HostComponent,
+  ClassComponent,
+  ClassComponentLazy,
+} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
-  isContextProvider,
   processChildContext,
   emptyContextObject,
+  isContextProvider as isLegacyContextProvider,
 } from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
@@ -91,9 +96,20 @@ function getContextForSubtree(
 
   const fiber = ReactInstanceMap.get(parentComponent);
   const parentContext = findCurrentUnmaskedContext(fiber);
-  return isContextProvider(fiber)
-    ? processChildContext(fiber, parentContext)
-    : parentContext;
+
+  if (fiber.tag === ClassComponent) {
+    const Component = fiber.type;
+    if (isLegacyContextProvider(Component)) {
+      return processChildContext(fiber, Component, parentContext);
+    }
+  } else if (fiber.tag === ClassComponentLazy) {
+    const Component = getResultFromResolvedThenable(fiber.type);
+    if (isLegacyContextProvider(Component)) {
+      return processChildContext(fiber, Component, parentContext);
+    }
+  }
+
+  return parentContext;
 }
 
 function scheduleRootUpdate(

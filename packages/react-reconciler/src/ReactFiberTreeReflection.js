@@ -17,6 +17,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import {
   ClassComponent,
+  ClassComponentLazy,
   HostComponent,
   HostRoot,
   HostPortal,
@@ -66,7 +67,10 @@ export function isFiberMounted(fiber: Fiber): boolean {
 export function isMounted(component: React$Component<any, any>): boolean {
   if (__DEV__) {
     const owner = (ReactCurrentOwner.current: any);
-    if (owner !== null && owner.tag === ClassComponent) {
+    if (
+      owner !== null &&
+      (owner.tag === ClassComponent || owner.tag === ClassComponentLazy)
+    ) {
       const ownerFiber: Fiber = owner;
       const instance = ownerFiber.stateNode;
       warningWithoutStack(

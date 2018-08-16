@@ -17,7 +17,9 @@ import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import {
   Fragment,
   FunctionalComponent,
+  FunctionalComponentLazy,
   ClassComponent,
+  ClassComponentLazy,
   HostComponent,
   HostPortal,
   HostText,
@@ -27,6 +29,7 @@ import {
   Mode,
   ForwardRef,
   Profiler,
+  ForwardRefLazy,
 } from 'shared/ReactTypeOfWork';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -148,6 +151,17 @@ function toTree(node: ?Fiber) {
         instance: node.stateNode,
         rendered: childrenToTree(node.child),
       };
+    case ClassComponentLazy: {
+      const thenable = node.type;
+      const type = thenable._reactResult;
+      return {
+        nodeType: 'component',
+        type,
+        props: {...node.memoizedProps},
+        instance: node.stateNode,
+        rendered: childrenToTree(node.child),
+      };
+    }
     case FunctionalComponent:
       return {
         nodeType: 'component',
@@ -156,6 +170,17 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
+    case FunctionalComponentLazy: {
+      const thenable = node.type;
+      const type = thenable._reactResult;
+      return {
+        nodeType: 'component',
+        type: type,
+        props: {...node.memoizedProps},
+        instance: node.stateNode,
+        rendered: childrenToTree(node.child),
+      };
+    }
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -173,6 +198,7 @@ function toTree(node: ?Fiber) {
     case Mode:
     case Profiler:
     case ForwardRef:
+    case ForwardRefLazy:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -198,9 +224,12 @@ function wrapFiber(fiber: Fiber): ReactTestInstance {
 
 const validWrapperTypes = new Set([
   FunctionalComponent,
+  FunctionalComponentLazy,
   ClassComponent,
+  ClassComponentLazy,
   HostComponent,
   ForwardRef,
+  ForwardRefLazy,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);

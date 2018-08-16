@@ -23,7 +23,9 @@ import type {
 import {
   IndeterminateComponent,
   FunctionalComponent,
+  FunctionalComponentLazy,
   ClassComponent,
+  ClassComponentLazy,
   HostRoot,
   HostComponent,
   HostText,
@@ -35,9 +37,11 @@ import {
   Mode,
   Profiler,
   PlaceholderComponent,
+  ForwardRefLazy,
 } from 'shared/ReactTypeOfWork';
 import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'shared/invariant';
+import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {
   createInstance,
@@ -59,7 +63,8 @@ import {
   popHostContainer,
 } from './ReactFiberHostContext';
 import {
-  popContextProvider as popLegacyContextProvider,
+  isContextProvider as isLegacyContextProvider,
+  popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
@@ -313,10 +318,20 @@ function completeWork(
 
   switch (workInProgress.tag) {
     case FunctionalComponent:
+    case FunctionalComponentLazy:
       break;
     case ClassComponent: {
-      // We are leaving this subtree, so pop context if any.
-      popLegacyContextProvider(workInProgress);
+      const Component = workInProgress.type;
+      if (isLegacyContextProvider(Component)) {
+        popLegacyContext(workInProgress);
+      }
+      break;
+    }
+    case ClassComponentLazy: {
+      const Component = getResultFromResolvedThenable(workInProgress.type);
+      if (isLegacyContextProvider(Component)) {
+        popLegacyContext(workInProgress);
+      }
       break;
     }
     case HostRoot: {
@@ -479,6 +494,7 @@ function completeWork(
       break;
     }
     case ForwardRef:
+    case ForwardRefLazy:
       break;
     case PlaceholderComponent:
       break;

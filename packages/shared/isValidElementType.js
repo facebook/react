@@ -30,7 +30,8 @@ export default function isValidElementType(type: mixed) {
     type === REACT_PLACEHOLDER_TYPE ||
     (typeof type === 'object' &&
       type !== null &&
-      (type.$$typeof === REACT_PROVIDER_TYPE ||
+      (typeof type.then === 'function' ||
+        type.$$typeof === REACT_PROVIDER_TYPE ||
         type.$$typeof === REACT_CONTEXT_TYPE ||
         type.$$typeof === REACT_FORWARD_REF_TYPE))
   );
