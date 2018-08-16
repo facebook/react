@@ -1207,10 +1207,8 @@ class ReactDOMServerRenderer {
           didWarnDefaultSelectValue = true;
         }
       }
-
       this.currentSelectValue =
         props.value != null ? props.value : props.defaultValue;
-
       props = Object.assign({}, props, {
         value: undefined,
         defaultValue: undefined,
@@ -1242,8 +1240,8 @@ class ReactDOMServerRenderer {
 
         props = Object.assign(
           {
-            children: undefined,
             selected: undefined,
+            children: undefined,
           },
           props,
           {

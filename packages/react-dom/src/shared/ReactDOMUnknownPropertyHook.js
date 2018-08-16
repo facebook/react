@@ -13,8 +13,8 @@ import warning from 'shared/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
-  RESERVED,
   BOOLEAN,
+  RESERVED,
   shouldRemoveAttributeWithWarning,
   getPropertyInfo,
 } from './DOMProperty';
