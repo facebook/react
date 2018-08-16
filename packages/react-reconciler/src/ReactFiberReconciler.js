@@ -34,12 +34,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
 import {getPublicInstance} from './ReactFiberHostConfig';
-import {
-  findCurrentUnmaskedContext,
-  processChildContext,
-  emptyContextObject,
-  isContextProvider as isLegacyContextProvider,
-} from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
 import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import {
@@ -85,31 +79,6 @@ let didWarnAboutNestedUpdates;
 
 if (__DEV__) {
   didWarnAboutNestedUpdates = false;
-}
-
-function getContextForSubtree(
-  parentComponent: ?React$Component<any, any>,
-): Object {
-  if (!parentComponent) {
-    return emptyContextObject;
-  }
-
-  const fiber = ReactInstanceMap.get(parentComponent);
-  const parentContext = findCurrentUnmaskedContext(fiber);
-
-  if (fiber.tag === ClassComponent) {
-    const Component = fiber.type;
-    if (isLegacyContextProvider(Component)) {
-      return processChildContext(fiber, Component, parentContext);
-    }
-  } else if (fiber.tag === ClassComponentLazy) {
-    const Component = getResultFromResolvedThenable(fiber.type);
-    if (isLegacyContextProvider(Component)) {
-      return processChildContext(fiber, Component, parentContext);
-    }
-  }
-
-  return parentContext;
 }
 
 function scheduleRootUpdate(
@@ -177,13 +146,6 @@ export function updateContainerAtExpirationTime(
         ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
       }
     }
-  }
-
-  const context = getContextForSubtree(parentComponent);
-  if (container.context === null) {
-    container.context = context;
-  } else {
-    container.pendingContext = context;
   }
 
   return scheduleRootUpdate(current, element, expirationTime, callback);

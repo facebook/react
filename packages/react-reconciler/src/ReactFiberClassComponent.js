@@ -38,13 +38,6 @@ import {
 } from './ReactUpdateQueue';
 import {NoWork} from './ReactFiberExpirationTime';
 import {
-  cacheContext,
-  getMaskedContext,
-  getUnmaskedContext,
-  hasContextChanged,
-  emptyContextObject,
-} from './ReactFiberContext';
-import {
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
@@ -232,16 +225,11 @@ function checkShouldComponentUpdate(
   newProps,
   oldState,
   newState,
-  nextLegacyContext,
 ) {
   const instance = workInProgress.stateNode;
   if (typeof instance.shouldComponentUpdate === 'function') {
     startPhaseTimer(workInProgress, 'shouldComponentUpdate');
-    const shouldUpdate = instance.shouldComponentUpdate(
-      newProps,
-      newState,
-      nextLegacyContext,
-    );
+    const shouldUpdate = instance.shouldComponentUpdate(newProps, newState);
     stopPhaseTimer();
 
     if (__DEV__) {
@@ -315,13 +303,6 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       noInstancePropTypes,
       'propTypes was defined as an instance property on %s. Use a static ' +
         'property to define propTypes instead.',
-      name,
-    );
-    const noInstanceContextTypes = !instance.contextTypes;
-    warningWithoutStack(
-      noInstanceContextTypes,
-      'contextTypes was defined as an instance property on %s. Use a static ' +
-        'property to define contextTypes instead.',
       name,
     );
     const noComponentShouldUpdate =
@@ -446,14 +427,6 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         name,
       );
     }
-    if (typeof instance.getChildContext === 'function') {
-      warningWithoutStack(
-        typeof ctor.childContextTypes === 'object',
-        '%s.getChildContext(): childContextTypes must be defined in order to ' +
-          'use getChildContext().',
-        name,
-      );
-    }
   }
 }
 
@@ -473,13 +446,6 @@ function constructClassInstance(
   props: any,
   renderExpirationTime: ExpirationTime,
 ): any {
-  const unmaskedContext = getUnmaskedContext(workInProgress, ctor);
-  const contextTypes = ctor.contextTypes;
-  const isContextConsumer = contextTypes !== null && contextTypes !== undefined;
-  const context = isContextConsumer
-    ? getMaskedContext(workInProgress, unmaskedContext)
-    : emptyContextObject;
-
   // Instantiate twice to help detect side-effects.
   if (__DEV__) {
     if (
@@ -487,11 +453,11 @@ function constructClassInstance(
       (debugRenderPhaseSideEffectsForStrictMode &&
         workInProgress.mode & StrictMode)
     ) {
-      new ctor(props, context); // eslint-disable-line no-new
+      new ctor(props); // eslint-disable-line no-new
     }
   }
 
-  const instance = new ctor(props, context);
+  const instance = new ctor(props);
   const state = (workInProgress.memoizedState =
     instance.state !== null && instance.state !== undefined
       ? instance.state
@@ -583,12 +549,6 @@ function constructClassInstance(
     }
   }
 
-  // Cache unmasked context so we can avoid recreating masked context unless necessary.
-  // ReactFiberContext usually updates this cache but can't for newly-created instances.
-  if (isContextConsumer) {
-    cacheContext(workInProgress, unmaskedContext, context);
-  }
-
   return instance;
 }
 
@@ -619,19 +579,14 @@ function callComponentWillMount(workInProgress, instance) {
   }
 }
 
-function callComponentWillReceiveProps(
-  workInProgress,
-  instance,
-  newProps,
-  nextLegacyContext,
-) {
+function callComponentWillReceiveProps(workInProgress, instance, newProps) {
   const oldState = instance.state;
   startPhaseTimer(workInProgress, 'componentWillReceiveProps');
   if (typeof instance.componentWillReceiveProps === 'function') {
-    instance.componentWillReceiveProps(newProps, nextLegacyContext);
+    instance.componentWillReceiveProps(newProps);
   }
   if (typeof instance.UNSAFE_componentWillReceiveProps === 'function') {
-    instance.UNSAFE_componentWillReceiveProps(newProps, nextLegacyContext);
+    instance.UNSAFE_componentWillReceiveProps(newProps);
   }
   stopPhaseTimer();
 
@@ -666,21 +621,13 @@ function mountClassInstance(
   }
 
   const instance = workInProgress.stateNode;
-  const unmaskedContext = getUnmaskedContext(workInProgress, ctor);
-
   instance.props = newProps;
   instance.state = workInProgress.memoizedState;
   instance.refs = emptyRefsObject;
-  instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
   if (__DEV__) {
     if (workInProgress.mode & StrictMode) {
       ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
-        workInProgress,
-        instance,
-      );
-
-      ReactStrictModeWarnings.recordLegacyContextWarning(
         workInProgress,
         instance,
       );
@@ -753,16 +700,8 @@ function resumeMountClassInstance(
   renderExpirationTime: ExpirationTime,
 ): boolean {
   const instance = workInProgress.stateNode;
-
   const oldProps = workInProgress.memoizedProps;
   instance.props = oldProps;
-
-  const oldContext = instance.context;
-  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress, ctor);
-  const nextLegacyContext = getMaskedContext(
-    workInProgress,
-    nextLegacyUnmaskedContext,
-  );
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   const hasNewLifecycles =
@@ -780,13 +719,8 @@ function resumeMountClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== nextLegacyContext) {
-      callComponentWillReceiveProps(
-        workInProgress,
-        instance,
-        newProps,
-        nextLegacyContext,
-      );
+    if (oldProps !== newProps) {
+      callComponentWillReceiveProps(workInProgress, instance, newProps);
     }
   }
 
@@ -808,7 +742,6 @@ function resumeMountClassInstance(
   if (
     oldProps === newProps &&
     oldState === newState &&
-    !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -838,7 +771,6 @@ function resumeMountClassInstance(
       newProps,
       oldState,
       newState,
-      nextLegacyContext,
     );
 
   if (shouldUpdate) {
@@ -874,11 +806,10 @@ function resumeMountClassInstance(
     workInProgress.memoizedState = newState;
   }
 
-  // Update the existing instance's state, props, and context pointers even
+  // Update the existing instance's state and props pointers even
   // if shouldComponentUpdate returns false.
   instance.props = newProps;
   instance.state = newState;
-  instance.context = nextLegacyContext;
 
   return shouldUpdate;
 }
@@ -896,13 +827,6 @@ function updateClassInstance(
   const oldProps = workInProgress.memoizedProps;
   instance.props = oldProps;
 
-  const oldContext = instance.context;
-  const nextLegacyUnmaskedContext = getUnmaskedContext(workInProgress, ctor);
-  const nextLegacyContext = getMaskedContext(
-    workInProgress,
-    nextLegacyUnmaskedContext,
-  );
-
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
   const hasNewLifecycles =
     typeof getDerivedStateFromProps === 'function' ||
@@ -919,13 +843,8 @@ function updateClassInstance(
     (typeof instance.UNSAFE_componentWillReceiveProps === 'function' ||
       typeof instance.componentWillReceiveProps === 'function')
   ) {
-    if (oldProps !== newProps || oldContext !== nextLegacyContext) {
-      callComponentWillReceiveProps(
-        workInProgress,
-        instance,
-        newProps,
-        nextLegacyContext,
-      );
+    if (oldProps !== newProps) {
+      callComponentWillReceiveProps(workInProgress, instance, newProps);
     }
   }
 
@@ -948,7 +867,6 @@ function updateClassInstance(
   if (
     oldProps === newProps &&
     oldState === newState &&
-    !hasContextChanged() &&
     !checkHasForceUpdateAfterProcessing()
   ) {
     // If an update was already in progress, we should schedule an Update
@@ -991,7 +909,6 @@ function updateClassInstance(
       newProps,
       oldState,
       newState,
-      nextLegacyContext,
     );
 
   if (shouldUpdate) {
@@ -1004,14 +921,10 @@ function updateClassInstance(
     ) {
       startPhaseTimer(workInProgress, 'componentWillUpdate');
       if (typeof instance.componentWillUpdate === 'function') {
-        instance.componentWillUpdate(newProps, newState, nextLegacyContext);
+        instance.componentWillUpdate(newProps, newState);
       }
       if (typeof instance.UNSAFE_componentWillUpdate === 'function') {
-        instance.UNSAFE_componentWillUpdate(
-          newProps,
-          newState,
-          nextLegacyContext,
-        );
+        instance.UNSAFE_componentWillUpdate(newProps, newState);
       }
       stopPhaseTimer();
     }
@@ -1047,11 +960,10 @@ function updateClassInstance(
     workInProgress.memoizedState = newState;
   }
 
-  // Update the existing instance's state, props, and context pointers even
+  // Update the existing instance's state and props pointers even
   // if shouldComponentUpdate returns false.
   instance.props = newProps;
   instance.state = newState;
-  instance.context = nextLegacyContext;
 
   return shouldUpdate;
 }

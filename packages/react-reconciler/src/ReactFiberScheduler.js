@@ -46,7 +46,6 @@ import {
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
-  warnAboutLegacyContextAPI,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
@@ -111,11 +110,6 @@ import {
 import {AsyncMode, ProfileMode} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
-import {
-  isContextProvider as isLegacyContextProvider,
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-  popContext as popLegacyContext,
-} from './ReactFiberContext';
 import {popProvider, resetContextDependences} from './ReactFiberNewContext';
 import {popHostContext, popHostContainer} from './ReactFiberHostContext';
 import {
@@ -285,25 +279,10 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
     switch (failedUnitOfWork.tag) {
       case HostRoot:
         popHostContainer(failedUnitOfWork);
-        popTopLevelLegacyContextObject(failedUnitOfWork);
         break;
       case HostComponent:
         popHostContext(failedUnitOfWork);
         break;
-      case ClassComponent: {
-        const Component = failedUnitOfWork.type;
-        if (isLegacyContextProvider(Component)) {
-          popLegacyContext(failedUnitOfWork);
-        }
-        break;
-      }
-      case ClassComponentLazy: {
-        const Component = getResultFromResolvedThenable(failedUnitOfWork.type);
-        if (isLegacyContextProvider(Component)) {
-          popLegacyContext(failedUnitOfWork);
-        }
-        break;
-      }
       case HostPortal:
         popHostContainer(failedUnitOfWork);
         break;
@@ -461,10 +440,6 @@ function commitAllLifeCycles(
 
     if (warnAboutDeprecatedLifecycles) {
       ReactStrictModeWarnings.flushPendingDeprecationWarnings();
-    }
-
-    if (warnAboutLegacyContextAPI) {
-      ReactStrictModeWarnings.flushLegacyContextWarning();
     }
   }
   while (nextEffect !== null) {

@@ -7,7 +7,6 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ AllLifecycles [mount]
     ⚛ AllLifecycles.componentWillMount
-    ⚛ AllLifecycles.getChildContext
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
@@ -23,7 +22,6 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
     ⚛ AllLifecycles.componentWillReceiveProps
     ⚛ AllLifecycles.shouldComponentUpdate
     ⚛ AllLifecycles.componentWillUpdate
-    ⚛ AllLifecycles.getChildContext
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)

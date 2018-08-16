@@ -47,11 +47,6 @@ import {
 } from './ReactUpdateQueue';
 import {logError} from './ReactFiberCommitWork';
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
-import {
-  isContextProvider as isLegacyContextProvider,
-  popContext as popLegacyContext,
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
 import {
   renderDidSuspend,
@@ -387,9 +382,6 @@ function unwindWork(
   switch (workInProgress.tag) {
     case ClassComponent: {
       const Component = workInProgress.type;
-      if (isLegacyContextProvider(Component)) {
-        popLegacyContext(workInProgress);
-      }
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -399,9 +391,6 @@ function unwindWork(
     }
     case ClassComponentLazy: {
       const Component = workInProgress.type._reactResult;
-      if (isLegacyContextProvider(Component)) {
-        popLegacyContext(workInProgress);
-      }
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -411,7 +400,6 @@ function unwindWork(
     }
     case HostRoot: {
       popHostContainer(workInProgress);
-      popTopLevelLegacyContextObject(workInProgress);
       const effectTag = workInProgress.effectTag;
       invariant(
         (effectTag & DidCapture) === NoEffect,
@@ -446,24 +434,8 @@ function unwindWork(
 
 function unwindInterruptedWork(interruptedWork: Fiber) {
   switch (interruptedWork.tag) {
-    case ClassComponent: {
-      const childContextTypes = interruptedWork.type.childContextTypes;
-      if (childContextTypes !== null && childContextTypes !== undefined) {
-        popLegacyContext(interruptedWork);
-      }
-      break;
-    }
-    case ClassComponentLazy: {
-      const childContextTypes =
-        interruptedWork.type._reactResult.childContextTypes;
-      if (childContextTypes !== null && childContextTypes !== undefined) {
-        popLegacyContext(interruptedWork);
-      }
-      break;
-    }
     case HostRoot: {
       popHostContainer(interruptedWork);
-      popTopLevelLegacyContextObject(interruptedWork);
       break;
     }
     case HostComponent: {

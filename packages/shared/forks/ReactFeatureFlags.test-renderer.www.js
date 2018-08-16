@@ -18,7 +18,6 @@ export const enableUserTimingAPI = __DEV__;
 export const enableGetDerivedStateFromCatch = false;
 export const enableSuspense = true;
 export const warnAboutDeprecatedLifecycles = false;
-export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
 

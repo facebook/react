@@ -58,9 +58,6 @@ export type FiberRoot = {
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
   // it's superseded by a new one.
   timeoutHandle: TimeoutHandle | NoTimeout,
-  // Top context object, used by renderSubtreeIntoContainer
-  context: Object | null,
-  pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
   // Remaining expiration time on this root.
@@ -99,8 +96,6 @@ export function createFiberRoot(
     pendingCommitExpirationTime: NoWork,
     finishedWork: null,
     timeoutHandle: noTimeout,
-    context: null,
-    pendingContext: null,
     hydrate,
     nextExpirationTimeToWorkOn: NoWork,
     expirationTime: NoWork,

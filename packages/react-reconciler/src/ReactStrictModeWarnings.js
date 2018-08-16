@@ -31,8 +31,6 @@ const ReactStrictModeWarnings = {
   flushPendingUnsafeLifecycleWarnings(): void {},
   recordDeprecationWarnings(fiber: Fiber, instance: any): void {},
   recordUnsafeLifecycleWarnings(fiber: Fiber, instance: any): void {},
-  recordLegacyContextWarning(fiber: Fiber, instance: any): void {},
-  flushLegacyContextWarning(): void {},
 };
 
 if (__DEV__) {
@@ -46,12 +44,10 @@ if (__DEV__) {
   let pendingComponentWillReceivePropsWarnings: Array<Fiber> = [];
   let pendingComponentWillUpdateWarnings: Array<Fiber> = [];
   let pendingUnsafeLifecycleWarnings: FiberToLifecycleMap = new Map();
-  let pendingLegacyContextWarning: FiberToFiberComponentsMap = new Map();
 
   // Tracks components we have already warned about.
   const didWarnAboutDeprecatedLifecycles = new Set();
   const didWarnAboutUnsafeLifecycles = new Set();
-  const didWarnAboutLegacyContext = new Set();
 
   const setToSortedString = set => {
     const array = [];
@@ -66,7 +62,6 @@ if (__DEV__) {
     pendingComponentWillReceivePropsWarnings = [];
     pendingComponentWillUpdateWarnings = [];
     pendingUnsafeLifecycleWarnings = new Map();
-    pendingLegacyContextWarning = new Map();
   };
 
   ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings = () => {
@@ -296,67 +291,6 @@ if (__DEV__) {
         );
       });
     }
-  };
-
-  ReactStrictModeWarnings.recordLegacyContextWarning = (
-    fiber: Fiber,
-    instance: any,
-  ) => {
-    const strictRoot = findStrictRoot(fiber);
-    if (strictRoot === null) {
-      warningWithoutStack(
-        false,
-        'Expected to find a StrictMode component in a strict mode tree. ' +
-          'This error is likely caused by a bug in React. Please file an issue.',
-      );
-      return;
-    }
-
-    // Dedup strategy: Warn once per component.
-    if (didWarnAboutLegacyContext.has(fiber.type)) {
-      return;
-    }
-
-    let warningsForRoot = pendingLegacyContextWarning.get(strictRoot);
-
-    if (
-      fiber.type.contextTypes != null ||
-      fiber.type.childContextTypes != null ||
-      (instance !== null && typeof instance.getChildContext === 'function')
-    ) {
-      if (warningsForRoot === undefined) {
-        warningsForRoot = [];
-        pendingLegacyContextWarning.set(strictRoot, warningsForRoot);
-      }
-      warningsForRoot.push(fiber);
-    }
-  };
-
-  ReactStrictModeWarnings.flushLegacyContextWarning = () => {
-    ((pendingLegacyContextWarning: any): FiberToFiberComponentsMap).forEach(
-      (fiberArray: FiberArray, strictRoot) => {
-        const uniqueNames = new Set();
-        fiberArray.forEach(fiber => {
-          uniqueNames.add(getComponentName(fiber.type) || 'Component');
-          didWarnAboutLegacyContext.add(fiber.type);
-        });
-
-        const sortedNames = setToSortedString(uniqueNames);
-        const strictRootComponentStack = getStackByFiberInDevAndProd(
-          strictRoot,
-        );
-
-        warningWithoutStack(
-          false,
-          'Legacy context API has been detected within a strict-mode tree: %s' +
-            '\n\nPlease update the following components: %s' +
-            '\n\nLearn more about this warning here:' +
-            '\nhttps://fb.me/react-strict-mode-warnings',
-          strictRootComponentStack,
-          sortedNames,
-        );
-      },
-    );
   };
 }
 

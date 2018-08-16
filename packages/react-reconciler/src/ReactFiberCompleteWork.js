@@ -62,11 +62,6 @@ import {
   getHostContext,
   popHostContainer,
 } from './ReactFiberHostContext';
-import {
-  isContextProvider as isLegacyContextProvider,
-  popContext as popLegacyContext,
-  popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
@@ -320,28 +315,13 @@ function completeWork(
     case FunctionalComponent:
     case FunctionalComponentLazy:
       break;
-    case ClassComponent: {
-      const Component = workInProgress.type;
-      if (isLegacyContextProvider(Component)) {
-        popLegacyContext(workInProgress);
-      }
+    case ClassComponent:
       break;
-    }
-    case ClassComponentLazy: {
-      const Component = getResultFromResolvedThenable(workInProgress.type);
-      if (isLegacyContextProvider(Component)) {
-        popLegacyContext(workInProgress);
-      }
+    case ClassComponentLazy:
       break;
-    }
     case HostRoot: {
       popHostContainer(workInProgress);
-      popTopLevelLegacyContextObject(workInProgress);
       const fiberRoot = (workInProgress.stateNode: FiberRoot);
-      if (fiberRoot.pendingContext) {
-        fiberRoot.context = fiberRoot.pendingContext;
-        fiberRoot.pendingContext = null;
-      }
       if (current === null || current.child === null) {
         // If we hydrated, pop so that we can delete any remaining children
         // that weren't hydrated.
