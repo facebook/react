@@ -172,9 +172,10 @@ export function updateWrapper(element: Element, props: Object) {
   updateChecked(element, props);
 
   const value = getToStringValue(props.value);
+  const type = props.type;
 
   if (value != null) {
-    if (props.type === 'number') {
+    if (type === 'number') {
       if (
         (value === 0 && node.value === '') ||
         // We explicitly want to coerce to number here if possible.
@@ -186,6 +187,11 @@ export function updateWrapper(element: Element, props: Object) {
     } else if (node.value !== toString(value)) {
       node.value = toString(value);
     }
+  } else if (type === 'submit' || type === 'reset') {
+    // Submit/reset inputs need the attribute removed completely to avoid
+    // blank-text buttons.
+    node.removeAttribute('value');
+    return;
   }
 
   if (props.hasOwnProperty('value')) {
@@ -207,6 +213,16 @@ export function postMountWrapper(
   const node = ((element: any): InputWithWrapperState);
 
   if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
+    // Avoid setting value attribute on submit/reset inputs as it overrides the
+    // default value provided by the browser. See: #12872
+    const type = props.type;
+    if (
+      (type === 'submit' || type === 'reset') &&
+      (props.value === undefined || props.value === null)
+    ) {
+      return;
+    }
+
     const initialValue = toString(node._wrapperState.initialValue);
     const currentValue = node.value;
 
