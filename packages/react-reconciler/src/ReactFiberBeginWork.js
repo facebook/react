@@ -151,10 +151,10 @@ function updateForwardRef(
   current: Fiber | null,
   workInProgress: Fiber,
   type: any,
+  nextProps: any,
   renderExpirationTime: ExpirationTime,
 ) {
   const render = type.render;
-  const nextProps = workInProgress.pendingProps;
   const ref = workInProgress.ref;
   if (hasLegacyContextChanged()) {
     // Normally we can bail out on props equality but if context has changed
@@ -188,34 +188,6 @@ function updateForwardRef(
   );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
-}
-
-function updateForwardRefLazy(
-  current: Fiber | null,
-  workInProgress: Fiber,
-  Component: any,
-  renderExpirationTime: ExpirationTime,
-) {
-  const props = workInProgress.pendingProps;
-  const resolvedProps = resolveDefaultProps(Component, props);
-  if (resolvedProps !== props) {
-    workInProgress.pendingProps = resolvedProps;
-    const child = updateForwardRef(
-      current,
-      workInProgress,
-      Component,
-      renderExpirationTime,
-    );
-    workInProgress.pendingProps = workInProgress.memoizedProps = props;
-    return child;
-  } else {
-    return updateForwardRef(
-      current,
-      workInProgress,
-      Component,
-      renderExpirationTime,
-    );
-  }
 }
 
 function updateFragment(
@@ -285,9 +257,9 @@ function updateFunctionalComponent(
   current,
   workInProgress,
   Component,
+  nextProps: any,
   renderExpirationTime,
 ) {
-  const nextProps = workInProgress.pendingProps;
   const unmaskedContext = getUnmaskedContext(workInProgress);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
@@ -314,38 +286,11 @@ function updateFunctionalComponent(
   return workInProgress.child;
 }
 
-function updateFunctionalComponentLazy(
-  current,
-  workInProgress,
-  Component,
-  renderExpirationTime,
-) {
-  const props = workInProgress.pendingProps;
-  const resolvedProps = resolveDefaultProps(Component, props);
-  if (resolvedProps !== props) {
-    workInProgress.pendingProps = resolvedProps;
-    const child = updateFunctionalComponent(
-      current,
-      workInProgress,
-      Component,
-      renderExpirationTime,
-    );
-    workInProgress.pendingProps = workInProgress.memoizedProps = props;
-    return child;
-  } else {
-    return updateFunctionalComponent(
-      current,
-      workInProgress,
-      Component,
-      renderExpirationTime,
-    );
-  }
-}
-
 function updateClassComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   Component: any,
+  nextProps,
   renderExpirationTime: ExpirationTime,
 ) {
   // Push context providers early to prevent context stack mismatches.
@@ -368,17 +313,22 @@ function updateClassComponent(
       constructClassInstance(
         workInProgress,
         Component,
-        workInProgress.pendingProps,
+        nextProps,
         renderExpirationTime,
       );
-      mountClassInstance(workInProgress, Component, renderExpirationTime);
-
+      mountClassInstance(
+        workInProgress,
+        Component,
+        nextProps,
+        renderExpirationTime,
+      );
       shouldUpdate = true;
     } else {
       // In a resume, we'll already have an instance we can reuse.
       shouldUpdate = resumeMountClassInstance(
         workInProgress,
         Component,
+        nextProps,
         renderExpirationTime,
       );
     }
@@ -387,6 +337,7 @@ function updateClassComponent(
       current,
       workInProgress,
       Component,
+      nextProps,
       renderExpirationTime,
     );
   }
@@ -491,34 +442,6 @@ function finishClassComponent(
   }
 
   return workInProgress.child;
-}
-
-function updateClassComponentLazy(
-  current,
-  workInProgress,
-  Component,
-  renderExpirationTime,
-) {
-  const props = workInProgress.pendingProps;
-  const resolvedProps = resolveDefaultProps(Component, props);
-  if (resolvedProps !== props) {
-    workInProgress.pendingProps = resolvedProps;
-    const child = updateClassComponent(
-      current,
-      workInProgress,
-      Component,
-      renderExpirationTime,
-    );
-    workInProgress.pendingProps = workInProgress.memoizedProps = props;
-    return child;
-  } else {
-    return updateClassComponent(
-      current,
-      workInProgress,
-      Component,
-      renderExpirationTime,
-    );
-  }
 }
 
 function pushHostRootContext(workInProgress) {
@@ -705,30 +628,40 @@ function mountIndeterminateComponent(
   ) {
     Component = readLazyComponentType(Component);
     reassignLazyComponentTag(workInProgress, Component);
+    const resolvedProps = resolveDefaultProps(Component, props);
+    let child;
     switch (workInProgress.tag) {
-      case FunctionalComponentLazy:
-        return updateFunctionalComponentLazy(
+      case FunctionalComponentLazy: {
+        child = updateFunctionalComponent(
           current,
           workInProgress,
           Component,
+          resolvedProps,
           renderExpirationTime,
         );
-
-      case ClassComponentLazy:
-        return updateClassComponentLazy(
+        break;
+      }
+      case ClassComponentLazy: {
+        child = updateClassComponent(
           current,
           workInProgress,
           Component,
+          resolvedProps,
           renderExpirationTime,
         );
-      case ForwardRefLazy:
-        return updateForwardRefLazy(
+        break;
+      }
+      case ForwardRefLazy: {
+        child = updateForwardRef(
           current,
           workInProgress,
           Component,
+          resolvedProps,
           renderExpirationTime,
         );
-      default:
+        break;
+      }
+      default: {
         // This message intentionally doesn't metion ForwardRef because the
         // fact that it's a separate type of work is an implementation detail.
         invariant(
@@ -737,7 +670,10 @@ function mountIndeterminateComponent(
             'Promise elements must resolve to a class or function.',
           Component,
         );
+      }
     }
+    workInProgress.pendingProps = props;
+    return child;
   }
 
   const unmaskedContext = getUnmaskedContext(workInProgress);
@@ -813,7 +749,7 @@ function mountIndeterminateComponent(
     }
 
     adoptClassInstance(workInProgress, value);
-    mountClassInstance(workInProgress, Component, renderExpirationTime);
+    mountClassInstance(workInProgress, Component, props, renderExpirationTime);
     return finishClassComponent(
       current,
       workInProgress,
@@ -1222,18 +1158,23 @@ function beginWork(
         current,
         workInProgress,
         Component,
+        workInProgress.pendingProps,
         renderExpirationTime,
       );
     }
     case FunctionalComponentLazy: {
       const thenable = workInProgress.type;
       const Component = (thenable._reactResult: any);
-      return updateFunctionalComponentLazy(
+      const unresolvedProps = workInProgress.pendingProps;
+      const child = updateFunctionalComponent(
         current,
         workInProgress,
         Component,
+        resolveDefaultProps(Component, unresolvedProps),
         renderExpirationTime,
       );
+      workInProgress.memoizedProps = unresolvedProps;
+      return child;
     }
     case ClassComponent: {
       const Component = workInProgress.type;
@@ -1241,18 +1182,23 @@ function beginWork(
         current,
         workInProgress,
         Component,
+        workInProgress.pendingProps,
         renderExpirationTime,
       );
     }
     case ClassComponentLazy: {
       const thenable = workInProgress.type;
       const Component = (thenable._reactResult: any);
-      return updateClassComponentLazy(
+      const unresolvedProps = workInProgress.pendingProps;
+      const child = updateClassComponent(
         current,
         workInProgress,
         Component,
+        resolveDefaultProps(Component, unresolvedProps),
         renderExpirationTime,
       );
+      workInProgress.memoizedProps = unresolvedProps;
+      return child;
     }
     case HostRoot:
       return updateHostRoot(current, workInProgress, renderExpirationTime);
@@ -1278,18 +1224,23 @@ function beginWork(
         current,
         workInProgress,
         type,
+        workInProgress.pendingProps,
         renderExpirationTime,
       );
     }
     case ForwardRefLazy:
       const thenable = workInProgress.type;
       const Component = (thenable._reactResult: any);
-      return updateForwardRefLazy(
+      const unresolvedProps = workInProgress.pendingProps;
+      const child = updateForwardRef(
         current,
         workInProgress,
         Component,
+        resolveDefaultProps(Component, unresolvedProps),
         renderExpirationTime,
       );
+      workInProgress.memoizedProps = unresolvedProps;
+      return child;
     case Fragment:
       return updateFragment(current, workInProgress, renderExpirationTime);
     case Mode:

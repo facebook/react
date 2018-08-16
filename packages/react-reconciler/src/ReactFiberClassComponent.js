@@ -265,7 +265,7 @@ function checkShouldComponentUpdate(
   return true;
 }
 
-function checkClassInstance(workInProgress: Fiber, ctor: any) {
+function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
   const instance = workInProgress.stateNode;
   if (__DEV__) {
     const name = getComponentName(ctor) || 'Component';
@@ -383,7 +383,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any) {
         'UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?',
       name,
     );
-    const hasMutatedProps = instance.props !== workInProgress.pendingProps;
+    const hasMutatedProps = instance.props !== newProps;
     warningWithoutStack(
       instance.props === undefined || !hasMutatedProps,
       '%s(...): When calling super() in `%s`, make sure to pass ' +
@@ -658,17 +658,17 @@ function callComponentWillReceiveProps(
 function mountClassInstance(
   workInProgress: Fiber,
   ctor: any,
+  newProps: any,
   renderExpirationTime: ExpirationTime,
 ): void {
   if (__DEV__) {
-    checkClassInstance(workInProgress, ctor);
+    checkClassInstance(workInProgress, ctor, newProps);
   }
 
   const instance = workInProgress.stateNode;
-  const props = workInProgress.pendingProps;
   const unmaskedContext = getUnmaskedContext(workInProgress);
 
-  instance.props = props;
+  instance.props = newProps;
   instance.state = workInProgress.memoizedState;
   instance.refs = emptyRefsObject;
   instance.context = getMaskedContext(workInProgress, unmaskedContext);
@@ -699,7 +699,7 @@ function mountClassInstance(
     processUpdateQueue(
       workInProgress,
       updateQueue,
-      props,
+      newProps,
       instance,
       renderExpirationTime,
     );
@@ -712,7 +712,7 @@ function mountClassInstance(
       workInProgress,
       ctor,
       getDerivedStateFromProps,
-      props,
+      newProps,
     );
     instance.state = workInProgress.memoizedState;
   }
@@ -733,7 +733,7 @@ function mountClassInstance(
       processUpdateQueue(
         workInProgress,
         updateQueue,
-        props,
+        newProps,
         instance,
         renderExpirationTime,
       );
@@ -749,12 +749,12 @@ function mountClassInstance(
 function resumeMountClassInstance(
   workInProgress: Fiber,
   ctor: any,
+  newProps: any,
   renderExpirationTime: ExpirationTime,
 ): boolean {
   const instance = workInProgress.stateNode;
 
   const oldProps = workInProgress.memoizedProps;
-  const newProps = workInProgress.pendingProps;
   instance.props = oldProps;
 
   const oldContext = instance.context;
@@ -888,12 +888,12 @@ function updateClassInstance(
   current: Fiber,
   workInProgress: Fiber,
   ctor: any,
+  newProps: any,
   renderExpirationTime: ExpirationTime,
 ): boolean {
   const instance = workInProgress.stateNode;
 
   const oldProps = workInProgress.memoizedProps;
-  const newProps = workInProgress.pendingProps;
   instance.props = oldProps;
 
   const oldContext = instance.context;
