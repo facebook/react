@@ -294,7 +294,7 @@ function shouldConstruct(Component: Function) {
 export function resolveLazyComponentTag(
   fiber: Fiber,
   Component: Function,
-): void {
+): TypeOfWork {
   if (typeof Component === 'function') {
     return shouldConstruct(Component)
       ? ClassComponentLazy
