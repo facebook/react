@@ -50,7 +50,7 @@ const RCTFabricUIManager = {
     viewName,
     rootTag,
     props,
-    instanceHandle,
+    eventTarget,
   ) {
     invariant(
       !allocatedTags.has(reactTag),
@@ -65,7 +65,7 @@ const RCTFabricUIManager = {
       children: [],
     };
   }),
-  cloneNode: jest.fn(function cloneNode(node, instanceHandle) {
+  cloneNode: jest.fn(function cloneNode(node) {
     return {
       reactTag: node.reactTag,
       viewName: node.viewName,
@@ -73,10 +73,7 @@ const RCTFabricUIManager = {
       children: node.children,
     };
   }),
-  cloneNodeWithNewChildren: jest.fn(function cloneNodeWithNewChildren(
-    node,
-    instanceHandle,
-  ) {
+  cloneNodeWithNewChildren: jest.fn(function cloneNodeWithNewChildren(node) {
     return {
       reactTag: node.reactTag,
       viewName: node.viewName,
@@ -87,7 +84,6 @@ const RCTFabricUIManager = {
   cloneNodeWithNewProps: jest.fn(function cloneNodeWithNewProps(
     node,
     newPropsDiff,
-    instanceHandle,
   ) {
     return {
       reactTag: node.reactTag,
@@ -97,11 +93,7 @@ const RCTFabricUIManager = {
     };
   }),
   cloneNodeWithNewChildrenAndProps: jest.fn(
-    function cloneNodeWithNewChildrenAndProps(
-      node,
-      newPropsDiff,
-      instanceHandle,
-    ) {
+    function cloneNodeWithNewChildrenAndProps(node, newPropsDiff) {
       return {
         reactTag: node.reactTag,
         viewName: node.viewName,

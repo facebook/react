@@ -351,23 +351,15 @@ export function cloneInstance(
   let clone;
   if (keepChildren) {
     if (updatePayload !== null) {
-      clone = cloneNodeWithNewProps(
-        node,
-        updatePayload,
-        internalInstanceHandle,
-      );
+      clone = cloneNodeWithNewProps(node, updatePayload);
     } else {
-      clone = cloneNode(node, internalInstanceHandle);
+      clone = cloneNode(node);
     }
   } else {
     if (updatePayload !== null) {
-      clone = cloneNodeWithNewChildrenAndProps(
-        node,
-        updatePayload,
-        internalInstanceHandle,
-      );
+      clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
     } else {
-      clone = cloneNodeWithNewChildren(node, internalInstanceHandle);
+      clone = cloneNodeWithNewChildren(node);
     }
   }
   return {
