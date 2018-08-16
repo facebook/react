@@ -46,7 +46,7 @@ const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';
 
 export function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
-  if (maybeIterable === null || typeof maybeIterable === 'undefined') {
+  if (maybeIterable === null || typeof maybeIterable !== 'object') {
     return null;
   }
   const maybeIterator =
