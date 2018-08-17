@@ -15,10 +15,7 @@ describe('InteractionTracking', () => {
   let advanceTimeBy;
   let currentTime;
 
-  function loadModules({
-    enableInteractionTracking,
-    enableInteractionTrackingObserver,
-  }) {
+  function loadModules({enableInteractionTracking}) {
     jest.resetModules();
     jest.useFakeTimers();
 
@@ -31,7 +28,6 @@ describe('InteractionTracking', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableInteractionTracking = enableInteractionTracking;
-    ReactFeatureFlags.enableInteractionTrackingObserver = enableInteractionTrackingObserver;
 
     InteractionTracking = require('interaction-tracking');
   }
@@ -353,11 +349,10 @@ describe('InteractionTracking', () => {
         });
       });
 
-      describe('enableInteractionTrackingObserver enabled', () => {
+      describe('subscriptions', () => {
         beforeEach(() => {
           loadModules({
             enableInteractionTracking: true,
-            enableInteractionTrackingObserver: true,
           });
 
           subscriber = {
@@ -808,19 +803,6 @@ describe('InteractionTracking', () => {
               InteractionTracking.__subscriberRef.current.onInteractionTracked,
             ).toBe(onInteractionTracked);
           });
-        });
-      });
-
-      describe('enableInteractionTrackingObserver disabled', () => {
-        beforeEach(() => {
-          loadModules({
-            enableInteractionTracking: true,
-            enableInteractionTrackingObserver: false,
-          });
-        });
-
-        it('should not create unnecessary objects', () => {
-          expect(InteractionTracking.__subscriberRef).toBe(null);
         });
       });
     });
