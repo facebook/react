@@ -221,25 +221,6 @@ const properties = {};
   );
 });
 
-// defaultValue stringifies boolean values for backward compatability
-// from when it was treated as a reserved property. Reserved
-// properties skip most property validation.
-properties.defaultValue = new PropertyInfoRecord(
-  'defaultValue',
-  OVERLOADED_BOOLEAN,
-  false,
-  'value',
-  null,
-);
-
-properties.defaultChecked = new PropertyInfoRecord(
-  'defaultChecked',
-  BOOLEAN,
-  false,
-  'checked',
-  null,
-);
-
 // A few React string attributes have a different name.
 // This is a mapping from React prop names to the attribute names.
 [
@@ -269,6 +250,15 @@ properties.defaultChecked = new PropertyInfoRecord(
     null, // attributeNamespace
   );
 });
+
+// defaultValue is the property version of the value attribute
+properties.defaultValue = new PropertyInfoRecord(
+  'defaultValue',
+  BOOLEANISH_STRING,
+  false,
+  'value',
+  null,
+);
 
 // These are "enumerated" SVG attributes that accept "true" and "false".
 // In React, we let users pass `true` and `false` even though technically
@@ -355,6 +345,15 @@ properties.defaultChecked = new PropertyInfoRecord(
     null, // attributeNamespace
   );
 });
+
+// defaultChecked is the property version of the checked attribute
+properties.defaultChecked = new PropertyInfoRecord(
+  'defaultChecked',
+  BOOLEAN,
+  false,
+  'checked',
+  null,
+);
 
 // These are HTML attributes that must be positive numbers.
 ['cols', 'rows', 'size', 'span'].forEach(name => {
