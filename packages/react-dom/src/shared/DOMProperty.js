@@ -486,6 +486,7 @@ const capitalize = token => token[1].toUpperCase();
 });
 
 // String SVG attributes with the xml namespace.
+//
 // Note: Add `name.toLowerCase()` to attributeName if adding a cased item
 ['xml:base', 'xml:lang', 'xml:space'].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
