@@ -2,12 +2,22 @@
   "name": "interaction-tracking",
   "description": "utility for tracking interaction events",
   "version": "0.0.1",
-  "repository": "facebook/react",
+  "license": "MIT",
   "files": [
     "LICENSE",
     "README.md",
     "index.js",
     "cjs/",
     "umd/"
-  ]
+  ],
+  "keywords": [
+    "interaction",
+    "tracking",
+    "react"
+  ],
+  "repository": "https://github.com/facebook/react",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://reactjs.org/"
 }
