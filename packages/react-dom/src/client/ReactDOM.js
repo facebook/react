@@ -448,7 +448,11 @@ function shouldHydrateDueToLegacyHeuristic(container) {
   );
 }
 
-ReactGenericBatching.injection.injectRenderer(DOMRenderer);
+ReactGenericBatching.setBatchingImplementation(
+  DOMRenderer.batchedUpdates,
+  DOMRenderer.interactiveUpdates,
+  DOMRenderer.flushInteractiveUpdates,
+);
 
 let warnedAboutHydrateAPI = false;
 
