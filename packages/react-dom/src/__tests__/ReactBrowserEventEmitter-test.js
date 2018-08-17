@@ -44,9 +44,7 @@ describe('ReactBrowserEventEmitter', () => {
       render() {
         return (
           <div {...this.props.parentProps}>
-            {this.props.childProps.isUnmount ? null : (
-              <Child ref={n => (CHILD = n)} {...this.props.childProps} />
-            )}
+            <Child ref={n => (CHILD = n)} {...this.props.childProps} />
           </div>
         );
       }
@@ -569,28 +567,62 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should work with event plugins without dependencies', () => {
-    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    // const SimpleComponent = () => <div onClick={LISTENER} />;
-    // ReactDOM.render(<SimpleComponent />, container);
-    document.addEventListener('click', LISTENER);
-    expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
-      'click',
+    const node = ReactDOM.render(<button onClick={LISTENER} />, container);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
     );
+    expect(LISTENER.mock.calls.length).toBe(1);
   });
 
   it('should work with event plugins with dependencies', () => {
-    //   spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    //   ReactBrowserEventEmitter.listenTo('onClick', document);
-    //   var setEventListeners = [];
-    //   var listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
-    //   for (var i = 0; i < listenCalls.length; i++) {
-    //     setEventListeners.push(listenCalls[i][1]);
-    //   }
-    //   var module = EventPluginRegistry.registrationNameModules['onChange'];
-    //   var dependencies = module.eventTypes.change.dependencies;
-    //   expect(setEventListeners.length).toEqual(dependencies.length);
-    //   for (i = 0; i < setEventListeners.length; i++) {
-    //     expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
-    //   }
+    /**
+     * test input
+     * ref: https://github.com/facebook/react/issues/10135#issuecomment-314441175
+     *
+     * TOP_CLICK,
+     * TOP_FOCUS,
+     * TOP_INPUT,
+     * TOP_KEY_DOWN,
+     * TOP_KEY_UP,
+     * TOP_SELECTION_CHANGE,
+     *
+     */
+    function setNativeValue(element, value) {
+      const valueSetter = Object.getOwnPropertyDescriptor(element, 'value').set;
+      const prototype = Object.getPrototypeOf(element);
+      const prototypeValueSetter = Object.getOwnPropertyDescriptor(
+        prototype,
+        'value',
+      ).set;
+      if (valueSetter && valueSetter !== prototypeValueSetter) {
+        prototypeValueSetter.call(element, value);
+      } else {
+        valueSetter.call(element, value);
+      }
+    }
+    const input = ReactDOM.render(
+      <input
+        type="text"
+        onChange={LISTENER}
+        onFocus={LISTENER}
+        onBlur={LISTENER}
+        onInput={LISTENER}
+        onKeyDown={LISTENER}
+        onKeyUp={LISTENER}
+      />,
+      container,
+    );
+    setNativeValue(input, ' ');
+    input.dispatchEvent(new Event('change', {bubbles: true}));
+    input.dispatchEvent(new Event('blur', {bubbles: true}));
+    input.dispatchEvent(new Event('input', {bubbles: true}));
+    input.dispatchEvent(new Event('keydown', {bubbles: true}));
+    input.dispatchEvent(new Event('keyup', {bubbles: true}));
+    input.focus();
+
+    expect(LISTENER.mock.calls.length).toBe(6);
   });
 });
