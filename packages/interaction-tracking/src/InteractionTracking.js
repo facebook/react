@@ -12,7 +12,6 @@ import {
   enableInteractionTracking,
   enableInteractionTrackingObserver,
 } from 'shared/ReactFeatureFlags';
-import now from './InteractionTrackingNow';
 
 export type Interaction = {|
   __count: number,
@@ -121,8 +120,7 @@ export function getThreadID(): number {
 export function subscribe(subscriber: Subscriber): void {
   if (enableInteractionTracking && enableInteractionTrackingObserver) {
     invariant(
-      subscriberRef.current === null ||
-        subscriberRef.current === subscriber,
+      subscriberRef.current === null || subscriberRef.current === subscriber,
       'Only one interactions subscriber may be registered at a time.',
     );
     subscriberRef.current = subscriber;
@@ -131,6 +129,7 @@ export function subscribe(subscriber: Subscriber): void {
 
 export function track(
   name: string,
+  timestamp: number,
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): any {
@@ -142,7 +141,7 @@ export function track(
     __count: 0,
     id: interactionIDCounter++,
     name,
-    timestamp: now(),
+    timestamp,
   };
 
   const prevInteractions = interactionsRef.current;
@@ -312,10 +311,7 @@ export function wrap(
         wrappedInteractions.forEach(interaction => {
           interaction.__count = interaction.__count - 1;
 
-          if (
-            subscriber !== null &&
-            interaction.__count === 0
-          ) {
+          if (subscriber !== null && interaction.__count === 0) {
             subscriber.onInteractionScheduledWorkCompleted(interaction);
           }
         });
