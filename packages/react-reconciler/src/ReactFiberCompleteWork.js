@@ -361,6 +361,10 @@ function completeWork(
         // If we have an alternate, that means this is an update and we need to
         // schedule a side-effect to do the updates.
         const oldProps = current.memoizedProps;
+        if (oldProps === newProps) {
+          break;
+        }
+
         // If we get updated because one of our children updated, we don't
         // have newProps so we'll have to reuse them.
         // TODO: Split the update API as separate for the props vs. children.
