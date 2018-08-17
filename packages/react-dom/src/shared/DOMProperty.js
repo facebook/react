@@ -313,6 +313,8 @@ const properties = {};
 
 // These are the few React props that we set as DOM properties
 // rather than attributes. These are all booleans.
+//
+// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
 [
   'checked',
   // Note: `option.selected` is not updated if `select.multiple` is
@@ -332,6 +334,8 @@ const properties = {};
 
 // These are HTML attributes that are "overloaded booleans": they behave like
 // booleans, but can also accept a string value.
+//
+// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
 ['capture', 'download'].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
@@ -343,6 +347,8 @@ const properties = {};
 });
 
 // These are HTML attributes that must be positive numbers.
+//
+// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
 ['cols', 'rows', 'size', 'span'].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
@@ -372,6 +378,8 @@ const capitalize = token => token[1].toUpperCase();
 // and have the same names are omitted, just like in the HTML whitelist.
 // Some of these attributes can be hard to find. This list was created by
 // scrapping the MDN documentation.
+//
+// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
 [
   'accent-height',
   'alignment-baseline',
@@ -478,6 +486,7 @@ const capitalize = token => token[1].toUpperCase();
 });
 
 // String SVG attributes with the xml namespace.
+// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
 ['xml:base', 'xml:lang', 'xml:space'].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
