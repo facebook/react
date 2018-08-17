@@ -313,8 +313,6 @@ const properties = {};
 
 // These are the few React props that we set as DOM properties
 // rather than attributes. These are all booleans.
-//
-// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
 [
   'checked',
   // Note: `option.selected` is not updated if `select.multiple` is
@@ -322,6 +320,10 @@ const properties = {};
   'multiple',
   'muted',
   'selected',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
 ].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
@@ -334,9 +336,14 @@ const properties = {};
 
 // These are HTML attributes that are "overloaded booleans": they behave like
 // booleans, but can also accept a string value.
-//
-// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
-['capture', 'download'].forEach(name => {
+[
+  'capture',
+  'download',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
     OVERLOADED_BOOLEAN,
@@ -347,9 +354,16 @@ const properties = {};
 });
 
 // These are HTML attributes that must be positive numbers.
-//
-// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
-['cols', 'rows', 'size', 'span'].forEach(name => {
+[
+  'cols',
+  'rows',
+  'size',
+  'span',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
     POSITIVE_NUMERIC,
@@ -378,8 +392,6 @@ const capitalize = token => token[1].toUpperCase();
 // and have the same names are omitted, just like in the HTML whitelist.
 // Some of these attributes can be hard to find. This list was created by
 // scrapping the MDN documentation.
-//
-// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
 [
   'accent-height',
   'alignment-baseline',
@@ -454,6 +466,10 @@ const capitalize = token => token[1].toUpperCase();
   'writing-mode',
   'xmlns:xlink',
   'x-height',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
@@ -474,6 +490,10 @@ const capitalize = token => token[1].toUpperCase();
   'xlink:show',
   'xlink:title',
   'xlink:type',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
@@ -486,9 +506,15 @@ const capitalize = token => token[1].toUpperCase();
 });
 
 // String SVG attributes with the xml namespace.
-//
-// Note: Add `name.toLowerCase()` to attributeName if adding a cased item
-['xml:base', 'xml:lang', 'xml:space'].forEach(attributeName => {
+[
+  'xml:base',
+  'xml:lang',
+  'xml:space',
+
+  // NOTE: if you add a camelCased prop to this list,
+  // you'll need to set attributeName to name.toLowerCase()
+  // instead in the assignment below.
+].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
     name,
