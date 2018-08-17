@@ -325,7 +325,7 @@ const properties = {};
     name,
     BOOLEAN,
     true, // mustUseProperty
-    name.toLowerCase(), // attributeName
+    name, // attributeName
     null, // attributeNamespace
   );
 });
@@ -337,7 +337,7 @@ const properties = {};
     name,
     OVERLOADED_BOOLEAN,
     false, // mustUseProperty
-    name.toLowerCase(), // attributeName
+    name, // attributeName
     null, // attributeNamespace
   );
 });
@@ -348,7 +348,7 @@ const properties = {};
     name,
     POSITIVE_NUMERIC,
     false, // mustUseProperty
-    name.toLowerCase(), // attributeName
+    name, // attributeName
     null, // attributeNamespace
   );
 });
