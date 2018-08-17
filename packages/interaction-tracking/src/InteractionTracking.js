@@ -196,7 +196,7 @@ export function track(
       }
     }
 
-    interaction.__count = interaction.__count - 1;
+    interaction.__count--;
 
     // If no async work was scheduled for this interaction,
     // Notify subscribers that it's completed.
@@ -250,7 +250,7 @@ export function wrap(
     // Update the pending async work count for the current interactions.
     // Update after calling subscribers in case of error.
     wrappedInteractions.forEach(interaction => {
-      interaction.__count = interaction.__count + 1;
+      interaction.__count++;
     });
   }
 
@@ -309,7 +309,7 @@ export function wrap(
         // If this was the last scheduled async work for any of them,
         // Mark them as completed.
         wrappedInteractions.forEach(interaction => {
-          interaction.__count = interaction.__count - 1;
+          interaction.__count--;
 
           if (subscriber !== null && interaction.__count === 0) {
             subscriber.onInteractionScheduledWorkCompleted(interaction);
@@ -338,7 +338,7 @@ export function wrap(
         // If this was the last scheduled async work for any of them,
         // Mark them as completed.
         wrappedInteractions.forEach(interaction => {
-          interaction.__count = interaction.__count - 1;
+          interaction.__count--;
 
           if (subscriber && interaction.__count === 0) {
             subscriber.onInteractionScheduledWorkCompleted(interaction);
