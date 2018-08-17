@@ -195,7 +195,7 @@ export function wrap(
     interaction.__count++;
   });
 
-  const wrapped = () => {
+  const wrapped = (...args) => {
     const prevInteractions = interactionsRef.current;
     interactionsRef.current = wrappedInteractions;
 
@@ -210,7 +210,7 @@ export function wrap(
         }
       } finally {
         try {
-          returnValue = callback.apply(undefined, arguments);
+          returnValue = callback.apply(undefined, args);
         } finally {
           interactionsRef.current = prevInteractions;
 

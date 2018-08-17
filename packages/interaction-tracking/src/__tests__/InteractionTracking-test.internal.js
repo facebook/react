@@ -53,6 +53,18 @@ describe('InteractionTracking', () => {
       expect(wrapped()).toBe(123);
     });
 
+    it('should pass arguments through to a wrapped function', done => {
+      let wrapped;
+      InteractionTracking.track('arbitrary', currentTime, () => {
+        wrapped = InteractionTracking.wrap((param1, param2) => {
+          expect(param1).toBe('foo');
+          expect(param2).toBe('bar');
+          done();
+        });
+      });
+      wrapped('foo', 'bar');
+    });
+
     it('should return an empty set when outside of a tracked event', () => {
       expect(InteractionTracking.getCurrent()).toContainNoInteractions();
     });
