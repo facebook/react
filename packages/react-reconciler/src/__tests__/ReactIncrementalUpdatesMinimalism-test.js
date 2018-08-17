@@ -111,6 +111,7 @@ describe('ReactIncrementalUpdatesMinimalism', () => {
           <div>
             <Leaf name="world" />
             <Child />
+            <hr />
             <Leaf name="world" />
           </div>
         </section>
@@ -145,10 +146,11 @@ describe('ReactIncrementalUpdatesMinimalism', () => {
       // Parent > section > div > Child > div
       // Parent > section > div > Child > div > Leaf > span
       // Parent > section > div > Child > div > Leaf > span > b
+      // Parent > section > div > hr
       // Parent > section > div > Leaf > span
       // Parent > section > div > Leaf > span > b
-      hostDiffCounter: 9,
-      hostUpdateCounter: 9,
+      hostDiffCounter: 10,
+      hostUpdateCounter: 10,
     });
   });
 });
