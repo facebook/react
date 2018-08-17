@@ -73,7 +73,11 @@ function findNodeHandle(componentOrHandle: any): ?number {
   return hostInstance._nativeTag;
 }
 
-ReactGenericBatching.injection.injectRenderer(ReactFabricRenderer);
+ReactGenericBatching.setBatchingImplementation(
+  ReactFabricRenderer.batchedUpdates,
+  ReactFabricRenderer.interactiveUpdates,
+  ReactFabricRenderer.flushInteractiveUpdates,
+);
 
 const roots = new Map();
 

@@ -13,22 +13,22 @@ export let getFiberCurrentPropsFromNode = null;
 export let getInstanceFromNode = null;
 export let getNodeFromInstance = null;
 
-export const injection = {
-  injectComponentTree: function(Injected) {
-    ({
-      getFiberCurrentPropsFromNode,
-      getInstanceFromNode,
-      getNodeFromInstance,
-    } = Injected);
-    if (__DEV__) {
-      warningWithoutStack(
-        getNodeFromInstance && getInstanceFromNode,
-        'EventPluginUtils.injection.injectComponentTree(...): Injected ' +
-          'module is missing getNodeFromInstance or getInstanceFromNode.',
-      );
-    }
-  },
-};
+export function setComponentTree(
+  getFiberCurrentPropsFromNodeImpl,
+  getInstanceFromNodeImpl,
+  getNodeFromInstanceImpl,
+) {
+  getFiberCurrentPropsFromNode = getFiberCurrentPropsFromNodeImpl;
+  getInstanceFromNode = getInstanceFromNodeImpl;
+  getNodeFromInstance = getNodeFromInstanceImpl;
+  if (__DEV__) {
+    warningWithoutStack(
+      getNodeFromInstance && getInstanceFromNode,
+      'EventPluginUtils.setComponentTree(...): Injected ' +
+        'module is missing getNodeFromInstance or getInstanceFromNode.',
+    );
+  }
+}
 
 let validateEventDispatches;
 if (__DEV__) {

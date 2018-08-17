@@ -9,10 +9,21 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import * as ReactScheduler from 'shared/ReactScheduler';
-
-import * as ReactDOMComponentTree from './ReactDOMComponentTree';
-import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
+import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
+import {
+  createElement,
+  createTextNode,
+  setInitialProperties,
+  diffProperties,
+  updateProperties,
+  diffHydratedProperties,
+  diffHydratedText,
+  warnForUnmatchedText,
+  warnForDeletedHydratableElement,
+  warnForDeletedHydratableText,
+  warnForInsertedHydratedElement,
+  warnForInsertedHydratedText,
+} from './ReactDOMFiberComponent';
 import * as ReactInputSelection from './ReactInputSelection';
 import setTextContent from './setTextContent';
 import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
@@ -50,21 +61,11 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
-const {
-  createElement,
-  createTextNode,
-  setInitialProperties,
-  diffProperties,
-  updateProperties,
-  diffHydratedProperties,
-  diffHydratedText,
-  warnForUnmatchedText,
-  warnForDeletedHydratableElement,
-  warnForDeletedHydratableText,
-  warnForInsertedHydratedElement,
-  warnForInsertedHydratedText,
-} = ReactDOMFiberComponent;
-const {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
+export {
+  now,
+  scheduleWork as scheduleDeferredCallback,
+  cancelScheduledWork as cancelDeferredCallback,
+} from 'shared/ReactScheduler';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -275,11 +276,7 @@ export function createTextInstance(
   return textNode;
 }
 
-export const now = ReactScheduler.now;
 export const isPrimaryRenderer = true;
-export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
-export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
-
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;

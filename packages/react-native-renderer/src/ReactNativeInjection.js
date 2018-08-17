@@ -23,7 +23,11 @@ import RCTEventEmitter from 'RCTEventEmitter';
  */
 RCTEventEmitter.register(ReactNativeEventEmitter);
 
-EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
+EventPluginUtils.setComponentTree(
+  ReactNativeComponentTree.getFiberCurrentPropsFromNode,
+  ReactNativeComponentTree.getInstanceFromNode,
+  ReactNativeComponentTree.getNodeFromInstance,
+);
 
 ResponderEventPlugin.injection.injectGlobalResponderHandler(
   ReactNativeGlobalResponderHandler,

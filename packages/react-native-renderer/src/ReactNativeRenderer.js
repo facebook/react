@@ -74,7 +74,11 @@ function findNodeHandle(componentOrHandle: any): ?number {
   return hostInstance._nativeTag;
 }
 
-ReactGenericBatching.injection.injectRenderer(ReactNativeFiberRenderer);
+ReactGenericBatching.setBatchingImplementation(
+  ReactNativeFiberRenderer.batchedUpdates,
+  ReactNativeFiberRenderer.interactiveUpdates,
+  ReactNativeFiberRenderer.flushInteractiveUpdates,
+);
 
 function computeComponentStackForErrorReporting(reactTag: number): string {
   let fiber = ReactNativeComponentTree.getClosestInstanceFromNode(reactTag);

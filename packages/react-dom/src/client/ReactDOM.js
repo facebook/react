@@ -36,7 +36,7 @@ import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
-import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
+import {restoreControlledState} from './ReactDOMFiberComponent';
 import * as ReactDOMEventListener from '../events/ReactDOMEventListener';
 import {
   ELEMENT_NODE,
@@ -124,9 +124,7 @@ if (__DEV__) {
   };
 }
 
-ReactControlledComponent.injection.injectFiberControlledHostComponent(
-  ReactDOMFiberComponent,
-);
+ReactControlledComponent.setRestoreImplementation(restoreControlledState);
 
 type DOMContainer =
   | (Element & {
@@ -450,7 +448,11 @@ function shouldHydrateDueToLegacyHeuristic(container) {
   );
 }
 
-ReactGenericBatching.injection.injectRenderer(DOMRenderer);
+ReactGenericBatching.setBatchingImplementation(
+  DOMRenderer.batchedUpdates,
+  DOMRenderer.interactiveUpdates,
+  DOMRenderer.flushInteractiveUpdates,
+);
 
 let warnedAboutHydrateAPI = false;
 

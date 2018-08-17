@@ -8,7 +8,11 @@
 import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginUtils from 'events/EventPluginUtils';
 
-import * as ReactDOMComponentTree from './ReactDOMComponentTree';
+import {
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+} from './ReactDOMComponentTree';
 import BeforeInputEventPlugin from '../events/BeforeInputEventPlugin';
 import ChangeEventPlugin from '../events/ChangeEventPlugin';
 import DOMEventPluginOrder from '../events/DOMEventPluginOrder';
@@ -20,7 +24,11 @@ import SimpleEventPlugin from '../events/SimpleEventPlugin';
  * Inject modules for resolving DOM hierarchy and plugin ordering.
  */
 EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
-EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
+EventPluginUtils.setComponentTree(
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+);
 
 /**
  * Some important event plugins included by default (without having to require

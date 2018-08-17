@@ -17,13 +17,13 @@ import {
 // scheduled work and instead do synchronous work.
 
 // Defaults
-let _batchedUpdates = function(fn, bookkeeping) {
+let _batchedUpdatesImpl = function(fn, bookkeeping) {
   return fn(bookkeeping);
 };
-let _interactiveUpdates = function(fn, a, b) {
+let _interactiveUpdatesImpl = function(fn, a, b) {
   return fn(a, b);
 };
-let _flushInteractiveUpdates = function() {};
+let _flushInteractiveUpdatesImpl = function() {};
 
 let isBatching = false;
 export function batchedUpdates(fn, bookkeeping) {
@@ -34,7 +34,7 @@ export function batchedUpdates(fn, bookkeeping) {
   }
   isBatching = true;
   try {
-    return _batchedUpdates(fn, bookkeeping);
+    return _batchedUpdatesImpl(fn, bookkeeping);
   } finally {
     // Here we wait until all updates have propagated, which is important
     // when using controlled components within layers:
@@ -46,24 +46,26 @@ export function batchedUpdates(fn, bookkeeping) {
       // If a controlled event was fired, we may need to restore the state of
       // the DOM node back to the controlled value. This is necessary when React
       // bails out of the update without touching the DOM.
-      _flushInteractiveUpdates();
+      _flushInteractiveUpdatesImpl();
       restoreStateIfNeeded();
     }
   }
 }
 
 export function interactiveUpdates(fn, a, b) {
-  return _interactiveUpdates(fn, a, b);
+  return _interactiveUpdatesImpl(fn, a, b);
 }
 
 export function flushInteractiveUpdates() {
-  return _flushInteractiveUpdates();
+  return _flushInteractiveUpdatesImpl();
 }
 
-export const injection = {
-  injectRenderer(renderer) {
-    _batchedUpdates = renderer.batchedUpdates;
-    _interactiveUpdates = renderer.interactiveUpdates;
-    _flushInteractiveUpdates = renderer.flushInteractiveUpdates;
-  },
-};
+export function setBatchingImplementation(
+  batchedUpdatesImpl,
+  interactiveUpdatesImpl,
+  flushInteractiveUpdatesImpl,
+) {
+  _batchedUpdatesImpl = batchedUpdatesImpl;
+  _interactiveUpdatesImpl = interactiveUpdatesImpl;
+  _flushInteractiveUpdatesImpl = flushInteractiveUpdatesImpl;
+}

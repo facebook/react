@@ -14,16 +14,7 @@ import {
 
 // Use to restore controlled state after a change event has fired.
 
-let fiberHostComponent = null;
-
-const ReactControlledComponentInjection = {
-  injectFiberControlledHostComponent: function(hostComponentImpl) {
-    // The fiber implementation doesn't use dynamic dispatch so we need to
-    // inject the implementation.
-    fiberHostComponent = hostComponentImpl;
-  },
-};
-
+let restoreImpl = null;
 let restoreTarget = null;
 let restoreQueue = null;
 
@@ -36,20 +27,17 @@ function restoreStateOfTarget(target) {
     return;
   }
   invariant(
-    fiberHostComponent &&
-      typeof fiberHostComponent.restoreControlledState === 'function',
-    'Fiber needs to be injected to handle a fiber target for controlled ' +
+    typeof restoreImpl === 'function',
+    'setRestoreImplementation() needs to be called to handle a target for controlled ' +
       'events. This error is likely caused by a bug in React. Please file an issue.',
   );
   const props = getFiberCurrentPropsFromNode(internalInstance.stateNode);
-  fiberHostComponent.restoreControlledState(
-    internalInstance.stateNode,
-    internalInstance.type,
-    props,
-  );
+  restoreImpl(internalInstance.stateNode, internalInstance.type, props);
 }
 
-export const injection = ReactControlledComponentInjection;
+export function setRestoreImplementation(impl) {
+  restoreImpl = impl;
+}
 
 export function enqueueStateRestore(target) {
   if (restoreTarget) {
