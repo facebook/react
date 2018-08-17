@@ -21,6 +21,7 @@ const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
   'interaction-tracking': 'InteractionTracking',
+  'interaction-tracking/subscriptions': 'InteractionTrackingSubscriptions',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.

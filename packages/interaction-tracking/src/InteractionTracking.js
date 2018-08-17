@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  enableInteractionTracking,
-  enableInteractionTrackingObserver,
-} from 'shared/ReactFeatureFlags';
+import {enableInteractionTracking} from 'shared/ReactFeatureFlags';
 
 export type Interaction = {|
   __count: number,
@@ -71,18 +68,15 @@ let threadIDCounter: number = 0;
 let interactionsRef: InteractionsRef = (null: any);
 
 // Listener(s) to notify when interactions begin and end.
-// Note that subscribers are only supported when enableInteractionTrackingObserver is enabled.
 let subscriberRef: SubscriberRef = (null: any);
 
 if (enableInteractionTracking) {
   interactionsRef = {
     current: new Set(),
   };
-  if (enableInteractionTrackingObserver) {
-    subscriberRef = {
-      current: null,
-    };
-  }
+  subscriberRef = {
+    current: null,
+  };
 }
 
 // These values are exported for libraries with advanced use cases (i.e. React).
@@ -127,7 +121,7 @@ export function track(
   }
 
   const interaction: Interaction = {
-    __count: 0,
+    __count: 1,
     id: interactionIDCounter++,
     name,
     timestamp,
@@ -142,53 +136,42 @@ export function track(
   interactions.add(interaction);
   interactionsRef.current = interactions;
 
-  if (enableInteractionTrackingObserver) {
-    // Update before calling callback in case it schedules follow-up work.
-    interaction.__count = 1;
+  const subscriber = subscriberRef.current;
+  let returnValue;
 
-    let returnValue;
-    const subscriber = subscriberRef.current;
-
+  try {
+    if (subscriber !== null) {
+      subscriber.onInteractionTracked(interaction);
+    }
+  } finally {
     try {
       if (subscriber !== null) {
-        subscriber.onInteractionTracked(interaction);
+        subscriber.onWorkStarted(interactions, threadID);
       }
     } finally {
       try {
-        if (subscriber !== null) {
-          subscriber.onWorkStarted(interactions, threadID);
-        }
+        returnValue = callback();
       } finally {
+        interactionsRef.current = prevInteractions;
+
         try {
-          returnValue = callback();
+          if (subscriber !== null) {
+            subscriber.onWorkStopped(interactions, threadID);
+          }
         } finally {
-          interactionsRef.current = prevInteractions;
+          interaction.__count--;
 
-          try {
-            if (subscriber !== null) {
-              subscriber.onWorkStopped(interactions, threadID);
-            }
-          } finally {
-            interaction.__count--;
-
-            // If no async work was scheduled for this interaction,
-            // Notify subscribers that it's completed.
-            if (subscriber !== null && interaction.__count === 0) {
-              subscriber.onInteractionScheduledWorkCompleted(interaction);
-            }
+          // If no async work was scheduled for this interaction,
+          // Notify subscribers that it's completed.
+          if (subscriber !== null && interaction.__count === 0) {
+            subscriber.onInteractionScheduledWorkCompleted(interaction);
           }
         }
       }
     }
-
-    return returnValue;
-  } else {
-    try {
-      return callback();
-    } finally {
-      interactionsRef.current = prevInteractions;
-    }
   }
+
+  return returnValue;
 }
 
 export function wrap(
@@ -201,89 +184,77 @@ export function wrap(
 
   const wrappedInteractions = interactionsRef.current;
 
-  if (enableInteractionTrackingObserver) {
-    const subscriber = subscriberRef.current;
-    if (subscriber !== null) {
-      subscriber.onWorkScheduled(wrappedInteractions, threadID);
-    }
-
-    // Update the pending async work count for the current interactions.
-    // Update after calling subscribers in case of error.
-    wrappedInteractions.forEach(interaction => {
-      interaction.__count++;
-    });
+  let subscriber = subscriberRef.current;
+  if (subscriber !== null) {
+    subscriber.onWorkScheduled(wrappedInteractions, threadID);
   }
 
-  const wrapped = () => {
+  // Update the pending async work count for the current interactions.
+  // Update after calling subscribers in case of error.
+  wrappedInteractions.forEach(interaction => {
+    interaction.__count++;
+  });
+
+  function wrapped() {
     const prevInteractions = interactionsRef.current;
     interactionsRef.current = wrappedInteractions;
 
-    if (enableInteractionTrackingObserver) {
-      const subscriber = subscriberRef.current;
+    subscriber = subscriberRef.current;
 
-      try {
-        let returnValue;
-
-        try {
-          if (subscriber !== null) {
-            subscriber.onWorkStarted(wrappedInteractions, threadID);
-          }
-        } finally {
-          try {
-            returnValue = callback.apply(undefined, arguments);
-          } finally {
-            interactionsRef.current = prevInteractions;
-
-            if (subscriber !== null) {
-              subscriber.onWorkStopped(wrappedInteractions, threadID);
-            }
-          }
-        }
-
-        return returnValue;
-      } finally {
-        // Update pending async counts for all wrapped interactions.
-        // If this was the last scheduled async work for any of them,
-        // Mark them as completed.
-        wrappedInteractions.forEach(interaction => {
-          interaction.__count--;
-
-          if (subscriber !== null && interaction.__count === 0) {
-            subscriber.onInteractionScheduledWorkCompleted(interaction);
-          }
-        });
-      }
-    } else {
-      try {
-        return callback.apply(undefined, arguments);
-      } finally {
-        interactionsRef.current = prevInteractions;
-      }
-    }
-  };
-
-  if (enableInteractionTrackingObserver) {
-    wrapped.cancel = () => {
-      const subscriber = subscriberRef.current;
+    try {
+      let returnValue;
 
       try {
         if (subscriber !== null) {
-          subscriber.onWorkCanceled(wrappedInteractions, threadID);
+          subscriber.onWorkStarted(wrappedInteractions, threadID);
         }
       } finally {
-        // Update pending async counts for all wrapped interactions.
-        // If this was the last scheduled async work for any of them,
-        // Mark them as completed.
-        wrappedInteractions.forEach(interaction => {
-          interaction.__count--;
+        try {
+          returnValue = callback.apply(undefined, arguments);
+        } finally {
+          interactionsRef.current = prevInteractions;
 
-          if (subscriber && interaction.__count === 0) {
-            subscriber.onInteractionScheduledWorkCompleted(interaction);
+          if (subscriber !== null) {
+            subscriber.onWorkStopped(wrappedInteractions, threadID);
           }
-        });
+        }
       }
-    };
+
+      return returnValue;
+    } finally {
+      // Update pending async counts for all wrapped interactions.
+      // If this was the last scheduled async work for any of them,
+      // Mark them as completed.
+      wrappedInteractions.forEach(interaction => {
+        interaction.__count--;
+
+        if (subscriber !== null && interaction.__count === 0) {
+          subscriber.onInteractionScheduledWorkCompleted(interaction);
+        }
+      });
+    }
   }
+
+  wrapped.cancel = function cancel() {
+    subscriber = subscriberRef.current;
+
+    try {
+      if (subscriber !== null) {
+        subscriber.onWorkCanceled(wrappedInteractions, threadID);
+      }
+    } finally {
+      // Update pending async counts for all wrapped interactions.
+      // If this was the last scheduled async work for any of them,
+      // Mark them as completed.
+      wrappedInteractions.forEach(interaction => {
+        interaction.__count--;
+
+        if (subscriber && interaction.__count === 0) {
+          subscriber.onInteractionScheduledWorkCompleted(interaction);
+        }
+      });
+    }
+  };
 
   return wrapped;
 }
