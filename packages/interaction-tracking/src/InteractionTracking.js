@@ -195,7 +195,7 @@ export function wrap(
     interaction.__count++;
   });
 
-  const wrapped = (...args) => {
+  function wrapped() {
     const prevInteractions = interactionsRef.current;
     interactionsRef.current = wrappedInteractions;
 
@@ -210,7 +210,7 @@ export function wrap(
         }
       } finally {
         try {
-          returnValue = callback.apply(undefined, args);
+          returnValue = callback.apply(undefined, arguments);
         } finally {
           interactionsRef.current = prevInteractions;
 
@@ -233,9 +233,9 @@ export function wrap(
         }
       });
     }
-  };
+  }
 
-  wrapped.cancel = () => {
+  wrapped.cancel = function cancel() {
     subscriber = subscriberRef.current;
 
     try {
