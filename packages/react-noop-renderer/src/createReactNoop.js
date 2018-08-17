@@ -41,6 +41,8 @@ if (__DEV__) {
 function createReactNoop(reconciler: Function, useMutation: boolean) {
   let scheduledCallback = null;
   let instanceCounter = 0;
+  let hostDiffCounter = 0;
+  let hostUpdateCounter = 0;
 
   function appendChildToContainerOrInstance(
     parentInstance: Container | Instance,
@@ -220,6 +222,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (newProps === null) {
         throw new Error('Should have new props');
       }
+      hostDiffCounter++;
       return UPDATE_SIGNAL;
     },
 
@@ -303,6 +306,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           if (oldProps === null) {
             throw new Error('Should have old props');
           }
+          hostUpdateCounter++;
           instance.prop = newProps.prop;
         },
 
@@ -311,6 +315,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           oldText: string,
           newText: string,
         ): void {
+          hostUpdateCounter++;
           textInstance.text = newText;
         },
 
@@ -554,6 +559,26 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         break;
       }
       return actual !== null ? actual : [];
+    },
+
+    flushWithHostCounters(
+      fn: () => void,
+    ): {|
+      hostDiffCounter: number,
+      hostUpdateCounter: number,
+    |} {
+      hostDiffCounter = 0;
+      hostUpdateCounter = 0;
+      try {
+        ReactNoop.flush();
+        return {
+          hostDiffCounter,
+          hostUpdateCounter,
+        };
+      } finally {
+        hostDiffCounter = 0;
+        hostUpdateCounter = 0;
+      }
     },
 
     expire(ms: number): Array<mixed> {
