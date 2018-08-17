@@ -42,9 +42,6 @@ export const enableProfilerTimer = __PROFILE__;
 // Track which interactions trigger each commit.
 export const enableInteractionTracking = false;
 
-// Track which interactions trigger each commit.
-export const enableInteractionTrackingObserver = false;
-
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');

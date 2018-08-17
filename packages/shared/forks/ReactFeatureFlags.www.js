@@ -33,7 +33,6 @@ export let enableUserTimingAPI = __DEV__;
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableInteractionTracking = __PROFILE__;
-export const enableInteractionTrackingObserver = __PROFILE__;
 
 let refCount = 0;
 export function addUserTimingListener() {

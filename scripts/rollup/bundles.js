@@ -404,6 +404,15 @@ const bundles = [
     global: 'InteractionTracking',
     externals: [],
   },
+
+  {
+    label: 'interaction-tracking-subscriptions',
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'interaction-tracking/subscriptions',
+    global: 'InteractionTrackingSubscriptions',
+    externals: ['interaction-tracking'],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)
