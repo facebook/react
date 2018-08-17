@@ -255,7 +255,7 @@ export function wrap(
     });
   }
 
-  const wrapped = (...args) => {
+  const wrapped = () => {
     const prevInteractions = interactionsRef.current;
     interactionsRef.current = wrappedInteractions;
 
@@ -279,7 +279,7 @@ export function wrap(
         }
 
         try {
-          returnValue = callback(...args);
+          returnValue = callback.apply(undefined, arguments);
         } catch (error) {
           if (!didCatch) {
             didCatch = true;
@@ -322,7 +322,7 @@ export function wrap(
       }
     } else {
       try {
-        return callback(...args);
+        return callback.apply(undefined, arguments);
       } finally {
         interactionsRef.current = prevInteractions;
       }
