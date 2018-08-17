@@ -561,7 +561,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return actual !== null ? actual : [];
     },
 
-    flushWithHostCounters(fn) {
+    flushWithHostCounters(
+      fn: () => void,
+    ): {|
+      hostDiffCounter: number,
+      hostUpdateCounter: number,
+    |} {
       hostDiffCounter = 0;
       hostUpdateCounter = 0;
       try {
