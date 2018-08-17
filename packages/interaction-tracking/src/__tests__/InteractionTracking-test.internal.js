@@ -486,17 +486,6 @@ describe('InteractionTracking', () => {
             done();
           });
 
-          it('should always re-throw the first error from track', () => {
-            throwInOnWorkStarted = true;
-            throwInOnWorkStopped = true;
-
-            expect(() => {
-              InteractionTracking.track(firstEvent.name, currentTime, () => {
-                throw Error('Expected error track');
-              });
-            }).toThrow('Expected error onWorkStarted');
-          });
-
           it('should cover onWorkScheduled within wrap', done => {
             InteractionTracking.track(firstEvent.name, currentTime, () => {
               const interaction = Array.from(
@@ -620,20 +609,6 @@ describe('InteractionTracking', () => {
             expect(
               onInteractionScheduledWorkCompleted,
             ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
-          });
-
-          it('should always re-throw the first error from wrap', () => {
-            let wrapped;
-            InteractionTracking.track(firstEvent.name, currentTime, () => {
-              wrapped = InteractionTracking.wrap(() => {
-                throw Error('Expected error wrap');
-              });
-            });
-
-            throwInOnWorkStarted = true;
-            throwInOnWorkStopped = true;
-
-            expect(wrapped).toThrow('Expected error onWorkStarted');
           });
         });
 

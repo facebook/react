@@ -157,65 +157,42 @@ export function track(
     // Update before calling callback in case it schedules follow-up work.
     interaction.__count = 1;
 
-    let caughtError;
-    let didCatch = false;
     let returnValue;
     const subscriber = subscriberRef.current;
 
-    if (subscriber !== null) {
-      try {
-        subscriber.onInteractionTracked(interaction);
-        subscriber.onWorkStarted(interactions, threadID);
-      } catch (error) {
-        if (!didCatch) {
-          didCatch = true;
-          caughtError = error;
-        }
-      }
-    }
-
     try {
-      returnValue = callback();
-    } catch (error) {
-      if (!didCatch) {
-        didCatch = true;
-        caughtError = error;
+      if (subscriber !== null) {
+        subscriber.onInteractionTracked(interaction);
       }
-    }
-
-    interactionsRef.current = prevInteractions;
-
-    if (subscriber !== null) {
+    } finally {
       try {
-        subscriber.onWorkStopped(interactions, threadID);
-      } catch (error) {
-        if (!didCatch) {
-          didCatch = true;
-          caughtError = error;
+        if (subscriber !== null) {
+          subscriber.onWorkStarted(interactions, threadID);
+        }
+      } finally {
+        try {
+          returnValue = callback();
+        } finally {
+          interactionsRef.current = prevInteractions;
+
+          try {
+            if (subscriber !== null) {
+              subscriber.onWorkStopped(interactions, threadID);
+            }
+          } finally {
+            interaction.__count--;
+
+            // If no async work was scheduled for this interaction,
+            // Notify subscribers that it's completed.
+            if (subscriber !== null && interaction.__count === 0) {
+              subscriber.onInteractionScheduledWorkCompleted(interaction);
+            }
+          }
         }
       }
     }
 
-    interaction.__count--;
-
-    // If no async work was scheduled for this interaction,
-    // Notify subscribers that it's completed.
-    if (subscriber !== null && interaction.__count === 0) {
-      try {
-        subscriber.onInteractionScheduledWorkCompleted(interaction);
-      } catch (error) {
-        if (!didCatch) {
-          didCatch = true;
-          caughtError = error;
-        }
-      }
-    }
-
-    if (didCatch) {
-      throw caughtError;
-    } else {
-      return returnValue;
-    }
+    return returnValue;
   } else {
     try {
       return callback();
@@ -262,48 +239,25 @@ export function wrap(
       const subscriber = subscriberRef.current;
 
       try {
-        let caughtError;
-        let didCatch = false;
         let returnValue;
 
         try {
           if (subscriber !== null) {
             subscriber.onWorkStarted(wrappedInteractions, threadID);
           }
-        } catch (error) {
-          if (!didCatch) {
-            didCatch = true;
-            caughtError = error;
+        } finally {
+          try {
+            returnValue = callback.apply(undefined, arguments);
+          } finally {
+            interactionsRef.current = prevInteractions;
+
+            if (subscriber !== null) {
+              subscriber.onWorkStopped(wrappedInteractions, threadID);
+            }
           }
         }
 
-        try {
-          returnValue = callback.apply(undefined, arguments);
-        } catch (error) {
-          if (!didCatch) {
-            didCatch = true;
-            caughtError = error;
-          }
-        }
-
-        interactionsRef.current = prevInteractions;
-
-        try {
-          if (subscriber !== null) {
-            subscriber.onWorkStopped(wrappedInteractions, threadID);
-          }
-        } catch (error) {
-          if (!didCatch) {
-            didCatch = true;
-            caughtError = error;
-          }
-        }
-
-        if (didCatch) {
-          throw caughtError;
-        } else {
-          return returnValue;
-        }
+        return returnValue;
       } finally {
         // Update pending async counts for all wrapped interactions.
         // If this was the last scheduled async work for any of them,
