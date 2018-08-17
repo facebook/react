@@ -21,13 +21,14 @@ describe('InteractionTracking', () => {
   let onWorkScheduled;
   let onWorkStarted;
   let onWorkStopped;
-  let subscriber;
   let throwInOnInteractionScheduledWorkCompleted;
   let throwInOnInteractionTracked;
   let throwInOnWorkCanceled;
   let throwInOnWorkScheduled;
   let throwInOnWorkStarted;
   let throwInOnWorkStopped;
+  let firstSubscriber;
+  let secondSubscriber;
 
   const firstEvent = {id: 0, name: 'first', timestamp: 0};
   const secondEvent = {id: 1, name: 'second', timestamp: 0};
@@ -83,7 +84,7 @@ describe('InteractionTracking', () => {
       }
     });
 
-    subscriber = {
+    firstSubscriber = {
       onInteractionScheduledWorkCompleted,
       onInteractionTracked,
       onWorkCanceled,
@@ -92,7 +93,17 @@ describe('InteractionTracking', () => {
       onWorkStopped,
     };
 
-    InteractionTrackingSubscriptions.subscribe(subscriber);
+    secondSubscriber = {
+      onInteractionScheduledWorkCompleted: jest.fn(),
+      onInteractionTracked: jest.fn(),
+      onWorkCanceled: jest.fn(),
+      onWorkScheduled: jest.fn(),
+      onWorkStarted: jest.fn(),
+      onWorkStopped: jest.fn(),
+    };
+
+    InteractionTrackingSubscriptions.subscribe(firstSubscriber);
+    InteractionTrackingSubscriptions.subscribe(secondSubscriber);
   }
 
   describe('enabled', () => {
@@ -132,6 +143,12 @@ describe('InteractionTracking', () => {
             firstEvent,
           ]);
 
+          // It should call other subscribers despite the earlier error
+          expect(secondSubscriber.onInteractionTracked).toHaveBeenCalledTimes(
+            3,
+          );
+          expect(secondSubscriber.onWorkStarted).toHaveBeenCalledTimes(3);
+
           done();
         });
       });
@@ -156,6 +173,33 @@ describe('InteractionTracking', () => {
 
           // It should update the interaction count so as not to interfere with subsequent calls
           expect(innerInteraction.__count).toBe(0);
+
+          // It should call other subscribers despite the earlier error
+          expect(secondSubscriber.onWorkStopped).toHaveBeenCalledTimes(1);
+
+          done();
+        });
+      });
+
+      it('should cover onInteractionScheduledWorkCompleted within track', done => {
+        InteractionTracking.track(firstEvent.name, currentTime, () => {
+          const mock = jest.fn();
+
+          throwInOnInteractionScheduledWorkCompleted = true;
+          expect(() =>
+            InteractionTracking.track(secondEvent.name, currentTime, mock),
+          ).toThrow('Expected error onInteractionScheduledWorkCompleted');
+          throwInOnInteractionScheduledWorkCompleted = false;
+
+          // It should restore the previous/outer interactions
+          expect(InteractionTracking.getCurrent()).toMatchInteractions([
+            firstEvent,
+          ]);
+
+          // It should call other subscribers despite the earlier error
+          expect(
+            secondSubscriber.onInteractionScheduledWorkCompleted,
+          ).toHaveBeenCalledTimes(1);
 
           done();
         });
@@ -190,6 +234,9 @@ describe('InteractionTracking', () => {
           // It should not update the interaction count so as not to interfere with subsequent calls
           expect(interaction.__count).toBe(beforeCount);
 
+          // It should call other subscribers despite the earlier error
+          expect(secondSubscriber.onWorkScheduled).toHaveBeenCalledTimes(1);
+
           done();
         });
       });
@@ -211,6 +258,9 @@ describe('InteractionTracking', () => {
 
         // It should update the interaction count so as not to interfere with subsequent calls
         expect(interaction.__count).toBe(0);
+
+        // It should call other subscribers despite the earlier error
+        expect(secondSubscriber.onWorkStarted).toHaveBeenCalledTimes(2);
       });
 
       it('should cover onWorkStopped within wrap', done => {
@@ -248,6 +298,8 @@ describe('InteractionTracking', () => {
           // It should update the interaction count so as not to interfere with subsequent calls
           expect(outerInteraction.__count).toBe(1);
           expect(innerInteraction.__count).toBe(0);
+
+          expect(secondSubscriber.onWorkStopped).toHaveBeenCalledTimes(2);
 
           done();
         });
@@ -296,6 +348,9 @@ describe('InteractionTracking', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
+
+        // It should call other subscribers despite the earlier error
+        expect(secondSubscriber.onWorkCanceled).toHaveBeenCalledTimes(1);
       });
     });
 
@@ -492,7 +547,7 @@ describe('InteractionTracking', () => {
     });
 
     it('should unsubscribe', () => {
-      InteractionTrackingSubscriptions.unsubscribe();
+      InteractionTrackingSubscriptions.unsubscribe(firstSubscriber);
       InteractionTracking.track(firstEvent.name, currentTime, () => {});
 
       expect(onInteractionTracked).not.toHaveBeenCalled();
