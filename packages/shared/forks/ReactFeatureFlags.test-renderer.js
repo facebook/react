@@ -21,6 +21,8 @@ export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
+export const enableInteractionTracking = false;
+export const enableInteractionTrackingObserver = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

@@ -394,6 +394,16 @@ const bundles = [
     global: 'ReactScheduler',
     externals: [],
   },
+
+  /******* interaction-tracking (experimental) *******/
+  {
+    label: 'interaction-tracking',
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'interaction-tracking',
+    global: 'InteractionTracking',
+    externals: [],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)
