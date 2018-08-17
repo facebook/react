@@ -320,32 +320,32 @@ describe('InteractionTracking', () => {
 
         onInteractionScheduledWorkCompleted = jest.fn(() => {
           if (throwInOnInteractionScheduledWorkCompleted) {
-            throw Error('Expected error');
+            throw Error('Expected error onInteractionScheduledWorkCompleted');
           }
         });
         onInteractionTracked = jest.fn(() => {
           if (throwInOnInteractionTracked) {
-            throw Error('Expected error');
+            throw Error('Expected error onInteractionTracked');
           }
         });
         onWorkCanceled = jest.fn(() => {
           if (throwInOnWorkCanceled) {
-            throw Error('Expected error');
+            throw Error('Expected error onWorkCanceled');
           }
         });
         onWorkScheduled = jest.fn(() => {
           if (throwInOnWorkScheduled) {
-            throw Error('Expected error');
+            throw Error('Expected error onWorkScheduled');
           }
         });
         onWorkStarted = jest.fn(() => {
           if (throwInOnWorkStarted) {
-            throw Error('Expected error');
+            throw Error('Expected error onWorkStarted');
           }
         });
         onWorkStopped = jest.fn(() => {
           if (throwInOnWorkStopped) {
-            throw Error('Expected error');
+            throw Error('Expected error onWorkStopped');
           }
         });
       });
@@ -409,13 +409,14 @@ describe('InteractionTracking', () => {
               throwInOnInteractionTracked = true;
               expect(() =>
                 InteractionTracking.track(secondEvent.name, mock, threadID),
-              ).toThrow('Expected error');
+              ).toThrow('Expected error onInteractionTracked');
+              throwInOnInteractionTracked = false;
               expect(mock).toHaveBeenCalledTimes(1);
 
               throwInOnWorkStarted = true;
               expect(() =>
                 InteractionTracking.track(secondEvent.name, mock, threadID),
-              ).toThrow('Expected error');
+              ).toThrow('Expected error onWorkStarted');
               expect(mock).toHaveBeenCalledTimes(2);
 
               // It should restore the previous/outer interactions
@@ -439,7 +440,7 @@ describe('InteractionTracking', () => {
               throwInOnWorkStopped = true;
               expect(() =>
                 InteractionTracking.track(secondEvent.name, mock),
-              ).toThrow('Expected error');
+              ).toThrow('Expected error onWorkStopped');
               throwInOnWorkStopped = false;
 
               // It should restore the previous/outer interactions
@@ -454,6 +455,33 @@ describe('InteractionTracking', () => {
             });
           });
 
+          it('should cover the callback within track', done => {
+            expect(onWorkStarted).not.toHaveBeenCalled();
+            expect(onWorkStopped).not.toHaveBeenCalled();
+
+            expect(() => {
+              InteractionTracking.track(firstEvent.name, () => {
+                throw Error('Expected error callback');
+              });
+            }).toThrow('Expected error callback');
+
+            expect(onWorkStarted).toHaveBeenCalledTimes(1);
+            expect(onWorkStopped).toHaveBeenCalledTimes(1);
+
+            done();
+          });
+
+          it('should always re-throw the first error from track', () => {
+            throwInOnWorkStarted = true;
+            throwInOnWorkStopped = true;
+
+            expect(() => {
+              InteractionTracking.track(firstEvent.name, () => {
+                throw Error('Expected error track');
+              });
+            }).toThrow('Expected error onWorkStarted');
+          });
+
           it('should cover onWorkScheduled within wrap', done => {
             InteractionTracking.track(firstEvent.name, () => {
               const interaction = Array.from(
@@ -463,7 +491,7 @@ describe('InteractionTracking', () => {
 
               throwInOnWorkScheduled = true;
               expect(() => InteractionTracking.wrap(() => {})).toThrow(
-                'Expected error',
+                'Expected error onWorkScheduled',
               );
 
               // It should not update the interaction count so as not to interfere with subsequent calls
@@ -483,7 +511,7 @@ describe('InteractionTracking', () => {
             expect(interaction.__count).toBe(1);
 
             throwInOnWorkStarted = true;
-            expect(wrapped).toThrow('Expected error');
+            expect(wrapped).toThrow('Expected error onWorkStarted');
 
             // It should call the callback before re-throwing
             expect(mock).toHaveBeenCalledTimes(1);
@@ -518,7 +546,7 @@ describe('InteractionTracking', () => {
               expect(innerInteraction.__count).toBe(1);
 
               throwInOnWorkStopped = true;
-              expect(wrapped).toThrow('Expected error');
+              expect(wrapped).toThrow('Expected error onWorkStopped');
               throwInOnWorkStopped = false;
 
               // It should restore the previous interactions
@@ -534,6 +562,31 @@ describe('InteractionTracking', () => {
             });
           });
 
+          it('should cover the callback within wrap', done => {
+            expect(onWorkStarted).not.toHaveBeenCalled();
+            expect(onWorkStopped).not.toHaveBeenCalled();
+
+            let wrapped;
+            let interaction;
+            InteractionTracking.track(firstEvent.name, () => {
+              interaction = Array.from(InteractionTracking.getCurrent())[0];
+              wrapped = InteractionTracking.wrap(() => {
+                throw Error('Expected error wrap');
+              });
+            });
+
+            expect(onWorkStarted).toHaveBeenCalledTimes(1);
+            expect(onWorkStopped).toHaveBeenCalledTimes(1);
+
+            expect(wrapped).toThrow('Expected error wrap');
+
+            expect(onWorkStarted).toHaveBeenCalledTimes(2);
+            expect(onWorkStopped).toHaveBeenCalledTimes(2);
+            expect(onWorkStopped).toHaveBeenLastNotifiedOfWork([interaction])
+
+            done();
+          });
+
           it('should cover onWorkCanceled within wrap', () => {
             let interaction, wrapped;
             InteractionTracking.track(firstEvent.name, () => {
@@ -543,7 +596,7 @@ describe('InteractionTracking', () => {
             expect(interaction.__count).toBe(1);
 
             throwInOnWorkCanceled = true;
-            expect(wrapped.cancel).toThrow('Expected error');
+            expect(wrapped.cancel).toThrow('Expected error onWorkCanceled');
 
             expect(onWorkCanceled).toHaveBeenCalledTimes(1);
 
@@ -552,6 +605,20 @@ describe('InteractionTracking', () => {
             expect(
               onInteractionScheduledWorkCompleted,
             ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
+          });
+
+          it('should always re-throw the first error from wrap', () => {
+            let wrapped;
+            InteractionTracking.track(firstEvent.name, () => {
+              wrapped = InteractionTracking.wrap(() => {
+                throw Error('Expected error wrap');
+              });
+            });
+
+            throwInOnWorkStarted = true;
+            throwInOnWorkStopped = true;
+
+            expect(wrapped).toThrow('Expected error onWorkStarted');
           });
         });
 
