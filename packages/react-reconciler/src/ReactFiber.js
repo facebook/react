@@ -17,6 +17,7 @@ import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
 
 import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
 import {
@@ -531,7 +532,7 @@ export function createFiberFromProfiler(
       typeof pendingProps.id !== 'string' ||
       typeof pendingProps.onRender !== 'function'
     ) {
-      invariant(
+      warningWithoutStack(
         false,
         'Profiler must specify an "id" string and "onRender" function as props',
       );

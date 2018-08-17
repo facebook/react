@@ -10,11 +10,13 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
+import type {Interaction} from 'interaction-tracking/src/InteractionTracking';
 
 import {noTimeout} from './ReactFiberHostConfig';
-
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
+import {enableInteractionTracking} from 'shared/ReactFeatureFlags';
+import {getThreadID} from 'interaction-tracking';
 
 // TODO: This should be lifted into the renderer.
 export type Batch = {
@@ -23,6 +25,8 @@ export type Batch = {
   _onComplete: () => mixed,
   _next: Batch | null,
 };
+
+export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -73,6 +77,13 @@ export type FiberRoot = {
   firstBatch: Batch | null,
   // Linked-list of roots
   nextScheduledRoot: FiberRoot | null,
+
+  // The following attributes are only used by interaction tracking builds.
+  // They enable interactions to be associated with their async work,
+  // And expose interaction metadata to the React DevTools Profiler plugin.
+  interactionThreadID?: number,
+  memoizedInteractions?: Set<Interaction>,
+  pendingInteractionMap?: PendingInteractionMap,
 };
 
 export function createFiberRoot(
@@ -83,30 +94,64 @@ export function createFiberRoot(
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
   const uninitializedFiber = createHostRootFiber(isAsync);
-  const root = {
-    current: uninitializedFiber,
-    containerInfo: containerInfo,
-    pendingChildren: null,
 
-    earliestPendingTime: NoWork,
-    latestPendingTime: NoWork,
-    earliestSuspendedTime: NoWork,
-    latestSuspendedTime: NoWork,
-    latestPingedTime: NoWork,
+  let root;
+  if (enableInteractionTracking) {
+    root = {
+      current: uninitializedFiber,
+      containerInfo: containerInfo,
+      pendingChildren: null,
 
-    didError: false,
+      earliestPendingTime: NoWork,
+      latestPendingTime: NoWork,
+      earliestSuspendedTime: NoWork,
+      latestSuspendedTime: NoWork,
+      latestPingedTime: NoWork,
 
-    pendingCommitExpirationTime: NoWork,
-    finishedWork: null,
-    timeoutHandle: noTimeout,
-    context: null,
-    pendingContext: null,
-    hydrate,
-    nextExpirationTimeToWorkOn: NoWork,
-    expirationTime: NoWork,
-    firstBatch: null,
-    nextScheduledRoot: null,
-  };
+      didError: false,
+
+      pendingCommitExpirationTime: NoWork,
+      finishedWork: null,
+      timeoutHandle: noTimeout,
+      context: null,
+      pendingContext: null,
+      hydrate,
+      nextExpirationTimeToWorkOn: NoWork,
+      expirationTime: NoWork,
+      firstBatch: null,
+      nextScheduledRoot: null,
+
+      interactionThreadID: getThreadID(),
+      memoizedInteractions: new Set(),
+      pendingInteractionMap: new Map(),
+    };
+  } else {
+    root = {
+      current: uninitializedFiber,
+      containerInfo: containerInfo,
+      pendingChildren: null,
+
+      earliestPendingTime: NoWork,
+      latestPendingTime: NoWork,
+      earliestSuspendedTime: NoWork,
+      latestSuspendedTime: NoWork,
+      latestPingedTime: NoWork,
+
+      didError: false,
+
+      pendingCommitExpirationTime: NoWork,
+      finishedWork: null,
+      timeoutHandle: noTimeout,
+      context: null,
+      pendingContext: null,
+      hydrate,
+      nextExpirationTimeToWorkOn: NoWork,
+      expirationTime: NoWork,
+      firstBatch: null,
+      nextScheduledRoot: null,
+    };
+  }
+
   uninitializedFiber.stateNode = root;
   return root;
 }

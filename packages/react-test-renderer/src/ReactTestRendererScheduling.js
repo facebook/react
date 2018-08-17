@@ -35,17 +35,27 @@ export function flushAll(): Array<mixed> {
   yieldedValues = [];
   while (scheduledCallback !== null) {
     const cb = scheduledCallback;
-    scheduledCallback = null;
-    cb({
-      timeRemaining() {
-        // Keep rendering until there's no more work
-        return 999;
-      },
-      // React's scheduler has its own way of keeping track of expired
-      // work and doesn't read this, so don't bother setting it to the
-      // correct value.
-      didTimeout: false,
-    });
+    try {
+      scheduledCallback = null;
+      cb({
+        timeRemaining() {
+          // Keep rendering until there's no more work
+          return 999;
+        },
+        // React's scheduler has its own way of keeping track of expired
+        // work and doesn't read this, so don't bother setting it to the
+        // correct value.
+        didTimeout: false,
+      });
+    } catch (error) {
+      // If an error occurred before we finished work,
+      // Reset the callback so it can be flushed again.
+      // Otherwise we leave the test renderer in a funky state,
+      // Where nothing appears to be scheuduled unless new work is added,
+      // And then the old failed work will also re-appear.
+      scheduledCallback = cb;
+      throw error;
+    }
   }
   return yieldedValues;
 }
@@ -55,22 +65,32 @@ export function flushNumberOfYields(count: number): Array<mixed> {
   yieldedValues = [];
   while (scheduledCallback !== null && !didStop) {
     const cb = scheduledCallback;
-    scheduledCallback = null;
-    cb({
-      timeRemaining() {
-        if (yieldedValues.length >= count) {
-          // We at least as many values as expected. Stop rendering.
-          didStop = true;
-          return 0;
-        }
-        // Keep rendering.
-        return 999;
-      },
-      // React's scheduler has its own way of keeping track of expired
-      // work and doesn't read this, so don't bother setting it to the
-      // correct value.
-      didTimeout: false,
-    });
+    try {
+      scheduledCallback = null;
+      cb({
+        timeRemaining() {
+          if (yieldedValues.length >= count) {
+            // We at least as many values as expected. Stop rendering.
+            didStop = true;
+            return 0;
+          }
+          // Keep rendering.
+          return 999;
+        },
+        // React's scheduler has its own way of keeping track of expired
+        // work and doesn't read this, so don't bother setting it to the
+        // correct value.
+        didTimeout: false,
+      });
+    } catch (error) {
+      // If an error occurred before we finished work,
+      // Reset the callback so it can be flushed again.
+      // Otherwise we leave the test renderer in a funky state,
+      // Where nothing appears to be scheuduled unless new work is added,
+      // And then the old failed work will also re-appear.
+      scheduledCallback = cb;
+      throw error;
+    }
   }
   return yieldedValues;
 }

@@ -35,6 +35,7 @@ import {
 } from 'shared/ReactSideEffectTags';
 import {
   enableGetDerivedStateFromCatch,
+  enableInteractionTracking,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
 import {StrictMode, AsyncMode} from './ReactTypeOfMode';
@@ -71,6 +72,7 @@ import {
 } from './ReactFiberExpirationTime';
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
 import {reconcileChildren} from './ReactFiberBeginWork';
+import {wrap} from 'interaction-tracking';
 
 function NoopComponent() {
   return null;
@@ -217,12 +219,20 @@ function throwException(
               : renderExpirationTime;
 
           // Attach a listener to the promise to "ping" the root and retry.
-          const onResolveOrReject = retrySuspendedRoot.bind(
+          let onResolveOrReject = retrySuspendedRoot.bind(
             null,
             root,
             workInProgress,
             pingTime,
           );
+          if (enableInteractionTracking) {
+            // Wrap suspense callback so that the current interaction are preserved.
+            // Interaction threads are unique per root and expiration time.
+            // DO NOT CHANGE THIS VALUE without also updating other threadID values.
+            const threadID =
+              renderExpirationTime * 1000 + root.interactionThreadID;
+            onResolveOrReject = wrap(onResolveOrReject, threadID);
+          }
           thenable.then(onResolveOrReject, onResolveOrReject);
 
           // If the boundary is outside of strict mode, we should *not* suspend
