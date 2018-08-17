@@ -7,7 +7,6 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
 import {
   enableInteractionTracking,
   enableInteractionTrackingObserver,
@@ -117,16 +116,6 @@ export function getThreadID(): number {
   return ++threadIDCounter;
 }
 
-export function subscribe(subscriber: Subscriber): void {
-  if (enableInteractionTracking && enableInteractionTrackingObserver) {
-    invariant(
-      subscriberRef.current === null || subscriberRef.current === subscriber,
-      'Only one interactions subscriber may be registered at a time.',
-    );
-    subscriberRef.current = subscriber;
-  }
-}
-
 export function track(
   name: string,
   timestamp: number,
@@ -199,12 +188,6 @@ export function track(
     } finally {
       interactionsRef.current = prevInteractions;
     }
-  }
-}
-
-export function unsubscribe(subscriber: Subscriber): void {
-  if (enableInteractionTracking && enableInteractionTrackingObserver) {
-    subscriberRef.current = null;
   }
 }
 

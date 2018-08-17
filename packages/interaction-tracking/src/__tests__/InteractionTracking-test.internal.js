@@ -369,7 +369,7 @@ describe('InteractionTracking', () => {
             onWorkStopped,
           };
 
-          InteractionTracking.subscribe(subscriber);
+          InteractionTracking.__subscriberRef.current = subscriber;
         });
 
         it('should return the value of a tracked function', () => {
@@ -387,25 +387,6 @@ describe('InteractionTracking', () => {
         });
 
         describe('error handling', () => {
-          it('should error if a second subscriber is registerted', () => {
-            // Re-registering the current subscriber is fine.
-            InteractionTracking.subscribe(subscriber);
-
-            const newSubscriber = {
-              onInteractionScheduledWorkCompleted,
-              onInteractionTracked,
-              onWorkCanceled,
-              onWorkScheduled,
-              onWorkStarted,
-              onWorkStopped,
-            };
-
-            // Registering a new one should fail.
-            expect(() => InteractionTracking.subscribe(newSubscriber)).toThrow(
-              'Only one interactions subscriber may be registered at a time.',
-            );
-          });
-
           it('should cover onInteractionTracked/onWorkStarted within', done => {
             InteractionTracking.track(firstEvent.name, currentTime, () => {
               const mock = jest.fn();
@@ -809,7 +790,7 @@ describe('InteractionTracking', () => {
         });
 
         it('should unsubscribe', () => {
-          InteractionTracking.unsubscribe(subscriber);
+          InteractionTracking.__subscriberRef.current = null;
           InteractionTracking.track(firstEvent.name, currentTime, () => {});
 
           expect(onInteractionTracked).not.toHaveBeenCalled();
@@ -836,32 +817,10 @@ describe('InteractionTracking', () => {
             enableInteractionTracking: true,
             enableInteractionTrackingObserver: false,
           });
-
-          InteractionTracking.subscribe(subscriber);
         });
 
-        it('should not call registerted subscribers', () => {
-          const unwrapped = jest.fn();
-          let wrapped;
-          InteractionTracking.track(firstEvent.name, currentTime, () => {
-            wrapped = InteractionTracking.wrap(unwrapped);
-          });
-
-          wrapped();
-          expect(unwrapped).toHaveBeenCalled();
-
-          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-          expect(onInteractionTracked).not.toHaveBeenCalled();
-          expect(onWorkCanceled).not.toHaveBeenCalled();
-          expect(onWorkScheduled).not.toHaveBeenCalled();
-          expect(onWorkStarted).not.toHaveBeenCalled();
-          expect(onWorkStopped).not.toHaveBeenCalled();
-        });
-
-        describe('advanced integration', () => {
-          it('should not create unnecessary objects', () => {
-            expect(InteractionTracking.__subscriberRef).toBe(null);
-          });
+        it('should not create unnecessary objects', () => {
+          expect(InteractionTracking.__subscriberRef).toBe(null);
         });
       });
     });
