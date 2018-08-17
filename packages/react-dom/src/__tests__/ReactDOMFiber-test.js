@@ -18,6 +18,12 @@ describe('ReactDOMFiber', () => {
 
   beforeEach(() => {
     container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
   });
 
   it('should render strings as children', () => {
@@ -205,12 +211,12 @@ describe('ReactDOMFiber', () => {
   };
 
   const assertNamespacesMatch = function(tree) {
-    container = document.createElement('div');
+    let testContainer = document.createElement('div');
     svgEls = [];
     htmlEls = [];
     mathEls = [];
 
-    ReactDOM.render(tree, container);
+    ReactDOM.render(tree, testContainer);
     svgEls.forEach(el => {
       expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
     });
@@ -221,8 +227,8 @@ describe('ReactDOMFiber', () => {
       expect(el.namespaceURI).toBe('http://www.w3.org/1998/Math/MathML');
     });
 
-    ReactDOM.unmountComponentAtNode(container);
-    expect(container.innerHTML).toBe('');
+    ReactDOM.unmountComponentAtNode(testContainer);
+    expect(testContainer.innerHTML).toBe('');
   };
 
   it('should render one portal', () => {
@@ -874,7 +880,6 @@ describe('ReactDOMFiber', () => {
 
   it('should not onMouseLeave when staying in the portal', () => {
     const portalContainer = document.createElement('div');
-    document.body.appendChild(container);
     document.body.appendChild(portalContainer);
 
     let ops = [];
@@ -944,7 +949,6 @@ describe('ReactDOMFiber', () => {
         'leave parent', // Only when we leave the portal does onMouseLeave fire.
       ]);
     } finally {
-      document.body.removeChild(container);
       document.body.removeChild(portalContainer);
     }
   });
@@ -987,82 +991,77 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should not update event handlers until commit', () => {
-    document.body.appendChild(container);
-    try {
-      let ops = [];
-      const handlerA = () => ops.push('A');
-      const handlerB = () => ops.push('B');
+    let ops = [];
+    const handlerA = () => ops.push('A');
+    const handlerB = () => ops.push('B');
 
-      class Example extends React.Component {
-        state = {flip: false, count: 0};
-        flip() {
-          this.setState({flip: true, count: this.state.count + 1});
-        }
-        tick() {
-          this.setState({count: this.state.count + 1});
-        }
-        render() {
-          const useB = !this.props.forceA && this.state.flip;
-          return <div onClick={useB ? handlerB : handlerA} />;
-        }
+    class Example extends React.Component {
+      state = {flip: false, count: 0};
+      flip() {
+        this.setState({flip: true, count: this.state.count + 1});
       }
-
-      class Click extends React.Component {
-        constructor() {
-          super();
-          node.click();
-        }
-        render() {
-          return null;
-        }
+      tick() {
+        this.setState({count: this.state.count + 1});
       }
-
-      let inst;
-      ReactDOM.render([<Example key="a" ref={n => (inst = n)} />], container);
-      const node = container.firstChild;
-      expect(node.tagName).toEqual('DIV');
-
-      node.click();
-
-      expect(ops).toEqual(['A']);
-      ops = [];
-
-      // Render with the other event handler.
-      inst.flip();
-
-      node.click();
-
-      expect(ops).toEqual(['B']);
-      ops = [];
-
-      // Rerender without changing any props.
-      inst.tick();
-
-      node.click();
-
-      expect(ops).toEqual(['B']);
-      ops = [];
-
-      // Render a flip back to the A handler. The second component invokes the
-      // click handler during render to simulate a click during an aborted
-      // render. I use this hack because at current time we don't have a way to
-      // test aborted ReactDOM renders.
-      ReactDOM.render(
-        [<Example key="a" forceA={true} />, <Click key="b" />],
-        container,
-      );
-
-      // Because the new click handler has not yet committed, we should still
-      // invoke B.
-      expect(ops).toEqual(['B']);
-      ops = [];
-
-      // Any click that happens after commit, should invoke A.
-      node.click();
-      expect(ops).toEqual(['A']);
-    } finally {
-      document.body.removeChild(container);
+      render() {
+        const useB = !this.props.forceA && this.state.flip;
+        return <div onClick={useB ? handlerB : handlerA} />;
+      }
     }
+
+    class Click extends React.Component {
+      constructor() {
+        super();
+        node.click();
+      }
+      render() {
+        return null;
+      }
+    }
+
+    let inst;
+    ReactDOM.render([<Example key="a" ref={n => (inst = n)} />], container);
+    const node = container.firstChild;
+    expect(node.tagName).toEqual('DIV');
+
+    node.click();
+
+    expect(ops).toEqual(['A']);
+    ops = [];
+
+    // Render with the other event handler.
+    inst.flip();
+
+    node.click();
+
+    expect(ops).toEqual(['B']);
+    ops = [];
+
+    // Rerender without changing any props.
+    inst.tick();
+
+    node.click();
+
+    expect(ops).toEqual(['B']);
+    ops = [];
+
+    // Render a flip back to the A handler. The second component invokes the
+    // click handler during render to simulate a click during an aborted
+    // render. I use this hack because at current time we don't have a way to
+    // test aborted ReactDOM renders.
+    ReactDOM.render(
+      [<Example key="a" forceA={true} />, <Click key="b" />],
+      container,
+    );
+
+    // Because the new click handler has not yet committed, we should still
+    // invoke B.
+    expect(ops).toEqual(['B']);
+    ops = [];
+
+    // Any click that happens after commit, should invoke A.
+    node.click();
+    expect(ops).toEqual(['A']);
   });
 
   it('should not crash encountering low-priority tree', () => {
@@ -1177,5 +1176,64 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('');
     container.appendChild(fragment);
     expect(container.innerHTML).toBe('<div>foo</div>');
+  });
+
+  // Regression test for https://github.com/facebook/react/issues/12643#issuecomment-413727104
+  it('should not diff memoized host components', () => {
+    let inputRef = React.createRef();
+    let didCallOnChange = false;
+
+    class Child extends React.Component {
+      state = {};
+      componentDidMount() {
+        document.addEventListener('click', this.update, true);
+      }
+      componentWillUnmount() {
+        document.removeEventListener('click', this.update, true);
+      }
+      update = () => {
+        // We're testing that this setState()
+        // doesn't cause React to commit updates
+        // to the input outside (which would itself
+        // prevent the parent's onChange parent handler
+        // from firing).
+        this.setState({});
+        // Note that onChange was always broken when there was an
+        // earlier setState() in a manual document capture phase
+        // listener *in the same component*. But that's very rare.
+        // Here we're testing that a *child* component doesn't break
+        // the parent if this happens.
+      };
+      render() {
+        return <div />;
+      }
+    }
+
+    class Parent extends React.Component {
+      handleChange = val => {
+        didCallOnChange = true;
+      };
+      render() {
+        return (
+          <div>
+            <Child />
+            <input
+              ref={inputRef}
+              type="checkbox"
+              checked={true}
+              onChange={this.handleChange}
+            />
+          </div>
+        );
+      }
+    }
+
+    ReactDOM.render(<Parent />, container);
+    inputRef.current.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+      }),
+    );
+    expect(didCallOnChange).toBe(true);
   });
 });

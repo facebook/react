@@ -85,8 +85,8 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 3 Total)
-  ⚛ (Calling Lifecycle Methods: 3 Total)
+  ⚛ (Committing Host Effects: 2 Total)
+  ⚛ (Calling Lifecycle Methods: 2 Total)
     ⚛ B.componentDidUpdate
 "
 `;
@@ -257,8 +257,8 @@ exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 3 Total)
-  ⚛ (Calling Lifecycle Methods: 2 Total)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;
 
@@ -311,8 +311,8 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 2 Total)
-  ⚛ (Calling Lifecycle Methods: 1 Total)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;
 
@@ -357,8 +357,8 @@ exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 6 Total)
-  ⚛ (Calling Lifecycle Methods: 6 Total)
+  ⚛ (Committing Host Effects: 2 Total)
+  ⚛ (Calling Lifecycle Methods: 2 Total)
 "
 `;
 
@@ -431,8 +431,8 @@ exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
-  ⚛ (Committing Host Effects: 2 Total)
-  ⚛ (Calling Lifecycle Methods: 2 Total)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 1 Total)
 "
 `;
 

@@ -361,34 +361,36 @@ function completeWork(
         // If we have an alternate, that means this is an update and we need to
         // schedule a side-effect to do the updates.
         const oldProps = current.memoizedProps;
-        // If we get updated because one of our children updated, we don't
-        // have newProps so we'll have to reuse them.
-        // TODO: Split the update API as separate for the props vs. children.
-        // Even better would be if children weren't special cased at all tho.
-        const instance: Instance = workInProgress.stateNode;
-        const currentHostContext = getHostContext();
-        // TODO: Experiencing an error where oldProps is null. Suggests a host
-        // component is hitting the resume path. Figure out why. Possibly
-        // related to `hidden`.
-        const updatePayload = prepareUpdate(
-          instance,
-          type,
-          oldProps,
-          newProps,
-          rootContainerInstance,
-          currentHostContext,
-        );
+        if (oldProps !== newProps) {
+          // If we get updated because one of our children updated, we don't
+          // have newProps so we'll have to reuse them.
+          // TODO: Split the update API as separate for the props vs. children.
+          // Even better would be if children weren't special cased at all tho.
+          const instance: Instance = workInProgress.stateNode;
+          const currentHostContext = getHostContext();
+          // TODO: Experiencing an error where oldProps is null. Suggests a host
+          // component is hitting the resume path. Figure out why. Possibly
+          // related to `hidden`.
+          const updatePayload = prepareUpdate(
+            instance,
+            type,
+            oldProps,
+            newProps,
+            rootContainerInstance,
+            currentHostContext,
+          );
 
-        updateHostComponent(
-          current,
-          workInProgress,
-          updatePayload,
-          type,
-          oldProps,
-          newProps,
-          rootContainerInstance,
-          currentHostContext,
-        );
+          updateHostComponent(
+            current,
+            workInProgress,
+            updatePayload,
+            type,
+            oldProps,
+            newProps,
+            rootContainerInstance,
+            currentHostContext,
+          );
+        }
 
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
