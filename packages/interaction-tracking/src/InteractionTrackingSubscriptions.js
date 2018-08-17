@@ -18,11 +18,15 @@ if (enableInteractionTracking) {
 }
 
 export function subscribe(subscriber: Subscriber): void {
-  subscribers.add(subscriber);
+  if (enableInteractionTracking) {
+    subscribers.add(subscriber);
+  }
 }
 
 export function unsubscribe(subscriber: Subscriber): void {
-  subscribers.delete(subscriber);
+  if (enableInteractionTracking) {
+    subscribers.delete(subscriber);
+  }
 }
 
 function onInteractionTracked(interaction: Interaction): void {
@@ -151,11 +155,13 @@ function onWorkCanceled(
   }
 }
 
-__subscriberRef.current = {
-  onInteractionScheduledWorkCompleted,
-  onInteractionTracked,
-  onWorkCanceled,
-  onWorkScheduled,
-  onWorkStarted,
-  onWorkStopped,
-};
+if (enableInteractionTracking) {
+  __subscriberRef.current = {
+    onInteractionScheduledWorkCompleted,
+    onInteractionTracked,
+    onWorkCanceled,
+    onWorkScheduled,
+    onWorkStarted,
+    onWorkStopped,
+  };
+}
