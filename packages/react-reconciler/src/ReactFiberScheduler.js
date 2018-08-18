@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactFiber';
-import type {Batch, FiberRoot, PendingInteractionMap} from './ReactFiberRoot';
+import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {Interaction} from 'interaction-tracking/src/InteractionTracking';
 
@@ -548,17 +548,15 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       : updateExpirationTimeBeforeCommit;
   markCommittedPriorityLevels(root, earliestRemainingTimeBeforeCommit);
 
-  let prevInteractions: Set<Interaction> | null = null;
-  let committedInteractions: Array<
-    Interaction,
-  > | null = enableInteractionTracking ? [] : null;
+  let prevInteractions: Set<Interaction> = (null: any);
+  let committedInteractions: Array<Interaction> = enableInteractionTracking
+    ? []
+    : (null: any);
   if (enableInteractionTracking) {
     // Restore any pending interactions at this point,
     // So that cascading work triggered during the render phase will be accounted for.
     prevInteractions = __interactionsRef.current;
-    __interactionsRef.current = ((root.memoizedInteractions: any): Set<
-      Interaction,
-    >);
+    __interactionsRef.current = root.memoizedInteractions;
 
     // We are potentially finished with the current batch of interactions.
     // So we should clear them out of the pending interaction map.
@@ -568,15 +566,11 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     // These are stored as an Array rather than a Set,
     // Because the same interaction may be pending for multiple expiration times,
     // In which case it's important that we decrement the count the right number of times after finishing.
-    ((root.pendingInteractionMap: any): PendingInteractionMap).forEach(
+    root.pendingInteractionMap.forEach(
       (scheduledInteractions, scheduledExpirationTime) => {
         if (scheduledExpirationTime <= committedExpirationTime) {
-          ((committedInteractions: any): Array<Interaction>).push(
-            ...Array.from(scheduledInteractions),
-          );
-          ((root.pendingInteractionMap: any): PendingInteractionMap).delete(
-            scheduledExpirationTime,
-          );
+          committedInteractions.push(...Array.from(scheduledInteractions));
+          root.pendingInteractionMap.delete(scheduledExpirationTime);
         }
       },
     );
@@ -757,25 +751,19 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   onCommit(root, earliestRemainingTimeAfterCommit);
 
   if (enableInteractionTracking) {
-    __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
+    __interactionsRef.current = prevInteractions;
 
     let caughtError = null;
     let subscriber;
 
     try {
       subscriber = __subscriberRef.current;
-      if (
-        subscriber !== null &&
-        ((root.memoizedInteractions: any): Set<Interaction>).size > 0
-      ) {
+      if (subscriber !== null && root.memoizedInteractions.size > 0) {
         // Interaction threads are unique per root and expiration time.
         // DO NOT CHANGE THIS VALUE without also updating other threadID values.
         const threadID =
           committedExpirationTime * 1000 + root.interactionThreadID;
-        subscriber.onWorkStopped(
-          ((root.memoizedInteractions: any): Set<Interaction>),
-          threadID,
-        );
+        subscriber.onWorkStopped(root.memoizedInteractions, threadID);
       }
     } catch (error) {
       caughtError = error;
@@ -783,18 +771,16 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
       // Now that we're done, check the completed batch of interactions.
       // If no more work is outstanding for a given interaction,
       // We need to notify the subscribers that it's finished.
-      ((committedInteractions: any): Array<Interaction>).forEach(
-        interaction => {
-          interaction.__count--;
-          if (subscriber !== null && interaction.__count === 0) {
-            try {
-              subscriber.onInteractionScheduledWorkCompleted(interaction);
-            } catch (error) {
-              caughtError = caughtError || error;
-            }
+      committedInteractions.forEach(interaction => {
+        interaction.__count--;
+        if (subscriber !== null && interaction.__count === 0) {
+          try {
+            subscriber.onInteractionScheduledWorkCompleted(interaction);
+          } catch (error) {
+            caughtError = caughtError || error;
           }
-        },
-      );
+        }
+      });
 
       if (caughtError) {
         throw caughtError;
@@ -1162,14 +1148,12 @@ function renderRoot(
 
   const expirationTime = root.nextExpirationTimeToWorkOn;
 
-  let prevInteractions: Set<Interaction> | null = null;
+  let prevInteractions: Set<Interaction> = (null: any);
   if (enableInteractionTracking) {
     // We're about to start new tracked work.
     // Restore pending interactions so cascading work triggered during the render phase will be accounted for.
     prevInteractions = __interactionsRef.current;
-    __interactionsRef.current = ((root.memoizedInteractions: any): Set<
-      Interaction,
-    >);
+    __interactionsRef.current = root.memoizedInteractions;
   }
 
   // Check if we're starting from a fresh stack, or if we're resuming from
@@ -1254,7 +1238,7 @@ function renderRoot(
 
   if (enableInteractionTracking) {
     // Tracked work is done for now; restore the previous interactions.
-    __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
+    __interactionsRef.current = prevInteractions;
   }
 
   // We're done performing work. Time to clean up.
@@ -1618,9 +1602,7 @@ function storeInteractionsForExpirationTime(
 
   const interactions = __interactionsRef.current;
   if (interactions.size > 0) {
-    const pendingInteractions = ((root.pendingInteractionMap: any): PendingInteractionMap).get(
-      expirationTime,
-    );
+    const pendingInteractions = root.pendingInteractionMap.get(expirationTime);
     if (pendingInteractions != null) {
       interactions.forEach(interaction => {
         if (!pendingInteractions.has(interaction)) {
@@ -1631,10 +1613,7 @@ function storeInteractionsForExpirationTime(
         pendingInteractions.add(interaction);
       });
     } else {
-      ((root.pendingInteractionMap: any): PendingInteractionMap).set(
-        expirationTime,
-        new Set(interactions),
-      );
+      root.pendingInteractionMap.set(expirationTime, new Set(interactions));
 
       // Update the pending async work count for the current interactions.
       interactions.forEach(interaction => {
@@ -2181,7 +2160,7 @@ function performWorkOnRoot(
     // So that we can accurately attribute time spent working on it,
     // And so that cascading work triggered during the render phase will be associated with it.
     const interactions: Set<Interaction> = new Set();
-    ((root.pendingInteractionMap: any): PendingInteractionMap).forEach(
+    root.pendingInteractionMap.forEach(
       (scheduledInteractions, scheduledExpirationTime) => {
         if (scheduledExpirationTime <= expirationTime) {
           scheduledInteractions.forEach(interaction =>
