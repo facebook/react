@@ -240,7 +240,9 @@ describe('Profiler', () => {
         expect(call[3]).toBe(10); // base time
         expect(call[4]).toBe(5); // start time
         expect(call[5]).toBe(15); // commit time
-        expect(call[6]).toEqual(enableInteractionTracking ? [] : undefined); // interaction events
+        expect(call[6]).toEqual(
+          enableInteractionTracking ? new Set() : undefined,
+        ); // interaction events
 
         callback.mockReset();
 
@@ -263,7 +265,9 @@ describe('Profiler', () => {
         expect(call[3]).toBe(10); // base time
         expect(call[4]).toBe(35); // start time
         expect(call[5]).toBe(45); // commit time
-        expect(call[6]).toEqual(enableInteractionTracking ? [] : undefined); // interaction events
+        expect(call[6]).toEqual(
+          enableInteractionTracking ? new Set() : undefined,
+        ); // interaction events
 
         callback.mockReset();
 
@@ -286,7 +290,9 @@ describe('Profiler', () => {
         expect(call[3]).toBe(4); // base time
         expect(call[4]).toBe(65); // start time
         expect(call[5]).toBe(69); // commit time
-        expect(call[6]).toEqual(enableInteractionTracking ? [] : undefined); // interaction events
+        expect(call[6]).toEqual(
+          enableInteractionTracking ? new Set() : undefined,
+        ); // interaction events
       });
 
       it('includes render times of nested Profilers in their parent times', () => {
@@ -1519,7 +1525,7 @@ describe('Profiler', () => {
       expect(call[0]).toEqual('test-profiler');
       expect(call[5]).toEqual(mockNow());
       if (ReactFeatureFlags.enableInteractionTracking) {
-        expect(call[6]).toHaveLength(0);
+        expect(call[6]).toMatchInteractions([]);
       }
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(2);

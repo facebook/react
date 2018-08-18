@@ -94,7 +94,7 @@ describe('ReactProfiler DevTools integration', () => {
       10,
       2,
       12,
-      [],
+      new Set(),
     );
     onRender.mockClear();
 
@@ -119,7 +119,7 @@ describe('ReactProfiler DevTools integration', () => {
       13,
       14,
       20,
-      [],
+      new Set(),
     );
 
     // Measure unobservable timing required by the DevTools profiler.

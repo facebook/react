@@ -853,7 +853,7 @@ function commitWork(
             finishedWork.treeBaseDuration,
             finishedWork.actualStartTime,
             getCommitTime(),
-            Array.from((root.memoizedInteractions: any)),
+            root.memoizedInteractions,
           );
         } else {
           onRender(
