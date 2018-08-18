@@ -228,7 +228,7 @@ function getOwnerDocumentFromRootContainer(
 
 function noop() {}
 
-function trapClickOnNonInteractiveElement(node: HTMLElement) {
+export function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // Mobile Safari does not fire properly bubble click events on
   // non-interactive elements, which means delegated click listeners do not
   // fire. The workaround for this bug involves attaching an empty click
