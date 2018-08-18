@@ -22,7 +22,7 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
  * @license Modernizr 3.0.0pre (Custom Build) | MIT
  */
 function isEventSupported(eventNameSuffix, capture) {
-  if (!canUseDOM || (capture && !('addEventListener' in document))) {
+  if (!canUseDOM) {
     return false;
   }
 
