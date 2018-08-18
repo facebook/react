@@ -20,8 +20,8 @@ export default class App extends PureComponent {
 
   componentDidUpdate(prevProps, prevState) {
     if (
-      prevState.showDetail !== this.state.showDetail ||
-      prevState.currentId !== this.state.currentId
+      prevState.showDetail !== this.state.showDetail &&
+      this.state.showDetail
     ) {
       window.scrollTo(0, 0);
     }
