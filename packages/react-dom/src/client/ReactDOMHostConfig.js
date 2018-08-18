@@ -16,6 +16,7 @@ import {
   updateProperties,
   diffHydratedProperties,
   diffHydratedText,
+  trapClickOnNonInteractiveElement,
   warnForUnmatchedText,
   warnForDeletedHydratableElement,
   warnForDeletedHydratableText,
@@ -343,10 +344,24 @@ export function appendChildToContainer(
   container: Container,
   child: Instance | TextInstance,
 ): void {
+  let parentNode;
   if (container.nodeType === COMMENT_NODE) {
-    (container.parentNode: any).insertBefore(child, container);
+    parentNode = (container.parentNode: any);
+    parentNode.insertBefore(child, container);
   } else {
-    container.appendChild(child);
+    parentNode = container;
+    parentNode.appendChild(child);
+  }
+  // This container might be used for a portal.
+  // If something inside a portal is clicked, that click should bubble
+  // through the React tree. However, on Mobile Safari the click would
+  // never bubble through the *DOM* tree unless an ancestor with onclick
+  // event exists. So we wouldn't see it and dispatch it.
+  // This is why we ensure that containers have inline onclick defined.
+  // https://github.com/facebook/react/issues/11918
+  if (parentNode.onclick === null) {
+    // TODO: This cast may not be sound for SVG, MathML or custom elements.
+    trapClickOnNonInteractiveElement(((parentNode: any): HTMLElement));
   }
 }
 
