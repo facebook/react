@@ -146,7 +146,7 @@ export function listenTo(
           break;
         case TOP_CANCEL:
         case TOP_CLOSE:
-          if (isEventSupported(getRawEventName(dependency), true)) {
+          if (isEventSupported(getRawEventName(dependency))) {
             trapCapturedEvent(dependency, mountAt);
           }
           break;
