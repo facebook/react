@@ -51,8 +51,7 @@ function getUnmaskedContext(
   Component: Function,
   didPushOwnContext: boolean,
 ): Object {
-  const hasOwnContext = isContextProvider(Component);
-  if (hasOwnContext && didPushOwnContext) {
+  if (didPushOwnContext && isContextProvider(Component)) {
     // If the fiber is a context provider itself, when we read its context
     // we may have already pushed its own child context on the stack. A context
     // provider should not "see" its own child context. Therefore we read the
