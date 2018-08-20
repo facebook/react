@@ -1729,13 +1729,18 @@ describe('ReactCompositeComponent', () => {
     expect(() => {
       expect(() => {
         ReactTestUtils.renderIntoDocument(<RenderTextInvalidConstructor />);
-        // eslint-disable-next-line react-internal/no-to-warn-dev-within-to-throw
-      }).toWarnDev(
+      }).toThrow();
+    }).toWarnDev(
+      [
+        // Expect two errors because invokeGuardedCallback will dispatch an error event,
+        // Causing the warning to be logged again.
         'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
           'did you accidentally return an object from the constructor?',
-        {withoutStack: true},
-      );
-    }).toThrow();
+        'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+          'did you accidentally return an object from the constructor?',
+      ],
+      {withoutStack: true},
+    );
   });
 
   it('should return error if render is not defined', () => {
@@ -1744,12 +1749,17 @@ describe('ReactCompositeComponent', () => {
     expect(() => {
       expect(() => {
         ReactTestUtils.renderIntoDocument(<RenderTestUndefinedRender />);
-        // eslint-disable-next-line react-internal/no-to-warn-dev-within-to-throw
-      }).toWarnDev(
+      }).toThrow();
+    }).toWarnDev(
+      [
+        // Expect two errors because invokeGuardedCallback will dispatch an error event,
+        // Causing the warning to be logged again.
         'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
           'component instance: you may have forgotten to define `render`.',
-        {withoutStack: true},
-      );
-    }).toThrow();
+        'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
+          'component instance: you may have forgotten to define `render`.',
+      ],
+      {withoutStack: true},
+    );
   });
 });
