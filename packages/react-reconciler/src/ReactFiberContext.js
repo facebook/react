@@ -49,9 +49,9 @@ let previousContext: Object = emptyContextObject;
 function getUnmaskedContext(
   workInProgress: Fiber,
   Component: Function,
-  didPushOwnContext: boolean,
+  didPushOwnContextIfProvider: boolean,
 ): Object {
-  if (didPushOwnContext && isContextProvider(Component)) {
+  if (didPushOwnContextIfProvider && isContextProvider(Component)) {
     // If the fiber is a context provider itself, when we read its context
     // we may have already pushed its own child context on the stack. A context
     // provider should not "see" its own child context. Therefore we read the
