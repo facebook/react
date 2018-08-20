@@ -1576,6 +1576,30 @@ describe('ReactSuspense', () => {
         span('C'),
       ]);
     });
+
+    it('includes lazy-loaded component in warning stack', async () => {
+      const LazyFoo = lazy(() => {
+        ReactNoop.yield('Started loading');
+        const Foo = props => (
+          <div>{[<Text text="A" />, <Text text="B" />]}</div>
+        );
+        return Promise.resolve(Foo);
+      });
+
+      ReactNoop.render(
+        <Placeholder fallback={<Text text="Loading..." />}>
+          <LazyFoo />
+        </Placeholder>,
+      );
+      expect(ReactNoop.flush()).toEqual(['Started loading', 'Loading...']);
+      expect(ReactNoop.getChildren()).toEqual([]);
+
+      await LazyFoo;
+      expect(() => {
+        expect(ReactNoop.flush()).toEqual(['A', 'B']);
+      }).toWarnDev('    in Text (at **)\n' + '    in Foo (at **)');
+      expect(ReactNoop.getChildren()).toEqual([div(span('A'), span('B'))]);
+    });
   });
 
   it('does not call lifecycles of a suspended component', async () => {
