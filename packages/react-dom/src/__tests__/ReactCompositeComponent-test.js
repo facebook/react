@@ -433,6 +433,7 @@ describe('ReactCompositeComponent', () => {
       'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
         "but doesn't extend React.Component. This is likely to cause errors. " +
         'Change ClassWithRenderNotExtended to extend React.Component instead.',
+      {withoutStack: true},
     );
 
     // Test deduplication
@@ -1732,6 +1733,7 @@ describe('ReactCompositeComponent', () => {
       }).toWarnDev(
         'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
           'did you accidentally return an object from the constructor?',
+        {withoutStack: true},
       );
     }).toThrow();
   });
@@ -1746,6 +1748,7 @@ describe('ReactCompositeComponent', () => {
       }).toWarnDev(
         'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
           'component instance: you may have forgotten to define `render`.',
+        {withoutStack: true},
       );
     }).toThrow();
   });
