@@ -77,8 +77,7 @@ function getComponentName(type: mixed): string | null {
       const thenable: Thenable<mixed> = (type: any);
       const resolvedThenable = refineResolvedThenable(thenable);
       if (resolvedThenable) {
-        const Component = getResultFromResolvedThenable(resolvedThenable);
-        return getComponentName(Component);
+        return getComponentName(resolvedThenable);
       }
     }
   }
