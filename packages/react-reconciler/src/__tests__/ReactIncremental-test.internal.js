@@ -2030,6 +2030,39 @@ describe('ReactIncremental', () => {
     ]);
   });
 
+  it('does not leak own context into context provider (factory components)', () => {
+    const ops = [];
+    function Recurse(props, context) {
+      return {
+        getChildContext() {
+          return {n: (context.n || 3) - 1};
+        },
+        render() {
+          ops.push('Recurse ' + JSON.stringify(context));
+          if (context.n === 0) {
+            return null;
+          }
+          return <Recurse />;
+        },
+      };
+    }
+    Recurse.contextTypes = {
+      n: PropTypes.number,
+    };
+    Recurse.childContextTypes = {
+      n: PropTypes.number,
+    };
+
+    ReactNoop.render(<Recurse />);
+    ReactNoop.flush();
+    expect(ops).toEqual([
+      'Recurse {}',
+      'Recurse {"n":2}',
+      'Recurse {"n":1}',
+      'Recurse {"n":0}',
+    ]);
+  });
+
   it('provides context when reusing work', () => {
     const ops = [];
 
