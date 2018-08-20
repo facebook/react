@@ -72,7 +72,7 @@ describe('ReactSuspense', () => {
 
   function Text(props) {
     ReactNoop.yield(props.text);
-    return <span prop={props.text} />;
+    return <span prop={props.text} ref={props.hostRef} />;
   }
 
   function AsyncText(props) {
@@ -1599,6 +1599,41 @@ describe('ReactSuspense', () => {
         expect(ReactNoop.flush()).toEqual(['A', 'B']);
       }).toWarnDev('    in Text (at **)\n' + '    in Foo (at **)');
       expect(ReactNoop.getChildren()).toEqual([div(span('A'), span('B'))]);
+    });
+
+    it('supports class and forwardRef components', async () => {
+      const LazyClass = lazy(() => {
+        class Foo extends React.Component {
+          render() {
+            return <Text text="Foo" />;
+          }
+        }
+        return Promise.resolve(Foo);
+      });
+
+      const LazyForwardRef = lazy(() => {
+        const Bar = React.forwardRef((props, ref) => (
+          <Text text="Bar" hostRef={ref} />
+        ));
+        return Promise.resolve(Bar);
+      });
+
+      const ref = React.createRef();
+      ReactNoop.render(
+        <Placeholder fallback={<Text text="Loading..." />}>
+          <LazyClass />
+          <LazyForwardRef ref={ref} />
+        </Placeholder>,
+      );
+      expect(ReactNoop.flush()).toEqual(['Loading...']);
+      expect(ReactNoop.getChildren()).toEqual([]);
+      expect(ref.current).toBe(null);
+
+      await LazyClass;
+      await LazyForwardRef;
+      expect(ReactNoop.flush()).toEqual(['Foo', 'Bar']);
+      expect(ReactNoop.getChildren()).toEqual([span('Foo'), span('Bar')]);
+      expect(ref.current).not.toBe(null);
     });
   });
 
