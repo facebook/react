@@ -21,10 +21,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
-import {
-  getResultFromResolvedThenable,
-  refineResolvedThenable,
-} from 'shared/ReactLazyComponent';
+import {refineResolvedThenable} from 'shared/ReactLazyComponent';
 
 function getComponentName(type: mixed): string | null {
   if (type == null) {
