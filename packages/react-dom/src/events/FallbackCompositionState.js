@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import getTextContentAccessor from '../client/getTextContentAccessor';
-
 /**
  * These variables store information about text content of a target node,
  * allowing comparison of content before and after a given event.
@@ -69,5 +67,5 @@ export function getText() {
   if ('value' in root) {
     return root.value;
   }
-  return root[getTextContentAccessor()];
+  return root.textContent;
 }
