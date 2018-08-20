@@ -13,6 +13,4 @@ const ReactNativeRenderer = require('./src/ReactNativeRenderer');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactNativeRenderer.default
-  ? ReactNativeRenderer.default
-  : ReactNativeRenderer;
+module.exports = ReactNativeRenderer.default || ReactNativeRenderer;

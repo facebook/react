@@ -13,4 +13,4 @@ const ReactFabric = require('./src/ReactFabric');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFabric.default ? ReactFabric.default : ReactFabric;
+module.exports = ReactFabric.default || ReactFabric;
