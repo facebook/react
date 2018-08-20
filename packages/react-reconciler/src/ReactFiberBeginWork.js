@@ -262,7 +262,7 @@ function updateFunctionalComponent(
   nextProps: any,
   renderExpirationTime,
 ) {
-  const unmaskedContext = getUnmaskedContext(workInProgress, Component);
+  const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   let nextChildren;
@@ -674,7 +674,7 @@ function mountIndeterminateComponent(
     }
   }
 
-  const unmaskedContext = getUnmaskedContext(workInProgress, Component);
+  const unmaskedContext = getUnmaskedContext(workInProgress, Component, false);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
