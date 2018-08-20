@@ -6,7 +6,6 @@
  */
 
 import getNodeForCharacterOffset from './getNodeForCharacterOffset';
-import getTextContentAccessor from './getTextContentAccessor';
 import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
@@ -155,7 +154,7 @@ export function setOffsets(node, offsets) {
   const doc = node.ownerDocument || document;
   const win = doc ? doc.defaultView : window;
   const selection = win.getSelection();
-  const length = node[getTextContentAccessor()].length;
+  const length = node.textContent.length;
   let start = Math.min(offsets.start, length);
   let end = offsets.end === undefined ? start : Math.min(offsets.end, length);
 
