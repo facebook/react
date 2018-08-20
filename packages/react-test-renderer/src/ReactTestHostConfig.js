@@ -9,6 +9,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
+import warning from 'shared/warning';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 export type Type = string;
@@ -64,6 +65,15 @@ export function appendChild(
   parentInstance: Instance | Container,
   child: Instance | TextInstance,
 ): void {
+  if (__DEV__) {
+    warning(
+      Array.isArray(parentInstance.children),
+      'An invalid container has been provided. ' +
+        'This may indicate that another render is being used in addition to the test renderer. ' +
+        '(For example, ReactDOM.createPortal inside of a ReactTestRenderer tree.) ' +
+        'This is not supported.',
+    );
+  }
   const index = parentInstance.children.indexOf(child);
   if (index !== -1) {
     parentInstance.children.splice(index, 1);
