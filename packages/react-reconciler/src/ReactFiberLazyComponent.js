@@ -33,7 +33,7 @@ export function readLazyComponentType<T>(thenable: Thenable<T>): T {
               // resolved value itself.
               const defaultExport = (resolvedValue: any).default;
               resolvedValue =
-                typeof defaultExport !== undefined && defaultExport !== null
+                defaultExport !== undefined && defaultExport !== null
                   ? defaultExport
                   : resolvedValue;
             } else {
