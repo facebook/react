@@ -41,6 +41,7 @@ module.exports = {
     'quotes': [ERROR, 'single', {avoidEscape: true, allowTemplateLiterals: true }],
     'space-before-blocks': ERROR,
     'space-before-function-paren': OFF,
+    'valid-typeof': [ERROR, {requireStringLiterals: true}],
 
     // React & JSX
     // Our transforms set this automatically
