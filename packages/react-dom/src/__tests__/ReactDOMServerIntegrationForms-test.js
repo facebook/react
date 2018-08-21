@@ -223,6 +223,7 @@ describe('ReactDOMServerIntegrationForms', () => {
         },
       );
 
+      /*
       itRenders('a textarea with Symbol value with a warning', async render => {
         const e = await render(
           <textarea value={Symbol('test')} readOnly={true} />,
@@ -291,6 +292,7 @@ describe('ReactDOMServerIntegrationForms', () => {
 
         expect(e.value).toBe('result of toString()');
       });
+      */
 
       itRenders('a textarea with true value with a warning', async render => {
         const e = await render(<textarea value={true} readOnly={true} />, 0);
