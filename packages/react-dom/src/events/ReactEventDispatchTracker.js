@@ -28,5 +28,5 @@ export function hasEventDispatched(event: AnyNativeEvent): boolean {
     return tracker.has(event);
   }
 
-  return tracker.hasOwnProperty(trackedProperty);
+  return event.hasOwnProperty(trackedProperty);
 }
