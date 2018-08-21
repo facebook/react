@@ -14,12 +14,6 @@ invariant(
   'Expected ReactFbErrorUtils.invokeGuardedCallback to be a function.',
 );
 
-// This object will be mutated by the www version.
-let result = {
-  _hasCaughtError: false,
-  _caughtError: null,
-};
-
 let invokeGuardedCallbackImpl = function<A, B, C, D, E, F, Context>(
   name: string | null,
   func: (a: A, b: B, c: C, d: D, e: E, f: F) => mixed,
@@ -31,13 +25,8 @@ let invokeGuardedCallbackImpl = function<A, B, C, D, E, F, Context>(
   e: E,
   f: F,
 ) {
-  // The www version doesn't take the `onError` callback on context.
-  // Instead, it writes the result to fields on context.
-  // TODO: change the www function API so we can re-export it directly.
-  ReactFbErrorUtils.invokeGuardedCallback.apply(result, arguments);
-  if (result._hasCaughtError) {
-    this.onError(result._caughtError);
-  }
+  // This will call `this.onError(err)` if an error was caught.
+  ReactFbErrorUtils.invokeGuardedCallback.apply(this, arguments);
 };
 
 export default invokeGuardedCallbackImpl;
