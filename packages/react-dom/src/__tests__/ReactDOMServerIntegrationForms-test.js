@@ -525,6 +525,7 @@ describe('ReactDOMServerIntegrationForms', () => {
         },
       );
 
+      /*
       itRenders('a select with Symbol value with a warning', async render => {
         const e = await render(
           <select value={Symbol('test')} readOnly={true} />,
@@ -604,6 +605,7 @@ describe('ReactDOMServerIntegrationForms', () => {
           expect(e.options[1].selected).toBe(true);
         },
       );
+      */
     });
 
     describe('user interaction', function() {
