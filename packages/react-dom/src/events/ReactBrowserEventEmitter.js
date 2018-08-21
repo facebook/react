@@ -140,7 +140,7 @@ export function listenTo(
           const elementListeners = getListenerTrackingFor(element);
 
           if (!elementListeners.hasOwnProperty(dependency)) {
-            trapCapturedEvent(dependency, element);
+            trapBubbledEvent(dependency, element);
             elementListeners[dependency] = true;
           }
           return;
