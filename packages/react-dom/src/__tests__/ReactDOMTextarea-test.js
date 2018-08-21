@@ -359,10 +359,10 @@ describe('ReactDOMTextarea', () => {
             {'there'}
           </textarea>,
         ),
-      ).toWarnDev(
-        'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
-      );
-    }).toThrow();
+      ).toThrow('<textarea> can only have at most one child');
+    }).toWarnDev(
+      'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+    );
 
     let node;
     expect(() => {
@@ -373,10 +373,10 @@ describe('ReactDOMTextarea', () => {
               <strong />
             </textarea>,
           )),
-      ).toWarnDev(
-        'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
-      );
-    }).not.toThrow();
+      ).not.toThrow();
+    }).toWarnDev(
+      'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
+    );
 
     expect(node.value).toBe('[object Object]');
   });

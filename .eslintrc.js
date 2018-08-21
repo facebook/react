@@ -65,6 +65,7 @@ module.exports = {
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
     'react-internal/no-primitive-constructors': ERROR,
+    'react-internal/no-to-warn-dev-within-to-throw': ERROR,
     'react-internal/warning-and-invariant-args': ERROR,
   },
 

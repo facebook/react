@@ -54,166 +54,159 @@ describe('toWarnDev', () => {
   });
 
   if (__DEV__) {
+    // Helper methods avoids invalid toWarn().toThrow() nesting
+    // See no-to-warn-dev-within-to-throw
+    const expectToWarnAndToThrow = (expectBlock, expectedErrorMessage) => {
+      let caughtError;
+      try {
+        expectBlock();
+      } catch (error) {
+        caughtError = error;
+      }
+      expect(caughtError).toBeDefined();
+      expect(caughtError.message).toContain(expectedErrorMessage);
+    };
+
     it('fails if a warning does not contain a stack', () => {
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hello');
         }).toWarnDev('Hello');
-      }).toThrow(
-        'Received warning unexpectedly does not include a component stack'
-      );
+      }, 'Received warning unexpectedly does not include a component stack');
     });
 
     it('fails if some warnings do not contain a stack', () => {
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hello\n    in div');
           console.error('Good day\n    in div');
           console.error('Bye');
         }).toWarnDev(['Hello', 'Good day', 'Bye']);
-      }).toThrow(
-        'Received warning unexpectedly does not include a component stack'
-      );
-      expect(() => {
+      }, 'Received warning unexpectedly does not include a component stack');
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hello');
           console.error('Good day\n    in div');
           console.error('Bye\n    in div');
         }).toWarnDev(['Hello', 'Good day', 'Bye']);
-      }).toThrow(
-        'Received warning unexpectedly does not include a component stack'
-      );
-      expect(() => {
+      }, 'Received warning unexpectedly does not include a component stack');
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hello\n    in div');
           console.error('Good day');
           console.error('Bye\n    in div');
         }).toWarnDev(['Hello', 'Good day', 'Bye']);
-      }).toThrow(
-        'Received warning unexpectedly does not include a component stack'
-      );
-      expect(() => {
+      }, 'Received warning unexpectedly does not include a component stack');
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hello');
           console.error('Good day');
           console.error('Bye');
         }).toWarnDev(['Hello', 'Good day', 'Bye']);
-      }).toThrow(
-        'Received warning unexpectedly does not include a component stack'
-      );
+      }, 'Received warning unexpectedly does not include a component stack');
     });
 
     it('fails if warning is expected to not have a stack, but does', () => {
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hello\n    in div');
         }).toWarnDev('Hello', {withoutStack: true});
-      }).toThrow('Received warning unexpectedly includes a component stack');
-      expect(() => {
+      }, 'Received warning unexpectedly includes a component stack');
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hello\n    in div');
           console.error('Good day');
           console.error('Bye\n    in div');
         }).toWarnDev(['Hello', 'Good day', 'Bye'], {withoutStack: true});
-      }).toThrow('Received warning unexpectedly includes a component stack');
+      }, 'Received warning unexpectedly includes a component stack');
     });
 
     it('fails if expected stack-less warning number does not match the actual one', () => {
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hello\n    in div');
           console.error('Good day');
           console.error('Bye\n    in div');
         }).toWarnDev(['Hello', 'Good day', 'Bye'], {withoutStack: 4});
-      }).toThrow(
-        'Expected 4 warnings without a component stack but received 1'
-      );
+      }, 'Expected 4 warnings without a component stack but received 1');
     });
 
     it('fails if withoutStack is invalid', () => {
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi');
         }).toWarnDev('Hi', {withoutStack: null});
-      }).toThrow('Instead received object');
-      expect(() => {
+      }, 'Instead received object');
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi');
         }).toWarnDev('Hi', {withoutStack: {}});
-      }).toThrow('Instead received object');
-      expect(() => {
+      }, 'Instead received object');
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi');
         }).toWarnDev('Hi', {withoutStack: 'haha'});
-      }).toThrow('Instead received string');
+      }, 'Instead received string');
     });
 
     it('fails if the argument number does not match', () => {
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi %s', 'Sara', 'extra');
         }).toWarnDev('Hi', {withoutStack: true});
-      }).toThrow('Received 2 arguments for a message with 1 placeholders');
+      }, 'Received 2 arguments for a message with 1 placeholders');
 
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi %s');
         }).toWarnDev('Hi', {withoutStack: true});
-      }).toThrow('Received 0 arguments for a message with 1 placeholders');
+      }, 'Received 0 arguments for a message with 1 placeholders');
     });
 
     it('fails if stack is passed twice', () => {
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi %s%s', '\n    in div', '\n    in div');
         }).toWarnDev('Hi');
-      }).toThrow('Received more than one component stack for a warning');
+      }, 'Received more than one component stack for a warning');
     });
 
     it('fails if multiple strings are passed without an array wrapper', () => {
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi \n    in div');
         }).toWarnDev('Hi', 'Bye');
-      }).toThrow(
-        'toWarnDev() second argument, when present, should be an object'
-      );
-      expect(() => {
+      }, 'toWarnDev() second argument, when present, should be an object');
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi \n    in div');
           console.error('Bye \n    in div');
         }).toWarnDev('Hi', 'Bye');
-      }).toThrow(
-        'toWarnDev() second argument, when present, should be an object'
-      );
-      expect(() => {
+      }, 'toWarnDev() second argument, when present, should be an object');
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi \n    in div');
           console.error('Wow \n    in div');
           console.error('Bye \n    in div');
         }).toWarnDev('Hi', 'Bye');
-      }).toThrow(
-        'toWarnDev() second argument, when present, should be an object'
-      );
-      expect(() => {
+      }, 'toWarnDev() second argument, when present, should be an object');
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi \n    in div');
           console.error('Wow \n    in div');
           console.error('Bye \n    in div');
         }).toWarnDev('Hi', 'Wow', 'Bye');
-      }).toThrow(
-        'toWarnDev() second argument, when present, should be an object'
-      );
+      }, 'toWarnDev() second argument, when present, should be an object');
     });
 
     it('fails on more than two arguments', () => {
-      expect(() => {
+      expectToWarnAndToThrow(() => {
         expect(() => {
           console.error('Hi \n    in div');
           console.error('Wow \n    in div');
           console.error('Bye \n    in div');
         }).toWarnDev('Hi', undefined, 'Bye');
-      }).toThrow('toWarnDev() received more than two arguments.');
+      }, 'toWarnDev() received more than two arguments.');
     });
   }
 });
