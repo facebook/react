@@ -359,7 +359,7 @@ describe('ReactDOMTextarea', () => {
             {'there'}
           </textarea>,
         ),
-      ).toThrow();
+      ).toThrow('<textarea> can only have at most one child');
     }).toWarnDev(
       'Use the `defaultValue` or `value` props instead of setting children on <textarea>.',
     );
