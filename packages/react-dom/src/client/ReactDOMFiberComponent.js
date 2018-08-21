@@ -215,7 +215,7 @@ function ensureListeningTo(rootContainerElement, registrationName, domElement) {
   const doc = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
-  listenTo(registrationName, doc, rootContainerElement);
+  listenTo(registrationName, doc, domElement);
 }
 
 function getOwnerDocumentFromRootContainer(

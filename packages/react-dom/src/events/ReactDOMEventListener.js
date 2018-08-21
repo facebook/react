@@ -21,6 +21,10 @@ import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
+import {
+  hasEventDispatched,
+  trackEventDispatch,
+} from './ReactEventDispatchTracker';
 
 const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 
@@ -189,12 +193,15 @@ export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   nativeEvent: AnyNativeEvent,
 ) {
-  if (!_enabled) {
+  if (!_enabled || hasEventDispatched(nativeEvent)) {
     return;
   }
 
+  trackEventDispatch(nativeEvent);
+
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
+
   if (
     targetInst !== null &&
     typeof targetInst.tag === 'number' &&
