@@ -127,7 +127,7 @@ function getListenerTrackingFor(node: Document | Element) {
 export function listenTo(
   registrationName: string,
   mountAt: Document | Element,
-  owner: Element,
+  element: Element,
 ) {
   const mountAtListeners = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
@@ -139,11 +139,11 @@ export function listenTo(
       switch (dependency) {
         case TOP_SCROLL:
         case TOP_WHEEL:
-          const ownerListeners = getListenerTrackingFor(owner);
+          const elementListeners = getListenerTrackingFor(element);
 
-          if (!ownerListeners.hasOwnProperty(dependency)) {
-            trapCapturedEvent(dependency, owner);
-            ownerListeners[dependency] = true;
+          if (!elementListeners.hasOwnProperty(dependency)) {
+            trapCapturedEvent(dependency, element);
+            elementListeners[dependency] = true;
           }
           return;
         case TOP_FOCUS:
