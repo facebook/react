@@ -91,7 +91,7 @@ let reactTopListenersCounter = 0;
  */
 const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
 
-function getListenerTrackingFor(node: Document | Element) {
+function getListenerTrackingFor(node: any) {
   // In IE8, `node` is a host object and doesn't have `hasOwnProperty`
   // directly.
   if (!Object.prototype.hasOwnProperty.call(node, topListenersIDKey)) {
