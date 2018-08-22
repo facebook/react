@@ -14,11 +14,11 @@ import warning from 'shared/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
-import {getToStringValue, toString} from './ToStringValue';
+import {getToStringValue, toString} from '../shared/ToStringValue';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import * as inputValueTracking from './inputValueTracking';
 
-import type {ToStringValue} from './ToStringValue';
+import type {ToStringValue} from '../shared/ToStringValue';
 
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {

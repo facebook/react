@@ -56,6 +56,11 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import {
+  toString,
+  getToStringValue,
+  isSameStringValue,
+} from '../shared/ToStringValue';
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -1040,6 +1045,11 @@ class ReactDOMServerRenderer {
     validateDangerousTag(tag);
 
     let props = element.props;
+
+    if (__DEV__) {
+      validatePropertiesInDevelopment(tag, props);
+    }
+
     if (tag === 'input') {
       if (__DEV__) {
         ReactControlledValuePropTypes.checkPropTypes('input', props);
@@ -1139,7 +1149,7 @@ class ReactDOMServerRenderer {
             textareaChildren = textareaChildren[0];
           }
 
-          defaultValue = '' + textareaChildren;
+          defaultValue = textareaChildren;
         }
         if (defaultValue == null) {
           defaultValue = '';
@@ -1147,9 +1157,12 @@ class ReactDOMServerRenderer {
         initialValue = defaultValue;
       }
 
+      initialValue = toString(getToStringValue(initialValue));
+
       props = Object.assign({}, props, {
         value: undefined,
-        children: '' + initialValue,
+        defaultValue: undefined,
+        children: initialValue,
       });
     } else if (tag === 'select') {
       if (__DEV__) {
@@ -1198,6 +1211,7 @@ class ReactDOMServerRenderer {
         props.value != null ? props.value : props.defaultValue;
       props = Object.assign({}, props, {
         value: undefined,
+        defaultValue: undefined,
       });
     } else if (tag === 'option') {
       let selected = null;
@@ -1206,21 +1220,22 @@ class ReactDOMServerRenderer {
       if (selectValue != null) {
         let value;
         if (props.value != null) {
-          value = props.value + '';
+          value = props.value;
         } else {
           value = optionChildren;
         }
+
         selected = false;
         if (Array.isArray(selectValue)) {
           // multiple
           for (let j = 0; j < selectValue.length; j++) {
-            if ('' + selectValue[j] === value) {
+            if (isSameStringValue(selectValue[j], value)) {
               selected = true;
               break;
             }
           }
         } else {
-          selected = '' + selectValue === value;
+          selected = isSameStringValue(selectValue, value);
         }
 
         props = Object.assign(
@@ -1235,10 +1250,6 @@ class ReactDOMServerRenderer {
           },
         );
       }
-    }
-
-    if (__DEV__) {
-      validatePropertiesInDevelopment(tag, props);
     }
 
     assertValidProps(tag, props);
