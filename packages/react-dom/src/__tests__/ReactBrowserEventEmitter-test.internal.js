@@ -365,4 +365,36 @@ describe('ReactBrowserEventEmitter', () => {
       expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
     }
   });
+
+  describe('local listener attachment', function() {
+    it('does attach a new listener for the same event type', () => {
+      const spy = jest.fn();
+
+      ReactDOM.render(<div onScroll={() => spy()} />, container);
+      ReactDOM.render(<div onScroll={() => spy()} />, container);
+
+      const el = container.querySelector('div');
+
+      el.dispatchEvent(new Event('scroll'));
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call old listeners on a second update with a new handler', () => {
+      const a = jest.fn();
+      const b = jest.fn();
+
+      ReactDOM.render(<div onScroll={a} />, container);
+      ReactDOM.render(<div onScroll={b} />, container);
+
+      const el = container.querySelector('div');
+
+      el.dispatchEvent(new Event('scroll'));
+
+      // The first handler should have been torn down
+      expect(a).toHaveBeenCalledTimes(0);
+      // The second handler is now attached
+      expect(b).toHaveBeenCalledTimes(1);
+    });
+  });
 });

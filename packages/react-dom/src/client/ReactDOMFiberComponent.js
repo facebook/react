@@ -212,10 +212,11 @@ function ensureListeningTo(rootContainerElement, registrationName) {
   const isDocumentOrFragment =
     rootContainerElement.nodeType === DOCUMENT_NODE ||
     rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
-  const doc = isDocumentOrFragment
+  const mountAt = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
-  listenTo(registrationName, doc);
+  const root = isDocumentOrFragment ? mountAt : rootContainerElement;
+  listenTo(registrationName, mountAt, root);
 }
 
 function getOwnerDocumentFromRootContainer(

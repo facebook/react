@@ -15,6 +15,7 @@ import {
   TOP_FOCUS,
   TOP_INVALID,
   TOP_SCROLL,
+  TOP_WHEEL,
   getRawEventName,
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
@@ -90,14 +91,14 @@ let reactTopListenersCounter = 0;
  */
 const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
 
-function getListeningForDocument(mountAt: any) {
-  // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
+function getListenerTrackingFor(node: any) {
+  // In IE8, `node` is a host object and doesn't have `hasOwnProperty`
   // directly.
-  if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
-    mountAt[topListenersIDKey] = reactTopListenersCounter++;
-    alreadyListeningTo[mountAt[topListenersIDKey]] = {};
+  if (!Object.prototype.hasOwnProperty.call(node, topListenersIDKey)) {
+    node[topListenersIDKey] = reactTopListenersCounter++;
+    alreadyListeningTo[node[topListenersIDKey]] = {};
   }
-  return alreadyListeningTo[mountAt[topListenersIDKey]];
+  return alreadyListeningTo[node[topListenersIDKey]];
 }
 
 /**
@@ -124,25 +125,43 @@ function getListeningForDocument(mountAt: any) {
 export function listenTo(
   registrationName: string,
   mountAt: Document | Element,
+  root: Document | Element,
 ) {
-  const isListening = getListeningForDocument(mountAt);
+  const mountAtListeners = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
+
+    if (
+      !(
+        mountAtListeners.hasOwnProperty(dependency) &&
+        mountAtListeners[dependency]
+      )
+    ) {
       switch (dependency) {
         case TOP_SCROLL:
-          trapCapturedEvent(TOP_SCROLL, mountAt);
-          break;
+        case TOP_WHEEL:
+          const rootListeners = getListenerTrackingFor(root);
+
+          if (
+            !(
+              rootListeners.hasOwnProperty(dependency) &&
+              rootListeners[dependency]
+            )
+          ) {
+            trapCapturedEvent(dependency, root);
+            rootListeners[dependency] = true;
+          }
+          return;
         case TOP_FOCUS:
         case TOP_BLUR:
           trapCapturedEvent(TOP_FOCUS, mountAt);
           trapCapturedEvent(TOP_BLUR, mountAt);
           // We set the flag for a single dependency later in this function,
           // but this ensures we mark both as attached rather than just one.
-          isListening[TOP_BLUR] = true;
-          isListening[TOP_FOCUS] = true;
+          mountAtListeners[TOP_BLUR] = true;
+          mountAtListeners[TOP_FOCUS] = true;
           break;
         case TOP_CANCEL:
         case TOP_CLOSE:
@@ -163,7 +182,7 @@ export function listenTo(
           }
           break;
       }
-      isListening[dependency] = true;
+      mountAtListeners[dependency] = true;
     }
   }
 }
@@ -172,7 +191,7 @@ export function isListeningToAllDependencies(
   registrationName: string,
   mountAt: Document | Element,
 ) {
-  const isListening = getListeningForDocument(mountAt);
+  const isListening = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];

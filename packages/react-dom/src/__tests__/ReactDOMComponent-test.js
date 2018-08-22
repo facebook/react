@@ -2603,4 +2603,79 @@ describe('ReactDOMComponent', () => {
       expect(node.getAttribute('onx')).toBe('bar');
     });
   });
+
+  describe('Trapping local event listeners', () => {
+    it('triggers events local captured events from children without listeners', () => {
+      const callback = jest.fn();
+      const container = document.createElement('div');
+
+      ReactDOM.render(
+        <div id="top" onScroll={callback}>
+          <div id="middle">
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
+
+      const event = document.createEvent('Event');
+
+      event.initEvent('scroll', true, true);
+      container.querySelector('#bottom').dispatchEvent(event);
+
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not double dispatch events at the deepest leaf', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+      const container = document.createElement('div');
+
+      ReactDOM.render(
+        <div id="top" onScroll={top}>
+          <div id="middle" onScroll={middle}>
+            <div id="bottom" onScroll={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#bottom');
+      const event = document.createEvent('Event');
+
+      event.initEvent('scroll', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not double dispatch events at the middle leaf', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+      const container = document.createElement('div');
+
+      ReactDOM.render(
+        <div id="top" onScroll={top}>
+          <div id="middle" onScroll={middle}>
+            <div id="bottom" onScroll={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#middle');
+      const event = document.createEvent('Event');
+
+      event.initEvent('scroll', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(0);
+    });
+  });
 });
