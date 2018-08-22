@@ -759,10 +759,10 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     try {
       subscriber = __subscriberRef.current;
       if (subscriber !== null && root.memoizedInteractions.size > 0) {
-        // Interaction threads are unique per root and expiration time.
-        // DO NOT CHANGE THIS VALUE without also updating other threadID values.
-        const threadID =
-          committedExpirationTime * 1000 + root.interactionThreadID;
+        const threadID = computeThreadID(
+          committedExpirationTime,
+          root.interactionThreadID,
+        );
         subscriber.onWorkStopped(root.memoizedInteractions, threadID);
       }
     } catch (error) {
@@ -1433,6 +1433,14 @@ function captureCommitPhaseError(fiber: Fiber, error: mixed) {
   return dispatch(fiber, error, Sync);
 }
 
+function computeThreadID(
+  expirationTime: ExpirationTime,
+  interactionThreadID: number,
+): number {
+  // Interaction threads are unique per root and expiration time.
+  return expirationTime * 1000 + interactionThreadID;
+}
+
 // Creates a unique async expiration time.
 function computeUniqueAsyncExpiration(): ExpirationTime {
   const currentTime = requestCurrentTime();
@@ -1623,9 +1631,10 @@ function storeInteractionsForExpirationTime(
 
     const subscriber = __subscriberRef.current;
     if (subscriber !== null) {
-      // Interaction threads are unique per root and expiration time.
-      // DO NOT CHANGE THIS VALUE without also updating other threadID values.
-      const threadID = expirationTime * 1000 + root.interactionThreadID;
+      const threadID = computeThreadID(
+        expirationTime,
+        root.interactionThreadID,
+      );
       subscriber.onWorkScheduled(interactions, threadID);
     }
   }
@@ -2179,9 +2188,10 @@ function performWorkOnRoot(
     if (interactions.size > 0) {
       const subscriber = __subscriberRef.current;
       if (subscriber !== null) {
-        // Interaction threads are unique per root and expiration time.
-        // DO NOT CHANGE THIS VALUE without also updating other threadID values.
-        const threadID = expirationTime * 1000 + root.interactionThreadID;
+        const threadID = computeThreadID(
+          expirationTime,
+          root.interactionThreadID,
+        );
         subscriber.onWorkStarted(interactions, threadID);
       }
     }
@@ -2452,4 +2462,5 @@ export {
   interactiveUpdates,
   flushInteractiveUpdates,
   computeUniqueAsyncExpiration,
+  computeThreadID,
 };

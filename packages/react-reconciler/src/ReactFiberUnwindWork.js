@@ -61,6 +61,7 @@ import {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   retrySuspendedRoot,
+  computeThreadID,
 } from './ReactFiberScheduler';
 import {Sync} from './ReactFiberExpirationTime';
 
@@ -227,10 +228,10 @@ function throwException(
           );
           if (enableInteractionTracking) {
             // Wrap suspense callback so that the current interaction are preserved.
-            // Interaction threads are unique per root and expiration time.
-            // DO NOT CHANGE THIS VALUE without also updating other threadID values.
-            const threadID =
-              renderExpirationTime * 1000 + root.interactionThreadID;
+            const threadID = computeThreadID(
+              renderExpirationTime,
+              root.interactionThreadID,
+            );
             onResolveOrReject = wrap(onResolveOrReject, threadID);
           }
           thenable.then(onResolveOrReject, onResolveOrReject);
