@@ -293,17 +293,18 @@ function flattenOptionChildren(children: mixed): ?string {
     if (child == null) {
       return;
     }
-    if (typeof child === 'string' || typeof child === 'number') {
-      content += child;
-    } else {
-      if (__DEV__) {
-        if (!didWarnInvalidOptionChildren) {
-          didWarnInvalidOptionChildren = true;
-          warningWithoutStack(
-            false,
-            'Only strings and numbers are supported as <option> children.',
-          );
-        }
+    content += child;
+    if (__DEV__) {
+      if (
+        !didWarnInvalidOptionChildren &&
+        typeof child !== 'string' &&
+        typeof child !== 'number'
+      ) {
+        didWarnInvalidOptionChildren = true;
+        warning(
+          false,
+          'Only strings and numbers are supported as <option> children.',
+        );
       }
     }
   });
