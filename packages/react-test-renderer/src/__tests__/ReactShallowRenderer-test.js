@@ -1418,4 +1418,25 @@ describe('ReactShallowRenderer', () => {
     shallowRenderer.render(<Foo foo="bar" />);
     expect(logs).toEqual([undefined]);
   });
+
+  it('should callback when setState returns null or undefined', () => {
+    let instance;
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          count: 0,
+        };
+      }
+      render() {
+        instance = this;
+        return null;
+      }
+    }
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component />);
+    const spy = jest.fn();
+    instance.setState(() => null, spy);
+    expect(spy).toBeCalled();
+  });
 });

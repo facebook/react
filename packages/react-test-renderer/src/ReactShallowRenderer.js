@@ -315,8 +315,10 @@ class Updater {
       );
     }
 
-    // Null and undefined are treated as no-ops.
+    // Skip the update if partialState is null or undefined
     if (partialState === null || partialState === undefined) {
+      // the callback of 2nd arguments should always be called
+      this._invokeCallbacks();
       return;
     }
 
