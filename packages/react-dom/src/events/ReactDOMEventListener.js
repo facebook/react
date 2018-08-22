@@ -195,7 +195,6 @@ export function dispatchEvent(
 
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
-
   if (
     targetInst !== null &&
     typeof targetInst.tag === 'number' &&
