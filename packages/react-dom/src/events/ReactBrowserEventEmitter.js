@@ -181,11 +181,11 @@ export function isListeningToAllDependencies(
   registrationName: string,
   mountAt: Document | Element,
 ) {
-  const isListeningListeners = getListenerTrackingFor(mountAt);
+  const isListening = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!isListeningListeners.hasOwnProperty(dependency)) {
+    if (!isListening.hasOwnProperty(dependency)) {
       return false;
     }
   }
