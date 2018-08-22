@@ -208,14 +208,15 @@ if (__DEV__) {
   };
 }
 
-function ensureListeningTo(rootContainerElement, registrationName, domElement) {
+function ensureListeningTo(rootContainerElement, registrationName) {
   const isDocumentOrFragment =
     rootContainerElement.nodeType === DOCUMENT_NODE ||
     rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
-  const doc = isDocumentOrFragment
+  const mountAt = isDocumentOrFragment
     ? rootContainerElement
     : rootContainerElement.ownerDocument;
-  listenTo(registrationName, doc, domElement);
+  const root = isDocumentOrFragment ? mountAt : rootContainerElement;
+  listenTo(registrationName, mountAt, root);
 }
 
 function getOwnerDocumentFromRootContainer(
@@ -294,7 +295,7 @@ function setInitialDOMProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey, domElement);
+        ensureListeningTo(rootContainerElement, propKey);
       }
     } else if (nextProp != null) {
       DOMPropertyOperations.setValueForProperty(
@@ -489,7 +490,7 @@ export function setInitialProperties(
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange', domElement);
+      ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'option':
       ReactDOMFiberOption.validateProps(domElement, rawProps);
@@ -501,7 +502,7 @@ export function setInitialProperties(
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange', domElement);
+      ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'textarea':
       ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
@@ -509,7 +510,7 @@ export function setInitialProperties(
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange', domElement);
+      ensureListeningTo(rootContainerElement, 'onChange');
       break;
     default:
       props = rawProps;
@@ -730,7 +731,7 @@ export function diffProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey, domElement);
+        ensureListeningTo(rootContainerElement, propKey);
       }
       if (!updatePayload && lastProp !== nextProp) {
         // This is a special case. If any listener updates we need to ensure
@@ -869,7 +870,7 @@ export function diffHydratedProperties(
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange', domElement);
+      ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'option':
       ReactDOMFiberOption.validateProps(domElement, rawProps);
@@ -879,14 +880,14 @@ export function diffHydratedProperties(
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange', domElement);
+      ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'textarea':
       ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange', domElement);
+      ensureListeningTo(rootContainerElement, 'onChange');
       break;
   }
 
@@ -953,7 +954,7 @@ export function diffHydratedProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey, domElement);
+        ensureListeningTo(rootContainerElement, propKey);
       }
     } else if (
       __DEV__ &&
