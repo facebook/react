@@ -439,7 +439,7 @@ describe('ReactDOMServerIntegration', () => {
           );
           expect(e.getAttribute('value')).toBe(null);
           expect(e.getAttribute('defaultValue')).toBe(null);
-          expect(e.firstChild.innerHTML).toBe('BarFooBaz');
+          expect(e.firstChild.innerHTML).toBe('BarFoo[object Object]Baz');
           expect(e.firstChild.selected).toBe(true);
         },
       );

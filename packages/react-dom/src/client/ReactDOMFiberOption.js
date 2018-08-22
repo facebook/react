@@ -9,23 +9,24 @@
 
 import React from 'react';
 import warning from 'shared/warning';
-import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
 import {getToStringValue, toString} from './ToStringValue';
 
 let didWarnSelectedSetOnOption = false;
+let didWarnInvalidChild = false;
 
 function flattenChildren(children) {
   let content = '';
 
-  // Flatten children and warn if they aren't strings or numbers;
-  // invalid types are ignored.
+  // Flatten children. We'll warn if they are invalid
+  // during validateProps() which runs for hydration too.
+  // Note that this would throw on non-element objects.
+  // Elements are stringified (which is normally irrelevant
+  // but matters for <fbt>).
   React.Children.forEach(children, function(child) {
     if (child == null) {
       return;
     }
-    if (typeof child === 'string' || typeof child === 'number') {
-      content += child;
-    }
+    content += child;
     // Note: we don't warn about invalid children here.
     // Instead, this is done separately below so that
     // it happens during the hydration codepath too.
@@ -40,7 +41,10 @@ function flattenChildren(children) {
 
 export function validateProps(element: Element, props: Object) {
   if (__DEV__) {
-    // Warn about invalid children, mirroring the logic above.
+    // This mirrors the codepath above, but runs for hydration too.
+    // Warn about invalid children here so that client and hydration are consistent.
+    // TODO: this seems like it could cause a DEV-only throw for hydration
+    // if children contains a non-element object. We should try to avoid that.
     if (typeof props.children === 'object' && props.children !== null) {
       React.Children.forEach(props.children, function(child) {
         if (child == null) {
@@ -49,13 +53,16 @@ export function validateProps(element: Element, props: Object) {
         if (typeof child === 'string' || typeof child === 'number') {
           return;
         }
-        // This is not real ancestor info but it's close enough
-        // to produce a useful warning for invalid children.
-        // We don't have access to the real one because the <option>
-        // fiber has already been popped, and threading it through
-        // is needlessly annoying.
-        const ancestorInfo = updatedAncestorInfo(null, 'option');
-        validateDOMNesting(child.type, null, ancestorInfo);
+        if (typeof child.type !== 'string') {
+          return;
+        }
+        if (!didWarnInvalidChild) {
+          didWarnInvalidChild = true;
+          warning(
+            false,
+            'Only strings and numbers are supported as <option> children.',
+          );
+        }
       });
     }
 

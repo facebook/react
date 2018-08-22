@@ -15,6 +15,7 @@ describe('ReactDOMOption', () => {
   let ReactTestUtils;
 
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
@@ -41,9 +42,10 @@ describe('ReactDOMOption', () => {
     expect(() => {
       node = ReactTestUtils.renderIntoDocument(el);
     }).toWarnDev(
-      '<div> cannot appear as a child of <option>.\n' + '    in option (at **)',
+      'Only strings and numbers are supported as <option> children.\n' +
+        '    in option (at **)',
     );
-    expect(node.innerHTML).toBe('1  2');
+    expect(node.innerHTML).toBe('1 [object Object] 2');
     ReactTestUtils.renderIntoDocument(el);
   });
 
@@ -59,6 +61,76 @@ describe('ReactDOMOption', () => {
     const node = ReactTestUtils.renderIntoDocument(stub);
 
     expect(node.innerHTML).toBe('1  2');
+  });
+
+  it('should throw on object children', () => {
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<option>{{}}</option>);
+    }).toThrow('Objects are not valid as a React child');
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<option>{[{}]}</option>);
+    }).toThrow('Objects are not valid as a React child');
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(
+        <option>
+          {{}}
+          <span />
+        </option>,
+      );
+    }).toThrow('Objects are not valid as a React child');
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(
+        <option>
+          {'1'}
+          {{}}
+          {2}
+        </option>,
+      );
+    }).toThrow('Objects are not valid as a React child');
+  });
+
+  it('should support element-ish child', () => {
+    // This is similar to <fbt>.
+    // It's important that we toString it.
+    let obj = {
+      $$typeof: Symbol.for('react.element'),
+      type: props => props.content,
+      ref: null,
+      key: null,
+      props: {
+        content: 'hello',
+      },
+      toString() {
+        return this.props.content;
+      },
+    };
+
+    let node = ReactTestUtils.renderIntoDocument(<option>{obj}</option>);
+    expect(node.innerHTML).toBe('hello');
+
+    node = ReactTestUtils.renderIntoDocument(<option>{[obj]}</option>);
+    expect(node.innerHTML).toBe('hello');
+
+    expect(() => {
+      node = ReactTestUtils.renderIntoDocument(
+        <option>
+          {obj}
+          <span />
+        </option>,
+      );
+    }).toWarnDev(
+      'Only strings and numbers are supported as <option> children.',
+    );
+    expect(node.innerHTML).toBe('hello[object Object]');
+
+    node = ReactTestUtils.renderIntoDocument(
+      <option>
+        {'1'}
+        {obj}
+        {2}
+      </option>,
+    );
+    expect(node.innerHTML).toBe('1hello2');
   });
 
   it('should be able to use dangerouslySetInnerHTML on option', () => {
