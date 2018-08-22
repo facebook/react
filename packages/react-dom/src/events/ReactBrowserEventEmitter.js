@@ -133,13 +133,23 @@ export function listenTo(
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
 
-    if (!mountAtListeners.hasOwnProperty(dependency)) {
+    if (
+      !(
+        mountAtListeners.hasOwnProperty(dependency) &&
+        mountAtListeners[dependency]
+      )
+    ) {
       switch (dependency) {
         case TOP_SCROLL:
         case TOP_WHEEL:
           const rootListeners = getListenerTrackingFor(root);
 
-          if (!rootListeners.hasOwnProperty(dependency)) {
+          if (
+            !(
+              rootListeners.hasOwnProperty(dependency) &&
+              rootListeners[dependency]
+            )
+          ) {
             trapCapturedEvent(dependency, root);
             rootListeners[dependency] = true;
           }
@@ -185,7 +195,7 @@ export function isListeningToAllDependencies(
   const dependencies = registrationNameDependencies[registrationName];
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!isListening.hasOwnProperty(dependency)) {
+    if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
       return false;
     }
   }
