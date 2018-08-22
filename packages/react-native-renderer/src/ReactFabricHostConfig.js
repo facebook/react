@@ -15,7 +15,7 @@ import type {
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 
-import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
+import {warnForStyleProps} from './NativeMethodsMixinUtils';
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
 import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
 import * as ReactNativeViewConfigRegistry from 'ReactNativeViewConfigRegistry';
@@ -40,6 +40,10 @@ import {
   registerEventHandler,
 } from 'FabricUIManager';
 import UIManager from 'UIManager';
+
+import makeCancelable, {
+  type CancelableCallback,
+} from 'shared/cancelableCallback';
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
@@ -82,6 +86,7 @@ if (registerEventHandler) {
  */
 class ReactFabricHostComponent {
   _nativeTag: number;
+  _pendingCancelableCallbacks: Array<CancelableCallback>;
   viewConfig: ReactNativeBaseComponentViewConfig;
   currentProps: Props;
 
@@ -104,14 +109,15 @@ class ReactFabricHostComponent {
   }
 
   measure(callback: MeasureOnSuccessCallback) {
-    UIManager.measure(this._nativeTag, mountSafeCallback(this, callback));
+    const cancelableCallback = makeCancelable(callback);
+    UIManager.measure(this._nativeTag, cancelableCallback.callback);
+    this._pendingCancelableCallbacks.push(cancelableCallback);
   }
 
   measureInWindow(callback: MeasureInWindowOnSuccessCallback) {
-    UIManager.measureInWindow(
-      this._nativeTag,
-      mountSafeCallback(this, callback),
-    );
+    const cancelableCallback = makeCancelable(callback);
+    UIManager.measureInWindow(this._nativeTag, cancelableCallback.callback);
+    this._pendingCancelableCallbacks.push(cancelableCallback);
   }
 
   measureLayout(
@@ -119,12 +125,18 @@ class ReactFabricHostComponent {
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void /* currently unused */,
   ) {
+    const cancelableSuccessCallback = makeCancelable(onSuccess);
+    const cancelableErrorCallback = makeCancelable(onFail);
     UIManager.measureLayout(
       this._nativeTag,
       relativeToNativeNode,
-      mountSafeCallback(this, onFail),
-      mountSafeCallback(this, onSuccess),
+      cancelableSuccessCallback.callback,
+      cancelableErrorCallback.callback,
     );
+    this._pendingCancelableCallbacks.concat([
+      cancelableSuccessCallback,
+      cancelableErrorCallback,
+    ]);
   }
 
   setNativeProps(nativeProps: Object) {

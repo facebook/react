@@ -89,6 +89,7 @@ export default function(
     measureInWindow: function(callback: MeasureInWindowOnSuccessCallback) {
       UIManager.measureInWindow(
         findNodeHandle(this),
+        // TODO(Tycho): how to supress theese mountSafeCallback
         mountSafeCallback(this, callback),
       );
     },
@@ -109,6 +110,7 @@ export default function(
       UIManager.measureLayout(
         findNodeHandle(this),
         relativeToNativeNode,
+        // TODO(Tycho): how to supress those
         mountSafeCallback(this, onFail),
         mountSafeCallback(this, onSuccess),
       );

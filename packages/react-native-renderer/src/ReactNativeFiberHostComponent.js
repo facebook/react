@@ -21,7 +21,10 @@ import TextInputState from 'TextInputState';
 import UIManager from 'UIManager';
 
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
-import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
+import {warnForStyleProps} from './NativeMethodsMixinUtils';
+import makeCancelable, {
+  type CancelableCallback,
+} from 'shared/cancelableCallback';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the
@@ -33,6 +36,7 @@ import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
 class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;
+  _pendingCancelableCallbacks: Array<CancelableCallback>;
   viewConfig: ReactNativeBaseComponentViewConfig;
 
   constructor(tag: number, viewConfig: ReactNativeBaseComponentViewConfig) {
@@ -50,14 +54,15 @@ class ReactNativeFiberHostComponent {
   }
 
   measure(callback: MeasureOnSuccessCallback) {
-    UIManager.measure(this._nativeTag, mountSafeCallback(this, callback));
+    const cancelableCallback = makeCancelable(callback);
+    UIManager.measure(this._nativeTag, cancelableCallback.callback);
+    this._pendingCancelableCallbacks.push(cancelableCallback);
   }
 
   measureInWindow(callback: MeasureInWindowOnSuccessCallback) {
-    UIManager.measureInWindow(
-      this._nativeTag,
-      mountSafeCallback(this, callback),
-    );
+    const cancelableCallback = makeCancelable(callback);
+    UIManager.measureInWindow(this._nativeTag, cancelableCallback.callback);
+    this._pendingCancelableCallbacks.push(cancelableCallback);
   }
 
   measureLayout(
@@ -65,12 +70,18 @@ class ReactNativeFiberHostComponent {
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void /* currently unused */,
   ) {
+    const cancelableSuccessCallback = makeCancelable(onSuccess);
+    const cancelableErrorCallback = makeCancelable(onFail);
     UIManager.measureLayout(
       this._nativeTag,
       relativeToNativeNode,
-      mountSafeCallback(this, onFail),
-      mountSafeCallback(this, onSuccess),
+      cancelableSuccessCallback.callback,
+      cancelableErrorCallback.callback,
     );
+    this._pendingCancelableCallbacks.concat([
+      cancelableSuccessCallback,
+      cancelableErrorCallback,
+    ]);
   }
 
   setNativeProps(nativeProps: Object) {

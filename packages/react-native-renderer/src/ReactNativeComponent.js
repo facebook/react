@@ -22,7 +22,9 @@ import TextInputState from 'TextInputState';
 import UIManager from 'UIManager';
 
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
-import {mountSafeCallback} from './NativeMethodsMixinUtils';
+import makeCancelable, {
+  type CancelableCallback,
+} from 'shared/cancelableCallback';
 
 export default function(
   findNodeHandle: any => ?number,
@@ -43,6 +45,7 @@ export default function(
     Props,
     State,
   > {
+    _pendingCancelableCallbacks: Array<CancelableCallback>;
     /**
      * Due to bugs in Flow's handling of React.createClass, some fields already
      * declared in the base class need to be redeclared below.
@@ -80,10 +83,13 @@ export default function(
      * [`onLayout` prop](docs/view.html#onlayout) instead.
      */
     measure(callback: MeasureOnSuccessCallback): void {
+      const cancelableCallback = makeCancelable(callback);
       UIManager.measure(
         findNodeHandle(this),
-        mountSafeCallback(this, callback),
+        this,
+        cancelableCallback.callback,
       );
+      this._pendingCancelableCallbacks.push(cancelableCallback);
     }
 
     /**
@@ -100,10 +106,12 @@ export default function(
      * These values are not available until after natives rendering completes.
      */
     measureInWindow(callback: MeasureInWindowOnSuccessCallback): void {
+      const cancelableCallback = makeCancelable(callback);
       UIManager.measureInWindow(
         findNodeHandle(this),
-        mountSafeCallback(this, callback),
+        cancelableCallback.callback,
       );
+      this._pendingCancelableCallbacks.push(cancelableCallback);
     }
 
     /**
@@ -117,12 +125,18 @@ export default function(
       onSuccess: MeasureLayoutOnSuccessCallback,
       onFail: () => void /* currently unused */,
     ): void {
+      const cancelableSuccessCallback = makeCancelable(onSuccess);
+      const cancelableErrorCallback = makeCancelable(onFail);
       UIManager.measureLayout(
         findNodeHandle(this),
         relativeToNativeNode,
-        mountSafeCallback(this, onFail),
-        mountSafeCallback(this, onSuccess),
+        cancelableSuccessCallback.callback,
+        cancelableErrorCallback.callback,
       );
+      this._pendingCancelableCallbacks.concat([
+        cancelableSuccessCallback,
+        cancelableErrorCallback,
+      ]);
     }
 
     /**
