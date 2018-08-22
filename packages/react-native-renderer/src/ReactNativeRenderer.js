@@ -121,6 +121,9 @@ const ReactNativeRenderer: ReactNativeType = {
         roots.delete(containerTag);
       });
     }
+    // TODO(Tycho): how to access the Instance form the container tag ?
+    // I want to do
+    // findHostInstance(containerTag)._pendingCancelableCallbacks.map(cb => cb.cancel());
   },
 
   unmountComponentAtNodeAndRemoveContainer(containerTag: number) {

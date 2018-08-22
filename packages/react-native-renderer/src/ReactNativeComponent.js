@@ -53,6 +53,13 @@ export default function(
     props: Props;
     state: State;
 
+    componentWillUnmount() {
+      this._pendingCancelableCallbacks.map(cancelableCallback =>
+        cancelableCallback.cancel(),
+      );
+      delete this._pendingCancelableCallbacks;
+    }
+
     /**
      * Removes focus. This is the opposite of `focus()`.
      */
