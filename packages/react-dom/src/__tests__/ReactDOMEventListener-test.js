@@ -271,6 +271,51 @@ describe('ReactDOMEventListener', () => {
     document.body.removeChild(container);
   });
 
+  // This is a special case for submit and reset events as they are listened on
+  // at the element level and not the document.
+  // @see https://github.com/facebook/react/pull/13462
+  it('should not receive submit events if native, interim DOM handler prevents it', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    try {
+      const formRef = React.createRef();
+      const interimRef = React.createRef();
+
+      const handleSubmit = jest.fn();
+      const handleReset = jest.fn();
+      ReactDOM.render(
+        <div ref={interimRef}>
+          <form ref={formRef} onSubmit={handleSubmit} onReset={handleReset} />
+        </div>,
+        container,
+      );
+
+      interimRef.current.onsubmit = nativeEvent =>
+        nativeEvent.stopPropagation();
+      interimRef.current.onreset = nativeEvent => nativeEvent.stopPropagation();
+
+      formRef.current.dispatchEvent(
+        new Event('submit', {
+          // https://developer.mozilla.org/en-US/docs/Web/Events/submit
+          bubbles: true,
+        }),
+      );
+
+      formRef.current.dispatchEvent(
+        new Event('reset', {
+          // https://developer.mozilla.org/en-US/docs/Web/Events/reset
+          bubbles: true,
+        }),
+      );
+
+      expect(handleSubmit).toHaveBeenCalled();
+      expect(handleReset).toHaveBeenCalled();
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
   it('should dispatch loadstart only for media elements', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
