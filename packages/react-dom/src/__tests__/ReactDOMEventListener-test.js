@@ -361,6 +361,7 @@ describe('ReactDOMEventListener', () => {
           <audio {...mediaEvents}>
             <source {...mediaEvents} />
           </audio>
+          <form onReset={() => {}} onSubmit={() => {}} />
         </div>,
         container,
       );

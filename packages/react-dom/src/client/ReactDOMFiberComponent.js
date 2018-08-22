@@ -25,6 +25,8 @@ import {
   TOP_ERROR,
   TOP_INVALID,
   TOP_LOAD,
+  TOP_RESET,
+  TOP_SUBMIT,
   TOP_TOGGLE,
 } from '../events/DOMTopLevelEventTypes';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
@@ -479,6 +481,11 @@ export function setInitialProperties(
       trapBubbledEvent(TOP_LOAD, domElement);
       props = rawProps;
       break;
+    case 'form':
+      trapBubbledEvent(TOP_RESET, domElement);
+      trapBubbledEvent(TOP_SUBMIT, domElement);
+      props = rawProps;
+      break;
     case 'details':
       trapBubbledEvent(TOP_TOGGLE, domElement);
       props = rawProps;
@@ -860,6 +867,10 @@ export function diffHydratedProperties(
     case 'link':
       trapBubbledEvent(TOP_ERROR, domElement);
       trapBubbledEvent(TOP_LOAD, domElement);
+      break;
+    case 'form':
+      trapBubbledEvent(TOP_RESET, domElement);
+      trapBubbledEvent(TOP_SUBMIT, domElement);
       break;
     case 'details':
       trapBubbledEvent(TOP_TOGGLE, domElement);

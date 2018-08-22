@@ -23,41 +23,34 @@ describe('ReactDOM', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
+  // TODO: uncomment this test once we can run in phantom, which
+  // supports real submit events.
+  /*
   it('should bubble onSubmit', function() {
-    const container = document.createElement('div');
-
-    let count = 0;
-    let buttonRef;
-
-    function Parent() {
-      return (
-        <div
-          onSubmit={event => {
-            event.preventDefault();
-            count++;
-          }}>
-          <Child />
-        </div>
-      );
-    }
-
-    function Child() {
-      return (
-        <form>
-          <input type="submit" ref={button => (buttonRef = button)} />
-        </form>
-      );
-    }
-
-    document.body.appendChild(container);
-    try {
-      ReactDOM.render(<Parent />, container);
-      buttonRef.click();
-      expect(count).toBe(1);
-    } finally {
-      document.body.removeChild(container);
-    }
+    const count = 0;
+    const form;
+    const Parent = React.createClass({
+      handleSubmit: function() {
+        count++;
+        return false;
+      },
+      render: function() {
+        return <Child />;
+      }
+    });
+    const Child = React.createClass({
+      render: function() {
+        return <form><input type="submit" value="Submit" /></form>;
+      },
+      componentDidMount: function() {
+        form = ReactDOM.findDOMNode(this);
+      }
+    });
+    const instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    form.submit();
+    expect(count).toEqual(1);
   });
+  */
 
   it('allows a DOM element to be used with a string', () => {
     const element = React.createElement('div', {className: 'foo'});
