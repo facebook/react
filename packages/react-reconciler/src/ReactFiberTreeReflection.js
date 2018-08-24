@@ -22,7 +22,7 @@ import {
   HostRoot,
   HostPortal,
   HostText,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import {NoEffect, Placement} from 'shared/ReactTypeOfSideEffect';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;

@@ -29,7 +29,7 @@ import {
   HostPortal,
   Profiler,
   PlaceholderComponent,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
   hasCaughtError,

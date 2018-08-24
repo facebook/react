@@ -31,7 +31,7 @@ import {
   ContextConsumer,
   Profiler,
   PlaceholderComponent,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import {
   NoEffect,
   PerformedWork,

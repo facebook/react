@@ -24,7 +24,7 @@ import {
   HostPortal,
   ContextProvider,
   PlaceholderComponent,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import {
   DidCapture,
   Incomplete,

@@ -40,7 +40,7 @@ import {
   HostComponent,
   ContextProvider,
   HostPortal,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import {
   enableProfilerTimer,
   enableUserTimingAPI,

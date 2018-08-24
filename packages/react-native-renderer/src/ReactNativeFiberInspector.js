@@ -14,7 +14,7 @@ import {
   findCurrentFiberUsingSlowPath,
 } from 'react-reconciler/reflection';
 import getComponentName from 'shared/getComponentName';
-import {HostComponent} from 'shared/ReactTypeOfWork';
+import {HostComponent} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 // Module provided by RN:
 import UIManager from 'UIManager';

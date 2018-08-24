@@ -16,7 +16,7 @@ import type {
   HostContext,
 } from './ReactFiberHostConfig';
 
-import {HostComponent, HostText, HostRoot} from 'shared/ReactTypeOfWork';
+import {HostComponent, HostText, HostRoot} from 'shared/ReactWorkTags';
 import {Deletion, Placement} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'shared/invariant';
 

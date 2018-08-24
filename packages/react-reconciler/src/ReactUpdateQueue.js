@@ -93,7 +93,7 @@ import {
   ShouldCapture,
   DidCapture,
 } from 'shared/ReactTypeOfSideEffect';
-import {ClassComponent, ClassComponentLazy} from 'shared/ReactTypeOfWork';
+import {ClassComponent, ClassComponentLazy} from 'shared/ReactWorkTags';
 
 import {
   debugRenderPhaseSideEffects,
