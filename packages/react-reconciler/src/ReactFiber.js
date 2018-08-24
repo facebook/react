@@ -11,14 +11,14 @@ import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {ReactFragment, ReactPortal, RefObject} from 'shared/ReactTypes';
 import type {WorkTag} from 'shared/ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
+import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
 
 import invariant from 'shared/invariant';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
-import {NoEffect} from 'shared/ReactTypeOfSideEffect';
+import {NoEffect} from 'shared/ReactSideEffectTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -140,7 +140,7 @@ export type Fiber = {|
   mode: TypeOfMode,
 
   // Effect
-  effectTag: TypeOfSideEffect,
+  effectTag: SideEffectTag,
 
   // Singly linked list fast path to the next fiber with side-effects.
   nextEffect: Fiber | null,

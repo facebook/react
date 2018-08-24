@@ -41,7 +41,7 @@ import {
   Placement,
   Snapshot,
   Update,
-} from 'shared/ReactTypeOfSideEffect';
+} from 'shared/ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';

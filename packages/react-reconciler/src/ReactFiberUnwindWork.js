@@ -32,7 +32,7 @@ import {
   ShouldCapture,
   Update as UpdateEffect,
   LifecycleEffectMask,
-} from 'shared/ReactTypeOfSideEffect';
+} from 'shared/ReactSideEffectTags';
 import {
   enableGetDerivedStateFromCatch,
   enableSuspense,

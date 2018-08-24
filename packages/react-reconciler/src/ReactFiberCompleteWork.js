@@ -39,7 +39,7 @@ import {
   PlaceholderComponent,
   ForwardRefLazy,
 } from 'shared/ReactWorkTags';
-import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
+import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 

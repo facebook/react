@@ -40,7 +40,7 @@ import {
   DidCapture,
   Update,
   Ref,
-} from 'shared/ReactTypeOfSideEffect';
+} from 'shared/ReactSideEffectTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableGetDerivedStateFromCatch,

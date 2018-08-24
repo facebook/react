@@ -32,7 +32,7 @@ import {
   Ref,
   Incomplete,
   HostEffectMask,
-} from 'shared/ReactTypeOfSideEffect';
+} from 'shared/ReactSideEffectTags';
 import {
   HostRoot,
   ClassComponent,
