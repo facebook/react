@@ -261,8 +261,8 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
   const isFunction = typeof getVal === 'function';
   return {
     configurable: true,
-    set: set,
-    get: get,
+    set,
+    get,
   };
 
   function set(val) {
