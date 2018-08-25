@@ -17,9 +17,15 @@ export function trackEventDispatch(event: AnyNativeEvent) {
     tracker.add(event);
   } else {
     // Only process each native event once
-    Object.defineProperty(event, trackedProperty, {
-      value: true,
-    });
+    event[trackedProperty] = true;
+  }
+}
+
+export function removeTrackedEvent(event: AnyNativeEvent) {
+  if (tracker != null) {
+    tracker.delete(event);
+  } else {
+    event[trackedProperty] = false;
   }
 }
 
@@ -28,5 +34,7 @@ export function hasEventDispatched(event: AnyNativeEvent): boolean {
     return tracker.has(event);
   }
 
-  return event.hasOwnProperty(trackedProperty);
+  return (
+    event.hasOwnProperty(trackedProperty) && event[trackedProperty] === true
+  );
 }

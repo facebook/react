@@ -18,6 +18,10 @@ import {
   TOP_SCROLL,
   TOP_SUBMIT,
   TOP_WHEEL,
+  TOP_TOUCH_START,
+  TOP_TOUCH_END,
+  TOP_TOUCH_MOVE,
+  TOP_TOUCH_CANCEL,
   getRawEventName,
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
@@ -26,6 +30,7 @@ import {
   isEnabled,
   trapBubbledEvent,
   trapCapturedEvent,
+  releaseLocalEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
 
@@ -128,6 +133,7 @@ export function listenTo(
   registrationName: string,
   mountAt: Document | Element,
   element: Element,
+  root: Element,
 ) {
   const mountAtListeners = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
@@ -135,49 +141,63 @@ export function listenTo(
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
 
-    if (!mountAtListeners.hasOwnProperty(dependency)) {
-      switch (dependency) {
-        case TOP_SCROLL:
-        case TOP_WHEEL:
-          const elementListeners = getListenerTrackingFor(element);
+    switch (dependency) {
+      case TOP_TOUCH_START:
+      case TOP_TOUCH_END:
+      case TOP_TOUCH_MOVE:
+      case TOP_TOUCH_CANCEL:
+      case TOP_SCROLL:
+      case TOP_WHEEL:
+        const elementListeners = getListenerTrackingFor(element);
+        const rootListeners = getListenerTrackingFor(root);
 
-          if (!elementListeners.hasOwnProperty(dependency)) {
-            trapBubbledEvent(dependency, element);
-            elementListeners[dependency] = true;
-          }
-          return;
-        case TOP_FOCUS:
-        case TOP_BLUR:
+        if (!elementListeners.hasOwnProperty(dependency)) {
+          trapCapturedEvent(dependency, element, mountAt);
+          elementListeners[dependency] = true;
+        }
+
+        if (!rootListeners.hasOwnProperty(dependency)) {
+          releaseLocalEvent(dependency, root);
+          rootListeners[dependency] = true;
+        }
+        break;
+      case TOP_FOCUS:
+      case TOP_BLUR:
+        if (!mountAtListeners.hasOwnProperty(dependency)) {
           trapCapturedEvent(TOP_FOCUS, mountAt);
           trapCapturedEvent(TOP_BLUR, mountAt);
           // We set the flag for a single dependency later in this function,
           // but this ensures we mark both as attached rather than just one.
           mountAtListeners[TOP_BLUR] = true;
           mountAtListeners[TOP_FOCUS] = true;
-          break;
-        case TOP_CANCEL:
-        case TOP_CLOSE:
+        }
+        break;
+      case TOP_CANCEL:
+      case TOP_CLOSE:
+        if (!mountAtListeners.hasOwnProperty(dependency)) {
           if (isEventSupported(getRawEventName(dependency))) {
             trapCapturedEvent(dependency, mountAt);
           }
-          break;
-        case TOP_INVALID:
-        case TOP_SUBMIT:
-        case TOP_RESET:
-          // We listen to them on the target DOM elements.
-          // Some of them bubble so we don't want them to fire twice.
-          break;
-        default:
+        }
+        break;
+      case TOP_INVALID:
+      case TOP_SUBMIT:
+      case TOP_RESET:
+        // We listen to them on the target DOM elements.
+        // Some of them bubble so we don't want them to fire twice.
+        break;
+      default:
+        if (!mountAtListeners.hasOwnProperty(dependency)) {
           // By default, listen on the top level to all non-media events.
           // Media events don't bubble so adding the listener wouldn't do anything.
           const isMediaEvent = mediaEventTypes.indexOf(dependency) !== -1;
           if (!isMediaEvent) {
             trapBubbledEvent(dependency, mountAt);
           }
-          break;
-      }
-      mountAtListeners[dependency] = true;
+        }
     }
+
+    mountAtListeners[dependency] = true;
   }
 }
 
