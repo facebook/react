@@ -65,7 +65,7 @@ if (__DEV__) {
  * @param {*} inst Internal component instance
  */
 function executeDispatch(event, simulated, listener, inst) {
-  const { type } = event || 'unknown-event';
+  const {type} = event || 'unknown-event';
   event.currentTarget = getNodeFromInstance(inst);
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
   event.currentTarget = null;
