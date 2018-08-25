@@ -59,9 +59,11 @@
     "glob-stream": "^6.1.0",
     "google-closure-compiler": "20180506.0.0",
     "gzip-size": "^3.0.0",
+    "husky": "^0.14.3",
     "jasmine-check": "^1.0.0-rc.0",
     "jest": "^23.1.0",
     "jest-diff": "^23.0.1",
+    "lint-staged": "^7.2.2",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
@@ -107,6 +109,14 @@
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
-    "version-check": "node ./scripts/tasks/version-check.js"
+    "version-check": "node ./scripts/tasks/version-check.js",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.js": [
+      "yarn prettier",
+      "yarn linc",
+      "git add"
+    ]
   }
 }
