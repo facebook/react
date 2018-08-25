@@ -453,4 +453,50 @@ describe('ReactIncrementalUpdates', () => {
     });
     expect(ReactNoop.getChildren()).toEqual([span('derived state')]);
   });
+
+  it('does not commit in a loop on expiration', () => {
+    let updateCommits = 0;
+    class Foo extends React.Component {
+      state = {};
+      componentDidUpdate() {
+        updateCommits++;
+      }
+      render() {
+        return <span prop={this.props.prop} />;
+      }
+    }
+
+    ReactNoop.render(<Foo prop="" />);
+    expect(updateCommits).toBe(0);
+    ReactNoop.flush();
+    expect(updateCommits).toBe(0);
+    expect(ReactNoop.getChildren()).toEqual([span('')]);
+
+    ReactNoop.deferredUpdates(() => {
+      ReactNoop.render(<Foo prop="h" />);
+    });
+    ReactNoop.deferredUpdates(() => {
+      ReactNoop.render(<Foo prop="he" />);
+    });
+    // Do some work but not enough for a commit
+    expect(updateCommits).toBe(0);
+    ReactNoop.flushUnitsOfWork(1);
+    expect(updateCommits).toBe(0);
+    expect(ReactNoop.getChildren()).toEqual([span('')]);
+
+    ReactNoop.deferredUpdates(() => {
+      ReactNoop.render(<Foo prop="hel" />);
+    });
+    ReactNoop.deferredUpdates(() => {
+      ReactNoop.render(<Foo prop="hell" />);
+    });
+    ReactNoop.deferredUpdates(() => {
+      ReactNoop.render(<Foo prop="hello" />);
+    });
+    // We expect a single resulting commit
+    expect(updateCommits).toBe(0);
+    ReactNoop.flushDeferredPri();
+    expect(updateCommits).toBe(1);
+    expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+  });
 });
