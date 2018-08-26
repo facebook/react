@@ -133,6 +133,31 @@ describe('ReactDOMOption', () => {
     expect(node.innerHTML).toBe('1hello2');
   });
 
+  it('should not throw for hydration of non-element object children', () => {
+    let option = (<option>A fooby!</option>);
+    const container = document.createElement('div');
+    const node = ReactDOM.render(option, container);
+
+    // Rendering react.fragment children should not throw in DEV
+    const items = [
+      { id: 1, stuff: 'A fooby!' },
+      { id: 2, stuff: 'A barby!' },
+    ];
+    option = (
+      <option>
+        {items.map((item) => (
+          <React.Fragment key={item.id}>
+            {item.stuff}
+          </React.Fragment>
+        ))}
+      </option>
+    );
+
+    expect(() => {
+      ReactDOM.hydrate(option, container);
+    }).not.toThrow();
+  });
+
   it('should be able to use dangerouslySetInnerHTML on option', () => {
     let stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
     const node = ReactTestUtils.renderIntoDocument(stub);
