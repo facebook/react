@@ -134,22 +134,20 @@ describe('ReactDOMOption', () => {
   });
 
   it('should not throw for hydration of non-element object children', () => {
-    let option = (<option>A fooby!</option>);
-    const container = document.createElement('div');
-    const node = ReactDOM.render(option, container);
+    let option = (
+      <option>
+        {'Text'}
+        <span />
+      </option>
+    );
 
-    // Rendering react.fragment children should not throw in DEV
-    const items = [
-      { id: 1, stuff: 'A fooby!' },
-      { id: 2, stuff: 'A barby!' },
-    ];
+    const container = document.createElement('div');
+    ReactDOM.render(option, container);
+    
     option = (
       <option>
-        {items.map((item) => (
-          <React.Fragment key={item.id}>
-            {item.stuff}
-          </React.Fragment>
-        ))}
+        {'Better Text'}
+        <span />
       </option>
     );
 
