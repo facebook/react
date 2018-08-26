@@ -30,7 +30,7 @@ import {
   ForwardRef,
   Profiler,
   ForwardRefLazy,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
 

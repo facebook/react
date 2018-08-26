@@ -27,7 +27,7 @@ import {
   ContextProvider,
   ClassComponent,
   ClassComponentLazy,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';

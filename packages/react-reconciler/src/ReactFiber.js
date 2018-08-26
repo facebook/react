@@ -9,16 +9,16 @@
 
 import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {ReactFragment, ReactPortal, RefObject} from 'shared/ReactTypes';
-import type {TypeOfWork} from 'shared/ReactTypeOfWork';
+import type {WorkTag} from 'shared/ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
+import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
 
 import invariant from 'shared/invariant';
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
-import {NoEffect} from 'shared/ReactTypeOfSideEffect';
+import {NoEffect} from 'shared/ReactSideEffectTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -36,7 +36,7 @@ import {
   FunctionalComponentLazy,
   ClassComponentLazy,
   ForwardRefLazy,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
@@ -86,7 +86,7 @@ export type Fiber = {|
   // minimize the number of objects created during the initial render.
 
   // Tag identifying the type of fiber.
-  tag: TypeOfWork,
+  tag: WorkTag,
 
   // Unique identifier of this child.
   key: null | string,
@@ -140,7 +140,7 @@ export type Fiber = {|
   mode: TypeOfMode,
 
   // Effect
-  effectTag: TypeOfSideEffect,
+  effectTag: SideEffectTag,
 
   // Singly linked list fast path to the next fiber with side-effects.
   nextEffect: Fiber | null,
@@ -201,7 +201,7 @@ if (__DEV__) {
 }
 
 function FiberNode(
-  tag: TypeOfWork,
+  tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
   mode: TypeOfMode,
@@ -272,7 +272,7 @@ function FiberNode(
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 const createFiber = function(
-  tag: TypeOfWork,
+  tag: WorkTag,
   pendingProps: mixed,
   key: null | string,
   mode: TypeOfMode,
@@ -294,7 +294,7 @@ function shouldConstruct(Component: Function) {
 export function resolveLazyComponentTag(
   fiber: Fiber,
   Component: Function,
-): TypeOfWork {
+): WorkTag {
   if (typeof Component === 'function') {
     return shouldConstruct(Component)
       ? ClassComponentLazy

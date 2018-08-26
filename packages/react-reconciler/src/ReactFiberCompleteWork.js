@@ -38,8 +38,8 @@ import {
   Profiler,
   PlaceholderComponent,
   ForwardRefLazy,
-} from 'shared/ReactTypeOfWork';
-import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
+} from 'shared/ReactWorkTags';
+import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 

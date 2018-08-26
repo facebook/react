@@ -88,12 +88,8 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {
-  Callback,
-  ShouldCapture,
-  DidCapture,
-} from 'shared/ReactTypeOfSideEffect';
-import {ClassComponent, ClassComponentLazy} from 'shared/ReactTypeOfWork';
+import {Callback, ShouldCapture, DidCapture} from 'shared/ReactSideEffectTags';
+import {ClassComponent, ClassComponentLazy} from 'shared/ReactWorkTags';
 
 import {
   debugRenderPhaseSideEffects,
