@@ -16,7 +16,7 @@ import {
   FunctionalComponentLazy,
   HostComponent,
   HostText,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';

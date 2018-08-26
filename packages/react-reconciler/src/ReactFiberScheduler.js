@@ -32,7 +32,7 @@ import {
   Ref,
   Incomplete,
   HostEffectMask,
-} from 'shared/ReactTypeOfSideEffect';
+} from 'shared/ReactSideEffectTags';
 import {
   HostRoot,
   ClassComponent,
@@ -40,7 +40,7 @@ import {
   HostComponent,
   ContextProvider,
   HostPortal,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import {
   enableProfilerTimer,
   enableUserTimingAPI,

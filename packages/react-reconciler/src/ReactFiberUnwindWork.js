@@ -24,7 +24,7 @@ import {
   HostPortal,
   ContextProvider,
   PlaceholderComponent,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import {
   DidCapture,
   Incomplete,
@@ -32,7 +32,7 @@ import {
   ShouldCapture,
   Update as UpdateEffect,
   LifecycleEffectMask,
-} from 'shared/ReactTypeOfSideEffect';
+} from 'shared/ReactSideEffectTags';
 import {
   enableGetDerivedStateFromCatch,
   enableSuspense,

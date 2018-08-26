@@ -14,7 +14,7 @@ import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
 import {runExtractedEventsInBatch} from 'events/EventPluginHub';
 import {isFiberMounted} from 'react-reconciler/reflection';
-import {HostRoot} from 'shared/ReactTypeOfWork';
+import {HostRoot} from 'shared/ReactWorkTags';
 
 import {addEventBubbleListener, addEventCaptureListener} from './EventListener';
 import getEventTarget from './getEventTarget';

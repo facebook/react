@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HostComponent, HostText} from 'shared/ReactTypeOfWork';
+import {HostComponent, HostText} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 
 const randomKey = Math.random()

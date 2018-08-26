@@ -15,7 +15,7 @@ import {
   ClassComponent,
   HostRoot,
   ClassComponentLazy,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';

@@ -9,7 +9,7 @@
 
 'use strict';
 
-const {HostComponent} = require('shared/ReactTypeOfWork');
+const {HostComponent} = require('shared/ReactWorkTags');
 
 let EventPluginHub;
 let ResponderEventPlugin;

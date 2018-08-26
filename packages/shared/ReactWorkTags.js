@@ -7,7 +7,7 @@
  * @flow
  */
 
-export type TypeOfWork =
+export type WorkTag =
   | 0
   | 1
   | 2

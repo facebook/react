@@ -20,7 +20,7 @@ import {
   ContextProvider,
   ContextConsumer,
   Mode,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 
 type MeasurementPhase =
   | 'componentWillMount'

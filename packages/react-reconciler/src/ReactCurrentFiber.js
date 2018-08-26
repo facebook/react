@@ -16,7 +16,7 @@ import {
   ClassComponentLazy,
   HostComponent,
   Mode,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 
