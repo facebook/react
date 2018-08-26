@@ -472,27 +472,22 @@ describe('ReactIncrementalUpdates', () => {
     expect(updateCommits).toBe(0);
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
-    ReactNoop.deferredUpdates(() => {
-      ReactNoop.render(<Foo prop="h" />);
-    });
-    ReactNoop.deferredUpdates(() => {
-      ReactNoop.render(<Foo prop="he" />);
-    });
+    ReactNoop.render(<Foo prop="h" />);
+    ReactNoop.expire(200);
+    ReactNoop.render(<Foo prop="he" />);
+    ReactNoop.expire(200);
     // Do some work but not enough for a commit
     expect(updateCommits).toBe(0);
     ReactNoop.flushUnitsOfWork(1);
     expect(updateCommits).toBe(0);
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
-    ReactNoop.deferredUpdates(() => {
-      ReactNoop.render(<Foo prop="hel" />);
-    });
-    ReactNoop.deferredUpdates(() => {
-      ReactNoop.render(<Foo prop="hell" />);
-    });
-    ReactNoop.deferredUpdates(() => {
-      ReactNoop.render(<Foo prop="hello" />);
-    });
+    ReactNoop.render(<Foo prop="hel" />);
+    ReactNoop.expire(200);
+    ReactNoop.render(<Foo prop="hell" />);
+    ReactNoop.expire(200);
+    ReactNoop.render(<Foo prop="hello" />);
+    ReactNoop.expire(200);
     // We expect a single resulting commit
     expect(updateCommits).toBe(0);
     ReactNoop.flushDeferredPri();
