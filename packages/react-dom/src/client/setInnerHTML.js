@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import {Namespaces} from '../shared/DOMNamespaces';
@@ -18,7 +20,10 @@ let reusableSVGContainer;
  * @param {string} html
  * @internal
  */
-const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(node, html) {
+const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
+  node: Element,
+  html: string,
+): void {
   // IE does not have innerHTML for SVG nodes, so instead we inject the
   // new markup in a temp node and then move the child nodes across into
   // the target node
