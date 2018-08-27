@@ -207,13 +207,17 @@ export function trapCapturedEvent(
  */
 export function releaseLocalEvent(
   topLevelType: DOMTopLevelEventType,
-  element: Element,
+  element: Document | Element,
 ) {
   if (!element) {
     return null;
   }
 
-  addEventCaptureListener(element, topLevelType, removeTrackedEvent);
+  addEventCaptureListener(
+    element,
+    getRawEventName(topLevelType),
+    removeTrackedEvent,
+  );
 }
 
 function dispatchInteractiveEvent(topLevelType, nativeEvent) {

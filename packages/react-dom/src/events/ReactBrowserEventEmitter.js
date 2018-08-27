@@ -133,7 +133,7 @@ export function listenTo(
   registrationName: string,
   mountAt: Document | Element,
   element: Element,
-  root: Element,
+  root: Document | Element,
 ) {
   const mountAtListeners = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
@@ -152,7 +152,7 @@ export function listenTo(
         const rootListeners = getListenerTrackingFor(root);
 
         if (!elementListeners.hasOwnProperty(dependency)) {
-          trapCapturedEvent(dependency, element, mountAt);
+          trapCapturedEvent(dependency, element);
           elementListeners[dependency] = true;
         }
 

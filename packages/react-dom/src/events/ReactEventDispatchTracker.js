@@ -12,7 +12,11 @@ import type {AnyNativeEvent} from 'events/PluginModuleType';
 const tracker = typeof WeakSet === 'undefined' ? null : new WeakSet();
 const trackedProperty = '__react_event_tracking:' + Math.random();
 
-export function trackEventDispatch(event: AnyNativeEvent) {
+type TrackableEvent = AnyNativeEvent & {
+  [trackedProperty: string]: boolean,
+};
+
+export function trackEventDispatch(event: TrackableEvent) {
   if (tracker != null) {
     tracker.add(event);
   } else {
@@ -21,7 +25,7 @@ export function trackEventDispatch(event: AnyNativeEvent) {
   }
 }
 
-export function removeTrackedEvent(event: AnyNativeEvent) {
+export function removeTrackedEvent(event: TrackableEvent) {
   if (tracker != null) {
     tracker.delete(event);
   } else {
@@ -29,7 +33,7 @@ export function removeTrackedEvent(event: AnyNativeEvent) {
   }
 }
 
-export function hasEventDispatched(event: AnyNativeEvent): boolean {
+export function hasEventDispatched(event: TrackableEvent): boolean {
   if (tracker != null) {
     return tracker.has(event);
   }
