@@ -533,7 +533,7 @@ export function didNotHydrateContainerInstance(
   instance: Instance | TextInstance,
 ) {
   if (__DEV__) {
-    if (instance.nodeType === 1) {
+    if (instance.nodeType === ELEMENT_NODE) {
       warnForDeletedHydratableElement(parentContainer, (instance: any));
     } else {
       warnForDeletedHydratableText(parentContainer, (instance: any));
@@ -548,7 +548,7 @@ export function didNotHydrateInstance(
   instance: Instance | TextInstance,
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-    if (instance.nodeType === 1) {
+    if (instance.nodeType === ELEMENT_NODE) {
       warnForDeletedHydratableElement(parentInstance, (instance: any));
     } else {
       warnForDeletedHydratableText(parentInstance, (instance: any));

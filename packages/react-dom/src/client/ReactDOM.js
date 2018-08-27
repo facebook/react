@@ -694,7 +694,7 @@ const ReactDOM: Object = {
 
         // Check if the container itself is a React root node.
         const isContainerReactRoot =
-          container.nodeType === 1 &&
+          container.nodeType === ELEMENT_NODE &&
           isValidContainer(container.parentNode) &&
           !!container.parentNode._reactRootContainer;
 

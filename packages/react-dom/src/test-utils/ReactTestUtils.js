@@ -20,7 +20,7 @@ import {
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-
+import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 
 const {findDOMNode} = ReactDOM;
@@ -124,7 +124,7 @@ function validateClassInstance(inst, methodName) {
   const stringified = '' + inst;
   if (Array.isArray(inst)) {
     received = 'an array';
-  } else if (inst && inst.nodeType === 1 && inst.tagName) {
+  } else if (inst && inst.nodeType === ELEMENT_NODE && inst.tagName) {
     received = 'a DOM node';
   } else if (stringified === '[object Object]') {
     received = 'object with keys {' + Object.keys(inst).join(', ') + '}';
@@ -169,7 +169,7 @@ const ReactTestUtils = {
   },
 
   isDOMComponent: function(inst) {
-    return !!(inst && inst.nodeType === 1 && inst.tagName);
+    return !!(inst && inst.nodeType === ELEMENT_NODE && inst.tagName);
   },
 
   isDOMComponentElement: function(inst) {
