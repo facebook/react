@@ -2237,7 +2237,10 @@ function interactiveUpdates<A, B, R>(fn: (A, B) => R, a: A, b: B): R {
 }
 
 function flushInteractiveUpdates() {
-  if (!isRendering && lowestPriorityPendingInteractiveExpirationTime !== NoWork) {
+  if (
+    !isRendering &&
+    lowestPriorityPendingInteractiveExpirationTime !== NoWork
+  ) {
     // Synchronously flush pending interactive updates.
     performWork(lowestPriorityPendingInteractiveExpirationTime, null);
     lowestPriorityPendingInteractiveExpirationTime = NoWork;
