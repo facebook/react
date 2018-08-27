@@ -1,5 +1,4 @@
 import React, {Placeholder, PureComponent} from 'react';
-import {unstable_deferredUpdates} from 'react-dom';
 import {createResource} from 'simple-cache-provider';
 import {cache} from '../cache';
 import Spinner from './Spinner';
@@ -31,7 +30,7 @@ export default class App extends PureComponent {
     this.setState({
       currentId: id,
     });
-    unstable_deferredUpdates(() => {
+    requestIdleCallback(() => {
       this.setState({
         showDetail: true,
       });

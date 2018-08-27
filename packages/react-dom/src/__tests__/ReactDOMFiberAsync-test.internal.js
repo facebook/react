@@ -81,7 +81,7 @@ describe('ReactDOMFiberAsync', () => {
 
       handleChange = e => {
         const nextValue = e.target.value;
-        ReactDOM.unstable_deferredUpdates(() => {
+        requestIdleCallback(() => {
           this.setState({
             asyncValue: nextValue,
           });

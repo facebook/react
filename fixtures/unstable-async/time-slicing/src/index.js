@@ -1,5 +1,5 @@
-import React, {PureComponent, unstable_AsyncMode} from 'react';
-import {flushSync, render, unstable_deferredUpdates} from 'react-dom';
+import React, {PureComponent} from 'react';
+import {flushSync, render} from 'react-dom';
 import _ from 'lodash';
 import Charts from './Charts';
 import Clock from './Clock';
@@ -54,9 +54,11 @@ class App extends PureComponent {
       return;
     }
     if (this.state.strategy !== 'async') {
-      this.setState(state => ({
-        showDemo: !state.showDemo,
-      }));
+      flushSync(() => {
+        this.setState(state => ({
+          showDemo: !state.showDemo,
+        }));
+      });
       return;
     }
     if (this._ignoreClick) {
@@ -64,7 +66,7 @@ class App extends PureComponent {
     }
     this._ignoreClick = true;
 
-    unstable_deferredUpdates(() => {
+    requestIdleCallback(() => {
       this.setState({showDemo: true}, () => {
         this._ignoreClick = false;
       });
@@ -104,7 +106,7 @@ class App extends PureComponent {
         this.debouncedHandleChange(value);
         break;
       case 'async':
-        unstable_deferredUpdates(() => {
+        requestIdleCallback(() => {
           this.setState({value});
         });
         break;
@@ -114,8 +116,6 @@ class App extends PureComponent {
   };
 
   render() {
-    const Wrapper =
-      this.state.strategy === 'async' ? unstable_AsyncMode : 'div';
     const {showClock} = this.state;
     const data = this.getStreamData(this.state.value);
     return (
@@ -131,20 +131,23 @@ class App extends PureComponent {
           defaultValue={this.state.input}
           onChange={this.handleChange}
         />
-        <Wrapper>
-          <div className="demo" onClick={this.handleChartClick}>
-            {this.state.showDemo && (
-              <Charts data={data} onClick={this.handleChartClick} />
-            )}
-            <div style={{display: showClock ? 'block' : 'none'}}>
-              <Clock />
-            </div>
+        <div className="demo" onClick={this.handleChartClick}>
+          {this.state.showDemo && (
+            <Charts data={data} onClick={this.handleChartClick} />
+          )}
+          <div style={{display: showClock ? 'block' : 'none'}}>
+            <Clock />
           </div>
-        </Wrapper>
+        </div>
       </div>
     );
   }
 }
 
 const container = document.getElementById('root');
-render(<App />, container);
+render(
+  <React.unstable_AsyncMode>
+    <App />
+  </React.unstable_AsyncMode>,
+  container
+);
