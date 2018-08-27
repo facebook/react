@@ -25,14 +25,6 @@ import {
   hasEventDispatched,
   trackEventDispatch,
 } from './ReactEventDispatchTracker';
-import {
-  TOP_SCROLL,
-  TOP_WHEEL,
-  TOP_TOUCH_START,
-  TOP_TOUCH_END,
-  TOP_TOUCH_MOVE,
-  TOP_TOUCH_CANCEL,
-} from './DOMTopLevelEventTypes';
 
 const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 

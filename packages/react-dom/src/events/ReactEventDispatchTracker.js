@@ -21,8 +21,8 @@ export function trackEventDispatch(event: TrackableEvent) {
 
 export function hasEventDispatched(event: TrackableEvent): boolean {
   if (!event.hasOwnProperty(lastTarget)) {
-    return false
+    return false;
   }
 
-  return event[lastTarget] !== event.currentTarget
+  return event[lastTarget] !== event.currentTarget;
 }

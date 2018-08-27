@@ -192,5 +192,4 @@ describe('Local event listeners', () => {
     expect(middle).toHaveBeenCalledTimes(1);
     expect(bottom).toHaveBeenCalledTimes(1);
   });
-
 });

@@ -131,7 +131,7 @@ function getListenerTrackingFor(node: any) {
 export function listenTo(
   registrationName: string,
   mountAt: Document | Element,
-  element: Element
+  element: Element,
 ) {
   const mountAtListeners = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
