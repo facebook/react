@@ -30,7 +30,6 @@ import {
   isEnabled,
   trapBubbledEvent,
   trapCapturedEvent,
-  releaseLocalEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
 
@@ -132,8 +131,7 @@ function getListenerTrackingFor(node: any) {
 export function listenTo(
   registrationName: string,
   mountAt: Document | Element,
-  element: Element,
-  root: Document | Element,
+  element: Element
 ) {
   const mountAtListeners = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
@@ -149,16 +147,10 @@ export function listenTo(
       case TOP_SCROLL:
       case TOP_WHEEL:
         const elementListeners = getListenerTrackingFor(element);
-        const rootListeners = getListenerTrackingFor(root);
 
         if (!elementListeners.hasOwnProperty(dependency)) {
           trapCapturedEvent(dependency, element);
           elementListeners[dependency] = true;
-        }
-
-        if (!rootListeners.hasOwnProperty(dependency)) {
-          releaseLocalEvent(dependency, root);
-          rootListeners[dependency] = true;
         }
         break;
       case TOP_FOCUS:

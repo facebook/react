@@ -44,41 +44,73 @@ describe('Local event listeners', () => {
     expect(callback).toHaveBeenCalledTimes(2);
   });
 
-  it('can re-dispatch the same event', () => {
+  it('can re-dispatch the same event from lower in the tree', () => {
     const callback = jest.fn();
 
     ReactDOM.render(
       <div id="top" onScroll={callback}>
-        <div id="bottom" />
+        <div id="middle">
+          <div id="bottom" />
+        </div>
       </div>,
       container,
     );
 
     const event = document.createEvent('Event');
+    const top = container.querySelector('#top');
+    const middle = container.querySelector('#middle');
+    const bottom = container.querySelector('#bottom');
+
+    event.initEvent('scroll', true, true);
+
+    top.dispatchEvent(event);
+    middle.dispatchEvent(event);
+    bottom.dispatchEvent(event);
+
+    expect(callback).toHaveBeenCalledTimes(3);
+  });
+
+  it('can re-dispatch the same event from higher in the tree', () => {
+    const callback = jest.fn();
+
+    ReactDOM.render(
+      <div id="top" onScroll={callback}>
+        <div id="middle">
+          <div id="bottom" />
+        </div>
+      </div>,
+      container,
+    );
+
+    const event = document.createEvent('Event');
+    const top = container.querySelector('#top');
     const bottom = container.querySelector('#bottom');
 
     event.initEvent('scroll', true, true);
 
     bottom.dispatchEvent(event);
-    bottom.dispatchEvent(event);
+    top.dispatchEvent(event);
 
     expect(callback).toHaveBeenCalledTimes(2);
   });
 
-  it('can re-dispatch non-local events', () => {
+  it('can re-dispatch the same event from the same point in the tree', () => {
     const callback = jest.fn();
 
     ReactDOM.render(
-      <div id="top" onMouseOver={callback}>
-        <div id="bottom" />
+      <div id="top" onScroll={callback}>
+        <div id="middle">
+          <div id="bottom" />
+        </div>
       </div>,
       container,
     );
 
     const event = document.createEvent('Event');
+
     const bottom = container.querySelector('#bottom');
 
-    event.initEvent('mouseover', true, true);
+    event.initEvent('scroll', true, true);
 
     bottom.dispatchEvent(event);
     bottom.dispatchEvent(event);

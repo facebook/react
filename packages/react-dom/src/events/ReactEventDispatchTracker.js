@@ -9,36 +9,20 @@
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 
-const tracker = typeof WeakSet === 'undefined' ? null : new WeakSet();
-const trackedProperty = '__react_event_tracking:' + Math.random();
+const lastTarget = '__$react_event_tracking:' + Math.random();
 
 type TrackableEvent = AnyNativeEvent & {
-  [trackedProperty: string]: boolean,
+  [lastTarget: string]: Node,
 };
 
 export function trackEventDispatch(event: TrackableEvent) {
-  if (tracker != null) {
-    tracker.add(event);
-  } else {
-    // Only process each native event once
-    event[trackedProperty] = true;
-  }
-}
-
-export function removeTrackedEvent(event: TrackableEvent) {
-  if (tracker != null) {
-    tracker.delete(event);
-  } else {
-    event[trackedProperty] = false;
-  }
+  event[lastTarget] = event.currentTarget;
 }
 
 export function hasEventDispatched(event: TrackableEvent): boolean {
-  if (tracker != null) {
-    return tracker.has(event);
+  if (!event.hasOwnProperty(lastTarget)) {
+    return false
   }
 
-  return (
-    event.hasOwnProperty(trackedProperty) && event[trackedProperty] === true
-  );
+  return event[lastTarget] !== event.currentTarget
 }

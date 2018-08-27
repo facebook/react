@@ -24,7 +24,6 @@ import {getRawEventName} from './DOMTopLevelEventTypes';
 import {
   hasEventDispatched,
   trackEventDispatch,
-  removeTrackedEvent,
 } from './ReactEventDispatchTracker';
 import {
   TOP_SCROLL,
@@ -194,32 +193,6 @@ export function trapCapturedEvent(
   );
 }
 
-/**
- * Scroll and touch events are attached locally. To prevent multiple
- * dispatches of nested events, they are tracked. When tracked events hit
- * the root element, they are removed from tracking so that an event can be
- * dispatched multiple times (usually when testing).
- *
- * @param {number} topLevelType Number from `TopLevelEventTypes`.
- * @param {object} element Root element on which the event should be released.
- *
- * @internal
- */
-export function releaseLocalEvent(
-  topLevelType: DOMTopLevelEventType,
-  element: Document | Element,
-) {
-  if (!element) {
-    return null;
-  }
-
-  addEventCaptureListener(
-    element,
-    getRawEventName(topLevelType),
-    removeTrackedEvent,
-  );
-}
-
 function dispatchInteractiveEvent(topLevelType, nativeEvent) {
   interactiveUpdates(dispatchEvent, topLevelType, nativeEvent);
 }
@@ -228,25 +201,11 @@ export function dispatchEvent(
   topLevelType: DOMTopLevelEventType,
   nativeEvent: AnyNativeEvent,
 ) {
-  if (!_enabled) {
+  if (!_enabled || hasEventDispatched(nativeEvent)) {
     return;
   }
 
-  switch (topLevelType) {
-    case TOP_TOUCH_START:
-    case TOP_TOUCH_END:
-    case TOP_TOUCH_MOVE:
-    case TOP_TOUCH_CANCEL:
-    case TOP_SCROLL:
-    case TOP_WHEEL:
-      if (hasEventDispatched(nativeEvent)) {
-        return;
-      }
-      trackEventDispatch(nativeEvent);
-      break;
-    default:
-    // Do nothing
-  }
+  trackEventDispatch(nativeEvent);
 
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
