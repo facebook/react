@@ -64,12 +64,9 @@ class App extends PureComponent {
     }
     this._ignoreClick = true;
 
-    // TODO: needing setTimeout here seems like a React bug.
-    setTimeout(() => {
-      unstable_deferredUpdates(() => {
-        this.setState({showDemo: true}, () => {
-          this._ignoreClick = false;
-        });
+    unstable_deferredUpdates(() => {
+      this.setState({showDemo: true}, () => {
+        this._ignoreClick = false;
       });
     });
   };
@@ -107,11 +104,8 @@ class App extends PureComponent {
         this.debouncedHandleChange(value);
         break;
       case 'async':
-        // TODO: needing setTimeout here seems like a React bug.
-        setTimeout(() => {
-          unstable_deferredUpdates(() => {
-            this.setState({value});
-          });
+        unstable_deferredUpdates(() => {
+          this.setState({value});
         });
         break;
       default:
