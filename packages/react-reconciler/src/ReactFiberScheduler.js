@@ -1406,10 +1406,10 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
     // interactive expiration time. This allows us to synchronously flush
     // all interactive updates when needed.
     if (
-      lowestPendingInteractiveExpirationTime === NoWork ||
-      expirationTime > lowestPendingInteractiveExpirationTime
+      lowestPriorityPendingInteractiveExpirationTime === NoWork ||
+      expirationTime > lowestPriorityPendingInteractiveExpirationTime
     ) {
-      lowestPendingInteractiveExpirationTime = expirationTime;
+      lowestPriorityPendingInteractiveExpirationTime = expirationTime;
     }
   }
   return expirationTime;
@@ -1604,7 +1604,7 @@ let callbackID: *;
 let isRendering: boolean = false;
 let nextFlushedRoot: FiberRoot | null = null;
 let nextFlushedExpirationTime: ExpirationTime = NoWork;
-let lowestPendingInteractiveExpirationTime: ExpirationTime = NoWork;
+let lowestPriorityPendingInteractiveExpirationTime: ExpirationTime = NoWork;
 let deadlineDidExpire: boolean = false;
 let hasUnhandledError: boolean = false;
 let unhandledError: mixed | null = null;
@@ -2215,11 +2215,11 @@ function interactiveUpdates<A, B, R>(fn: (A, B) => R, a: A, b: B): R {
   if (
     !isBatchingUpdates &&
     !isRendering &&
-    lowestPendingInteractiveExpirationTime !== NoWork
+    lowestPriorityPendingInteractiveExpirationTime !== NoWork
   ) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPendingInteractiveExpirationTime, null);
-    lowestPendingInteractiveExpirationTime = NoWork;
+    performWork(lowestPriorityPendingInteractiveExpirationTime, null);
+    lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
   const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
   const previousIsBatchingUpdates = isBatchingUpdates;
@@ -2237,10 +2237,13 @@ function interactiveUpdates<A, B, R>(fn: (A, B) => R, a: A, b: B): R {
 }
 
 function flushInteractiveUpdates() {
-  if (!isRendering && lowestPendingInteractiveExpirationTime !== NoWork) {
+  if (
+    !isRendering &&
+    lowestPriorityPendingInteractiveExpirationTime !== NoWork
+  ) {
     // Synchronously flush pending interactive updates.
-    performWork(lowestPendingInteractiveExpirationTime, null);
-    lowestPendingInteractiveExpirationTime = NoWork;
+    performWork(lowestPriorityPendingInteractiveExpirationTime, null);
+    lowestPriorityPendingInteractiveExpirationTime = NoWork;
   }
 }
 
