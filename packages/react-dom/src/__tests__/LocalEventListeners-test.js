@@ -118,7 +118,7 @@ describe('Local event listeners', () => {
     expect(callback).toHaveBeenCalledTimes(2);
   });
 
-  it('does not double dispatch events at the deepest leaf', () => {
+  it('does not double dispatch events at the top leaf', () => {
     const top = jest.fn();
     const middle = jest.fn();
     const bottom = jest.fn();
@@ -132,15 +132,15 @@ describe('Local event listeners', () => {
       container,
     );
 
-    const target = container.querySelector('#bottom');
+    const target = container.querySelector('#top');
     const event = document.createEvent('Event');
 
     event.initEvent('scroll', true, true);
     target.dispatchEvent(event);
 
     expect(top).toHaveBeenCalledTimes(1);
-    expect(middle).toHaveBeenCalledTimes(1);
-    expect(bottom).toHaveBeenCalledTimes(1);
+    expect(middle).toHaveBeenCalledTimes(0);
+    expect(bottom).toHaveBeenCalledTimes(0);
   });
 
   it('does not double dispatch events at the middle leaf', () => {
@@ -167,4 +167,30 @@ describe('Local event listeners', () => {
     expect(middle).toHaveBeenCalledTimes(1);
     expect(bottom).toHaveBeenCalledTimes(0);
   });
+
+  it('does not double dispatch events at the deepest leaf', () => {
+    const top = jest.fn();
+    const middle = jest.fn();
+    const bottom = jest.fn();
+
+    ReactDOM.render(
+      <div id="top" onScroll={top}>
+        <div id="middle" onScroll={middle}>
+          <div id="bottom" onScroll={bottom} />
+        </div>
+      </div>,
+      container,
+    );
+
+    const target = container.querySelector('#bottom');
+    const event = document.createEvent('Event');
+
+    event.initEvent('scroll', true, true);
+    target.dispatchEvent(event);
+
+    expect(top).toHaveBeenCalledTimes(1);
+    expect(middle).toHaveBeenCalledTimes(1);
+    expect(bottom).toHaveBeenCalledTimes(1);
+  });
+
 });
