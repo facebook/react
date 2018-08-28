@@ -64,12 +64,14 @@ let didWarnAboutLegacyLifecyclesAndDerivedState;
 let didWarnAboutUndefinedDerivedState;
 let warnOnUndefinedDerivedState;
 let warnOnInvalidCallback;
+let didWarnAboutDirectlyAssigningPropsToState;
 
 if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = new Set();
   didWarnAboutUninitializedState = new Set();
   didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set();
   didWarnAboutLegacyLifecyclesAndDerivedState = new Set();
+  didWarnAboutDirectlyAssigningPropsToState = new Set();
   didWarnAboutUndefinedDerivedState = new Set();
 
   const didWarnOnInvalidCallback = new Set();
@@ -674,6 +676,20 @@ function mountClassInstance(
   instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
   if (__DEV__) {
+    if (instance.state === newProps) {
+      const componentName = getComponentName(ctor) || 'Component';
+      if (!didWarnAboutDirectlyAssigningPropsToState.has(componentName)) {
+        didWarnAboutDirectlyAssigningPropsToState.add(componentName);
+        warningWithoutStack(
+          false,
+          '%s: It is not recommended to assign props directly to state ' +
+            "because updates to props won't be reflected in state. " +
+            'In most cases, it is better to use props directly.',
+          componentName,
+        );
+      }
+    }
+
     if (workInProgress.mode & StrictMode) {
       ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
         workInProgress,
