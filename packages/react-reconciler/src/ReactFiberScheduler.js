@@ -1568,11 +1568,14 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
 function deferredUpdates<A>(fn: () => A): A {
   const currentTime = requestCurrentTime();
   const previousExpirationContext = expirationContext;
+  const previousIsBatchingInteractiveUpdates = isBatchingInteractiveUpdates;
   expirationContext = computeAsyncExpiration(currentTime);
+  isBatchingInteractiveUpdates = false;
   try {
     return fn();
   } finally {
     expirationContext = previousExpirationContext;
+    isBatchingInteractiveUpdates = previousIsBatchingInteractiveUpdates;
   }
 }
 
