@@ -167,5 +167,9 @@ export function createFiberRoot(
 
   uninitializedFiber.stateNode = root;
 
+  // The reason for the way the Flow types are structured in this file,
+  // Is to avoid needing :any casts everywhere interaction-tracking fields are used.
+  // Unfortunately that requires an :any cast for non-interaction-tracking capable builds.
+  // $FlowFixMe Remove this :any cast and replace it with something better.
   return ((root: any): FiberRoot);
 }
