@@ -1271,8 +1271,8 @@ describe('Profiler', () => {
         throwInOnWorkStarted = false;
         expect(onWorkStarted).toHaveBeenCalled();
 
-        // But should not leave React in a broken state for subsequent renders.
-        expect(renderer).toFlushAll(['Component:text']);
+        // But the React work should have still been processed.
+        expect(renderer).toFlushAll([]);
         const tree = renderer.toTree();
         expect(tree.type).toBe(Component);
         expect(tree.props.children).toBe('text');

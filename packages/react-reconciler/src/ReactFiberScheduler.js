@@ -753,7 +753,6 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   if (enableInteractionTracking) {
     __interactionsRef.current = prevInteractions;
 
-    let caughtError = null;
     let subscriber;
 
     try {
@@ -766,7 +765,12 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
         subscriber.onWorkStopped(root.memoizedInteractions, threadID);
       }
     } catch (error) {
-      caughtError = error;
+      // It's not safe for commitRoot() to throw.
+      // Store the error for now and we'll re-throw in finishRendering().
+      if (!hasUnhandledError) {
+        hasUnhandledError = true;
+        unhandledError = error;
+      }
     } finally {
       // Now that we're done, check the completed batch of interactions.
       // If no more work is outstanding for a given interaction,
@@ -777,14 +781,15 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
           try {
             subscriber.onInteractionScheduledWorkCompleted(interaction);
           } catch (error) {
-            caughtError = caughtError || error;
+            // It's not safe for commitRoot() to throw.
+            // Store the error for now and we'll re-throw in finishRendering().
+            if (!hasUnhandledError) {
+              hasUnhandledError = true;
+              unhandledError = error;
+            }
           }
         }
       });
-
-      if (caughtError) {
-        throw caughtError;
-      }
     }
   }
 }
@@ -2164,6 +2169,8 @@ function performWorkOnRoot(
       'by a bug in React. Please file an issue.',
   );
 
+  isRendering = true;
+
   if (enableInteractionTracking) {
     // Determine which interactions this batch of work currently includes,
     // So that we can accurately attribute time spent working on it,
@@ -2192,12 +2199,20 @@ function performWorkOnRoot(
           expirationTime,
           root.interactionThreadID,
         );
-        subscriber.onWorkStarted(interactions, threadID);
+        try {
+          subscriber.onWorkStarted(interactions, threadID);
+        } catch (error) {
+          // Work thrown by a interaction-tracking subscriber should be rethrown,
+          // But only once it's safe (to avoid leaveing the scheduler in an invalid state).
+          // Store the error for now and we'll re-throw in finishRendering().
+          if (!hasUnhandledError) {
+            hasUnhandledError = true;
+            unhandledError = error;
+          }
+        }
       }
     }
   }
-
-  isRendering = true;
 
   // Check if this is async work or sync/expired work.
   if (deadline === null || isExpired) {
