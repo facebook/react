@@ -16,6 +16,11 @@ let ReactDOM;
 
 const AsyncMode = React.unstable_AsyncMode;
 
+const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
+  HTMLInputElement.prototype,
+  'value',
+).set;
+
 describe('ReactDOMFiberAsync', () => {
   let container;
 
@@ -47,6 +52,12 @@ describe('ReactDOMFiberAsync', () => {
     jest.resetModules();
     container = document.createElement('div');
     ReactDOM = require('react-dom');
+
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
   });
 
   it('renders synchronously by default', () => {
@@ -60,11 +71,60 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['Hi', 'Bye']);
   });
 
+  it('does not perform deferred updates synchronously', () => {
+    let inputRef = React.createRef();
+    let asyncValueRef = React.createRef();
+    let syncValueRef = React.createRef();
+
+    class Counter extends React.Component {
+      state = {asyncValue: '', syncValue: ''};
+
+      handleChange = e => {
+        const nextValue = e.target.value;
+        requestIdleCallback(() => {
+          this.setState({
+            asyncValue: nextValue,
+          });
+        });
+        this.setState({
+          syncValue: nextValue,
+        });
+      };
+
+      render() {
+        return (
+          <div>
+            <input
+              ref={inputRef}
+              onChange={this.handleChange}
+              defaultValue=""
+            />
+            <p ref={asyncValueRef}>{this.state.asyncValue}</p>
+            <p ref={syncValueRef}>{this.state.syncValue}</p>
+          </div>
+        );
+      }
+    }
+    ReactDOM.render(<Counter />, container);
+    expect(asyncValueRef.current.textContent).toBe('');
+    expect(syncValueRef.current.textContent).toBe('');
+
+    setUntrackedInputValue.call(inputRef.current, 'hello');
+    inputRef.current.dispatchEvent(new MouseEvent('input', {bubbles: true}));
+    // Should only flush non-deferred update.
+    expect(asyncValueRef.current.textContent).toBe('');
+    expect(syncValueRef.current.textContent).toBe('hello');
+
+    // Should flush both updates now.
+    jest.runAllTimers();
+    expect(asyncValueRef.current.textContent).toBe('hello');
+    expect(syncValueRef.current.textContent).toBe('hello');
+  });
+
   describe('with feature flag disabled', () => {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      container = document.createElement('div');
       ReactDOM = require('react-dom');
     });
 
@@ -91,7 +151,6 @@ describe('ReactDOMFiberAsync', () => {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      container = document.createElement('div');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactDOM = require('react-dom');
     });
