@@ -245,9 +245,9 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 // Used for performance tracking.
 let interruptedBy: Fiber | null = null;
 
-// Do not increment or decrement interaction counts in the event of suspense timeouts.
-// This flag is only used when enableInteractionTracking is true.
-let freezeInteractionCount: boolean = false;
+// Do not decrement interaction counts in the event of suspense timeouts.
+// This would lead to prematurely calling the interaction-complete hook.
+let suspenseDidTimeout: boolean = false;
 
 let stashedWorkInProgressProperties;
 let replayUnitOfWork;
@@ -778,7 +778,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     } finally {
       // Don't update interaction counts if we're frozen due to suspense.
       // In this case, we can skip the completed-work check entirely.
-      if (!freezeInteractionCount) {
+      if (!suspenseDidTimeout) {
         // Now that we're done, check the completed batch of interactions.
         // If no more work is outstanding for a given interaction,
         // We need to notify the subscribers that it's finished.
@@ -1607,9 +1607,8 @@ function retrySuspendedRoot(
         __interactionsRef.current = root.memoizedInteractions;
         // Because suspense timeouts do not decrement the interaction count,
         // Continued suspense work should also not increment the count.
-        freezeInteractionCount = true;
+        storeInteractionsForExpirationTime(root, rootExpirationTime, false);
         requestWork(root, rootExpirationTime);
-        freezeInteractionCount = false;
         __interactionsRef.current = prevInteractions;
       } else {
         requestWork(root, rootExpirationTime);
@@ -1671,6 +1670,7 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
 function storeInteractionsForExpirationTime(
   root: FiberRoot,
   expirationTime: ExpirationTime,
+  updateInteractionCounts: boolean,
 ): void {
   if (!enableInteractionTracking) {
     return;
@@ -1681,7 +1681,7 @@ function storeInteractionsForExpirationTime(
     const pendingInteractions = root.pendingInteractionMap.get(expirationTime);
     if (pendingInteractions != null) {
       interactions.forEach(interaction => {
-        if (!freezeInteractionCount && !pendingInteractions.has(interaction)) {
+        if (updateInteractionCounts && !pendingInteractions.has(interaction)) {
           // Update the pending async work count for previously unscheduled interaction.
           interaction.__count++;
         }
@@ -1692,7 +1692,7 @@ function storeInteractionsForExpirationTime(
       root.pendingInteractionMap.set(expirationTime, new Set(interactions));
 
       // Update the pending async work count for the current interactions.
-      if (!freezeInteractionCount) {
+      if (updateInteractionCounts) {
         interactions.forEach(interaction => {
           interaction.__count++;
         });
@@ -1732,7 +1732,7 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
   }
 
   if (enableInteractionTracking) {
-    storeInteractionsForExpirationTime(root, expirationTime);
+    storeInteractionsForExpirationTime(root, expirationTime, true);
   }
 
   if (
@@ -1845,10 +1845,6 @@ function scheduleCallbackWithExpirationTime(
   root: FiberRoot,
   expirationTime: ExpirationTime,
 ) {
-  if (enableProfilerTimer) {
-    storeInteractionsForExpirationTime(root, expirationTime);
-  }
-
   if (callbackExpirationTime !== NoWork) {
     // A callback is already scheduled. Check its expiration time (timeout).
     if (expirationTime > callbackExpirationTime) {
@@ -1929,9 +1925,9 @@ function onTimeout(root, finishedWork, suspendedExpirationTime) {
     if (enableInteractionTracking) {
       // Don't update pending interaction counts for suspense timeouts,
       // Because we know we still need to do more work in this case.
-      freezeInteractionCount = true;
+      suspenseDidTimeout = true;
       flushRoot(root, suspendedExpirationTime);
-      freezeInteractionCount = false;
+      suspenseDidTimeout = false;
     } else {
       flushRoot(root, suspendedExpirationTime);
     }
