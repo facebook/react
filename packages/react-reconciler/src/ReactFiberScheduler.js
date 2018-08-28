@@ -245,6 +245,10 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 // Used for performance tracking.
 let interruptedBy: Fiber | null = null;
 
+// Do not increment or decrement interaction counts in the event of suspense timeouts.
+// This flag is only used when enableInteractionTracking is true.
+let freezeInteractionCount: boolean = false;
+
 let stashedWorkInProgressProperties;
 let replayUnitOfWork;
 let isReplayingFailedUnitOfWork;
@@ -772,24 +776,28 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
         unhandledError = error;
       }
     } finally {
-      // Now that we're done, check the completed batch of interactions.
-      // If no more work is outstanding for a given interaction,
-      // We need to notify the subscribers that it's finished.
-      committedInteractions.forEach(interaction => {
-        interaction.__count--;
-        if (subscriber !== null && interaction.__count === 0) {
-          try {
-            subscriber.onInteractionScheduledWorkCompleted(interaction);
-          } catch (error) {
-            // It's not safe for commitRoot() to throw.
-            // Store the error for now and we'll re-throw in finishRendering().
-            if (!hasUnhandledError) {
-              hasUnhandledError = true;
-              unhandledError = error;
+      // Don't update interaction counts if we're frozen due to suspense.
+      // In this case, we can skip the completed-work check entirely.
+      if (!freezeInteractionCount) {
+        // Now that we're done, check the completed batch of interactions.
+        // If no more work is outstanding for a given interaction,
+        // We need to notify the subscribers that it's finished.
+        committedInteractions.forEach(interaction => {
+          interaction.__count--;
+          if (subscriber !== null && interaction.__count === 0) {
+            try {
+              subscriber.onInteractionScheduledWorkCompleted(interaction);
+            } catch (error) {
+              // It's not safe for commitRoot() to throw.
+              // Store the error for now and we'll re-throw in finishRendering().
+              if (!hasUnhandledError) {
+                hasUnhandledError = true;
+                unhandledError = error;
+              }
             }
           }
-        }
-      });
+        });
+      }
     }
   }
 }
@@ -1178,6 +1186,49 @@ function renderRoot(
       nextRenderExpirationTime,
     );
     root.pendingCommitExpirationTime = NoWork;
+
+    if (enableInteractionTracking) {
+      // Determine which interactions this batch of work currently includes,
+      // So that we can accurately attribute time spent working on it,
+      // And so that cascading work triggered during the render phase will be associated with it.
+      const interactions: Set<Interaction> = new Set();
+      root.pendingInteractionMap.forEach(
+        (scheduledInteractions, scheduledExpirationTime) => {
+          if (scheduledExpirationTime <= expirationTime) {
+            scheduledInteractions.forEach(interaction =>
+              interactions.add(interaction),
+            );
+          }
+        },
+      );
+
+      // Store the current set of interactions on the FiberRoot for a few reasons:
+      // We can re-use it in hot functions like renderRoot() without having to recalculate it.
+      // We will also use it in commitWork() to pass to any Profiler onRender() hooks.
+      // This also provides DevTools with a way to access it when the onCommitRoot() hook is called.
+      root.memoizedInteractions = interactions;
+
+      if (interactions.size > 0) {
+        const subscriber = __subscriberRef.current;
+        if (subscriber !== null) {
+          const threadID = computeThreadID(
+            expirationTime,
+            root.interactionThreadID,
+          );
+          try {
+            subscriber.onWorkStarted(interactions, threadID);
+          } catch (error) {
+            // Work thrown by a interaction-tracking subscriber should be rethrown,
+            // But only once it's safe (to avoid leaveing the scheduler in an invalid state).
+            // Store the error for now and we'll re-throw in finishRendering().
+            if (!hasUnhandledError) {
+              hasUnhandledError = true;
+              unhandledError = error;
+            }
+          }
+        }
+      }
+    }
   }
 
   let didFatal = false;
@@ -1550,7 +1601,19 @@ function retrySuspendedRoot(
     scheduleWorkToRoot(fiber, retryTime);
     const rootExpirationTime = root.expirationTime;
     if (rootExpirationTime !== NoWork) {
-      requestWork(root, rootExpirationTime);
+      if (enableInteractionTracking) {
+        // Restore previous interactions so that new work is associated with them.
+        let prevInteractions = __interactionsRef.current;
+        __interactionsRef.current = root.memoizedInteractions;
+        // Because suspense timeouts do not decrement the interaction count,
+        // Continued suspense work should also not increment the count.
+        freezeInteractionCount = true;
+        requestWork(root, rootExpirationTime);
+        freezeInteractionCount = false;
+        __interactionsRef.current = prevInteractions;
+      } else {
+        requestWork(root, rootExpirationTime);
+      }
     }
   }
 }
@@ -1618,7 +1681,7 @@ function storeInteractionsForExpirationTime(
     const pendingInteractions = root.pendingInteractionMap.get(expirationTime);
     if (pendingInteractions != null) {
       interactions.forEach(interaction => {
-        if (!pendingInteractions.has(interaction)) {
+        if (!freezeInteractionCount && !pendingInteractions.has(interaction)) {
           // Update the pending async work count for previously unscheduled interaction.
           interaction.__count++;
         }
@@ -1629,9 +1692,11 @@ function storeInteractionsForExpirationTime(
       root.pendingInteractionMap.set(expirationTime, new Set(interactions));
 
       // Update the pending async work count for the current interactions.
-      interactions.forEach(interaction => {
-        interaction.__count++;
-      });
+      if (!freezeInteractionCount) {
+        interactions.forEach(interaction => {
+          interaction.__count++;
+        });
+      }
     }
 
     const subscriber = __subscriberRef.current;
@@ -1860,7 +1925,16 @@ function onTimeout(root, finishedWork, suspendedExpirationTime) {
     // because we're at the top of a timer event.
     recomputeCurrentRendererTime();
     currentSchedulerTime = currentRendererTime;
-    flushRoot(root, suspendedExpirationTime);
+
+    if (enableInteractionTracking) {
+      // Don't update pending interaction counts for suspense timeouts,
+      // Because we know we still need to do more work in this case.
+      freezeInteractionCount = true;
+      flushRoot(root, suspendedExpirationTime);
+      freezeInteractionCount = false;
+    } else {
+      flushRoot(root, suspendedExpirationTime);
+    }
   }
 }
 
@@ -2171,49 +2245,6 @@ function performWorkOnRoot(
 
   isRendering = true;
 
-  if (enableInteractionTracking) {
-    // Determine which interactions this batch of work currently includes,
-    // So that we can accurately attribute time spent working on it,
-    // And so that cascading work triggered during the render phase will be associated with it.
-    const interactions: Set<Interaction> = new Set();
-    root.pendingInteractionMap.forEach(
-      (scheduledInteractions, scheduledExpirationTime) => {
-        if (scheduledExpirationTime <= expirationTime) {
-          scheduledInteractions.forEach(interaction =>
-            interactions.add(interaction),
-          );
-        }
-      },
-    );
-
-    // Store the current set of interactions on the FiberRoot for a few reasons:
-    // We can re-use it in hot functions like renderRoot() without having to recalculate it.
-    // We will also use it in commitWork() to pass to any Profiler onRender() hooks.
-    // This also provides DevTools with a way to access it when the onCommitRoot() hook is called.
-    root.memoizedInteractions = interactions;
-
-    if (interactions.size > 0) {
-      const subscriber = __subscriberRef.current;
-      if (subscriber !== null) {
-        const threadID = computeThreadID(
-          expirationTime,
-          root.interactionThreadID,
-        );
-        try {
-          subscriber.onWorkStarted(interactions, threadID);
-        } catch (error) {
-          // Work thrown by a interaction-tracking subscriber should be rethrown,
-          // But only once it's safe (to avoid leaveing the scheduler in an invalid state).
-          // Store the error for now and we'll re-throw in finishRendering().
-          if (!hasUnhandledError) {
-            hasUnhandledError = true;
-            unhandledError = error;
-          }
-        }
-      }
-    }
-  }
-
   // Check if this is async work or sync/expired work.
   if (deadline === null || isExpired) {
     // Flush work without yielding.
@@ -2477,5 +2508,4 @@ export {
   interactiveUpdates,
   flushInteractiveUpdates,
   computeUniqueAsyncExpiration,
-  computeThreadID,
 };

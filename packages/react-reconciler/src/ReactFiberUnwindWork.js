@@ -35,7 +35,6 @@ import {
 } from 'shared/ReactSideEffectTags';
 import {
   enableGetDerivedStateFromCatch,
-  enableInteractionTracking,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
 import {StrictMode, AsyncMode} from './ReactTypeOfMode';
@@ -61,7 +60,6 @@ import {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   retrySuspendedRoot,
-  computeThreadID,
 } from './ReactFiberScheduler';
 import {Sync} from './ReactFiberExpirationTime';
 
@@ -73,7 +71,6 @@ import {
 } from './ReactFiberExpirationTime';
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
 import {reconcileChildren} from './ReactFiberBeginWork';
-import {wrap} from 'interaction-tracking';
 
 function NoopComponent() {
   return null;
@@ -226,14 +223,6 @@ function throwException(
             workInProgress,
             pingTime,
           );
-          if (enableInteractionTracking) {
-            // Wrap suspense callback so that the current interaction are preserved.
-            const threadID = computeThreadID(
-              renderExpirationTime,
-              root.interactionThreadID,
-            );
-            onResolveOrReject = wrap(onResolveOrReject, threadID);
-          }
           thenable.then(onResolveOrReject, onResolveOrReject);
 
           // If the boundary is outside of strict mode, we should *not* suspend

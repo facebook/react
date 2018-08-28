@@ -1497,8 +1497,8 @@ describe('Profiler', () => {
 
         didRunCallback = true;
 
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(2);
-        expect(getWorkForReactThreads(onWorkStarted)[1][0]).toMatchInteractions(
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+        expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions(
           [interactionOne],
         );
         expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
