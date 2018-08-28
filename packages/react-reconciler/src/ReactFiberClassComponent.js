@@ -676,7 +676,7 @@ function mountClassInstance(
   instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
   if (__DEV__) {
-    if (instance.state === instance.props) {
+    if (instance.state === newProps) {
       const componentName = getComponentName(ctor) || 'Component';
       if (!didWarnAboutDirectlyAssigningPropsToState.has(componentName)) {
         didWarnAboutDirectlyAssigningPropsToState.add(componentName);
