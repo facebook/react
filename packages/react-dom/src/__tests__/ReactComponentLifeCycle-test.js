@@ -198,6 +198,27 @@ describe('ReactComponentLifeCycle', () => {
     }).not.toThrow();
   });
 
+  it("warns if setting 'this.state = props'", () => {
+    class StatefulComponent extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = props;
+      }
+      render() {
+        return <div />;
+      }
+    }
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    }).toWarnDev(
+      'StatefulComponent: It is not recommended to assign props directly to state ' +
+        "because updates to props won't be reflected in state. " +
+        'In most cases, it is better to use props directly.',
+      {withoutStack: true},
+    );
+  });
+
   it('should not allow update state inside of getInitialState', () => {
     class StatefulComponent extends React.Component {
       constructor(props, context) {
