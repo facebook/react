@@ -217,7 +217,7 @@ function throwException(
               : renderExpirationTime;
 
           // Attach a listener to the promise to "ping" the root and retry.
-          let onResolveOrReject = retrySuspendedRoot.bind(
+          const onResolveOrReject = retrySuspendedRoot.bind(
             null,
             root,
             workInProgress,
