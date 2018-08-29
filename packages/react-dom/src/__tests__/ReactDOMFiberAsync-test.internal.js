@@ -85,6 +85,8 @@ describe('ReactDOMFiberAsync', () => {
           this.setState({
             asyncValue: nextValue,
           });
+          // It should not be flushed yet.
+          expect(asyncValueRef.current.textContent).toBe('');
         });
         this.setState({
           syncValue: nextValue,
@@ -105,7 +107,12 @@ describe('ReactDOMFiberAsync', () => {
         );
       }
     }
-    ReactDOM.render(<Counter />, container);
+    ReactDOM.render(
+      <AsyncMode>
+        <Counter />
+      </AsyncMode>,
+      container,
+    );
     expect(asyncValueRef.current.textContent).toBe('');
     expect(syncValueRef.current.textContent).toBe('');
 
