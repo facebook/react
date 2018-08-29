@@ -71,37 +71,48 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['Hi', 'Bye']);
   });
 
-  it('does not perform deferred updates synchronously', () => {
+  it('does not perform deferred or interactive updates synchronously', () => {
     let inputRef = React.createRef();
-    let asyncValueRef = React.createRef();
+    let deferredValueRef = React.createRef();
+    let interactiveValueRef = React.createRef();
     let syncValueRef = React.createRef();
 
     class Counter extends React.Component {
-      state = {asyncValue: '', syncValue: ''};
+      state = {deferredValue: '', interactiveValue: ''};
 
       handleChange = e => {
         const nextValue = e.target.value;
-        requestIdleCallback(() => {
+        ReactDOM.flushSync(() => {
           this.setState({
-            asyncValue: nextValue,
+            syncValue: nextValue,
+          });
+        });
+        requestIdleCallback(() => {
+          let previousDeferredValue = this.state.deferredValue;
+          this.setState({
+            deferredValue: nextValue,
           });
           // It should not be flushed yet.
-          expect(asyncValueRef.current.textContent).toBe('');
+          expect(deferredValueRef.current.textContent).toBe(
+            previousDeferredValue,
+          );
         });
         this.setState({
-          syncValue: nextValue,
+          interactiveValue: nextValue,
         });
       };
 
       render() {
         return (
           <div>
+            {/* This input is uncontrolled so it doesn't need to flush immediately. */}
             <input
               ref={inputRef}
               onChange={this.handleChange}
               defaultValue=""
             />
-            <p ref={asyncValueRef}>{this.state.asyncValue}</p>
+            <p ref={deferredValueRef}>{this.state.deferredValue}</p>
+            <p ref={interactiveValueRef}>{this.state.interactiveValue}</p>
             <p ref={syncValueRef}>{this.state.syncValue}</p>
           </div>
         );
@@ -113,19 +124,29 @@ describe('ReactDOMFiberAsync', () => {
       </AsyncMode>,
       container,
     );
-    expect(asyncValueRef.current.textContent).toBe('');
+    expect(deferredValueRef.current.textContent).toBe('');
+    expect(interactiveValueRef.current.textContent).toBe('');
     expect(syncValueRef.current.textContent).toBe('');
 
     setUntrackedInputValue.call(inputRef.current, 'hello');
     inputRef.current.dispatchEvent(new MouseEvent('input', {bubbles: true}));
-    // Should only flush non-deferred update.
-    expect(asyncValueRef.current.textContent).toBe('');
+    // Should not flush anything except sync.
+    expect(deferredValueRef.current.textContent).toBe('');
+    expect(interactiveValueRef.current.textContent).toBe('');
     expect(syncValueRef.current.textContent).toBe('hello');
 
-    // Should flush both updates now.
+    setUntrackedInputValue.call(inputRef.current, 'goodbye');
+    inputRef.current.dispatchEvent(new MouseEvent('input', {bubbles: true}));
+    // Should flush previous interactive update.
+    expect(deferredValueRef.current.textContent).toBe('');
+    expect(interactiveValueRef.current.textContent).toBe('hello');
+    expect(syncValueRef.current.textContent).toBe('goodbye');
+
+    // Should flush everything.
     jest.runAllTimers();
-    expect(asyncValueRef.current.textContent).toBe('hello');
-    expect(syncValueRef.current.textContent).toBe('hello');
+    expect(deferredValueRef.current.textContent).toBe('goodbye');
+    expect(interactiveValueRef.current.textContent).toBe('goodbye');
+    expect(syncValueRef.current.textContent).toBe('goodbye');
   });
 
   describe('with feature flag disabled', () => {
