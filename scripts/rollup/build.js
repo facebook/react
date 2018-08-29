@@ -408,33 +408,6 @@ function shouldSkipBundle(bundle, bundleType) {
   return false;
 }
 
-// Strip unused require() statements for pure externals modules from the bundle.
-// Rollup's treeshake option should do this, but it doesn't work.
-function stripNoSideEffectImports(bundleType, pureExternalModules, filePath) {
-  const isProduction = isProductionBundleType(bundleType);
-
-  // Dead code elimintation is only applied to production bundles.
-  if (!isProduction) {
-    return;
-  }
-
-  const codeIn = fs.readFileSync(filePath, 'utf-8');
-  let codeOut = codeIn;
-
-  pureExternalModules.forEach(module => {
-    const regExp = new RegExp(
-      `(?<!= *)require\\(["']${module}["']\\)[,;]`,
-      'g'
-    );
-
-    codeOut = codeOut.replace(regExp, '');
-  });
-
-  if (codeIn !== codeOut) {
-    fs.writeFileSync(filePath, codeOut, 'utf-8');
-  }
-}
-
 async function createBundle(bundle, bundleType) {
   if (shouldSkipBundle(bundle, bundleType)) {
     return;
@@ -520,9 +493,6 @@ async function createBundle(bundle, bundleType) {
   try {
     const result = await rollup(rollupConfig);
     await result.write(rollupOutputOptions);
-
-    // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
-    stripNoSideEffectImports(bundleType, pureExternalModules, mainOutputPath);
   } catch (error) {
     console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
     handleRollupError(error);

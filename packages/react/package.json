@@ -21,6 +21,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
+    "interaction-tracking": "16.4.3-alpha.0",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2"

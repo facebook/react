@@ -1,5 +1,4 @@
-import {track} from 'interaction-tracking';
-import React, {Fragment, PureComponent} from 'react';
+import React, {Fragment, PureComponent, unstable_interactions} from 'react';
 import {unstable_createRoot, render} from 'react-dom';
 import {cache} from './cache';
 import {
@@ -11,6 +10,8 @@ import {
 import App from './components/App';
 import Draggable from 'react-draggable';
 import './index.css';
+
+const {track} = unstable_interactions;
 
 let handleReset;
 

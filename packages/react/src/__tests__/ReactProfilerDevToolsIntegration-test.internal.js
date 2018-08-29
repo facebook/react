@@ -14,7 +14,6 @@ describe('ReactProfiler DevTools integration', () => {
   let React;
   let ReactFeatureFlags;
   let ReactTestRenderer;
-  let InteractionTracking;
   let AdvanceTime;
   let advanceTimeBy;
   let hook;
@@ -41,7 +40,6 @@ describe('ReactProfiler DevTools integration', () => {
     ReactFeatureFlags.enableInteractionTracking = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    InteractionTracking = require('interaction-tracking');
 
     ReactTestRenderer.unstable_setNowImplementation(mockNow);
     advanceTimeBy = amount => {
@@ -180,7 +178,7 @@ describe('ReactProfiler DevTools integration', () => {
     const eventTime = mockNow();
 
     // Render with an interaction
-    InteractionTracking.track('some event', eventTime, () => {
+    React.unstable_interactions.track('some event', eventTime, () => {
       rendered.update(<div />);
     });
 

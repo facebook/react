@@ -10,8 +10,6 @@
 
 'use strict';
 
-let InteractionTracking;
-let InteractionTrackingSubscriptions;
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
@@ -42,8 +40,6 @@ function loadModules({
   ReactFeatureFlags.enableSuspense = enableSuspense;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
-  InteractionTracking = require('interaction-tracking');
-  InteractionTrackingSubscriptions = require('interaction-tracking/subscriptions');
   React = require('react');
 
   if (useNoopRenderer) {
@@ -1208,7 +1204,7 @@ describe('Profiler', () => {
       });
 
       // Verify interaction subscriber methods are called as expected.
-      InteractionTrackingSubscriptions.subscribe({
+      React.unstable_interactions.subscribe({
         onInteractionScheduledWorkCompleted,
         onInteractionTracked,
         onWorkCanceled,
@@ -1230,7 +1226,7 @@ describe('Profiler', () => {
         // Errors that happen inside of a subscriber should throw,
         throwInOnWorkScheduled = true;
         expect(() => {
-          InteractionTracking.track('event', mockNow(), () => {
+          React.unstable_interactions.track('event', mockNow(), () => {
             renderer = ReactTestRenderer.create(<Component>fail</Component>, {
               unstable_isAsync: true,
             });
@@ -1256,7 +1252,7 @@ describe('Profiler', () => {
         }
 
         let renderer;
-        InteractionTracking.track('event', mockNow(), () => {
+        React.unstable_interactions.track('event', mockNow(), () => {
           renderer = ReactTestRenderer.create(<Component>text</Component>, {
             unstable_isAsync: true,
           });
@@ -1285,7 +1281,7 @@ describe('Profiler', () => {
         }
 
         let renderer;
-        InteractionTracking.track('event', mockNow(), () => {
+        React.unstable_interactions.track('event', mockNow(), () => {
           renderer = ReactTestRenderer.create(<Component>text</Component>, {
             unstable_isAsync: true,
           });
@@ -1327,8 +1323,8 @@ describe('Profiler', () => {
         };
 
         let renderer;
-        InteractionTracking.track(eventOne.name, mockNow(), () => {
-          InteractionTracking.track(eventTwo.name, mockNow(), () => {
+        React.unstable_interactions.track(eventOne.name, mockNow(), () => {
+          React.unstable_interactions.track(eventTwo.name, mockNow(), () => {
             renderer = ReactTestRenderer.create(<Component>text</Component>, {
               unstable_isAsync: true,
             });
@@ -1382,16 +1378,20 @@ describe('Profiler', () => {
 
       const onRender = jest.fn();
       let renderer;
-      InteractionTracking.track(interactionCreation.name, mockNow(), () => {
-        renderer = ReactTestRenderer.create(
-          <React.unstable_Profiler id="test-profiler" onRender={onRender}>
-            <Example />
-          </React.unstable_Profiler>,
-          {
-            unstable_isAsync: true,
-          },
-        );
-      });
+      React.unstable_interactions.track(
+        interactionCreation.name,
+        mockNow(),
+        () => {
+          renderer = ReactTestRenderer.create(
+            <React.unstable_Profiler id="test-profiler" onRender={onRender}>
+              <Example />
+            </React.unstable_Profiler>,
+            {
+              unstable_isAsync: true,
+            },
+          );
+        },
+      );
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(1);
       expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
@@ -1451,7 +1451,7 @@ describe('Profiler', () => {
         name: 'initial event',
         timestamp: mockNow(),
       };
-      InteractionTracking.track(interactionOne.name, mockNow(), () => {
+      React.unstable_interactions.track(interactionOne.name, mockNow(), () => {
         instance.setState({count: 1});
 
         // Update state again to verify our tracked interaction isn't registered twice
@@ -1546,7 +1546,7 @@ describe('Profiler', () => {
         name: 'root update event',
         timestamp: mockNow(),
       };
-      InteractionTracking.track(interactionTwo.name, mockNow(), () => {
+      React.unstable_interactions.track(interactionTwo.name, mockNow(), () => {
         renderer.update(
           <React.unstable_Profiler id="test-profiler" onRender={onRender}>
             <Example />
@@ -1647,109 +1647,119 @@ describe('Profiler', () => {
         timestamp: mockNow(),
       };
 
-      InteractionTracking.track(interactionLowPri.name, mockNow(), () => {
-        // Render a partially update, but don't finish.
-        first.setState({count: 1});
+      React.unstable_interactions.track(
+        interactionLowPri.name,
+        mockNow(),
+        () => {
+          // Render a partially update, but don't finish.
+          first.setState({count: 1});
 
-        expect(onWorkScheduled).toHaveBeenCalled();
-        expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
-          interactionLowPri,
-        ]);
+          expect(onWorkScheduled).toHaveBeenCalled();
+          expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
+            interactionLowPri,
+          ]);
 
-        expect(renderer).toFlushThrough(['FirstComponent']);
-        expect(onRender).not.toHaveBeenCalled();
+          expect(renderer).toFlushThrough(['FirstComponent']);
+          expect(onRender).not.toHaveBeenCalled();
 
-        expect(onInteractionTracked).toHaveBeenCalledTimes(1);
-        expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
-          interactionLowPri,
-        );
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-        expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions(
-          [interactionLowPri],
-        );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+          expect(onInteractionTracked).toHaveBeenCalledTimes(1);
+          expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
+            interactionLowPri,
+          );
+          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+          expect(
+            getWorkForReactThreads(onWorkStarted)[0][0],
+          ).toMatchInteractions([interactionLowPri]);
+          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-        advanceTimeBy(100);
+          advanceTimeBy(100);
 
-        const interactionHighPri = {
-          id: 1,
-          name: 'highPri',
-          timestamp: mockNow(),
-        };
+          const interactionHighPri = {
+            id: 1,
+            name: 'highPri',
+            timestamp: mockNow(),
+          };
 
-        // Interrupt with higher priority work.
-        // This simulates a total of 37ms of actual render time.
-        renderer.unstable_flushSync(() => {
-          InteractionTracking.track(interactionHighPri.name, mockNow(), () => {
-            second.setState({count: 1});
+          // Interrupt with higher priority work.
+          // This simulates a total of 37ms of actual render time.
+          renderer.unstable_flushSync(() => {
+            React.unstable_interactions.track(
+              interactionHighPri.name,
+              mockNow(),
+              () => {
+                second.setState({count: 1});
 
-            expect(onInteractionTracked).toHaveBeenCalledTimes(2);
-            expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
-              interactionHighPri,
+                expect(onInteractionTracked).toHaveBeenCalledTimes(2);
+                expect(
+                  onInteractionTracked,
+                ).toHaveBeenLastNotifiedOfInteraction(interactionHighPri);
+                expect(
+                  onInteractionScheduledWorkCompleted,
+                ).not.toHaveBeenCalled();
+
+                expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+                expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+              },
             );
-            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-
-            expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-            expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
           });
-        });
-        expect(ReactTestRenderer).toClearYields(['SecondComponent']);
+          expect(ReactTestRenderer).toClearYields(['SecondComponent']);
 
-        expect(onInteractionTracked).toHaveBeenCalledTimes(2);
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-        expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(interactionHighPri);
+          expect(onInteractionTracked).toHaveBeenCalledTimes(2);
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(interactionHighPri);
 
-        // Verify the high priority update was associated with the high priority event.
-        expect(onRender).toHaveBeenCalledTimes(1);
-        let call = onRender.mock.calls[0];
-        expect(call[0]).toEqual('test');
-        expect(call[5]).toEqual(mockNow());
-        expect(call[6]).toMatchInteractions(
-          ReactFeatureFlags.enableInteractionTracking
-            ? [interactionLowPri, interactionHighPri]
-            : [],
-        );
+          // Verify the high priority update was associated with the high priority event.
+          expect(onRender).toHaveBeenCalledTimes(1);
+          let call = onRender.mock.calls[0];
+          expect(call[0]).toEqual('test');
+          expect(call[5]).toEqual(mockNow());
+          expect(call[6]).toMatchInteractions(
+            ReactFeatureFlags.enableInteractionTracking
+              ? [interactionLowPri, interactionHighPri]
+              : [],
+          );
 
-        onRender.mockClear();
+          onRender.mockClear();
 
-        advanceTimeBy(100);
+          advanceTimeBy(100);
 
-        // Resume the original low priority update, with rebased state.
-        // Verify the low priority update was retained.
-        renderer.unstable_flushAll(['FirstComponent']);
-        expect(onRender).toHaveBeenCalledTimes(1);
-        call = onRender.mock.calls[0];
-        expect(call[0]).toEqual('test');
-        expect(call[5]).toEqual(mockNow());
-        expect(call[6]).toMatchInteractions(
-          ReactFeatureFlags.enableInteractionTracking
-            ? [interactionLowPri]
-            : [],
-        );
+          // Resume the original low priority update, with rebased state.
+          // Verify the low priority update was retained.
+          renderer.unstable_flushAll(['FirstComponent']);
+          expect(onRender).toHaveBeenCalledTimes(1);
+          call = onRender.mock.calls[0];
+          expect(call[0]).toEqual('test');
+          expect(call[5]).toEqual(mockNow());
+          expect(call[6]).toMatchInteractions(
+            ReactFeatureFlags.enableInteractionTracking
+              ? [interactionLowPri]
+              : [],
+          );
 
-        expect(onInteractionTracked).toHaveBeenCalledTimes(2);
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(onInteractionTracked).toHaveBeenCalledTimes(2);
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
 
-        // Work might be started multiple times before being completed.
-        // This is okay; it's part of the interaction-tracking subscriber contract.
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
-        expect(getWorkForReactThreads(onWorkStarted)[1][0]).toMatchInteractions(
-          [interactionLowPri, interactionHighPri],
-        );
-        expect(getWorkForReactThreads(onWorkStarted)[2][0]).toMatchInteractions(
-          [interactionLowPri],
-        );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
-        expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions(
-          [interactionLowPri, interactionHighPri],
-        );
-        expect(getWorkForReactThreads(onWorkStopped)[1][0]).toMatchInteractions(
-          [interactionLowPri],
-        );
-      });
+          // Work might be started multiple times before being completed.
+          // This is okay; it's part of the interaction-tracking subscriber contract.
+          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
+          expect(
+            getWorkForReactThreads(onWorkStarted)[1][0],
+          ).toMatchInteractions([interactionLowPri, interactionHighPri]);
+          expect(
+            getWorkForReactThreads(onWorkStarted)[2][0],
+          ).toMatchInteractions([interactionLowPri]);
+          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
+          expect(
+            getWorkForReactThreads(onWorkStopped)[0][0],
+          ).toMatchInteractions([interactionLowPri, interactionHighPri]);
+          expect(
+            getWorkForReactThreads(onWorkStopped)[1][0],
+          ).toMatchInteractions([interactionLowPri]);
+        },
+      );
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(2);
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
@@ -1793,7 +1803,7 @@ describe('Profiler', () => {
       const onRender = jest.fn();
       let firstCommitTime = mockNow();
       let renderer;
-      InteractionTracking.track(interactionOne.name, mockNow(), () => {
+      React.unstable_interactions.track(interactionOne.name, mockNow(), () => {
         renderer = ReactTestRenderer.create(
           <React.unstable_Profiler id="test" onRender={onRender}>
             <Example />
@@ -1855,7 +1865,7 @@ describe('Profiler', () => {
       };
 
       // Cause an tracked, async update
-      InteractionTracking.track(interactionTwo.name, mockNow(), () => {
+      React.unstable_interactions.track(interactionTwo.name, mockNow(), () => {
         instance.setState({count: 2});
       });
       expect(onRender).not.toHaveBeenCalled();
@@ -1921,9 +1931,13 @@ describe('Profiler', () => {
       function callback() {
         instance.setState({count: 6});
       }
-      InteractionTracking.track(interactionThree.name, mockNow(), () => {
-        instance.setState({count: 5}, callback);
-      });
+      React.unstable_interactions.track(
+        interactionThree.name,
+        mockNow(),
+        () => {
+          instance.setState({count: 5}, callback);
+        },
+      );
       expect(onRender).not.toHaveBeenCalled();
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(3);
@@ -2014,7 +2028,7 @@ describe('Profiler', () => {
         timestamp: mockNow(),
       };
 
-      InteractionTracking.track(interaction.name, mockNow(), () => {
+      React.unstable_interactions.track(interaction.name, mockNow(), () => {
         parentInstance.setState({count: 1});
       });
 
@@ -2060,7 +2074,7 @@ describe('Profiler', () => {
       });
 
       // Re-register since we've reloaded modules
-      InteractionTrackingSubscriptions.subscribe({
+      React.unstable_interactions.subscribe({
         onInteractionScheduledWorkCompleted,
         onInteractionTracked,
         onWorkCanceled,
@@ -2127,7 +2141,7 @@ describe('Profiler', () => {
       };
 
       const onRender = jest.fn();
-      InteractionTracking.track(interaction.name, mockNow(), () => {
+      React.unstable_interactions.track(interaction.name, mockNow(), () => {
         ReactNoop.render(
           <React.unstable_Profiler id="test-profiler" onRender={onRender}>
             <React.Placeholder fallback={<Text text="Loading..." />}>

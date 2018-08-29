@@ -12,11 +12,13 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Interaction} from 'interaction-tracking/src/InteractionTracking';
 
+import React from 'react';
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
 import {enableInteractionTracking} from 'shared/ReactFeatureFlags';
-import {getThreadID} from 'interaction-tracking';
+
+const {getThreadID} = React.unstable_interactions;
 
 // TODO: This should be lifted into the renderer.
 export type Batch = {

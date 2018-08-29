@@ -83,7 +83,7 @@ if (enableInteractionTracking) {
 // They should not typically be accessed directly.
 export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
 
-export function clear(callback: Function): any {
+export function unstable_clear(callback: Function): any {
   if (!enableInteractionTracking) {
     return callback();
   }
@@ -98,7 +98,7 @@ export function clear(callback: Function): any {
   }
 }
 
-export function getCurrent(): Set<Interaction> | null {
+export function unstable_getCurrent(): Set<Interaction> | null {
   if (!enableInteractionTracking) {
     return null;
   } else {
@@ -106,11 +106,11 @@ export function getCurrent(): Set<Interaction> | null {
   }
 }
 
-export function getThreadID(): number {
+export function unstable_getThreadID(): number {
   return ++threadIDCounter;
 }
 
-export function track(
+export function unstable_track(
   name: string,
   timestamp: number,
   callback: Function,
@@ -174,7 +174,7 @@ export function track(
   return returnValue;
 }
 
-export function wrap(
+export function unstable_wrap(
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): Function {

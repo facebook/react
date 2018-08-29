@@ -33,6 +33,19 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
+import {
+  __interactionsRef,
+  __subscriberRef,
+  unstable_clear as clear,
+  unstable_getCurrent as getCurrent,
+  unstable_getThreadID as getThreadID,
+  unstable_track as track,
+  unstable_wrap as wrap,
+} from 'interaction-tracking';
+import {
+  unstable_subscribe as subscribe,
+  unstable_unsubscribe as unsubscribe,
+} from 'interaction-tracking/subscriptions';
 
 const React = {
   Children: {
@@ -61,6 +74,21 @@ const React = {
   isValidElement: isValidElement,
 
   version: ReactVersion,
+
+  // Re-export the interaction-tracking API for UMD bundles.
+  // This avoids introducing a dependency on a new UMD global in a minor update,
+  // Since this would be a breaking change.
+  unstable_interactions: {
+    __interactionsRef,
+    __subscriberRef,
+    clear,
+    getCurrent,
+    getThreadID,
+    subscribe,
+    track,
+    unsubscribe,
+    wrap,
+  },
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };

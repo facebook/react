@@ -12,7 +12,7 @@ import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {Interaction} from 'interaction-tracking/src/InteractionTracking';
 
-import {__interactionsRef, __subscriberRef} from 'interaction-tracking';
+import React from 'react';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -161,6 +161,7 @@ export type Thenable = {
 };
 
 const {ReactCurrentOwner} = ReactSharedInternals;
+const {__interactionsRef, __subscriberRef} = React.unstable_interactions;
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;

@@ -17,13 +17,13 @@ if (enableInteractionTracking) {
   subscribers = new Set();
 }
 
-export function subscribe(subscriber: Subscriber): void {
+export function unstable_subscribe(subscriber: Subscriber): void {
   if (enableInteractionTracking) {
     subscribers.add(subscriber);
   }
 }
 
-export function unsubscribe(subscriber: Subscriber): void {
+export function unstable_unsubscribe(subscriber: Subscriber): void {
   if (enableInteractionTracking) {
     subscribers.delete(subscriber);
   }

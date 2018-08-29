@@ -102,8 +102,8 @@ describe('InteractionTracking', () => {
       onWorkStopped: jest.fn(),
     };
 
-    InteractionTrackingSubscriptions.subscribe(firstSubscriber);
-    InteractionTrackingSubscriptions.subscribe(secondSubscriber);
+    InteractionTrackingSubscriptions.unstable_subscribe(firstSubscriber);
+    InteractionTrackingSubscriptions.unstable_subscribe(secondSubscriber);
   }
 
   describe('enabled', () => {
@@ -111,13 +111,13 @@ describe('InteractionTracking', () => {
 
     describe('error handling', () => {
       it('should cover onInteractionTracked/onWorkStarted within', done => {
-        InteractionTracking.track(firstEvent.name, currentTime, () => {
+        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
           const mock = jest.fn();
 
           // It should call the callback before re-throwing
           throwInOnInteractionTracked = true;
           expect(() =>
-            InteractionTracking.track(
+            InteractionTracking.unstable_track(
               secondEvent.name,
               currentTime,
               mock,
@@ -129,7 +129,7 @@ describe('InteractionTracking', () => {
 
           throwInOnWorkStarted = true;
           expect(() =>
-            InteractionTracking.track(
+            InteractionTracking.unstable_track(
               secondEvent.name,
               currentTime,
               mock,
@@ -139,9 +139,9 @@ describe('InteractionTracking', () => {
           expect(mock).toHaveBeenCalledTimes(2);
 
           // It should restore the previous/outer interactions
-          expect(InteractionTracking.getCurrent()).toMatchInteractions([
-            firstEvent,
-          ]);
+          expect(InteractionTracking.unstable_getCurrent()).toMatchInteractions(
+            [firstEvent],
+          );
 
           // It should call other subscribers despite the earlier error
           expect(secondSubscriber.onInteractionTracked).toHaveBeenCalledTimes(
@@ -154,22 +154,28 @@ describe('InteractionTracking', () => {
       });
 
       it('should cover onWorkStopped within track', done => {
-        InteractionTracking.track(firstEvent.name, currentTime, () => {
+        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
           let innerInteraction;
           const mock = jest.fn(() => {
-            innerInteraction = Array.from(InteractionTracking.getCurrent())[1];
+            innerInteraction = Array.from(
+              InteractionTracking.unstable_getCurrent(),
+            )[1];
           });
 
           throwInOnWorkStopped = true;
           expect(() =>
-            InteractionTracking.track(secondEvent.name, currentTime, mock),
+            InteractionTracking.unstable_track(
+              secondEvent.name,
+              currentTime,
+              mock,
+            ),
           ).toThrow('Expected error onWorkStopped');
           throwInOnWorkStopped = false;
 
           // It should restore the previous/outer interactions
-          expect(InteractionTracking.getCurrent()).toMatchInteractions([
-            firstEvent,
-          ]);
+          expect(InteractionTracking.unstable_getCurrent()).toMatchInteractions(
+            [firstEvent],
+          );
 
           // It should update the interaction count so as not to interfere with subsequent calls
           expect(innerInteraction.__count).toBe(0);
@@ -182,19 +188,23 @@ describe('InteractionTracking', () => {
       });
 
       it('should cover onInteractionScheduledWorkCompleted within track', done => {
-        InteractionTracking.track(firstEvent.name, currentTime, () => {
+        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
           const mock = jest.fn();
 
           throwInOnInteractionScheduledWorkCompleted = true;
           expect(() =>
-            InteractionTracking.track(secondEvent.name, currentTime, mock),
+            InteractionTracking.unstable_track(
+              secondEvent.name,
+              currentTime,
+              mock,
+            ),
           ).toThrow('Expected error onInteractionScheduledWorkCompleted');
           throwInOnInteractionScheduledWorkCompleted = false;
 
           // It should restore the previous/outer interactions
-          expect(InteractionTracking.getCurrent()).toMatchInteractions([
-            firstEvent,
-          ]);
+          expect(InteractionTracking.unstable_getCurrent()).toMatchInteractions(
+            [firstEvent],
+          );
 
           // It should call other subscribers despite the earlier error
           expect(
@@ -210,9 +220,13 @@ describe('InteractionTracking', () => {
         expect(onWorkStopped).not.toHaveBeenCalled();
 
         expect(() => {
-          InteractionTracking.track(firstEvent.name, currentTime, () => {
-            throw Error('Expected error callback');
-          });
+          InteractionTracking.unstable_track(
+            firstEvent.name,
+            currentTime,
+            () => {
+              throw Error('Expected error callback');
+            },
+          );
         }).toThrow('Expected error callback');
 
         expect(onWorkStarted).toHaveBeenCalledTimes(1);
@@ -222,12 +236,14 @@ describe('InteractionTracking', () => {
       });
 
       it('should cover onWorkScheduled within wrap', done => {
-        InteractionTracking.track(firstEvent.name, currentTime, () => {
-          const interaction = Array.from(InteractionTracking.getCurrent())[0];
+        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+          const interaction = Array.from(
+            InteractionTracking.unstable_getCurrent(),
+          )[0];
           const beforeCount = interaction.__count;
 
           throwInOnWorkScheduled = true;
-          expect(() => InteractionTracking.wrap(() => {})).toThrow(
+          expect(() => InteractionTracking.unstable_wrap(() => {})).toThrow(
             'Expected error onWorkScheduled',
           );
 
@@ -244,9 +260,11 @@ describe('InteractionTracking', () => {
       it('should cover onWorkStarted within wrap', () => {
         const mock = jest.fn();
         let interaction, wrapped;
-        InteractionTracking.track(firstEvent.name, currentTime, () => {
-          interaction = Array.from(InteractionTracking.getCurrent())[0];
-          wrapped = InteractionTracking.wrap(mock);
+        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+          interaction = Array.from(
+            InteractionTracking.unstable_getCurrent(),
+          )[0];
+          wrapped = InteractionTracking.unstable_wrap(mock);
         });
         expect(interaction.__count).toBe(1);
 
@@ -264,24 +282,30 @@ describe('InteractionTracking', () => {
       });
 
       it('should cover onWorkStopped within wrap', done => {
-        InteractionTracking.track(firstEvent.name, currentTime, () => {
+        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
           const outerInteraction = Array.from(
-            InteractionTracking.getCurrent(),
+            InteractionTracking.unstable_getCurrent(),
           )[0];
           expect(outerInteraction.__count).toBe(1);
 
           let wrapped;
           let innerInteraction;
 
-          InteractionTracking.track(secondEvent.name, currentTime, () => {
-            innerInteraction = Array.from(InteractionTracking.getCurrent())[1];
-            expect(outerInteraction.__count).toBe(1);
-            expect(innerInteraction.__count).toBe(1);
+          InteractionTracking.unstable_track(
+            secondEvent.name,
+            currentTime,
+            () => {
+              innerInteraction = Array.from(
+                InteractionTracking.unstable_getCurrent(),
+              )[1];
+              expect(outerInteraction.__count).toBe(1);
+              expect(innerInteraction.__count).toBe(1);
 
-            wrapped = InteractionTracking.wrap(jest.fn());
-            expect(outerInteraction.__count).toBe(2);
-            expect(innerInteraction.__count).toBe(2);
-          });
+              wrapped = InteractionTracking.unstable_wrap(jest.fn());
+              expect(outerInteraction.__count).toBe(2);
+              expect(innerInteraction.__count).toBe(2);
+            },
+          );
 
           expect(outerInteraction.__count).toBe(2);
           expect(innerInteraction.__count).toBe(1);
@@ -291,9 +315,9 @@ describe('InteractionTracking', () => {
           throwInOnWorkStopped = false;
 
           // It should restore the previous interactions
-          expect(InteractionTracking.getCurrent()).toMatchInteractions([
-            outerInteraction,
-          ]);
+          expect(InteractionTracking.unstable_getCurrent()).toMatchInteractions(
+            [outerInteraction],
+          );
 
           // It should update the interaction count so as not to interfere with subsequent calls
           expect(outerInteraction.__count).toBe(1);
@@ -311,9 +335,11 @@ describe('InteractionTracking', () => {
 
         let wrapped;
         let interaction;
-        InteractionTracking.track(firstEvent.name, currentTime, () => {
-          interaction = Array.from(InteractionTracking.getCurrent())[0];
-          wrapped = InteractionTracking.wrap(() => {
+        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+          interaction = Array.from(
+            InteractionTracking.unstable_getCurrent(),
+          )[0];
+          wrapped = InteractionTracking.unstable_wrap(() => {
             throw Error('Expected error wrap');
           });
         });
@@ -332,9 +358,11 @@ describe('InteractionTracking', () => {
 
       it('should cover onWorkCanceled within wrap', () => {
         let interaction, wrapped;
-        InteractionTracking.track(firstEvent.name, currentTime, () => {
-          interaction = Array.from(InteractionTracking.getCurrent())[0];
-          wrapped = InteractionTracking.wrap(jest.fn());
+        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+          interaction = Array.from(
+            InteractionTracking.unstable_getCurrent(),
+          )[0];
+          wrapped = InteractionTracking.unstable_wrap(jest.fn());
         });
         expect(interaction.__count).toBe(1);
 
@@ -358,7 +386,7 @@ describe('InteractionTracking', () => {
       expect(onInteractionTracked).not.toHaveBeenCalled();
       expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-      InteractionTracking.track(
+      InteractionTracking.unstable_track(
         firstEvent.name,
         currentTime,
         () => {
@@ -374,7 +402,7 @@ describe('InteractionTracking', () => {
           );
           expect(onWorkStopped).not.toHaveBeenCalled();
 
-          InteractionTracking.track(
+          InteractionTracking.unstable_track(
             secondEvent.name,
             currentTime,
             () => {
@@ -426,25 +454,29 @@ describe('InteractionTracking', () => {
       const unwrapped = jest.fn();
       let wrapped;
 
-      InteractionTracking.track(firstEvent.name, currentTime, () => {
+      InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
         expect(onInteractionTracked).toHaveBeenCalledTimes(1);
         expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
           firstEvent,
         );
 
-        InteractionTracking.track(secondEvent.name, currentTime, () => {
-          expect(onInteractionTracked).toHaveBeenCalledTimes(2);
-          expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
-            secondEvent,
-          );
+        InteractionTracking.unstable_track(
+          secondEvent.name,
+          currentTime,
+          () => {
+            expect(onInteractionTracked).toHaveBeenCalledTimes(2);
+            expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
+              secondEvent,
+            );
 
-          wrapped = InteractionTracking.wrap(unwrapped, threadID);
-          expect(onWorkScheduled).toHaveBeenCalledTimes(1);
-          expect(onWorkScheduled).toHaveBeenLastNotifiedOfWork(
-            new Set([firstEvent, secondEvent]),
-            threadID,
-          );
-        });
+            wrapped = InteractionTracking.unstable_wrap(unwrapped, threadID);
+            expect(onWorkScheduled).toHaveBeenCalledTimes(1);
+            expect(onWorkScheduled).toHaveBeenLastNotifiedOfWork(
+              new Set([firstEvent, secondEvent]),
+              threadID,
+            );
+          },
+        );
       });
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(2);
@@ -478,11 +510,15 @@ describe('InteractionTracking', () => {
       const fnOne = jest.fn();
       const fnTwo = jest.fn();
       let wrappedOne, wrappedTwo;
-      InteractionTracking.track(firstEvent.name, currentTime, () => {
-        wrappedOne = InteractionTracking.wrap(fnOne, threadID);
-        InteractionTracking.track(secondEvent.name, currentTime, () => {
-          wrappedTwo = InteractionTracking.wrap(fnTwo, threadID);
-        });
+      InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+        wrappedOne = InteractionTracking.unstable_wrap(fnOne, threadID);
+        InteractionTracking.unstable_track(
+          secondEvent.name,
+          currentTime,
+          () => {
+            wrappedTwo = InteractionTracking.unstable_wrap(fnTwo, threadID);
+          },
+        );
       });
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(2);
@@ -521,12 +557,12 @@ describe('InteractionTracking', () => {
 
     it('should not end an interaction twice if wrap is used to schedule follow up work within another wrap', () => {
       const fnOne = jest.fn(() => {
-        wrappedTwo = InteractionTracking.wrap(fnTwo, threadID);
+        wrappedTwo = InteractionTracking.unstable_wrap(fnTwo, threadID);
       });
       const fnTwo = jest.fn();
       let wrappedOne, wrappedTwo;
-      InteractionTracking.track(firstEvent.name, currentTime, () => {
-        wrappedOne = InteractionTracking.wrap(fnOne, threadID);
+      InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+        wrappedOne = InteractionTracking.unstable_wrap(fnOne, threadID);
       });
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(1);
@@ -547,8 +583,12 @@ describe('InteractionTracking', () => {
     });
 
     it('should unsubscribe', () => {
-      InteractionTrackingSubscriptions.unsubscribe(firstSubscriber);
-      InteractionTracking.track(firstEvent.name, currentTime, () => {});
+      InteractionTrackingSubscriptions.unstable_unsubscribe(firstSubscriber);
+      InteractionTracking.unstable_track(
+        firstEvent.name,
+        currentTime,
+        () => {},
+      );
 
       expect(onInteractionTracked).not.toHaveBeenCalled();
     });
