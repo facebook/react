@@ -31,7 +31,7 @@ export type Container = number;
 export type Instance = {
   _children: Array<Instance | number>,
   _nativeTag: number,
-  viewConfig: ReactNativeBaseComponentViewConfig,
+  viewConfig: ReactNativeBaseComponentViewConfig<>,
 };
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;

@@ -142,7 +142,7 @@ export default function(
         return;
       }
 
-      const viewConfig: ReactNativeBaseComponentViewConfig =
+      const viewConfig: ReactNativeBaseComponentViewConfig<> =
         maybeInstance.viewConfig;
 
       if (__DEV__) {
