@@ -19,7 +19,11 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
-import {enableProfilerTimer, enableSuspense} from 'shared/ReactFeatureFlags';
+import {
+  enableInteractionTracking,
+  enableProfilerTimer,
+  enableSuspense,
+} from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
   ClassComponentLazy,
@@ -777,7 +781,11 @@ function commitDeletion(current: Fiber): void {
   detachFiber(current);
 }
 
-function commitWork(current: Fiber | null, finishedWork: Fiber): void {
+function commitWork(
+  root: FiberRoot,
+  current: Fiber | null,
+  finishedWork: Fiber,
+): void {
   if (!supportsMutation) {
     commitContainer(finishedWork);
     return;
@@ -836,14 +844,27 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case Profiler: {
       if (enableProfilerTimer) {
         const onRender = finishedWork.memoizedProps.onRender;
-        onRender(
-          finishedWork.memoizedProps.id,
-          current === null ? 'mount' : 'update',
-          finishedWork.actualDuration,
-          finishedWork.treeBaseDuration,
-          finishedWork.actualStartTime,
-          getCommitTime(),
-        );
+
+        if (enableInteractionTracking) {
+          onRender(
+            finishedWork.memoizedProps.id,
+            current === null ? 'mount' : 'update',
+            finishedWork.actualDuration,
+            finishedWork.treeBaseDuration,
+            finishedWork.actualStartTime,
+            getCommitTime(),
+            root.memoizedInteractions,
+          );
+        } else {
+          onRender(
+            finishedWork.memoizedProps.id,
+            current === null ? 'mount' : 'update',
+            finishedWork.actualDuration,
+            finishedWork.treeBaseDuration,
+            finishedWork.actualStartTime,
+            getCommitTime(),
+          );
+        }
       }
       return;
     }

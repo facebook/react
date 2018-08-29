@@ -85,7 +85,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom',
     global: 'ReactDOM',
-    externals: ['react'],
+    externals: ['interaction-tracking', 'react'],
   },
 
   //******* Test Utils *******/
@@ -129,7 +129,7 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
-    externals: ['react'],
+    externals: ['interaction-tracking', 'react'],
   },
 
   {
@@ -137,7 +137,7 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.node',
-    externals: ['react', 'stream'],
+    externals: ['interaction-tracking', 'react', 'stream'],
   },
 
   /******* React ART *******/
@@ -179,6 +179,7 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'interaction-tracking',
       'ReactNativeViewConfigRegistry',
     ],
   },
@@ -199,6 +200,7 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'interaction-tracking',
       'ReactNativeViewConfigRegistry',
     ],
   },
@@ -221,6 +223,7 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'interaction-tracking',
       'ReactNativeViewConfigRegistry',
     ],
   },
@@ -242,6 +245,7 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
+      'interaction-tracking',
       'ReactNativeViewConfigRegistry',
     ],
   },
@@ -253,7 +257,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
-    externals: ['react'],
+    externals: ['interaction-tracking', 'react'],
   },
 
   {
@@ -318,7 +322,7 @@ const bundles = [
     moduleType: RECONCILER,
     entry: 'react-reconciler',
     global: 'ReactReconciler',
-    externals: ['react'],
+    externals: ['interaction-tracking', 'react'],
   },
 
   /******* React Persistent Reconciler *******/
@@ -328,7 +332,7 @@ const bundles = [
     moduleType: RECONCILER,
     entry: 'react-reconciler/persistent',
     global: 'ReactPersistentReconciler',
-    externals: ['react'],
+    externals: ['interaction-tracking', 'react'],
   },
 
   /******* Reflection *******/

@@ -10,11 +10,13 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
+import type {Interaction} from 'interaction-tracking/src/InteractionTracking';
 
 import {noTimeout} from './ReactFiberHostConfig';
-
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
+import {enableInteractionTracking} from 'shared/ReactFeatureFlags';
+import {getThreadID} from 'interaction-tracking';
 
 // TODO: This should be lifted into the renderer.
 export type Batch = {
@@ -24,7 +26,9 @@ export type Batch = {
   _next: Batch | null,
 };
 
-export type FiberRoot = {
+export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
+
+type BaseFiberRootProperties = {|
   // Any additional information from the host associated with this root.
   containerInfo: any,
   // Used only by persistent updates.
@@ -73,6 +77,26 @@ export type FiberRoot = {
   firstBatch: Batch | null,
   // Linked-list of roots
   nextScheduledRoot: FiberRoot | null,
+|};
+
+// The following attributes are only used by interaction tracking builds.
+// They enable interactions to be associated with their async work,
+// And expose interaction metadata to the React DevTools Profiler plugin.
+// Note that these attributes are only defined when the enableInteractionTracking flag is enabled.
+type ProfilingOnlyFiberRootProperties = {|
+  interactionThreadID: number,
+  memoizedInteractions: Set<Interaction>,
+  pendingInteractionMap: PendingInteractionMap,
+|};
+
+// Exported FiberRoot type includes all properties,
+// To avoid requiring potentially error-prone :any casts throughout the project.
+// Profiling properties are only safe to access in profiling builds (when enableInteractionTracking is true).
+// The types are defined separately within this file to ensure they stay in sync.
+// (We don't have to use an inline :any cast when enableInteractionTracking is disabled.)
+export type FiberRoot = {
+  ...BaseFiberRootProperties,
+  ...ProfilingOnlyFiberRootProperties,
 };
 
 export function createFiberRoot(
@@ -83,30 +107,69 @@ export function createFiberRoot(
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
   const uninitializedFiber = createHostRootFiber(isAsync);
-  const root = {
-    current: uninitializedFiber,
-    containerInfo: containerInfo,
-    pendingChildren: null,
 
-    earliestPendingTime: NoWork,
-    latestPendingTime: NoWork,
-    earliestSuspendedTime: NoWork,
-    latestSuspendedTime: NoWork,
-    latestPingedTime: NoWork,
+  let root;
+  if (enableInteractionTracking) {
+    root = ({
+      current: uninitializedFiber,
+      containerInfo: containerInfo,
+      pendingChildren: null,
 
-    didError: false,
+      earliestPendingTime: NoWork,
+      latestPendingTime: NoWork,
+      earliestSuspendedTime: NoWork,
+      latestSuspendedTime: NoWork,
+      latestPingedTime: NoWork,
 
-    pendingCommitExpirationTime: NoWork,
-    finishedWork: null,
-    timeoutHandle: noTimeout,
-    context: null,
-    pendingContext: null,
-    hydrate,
-    nextExpirationTimeToWorkOn: NoWork,
-    expirationTime: NoWork,
-    firstBatch: null,
-    nextScheduledRoot: null,
-  };
+      didError: false,
+
+      pendingCommitExpirationTime: NoWork,
+      finishedWork: null,
+      timeoutHandle: noTimeout,
+      context: null,
+      pendingContext: null,
+      hydrate,
+      nextExpirationTimeToWorkOn: NoWork,
+      expirationTime: NoWork,
+      firstBatch: null,
+      nextScheduledRoot: null,
+
+      interactionThreadID: getThreadID(),
+      memoizedInteractions: new Set(),
+      pendingInteractionMap: new Map(),
+    }: FiberRoot);
+  } else {
+    root = ({
+      current: uninitializedFiber,
+      containerInfo: containerInfo,
+      pendingChildren: null,
+
+      earliestPendingTime: NoWork,
+      latestPendingTime: NoWork,
+      earliestSuspendedTime: NoWork,
+      latestSuspendedTime: NoWork,
+      latestPingedTime: NoWork,
+
+      didError: false,
+
+      pendingCommitExpirationTime: NoWork,
+      finishedWork: null,
+      timeoutHandle: noTimeout,
+      context: null,
+      pendingContext: null,
+      hydrate,
+      nextExpirationTimeToWorkOn: NoWork,
+      expirationTime: NoWork,
+      firstBatch: null,
+      nextScheduledRoot: null,
+    }: BaseFiberRootProperties);
+  }
+
   uninitializedFiber.stateNode = root;
-  return root;
+
+  // The reason for the way the Flow types are structured in this file,
+  // Is to avoid needing :any casts everywhere interaction-tracking fields are used.
+  // Unfortunately that requires an :any cast for non-interaction-tracking capable builds.
+  // $FlowFixMe Remove this :any cast and replace it with something better.
+  return ((root: any): FiberRoot);
 }

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
@@ -13,21 +14,11 @@ describe('ReactProfiler DevTools integration', () => {
   let React;
   let ReactFeatureFlags;
   let ReactTestRenderer;
+  let InteractionTracking;
   let AdvanceTime;
   let advanceTimeBy;
   let hook;
   let mockNow;
-
-  const mockNowForTests = () => {
-    let currentTime = 0;
-
-    mockNow = jest.fn().mockImplementation(() => currentTime);
-
-    ReactTestRenderer.unstable_setNowImplementation(mockNow);
-    advanceTimeBy = amount => {
-      currentTime += amount;
-    };
-  };
 
   beforeEach(() => {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
@@ -39,12 +30,23 @@ describe('ReactProfiler DevTools integration', () => {
 
     jest.resetModules();
 
+    let currentTime = 0;
+
+    mockNow = jest.fn().mockImplementation(() => currentTime);
+
+    global.Date.now = mockNow;
+
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableProfilerTimer = true;
+    ReactFeatureFlags.enableInteractionTracking = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
+    InteractionTracking = require('interaction-tracking');
 
-    mockNowForTests();
+    ReactTestRenderer.unstable_setNowImplementation(mockNow);
+    advanceTimeBy = amount => {
+      currentTime += amount;
+    };
 
     AdvanceTime = class extends React.Component {
       static defaultProps = {
@@ -85,7 +87,15 @@ describe('ReactProfiler DevTools integration', () => {
     // The time spent in App (above the Profiler) won't be included in the durations,
     // But needs to be accounted for in the offset times.
     expect(onRender).toHaveBeenCalledTimes(1);
-    expect(onRender).toHaveBeenCalledWith('Profiler', 'mount', 10, 10, 2, 12);
+    expect(onRender).toHaveBeenCalledWith(
+      'Profiler',
+      'mount',
+      10,
+      10,
+      2,
+      12,
+      new Set(),
+    );
     onRender.mockClear();
 
     // Measure unobservable timing required by the DevTools profiler.
@@ -102,7 +112,15 @@ describe('ReactProfiler DevTools integration', () => {
     // The time spent in App (above the Profiler) won't be included in the durations,
     // But needs to be accounted for in the offset times.
     expect(onRender).toHaveBeenCalledTimes(1);
-    expect(onRender).toHaveBeenCalledWith('Profiler', 'update', 6, 13, 14, 20);
+    expect(onRender).toHaveBeenCalledWith(
+      'Profiler',
+      'update',
+      6,
+      13,
+      14,
+      20,
+      new Set(),
+    );
 
     // Measure unobservable timing required by the DevTools profiler.
     // At this point, the base time should include both:
@@ -148,5 +166,26 @@ describe('ReactProfiler DevTools integration', () => {
     expect(
       rendered.root.findByType('div')._currentFiber().treeBaseDuration,
     ).toBe(7);
+  });
+
+  it('should store tracked interactions on the HostNode so DevTools can access them', () => {
+    // Render without an interaction
+    const rendered = ReactTestRenderer.create(<div />);
+
+    const root = rendered.root._currentFiber().return;
+    expect(root.stateNode.memoizedInteractions).toContainNoInteractions();
+
+    advanceTimeBy(10);
+
+    const eventTime = mockNow();
+
+    // Render with an interaction
+    InteractionTracking.track('some event', eventTime, () => {
+      rendered.update(<div />);
+    });
+
+    expect(root.stateNode.memoizedInteractions).toMatchInteractions([
+      {name: 'some event', timestamp: eventTime},
+    ]);
   });
 });
