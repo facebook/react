@@ -582,6 +582,39 @@ describe('InteractionTracking', () => {
       ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
     });
 
+    it('should not decrement the interaction count twice if a wrapped function is run twice', () => {
+      const unwrappedOne = jest.fn();
+      const unwrappedTwo = jest.fn();
+      let wrappedOne, wrappedTwo;
+      InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+        wrappedOne = InteractionTracking.unstable_wrap(unwrappedOne, threadID);
+        wrappedTwo = InteractionTracking.unstable_wrap(unwrappedTwo, threadID);
+      });
+
+      expect(onInteractionTracked).toHaveBeenCalledTimes(1);
+      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+      wrappedOne();
+
+      expect(unwrappedOne).toHaveBeenCalledTimes(1);
+      expect(onInteractionTracked).toHaveBeenCalledTimes(1);
+      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+      wrappedOne();
+
+      expect(unwrappedOne).toHaveBeenCalledTimes(2);
+      expect(onInteractionTracked).toHaveBeenCalledTimes(1);
+      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+      wrappedTwo();
+
+      expect(onInteractionTracked).toHaveBeenCalledTimes(1);
+      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+      expect(
+        onInteractionScheduledWorkCompleted,
+      ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
+    });
+
     it('should unsubscribe', () => {
       InteractionTrackingSubscriptions.unstable_unsubscribe(firstSubscriber);
       InteractionTracking.unstable_track(

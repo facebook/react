@@ -195,6 +195,8 @@ export function unstable_wrap(
     interaction.__count++;
   });
 
+  let hasRun = false;
+
   function wrapped() {
     const prevInteractions = interactionsRef.current;
     interactionsRef.current = wrappedInteractions;
@@ -222,16 +224,23 @@ export function unstable_wrap(
 
       return returnValue;
     } finally {
-      // Update pending async counts for all wrapped interactions.
-      // If this was the last scheduled async work for any of them,
-      // Mark them as completed.
-      wrappedInteractions.forEach(interaction => {
-        interaction.__count--;
+      if (!hasRun) {
+        // We only expect a wrapped function to be executed once,
+        // But in the event that it's executed more than once–
+        // Only decrement the outstanding interaction counts once.
+        hasRun = true;
 
-        if (subscriber !== null && interaction.__count === 0) {
-          subscriber.onInteractionScheduledWorkCompleted(interaction);
-        }
-      });
+        // Update pending async counts for all wrapped interactions.
+        // If this was the last scheduled async work for any of them,
+        // Mark them as completed.
+        wrappedInteractions.forEach(interaction => {
+          interaction.__count--;
+
+          if (subscriber !== null && interaction.__count === 0) {
+            subscriber.onInteractionScheduledWorkCompleted(interaction);
+          }
+        });
+      }
     }
   }
 
