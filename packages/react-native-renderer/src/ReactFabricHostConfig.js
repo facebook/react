@@ -82,12 +82,12 @@ if (registerEventHandler) {
  */
 class ReactFabricHostComponent {
   _nativeTag: number;
-  viewConfig: ReactNativeBaseComponentViewConfig;
+  viewConfig: ReactNativeBaseComponentViewConfig<>;
   currentProps: Props;
 
   constructor(
     tag: number,
-    viewConfig: ReactNativeBaseComponentViewConfig,
+    viewConfig: ReactNativeBaseComponentViewConfig<>,
     props: Props,
   ) {
     this._nativeTag = tag;
