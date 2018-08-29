@@ -1,4 +1,4 @@
-import {track} from 'interaction-tracking';
+import {track, wrap} from 'interaction-tracking';
 import React, {Placeholder, PureComponent} from 'react';
 import {createResource} from 'simple-cache-provider';
 import {cache} from '../cache';
@@ -28,24 +28,26 @@ export default class App extends PureComponent {
   }
 
   handleUserClick = id => {
-    track(`View ${id}`, () => {
-      track(`View ${id} (high-pri)`, () =>
+    track(`View ${id}`, performance.now(), () => {
+      track(`View ${id} (high-pri)`, performance.now(), () =>
         this.setState({
           currentId: id,
         })
       );
-      track(`View ${id} (low-pri)`, () =>
-        requestIdleCallback(() =>
-          this.setState({
-            showDetail: true,
-          })
+      requestIdleCallback(
+        wrap(() =>
+          track(`View ${id} (low-pri)`, performance.now(), () =>
+            this.setState({
+              showDetail: true,
+            })
+          )
         )
       );
     });
   };
 
   handleBackClick = () =>
-    track('View list', () =>
+    track('View list', performance.now(), () =>
       this.setState({
         currentId: null,
         showDetail: false,
