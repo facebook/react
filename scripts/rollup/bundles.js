@@ -402,7 +402,16 @@ const bundles = [
   /******* interaction-tracking (experimental) *******/
   {
     label: 'interaction-tracking',
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      UMD_DEV,
+      UMD_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'interaction-tracking',
     global: 'InteractionTracking',
@@ -411,7 +420,16 @@ const bundles = [
 
   {
     label: 'interaction-tracking-subscriptions',
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      UMD_DEV,
+      UMD_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'interaction-tracking/subscriptions',
     global: 'InteractionTrackingSubscriptions',
