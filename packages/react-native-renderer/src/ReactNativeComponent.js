@@ -153,7 +153,7 @@ export default function(
         return;
       }
 
-      const viewConfig: ReactNativeBaseComponentViewConfig =
+      const viewConfig: ReactNativeBaseComponentViewConfig<> =
         maybeInstance.viewConfig || maybeInstance.canonical.viewConfig;
 
       const updatePayload = ReactNativeAttributePayload.create(

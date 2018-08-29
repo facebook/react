@@ -4,8 +4,9 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * @flow strict-local
  */
+
 'use strict';
 
 import type {
@@ -28,7 +29,7 @@ const viewConfigCallbacks = new Map();
 const viewConfigs = new Map();
 
 function processEventTypes(
-  viewConfig: ReactNativeBaseComponentViewConfig,
+  viewConfig: ReactNativeBaseComponentViewConfig<>,
 ): void {
   const {bubblingEventTypes, directEventTypes} = viewConfig;
 
@@ -84,7 +85,7 @@ exports.register = function(name: string, callback: ViewConfigGetter): string {
  * If this is the first time the view has been used,
  * This configuration will be lazy-loaded from UIManager.
  */
-exports.get = function(name: string): ReactNativeBaseComponentViewConfig {
+exports.get = function(name: string): ReactNativeBaseComponentViewConfig<> {
   let viewConfig;
   if (!viewConfigs.has(name)) {
     const callback = viewConfigCallbacks.get(name);

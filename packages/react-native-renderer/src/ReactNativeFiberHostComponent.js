@@ -33,9 +33,9 @@ import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
 class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;
-  viewConfig: ReactNativeBaseComponentViewConfig;
+  viewConfig: ReactNativeBaseComponentViewConfig<>;
 
-  constructor(tag: number, viewConfig: ReactNativeBaseComponentViewConfig) {
+  constructor(tag: number, viewConfig: ReactNativeBaseComponentViewConfig<>) {
     this._nativeTag = tag;
     this._children = [];
     this.viewConfig = viewConfig;
