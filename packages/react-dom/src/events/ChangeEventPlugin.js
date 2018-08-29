@@ -25,7 +25,10 @@ import {
 } from './DOMTopLevelEventTypes';
 import getEventTarget from './getEventTarget';
 import isEventSupported from './isEventSupported';
-import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
+import {
+  getNodeFromInstance,
+  getFiberCurrentPropsFromNode,
+} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
 import {setDefaultValue} from '../client/ReactDOMFiberInput';
 
@@ -56,8 +59,25 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
     target,
   );
   event.type = 'change';
-  // Flag this event loop as needing state restore.
-  enqueueStateRestore(target);
+  const props = getFiberCurrentPropsFromNode(target);
+  if (props !== null) {
+    // This might be a controlled component, in which case
+    // we need to enqueue a state restore. We try to avoid
+    // it if possible because in async mode, this would
+    // force the interactive updates to flush early.
+    const type = props.type;
+    const needsRestore =
+      // Restore controlled inputs
+      props.value != null ||
+      // Restore controlled checkboxes
+      (type === 'checkbox' && props.checked != null) ||
+      // Restore all radios (because they affect cousins)
+      type === 'radio';
+    if (needsRestore) {
+      // Flag this event loop as needing state restore.
+      enqueueStateRestore(target);
+    }
+  }
   accumulateTwoPhaseDispatches(event);
   return event;
 }
