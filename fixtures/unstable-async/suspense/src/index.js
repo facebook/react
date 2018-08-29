@@ -1,3 +1,4 @@
+import {track} from 'interaction-tracking';
 import React, {Fragment, PureComponent} from 'react';
 import {unstable_createRoot, render} from 'react-dom';
 import {cache} from './cache';
@@ -64,11 +65,13 @@ class Debugger extends PureComponent {
   }
 
   handleReset = () => {
-    cache.invalidate();
-    this.setState(state => ({
-      requests: {},
-    }));
-    handleReset();
+    track('Clear cache', () => {
+      cache.invalidate();
+      this.setState(state => ({
+        requests: {},
+      }));
+      handleReset();
+    });
   };
 
   handleProgress = (url, progress, isPaused) => {
