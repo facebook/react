@@ -139,7 +139,7 @@ type Batch = FiberRootBatch & {
   then(onComplete: () => mixed): void,
   commit(): void,
 
-  // The ReactRoot constuctor is hoisted but the prototype methods are not. If
+  // The ReactRoot constructor is hoisted but the prototype methods are not. If
   // we move ReactRoot to be above ReactBatch, the inverse error occurs.
   // $FlowFixMe Hoisting issue.
   _root: Root,
