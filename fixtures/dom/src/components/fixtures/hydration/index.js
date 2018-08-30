@@ -2,25 +2,21 @@ import './hydration.css';
 import {SAMPLE_CODE} from './data';
 import {LiveProvider, LiveEditor, LiveError} from 'react-live';
 import * as buble from 'buble';
+import {reactPaths} from '../../../react-loader';
+import qs from 'query-string';
 
 const React = window.React;
+
+const {reactPath, reactDOMPath, needsReactDOM} = reactPaths();
 
 class Hydration extends React.Component {
   state = {
     code: SAMPLE_CODE,
-    transformed: buble.transform(SAMPLE_CODE).code,
     hydrate: true,
   };
 
   setCode = code => {
-    try {
-      this.setState({
-        code: code,
-        transformed: buble.transform(code).code,
-      });
-    } catch (_error) {
-      // Do nothing, ReactLive will show the error
-    }
+    this.setState({code});
   };
 
   setCheckbox = event => {
@@ -31,8 +27,15 @@ class Hydration extends React.Component {
   render() {
     const {code, hydrate} = this.state;
 
-    const transformed = buble.transform(code).code;
-    const src = `/renderer.html?code=${escape(transformed)}&hydrate=${hydrate}`;
+    const src =
+      '/renderer.html?' +
+      qs.stringify({
+        code: buble.transform(code).code,
+        hydrate,
+        reactPath,
+        reactDOMPath,
+        needsReactDOM,
+      });
 
     return (
       <LiveProvider code={code}>

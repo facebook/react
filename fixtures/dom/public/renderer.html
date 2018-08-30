@@ -143,7 +143,7 @@
 
         hydrate.onclick = render;
 
-        script.textContent = unescape(query('code'), '');
+        script.textContent = decodeURIComponent(query('code'))
 
         document.body.appendChild(script);
 
