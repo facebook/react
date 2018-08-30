@@ -64,6 +64,8 @@ export function reactPaths() {
       reactPath = 'https://unpkg.com/react@' + version + '/dist/react.js';
       reactDOMPath =
         'https://unpkg.com/react-dom@' + version + '/dist/react-dom.js';
+      reactDOMServerPath =
+        'https://unpkg.com/react-dom@' + version + '/dist/react-dom-server.js';
     }
   }
 
