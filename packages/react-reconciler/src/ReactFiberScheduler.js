@@ -12,7 +12,6 @@ import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {Interaction} from 'interaction-tracking/src/InteractionTracking';
 
-import React from 'react';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -160,8 +159,13 @@ export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): mixed,
 };
 
-const {ReactCurrentOwner} = ReactSharedInternals;
-const {__interactionsRef, __subscriberRef} = React.unstable_interactions;
+const {InteractionTracking, ReactCurrentOwner} = ReactSharedInternals;
+
+// Access the interaction-tracking API from React's internal re-export.
+// This will be a re-export of the interaction-tracking package for CJS bundles,
+// And an embedded version for UMD bundles.
+// This is being done so that we don't break backwards compat for existing UMD apps.
+const {__interactionsRef, __subscriberRef} = InteractionTracking;
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;

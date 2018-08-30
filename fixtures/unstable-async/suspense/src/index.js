@@ -1,5 +1,6 @@
-import React, {Fragment, PureComponent, unstable_interactions} from 'react';
+import React, {Fragment, PureComponent} from 'react';
 import {unstable_createRoot, render} from 'react-dom';
+import {unstable_track as track} from 'interaction-tracking';
 import {cache} from './cache';
 import {
   setFakeRequestTime,
@@ -10,8 +11,6 @@ import {
 import App from './components/App';
 import Draggable from 'react-draggable';
 import './index.css';
-
-const {track} = unstable_interactions;
 
 let handleReset;
 

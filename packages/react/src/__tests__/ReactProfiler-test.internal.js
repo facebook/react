@@ -15,6 +15,8 @@ let ReactFeatureFlags;
 let ReactNoop;
 let ReactTestRenderer;
 let advanceTimeBy;
+let InteractionTracking;
+let InteractionTrackingSubscriptions;
 let mockNow;
 let AdvanceTime;
 
@@ -41,6 +43,8 @@ function loadModules({
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
   React = require('react');
+  InteractionTracking = require('interaction-tracking');
+  InteractionTrackingSubscriptions = require('interaction-tracking/subscriptions');
 
   if (useNoopRenderer) {
     ReactNoop = require('react-noop-renderer');
@@ -1204,7 +1208,7 @@ describe('Profiler', () => {
       });
 
       // Verify interaction subscriber methods are called as expected.
-      React.unstable_interactions.subscribe({
+      InteractionTrackingSubscriptions.unstable_subscribe({
         onInteractionScheduledWorkCompleted,
         onInteractionTracked,
         onWorkCanceled,
@@ -1226,7 +1230,7 @@ describe('Profiler', () => {
         // Errors that happen inside of a subscriber should throw,
         throwInOnWorkScheduled = true;
         expect(() => {
-          React.unstable_interactions.track('event', mockNow(), () => {
+          InteractionTracking.unstable_track('event', mockNow(), () => {
             renderer = ReactTestRenderer.create(<Component>fail</Component>, {
               unstable_isAsync: true,
             });
@@ -1252,7 +1256,7 @@ describe('Profiler', () => {
         }
 
         let renderer;
-        React.unstable_interactions.track('event', mockNow(), () => {
+        InteractionTracking.unstable_track('event', mockNow(), () => {
           renderer = ReactTestRenderer.create(<Component>text</Component>, {
             unstable_isAsync: true,
           });
@@ -1281,7 +1285,7 @@ describe('Profiler', () => {
         }
 
         let renderer;
-        React.unstable_interactions.track('event', mockNow(), () => {
+        InteractionTracking.unstable_track('event', mockNow(), () => {
           renderer = ReactTestRenderer.create(<Component>text</Component>, {
             unstable_isAsync: true,
           });
@@ -1323,8 +1327,8 @@ describe('Profiler', () => {
         };
 
         let renderer;
-        React.unstable_interactions.track(eventOne.name, mockNow(), () => {
-          React.unstable_interactions.track(eventTwo.name, mockNow(), () => {
+        InteractionTracking.unstable_track(eventOne.name, mockNow(), () => {
+          InteractionTracking.unstable_track(eventTwo.name, mockNow(), () => {
             renderer = ReactTestRenderer.create(<Component>text</Component>, {
               unstable_isAsync: true,
             });
@@ -1378,7 +1382,7 @@ describe('Profiler', () => {
 
       const onRender = jest.fn();
       let renderer;
-      React.unstable_interactions.track(
+      InteractionTracking.unstable_track(
         interactionCreation.name,
         mockNow(),
         () => {
@@ -1451,7 +1455,7 @@ describe('Profiler', () => {
         name: 'initial event',
         timestamp: mockNow(),
       };
-      React.unstable_interactions.track(interactionOne.name, mockNow(), () => {
+      InteractionTracking.unstable_track(interactionOne.name, mockNow(), () => {
         instance.setState({count: 1});
 
         // Update state again to verify our tracked interaction isn't registered twice
@@ -1546,7 +1550,7 @@ describe('Profiler', () => {
         name: 'root update event',
         timestamp: mockNow(),
       };
-      React.unstable_interactions.track(interactionTwo.name, mockNow(), () => {
+      InteractionTracking.unstable_track(interactionTwo.name, mockNow(), () => {
         renderer.update(
           <React.unstable_Profiler id="test-profiler" onRender={onRender}>
             <Example />
@@ -1647,7 +1651,7 @@ describe('Profiler', () => {
         timestamp: mockNow(),
       };
 
-      React.unstable_interactions.track(
+      InteractionTracking.unstable_track(
         interactionLowPri.name,
         mockNow(),
         () => {
@@ -1684,7 +1688,7 @@ describe('Profiler', () => {
           // Interrupt with higher priority work.
           // This simulates a total of 37ms of actual render time.
           renderer.unstable_flushSync(() => {
-            React.unstable_interactions.track(
+            InteractionTracking.unstable_track(
               interactionHighPri.name,
               mockNow(),
               () => {
@@ -1803,7 +1807,7 @@ describe('Profiler', () => {
       const onRender = jest.fn();
       let firstCommitTime = mockNow();
       let renderer;
-      React.unstable_interactions.track(interactionOne.name, mockNow(), () => {
+      InteractionTracking.unstable_track(interactionOne.name, mockNow(), () => {
         renderer = ReactTestRenderer.create(
           <React.unstable_Profiler id="test" onRender={onRender}>
             <Example />
@@ -1865,7 +1869,7 @@ describe('Profiler', () => {
       };
 
       // Cause an tracked, async update
-      React.unstable_interactions.track(interactionTwo.name, mockNow(), () => {
+      InteractionTracking.unstable_track(interactionTwo.name, mockNow(), () => {
         instance.setState({count: 2});
       });
       expect(onRender).not.toHaveBeenCalled();
@@ -1931,7 +1935,7 @@ describe('Profiler', () => {
       function callback() {
         instance.setState({count: 6});
       }
-      React.unstable_interactions.track(
+      InteractionTracking.unstable_track(
         interactionThree.name,
         mockNow(),
         () => {
@@ -2028,7 +2032,7 @@ describe('Profiler', () => {
         timestamp: mockNow(),
       };
 
-      React.unstable_interactions.track(interaction.name, mockNow(), () => {
+      InteractionTracking.unstable_track(interaction.name, mockNow(), () => {
         parentInstance.setState({count: 1});
       });
 
@@ -2074,7 +2078,7 @@ describe('Profiler', () => {
       });
 
       // Re-register since we've reloaded modules
-      React.unstable_interactions.subscribe({
+      InteractionTrackingSubscriptions.unstable_subscribe({
         onInteractionScheduledWorkCompleted,
         onInteractionTracked,
         onWorkCanceled,
@@ -2141,7 +2145,7 @@ describe('Profiler', () => {
       };
 
       const onRender = jest.fn();
-      React.unstable_interactions.track(interaction.name, mockNow(), () => {
+      InteractionTracking.unstable_track(interaction.name, mockNow(), () => {
         ReactNoop.render(
           <React.unstable_Profiler id="test-profiler" onRender={onRender}>
             <React.Placeholder fallback={<Text text="Loading..." />}>

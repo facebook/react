@@ -12,13 +12,17 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Interaction} from 'interaction-tracking/src/InteractionTracking';
 
-import React from 'react';
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {enableInteractionTracking} from 'shared/ReactFeatureFlags';
 
-const {getThreadID} = React.unstable_interactions;
+// Access the interaction-tracking API from React's internal re-export.
+// This will be a re-export of the interaction-tracking package for CJS bundles,
+// And an embedded version for UMD bundles.
+// This is being done so that we don't break backwards compat for existing UMD apps.
+const {getThreadID} = ReactSharedInternals.InteractionTracking;
 
 // TODO: This should be lifted into the renderer.
 export type Batch = {

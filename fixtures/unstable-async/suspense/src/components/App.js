@@ -1,10 +1,12 @@
-import React, {Placeholder, PureComponent, unstable_interactions} from 'react';
+import React, {Placeholder, PureComponent} from 'react';
+import {
+  unstable_track as track,
+  unstable_wrap as wrap,
+} from 'interaction-tracking';
 import {createResource} from 'simple-cache-provider';
 import {cache} from '../cache';
 import Spinner from './Spinner';
 import ContributorListPage from './ContributorListPage';
-
-const {track, wrap} = unstable_interactions;
 
 const UserPageResource = createResource(() => import('./UserPage'));
 

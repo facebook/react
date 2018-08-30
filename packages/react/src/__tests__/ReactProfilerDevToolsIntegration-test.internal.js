@@ -11,6 +11,7 @@
 'use strict';
 
 describe('ReactProfiler DevTools integration', () => {
+  let InteractionTracking;
   let React;
   let ReactFeatureFlags;
   let ReactTestRenderer;
@@ -38,6 +39,7 @@ describe('ReactProfiler DevTools integration', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableProfilerTimer = true;
     ReactFeatureFlags.enableInteractionTracking = true;
+    InteractionTracking = require('interaction-tracking');
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
 
@@ -178,7 +180,7 @@ describe('ReactProfiler DevTools integration', () => {
     const eventTime = mockNow();
 
     // Render with an interaction
-    React.unstable_interactions.track('some event', eventTime, () => {
+    InteractionTracking.unstable_track('some event', eventTime, () => {
       rendered.update(<div />);
     });
 
