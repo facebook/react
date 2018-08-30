@@ -96,6 +96,21 @@ describe('validateDOMNesting', () => {
       ],
     );
     expectWarnings(
+      ['svg', 'div'],
+      [
+        'validateDOMNesting(...): <div> cannot appear as a descendant of <svg>.\n' +
+          '    in div (at **)',
+      ],
+    );
+    expectWarnings(
+      ['svg', 'path', 'span'],
+      [
+        'validateDOMNesting(...): <span> cannot appear as a descendant of <svg>.\n' +
+          '    in span (at **)\n' +
+          '    in path (at **)',
+      ],
+    );
+    expectWarnings(
       ['div', 'html'],
       [
         'validateDOMNesting(...): <html> cannot appear as a child of <div>.\n' +
