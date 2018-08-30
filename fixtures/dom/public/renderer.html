@@ -84,18 +84,25 @@
 
       (function() {
         var output = document.getElementById('output');
-        var script = document.createElement('script');
         var status = document.getElementById('status');
         var hydrate = document.getElementById('hydrate');
         var reload = document.getElementById('reload');
         var renders = 0;
         var failed = false;
 
-        function query(key, fallback) {
-          let pattern = new RegExp(key + '=([^&]+)(&|$)')
-          let matches = window.location.search.match(pattern)
+        function query(key) {
+          let pattern = new RegExp(key + '=([^&]+)(&|$)');
+          let matches = window.location.search.match(pattern);
 
-          return matches ? decodeURIComponent(matches[1]) : fallback
+          if (matches) {
+            return decodeURIComponent(matches[1]);
+          }
+
+          handleError(new Error('No key found for' + key));
+        }
+
+        function booleanQuery(key) {
+          return query(key) === 'true'
         }
 
         function setStatus(label) {
@@ -122,8 +129,8 @@
           }
 
           setStatus(renders > 0 ? 'Re-rendered (' + renders + 'x)' : 'Hydrated');
-          renders += 1
-          hydrate.innerHTML = 'Re-render'
+          renders += 1;
+          hydrate.innerHTML = 'Re-render';
         }
 
         function handleError (error) {
@@ -134,18 +141,26 @@
 
         function loadScript(src) {
           return new Promise(function (resolve, reject) {
-            var script = document.createElement('script')
-            script.async = 1
-            script.src = src
+            var script = document.createElement('script');
+            script.async = 1;
+            script.src = src;
 
-            script.onload = resolve
-            script.onerror = reject
+            script.onload = resolve;
+            script.onerror = reject;
 
-            document.body.appendChild(script)
+            document.body.appendChild(script);
           })
         }
 
-        window.onerror = handleError
+        function injectScript(src) {
+          return new Promise(function (resolve, reject) {
+            var script = document.createElement('script');
+            script.textContent = src;
+            document.body.appendChild(script);
+          })
+        }
+
+        window.onerror = handleError;
 
         reload.onclick = function() {
           window.location.reload();
@@ -155,12 +170,10 @@
 
         Promise.all([
           loadScript(query('reactPath')),
-          query('needsReactDOM') === 'true' ? loadScript(query('reactDOMPath')) : null,
+          booleanQuery('needsReactDOM') ? loadScript(query('reactDOMPath')) : null,
           loadScript(query('reactDOMServerPath'))
-        ]).then(function execute() {
-          script.textContent = query('code')
-
-          document.body.appendChild(script);
+        ]).then(function () {
+          injectScript(query('code'))
 
           if (failed) {
             return;
@@ -172,11 +185,11 @@
           } else {
             prerender();
 
-            if (query('hydrate', 'true') === 'true') {
+            if (booleanQuery('hydrate')) {
               render();
             }
           }
-        })
+        }).catch(handleError);
       })();
     </script>
   </body>
