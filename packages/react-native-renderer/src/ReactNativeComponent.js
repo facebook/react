@@ -22,7 +22,7 @@ import TextInputState from 'TextInputState';
 import UIManager from 'UIManager';
 
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
-import {mountSafeCallback} from './NativeMethodsMixinUtils';
+import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 
 export default function(
   findNodeHandle: any => ?number,
@@ -82,7 +82,7 @@ export default function(
     measure(callback: MeasureOnSuccessCallback): void {
       UIManager.measure(
         findNodeHandle(this),
-        mountSafeCallback(this, callback),
+        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
       );
     }
 
@@ -102,7 +102,7 @@ export default function(
     measureInWindow(callback: MeasureInWindowOnSuccessCallback): void {
       UIManager.measureInWindow(
         findNodeHandle(this),
-        mountSafeCallback(this, callback),
+        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
       );
     }
 
@@ -120,8 +120,8 @@ export default function(
       UIManager.measureLayout(
         findNodeHandle(this),
         relativeToNativeNode,
-        mountSafeCallback(this, onFail),
-        mountSafeCallback(this, onSuccess),
+        mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
+        mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
       );
     }
 

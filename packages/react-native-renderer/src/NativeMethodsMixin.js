@@ -22,7 +22,7 @@ import UIManager from 'UIManager';
 
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
 import {
-  mountSafeCallback,
+  mountSafeCallback_NOT_REALLY_SAFE,
   throwOnStylesProp,
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
@@ -67,7 +67,7 @@ export default function(
     measure: function(callback: MeasureOnSuccessCallback) {
       UIManager.measure(
         findNodeHandle(this),
-        mountSafeCallback(this, callback),
+        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
       );
     },
 
@@ -89,7 +89,7 @@ export default function(
     measureInWindow: function(callback: MeasureInWindowOnSuccessCallback) {
       UIManager.measureInWindow(
         findNodeHandle(this),
-        mountSafeCallback(this, callback),
+        mountSafeCallback_NOT_REALLY_SAFE(this, callback),
       );
     },
 
@@ -109,8 +109,8 @@ export default function(
       UIManager.measureLayout(
         findNodeHandle(this),
         relativeToNativeNode,
-        mountSafeCallback(this, onFail),
-        mountSafeCallback(this, onSuccess),
+        mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
+        mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
       );
     },
 
