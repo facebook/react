@@ -346,6 +346,10 @@ if (__DEV__) {
    * Returns whether
    */
   const findInvalidAncestorForTag = function(tag, ancestorInfo) {
+    const isValidHtmlInSvg = !ancestorInfo.foreignObjectInScope
+      ? ancestorInfo.svgTagInScope
+      : null;
+
     switch (tag) {
       case 'address':
       case 'article':
@@ -382,12 +386,7 @@ if (__DEV__) {
       case 'h4':
       case 'h5':
       case 'h6':
-        return (
-          ancestorInfo.pTagInButtonScope ||
-          (!ancestorInfo.foreignObjectInScope
-            ? ancestorInfo.svgTagInScope
-            : null)
-        );
+        return ancestorInfo.pTagInButtonScope || isValidHtmlInSvg;
 
       case 'span':
         return !ancestorInfo.foreignObjectInScope
@@ -398,40 +397,23 @@ if (__DEV__) {
         return (
           ancestorInfo.formTag ||
           ancestorInfo.pTagInButtonScope ||
-          (!ancestorInfo.foreignObjectInScope
-            ? ancestorInfo.svgTagInScope
-            : null)
+          isValidHtmlInSvg
         );
 
       case 'li':
-        return (
-          ancestorInfo.listItemTagAutoclosing ||
-          (!ancestorInfo.foreignObjectInScope
-            ? ancestorInfo.svgTagInScope
-            : null)
-        );
+        return ancestorInfo.listItemTagAutoclosing || isValidHtmlInSvg;
 
       case 'dd':
       case 'dt':
         return ancestorInfo.dlItemTagAutoclosing;
 
       case 'button':
-        return (
-          ancestorInfo.buttonTagInScope ||
-          (!ancestorInfo.foreignObjectInScope
-            ? ancestorInfo.svgTagInScope
-            : null)
-        );
+        return ancestorInfo.buttonTagInScope || isValidHtmlInSvg;
 
       case 'a':
         // Spec says something about storing a list of markers, but it sounds
         // equivalent to this check.
-        return (
-          ancestorInfo.aTagInScope ||
-          (!ancestorInfo.foreignObjectInScope
-            ? ancestorInfo.svgTagInScope
-            : null)
-        );
+        return ancestorInfo.aTagInScope || isValidHtmlInSvg;
 
       case 'nobr':
         return ancestorInfo.nobrTagInScope;
