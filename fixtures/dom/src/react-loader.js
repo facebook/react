@@ -39,6 +39,7 @@ function loadScript(src) {
 export function reactPaths() {
   let reactPath = 'react.development.js';
   let reactDOMPath = 'react-dom.development.js';
+  let reactDOMServerPath = 'react-dom-server.browser.development.js';
 
   let query = parseQuery(window.location.search);
   let version = query.version || 'local';
@@ -55,6 +56,10 @@ export function reactPaths() {
         'https://unpkg.com/react-dom@' +
         version +
         '/umd/react-dom.development.js';
+      reactDOMServerPath =
+        'https://unpkg.com/react-dom-server@' +
+        version +
+        '/umd/react-server.browser.development.js';
     } else {
       reactPath = 'https://unpkg.com/react@' + version + '/dist/react.js';
       reactDOMPath =
@@ -64,7 +69,7 @@ export function reactPaths() {
 
   const needsReactDOM = version === 'local' || parseFloat(version, 10) > 0.13;
 
-  return {reactPath, reactDOMPath, needsReactDOM};
+  return {reactPath, reactDOMPath, reactDOMServerPath, needsReactDOM};
 }
 
 export default function loadReact() {

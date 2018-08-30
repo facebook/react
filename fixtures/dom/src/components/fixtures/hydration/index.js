@@ -7,8 +7,6 @@ import qs from 'query-string';
 
 const React = window.React;
 
-const {reactPath, reactDOMPath, needsReactDOM} = reactPaths();
-
 class Hydration extends React.Component {
   state = {
     code: SAMPLE_CODE,
@@ -32,9 +30,7 @@ class Hydration extends React.Component {
       qs.stringify({
         code: buble.transform(code).code,
         hydrate,
-        reactPath,
-        reactDOMPath,
-        needsReactDOM,
+        ...reactPaths(),
       });
 
     return (

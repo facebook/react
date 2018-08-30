@@ -4,9 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Renderer</title>
-    <script src="./react.development.js"></script>
-    <script src="./react-dom.development.js"></script>
-    <script src="./react-dom-server.browser.development.js"></script>
     <style>
       *,
       *:before,
@@ -98,7 +95,7 @@
           let pattern = new RegExp(key + '=([^&]+)(&|$)')
           let matches = window.location.search.match(pattern)
 
-          return matches ? matches[1] : fallback
+          return matches ? decodeURIComponent(matches[1]) : fallback
         }
 
         function setStatus(label) {
@@ -135,6 +132,19 @@
           output.innerHTML = error;
         };
 
+        function loadScript(src) {
+          return new Promise(function (resolve, reject) {
+            var script = document.createElement('script')
+            script.async = 1
+            script.src = src
+
+            script.onload = resolve
+            script.onerror = reject
+
+            document.body.appendChild(script)
+          })
+        }
+
         window.onerror = handleError
 
         reload.onclick = function() {
@@ -143,24 +153,30 @@
 
         hydrate.onclick = render;
 
-        script.textContent = decodeURIComponent(query('code'))
+        Promise.all([
+          loadScript(query('reactPath')),
+          query('needsReactDOM') === 'true' ? loadScript(query('reactDOMPath')) : null,
+          loadScript(query('reactDOMServerPath'))
+        ]).then(function execute() {
+          script.textContent = query('code')
 
-        document.body.appendChild(script);
+          document.body.appendChild(script);
 
-        if (failed) {
-          return;
-        }
-
-        if (typeof Fixture === 'undefined') {
-          setStatus('Failed');
-          output.innerHTML = 'Please name your root component "Fixture"';
-        } else {
-          prerender();
-
-          if (query('hydrate', 'true') === 'true') {
-            render();
+          if (failed) {
+            return;
           }
-        }
+
+          if (typeof Fixture === 'undefined') {
+            setStatus('Failed');
+            output.innerHTML = 'Please name your root component "Fixture"';
+          } else {
+            prerender();
+
+            if (query('hydrate', 'true') === 'true') {
+              render();
+            }
+          }
+        })
       })();
     </script>
   </body>
