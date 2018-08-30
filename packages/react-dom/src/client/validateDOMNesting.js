@@ -195,6 +195,12 @@ if (__DEV__) {
     if (tag === 'button') {
       ancestorInfo.buttonTagInScope = info;
     }
+    if (tag === 'svg') {
+      ancestorInfo.svgTagInScope = info;
+    }
+    if (tag === 'foreignObject') {
+      ancestorInfo.foreignObjectInScope = info;
+    }
     if (tag === 'nobr') {
       ancestorInfo.nobrTagInScope = info;
     }
@@ -376,25 +382,56 @@ if (__DEV__) {
       case 'h4':
       case 'h5':
       case 'h6':
-        return ancestorInfo.pTagInButtonScope;
+        return (
+          ancestorInfo.pTagInButtonScope ||
+          (!ancestorInfo.foreignObjectInScope
+            ? ancestorInfo.svgTagInScope
+            : null)
+        );
+
+      case 'span':
+        return !ancestorInfo.foreignObjectInScope
+          ? ancestorInfo.svgTagInScope
+          : null;
 
       case 'form':
-        return ancestorInfo.formTag || ancestorInfo.pTagInButtonScope;
+        return (
+          ancestorInfo.formTag ||
+          ancestorInfo.pTagInButtonScope ||
+          (!ancestorInfo.foreignObjectInScope
+            ? ancestorInfo.svgTagInScope
+            : null)
+        );
 
       case 'li':
-        return ancestorInfo.listItemTagAutoclosing;
+        return (
+          ancestorInfo.listItemTagAutoclosing ||
+          (!ancestorInfo.foreignObjectInScope
+            ? ancestorInfo.svgTagInScope
+            : null)
+        );
 
       case 'dd':
       case 'dt':
         return ancestorInfo.dlItemTagAutoclosing;
 
       case 'button':
-        return ancestorInfo.buttonTagInScope;
+        return (
+          ancestorInfo.buttonTagInScope ||
+          (!ancestorInfo.foreignObjectInScope
+            ? ancestorInfo.svgTagInScope
+            : null)
+        );
 
       case 'a':
         // Spec says something about storing a list of markers, but it sounds
         // equivalent to this check.
-        return ancestorInfo.aTagInScope;
+        return (
+          ancestorInfo.aTagInScope ||
+          (!ancestorInfo.foreignObjectInScope
+            ? ancestorInfo.svgTagInScope
+            : null)
+        );
 
       case 'nobr':
         return ancestorInfo.nobrTagInScope;
