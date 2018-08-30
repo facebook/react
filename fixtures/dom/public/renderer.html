@@ -134,9 +134,10 @@
         }
 
         function handleError (error) {
+          console.log(error)
           failed = true;
           setStatus('Javascript Error');
-          output.innerHTML = error;
+          output.innerHTML = error
         };
 
         function loadScript(src) {
@@ -146,7 +147,9 @@
             script.src = src;
 
             script.onload = resolve;
-            script.onerror = reject;
+            script.onerror = function(error) {
+              reject(new Error('Unable to load ' + src));
+            };
 
             document.body.appendChild(script);
           })
@@ -160,7 +163,7 @@
           })
         }
 
-        window.onerror = handleError;
+        window.onerror = handleError
 
         reload.onclick = function() {
           window.location.reload();

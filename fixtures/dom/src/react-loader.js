@@ -57,9 +57,9 @@ export function reactPaths() {
         version +
         '/umd/react-dom.development.js';
       reactDOMServerPath =
-        'https://unpkg.com/react-dom-server@' +
+        'https://unpkg.com/react-dom@' +
         version +
-        '/umd/react-server.browser.development.js';
+        '/umd/react-dom-server.browser.development';
     } else {
       reactPath = 'https://unpkg.com/react@' + version + '/dist/react.js';
       reactDOMPath =
