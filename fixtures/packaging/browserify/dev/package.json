@@ -3,6 +3,7 @@
   "name": "browserify-dev-fixture",
   "dependencies": {
     "browserify": "^13.3.0",
+    "interaction-tracking": "link:../../../../build/node_modules/interaction-tracking",
     "react": "link:../../../../build/node_modules/react",
     "react-dom": "link:../../../../build/node_modules/react-dom"
   },

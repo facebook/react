@@ -4,6 +4,7 @@
   "devDependencies": {
     "brunch": "^2.9.1",
     "javascript-brunch": "^2.0.0",
+    "interaction-tracking": "link:../../../../build/node_modules/interaction-tracking",
     "react": "link:../../../../build/node_modules/react",
     "react-dom": "link:../../../../build/node_modules/react-dom"
   },
