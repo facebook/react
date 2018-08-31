@@ -139,6 +139,15 @@ describe('DOMPropertyOperations', () => {
       ReactDOM.render(<progress value="30" />, container);
       expect(container.firstChild.setAttribute).toHaveBeenCalledTimes(2);
     });
+
+    it('should return the progress to intermediate state on null value', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<progress value={30} />, container);
+      ReactDOM.render(<progress value={null} />, container);
+      // Ensure we move progress back to an indeterminate state.
+      // Regression test for https://github.com/facebook/react/issues/6119
+      expect(container.firstChild.hasAttribute('value')).toBe(false);
+    });
   });
 
   describe('deleteValueForProperty', () => {
