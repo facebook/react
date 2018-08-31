@@ -750,6 +750,37 @@ describe('ReactDOMInput', () => {
     expect(handled).toBe(true);
   });
 
+  it('should restore uncontrolled inputs to last defaultValue upon reset', () => {
+    const inputRef = React.createRef();
+    ReactDOM.render(
+      <form>
+        <input defaultValue="default1" ref={inputRef} />
+        <input type="reset" />
+      </form>,
+      container,
+    );
+    expect(inputRef.current.value).toBe('default1');
+
+    setUntrackedValue.call(inputRef.current, 'changed');
+    dispatchEventOnNode(inputRef.current, 'input');
+    expect(inputRef.current.value).toBe('changed');
+
+    ReactDOM.render(
+      <form>
+        <input defaultValue="default2" ref={inputRef} />
+        <input type="reset" />
+      </form>,
+      container,
+    );
+    expect(inputRef.current.value).toBe('changed');
+
+    container.firstChild.reset();
+    // Note: I don't know if we want to always support this.
+    // But it's current behavior so worth being intentional if we break it.
+    // https://github.com/facebook/react/issues/4618
+    expect(inputRef.current.value).toBe('default2');
+  });
+
   it('should not set a value for submit buttons unnecessarily', () => {
     const stub = <input type="submit" />;
     ReactDOM.render(stub, container);
