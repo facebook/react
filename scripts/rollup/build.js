@@ -325,6 +325,7 @@ function getPlugins(
     replace({
       __DEV__: isProduction ? 'false' : 'true',
       __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
+      __UMD__: isUMDBundle ? 'true' : 'false',
       'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
     }),
     // We still need CommonJS for external deps like object-assign.

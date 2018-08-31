@@ -31,28 +31,35 @@ const ReactSharedInternals = {
   ReactCurrentOwner,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
+};
+
+if (__UMD__) {
   // Re-export the react-scheduler API(s) for UMD bundles.
   // This avoids introducing a dependency on a new UMD global in a minor update,
   // Since that would be a breaking change (e.g. for all existing CodeSandboxes).
-  Scheduler: {
-    cancelScheduledWork,
-    now,
-    scheduleWork,
-  },
-  SchedulerTracking: {
-    __getInteractionsRef,
-    __getSubscriberRef,
-    clear,
-    getCurrent,
-    getThreadID,
-    track,
-    wrap,
-  },
-  SchedulerTrackingSubscriptions: {
-    subscribe,
-    unsubscribe,
-  },
-};
+  // This re-export is only required for UMD bundles;
+  // CJS bundles use the shared NPM package.
+  Object.assign(ReactSharedInternals, {
+    Scheduler: {
+      cancelScheduledWork,
+      now,
+      scheduleWork,
+    },
+    SchedulerTracking: {
+      __getInteractionsRef,
+      __getSubscriberRef,
+      clear,
+      getCurrent,
+      getThreadID,
+      track,
+      wrap,
+    },
+    SchedulerTrackingSubscriptions: {
+      subscribe,
+      unsubscribe,
+    },
+  });
+}
 
 if (__DEV__) {
   Object.assign(ReactSharedInternals, {
