@@ -123,8 +123,7 @@ const forks = Object.freeze({
       case UMD_DEV:
       case UMD_PROD:
         if (dependencies.indexOf('react') === -1) {
-          // We can only apply the optimizations to bundle that depend on React
-          // because we read assign() from an object exposed on React internals.
+          // For CJS bundles, use the shared NPM package.
           return null;
         }
         // Optimization: for UMDs, use the API that is already a part of the React
@@ -140,8 +139,7 @@ const forks = Object.freeze({
       case UMD_DEV:
       case UMD_PROD:
         if (dependencies.indexOf('react') === -1) {
-          // We can only apply the optimizations to bundle that depend on React
-          // because we read assign() from an object exposed on React internals.
+          // For CJS bundles, use the shared NPM package.
           return null;
         }
         // Optimization: for UMDs, use the API that is already a part of the React
@@ -161,8 +159,7 @@ const forks = Object.freeze({
       case UMD_DEV:
       case UMD_PROD:
         if (dependencies.indexOf('react') === -1) {
-          // We can only apply the optimizations to bundle that depend on React
-          // because we read assign() from an object exposed on React internals.
+          // For CJS bundles, use the shared NPM package.
           return null;
         }
         // Optimization: for UMDs, use the API that is already a part of the React

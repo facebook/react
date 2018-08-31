@@ -9,23 +9,12 @@
 
 import React from 'react';
 
-export function unstable_now() {
-  return React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.now.apply(
-    this,
-    arguments,
-  );
-}
+const ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-export function unstable_scheduleWork() {
-  return React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.scheduleWork.apply(
-    this,
-    arguments,
-  );
-}
+const {
+  unstable_cancelScheduledWork,
+  unstable_now,
+  unstable_scheduleWork,
+} = ReactInternals.Scheduler;
 
-export function unstable_cancelScheduledWork() {
-  return React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.cancelScheduledWork.apply(
-    this,
-    arguments,
-  );
-}
+export {unstable_cancelScheduledWork, unstable_now, unstable_scheduleWork};

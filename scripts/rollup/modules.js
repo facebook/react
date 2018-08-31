@@ -23,8 +23,9 @@ const importSideEffects = Object.freeze({
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
-  'react-scheduler-tracking': 'ReactSchedulerTracking',
-  'react-scheduler-tracking-subscriptions':
+  'react-scheduler': 'ReactScheduler',
+  'react-scheduler/tracking': 'ReactSchedulerTracking',
+  'react-scheduler/tracking-subscriptions':
     'ReactSchedulerTrackingSubscriptions',
 });
 

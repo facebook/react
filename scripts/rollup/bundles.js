@@ -383,14 +383,7 @@ const bundles = [
   /******* React Scheduler (experimental) *******/
   {
     label: 'react-scheduler',
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: ISOMORPHIC,
     entry: 'react-scheduler',
     global: 'ReactScheduler',
@@ -400,8 +393,6 @@ const bundles = [
   {
     label: 'react-scheduler-tracking',
     bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
       FB_WWW_PROFILING,
@@ -418,8 +409,6 @@ const bundles = [
   {
     label: 'react-scheduler-tracking-subscriptions',
     bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
       FB_WWW_PROFILING,
@@ -430,7 +419,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-scheduler/tracking-subscriptions',
     global: 'ReactSchedulerTrackingSubscriptions',
-    externals: ['react-scheduler-tracking'],
+    externals: ['react-scheduler', 'react-scheduler/tracking'],
   },
 ];
 

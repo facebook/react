@@ -7,22 +7,22 @@
 
 import assign from 'object-assign';
 import {
-  unstable_cancelScheduledWork as cancelScheduledWork,
-  unstable_now as now,
-  unstable_scheduleWork as scheduleWork,
+  unstable_cancelScheduledWork,
+  unstable_now,
+  unstable_scheduleWork,
 } from 'react-scheduler';
 import {
   __getInteractionsRef,
   __getSubscriberRef,
-  unstable_clear as clear,
-  unstable_getCurrent as getCurrent,
-  unstable_getThreadID as getThreadID,
-  unstable_track as track,
-  unstable_wrap as wrap,
+  unstable_clear,
+  unstable_getCurrent,
+  unstable_getThreadID,
+  unstable_track,
+  unstable_wrap,
 } from 'react-scheduler/tracking';
 import {
-  unstable_subscribe as subscribe,
-  unstable_unsubscribe as unsubscribe,
+  unstable_subscribe,
+  unstable_unsubscribe,
 } from 'react-scheduler/tracking-subscriptions';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
@@ -41,22 +41,22 @@ if (__UMD__) {
   // CJS bundles use the shared NPM package.
   Object.assign(ReactSharedInternals, {
     Scheduler: {
-      cancelScheduledWork,
-      now,
-      scheduleWork,
+      unstable_cancelScheduledWork,
+      unstable_now,
+      unstable_scheduleWork,
     },
     SchedulerTracking: {
       __getInteractionsRef,
       __getSubscriberRef,
-      clear,
-      getCurrent,
-      getThreadID,
-      track,
-      wrap,
+      unstable_clear,
+      unstable_getCurrent,
+      unstable_getThreadID,
+      unstable_track,
+      unstable_wrap,
     },
     SchedulerTrackingSubscriptions: {
-      subscribe,
-      unsubscribe,
+      unstable_subscribe,
+      unstable_unsubscribe,
     },
   });
 }
