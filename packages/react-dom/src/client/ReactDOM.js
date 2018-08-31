@@ -127,12 +127,8 @@ if (__DEV__) {
 ReactControlledComponent.setRestoreImplementation(restoreControlledState);
 
 type DOMContainer =
-  | (Element & {
-      _reactRootContainer: ?Root,
-    })
-  | (Document & {
-      _reactRootContainer: ?Root,
-    });
+  | (Element & {_reactRootContainer: ?Root})
+  | (Document & {_reactRootContainer: ?Root});
 
 type Batch = FiberRootBatch & {
   render(children: ReactNodeList): Work,
@@ -518,15 +514,9 @@ function legacyRenderSubtreeIntoContainer(
     topLevelUpdateWarnings(container);
   }
 
-  // TODO: Without `any` type, Flow says "Property cannot be accessed on any
-  // member of intersection type." Whyyyyyy.
-  let root: Root = (container._reactRootContainer: any);
-  if (!root) {
-    // Initial mount
-    root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
-      container,
-      forceHydrate,
-    );
+  let root: Root;
+
+  function wrapCallback() {
     if (typeof callback === 'function') {
       const originalCallback = callback;
       callback = function() {
@@ -534,27 +524,9 @@ function legacyRenderSubtreeIntoContainer(
         originalCallback.call(instance);
       };
     }
-    // Initial mount should not be batched.
-    DOMRenderer.unbatchedUpdates(() => {
-      if (parentComponent != null) {
-        root.legacy_renderSubtreeIntoContainer(
-          parentComponent,
-          children,
-          callback,
-        );
-      } else {
-        root.render(children, callback);
-      }
-    });
-  } else {
-    if (typeof callback === 'function') {
-      const originalCallback = callback;
-      callback = function() {
-        const instance = DOMRenderer.getPublicRootInstance(root._internalRoot);
-        originalCallback.call(instance);
-      };
-    }
-    // Update
+  }
+
+  function beginLegacyRender() {
     if (parentComponent != null) {
       root.legacy_renderSubtreeIntoContainer(
         parentComponent,
@@ -564,6 +536,21 @@ function legacyRenderSubtreeIntoContainer(
     } else {
       root.render(children, callback);
     }
+  }
+
+  if (!container._reactRootContainer) {
+    // Initial mount
+    root = container._reactRootContainer = legacyCreateRootFromDOMContainer(
+      container,
+      forceHydrate,
+    );
+    wrapCallback();
+    // Initial mount should not be batched.
+    DOMRenderer.unbatchedUpdates(beginLegacyRender);
+  } else {
+    root = container._reactRootContainer;
+    wrapCallback();
+    beginLegacyRender();
   }
   return DOMRenderer.getPublicRootInstance(root._internalRoot);
 }
