@@ -27,7 +27,6 @@ import getEventTarget from './getEventTarget';
 import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
-import {setDefaultValue} from '../client/ReactDOMInput';
 
 const eventTypes = {
   change: {
@@ -237,9 +236,6 @@ function handleControlledInputBlur(node) {
   if (!state || !state.controlled || node.type !== 'number') {
     return;
   }
-
-  // If controlled, assign the value attribute to the current value on blur
-  setDefaultValue(node, 'number', node.value);
 }
 
 /**

@@ -194,9 +194,7 @@ export function updateWrapper(element: Element, props: Object) {
     return;
   }
 
-  if (props.hasOwnProperty('value')) {
-    setDefaultValue(node, props.type, value);
-  } else if (props.hasOwnProperty('defaultValue')) {
+  if (props.hasOwnProperty('defaultValue')) {
     setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
   }
 
@@ -321,11 +319,7 @@ function updateNamedCousins(rootNode, props) {
 // when the user is inputting text
 //
 // https://github.com/facebook/react/issues/7253
-export function setDefaultValue(
-  node: InputWithWrapperState,
-  type: ?string,
-  value: *,
-) {
+function setDefaultValue(node: InputWithWrapperState, type: ?string, value: *) {
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
     type !== 'number' ||
