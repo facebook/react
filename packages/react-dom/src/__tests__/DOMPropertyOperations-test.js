@@ -77,11 +77,23 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.getAttribute('class')).toBe('css-class');
     });
 
-    it('should not remove empty attributes for special properties', () => {
+    it('should not remove empty attributes for special input properties', () => {
       const container = document.createElement('div');
       ReactDOM.render(<input value="" onChange={() => {}} />, container);
       expect(container.firstChild.getAttribute('value')).toBe('');
       expect(container.firstChild.value).toBe('');
+    });
+
+    it('should not remove empty attributes for special option properties', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <select>
+          <option value="">empty</option>
+        </select>,
+        container,
+      );
+      // Regression test for https://github.com/facebook/react/issues/6219
+      expect(container.firstChild.firstChild.value).toBe('');
     });
 
     it('should remove for falsey boolean properties', () => {
