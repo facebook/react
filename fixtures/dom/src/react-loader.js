@@ -45,7 +45,7 @@ export default function loadReact() {
 
   if (version !== 'local') {
     const {major, minor, prerelease} = semver(version);
-    const [preReleaseStage, preReleaseVersion] = prerelease;
+    const [preReleaseStage] = prerelease;
     // The file structure was updated in 16. This wasn't the case for alphas.
     // Load the old module location for anything less than 16 RC
     if (major >= 16 && !(minor === 0 && preReleaseStage === 'alpha')) {
