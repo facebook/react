@@ -89,11 +89,13 @@ describe('DOMPropertyOperations', () => {
       ReactDOM.render(
         <select>
           <option value="">empty</option>
+          <option>filled</option>
         </select>,
         container,
       );
       // Regression test for https://github.com/facebook/react/issues/6219
       expect(container.firstChild.firstChild.value).toBe('');
+      expect(container.firstChild.lastChild.value).toBe('filled');
     });
 
     it('should remove for falsey boolean properties', () => {
