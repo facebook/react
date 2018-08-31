@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './src/InteractionTrackingSubscriptions';
+export * from './src/Tracking';

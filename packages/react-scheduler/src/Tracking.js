@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableInteractionTracking} from 'shared/ReactFeatureFlags';
+import {enableSchedulerTracking} from 'shared/ReactFeatureFlags';
 
 export type Interaction = {|
   __count: number,
@@ -70,7 +70,7 @@ let interactionsRef: InteractionsRef = (null: any);
 // Listener(s) to notify when interactions begin and end.
 let subscriberRef: SubscriberRef = (null: any);
 
-if (enableInteractionTracking) {
+if (enableSchedulerTracking) {
   interactionsRef = {
     current: new Set(),
   };
@@ -81,10 +81,16 @@ if (enableInteractionTracking) {
 
 // These values are exported for libraries with advanced use cases (i.e. React).
 // They should not typically be accessed directly.
-export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
+export function __getInteractionsRef(): InteractionsRef {
+  return interactionsRef;
+}
+
+export function __getSubscriberRef(): SubscriberRef {
+  return subscriberRef;
+}
 
 export function unstable_clear(callback: Function): any {
-  if (!enableInteractionTracking) {
+  if (!enableSchedulerTracking) {
     return callback();
   }
 
@@ -99,7 +105,7 @@ export function unstable_clear(callback: Function): any {
 }
 
 export function unstable_getCurrent(): Set<Interaction> | null {
-  if (!enableInteractionTracking) {
+  if (!enableSchedulerTracking) {
     return null;
   } else {
     return interactionsRef.current;
@@ -116,7 +122,7 @@ export function unstable_track(
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): any {
-  if (!enableInteractionTracking) {
+  if (!enableSchedulerTracking) {
     return callback();
   }
 
@@ -178,7 +184,7 @@ export function unstable_wrap(
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): Function {
-  if (!enableInteractionTracking) {
+  if (!enableSchedulerTracking) {
     return callback;
   }
 

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html style="width: 100%; height: 100%;">
+  <head>
+    <meta charset="utf-8">
+    <title>Test tracking UMD</title>
+    <style>
+      li {
+        border: solid #CCC 0.125rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.25rem;
+        padding: 0.25rem;
+      }
+      li:after {
+        content: attr(data-value);
+      }
+      .correct {
+        border-color: #0C0;
+        border-style: solid;
+      }
+      .incorrect {
+        border-color: #F00;
+        border-style: dashed;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Test tracking UMD</h1>
+    <p>
+      This fixture tests that the new tracking API is accessible via UMD build using the UMD shim.
+      It does not exhaustively test API functionality, only that the forwarded methods can be called.
+    </p>
+    <h2>Tests:</h2>
+    <ol>
+      <li id="checkSchedulerAPI">
+        <button onClick="checkSchedulerAPI()">Check scheduler API</button>
+      </li>
+      <li id="checkSchedulerTrackingAPI">
+        <button onClick="checkSchedulerTrackingAPI()">Check tracking API</button>
+      </li>
+      <li id="checkSchedulerTrackingSubscriptionsAPI">
+        <button onClick="checkSchedulerTrackingSubscriptionsAPI()">Check tracking subscriptions API</button>
+      </li>
+    </ol>
+    <!-- Load the tracking API before react to test that it's lazily evaluated -->
+    <script src="../../build/node_modules/react-scheduler/umd/react-scheduler.development.js"></script>
+    <script src="../../build/node_modules/react-scheduler/umd/react-scheduler-tracking.development.js"></script>
+    <script src="../../build/node_modules/react-scheduler/umd/react-scheduler-tracking-subscriptions.development.js"></script>
+    <script src="../../build/node_modules/react/umd/react.development.js"></script>
+    <script src="../../build/node_modules/react-dom/umd/react-dom.development.js"></script>
+    <script>
+      function runTest(listItem, callback) {
+        try {
+          callback();
+          listItem.className = "correct";
+          listItem.setAttribute("data-value", "All checks pass");
+        } catch (error) {
+          listItem.className = "incorrect";
+          listItem.setAttribute("data-value", error.message);
+        }
+      }
+
+      function checkSchedulerAPI() {
+        runTest(
+          document.getElementById('checkSchedulerAPI'),
+          () => {
+            if (
+              typeof ReactScheduler.unstable_now !== 'function' ||
+              typeof ReactScheduler.unstable_scheduleWork !== 'function' ||
+              typeof ReactScheduler.unstable_cancelScheduledWork !== 'function'
+            ) {
+              throw "API is not defined";
+            }
+
+            if (ReactScheduler.unstable_now() !== performance.now()) {
+              throw "API does not work";
+            }
+          });
+      }
+
+      function checkSchedulerTrackingAPI() {
+        runTest(
+          document.getElementById('checkSchedulerTrackingAPI'),
+          () => {
+            if (
+              typeof ReactSchedulerTracking.__getInteractionsRef !== 'function' ||
+              typeof ReactSchedulerTracking.__getSubscriberRef !== 'function' ||
+              typeof ReactSchedulerTracking.unstable_clear !== 'function' ||
+              typeof ReactSchedulerTracking.unstable_getCurrent !== 'function' ||
+              typeof ReactSchedulerTracking.unstable_getThreadID !== 'function' ||
+              typeof ReactSchedulerTracking.unstable_track !== 'function' ||
+              typeof ReactSchedulerTracking.unstable_wrap !== 'function'
+            ) {
+              throw "API is not defined";
+            }
+
+            try {
+              let interactionsSet;
+              ReactSchedulerTracking.unstable_track('test', 123, () => {
+                interactionsSet = ReactSchedulerTracking.__getInteractionsRef().current;
+              });
+              if (interactionsSet.size !== 1) {
+                throw null;
+              }
+              const interaction = Array.from(interactionsSet)[0];
+              if (interaction.name !== 'test' || interaction.timestamp !== 123) {
+                throw null;
+              }
+            } catch (error) {
+              throw "API does not work";
+            }
+          });
+      }
+
+      function checkSchedulerTrackingSubscriptionsAPI() {
+        runTest(
+          document.getElementById('checkSchedulerTrackingSubscriptionsAPI'),
+          () => {
+            if (
+              typeof ReactSchedulerTrackingSubscriptions.unstable_subscribe !== 'function' ||
+              typeof ReactSchedulerTrackingSubscriptions.unstable_unsubscribe !== 'function'
+            ) {
+              throw "API is not defined";
+            }
+
+            try {
+              ReactSchedulerTrackingSubscriptions.unstable_subscribe({});
+              ReactSchedulerTrackingSubscriptions.unstable_unsubscribe({});
+            } catch (error) {
+              throw "API does not forward methods";
+            }
+          });
+      }
+    </script>
+  </body>
+</html>

@@ -15,15 +15,15 @@ let ReactFeatureFlags;
 let ReactNoop;
 let ReactTestRenderer;
 let advanceTimeBy;
-let InteractionTracking;
-let InteractionTrackingSubscriptions;
+let SchedulerTracking;
+let SchedulerTrackingSubscriptions;
 let mockNow;
 let AdvanceTime;
 
 function loadModules({
   enableProfilerTimer = true,
   enableSuspense = false,
-  enableInteractionTracking = true,
+  enableSchedulerTracking = true,
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
   useNoopRenderer = false,
 } = {}) {
@@ -38,13 +38,13 @@ function loadModules({
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
   ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
-  ReactFeatureFlags.enableInteractionTracking = enableInteractionTracking;
+  ReactFeatureFlags.enableSchedulerTracking = enableSchedulerTracking;
   ReactFeatureFlags.enableSuspense = enableSuspense;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
   React = require('react');
-  InteractionTracking = require('interaction-tracking');
-  InteractionTrackingSubscriptions = require('interaction-tracking/subscriptions');
+  SchedulerTracking = require('react-scheduler/tracking');
+  SchedulerTrackingSubscriptions = require('react-scheduler/tracking-subscriptions');
 
   if (useNoopRenderer) {
     ReactNoop = require('react-noop-renderer');
@@ -84,17 +84,17 @@ const mockDevToolsForTest = () => {
 
 describe('Profiler', () => {
   describe('works in profiling and non-profiling bundles', () => {
-    [true, false].forEach(enableInteractionTracking => {
+    [true, false].forEach(enableSchedulerTracking => {
       [true, false].forEach(enableProfilerTimer => {
-        describe(`enableInteractionTracking:${
-          enableInteractionTracking ? 'enabled' : 'disabled'
+        describe(`enableSchedulerTracking:${
+          enableSchedulerTracking ? 'enabled' : 'disabled'
         } enableProfilerTimer:${
           enableProfilerTimer ? 'enabled' : 'disabled'
         }`, () => {
           beforeEach(() => {
             jest.resetModules();
 
-            loadModules({enableInteractionTracking, enableProfilerTimer});
+            loadModules({enableSchedulerTracking, enableProfilerTimer});
           });
 
           // This will throw in production too,
@@ -167,12 +167,12 @@ describe('Profiler', () => {
     });
   });
 
-  [true, false].forEach(enableInteractionTracking => {
+  [true, false].forEach(enableSchedulerTracking => {
     describe('onRender callback', () => {
       beforeEach(() => {
         jest.resetModules();
 
-        loadModules({enableInteractionTracking});
+        loadModules({enableSchedulerTracking});
       });
 
       it('is not invoked until the commit phase', () => {
@@ -233,7 +233,7 @@ describe('Profiler', () => {
 
         let [call] = callback.mock.calls;
 
-        expect(call).toHaveLength(enableInteractionTracking ? 7 : 6);
+        expect(call).toHaveLength(enableSchedulerTracking ? 7 : 6);
         expect(call[0]).toBe('test');
         expect(call[1]).toBe('mount');
         expect(call[2]).toBe(10); // actual time
@@ -241,7 +241,7 @@ describe('Profiler', () => {
         expect(call[4]).toBe(5); // start time
         expect(call[5]).toBe(15); // commit time
         expect(call[6]).toEqual(
-          enableInteractionTracking ? new Set() : undefined,
+          enableSchedulerTracking ? new Set() : undefined,
         ); // interaction events
 
         callback.mockReset();
@@ -258,7 +258,7 @@ describe('Profiler', () => {
 
         [call] = callback.mock.calls;
 
-        expect(call).toHaveLength(enableInteractionTracking ? 7 : 6);
+        expect(call).toHaveLength(enableSchedulerTracking ? 7 : 6);
         expect(call[0]).toBe('test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(10); // actual time
@@ -266,7 +266,7 @@ describe('Profiler', () => {
         expect(call[4]).toBe(35); // start time
         expect(call[5]).toBe(45); // commit time
         expect(call[6]).toEqual(
-          enableInteractionTracking ? new Set() : undefined,
+          enableSchedulerTracking ? new Set() : undefined,
         ); // interaction events
 
         callback.mockReset();
@@ -283,7 +283,7 @@ describe('Profiler', () => {
 
         [call] = callback.mock.calls;
 
-        expect(call).toHaveLength(enableInteractionTracking ? 7 : 6);
+        expect(call).toHaveLength(enableSchedulerTracking ? 7 : 6);
         expect(call[0]).toBe('test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(4); // actual time
@@ -291,7 +291,7 @@ describe('Profiler', () => {
         expect(call[4]).toBe(65); // start time
         expect(call[5]).toBe(69); // commit time
         expect(call[6]).toEqual(
-          enableInteractionTracking ? new Set() : undefined,
+          enableSchedulerTracking ? new Set() : undefined,
         ); // interaction events
       });
 
@@ -1176,7 +1176,7 @@ describe('Profiler', () => {
       jest.resetModules();
 
       loadModules({
-        enableInteractionTracking: true,
+        enableSchedulerTracking: true,
       });
 
       throwInOnInteractionScheduledWorkCompleted = false;
@@ -1208,7 +1208,7 @@ describe('Profiler', () => {
       });
 
       // Verify interaction subscriber methods are called as expected.
-      InteractionTrackingSubscriptions.unstable_subscribe({
+      SchedulerTrackingSubscriptions.unstable_subscribe({
         onInteractionScheduledWorkCompleted,
         onInteractionTracked,
         onWorkCanceled,
@@ -1230,7 +1230,7 @@ describe('Profiler', () => {
         // Errors that happen inside of a subscriber should throw,
         throwInOnWorkScheduled = true;
         expect(() => {
-          InteractionTracking.unstable_track('event', mockNow(), () => {
+          SchedulerTracking.unstable_track('event', mockNow(), () => {
             renderer = ReactTestRenderer.create(<Component>fail</Component>, {
               unstable_isAsync: true,
             });
@@ -1256,7 +1256,7 @@ describe('Profiler', () => {
         }
 
         let renderer;
-        InteractionTracking.unstable_track('event', mockNow(), () => {
+        SchedulerTracking.unstable_track('event', mockNow(), () => {
           renderer = ReactTestRenderer.create(<Component>text</Component>, {
             unstable_isAsync: true,
           });
@@ -1285,7 +1285,7 @@ describe('Profiler', () => {
         }
 
         let renderer;
-        InteractionTracking.unstable_track('event', mockNow(), () => {
+        SchedulerTracking.unstable_track('event', mockNow(), () => {
           renderer = ReactTestRenderer.create(<Component>text</Component>, {
             unstable_isAsync: true,
           });
@@ -1327,8 +1327,8 @@ describe('Profiler', () => {
         };
 
         let renderer;
-        InteractionTracking.unstable_track(eventOne.name, mockNow(), () => {
-          InteractionTracking.unstable_track(eventTwo.name, mockNow(), () => {
+        SchedulerTracking.unstable_track(eventOne.name, mockNow(), () => {
+          SchedulerTracking.unstable_track(eventTwo.name, mockNow(), () => {
             renderer = ReactTestRenderer.create(<Component>text</Component>, {
               unstable_isAsync: true,
             });
@@ -1382,7 +1382,7 @@ describe('Profiler', () => {
 
       const onRender = jest.fn();
       let renderer;
-      InteractionTracking.unstable_track(
+      SchedulerTracking.unstable_track(
         interactionCreation.name,
         mockNow(),
         () => {
@@ -1403,7 +1403,7 @@ describe('Profiler', () => {
       );
       expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-      // The interaction-tracking package will notify of work started for the default thread,
+      // The react-scheduler/tracking package will notify of work started for the default thread,
       // But React shouldn't notify until it's been flushed.
       expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
       expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
@@ -1423,7 +1423,7 @@ describe('Profiler', () => {
       let call = onRender.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
       expect(call[5]).toEqual(mockNow());
-      if (ReactFeatureFlags.enableInteractionTracking) {
+      if (ReactFeatureFlags.enableSchedulerTracking) {
         expect(call[6]).toMatchInteractions([interactionCreation]);
       }
 
@@ -1455,13 +1455,13 @@ describe('Profiler', () => {
         name: 'initial event',
         timestamp: mockNow(),
       };
-      InteractionTracking.unstable_track(interactionOne.name, mockNow(), () => {
+      SchedulerTracking.unstable_track(interactionOne.name, mockNow(), () => {
         instance.setState({count: 1});
 
         // Update state again to verify our tracked interaction isn't registered twice
         instance.setState({count: 2});
 
-        // The interaction-tracking package will notify of work started for the default thread,
+        // The react-scheduler/tracking package will notify of work started for the default thread,
         // But React shouldn't notify until it's been flushed.
         expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
         expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
@@ -1495,7 +1495,7 @@ describe('Profiler', () => {
         call = onRender.mock.calls[0];
         expect(call[0]).toEqual('test-profiler');
         expect(call[5]).toEqual(mockNow());
-        if (ReactFeatureFlags.enableInteractionTracking) {
+        if (ReactFeatureFlags.enableSchedulerTracking) {
           expect(call[6]).toMatchInteractions([interactionOne]);
         }
 
@@ -1528,7 +1528,7 @@ describe('Profiler', () => {
       call = onRender.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
       expect(call[5]).toEqual(mockNow());
-      if (ReactFeatureFlags.enableInteractionTracking) {
+      if (ReactFeatureFlags.enableSchedulerTracking) {
         expect(call[6]).toMatchInteractions([]);
       }
 
@@ -1550,7 +1550,7 @@ describe('Profiler', () => {
         name: 'root update event',
         timestamp: mockNow(),
       };
-      InteractionTracking.unstable_track(interactionTwo.name, mockNow(), () => {
+      SchedulerTracking.unstable_track(interactionTwo.name, mockNow(), () => {
         renderer.update(
           <React.unstable_Profiler id="test-profiler" onRender={onRender}>
             <Example />
@@ -1564,7 +1564,7 @@ describe('Profiler', () => {
       );
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
 
-      // The interaction-tracking package will notify of work started for the default thread,
+      // The react-scheduler/tracking package will notify of work started for the default thread,
       // But React shouldn't notify until it's been flushed.
       expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
       expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
@@ -1584,7 +1584,7 @@ describe('Profiler', () => {
       call = onRender.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
       expect(call[5]).toEqual(mockNow());
-      if (ReactFeatureFlags.enableInteractionTracking) {
+      if (ReactFeatureFlags.enableSchedulerTracking) {
         expect(call[6]).toMatchInteractions([interactionTwo]);
       }
 
@@ -1651,7 +1651,7 @@ describe('Profiler', () => {
         timestamp: mockNow(),
       };
 
-      InteractionTracking.unstable_track(
+      SchedulerTracking.unstable_track(
         interactionLowPri.name,
         mockNow(),
         () => {
@@ -1688,7 +1688,7 @@ describe('Profiler', () => {
           // Interrupt with higher priority work.
           // This simulates a total of 37ms of actual render time.
           renderer.unstable_flushSync(() => {
-            InteractionTracking.unstable_track(
+            SchedulerTracking.unstable_track(
               interactionHighPri.name,
               mockNow(),
               () => {
@@ -1721,7 +1721,7 @@ describe('Profiler', () => {
           expect(call[0]).toEqual('test');
           expect(call[5]).toEqual(mockNow());
           expect(call[6]).toMatchInteractions(
-            ReactFeatureFlags.enableInteractionTracking
+            ReactFeatureFlags.enableSchedulerTracking
               ? [interactionLowPri, interactionHighPri]
               : [],
           );
@@ -1738,7 +1738,7 @@ describe('Profiler', () => {
           expect(call[0]).toEqual('test');
           expect(call[5]).toEqual(mockNow());
           expect(call[6]).toMatchInteractions(
-            ReactFeatureFlags.enableInteractionTracking
+            ReactFeatureFlags.enableSchedulerTracking
               ? [interactionLowPri]
               : [],
           );
@@ -1747,7 +1747,7 @@ describe('Profiler', () => {
           expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
 
           // Work might be started multiple times before being completed.
-          // This is okay; it's part of the interaction-tracking subscriber contract.
+          // This is okay; it's part of the react-scheduler/tracking-subscriptions contract.
           expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
           expect(
             getWorkForReactThreads(onWorkStarted)[1][0],
@@ -1807,7 +1807,7 @@ describe('Profiler', () => {
       const onRender = jest.fn();
       let firstCommitTime = mockNow();
       let renderer;
-      InteractionTracking.unstable_track(interactionOne.name, mockNow(), () => {
+      SchedulerTracking.unstable_track(interactionOne.name, mockNow(), () => {
         renderer = ReactTestRenderer.create(
           <React.unstable_Profiler id="test" onRender={onRender}>
             <Example />
@@ -1851,13 +1851,13 @@ describe('Profiler', () => {
       expect(call[0]).toEqual('test');
       expect(call[5]).toEqual(firstCommitTime);
       expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableInteractionTracking ? [interactionOne] : [],
+        ReactFeatureFlags.enableSchedulerTracking ? [interactionOne] : [],
       );
       call = onRender.mock.calls[1];
       expect(call[0]).toEqual('test');
       expect(call[5]).toEqual(mockNow());
       expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableInteractionTracking ? [interactionOne] : [],
+        ReactFeatureFlags.enableSchedulerTracking ? [interactionOne] : [],
       );
 
       onRender.mockClear();
@@ -1869,7 +1869,7 @@ describe('Profiler', () => {
       };
 
       // Cause an tracked, async update
-      InteractionTracking.unstable_track(interactionTwo.name, mockNow(), () => {
+      SchedulerTracking.unstable_track(interactionTwo.name, mockNow(), () => {
         instance.setState({count: 2});
       });
       expect(onRender).not.toHaveBeenCalled();
@@ -1914,13 +1914,13 @@ describe('Profiler', () => {
       expect(call[0]).toEqual('test');
       expect(call[5]).toEqual(firstCommitTime);
       expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableInteractionTracking ? [interactionTwo] : [],
+        ReactFeatureFlags.enableSchedulerTracking ? [interactionTwo] : [],
       );
       call = onRender.mock.calls[1];
       expect(call[0]).toEqual('test');
       expect(call[5]).toEqual(mockNow());
       expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableInteractionTracking ? [interactionTwo] : [],
+        ReactFeatureFlags.enableSchedulerTracking ? [interactionTwo] : [],
       );
 
       onRender.mockClear();
@@ -1935,13 +1935,9 @@ describe('Profiler', () => {
       function callback() {
         instance.setState({count: 6});
       }
-      InteractionTracking.unstable_track(
-        interactionThree.name,
-        mockNow(),
-        () => {
-          instance.setState({count: 5}, callback);
-        },
-      );
+      SchedulerTracking.unstable_track(interactionThree.name, mockNow(), () => {
+        instance.setState({count: 5}, callback);
+      });
       expect(onRender).not.toHaveBeenCalled();
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(3);
@@ -1983,13 +1979,13 @@ describe('Profiler', () => {
       expect(call[0]).toEqual('test');
       expect(call[5]).toEqual(firstCommitTime);
       expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableInteractionTracking ? [interactionThree] : [],
+        ReactFeatureFlags.enableSchedulerTracking ? [interactionThree] : [],
       );
       call = onRender.mock.calls[1];
       expect(call[0]).toEqual('test');
       expect(call[5]).toEqual(mockNow());
       expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableInteractionTracking ? [interactionThree] : [],
+        ReactFeatureFlags.enableSchedulerTracking ? [interactionThree] : [],
       );
     });
 
@@ -2032,7 +2028,7 @@ describe('Profiler', () => {
         timestamp: mockNow(),
       };
 
-      InteractionTracking.unstable_track(interaction.name, mockNow(), () => {
+      SchedulerTracking.unstable_track(interaction.name, mockNow(), () => {
         parentInstance.setState({count: 1});
       });
 
@@ -2050,7 +2046,7 @@ describe('Profiler', () => {
       let call = onRender.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
       expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableInteractionTracking ? [interaction] : [],
+        ReactFeatureFlags.enableSchedulerTracking ? [interaction] : [],
       );
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(1);
@@ -2074,11 +2070,11 @@ describe('Profiler', () => {
       loadModules({
         useNoopRenderer: true,
         enableSuspense: true,
-        enableInteractionTracking: true,
+        enableSchedulerTracking: true,
       });
 
       // Re-register since we've reloaded modules
-      InteractionTrackingSubscriptions.unstable_subscribe({
+      SchedulerTrackingSubscriptions.unstable_subscribe({
         onInteractionScheduledWorkCompleted,
         onInteractionTracked,
         onWorkCanceled,
@@ -2145,7 +2141,7 @@ describe('Profiler', () => {
       };
 
       const onRender = jest.fn();
-      InteractionTracking.unstable_track(interaction.name, mockNow(), () => {
+      SchedulerTracking.unstable_track(interaction.name, mockNow(), () => {
         ReactNoop.render(
           <React.unstable_Profiler id="test-profiler" onRender={onRender}>
             <React.Placeholder fallback={<Text text="Loading..." />}>
@@ -2190,7 +2186,7 @@ describe('Profiler', () => {
       let call = onRender.mock.calls[0];
       expect(call[0]).toEqual('test-profiler');
       expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableInteractionTracking ? [interaction] : [],
+        ReactFeatureFlags.enableSchedulerTracking ? [interaction] : [],
       );
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(1);
@@ -2205,7 +2201,7 @@ describe('Profiler', () => {
       call = onRender.mock.calls[1];
       expect(call[0]).toEqual('test-profiler');
       expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableInteractionTracking ? [interaction] : [],
+        ReactFeatureFlags.enableSchedulerTracking ? [interaction] : [],
       );
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(1);

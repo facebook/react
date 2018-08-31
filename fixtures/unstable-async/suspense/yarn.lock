@@ -3482,13 +3482,6 @@ inquirer@3.3.0, inquirer@^3.0.6:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
-interaction-tracking@../../../build/node_modules/interaction-tracking:
-  version "16.4.3-alpha.0"
-
-interaction-tracking@16.4.3-alpha.0:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/interaction-tracking/-/interaction-tracking-0.0.1.tgz#08877accb2ec479f2af83d7de7a9ae60b80e8dc5"
-
 internal-ip@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/internal-ip/-/internal-ip-1.2.0.tgz#ae9fbf93b984878785d50a8de1b356956058cf5c"
@@ -5739,6 +5732,7 @@ react-dom@../../../build/node_modules/react-dom:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
     prop-types "^15.6.2"
+    react-scheduler "^0.1.0-alpha-1"
 
 react-draggable@^3.0.5:
   version "3.0.5"
@@ -5750,6 +5744,15 @@ react-draggable@^3.0.5:
 react-error-overlay@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/react-error-overlay/-/react-error-overlay-4.0.0.tgz#d198408a85b4070937a98667f500c832f86bd5d4"
+
+react-scheduler@../../../build/node_modules/react-scheduler:
+  version "0.1.0-alpha-1"
+  dependencies:
+    object-assign "^4.1.1"
+
+react-scheduler@^0.1.0-alpha-1:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/react-scheduler/-/react-scheduler-0.1.0.tgz#d16c0ee90d2895ff1941e0d681293dbe4f4b4f38"
 
 react-scripts@^1.1.4:
   version "1.1.4"
@@ -5799,10 +5802,10 @@ react-scripts@^1.1.4:
 react@../../../build/node_modules/react:
   version "16.4.3-alpha.0"
   dependencies:
-    interaction-tracking "16.4.3-alpha.0"
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
     prop-types "^15.6.2"
+    react-scheduler "^0.1.0-alpha-1"
 
 read-pkg-up@^1.0.1:
   version "1.0.1"

@@ -5,12 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  __interactionsRef,
-  __subscriberRef,
-  unstable_getThreadID as getThreadID,
-} from 'interaction-tracking';
 import assign from 'object-assign';
+import {
+  unstable_cancelScheduledWork as cancelScheduledWork,
+  unstable_now as now,
+  unstable_scheduleWork as scheduleWork,
+} from 'react-scheduler';
+import {
+  __getInteractionsRef,
+  __getSubscriberRef,
+  unstable_clear as clear,
+  unstable_getCurrent as getCurrent,
+  unstable_getThreadID as getThreadID,
+  unstable_track as track,
+  unstable_wrap as wrap,
+} from 'react-scheduler/tracking';
+import {
+  unstable_subscribe as subscribe,
+  unstable_unsubscribe as unsubscribe,
+} from 'react-scheduler/tracking-subscriptions';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
@@ -18,13 +31,26 @@ const ReactSharedInternals = {
   ReactCurrentOwner,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
-  // Re-export the interaction-tracking API for UMD bundles.
+  // Re-export the react-scheduler API(s) for UMD bundles.
   // This avoids introducing a dependency on a new UMD global in a minor update,
-  // Since this would be a breaking change.
-  InteractionTracking: {
-    __interactionsRef,
-    __subscriberRef,
+  // Since that would be a breaking change (e.g. for all existing CodeSandboxes).
+  Scheduler: {
+    cancelScheduledWork,
+    now,
+    scheduleWork,
+  },
+  SchedulerTracking: {
+    __getInteractionsRef,
+    __getSubscriberRef,
+    clear,
+    getCurrent,
     getThreadID,
+    track,
+    wrap,
+  },
+  SchedulerTrackingSubscriptions: {
+    subscribe,
+    unsubscribe,
   },
 };
 

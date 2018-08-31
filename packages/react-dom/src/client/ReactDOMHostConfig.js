@@ -61,10 +61,10 @@ export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 
 export {
-  now,
-  scheduleWork as scheduleDeferredCallback,
-  cancelScheduledWork as cancelDeferredCallback,
-} from 'shared/ReactScheduler';
+  unstable_now as now,
+  unstable_scheduleWork as scheduleDeferredCallback,
+  unstable_cancelScheduledWork as cancelDeferredCallback,
+} from 'react-scheduler';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {

@@ -8,41 +8,41 @@
  */
 'use strict';
 
-describe('InteractionTracking', () => {
-  let InteractionTracking;
+describe('Tracking', () => {
+  let SchedulerTracking;
 
   beforeEach(() => {
     jest.resetModules();
 
-    InteractionTracking = require('interaction-tracking');
+    SchedulerTracking = require('react-scheduler/tracking');
   });
 
   it('should return the value of a tracked function', () => {
-    expect(InteractionTracking.unstable_track('arbitrary', 0, () => 123)).toBe(
+    expect(SchedulerTracking.unstable_track('arbitrary', 0, () => 123)).toBe(
       123,
     );
   });
 
   it('should return the value of a wrapped function', () => {
     let wrapped;
-    InteractionTracking.unstable_track('arbitrary', 0, () => {
-      wrapped = InteractionTracking.unstable_wrap(() => 123);
+    SchedulerTracking.unstable_track('arbitrary', 0, () => {
+      wrapped = SchedulerTracking.unstable_wrap(() => 123);
     });
     expect(wrapped()).toBe(123);
   });
 
   it('should execute tracked callbacks', done => {
-    InteractionTracking.unstable_track('some event', 0, () => {
+    SchedulerTracking.unstable_track('some event', 0, () => {
       done();
     });
   });
 
   it('should return the value of a clear function', () => {
-    expect(InteractionTracking.unstable_clear(() => 123)).toBe(123);
+    expect(SchedulerTracking.unstable_clear(() => 123)).toBe(123);
   });
 
   it('should execute wrapped callbacks', done => {
-    const wrappedCallback = InteractionTracking.unstable_wrap(() => {
+    const wrappedCallback = SchedulerTracking.unstable_wrap(() => {
       done();
     });
 

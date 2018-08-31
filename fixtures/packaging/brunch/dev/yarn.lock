@@ -1044,14 +1044,6 @@ init-skeleton@~1.0:
     ncp "^2.0.0"
     normalize-git-url "~3.0.1"
 
-interaction-tracking@16.4.3-alpha.0:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/interaction-tracking/-/interaction-tracking-0.0.1.tgz#08877accb2ec479f2af83d7de7a9ae60b80e8dc5"
-
-"interaction-tracking@link:../../../../build/node_modules/interaction-tracking":
-  version "0.0.0"
-  uid ""
-
 ipaddr.js@1.5.2:
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/ipaddr.js/-/ipaddr.js-1.5.2.tgz#d4b505bde9946987ccf0fc58d9010ff9607e3fa0"
@@ -1662,6 +1654,14 @@ rc@^1.1.7:
     strip-json-comments "~2.0.1"
 
 "react-dom@link:../../../../build/node_modules/react-dom":
+  version "0.0.0"
+  uid ""
+
+react-scheduler@^0.1.0-alpha-1:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/react-scheduler/-/react-scheduler-0.1.0.tgz#d16c0ee90d2895ff1941e0d681293dbe4f4b4f38"
+
+"react-scheduler@link:../../../../build/node_modules/react-scheduler":
   version "0.0.0"
   uid ""
 

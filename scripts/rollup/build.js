@@ -18,6 +18,7 @@ const Stats = require('./stats');
 const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
+const stripUnusedImports = require('./plugins/strip-unused-imports');
 const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
 const {asyncCopyTo, asyncRimRaf} = require('./utils');
@@ -272,7 +273,8 @@ function getPlugins(
   bundleType,
   globalName,
   moduleType,
-  modulesToStub
+  modulesToStub,
+  pureExternalModules
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const forks = Modules.getForks(bundleType, entry, moduleType);
@@ -349,6 +351,9 @@ function getPlugins(
           renaming: !shouldStayReadable,
         })
       ),
+    // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
+    // Note that this plugin must be called after closure applies DCE.
+    isProduction && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
     shouldStayReadable && prettier({parser: 'babylon'}),
     // License and haste headers, top-level `if` blocks.
@@ -468,7 +473,8 @@ async function createBundle(bundle, bundleType) {
       bundleType,
       bundle.global,
       bundle.moduleType,
-      bundle.modulesToStub
+      bundle.modulesToStub,
+      pureExternalModules
     ),
     // We can't use getters in www.
     legacy:

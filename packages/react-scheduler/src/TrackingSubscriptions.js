@@ -7,24 +7,24 @@
  * @flow
  */
 
-import type {Interaction, Subscriber} from './InteractionTracking';
+import type {Interaction, Subscriber} from './Tracking';
 
-import {enableInteractionTracking} from 'shared/ReactFeatureFlags';
-import {__subscriberRef} from 'interaction-tracking';
+import {enableSchedulerTracking} from 'shared/ReactFeatureFlags';
+import {__getSubscriberRef} from 'react-scheduler/tracking';
 
 let subscribers: Set<Subscriber> = (null: any);
-if (enableInteractionTracking) {
+if (enableSchedulerTracking) {
   subscribers = new Set();
 }
 
 export function unstable_subscribe(subscriber: Subscriber): void {
-  if (enableInteractionTracking) {
+  if (enableSchedulerTracking) {
     subscribers.add(subscriber);
   }
 }
 
 export function unstable_unsubscribe(subscriber: Subscriber): void {
-  if (enableInteractionTracking) {
+  if (enableSchedulerTracking) {
     subscribers.delete(subscriber);
   }
 }
@@ -155,8 +155,9 @@ function onWorkCanceled(
   }
 }
 
-if (enableInteractionTracking) {
-  __subscriberRef.current = {
+if (enableSchedulerTracking) {
+  const subscriberRef = __getSubscriberRef();
+  subscriberRef.current = {
     onInteractionScheduledWorkCompleted,
     onInteractionTracked,
     onWorkCanceled,

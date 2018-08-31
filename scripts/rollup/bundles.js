@@ -397,10 +397,11 @@ const bundles = [
     externals: [],
   },
 
-  /******* interaction-tracking (experimental) *******/
   {
-    label: 'interaction-tracking',
+    label: 'react-scheduler-tracking',
     bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
       FB_WWW_PROFILING,
@@ -409,14 +410,16 @@ const bundles = [
       NODE_PROFILING,
     ],
     moduleType: ISOMORPHIC,
-    entry: 'interaction-tracking',
-    global: 'InteractionTracking',
+    entry: 'react-scheduler/tracking',
+    global: 'ReactSchedulerTracking',
     externals: [],
   },
 
   {
-    label: 'interaction-tracking-subscriptions',
+    label: 'react-scheduler-tracking-subscriptions',
     bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
       FB_WWW_PROFILING,
@@ -425,9 +428,9 @@ const bundles = [
       NODE_PROFILING,
     ],
     moduleType: ISOMORPHIC,
-    entry: 'interaction-tracking/subscriptions',
-    global: 'InteractionTrackingSubscriptions',
-    externals: ['interaction-tracking'],
+    entry: 'react-scheduler/tracking-subscriptions',
+    global: 'ReactSchedulerTrackingSubscriptions',
+    externals: ['react-scheduler-tracking'],
   },
 ];
 

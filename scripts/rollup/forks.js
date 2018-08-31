@@ -114,12 +114,60 @@ const forks = Object.freeze({
     return null;
   },
 
-  'shared/ReactScheduler': (bundleType, entry) => {
+  'react-scheduler': (bundleType, entry, dependencies) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
         return 'shared/forks/ReactScheduler.www.js';
+      case UMD_DEV:
+      case UMD_PROD:
+        if (dependencies.indexOf('react') === -1) {
+          // We can only apply the optimizations to bundle that depend on React
+          // because we read assign() from an object exposed on React internals.
+          return null;
+        }
+        // Optimization: for UMDs, use the API that is already a part of the React
+        // package instead of requiring it to be loaded via a separate <script> tag
+        return 'shared/forks/ReactScheduler.umd.js';
+      default:
+        return null;
+    }
+  },
+
+  'react-scheduler/tracking': (bundleType, entry, dependencies) => {
+    switch (bundleType) {
+      case UMD_DEV:
+      case UMD_PROD:
+        if (dependencies.indexOf('react') === -1) {
+          // We can only apply the optimizations to bundle that depend on React
+          // because we read assign() from an object exposed on React internals.
+          return null;
+        }
+        // Optimization: for UMDs, use the API that is already a part of the React
+        // package instead of requiring it to be loaded via a separate <script> tag
+        return 'shared/forks/ReactSchedulerTracking.umd.js';
+      default:
+        return null;
+    }
+  },
+
+  'react-scheduler/tracking-subscriptions': (
+    bundleType,
+    entry,
+    dependencies
+  ) => {
+    switch (bundleType) {
+      case UMD_DEV:
+      case UMD_PROD:
+        if (dependencies.indexOf('react') === -1) {
+          // We can only apply the optimizations to bundle that depend on React
+          // because we read assign() from an object exposed on React internals.
+          return null;
+        }
+        // Optimization: for UMDs, use the API that is already a part of the React
+        // package instead of requiring it to be loaded via a separate <script> tag
+        return 'shared/forks/ReactSchedulerTrackingSubscriptions.umd.js';
       default:
         return null;
     }

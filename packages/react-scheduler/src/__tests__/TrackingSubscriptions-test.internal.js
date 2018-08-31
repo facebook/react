@@ -8,9 +8,9 @@
  */
 'use strict';
 
-describe('InteractionTracking', () => {
-  let InteractionTracking;
-  let InteractionTrackingSubscriptions;
+describe('SchedulerTrackingSubscriptions', () => {
+  let SchedulerTracking;
+  let SchedulerTrackingSubscriptions;
   let ReactFeatureFlags;
 
   let currentTime;
@@ -34,17 +34,17 @@ describe('InteractionTracking', () => {
   const secondEvent = {id: 1, name: 'second', timestamp: 0};
   const threadID = 123;
 
-  function loadModules({enableInteractionTracking}) {
+  function loadModules({enableSchedulerTracking}) {
     jest.resetModules();
     jest.useFakeTimers();
 
     currentTime = 0;
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableInteractionTracking = enableInteractionTracking;
+    ReactFeatureFlags.enableSchedulerTracking = enableSchedulerTracking;
 
-    InteractionTracking = require('interaction-tracking');
-    InteractionTrackingSubscriptions = require('interaction-tracking/subscriptions');
+    SchedulerTracking = require('react-scheduler/tracking');
+    SchedulerTrackingSubscriptions = require('react-scheduler/tracking-subscriptions');
 
     throwInOnInteractionScheduledWorkCompleted = false;
     throwInOnInteractionTracked = false;
@@ -102,22 +102,22 @@ describe('InteractionTracking', () => {
       onWorkStopped: jest.fn(),
     };
 
-    InteractionTrackingSubscriptions.unstable_subscribe(firstSubscriber);
-    InteractionTrackingSubscriptions.unstable_subscribe(secondSubscriber);
+    SchedulerTrackingSubscriptions.unstable_subscribe(firstSubscriber);
+    SchedulerTrackingSubscriptions.unstable_subscribe(secondSubscriber);
   }
 
   describe('enabled', () => {
-    beforeEach(() => loadModules({enableInteractionTracking: true}));
+    beforeEach(() => loadModules({enableSchedulerTracking: true}));
 
     describe('error handling', () => {
       it('should cover onInteractionTracked/onWorkStarted within', done => {
-        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+        SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
           const mock = jest.fn();
 
           // It should call the callback before re-throwing
           throwInOnInteractionTracked = true;
           expect(() =>
-            InteractionTracking.unstable_track(
+            SchedulerTracking.unstable_track(
               secondEvent.name,
               currentTime,
               mock,
@@ -129,7 +129,7 @@ describe('InteractionTracking', () => {
 
           throwInOnWorkStarted = true;
           expect(() =>
-            InteractionTracking.unstable_track(
+            SchedulerTracking.unstable_track(
               secondEvent.name,
               currentTime,
               mock,
@@ -139,9 +139,9 @@ describe('InteractionTracking', () => {
           expect(mock).toHaveBeenCalledTimes(2);
 
           // It should restore the previous/outer interactions
-          expect(InteractionTracking.unstable_getCurrent()).toMatchInteractions(
-            [firstEvent],
-          );
+          expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
+            firstEvent,
+          ]);
 
           // It should call other subscribers despite the earlier error
           expect(secondSubscriber.onInteractionTracked).toHaveBeenCalledTimes(
@@ -154,17 +154,17 @@ describe('InteractionTracking', () => {
       });
 
       it('should cover onWorkStopped within track', done => {
-        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+        SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
           let innerInteraction;
           const mock = jest.fn(() => {
             innerInteraction = Array.from(
-              InteractionTracking.unstable_getCurrent(),
+              SchedulerTracking.unstable_getCurrent(),
             )[1];
           });
 
           throwInOnWorkStopped = true;
           expect(() =>
-            InteractionTracking.unstable_track(
+            SchedulerTracking.unstable_track(
               secondEvent.name,
               currentTime,
               mock,
@@ -173,9 +173,9 @@ describe('InteractionTracking', () => {
           throwInOnWorkStopped = false;
 
           // It should restore the previous/outer interactions
-          expect(InteractionTracking.unstable_getCurrent()).toMatchInteractions(
-            [firstEvent],
-          );
+          expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
+            firstEvent,
+          ]);
 
           // It should update the interaction count so as not to interfere with subsequent calls
           expect(innerInteraction.__count).toBe(0);
@@ -188,12 +188,12 @@ describe('InteractionTracking', () => {
       });
 
       it('should cover onInteractionScheduledWorkCompleted within track', done => {
-        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+        SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
           const mock = jest.fn();
 
           throwInOnInteractionScheduledWorkCompleted = true;
           expect(() =>
-            InteractionTracking.unstable_track(
+            SchedulerTracking.unstable_track(
               secondEvent.name,
               currentTime,
               mock,
@@ -202,9 +202,9 @@ describe('InteractionTracking', () => {
           throwInOnInteractionScheduledWorkCompleted = false;
 
           // It should restore the previous/outer interactions
-          expect(InteractionTracking.unstable_getCurrent()).toMatchInteractions(
-            [firstEvent],
-          );
+          expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
+            firstEvent,
+          ]);
 
           // It should call other subscribers despite the earlier error
           expect(
@@ -220,13 +220,9 @@ describe('InteractionTracking', () => {
         expect(onWorkStopped).not.toHaveBeenCalled();
 
         expect(() => {
-          InteractionTracking.unstable_track(
-            firstEvent.name,
-            currentTime,
-            () => {
-              throw Error('Expected error callback');
-            },
-          );
+          SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
+            throw Error('Expected error callback');
+          });
         }).toThrow('Expected error callback');
 
         expect(onWorkStarted).toHaveBeenCalledTimes(1);
@@ -236,14 +232,14 @@ describe('InteractionTracking', () => {
       });
 
       it('should cover onWorkScheduled within wrap', done => {
-        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+        SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
           const interaction = Array.from(
-            InteractionTracking.unstable_getCurrent(),
+            SchedulerTracking.unstable_getCurrent(),
           )[0];
           const beforeCount = interaction.__count;
 
           throwInOnWorkScheduled = true;
-          expect(() => InteractionTracking.unstable_wrap(() => {})).toThrow(
+          expect(() => SchedulerTracking.unstable_wrap(() => {})).toThrow(
             'Expected error onWorkScheduled',
           );
 
@@ -260,11 +256,9 @@ describe('InteractionTracking', () => {
       it('should cover onWorkStarted within wrap', () => {
         const mock = jest.fn();
         let interaction, wrapped;
-        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
-          interaction = Array.from(
-            InteractionTracking.unstable_getCurrent(),
-          )[0];
-          wrapped = InteractionTracking.unstable_wrap(mock);
+        SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
+          interaction = Array.from(SchedulerTracking.unstable_getCurrent())[0];
+          wrapped = SchedulerTracking.unstable_wrap(mock);
         });
         expect(interaction.__count).toBe(1);
 
@@ -282,26 +276,26 @@ describe('InteractionTracking', () => {
       });
 
       it('should cover onWorkStopped within wrap', done => {
-        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+        SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
           const outerInteraction = Array.from(
-            InteractionTracking.unstable_getCurrent(),
+            SchedulerTracking.unstable_getCurrent(),
           )[0];
           expect(outerInteraction.__count).toBe(1);
 
           let wrapped;
           let innerInteraction;
 
-          InteractionTracking.unstable_track(
+          SchedulerTracking.unstable_track(
             secondEvent.name,
             currentTime,
             () => {
               innerInteraction = Array.from(
-                InteractionTracking.unstable_getCurrent(),
+                SchedulerTracking.unstable_getCurrent(),
               )[1];
               expect(outerInteraction.__count).toBe(1);
               expect(innerInteraction.__count).toBe(1);
 
-              wrapped = InteractionTracking.unstable_wrap(jest.fn());
+              wrapped = SchedulerTracking.unstable_wrap(jest.fn());
               expect(outerInteraction.__count).toBe(2);
               expect(innerInteraction.__count).toBe(2);
             },
@@ -315,9 +309,9 @@ describe('InteractionTracking', () => {
           throwInOnWorkStopped = false;
 
           // It should restore the previous interactions
-          expect(InteractionTracking.unstable_getCurrent()).toMatchInteractions(
-            [outerInteraction],
-          );
+          expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
+            outerInteraction,
+          ]);
 
           // It should update the interaction count so as not to interfere with subsequent calls
           expect(outerInteraction.__count).toBe(1);
@@ -335,11 +329,9 @@ describe('InteractionTracking', () => {
 
         let wrapped;
         let interaction;
-        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
-          interaction = Array.from(
-            InteractionTracking.unstable_getCurrent(),
-          )[0];
-          wrapped = InteractionTracking.unstable_wrap(() => {
+        SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
+          interaction = Array.from(SchedulerTracking.unstable_getCurrent())[0];
+          wrapped = SchedulerTracking.unstable_wrap(() => {
             throw Error('Expected error wrap');
           });
         });
@@ -358,11 +350,9 @@ describe('InteractionTracking', () => {
 
       it('should cover onWorkCanceled within wrap', () => {
         let interaction, wrapped;
-        InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
-          interaction = Array.from(
-            InteractionTracking.unstable_getCurrent(),
-          )[0];
-          wrapped = InteractionTracking.unstable_wrap(jest.fn());
+        SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
+          interaction = Array.from(SchedulerTracking.unstable_getCurrent())[0];
+          wrapped = SchedulerTracking.unstable_wrap(jest.fn());
         });
         expect(interaction.__count).toBe(1);
 
@@ -386,7 +376,7 @@ describe('InteractionTracking', () => {
       expect(onInteractionTracked).not.toHaveBeenCalled();
       expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-      InteractionTracking.unstable_track(
+      SchedulerTracking.unstable_track(
         firstEvent.name,
         currentTime,
         () => {
@@ -402,7 +392,7 @@ describe('InteractionTracking', () => {
           );
           expect(onWorkStopped).not.toHaveBeenCalled();
 
-          InteractionTracking.unstable_track(
+          SchedulerTracking.unstable_track(
             secondEvent.name,
             currentTime,
             () => {
@@ -454,29 +444,25 @@ describe('InteractionTracking', () => {
       const unwrapped = jest.fn();
       let wrapped;
 
-      InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
+      SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
         expect(onInteractionTracked).toHaveBeenCalledTimes(1);
         expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
           firstEvent,
         );
 
-        InteractionTracking.unstable_track(
-          secondEvent.name,
-          currentTime,
-          () => {
-            expect(onInteractionTracked).toHaveBeenCalledTimes(2);
-            expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
-              secondEvent,
-            );
+        SchedulerTracking.unstable_track(secondEvent.name, currentTime, () => {
+          expect(onInteractionTracked).toHaveBeenCalledTimes(2);
+          expect(onInteractionTracked).toHaveBeenLastNotifiedOfInteraction(
+            secondEvent,
+          );
 
-            wrapped = InteractionTracking.unstable_wrap(unwrapped, threadID);
-            expect(onWorkScheduled).toHaveBeenCalledTimes(1);
-            expect(onWorkScheduled).toHaveBeenLastNotifiedOfWork(
-              new Set([firstEvent, secondEvent]),
-              threadID,
-            );
-          },
-        );
+          wrapped = SchedulerTracking.unstable_wrap(unwrapped, threadID);
+          expect(onWorkScheduled).toHaveBeenCalledTimes(1);
+          expect(onWorkScheduled).toHaveBeenLastNotifiedOfWork(
+            new Set([firstEvent, secondEvent]),
+            threadID,
+          );
+        });
       });
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(2);
@@ -510,15 +496,11 @@ describe('InteractionTracking', () => {
       const fnOne = jest.fn();
       const fnTwo = jest.fn();
       let wrappedOne, wrappedTwo;
-      InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
-        wrappedOne = InteractionTracking.unstable_wrap(fnOne, threadID);
-        InteractionTracking.unstable_track(
-          secondEvent.name,
-          currentTime,
-          () => {
-            wrappedTwo = InteractionTracking.unstable_wrap(fnTwo, threadID);
-          },
-        );
+      SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
+        wrappedOne = SchedulerTracking.unstable_wrap(fnOne, threadID);
+        SchedulerTracking.unstable_track(secondEvent.name, currentTime, () => {
+          wrappedTwo = SchedulerTracking.unstable_wrap(fnTwo, threadID);
+        });
       });
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(2);
@@ -557,12 +539,12 @@ describe('InteractionTracking', () => {
 
     it('should not end an interaction twice if wrap is used to schedule follow up work within another wrap', () => {
       const fnOne = jest.fn(() => {
-        wrappedTwo = InteractionTracking.unstable_wrap(fnTwo, threadID);
+        wrappedTwo = SchedulerTracking.unstable_wrap(fnTwo, threadID);
       });
       const fnTwo = jest.fn();
       let wrappedOne, wrappedTwo;
-      InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
-        wrappedOne = InteractionTracking.unstable_wrap(fnOne, threadID);
+      SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
+        wrappedOne = SchedulerTracking.unstable_wrap(fnOne, threadID);
       });
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(1);
@@ -586,9 +568,9 @@ describe('InteractionTracking', () => {
       const unwrappedOne = jest.fn();
       const unwrappedTwo = jest.fn();
       let wrappedOne, wrappedTwo;
-      InteractionTracking.unstable_track(firstEvent.name, currentTime, () => {
-        wrappedOne = InteractionTracking.unstable_wrap(unwrappedOne, threadID);
-        wrappedTwo = InteractionTracking.unstable_wrap(unwrappedTwo, threadID);
+      SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {
+        wrappedOne = SchedulerTracking.unstable_wrap(unwrappedOne, threadID);
+        wrappedTwo = SchedulerTracking.unstable_wrap(unwrappedTwo, threadID);
       });
 
       expect(onInteractionTracked).toHaveBeenCalledTimes(1);
@@ -616,19 +598,15 @@ describe('InteractionTracking', () => {
     });
 
     it('should unsubscribe', () => {
-      InteractionTrackingSubscriptions.unstable_unsubscribe(firstSubscriber);
-      InteractionTracking.unstable_track(
-        firstEvent.name,
-        currentTime,
-        () => {},
-      );
+      SchedulerTrackingSubscriptions.unstable_unsubscribe(firstSubscriber);
+      SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {});
 
       expect(onInteractionTracked).not.toHaveBeenCalled();
     });
   });
 
   describe('disabled', () => {
-    beforeEach(() => loadModules({enableInteractionTracking: false}));
+    beforeEach(() => loadModules({enableSchedulerTracking: false}));
 
     // TODO
   });

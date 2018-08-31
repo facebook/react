@@ -4,9 +4,8 @@ module.exports = {
   out: 'output.js',
   optimize: 'none',
   paths: {
-    'interaction-tracking':
-      '../../../../build/dist/interaction-tracking.development',
     react: '../../../../build/dist/react.development',
     'react-dom': '../../../../build/dist/react-dom.development',
+    'react-scheduler': '../../../../build/dist/react-scheduler.development',
   },
 };

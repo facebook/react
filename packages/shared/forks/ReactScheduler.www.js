@@ -8,4 +8,8 @@
 'use strict';
 const {now, scheduleWork, cancelScheduledWork} = require('customSchedule');
 
-export {now, scheduleWork, cancelScheduledWork};
+export {
+  now as unstable_now,
+  scheduleWork as unstable_scheduleWork,
+  cancelScheduledWork as unstable_cancelScheduledWork,
+};
