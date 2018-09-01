@@ -21,7 +21,6 @@
     "README.md",
     "index.js",
     "tracking.js",
-    "tracking-subscriptions.js",
     "cjs/",
     "umd/"
   ]

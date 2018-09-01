@@ -17,13 +17,11 @@ import {
   unstable_clear,
   unstable_getCurrent,
   unstable_getThreadID,
+  unstable_subscribe,
   unstable_track,
+  unstable_unsubscribe,
   unstable_wrap,
 } from 'react-scheduler/tracking';
-import {
-  unstable_subscribe,
-  unstable_unsubscribe,
-} from 'react-scheduler/tracking-subscriptions';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
@@ -51,12 +49,10 @@ if (__UMD__) {
       unstable_clear,
       unstable_getCurrent,
       unstable_getThreadID,
-      unstable_track,
-      unstable_wrap,
-    },
-    SchedulerTrackingSubscriptions: {
       unstable_subscribe,
+      unstable_track,
       unstable_unsubscribe,
+      unstable_wrap,
     },
   });
 }

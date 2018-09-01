@@ -16,7 +16,6 @@ let ReactNoop;
 let ReactTestRenderer;
 let advanceTimeBy;
 let SchedulerTracking;
-let SchedulerTrackingSubscriptions;
 let mockNow;
 let AdvanceTime;
 
@@ -44,7 +43,6 @@ function loadModules({
 
   React = require('react');
   SchedulerTracking = require('react-scheduler/tracking');
-  SchedulerTrackingSubscriptions = require('react-scheduler/tracking-subscriptions');
 
   if (useNoopRenderer) {
     ReactNoop = require('react-noop-renderer');
@@ -1208,7 +1206,7 @@ describe('Profiler', () => {
       });
 
       // Verify interaction subscriber methods are called as expected.
-      SchedulerTrackingSubscriptions.unstable_subscribe({
+      SchedulerTracking.unstable_subscribe({
         onInteractionScheduledWorkCompleted,
         onInteractionTracked,
         onWorkCanceled,
@@ -1747,7 +1745,7 @@ describe('Profiler', () => {
           expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
 
           // Work might be started multiple times before being completed.
-          // This is okay; it's part of the react-scheduler/tracking-subscriptions contract.
+          // This is okay; it's part of the react-scheduler/tracking contract.
           expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
           expect(
             getWorkForReactThreads(onWorkStarted)[1][0],
@@ -2074,7 +2072,7 @@ describe('Profiler', () => {
       });
 
       // Re-register since we've reloaded modules
-      SchedulerTrackingSubscriptions.unstable_subscribe({
+      SchedulerTracking.unstable_subscribe({
         onInteractionScheduledWorkCompleted,
         onInteractionTracked,
         onWorkCanceled,

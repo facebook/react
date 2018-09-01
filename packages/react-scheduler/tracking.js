@@ -10,3 +10,4 @@
 'use strict';
 
 export * from './src/Tracking';
+export * from './src/TrackingSubscriptions';

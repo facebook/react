@@ -16,7 +16,6 @@ const importSideEffects = Object.freeze({
   deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-scheduler': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-scheduler/tracking': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'react-scheduler/tracking-subscriptions': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
@@ -25,8 +24,6 @@ const knownGlobals = Object.freeze({
   'react-dom': 'ReactDOM',
   'react-scheduler': 'ReactScheduler',
   'react-scheduler/tracking': 'ReactSchedulerTracking',
-  'react-scheduler/tracking-subscriptions':
-    'ReactSchedulerTrackingSubscriptions',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.

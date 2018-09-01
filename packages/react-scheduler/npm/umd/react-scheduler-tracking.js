@@ -51,8 +51,24 @@
     );
   }
 
+  function unstable_subscribe() {
+    // eslint-disable-next-line max-len
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_subscribe.apply(
+      this,
+      arguments
+    );
+  }
+
   function unstable_track() {
     return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_track.apply(
+      this,
+      arguments
+    );
+  }
+
+  function unstable_unsubscribe() {
+    // eslint-disable-next-line max-len
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_unsubscribe.apply(
       this,
       arguments
     );
@@ -71,7 +87,9 @@
     unstable_clear: unstable_clear,
     unstable_getCurrent: unstable_getCurrent,
     unstable_getThreadID: unstable_getThreadID,
+    unstable_subscribe: unstable_subscribe,
     unstable_track: unstable_track,
+    unstable_unsubscribe: unstable_unsubscribe,
     unstable_wrap: unstable_wrap,
   });
 });

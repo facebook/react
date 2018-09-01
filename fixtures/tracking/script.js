@@ -93,11 +93,9 @@ function checkSchedulerTrackingSubscriptionsAPI() {
     document.getElementById('checkSchedulerTrackingSubscriptionsAPI'),
     () => {
       if (
-        typeof ReactSchedulerTrackingSubscriptions === 'undefined' ||
-        typeof ReactSchedulerTrackingSubscriptions.unstable_subscribe !==
-          'function' ||
-        typeof ReactSchedulerTrackingSubscriptions.unstable_unsubscribe !==
-          'function'
+        typeof ReactSchedulerTracking === 'undefined' ||
+        typeof ReactSchedulerTracking.unstable_subscribe !== 'function' ||
+        typeof ReactSchedulerTracking.unstable_unsubscribe !== 'function'
       ) {
         throw 'API is not defined';
       }
@@ -119,9 +117,9 @@ function checkSchedulerTrackingSubscriptionsAPI() {
       };
 
       try {
-        ReactSchedulerTrackingSubscriptions.unstable_subscribe(subscriber);
+        ReactSchedulerTracking.unstable_subscribe(subscriber);
         ReactSchedulerTracking.unstable_track('foo', 123, () => {});
-        ReactSchedulerTrackingSubscriptions.unstable_unsubscribe(subscriber);
+        ReactSchedulerTracking.unstable_unsubscribe(subscriber);
         if (onInteractionTrackedCalls.length !== 1) {
           throw null;
         }
@@ -137,18 +135,15 @@ function checkSchedulerTrackingSubscriptionsAPI() {
         throw 'API does not forward methods';
       }
 
-      const ForwardedSchedulerTrackingSubscriptions =
-        React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-          .SchedulerTrackingSubscriptions;
       const ForwardedSchedulerTracking =
         React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
           .SchedulerTracking;
 
       try {
-        ForwardedSchedulerTrackingSubscriptions.unstable_subscribe(subscriber);
+        ForwardedSchedulerTracking.unstable_subscribe(subscriber);
         ReactSchedulerTracking.unstable_track('foo', 123, () => {});
         ForwardedSchedulerTracking.unstable_track('bar', 456, () => {});
-        ReactSchedulerTrackingSubscriptions.unstable_unsubscribe(subscriber);
+        ReactSchedulerTracking.unstable_unsubscribe(subscriber);
         if (onInteractionTrackedCalls.length !== 3) {
           throw null;
         }

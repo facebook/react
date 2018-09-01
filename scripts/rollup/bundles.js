@@ -405,22 +405,6 @@ const bundles = [
     global: 'ReactSchedulerTracking',
     externals: [],
   },
-
-  {
-    label: 'react-scheduler-tracking-subscriptions',
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-    ],
-    moduleType: ISOMORPHIC,
-    entry: 'react-scheduler/tracking-subscriptions',
-    global: 'ReactSchedulerTrackingSubscriptions',
-    externals: ['react-scheduler', 'react-scheduler/tracking'],
-  },
 ];
 
 // Based on deep-freeze by substack (public domain)

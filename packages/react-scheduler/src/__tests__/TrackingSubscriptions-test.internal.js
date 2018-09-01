@@ -8,9 +8,8 @@
  */
 'use strict';
 
-describe('SchedulerTrackingSubscriptions', () => {
+describe('TrackingSubscriptions', () => {
   let SchedulerTracking;
-  let SchedulerTrackingSubscriptions;
   let ReactFeatureFlags;
 
   let currentTime;
@@ -34,7 +33,7 @@ describe('SchedulerTrackingSubscriptions', () => {
   const secondEvent = {id: 1, name: 'second', timestamp: 0};
   const threadID = 123;
 
-  function loadModules({enableSchedulerTracking}) {
+  function loadModules({enableSchedulerTracking, autoSubscribe = true}) {
     jest.resetModules();
     jest.useFakeTimers();
 
@@ -44,7 +43,6 @@ describe('SchedulerTrackingSubscriptions', () => {
     ReactFeatureFlags.enableSchedulerTracking = enableSchedulerTracking;
 
     SchedulerTracking = require('react-scheduler/tracking');
-    SchedulerTrackingSubscriptions = require('react-scheduler/tracking-subscriptions');
 
     throwInOnInteractionScheduledWorkCompleted = false;
     throwInOnInteractionTracked = false;
@@ -102,12 +100,28 @@ describe('SchedulerTrackingSubscriptions', () => {
       onWorkStopped: jest.fn(),
     };
 
-    SchedulerTrackingSubscriptions.unstable_subscribe(firstSubscriber);
-    SchedulerTrackingSubscriptions.unstable_subscribe(secondSubscriber);
+    if (autoSubscribe) {
+      SchedulerTracking.unstable_subscribe(firstSubscriber);
+      SchedulerTracking.unstable_subscribe(secondSubscriber);
+    }
   }
 
   describe('enabled', () => {
     beforeEach(() => loadModules({enableSchedulerTracking: true}));
+
+    it('should lazily subscribe to tracking and unsubscribe again if there are no external subscribers', () => {
+      loadModules({enableSchedulerTracking: true, autoSubscribe: false});
+
+      expect(SchedulerTracking.__getSubscriberRef().current).toBe(null);
+      SchedulerTracking.unstable_subscribe(firstSubscriber);
+      expect(SchedulerTracking.__getSubscriberRef().current).toBeDefined();
+      SchedulerTracking.unstable_subscribe(secondSubscriber);
+      expect(SchedulerTracking.__getSubscriberRef().current).toBeDefined();
+      SchedulerTracking.unstable_unsubscribe(secondSubscriber);
+      expect(SchedulerTracking.__getSubscriberRef().current).toBeDefined();
+      SchedulerTracking.unstable_unsubscribe(firstSubscriber);
+      expect(SchedulerTracking.__getSubscriberRef().current).toBe(null);
+    });
 
     describe('error handling', () => {
       it('should cover onInteractionTracked/onWorkStarted within', done => {
@@ -598,7 +612,7 @@ describe('SchedulerTrackingSubscriptions', () => {
     });
 
     it('should unsubscribe', () => {
-      SchedulerTrackingSubscriptions.unstable_unsubscribe(firstSubscriber);
+      SchedulerTracking.unstable_unsubscribe(firstSubscriber);
       SchedulerTracking.unstable_track(firstEvent.name, currentTime, () => {});
 
       expect(onInteractionTracked).not.toHaveBeenCalled();

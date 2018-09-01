@@ -8,7 +8,7 @@
  */
 'use strict';
 
-describe('SchedulerTracking', () => {
+describe('Tracking', () => {
   let SchedulerTracking;
   let ReactFeatureFlags;
 

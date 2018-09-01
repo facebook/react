@@ -17,7 +17,9 @@ const {
   unstable_clear,
   unstable_getCurrent,
   unstable_getThreadID,
+  unstable_subscribe,
   unstable_track,
+  unstable_unsubscribe,
   unstable_wrap,
 } = ReactInternals.SchedulerTracking;
 
@@ -27,6 +29,8 @@ export {
   unstable_clear,
   unstable_getCurrent,
   unstable_getThreadID,
+  unstable_subscribe,
   unstable_track,
+  unstable_unsubscribe,
   unstable_wrap,
 };
