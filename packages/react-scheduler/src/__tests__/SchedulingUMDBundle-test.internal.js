@@ -16,26 +16,30 @@ describe('Scheduling UMD bundle', () => {
     jest.resetModules();
   });
 
-  function compareAPIS(apis) {
-    apis = apis.map(api => Object.keys(api).sort());
-    for (let i = 1; i < apis.length; i++) {
-      expect(apis[0]).toEqual(apis[i]);
-    }
+  function validateForwardedAPIs(api, forwardedAPIs) {
+    const apiKeys = Object.keys(api).sort();
+    forwardedAPIs.forEach(forwardedAPI => {
+      expect(Object.keys(forwardedAPI).sort()).toEqual(apiKeys);
+    });
   }
 
   it('should define the same scheduling API', () => {
+    const api = require('../../index');
     const umdAPIDev = require('../../npm/umd/react-scheduler.development');
     const umdAPIProd = require('../../npm/umd/react-scheduler.production.min');
-    const cjsAPI = require('../../index');
     const secretAPI = require('react/src/ReactSharedInternals').default;
-    compareAPIS([umdAPIDev, umdAPIProd, cjsAPI, secretAPI.Scheduler]);
+    validateForwardedAPIs(api, [umdAPIDev, umdAPIProd, secretAPI.Scheduler]);
   });
 
   it('should define the same tracking API', () => {
+    const api = require('../../tracking');
     const umdAPIDev = require('../../npm/umd/react-scheduler-tracking.development');
     const umdAPIProd = require('../../npm/umd/react-scheduler-tracking.production.min');
-    const cjsAPI = require('../../tracking');
     const secretAPI = require('react/src/ReactSharedInternals').default;
-    compareAPIS([umdAPIDev, umdAPIProd, cjsAPI, secretAPI.SchedulerTracking]);
+    validateForwardedAPIs(api, [
+      umdAPIDev,
+      umdAPIProd,
+      secretAPI.SchedulerTracking,
+    ]);
   });
 });
