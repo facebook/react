@@ -245,9 +245,9 @@ to return true:wantsResponderID|                            |
 +-----------v-------------+true| +------------------------+ |
 |onMoveShouldSetResponder |----->|onResponderMove (cur)   |<-----------+
 +-----------+-------------+    | +------------------------+ |          |
-            |                  |                            | +--------+-------+
-            | returned true for|       false:REJECT +-------->|onResponderRejec|
-            | wantsResponderID |                    |       | +----------------+
+            |                  |                            | +--------+--------+
+            | returned true for|       false:REJECT +-------->|onResponderReject|
+            | wantsResponderID |                    |       | +-----------------+
             | (now attempt     | +------------------+-----+ |
             |  handoff)        | |   onResponder          | |
             +------------------->|      TerminationRequest| |

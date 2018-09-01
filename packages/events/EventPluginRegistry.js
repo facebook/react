@@ -78,7 +78,8 @@ function recomputePluginOrdering(): void {
  * Publishes an event so that it can be dispatched by the supplied plugin.
  *
  * @param {object} dispatchConfig Dispatch configuration for the event.
- * @param {object} PluginModule Plugin publishing the event.
+ * @param {object} pluginModule Plugin publishing the event.
+ * @param {string} eventName name of event.
  * @return {boolean} True if the event was successfully published.
  * @private
  */
@@ -123,7 +124,8 @@ function publishEventForPlugin(
  * Publishes a registration name that is used to identify dispatched events.
  *
  * @param {string} registrationName Registration name to add.
- * @param {object} PluginModule Plugin publishing the event.
+ * @param {object} pluginModule Plugin publishing the event.
+ * @param {string} eventName name of event.
  * @private
  */
 function publishRegistrationName(
@@ -191,7 +193,7 @@ export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
  * to be decoupled from injection of the actual plugins so that ordering is
  * always deterministic regardless of packaging, on-the-fly injection, etc.
  *
- * @param {array} InjectedEventPluginOrder
+ * @param {array} injectedEventPluginOrder
  * @internal
  * @see {EventPluginHub.injection.injectEventPluginOrder}
  */

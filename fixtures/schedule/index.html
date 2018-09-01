@@ -106,7 +106,7 @@ function clearTestResult(testNumber) {
 }
 function updateTestResult(testNumber, textToAddToResult) {
   latestResults[testNumber - 1].push(textToAddToResult);
-};
+}
 function checkTestResult(testNumber) {
 
   let correct = true;
@@ -213,18 +213,16 @@ function runTestOne() {
   // Test 1
   // Calls the callback with the frame when not blocked
   clearTestResult(1);
-  const test1Log = [];
-  const cb1Arguments = [];
   const cb1 = (x) => {
     updateTestResult(1, 'cb1 called with argument of ' + JSON.stringify(x));
-  }
+  };
   scheduleWork(cb1);
   updateTestResult(1, 'scheduled Cb1');
   logWhenFramesStart(1, () => {
     displayTestResult(1);
     checkTestResult(1);
   });
-};
+}
 
 function runTestTwo() {
   // Test 2
@@ -258,10 +256,10 @@ function runTestThree() {
     }
     updateTestResult(3, 'cbA' + callbackAIterations + ' called with argument of ' + JSON.stringify(x));
     callbackAIterations++;
-  }
+  };
   const cbB = (x) => {
     updateTestResult(3, 'cbB called with argument of ' + JSON.stringify(x));
-  }
+  };
   scheduleWork(cbA);
   updateTestResult(3, 'scheduled CbA');
   scheduleWork(cbB);
@@ -288,16 +286,16 @@ function runTestFour() {
     updateTestResult(4, 'cbA called with argument of ' + JSON.stringify(x));
     updateTestResult(4, 'cbA running and taking some time');
     waitForTimeToPass(35);
-  }
+  };
   const cbB = (x) => {
     updateTestResult(4, 'cbB called with argument of ' + JSON.stringify(x));
-  }
+  };
   const cbC = (x) => {
     updateTestResult(4, 'cbC called with argument of ' + JSON.stringify(x));
-  }
+  };
   const cbD = (x) => {
     updateTestResult(4, 'cbD called with argument of ' + JSON.stringify(x));
-  }
+  };
   scheduleWork(cbA); // won't time out
   updateTestResult(4, 'scheduled cbA');
   scheduleWork(cbB, {timeout: 100}); // times out later
@@ -323,24 +321,24 @@ function runTestFive() {
   // When some callbacks throw errors, still calls them all within the same frame
   const cbA = (x) => {
     console.log('cbA called with argument of ' + JSON.stringify(x));
-  }
+  };
   const cbB = (x) => {
     console.log('cbB called with argument of ' + JSON.stringify(x));
     console.log('cbB is about to throw an error!');
     throw new Error('error B');
-  }
+  };
   const cbC = (x) => {
     console.log('cbC called with argument of ' + JSON.stringify(x));
-  }
+  };
   const cbD = (x) => {
     console.log('cbD called with argument of ' + JSON.stringify(x));
     console.log('cbD is about to throw an error!');
     throw new Error('error D');
-  }
+  };
   const cbE = (x) => {
     console.log('cbE called with argument of ' + JSON.stringify(x));
     console.log('This was the last callback! ------------------');
-  }
+  };
 
   console.log('We are aiming to roughly emulate the way ' +
   '`requestAnimationFrame` handles errors from callbacks.');
@@ -393,7 +391,7 @@ function runTestFive() {
     console.log('scheduled cbD');
     scheduleWork(cbE);
     console.log('scheduled cbE');
-  };
+  }
 }
 
 function runTestSix() {
@@ -403,22 +401,22 @@ function runTestSix() {
     console.log('cbA called with argument of ' + JSON.stringify(x));
     console.log('cbA is about to throw an error!');
     throw new Error('error A');
-  }
+  };
   const cbB = (x) => {
     console.log('cbB called with argument of ' + JSON.stringify(x));
-  }
+  };
   const cbC = (x) => {
     console.log('cbC called with argument of ' + JSON.stringify(x));
-  }
+  };
   const cbD = (x) => {
     console.log('cbD called with argument of ' + JSON.stringify(x));
     console.log('cbD is about to throw an error!');
     throw new Error('error D');
-  }
+  };
   const cbE = (x) => {
     console.log('cbE called with argument of ' + JSON.stringify(x));
     console.log('This was the last callback! ------------------');
-  }
+  };
 
   console.log('We are aiming to roughly emulate the way ' +
   '`requestAnimationFrame` handles errors from callbacks.');
@@ -471,7 +469,7 @@ function runTestSix() {
     console.log('scheduled cbD');
     scheduleWork(cbE, {timeout: 1});
     console.log('scheduled cbE');
-  };
+  }
 }
 
 function runTestSeven() {
