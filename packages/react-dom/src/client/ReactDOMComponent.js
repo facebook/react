@@ -999,12 +999,23 @@ export function diffHydratedProperties(
       } else if (propKey === STYLE) {
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey);
-        const expectedStyle = CSSPropertyOperations.createDangerousStringForStyles(
-          nextProp,
-        );
-        serverValue = domElement.getAttribute('style');
-        if (expectedStyle !== serverValue) {
-          warnForPropDifference(propKey, serverValue, expectedStyle);
+
+        // IE 11 parses & normalizes the style attribute as opposed to other
+        // browsers. It adds spaces and sorts the properties in some
+        // non-alphabetical order. Handling that would require sorting CSS
+        // properties in the client & server versions or applying
+        // `expectedStyle` to a temporary DOM node to read its `style` attribute
+        // normalized. Since it only affects IE, we're skipping style warnings
+        // in that browser completely in favor of doing all that work.
+        // See https://github.com/facebook/react/issues/11807
+        if (!document.documentMode) {
+          const expectedStyle = CSSPropertyOperations.createDangerousStringForStyles(
+            nextProp,
+          );
+          serverValue = domElement.getAttribute('style');
+          if (expectedStyle !== serverValue) {
+            warnForPropDifference(propKey, serverValue, expectedStyle);
+          }
         }
       } else if (isCustomComponentTag) {
         // $FlowFixMe - Should be inferred as not undefined.
