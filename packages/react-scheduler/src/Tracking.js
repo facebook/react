@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableInteractionTracking} from 'shared/ReactFeatureFlags';
+import {enableSchedulerTracking} from 'shared/ReactFeatureFlags';
 
 export type Interaction = {|
   __count: number,
@@ -70,7 +70,7 @@ let interactionsRef: InteractionsRef = (null: any);
 // Listener(s) to notify when interactions begin and end.
 let subscriberRef: SubscriberRef = (null: any);
 
-if (enableInteractionTracking) {
+if (enableSchedulerTracking) {
   interactionsRef = {
     current: new Set(),
   };
@@ -81,10 +81,16 @@ if (enableInteractionTracking) {
 
 // These values are exported for libraries with advanced use cases (i.e. React).
 // They should not typically be accessed directly.
-export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
+export function __getInteractionsRef(): InteractionsRef {
+  return interactionsRef;
+}
 
-export function clear(callback: Function): any {
-  if (!enableInteractionTracking) {
+export function __getSubscriberRef(): SubscriberRef {
+  return subscriberRef;
+}
+
+export function unstable_clear(callback: Function): any {
+  if (!enableSchedulerTracking) {
     return callback();
   }
 
@@ -98,25 +104,25 @@ export function clear(callback: Function): any {
   }
 }
 
-export function getCurrent(): Set<Interaction> | null {
-  if (!enableInteractionTracking) {
+export function unstable_getCurrent(): Set<Interaction> | null {
+  if (!enableSchedulerTracking) {
     return null;
   } else {
     return interactionsRef.current;
   }
 }
 
-export function getThreadID(): number {
+export function unstable_getThreadID(): number {
   return ++threadIDCounter;
 }
 
-export function track(
+export function unstable_track(
   name: string,
   timestamp: number,
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): any {
-  if (!enableInteractionTracking) {
+  if (!enableSchedulerTracking) {
     return callback();
   }
 
@@ -174,11 +180,11 @@ export function track(
   return returnValue;
 }
 
-export function wrap(
+export function unstable_wrap(
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): Function {
-  if (!enableInteractionTracking) {
+  if (!enableSchedulerTracking) {
     return callback;
   }
 
@@ -194,6 +200,8 @@ export function wrap(
   wrappedInteractions.forEach(interaction => {
     interaction.__count++;
   });
+
+  let hasRun = false;
 
   function wrapped() {
     const prevInteractions = interactionsRef.current;
@@ -222,16 +230,23 @@ export function wrap(
 
       return returnValue;
     } finally {
-      // Update pending async counts for all wrapped interactions.
-      // If this was the last scheduled async work for any of them,
-      // Mark them as completed.
-      wrappedInteractions.forEach(interaction => {
-        interaction.__count--;
+      if (!hasRun) {
+        // We only expect a wrapped function to be executed once,
+        // But in the event that it's executed more than once–
+        // Only decrement the outstanding interaction counts once.
+        hasRun = true;
 
-        if (subscriber !== null && interaction.__count === 0) {
-          subscriber.onInteractionScheduledWorkCompleted(interaction);
-        }
-      });
+        // Update pending async counts for all wrapped interactions.
+        // If this was the last scheduled async work for any of them,
+        // Mark them as completed.
+        wrappedInteractions.forEach(interaction => {
+          interaction.__count--;
+
+          if (subscriber !== null && interaction.__count === 0) {
+            subscriber.onInteractionScheduledWorkCompleted(interaction);
+          }
+        });
+      }
     }
   }
 

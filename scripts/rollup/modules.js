@@ -14,15 +14,16 @@ const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
 const importSideEffects = Object.freeze({
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'interaction-tracking': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'react-scheduler': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'react-scheduler/tracking': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
-  'interaction-tracking': 'InteractionTracking',
-  'interaction-tracking/subscriptions': 'InteractionTrackingSubscriptions',
+  'react-scheduler': 'ReactScheduler',
+  'react-scheduler/tracking': 'ReactSchedulerTracking',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.

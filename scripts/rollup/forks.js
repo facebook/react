@@ -114,13 +114,42 @@ const forks = Object.freeze({
     return null;
   },
 
-  'shared/ReactScheduler': (bundleType, entry) => {
+  'react-scheduler': (bundleType, entry, dependencies) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
         return 'shared/forks/ReactScheduler.www.js';
+      case UMD_DEV:
+      case UMD_PROD:
+        if (dependencies.indexOf('react') === -1) {
+          // It's only safe to use this fork for modules that depend on React,
+          // because they read the re-exported API from the SECRET_INTERNALS object.
+          return null;
+        }
+        // Optimization: for UMDs, use the API that is already a part of the React
+        // package instead of requiring it to be loaded via a separate <script> tag
+        return 'shared/forks/ReactScheduler.umd.js';
       default:
+        // For CJS bundles, use the shared NPM package.
+        return null;
+    }
+  },
+
+  'react-scheduler/tracking': (bundleType, entry, dependencies) => {
+    switch (bundleType) {
+      case UMD_DEV:
+      case UMD_PROD:
+        if (dependencies.indexOf('react') === -1) {
+          // It's only safe to use this fork for modules that depend on React,
+          // because they read the re-exported API from the SECRET_INTERNALS object.
+          return null;
+        }
+        // Optimization: for UMDs, use the API that is already a part of the React
+        // package instead of requiring it to be loaded via a separate <script> tag
+        return 'shared/forks/ReactSchedulerTracking.umd.js';
+      default:
+        // For CJS bundles, use the shared NPM package.
         return null;
     }
   },
