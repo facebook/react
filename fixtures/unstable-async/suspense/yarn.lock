@@ -3482,9 +3482,6 @@ inquirer@3.3.0, inquirer@^3.0.6:
     strip-ansi "^4.0.0"
     through "^2.3.6"
 
-interaction-tracking@../../../build/node_modules/interaction-tracking:
-  version "0.0.1"
-
 internal-ip@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/internal-ip/-/internal-ip-1.2.0.tgz#ae9fbf93b984878785d50a8de1b356956058cf5c"
@@ -4102,6 +4099,10 @@ js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
 
+"js-tokens@^3.0.0 || ^4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-4.0.0.tgz#19203fb59991df98e3a287050d4647cdeaf32499"
+
 js-yaml@^3.4.3, js-yaml@^3.7.0, js-yaml@^3.9.1:
   version "3.10.0"
   resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.10.0.tgz#2e78441646bd4682e963f22b6e92823c309c62dc"
@@ -4389,11 +4390,17 @@ longest@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/longest/-/longest-1.0.1.tgz#30a0b2da38f73770e8294a0d22e6625ed77d0097"
 
-loose-envify@^1.0.0, loose-envify@^1.1.0, loose-envify@^1.3.1:
+loose-envify@^1.0.0, loose-envify@^1.3.1:
   version "1.3.1"
   resolved "https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.3.1.tgz#d1a8ad33fa9ce0e713d65fdd0ac8b748d478c848"
   dependencies:
     js-tokens "^3.0.0"
+
+loose-envify@^1.1.0:
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz#71ee51fa7be4caec1a63839f7e682d8132d30caf"
+  dependencies:
+    js-tokens "^3.0.0 || ^4.0.0"
 
 loud-rejection@^1.0.0:
   version "1.6.0"
@@ -5720,11 +5727,12 @@ react-dev-utils@^5.0.1:
     text-table "0.2.0"
 
 react-dom@../../../build/node_modules/react-dom:
-  version "16.4.1"
+  version "16.4.3-alpha.0"
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
     prop-types "^15.6.2"
+    react-scheduler "^0.1.0-alpha-1"
 
 react-draggable@^3.0.5:
   version "3.0.5"
@@ -5736,6 +5744,15 @@ react-draggable@^3.0.5:
 react-error-overlay@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/react-error-overlay/-/react-error-overlay-4.0.0.tgz#d198408a85b4070937a98667f500c832f86bd5d4"
+
+react-scheduler@../../../build/node_modules/react-scheduler:
+  version "0.1.0-alpha-1"
+  dependencies:
+    object-assign "^4.1.1"
+
+react-scheduler@^0.1.0-alpha-1:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/react-scheduler/-/react-scheduler-0.1.0.tgz#d16c0ee90d2895ff1941e0d681293dbe4f4b4f38"
 
 react-scripts@^1.1.4:
   version "1.1.4"
@@ -5783,11 +5800,12 @@ react-scripts@^1.1.4:
     fsevents "^1.1.3"
 
 react@../../../build/node_modules/react:
-  version "16.4.1"
+  version "16.4.3-alpha.0"
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
     prop-types "^15.6.2"
+    react-scheduler "^0.1.0-alpha-1"
 
 read-pkg-up@^1.0.1:
   version "1.0.1"

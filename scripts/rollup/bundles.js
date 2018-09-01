@@ -60,8 +60,10 @@ const bundles = [
       UMD_PROD,
       NODE_DEV,
       NODE_PROD,
+      NODE_PROFILING,
       FB_WWW_DEV,
       FB_WWW_PROD,
+      FB_WWW_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'react',
@@ -85,7 +87,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom',
     global: 'ReactDOM',
-    externals: ['interaction-tracking', 'react'],
+    externals: ['react'],
   },
 
   //******* Test Utils *******/
@@ -129,7 +131,7 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
-    externals: ['interaction-tracking', 'react'],
+    externals: ['react'],
   },
 
   {
@@ -137,7 +139,7 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.node',
-    externals: ['interaction-tracking', 'react', 'stream'],
+    externals: ['react', 'stream'],
   },
 
   /******* React ART *******/
@@ -179,7 +181,6 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
-      'interaction-tracking',
       'ReactNativeViewConfigRegistry',
     ],
   },
@@ -200,7 +201,6 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
-      'interaction-tracking',
       'ReactNativeViewConfigRegistry',
     ],
   },
@@ -223,7 +223,6 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
-      'interaction-tracking',
       'ReactNativeViewConfigRegistry',
     ],
   },
@@ -245,7 +244,6 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
-      'interaction-tracking',
       'ReactNativeViewConfigRegistry',
     ],
   },
@@ -257,7 +255,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
-    externals: ['interaction-tracking', 'react'],
+    externals: ['react'],
   },
 
   {
@@ -322,7 +320,7 @@ const bundles = [
     moduleType: RECONCILER,
     entry: 'react-reconciler',
     global: 'ReactReconciler',
-    externals: ['interaction-tracking', 'react'],
+    externals: ['react'],
   },
 
   /******* React Persistent Reconciler *******/
@@ -332,7 +330,7 @@ const bundles = [
     moduleType: RECONCILER,
     entry: 'react-reconciler/persistent',
     global: 'ReactPersistentReconciler',
-    externals: ['interaction-tracking', 'react'],
+    externals: ['react'],
   },
 
   /******* Reflection *******/
@@ -385,37 +383,27 @@ const bundles = [
   /******* React Scheduler (experimental) *******/
   {
     label: 'react-scheduler',
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: ISOMORPHIC,
     entry: 'react-scheduler',
     global: 'ReactScheduler',
     externals: [],
   },
 
-  /******* interaction-tracking (experimental) *******/
   {
-    label: 'interaction-tracking',
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    label: 'react-scheduler-tracking',
+    bundleTypes: [
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+    ],
     moduleType: ISOMORPHIC,
-    entry: 'interaction-tracking',
-    global: 'InteractionTracking',
+    entry: 'react-scheduler/tracking',
+    global: 'ReactSchedulerTracking',
     externals: [],
-  },
-
-  {
-    label: 'interaction-tracking-subscriptions',
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
-    moduleType: ISOMORPHIC,
-    entry: 'interaction-tracking/subscriptions',
-    global: 'InteractionTrackingSubscriptions',
-    externals: ['interaction-tracking'],
   },
 ];
 

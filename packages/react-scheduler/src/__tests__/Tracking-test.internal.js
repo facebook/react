@@ -8,14 +8,14 @@
  */
 'use strict';
 
-describe('InteractionTracking', () => {
-  let InteractionTracking;
+describe('Tracking', () => {
+  let SchedulerTracking;
   let ReactFeatureFlags;
 
   let advanceTimeBy;
   let currentTime;
 
-  function loadModules({enableInteractionTracking}) {
+  function loadModules({enableSchedulerTracking}) {
     jest.resetModules();
     jest.useFakeTimers();
 
@@ -27,36 +27,36 @@ describe('InteractionTracking', () => {
     };
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableInteractionTracking = enableInteractionTracking;
+    ReactFeatureFlags.enableSchedulerTracking = enableSchedulerTracking;
 
-    InteractionTracking = require('interaction-tracking');
+    SchedulerTracking = require('react-scheduler/tracking');
   }
 
-  describe('enableInteractionTracking enabled', () => {
-    beforeEach(() => loadModules({enableInteractionTracking: true}));
+  describe('enableSchedulerTracking enabled', () => {
+    beforeEach(() => loadModules({enableSchedulerTracking: true}));
 
     it('should return the value of a tracked function', () => {
       expect(
-        InteractionTracking.track('arbitrary', currentTime, () => 123),
+        SchedulerTracking.unstable_track('arbitrary', currentTime, () => 123),
       ).toBe(123);
     });
 
     it('should return the value of a clear function', () => {
-      expect(InteractionTracking.clear(() => 123)).toBe(123);
+      expect(SchedulerTracking.unstable_clear(() => 123)).toBe(123);
     });
 
     it('should return the value of a wrapped function', () => {
       let wrapped;
-      InteractionTracking.track('arbitrary', currentTime, () => {
-        wrapped = InteractionTracking.wrap(() => 123);
+      SchedulerTracking.unstable_track('arbitrary', currentTime, () => {
+        wrapped = SchedulerTracking.unstable_wrap(() => 123);
       });
       expect(wrapped()).toBe(123);
     });
 
     it('should pass arguments through to a wrapped function', done => {
       let wrapped;
-      InteractionTracking.track('arbitrary', currentTime, () => {
-        wrapped = InteractionTracking.wrap((param1, param2) => {
+      SchedulerTracking.unstable_track('arbitrary', currentTime, () => {
+        wrapped = SchedulerTracking.unstable_wrap((param1, param2) => {
           expect(param1).toBe('foo');
           expect(param2).toBe('bar');
           done();
@@ -66,14 +66,14 @@ describe('InteractionTracking', () => {
     });
 
     it('should return an empty set when outside of a tracked event', () => {
-      expect(InteractionTracking.getCurrent()).toContainNoInteractions();
+      expect(SchedulerTracking.unstable_getCurrent()).toContainNoInteractions();
     });
 
     it('should report the tracked interaction from within the track callback', done => {
       advanceTimeBy(100);
 
-      InteractionTracking.track('some event', currentTime, () => {
-        const interactions = InteractionTracking.getCurrent();
+      SchedulerTracking.unstable_track('some event', currentTime, () => {
+        const interactions = SchedulerTracking.unstable_getCurrent();
         expect(interactions).toMatchInteractions([
           {name: 'some event', timestamp: 100},
         ]);
@@ -86,7 +86,7 @@ describe('InteractionTracking', () => {
       let wrappedIndirection;
 
       function indirection() {
-        const interactions = InteractionTracking.getCurrent();
+        const interactions = SchedulerTracking.unstable_getCurrent();
         expect(interactions).toMatchInteractions([
           {name: 'some event', timestamp: 100},
         ]);
@@ -96,8 +96,8 @@ describe('InteractionTracking', () => {
 
       advanceTimeBy(100);
 
-      InteractionTracking.track('some event', currentTime, () => {
-        wrappedIndirection = InteractionTracking.wrap(indirection);
+      SchedulerTracking.unstable_track('some event', currentTime, () => {
+        wrappedIndirection = SchedulerTracking.unstable_wrap(indirection);
       });
 
       advanceTimeBy(50);
@@ -108,24 +108,26 @@ describe('InteractionTracking', () => {
     it('should clear the interaction stack for tracked callbacks', () => {
       let innerTestReached = false;
 
-      InteractionTracking.track('outer event', currentTime, () => {
-        expect(InteractionTracking.getCurrent()).toMatchInteractions([
+      SchedulerTracking.unstable_track('outer event', currentTime, () => {
+        expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
           {name: 'outer event'},
         ]);
 
-        InteractionTracking.clear(() => {
-          expect(InteractionTracking.getCurrent()).toMatchInteractions([]);
+        SchedulerTracking.unstable_clear(() => {
+          expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions(
+            [],
+          );
 
-          InteractionTracking.track('inner event', currentTime, () => {
-            expect(InteractionTracking.getCurrent()).toMatchInteractions([
-              {name: 'inner event'},
-            ]);
+          SchedulerTracking.unstable_track('inner event', currentTime, () => {
+            expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions(
+              [{name: 'inner event'}],
+            );
 
             innerTestReached = true;
           });
         });
 
-        expect(InteractionTracking.getCurrent()).toMatchInteractions([
+        expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
           {name: 'outer event'},
         ]);
       });
@@ -138,29 +140,31 @@ describe('InteractionTracking', () => {
       let wrappedIndirection;
 
       const indirection = jest.fn(() => {
-        expect(InteractionTracking.getCurrent()).toMatchInteractions([
+        expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
           {name: 'outer event'},
         ]);
 
-        InteractionTracking.clear(() => {
-          expect(InteractionTracking.getCurrent()).toMatchInteractions([]);
+        SchedulerTracking.unstable_clear(() => {
+          expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions(
+            [],
+          );
 
-          InteractionTracking.track('inner event', currentTime, () => {
-            expect(InteractionTracking.getCurrent()).toMatchInteractions([
-              {name: 'inner event'},
-            ]);
+          SchedulerTracking.unstable_track('inner event', currentTime, () => {
+            expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions(
+              [{name: 'inner event'}],
+            );
 
             innerTestReached = true;
           });
         });
 
-        expect(InteractionTracking.getCurrent()).toMatchInteractions([
+        expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
           {name: 'outer event'},
         ]);
       });
 
-      InteractionTracking.track('outer event', currentTime, () => {
-        wrappedIndirection = InteractionTracking.wrap(indirection);
+      SchedulerTracking.unstable_track('outer event', currentTime, () => {
+        wrappedIndirection = SchedulerTracking.unstable_wrap(indirection);
       });
 
       wrappedIndirection();
@@ -175,7 +179,7 @@ describe('InteractionTracking', () => {
       let outerIndirectionTracked = false;
 
       function innerIndirection() {
-        const interactions = InteractionTracking.getCurrent();
+        const interactions = SchedulerTracking.unstable_getCurrent();
         expect(interactions).toMatchInteractions([
           {name: 'outer event', timestamp: 100},
           {name: 'inner event', timestamp: 150},
@@ -185,7 +189,7 @@ describe('InteractionTracking', () => {
       }
 
       function outerIndirection() {
-        const interactions = InteractionTracking.getCurrent();
+        const interactions = SchedulerTracking.unstable_getCurrent();
         expect(interactions).toMatchInteractions([
           {name: 'outer event', timestamp: 100},
         ]);
@@ -193,16 +197,16 @@ describe('InteractionTracking', () => {
         outerIndirectionTracked = true;
       }
 
-      InteractionTracking.track('outer event', currentTime, () => {
+      SchedulerTracking.unstable_track('outer event', currentTime, () => {
         // Verify the current tracked event
-        let interactions = InteractionTracking.getCurrent();
+        let interactions = SchedulerTracking.unstable_getCurrent();
         expect(interactions).toMatchInteractions([
           {name: 'outer event', timestamp: 100},
         ]);
 
         advanceTimeBy(50);
 
-        const wrapperOuterIndirection = InteractionTracking.wrap(
+        const wrapperOuterIndirection = SchedulerTracking.unstable_wrap(
           outerIndirection,
         );
 
@@ -210,8 +214,8 @@ describe('InteractionTracking', () => {
         let innerEventTracked = false;
 
         // Verify that a nested event is properly tracked
-        InteractionTracking.track('inner event', currentTime, () => {
-          interactions = InteractionTracking.getCurrent();
+        SchedulerTracking.unstable_track('inner event', currentTime, () => {
+          interactions = SchedulerTracking.unstable_getCurrent();
           expect(interactions).toMatchInteractions([
             {name: 'outer event', timestamp: 100},
             {name: 'inner event', timestamp: 150},
@@ -221,7 +225,9 @@ describe('InteractionTracking', () => {
           wrapperOuterIndirection();
           expect(outerIndirectionTracked).toBe(true);
 
-          wrapperInnerIndirection = InteractionTracking.wrap(innerIndirection);
+          wrapperInnerIndirection = SchedulerTracking.unstable_wrap(
+            innerIndirection,
+          );
 
           innerEventTracked = true;
         });
@@ -229,7 +235,7 @@ describe('InteractionTracking', () => {
         expect(innerEventTracked).toBe(true);
 
         // Verify that the original event is restored
-        interactions = InteractionTracking.getCurrent();
+        interactions = SchedulerTracking.unstable_getCurrent();
         expect(interactions).toMatchInteractions([
           {name: 'outer event', timestamp: 100},
         ]);
@@ -246,14 +252,14 @@ describe('InteractionTracking', () => {
       it('should reset state appropriately when an error occurs in a track callback', done => {
         advanceTimeBy(100);
 
-        InteractionTracking.track('outer event', currentTime, () => {
+        SchedulerTracking.unstable_track('outer event', currentTime, () => {
           expect(() => {
-            InteractionTracking.track('inner event', currentTime, () => {
+            SchedulerTracking.unstable_track('inner event', currentTime, () => {
               throw Error('intentional');
             });
           }).toThrow();
 
-          expect(InteractionTracking.getCurrent()).toMatchInteractions([
+          expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
             {name: 'outer event', timestamp: 100},
           ]);
 
@@ -264,18 +270,18 @@ describe('InteractionTracking', () => {
       it('should reset state appropriately when an error occurs in a wrapped callback', done => {
         advanceTimeBy(100);
 
-        InteractionTracking.track('outer event', currentTime, () => {
+        SchedulerTracking.unstable_track('outer event', currentTime, () => {
           let wrappedCallback;
 
-          InteractionTracking.track('inner event', currentTime, () => {
-            wrappedCallback = InteractionTracking.wrap(() => {
+          SchedulerTracking.unstable_track('inner event', currentTime, () => {
+            wrappedCallback = SchedulerTracking.unstable_wrap(() => {
               throw Error('intentional');
             });
           });
 
           expect(wrappedCallback).toThrow();
 
-          expect(InteractionTracking.getCurrent()).toMatchInteractions([
+          expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
             {name: 'outer event', timestamp: 100},
           ]);
 
@@ -286,30 +292,30 @@ describe('InteractionTracking', () => {
 
     describe('advanced integration', () => {
       it('should return a unique threadID per request', () => {
-        expect(InteractionTracking.getThreadID()).not.toBe(
-          InteractionTracking.getThreadID(),
+        expect(SchedulerTracking.unstable_getThreadID()).not.toBe(
+          SchedulerTracking.unstable_getThreadID(),
         );
       });
 
       it('should expose the current set of interactions to be externally manipulated', () => {
-        InteractionTracking.track('outer event', currentTime, () => {
-          expect(InteractionTracking.__interactionsRef.current).toBe(
-            InteractionTracking.getCurrent(),
+        SchedulerTracking.unstable_track('outer event', currentTime, () => {
+          expect(SchedulerTracking.__getInteractionsRef().current).toBe(
+            SchedulerTracking.unstable_getCurrent(),
           );
 
-          InteractionTracking.__interactionsRef.current = new Set([
+          SchedulerTracking.__getInteractionsRef().current = new Set([
             {name: 'override event'},
           ]);
 
-          expect(InteractionTracking.getCurrent()).toMatchInteractions([
+          expect(SchedulerTracking.unstable_getCurrent()).toMatchInteractions([
             {name: 'override event'},
           ]);
         });
       });
 
       it('should expose a subscriber ref to be externally manipulated', () => {
-        InteractionTracking.track('outer event', currentTime, () => {
-          expect(InteractionTracking.__subscriberRef).toEqual({
+        SchedulerTracking.unstable_track('outer event', currentTime, () => {
+          expect(SchedulerTracking.__getSubscriberRef()).toEqual({
             current: null,
           });
         });
@@ -317,42 +323,42 @@ describe('InteractionTracking', () => {
     });
   });
 
-  describe('enableInteractionTracking disabled', () => {
-    beforeEach(() => loadModules({enableInteractionTracking: false}));
+  describe('enableSchedulerTracking disabled', () => {
+    beforeEach(() => loadModules({enableSchedulerTracking: false}));
 
     it('should return the value of a tracked function', () => {
       expect(
-        InteractionTracking.track('arbitrary', currentTime, () => 123),
+        SchedulerTracking.unstable_track('arbitrary', currentTime, () => 123),
       ).toBe(123);
     });
 
     it('should return the value of a wrapped function', () => {
       let wrapped;
-      InteractionTracking.track('arbitrary', currentTime, () => {
-        wrapped = InteractionTracking.wrap(() => 123);
+      SchedulerTracking.unstable_track('arbitrary', currentTime, () => {
+        wrapped = SchedulerTracking.unstable_wrap(() => 123);
       });
       expect(wrapped()).toBe(123);
     });
 
     it('should return null for tracked interactions', () => {
-      expect(InteractionTracking.getCurrent()).toBe(null);
+      expect(SchedulerTracking.unstable_getCurrent()).toBe(null);
     });
 
     it('should execute tracked callbacks', done => {
-      InteractionTracking.track('some event', currentTime, () => {
-        expect(InteractionTracking.getCurrent()).toBe(null);
+      SchedulerTracking.unstable_track('some event', currentTime, () => {
+        expect(SchedulerTracking.unstable_getCurrent()).toBe(null);
 
         done();
       });
     });
 
     it('should return the value of a clear function', () => {
-      expect(InteractionTracking.clear(() => 123)).toBe(123);
+      expect(SchedulerTracking.unstable_clear(() => 123)).toBe(123);
     });
 
     it('should execute wrapped callbacks', done => {
-      const wrappedCallback = InteractionTracking.wrap(() => {
-        expect(InteractionTracking.getCurrent()).toBe(null);
+      const wrappedCallback = SchedulerTracking.unstable_wrap(() => {
+        expect(SchedulerTracking.unstable_getCurrent()).toBe(null);
 
         done();
       });
@@ -362,7 +368,7 @@ describe('InteractionTracking', () => {
 
     describe('advanced integration', () => {
       it('should not create unnecessary objects', () => {
-        expect(InteractionTracking.__interactionsRef).toBe(null);
+        expect(SchedulerTracking.__getInteractionsRef()).toBe(null);
       });
     });
   });

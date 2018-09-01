@@ -6,6 +6,10 @@
  */
 
 'use strict';
-const {now, scheduleWork, cancelScheduledWork} = require('customSchedule');
+const {
+  unstable_now,
+  unstable_scheduleWork,
+  unstable_cancelScheduledWork,
+} = require('customSchedule');
 
-export {now, scheduleWork, cancelScheduledWork};
+export {unstable_now, unstable_scheduleWork, unstable_cancelScheduledWork};

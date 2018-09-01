@@ -20,7 +20,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
 import {
-  enableInteractionTracking,
+  enableSchedulerTracking,
   enableProfilerTimer,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
@@ -845,7 +845,7 @@ function commitWork(
       if (enableProfilerTimer) {
         const onRender = finishedWork.memoizedProps.onRender;
 
-        if (enableInteractionTracking) {
+        if (enableSchedulerTracking) {
           onRender(
             finishedWork.memoizedProps.id,
             current === null ? 'mount' : 'update',

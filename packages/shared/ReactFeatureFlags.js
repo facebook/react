@@ -40,7 +40,7 @@ export const warnAboutLegacyContextAPI = false;
 export const enableProfilerTimer = __PROFILE__;
 
 // Track which interactions trigger each commit.
-export const enableInteractionTracking = __PROFILE__;
+export const enableSchedulerTracking = __PROFILE__;
 
 // Only used in www builds.
 export function addUserTimingListener() {

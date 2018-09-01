@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import * as ReactScheduler from 'shared/ReactScheduler';
+export {
+  unstable_now as now,
+  unstable_scheduleWork as scheduleDeferredCallback,
+  unstable_cancelScheduledWork as cancelDeferredCallback,
+} from 'react-scheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import invariant from 'shared/invariant';
@@ -329,9 +333,6 @@ export function getChildHostContext() {
   return NO_CONTEXT;
 }
 
-export const scheduleDeferredCallback = ReactScheduler.scheduleWork;
-export const cancelDeferredCallback = ReactScheduler.cancelScheduledWork;
-
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
@@ -341,8 +342,6 @@ export function shouldSetTextContent(type, props) {
     typeof props.children === 'string' || typeof props.children === 'number'
   );
 }
-
-export const now = ReactScheduler.now;
 
 // The ART renderer is secondary to the React DOM renderer.
 export const isPrimaryRenderer = false;

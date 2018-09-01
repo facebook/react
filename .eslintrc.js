@@ -84,5 +84,6 @@ module.exports = {
     spyOnDevAndProd: true,
     spyOnProd: true,
     __PROFILE__: true,
+    __UMD__: true,
   },
 };
