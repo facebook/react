@@ -123,13 +123,15 @@ const forks = Object.freeze({
       case UMD_DEV:
       case UMD_PROD:
         if (dependencies.indexOf('react') === -1) {
-          // For CJS bundles, use the shared NPM package.
+          // It's only safe to use this fork for modules that depend on React,
+          // because they read the re-exported API from the SECRET_INTERNALS object.
           return null;
         }
         // Optimization: for UMDs, use the API that is already a part of the React
         // package instead of requiring it to be loaded via a separate <script> tag
         return 'shared/forks/ReactScheduler.umd.js';
       default:
+        // For CJS bundles, use the shared NPM package.
         return null;
     }
   },
@@ -139,13 +141,15 @@ const forks = Object.freeze({
       case UMD_DEV:
       case UMD_PROD:
         if (dependencies.indexOf('react') === -1) {
-          // For CJS bundles, use the shared NPM package.
+          // It's only safe to use this fork for modules that depend on React,
+          // because they read the re-exported API from the SECRET_INTERNALS object.
           return null;
         }
         // Optimization: for UMDs, use the API that is already a part of the React
         // package instead of requiring it to be loaded via a separate <script> tag
         return 'shared/forks/ReactSchedulerTracking.umd.js';
       default:
+        // For CJS bundles, use the shared NPM package.
         return null;
     }
   },
@@ -159,13 +163,15 @@ const forks = Object.freeze({
       case UMD_DEV:
       case UMD_PROD:
         if (dependencies.indexOf('react') === -1) {
-          // For CJS bundles, use the shared NPM package.
+          // It's only safe to use this fork for modules that depend on React,
+          // because they read the re-exported API from the SECRET_INTERNALS object.
           return null;
         }
         // Optimization: for UMDs, use the API that is already a part of the React
         // package instead of requiring it to be loaded via a separate <script> tag
         return 'shared/forks/ReactSchedulerTrackingSubscriptions.umd.js';
       default:
+        // For CJS bundles, use the shared NPM package.
         return null;
     }
   },
