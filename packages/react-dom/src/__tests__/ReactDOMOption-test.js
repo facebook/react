@@ -133,6 +133,29 @@ describe('ReactDOMOption', () => {
     expect(node.innerHTML).toBe('1hello2');
   });
 
+  it('should not throw for hydration of non-element object children', () => {
+    let option = (
+      <option>
+        {'Text'}
+        <span />
+      </option>
+    );
+
+    const container = document.createElement('div');
+    ReactDOM.render(option, container);
+    
+    option = (
+      <option>
+        {'Better Text'}
+        <span />
+      </option>
+    );
+
+    expect(() => {
+      ReactDOM.hydrate(option, container);
+    }).not.toThrow();
+  });
+
   it('should be able to use dangerouslySetInnerHTML on option', () => {
     let stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
     const node = ReactTestUtils.renderIntoDocument(stub);
