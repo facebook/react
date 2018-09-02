@@ -431,29 +431,29 @@
       "filename": "react-is.development.js",
       "bundleType": "UMD_DEV",
       "packageName": "react-is",
-      "size": 5008,
-      "gzip": 1331
+      "size": 5051,
+      "gzip": 1343
     },
     {
       "filename": "react-is.production.min.js",
       "bundleType": "UMD_PROD",
       "packageName": "react-is",
-      "size": 1937,
-      "gzip": 789
+      "size": 1973,
+      "gzip": 802
     },
     {
       "filename": "react-is.development.js",
       "bundleType": "NODE_DEV",
       "packageName": "react-is",
-      "size": 4608,
-      "gzip": 1267
+      "size": 4651,
+      "gzip": 1279
     },
     {
       "filename": "react-is.production.min.js",
       "bundleType": "NODE_PROD",
       "packageName": "react-is",
-      "size": 1886,
-      "gzip": 722
+      "size": 1922,
+      "gzip": 735
     },
     {
       "filename": "ReactIs-dev.js",
@@ -648,15 +648,15 @@
       "filename": "ReactIs-dev.js",
       "bundleType": "FB_WWW_DEV",
       "packageName": "react-is",
-      "size": 4685,
-      "gzip": 1298
+      "size": 4728,
+      "gzip": 1301
     },
     {
       "filename": "ReactIs-prod.js",
       "bundleType": "FB_WWW_PROD",
       "packageName": "react-is",
-      "size": 3768,
-      "gzip": 1006
+      "size": 3811,
+      "gzip": 1012
     },
     {
       "filename": "react-scheduler.development.js",
@@ -774,23 +774,23 @@
       "filename": "react-is.development.mjs",
       "bundleType": "ESM_DEV",
       "packageName": "react-is",
-      "size": 4015,
-      "gzip": 1121
+      "size": 4058,
+      "gzip": 1132
     },
     {
       "filename": "react-is.production.min.mjs",
       "bundleType": "ESM_PROD",
       "packageName": "react-is",
-      "size": 3410,
-      "gzip": 1187
+      "size": 3446,
+      "gzip": 1200
     }
   ],
   "treeshakedSizes": [
     {
-      "filename": "index.mjs",
+      "filename": "react-is.development.mjs",
       "packageName": "react-is",
-      "treeshakedSize": 1874,
-      "productionSize": 3410
+      "originalSize": 4057,
+      "treeshakedSize": 0
     }
   ]
 }

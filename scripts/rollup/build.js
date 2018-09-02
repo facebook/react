@@ -399,6 +399,25 @@ function getPlugins(
         };
       },
     }),
+
+    // Treeshaked bundle size.
+    bundleType === ESM_DEV && {
+      async transformBundle(source) {
+        // bundle esm entry point importing nothing
+        const newSizes = await Treeshake.treeshakeCode(source);
+        const treeshakedSizes = Stats.currentBuildResults.treeshakedSizes;
+        const recordIndex = treeshakedSizes.findIndex(
+          record =>
+            record.packageName === packageName && record.filename === filename
+        );
+        const index = recordIndex !== -1 ? recordIndex : treeshakedSizes.length;
+        Stats.currentBuildResults.treeshakedSizes[index] = {
+          filename,
+          packageName,
+          ...newSizes,
+        };
+      },
+    },
   ].filter(Boolean);
 }
 
@@ -543,11 +562,13 @@ function handleRollupWarning(warning) {
   }
 
   // Fix react-reconciler circular dependency later
-  if (
-    warning.code === 'CIRCULAR_DEPENDENCY' &&
-    warning.importer.includes('react-reconciler')
-  ) {
-    return;
+  if (warning.code === 'CIRCULAR_DEPENDENCY') {
+    if (
+      warning.importer.includes('react-reconciler') ||
+      warning.importer.includes('react-scheduler')
+    ) {
+      return;
+    }
   }
 
   if (typeof warning.code === 'string') {
@@ -635,20 +656,6 @@ async function buildEverything() {
         filepath,
         Entries.generateESMEntryPoint(packageName, esmResult.exports)
       );
-      // bundle esm entry point importing nothing
-      const {size} = await Treeshake.treeshakeProductionModule(filepath);
-      const treeshakedSizes = Stats.currentBuildResults.treeshakedSizes;
-      const recordIndex = treeshakedSizes.findIndex(
-        record =>
-          record.packageName === packageName && record.filename === filename
-      );
-      const index = recordIndex !== -1 ? recordIndex : treeshakedSizes.length;
-      Stats.currentBuildResults.treeshakedSizes[index] = {
-        filename,
-        packageName,
-        treeshakedSize: size,
-        productionSize: esmResult.code.length,
-      };
     }
   }
 
