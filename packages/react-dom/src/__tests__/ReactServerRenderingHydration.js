@@ -365,10 +365,7 @@ describe('ReactDOMServerHydration', () => {
     // On the client we want to keep the existing markup, but not render the
     // actual elements for performance reasons and to avoid for example
     // downloading images. This should also not warn for hydration mismatches.
-    expect(() => ReactDOM.hydrate(markup, element)).not.toWarnDev(
-      'Expected server HTML to contain a matching <div> in <noscript>.',
-      {withoutStack: true},
-    );
+    ReactDOM.hydrate(markup, element);
     expect(callback).toHaveBeenCalledTimes(1);
     expect(element.textContent).toBe(
       '<div>Enable JavaScript to run this app.</div>',
