@@ -9,6 +9,7 @@
     "schedule": "link:../../../../build/node_modules/schedule"
   },
   "scripts": {
-    "build": "rm -rf public && brunch build"
+    "build": "rm -rf public && brunch build",
+    "prebuild": "rm -rf ./node_modules/react-dom/node_modules/schedule"
   }
 }

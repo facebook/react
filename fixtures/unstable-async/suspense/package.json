@@ -21,7 +21,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "prestart": "rm -rf ./node_modules/react-dom/node_modules/schedule"
   },
   "eslintConfig": {
     "extends": "./node_modules/react-scripts/config/eslint.js"

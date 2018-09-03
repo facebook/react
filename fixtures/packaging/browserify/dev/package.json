@@ -8,6 +8,7 @@
     "schedule": "link:../../../../build/node_modules/schedule"
   },
   "scripts": {
-    "build": "rm -f output.js && browserify ./input.js -o output.js"
+    "build": "rm -f output.js && browserify ./input.js -o output.js",
+    "prebuild": "rm -rf ./node_modules/react-dom/node_modules/schedule"
   }
 }
