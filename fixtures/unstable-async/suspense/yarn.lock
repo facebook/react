@@ -5732,7 +5732,7 @@ react-dom@../../../build/node_modules/react-dom:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
     prop-types "^15.6.2"
-    schedule "^0.1.0-alpha-1"
+    schedule "^0.2.0"
 
 react-draggable@^3.0.5:
   version "3.0.5"
@@ -5744,15 +5744,6 @@ react-draggable@^3.0.5:
 react-error-overlay@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/react-error-overlay/-/react-error-overlay-4.0.0.tgz#d198408a85b4070937a98667f500c832f86bd5d4"
-
-schedule@../../../build/node_modules/schedule:
-  version "0.1.0-alpha-1"
-  dependencies:
-    object-assign "^4.1.1"
-
-schedule@^0.1.0-alpha-1:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/schedule/-/schedule-0.1.0.tgz#d16c0ee90d2895ff1941e0d681293dbe4f4b4f38"
 
 react-scripts@^1.1.4:
   version "1.1.4"
@@ -5805,7 +5796,6 @@ react@../../../build/node_modules/react:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
     prop-types "^15.6.2"
-    schedule "^0.1.0-alpha-1"
 
 read-pkg-up@^1.0.1:
   version "1.0.1"
@@ -6197,6 +6187,15 @@ sane@~1.6.0:
 sax@^1.2.1, sax@^1.2.4, sax@~1.2.1:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.4.tgz#2816234e2378bddc4e5354fab5caa895df7100d9"
+
+schedule@../../../build/node_modules/schedule:
+  version "0.2.0"
+  dependencies:
+    object-assign "^4.1.1"
+
+schedule@^0.2.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/schedule/-/schedule-0.1.0.tgz#800ddf15212dfd07224443f1a5fc1ddae96114b8"
 
 schema-utils@^0.3.0:
   version "0.3.0"

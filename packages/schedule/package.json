@@ -1,6 +1,6 @@
 {
   "name": "schedule",
-  "version": "0.1.0-alpha-1",
+  "version": "0.2.0",
   "private": true,
   "description": "unstable scheduling helper for coordinating React and other JS libraries",
   "main": "index.js",

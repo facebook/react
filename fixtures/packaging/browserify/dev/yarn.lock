@@ -688,14 +688,6 @@ randombytes@^2.0.0, randombytes@^2.0.1:
   version "0.0.0"
   uid ""
 
-schedule@^0.1.0-alpha-1:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/schedule/-/schedule-0.1.0.tgz#d16c0ee90d2895ff1941e0d681293dbe4f4b4f38"
-
-"schedule@link:../../../../build/node_modules/schedule":
-  version "0.0.0"
-  uid ""
-
 "react@link:../../../../build/node_modules/react":
   version "0.0.0"
   uid ""
@@ -749,6 +741,14 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
 safe-buffer@^5.0.1, safe-buffer@^5.1.0, safe-buffer@^5.1.1, safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/safe-buffer/-/safe-buffer-5.1.1.tgz#893312af69b2123def71f57889001671eeb2c853"
+
+schedule@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/schedule/-/schedule-0.1.0.tgz#800ddf15212dfd07224443f1a5fc1ddae96114b8"
+
+"schedule@link:../../../../build/node_modules/schedule":
+  version "0.0.0"
+  uid ""
 
 sha.js@^2.4.0, sha.js@^2.4.8, sha.js@~2.4.4:
   version "2.4.9"
