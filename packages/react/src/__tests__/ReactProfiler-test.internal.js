@@ -42,7 +42,7 @@ function loadModules({
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
   React = require('react');
-  SchedulerTracking = require('react-scheduler/tracking');
+  SchedulerTracking = require('schedule/tracking');
 
   if (useNoopRenderer) {
     ReactNoop = require('react-noop-renderer');
@@ -1401,7 +1401,7 @@ describe('Profiler', () => {
       );
       expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-      // The react-scheduler/tracking package will notify of work started for the default thread,
+      // The schedule/tracking package will notify of work started for the default thread,
       // But React shouldn't notify until it's been flushed.
       expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
       expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
@@ -1459,7 +1459,7 @@ describe('Profiler', () => {
         // Update state again to verify our tracked interaction isn't registered twice
         instance.setState({count: 2});
 
-        // The react-scheduler/tracking package will notify of work started for the default thread,
+        // The schedule/tracking package will notify of work started for the default thread,
         // But React shouldn't notify until it's been flushed.
         expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
         expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
@@ -1562,7 +1562,7 @@ describe('Profiler', () => {
       );
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
 
-      // The react-scheduler/tracking package will notify of work started for the default thread,
+      // The schedule/tracking package will notify of work started for the default thread,
       // But React shouldn't notify until it's been flushed.
       expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
       expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
@@ -1745,7 +1745,7 @@ describe('Profiler', () => {
           expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
 
           // Work might be started multiple times before being completed.
-          // This is okay; it's part of the react-scheduler/tracking contract.
+          // This is okay; it's part of the schedule/tracking contract.
           expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
           expect(
             getWorkForReactThreads(onWorkStarted)[1][0],

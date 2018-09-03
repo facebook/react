@@ -10,13 +10,13 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
-import type {Interaction} from 'react-scheduler/src/Tracking';
+import type {Interaction} from 'schedule/src/Tracking';
 
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
 import {enableSchedulerTracking} from 'shared/ReactFeatureFlags';
-import {unstable_getThreadID} from 'react-scheduler/tracking';
+import {unstable_getThreadID} from 'schedule/tracking';
 
 // TODO: This should be lifted into the renderer.
 export type Batch = {

@@ -33,7 +33,7 @@ describe('ChangeEventPlugin', () => {
 
   beforeEach(() => {
     // TODO pull this into helper method, reduce repetition.
-    // mock the browser APIs which are used in react-scheduler:
+    // mock the browser APIs which are used in schedule:
     // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
     // - calling 'window.postMessage' should actually fire postmessage handlers
     global.requestAnimationFrame = function(cb) {

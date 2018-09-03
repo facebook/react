@@ -2,13 +2,11 @@
   "private": true,
   "name": "browserify-prod-fixture",
   "dependencies": {
-    "browserify": "^13.3.0",
-    "react": "link:../../../../build/node_modules/react",
-    "react-dom": "link:../../../../build/node_modules/react-dom",
-    "react-scheduler": "link:../../../../build/node_modules/react-scheduler"
+    "browserify": "^13.3.0"
   },
   "scripts": {
-    "build": "rm -f output.js && browserify ./input.js -g [envify --NODE_ENV 'production'] -o output.js"
+    "build": "rm -f output.js && browserify ./input.js -g [envify --NODE_ENV 'production'] -o output.js",
+    "prebuild": "cp -r ../../../../build/node_modules/* ./node_modules/"
   },
   "devDependencies": {
     "envify": "^4.0.0"

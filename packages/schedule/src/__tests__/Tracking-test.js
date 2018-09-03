@@ -14,7 +14,7 @@ describe('Tracking', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    SchedulerTracking = require('react-scheduler/tracking');
+    SchedulerTracking = require('schedule/tracking');
   });
 
   it('should return the value of a tracked function', () => {

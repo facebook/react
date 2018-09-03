@@ -659,30 +659,30 @@
       "gzip": 999
     },
     {
-      "filename": "react-scheduler.development.js",
+      "filename": "schedule.development.js",
       "bundleType": "UMD_DEV",
-      "packageName": "react-scheduler",
+      "packageName": "schedule",
       "size": 19628,
       "gzip": 5881
     },
     {
-      "filename": "react-scheduler.production.min.js",
+      "filename": "schedule.production.min.js",
       "bundleType": "UMD_PROD",
-      "packageName": "react-scheduler",
+      "packageName": "schedule",
       "size": 3233,
       "gzip": 1562
     },
     {
-      "filename": "react-scheduler.development.js",
+      "filename": "schedule.development.js",
       "bundleType": "NODE_DEV",
-      "packageName": "react-scheduler",
+      "packageName": "schedule",
       "size": 14449,
       "gzip": 4354
     },
     {
-      "filename": "react-scheduler.production.min.js",
+      "filename": "schedule.production.min.js",
       "bundleType": "NODE_PROD",
-      "packageName": "react-scheduler",
+      "packageName": "schedule",
       "size": 2825,
       "gzip": 1387
     },
@@ -736,16 +736,16 @@
       "gzip": 33867
     },
     {
-      "filename": "ReactScheduler-dev.js",
+      "filename": "Schedule-dev.js",
       "bundleType": "FB_WWW_DEV",
-      "packageName": "react-scheduler",
+      "packageName": "schedule",
       "size": 14452,
       "gzip": 4364
     },
     {
-      "filename": "ReactScheduler-prod.js",
+      "filename": "Schedule-prod.js",
       "bundleType": "FB_WWW_PROD",
-      "packageName": "react-scheduler",
+      "packageName": "schedule",
       "size": 7800,
       "gzip": 2108
     }

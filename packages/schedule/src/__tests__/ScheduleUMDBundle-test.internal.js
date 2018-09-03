@@ -25,16 +25,16 @@ describe('Scheduling UMD bundle', () => {
 
   it('should define the same scheduling API', () => {
     const api = require('../../index');
-    const umdAPIDev = require('../../npm/umd/react-scheduler.development');
-    const umdAPIProd = require('../../npm/umd/react-scheduler.production.min');
+    const umdAPIDev = require('../../npm/umd/schedule.development');
+    const umdAPIProd = require('../../npm/umd/schedule.production.min');
     const secretAPI = require('react/src/ReactSharedInternals').default;
     validateForwardedAPIs(api, [umdAPIDev, umdAPIProd, secretAPI.Scheduler]);
   });
 
   it('should define the same tracking API', () => {
     const api = require('../../tracking');
-    const umdAPIDev = require('../../npm/umd/react-scheduler-tracking.development');
-    const umdAPIProd = require('../../npm/umd/react-scheduler-tracking.production.min');
+    const umdAPIDev = require('../../npm/umd/schedule-tracking.development');
+    const umdAPIProd = require('../../npm/umd/schedule-tracking.production.min');
     const secretAPI = require('react/src/ReactSharedInternals').default;
     validateForwardedAPIs(api, [
       umdAPIDev,

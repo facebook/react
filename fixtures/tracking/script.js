@@ -28,15 +28,15 @@ function runAllTests() {
 function checkSchedulerAPI() {
   runTest(document.getElementById('checkSchedulerAPI'), () => {
     if (
-      typeof ReactScheduler === 'undefined' ||
-      typeof ReactScheduler.unstable_now !== 'function' ||
-      typeof ReactScheduler.unstable_scheduleWork !== 'function' ||
-      typeof ReactScheduler.unstable_cancelScheduledWork !== 'function'
+      typeof Schedule === 'undefined' ||
+      typeof Schedule.unstable_now !== 'function' ||
+      typeof Schedule.unstable_scheduleWork !== 'function' ||
+      typeof Schedule.unstable_cancelScheduledWork !== 'function'
     ) {
       throw 'API is not defined';
     }
 
-    if (ReactScheduler.unstable_now() !== performance.now()) {
+    if (Schedule.unstable_now() !== performance.now()) {
       throw 'API does not work';
     }
 
@@ -47,22 +47,22 @@ function checkSchedulerAPI() {
 function checkSchedulerTrackingAPI() {
   runTest(document.getElementById('checkSchedulerTrackingAPI'), () => {
     if (
-      typeof ReactSchedulerTracking === 'undefined' ||
-      typeof ReactSchedulerTracking.__getInteractionsRef !== 'function' ||
-      typeof ReactSchedulerTracking.__getSubscriberRef !== 'function' ||
-      typeof ReactSchedulerTracking.unstable_clear !== 'function' ||
-      typeof ReactSchedulerTracking.unstable_getCurrent !== 'function' ||
-      typeof ReactSchedulerTracking.unstable_getThreadID !== 'function' ||
-      typeof ReactSchedulerTracking.unstable_track !== 'function' ||
-      typeof ReactSchedulerTracking.unstable_wrap !== 'function'
+      typeof ScheduleTracking === 'undefined' ||
+      typeof ScheduleTracking.__getInteractionsRef !== 'function' ||
+      typeof ScheduleTracking.__getSubscriberRef !== 'function' ||
+      typeof ScheduleTracking.unstable_clear !== 'function' ||
+      typeof ScheduleTracking.unstable_getCurrent !== 'function' ||
+      typeof ScheduleTracking.unstable_getThreadID !== 'function' ||
+      typeof ScheduleTracking.unstable_track !== 'function' ||
+      typeof ScheduleTracking.unstable_wrap !== 'function'
     ) {
       throw 'API is not defined';
     }
 
     try {
       let interactionsSet;
-      ReactSchedulerTracking.unstable_track('test', 123, () => {
-        interactionsSet = ReactSchedulerTracking.__getInteractionsRef().current;
+      ScheduleTracking.unstable_track('test', 123, () => {
+        interactionsSet = ScheduleTracking.__getInteractionsRef().current;
       });
       if (interactionsSet.size !== 1) {
         throw null;
@@ -80,7 +80,7 @@ function checkSchedulerTrackingAPI() {
         .SchedulerTracking;
 
     if (
-      ReactSchedulerTracking.unstable_getThreadID() ===
+      ScheduleTracking.unstable_getThreadID() ===
       ForwardedSchedulerTracking.unstable_getThreadID()
     ) {
       throw 'API forwarding is broken';
@@ -93,9 +93,9 @@ function checkSchedulerTrackingSubscriptionsAPI() {
     document.getElementById('checkSchedulerTrackingSubscriptionsAPI'),
     () => {
       if (
-        typeof ReactSchedulerTracking === 'undefined' ||
-        typeof ReactSchedulerTracking.unstable_subscribe !== 'function' ||
-        typeof ReactSchedulerTracking.unstable_unsubscribe !== 'function'
+        typeof ScheduleTracking === 'undefined' ||
+        typeof ScheduleTracking.unstable_subscribe !== 'function' ||
+        typeof ScheduleTracking.unstable_unsubscribe !== 'function'
       ) {
         throw 'API is not defined';
       }
@@ -117,9 +117,9 @@ function checkSchedulerTrackingSubscriptionsAPI() {
       };
 
       try {
-        ReactSchedulerTracking.unstable_subscribe(subscriber);
-        ReactSchedulerTracking.unstable_track('foo', 123, () => {});
-        ReactSchedulerTracking.unstable_unsubscribe(subscriber);
+        ScheduleTracking.unstable_subscribe(subscriber);
+        ScheduleTracking.unstable_track('foo', 123, () => {});
+        ScheduleTracking.unstable_unsubscribe(subscriber);
         if (onInteractionTrackedCalls.length !== 1) {
           throw null;
         }
@@ -127,7 +127,7 @@ function checkSchedulerTrackingSubscriptionsAPI() {
         if (interaction.name !== 'foo' || interaction.timestamp !== 123) {
           throw null;
         }
-        ReactSchedulerTracking.unstable_track('bar', 456, () => {});
+        ScheduleTracking.unstable_track('bar', 456, () => {});
         if (onInteractionTrackedCalls.length !== 1) {
           throw null;
         }
@@ -141,9 +141,9 @@ function checkSchedulerTrackingSubscriptionsAPI() {
 
       try {
         ForwardedSchedulerTracking.unstable_subscribe(subscriber);
-        ReactSchedulerTracking.unstable_track('foo', 123, () => {});
+        ScheduleTracking.unstable_track('foo', 123, () => {});
         ForwardedSchedulerTracking.unstable_track('bar', 456, () => {});
-        ReactSchedulerTracking.unstable_unsubscribe(subscriber);
+        ScheduleTracking.unstable_unsubscribe(subscriber);
         if (onInteractionTrackedCalls.length !== 3) {
           throw null;
         }
@@ -175,7 +175,7 @@ function checkEndToEndIntegration() {
       const onRender = (...args) => onRenderCalls.push(args);
       const container = document.createElement('div');
 
-      ReactSchedulerTracking.unstable_track('render', 123, () => {
+      ScheduleTracking.unstable_track('render', 123, () => {
         ReactDOM.render(
           React.createElement(
             React.unstable_Profiler,

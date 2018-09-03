@@ -9,14 +9,14 @@
 
 'use strict';
 
-let ReactScheduler;
+let Schedule;
 type FrameTimeoutConfigType = {
   // should only specify one or the other
   timeLeftInFrame: ?number,
   timePastFrameDeadline: ?number,
 };
 
-describe('ReactScheduler', () => {
+describe('Schedule', () => {
   let rAFCallbacks = [];
   let postMessageCallback;
   let postMessageEvents = [];
@@ -64,7 +64,7 @@ describe('ReactScheduler', () => {
 
   beforeEach(() => {
     // TODO pull this into helper method, reduce repetition.
-    // mock the browser APIs which are used in react-scheduler:
+    // mock the browser APIs which are used in schedule:
     // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
     // - calling 'window.postMessage' should actually fire postmessage handlers
     // - Date.now should return the correct thing
@@ -94,12 +94,12 @@ describe('ReactScheduler', () => {
       return currentTime;
     };
     jest.resetModules();
-    ReactScheduler = require('react-scheduler');
+    Schedule = require('schedule');
   });
 
   describe('scheduleWork', () => {
     it('calls the callback within the frame when not blocked', () => {
-      const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+      const {unstable_scheduleWork: scheduleWork} = Schedule;
       const cb = jest.fn();
       scheduleWork(cb);
       advanceOneFrame({timeLeftInFrame: 15});
@@ -111,7 +111,7 @@ describe('ReactScheduler', () => {
 
     describe('with multiple callbacks', () => {
       it('accepts multiple callbacks and calls within frame when not blocked', () => {
-        const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+        const {unstable_scheduleWork: scheduleWork} = Schedule;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => callbackLog.push('B'));
@@ -137,7 +137,7 @@ describe('ReactScheduler', () => {
       });
 
       it("accepts callbacks betweeen animationFrame and postMessage and doesn't stall", () => {
-        const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+        const {unstable_scheduleWork: scheduleWork} = Schedule;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => callbackLog.push('B'));
@@ -167,7 +167,7 @@ describe('ReactScheduler', () => {
         'schedules callbacks in correct order and' +
           'keeps calling them if there is time',
         () => {
-          const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+          const {unstable_scheduleWork: scheduleWork} = Schedule;
           const callbackLog = [];
           const callbackA = jest.fn(() => {
             callbackLog.push('A');
@@ -194,7 +194,7 @@ describe('ReactScheduler', () => {
       );
 
       it('schedules callbacks in correct order when callbacks have many nested scheduleWork calls', () => {
-        const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+        const {unstable_scheduleWork: scheduleWork} = Schedule;
         const callbackLog = [];
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
@@ -229,7 +229,7 @@ describe('ReactScheduler', () => {
       });
 
       it('schedules callbacks in correct order when they use scheduleWork to schedule themselves', () => {
-        const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+        const {unstable_scheduleWork: scheduleWork} = Schedule;
         const callbackLog = [];
         let callbackAIterations = 0;
         const callbackA = jest.fn(() => {
@@ -260,7 +260,7 @@ describe('ReactScheduler', () => {
 
       describe('when there is no more time left in the frame', () => {
         it('calls any callback which has timed out, waits for others', () => {
-          const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+          const {unstable_scheduleWork: scheduleWork} = Schedule;
           startOfLatestFrame = 1000000000000;
           currentTime = startOfLatestFrame - 10;
           const callbackLog = [];
@@ -295,7 +295,7 @@ describe('ReactScheduler', () => {
 
       describe('when there is some time left in the frame', () => {
         it('calls timed out callbacks and then any more pending callbacks, defers others if time runs out', () => {
-          const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+          const {unstable_scheduleWork: scheduleWork} = Schedule;
           startOfLatestFrame = 1000000000000;
           currentTime = startOfLatestFrame - 10;
           const callbackLog = [];
@@ -346,7 +346,7 @@ describe('ReactScheduler', () => {
       const {
         unstable_scheduleWork: scheduleWork,
         unstable_cancelScheduledWork: cancelScheduledWork,
-      } = ReactScheduler;
+      } = Schedule;
       const cb = jest.fn();
       const callbackId = scheduleWork(cb);
       expect(cb).toHaveBeenCalledTimes(0);
@@ -360,7 +360,7 @@ describe('ReactScheduler', () => {
         const {
           unstable_scheduleWork: scheduleWork,
           unstable_cancelScheduledWork: cancelScheduledWork,
-        } = ReactScheduler;
+        } = Schedule;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => callbackLog.push('B'));
@@ -384,7 +384,7 @@ describe('ReactScheduler', () => {
         const {
           unstable_scheduleWork: scheduleWork,
           unstable_cancelScheduledWork: cancelScheduledWork,
-        } = ReactScheduler;
+        } = Schedule;
         const callbackLog = [];
         let callbackBId;
         const callbackA = jest.fn(() => {
@@ -421,7 +421,7 @@ describe('ReactScheduler', () => {
        *
        */
       it('still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+        const {unstable_scheduleWork: scheduleWork} = Schedule;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => {
@@ -467,7 +467,7 @@ describe('ReactScheduler', () => {
        *
        */
       it('and with some timed out callbacks, still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+        const {unstable_scheduleWork: scheduleWork} = Schedule;
         const callbackLog = [];
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
@@ -513,7 +513,7 @@ describe('ReactScheduler', () => {
        *
        */
       it('still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+        const {unstable_scheduleWork: scheduleWork} = Schedule;
         const callbackLog = [];
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
@@ -574,7 +574,7 @@ describe('ReactScheduler', () => {
        *
        */
       it('and with all timed out callbacks, still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+        const {unstable_scheduleWork: scheduleWork} = Schedule;
         const callbackLog = [];
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
@@ -655,7 +655,7 @@ describe('ReactScheduler', () => {
        *
        */
       it('still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = ReactScheduler;
+        const {unstable_scheduleWork: scheduleWork} = Schedule;
         startOfLatestFrame = 1000000000000;
         currentTime = startOfLatestFrame - 10;
         catchPostMessageErrors = true;
