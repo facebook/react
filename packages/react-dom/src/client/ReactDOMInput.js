@@ -56,17 +56,12 @@ function isControlled(props) {
  */
 
 export function getHostProps(element: Element, props: Object) {
-  const node = ((element: any): InputWithWrapperState);
-  const checked = props.checked;
-
-  const hostProps = Object.assign({}, props, {
+  return Object.assign({}, props, {
     defaultChecked: undefined,
     defaultValue: undefined,
     value: undefined,
-    checked: checked != null ? checked : node._wrapperState.initialChecked,
+    checked: undefined,
   });
-
-  return hostProps;
 }
 
 export function initWrapperState(element: Element, props: Object) {
@@ -112,14 +107,8 @@ export function initWrapperState(element: Element, props: Object) {
   }
 
   const node = ((element: any): InputWithWrapperState);
-  const defaultValue = props.defaultValue == null ? '' : props.defaultValue;
 
   node._wrapperState = {
-    initialChecked:
-      props.checked != null ? props.checked : props.defaultChecked,
-    initialValue: getToStringValue(
-      props.value != null ? props.value : defaultValue,
-    ),
     controlled: isControlled(props),
   };
 }
@@ -195,11 +184,19 @@ export function updateWrapper(element: Element, props: Object) {
   }
 
   if (props.hasOwnProperty('defaultValue')) {
-    setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    if (props.defaultValue == null) {
+      node.removeAttribute('value');
+    } else if (node.defaultValue !== toString(value)) {
+      node.defaultValue = getToStringValue(props.defaultvalue);
+    }
   }
 
-  if (props.checked == null && props.defaultChecked != null) {
-    node.defaultChecked = !!props.defaultChecked;
+  if (props.hasOwnProperty('defaultChecked')) {
+    if (props.defaultChecked == null) {
+      node.removeAttribute('checked');
+    } else {
+      node.defaultChecked = !!props.defaultChecked;
+    }
   }
 }
 
@@ -221,7 +218,7 @@ export function postMountWrapper(
       return;
     }
 
-    const initialValue = toString(node._wrapperState.initialValue);
+    const initialValue = toString(props.value);
     const currentValue = node.value;
 
     // Do not assign value if it is already set. This prevents user text input
@@ -238,7 +235,7 @@ export function postMountWrapper(
     // value must be assigned before defaultValue. This fixes an issue where the
     // visually displayed value of date inputs disappears on mobile Safari and Chrome:
     // https://github.com/facebook/react/issues/7233
-    node.defaultValue = initialValue;
+    node.defaultValue = props.defaultValue || '';
   }
 
   // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
@@ -307,28 +304,6 @@ function updateNamedCousins(rootNode, props) {
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
       updateWrapper(otherNode, otherProps);
-    }
-  }
-}
-
-// In Chrome, assigning defaultValue to certain input types triggers input validation.
-// For number inputs, the display value loses trailing decimal points. For email inputs,
-// Chrome raises "The specified value <x> is not a valid email address".
-//
-// Here we check to see if the defaultValue has actually changed, avoiding these problems
-// when the user is inputting text
-//
-// https://github.com/facebook/react/issues/7253
-function setDefaultValue(node: InputWithWrapperState, type: ?string, value: *) {
-  if (
-    // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
-    type !== 'number' ||
-    node.ownerDocument.activeElement !== node
-  ) {
-    if (value == null) {
-      node.defaultValue = toString(node._wrapperState.initialValue);
-    } else if (node.defaultValue !== toString(value)) {
-      node.defaultValue = toString(value);
     }
   }
 }
