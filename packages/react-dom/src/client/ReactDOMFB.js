@@ -7,6 +7,7 @@
  * @flow
  */
 
+import * as EventPluginHub from 'events/EventPluginHub';
 import * as ReactFiberTreeReflection from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
@@ -25,6 +26,7 @@ Object.assign(
     ReactDOMComponentTree,
     ReactInstanceMap,
     // Used by www msite:
+    EventPluginHub,
     TapEventPlugin,
     // Perf experiment
     addUserTimingListener,

@@ -22,11 +22,14 @@ export function injectComponentTree(ComponentTree) {
 export {ResponderEventPlugin, ResponderTouchHistoryStore};
 
 // Inject react-dom's ComponentTree into this module.
-const {
-  ReactDOMComponentTree,
-} = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+// Keep in sync with ReactDOM.js and ReactTestUtils.js:
+const [
+  getInstanceFromNode,
+  getNodeFromInstance,
+  getFiberCurrentPropsFromNode,
+] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 EventPluginUtils.setComponentTree(
-  ReactDOMComponentTree.getFiberCurrentPropsFromNode,
-  ReactDOMComponentTree.getInstanceFromNode,
-  ReactDOMComponentTree.getNodeFromInstance,
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
 );

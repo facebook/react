@@ -739,14 +739,20 @@ const ReactDOM: Object = {
   unstable_flushControlled: DOMRenderer.flushControlled,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    // For TapEventPlugin which is popular in open source
-    EventPluginHub,
-    // Used by test-utils
-    EventPluginRegistry,
-    EventPropagators,
-    ReactControlledComponent,
-    ReactDOMComponentTree,
-    ReactDOMEventListener,
+    // Keep in sync with ReactDOMUnstableNativeDependencies.js
+    // and ReactTestUtils.js. This is an array for better minification.
+    Events: [
+      ReactDOMComponentTree.getInstanceFromNode,
+      ReactDOMComponentTree.getNodeFromInstance,
+      ReactDOMComponentTree.getFiberCurrentPropsFromNode,
+      EventPluginRegistry.eventNameDispatchConfigs,
+      EventPropagators.accumulateTwoPhaseDispatches,
+      EventPropagators.accumulateDirectDispatches,
+      ReactControlledComponent.enqueueStateRestore,
+      ReactControlledComponent.restoreStateIfNeeded,
+      ReactDOMEventListener.dispatchEvent,
+      EventPluginHub.runEventsInBatch,
+    ],
   },
 };
 
