@@ -341,4 +341,34 @@ describe('ReactDOMServerHydration', () => {
       expect(callback).toHaveBeenCalledTimes(0);
     }
   });
+
+  // Regression test for https://github.com/facebook/react/issues/11423
+  it('should ignore noscript content on the client and not warn about mismatches', () => {
+    const callback = jest.fn();
+    const TestComponent = ({onRender}) => {
+      onRender();
+      return <div>Enable JavaScript to run this app.</div>;
+    };
+    const markup = (
+      <noscript>
+        <TestComponent onRender={callback} />
+      </noscript>
+    );
+
+    const element = document.createElement('div');
+    element.innerHTML = ReactDOMServer.renderToString(markup);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(element.textContent).toBe(
+      '<div>Enable JavaScript to run this app.</div>',
+    );
+
+    // On the client we want to keep the existing markup, but not render the
+    // actual elements for performance reasons and to avoid for example
+    // downloading images. This should also not warn for hydration mismatches.
+    ReactDOM.hydrate(markup, element);
+    expect(callback).toHaveBeenCalledTimes(1);
+    expect(element.textContent).toBe(
+      '<div>Enable JavaScript to run this app.</div>',
+    );
+  });
 });
