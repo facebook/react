@@ -36,7 +36,7 @@ import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
-import {restoreControlledState} from './ReactDOMFiberComponent';
+import {restoreControlledState} from './ReactDOMComponent';
 import * as ReactDOMEventListener from '../events/ReactDOMEventListener';
 import {
   ELEMENT_NODE,

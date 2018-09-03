@@ -14,10 +14,10 @@ import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
-import * as ReactDOMFiberInput from './ReactDOMFiberInput';
-import * as ReactDOMFiberOption from './ReactDOMFiberOption';
-import * as ReactDOMFiberSelect from './ReactDOMFiberSelect';
-import * as ReactDOMFiberTextarea from './ReactDOMFiberTextarea';
+import * as ReactDOMInput from './ReactDOMInput';
+import * as ReactDOMOption from './ReactDOMOption';
+import * as ReactDOMSelect from './ReactDOMSelect';
+import * as ReactDOMTextarea from './ReactDOMTextarea';
 import * as inputValueTracking from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
@@ -491,28 +491,28 @@ export function setInitialProperties(
       props = rawProps;
       break;
     case 'input':
-      ReactDOMFiberInput.initWrapperState(domElement, rawProps);
-      props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
+      ReactDOMInput.initWrapperState(domElement, rawProps);
+      props = ReactDOMInput.getHostProps(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'option':
-      ReactDOMFiberOption.validateProps(domElement, rawProps);
-      props = ReactDOMFiberOption.getHostProps(domElement, rawProps);
+      ReactDOMOption.validateProps(domElement, rawProps);
+      props = ReactDOMOption.getHostProps(domElement, rawProps);
       break;
     case 'select':
-      ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
-      props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
+      ReactDOMSelect.initWrapperState(domElement, rawProps);
+      props = ReactDOMSelect.getHostProps(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'textarea':
-      ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
-      props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
+      ReactDOMTextarea.initWrapperState(domElement, rawProps);
+      props = ReactDOMTextarea.getHostProps(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
@@ -537,19 +537,19 @@ export function setInitialProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, false);
+      ReactDOMInput.postMountWrapper(domElement, rawProps, false);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
+      ReactDOMTextarea.postMountWrapper(domElement, rawProps);
       break;
     case 'option':
-      ReactDOMFiberOption.postMountWrapper(domElement, rawProps);
+      ReactDOMOption.postMountWrapper(domElement, rawProps);
       break;
     case 'select':
-      ReactDOMFiberSelect.postMountWrapper(domElement, rawProps);
+      ReactDOMSelect.postMountWrapper(domElement, rawProps);
       break;
     default:
       if (typeof props.onClick === 'function') {
@@ -578,23 +578,23 @@ export function diffProperties(
   let nextProps: Object;
   switch (tag) {
     case 'input':
-      lastProps = ReactDOMFiberInput.getHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMFiberInput.getHostProps(domElement, nextRawProps);
+      lastProps = ReactDOMInput.getHostProps(domElement, lastRawProps);
+      nextProps = ReactDOMInput.getHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'option':
-      lastProps = ReactDOMFiberOption.getHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMFiberOption.getHostProps(domElement, nextRawProps);
+      lastProps = ReactDOMOption.getHostProps(domElement, lastRawProps);
+      nextProps = ReactDOMOption.getHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'select':
-      lastProps = ReactDOMFiberSelect.getHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMFiberSelect.getHostProps(domElement, nextRawProps);
+      lastProps = ReactDOMSelect.getHostProps(domElement, lastRawProps);
+      nextProps = ReactDOMSelect.getHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'textarea':
-      lastProps = ReactDOMFiberTextarea.getHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMFiberTextarea.getHostProps(domElement, nextRawProps);
+      lastProps = ReactDOMTextarea.getHostProps(domElement, lastRawProps);
+      nextProps = ReactDOMTextarea.getHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     default:
@@ -773,7 +773,7 @@ export function updateProperties(
     nextRawProps.type === 'radio' &&
     nextRawProps.name != null
   ) {
-    ReactDOMFiberInput.updateChecked(domElement, nextRawProps);
+    ReactDOMInput.updateChecked(domElement, nextRawProps);
   }
 
   const wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
@@ -793,15 +793,15 @@ export function updateProperties(
       // Update the wrapper around inputs *after* updating props. This has to
       // happen after `updateDOMProperties`. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
-      ReactDOMFiberInput.updateWrapper(domElement, nextRawProps);
+      ReactDOMInput.updateWrapper(domElement, nextRawProps);
       break;
     case 'textarea':
-      ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);
+      ReactDOMTextarea.updateWrapper(domElement, nextRawProps);
       break;
     case 'select':
       // <select> value update needs to occur after <option> children
       // reconciliation
-      ReactDOMFiberSelect.postUpdateWrapper(domElement, nextRawProps);
+      ReactDOMSelect.postUpdateWrapper(domElement, nextRawProps);
       break;
   }
 }
@@ -876,24 +876,24 @@ export function diffHydratedProperties(
       trapBubbledEvent(TOP_TOGGLE, domElement);
       break;
     case 'input':
-      ReactDOMFiberInput.initWrapperState(domElement, rawProps);
+      ReactDOMInput.initWrapperState(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'option':
-      ReactDOMFiberOption.validateProps(domElement, rawProps);
+      ReactDOMOption.validateProps(domElement, rawProps);
       break;
     case 'select':
-      ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
+      ReactDOMSelect.initWrapperState(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'textarea':
-      ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
+      ReactDOMTextarea.initWrapperState(domElement, rawProps);
       trapBubbledEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
@@ -1087,13 +1087,13 @@ export function diffHydratedProperties(
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberInput.postMountWrapper(domElement, rawProps, true);
+      ReactDOMInput.postMountWrapper(domElement, rawProps, true);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       inputValueTracking.track((domElement: any));
-      ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
+      ReactDOMTextarea.postMountWrapper(domElement, rawProps);
       break;
     case 'select':
     case 'option':
@@ -1212,13 +1212,13 @@ export function restoreControlledState(
 ): void {
   switch (tag) {
     case 'input':
-      ReactDOMFiberInput.restoreControlledState(domElement, props);
+      ReactDOMInput.restoreControlledState(domElement, props);
       return;
     case 'textarea':
-      ReactDOMFiberTextarea.restoreControlledState(domElement, props);
+      ReactDOMTextarea.restoreControlledState(domElement, props);
       return;
     case 'select':
-      ReactDOMFiberSelect.restoreControlledState(domElement, props);
+      ReactDOMSelect.restoreControlledState(domElement, props);
       return;
   }
 }
