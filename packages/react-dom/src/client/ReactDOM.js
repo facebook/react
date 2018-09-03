@@ -740,8 +740,11 @@ const ReactDOM: Object = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Keep in sync with ReactDOMUnstableNativeDependencies.js
-    // and ReactTestUtils.js:
+    // and ReactTestUtils.js. This is an array for better minification.
     Events: [
+      ReactDOMComponentTree.getInstanceFromNode,
+      ReactDOMComponentTree.getNodeFromInstance,
+      ReactDOMComponentTree.getFiberCurrentPropsFromNode,
       EventPluginRegistry.eventNameDispatchConfigs,
       EventPropagators.accumulateTwoPhaseDispatches,
       EventPropagators.accumulateDirectDispatches,
@@ -749,9 +752,6 @@ const ReactDOM: Object = {
       ReactControlledComponent.restoreStateIfNeeded,
       ReactDOMEventListener.dispatchEvent,
       EventPluginHub.runEventsInBatch,
-      ReactDOMComponentTree.getFiberCurrentPropsFromNode,
-      ReactDOMComponentTree.getInstanceFromNode,
-      ReactDOMComponentTree.getNodeFromInstance,
     ],
   },
 };
