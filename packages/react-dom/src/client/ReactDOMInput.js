@@ -22,8 +22,6 @@ import type {ToStringValue} from './ToStringValue';
 
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
-    initialValue: ToStringValue,
-    initialChecked: ?boolean,
     controlled?: boolean,
   },
 };
