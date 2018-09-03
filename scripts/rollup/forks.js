@@ -116,10 +116,6 @@ const forks = Object.freeze({
 
   schedule: (bundleType, entry, dependencies) => {
     switch (bundleType) {
-      case FB_WWW_DEV:
-      case FB_WWW_PROD:
-      case FB_WWW_PROFILING:
-        return 'shared/forks/Schedule.www.js';
       case UMD_DEV:
       case UMD_PROD:
         if (dependencies.indexOf('react') === -1) {
@@ -131,7 +127,7 @@ const forks = Object.freeze({
         // package instead of requiring it to be loaded via a separate <script> tag
         return 'shared/forks/Schedule.umd.js';
       default:
-        // For CJS bundles, use the shared NPM package.
+        // For other bundles, use the shared NPM package.
         return null;
     }
   },
@@ -149,7 +145,7 @@ const forks = Object.freeze({
         // package instead of requiring it to be loaded via a separate <script> tag
         return 'shared/forks/ScheduleTracking.umd.js';
       default:
-        // For CJS bundles, use the shared NPM package.
+        // For other bundles, use the shared NPM package.
         return null;
     }
   },
