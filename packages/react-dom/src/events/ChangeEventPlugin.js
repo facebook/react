@@ -27,7 +27,7 @@ import getEventTarget from './getEventTarget';
 import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
-import {setDefaultValue} from '../client/ReactDOMFiberInput';
+import {setDefaultValue} from '../client/ReactDOMInput';
 
 const eventTypes = {
   change: {
