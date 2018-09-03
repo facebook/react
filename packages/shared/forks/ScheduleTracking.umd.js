@@ -21,7 +21,7 @@ const {
   unstable_track,
   unstable_unsubscribe,
   unstable_wrap,
-} = ReactInternals.SchedulerTracking;
+} = ReactInternals.ScheduleTracking;
 
 export {
   __getInteractionsRef,

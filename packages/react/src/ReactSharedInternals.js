@@ -38,12 +38,12 @@ if (__UMD__) {
   // This re-export is only required for UMD bundles;
   // CJS bundles use the shared NPM package.
   Object.assign(ReactSharedInternals, {
-    Scheduler: {
+    Schedule: {
       unstable_cancelScheduledWork,
       unstable_now,
       unstable_scheduleWork,
     },
-    SchedulerTracking: {
+    ScheduleTracking: {
       __getInteractionsRef,
       __getSubscriberRef,
       unstable_clear,
