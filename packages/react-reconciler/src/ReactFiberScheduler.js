@@ -1601,13 +1601,14 @@ function retrySuspendedRoot(
     if (isPriorityLevelSuspended(root, suspendedTime)) {
       // Ping at the original level
       retryTime = suspendedTime;
+      markPingedPriorityLevel(root, retryTime);
     } else {
       // Placeholder already timed out. Compute a new expiration time
       const currentTime = requestCurrentTime();
       retryTime = computeExpirationForFiber(currentTime, fiber);
+      markPendingPriorityLevel(root, retryTime);
     }
 
-    markPingedPriorityLevel(root, retryTime);
     scheduleWorkToRoot(fiber, retryTime);
     const rootExpirationTime = root.expirationTime;
     if (rootExpirationTime !== NoWork) {
