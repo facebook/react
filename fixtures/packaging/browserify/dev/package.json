@@ -5,7 +5,7 @@
     "browserify": "^13.3.0",
     "react": "link:../../../../build/node_modules/react",
     "react-dom": "link:../../../../build/node_modules/react-dom",
-    "react-scheduler": "link:../../../../build/node_modules/react-scheduler"
+    "schedule": "link:../../../../build/node_modules/schedule"
   },
   "scripts": {
     "build": "rm -f output.js && browserify ./input.js -o output.js"

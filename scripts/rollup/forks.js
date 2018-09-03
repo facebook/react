@@ -114,7 +114,7 @@ const forks = Object.freeze({
     return null;
   },
 
-  'react-scheduler': (bundleType, entry, dependencies) => {
+  'schedule': (bundleType, entry, dependencies) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -136,7 +136,7 @@ const forks = Object.freeze({
     }
   },
 
-  'react-scheduler/tracking': (bundleType, entry, dependencies) => {
+  'schedule/tracking': (bundleType, entry, dependencies) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:

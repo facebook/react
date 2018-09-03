@@ -9,7 +9,7 @@ export {
   unstable_now as now,
   unstable_scheduleWork as scheduleDeferredCallback,
   unstable_cancelScheduledWork as cancelDeferredCallback,
-} from 'react-scheduler';
+} from 'schedule';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import invariant from 'shared/invariant';

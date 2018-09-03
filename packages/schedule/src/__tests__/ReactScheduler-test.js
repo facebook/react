@@ -64,7 +64,7 @@ describe('ReactScheduler', () => {
 
   beforeEach(() => {
     // TODO pull this into helper method, reduce repetition.
-    // mock the browser APIs which are used in react-scheduler:
+    // mock the browser APIs which are used in schedule:
     // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
     // - calling 'window.postMessage' should actually fire postmessage handlers
     // - Date.now should return the correct thing
@@ -94,7 +94,7 @@ describe('ReactScheduler', () => {
       return currentTime;
     };
     jest.resetModules();
-    ReactScheduler = require('react-scheduler');
+    ReactScheduler = require('schedule');
   });
 
   describe('scheduleWork', () => {

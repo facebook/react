@@ -1,5 +1,5 @@
 {
-  "name": "react-scheduler",
+  "name": "schedule",
   "version": "0.1.0-alpha-1",
   "private": true,
   "description": "unstable scheduling helper for coordinating React and other JS libraries",

@@ -1657,11 +1657,11 @@ rc@^1.1.7:
   version "0.0.0"
   uid ""
 
-react-scheduler@^0.1.0-alpha-1:
+schedule@^0.1.0-alpha-1:
   version "0.1.0"
-  resolved "https://registry.yarnpkg.com/react-scheduler/-/react-scheduler-0.1.0.tgz#d16c0ee90d2895ff1941e0d681293dbe4f4b4f38"
+  resolved "https://registry.yarnpkg.com/schedule/-/schedule-0.1.0.tgz#d16c0ee90d2895ff1941e0d681293dbe4f4b4f38"
 
-"react-scheduler@link:../../../../build/node_modules/react-scheduler":
+"schedule@link:../../../../build/node_modules/schedule":
   version "0.0.0"
   uid ""
 
