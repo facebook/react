@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './src/ReactScheduler';
+export * from './src/Schedule';

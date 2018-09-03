@@ -382,16 +382,16 @@ const bundles = [
 
   /******* React Scheduler (experimental) *******/
   {
-    label: 'react-scheduler',
+    label: 'schedule',
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react-scheduler',
-    global: 'ReactScheduler',
+    entry: 'schedule',
+    global: 'Schedule',
     externals: [],
   },
 
   {
-    label: 'react-scheduler-tracking',
+    label: 'schedule-tracking',
     bundleTypes: [
       FB_WWW_DEV,
       FB_WWW_PROD,
@@ -401,8 +401,8 @@ const bundles = [
       NODE_PROFILING,
     ],
     moduleType: ISOMORPHIC,
-    entry: 'react-scheduler/tracking',
-    global: 'ReactSchedulerTracking',
+    entry: 'schedule/tracking',
+    global: 'ScheduleTracking',
     externals: [],
   },
 ];

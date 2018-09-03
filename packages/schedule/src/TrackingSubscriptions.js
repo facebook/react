@@ -10,7 +10,7 @@
 import type {Interaction, Subscriber, SubscriberRef} from './Tracking';
 
 import {enableSchedulerTracking} from 'shared/ReactFeatureFlags';
-import {__getSubscriberRef} from 'react-scheduler/tracking';
+import {__getSubscriberRef} from 'schedule/tracking';
 
 let subscriberRef: SubscriberRef = (null: any);
 let subscribers: Set<Subscriber> = (null: any);

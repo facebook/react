@@ -14,7 +14,7 @@
     ? (module.exports = factory(require('react')))
     : typeof define === 'function' && define.amd // eslint-disable-line no-undef
       ? define(['react'], factory) // eslint-disable-line no-undef
-      : (global.ReactSchedulerTracking = factory(global));
+      : (global.ScheduleTracking = factory(global));
 })(this, function(global) {
   function __getInteractionsRef() {
     return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.__getInteractionsRef.apply(

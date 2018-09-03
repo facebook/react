@@ -39,7 +39,7 @@ describe('ReactProfiler DevTools integration', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableProfilerTimer = true;
     ReactFeatureFlags.enableSchedulerTracking = true;
-    SchedulerTracking = require('react-scheduler/tracking');
+    SchedulerTracking = require('schedule/tracking');
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
 

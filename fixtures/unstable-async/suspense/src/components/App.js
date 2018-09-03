@@ -2,7 +2,7 @@ import React, {Placeholder, PureComponent} from 'react';
 import {
   unstable_track as track,
   unstable_wrap as wrap,
-} from 'react-scheduler/tracking';
+} from 'schedule/tracking';
 import {createResource} from 'simple-cache-provider';
 import {cache} from '../cache';
 import Spinner from './Spinner';

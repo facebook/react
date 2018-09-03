@@ -14,12 +14,9 @@ import type {
   Interaction,
   InteractionsRef,
   SubscriberRef,
-} from 'react-scheduler/src/Tracking';
+} from 'schedule/src/Tracking';
 
-import {
-  __getInteractionsRef,
-  __getSubscriberRef,
-} from 'react-scheduler/tracking';
+import {__getInteractionsRef, __getSubscriberRef} from 'schedule/tracking';
 import {
   invokeGuardedCallback,
   hasCaughtError,
