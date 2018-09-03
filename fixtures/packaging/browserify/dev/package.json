@@ -2,13 +2,10 @@
   "private": true,
   "name": "browserify-dev-fixture",
   "dependencies": {
-    "browserify": "^13.3.0",
-    "react": "link:../../../../build/node_modules/react",
-    "react-dom": "link:../../../../build/node_modules/react-dom",
-    "schedule": "link:../../../../build/node_modules/schedule"
+    "browserify": "^13.3.0"
   },
   "scripts": {
     "build": "rm -f output.js && browserify ./input.js -o output.js",
-    "prebuild": "rm -rf ./node_modules/react-dom/node_modules/schedule"
+    "prebuild": "cp -r ../../../../build/node_modules/* ./node_modules/"
   }
 }
