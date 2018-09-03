@@ -1,7 +1,7 @@
 {
   "name": "schedule",
   "version": "0.2.0",
-  "description": "unstable scheduling helper for coordinating React and other JS libraries",
+  "description": "Cooperative scheduler for the browser environment.",
   "main": "index.js",
   "repository": "facebook/react",
   "license": "MIT",
