@@ -6,16 +6,22 @@
  */
 'use strict';
 
-module.exports = function sizes(pureExternalModules) {
+module.exports = function stripUnusedImports(pureExternalModules) {
   return {
     name: 'scripts/rollup/plugins/strip-unused-imports',
     transformBundle(code) {
       pureExternalModules.forEach(module => {
+        // Ideally this would use a negative lookbehind: (?<!= *)
+        // But this isn't supported by the Node <= 8.9.
+        // So instead we try to handle the most common cases:
+        // 1. foo,bar=require("bar"),baz
+        // 2. foo;bar = require('bar');baz
+        // 3.   require('bar');
         const regExp = new RegExp(
-          `(?<!= *)require\\(["']${module}["']\\)[,;]`,
+          `([,;]| {2})require\\(["']${module}["']\\)[,;]`,
           'g'
         );
-        code = code.replace(regExp, '');
+        code = code.replace(regExp, '$1');
       });
       return {code};
     },
