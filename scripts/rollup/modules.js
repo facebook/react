@@ -14,7 +14,7 @@ const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
 const importSideEffects = Object.freeze({
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'schedule': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  schedule: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'schedule/tracking': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
@@ -22,8 +22,8 @@ const importSideEffects = Object.freeze({
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
-  'schedule': 'ReactScheduler',
-  'schedule/tracking': 'ReactSchedulerTracking',
+  schedule: 'Schedule',
+  'schedule/tracking': 'ScheduleTracking',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.

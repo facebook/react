@@ -386,7 +386,7 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: ISOMORPHIC,
     entry: 'schedule',
-    global: 'ReactScheduler',
+    global: 'Schedule',
     externals: [],
   },
 
@@ -402,7 +402,7 @@ const bundles = [
     ],
     moduleType: ISOMORPHIC,
     entry: 'schedule/tracking',
-    global: 'ReactSchedulerTracking',
+    global: 'ScheduleTracking',
     externals: [],
   },
 ];

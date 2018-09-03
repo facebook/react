@@ -16,10 +16,7 @@ import type {
   SubscriberRef,
 } from 'schedule/src/Tracking';
 
-import {
-  __getInteractionsRef,
-  __getSubscriberRef,
-} from 'schedule/tracking';
+import {__getInteractionsRef, __getSubscriberRef} from 'schedule/tracking';
 import {
   invokeGuardedCallback,
   hasCaughtError,
