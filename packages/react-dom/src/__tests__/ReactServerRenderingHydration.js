@@ -258,6 +258,67 @@ describe('ReactDOMServerHydration', () => {
     expect(element.firstChild.focus).not.toHaveBeenCalled();
   });
 
+  it('should warn when the style property differs', () => {
+    const element = document.createElement('div');
+    element.innerHTML = ReactDOMServer.renderToString(
+      <div style={{textDecoration: 'none', color: 'black', height: '10px'}} />,
+    );
+    expect(element.firstChild.style.textDecoration).toBe('none');
+    expect(element.firstChild.style.color).toBe('black');
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div
+          style={{textDecoration: 'none', color: 'white', height: '10px'}}
+        />,
+        element,
+      ),
+    ).toWarnDev(
+      'Warning: Prop `style` did not match. Server: ' +
+        '"text-decoration:none;color:black;height:10px" Client: ' +
+        '"text-decoration:none;color:white;height:10px"',
+      {withoutStack: true},
+    );
+  });
+
+  it('should not warn when the style property differs on whitespace or order in IE', () => {
+    document.documentMode = 11;
+    const element = document.createElement('div');
+
+    // Simulate IE normalizing the style attribute. IE makes it equal to
+    // what's available under `node.style.cssText`.
+    element.innerHTML =
+      '<div style="height: 10px; color: black; text-decoration: none;" data-reactroot=""></div>';
+
+    ReactDOM.hydrate(
+      <div style={{textDecoration: 'none', color: 'black', height: '10px'}} />,
+      element,
+    );
+
+    delete document.documentMode;
+  });
+
+  it('should warn when the style property differs on whitespace in non-IE browsers', () => {
+    const element = document.createElement('div');
+
+    element.innerHTML =
+      '<div style="text-decoration: none; color: black; height: 10px;" data-reactroot=""></div>';
+
+    expect(() =>
+      ReactDOM.hydrate(
+        <div
+          style={{textDecoration: 'none', color: 'black', height: '10px'}}
+        />,
+        element,
+      ),
+    ).toWarnDev(
+      'Warning: Prop `style` did not match. Server: ' +
+        '"text-decoration: none; color: black; height: 10px;" Client: ' +
+        '"text-decoration:none;color:black;height:10px"',
+      {withoutStack: true},
+    );
+  });
+
   it('should throw rendering portals on the server', () => {
     const div = document.createElement('div');
     expect(() => {
