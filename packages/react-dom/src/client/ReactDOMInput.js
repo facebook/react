@@ -27,6 +27,7 @@ type InputWithWrapperState = HTMLInputElement & {
 };
 
 let didWarnValueDefaultValue = false;
+let didWarnCheckedDefaultChecked = false;
 let didWarnControlledToUncontrolled = false;
 let didWarnUncontrolledToControlled = false;
 
@@ -64,6 +65,43 @@ export function getHostProps(element: Element, props: Object) {
 export function initWrapperState(element: Element, props: Object) {
   if (__DEV__) {
     ReactControlledValuePropTypes.checkPropTypes('input', props);
+
+    if (
+      props.checked !== undefined &&
+      props.defaultChecked !== undefined &&
+      !didWarnCheckedDefaultChecked
+    ) {
+      warning(
+        false,
+        '%s contains an input of type %s with both checked and defaultChecked props. ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the checked prop, or the defaultChecked prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
+        props.type,
+      );
+      didWarnCheckedDefaultChecked = true;
+    }
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnValueDefaultValue
+    ) {
+      warning(
+        false,
+        '%s contains an input of type %s with both value and defaultValue props. ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
+        props.type,
+      );
+      didWarnValueDefaultValue = true;
+    }
   }
 
   const node = ((element: any): InputWithWrapperState);
@@ -167,20 +205,23 @@ export function postMountWrapper(
   props: Object,
   isHydrating: boolean,
 ) {
+  if (isHydrating) {
+    return;
+  }
+
   const node: HTMLInputElement = element;
 
   // Do not assign value if it is already set. This prevents user text input
   // from being lost during SSR hydration.
-  if (!isHydrating && props.hasOwnProperty('value')) {
-    const initialValue = getToStringValue(props.value);
-    const currentValue = node.value;
+  if (props.hasOwnProperty('value')) {
+    const value = getToStringValue(props.value);
     const type = props.type;
 
     // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
     if (type === 'submit' || type === 'reset') {
-      if (initialValue !== undefined && initialValue !== null) {
-        node.setAttribute('value', initialValue);
+      if (value !== undefined && value !== null) {
+        node.setAttribute('value', value);
       }
 
       return;
@@ -189,8 +230,8 @@ export function postMountWrapper(
     // Do not re-assign the value property if is empty. This
     // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
     // prematurely marking required inputs as invalid
-    if (initialValue !== '') {
-      node.value = initialValue;
+    if (value !== '') {
+      node.value = value;
     }
   }
 
@@ -201,7 +242,10 @@ export function postMountWrapper(
     node.defaultValue = getToStringValue(props.defaultValue);
   }
 
-  if (props.hasOwnProperty('defaultChecked')) {
+  if (
+    props.hasOwnProperty('checked') ||
+    props.hasOwnProperty('defaultChecked')
+  ) {
     // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
     // this is needed to work around a chrome bug where setting defaultChecked
     // will sometimes influence the value of checked (even after detachment).
@@ -212,18 +256,18 @@ export function postMountWrapper(
       node.name = '';
     }
 
-    // Do not assign checked value if it is already set. This prevents user text input
-    // from being lost during SSR hydration.
-    if (!isHydrating && props.hasOwnProperty('checked')) {
-      node.checked = !!props.checked;
-    }
-
     node.defaultChecked = !node.defaultChecked;
     node.defaultChecked = !!props.defaultChecked;
+
+    updateChecked(node, props);
+
     if (name !== '') {
       node.name = name;
     }
   }
+
+  // TODO: This is necessary because assignment to checked/value is mitigated, but why?
+  inputValueTracking.updateValueIfChanged(node);
 }
 
 export function restoreControlledState(element: Element, props: Object) {
