@@ -18,8 +18,6 @@ import {getToStringValue, toString} from './ToStringValue';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import * as inputValueTracking from './inputValueTracking';
 
-import type {ToStringValue} from './ToStringValue';
-
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
     controlled?: boolean,
