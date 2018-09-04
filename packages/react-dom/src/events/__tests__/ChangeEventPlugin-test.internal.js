@@ -108,7 +108,6 @@ describe('ChangeEventPlugin', () => {
     // make it `true` again. Thus, at the time of the event, React should not
     // consider it a change from the initial `true` value.
     setUntrackedChecked.call(node, false);
-
     node.dispatchEvent(
       new MouseEvent('click', {bubbles: true, cancelable: true}),
     );
