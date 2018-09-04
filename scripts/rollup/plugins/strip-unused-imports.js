@@ -19,7 +19,7 @@ module.exports = function stripUnusedImports(pureExternalModules) {
         // 3.   require('bar');
         const regExp = new RegExp(
           `([,;]| {2})require\\(["']${module}["']\\)[,;]`,
-          'gi'
+          'g'
         );
         code = code.replace(regExp, '$1');
       });
