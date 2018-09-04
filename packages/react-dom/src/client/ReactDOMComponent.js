@@ -11,6 +11,7 @@
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
@@ -103,7 +104,7 @@ if (__DEV__) {
   // normalized. Since it only affects IE, we're skipping style warnings
   // in that browser completely in favor of doing all that work.
   // See https://github.com/facebook/react/issues/11807
-  canDiffStyleForHydrationWarning = !document.documentMode;
+  canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
 
   // HTML parsing normalizes CR and CRLF to LF.
   // It also can turn \u0000 into \uFFFD inside attributes.
