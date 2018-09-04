@@ -17,35 +17,35 @@
       : (global.ScheduleTracking = factory(global));
 })(this, function(global) {
   function __getInteractionsRef() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.__getInteractionsRef.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.__getInteractionsRef.apply(
       this,
       arguments
     );
   }
 
   function __getSubscriberRef() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.__getSubscriberRef.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.__getSubscriberRef.apply(
       this,
       arguments
     );
   }
 
   function unstable_clear() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_clear.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.unstable_clear.apply(
       this,
       arguments
     );
   }
 
   function unstable_getCurrent() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_getCurrent.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.unstable_getCurrent.apply(
       this,
       arguments
     );
   }
 
   function unstable_getThreadID() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_getThreadID.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.unstable_getThreadID.apply(
       this,
       arguments
     );
@@ -53,14 +53,14 @@
 
   function unstable_subscribe() {
     // eslint-disable-next-line max-len
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_subscribe.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.unstable_subscribe.apply(
       this,
       arguments
     );
   }
 
   function unstable_track() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_track.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.unstable_track.apply(
       this,
       arguments
     );
@@ -68,14 +68,14 @@
 
   function unstable_unsubscribe() {
     // eslint-disable-next-line max-len
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_unsubscribe.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.unstable_unsubscribe.apply(
       this,
       arguments
     );
   }
 
   function unstable_wrap() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracking.unstable_wrap.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.unstable_wrap.apply(
       this,
       arguments
     );
