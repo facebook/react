@@ -17,21 +17,21 @@
       : (global.Schedule = factory(global));
 })(this, function(global) {
   function unstable_now() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_now.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Schedule.unstable_now.apply(
       this,
       arguments
     );
   }
 
   function unstable_scheduleWork() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_scheduleWork.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Schedule.unstable_scheduleWork.apply(
       this,
       arguments
     );
   }
 
   function unstable_cancelScheduledWork() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_cancelScheduledWork.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Schedule.unstable_cancelScheduledWork.apply(
       this,
       arguments
     );
