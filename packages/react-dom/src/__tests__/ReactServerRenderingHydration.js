@@ -283,19 +283,25 @@ describe('ReactDOMServerHydration', () => {
 
   it('should not warn when the style property differs on whitespace or order in IE', () => {
     document.documentMode = 11;
-    const element = document.createElement('div');
+    try {
+      const element = document.createElement('div');
 
-    // Simulate IE normalizing the style attribute. IE makes it equal to
-    // what's available under `node.style.cssText`.
-    element.innerHTML =
-      '<div style="height: 10px; color: black; text-decoration: none;" data-reactroot=""></div>';
+      // Simulate IE normalizing the style attribute. IE makes it equal to
+      // what's available under `node.style.cssText`.
+      element.innerHTML =
+        '<div style="height: 10px; color: black; text-decoration: none;" data-reactroot=""></div>';
 
-    ReactDOM.hydrate(
-      <div style={{textDecoration: 'none', color: 'black', height: '10px'}} />,
-      element,
-    );
-
-    delete document.documentMode;
+      // We don't expect to see false positive warnings.
+      // https://github.com/facebook/react/issues/11807
+      ReactDOM.hydrate(
+        <div
+          style={{textDecoration: 'none', color: 'black', height: '10px'}}
+        />,
+        element,
+      );
+    } finally {
+      delete document.documentMode;
+    }
   });
 
   it('should warn when the style property differs on whitespace in non-IE browsers', () => {
