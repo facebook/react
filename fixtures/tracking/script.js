@@ -76,8 +76,7 @@ function checkSchedulerTrackingAPI() {
     }
 
     const ForwardedSchedulerTracking =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .SchedulerTracking;
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking;
 
     if (
       ScheduleTracking.unstable_getThreadID() ===
@@ -137,7 +136,7 @@ function checkSchedulerTrackingSubscriptionsAPI() {
 
       const ForwardedSchedulerTracking =
         React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-          .SchedulerTracking;
+          .ScheduleTracking;
 
       try {
         ForwardedSchedulerTracking.unstable_subscribe(subscriber);
