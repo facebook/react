@@ -330,14 +330,6 @@ function getPlugins(
     }),
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
-    // www still needs require('React') rather than require('react')
-    isFBBundle && {
-      transformBundle(source) {
-        return source
-          .replace(/require\(['"]react['"]\)/g, "require('React')")
-          .replace(/require\(['"]react-is['"]\)/g, "require('ReactIs')");
-      },
-    },
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(
