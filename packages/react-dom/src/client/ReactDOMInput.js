@@ -207,7 +207,7 @@ export function postMountWrapper(
     return;
   }
 
-  const node: HTMLInputElement = element;
+  const node = ((element: any): HTMLInputElement);
 
   // Do not assign value if it is already set. This prevents user text input
   // from being lost during SSR hydration.
@@ -219,7 +219,7 @@ export function postMountWrapper(
     // default value provided by the browser. See: #12872
     if (type === 'submit' || type === 'reset') {
       if (value !== undefined && value !== null) {
-        node.setAttribute('value', value);
+        node.setAttribute('value', toString(value));
       }
 
       return;
@@ -229,7 +229,7 @@ export function postMountWrapper(
     // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
     // prematurely marking required inputs as invalid
     if (value !== '') {
-      node.value = value;
+      node.value = toString(value);
     }
   }
 
@@ -237,7 +237,7 @@ export function postMountWrapper(
     // value must be assigned before defaultValue. This fixes an issue where the
     // visually displayed value of date inputs disappears on mobile Safari and Chrome:
     // https://github.com/facebook/react/issues/7233
-    node.defaultValue = getToStringValue(props.defaultValue);
+    node.defaultValue = toString(getToStringValue(props.defaultValue));
   }
 
   if (
