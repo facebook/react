@@ -335,7 +335,12 @@ function getPlugins(
       transformBundle(source) {
         return source
           .replace(/require\(['"]react['"]\)/g, "require('React')")
-          .replace(/require\(['"]react-is['"]\)/g, "require('ReactIs')");
+          .replace(/require\(['"]react-is['"]\)/g, "require('ReactIs')")
+          .replace(/require\(['"]schedule['"]\)/g, "require('Schedule')")
+          .replace(
+            /require\(['"]schedule\/tracking['"]\)/g,
+            "require('ScheduleTracking')"
+          );
       },
     },
     // Apply dead code elimination and/or minification.
