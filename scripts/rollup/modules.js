@@ -16,7 +16,6 @@ const importSideEffects = Object.freeze({
   deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   schedule: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'schedule/tracking': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  ScheduleTracking: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
