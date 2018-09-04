@@ -1,5 +1,6 @@
 import React, {PureComponent} from 'react';
 import {flushSync, render} from 'react-dom';
+import {unstable_scheduleWork} from 'schedule';
 import _ from 'lodash';
 import Charts from './Charts';
 import Clock from './Clock';
@@ -66,7 +67,7 @@ class App extends PureComponent {
     }
     this._ignoreClick = true;
 
-    requestIdleCallback(() => {
+    unstable_scheduleWork(() => {
       this.setState({showDemo: true}, () => {
         this._ignoreClick = false;
       });
@@ -106,7 +107,7 @@ class App extends PureComponent {
         this.debouncedHandleChange(value);
         break;
       case 'async':
-        requestIdleCallback(() => {
+        unstable_scheduleWork(() => {
           this.setState({value});
         });
         break;

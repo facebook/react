@@ -13,12 +13,13 @@
     "react-draggable": "^3.0.5"
   },
   "scripts": {
+    "prestart": "cp -r ../../../build/node_modules/* ./node_modules/",
+    "prebuild": "cp -r ../../../build/node_modules/* ./node_modules/",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "deploy": "gh-pages -d build",
-    "prestart": "cp -r ../../../build/node_modules/* ./node_modules/"
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": "./node_modules/react-scripts/config/eslint.js"

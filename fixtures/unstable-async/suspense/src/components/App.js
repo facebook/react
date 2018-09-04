@@ -1,4 +1,5 @@
 import React, {Placeholder, PureComponent} from 'react';
+import {unstable_scheduleWork} from 'schedule';
 import {
   unstable_track as track,
   unstable_wrap as wrap,
@@ -37,7 +38,7 @@ export default class App extends PureComponent {
           currentId: id,
         })
       );
-      requestIdleCallback(
+      unstable_scheduleWork(
         wrap(() =>
           track(`View ${id} (low-pri)`, performance.now(), () =>
             this.setState({
