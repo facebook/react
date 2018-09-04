@@ -67,6 +67,7 @@ let warnForTextDifference;
 let warnForPropDifference;
 let warnForExtraAttributes;
 let warnForInvalidEventListener;
+let canDiffStyleForHydrationWarning;
 
 let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
@@ -93,6 +94,16 @@ if (__DEV__) {
     validateInputProperties(type, props);
     validateUnknownProperties(type, props, /* canUseEventSystem */ true);
   };
+
+  // IE 11 parses & normalizes the style attribute as opposed to other
+  // browsers. It adds spaces and sorts the properties in some
+  // non-alphabetical order. Handling that would require sorting CSS
+  // properties in the client & server versions or applying
+  // `expectedStyle` to a temporary DOM node to read its `style` attribute
+  // normalized. Since it only affects IE, we're skipping style warnings
+  // in that browser completely in favor of doing all that work.
+  // See https://github.com/facebook/react/issues/11807
+  canDiffStyleForHydrationWarning = !document.documentMode;
 
   // HTML parsing normalizes CR and CRLF to LF.
   // It also can turn \u0000 into \uFFFD inside attributes.
@@ -1000,15 +1011,7 @@ export function diffHydratedProperties(
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey);
 
-        // IE 11 parses & normalizes the style attribute as opposed to other
-        // browsers. It adds spaces and sorts the properties in some
-        // non-alphabetical order. Handling that would require sorting CSS
-        // properties in the client & server versions or applying
-        // `expectedStyle` to a temporary DOM node to read its `style` attribute
-        // normalized. Since it only affects IE, we're skipping style warnings
-        // in that browser completely in favor of doing all that work.
-        // See https://github.com/facebook/react/issues/11807
-        if (!document.documentMode) {
+        if (canDiffStyleForHydrationWarning) {
           const expectedStyle = CSSPropertyOperations.createDangerousStringForStyles(
             nextProp,
           );
