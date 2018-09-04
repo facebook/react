@@ -283,6 +283,10 @@ describe('ReactDOMServerHydration', () => {
 
   it('should not warn when the style property differs on whitespace or order in IE', () => {
     document.documentMode = 11;
+    jest.resetModules();
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     try {
       const element = document.createElement('div');
 
