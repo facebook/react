@@ -25,6 +25,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "profiling.js",
     "server.js",
     "server.browser.js",
     "server.node.js",
