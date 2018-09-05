@@ -122,6 +122,7 @@ import {
   popContext as popLegacyContext,
 } from './ReactFiberContext';
 import {popProvider, resetContextDependences} from './ReactFiberNewContext';
+import {resetHooks} from './ReactFiberHooks';
 import {popHostContext, popHostContainer} from './ReactFiberHostContext';
 import {
   recordCommitTime,
@@ -1222,6 +1223,9 @@ function renderRoot(
     try {
       workLoop(isYieldy);
     } catch (thrownValue) {
+      resetContextDependences();
+      resetHooks();
+
       if (nextUnitOfWork === null) {
         // This is a fatal error.
         didFatal = true;
@@ -1284,6 +1288,7 @@ function renderRoot(
   isWorking = false;
   ReactCurrentOwner.currentDispatcher = null;
   resetContextDependences();
+  resetHooks();
 
   // Yield back to main thread.
   if (didFatal) {

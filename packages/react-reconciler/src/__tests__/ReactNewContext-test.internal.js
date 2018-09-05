@@ -12,6 +12,7 @@
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let React = require('react');
+let useContext;
 let ReactNoop;
 let gen;
 
@@ -21,6 +22,7 @@ describe('ReactNewContext', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
+    useContext = React.useContext;
     ReactNoop = require('react-noop-renderer');
     gen = require('random-seed');
   });
@@ -34,33 +36,26 @@ describe('ReactNewContext', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
-  function readContext(Context, observedBits) {
-    const dispatcher =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner
-        .currentDispatcher;
-    return dispatcher.readContext(Context, observedBits);
-  }
-
   // We have several ways of reading from context. sharedContextTests runs
   // a suite of tests for a given context consumer implementation.
   sharedContextTests('Context.Consumer', Context => Context.Consumer);
   sharedContextTests(
-    'readContext(Context) inside function component',
+    'useContext inside functional component',
     Context =>
       function Consumer(props) {
         const observedBits = props.unstable_observedBits;
-        const contextValue = readContext(Context, observedBits);
+        const contextValue = useContext(Context, observedBits);
         const render = props.children;
         return render(contextValue);
       },
   );
   sharedContextTests(
-    'readContext(Context) inside class component',
+    'useContext inside class component',
     Context =>
       class Consumer extends React.Component {
         render() {
           const observedBits = this.props.unstable_observedBits;
-          const contextValue = readContext(Context, observedBits);
+          const contextValue = useContext(Context, observedBits);
           const render = this.props.children;
           return render(contextValue);
         }
@@ -1194,7 +1189,7 @@ describe('ReactNewContext', () => {
         return (
           <FooContext.Consumer>
             {foo => {
-              const bar = readContext(BarContext);
+              const bar = useContext(BarContext);
               return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
             }}
           </FooContext.Consumer>
@@ -1238,7 +1233,7 @@ describe('ReactNewContext', () => {
     });
   });
 
-  describe('readContext', () => {
+  describe('useContext', () => {
     it('can use the same context multiple times in the same function', () => {
       const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
         let result = 0;
@@ -1264,13 +1259,13 @@ describe('ReactNewContext', () => {
       }
 
       function FooAndBar() {
-        const {foo} = readContext(Context, 0b001);
-        const {bar} = readContext(Context, 0b010);
+        const {foo} = useContext(Context, 0b001);
+        const {bar} = useContext(Context, 0b010);
         return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
       }
 
       function Baz() {
-        const {baz} = readContext(Context, 0b100);
+        const {baz} = useContext(Context, 0b100);
         return <Text text={'Baz: ' + baz} />;
       }
 

@@ -28,6 +28,16 @@ import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import memo from './memo';
 import {
+  useContext,
+  useState,
+  useReducer,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  useAPI,
+} from './ReactHooks';
+import {
   createElementWithValidation,
   createFactoryWithValidation,
   cloneElementWithValidation,
@@ -52,6 +62,15 @@ const React = {
   forwardRef,
   lazy,
   memo,
+
+  useContext,
+  useState,
+  useReducer,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  useAPI,
 
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
