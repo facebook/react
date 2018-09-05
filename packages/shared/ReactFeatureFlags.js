@@ -43,6 +43,9 @@ export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracking = __PROFILE__;
 
 // Only used in www builds.
+export const enableSuspenseServerRenderer = false;
+
+// Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');
 }
