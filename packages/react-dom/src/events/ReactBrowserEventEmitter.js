@@ -140,16 +140,23 @@ export function listenTo(
     const dependency = dependencies[i];
 
     switch (dependency) {
-      case TOP_TOUCH_START:
-      case TOP_TOUCH_END:
-      case TOP_TOUCH_MOVE:
-      case TOP_TOUCH_CANCEL:
       case TOP_SCROLL:
       case TOP_WHEEL:
         const elementListeners = getListenerTrackingFor(element);
 
         if (!elementListeners.hasOwnProperty(dependency)) {
           trapCapturedEvent(dependency, element);
+          elementListeners[dependency] = true;
+        }
+        break;
+      case TOP_TOUCH_START:
+      case TOP_TOUCH_END:
+      case TOP_TOUCH_MOVE:
+      case TOP_TOUCH_CANCEL:
+        const elementListeners = getListenerTrackingFor(element);
+
+        if (!elementListeners.hasOwnProperty(dependency)) {
+          trapBubbledEvent(dependency, element);
           elementListeners[dependency] = true;
         }
         break;
