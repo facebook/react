@@ -79,6 +79,7 @@ import {
   prepareToReadContext,
   calculateChangedBits,
 } from './ReactFiberNewContext';
+import {prepareToUseHooks, finishHooks, resetHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
@@ -124,7 +125,7 @@ export function reconcileChildren(
   current: Fiber | null,
   workInProgress: Fiber,
   nextChildren: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   if (current === null) {
     // If this is a fresh new component that hasn't been rendered yet, we
@@ -135,7 +136,7 @@ export function reconcileChildren(
       workInProgress,
       null,
       nextChildren,
-      renderExpirationTime,
+      renderExpirationTime
     );
   } else {
     // If the current child is the same as the work in progress, it means that
@@ -148,7 +149,7 @@ export function reconcileChildren(
       workInProgress,
       current.child,
       nextChildren,
-      renderExpirationTime,
+      renderExpirationTime
     );
   }
 }
@@ -157,7 +158,7 @@ function forceUnmountCurrentAndReconcile(
   current: Fiber,
   workInProgress: Fiber,
   nextChildren: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   // This function is fork of reconcileChildren. It's used in cases where we
   // want to reconcile without matching against the existing set. This has the
@@ -171,7 +172,7 @@ function forceUnmountCurrentAndReconcile(
     workInProgress,
     current.child,
     null,
-    renderExpirationTime,
+    renderExpirationTime
   );
   // In the second pass, we mount the new children. The trick here is that we
   // pass null in place of where we usually pass the current child set. This has
@@ -181,34 +182,24 @@ function forceUnmountCurrentAndReconcile(
     workInProgress,
     null,
     nextChildren,
-    renderExpirationTime,
+    renderExpirationTime
   );
 }
 
 function updateForwardRef(
   current: Fiber | null,
   workInProgress: Fiber,
-  type: any,
+  Component: any,
   nextProps: any,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
-  const render = type.render;
+  const render = Component.render;
   const ref = workInProgress.ref;
-  if (hasLegacyContextChanged()) {
-    // Normally we can bail out on props equality but if context has changed
-    // we don't do the bailout and we have to reuse existing props instead.
-  } else if (workInProgress.memoizedProps === nextProps) {
-    const currentRef = current !== null ? current.ref : null;
-    if (ref === currentRef) {
-      return bailoutOnAlreadyFinishedWork(
-        current,
-        workInProgress,
-        renderExpirationTime,
-      );
-    }
-  }
 
+  // The rest is a fork of updateFunctionComponent
   let nextChildren;
+  prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     ReactCurrentFiber.setCurrentPhase('render');
@@ -217,12 +208,15 @@ function updateForwardRef(
   } else {
     nextChildren = render(nextProps, ref);
   }
+  nextChildren = finishHooks(render, nextProps, nextChildren, ref);
 
+  // React DevTools reads this flag.
+  workInProgress.effectTag |= PerformedWork;
   reconcileChildren(
     current,
     workInProgress,
     nextChildren,
-    renderExpirationTime,
+    renderExpirationTime
   );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
@@ -234,7 +228,7 @@ function updatePureComponent(
   Component: any,
   nextProps: any,
   updateExpirationTime,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   const render = Component.render;
 
@@ -251,7 +245,7 @@ function updatePureComponent(
       return bailoutOnAlreadyFinishedWork(
         current,
         workInProgress,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
   }
@@ -274,7 +268,7 @@ function updatePureComponent(
     current,
     workInProgress,
     nextChildren,
-    renderExpirationTime,
+    renderExpirationTime
   );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
@@ -283,14 +277,14 @@ function updatePureComponent(
 function updateFragment(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   const nextChildren = workInProgress.pendingProps;
   reconcileChildren(
     current,
     workInProgress,
     nextChildren,
-    renderExpirationTime,
+    renderExpirationTime
   );
   memoizeProps(workInProgress, nextChildren);
   return workInProgress.child;
@@ -299,14 +293,14 @@ function updateFragment(
 function updateMode(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(
     current,
     workInProgress,
     nextChildren,
-    renderExpirationTime,
+    renderExpirationTime
   );
   memoizeProps(workInProgress, nextChildren);
   return workInProgress.child;
@@ -315,7 +309,7 @@ function updateMode(
 function updateProfiler(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   if (enableProfilerTimer) {
     workInProgress.effectTag |= Update;
@@ -326,7 +320,7 @@ function updateProfiler(
     current,
     workInProgress,
     nextChildren,
-    renderExpirationTime,
+    renderExpirationTime
   );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
@@ -348,13 +342,14 @@ function updateFunctionComponent(
   workInProgress,
   Component,
   nextProps: any,
-  renderExpirationTime,
+  renderExpirationTime
 ) {
   const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     ReactCurrentFiber.setCurrentPhase('render');
@@ -363,6 +358,7 @@ function updateFunctionComponent(
   } else {
     nextChildren = Component(nextProps, context);
   }
+  nextChildren = finishHooks(Component, nextProps, nextChildren, context);
 
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
@@ -370,7 +366,7 @@ function updateFunctionComponent(
     current,
     workInProgress,
     nextChildren,
-    renderExpirationTime,
+    renderExpirationTime
   );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
@@ -381,7 +377,7 @@ function updateClassComponent(
   workInProgress: Fiber,
   Component: any,
   nextProps,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   // Push context providers early to prevent context stack mismatches.
   // During mounting we don't know the child context yet as the instance doesn't exist.
@@ -403,13 +399,13 @@ function updateClassComponent(
         workInProgress,
         Component,
         nextProps,
-        renderExpirationTime,
+        renderExpirationTime
       );
       mountClassInstance(
         workInProgress,
         Component,
         nextProps,
-        renderExpirationTime,
+        renderExpirationTime
       );
       shouldUpdate = true;
     } else {
@@ -418,7 +414,7 @@ function updateClassComponent(
         workInProgress,
         Component,
         nextProps,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
   } else {
@@ -427,7 +423,7 @@ function updateClassComponent(
       workInProgress,
       Component,
       nextProps,
-      renderExpirationTime,
+      renderExpirationTime
     );
   }
   return finishClassComponent(
@@ -436,7 +432,7 @@ function updateClassComponent(
     Component,
     shouldUpdate,
     hasContext,
-    renderExpirationTime,
+    renderExpirationTime
   );
 }
 
@@ -446,7 +442,7 @@ function finishClassComponent(
   Component: any,
   shouldUpdate: boolean,
   hasContext: boolean,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   // Refs should update even if shouldComponentUpdate returns false
   markRef(current, workInProgress);
@@ -462,7 +458,7 @@ function finishClassComponent(
     return bailoutOnAlreadyFinishedWork(
       current,
       workInProgress,
-      renderExpirationTime,
+      renderExpirationTime
     );
   }
 
@@ -513,14 +509,14 @@ function finishClassComponent(
       current,
       workInProgress,
       nextChildren,
-      renderExpirationTime,
+      renderExpirationTime
     );
   } else {
     reconcileChildren(
       current,
       workInProgress,
       nextChildren,
-      renderExpirationTime,
+      renderExpirationTime
     );
   }
 
@@ -543,7 +539,7 @@ function pushHostRootContext(workInProgress) {
     pushTopLevelContextObject(
       workInProgress,
       root.pendingContext,
-      root.pendingContext !== root.context,
+      root.pendingContext !== root.context
     );
   } else if (root.context) {
     // Should always be set
@@ -559,7 +555,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
     updateQueue !== null,
     'If the root does not have an updateQueue, we should have already ' +
       'bailed out. This error is likely caused by a bug in React. Please ' +
-      'file an issue.',
+      'file an issue.'
   );
   const nextProps = workInProgress.pendingProps;
   const prevState = workInProgress.memoizedState;
@@ -569,7 +565,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
     updateQueue,
     nextProps,
     null,
-    renderExpirationTime,
+    renderExpirationTime
   );
   const nextState = workInProgress.memoizedState;
   // Caution: React DevTools currently depends on this property
@@ -582,7 +578,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
     return bailoutOnAlreadyFinishedWork(
       current,
       workInProgress,
-      renderExpirationTime,
+      renderExpirationTime
     );
   }
   const root: FiberRoot = workInProgress.stateNode;
@@ -609,7 +605,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
       workInProgress,
       null,
       nextChildren,
-      renderExpirationTime,
+      renderExpirationTime
     );
   } else {
     // Otherwise reset hydration state in case we aborted and resumed another
@@ -618,7 +614,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
       current,
       workInProgress,
       nextChildren,
-      renderExpirationTime,
+      renderExpirationTime
     );
     resetHydrationState();
   }
@@ -669,7 +665,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     current,
     workInProgress,
     nextChildren,
-    renderExpirationTime,
+    renderExpirationTime
   );
   memoizeProps(workInProgress, nextProps);
   return workInProgress.child;
@@ -706,12 +702,12 @@ function mountIndeterminateComponent(
   workInProgress,
   Component,
   updateExpirationTime,
-  renderExpirationTime,
+  renderExpirationTime
 ) {
   invariant(
     current === null,
     'An indeterminate component should never have mounted. This error is ' +
-      'likely caused by a bug in React. Please file an issue.',
+      'likely caused by a bug in React. Please file an issue.'
   );
 
   const props = workInProgress.pendingProps;
@@ -723,7 +719,7 @@ function mountIndeterminateComponent(
     Component = readLazyComponentType(Component);
     const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(
       workInProgress,
-      Component,
+      Component
     ));
     const resolvedProps = resolveDefaultProps(Component, props);
     let child;
@@ -734,7 +730,7 @@ function mountIndeterminateComponent(
           workInProgress,
           Component,
           resolvedProps,
-          renderExpirationTime,
+          renderExpirationTime
         );
         break;
       }
@@ -744,7 +740,7 @@ function mountIndeterminateComponent(
           workInProgress,
           Component,
           resolvedProps,
-          renderExpirationTime,
+          renderExpirationTime
         );
         break;
       }
@@ -754,7 +750,7 @@ function mountIndeterminateComponent(
           workInProgress,
           Component,
           resolvedProps,
-          renderExpirationTime,
+          renderExpirationTime
         );
         break;
       }
@@ -765,7 +761,7 @@ function mountIndeterminateComponent(
           Component,
           resolvedProps,
           updateExpirationTime,
-          renderExpirationTime,
+          renderExpirationTime
         );
         break;
       }
@@ -777,7 +773,7 @@ function mountIndeterminateComponent(
           false,
           'Element type is invalid. Received a promise that resolves to: %s. ' +
             'Promise elements must resolve to a class or function.',
-          Component,
+          Component
         );
       }
     }
@@ -789,6 +785,7 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToUseHooks(current, workInProgress, renderExpirationTime);
 
   let value;
 
@@ -805,7 +802,7 @@ function mountIndeterminateComponent(
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
             'This is likely to cause errors. Change %s to extend React.Component instead.',
           componentName,
-          componentName,
+          componentName
         );
         didWarnAboutBadClass[componentName] = true;
       }
@@ -832,6 +829,9 @@ function mountIndeterminateComponent(
     // Proceed under the assumption that this is a class instance
     workInProgress.tag = ClassComponent;
 
+    // Throw out any hooks that were used.
+    resetHooks();
+
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
@@ -852,7 +852,7 @@ function mountIndeterminateComponent(
         workInProgress,
         Component,
         getDerivedStateFromProps,
-        props,
+        props
       );
     }
 
@@ -864,17 +864,18 @@ function mountIndeterminateComponent(
       Component,
       true,
       hasContext,
-      renderExpirationTime,
+      renderExpirationTime
     );
   } else {
     // Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent;
+    value = finishHooks(Component, props, value, context);
     if (__DEV__) {
       if (Component) {
         warningWithoutStack(
           !Component.childContextTypes,
           '%s(...): childContextTypes cannot be defined on a function component.',
-          Component.displayName || Component.name || 'Component',
+          Component.displayName || Component.name || 'Component'
         );
       }
       if (workInProgress.ref !== null) {
@@ -895,7 +896,7 @@ function mountIndeterminateComponent(
             false,
             'Function components cannot be given refs. ' +
               'Attempts to access this ref will fail.%s',
-            info,
+            info
           );
         }
       }
@@ -907,7 +908,7 @@ function mountIndeterminateComponent(
           warningWithoutStack(
             false,
             '%s: Function components do not support getDerivedStateFromProps.',
-            componentName,
+            componentName
           );
           didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
         }
@@ -923,7 +924,7 @@ function mountIndeterminateComponent(
           warningWithoutStack(
             false,
             '%s: Function components do not support contextType.',
-            componentName,
+            componentName
           );
           didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
         }
@@ -938,7 +939,7 @@ function mountIndeterminateComponent(
 function updatePlaceholderComponent(
   current,
   workInProgress,
-  renderExpirationTime,
+  renderExpirationTime
 ) {
   if (enableSuspense) {
     const nextProps = workInProgress.pendingProps;
@@ -990,14 +991,14 @@ function updatePlaceholderComponent(
         current,
         workInProgress,
         nextChildren,
-        renderExpirationTime,
+        renderExpirationTime
       );
     } else {
       reconcileChildren(
         current,
         workInProgress,
         nextChildren,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
     workInProgress.memoizedProps = nextProps;
@@ -1011,7 +1012,7 @@ function updatePlaceholderComponent(
 function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
   const nextChildren = workInProgress.pendingProps;
@@ -1025,7 +1026,7 @@ function updatePortalComponent(
       workInProgress,
       null,
       nextChildren,
-      renderExpirationTime,
+      renderExpirationTime
     );
     memoizeProps(workInProgress, nextChildren);
   } else {
@@ -1033,7 +1034,7 @@ function updatePortalComponent(
       current,
       workInProgress,
       nextChildren,
-      renderExpirationTime,
+      renderExpirationTime
     );
     memoizeProps(workInProgress, nextChildren);
   }
@@ -1043,7 +1044,7 @@ function updatePortalComponent(
 function updateContextProvider(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   const providerType: ReactProviderType<any> = workInProgress.type;
   const context: ReactContext<any> = providerType._context;
@@ -1063,7 +1064,7 @@ function updateContextProvider(
         newProps,
         'prop',
         'Context.Provider',
-        ReactCurrentFiber.getCurrentFiberStackInDev,
+        ReactCurrentFiber.getCurrentFiberStackInDev
       );
     }
   }
@@ -1082,7 +1083,7 @@ function updateContextProvider(
         return bailoutOnAlreadyFinishedWork(
           current,
           workInProgress,
-          renderExpirationTime,
+          renderExpirationTime
         );
       }
     } else {
@@ -1092,7 +1093,7 @@ function updateContextProvider(
         workInProgress,
         context,
         changedBits,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
   }
@@ -1105,7 +1106,7 @@ function updateContextProvider(
 function updateContextConsumer(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ) {
   const context: ReactContext<any> = workInProgress.type;
   const newProps = workInProgress.pendingProps;
@@ -1117,7 +1118,7 @@ function updateContextConsumer(
       'A context consumer was rendered with multiple children, or a child ' +
         "that isn't a function. A context consumer expects a single child " +
         'that is a function. If you did pass a function, make sure there ' +
-        'is no trailing or leading whitespace around it.',
+        'is no trailing or leading whitespace around it.'
     );
   }
 
@@ -1162,7 +1163,7 @@ function updateContextConsumer(
 function bailoutOnAlreadyFinishedWork(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ): Fiber | null {
   cancelWorkTimer(workInProgress);
 
@@ -1208,7 +1209,7 @@ function memoizeState(workInProgress: Fiber, nextState: any) {
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
-  renderExpirationTime: ExpirationTime,
+  renderExpirationTime: ExpirationTime
 ): Fiber | null {
   const updateExpirationTime = workInProgress.expirationTime;
 
@@ -1250,7 +1251,7 @@ function beginWork(
         case HostPortal:
           pushHostContainer(
             workInProgress,
-            workInProgress.stateNode.containerInfo,
+            workInProgress.stateNode.containerInfo
           );
           break;
         case ContextProvider: {
@@ -1267,7 +1268,7 @@ function beginWork(
       return bailoutOnAlreadyFinishedWork(
         current,
         workInProgress,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
   }
@@ -1283,7 +1284,7 @@ function beginWork(
         workInProgress,
         Component,
         updateExpirationTime,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
     case FunctionComponent: {
@@ -1294,7 +1295,7 @@ function beginWork(
         workInProgress,
         Component,
         unresolvedProps,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
     case FunctionComponentLazy: {
@@ -1306,7 +1307,7 @@ function beginWork(
         workInProgress,
         Component,
         resolveDefaultProps(Component, unresolvedProps),
-        renderExpirationTime,
+        renderExpirationTime
       );
       workInProgress.memoizedProps = unresolvedProps;
       return child;
@@ -1319,7 +1320,7 @@ function beginWork(
         workInProgress,
         Component,
         unresolvedProps,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
     case ClassComponentLazy: {
@@ -1331,7 +1332,7 @@ function beginWork(
         workInProgress,
         Component,
         resolveDefaultProps(Component, unresolvedProps),
-        renderExpirationTime,
+        renderExpirationTime
       );
       workInProgress.memoizedProps = unresolvedProps;
       return child;
@@ -1346,13 +1347,13 @@ function beginWork(
       return updatePlaceholderComponent(
         current,
         workInProgress,
-        renderExpirationTime,
+        renderExpirationTime
       );
     case HostPortal:
       return updatePortalComponent(
         current,
         workInProgress,
-        renderExpirationTime,
+        renderExpirationTime
       );
     case ForwardRef: {
       const type = workInProgress.type;
@@ -1361,7 +1362,7 @@ function beginWork(
         workInProgress,
         type,
         workInProgress.pendingProps,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
     case ForwardRefLazy: {
@@ -1373,7 +1374,7 @@ function beginWork(
         workInProgress,
         Component,
         resolveDefaultProps(Component, unresolvedProps),
-        renderExpirationTime,
+        renderExpirationTime
       );
       workInProgress.memoizedProps = unresolvedProps;
       return child;
@@ -1388,13 +1389,13 @@ function beginWork(
       return updateContextProvider(
         current,
         workInProgress,
-        renderExpirationTime,
+        renderExpirationTime
       );
     case ContextConsumer:
       return updateContextConsumer(
         current,
         workInProgress,
-        renderExpirationTime,
+        renderExpirationTime
       );
     case PureComponent: {
       const type = workInProgress.type;
@@ -1404,7 +1405,7 @@ function beginWork(
         type,
         workInProgress.pendingProps,
         updateExpirationTime,
-        renderExpirationTime,
+        renderExpirationTime
       );
     }
     case PureComponentLazy: {
@@ -1417,7 +1418,7 @@ function beginWork(
         Component,
         resolveDefaultProps(Component, unresolvedProps),
         updateExpirationTime,
-        renderExpirationTime,
+        renderExpirationTime
       );
       workInProgress.memoizedProps = unresolvedProps;
       return child;
@@ -1426,7 +1427,7 @@ function beginWork(
       invariant(
         false,
         'Unknown unit of work tag. This error is likely caused by a bug in ' +
-          'React. Please file an issue.',
+          'React. Please file an issue.'
       );
   }
 }

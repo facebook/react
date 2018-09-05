@@ -24,10 +24,19 @@ import {
   cloneElement,
   isValidElement,
 } from './ReactElement';
-import {createContext} from './ReactContext';
+import {readContext, createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import pure from './pure';
+import {
+  useState,
+  useReducer,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  useAPI,
+} from './ReactHooks';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -51,6 +60,15 @@ const React = {
   createContext,
   forwardRef,
   pure,
+
+  useContext: readContext,
+  useState,
+  useReducer,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  useAPI,
 
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,

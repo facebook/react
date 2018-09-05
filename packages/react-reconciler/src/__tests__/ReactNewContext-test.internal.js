@@ -12,6 +12,7 @@
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let React = require('react');
+let useContext;
 let ReactNoop;
 let gen;
 
@@ -21,6 +22,7 @@ describe('ReactNewContext', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
+    useContext = React.useContext;
     ReactNoop = require('react-noop-renderer');
     gen = require('random-seed');
   });
@@ -43,22 +45,22 @@ describe('ReactNewContext', () => {
   // a suite of tests for a given context consumer implementation.
   sharedContextTests('Context.Consumer', Context => Context.Consumer);
   sharedContextTests(
-    'Context.unstable_read inside function component',
+    'useContext inside functional component',
     Context =>
       function Consumer(props) {
         const observedBits = props.unstable_observedBits;
-        const contextValue = Context.unstable_read(observedBits);
+        const contextValue = useContext(Context, observedBits);
         const render = props.children;
         return render(contextValue);
       },
   );
   sharedContextTests(
-    'Context.unstable_read inside class component',
+    'useContext inside class component',
     Context =>
       class Consumer extends React.Component {
         render() {
           const observedBits = this.props.unstable_observedBits;
-          const contextValue = Context.unstable_read(observedBits);
+          const contextValue = useContext(Context, observedBits);
           const render = this.props.children;
           return render(contextValue);
         }
@@ -1192,7 +1194,7 @@ describe('ReactNewContext', () => {
         return (
           <FooContext>
             {foo => {
-              const bar = BarContext.unstable_read();
+              const bar = useContext(BarContext);
               return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
             }}
           </FooContext>
@@ -1236,7 +1238,7 @@ describe('ReactNewContext', () => {
     });
   });
 
-  describe('unstable_readContext', () => {
+  describe('useContext', () => {
     it('can use the same context multiple times in the same function', () => {
       const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
         let result = 0;
@@ -1262,13 +1264,13 @@ describe('ReactNewContext', () => {
       }
 
       function FooAndBar() {
-        const {foo} = Context.unstable_read(0b001);
-        const {bar} = Context.unstable_read(0b010);
+        const {foo} = useContext(Context, 0b001);
+        const {bar} = useContext(Context, 0b010);
         return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
       }
 
       function Baz() {
-        const {baz} = Context.unstable_read(0b100);
+        const {baz} = useContext(Context, 0b100);
         return <Text text={'Baz: ' + baz} />;
       }
 
