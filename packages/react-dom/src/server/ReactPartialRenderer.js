@@ -23,12 +23,17 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {warnAboutDeprecatedLifecycles} from 'shared/ReactFeatureFlags';
+import {
+  warnAboutDeprecatedLifecycles,
+  enableSuspenseServerRenderer,
+} from 'shared/ReactFeatureFlags';
+
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_ASYNC_MODE_TYPE,
+  REACT_PLACEHOLDER_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
@@ -910,6 +915,27 @@ class ReactDOMServerRenderer {
           }
           this.stack.push(frame);
           return '';
+        }
+        case REACT_PLACEHOLDER_TYPE: {
+          if (enableSuspenseServerRenderer) {
+            const nextChildren = toArray(
+              // Always use the fallback when synchronously rendering to string.
+              ((nextChild: any): ReactElement).props.fallback,
+            );
+            const frame: Frame = {
+              type: null,
+              domNamespace: parentNamespace,
+              children: nextChildren,
+              childIndex: 0,
+              context: context,
+              footer: '',
+            };
+            if (__DEV__) {
+              ((frame: any): FrameDev).debugElementStack = [];
+            }
+            this.stack.push(frame);
+            return '';
+          }
         }
         // eslint-disable-next-line-no-fallthrough
         default:
