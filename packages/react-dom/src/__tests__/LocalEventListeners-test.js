@@ -24,172 +24,395 @@ describe('Local event listeners', () => {
     container.remove();
   });
 
-  it('triggers events local captured events from children without listeners', () => {
-    const callback = jest.fn();
+  describe('capturing', () => {
+    it('triggers events local captured events from children without listeners', () => {
+      const callback = jest.fn();
 
-    ReactDOM.render(
-      <div id="top" onScroll={callback}>
-        <div id="middle" onScroll={callback}>
-          <div id="bottom" />
-        </div>
-      </div>,
-      container,
-    );
+      ReactDOM.render(
+        <div id="top" onScroll={callback}>
+          <div id="middle" onScroll={callback}>
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
 
-    const event = document.createEvent('Event');
+      const event = document.createEvent('Event');
 
-    event.initEvent('scroll', true, true);
-    container.querySelector('#bottom').dispatchEvent(event);
+      event.initEvent('scroll', true, true);
+      container.querySelector('#bottom').dispatchEvent(event);
 
-    expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveBeenCalledTimes(2);
+    });
+
+    it('can re-dispatch the same event from lower in the tree', () => {
+      const callback = jest.fn();
+
+      ReactDOM.render(
+        <div id="top" onScroll={callback}>
+          <div id="middle">
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
+
+      const event = document.createEvent('Event');
+      const top = container.querySelector('#top');
+      const middle = container.querySelector('#middle');
+      const bottom = container.querySelector('#bottom');
+
+      event.initEvent('scroll', true, true);
+
+      top.dispatchEvent(event);
+      middle.dispatchEvent(event);
+      bottom.dispatchEvent(event);
+
+      expect(callback).toHaveBeenCalledTimes(3);
+    });
+
+    it('can re-dispatch the same event from higher in the tree', () => {
+      const callback = jest.fn();
+
+      ReactDOM.render(
+        <div id="top" onScroll={callback}>
+          <div id="middle">
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
+
+      const event = document.createEvent('Event');
+      const top = container.querySelector('#top');
+      const bottom = container.querySelector('#bottom');
+
+      event.initEvent('scroll', true, true);
+
+      bottom.dispatchEvent(event);
+      top.dispatchEvent(event);
+
+      expect(callback).toHaveBeenCalledTimes(2);
+    });
+
+    it('can re-dispatch the same event from the same point in the tree', () => {
+      const callback = jest.fn();
+
+      ReactDOM.render(
+        <div id="top" onScroll={callback}>
+          <div id="middle">
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
+
+      const event = document.createEvent('Event');
+
+      const bottom = container.querySelector('#bottom');
+
+      event.initEvent('scroll', true, true);
+
+      bottom.dispatchEvent(event);
+      bottom.dispatchEvent(event);
+
+      expect(callback).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not double dispatch events at the top leaf', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+
+      ReactDOM.render(
+        <div id="top" onScroll={top}>
+          <div id="middle" onScroll={middle}>
+            <div id="bottom" onScroll={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#top');
+      const event = document.createEvent('Event');
+
+      event.initEvent('scroll', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(0);
+      expect(bottom).toHaveBeenCalledTimes(0);
+    });
+
+    it('does not double dispatch events at the middle leaf', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+
+      ReactDOM.render(
+        <div id="top" onScroll={top}>
+          <div id="middle" onScroll={middle}>
+            <div id="bottom" onScroll={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#middle');
+      const event = document.createEvent('Event');
+
+      event.initEvent('scroll', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(0);
+    });
+
+    it('does not double dispatch events at the deepest leaf for captured events', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+
+      ReactDOM.render(
+        <div id="top" onScroll={top}>
+          <div id="middle" onScroll={middle}>
+            <div id="bottom" onScroll={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#bottom');
+      const event = document.createEvent('Event');
+
+      event.initEvent('scroll', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('can re-dispatch the same event from lower in the tree', () => {
-    const callback = jest.fn();
+  describe('bubbling', () => {
+    it('triggers events local bubbled events from children without listeners', () => {
+      const callback = jest.fn();
 
-    ReactDOM.render(
-      <div id="top" onScroll={callback}>
-        <div id="middle">
-          <div id="bottom" />
-        </div>
-      </div>,
-      container,
-    );
+      ReactDOM.render(
+        <div id="top" onTouchStart={callback}>
+          <div id="middle" onTouchStart={callback}>
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
 
-    const event = document.createEvent('Event');
-    const top = container.querySelector('#top');
-    const middle = container.querySelector('#middle');
-    const bottom = container.querySelector('#bottom');
+      const event = document.createEvent('Event');
 
-    event.initEvent('scroll', true, true);
+      event.initEvent('touchstart', true, true);
+      container.querySelector('#bottom').dispatchEvent(event);
 
-    top.dispatchEvent(event);
-    middle.dispatchEvent(event);
-    bottom.dispatchEvent(event);
+      expect(callback).toHaveBeenCalledTimes(2);
+    });
 
-    expect(callback).toHaveBeenCalledTimes(3);
-  });
+    it('can re-dispatch the same event from lower in the tree', () => {
+      const callback = jest.fn();
 
-  it('can re-dispatch the same event from higher in the tree', () => {
-    const callback = jest.fn();
+      ReactDOM.render(
+        <div id="top" onTouchStart={callback}>
+          <div id="middle">
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
 
-    ReactDOM.render(
-      <div id="top" onScroll={callback}>
-        <div id="middle">
-          <div id="bottom" />
-        </div>
-      </div>,
-      container,
-    );
+      const event = document.createEvent('Event');
+      const top = container.querySelector('#top');
+      const middle = container.querySelector('#middle');
+      const bottom = container.querySelector('#bottom');
 
-    const event = document.createEvent('Event');
-    const top = container.querySelector('#top');
-    const bottom = container.querySelector('#bottom');
+      event.initEvent('touchstart', true, true);
 
-    event.initEvent('scroll', true, true);
+      top.dispatchEvent(event);
+      middle.dispatchEvent(event);
+      bottom.dispatchEvent(event);
 
-    bottom.dispatchEvent(event);
-    top.dispatchEvent(event);
+      expect(callback).toHaveBeenCalledTimes(3);
+    });
 
-    expect(callback).toHaveBeenCalledTimes(2);
-  });
+    it('can re-dispatch the same event from higher in the tree', () => {
+      const callback = jest.fn();
 
-  it('can re-dispatch the same event from the same point in the tree', () => {
-    const callback = jest.fn();
+      ReactDOM.render(
+        <div id="top" onTouchStart={callback}>
+          <div id="middle">
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
 
-    ReactDOM.render(
-      <div id="top" onScroll={callback}>
-        <div id="middle">
-          <div id="bottom" />
-        </div>
-      </div>,
-      container,
-    );
+      const event = document.createEvent('Event');
+      const top = container.querySelector('#top');
+      const bottom = container.querySelector('#bottom');
 
-    const event = document.createEvent('Event');
+      event.initEvent('touchstart', true, true);
 
-    const bottom = container.querySelector('#bottom');
+      bottom.dispatchEvent(event);
+      top.dispatchEvent(event);
 
-    event.initEvent('scroll', true, true);
+      expect(callback).toHaveBeenCalledTimes(2);
+    });
 
-    bottom.dispatchEvent(event);
-    bottom.dispatchEvent(event);
+    it('can re-dispatch the same event from higher in the tree with multiple listeners', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
 
-    expect(callback).toHaveBeenCalledTimes(2);
-  });
+      ReactDOM.render(
+        <div id="top" onTouchStart={top}>
+          <div id="middle" onTouchStart={middle}>
+            <div id="bottom" onTouchStart={bottom} />
+          </div>
+        </div>,
+        container,
+      );
 
-  it('does not double dispatch events at the top leaf', () => {
-    const top = jest.fn();
-    const middle = jest.fn();
-    const bottom = jest.fn();
+      const event = document.createEvent('Event');
+      event.initEvent('touchstart', true, true);
 
-    ReactDOM.render(
-      <div id="top" onScroll={top}>
-        <div id="middle" onScroll={middle}>
-          <div id="bottom" onScroll={bottom} />
-        </div>
-      </div>,
-      container,
-    );
+      container.querySelector('#top').dispatchEvent(event);
+      container.querySelector('#middle').dispatchEvent(event);
 
-    const target = container.querySelector('#top');
-    const event = document.createEvent('Event');
+      expect(top).toHaveBeenCalledTimes(2);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(0);
+    });
 
-    event.initEvent('scroll', true, true);
-    target.dispatchEvent(event);
+    it('can re-dispatch the same event from lower in the tree with multiple listeners', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
 
-    expect(top).toHaveBeenCalledTimes(1);
-    expect(middle).toHaveBeenCalledTimes(0);
-    expect(bottom).toHaveBeenCalledTimes(0);
-  });
+      ReactDOM.render(
+        <div id="top" onTouchStart={top}>
+          <div id="middle" onTouchStart={middle}>
+            <div id="bottom" onTouchStart={bottom} />
+          </div>
+        </div>,
+        container,
+      );
 
-  it('does not double dispatch events at the middle leaf', () => {
-    const top = jest.fn();
-    const middle = jest.fn();
-    const bottom = jest.fn();
+      const event = document.createEvent('Event');
+      event.initEvent('touchstart', true, true);
 
-    ReactDOM.render(
-      <div id="top" onScroll={top}>
-        <div id="middle" onScroll={middle}>
-          <div id="bottom" onScroll={bottom} />
-        </div>
-      </div>,
-      container,
-    );
+      container.querySelector('#middle').dispatchEvent(event);
+      container.querySelector('#top').dispatchEvent(event);
 
-    const target = container.querySelector('#middle');
-    const event = document.createEvent('Event');
+      expect(top).toHaveBeenCalledTimes(2);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(0);
+    });
 
-    event.initEvent('scroll', true, true);
-    target.dispatchEvent(event);
+    it('can re-dispatch the same event from the same point in the tree', () => {
+      const callback = jest.fn();
 
-    expect(top).toHaveBeenCalledTimes(1);
-    expect(middle).toHaveBeenCalledTimes(1);
-    expect(bottom).toHaveBeenCalledTimes(0);
-  });
+      ReactDOM.render(
+        <div id="top" onTouchStart={callback}>
+          <div id="middle">
+            <div id="bottom" />
+          </div>
+        </div>,
+        container,
+      );
 
-  it('does not double dispatch events at the deepest leaf', () => {
-    const top = jest.fn();
-    const middle = jest.fn();
-    const bottom = jest.fn();
+      const event = document.createEvent('Event');
 
-    ReactDOM.render(
-      <div id="top" onScroll={top}>
-        <div id="middle" onScroll={middle}>
-          <div id="bottom" onScroll={bottom} />
-        </div>
-      </div>,
-      container,
-    );
+      const bottom = container.querySelector('#bottom');
 
-    const target = container.querySelector('#bottom');
-    const event = document.createEvent('Event');
+      event.initEvent('touchstart', true, true);
 
-    event.initEvent('scroll', true, true);
-    target.dispatchEvent(event);
+      bottom.dispatchEvent(event);
+      bottom.dispatchEvent(event);
 
-    expect(top).toHaveBeenCalledTimes(1);
-    expect(middle).toHaveBeenCalledTimes(1);
-    expect(bottom).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not double dispatch events at the top leaf', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+
+      ReactDOM.render(
+        <div id="top" onTouchStart={top}>
+          <div id="middle" onTouchStart={middle}>
+            <div id="bottom" onTouchStart={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#top');
+      const event = document.createEvent('Event');
+
+      event.initEvent('touchstart', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(0);
+      expect(bottom).toHaveBeenCalledTimes(0);
+    });
+
+    it('does not double dispatch events at the middle leaf', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+
+      ReactDOM.render(
+        <div id="top" onTouchStart={top}>
+          <div id="middle" onTouchStart={middle}>
+            <div id="bottom" onTouchStart={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#middle');
+      const event = document.createEvent('Event');
+
+      event.initEvent('touchstart', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(0);
+    });
+
+    it('does not double dispatch events at the deepest leaf for captured events', () => {
+      const top = jest.fn();
+      const middle = jest.fn();
+      const bottom = jest.fn();
+
+      ReactDOM.render(
+        <div id="top" onTouchStart={top}>
+          <div id="middle" onTouchStart={middle}>
+            <div id="bottom" onTouchStart={bottom} />
+          </div>
+        </div>,
+        container,
+      );
+
+      const target = container.querySelector('#bottom');
+      const event = document.createEvent('Event');
+
+      event.initEvent('touchstart', true, true);
+      target.dispatchEvent(event);
+
+      expect(top).toHaveBeenCalledTimes(1);
+      expect(middle).toHaveBeenCalledTimes(1);
+      expect(bottom).toHaveBeenCalledTimes(1);
+    });
   });
 });
