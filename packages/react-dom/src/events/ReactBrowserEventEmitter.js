@@ -135,6 +135,7 @@ export function listenTo(
 ) {
   const mountAtListeners = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
+  let elementListeners;
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
@@ -142,8 +143,7 @@ export function listenTo(
     switch (dependency) {
       case TOP_SCROLL:
       case TOP_WHEEL:
-        const elementListeners = getListenerTrackingFor(element);
-
+        elementListeners = getListenerTrackingFor(element);
         if (!elementListeners.hasOwnProperty(dependency)) {
           trapCapturedEvent(dependency, element);
           elementListeners[dependency] = true;
@@ -153,8 +153,7 @@ export function listenTo(
       case TOP_TOUCH_END:
       case TOP_TOUCH_MOVE:
       case TOP_TOUCH_CANCEL:
-        const elementListeners = getListenerTrackingFor(element);
-
+        elementListeners = getListenerTrackingFor(element);
         if (!elementListeners.hasOwnProperty(dependency)) {
           trapBubbledEvent(dependency, element);
           elementListeners[dependency] = true;
