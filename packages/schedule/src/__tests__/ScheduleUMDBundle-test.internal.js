@@ -16,10 +16,20 @@ describe('Scheduling UMD bundle', () => {
     jest.resetModules();
   });
 
+  function filterPrivateKeys(name) {
+    return !name.startsWith('_');
+  }
+
   function validateForwardedAPIs(api, forwardedAPIs) {
-    const apiKeys = Object.keys(api).sort();
+    const apiKeys = Object.keys(api)
+      .filter(filterPrivateKeys)
+      .sort();
     forwardedAPIs.forEach(forwardedAPI => {
-      expect(Object.keys(forwardedAPI).sort()).toEqual(apiKeys);
+      expect(
+        Object.keys(forwardedAPI)
+          .filter(filterPrivateKeys)
+          .sort(),
+      ).toEqual(apiKeys);
     });
   }
 

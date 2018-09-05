@@ -16,20 +16,6 @@
       ? define(['react'], factory) // eslint-disable-line no-undef
       : (global.ScheduleTracking = factory(global));
 })(this, function(global) {
-  function __getInteractionsRef() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.__getInteractionsRef.apply(
-      this,
-      arguments
-    );
-  }
-
-  function __getSubscriberRef() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.__getSubscriberRef.apply(
-      this,
-      arguments
-    );
-  }
-
   function unstable_clear() {
     return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracking.unstable_clear.apply(
       this,
@@ -82,8 +68,6 @@
   }
 
   return Object.freeze({
-    __getInteractionsRef: __getInteractionsRef,
-    __getSubscriberRef: __getSubscriberRef,
     unstable_clear: unstable_clear,
     unstable_getCurrent: unstable_getCurrent,
     unstable_getThreadID: unstable_getThreadID,
