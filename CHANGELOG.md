@@ -7,6 +7,72 @@
 
 </details>
 
+## 16.5.0 (September 5, 2018)
+
+### React
+
+* Add a warning if `React.forwardRef` render function doesn't take exactly two arguments ([@bvaughn](https://github.com/bvaughn) in [#13168](https://github.com/facebook/react/issues/13168))
+* Improve the error message when passing an element to `createElement` by mistake ([@DCtheTall](https://github.com/DCtheTall) in [#13131](https://github.com/facebook/react/issues/13131))
+
+### React DOM
+
+* Add support for React DevTools Profiler ([@bvaughn](https://github.com/bvaughn) in [#13058](https://github.com/facebook/react/issues/13058))
+* Add `react-dom/profiling` entry point alias for profiling in production ([@bvaughn](https://github.com/bvaughn) in [#13570](https://github.com/facebook/react/issues/13570))
+* Add `onAuxClick` event for browsers that support it ([@jquense](https://github.com/jquense) in [#11571](https://github.com/facebook/react/issues/11571))
+* Add `movementX` and `movementY` fields to mouse events ([@jasonwilliams](https://github.com/jasonwilliams) in [#9018](https://github.com/facebook/react/issues/9018))
+* Add `tangentialPressure` and `twist` fields to pointer events ([@motiz88](https://github.com/motiz88) in [#13374](https://github.com/facebook/react/issues/13374))
+* Minimally support iframes (nested browsing contexts) in selection event handling ([@acusti](https://github.com/acusti) in [#12037](https://github.com/facebook/react/issues/12037))
+* Support passing booleans to the `focusable` SVG attribute ([@gaearon](https://github.com/gaearon) in [#13339](https://github.com/facebook/react/issues/13339))
+* Ignore `<noscript>` on the client when when hydrating ([@Ephem](https://github.com/Ephem) in [#13537](https://github.com/facebook/react/issues/13537))
+* Fix `gridArea` to be treated as a unitless CSS property ([@mgol](https://github.com/mgol) in [#13550](https://github.com/facebook/react/issues/13550))
+* Fix incorrect data in `compositionend` event when typing Korean on IE11 ([@robbertbrak](https://github.com/robbertbrak) in [#10217](https://github.com/facebook/react/issues/10217))
+* Fix a crash when using dynamic `children` in the `<option>` tag ([@Slowyn](https://github.com/Slowyn) in [#13261](https://github.com/facebook/react/issues/13261), [@gaearon](https://github.com/gaearon) in [#13465](https://github.com/facebook/react/pull/13465))
+* Fix the `checked` attribute not getting initially set on the `input` ([@dilidili](https://github.com/dilidili) in [#13114](https://github.com/facebook/react/issues/13114))
+* Fix hydration of `dangerousSetInnerHTML` when `__html` is not a string ([@gaearon](https://github.com/gaearon) in [#13353](https://github.com/facebook/react/issues/13353)) 
+* Fix a warning about missing controlled `onChange` to fire on falsy values too ([@nicolevy](https://github.com/nicolevy) in [#12628](https://github.com/facebook/react/issues/12628))
+* Fix `submit` and `reset` buttons getting an empty label ([@ellsclytn](https://github.com/ellsclytn) in [#12780](https://github.com/facebook/react/issues/12780))
+* Fix the `onSelect` event not being triggered after drag and drop ([@gaearon](https://github.com/gaearon) in [#13422](https://github.com/facebook/react/issues/13422))
+* Fix the `onClick` event not working inside a portal on iOS ([@aweary](https://github.com/aweary) in [#11927](https://github.com/facebook/react/issues/11927))
+* Fix a performance issue when thousands of roots are re-rendered ([@gaearon](https://github.com/gaearon) in [#13335](https://github.com/facebook/react/issues/13335))
+* Fix a performance regression that also caused `onChange` to not fire in some cases ([@gaearon](https://github.com/gaearon) in [#13423](https://github.com/facebook/react/issues/13423))
+* Handle errors in more edge cases gracefully ([@gaearon](https://github.com/gaearon) in [#13237](https://github.com/facebook/react/issues/13237) and [@acdlite](https://github.com/acdlite) in [#13269](https://github.com/facebook/react/issues/13269))
+* Don't use proxies for synthetic events in development ([@gaearon](https://github.com/gaearon) in [#12171](https://github.com/facebook/react/issues/12171))
+* Warn when `"false"` or `"true"` is the value of a boolean DOM prop ([@motiz88](https://github.com/motiz88) in [#13372](https://github.com/facebook/react/issues/13372))
+* Warn when `this.state` is initialized to `props` ([@veekas](https://github.com/veekas) in [#11658](https://github.com/facebook/react/issues/11658))
+* Don't compare `style` on hydration in IE due to noisy false positives ([@mgol](https://github.com/mgol) in [#13534](https://github.com/facebook/react/issues/13534))
+* Include `StrictMode` in the component stack ([@gaearon](https://github.com/gaearon) in [#13240](https://github.com/facebook/react/issues/13240))
+* Don't overwrite `window.event` in IE ([@ConradIrwin](https://github.com/ConradIrwin) in [#11696](https://github.com/facebook/react/issues/11696))
+* Improve component stack for the `folder/index.js` naming convention ([@gaearon](https://github.com/gaearon) in [#12059](https://github.com/facebook/react/issues/12059))
+* Improve a warning when using `getDerivedStateFromProps` without initialized state ([@flxwu](https://github.com/flxwu) in [#13317](https://github.com/facebook/react/issues/13317))
+* Improve a warning about invalid textarea usage ([@raunofreiberg](https://github.com/raunofreiberg) in [#13361](https://github.com/facebook/react/issues/13361))
+* Treat invalid Symbol and function values more consistently ([@raunofreiberg](https://github.com/raunofreiberg) in [#13362](https://github.com/facebook/react/issues/13362) and [#13389](https://github.com/facebook/react/issues/13389))
+* Allow Electron `<webview>` tag without warnings ([@philipp-spiess](https://github.com/philipp-spiess) in [#13301](https://github.com/facebook/react/issues/13301))
+* Don't show the uncaught error addendum if `e.preventDefault()` was called ([@gaearon](https://github.com/gaearon) in [#13384](https://github.com/facebook/react/issues/13384))
+* Warn about rendering Generators ([@gaearon](https://github.com/gaearon) in [#13312](https://github.com/facebook/react/issues/13312))
+* Remove irrelevant suggestion of a legacy method from a warning ([@zx6658](https://github.com/zx6658) in [#13169](https://github.com/facebook/react/issues/13169))
+* Remove `unstable_deferredUpdates` in favor of `unstable_scheduleWork` from `schedule` ([@gaearon](https://github.com/gaearon) in [#13488](https://github.com/facebook/react/issues/13488))
+* Fix unstable asynchronous mode from doing unnecessary work when an update takes too long ([@acdlite](https://github.com/acdlite) in [#13503](https://github.com/facebook/react/issues/13503))
+
+### React DOM Server
+
+* Fix crash with nullish children when using `dangerouslySetInnerHtml` in a selected `<option>` ([@mridgway](https://github.com/mridgway) in [#13078](https://github.com/facebook/react/issues/13078))
+* Fix crash when `setTimeout` is missing ([@dustinsoftware](https://github.com/dustinsoftware) in [#13088](https://github.com/facebook/react/issues/13088))
+
+### React Test Renderer and Test Utils
+
+* Fix `this` in a functional component for shallow renderer to be `undefined` ([@koba04](https://github.com/koba04) in [#13144](https://github.com/facebook/react/issues/13144))
+* Deprecate a Jest-specific `ReactTestUtils.mockComponent()` helper ([@bvaughn](https://github.com/bvaughn) in [#13193](https://github.com/facebook/react/issues/13193))
+* Warn about `ReactDOM.createPortal` usage within the test renderer ([@bvaughn](https://github.com/bvaughn) in [#12895](https://github.com/facebook/react/issues/12895))
+* Improve a confusing error message ([@gaearon](https://github.com/gaearon) in [#13351](https://github.com/facebook/react/issues/13351))
+
+### React ART
+
+* Add support for DevTools ([@yunchancho](https://github.com/yunchancho) in [#13173](https://github.com/facebook/react/issues/13173))
+
+### Schedule (Experimental)
+
+* New package for cooperatively scheduling work in a browser environment. It's used by React internally, but its public API is not finalized yet. ([@flarnie](https://github.com/flarnie) in [#12624](https://github.com/facebook/react/pull/12624))
+
 ## 16.4.2 (August 1, 2018)
 
 ### React DOM Server
