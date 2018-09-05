@@ -299,11 +299,11 @@ describe('Tracking', () => {
 
       it('should expose the current set of interactions to be externally manipulated', () => {
         SchedulerTracking.unstable_track('outer event', currentTime, () => {
-          expect(SchedulerTracking.__getInteractionsRef().current).toBe(
+          expect(SchedulerTracking.__interactionsRef.current).toBe(
             SchedulerTracking.unstable_getCurrent(),
           );
 
-          SchedulerTracking.__getInteractionsRef().current = new Set([
+          SchedulerTracking.__interactionsRef.current = new Set([
             {name: 'override event'},
           ]);
 
@@ -315,7 +315,7 @@ describe('Tracking', () => {
 
       it('should expose a subscriber ref to be externally manipulated', () => {
         SchedulerTracking.unstable_track('outer event', currentTime, () => {
-          expect(SchedulerTracking.__getSubscriberRef()).toEqual({
+          expect(SchedulerTracking.__subscriberRef).toEqual({
             current: null,
           });
         });
@@ -368,7 +368,7 @@ describe('Tracking', () => {
 
     describe('advanced integration', () => {
       it('should not create unnecessary objects', () => {
-        expect(SchedulerTracking.__getInteractionsRef()).toBe(null);
+        expect(SchedulerTracking.__interactionsRef).toBe(null);
       });
     });
   });

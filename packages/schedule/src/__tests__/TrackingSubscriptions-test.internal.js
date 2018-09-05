@@ -112,15 +112,15 @@ describe('TrackingSubscriptions', () => {
     it('should lazily subscribe to tracking and unsubscribe again if there are no external subscribers', () => {
       loadModules({enableSchedulerTracking: true, autoSubscribe: false});
 
-      expect(SchedulerTracking.__getSubscriberRef().current).toBe(null);
+      expect(SchedulerTracking.__subscriberRef.current).toBe(null);
       SchedulerTracking.unstable_subscribe(firstSubscriber);
-      expect(SchedulerTracking.__getSubscriberRef().current).toBeDefined();
+      expect(SchedulerTracking.__subscriberRef.current).toBeDefined();
       SchedulerTracking.unstable_subscribe(secondSubscriber);
-      expect(SchedulerTracking.__getSubscriberRef().current).toBeDefined();
+      expect(SchedulerTracking.__subscriberRef.current).toBeDefined();
       SchedulerTracking.unstable_unsubscribe(secondSubscriber);
-      expect(SchedulerTracking.__getSubscriberRef().current).toBeDefined();
+      expect(SchedulerTracking.__subscriberRef.current).toBeDefined();
       SchedulerTracking.unstable_unsubscribe(firstSubscriber);
-      expect(SchedulerTracking.__getSubscriberRef().current).toBe(null);
+      expect(SchedulerTracking.__subscriberRef.current).toBe(null);
     });
 
     describe('error handling', () => {

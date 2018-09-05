@@ -12,8 +12,8 @@ import React from 'react';
 const ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 const {
-  __getInteractionsRef,
-  __getSubscriberRef,
+  __interactionsRef,
+  __subscriberRef,
   unstable_clear,
   unstable_getCurrent,
   unstable_getThreadID,
@@ -24,8 +24,8 @@ const {
 } = ReactInternals.ScheduleTracking;
 
 export {
-  __getInteractionsRef,
-  __getSubscriberRef,
+  __interactionsRef,
+  __subscriberRef,
   unstable_clear,
   unstable_getCurrent,
   unstable_getThreadID,

@@ -48,8 +48,6 @@ function checkSchedulerTrackingAPI() {
   runTest(document.getElementById('checkSchedulerTrackingAPI'), () => {
     if (
       typeof ScheduleTracking === 'undefined' ||
-      typeof ScheduleTracking.__getInteractionsRef !== 'function' ||
-      typeof ScheduleTracking.__getSubscriberRef !== 'function' ||
       typeof ScheduleTracking.unstable_clear !== 'function' ||
       typeof ScheduleTracking.unstable_getCurrent !== 'function' ||
       typeof ScheduleTracking.unstable_getThreadID !== 'function' ||
@@ -62,7 +60,7 @@ function checkSchedulerTrackingAPI() {
     try {
       let interactionsSet;
       ScheduleTracking.unstable_track('test', 123, () => {
-        interactionsSet = ScheduleTracking.__getInteractionsRef().current;
+        interactionsSet = ScheduleTracking.unstable_getCurrent();
       });
       if (interactionsSet.size !== 1) {
         throw null;
