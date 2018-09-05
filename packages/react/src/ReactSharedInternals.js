@@ -12,8 +12,8 @@ import {
   unstable_scheduleWork,
 } from 'schedule';
 import {
-  __getInteractionsRef,
-  __getSubscriberRef,
+  __interactionsRef,
+  __subscriberRef,
   unstable_clear,
   unstable_getCurrent,
   unstable_getThreadID,
@@ -44,8 +44,8 @@ if (__UMD__) {
       unstable_scheduleWork,
     },
     ScheduleTracking: {
-      __getInteractionsRef,
-      __getSubscriberRef,
+      __interactionsRef,
+      __subscriberRef,
       unstable_clear,
       unstable_getCurrent,
       unstable_getThreadID,

@@ -10,13 +10,9 @@
 import type {Fiber} from './ReactFiber';
 import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {
-  Interaction,
-  InteractionsRef,
-  SubscriberRef,
-} from 'schedule/src/Tracking';
+import type {Interaction} from 'schedule/src/Tracking';
 
-import {__getInteractionsRef, __getSubscriberRef} from 'schedule/tracking';
+import {__interactionsRef, __subscriberRef} from 'schedule/tracking';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -165,13 +161,6 @@ export type Thenable = {
 };
 
 const {ReactCurrentOwner} = ReactSharedInternals;
-
-let interactionsRef: InteractionsRef = (null: any);
-let subscriberRef: SubscriberRef = (null: any);
-if (enableSchedulerTracking) {
-  interactionsRef = __getInteractionsRef();
-  subscriberRef = __getSubscriberRef();
-}
 
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;
@@ -570,8 +559,8 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   if (enableSchedulerTracking) {
     // Restore any pending interactions at this point,
     // So that cascading work triggered during the render phase will be accounted for.
-    prevInteractions = interactionsRef.current;
-    interactionsRef.current = root.memoizedInteractions;
+    prevInteractions = __interactionsRef.current;
+    __interactionsRef.current = root.memoizedInteractions;
 
     // We are potentially finished with the current batch of interactions.
     // So we should clear them out of the pending interaction map.
@@ -766,12 +755,12 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   onCommit(root, earliestRemainingTimeAfterCommit);
 
   if (enableSchedulerTracking) {
-    interactionsRef.current = prevInteractions;
+    __interactionsRef.current = prevInteractions;
 
     let subscriber;
 
     try {
-      subscriber = subscriberRef.current;
+      subscriber = __subscriberRef.current;
       if (subscriber !== null && root.memoizedInteractions.size > 0) {
         const threadID = computeThreadID(
           committedExpirationTime,
@@ -1176,8 +1165,8 @@ function renderRoot(
   if (enableSchedulerTracking) {
     // We're about to start new tracked work.
     // Restore pending interactions so cascading work triggered during the render phase will be accounted for.
-    prevInteractions = interactionsRef.current;
-    interactionsRef.current = root.memoizedInteractions;
+    prevInteractions = __interactionsRef.current;
+    __interactionsRef.current = root.memoizedInteractions;
   }
 
   // Check if we're starting from a fresh stack, or if we're resuming from
@@ -1220,7 +1209,7 @@ function renderRoot(
       root.memoizedInteractions = interactions;
 
       if (interactions.size > 0) {
-        const subscriber = subscriberRef.current;
+        const subscriber = __subscriberRef.current;
         if (subscriber !== null) {
           const threadID = computeThreadID(
             expirationTime,
@@ -1305,7 +1294,7 @@ function renderRoot(
 
   if (enableSchedulerTracking) {
     // Tracked work is done for now; restore the previous interactions.
-    interactionsRef.current = prevInteractions;
+    __interactionsRef.current = prevInteractions;
   }
 
   // We're done performing work. Time to clean up.
@@ -1614,13 +1603,13 @@ function retrySuspendedRoot(
     if (rootExpirationTime !== NoWork) {
       if (enableSchedulerTracking) {
         // Restore previous interactions so that new work is associated with them.
-        let prevInteractions = interactionsRef.current;
-        interactionsRef.current = root.memoizedInteractions;
+        let prevInteractions = __interactionsRef.current;
+        __interactionsRef.current = root.memoizedInteractions;
         // Because suspense timeouts do not decrement the interaction count,
         // Continued suspense work should also not increment the count.
         storeInteractionsForExpirationTime(root, rootExpirationTime, false);
         requestWork(root, rootExpirationTime);
-        interactionsRef.current = prevInteractions;
+        __interactionsRef.current = prevInteractions;
       } else {
         requestWork(root, rootExpirationTime);
       }
@@ -1687,7 +1676,7 @@ function storeInteractionsForExpirationTime(
     return;
   }
 
-  const interactions = interactionsRef.current;
+  const interactions = __interactionsRef.current;
   if (interactions.size > 0) {
     const pendingInteractions = root.pendingInteractionMap.get(expirationTime);
     if (pendingInteractions != null) {
@@ -1710,7 +1699,7 @@ function storeInteractionsForExpirationTime(
       }
     }
 
-    const subscriber = subscriberRef.current;
+    const subscriber = __subscriberRef.current;
     if (subscriber !== null) {
       const threadID = computeThreadID(
         expirationTime,

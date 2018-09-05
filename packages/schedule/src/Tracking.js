@@ -79,15 +79,7 @@ if (enableSchedulerTracking) {
   };
 }
 
-// These values are exported for libraries with advanced use cases (i.e. React).
-// They should not typically be accessed directly.
-export function __getInteractionsRef(): InteractionsRef {
-  return interactionsRef;
-}
-
-export function __getSubscriberRef(): SubscriberRef {
-  return subscriberRef;
-}
+export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
 
 export function unstable_clear(callback: Function): any {
   if (!enableSchedulerTracking) {
