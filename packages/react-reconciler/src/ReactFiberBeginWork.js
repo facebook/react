@@ -79,6 +79,7 @@ import {
   prepareToReadContext,
   calculateChangedBits,
 } from './ReactFiberNewContext';
+import {prepareToUseHooks, finishHooks, resetHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
 import {
   getMaskedContext,
@@ -193,27 +194,17 @@ function forceUnmountCurrentAndReconcile(
 function updateForwardRef(
   current: Fiber | null,
   workInProgress: Fiber,
-  type: any,
+  Component: any,
   nextProps: any,
   renderExpirationTime: ExpirationTime,
 ) {
-  const render = type.render;
+  const render = Component.render;
   const ref = workInProgress.ref;
-  if (hasLegacyContextChanged()) {
-    // Normally we can bail out on props equality but if context has changed
-    // we don't do the bailout and we have to reuse existing props instead.
-  } else if (workInProgress.memoizedProps === nextProps) {
-    const currentRef = current !== null ? current.ref : null;
-    if (ref === currentRef) {
-      return bailoutOnAlreadyFinishedWork(
-        current,
-        workInProgress,
-        renderExpirationTime,
-      );
-    }
-  }
 
+  // The rest is a fork of updateFunctionComponent
   let nextChildren;
+  prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     ReactCurrentFiber.setCurrentPhase('render');
@@ -222,7 +213,10 @@ function updateForwardRef(
   } else {
     nextChildren = render(nextProps, ref);
   }
+  nextChildren = finishHooks(render, nextProps, nextChildren, ref);
 
+  // React DevTools reads this flag.
+  workInProgress.effectTag |= PerformedWork;
   reconcileChildren(
     current,
     workInProgress,
@@ -406,6 +400,7 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToUseHooks(current, workInProgress, renderExpirationTime);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     ReactCurrentFiber.setCurrentPhase('render');
@@ -414,6 +409,7 @@ function updateFunctionComponent(
   } else {
     nextChildren = Component(nextProps, context);
   }
+  nextChildren = finishHooks(Component, nextProps, nextChildren, context);
 
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
@@ -921,6 +917,7 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToUseHooks(null, workInProgress, renderExpirationTime);
 
   let value;
 
@@ -964,6 +961,9 @@ function mountIndeterminateComponent(
     // Proceed under the assumption that this is a class instance
     workInProgress.tag = ClassComponent;
 
+    // Throw out any hooks that were used.
+    resetHooks();
+
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
@@ -1001,6 +1001,7 @@ function mountIndeterminateComponent(
   } else {
     // Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent;
+    value = finishHooks(Component, props, value, context);
     if (__DEV__) {
       if (Component) {
         warningWithoutStack(
