@@ -420,6 +420,21 @@ describe('ReactElementValidator', () => {
     );
   });
 
+  it('warns for fragments with illegal attributes', () => {
+    class Foo extends React.Component {
+      render() {
+        return React.createElement(React.Fragment, {a: 1}, '123');
+      }
+    }
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(React.createElement(Foo));
+    }).toWarnDev(
+      'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
+        'can only have `key` and `children` props.',
+    );
+  });
+
   it('should warn when accessing .type on an element factory', () => {
     function TestComponent() {
       return <div />;
