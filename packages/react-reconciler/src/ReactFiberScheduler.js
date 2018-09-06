@@ -370,7 +370,7 @@ function resetStack() {
   nextUnitOfWork = null;
 }
 
-function commitAllHostEffects(root: FiberRoot) {
+function commitAllHostEffects() {
   while (nextEffect !== null) {
     if (__DEV__) {
       ReactCurrentFiber.setCurrentFiber(nextEffect);
@@ -415,12 +415,12 @@ function commitAllHostEffects(root: FiberRoot) {
 
         // Update
         const current = nextEffect.alternate;
-        commitWork(root, current, nextEffect);
+        commitWork(current, nextEffect);
         break;
       }
       case Update: {
         const current = nextEffect.alternate;
-        commitWork(root, current, nextEffect);
+        commitWork(current, nextEffect);
         break;
       }
       case Deletion: {
@@ -652,14 +652,14 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     let didError = false;
     let error;
     if (__DEV__) {
-      invokeGuardedCallback(null, commitAllHostEffects, null, root);
+      invokeGuardedCallback(null, commitAllHostEffects, null);
       if (hasCaughtError()) {
         didError = true;
         error = clearCaughtError();
       }
     } else {
       try {
-        commitAllHostEffects(root);
+        commitAllHostEffects();
       } catch (e) {
         didError = true;
         error = e;

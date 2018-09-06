@@ -1092,6 +1092,37 @@ describe('Profiler', () => {
         expect(updateCall[3]).toBe(1); // base time
         expect(updateCall[4]).toBe(27); // start time
       });
+
+      it('should not be called until after mutations', () => {
+        let classComponentMounted = false;
+        const callback = jest.fn(
+          (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
+            // Don't call this hook until after mutations
+            expect(classComponentMounted).toBe(true);
+            // But the commit time should reflect pre-mutation
+            expect(commitTime).toBe(2);
+          },
+        );
+
+        class ClassComponent extends React.Component {
+          componentDidMount() {
+            advanceTimeBy(5);
+            classComponentMounted = true;
+          }
+          render() {
+            advanceTimeBy(2);
+            return null;
+          }
+        }
+
+        ReactTestRenderer.create(
+          <React.unstable_Profiler id="test" onRender={callback}>
+            <ClassComponent />
+          </React.unstable_Profiler>,
+        );
+
+        expect(callback).toHaveBeenCalledTimes(1);
+      });
     });
   });
 
