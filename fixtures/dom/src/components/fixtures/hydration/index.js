@@ -13,25 +13,58 @@ class Hydration extends React.Component {
     hydrate: true,
   };
 
+  ready = false;
+
+  componentDidMount() {
+    window.addEventListener('message', this.handleMessage);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('message', this.handleMessage);
+  }
+
+  injectCode = () => {
+    this.send({
+      type: 'code',
+      payload: buble.transform(this.state.code).code,
+    });
+  };
+
+  setFrame = frame => {
+    this.frame = frame;
+  };
+
+  handleMessage = event => {
+    switch (event.data.type) {
+      case 'ready':
+        this.ready = true;
+        this.injectCode();
+        break;
+      default:
+        throw new Error('Unrecognized message: ' + event.data.type);
+      // do nothing
+    }
+  };
+
+  send = message => {
+    if (this.ready) {
+      this.frame.contentWindow.postMessage(message, '*');
+    }
+  };
+
   setCode = code => {
-    this.setState({code});
+    this.setState({code}, this.injectCode);
   };
 
   setCheckbox = event => {
-    const {name, checked} = event.target;
-    this.setState({[name]: checked});
+    this.setState({
+      [event.target.name]: event.target.checked,
+    });
   };
 
   render() {
     const {code, hydrate} = this.state;
-
-    const src =
-      '/renderer.html?' +
-      qs.stringify({
-        code: buble.transform(code).code,
-        hydrate,
-        ...reactPaths(),
-      });
+    const src = '/renderer.html?' + qs.stringify({hydrate, ...reactPaths()});
 
     return (
       <LiveProvider code={code}>
@@ -55,6 +88,7 @@ class Hydration extends React.Component {
             </div>
           </section>
           <iframe
+            ref={this.setFrame}
             className="hydration-frame"
             title="Hydration Preview"
             src={src}
