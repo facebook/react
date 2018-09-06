@@ -1,13 +1,14 @@
 import CodeMirror from 'react-codemirror';
 import 'codemirror/lib/codemirror.css';
-import './codemirror-gruvbox-dark.css';
 import 'codemirror/mode/jsx/jsx';
+import './codemirror-paraiso-dark.css';
 
 const React = window.React;
 
 const options = {
   mode: 'jsx',
-  theme: 'gruvbox-dark',
+  theme: 'paraiso-dark',
+  lineNumbers: true
 };
 
 export class CodeEditor extends React.Component {

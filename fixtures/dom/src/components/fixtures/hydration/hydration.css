@@ -5,7 +5,6 @@
 }
 
 .hydration-editor {
-  background: #223;
   border-bottom-left-radius: 2px;
   width: 50%;
 }
@@ -31,13 +30,13 @@
 .hydration .ReactCodeMirror {
   height: 80vh;
   min-hight: 350px;
-  padding-left: 8px;
   width: 100%;
 }
 
 .hydration .CodeMirror {
   font-size: 12px;
   height: 100%;
+  padding: 8px 0;
 }
 
 .hydration-frame {
