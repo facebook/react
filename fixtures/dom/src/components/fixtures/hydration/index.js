@@ -1,7 +1,7 @@
 import './hydration.css';
 import {SAMPLE_CODE} from './data';
-import {CodeProvider, CodeEditor, CodeError} from './Code';
-import * as buble from 'buble';
+import {CodeEditor, CodeError} from './Code';
+import {compile} from './code-transformer';
 import {reactPaths} from '../../../react-loader';
 import qs from 'query-string';
 
@@ -24,38 +24,42 @@ class Hydration extends React.Component {
     window.removeEventListener('message', this.handleMessage);
   }
 
+  handleMessage = event => {
+    var data = JSON.parse(event.data);
+
+    switch (data.type) {
+      case 'ready':
+        this.ready = true;
+        this.injectCode();
+        break;
+      default:
+        throw new Error(
+          'Editor Error: Unrecognized message "' + data.type + '"'
+        );
+    }
+  };
+
   injectCode = () => {
     try {
       this.send({
         type: 'code',
-        payload: buble.transform(this.state.code).code,
+        payload: compile(this.state.code),
       });
+
       this.setState({error: null});
     } catch (error) {
       this.setState({error});
     }
   };
 
-  setFrame = frame => {
-    this.frame = frame;
-  };
-
-  handleMessage = event => {
-    switch (event.data.type) {
-      case 'ready':
-        this.ready = true;
-        this.injectCode();
-        break;
-      default:
-        throw new Error('Unrecognized message: ' + event.data.type);
-      // do nothing
-    }
-  };
-
   send = message => {
     if (this.ready) {
-      this.frame.contentWindow.postMessage(message, '*');
+      this.frame.contentWindow.postMessage(JSON.stringify(message), '*');
     }
+  };
+
+  setFrame = frame => {
+    this.frame = frame;
   };
 
   setCode = code => {
@@ -73,35 +77,33 @@ class Hydration extends React.Component {
     const src = '/renderer.html?' + qs.stringify({hydrate, ...reactPaths()});
 
     return (
-      <CodeProvider code={code}>
-        <div className="hydration">
-          <section className="hydration-editor">
-            <header className="hydration-options">
-              <label htmlFor="hydrate">
-                <input
-                  id="hydrate"
-                  name="hydrate"
-                  type="checkbox"
-                  checked={hydrate}
-                  onChange={this.setCheckbox}
-                />
-                Hydrate
-              </label>
-            </header>
+      <div className="hydration">
+        <section className="hydration-editor">
+          <header className="hydration-options">
+            <label htmlFor="hydrate">
+              <input
+                id="hydrate"
+                name="hydrate"
+                type="checkbox"
+                checked={hydrate}
+                onChange={this.setCheckbox}
+              />
+              Hydrate
+            </label>
+          </header>
 
-            <div className="hydration-code">
-              <CodeEditor code={code} onChange={this.setCode} />
-            </div>
-          </section>
-          <iframe
-            ref={this.setFrame}
-            className="hydration-frame"
-            title="Hydration Preview"
-            src={src}
-          />
-          <CodeError error={error} className="hydration-code-error" />
-        </div>
-      </CodeProvider>
+          <div className="hydration-code">
+            <CodeEditor code={code} onChange={this.setCode} />
+          </div>
+        </section>
+        <iframe
+          ref={this.setFrame}
+          className="hydration-frame"
+          title="Hydration Preview"
+          src={src}
+        />
+        <CodeError error={error} className="hydration-code-error" />
+      </div>
     );
   }
 }

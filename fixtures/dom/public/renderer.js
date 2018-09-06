@@ -125,16 +125,20 @@
       }
 
       window.addEventListener('message', function(event) {
-        switch (event.data.type) {
+        var data = JSON.parse(event.data);
+
+        switch (data.type) {
           case 'code':
-            reloadFixture(event.data.payload);
+            reloadFixture(data.payload);
             break;
           default:
-            throw new Error('Unrecognized message: ' + event.data.type);
+            throw new Error(
+              'Renderer Error: Unrecognized message "' + data.type + '"'
+            );
         }
       });
 
-      window.parent.postMessage({type: 'ready'}, '*');
+      window.parent.postMessage(JSON.stringify({type: 'ready'}), '*');
     })
     .catch(handleError);
 })();

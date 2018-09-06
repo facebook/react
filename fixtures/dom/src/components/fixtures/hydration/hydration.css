@@ -40,19 +40,13 @@
   width: 100%;
 }
 
-.hydration-code textarea {
-  background: transparent;
-  border: 0;
-  bottom: 0;
-  color: #efefef;
-  font-family: monospace;
-  font-size: 12px;
-  left: 0;
-  line-height: 1.5;
-  padding: 16px;
-  position: absolute;
-  top: 0;
-  width: 100%;
+.hydration-code .ReactCodeMirror {
+  height: 100%;
+  position: relative;
+}
+
+.hydration-code .CodeMirror {
+  height: 100%;
 }
 
 .hydration-frame {
