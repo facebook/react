@@ -8,7 +8,7 @@ const React = window.React;
 const options = {
   mode: 'jsx',
   theme: 'paraiso-dark',
-  lineNumbers: true
+  lineNumbers: true,
 };
 
 export class CodeEditor extends React.Component {
