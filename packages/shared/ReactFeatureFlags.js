@@ -9,6 +9,7 @@
 
 export const enableUserTimingAPI = __DEV__;
 
+export const enableHooks = false;
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 

@@ -21,6 +21,7 @@ describe('ReactNewContext', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.enableHooks = true;
     React = require('react');
     useContext = React.useContext;
     ReactNoop = require('react-noop-renderer');

@@ -13,6 +13,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
+import {enableHooks} from 'shared/ReactFeatureFlags';
 
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
@@ -63,15 +64,6 @@ const React = {
   lazy,
   memo,
 
-  useContext,
-  useState,
-  useReducer,
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  useAPI,
-
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   Suspense: REACT_SUSPENSE_TYPE,
@@ -92,6 +84,17 @@ if (enableStableConcurrentModeAPIs) {
 } else {
   React.unstable_ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
   React.unstable_Profiler = REACT_PROFILER_TYPE;
+}
+
+if (enableHooks) {
+  React.useContext = useContext;
+  React.useState = useState;
+  React.useReducer = useReducer;
+  React.useRef = useRef;
+  React.useEffect = useEffect;
+  React.useCallback = useCallback;
+  React.useMemo = useMemo;
+  React.useAPI = useAPI;
 }
 
 export default React;
