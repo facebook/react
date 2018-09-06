@@ -326,7 +326,30 @@ function commitLifeCycles(
       return;
     }
     case Profiler: {
-      // We have no life-cycles associated with Profiler.
+      if (enableProfilerTimer) {
+        const onRender = finishedWork.memoizedProps.onRender;
+
+        if (enableSchedulerTracking) {
+          onRender(
+            finishedWork.memoizedProps.id,
+            current === null ? 'mount' : 'update',
+            finishedWork.actualDuration,
+            finishedWork.treeBaseDuration,
+            finishedWork.actualStartTime,
+            getCommitTime(),
+            finishedRoot.memoizedInteractions,
+          );
+        } else {
+          onRender(
+            finishedWork.memoizedProps.id,
+            current === null ? 'mount' : 'update',
+            finishedWork.actualDuration,
+            finishedWork.treeBaseDuration,
+            finishedWork.actualStartTime,
+            getCommitTime(),
+          );
+        }
+      }
       return;
     }
     case PlaceholderComponent: {
@@ -781,11 +804,7 @@ function commitDeletion(current: Fiber): void {
   detachFiber(current);
 }
 
-function commitWork(
-  root: FiberRoot,
-  current: Fiber | null,
-  finishedWork: Fiber,
-): void {
+function commitWork(current: Fiber | null, finishedWork: Fiber): void {
   if (!supportsMutation) {
     commitContainer(finishedWork);
     return;
@@ -842,30 +861,6 @@ function commitWork(
       return;
     }
     case Profiler: {
-      if (enableProfilerTimer) {
-        const onRender = finishedWork.memoizedProps.onRender;
-
-        if (enableSchedulerTracking) {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-            root.memoizedInteractions,
-          );
-        } else {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-          );
-        }
-      }
       return;
     }
     case PlaceholderComponent: {
