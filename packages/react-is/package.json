@@ -1,6 +1,6 @@
 {
   "name": "react-is",
-  "version": "16.4.3-alpha.0",
+  "version": "16.5.0",
   "description": "Brand checking of React Elements.",
   "main": "index.js",
   "repository": "facebook/react",
