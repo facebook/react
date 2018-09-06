@@ -15,6 +15,7 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native-fb';
 // Re-export dynamic flags from the fbsource version.
 export const {
   enableSuspense,
+  enableHooks_DEPRECATED,
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,

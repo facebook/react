@@ -12,6 +12,7 @@ export const enableUserTimingAPI = __DEV__;
 
 // Suspense
 export const enableSuspense = false;
+export const enableHooks_DEPRECATED = false;
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 

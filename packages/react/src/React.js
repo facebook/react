@@ -13,7 +13,7 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
-import {enableSuspense} from 'shared/ReactFeatureFlags';
+import {enableSuspense, enableHooks_DEPRECATED} from 'shared/ReactFeatureFlags';
 
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
@@ -61,15 +61,6 @@ const React = {
   forwardRef,
   pure,
 
-  useContext: readContext,
-  useState,
-  useReducer,
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  useAPI,
-
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
@@ -88,6 +79,17 @@ const React = {
 if (enableSuspense) {
   React.Placeholder = REACT_PLACEHOLDER_TYPE;
   React.lazy = lazy;
+}
+
+if (enableHooks_DEPRECATED) {
+  React.useContext = readContext;
+  React.useState = useState;
+  React.useReducer = useReducer;
+  React.useRef = useRef;
+  React.useEffect = useEffect;
+  React.useCallback = useCallback;
+  React.useMemo = useMemo;
+  React.useAPI = useAPI;
 }
 
 export default React;

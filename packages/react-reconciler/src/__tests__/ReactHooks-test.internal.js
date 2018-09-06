@@ -29,6 +29,7 @@ describe('ReactHooks', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.enableHooks_DEPRECATED = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     useState = React.useState;
