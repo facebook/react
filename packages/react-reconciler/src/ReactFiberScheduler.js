@@ -153,7 +153,7 @@ import {
 import {Dispatcher} from './ReactFiberDispatcher';
 
 export type Deadline = {
-  timeRemaining: () => number,
+  timeRemaining(): number,
   didTimeout: boolean,
 };
 
