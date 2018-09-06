@@ -36,6 +36,22 @@
   height: calc(100vh - 150px);
   min-height: 350px;
   overflow: auto;
+  position: relative;
+  width: 100%;
+}
+
+.hydration-code textarea {
+  background: transparent;
+  border: 0;
+  bottom: 0;
+  color: #efefef;
+  font-family: monospace;
+  font-size: 12px;
+  left: 0;
+  line-height: 1.5;
+  padding: 16px;
+  position: absolute;
+  top: 0;
   width: 100%;
 }
 

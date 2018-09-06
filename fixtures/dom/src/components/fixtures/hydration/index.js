@@ -1,6 +1,6 @@
 import './hydration.css';
 import {SAMPLE_CODE} from './data';
-import {LiveProvider, LiveEditor, LiveError} from 'react-live';
+import {CodeProvider, CodeEditor, CodeError} from './Code';
 import * as buble from 'buble';
 import {reactPaths} from '../../../react-loader';
 import qs from 'query-string';
@@ -9,6 +9,7 @@ const React = window.React;
 
 class Hydration extends React.Component {
   state = {
+    error: null,
     code: SAMPLE_CODE,
     hydrate: true,
   };
@@ -24,10 +25,15 @@ class Hydration extends React.Component {
   }
 
   injectCode = () => {
-    this.send({
-      type: 'code',
-      payload: buble.transform(this.state.code).code,
-    });
+    try {
+      this.send({
+        type: 'code',
+        payload: buble.transform(this.state.code).code,
+      });
+      this.setState({error: null});
+    } catch (error) {
+      this.setState({error});
+    }
   };
 
   setFrame = frame => {
@@ -63,11 +69,11 @@ class Hydration extends React.Component {
   };
 
   render() {
-    const {code, hydrate} = this.state;
+    const {code, error, hydrate} = this.state;
     const src = '/renderer.html?' + qs.stringify({hydrate, ...reactPaths()});
 
     return (
-      <LiveProvider code={code}>
+      <CodeProvider code={code}>
         <div className="hydration">
           <section className="hydration-editor">
             <header className="hydration-options">
@@ -84,7 +90,7 @@ class Hydration extends React.Component {
             </header>
 
             <div className="hydration-code">
-              <LiveEditor onChange={this.setCode} />
+              <CodeEditor code={code} onChange={this.setCode} />
             </div>
           </section>
           <iframe
@@ -93,9 +99,9 @@ class Hydration extends React.Component {
             title="Hydration Preview"
             src={src}
           />
-          <LiveError className="hydration-code-error" />
+          <CodeError error={error} className="hydration-code-error" />
         </div>
-      </LiveProvider>
+      </CodeProvider>
     );
   }
 }
