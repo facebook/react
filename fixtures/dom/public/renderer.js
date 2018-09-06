@@ -78,6 +78,8 @@
   }
 
   function injectFixture(src) {
+    window.Fixture = undefined;
+
     var script = document.createElement('script');
     script.textContent = src;
     document.body.appendChild(script);
