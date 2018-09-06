@@ -29,9 +29,10 @@
 }
 
 .hydration .ReactCodeMirror {
+  height: 80vh;
+  min-hight: 350px;
   padding-left: 8px;
   width: 100%;
-  height: 100%;
 }
 
 .hydration .CodeMirror {
