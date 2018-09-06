@@ -80,6 +80,7 @@ import {
   hasLowerPriorityWork,
   isPriorityLevelSuspended,
   findEarliestOutstandingPriorityLevel,
+  didExpireAtExpirationTime,
 } from './ReactFiberPendingPriority';
 import {
   recordEffect,
@@ -2109,6 +2110,22 @@ function findHighestPriorityRoot() {
 }
 
 function performAsyncWork(dl) {
+  if (dl.didTimeout) {
+    // The callback timed out. That means at least one update has expired.
+    // Iterate through the root schedule. If they contain expired work, set
+    // the next render expiration time to the current time. This has the effect
+    // of flushing all expired work in a single batch, instead of flushing each
+    // level one at a time.
+    if (firstScheduledRoot !== null) {
+      recomputeCurrentRendererTime();
+      let root: FiberRoot = firstScheduledRoot;
+      do {
+        didExpireAtExpirationTime(root, currentRendererTime);
+        // The root schedule is circular, so this is never null.
+        root = (root.nextScheduledRoot: any);
+      } while (root !== firstScheduledRoot);
+    }
+  }
   performWork(NoWork, dl);
 }
 
