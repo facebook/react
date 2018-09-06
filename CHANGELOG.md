@@ -13,6 +13,7 @@
 
 * Add a warning if `React.forwardRef` render function doesn't take exactly two arguments ([@bvaughn](https://github.com/bvaughn) in [#13168](https://github.com/facebook/react/issues/13168))
 * Improve the error message when passing an element to `createElement` by mistake ([@DCtheTall](https://github.com/DCtheTall) in [#13131](https://github.com/facebook/react/issues/13131))
+* Don't call profiler `onRender` until after mutations ([@bvaughn](https://github.com/bvaughn) in [#13572](https://github.com/facebook/react/issues/13572))
 
 ### React DOM
 
