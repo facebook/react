@@ -275,5 +275,15 @@
   "273": "Nesting of <View> within <Text> is not currently supported.",
   "274": "Text strings must be rendered within a <Text> component.",
   "275": "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue.",
-  "276": "React depends on requestAnimationFrame. Make sure that you load a polyfill in older browsers. https://fb.me/react-polyfills"
+  "276": "React depends on requestAnimationFrame. Make sure that you load a polyfill in older browsers. https://fb.me/react-polyfills",
+  "277": "Context.unstable_read(): Context can only be read while React is rendering, e.g. inside the render method or getDerivedStateFromProps.",
+  "278": "unstable_createRoot(...): Target container is not a DOM element.",
+  "279": "Trying to release an event instance into a pool of a different type.",
+  "280": "setRestoreImplementation() needs to be called to handle a target for controlled events. This error is likely caused by a bug in React. Please file an issue.",
+  "281": "Finished root should have a work-in-progress. This error is likely caused by a bug in React. Please file an issue.",
+  "282": "If the root does not have an updateQueue, we should have already bailed out. This error is likely caused by a bug in React. Please file an issue.",
+  "283": "Element type is invalid. Received a promise that resolves to: %s. Promise elements must resolve to a class or function.",
+  "284": "Expected ref to be a function, a string, an object returned by React.createRef(), or null.",
+  "285": "The root failed to unmount after an error. This is likely a bug in React. Please file an issue.",
+  "286": "%s(...): the first argument must be a React class instance. Instead received: %s."
 }
