@@ -1,20 +1,42 @@
-import CodeMirror from 'react-codemirror';
+import CodeMirror from 'codemirror';
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/jsx/jsx';
 import './codemirror-paraiso-dark.css';
 
 const React = window.React;
 
-const options = {
-  mode: 'jsx',
-  theme: 'paraiso-dark',
-  lineNumbers: true,
-};
-
 export class CodeEditor extends React.Component {
+  shouldComponentUpdate() {
+    return false;
+  }
+
+  componentDidMount() {
+    const {onChange} = this.props;
+
+    this.editor = CodeMirror.fromTextArea(this.textarea, {
+      mode: 'jsx',
+      theme: 'paraiso-dark',
+    });
+
+    this.editor.on('change', function(doc) {
+      onChange(doc.getValue());
+    });
+  }
+
+  componentWillUnmount() {
+    if (this.editor) {
+      this.editor.toTextArea();
+    }
+  }
+
   render() {
-    const {code, onChange} = this.props;
-    return <CodeMirror value={code} options={options} onChange={onChange} />;
+    return (
+      <textarea
+        ref={ref => (this.textarea = ref)}
+        defaultValue={this.props.code}
+        autoComplete="off"
+      />
+    );
   }
 }
 

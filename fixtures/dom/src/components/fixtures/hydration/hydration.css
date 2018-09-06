@@ -27,8 +27,9 @@
 }
 
 .hydration .CodeMirror {
-  height: 580px;
+  height: 100%;
   font-size: 12px;
+  padding: 0 8px;
 }
 
 .hydration-frame {
