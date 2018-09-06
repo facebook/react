@@ -94,7 +94,7 @@ describe('ReactShallowRenderer', () => {
     const instance = shallowRenderer.getMountedInstance();
     instance.setState({});
 
-    expect(logs).toEqual(['shouldComponentUpdate']);
+    expect(logs).toEqual(['getDerivedStateFromProps', 'shouldComponentUpdate']);
 
     logs.splice(0);
 
@@ -125,9 +125,49 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<Component foo={2} />)).toWarnDev(
-      'Defines both componentWillReceiveProps() and static getDerivedStateFromProps()',
-    );
+    shallowRenderer.render(<Component />);
+  });
+
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+    class Component extends React.Component {
+      getSnapshotBeforeUpdate() {
+        return null;
+      }
+      componentWillMount() {
+        throw Error('unexpected');
+      }
+      componentWillReceiveProps() {
+        throw Error('unexpected');
+      }
+      componentWillUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component value={1} />);
+    shallowRenderer.render(<Component value={2} />);
+  });
+
+  it('should not call getSnapshotBeforeUpdate or componentDidUpdate when updating since refs wont exist', () => {
+    class Component extends React.Component {
+      getSnapshotBeforeUpdate() {
+        throw Error('unexpected');
+      }
+      componentDidUpdate() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component value={1} />);
+    shallowRenderer.render(<Component value={2} />);
   });
 
   it('should only render 1 level deep', () => {
@@ -166,6 +206,54 @@ describe('ReactShallowRenderer', () => {
       <span className="child1" />,
       <span className="child2" />,
     ]);
+  });
+
+  it('should handle ForwardRef', () => {
+    const testRef = React.createRef();
+    const SomeComponent = React.forwardRef((props, ref) => {
+      expect(ref).toEqual(testRef);
+      return (
+        <div>
+          <span className="child1" />
+          <span className="child2" />
+        </div>
+      );
+    });
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent ref={testRef} />);
+
+    expect(result.type).toBe('div');
+    expect(result.props.children).toEqual([
+      <span className="child1" />,
+      <span className="child2" />,
+    ]);
+  });
+
+  it('should handle Profiler', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return (
+          <React.unstable_Profiler id="test" onRender={jest.fn()}>
+            <div>
+              <span className="child1" />
+              <span className="child2" />
+            </div>
+          </React.unstable_Profiler>
+        );
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SomeComponent />);
+
+    expect(result.type).toBe(React.unstable_Profiler);
+    expect(result.props.children).toEqual(
+      <div>
+        <span className="child1" />
+        <span className="child2" />
+      </div>,
+    );
   });
 
   it('should enable shouldComponentUpdate to prevent a re-render', () => {
@@ -827,6 +915,33 @@ describe('ReactShallowRenderer', () => {
     expect(result.props.children).toEqual(3);
   });
 
+  it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
+    class SimpleComponent extends React.Component {
+      state = {value: 0};
+
+      static getDerivedStateFromProps(nextProps, prevState) {
+        return {...prevState};
+      }
+
+      updateState = () => {
+        this.setState(state => ({value: state.value + 1}));
+      };
+
+      render() {
+        return <div>{`value:${this.state.value}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    let result = shallowRenderer.render(<SimpleComponent />);
+    expect(result).toEqual(<div>value:0</div>);
+
+    let instance = shallowRenderer.getMountedInstance();
+    instance.updateState();
+    result = shallowRenderer.getRenderOutput();
+    expect(result).toEqual(<div>value:1</div>);
+  });
+
   it('can setState with an updater function', () => {
     let instance;
 
@@ -855,6 +970,27 @@ describe('ReactShallowRenderer', () => {
 
     result = shallowRenderer.getRenderOutput();
     expect(result.props.children).toEqual(2);
+  });
+
+  it('can access component instance from setState updater function', done => {
+    let instance;
+
+    class SimpleComponent extends React.Component {
+      state = {};
+
+      render() {
+        instance = this;
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+
+    instance.setState(function updater(state, props) {
+      expect(this).toBe(instance);
+      done();
+    });
   });
 
   it('can setState with a callback', () => {
@@ -1128,12 +1264,12 @@ describe('ReactShallowRenderer', () => {
 
     shallowRenderer.render(<Component />);
 
-    expect(mockFn.mock.calls.length).toBe(2);
+    expect(mockFn).toHaveBeenCalledTimes(2);
 
     // Ensure the callback queue is cleared after the callbacks are invoked
     const mountedInstance = shallowRenderer.getMountedInstance();
     mountedInstance.setState({foo: 'bar'}, () => mockFn());
-    expect(mockFn.mock.calls.length).toBe(3);
+    expect(mockFn).toHaveBeenCalledTimes(3);
   });
 
   it('should call the setState callback even if shouldComponentUpdate = false', done => {
@@ -1202,68 +1338,6 @@ describe('ReactShallowRenderer', () => {
     expect(shallowRenderer.getMountedInstance().state).toBeNull();
   });
 
-  it('should warn if both componentWillReceiveProps and static getDerivedStateFromProps exist', () => {
-    class ComponentWithWarnings extends React.Component {
-      state = {};
-      static getDerivedStateFromProps(props, prevState) {
-        return null;
-      }
-      UNSAFE_componentWillReceiveProps(nextProps) {}
-      render() {
-        return null;
-      }
-    }
-
-    const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<ComponentWithWarnings />)).toWarnDev(
-      'ComponentWithWarnings: Defines both componentWillReceiveProps() and static ' +
-        'getDerivedStateFromProps() methods. We recommend using ' +
-        'only getDerivedStateFromProps().',
-    );
-
-    // Should not log duplicate warning
-    shallowRenderer.render(<ComponentWithWarnings />);
-  });
-
-  it('should warn if getDerivedStateFromProps returns undefined', () => {
-    class Component extends React.Component {
-      state = {};
-      static getDerivedStateFromProps() {}
-      render() {
-        return null;
-      }
-    }
-
-    const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<Component />)).toWarnDev(
-      'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
-        'be returned. You have returned undefined.',
-    );
-
-    // De-duped
-    shallowRenderer.render(<Component />);
-  });
-
-  it('should warn if state not initialized before getDerivedStateFromProps', () => {
-    class Component extends React.Component {
-      static getDerivedStateFromProps() {
-        return null;
-      }
-      render() {
-        return null;
-      }
-    }
-
-    const shallowRenderer = createRenderer();
-    expect(() => shallowRenderer.render(<Component />)).toWarnDev(
-      'Component: Did not properly initialize state during construction. ' +
-        'Expected state to be an object, but it was undefined.',
-    );
-
-    // De-duped
-    shallowRenderer.render(<Component />);
-  });
-
   it('should invoke both deprecated and new lifecycles if both are present', () => {
     const log = [];
 
@@ -1304,5 +1378,44 @@ describe('ReactShallowRenderer', () => {
       'componentWillUpdate',
       'UNSAFE_componentWillUpdate',
     ]);
+  });
+
+  it('should stop the update when setState returns null or undefined', () => {
+    const log = [];
+    let instance;
+    class Component extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          count: 0,
+        };
+      }
+      render() {
+        log.push('render');
+        instance = this;
+        return null;
+      }
+    }
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component />);
+    log.length = 0;
+    instance.setState(() => null);
+    instance.setState(() => undefined);
+    instance.setState(null);
+    instance.setState(undefined);
+    expect(log).toEqual([]);
+    instance.setState(state => ({count: state.count + 1}));
+    expect(log).toEqual(['render']);
+  });
+
+  it('should not get this in a functional component', () => {
+    const logs = [];
+    function Foo() {
+      logs.push(this);
+      return <div>foo</div>;
+    }
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Foo foo="bar" />);
+    expect(logs).toEqual([undefined]);
   });
 });

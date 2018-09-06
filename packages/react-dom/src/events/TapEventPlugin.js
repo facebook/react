@@ -7,11 +7,41 @@
  * @flow
  */
 
-import {isStartish, isEndish} from 'events/EventPluginUtils';
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
-import TouchEventUtils from 'fbjs/lib/TouchEventUtils';
+import type {TopLevelType} from 'events/TopLevelEventTypes';
 
+import {
+  TOP_MOUSE_DOWN,
+  TOP_MOUSE_MOVE,
+  TOP_MOUSE_UP,
+  TOP_POINTER_CANCEL,
+  TOP_POINTER_DOWN,
+  TOP_POINTER_UP,
+  TOP_POINTER_MOVE,
+  TOP_TOUCH_CANCEL,
+  TOP_TOUCH_END,
+  TOP_TOUCH_MOVE,
+  TOP_TOUCH_START,
+} from './DOMTopLevelEventTypes';
 import SyntheticUIEvent from './SyntheticUIEvent';
+
+function isStartish(topLevelType) {
+  return (
+    topLevelType === TOP_MOUSE_DOWN ||
+    topLevelType === TOP_TOUCH_START ||
+    topLevelType === TOP_POINTER_DOWN
+  );
+}
+
+function isEndish(topLevelType) {
+  return (
+    topLevelType === TOP_MOUSE_UP ||
+    topLevelType === TOP_POINTER_CANCEL ||
+    topLevelType === TOP_POINTER_UP ||
+    topLevelType === TOP_TOUCH_CANCEL ||
+    topLevelType === TOP_TOUCH_END
+  );
+}
 
 /**
  * We are extending the Flow 'Touch' declaration to enable using bracket
@@ -54,11 +84,26 @@ const Axis: AxisType = {
   y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'},
 };
 
+function extractSingleTouch(nativeEvent) {
+  // $FlowFixMe: figure out why this is missing
+  const touches = nativeEvent.touches;
+  // $FlowFixMe: figure out why this is missing
+  const changedTouches = nativeEvent.changedTouches;
+  const hasTouches = touches && touches.length > 0;
+  const hasChangedTouches = changedTouches && changedTouches.length > 0;
+
+  return !hasTouches && hasChangedTouches
+    ? changedTouches[0]
+    : hasTouches
+      ? touches[0]
+      : nativeEvent;
+}
+
 function getAxisCoordOfEvent(
   axis: AxisCoordinateData,
   nativeEvent: _Touch,
 ): number {
-  const singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
+  const singleTouch = extractSingleTouch(nativeEvent);
   if (singleTouch) {
     return singleTouch[axis.page];
   }
@@ -75,15 +120,24 @@ function getDistance(coords: CoordinatesType, nativeEvent: _Touch): number {
 }
 
 const touchEvents = [
-  'topTouchStart',
-  'topTouchCancel',
-  'topTouchEnd',
-  'topTouchMove',
+  TOP_TOUCH_START,
+  TOP_TOUCH_CANCEL,
+  TOP_TOUCH_END,
+  TOP_TOUCH_MOVE,
 ];
 
-const dependencies = ['topMouseDown', 'topMouseMove', 'topMouseUp'].concat(
-  touchEvents,
-);
+const pointerEvents = [
+  TOP_POINTER_CANCEL,
+  TOP_POINTER_DOWN,
+  TOP_POINTER_MOVE,
+  TOP_POINTER_UP,
+];
+
+const dependencies: Array<TopLevelType> = [
+  TOP_MOUSE_DOWN,
+  TOP_MOUSE_MOVE,
+  TOP_MOUSE_UP,
+].concat(touchEvents, pointerEvents);
 
 const eventTypes = {
   touchTap: {
@@ -105,7 +159,7 @@ const TapEventPlugin = {
   eventTypes: eventTypes,
 
   extractEvents: function(
-    topLevelType: mixed,
+    topLevelType: TopLevelType,
     targetInst: mixed,
     nativeEvent: _Touch,
     nativeEventTarget: EventTarget,

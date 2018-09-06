@@ -31,7 +31,6 @@ const run = async () => {
   try {
     const params = parseBuildParameters();
     params.packages = getPublicPackages();
-
     await checkEnvironmentVariables(params);
     await validateVersion(params);
     await checkUncommittedChanges(params);

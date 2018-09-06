@@ -5,14 +5,55 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import containsNode from 'fbjs/lib/containsNode';
-import getActiveElement from 'fbjs/lib/getActiveElement';
+import getActiveElement from './getActiveElement';
 
 import * as ReactDOMSelection from './ReactDOMSelection';
-import {ELEMENT_NODE} from '../shared/HTMLNodeType';
+import {ELEMENT_NODE, TEXT_NODE} from '../shared/HTMLNodeType';
+
+function isTextNode(node) {
+  return node && node.nodeType === TEXT_NODE;
+}
+
+function containsNode(outerNode, innerNode) {
+  if (!outerNode || !innerNode) {
+    return false;
+  } else if (outerNode === innerNode) {
+    return true;
+  } else if (isTextNode(outerNode)) {
+    return false;
+  } else if (isTextNode(innerNode)) {
+    return containsNode(outerNode, innerNode.parentNode);
+  } else if ('contains' in outerNode) {
+    return outerNode.contains(innerNode);
+  } else if (outerNode.compareDocumentPosition) {
+    return !!(outerNode.compareDocumentPosition(innerNode) & 16);
+  } else {
+    return false;
+  }
+}
 
 function isInDocument(node) {
-  return containsNode(document.documentElement, node);
+  return (
+    node &&
+    node.ownerDocument &&
+    containsNode(node.ownerDocument.documentElement, node)
+  );
+}
+
+function getActiveElementDeep() {
+  let win = window;
+  let element = getActiveElement();
+  while (element instanceof win.HTMLIFrameElement) {
+    // Accessing the contentDocument of a HTMLIframeElement can cause the browser
+    // to throw, e.g. if it has a cross-origin src attribute
+    try {
+      win = element.contentDocument.defaultView;
+    } catch (e) {
+      return element;
+    }
+    element = getActiveElement(win.document);
+  }
+  return element;
 }
 
 /**
@@ -22,18 +63,28 @@ function isInDocument(node) {
  * Input selection module for React.
  */
 
+/**
+ * @hasSelectionCapabilities: we get the element types that support selection
+ * from https://html.spec.whatwg.org/#do-not-apply, looking at `selectionStart`
+ * and `selectionEnd` rows.
+ */
 export function hasSelectionCapabilities(elem) {
   const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName &&
-    ((nodeName === 'input' && elem.type === 'text') ||
+    ((nodeName === 'input' &&
+      (elem.type === 'text' ||
+        elem.type === 'search' ||
+        elem.type === 'tel' ||
+        elem.type === 'url' ||
+        elem.type === 'password')) ||
       nodeName === 'textarea' ||
       elem.contentEditable === 'true')
   );
 }
 
 export function getSelectionInformation() {
-  const focusedElem = getActiveElement();
+  const focusedElem = getActiveElementDeep();
   return {
     focusedElem: focusedElem,
     selectionRange: hasSelectionCapabilities(focusedElem)
@@ -48,11 +99,14 @@ export function getSelectionInformation() {
  * nodes and place them back in, resulting in focus being lost.
  */
 export function restoreSelection(priorSelectionInformation) {
-  const curFocusedElem = getActiveElement();
+  const curFocusedElem = getActiveElementDeep();
   const priorFocusedElem = priorSelectionInformation.focusedElem;
   const priorSelectionRange = priorSelectionInformation.selectionRange;
   if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
-    if (hasSelectionCapabilities(priorFocusedElem)) {
+    if (
+      priorSelectionRange !== null &&
+      hasSelectionCapabilities(priorFocusedElem)
+    ) {
       setSelection(priorFocusedElem, priorSelectionRange);
     }
 
@@ -69,7 +123,9 @@ export function restoreSelection(priorSelectionInformation) {
       }
     }
 
-    priorFocusedElem.focus();
+    if (typeof priorFocusedElem.focus === 'function') {
+      priorFocusedElem.focus();
+    }
 
     for (let i = 0; i < ancestors.length; i++) {
       const info = ancestors[i];

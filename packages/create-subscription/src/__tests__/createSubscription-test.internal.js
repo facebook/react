@@ -189,6 +189,38 @@ describe('createSubscription', () => {
       // Ensure that only Promise B causes an update
       expect(ReactNoop.flush()).toEqual([123]);
     });
+
+    it('should not call setState for a Promise that resolves after unmount', async () => {
+      const Subscription = createSubscription({
+        getCurrentValue: source => undefined,
+        subscribe: (source, callback) => {
+          source.then(value => callback(value), value => callback(value));
+          // (Can't unsubscribe from a Promise)
+          return () => {};
+        },
+      });
+
+      function render(hasLoaded) {
+        ReactNoop.yield('rendered');
+        return null;
+      }
+
+      let resolvePromise;
+      const promise = new Promise((resolve, reject) => {
+        resolvePromise = resolve;
+      });
+
+      ReactNoop.render(<Subscription source={promise}>{render}</Subscription>);
+      expect(ReactNoop.flush()).toEqual(['rendered']);
+
+      // Unmount
+      ReactNoop.render(null);
+      ReactNoop.flush();
+
+      // Resolve Promise should not trigger a setState warning
+      resolvePromise(true);
+      await promise;
+    });
   });
 
   it('should unsubscribe from old subscribables and subscribe to new subscribables when props change', () => {
@@ -232,7 +264,6 @@ describe('createSubscription', () => {
 
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
     const log = [];
-    let parentInstance;
 
     function Child({value}) {
       ReactNoop.yield('Child: ' + value);
@@ -269,8 +300,6 @@ describe('createSubscription', () => {
       }
 
       render() {
-        parentInstance = this;
-
         return (
           <Subscription source={this.state.observed}>
             {(value = 'default') => {
@@ -299,8 +328,8 @@ describe('createSubscription', () => {
     observableB.next('b-2');
     observableB.next('b-3');
 
-    // Mimic a higher-priority interruption
-    parentInstance.setState({observed: observableA});
+    // Update again
+    ReactNoop.render(<Parent observed={observableA} />);
 
     // Flush everything and ensure that the correct subscribable is used
     // We expect the last emitted update to be rendered (because of the commit phase value check)
@@ -322,7 +351,6 @@ describe('createSubscription', () => {
 
   it('should not drop values emitted between updates', () => {
     const log = [];
-    let parentInstance;
 
     function Child({value}) {
       ReactNoop.yield('Child: ' + value);
@@ -359,8 +387,6 @@ describe('createSubscription', () => {
       }
 
       render() {
-        parentInstance = this;
-
         return (
           <Subscription source={this.state.observed}>
             {(value = 'default') => {
@@ -388,8 +414,8 @@ describe('createSubscription', () => {
     observableA.next('a-1');
     observableA.next('a-2');
 
-    // Mimic a higher-priority interruption
-    parentInstance.setState({observed: observableA});
+    // Update again
+    ReactNoop.render(<Parent observed={observableA} />);
 
     // Flush everything and ensure that the correct subscribable is used
     // We expect the new subscribable to finish rendering,
@@ -424,7 +450,9 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a getCurrentValue function');
+      }).toWarnDev('Subscription must specify a getCurrentValue function', {
+        withoutStack: true,
+      });
     });
 
     it('should warn for invalid missing subscribe', () => {
@@ -435,7 +463,9 @@ describe('createSubscription', () => {
           },
           () => null,
         );
-      }).toWarnDev('Subscription must specify a subscribe function');
+      }).toWarnDev('Subscription must specify a subscribe function', {
+        withoutStack: true,
+      });
     });
 
     it('should warn if subscribe does not return an unsubscribe method', () => {

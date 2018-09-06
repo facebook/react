@@ -7,10 +7,10 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
-import {isEndish, isMoveish, isStartish} from './EventPluginUtils';
+import {isStartish, isMoveish, isEndish} from './ResponderTopLevelEventTypes';
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We
@@ -95,7 +95,7 @@ function resetTouchRecord(touchRecord: TouchRecord, touch: Touch): void {
 function getTouchIdentifier({identifier}: Touch): number {
   invariant(identifier != null, 'Touch object is missing identifier.');
   if (__DEV__) {
-    warning(
+    warningWithoutStack(
       identifier <= MAX_TOUCH_BANK,
       'Touch identifier %s is greater than maximum supported %s which causes ' +
         'performance issues backfilling array locations for all of the indices.',
@@ -200,7 +200,7 @@ const ResponderTouchHistoryStore = {
         }
         if (__DEV__) {
           const activeRecord = touchBank[touchHistory.indexOfSingleActiveTouch];
-          warning(
+          warningWithoutStack(
             activeRecord != null && activeRecord.touchActive,
             'Cannot find single active touch.',
           );

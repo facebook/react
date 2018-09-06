@@ -6,8 +6,8 @@
  * @flow
  */
 
-import ReactErrorUtils from 'shared/ReactErrorUtils';
-import invariant from 'fbjs/lib/invariant';
+import {rethrowCaughtError} from 'shared/ReactErrorUtils';
+import invariant from 'shared/invariant';
 
 import {
   injectEventPluginOrder,
@@ -25,6 +25,7 @@ import type {PluginModule} from './PluginModuleType';
 import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {AnyNativeEvent} from './PluginModuleType';
+import type {TopLevelType} from './TopLevelEventTypes';
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
@@ -165,8 +166,8 @@ export function getListener(inst: Fiber, registrationName: string) {
  * @internal
  */
 function extractEvents(
-  topLevelType: string,
-  targetInst: Fiber,
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
@@ -223,12 +224,12 @@ export function runEventsInBatch(
       'an event queue. Support for this has not yet been implemented.',
   );
   // This would be a good time to rethrow if any of the event handlers threw.
-  ReactErrorUtils.rethrowCaughtError();
+  rethrowCaughtError();
 }
 
 export function runExtractedEventsInBatch(
-  topLevelType: string,
-  targetInst: Fiber,
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
 ) {

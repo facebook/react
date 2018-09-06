@@ -12,7 +12,7 @@
     "query-string": "^4.2.3",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
-    "semver": "^5.3.0"
+    "semver": "^5.5.0"
   },
   "scripts": {
     "start": "react-scripts start",

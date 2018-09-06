@@ -10,6 +10,32 @@ const {join} = require('path');
 const semver = require('semver');
 const {execUnlessDry, logPromise} = require('../utils');
 
+const getNextVersion = (prevVersion, releaseVersion) => {
+  const prerelease = semver.prerelease(releaseVersion);
+
+  // Unstable packages (eg version < 1.0) are treated specially:
+  // Rather than use the release version (eg 16.1.0)-
+  // We just auto-increment the minor version (eg 0.1.0 -> 0.2.0).
+  // If we're doing a prerelease, we also append the suffix (eg 0.2.0-beta).
+  if (semver.lt(prevVersion, '1.0.0')) {
+    let suffix = '';
+    if (prerelease) {
+      suffix = `-${prerelease.join('.')}`;
+    }
+
+    // If this is a new pre-release, increment the minor.
+    // Else just increment (or remove) the pre-release suffix.
+    // This way our minor version isn't incremented unnecessarily with each prerelease.
+    const minor = semver.prerelease(prevVersion)
+      ? semver.minor(prevVersion)
+      : semver.minor(prevVersion) + 1;
+
+    return `0.${minor}.0${suffix}`;
+  } else {
+    return releaseVersion;
+  }
+};
+
 const update = async ({cwd, dry, packages, version}) => {
   try {
     // Update root package.json
@@ -32,29 +58,10 @@ const update = async ({cwd, dry, packages, version}) => {
       const json = await readJson(path);
       const prerelease = semver.prerelease(version);
 
-      // Unstable packages (eg version < 1.0) are treated specially:
-      // Rather than use the release version (eg 16.1.0)-
-      // We just auto-increment the minor version (eg 0.1.0 -> 0.2.0).
-      // If we're doing a prerelease, we also append the suffix (eg 0.2.0-beta).
-      if (semver.lt(json.version, '1.0.0')) {
-        let suffix = '';
-        if (prerelease) {
-          suffix = `-${prerelease.join('.')}`;
-        }
+      // Unstable package version.
+      json.version = getNextVersion(json.version, version);
 
-        // If this is a new pre-release, increment the minor.
-        // Else just increment (or remove) the pre-release suffix.
-        // This way our minor version isn't incremented unnecessarily with each prerelease.
-        const minor = semver.prerelease(json.version)
-          ? semver.minor(json.version)
-          : semver.minor(json.version) + 1;
-
-        json.version = `0.${minor}.0${suffix}`;
-      } else {
-        json.version = version;
-      }
-
-      if (project !== 'react') {
+      if (project !== 'react' && json.peerDependencies) {
         let peerVersion = json.peerDependencies.react.replace('^', '');
 
         // If the previous release was a pre-release version,
@@ -77,6 +84,21 @@ const update = async ({cwd, dry, packages, version}) => {
         // So rather than eg "^16.0.0" we need "^16.0.0 || 16.3.0-alpha.0"
         if (prerelease) {
           json.peerDependencies.react += ` || ${version}`;
+        }
+
+        // Update inter-package dependencies as well.
+        // e.g. react-test-renderer depends on react-is
+        if (json.dependencies) {
+          Object.keys(json.dependencies).forEach(dependency => {
+            if (packages.indexOf(dependency) >= 0) {
+              const prevVersion = json.dependencies[dependency];
+              const nextVersion = getNextVersion(
+                prevVersion.replace('^', ''),
+                version
+              );
+              json.dependencies[dependency] = `^${nextVersion}`;
+            }
+          });
         }
       }
 

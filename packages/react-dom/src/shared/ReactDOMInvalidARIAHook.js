@@ -5,8 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import warning from 'fbjs/lib/warning';
-import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import warning from 'shared/warning';
 
 import {ATTRIBUTE_NAME_CHAR} from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
@@ -17,11 +16,6 @@ const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
 const rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
-
-function getStackAddendum() {
-  const stack = ReactDebugCurrentFrame.getStackAddendum();
-  return stack != null ? stack : '';
-}
 
 function validateProperty(tagName, name) {
   if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
@@ -39,9 +33,8 @@ function validateProperty(tagName, name) {
     if (correctName == null) {
       warning(
         false,
-        'Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.%s',
+        'Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.',
         name,
-        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -50,10 +43,9 @@ function validateProperty(tagName, name) {
     if (name !== correctName) {
       warning(
         false,
-        'Invalid ARIA attribute `%s`. Did you mean `%s`?%s',
+        'Invalid ARIA attribute `%s`. Did you mean `%s`?',
         name,
         correctName,
-        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -76,10 +68,9 @@ function validateProperty(tagName, name) {
     if (name !== standardName) {
       warning(
         false,
-        'Unknown ARIA attribute `%s`. Did you mean `%s`?%s',
+        'Unknown ARIA attribute `%s`. Did you mean `%s`?',
         name,
         standardName,
-        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -107,19 +98,17 @@ function warnInvalidARIAProps(type, props) {
     warning(
       false,
       'Invalid aria prop %s on <%s> tag. ' +
-        'For details, see https://fb.me/invalid-aria-prop%s',
+        'For details, see https://fb.me/invalid-aria-prop',
       unknownPropString,
       type,
-      getStackAddendum(),
     );
   } else if (invalidProps.length > 1) {
     warning(
       false,
       'Invalid aria props %s on <%s> tag. ' +
-        'For details, see https://fb.me/invalid-aria-prop%s',
+        'For details, see https://fb.me/invalid-aria-prop',
       unknownPropString,
       type,
-      getStackAddendum(),
     );
   }
 }

@@ -5,14 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warning from 'shared/warning';
+// TODO: We can remove this if we add invariantWithStack()
+// or add stack by default to invariants where possible.
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import voidElementTags from './voidElementTags';
 
 const HTML = '__html';
 
-function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
+let ReactDebugCurrentFrame = null;
+if (__DEV__) {
+  ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+}
+
+function assertValidProps(tag: string, props: ?Object) {
   if (!props) {
     return;
   }
@@ -23,7 +31,7 @@ function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
       '%s is a void element tag and must neither have `children` nor ' +
         'use `dangerouslySetInnerHTML`.%s',
       tag,
-      getStack(),
+      __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
@@ -47,8 +55,7 @@ function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
       'A component is `contentEditable` and contains `children` managed by ' +
         'React. It is now your responsibility to guarantee that none of ' +
         'those nodes are unexpectedly modified or duplicated. This is ' +
-        'probably not intentional.%s',
-      getStack(),
+        'probably not intentional.',
     );
   }
   invariant(
@@ -56,7 +63,7 @@ function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
     'The `style` prop expects a mapping from style properties to values, ' +
       "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
       'using JSX.%s',
-    getStack(),
+    __DEV__ ? ReactDebugCurrentFrame.getStackAddendum() : '',
   );
 }
 

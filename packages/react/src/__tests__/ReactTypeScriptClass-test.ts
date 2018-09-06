@@ -331,7 +331,7 @@ describe('ReactTypeScriptClass', function() {
         'component instance: you may have forgotten to define `render`.',
       'Warning: Empty(...): No `render` method found on the returned ' +
         'component instance: you may have forgotten to define `render`.',
-    ]);
+    ], {withoutStack: true});
   });
 
   it('renders a simple stateless component with prop', function() {
@@ -378,6 +378,59 @@ describe('ReactTypeScriptClass', function() {
     test(React.createElement(Foo, {foo: 'foo'}), 'DIV', 'foo bar');
   });
 
+  it('warns if getDerivedStateFromProps is not static', function() {
+    class Foo extends React.Component {
+      getDerivedStateFromProps() {
+        return {};
+      }
+      render() {
+        return React.createElement('div', {});
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
+    }).toWarnDev(
+      'Foo: getDerivedStateFromProps() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+        {withoutStack: true}
+    );
+  });
+
+  it('warns if getDerivedStateFromCatch is not static', function() {
+    class Foo extends React.Component {
+      getDerivedStateFromCatch() {
+        return {};
+      }
+      render() {
+        return React.createElement('div');
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
+    }).toWarnDev(
+      'Foo: getDerivedStateFromCatch() is defined as an instance method ' +
+        'and will be ignored. Instead, declare it as a static method.',
+        {withoutStack: true}
+    );
+  });
+
+  it('warns if getSnapshotBeforeUpdate is static', function() {
+    class Foo extends React.Component {
+      static getSnapshotBeforeUpdate() {
+      }
+      render() {
+        return React.createElement('div', {});
+      }
+    }
+    expect(function() {
+      ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
+    }).toWarnDev(
+      'Foo: getSnapshotBeforeUpdate() is defined as a static method ' +
+        'and will be ignored. Instead, declare it as an instance method.',
+        {withoutStack: true}
+    );
+  });
+
   it('warns if state not initialized before static getDerivedStateFromProps', function() {
     class Foo extends React.Component {
       static getDerivedStateFromProps(nextProps, prevState) {
@@ -395,8 +448,11 @@ describe('ReactTypeScriptClass', function() {
     expect(function() {
       ReactDOM.render(React.createElement(Foo, {foo: 'foo'}), container);
     }).toWarnDev(
-      'Foo: Did not properly initialize state during construction. ' +
-        'Expected state to be an object, but it was undefined.'
+      '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
+      'undefined. This is not recommended. Instead, define the initial state by ' +
+      'assigning an object to `this.state` in the constructor of `Foo`. ' +
+      'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
+        {withoutStack: true}
     );
   });
 
@@ -453,13 +509,16 @@ describe('ReactTypeScriptClass', function() {
 
   it('should warn with non-object in the initial state property', function() {
     expect(() => test(React.createElement(ArrayState), 'SPAN', '')).toWarnDev(
-      'ArrayState.state: must be set to an object or null'
+      'ArrayState.state: must be set to an object or null',
+      {withoutStack: true}
     );
     expect(() => test(React.createElement(StringState), 'SPAN', '')).toWarnDev(
-      'StringState.state: must be set to an object or null'
+      'StringState.state: must be set to an object or null',
+      {withoutStack: true}
     );
     expect(() => test(React.createElement(NumberState), 'SPAN', '')).toWarnDev(
-      'NumberState.state: must be set to an object or null'
+      'NumberState.state: must be set to an object or null',
+      {withoutStack: true}
     );
   });
 
@@ -535,7 +594,7 @@ describe('ReactTypeScriptClass', function() {
           'a plain JavaScript class.',
         'propTypes was defined as an instance property on ClassicProperties.',
         'contextTypes was defined as an instance property on ClassicProperties.',
-      ]);
+      ], {withoutStack: true});
       expect(getInitialStateWasCalled).toBe(false);
       expect(getDefaultPropsWasCalled).toBe(false);
     }
@@ -566,7 +625,8 @@ describe('ReactTypeScriptClass', function() {
       'Warning: ' +
         'MisspelledComponent1 has a method called componentShouldUpdate(). Did ' +
         'you mean shouldComponentUpdate()? The name is phrased as a question ' +
-        'because the function is expected to return a value.'
+        'because the function is expected to return a value.',
+        {withoutStack: true}
     );
   });
 
@@ -576,7 +636,8 @@ describe('ReactTypeScriptClass', function() {
     ).toWarnDev(
       'Warning: ' +
         'MisspelledComponent2 has a method called componentWillRecieveProps(). ' +
-        'Did you mean componentWillReceiveProps()?'
+        'Did you mean componentWillReceiveProps()?',
+        {withoutStack: true}
     );
   });
 
@@ -586,7 +647,8 @@ describe('ReactTypeScriptClass', function() {
     ).toWarnDev(
       'Warning: ' +
         'MisspelledComponent3 has a method called UNSAFE_componentWillRecieveProps(). ' +
-        'Did you mean UNSAFE_componentWillReceiveProps()?'
+        'Did you mean UNSAFE_componentWillReceiveProps()?',
+        {withoutStack: true}
     );
   });
 
@@ -599,12 +661,14 @@ describe('ReactTypeScriptClass', function() {
     expect(() =>
       expect(() => instance.replaceState({})).toThrow()
     ).toLowPriorityWarnDev(
-      'replaceState(...) is deprecated in plain JavaScript React classes'
+      'replaceState(...) is deprecated in plain JavaScript React classes',
+      {withoutStack: true}
     );
     expect(() =>
       expect(() => instance.isMounted()).toThrow()
     ).toLowPriorityWarnDev(
-      'isMounted(...) is deprecated in plain JavaScript React classes'
+      'isMounted(...) is deprecated in plain JavaScript React classes',
+      {withoutStack: true}
     );
   });
 

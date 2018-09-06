@@ -9,20 +9,23 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
+import invariant from 'shared/invariant';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import {
   ClassComponent,
+  ClassComponentLazy,
   HostComponent,
   HostRoot,
   HostPortal,
   HostText,
-} from 'shared/ReactTypeOfWork';
-import {NoEffect, Placement} from 'shared/ReactTypeOfSideEffect';
+} from 'shared/ReactWorkTags';
+import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
+
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 const MOUNTING = 1;
 const MOUNTED = 2;
@@ -64,17 +67,20 @@ export function isFiberMounted(fiber: Fiber): boolean {
 export function isMounted(component: React$Component<any, any>): boolean {
   if (__DEV__) {
     const owner = (ReactCurrentOwner.current: any);
-    if (owner !== null && owner.tag === ClassComponent) {
+    if (
+      owner !== null &&
+      (owner.tag === ClassComponent || owner.tag === ClassComponentLazy)
+    ) {
       const ownerFiber: Fiber = owner;
       const instance = ownerFiber.stateNode;
-      warning(
+      warningWithoutStack(
         instance._warnedAboutRefsInRender,
         '%s is accessing isMounted inside its render() function. ' +
           'render() should be a pure function of props and state. It should ' +
           'never access something that requires stale data from the previous ' +
           'render, such as refs. Move this logic to componentDidMount and ' +
           'componentDidUpdate instead.',
-        getComponentName(ownerFiber) || 'A component',
+        getComponentName(ownerFiber.type) || 'A component',
       );
       instance._warnedAboutRefsInRender = true;
     }

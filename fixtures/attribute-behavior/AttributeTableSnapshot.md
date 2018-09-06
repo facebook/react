@@ -277,9 +277,9 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `action=(string)`| (changed)| `"https://reactjs.com/"` |
-| `action=(empty string)`| (changed)| `"http://localhost:3000/"` |
+| `action=(empty string)`| (initial)| `"http://localhost:3000/"` |
 | `action=(array with string)`| (changed)| `"https://reactjs.com/"` |
-| `action=(empty array)`| (changed)| `"http://localhost:3000/"` |
+| `action=(empty array)`| (initial)| `"http://localhost:3000/"` |
 | `action=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
 | `action=(numeric string)`| (changed)| `"http://localhost:3000/42"` |
 | `action=(-1)`| (changed)| `"http://localhost:3000/-1"` |
@@ -287,16 +287,16 @@
 | `action=(integer)`| (changed)| `"http://localhost:3000/1"` |
 | `action=(NaN)`| (changed, warning)| `"http://localhost:3000/NaN"` |
 | `action=(float)`| (changed)| `"http://localhost:3000/99.99"` |
-| `action=(true)`| (initial, warning)| `<empty string>` |
-| `action=(false)`| (initial, warning)| `<empty string>` |
+| `action=(true)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(false)`| (initial, warning)| `"http://localhost:3000/"` |
 | `action=(string 'true')`| (changed)| `"http://localhost:3000/true"` |
 | `action=(string 'false')`| (changed)| `"http://localhost:3000/false"` |
 | `action=(string 'on')`| (changed)| `"http://localhost:3000/on"` |
 | `action=(string 'off')`| (changed)| `"http://localhost:3000/off"` |
-| `action=(symbol)`| (initial, warning)| `<empty string>` |
-| `action=(function)`| (initial, warning)| `<empty string>` |
-| `action=(null)`| (initial)| `<empty string>` |
-| `action=(undefined)`| (initial)| `<empty string>` |
+| `action=(symbol)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(function)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(null)`| (initial)| `"http://localhost:3000/"` |
+| `action=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
 ## `additive` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
@@ -389,8 +389,8 @@
 | `allowFullScreen=(float)`| (changed)| `<boolean: true>` |
 | `allowFullScreen=(true)`| (changed)| `<boolean: true>` |
 | `allowFullScreen=(false)`| (initial)| `<boolean: false>` |
-| `allowFullScreen=(string 'true')`| (changed)| `<boolean: true>` |
-| `allowFullScreen=(string 'false')`| (changed)| `<boolean: true>` |
+| `allowFullScreen=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `allowFullScreen=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `allowFullScreen=(string 'on')`| (changed)| `<boolean: true>` |
 | `allowFullScreen=(string 'off')`| (changed)| `<boolean: true>` |
 | `allowFullScreen=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -739,8 +739,8 @@
 | `async=(float)`| (changed)| `<boolean: true>` |
 | `async=(true)`| (changed)| `<boolean: true>` |
 | `async=(false)`| (initial)| `<boolean: false>` |
-| `async=(string 'true')`| (changed)| `<boolean: true>` |
-| `async=(string 'false')`| (changed)| `<boolean: true>` |
+| `async=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `async=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `async=(string 'on')`| (changed)| `<boolean: true>` |
 | `async=(string 'off')`| (changed)| `<boolean: true>` |
 | `async=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -802,26 +802,26 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoCapitalize=(string)`| (changed)| `"words"` |
-| `autoCapitalize=(empty string)`| (initial)| `"sentences"` |
+| `autoCapitalize=(empty string)`| (initial)| `<empty string>` |
 | `autoCapitalize=(array with string)`| (changed)| `"words"` |
-| `autoCapitalize=(empty array)`| (initial)| `"sentences"` |
-| `autoCapitalize=(object)`| (initial)| `"sentences"` |
-| `autoCapitalize=(numeric string)`| (initial)| `"sentences"` |
-| `autoCapitalize=(-1)`| (initial)| `"sentences"` |
-| `autoCapitalize=(0)`| (initial)| `"sentences"` |
-| `autoCapitalize=(integer)`| (initial)| `"sentences"` |
-| `autoCapitalize=(NaN)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(float)`| (initial)| `"sentences"` |
-| `autoCapitalize=(true)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(false)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(string 'true')`| (initial)| `"sentences"` |
-| `autoCapitalize=(string 'false')`| (initial)| `"sentences"` |
-| `autoCapitalize=(string 'on')`| (initial)| `"sentences"` |
+| `autoCapitalize=(empty array)`| (initial)| `<empty string>` |
+| `autoCapitalize=(object)`| (changed)| `"sentences"` |
+| `autoCapitalize=(numeric string)`| (changed)| `"sentences"` |
+| `autoCapitalize=(-1)`| (changed)| `"sentences"` |
+| `autoCapitalize=(0)`| (changed)| `"sentences"` |
+| `autoCapitalize=(integer)`| (changed)| `"sentences"` |
+| `autoCapitalize=(NaN)`| (changed, warning)| `"sentences"` |
+| `autoCapitalize=(float)`| (changed)| `"sentences"` |
+| `autoCapitalize=(true)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(false)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(string 'true')`| (changed)| `"sentences"` |
+| `autoCapitalize=(string 'false')`| (changed)| `"sentences"` |
+| `autoCapitalize=(string 'on')`| (changed)| `"sentences"` |
 | `autoCapitalize=(string 'off')`| (changed)| `"none"` |
-| `autoCapitalize=(symbol)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(function)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(null)`| (initial)| `"sentences"` |
-| `autoCapitalize=(undefined)`| (initial)| `"sentences"` |
+| `autoCapitalize=(symbol)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(function)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(null)`| (initial)| `<empty string>` |
+| `autoCapitalize=(undefined)`| (initial)| `<empty string>` |
 
 ## `autoComplete` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
@@ -889,8 +889,8 @@
 | `autoPlay=(float)`| (changed)| `<boolean: true>` |
 | `autoPlay=(true)`| (changed)| `<boolean: true>` |
 | `autoPlay=(false)`| (initial)| `<boolean: false>` |
-| `autoPlay=(string 'true')`| (changed)| `<boolean: true>` |
-| `autoPlay=(string 'false')`| (changed)| `<boolean: true>` |
+| `autoPlay=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `autoPlay=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `autoPlay=(string 'on')`| (changed)| `<boolean: true>` |
 | `autoPlay=(string 'off')`| (changed)| `<boolean: true>` |
 | `autoPlay=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -1389,8 +1389,8 @@
 | `checked=(float)`| (changed)| `<boolean: true>` |
 | `checked=(true)`| (changed)| `<boolean: true>` |
 | `checked=(false)`| (initial)| `<boolean: false>` |
-| `checked=(string 'true')`| (changed)| `<boolean: true>` |
-| `checked=(string 'false')`| (changed)| `<boolean: true>` |
+| `checked=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `checked=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `checked=(string 'on')`| (changed)| `<boolean: true>` |
 | `checked=(string 'off')`| (changed)| `<boolean: true>` |
 | `checked=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -1401,23 +1401,23 @@
 ## `Checked` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `Checked=(string)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(empty string)`| (changed, warning)| `<empty string>` |
-| `Checked=(array with string)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(empty array)`| (changed, warning)| `<empty string>` |
-| `Checked=(object)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(numeric string)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(-1)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(0)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(integer)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(NaN)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(float)`| (changed, warning, ssr mismatch)| `<empty string>` |
+| `Checked=(string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(empty string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(array with string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(empty array)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(object)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(numeric string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(-1)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(0)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(integer)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(NaN)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(float)`| (initial, warning, ssr mismatch)| `<null>` |
 | `Checked=(true)`| (initial, warning)| `<null>` |
 | `Checked=(false)`| (initial, warning)| `<null>` |
-| `Checked=(string 'true')`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(string 'false')`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(string 'on')`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(string 'off')`| (changed, warning, ssr mismatch)| `<empty string>` |
+| `Checked=(string 'true')`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(string 'false')`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(string 'on')`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(string 'off')`| (initial, warning, ssr mismatch)| `<null>` |
 | `Checked=(symbol)`| (initial, warning)| `<null>` |
 | `Checked=(function)`| (initial, warning)| `<null>` |
 | `Checked=(null)`| (initial, warning)| `<null>` |
@@ -2139,8 +2139,8 @@
 | `controls=(float)`| (changed)| `<boolean: true>` |
 | `controls=(true)`| (changed)| `<boolean: true>` |
 | `controls=(false)`| (initial)| `<boolean: false>` |
-| `controls=(string 'true')`| (changed)| `<boolean: true>` |
-| `controls=(string 'false')`| (changed)| `<boolean: true>` |
+| `controls=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `controls=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `controls=(string 'on')`| (changed)| `<boolean: true>` |
 | `controls=(string 'off')`| (changed)| `<boolean: true>` |
 | `controls=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -2514,8 +2514,8 @@
 | `default=(float)`| (changed)| `<boolean: true>` |
 | `default=(true)`| (changed)| `<boolean: true>` |
 | `default=(false)`| (initial)| `<boolean: false>` |
-| `default=(string 'true')`| (changed)| `<boolean: true>` |
-| `default=(string 'false')`| (changed)| `<boolean: true>` |
+| `default=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `default=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `default=(string 'on')`| (changed)| `<boolean: true>` |
 | `default=(string 'off')`| (changed)| `<boolean: true>` |
 | `default=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -2551,25 +2551,25 @@
 ## `defaultChecked` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `defaultChecked=(string)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(string)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(empty string)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(array with string)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(empty array)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(object)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(numeric string)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(-1)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(array with string)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(empty array)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(object)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(numeric string)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(-1)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(0)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(integer)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(integer)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(NaN)`| (initial, warning, ssr warning)| `<boolean: false>` |
-| `defaultChecked=(float)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(true)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(float)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(true)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(false)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(string 'true')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(string 'false')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(string 'on')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(string 'off')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(symbol)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(function)`| (initial)| `<boolean: false>` |
+| `defaultChecked=(string 'true')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'false')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'on')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'off')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(symbol)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `defaultChecked=(function)`| (changed, ssr mismatch)| `<boolean: true>` |
 | `defaultChecked=(null)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -2639,8 +2639,8 @@
 | `defer=(float)`| (changed)| `<boolean: true>` |
 | `defer=(true)`| (changed)| `<boolean: true>` |
 | `defer=(false)`| (initial)| `<boolean: false>` |
-| `defer=(string 'true')`| (changed)| `<boolean: true>` |
-| `defer=(string 'false')`| (changed)| `<boolean: true>` |
+| `defer=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `defer=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `defer=(string 'on')`| (changed)| `<boolean: true>` |
 | `defer=(string 'off')`| (changed)| `<boolean: true>` |
 | `defer=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -2764,8 +2764,8 @@
 | `disabled=(float)`| (changed)| `<boolean: true>` |
 | `disabled=(true)`| (changed)| `<boolean: true>` |
 | `disabled=(false)`| (initial)| `<boolean: false>` |
-| `disabled=(string 'true')`| (changed)| `<boolean: true>` |
-| `disabled=(string 'false')`| (changed)| `<boolean: true>` |
+| `disabled=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `disabled=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `disabled=(string 'on')`| (changed)| `<boolean: true>` |
 | `disabled=(string 'off')`| (changed)| `<boolean: true>` |
 | `disabled=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -3587,8 +3587,8 @@
 | `focusable=(integer)`| (changed)| `"1"` |
 | `focusable=(NaN)`| (changed, warning)| `"NaN"` |
 | `focusable=(float)`| (changed)| `"99.99"` |
-| `focusable=(true)`| (initial, warning)| `<null>` |
-| `focusable=(false)`| (initial, warning)| `<null>` |
+| `focusable=(true)`| (changed)| `"true"` |
+| `focusable=(false)`| (changed)| `"false"` |
 | `focusable=(string 'true')`| (changed)| `"true"` |
 | `focusable=(string 'false')`| (changed)| `"false"` |
 | `focusable=(string 'on')`| (changed)| `"on"` |
@@ -4139,8 +4139,8 @@
 | `formNoValidate=(float)`| (changed)| `<boolean: true>` |
 | `formNoValidate=(true)`| (changed)| `<boolean: true>` |
 | `formNoValidate=(false)`| (initial)| `<boolean: false>` |
-| `formNoValidate=(string 'true')`| (changed)| `<boolean: true>` |
-| `formNoValidate=(string 'false')`| (changed)| `<boolean: true>` |
+| `formNoValidate=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `formNoValidate=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `formNoValidate=(string 'on')`| (changed)| `<boolean: true>` |
 | `formNoValidate=(string 'off')`| (changed)| `<boolean: true>` |
 | `formNoValidate=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -4764,8 +4764,8 @@
 | `hidden=(float)`| (changed)| `<boolean: true>` |
 | `hidden=(true)`| (changed)| `<boolean: true>` |
 | `hidden=(false)`| (initial)| `<boolean: false>` |
-| `hidden=(string 'true')`| (changed)| `<boolean: true>` |
-| `hidden=(string 'false')`| (changed)| `<boolean: true>` |
+| `hidden=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `hidden=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `hidden=(string 'on')`| (changed)| `<boolean: true>` |
 | `hidden=(string 'off')`| (changed)| `<boolean: true>` |
 | `hidden=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -5489,8 +5489,8 @@
 | `itemScope=(float)`| (changed)| `<empty string>` |
 | `itemScope=(true)`| (changed)| `<empty string>` |
 | `itemScope=(false)`| (initial)| `<null>` |
-| `itemScope=(string 'true')`| (changed)| `<empty string>` |
-| `itemScope=(string 'false')`| (changed)| `<empty string>` |
+| `itemScope=(string 'true')`| (changed, warning)| `<empty string>` |
+| `itemScope=(string 'false')`| (changed, warning)| `<empty string>` |
 | `itemScope=(string 'on')`| (changed)| `<empty string>` |
 | `itemScope=(string 'off')`| (changed)| `<empty string>` |
 | `itemScope=(symbol)`| (initial, warning)| `<null>` |
@@ -6239,8 +6239,8 @@
 | `loop=(float)`| (changed)| `<boolean: true>` |
 | `loop=(true)`| (changed)| `<boolean: true>` |
 | `loop=(false)`| (initial)| `<boolean: false>` |
-| `loop=(string 'true')`| (changed)| `<boolean: true>` |
-| `loop=(string 'false')`| (changed)| `<boolean: true>` |
+| `loop=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `loop=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `loop=(string 'on')`| (changed)| `<boolean: true>` |
 | `loop=(string 'off')`| (changed)| `<boolean: true>` |
 | `loop=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -7064,8 +7064,8 @@
 | `multiple=(float)`| (changed)| `<boolean: true>` |
 | `multiple=(true)`| (changed)| `<boolean: true>` |
 | `multiple=(false)`| (initial)| `<boolean: false>` |
-| `multiple=(string 'true')`| (changed)| `<boolean: true>` |
-| `multiple=(string 'false')`| (changed)| `<boolean: true>` |
+| `multiple=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `multiple=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `multiple=(string 'on')`| (changed)| `<boolean: true>` |
 | `multiple=(string 'off')`| (changed)| `<boolean: true>` |
 | `multiple=(symbol)`| (changed, warning, ssr mismatch)| `<boolean: true>` |
@@ -7076,23 +7076,23 @@
 ## `muted` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `muted=(string)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(string)`| (changed)| `<boolean: true>` |
 | `muted=(empty string)`| (initial)| `<boolean: false>` |
-| `muted=(array with string)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(empty array)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(object)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(numeric string)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(-1)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(array with string)`| (changed)| `<boolean: true>` |
+| `muted=(empty array)`| (changed)| `<boolean: true>` |
+| `muted=(object)`| (changed)| `<boolean: true>` |
+| `muted=(numeric string)`| (changed)| `<boolean: true>` |
+| `muted=(-1)`| (changed)| `<boolean: true>` |
 | `muted=(0)`| (initial)| `<boolean: false>` |
-| `muted=(integer)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(integer)`| (changed)| `<boolean: true>` |
 | `muted=(NaN)`| (initial, warning)| `<boolean: false>` |
-| `muted=(float)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(true)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(float)`| (changed)| `<boolean: true>` |
+| `muted=(true)`| (changed)| `<boolean: true>` |
 | `muted=(false)`| (initial)| `<boolean: false>` |
-| `muted=(string 'true')`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(string 'false')`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(string 'on')`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(string 'off')`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `muted=(string 'false')`| (changed, warning)| `<boolean: true>` |
+| `muted=(string 'on')`| (changed)| `<boolean: true>` |
+| `muted=(string 'off')`| (changed)| `<boolean: true>` |
 | `muted=(symbol)`| (initial, warning)| `<boolean: false>` |
 | `muted=(function)`| (initial, warning)| `<boolean: false>` |
 | `muted=(null)`| (initial)| `<boolean: false>` |
@@ -7148,6 +7148,31 @@
 | `name=(null)`| (initial)| `<null>` |
 | `name=(undefined)`| (initial)| `<null>` |
 
+## `noModule` (on `<script>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `noModule=(string)`| (changed)| `<boolean: true>` |
+| `noModule=(empty string)`| (initial)| `<boolean: false>` |
+| `noModule=(array with string)`| (changed)| `<boolean: true>` |
+| `noModule=(empty array)`| (changed)| `<boolean: true>` |
+| `noModule=(object)`| (changed)| `<boolean: true>` |
+| `noModule=(numeric string)`| (changed)| `<boolean: true>` |
+| `noModule=(-1)`| (changed)| `<boolean: true>` |
+| `noModule=(0)`| (initial)| `<boolean: false>` |
+| `noModule=(integer)`| (changed)| `<boolean: true>` |
+| `noModule=(NaN)`| (initial, warning)| `<boolean: false>` |
+| `noModule=(float)`| (changed)| `<boolean: true>` |
+| `noModule=(true)`| (changed)| `<boolean: true>` |
+| `noModule=(false)`| (initial)| `<boolean: false>` |
+| `noModule=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `noModule=(string 'false')`| (changed, warning)| `<boolean: true>` |
+| `noModule=(string 'on')`| (changed)| `<boolean: true>` |
+| `noModule=(string 'off')`| (changed)| `<boolean: true>` |
+| `noModule=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `noModule=(function)`| (initial, warning)| `<boolean: false>` |
+| `noModule=(null)`| (initial)| `<boolean: false>` |
+| `noModule=(undefined)`| (initial)| `<boolean: false>` |
+
 ## `nonce` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
@@ -7173,31 +7198,6 @@
 | `nonce=(null)`| (initial)| `<null>` |
 | `nonce=(undefined)`| (initial)| `<null>` |
 
-## `noModule` (on `<script>` inside `<div>`)
-| Test Case | Flags | Result |
-| --- | --- | --- |
-| `noModule=(string)`| (changed)| `<boolean: true>` |
-| `noModule=(empty string)`| (initial)| `<boolean: false>` |
-| `noModule=(array with string)`| (changed)| `<boolean: true>` |
-| `noModule=(empty array)`| (changed)| `<boolean: true>` |
-| `noModule=(object)`| (changed)| `<boolean: true>` |
-| `noModule=(numeric string)`| (changed)| `<boolean: true>` |
-| `noModule=(-1)`| (changed)| `<boolean: true>` |
-| `noModule=(0)`| (initial)| `<boolean: false>` |
-| `noModule=(integer)`| (changed)| `<boolean: true>` |
-| `noModule=(NaN)`| (initial, warning)| `<boolean: false>` |
-| `noModule=(float)`| (changed)| `<boolean: true>` |
-| `noModule=(true)`| (changed)| `<boolean: true>` |
-| `noModule=(false)`| (initial)| `<boolean: false>` |
-| `noModule=(string 'true')`| (changed)| `<boolean: true>` |
-| `noModule=(string 'false')`| (changed)| `<boolean: true>` |
-| `noModule=(string 'on')`| (changed)| `<boolean: true>` |
-| `noModule=(string 'off')`| (changed)| `<boolean: true>` |
-| `noModule=(symbol)`| (initial, warning)| `<boolean: false>` |
-| `noModule=(function)`| (initial, warning)| `<boolean: false>` |
-| `noModule=(null)`| (initial)| `<boolean: false>` |
-| `noModule=(undefined)`| (initial)| `<boolean: false>` |
-
 ## `noValidate` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
@@ -7214,8 +7214,8 @@
 | `noValidate=(float)`| (changed)| `<boolean: true>` |
 | `noValidate=(true)`| (changed)| `<boolean: true>` |
 | `noValidate=(false)`| (initial)| `<boolean: false>` |
-| `noValidate=(string 'true')`| (changed)| `<boolean: true>` |
-| `noValidate=(string 'false')`| (changed)| `<boolean: true>` |
+| `noValidate=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `noValidate=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `noValidate=(string 'on')`| (changed)| `<boolean: true>` |
 | `noValidate=(string 'off')`| (changed)| `<boolean: true>` |
 | `noValidate=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -7464,8 +7464,8 @@
 | `open=(float)`| (changed)| `<boolean: true>` |
 | `open=(true)`| (changed)| `<boolean: true>` |
 | `open=(false)`| (initial)| `<boolean: false>` |
-| `open=(string 'true')`| (changed)| `<boolean: true>` |
-| `open=(string 'false')`| (changed)| `<boolean: true>` |
+| `open=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `open=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `open=(string 'on')`| (changed)| `<boolean: true>` |
 | `open=(string 'off')`| (changed)| `<boolean: true>` |
 | `open=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -8014,8 +8014,8 @@
 | `playsInline=(float)`| (changed)| `<empty string>` |
 | `playsInline=(true)`| (changed)| `<empty string>` |
 | `playsInline=(false)`| (initial)| `<null>` |
-| `playsInline=(string 'true')`| (changed)| `<empty string>` |
-| `playsInline=(string 'false')`| (changed)| `<empty string>` |
+| `playsInline=(string 'true')`| (changed, warning)| `<empty string>` |
+| `playsInline=(string 'false')`| (changed, warning)| `<empty string>` |
 | `playsInline=(string 'on')`| (changed)| `<empty string>` |
 | `playsInline=(string 'off')`| (changed)| `<empty string>` |
 | `playsInline=(symbol)`| (initial, warning)| `<null>` |
@@ -8227,26 +8227,26 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `preload=(string)`| (changed)| `"none"` |
-| `preload=(empty string)`| (initial)| `"auto"` |
+| `preload=(empty string)`| (changed)| `"auto"` |
 | `preload=(array with string)`| (changed)| `"none"` |
-| `preload=(empty array)`| (initial)| `"auto"` |
-| `preload=(object)`| (initial)| `"auto"` |
-| `preload=(numeric string)`| (initial)| `"auto"` |
-| `preload=(-1)`| (initial)| `"auto"` |
-| `preload=(0)`| (initial)| `"auto"` |
-| `preload=(integer)`| (initial)| `"auto"` |
-| `preload=(NaN)`| (initial, warning)| `"auto"` |
-| `preload=(float)`| (initial)| `"auto"` |
-| `preload=(true)`| (initial, warning)| `"auto"` |
-| `preload=(false)`| (initial, warning)| `"auto"` |
-| `preload=(string 'true')`| (initial)| `"auto"` |
-| `preload=(string 'false')`| (initial)| `"auto"` |
-| `preload=(string 'on')`| (initial)| `"auto"` |
-| `preload=(string 'off')`| (initial)| `"auto"` |
-| `preload=(symbol)`| (initial, warning)| `"auto"` |
-| `preload=(function)`| (initial, warning)| `"auto"` |
-| `preload=(null)`| (initial)| `"auto"` |
-| `preload=(undefined)`| (initial)| `"auto"` |
+| `preload=(empty array)`| (changed)| `"auto"` |
+| `preload=(object)`| (initial)| `"metadata"` |
+| `preload=(numeric string)`| (initial)| `"metadata"` |
+| `preload=(-1)`| (initial)| `"metadata"` |
+| `preload=(0)`| (initial)| `"metadata"` |
+| `preload=(integer)`| (initial)| `"metadata"` |
+| `preload=(NaN)`| (initial, warning)| `"metadata"` |
+| `preload=(float)`| (initial)| `"metadata"` |
+| `preload=(true)`| (initial, warning)| `"metadata"` |
+| `preload=(false)`| (initial, warning)| `"metadata"` |
+| `preload=(string 'true')`| (initial)| `"metadata"` |
+| `preload=(string 'false')`| (initial)| `"metadata"` |
+| `preload=(string 'on')`| (initial)| `"metadata"` |
+| `preload=(string 'off')`| (initial)| `"metadata"` |
+| `preload=(symbol)`| (initial, warning)| `"metadata"` |
+| `preload=(function)`| (initial, warning)| `"metadata"` |
+| `preload=(null)`| (initial)| `"metadata"` |
+| `preload=(undefined)`| (initial)| `"metadata"` |
 
 ## `preserveAlpha` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
@@ -8489,8 +8489,8 @@
 | `readOnly=(float)`| (changed)| `<boolean: true>` |
 | `readOnly=(true)`| (changed)| `<boolean: true>` |
 | `readOnly=(false)`| (initial)| `<boolean: false>` |
-| `readOnly=(string 'true')`| (changed)| `<boolean: true>` |
-| `readOnly=(string 'false')`| (changed)| `<boolean: true>` |
+| `readOnly=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `readOnly=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `readOnly=(string 'on')`| (changed)| `<boolean: true>` |
 | `readOnly=(string 'off')`| (changed)| `<boolean: true>` |
 | `readOnly=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -8714,8 +8714,8 @@
 | `required=(float)`| (changed)| `<boolean: true>` |
 | `required=(true)`| (changed)| `<boolean: true>` |
 | `required=(false)`| (initial)| `<boolean: false>` |
-| `required=(string 'true')`| (changed)| `<boolean: true>` |
-| `required=(string 'false')`| (changed)| `<boolean: true>` |
+| `required=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `required=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `required=(string 'on')`| (changed)| `<boolean: true>` |
 | `required=(string 'off')`| (changed)| `<boolean: true>` |
 | `required=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -8889,8 +8889,8 @@
 | `reversed=(float)`| (changed)| `<boolean: true>` |
 | `reversed=(true)`| (changed)| `<boolean: true>` |
 | `reversed=(false)`| (initial)| `<boolean: false>` |
-| `reversed=(string 'true')`| (changed)| `<boolean: true>` |
-| `reversed=(string 'false')`| (changed)| `<boolean: true>` |
+| `reversed=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `reversed=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `reversed=(string 'on')`| (changed)| `<boolean: true>` |
 | `reversed=(string 'off')`| (changed)| `<boolean: true>` |
 | `reversed=(symbol)`| (initial, warning)| `<boolean: false>` |
@@ -8983,7 +8983,7 @@
 | `rowSpan=(object)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(numeric string)`| (changed, ssr error, ssr mismatch)| `<number: 42>` |
 | `rowSpan=(-1)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
-| `rowSpan=(0)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
+| `rowSpan=(0)`| (changed, ssr error, ssr mismatch)| `<number: 0>` |
 | `rowSpan=(integer)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(NaN)`| (initial, warning, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(float)`| (changed, ssr error, ssr mismatch)| `<number: 99>` |
@@ -9139,8 +9139,8 @@
 | `scoped=(float)`| (changed)| `<empty string>` |
 | `scoped=(true)`| (changed)| `<empty string>` |
 | `scoped=(false)`| (initial)| `<null>` |
-| `scoped=(string 'true')`| (changed)| `<empty string>` |
-| `scoped=(string 'false')`| (changed)| `<empty string>` |
+| `scoped=(string 'true')`| (changed, warning)| `<empty string>` |
+| `scoped=(string 'false')`| (changed, warning)| `<empty string>` |
 | `scoped=(string 'on')`| (changed)| `<empty string>` |
 | `scoped=(string 'off')`| (changed)| `<empty string>` |
 | `scoped=(symbol)`| (initial, warning)| `<null>` |
@@ -9189,8 +9189,8 @@
 | `seamless=(float)`| (changed)| `<empty string>` |
 | `seamless=(true)`| (changed)| `<empty string>` |
 | `seamless=(false)`| (initial)| `<null>` |
-| `seamless=(string 'true')`| (changed)| `<empty string>` |
-| `seamless=(string 'false')`| (changed)| `<empty string>` |
+| `seamless=(string 'true')`| (changed, warning)| `<empty string>` |
+| `seamless=(string 'false')`| (changed, warning)| `<empty string>` |
 | `seamless=(string 'on')`| (changed)| `<empty string>` |
 | `seamless=(string 'off')`| (changed)| `<empty string>` |
 | `seamless=(symbol)`| (initial, warning)| `<null>` |
@@ -9264,8 +9264,8 @@
 | `selected=(float)`| (initial, warning, ssr warning)| `<boolean: true>` |
 | `selected=(true)`| (initial, warning, ssr warning)| `<boolean: true>` |
 | `selected=(false)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(string 'true')`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(string 'false')`| (initial, warning, ssr warning)| `<boolean: true>` |
+| `selected=(string 'true')`| (initial, warning)| `<boolean: true>` |
+| `selected=(string 'false')`| (initial, warning)| `<boolean: true>` |
 | `selected=(string 'on')`| (initial, warning, ssr warning)| `<boolean: true>` |
 | `selected=(string 'off')`| (initial, warning, ssr warning)| `<boolean: true>` |
 | `selected=(symbol)`| (initial, warning)| `<boolean: true>` |
@@ -11868,8 +11868,8 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
-| `value=(function)`| (changed, warning, ssr warning)| `"function f() {}"` |
+| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
@@ -11893,8 +11893,8 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (changed, error, warning, ssr mismatch)| `` |
-| `value=(function)`| (changed, warning, ssr mismatch)| `"function f() {}"` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
+| `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 

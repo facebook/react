@@ -7,7 +7,7 @@ const React = window.React;
 class EventPooling extends React.Component {
   render() {
     return (
-      <FixtureSet title="Event Pooling" description="">
+      <FixtureSet title="Event Pooling">
         <MouseMove />
         <Persistence />
       </FixtureSet>

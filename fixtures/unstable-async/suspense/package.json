@@ -1,0 +1,40 @@
+{
+  "name": "io-demo",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": ".",
+  "devDependencies": {
+    "gh-pages": "^1.1.0",
+    "react-scripts": "^1.1.4"
+  },
+  "dependencies": {
+    "clipboard": "^1.7.1",
+    "github-fork-ribbon-css": "^0.2.1",
+    "react-draggable": "^3.0.5"
+  },
+  "scripts": {
+    "prestart": "cp -r ../../../build/node_modules/* ./node_modules/",
+    "prebuild": "cp -r ../../../build/node_modules/* ./node_modules/",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "deploy": "gh-pages -d build"
+  },
+  "eslintConfig": {
+    "extends": "./node_modules/react-scripts/config/eslint.js"
+  },
+  "browserslist": {
+    "development": [
+      "last 2 chrome versions",
+      "last 2 firefox versions",
+      "last 2 edge versions"
+    ],
+    "production": [
+      ">1%",
+      "last 4 versions",
+      "Firefox ESR",
+      "not ie < 11"
+    ]
+  }
+}

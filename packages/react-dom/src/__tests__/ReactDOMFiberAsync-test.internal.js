@@ -16,12 +16,48 @@ let ReactDOM;
 
 const AsyncMode = React.unstable_AsyncMode;
 
+const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
+  HTMLInputElement.prototype,
+  'value',
+).set;
+
 describe('ReactDOMFiberAsync', () => {
   let container;
 
   beforeEach(() => {
+    // TODO pull this into helper method, reduce repetition.
+    // mock the browser APIs which are used in schedule:
+    // - requestAnimationFrame should pass the DOMHighResTimeStamp argument
+    // - calling 'window.postMessage' should actually fire postmessage handlers
+    global.requestAnimationFrame = function(cb) {
+      return setTimeout(() => {
+        cb(Date.now());
+      });
+    };
+    const originalAddEventListener = global.addEventListener;
+    let postMessageCallback;
+    global.addEventListener = function(eventName, callback, useCapture) {
+      if (eventName === 'message') {
+        postMessageCallback = callback;
+      } else {
+        originalAddEventListener(eventName, callback, useCapture);
+      }
+    };
+    global.postMessage = function(messageKey, targetOrigin) {
+      const postMessageEvent = {source: window, data: messageKey};
+      if (postMessageCallback) {
+        postMessageCallback(postMessageEvent);
+      }
+    };
+    jest.resetModules();
     container = document.createElement('div');
     ReactDOM = require('react-dom');
+
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
   });
 
   it('renders synchronously by default', () => {
@@ -35,11 +71,67 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['Hi', 'Bye']);
   });
 
+  it('does not perform deferred updates synchronously', () => {
+    let inputRef = React.createRef();
+    let asyncValueRef = React.createRef();
+    let syncValueRef = React.createRef();
+
+    class Counter extends React.Component {
+      state = {asyncValue: '', syncValue: ''};
+
+      handleChange = e => {
+        const nextValue = e.target.value;
+        requestIdleCallback(() => {
+          this.setState({
+            asyncValue: nextValue,
+          });
+          // It should not be flushed yet.
+          expect(asyncValueRef.current.textContent).toBe('');
+        });
+        this.setState({
+          syncValue: nextValue,
+        });
+      };
+
+      render() {
+        return (
+          <div>
+            <input
+              ref={inputRef}
+              onChange={this.handleChange}
+              defaultValue=""
+            />
+            <p ref={asyncValueRef}>{this.state.asyncValue}</p>
+            <p ref={syncValueRef}>{this.state.syncValue}</p>
+          </div>
+        );
+      }
+    }
+    ReactDOM.render(
+      <AsyncMode>
+        <Counter />
+      </AsyncMode>,
+      container,
+    );
+    expect(asyncValueRef.current.textContent).toBe('');
+    expect(syncValueRef.current.textContent).toBe('');
+
+    setUntrackedInputValue.call(inputRef.current, 'hello');
+    inputRef.current.dispatchEvent(new MouseEvent('input', {bubbles: true}));
+    // Should only flush non-deferred update.
+    expect(asyncValueRef.current.textContent).toBe('');
+    expect(syncValueRef.current.textContent).toBe('hello');
+
+    // Should flush both updates now.
+    jest.runAllTimers();
+    expect(asyncValueRef.current.textContent).toBe('hello');
+    expect(syncValueRef.current.textContent).toBe('hello');
+  });
+
   describe('with feature flag disabled', () => {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      container = document.createElement('div');
       ReactDOM = require('react-dom');
     });
 
@@ -66,14 +158,12 @@ describe('ReactDOMFiberAsync', () => {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      container = document.createElement('div');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-      ReactFeatureFlags.enableCreateRoot = true;
       ReactDOM = require('react-dom');
     });
 
     it('createRoot makes the entire tree async', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<div>Hi</div>);
       expect(container.textContent).toEqual('');
       jest.runAllTimers();
@@ -95,7 +185,7 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Component />);
       expect(container.textContent).toEqual('');
       jest.runAllTimers();

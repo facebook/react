@@ -13,6 +13,7 @@
     "figlet": "^1.2.0",
     "fs-extra": "^4.0.2",
     "log-update": "^2.1.0",
+    "prompt-promise": "^1.0.3",
     "request-promise-json": "^1.0.4",
     "semver": "^5.4.1"
   }

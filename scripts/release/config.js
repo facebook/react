@@ -1,6 +1,6 @@
 'use strict';
 
-const dependencies = ['fbjs', 'object-assign', 'prop-types'];
+const dependencies = ['object-assign', 'prop-types'];
 
 const paramDefinitions = [
   {

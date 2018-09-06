@@ -9,6 +9,9 @@
 
 /* eslint-disable */
 
+declare var __PROFILE__: boolean;
+declare var __UMD__: boolean;
+
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/

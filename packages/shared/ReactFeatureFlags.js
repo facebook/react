@@ -4,24 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * @flow strict
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 // Exports ReactDOM.createRoot
-export const enableCreateRoot = true;
 export const enableUserTimingAPI = __DEV__;
 
-// Mutating mode (React DOM, React ART, React Native):
-export const enableMutatingReconciler = true;
-// Experimental noop mode (currently unused):
-export const enableNoopReconciler = false;
-// Experimental persistent mode (Fabric):
-export const enablePersistentReconciler = false;
 // Experimental error-boundary API that can recover from errors within a single
 // render phase
 export const enableGetDerivedStateFromCatch = false;
+// Suspense
+export const enableSuspense = false;
 // Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
 export const debugRenderPhaseSideEffects = false;
 
@@ -38,7 +33,17 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
 export const warnAboutDeprecatedLifecycles = false;
 
-export const alwaysUseRequestIdleCallbackPolyfill = false;
+// Warn about legacy context API
+export const warnAboutLegacyContextAPI = false;
+
+// Gather advanced timing metrics for Profiler subtrees.
+export const enableProfilerTimer = __PROFILE__;
+
+// Track which interactions trigger each commit.
+export const enableSchedulerTracking = __PROFILE__;
+
+// Only used in www builds.
+export const enableSuspenseServerRenderer = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

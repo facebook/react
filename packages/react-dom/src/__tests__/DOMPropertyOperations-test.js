@@ -77,11 +77,25 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.getAttribute('class')).toBe('css-class');
     });
 
-    it('should not remove empty attributes for special properties', () => {
+    it('should not remove empty attributes for special input properties', () => {
       const container = document.createElement('div');
-      ReactDOM.render(<input value="" />, container);
+      ReactDOM.render(<input value="" onChange={() => {}} />, container);
       expect(container.firstChild.getAttribute('value')).toBe('');
       expect(container.firstChild.value).toBe('');
+    });
+
+    it('should not remove empty attributes for special option properties', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <select>
+          <option value="">empty</option>
+          <option>filled</option>
+        </select>,
+        container,
+      );
+      // Regression test for https://github.com/facebook/react/issues/6219
+      expect(container.firstChild.firstChild.value).toBe('');
+      expect(container.firstChild.lastChild.value).toBe('filled');
     });
 
     it('should remove for falsey boolean properties', () => {
@@ -123,7 +137,16 @@ describe('DOMPropertyOperations', () => {
       spyOnDevAndProd(container.firstChild, 'setAttribute');
       ReactDOM.render(<progress value={30} />, container);
       ReactDOM.render(<progress value="30" />, container);
-      expect(container.firstChild.setAttribute.calls.count()).toBe(2);
+      expect(container.firstChild.setAttribute).toHaveBeenCalledTimes(2);
+    });
+
+    it('should return the progress to intermediate state on null value', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<progress value={30} />, container);
+      ReactDOM.render(<progress value={null} />, container);
+      // Ensure we move progress back to an indeterminate state.
+      // Regression test for https://github.com/facebook/react/issues/6119
+      expect(container.firstChild.hasAttribute('value')).toBe(false);
     });
   });
 
@@ -154,6 +177,12 @@ describe('DOMPropertyOperations', () => {
       );
       expect(container.firstChild.getAttribute('value')).toBe('foo');
       expect(container.firstChild.value).toBe('foo');
+    });
+
+    it('should not remove attributes for custom component tag', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<my-icon size="5px" />, container);
+      expect(container.firstChild.getAttribute('size')).toBe('5px');
     });
   });
 });

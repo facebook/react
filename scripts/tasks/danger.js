@@ -12,8 +12,8 @@ const spawn = require('child_process').spawn;
 
 const extension = process.platform === 'win32' ? '.cmd' : '';
 
-// Facebook-Open-Source-Bot public_repo token
-const token = 'b186c9a82bab3b08ec80' + 'c0818117619eec6f281a';
+// React-Linter public_repo token (this is publicly visible on purpose)
+const token = '80aa64c50f38a267e9ba' + '575d41d528f9c234edb8';
 spawn(path.join('node_modules', '.bin', 'danger-ci' + extension), [], {
   // Allow colors to pass through
   stdio: 'inherit',

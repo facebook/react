@@ -17,6 +17,9 @@ const pathToBabel = path.join(
 const pathToBabelPluginDevWithCode = require.resolve(
   '../error-codes/replace-invariant-error-codes'
 );
+const pathToBabelPluginWrapWarning = require.resolve(
+  '../babel/wrap-warning-with-env-check'
+);
 const pathToBabelPluginAsyncToGenerator = require.resolve(
   'babel-plugin-transform-async-to-generator'
 );
@@ -29,6 +32,8 @@ const babelOptions = {
     require.resolve('babel-plugin-transform-es2015-modules-commonjs'),
 
     pathToBabelPluginDevWithCode,
+    pathToBabelPluginWrapWarning,
+
     // Keep stacks detailed in tests.
     // Don't put this in .babelrc so that we don't embed filenames
     // into ReactART builds that include JSX.
@@ -75,6 +80,7 @@ module.exports = {
     pathToBabel,
     pathToBabelrc,
     pathToBabelPluginDevWithCode,
+    pathToBabelPluginWrapWarning,
     pathToErrorCodes,
   ]),
 };

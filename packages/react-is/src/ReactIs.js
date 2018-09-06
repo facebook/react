@@ -16,9 +16,11 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
+  REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
 } from 'shared/ReactSymbols';
+import isValidElementType from 'shared/isValidElementType';
 
 export function typeOf(object: any) {
   if (typeof object === 'object' && object !== null) {
@@ -31,10 +33,11 @@ export function typeOf(object: any) {
         switch (type) {
           case REACT_ASYNC_MODE_TYPE:
           case REACT_FRAGMENT_TYPE:
+          case REACT_PROFILER_TYPE:
           case REACT_STRICT_MODE_TYPE:
             return type;
           default:
-            const $$typeofType = type.$$typeof;
+            const $$typeofType = type && type.$$typeof;
 
             switch ($$typeofType) {
               case REACT_CONTEXT_TYPE:
@@ -59,8 +62,11 @@ export const ContextProvider = REACT_PROVIDER_TYPE;
 export const Element = REACT_ELEMENT_TYPE;
 export const ForwardRef = REACT_FORWARD_REF_TYPE;
 export const Fragment = REACT_FRAGMENT_TYPE;
+export const Profiler = REACT_PROFILER_TYPE;
 export const Portal = REACT_PORTAL_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
+
+export {isValidElementType};
 
 export function isAsyncMode(object: any) {
   return typeOf(object) === REACT_ASYNC_MODE_TYPE;
@@ -83,6 +89,9 @@ export function isForwardRef(object: any) {
 }
 export function isFragment(object: any) {
   return typeOf(object) === REACT_FRAGMENT_TYPE;
+}
+export function isProfiler(object: any) {
+  return typeOf(object) === REACT_PROFILER_TYPE;
 }
 export function isPortal(object: any) {
   return typeOf(object) === REACT_PORTAL_TYPE;

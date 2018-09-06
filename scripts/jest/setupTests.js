@@ -1,6 +1,8 @@
 'use strict';
 
 const chalk = require('chalk');
+const util = require('util');
+const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
@@ -42,7 +44,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   }
 
   expect.extend({
+    ...require('./matchers/interactionTracking'),
     ...require('./matchers/toWarnDev'),
+    ...require('./matchers/testRenderer'),
   });
 
   // We have a Babel transform that inserts guards against infinite loops.
@@ -63,14 +67,20 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 
   ['error', 'warn'].forEach(methodName => {
     const unexpectedConsoleCallStacks = [];
-    const newMethod = function(message) {
+    const newMethod = function(format, ...args) {
+      // Ignore uncaught errors reported by jsdom
+      // and React addendums because they're too noisy.
+      if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
+        return;
+      }
+
       // Capture the call stack now so we can warn about it later.
       // The call stack has helpful information for the test author.
       // Don't throw yet though b'c it might be accidentally caught and suppressed.
       const stack = new Error().stack;
       unexpectedConsoleCallStacks.push([
         stack.substr(stack.indexOf('\n') + 1),
-        message,
+        util.format(format, ...args),
       ]);
     };
 
@@ -105,11 +115,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
           `1. Using the ${chalk.bold('.toWarnDev()')} / ${chalk.bold(
             '.toLowPriorityWarnDev()'
           )} matchers, or...\n` +
-          `2. Mock it out using ${chalk.bold('spyOnDev')}(console, '${
-            methodName
-          }') or ${chalk.bold('spyOnProd')}(console, '${
-            methodName
-          }'), and test that the warning occurs.`;
+          `2. Mock it out using ${chalk.bold(
+            'spyOnDev'
+          )}(console, '${methodName}') or ${chalk.bold(
+            'spyOnProd'
+          )}(console, '${methodName}'), and test that the warning occurs.`;
 
         throw new Error(`${message}\n\n${messages.join('\n\n')}`);
       }
