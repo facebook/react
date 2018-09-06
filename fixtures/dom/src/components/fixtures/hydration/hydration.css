@@ -1,5 +1,4 @@
 .hydration {
-  overflow: hidden;
   border-radius: 2px;
   position: relative;
   width: 100%;
@@ -8,8 +7,6 @@
 .hydration-editor {
   background: #223;
   border-bottom-left-radius: 2px;
-  float: left;
-  position: relative;
   width: 50%;
 }
 
@@ -31,21 +28,14 @@
   vertical-align: middle;
 }
 
-.hydration-code {
-  font-size: 13px;
-  height: calc(100vh - 150px);
-  min-height: 350px;
-  overflow: auto;
-  position: relative;
+.hydration .ReactCodeMirror {
+  padding-left: 8px;
   width: 100%;
-}
-
-.hydration-code .ReactCodeMirror {
   height: 100%;
-  position: relative;
 }
 
-.hydration-code .CodeMirror {
+.hydration .CodeMirror {
+  font-size: 12px;
   height: 100%;
 }
 

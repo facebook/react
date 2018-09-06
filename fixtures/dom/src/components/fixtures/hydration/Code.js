@@ -1,13 +1,11 @@
+import CodeMirror from 'react-codemirror';
 import 'codemirror/lib/codemirror.css';
 import './codemirror-gruvbox-dark.css';
 import 'codemirror/mode/jsx/jsx';
 
-import CodeMirror from 'react-codemirror';
-
 const React = window.React;
 
 const options = {
-  lineNumbers: true,
   mode: 'jsx',
   theme: 'gruvbox-dark',
 };

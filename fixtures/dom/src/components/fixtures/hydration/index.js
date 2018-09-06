@@ -92,9 +92,7 @@ class Hydration extends React.Component {
             </label>
           </header>
 
-          <div className="hydration-code">
-            <CodeEditor code={code} onChange={this.setCode} />
-          </div>
+          <CodeEditor code={code} onChange={this.setCode} />
         </section>
         <iframe
           ref={this.setFrame}
