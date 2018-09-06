@@ -242,6 +242,17 @@ export function findEarliestOutstandingPriorityLevel(
   return earliestExpirationTime;
 }
 
+export function didExpireAtExpirationTime(
+  root: FiberRoot,
+  currentTime: ExpirationTime,
+): void {
+  const expirationTime = root.expirationTime;
+  if (expirationTime !== NoWork && currentTime >= expirationTime) {
+    // The root has expired. Flush all work up to the current time.
+    root.nextExpirationTimeToWorkOn = currentTime;
+  }
+}
+
 function findNextExpirationTimeToWorkOn(completedExpirationTime, root) {
   const earliestSuspendedTime = root.earliestSuspendedTime;
   const latestSuspendedTime = root.latestSuspendedTime;

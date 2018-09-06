@@ -40,6 +40,7 @@ if (__DEV__) {
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
   let scheduledCallback = null;
+  let scheduledCallbackTimeout = -1;
   let instanceCounter = 0;
   let hostDiffCounter = 0;
   let hostUpdateCounter = 0;
@@ -251,7 +252,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return inst;
     },
 
-    scheduleDeferredCallback(callback) {
+    scheduleDeferredCallback(callback, options) {
       if (scheduledCallback) {
         throw new Error(
           'Scheduling a callback twice is excessive. Instead, keep track of ' +
@@ -259,6 +260,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         );
       }
       scheduledCallback = callback;
+      if (
+        typeof options === 'object' &&
+        options !== null &&
+        typeof options.timeout === 'number'
+      ) {
+        const newTimeout = options.timeout;
+        if (
+          scheduledCallbackTimeout === -1 ||
+          scheduledCallbackTimeout > newTimeout
+        ) {
+          scheduledCallbackTimeout = newTimeout;
+        }
+      }
       return 0;
     },
 
@@ -267,6 +281,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         throw new Error('No callback is scheduled.');
       }
       scheduledCallback = null;
+      scheduledCallbackTimeout = -1;
     },
 
     scheduleTimeout: setTimeout,
@@ -409,10 +424,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           didStop = true;
           return 0;
         },
-        // React's scheduler has its own way of keeping track of expired
-        // work and doesn't read this, so don't bother setting it to the
-        // correct value.
-        didTimeout: false,
+        didTimeout:
+          scheduledCallbackTimeout !== -1 &&
+          elapsedTimeInMs > scheduledCallbackTimeout,
       });
 
       if (yieldedValues !== null) {

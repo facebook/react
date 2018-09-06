@@ -782,6 +782,53 @@ describe('ReactSuspense', () => {
     expect(ReactNoop.getChildren()).toEqual([div(span('Async'))]);
   });
 
+  it('flushes all expired updates in a single batch', async () => {
+    class Foo extends React.Component {
+      componentDidUpdate() {
+        ReactNoop.yield('Commit: ' + this.props.text);
+      }
+      componentDidMount() {
+        ReactNoop.yield('Commit: ' + this.props.text);
+      }
+      render() {
+        return (
+          <Placeholder fallback={<Text text="Loading..." />}>
+            <AsyncText ms={20000} text={this.props.text} />
+          </Placeholder>
+        );
+      }
+    }
+
+    ReactNoop.render(<Foo text="" />);
+    ReactNoop.expire(1000);
+    jest.advanceTimersByTime(1000);
+    ReactNoop.render(<Foo text="go" />);
+    ReactNoop.expire(1000);
+    jest.advanceTimersByTime(1000);
+    ReactNoop.render(<Foo text="good" />);
+    ReactNoop.expire(1000);
+    jest.advanceTimersByTime(1000);
+    ReactNoop.render(<Foo text="goodbye" />);
+
+    ReactNoop.advanceTime(10000);
+    jest.advanceTimersByTime(10000);
+
+    expect(ReactNoop.flush()).toEqual([
+      'Suspend! [goodbye]',
+      'Loading...',
+      'Commit: goodbye',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+    ReactNoop.advanceTime(20000);
+    await advanceTimers(20000);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [goodbye]']);
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+    expect(ReactNoop.flush()).toEqual(['goodbye']);
+    expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+  });
+
   describe('a Delay component', () => {
     function Never() {
       // Throws a promise that resolves after some arbitrarily large
