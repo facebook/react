@@ -61,7 +61,22 @@ const update = async ({cwd, dry, packages, version}) => {
       // Unstable package version.
       json.version = getNextVersion(json.version, version);
 
-      if (project !== 'react' && json.peerDependencies) {
+      if (project === 'react') {
+        // Update inter-package dependencies as well.
+        // e.g. react depends on scheduler
+        if (json.dependencies) {
+          Object.keys(json.dependencies).forEach(dependency => {
+            if (packages.indexOf(dependency) >= 0) {
+              const prevVersion = json.dependencies[dependency];
+              const nextVersion = getNextVersion(
+                prevVersion.replace('^', ''),
+                version
+              );
+              json.dependencies[dependency] = `^${nextVersion}`;
+            }
+          });
+        }
+      } else if (json.peerDependencies) {
         let peerVersion = json.peerDependencies.react.replace('^', '');
 
         // If the previous release was a pre-release version,
