@@ -173,6 +173,40 @@ describe('Profiler', () => {
         loadModules({enableSchedulerTracking});
       });
 
+      it('should handle errors thrown', () => {
+        const callback = jest.fn(id => {
+          if (id === 'throw') {
+            throw Error('expected');
+          }
+        });
+
+        let didMount = false;
+        class ClassComponent extends React.Component {
+          componentDidMount() {
+            didMount = true;
+          }
+          render() {
+            return this.props.children;
+          }
+        }
+
+        // Errors thrown from onRender should not break the commit phase,
+        // Or prevent other lifecycles from being called.
+        expect(() =>
+          ReactTestRenderer.create(
+            <ClassComponent>
+              <React.unstable_Profiler id="do-not-throw" onRender={callback}>
+                <React.unstable_Profiler id="throw" onRender={callback}>
+                  <div />
+                </React.unstable_Profiler>
+              </React.unstable_Profiler>
+            </ClassComponent>,
+          ),
+        ).toThrow('expected');
+        expect(didMount).toBe(true);
+        expect(callback).toHaveBeenCalledTimes(2);
+      });
+
       it('is not invoked until the commit phase', () => {
         const callback = jest.fn();
 
