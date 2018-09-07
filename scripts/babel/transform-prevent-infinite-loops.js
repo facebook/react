@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  * Copyright (c) 2017, Amjad Masad
  *
  * This source code is licensed under the MIT license found in the
