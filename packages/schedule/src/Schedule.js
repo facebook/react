@@ -14,7 +14,7 @@ const DEFERRED_TIMEOUT = 5000;
 let firstCallbackNode = null;
 
 let priorityContext = Deferred;
-let isPerformingWork = false;
+let currentlyFlushingTime = -1;
 
 let isHostCallbackScheduled = false;
 
@@ -24,15 +24,29 @@ const hasNativePerformanceNow =
 let timeRemaining;
 if (hasNativePerformanceNow) {
   timeRemaining = () => {
+    if (
+      firstCallbackNode !== null &&
+      firstCallbackNode.timesOutAt < currentlyFlushingTime
+    ) {
+      // A higher priority callback was scheduled. Yield so we can switch to
+      // working on that.
+      return 0;
+    }
     // We assume that if we have a performance timer that the rAF callback
     // gets a performance timer value. Not sure if this is always true.
-    const remaining = getTimeRemaining() - performance.now();
+    const remaining = getFrameDeadline() - performance.now();
     return remaining > 0 ? remaining : 0;
   };
 } else {
+  // Same thing, but with Date.now()
   timeRemaining = () => {
-    // Fallback to Date.now()
-    const remaining = getTimeRemaining() - Date.now();
+    if (
+      firstCallbackNode !== null &&
+      firstCallbackNode.timesOutAt < currentlyFlushingTime
+    ) {
+      return 0;
+    }
+    const remaining = getFrameDeadline() - Date.now();
     return remaining > 0 ? remaining : 0;
   };
 }
@@ -43,7 +57,7 @@ const deadlineObject = {
 };
 
 function ensureHostCallbackIsScheduled(highestPriorityNode) {
-  if (isPerformingWork) {
+  if (currentlyFlushingTime !== -1) {
     // Don't schedule work yet; wait until the next time we yield.
     return;
   }
@@ -65,54 +79,96 @@ function computeAbsoluteTimeoutForPriority(currentTime, priority) {
   throw new Error('Not yet implemented.');
 }
 
-function flushCallback(node) {
-  // This is already true; only assigning to appease Flow.
-  firstCallbackNode = node;
+function flushFirstCallback() {
+  const flushedNode = firstCallbackNode;
 
   // Remove the node from the list before calling the callback. That way the
   // list is in a consistent state even if the callback throws.
-  const next = firstCallbackNode.next;
+  let next = firstCallbackNode.next;
   if (firstCallbackNode === next) {
     // This is the last callback in the list.
     firstCallbackNode = null;
+    next = null;
   } else {
     const previous = firstCallbackNode.previous;
     firstCallbackNode = previous.next = next;
     next.previous = previous;
   }
 
-  node.next = node.previous = null;
+  flushedNode.next = flushedNode.previous = null;
 
   // Now it's safe to call the callback.
-  const callback = node.callback;
-  callback(deadlineObject);
+  currentlyFlushingTime = flushedNode.timesOutAt;
+  const callback = flushedNode.callback;
+  const continuationCallback = callback(deadlineObject);
+
+  if (typeof continuationCallback === 'function') {
+    const timesOutAt = flushedNode.timesOutAt;
+    const continuationNode: CallbackNode = {
+      callback: continuationCallback,
+      timesOutAt,
+      next: null,
+      previous: null,
+    };
+
+    // Insert the new callback into the list, sorted by its timeout.
+    if (firstCallbackNode === null) {
+      // This is the first callback in the list.
+      firstCallbackNode = continuationNode.next = continuationNode.previous = continuationNode;
+    } else {
+      let nextAfterContinuation = null;
+      let node = firstCallbackNode;
+      do {
+        if (node.timesOutAt >= timesOutAt) {
+          // This callback is equal or lower priority than the new one.
+          nextAfterContinuation = node;
+          break;
+        }
+        node = node.next;
+      } while (node !== firstCallbackNode);
+
+      if (nextAfterContinuation === null) {
+        // No equal or lower priority callback was found, which means the new
+        // callback is the lowest priority callback in the list.
+        nextAfterContinuation = firstCallbackNode;
+      } else if (nextAfterContinuation === firstCallbackNode) {
+        // The new callback is the highest priority callback in the list.
+        firstCallbackNode = continuationNode;
+        ensureHostCallbackIsScheduled(firstCallbackNode);
+      }
+
+      const previous = nextAfterContinuation.previous;
+      previous.next = nextAfterContinuation.previous = continuationNode;
+      continuationNode.next = nextAfterContinuation;
+      continuationNode.previous = previous;
+    }
+  }
 }
 
 function flushWork(didTimeout) {
-  isPerformingWork = true;
   deadlineObject.didTimeout = didTimeout;
   try {
-    if (firstCallbackNode !== null) {
-      if (didTimeout) {
-        // Flush all the timed out callbacks without yielding.
+    if (didTimeout) {
+      // Flush all the timed out callbacks without yielding.
+      while (
+        firstCallbackNode !== null &&
+        firstCallbackNode.timesOutAt <= getCurrentTime()
+      ) {
+        flushFirstCallback();
+      }
+    } else {
+      // Keep flushing callbacks until we run out of time in the frame.
+      if (firstCallbackNode !== null) {
         do {
-          flushCallback(firstCallbackNode);
+          flushFirstCallback();
         } while (
           firstCallbackNode !== null &&
-          firstCallbackNode.timesOutAt <= getCurrentTime()
+          getFrameDeadline() - getCurrentTime() > 0
         );
-      } else {
-        // Keep flushing callbacks until we run out of time in the frame.
-        while (
-          firstCallbackNode !== null &&
-          getTimeRemaining() - getCurrentTime() > 0
-        ) {
-          flushCallback(firstCallbackNode);
-        }
       }
     }
   } finally {
-    isPerformingWork = false;
+    currentlyFlushingTime = -1;
     if (firstCallbackNode !== null) {
       // There's still work remaining. Request another callback.
       ensureHostCallbackIsScheduled(firstCallbackNode);
@@ -126,19 +182,16 @@ function unstable_scheduleWork(callback, options) {
   const currentTime = getCurrentTime();
 
   let timesOutAt;
-  if (options !== undefined && options !== null) {
-    const timeoutOption = options.timeout;
-    if (timeoutOption !== null && timeoutOption !== undefined) {
-      // If an explicit timeout is provided, it takes precedence over the
-      // priority context.
-      timesOutAt = currentTime + timeoutOption;
-    } else {
-      // Compute an absolute timeout using the current priority context.
-      timesOutAt = computeAbsoluteTimeoutForPriority(
-        currentTime,
-        priorityContext,
-      );
-    }
+  if (
+    options !== undefined &&
+    options !== null &&
+    options.timeout !== null &&
+    options.timeout !== undefined
+  ) {
+    // Check for an explicit timeout.
+    timesOutAt = currentTime + options.timeout;
+  } else if (currentlyFlushingTime !== -1) {
+    timesOutAt = currentlyFlushingTime;
   } else {
     timesOutAt = computeAbsoluteTimeoutForPriority(
       currentTime,
@@ -280,7 +333,7 @@ if (hasNativePerformanceNow) {
 
 let requestCallback;
 let cancelCallback;
-let getTimeRemaining;
+let getFrameDeadline;
 
 if (typeof window === 'undefined') {
   // If this accidentally gets imported in a non-browser environment, fallback
@@ -292,13 +345,13 @@ if (typeof window === 'undefined') {
   cancelCallback = () => {
     clearTimeout(timeoutID);
   };
-  getTimeRemaining = () => 0;
+  getFrameDeadline = () => 0;
 } else if (window._sched) {
   // Dynamic injection, only for testing purposes.
   const impl = window._sched;
   requestCallback = impl[0];
   cancelCallback = impl[1];
-  getTimeRemaining = impl[2];
+  getFrameDeadline = impl[2];
 } else {
   if (typeof console !== 'undefined') {
     if (typeof localRequestAnimationFrame !== 'function') {
@@ -332,7 +385,7 @@ if (typeof window === 'undefined') {
   let previousFrameTime = 33;
   let activeFrameTime = 33;
 
-  getTimeRemaining = () => frameDeadline;
+  getFrameDeadline = () => frameDeadline;
 
   // We use the postMessage trick to defer idle work until after the repaint.
   const messageKey =

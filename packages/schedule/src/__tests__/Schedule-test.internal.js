@@ -39,7 +39,9 @@ describe('Schedule', () => {
       timeoutID = -1;
       endOfFrame = currentTime + frameSize;
       try {
-        _flushWork();
+        const cb = _flushWork;
+        _flushWork = null;
+        cb(false);
       } finally {
         endOfFrame = -1;
       }
@@ -48,7 +50,7 @@ describe('Schedule', () => {
       return yields;
     };
 
-    advanceTime = ms => {
+    advanceTime = (ms = 0) => {
       currentTime += ms;
       jest.advanceTimersByTime(ms);
     };
@@ -75,24 +77,25 @@ describe('Schedule', () => {
       }
       _flushWork = fw;
       timeoutID = setTimeout(() => {
-        _flushWork(true);
+        const cb = _flushWork;
+        if (cb !== null) {
+          _flushWork = null;
+          cb(true);
+        }
       }, absoluteTimeout - currentTime);
     }
     function cancelCallback() {
-      if (_flushWork === null) {
-        throw new Error('No work is scheduled.');
-      }
       _flushWork = null;
       clearTimeout(timeoutID);
     }
-    function getTimeRemaining() {
+    function getFrameDeadline() {
       return endOfFrame;
     }
 
     // Override host implementation
     delete global.performance;
     global.Date.now = () => currentTime;
-    window._sched = [requestCallback, cancelCallback, getTimeRemaining];
+    window._sched = [requestCallback, cancelCallback, getFrameDeadline];
 
     const Schedule = require('schedule');
     scheduleWork = Schedule.unstable_scheduleWork;
@@ -171,4 +174,164 @@ describe('Schedule', () => {
     advanceTime(1);
     expect(clearYieldedValues()).toEqual(['A', 'B', 'D']);
   });
+
+  it('continues working on same task after yielding', () => {
+    scheduleWork(() => doWork('A', 100));
+    scheduleWork(() => doWork('B', 100));
+
+    const tasks = [['C1', 100], ['C2', 100], ['C3', 100]];
+    const C = deadline => {
+      while (tasks.length > 0) {
+        doWork(...tasks.shift());
+        if (
+          tasks.length > 0 &&
+          !deadline.didTimeout &&
+          deadline.timeRemaining() <= 0
+        ) {
+          yieldValue('Yield!');
+          return C;
+        }
+      }
+    };
+
+    scheduleWork(C);
+
+    scheduleWork(() => doWork('D', 100));
+    scheduleWork(() => doWork('E', 100));
+
+    expect(flushWork(300)).toEqual(['A', 'B', 'C1', 'Yield!']);
+
+    expect(flushWork()).toEqual(['C2', 'C3', 'D', 'E']);
+  });
+
+  it('continuations callbacks inherit the timeout of the yielding callback', () => {
+    const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
+    const work = deadline => {
+      while (tasks.length > 0) {
+        doWork(...tasks.shift());
+        if (
+          tasks.length > 0 &&
+          !deadline.didTimeout &&
+          deadline.timeRemaining() <= 0
+        ) {
+          yieldValue('Yield!');
+          return work;
+        }
+      }
+    };
+    scheduleWork(work, {timeout: 201});
+
+    // Flush until just before the expiration time
+    expect(flushWork(200)).toEqual(['A', 'B', 'Yield!']);
+
+    // Advance time by just a bit more. This should expire all the remaining work.
+    advanceTime(1);
+    expect(clearYieldedValues()).toEqual(['C', 'D']);
+  });
+
+  it('nested callbacks inherit the timeout of the currently executing callback', () => {
+    const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
+    const work = deadline => {
+      while (tasks.length > 0) {
+        const task = tasks.shift();
+        if (task[0] === 'B') {
+          // Schedule a nested callback. This should inherit the timeout of
+          // the parent callback (201).
+          scheduleWork(() => doWork('E'));
+        }
+        doWork(...task);
+        if (
+          tasks.length > 0 &&
+          !deadline.didTimeout &&
+          deadline.timeRemaining() <= 0
+        ) {
+          yieldValue('Yield!');
+          return work;
+        }
+      }
+    };
+    scheduleWork(work, {timeout: 201});
+    expect(flushWork(200)).toEqual(['A', 'B', 'Yield!']);
+    advanceTime(1);
+    expect(clearYieldedValues()).toEqual(['C', 'D', 'E']);
+  });
+
+  it('continuations are interrupted by higher priority work', () => {
+    const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
+    const work = deadline => {
+      while (tasks.length > 0) {
+        doWork(...tasks.shift());
+        if (
+          tasks.length > 0 &&
+          !deadline.didTimeout &&
+          deadline.timeRemaining() <= 0
+        ) {
+          yieldValue('Yield!');
+          return work;
+        }
+      }
+    };
+    scheduleWork(work);
+    expect(flushWork(100)).toEqual(['A', 'Yield!']);
+
+    scheduleWork(() => doWork('High pri'), {timeout: 100});
+    expect(flushWork()).toEqual(['High pri', 'B', 'C', 'D']);
+  });
+
+  it(
+    'continutations are interrupted by higher priority work scheduled ' +
+      'inside an executing callback',
+    () => {
+      const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
+      const work = deadline => {
+        while (tasks.length > 0) {
+          const task = tasks.shift();
+          if (task[0] === 'B') {
+            // Schedule high pri work from inside another callback
+            scheduleWork(() => doWork('High pri'), {timeout: 100});
+          }
+          doWork(...task);
+          if (
+            tasks.length > 0 &&
+            !deadline.didTimeout &&
+            deadline.timeRemaining() <= 0
+          ) {
+            yieldValue('Yield!');
+            return work;
+          }
+        }
+      };
+      scheduleWork(work);
+      expect(flushWork(200)).toEqual(['A', 'B', 'Yield!']);
+      expect(flushWork()).toEqual(['High pri', 'C', 'D']);
+    },
+  );
+
+  it(
+    'asks work to yield when a high priority callback is scheduled, ' +
+      "even if there's time left in the frame",
+    () => {
+      const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
+      const work = deadline => {
+        while (tasks.length > 0) {
+          const task = tasks.shift();
+          if (task[0] === 'B') {
+            // Schedule high pri work from inside another callback
+            scheduleWork(() => doWork('High pri'), {timeout: 100});
+          }
+          doWork(...task);
+          if (
+            tasks.length > 0 &&
+            !deadline.didTimeout &&
+            deadline.timeRemaining() <= 0
+          ) {
+            yieldValue('Yield!');
+            return work;
+          }
+        }
+      };
+      scheduleWork(work);
+      expect(flushWork()).toEqual(['A', 'B', 'Yield!', 'High pri', 'C', 'D']);
+    },
+  );
 });
