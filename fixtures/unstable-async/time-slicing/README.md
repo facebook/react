@@ -18,7 +18,7 @@ There are also known bugs and inefficiencies in master so **don't use this fixtu
 # 1: Build react from source
 cd /path/to/react
 yarn
-yarn build dom,core,interaction,simple-cache-provider --type=NODE
+yarn build dom-client,core,simple-cache-provider,schedule --type=NODE
 
 # 2: Install fixture dependencies
 cd fixtures/unstable-async/time-slicing/
