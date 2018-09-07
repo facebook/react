@@ -169,4 +169,46 @@ describe('ReactDOMOption', () => {
     ReactDOM.render(<select value="gorilla">{options}</select>, container);
     expect(node.selectedIndex).toEqual(2);
   });
+
+  it('should warn when React component is a child (#13586)', () => {
+    const ctx = React.createContext();
+    const el = (
+      <option>
+        <ctx.Consumer>{value => value}</ctx.Consumer>
+      </option>
+    );
+    let node;
+    expect(() => {
+      node = ReactTestUtils.renderIntoDocument(
+        <div>
+          <ctx.Provider value="test">{el}</ctx.Provider>
+        </div>,
+      );
+    }).toWarnDev(
+      'Only strings and numbers are supported as <option> children.\n' +
+        '    in option (at **)',
+    );
+    expect(node.firstChild.innerHTML).toBe('[object Object]');
+    ReactTestUtils.renderIntoDocument(el);
+  });
+
+  it('should warn when React fragment is a child (#13586)', () => {
+    const el = (
+      <option>
+        <React.Fragment>
+          {1}
+          {2}
+        </React.Fragment>
+      </option>
+    );
+    let node;
+    expect(() => {
+      node = ReactTestUtils.renderIntoDocument(el);
+    }).toWarnDev(
+      'Only strings and numbers are supported as <option> children.\n' +
+        '    in option (at **)',
+    );
+    expect(node.innerHTML).toBe('[object Object]');
+    ReactTestUtils.renderIntoDocument(el);
+  });
 });

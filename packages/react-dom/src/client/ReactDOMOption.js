@@ -10,6 +10,7 @@
 import React from 'react';
 import warning from 'shared/warning';
 import {getToStringValue, toString} from './ToStringValue';
+import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 let didWarnSelectedSetOnOption = false;
 let didWarnInvalidChild = false;
@@ -53,7 +54,11 @@ export function validateProps(element: Element, props: Object) {
         if (typeof child === 'string' || typeof child === 'number') {
           return;
         }
-        if (typeof child.type !== 'string') {
+        if (
+          typeof child.type !== 'string' &&
+          typeof child.type !== 'object' &&
+          child.type !== REACT_FRAGMENT_TYPE
+        ) {
           return;
         }
         if (!didWarnInvalidChild) {
