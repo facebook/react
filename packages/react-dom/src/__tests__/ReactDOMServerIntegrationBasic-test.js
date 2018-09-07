@@ -44,7 +44,11 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('a self-closing tag as a child', async render => {
-      const e = await render(<div><br /></div>);
+      const e = await render(
+        <div>
+          <br />
+        </div>,
+      );
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('BR');
     });
@@ -68,8 +72,8 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('an array with several children', async render => {
-      const Header = () => (<p>header</p>);
-      const Footer = () => ([<h2 key={1}>footer</h2>, <h3 key={2}>about</h3>]);
+      const Header = () => <p>header</p>;
+      const Footer = () => [<h2 key={1}>footer</h2>, <h3 key={2}>about</h3>];
       const e = await render([
         <div key={1}>text1</div>,
         <span key={2}>text2</span>,
