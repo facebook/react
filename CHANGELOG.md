@@ -24,7 +24,7 @@
 * Add `tangentialPressure` and `twist` fields to pointer events ([@motiz88](https://github.com/motiz88) in [#13374](https://github.com/facebook/react/issues/13374))
 * Minimally support iframes (nested browsing contexts) in selection event handling ([@acusti](https://github.com/acusti) in [#12037](https://github.com/facebook/react/issues/12037))
 * Support passing booleans to the `focusable` SVG attribute ([@gaearon](https://github.com/gaearon) in [#13339](https://github.com/facebook/react/issues/13339))
-* Ignore `<noscript>` on the client when when hydrating ([@Ephem](https://github.com/Ephem) in [#13537](https://github.com/facebook/react/issues/13537))
+* Ignore `<noscript>` on the client when hydrating ([@Ephem](https://github.com/Ephem) in [#13537](https://github.com/facebook/react/issues/13537))
 * Fix `gridArea` to be treated as a unitless CSS property ([@mgol](https://github.com/mgol) in [#13550](https://github.com/facebook/react/issues/13550))
 * Fix incorrect data in `compositionend` event when typing Korean on IE11 ([@crux153](https://github.com/crux153) in [#12563](https://github.com/facebook/react/issues/12563))
 * Fix a crash when using dynamic `children` in the `<option>` tag ([@Slowyn](https://github.com/Slowyn) in [#13261](https://github.com/facebook/react/issues/13261), [@gaearon](https://github.com/gaearon) in [#13465](https://github.com/facebook/react/pull/13465))
