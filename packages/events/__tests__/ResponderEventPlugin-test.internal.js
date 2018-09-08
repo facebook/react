@@ -12,11 +12,20 @@
 const {HostComponent} = require('shared/ReactWorkTags');
 
 let EventPluginHub;
+let EventPluginUtils;
 let ResponderEventPlugin;
 
 const touch = function(nodeHandle, i) {
   return {target: nodeHandle, identifier: i};
 };
+
+function injectComponentTree(ComponentTree) {
+  EventPluginUtils.setComponentTree(
+    ComponentTree.getFiberCurrentPropsFromNode,
+    ComponentTree.getInstanceFromNode,
+    ComponentTree.getNodeFromInstance,
+  );
+}
 
 /**
  * @param {NodeHandle} nodeHandle @see NodeHandle. Handle of target.
@@ -395,8 +404,7 @@ describe('ResponderEventPlugin', () => {
 
     const ReactDOMUnstableNativeDependencies = require('react-dom/unstable-native-dependencies');
     EventPluginHub = require('events/EventPluginHub');
-    const injectComponentTree =
-      ReactDOMUnstableNativeDependencies.injectComponentTree;
+    EventPluginUtils = require('events/EventPluginUtils');
     ResponderEventPlugin =
       ReactDOMUnstableNativeDependencies.ResponderEventPlugin;
 

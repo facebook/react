@@ -745,6 +745,7 @@ const ReactDOM: Object = {
       ReactDOMComponentTree.getInstanceFromNode,
       ReactDOMComponentTree.getNodeFromInstance,
       ReactDOMComponentTree.getFiberCurrentPropsFromNode,
+      EventPluginHub.injection.injectEventPluginsByName,
       EventPluginRegistry.eventNameDispatchConfigs,
       EventPropagators.accumulateTwoPhaseDispatches,
       EventPropagators.accumulateDirectDispatches,
