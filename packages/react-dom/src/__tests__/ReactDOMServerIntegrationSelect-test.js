@@ -36,12 +36,10 @@ const {
 } = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegrationSelect', () => {
-  beforeEach(() => {
-    resetModules();
-  });
-
   let options;
   beforeEach(function() {
+    resetModules();
+
     options = [
       <option key={1} value="foo" id="foo">
         Foo

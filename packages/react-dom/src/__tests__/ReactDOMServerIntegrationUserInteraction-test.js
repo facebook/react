@@ -41,7 +41,6 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
 
   beforeEach(() => {
     resetModules();
-
     ControlledInput = class extends React.Component {
       static defaultProps = {
         type: 'text',

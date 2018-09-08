@@ -31,7 +31,7 @@ function initModules() {
 
 const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
 
-describe('ReactDOMServerIntegrationTextareas', () => {
+describe('ReactDOMServerIntegrationTextarea', () => {
   beforeEach(() => {
     resetModules();
   });
