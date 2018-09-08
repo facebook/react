@@ -37,7 +37,7 @@ const {
 
 describe('ReactDOMServerIntegrationSelect', () => {
   let options;
-  beforeEach(function() {
+  beforeEach(() => {
     resetModules();
 
     options = [
