@@ -6,12 +6,9 @@
  */
 
 import ReactDOM from 'react-dom';
-import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginUtils from 'events/EventPluginUtils';
 import ResponderEventPlugin from 'events/ResponderEventPlugin';
 import ResponderTouchHistoryStore from 'events/ResponderTouchHistoryStore';
-
-export {ResponderEventPlugin, ResponderTouchHistoryStore, EventPluginHub};
 
 // Inject react-dom's ComponentTree into this module.
 // Keep in sync with ReactDOM.js and ReactTestUtils.js:
@@ -19,9 +16,17 @@ const [
   getInstanceFromNode,
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
+  injectEventPluginsByName,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+
 EventPluginUtils.setComponentTree(
   getFiberCurrentPropsFromNode,
   getInstanceFromNode,
   getNodeFromInstance,
 );
+
+export {
+  ResponderEventPlugin,
+  ResponderTouchHistoryStore,
+  injectEventPluginsByName,
+};

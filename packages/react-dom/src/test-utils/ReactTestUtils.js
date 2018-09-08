@@ -31,6 +31,7 @@ const [
   /* eslint-disable no-unused-vars */
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
+  injectEventPluginsByName,
   /* eslint-enable no-unused-vars */
   eventNameDispatchConfigs,
   accumulateTwoPhaseDispatches,
