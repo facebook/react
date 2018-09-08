@@ -57,7 +57,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
-import {applyDerivedStateFromProps} from './ReactFiberClassComponent';
 import {
   mountChildFibers,
   reconcileChildFibers,
@@ -734,16 +733,6 @@ function mountIndeterminateComponent(
 
     workInProgress.memoizedState =
       value.state !== null && value.state !== undefined ? value.state : null;
-
-    const getDerivedStateFromProps = Component.getDerivedStateFromProps;
-    if (typeof getDerivedStateFromProps === 'function') {
-      applyDerivedStateFromProps(
-        workInProgress,
-        Component,
-        getDerivedStateFromProps,
-        props,
-      );
-    }
 
     adoptClassInstance(workInProgress, value);
     mountClassInstance(workInProgress, Component, props, renderExpirationTime);
