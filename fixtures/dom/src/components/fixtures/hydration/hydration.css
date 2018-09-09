@@ -1,13 +1,14 @@
 .hydration {
-  border-radius: 2px;
+  background: #2f1e2e;
+  margin: 0;
   position: relative;
 }
 
 .hydration-editor {
-  background: #2f1e2e;
-  border-bottom-left-radius: 2px;
-  height: calc(100vh - 108px); /* roughly the header + padding */
-  width: 50%;
+  height: calc(100vh - 72px); /* height of options and header */
+  overflow: auto;
+  position: relative;
+  width: 55%;
 }
 
 .hydration-editor.-error {
@@ -15,10 +16,13 @@
 }
 
 .hydration-options {
-  background: #111;
-  border-top-left-radius: 2px;
+  background: #171717;
+  border-top: 1px dashed rgba(215, 235, 255, 0.12);
   color: #def5ff;
-  padding: 4px 8px;
+  height: 32px;
+  line-height: 28px;
+  padding: 0 8px;
+  width: 100%;
 }
 
 .hydration-options label {
@@ -33,33 +37,35 @@
 
 .hydration .CodeMirror {
   height: auto;
-  font-size: 12px;
-  padding: 0 8px;
+  font-size: 13px;
+  padding-top: 8px;
 }
 
-.hydration-frame {
-  border: 1px solid #d9d9d9;
-  border-left-width: 0;
-  border-radius: 0 2px 2px 0;
+.hydration-sandbox {
+  background: white;
+  border-radius: 2px;
+  border: 0;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.54);
+  height: calc(100% - 34px);
   position: absolute;
-  right: 0;
-  height: 100%;
-  top: 0;
-  width: 50%;
+  right: 16px;
+  top: 14px;
+  width: calc(45% - 24px);
 }
 
 .hydration-code-error {
   background: #df3f3f;
-  bottom: 0;
+  border-radius: 2px;
+  bottom: 18px;
   color: white;
   font-family: monospace;
   font-size: 13px;
-  left: 0;
+  left: 16px;
   line-height: 1.25;
   overflow: auto;
   padding: 12px;
   position: absolute;
   white-space: pre;
-  width: 50%;
-  z-index: 2;
+  width: calc(100% - 26px);
+  z-index: 10;
 }

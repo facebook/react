@@ -78,29 +78,30 @@ class Hydration extends React.Component {
 
     return (
       <div className="hydration">
-        <section className={`hydration-editor ${error ? '-error' : ''}`}>
-          <header className="hydration-options">
-            <label htmlFor="hydrate">
-              <input
-                id="hydrate"
-                name="hydrate"
-                type="checkbox"
-                checked={hydrate}
-                onChange={this.setCheckbox}
-              />
-              Auto-Hydrate
-            </label>
-          </header>
+        <header className="hydration-options">
+          <label htmlFor="hydrate">
+            <input
+              id="hydrate"
+              name="hydrate"
+              type="checkbox"
+              checked={hydrate}
+              onChange={this.setCheckbox}
+            />
+            Auto-Hydrate
+          </label>
+        </header>
 
+        <section className={`hydration-editor ${error ? '-error' : ''}`}>
           <CodeEditor code={code} onChange={this.setCode} />
+          <CodeError error={error} className="hydration-code-error" />
         </section>
+
         <iframe
           ref={this.setFrame}
-          className="hydration-frame"
+          className="hydration-sandbox"
           title="Hydration Preview"
           src={src}
         />
-        <CodeError error={error} className="hydration-code-error" />
       </div>
     );
   }

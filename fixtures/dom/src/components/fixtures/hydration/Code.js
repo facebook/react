@@ -16,6 +16,7 @@ export class CodeEditor extends React.Component {
     this.editor = CodeMirror.fromTextArea(this.textarea, {
       mode: 'jsx',
       theme: 'paraiso-dark',
+      lineNumbers: true,
     });
 
     this.editor.on('change', function(doc) {

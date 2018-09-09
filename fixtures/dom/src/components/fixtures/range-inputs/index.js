@@ -1,3 +1,5 @@
+import FixtureSet from '../../FixtureSet';
+
 const React = window.React;
 
 class RangeInputs extends React.Component {
@@ -7,6 +9,9 @@ class RangeInputs extends React.Component {
   };
   render() {
     return (
+      <FixtureSet
+        title="Range Inputs"
+        description="Note: Range inputs are not supported in IE9.">
       <form>
         <fieldset>
           <legend>Controlled</legend>
@@ -23,6 +28,7 @@ class RangeInputs extends React.Component {
           <input type="range" defaultValue={0.5} />
         </fieldset>
       </form>
+      </FixtureSet>
     );
   }
 }
