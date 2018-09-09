@@ -12,7 +12,7 @@
   var renders = 0;
   var failed = false;
 
-  function query(key) {
+  function getQueryParam(key) {
     var pattern = new RegExp(key + '=([^&]+)(&|$)');
     var matches = window.location.search.match(pattern);
 
@@ -23,8 +23,8 @@
     handleError(new Error('No key found for' + key));
   }
 
-  function booleanQuery(key) {
-    return query(key) === 'true';
+  function getBooleanQueryParam(key) {
+    return getQueryParam(key) === 'true';
   }
 
   function setStatus(label) {
@@ -90,7 +90,7 @@
     } else {
       prerender();
 
-      if (booleanQuery('hydrate')) {
+      if (getBooleanQueryParam('hydrate')) {
         render();
       }
     }
@@ -110,14 +110,14 @@
 
   hydrate.onclick = render;
 
-  loadScript(query('reactPath'))
+  loadScript(getQueryParam('reactPath'))
     .then(function() {
-      return booleanQuery('needsReactDOM')
-        ? loadScript(query('reactDOMPath'))
+      return getBooleanQueryParam('needsReactDOM')
+        ? loadScript(getQueryParam('reactDOMPath'))
         : null;
     })
     .then(function() {
-      return loadScript(query('reactDOMServerPath'));
+      return loadScript(getQueryParam('reactDOMServerPath'));
     })
     .then(function() {
       if (failed) {
