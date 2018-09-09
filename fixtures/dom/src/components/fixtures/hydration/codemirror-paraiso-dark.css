@@ -1,12 +1,12 @@
-/*
-
-    Name:       Paraíso (Dark)
-    Author:     Jan T. Sott
-
-    Color scheme by Jan T. Sott (https://github.com/idleberg/Paraiso-CodeMirror)
-    Inspired by the art of Rubens LP (http://www.rubenslp.com.br)
-
-*/
+/**
+ * Name:       Paraíso (Dark)
+ * Author:     Jan T. Sott
+ * License:    Creative Commons Attribution-ShareAlike 4.0 Unported License.
+ *             https://creativecommons.org/licenses/by-sa/4.0/deed.en_US
+ *
+ * Color scheme by Jan T. Sott (https://github.com/idleberg/Paraiso-CodeMirror)
+ * Inspired by the art of Rubens LP (http://www.rubenslp.com.br)
+ */
 
 .cm-s-paraiso-dark.CodeMirror { background: #2f1e2e; color: #b9b6b0; }
 .cm-s-paraiso-dark div.CodeMirror-selected { background: #41323f; }
