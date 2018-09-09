@@ -11,7 +11,8 @@ export {
   unstable_cancelScheduledWork as cancelDeferredCallback,
 } from 'schedule';
 import Transform from 'art/core/transform';
-import Mode from 'art/modes/current';
+import CanvasMode from 'art/modes/fast-noSideEffects';
+import SVGMode from 'art/modes/dom';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
@@ -255,24 +256,40 @@ export function appendInitialChild(parentInstance, child) {
   child.inject(parentInstance);
 }
 
-export function createInstance(type, props, internalInstanceHandle) {
+export function createInstance(
+  type,
+  props,
+  rootContainerInstance,
+  hostContext,
+  internalInstanceHandle
+) {
   let instance;
+  let mode; 
+  const surfaceTagName = rootContainerInstance.element.tagName;
+  if (surfaceTagName === CanvasMode.Surface.tagName) {
+    mode = CanvasMode;
+  } else if (surfaceTagName === SVGMode.Surface.tagName) {
+    mode = SVGMode;
+  } else {
+    // In this case, canvas is used as fallback surface.
+    mode = CanvasMode;
+  }
 
   switch (type) {
     case TYPES.CLIPPING_RECTANGLE:
-      instance = Mode.ClippingRectangle();
+      instance = mode.ClippingRectangle();
       instance._applyProps = applyClippingRectangleProps;
       break;
     case TYPES.GROUP:
-      instance = Mode.Group();
+      instance = mode.Group();
       instance._applyProps = applyGroupProps;
       break;
     case TYPES.SHAPE:
-      instance = Mode.Shape();
+      instance = mode.Shape();
       instance._applyProps = applyShapeProps;
       break;
     case TYPES.TEXT:
-      instance = Mode.Text(
+      instance = mode.Text(
         props.children,
         props.font,
         props.alignment,

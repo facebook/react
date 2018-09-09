@@ -42,6 +42,7 @@ var Wedge = createReactClass({
     startAngle: PropTypes.number.isRequired,
     endAngle: PropTypes.number.isRequired,
     innerRadius: PropTypes.number,
+    mode: PropTypes.string,
   },
 
   circleRadians: Math.PI * 2,
@@ -75,7 +76,7 @@ var Wedge = createReactClass({
    * @return {object}
    */
   _createCirclePath: function _createCirclePath(or, ir) {
-    var path = Path();
+    var path = Path(null, this.props.mode);
 
     path
       .move(0, or)
@@ -106,7 +107,7 @@ var Wedge = createReactClass({
    * @return {object}
    */
   _createArcPath: function _createArcPath(startAngle, endAngle, or, ir) {
-    var path = Path();
+    var path = Path(null, this.props.mode);
 
     // angles in radians
     var sa = this._degreesToRadians(startAngle);

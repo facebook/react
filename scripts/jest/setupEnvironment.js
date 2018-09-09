@@ -26,4 +26,39 @@ if (typeof window !== 'undefined') {
   global.cancelIdleCallback = function(callbackID) {
     clearTimeout(callbackID);
   };
+
+  window.SVGElement.prototype.getBBox = function () {
+    return {};
+  }
+
+  window.HTMLCanvasElement.prototype.getContext = function () {
+    let dummyProps = [
+      'rect', 'fillRect', 'clearRect', 'drawImage', 'save', 'restore', 'fillText',
+      'beginPath', 'moveTo', 'lineTo', 'closePath', 'translate', 'scale', 'rotate',
+      'arc', 'fill', 'stroke', 'clip', 'transform', 'setTransform'
+    ];
+
+    let contextMap = {};
+    for (let prop of dummyProps) {
+      contextMap[prop] = () => {};
+    }
+
+    return {
+      ...contextMap,
+      measureText: () => {
+        return {
+          width: 0
+        };
+      },
+      getImageData: (x, y, w, h) => {
+        return {
+          data: new Array(w * h * 4)
+        };
+      },
+      putImageData: () => {},
+      createImageData: () => {
+        return [];
+      },
+    };
+  }
 }

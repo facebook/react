@@ -9,15 +9,10 @@ import React from 'react';
 import ReactVersion from 'shared/ReactVersion';
 import * as ARTRenderer from 'react-reconciler/inline.art';
 import Transform from 'art/core/transform';
-import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';
+import SVGMode from 'art/modes/dom';
 
 import {TYPES, childrenAsString} from './ReactARTInternals';
-
-Mode.setCurrent(
-  // Change to 'art/modes/dom' for easier debugging via SVG
-  FastNoSideEffects,
-);
 
 /** Declarative fill-type objects; API design not finalized */
 
@@ -56,11 +51,23 @@ class Pattern {
 /** React Components */
 
 class Surface extends React.Component {
+  constructor(props) {
+    super(props);
+    const mode = props.mode && props.mode.toLowerCase();
+    if (mode === FastNoSideEffects.Surface.tagName) {
+      this.ARTSurface = FastNoSideEffects.Surface;
+    } else if (mode === SVGMode.Surface.tagName) { 
+      this.ARTSurface = SVGMode.Surface;
+    } else {
+      // In this case, request mode is not supported as surface.
+      // canvas is used as fallback surface.
+      this.ARTSurface = FastNoSideEffects.Surface;
+    }
+  }
+
   componentDidMount() {
     const {height, width} = this.props;
-
-    this._surface = Mode.Surface(+width, +height, this._tagRef);
-
+    this._surface = this.ARTSurface(+width, +height, this._tagRef);
     this._mountNode = ARTRenderer.createContainer(this._surface);
     ARTRenderer.updateContainer(this.props.children, this._mountNode, this);
   }
@@ -91,7 +98,7 @@ class Surface extends React.Component {
     const props = this.props;
 
     // TODO: ART's Canvas Mode overrides surface title and cursor
-    const Tag = Mode.Surface.tagName;
+    const Tag = this.ARTSurface.tagName;
 
     return (
       <Tag
@@ -141,8 +148,21 @@ ARTRenderer.injectIntoDevTools({
 
 /** API */
 
+export function Path(path, mode) {
+  let pathInstance;
+  mode = (typeof mode === 'string') && mode.toLowerCase();
+
+  if (mode === FastNoSideEffects.Surface.tagName) {
+    pathInstance = FastNoSideEffects.Path(path);
+  } else if (mode === SVGMode.Surface.tagName) { 
+    pathInstance = SVGMode.Path(path);
+  } else {
+    pathInstance = FastNoSideEffects.Path(path);
+  }
+
+  return pathInstance;
+}
 export const ClippingRectangle = TYPES.CLIPPING_RECTANGLE;
 export const Group = TYPES.GROUP;
 export const Shape = TYPES.SHAPE;
-export const Path = Mode.Path;
 export {LinearGradient, Pattern, RadialGradient, Surface, Text, Transform};

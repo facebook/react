@@ -36,12 +36,13 @@ var Circle = createReactClass({
 
   propTypes: {
     radius: PropTypes.number.isRequired,
+    mode: PropTypes.string,
   },
 
   render: function render() {
     var radius = this.props.radius;
 
-    var path = Path()
+    var path = Path(null, this.props.mode)
       .moveTo(0, -radius)
       .arc(0, radius * 2, radius)
       .arc(0, radius * -2, radius)

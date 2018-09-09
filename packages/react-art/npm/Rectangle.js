@@ -49,6 +49,7 @@ var Rectangle = createReactClass({
     radiusTopRight: PropTypes.number,
     radiusBottomRight: PropTypes.number,
     radiusBottomLeft: PropTypes.number,
+    mode: PropTypes.string,
   },
 
   render: function render() {
@@ -65,7 +66,7 @@ var Rectangle = createReactClass({
       : radius;
     var bl = this.props.radiusBottomLeft ? this.props.radiusBottomLeft : radius;
 
-    var path = Path();
+    var path = Path(null, this.props.mode);
 
     // for negative width/height, offset the rectangle in the negative x/y
     // direction. for negative radius, just default to 0.
