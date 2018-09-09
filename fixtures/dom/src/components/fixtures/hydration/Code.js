@@ -61,12 +61,12 @@ export class CodeError extends React.Component {
       return null;
     }
 
-    const [summary, ...body] = error.message.split('\n');
+    const [summary, ...body] = error.message.split(/\n+/g);
 
     return (
       <details className={className}>
         <summary>{summary}</summary>
-        <p>{body.join('\n').trim()}</p>
+        <p>{body.join('\n')}</p>
       </details>
     );
   }
