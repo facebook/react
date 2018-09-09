@@ -5,6 +5,7 @@
 'use strict';
 
 (function() {
+  var Fixture = null;
   var output = document.getElementById('output');
   var status = document.getElementById('status');
   var hydrate = document.getElementById('hydrate');
@@ -78,11 +79,7 @@
   }
 
   function injectFixture(src) {
-    window.Fixture = undefined;
-
-    var script = document.createElement('script');
-    script.textContent = src;
-    document.body.appendChild(script);
+    Fixture = new Function(src + '\nreturn Fixture;')()
 
     if (typeof Fixture === 'undefined') {
       setStatus('Failed');
