@@ -250,9 +250,9 @@ function isProfilingBundleType(bundleType) {
   }
 }
 
-function blacklistFBJS() {
+function forbidFBJSImports() {
   return {
-    name: 'blacklistFBJS',
+    name: 'forbidFBJSImports',
     resolveId(importee, importer) {
       if (/^fbjs\//.test(importee)) {
         throw new Error(
@@ -304,7 +304,7 @@ function getPlugins(
     // Shim any modules that need forking in this environment.
     useForks(forks),
     // Ensure we don't try to bundle any fbjs modules.
-    blacklistFBJS(),
+    forbidFBJSImports(),
     // Use Node resolution mechanism.
     resolve({
       skip: externals,
