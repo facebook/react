@@ -168,6 +168,16 @@ let didWarnSetStateChildContext;
 let warnAboutUpdateOnUnmounted;
 let warnAboutInvalidUpdates;
 
+if (enableSchedulerTracking) {
+  // Provide explicit error message when production+profiling bundle of e.g. react-dom
+  // Is used with production (non-profiling) bundle of schedule/tracking
+  invariant(
+    __interactionsRef != null && __interactionsRef.current != null,
+    "Profiling renderer (e.g. 'react-dom/profiling') cannot be used with non-profiling 'schedule/tracking'. " +
+      "To fix, alias 'schedule/tracking' to 'schedule/tracking-profiling'.",
+  );
+}
+
 if (__DEV__) {
   didWarnAboutStateTransition = false;
   didWarnSetStateChildContext = false;
