@@ -12,7 +12,7 @@
 }
 
 .hydration-editor.-error {
-  padding-bottom: 40px;
+  padding-bottom: 72px;
 }
 
 .hydration-options {
@@ -49,7 +49,7 @@
   height: calc(100% - 34px);
   position: absolute;
   right: 16px;
-  top: 14px;
+  top: 16px;
   width: calc(45% - 24px);
 }
 
@@ -64,8 +64,8 @@
   line-height: 1.25;
   overflow: auto;
   padding: 12px;
-  position: absolute;
+  position: fixed;
   white-space: pre;
-  width: calc(100% - 26px);
+  width: calc(55% - 26px);
   z-index: 10;
 }
