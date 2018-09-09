@@ -162,7 +162,7 @@ const forks = Object.freeze({
     }
   },
 
-  // This logic is forked on www to blacklist warnings.
+  // This logic is forked on www to ignore some warnings.
   'shared/lowPriorityWarning': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
@@ -174,7 +174,7 @@ const forks = Object.freeze({
     }
   },
 
-  // This logic is forked on www to blacklist warnings.
+  // This logic is forked on www to ignore some warnings.
   'shared/warningWithoutStack': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
