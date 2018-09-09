@@ -48,15 +48,4 @@ describe('Tracking', () => {
 
     wrappedCallback();
   });
-
-  // Make sure that accidental pairing of react-dom/profiling production bundle,
-  // With production (non-profiling) schedule/tracking doesn't cause runtime error.
-  it('should always export non-null refs to avoid breaking react-dom/profiling bundle', () => {
-    expect(SchedulerTracking.__interactionsRef).toEqual({
-      current: new Set(),
-    });
-    expect(SchedulerTracking.__subscriberRef).toEqual({
-      current: null,
-    });
-  });
 });
