@@ -4,8 +4,14 @@
 }
 
 .hydration-editor {
+  background: #2f1e2e;
   border-bottom-left-radius: 2px;
+  height: calc(100vh - 108px); /* roughly the header + padding */
   width: 50%;
+}
+
+.hydration-editor.-error {
+  padding-bottom: 40px;
 }
 
 .hydration-options {
@@ -27,7 +33,7 @@
 }
 
 .hydration .CodeMirror {
-  height: 100%;
+  height: auto;
   font-size: 12px;
   padding: 0 8px;
 }
@@ -45,11 +51,16 @@
 
 .hydration-code-error {
   background: #df3f3f;
-  color: white;
-  padding: 12px 16px;
-  position: absolute;
   bottom: 0;
-  right: 0;
-  width: 50%;
+  color: white;
+  font-family: monospace;
+  font-size: 13px;
+  left: 0;
+  line-height: 1.25;
   overflow: auto;
+  padding: 12px;
+  position: absolute;
+  white-space: pre;
+  width: 50%;
+  z-index: 2;
 }

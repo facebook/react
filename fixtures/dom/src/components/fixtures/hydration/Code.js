@@ -42,7 +42,19 @@ export class CodeEditor extends React.Component {
 
 export class CodeError extends React.Component {
   render() {
-    let {error, className} = this.props;
-    return error ? <div className={className}>{error.message}</div> : null;
+    const {error, className} = this.props;
+
+    if (!error) {
+      return null
+    }
+
+    const [summary, ...body] = error.message.split('\n')
+
+    return (
+      <details className={className}>
+        <summary>{summary}</summary>
+        <p>{body.join('\n').trim()}</p>
+      </details>
+    )
   }
 }

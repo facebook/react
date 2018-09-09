@@ -78,7 +78,7 @@ class Hydration extends React.Component {
 
     return (
       <div className="hydration">
-        <section className="hydration-editor">
+        <section className={`hydration-editor ${error ? '-error' : ''}`}>
           <header className="hydration-options">
             <label htmlFor="hydrate">
               <input
