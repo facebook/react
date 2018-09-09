@@ -9,6 +9,12 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
+import {
+  didNotMatchHydratedChildrenPropValue,
+  didNotMatchHydratedPropValue,
+  didNotMatchHydratedPropsHostInstanceHasExtraAttributes,
+  SUPPRESS_HYDRATION_WARNING,
+} from 'react-reconciler/src/ReactFiberHydrationWarning';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -87,12 +93,10 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
-let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
 
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
-const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
@@ -101,17 +105,15 @@ const HTML = '__html';
 const {html: HTML_NAMESPACE} = Namespaces;
 
 let warnedUnknownTags;
-let suppressHydrationWarning;
-
 let validatePropertiesInDevelopment;
-let warnForTextDifference;
-let warnForPropDifference;
-let warnForExtraAttributes;
-let warnForInvalidEventListener;
 let canDiffStyleForHydrationWarning;
 
-let normalizeMarkupForTextOrAttribute;
-let normalizeHTML;
+let normalizeHTMLTextOrAttributeValue = (markup: mixed) => '';
+let normalizeHTMLMarkup = (parent: Element, html: string) => '';
+let warnForInvalidEventListener = (
+  registrationName: string,
+  listener: mixed,
+) => {};
 
 if (__DEV__) {
   warnedUnknownTags = {
@@ -154,7 +156,7 @@ if (__DEV__) {
   const NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
   const NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
 
-  normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
+  normalizeHTMLTextOrAttributeValue = function(markup: mixed): string {
     const markupString =
       typeof markup === 'string' ? markup : '' + (markup: any);
     return markupString
@@ -162,67 +164,25 @@ if (__DEV__) {
       .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
   };
 
-  warnForTextDifference = function(
-    serverText: string,
-    clientText: string | number,
-  ) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
-    const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
-    if (normalizedServerText === normalizedClientText) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    warning(
-      false,
-      'Text content did not match. Server: "%s" Client: "%s"',
-      normalizedServerText,
-      normalizedClientText,
-    );
+  // Parse the HTML and read it back to normalize the HTML string so that it
+  // can be used for comparison.
+  normalizeHTMLMarkup = function(parent: Element, html: string) {
+    // We could have created a separate document here to avoid
+    // re-initializing custom elements if they exist. But this breaks
+    // how <noscript> is being handled. So we use the same document.
+    // See the discussion in https://github.com/facebook/react/pull/11157.
+    const testElement =
+      parent.namespaceURI === HTML_NAMESPACE
+        ? parent.ownerDocument.createElement(parent.tagName)
+        : parent.ownerDocument.createElementNS(
+            (parent.namespaceURI: any),
+            parent.tagName,
+          );
+    testElement.innerHTML = html;
+    return testElement.innerHTML;
   };
 
-  warnForPropDifference = function(
-    propName: string,
-    serverValue: mixed,
-    clientValue: mixed,
-  ) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    const normalizedClientValue = normalizeMarkupForTextOrAttribute(
-      clientValue,
-    );
-    const normalizedServerValue = normalizeMarkupForTextOrAttribute(
-      serverValue,
-    );
-    if (normalizedServerValue === normalizedClientValue) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    warning(
-      false,
-      'Prop `%s` did not match. Server: %s Client: %s',
-      propName,
-      JSON.stringify(normalizedServerValue),
-      JSON.stringify(normalizedClientValue),
-    );
-  };
-
-  warnForExtraAttributes = function(attributeNames: Set<string>) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    const names = [];
-    attributeNames.forEach(function(name) {
-      names.push(name);
-    });
-    warning(false, 'Extra attributes from the server: %s', names);
-  };
-
-  warnForInvalidEventListener = function(registrationName, listener) {
+  warnForInvalidEventListener = (registrationName: string, listener: mixed) => {
     if (listener === false) {
       warning(
         false,
@@ -241,24 +201,6 @@ if (__DEV__) {
         typeof listener,
       );
     }
-  };
-
-  // Parse the HTML and read it back to normalize the HTML string so that it
-  // can be used for comparison.
-  normalizeHTML = function(parent: Element, html: string) {
-    // We could have created a separate document here to avoid
-    // re-initializing custom elements if they exist. But this breaks
-    // how <noscript> is being handled. So we use the same document.
-    // See the discussion in https://github.com/facebook/react/pull/11157.
-    const testElement =
-      parent.namespaceURI === HTML_NAMESPACE
-        ? parent.ownerDocument.createElement(parent.tagName)
-        : parent.ownerDocument.createElementNS(
-            (parent.namespaceURI: any),
-            parent.tagName,
-          );
-    testElement.innerHTML = html;
-    return testElement.innerHTML;
   };
 }
 
@@ -889,7 +831,6 @@ export function diffHydratedProperties(
   let extraAttributeNames: Set<string>;
 
   if (__DEV__) {
-    suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
     isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
     if (
@@ -1002,20 +943,32 @@ export function diffHydratedProperties(
       // satisfies our requirement. Our requirement is not to produce perfect
       // HTML and attributes. Ideally we should preserve structure but it's
       // ok not to if the visible content is still enough to indicate what
-      // even listeners these nodes might be wired up to.
+      // event listeners these nodes might be wired up to.
       // TODO: Warn if there is more than a single textNode as a child.
       // TODO: Should we use domElement.firstChild.nodeValue to compare?
       if (typeof nextProp === 'string') {
         if (domElement.textContent !== nextProp) {
-          if (__DEV__ && !suppressHydrationWarning) {
-            warnForTextDifference(domElement.textContent, nextProp);
+          if (__DEV__) {
+            didNotMatchHydratedChildrenPropValue(
+              tag,
+              rawProps,
+              (domElement: any),
+              domElement.textContent,
+              nextProp,
+            );
           }
           updatePayload = [CHILDREN, nextProp];
         }
       } else if (typeof nextProp === 'number') {
         if (domElement.textContent !== '' + nextProp) {
-          if (__DEV__ && !suppressHydrationWarning) {
-            warnForTextDifference(domElement.textContent, nextProp);
+          if (__DEV__) {
+            didNotMatchHydratedChildrenPropValue(
+              tag,
+              rawProps,
+              (domElement: any),
+              domElement.textContent,
+              nextProp,
+            );
           }
           updatePayload = [CHILDREN, '' + nextProp];
         }
@@ -1035,7 +988,7 @@ export function diffHydratedProperties(
       // Validate that the properties correspond to their expected values.
       let serverValue;
       const propertyInfo = getPropertyInfo(propKey);
-      if (suppressHydrationWarning) {
+      if (rawProps[SUPPRESS_HYDRATION_WARNING] === true) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
@@ -1050,12 +1003,19 @@ export function diffHydratedProperties(
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         const serverHTML = domElement.innerHTML;
         const nextHtml = nextProp ? nextProp[HTML] : undefined;
-        const expectedHTML = normalizeHTML(
+        const expectedHTML = normalizeHTMLMarkup(
           domElement,
           nextHtml != null ? nextHtml : '',
         );
         if (expectedHTML !== serverHTML) {
-          warnForPropDifference(propKey, serverHTML, expectedHTML);
+          didNotMatchHydratedPropValue(
+            tag,
+            rawProps,
+            (domElement: any),
+            propKey,
+            serverHTML,
+            expectedHTML,
+          );
         }
       } else if (propKey === STYLE) {
         // $FlowFixMe - Should be inferred as not undefined.
@@ -1065,7 +1025,14 @@ export function diffHydratedProperties(
           const expectedStyle = createDangerousStringForStyles(nextProp);
           serverValue = domElement.getAttribute('style');
           if (expectedStyle !== serverValue) {
-            warnForPropDifference(propKey, serverValue, expectedStyle);
+            didNotMatchHydratedPropValue(
+              tag,
+              rawProps,
+              (domElement: any),
+              propKey,
+              serverValue,
+              expectedStyle,
+            );
           }
         }
       } else if (isCustomComponentTag) {
@@ -1074,7 +1041,14 @@ export function diffHydratedProperties(
         serverValue = getValueForAttribute(domElement, propKey, nextProp);
 
         if (nextProp !== serverValue) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+          didNotMatchHydratedPropValue(
+            tag,
+            rawProps,
+            (domElement: any),
+            propKey,
+            serverValue,
+            nextProp,
+          );
         }
       } else if (
         !shouldIgnoreAttribute(propKey, propertyInfo, isCustomComponentTag) &&
@@ -1122,7 +1096,14 @@ export function diffHydratedProperties(
         }
 
         if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
-          warnForPropDifference(propKey, serverValue, nextProp);
+          didNotMatchHydratedPropValue(
+            tag,
+            rawProps,
+            (domElement: any),
+            propKey,
+            serverValue,
+            nextProp,
+          );
         }
       }
     }
@@ -1130,9 +1111,14 @@ export function diffHydratedProperties(
 
   if (__DEV__) {
     // $FlowFixMe - Should be inferred as not undefined.
-    if (extraAttributeNames.size > 0 && !suppressHydrationWarning) {
-      // $FlowFixMe - Should be inferred as not undefined.
-      warnForExtraAttributes(extraAttributeNames);
+    if (extraAttributeNames.size > 0) {
+      didNotMatchHydratedPropsHostInstanceHasExtraAttributes(
+        tag,
+        rawProps,
+        (domElement: any),
+        // $FlowFixMe - Should be inferred as not undefined.
+        extraAttributeNames,
+      );
     }
   }
 
@@ -1171,92 +1157,6 @@ export function diffHydratedProperties(
 export function diffHydratedText(textNode: Text, text: string): boolean {
   const isDifferent = textNode.nodeValue !== text;
   return isDifferent;
-}
-
-export function warnForUnmatchedText(textNode: Text, text: string) {
-  if (__DEV__) {
-    warnForTextDifference(textNode.nodeValue, text);
-  }
-}
-
-export function warnForDeletedHydratableElement(
-  parentNode: Element | Document,
-  child: Element,
-) {
-  if (__DEV__) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    warning(
-      false,
-      'Did not expect server HTML to contain a <%s> in <%s>.',
-      child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
-}
-
-export function warnForDeletedHydratableText(
-  parentNode: Element | Document,
-  child: Text,
-) {
-  if (__DEV__) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    warning(
-      false,
-      'Did not expect server HTML to contain the text node "%s" in <%s>.',
-      child.nodeValue,
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
-}
-
-export function warnForInsertedHydratedElement(
-  parentNode: Element | Document,
-  tag: string,
-  props: Object,
-) {
-  if (__DEV__) {
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    warning(
-      false,
-      'Expected server HTML to contain a matching <%s> in <%s>.',
-      tag,
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
-}
-
-export function warnForInsertedHydratedText(
-  parentNode: Element | Document,
-  text: string,
-) {
-  if (__DEV__) {
-    if (text === '') {
-      // We expect to insert empty text nodes since they're not represented in
-      // the HTML.
-      // TODO: Remove this special case if we can just avoid inserting empty
-      // text nodes.
-      return;
-    }
-    if (didWarnInvalidHydration) {
-      return;
-    }
-    didWarnInvalidHydration = true;
-    warning(
-      false,
-      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
-      text,
-      parentNode.nodeName.toLowerCase(),
-    );
-  }
 }
 
 export function restoreControlledState(
@@ -1342,3 +1242,5 @@ export function listenToEventResponderEventTypes(
 if (enableEventAPI) {
   setListenToResponderEventTypes(listenToEventResponderEventTypes);
 }
+
+export {normalizeHTMLTextOrAttributeValue};

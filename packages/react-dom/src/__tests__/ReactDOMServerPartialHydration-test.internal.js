@@ -1003,4 +1003,74 @@ describe('ReactDOMServerPartialHydration', () => {
     let div = container.getElementsByTagName('div')[0];
     expect(ref.current).toBe(div);
   });
+
+  it('warns when a sibling before the dehydrated boundary has inner text mismatch', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Second ' + text;
+      }
+    }
+
+    function Sibling({text}) {
+      return <div>First {text}</div>;
+    }
+
+    function App({text}) {
+      return (
+        <div>
+          <Sibling text={text} />
+          <Suspense fallback="Loading...">
+            <span>
+              <Child text={text} />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App text={'server text'} />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+
+    expect(() => {
+      act(() => {
+        ReactDOM.hydrate(<App text={'client text'} />, container);
+      });
+    }).toWarnDev(
+      'Text content did not match. ' +
+        'Server: "server text" ' +
+        'Client: "client text"\n' +
+        '    in div (at **)\n' +
+        '    in Sibling (at **)\n' +
+        '    in div (at **)\n' +
+        '    in App (at **)',
+    );
+
+    expect(container.firstChild.firstChild.tagName).toBe('DIV');
+    expect(container.firstChild.firstChild.textContent).toBe(
+      'First client text',
+    );
+
+    // Resolving the promise should continue hydration
+    suspend = false;
+    resolve();
+    await promise;
+    Scheduler.flushAll();
+    jest.runAllTimers();
+
+    let span = container.getElementsByTagName('span')[0];
+    expect(span.textContent).toBe('Second client text');
+    expect(container.textContent).toBe('First client textSecond client text');
+  });
 });

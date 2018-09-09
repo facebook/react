@@ -47,6 +47,7 @@ export type TextInstance = {|
   tag: 'TEXT',
 |};
 export type HydratableInstance = Instance | TextInstance;
+export type HostInstance = HydratableInstance | Container;
 export type PublicInstance = Instance | TextInstance;
 export type HostContext = Object;
 export type UpdatePayload = Object;

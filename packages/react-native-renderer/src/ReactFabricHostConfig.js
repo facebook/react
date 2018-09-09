@@ -53,6 +53,7 @@ let nextReactTag = 2;
 type Node = Object;
 export type Type = string;
 export type Props = Object;
+export type Container = number;
 export type Instance = {
   node: Node,
   canonical: ReactFabricHostComponent,
@@ -61,8 +62,8 @@ export type TextInstance = {
   node: Node,
 };
 export type HydratableInstance = Instance | TextInstance;
+export type HostInstance = HydratableInstance | Container;
 export type PublicInstance = ReactFabricHostComponent;
-export type Container = number;
 export type ChildSet = Object;
 export type HostContext = $ReadOnly<{|
   isInAParentText: boolean,

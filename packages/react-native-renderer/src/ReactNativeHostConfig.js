@@ -35,6 +35,7 @@ export type Instance = {
 };
 export type TextInstance = number;
 export type HydratableInstance = Instance | TextInstance;
+export type HostInstance = HydratableInstance | Container;
 export type PublicInstance = Instance;
 export type HostContext = $ReadOnly<{|
   isInAParentText: boolean,

@@ -129,7 +129,7 @@ describe('ReactMount', () => {
       "Warning: Did not expect server HTML to contain the text node {' '} in <container>.\n\n" +
         '  <container>\n' +
         "-   {' '}\n" +
-        '    <div data-reactroot=""></div>\n' +
+        '    <div data-reactroot="" />\n' +
         '  </container>\n\n' +
         '    in div (at **)',
     );
@@ -142,7 +142,7 @@ describe('ReactMount', () => {
     expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
       "Warning: Did not expect server HTML to contain the text node {' '} in <container>.\n\n" +
         '  <container>\n' +
-        '    <div data-reactroot=""></div>\n' +
+        '    <div data-reactroot="" />\n' +
         "-   {' '}\n" +
         '  </container>\n',
       // Without the component stack here because it's empty: found an unexpected text node directly in the root node.
@@ -203,7 +203,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when hydrating a text node over a mismatching text node', () => {
-    // See fixtures/ssr: ssr-warnForTextDifference-warnForUnmatchedText-didNotMatchHydratedContainerTextInstance
+    // See fixtures/ssr: ssr-warnForTextDifference-didNotMatchHydratedContainerTextInstance
 
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString('server text');
@@ -219,7 +219,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when a hydrated element has first text match but second text mismatch', () => {
-    // See fixtures/ssr: ssr-warnForTextDifference-warnForUnmatchedText-didNotMatchHydratedTextInstance
+    // See fixtures/ssr: ssr-warnForTextDifference-didNotMatchHydratedTextInstance
 
     class Component extends React.Component {
       render() {
@@ -265,7 +265,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when a hydrated element has children mismatch (replacement diff)', () => {
-    // See fixtures/ssr: ssr-warnForInsertedHydratedText-didNotFindHydratableTextInstance-replacement
+    // See fixtures/ssr: ssr-warnForInsertedHydratedTextInstance-didNotFindHydratableTextInstance-replacement
 
     class Component extends React.Component {
       render() {
@@ -313,15 +313,14 @@ describe('ReactMount', () => {
       'Warning: Expected server HTML to contain a matching <h2> in <div>.\n\n' +
         '  <div>\n' +
         "    {'nested'}\n" +
-        '    <!-- -->\n' +
         "    {'   '}\n" +
         '-   <h1>children <b>text</b></h1>\n' +
-        "+   <h2>{['children ', ...]}</h2>\n" +
-        '    <div data-ssr-mismatch-padding-after="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="5"></div>\n' +
+        '+   <h2>children <b>text</b></h2>\n' +
+        '    <div data-ssr-mismatch-padding-after="1" />\n' +
+        '    <div data-ssr-mismatch-padding-after="2" />\n' +
+        '    <div data-ssr-mismatch-padding-after="3" />\n' +
+        '    <div data-ssr-mismatch-padding-after="4" />\n' +
+        '    <div data-ssr-mismatch-padding-after="5" />\n' +
         '  </div>\n\n' +
         '    in h2 (at **)\n' +
         '    in Component (at **)',
@@ -329,7 +328,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when a hydrated element has extra child element (insertion diff)', () => {
-    // See fixtures/ssr: ssr-warnForInsertedHydratedText-didNotFindHydratableInstance-insertion
+    // See fixtures/ssr: ssr-warnForInsertedHydratedTextInstance-didNotFindHydratableInstance-insertion
 
     class Component extends React.Component {
       render() {
@@ -385,15 +384,14 @@ describe('ReactMount', () => {
       'Warning: Expected server HTML to contain a matching <h2> in <div>.\n\n' +
         '  <div>\n' +
         "    {'nested'}\n" +
-        '    <!-- -->\n' +
         "    {'   '}\n" +
         '    <h1>children <b>text</b></h1>\n' +
-        '    <div data-ssr-mismatch-padding="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding="5"></div>\n' +
-        "+   <h2>{['extra ', ...]}</h2>\n" +
+        '    <div data-ssr-mismatch-padding="1" />\n' +
+        '    <div data-ssr-mismatch-padding="2" />\n' +
+        '    <div data-ssr-mismatch-padding="3" />\n' +
+        '    <div data-ssr-mismatch-padding="4" />\n' +
+        '    <div data-ssr-mismatch-padding="5" />\n' +
+        '+   <h2>extra <b>element</b></h2>\n' +
         '  </div>\n\n' +
         '    in h2 (at **)\n' +
         '    in Component (at **)',
@@ -401,7 +399,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when a hydrated element has extra child text node (insertion diff)', () => {
-    // See fixtures/ssr: ssr-warnForInsertedHydratedText-didNotFindHydratableTextInstance-insertion
+    // See fixtures/ssr: ssr-warnForInsertedHydratedTextInstance-didNotFindHydratableTextInstance-insertion
 
     class Component extends React.Component {
       render() {
@@ -455,14 +453,13 @@ describe('ReactMount', () => {
       "Warning: Expected server HTML to contain a matching text node for {'extra text node'} in <div>.\n\n" +
         '  <div>\n' +
         "    {'nested'}\n" +
-        '    <!-- -->\n' +
         "    {'   '}\n" +
         '    <h1>children <b>text</b></h1>\n' +
-        '    <div data-ssr-mismatch-padding="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding="5"></div>\n' +
+        '    <div data-ssr-mismatch-padding="1" />\n' +
+        '    <div data-ssr-mismatch-padding="2" />\n' +
+        '    <div data-ssr-mismatch-padding="3" />\n' +
+        '    <div data-ssr-mismatch-padding="4" />\n' +
+        '    <div data-ssr-mismatch-padding="5" />\n' +
         "+   {'extra text node'}\n" +
         '  </div>\n\n' +
         '    in Component (at **)',
@@ -509,8 +506,8 @@ describe('ReactMount', () => {
       ),
     ).toWarnDev(
       'Warning: Prop `data-ssr-extra-prop` did not match. ' +
-        'Server: "null" ' +
-        'Client: "true"\n' +
+        'Server: null ' +
+        'Client: true\n' +
         '    in div (at **)',
     );
   });
@@ -555,7 +552,7 @@ describe('ReactMount', () => {
         div,
       ),
     ).toWarnDev(
-      'Warning: Extra attributes from the server: data-ssr-extra-prop,data-ssr-extra-prop-2\n' +
+      'Warning: Extra attributes from the server: data-ssr-extra-prop, data-ssr-extra-prop-2\n' +
         '    in div (at **)',
     );
   });
@@ -589,7 +586,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when hydrate removes an element within a root container (removal diff)', () => {
-    // See fixtures/ssr: ssr-warnForDeletedHydratableElement-didNotHydrateContainerInstance
+    // See fixtures/ssr: ssr-warnForDeletedHydratableInstance-didNotHydrateContainerInstance-element
 
     const div = document.createElement('div');
     div.setAttribute('data-ssr-mismatch-test-hydrate-root', '');
@@ -623,7 +620,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when hydrate removes an element within an element (removal diff)', () => {
-    // See fixtures/ssr: ssr-warnForDeletedHydratableElement-didNotHydrateInstance
+    // See fixtures/ssr: ssr-warnForDeletedHydratableInstance-didNotHydrateInstance-element
 
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
@@ -650,12 +647,12 @@ describe('ReactMount', () => {
       'Warning: Did not expect server HTML to contain a <div> in <div>.\n\n' +
         '  <div data-reactroot="">\n' +
         '-   <div>SSRMismatchTest default text</div>\n' +
-        '    <span></span>\n' +
-        '    <div data-ssr-mismatch-padding-after="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="5"></div>\n' +
+        '    <span />\n' +
+        '    <div data-ssr-mismatch-padding-after="1" />\n' +
+        '    <div data-ssr-mismatch-padding-after="2" />\n' +
+        '    <div data-ssr-mismatch-padding-after="3" />\n' +
+        '    <div data-ssr-mismatch-padding-after="4" />\n' +
+        '    <div data-ssr-mismatch-padding-after="5" />\n' +
         '  </div>\n\n' +
         '    in span (at **)\n' +
         '    in div (at **)',
@@ -739,19 +736,19 @@ describe('ReactMount', () => {
     ).toWarnDev(
       'Warning: Expected server HTML to contain a matching <h2> in <div>.\n\n' +
         '  <div data-reactroot="">\n' +
-        '    <div data-ssr-mismatch-padding-before="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="5"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="1" />\n' +
+        '    <div data-ssr-mismatch-padding-before="2" />\n' +
+        '    <div data-ssr-mismatch-padding-before="3" />\n' +
+        '    <div data-ssr-mismatch-padding-before="4" />\n' +
+        '    <div data-ssr-mismatch-padding-before="5" />\n' +
         '-   <h1>SSRMismatchTest default text</h1>\n' +
         '+   <h2>SSRMismatchTest default text</h2>\n' +
-        '    <span></span>\n' +
-        '    <div data-ssr-mismatch-padding-after="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="5"></div>\n' +
+        '    <span />\n' +
+        '    <div data-ssr-mismatch-padding-after="1" />\n' +
+        '    <div data-ssr-mismatch-padding-after="2" />\n' +
+        '    <div data-ssr-mismatch-padding-after="3" />\n' +
+        '    <div data-ssr-mismatch-padding-after="4" />\n' +
+        '    <div data-ssr-mismatch-padding-after="5" />\n' +
         '  </div>\n\n' +
         '    in h2 (at **)\n' +
         '    in div (at **)\n' +
@@ -761,7 +758,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when hydrate removes a text node within a root container (removal diff)', () => {
-    // See fixtures/ssr: ssr-warnForDeletedHydratableText-didNotHydrateContainerInstance
+    // See fixtures/ssr: ssr-warnForDeletedHydratableInstance-didNotHydrateContainerInstance-text
 
     const div = document.createElement('div');
     div.setAttribute('data-ssr-mismatch-test-hydrate-root', '');
@@ -784,18 +781,18 @@ describe('ReactMount', () => {
         "-   {'SSRMismatchTest server text'}\n" +
         '    <br />\n' +
         "    {'SSRMismatchTest default text'}\n" +
-        '    <div data-ssr-mismatch-padding-after="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="5"></div>\n' +
+        '    <div data-ssr-mismatch-padding-after="1" />\n' +
+        '    <div data-ssr-mismatch-padding-after="2" />\n' +
+        '    <div data-ssr-mismatch-padding-after="3" />\n' +
+        '    <div data-ssr-mismatch-padding-after="4" />\n' +
+        '    <div data-ssr-mismatch-padding-after="5" />\n' +
         '  </div>\n\n' +
         '    in br (at **)',
     );
   });
 
   it('should warn when hydrate removes a text node within an element (removal diff)', () => {
-    // See fixtures/ssr: ssr-warnForDeletedHydratableText-didNotHydrateInstance
+    // See fixtures/ssr: ssr-warnForDeletedHydratableInstance-didNotHydrateInstance-text
 
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
@@ -822,12 +819,12 @@ describe('ReactMount', () => {
       "Warning: Did not expect server HTML to contain the text node {'SSRMismatchTest server text'} in <div>.\n\n" +
         '  <div data-reactroot="">\n' +
         "-   {'SSRMismatchTest server text'}\n" +
-        '    <span></span>\n' +
-        '    <div data-ssr-mismatch-padding-after="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding-after="5"></div>\n' +
+        '    <span />\n' +
+        '    <div data-ssr-mismatch-padding-after="1" />\n' +
+        '    <div data-ssr-mismatch-padding-after="2" />\n' +
+        '    <div data-ssr-mismatch-padding-after="3" />\n' +
+        '    <div data-ssr-mismatch-padding-after="4" />\n' +
+        '    <div data-ssr-mismatch-padding-after="5" />\n' +
         '  </div>\n\n' +
         '    in span (at **)\n' +
         '    in div (at **)',
@@ -835,7 +832,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when hydrate replaces a text node by an element within a root container (replacement diff)', () => {
-    // See fixtures/ssr: ssr-warnForInsertedHydratedElement-didNotFindHydratableContainerInstance
+    // See fixtures/ssr: ssr-warnForInsertedHydratedInstance-didNotFindHydratableContainerInstance
 
     const div = document.createElement('div');
     const markup = 'SSRMismatchTest default text';
@@ -854,7 +851,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when hydrate replaces an element by a text node within a root container (replacement diff)', () => {
-    // See fixtures/ssr: ssr-warnForInsertedHydratedText-didNotFindHydratableContainerTextInstance
+    // See fixtures/ssr: ssr-warnForInsertedHydratedTextInstance-didNotFindHydratableContainerTextInstance
 
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
@@ -877,7 +874,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when hydrate replaces an element by a different element (replacement diff)', () => {
-    // See fixtures/ssr: ssr-warnForInsertedHydratedElement-didNotFindHydratableInstance
+    // See fixtures/ssr: ssr-warnForInsertedHydratedInstance-didNotFindHydratableInstance
 
     const div = document.createElement('div');
     const markup = ReactDOMServer.renderToString(
@@ -967,18 +964,18 @@ describe('ReactMount', () => {
       'Warning: Expected server HTML to contain a matching text node' +
         " for {'SSRMismatchTest client text'} in <div>.\n\n" +
         '  <div data-reactroot="">\n' +
-        '    <div data-ssr-mismatch-padding-before="1"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="2"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="3"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="4"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="5"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="6"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="7"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="8"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="9"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="10"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="11"></div>\n' +
-        '    <div data-ssr-mismatch-padding-before="12"></div>\n' +
+        '    <div data-ssr-mismatch-padding-before="1" />\n' +
+        '    <div data-ssr-mismatch-padding-before="2" />\n' +
+        '    <div data-ssr-mismatch-padding-before="3" />\n' +
+        '    <div data-ssr-mismatch-padding-before="4" />\n' +
+        '    <div data-ssr-mismatch-padding-before="5" />\n' +
+        '    <div data-ssr-mismatch-padding-before="6" />\n' +
+        '    <div data-ssr-mismatch-padding-before="7" />\n' +
+        '    <div data-ssr-mismatch-padding-before="8" />\n' +
+        '    <div data-ssr-mismatch-padding-before="9" />\n' +
+        '    <div data-ssr-mismatch-padding-before="10" />\n' +
+        '    <div data-ssr-mismatch-padding-before="11" />\n' +
+        '    <div data-ssr-mismatch-padding-before="12" />\n' +
         "+   {'SSRMismatchTest client text'}\n" +
         '  </div>\n\n' +
         '    in div (at **)',
@@ -999,8 +996,7 @@ describe('ReactMount', () => {
     ).toWarnDev(
       'Warning: Expected server HTML to contain a matching <span> in <div>.\n\n' +
         '  <div>\n' +
-        '    <!-- a comment -->\n' +
-        '+   <span></span>\n' +
+        '+   <span />\n' +
         '  </div>\n\n' +
         '    in span (at **)\n' +
         '    in div (at **)',
@@ -1009,7 +1005,7 @@ describe('ReactMount', () => {
 
   it('should warn when hydrate replaces an element after a comment node (replacement diff)', () => {
     const div = document.createElement('div');
-    div.innerHTML = '<div><!-- a comment --><div></div></div>';
+    div.innerHTML = '<div><!-- a comment <-- --&gt; > --><div></div></div>';
 
     expect(() =>
       ReactDOM.hydrate(
@@ -1022,9 +1018,8 @@ describe('ReactMount', () => {
     ).toWarnDev(
       'Warning: Expected server HTML to contain a matching <span> in <div>.\n\n' +
         '  <div>\n' +
-        '    <!-- a comment -->\n' +
-        '-   <div></div>\n' +
-        '+   <span></span>\n' +
+        '-   <div />\n' +
+        '+   <span />\n' +
         '  </div>\n\n' +
         '    in span (at **)\n' +
         '    in div (at **)',
@@ -1038,15 +1033,14 @@ describe('ReactMount', () => {
     xml.appendChild(
       document.createProcessingInstruction(
         'dom-processing-instruction',
-        'content',
+        'content > ',
       ),
     );
 
     expect(() => ReactDOM.hydrate(<div />, xml)).toWarnDev(
       'Warning: Expected server HTML to contain a matching <div> in <xml>.\n\n' +
         '  <xml>\n' +
-        '    <?dom-processing-instruction content?>\n' +
-        '+   <div></div>\n' +
+        '+   <div />\n' +
         '  </xml>\n\n' +
         '    in div (at **)',
     );
@@ -1071,8 +1065,8 @@ describe('ReactMount', () => {
       // TODO: Currently, the special characters in the JSX string output are not escaped, the output looks invalid.
       'Warning: Expected server HTML to contain a matching <span> in <div>.\n\n' +
         '  <div data-reactroot="">\n' +
-        "-   {'SSRMismatchTest special characters: '\"\t\n'}\n" +
-        '+   <span></span>\n' +
+        "-   {'SSRMismatchTest special characters: \\'\"\\t\\n'}\n" +
+        '+   <span />\n' +
         '  </div>\n\n' +
         '    in span (at **)\n' +
         '    in div (at **)',
@@ -1099,9 +1093,9 @@ describe('ReactMount', () => {
     ).toWarnDev(
       // TODO: Currently, the special characters in the HTML string output are not escaped, the output looks invalid.
       'Warning: Expected server HTML to contain a matching <span> in <div>.\n\n' +
-        '  <div data-ssr-mismatch-attribute-with-special-characters=""" data-reactroot="">\n' +
+        `  <div data-ssr-mismatch-attribute-with-special-characters={'"'} data-reactroot="">\n` +
         '-   <div>SSRMismatchTest text</div>\n' +
-        '+   <span> — <div></span>\n' +
+        "+   <span>{'\\xa0\\u2014 <div>'}</span>\n" +
         '  </div>\n\n' +
         '    in span (at **)\n' +
         '    in div (at **)',
