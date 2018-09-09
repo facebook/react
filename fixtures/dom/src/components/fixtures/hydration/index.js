@@ -91,10 +91,9 @@ class Hydration extends React.Component {
           </label>
         </header>
 
-        <section className={`hydration-editor ${error ? '-error' : ''}`}>
-          <CodeEditor code={code} onChange={this.setCode} />
-          <CodeError error={error} className="hydration-code-error" />
-        </section>
+        <CodeEditor code={code} onChange={this.setCode} />
+
+        <CodeError error={error} className="hydration-code-error" />
 
         <iframe
           ref={this.setFrame}

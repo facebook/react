@@ -2,17 +2,9 @@
   background: #2f1e2e;
   margin: 0;
   position: relative;
-}
-
-.hydration-editor {
-  height: calc(100vh - 72px); /* height of options and header */
+  height: calc(100vh - 40px); /* height of header */
   overflow: auto;
-  position: relative;
-  width: 55%;
-}
-
-.hydration-editor.-error {
-  padding-bottom: 72px;
+  padding-top: 32px;
 }
 
 .hydration-options {
@@ -23,6 +15,9 @@
   line-height: 28px;
   padding: 0 8px;
   width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .hydration-options label {
@@ -36,9 +31,11 @@
 }
 
 .hydration .CodeMirror {
-  height: auto;
   font-size: 13px;
   padding-top: 8px;
+  padding-bottom: 68px;
+  height: calc(100vh - 72px);
+  width: 55%;
 }
 
 .hydration-sandbox {

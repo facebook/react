@@ -1,8 +1,3 @@
-import CodeMirror from 'codemirror';
-import 'codemirror/lib/codemirror.css';
-import 'codemirror/mode/jsx/jsx';
-import './codemirror-paraiso-dark.css';
-
 const React = window.React;
 
 export class CodeEditor extends React.Component {
@@ -11,6 +6,22 @@ export class CodeEditor extends React.Component {
   }
 
   componentDidMount() {
+    // Important: CodeMirror incorrectly lays out the editor
+    // if it executes before CSS has loaded
+    // https://github.com/graphql/graphiql/issues/33#issuecomment-318188555
+    Promise.all([
+      import('codemirror'),
+      import('codemirror/mode/jsx/jsx'),
+      import('codemirror/lib/codemirror.css'),
+      import('./codemirror-paraiso-dark.css'),
+    ]).then(([CodeMirror]) => this.install(CodeMirror));
+  }
+
+  install(CodeMirror) {
+    if (!this.textarea) {
+      return;
+    }
+
     const {onChange} = this.props;
 
     this.editor = CodeMirror.fromTextArea(this.textarea, {
@@ -36,6 +47,7 @@ export class CodeEditor extends React.Component {
         ref={ref => (this.textarea = ref)}
         defaultValue={this.props.code}
         autoComplete="off"
+        hidden={true}
       />
     );
   }
@@ -46,16 +58,16 @@ export class CodeError extends React.Component {
     const {error, className} = this.props;
 
     if (!error) {
-      return null
+      return null;
     }
 
-    const [summary, ...body] = error.message.split('\n')
+    const [summary, ...body] = error.message.split('\n');
 
     return (
       <details className={className}>
         <summary>{summary}</summary>
         <p>{body.join('\n').trim()}</p>
       </details>
-    )
+    );
   }
 }

@@ -79,7 +79,7 @@
   }
 
   function injectFixture(src) {
-    Fixture = new Function(src + '\nreturn Fixture;')()
+    Fixture = new Function(src + '\nreturn Fixture;')();
 
     if (typeof Fixture === 'undefined') {
       setStatus('Failed');
