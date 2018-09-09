@@ -88,7 +88,7 @@ class Hydration extends React.Component {
                 checked={hydrate}
                 onChange={this.setCheckbox}
               />
-              Hydrate
+              Auto-Hydrate
             </label>
           </header>
 
