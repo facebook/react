@@ -1,10 +1,7 @@
 export const SAMPLE_CODE = `
 class Fixture extends React.Component {
-  constructor(props, context) {
-    super(props, context);
-    this.state = {
-      value: 'asdf'
-    };
+  state = {
+    value: 'asdf'
   }
 
   onChange(event) {
