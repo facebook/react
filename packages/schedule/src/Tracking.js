@@ -65,19 +65,14 @@ let threadIDCounter: number = 0;
 // Interactions "stack"–
 // Meaning that newly tracked interactions are appended to the previously active set.
 // When an interaction goes out of scope, the previous set (if any) is restored.
-let interactionsRef: InteractionsRef = (null: any);
+const interactionsRef: InteractionsRef = {
+  current: new Set(),
+};
 
 // Listener(s) to notify when interactions begin and end.
-let subscriberRef: SubscriberRef = (null: any);
-
-if (enableSchedulerTracking) {
-  interactionsRef = {
-    current: new Set(),
-  };
-  subscriberRef = {
-    current: null,
-  };
-}
+const subscriberRef: SubscriberRef = {
+  current: null,
+};
 
 export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
 

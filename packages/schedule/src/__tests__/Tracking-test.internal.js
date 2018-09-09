@@ -365,11 +365,5 @@ describe('Tracking', () => {
 
       wrappedCallback();
     });
-
-    describe('advanced integration', () => {
-      it('should not create unnecessary objects', () => {
-        expect(SchedulerTracking.__interactionsRef).toBe(null);
-      });
-    });
   });
 });
