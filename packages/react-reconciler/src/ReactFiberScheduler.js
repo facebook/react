@@ -173,8 +173,10 @@ if (enableSchedulerTracking) {
   // Is used with production (non-profiling) bundle of schedule/tracking
   invariant(
     __interactionsRef != null && __interactionsRef.current != null,
-    "Profiling renderer (e.g. 'react-dom/profiling') cannot be used with non-profiling 'schedule/tracking'. " +
-      "To fix, alias 'schedule/tracking' to 'schedule/tracking-profiling'.",
+    'It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) ' +
+      'without also replacing the `schedule/tracking` module with `schedule/tracking-profiling`. ' +
+      'Your bundler might have a setting for aliasing both modules. ' +
+      'Learn more at http://fb.me/react-profiling',
   );
 }
 

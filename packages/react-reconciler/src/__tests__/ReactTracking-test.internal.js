@@ -22,7 +22,7 @@ describe('ReactTracking', () => {
     ReactFeatureFlags.enableSchedulerTracking = true;
 
     expect(() => require('react-dom')).toThrow(
-      "Profiling renderer (e.g. 'react-dom/profiling') cannot be used with non-profiling 'schedule/tracking'.",
+      'Learn more at http://fb.me/react-profiling',
     );
   });
 });
