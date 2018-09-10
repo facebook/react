@@ -13,7 +13,7 @@
 let React;
 let ReactNoopPersistent;
 
-describe('ReactIncrementalUpdatesMinimalism', () => {
+describe('ReactPersistentUpdatesMinimalism', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
