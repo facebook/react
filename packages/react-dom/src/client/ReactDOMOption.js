@@ -9,7 +9,7 @@
 
 import React from 'react';
 import warning from 'shared/warning';
-import {getToStringValue, toString} from '../shared/ToStringValue';
+import {getToStringValue} from '../shared/ToStringValue';
 
 let didWarnSelectedSetOnOption = false;
 let didWarnInvalidChild = false;
@@ -81,7 +81,7 @@ export function validateProps(element: Element, props: Object) {
 export function postMountWrapper(element: Element, props: Object) {
   // value="" should make a value attribute (#6219)
   if (props.value != null) {
-    element.setAttribute('value', toString(getToStringValue(props.value)));
+    element.setAttribute('value', getToStringValue(props.value));
   }
 }
 
