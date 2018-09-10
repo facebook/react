@@ -63,7 +63,6 @@ import {validateProperties as validateARIAProperties} from '../shared/ReactDOMIn
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import {
-  toString,
   getToStringValue,
   isSameStringValue,
 } from '../shared/ToStringValue';
@@ -1185,7 +1184,7 @@ class ReactDOMServerRenderer {
         initialValue = defaultValue;
       }
 
-      initialValue = toString(getToStringValue(initialValue));
+      initialValue = '' + getToStringValue(initialValue);
 
       props = Object.assign({}, props, {
         value: undefined,
@@ -1258,7 +1257,7 @@ class ReactDOMServerRenderer {
         if (Array.isArray(selectValue)) {
           // multiple
           for (let j = 0; j < selectValue.length; j++) {
-            if (isSameStringValue(selectValue[j], value)) {
+            if ('' + getToStringValue(selectValue[j]) === '' + value) {
               selected = true;
               break;
             }

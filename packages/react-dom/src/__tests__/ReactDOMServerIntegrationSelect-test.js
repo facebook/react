@@ -342,10 +342,10 @@ describe('ReactDOMServerIntegrationSelect', () => {
     'multiselects the correct options even with a type mismatch',
     async render => {
       const e = await render(
-        <select multiple={true} value={[1,3]} readOnly={true}>
+        <select multiple={true} value={[1,"3"]} readOnly={true}>
           <option>None</option>
           <option value="1">1</option>
-          <option value="3">3</option>
+          <option value={3}>3</option>
         </select>,
       );
       expect(e.options[0].selected).toBe(false);
