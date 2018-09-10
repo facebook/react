@@ -14,7 +14,7 @@ import warning from 'shared/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
-import {getToStringValue, toString} from '../shared/ToStringValue';
+import {getToStringValue} from '../shared/ToStringValue';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import * as inputValueTracking from './inputValueTracking';
 
@@ -182,10 +182,10 @@ export function updateWrapper(element: Element, props: Object) {
         // eslint-disable-next-line
         node.value != (value: any)
       ) {
-        node.value = toString(value);
+        node.value = value;
       }
-    } else if (node.value !== toString(value)) {
-      node.value = toString(value);
+    } else if (node.value !== '' + value) {
+      node.value = value
     }
   } else if (type === 'submit' || type === 'reset') {
     // Submit/reset inputs need the attribute removed completely to avoid
@@ -223,7 +223,7 @@ export function postMountWrapper(
       return;
     }
 
-    const initialValue = toString(node._wrapperState.initialValue);
+    const initialValue = '' + node._wrapperState.initialValue;
     const currentValue = node.value;
 
     // Do not assign value if it is already set. This prevents user text input
@@ -332,9 +332,9 @@ export function setDefaultValue(
     node.ownerDocument.activeElement !== node
   ) {
     if (value == null) {
-      node.defaultValue = toString(node._wrapperState.initialValue);
-    } else if (node.defaultValue !== toString(value)) {
-      node.defaultValue = toString(value);
+      node.defaultValue = node._wrapperState.initialValue;
+    } else if (node.defaultValue !== '' + value) {
+      node.defaultValue = value;
     }
   }
 }
