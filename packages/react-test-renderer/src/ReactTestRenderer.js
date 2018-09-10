@@ -37,6 +37,7 @@ import ReactVersion from 'shared/ReactVersion';
 import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
+/* eslint-disable no-use-before-define */
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isAsync: boolean,
@@ -57,6 +58,7 @@ type FindOptions = $Shape<{
 }>;
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
+/* eslint-enable no-use-before-define */
 
 const defaultTestOptions = {
   createNodeMock: function() {
@@ -207,19 +209,6 @@ function toTree(node: ?Fiber) {
         node.tag,
       );
   }
-}
-
-const fiberToWrapper = new WeakMap();
-function wrapFiber(fiber: Fiber): ReactTestInstance {
-  let wrapper = fiberToWrapper.get(fiber);
-  if (wrapper === undefined && fiber.alternate !== null) {
-    wrapper = fiberToWrapper.get(fiber.alternate);
-  }
-  if (wrapper === undefined) {
-    wrapper = new ReactTestInstance(fiber);
-    fiberToWrapper.set(fiber, wrapper);
-  }
-  return wrapper;
 }
 
 const validWrapperTypes = new Set([
@@ -542,6 +531,19 @@ const ReactTestRendererFiber = {
 
   unstable_setNowImplementation: TestRendererScheduling.setNowImplementation,
 };
+
+const fiberToWrapper = new WeakMap();
+function wrapFiber(fiber: Fiber): ReactTestInstance {
+  let wrapper = fiberToWrapper.get(fiber);
+  if (wrapper === undefined && fiber.alternate !== null) {
+    wrapper = fiberToWrapper.get(fiber.alternate);
+  }
+  if (wrapper === undefined) {
+    wrapper = new ReactTestInstance(fiber);
+    fiberToWrapper.set(fiber, wrapper);
+  }
+  return wrapper;
+}
 
 // Enable ReactTestRenderer to be used to test DevTools integration.
 TestRenderer.injectIntoDevTools({
