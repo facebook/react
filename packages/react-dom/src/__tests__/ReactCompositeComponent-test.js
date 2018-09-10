@@ -1762,4 +1762,18 @@ describe('ReactCompositeComponent', () => {
       {withoutStack: true},
     );
   });
+
+  // Regression test for accidental breaking change
+  // https://github.com/facebook/react/issues/13580
+  it('should support classes shadowing isReactComponent', () => {
+    class Shadow extends React.Component {
+      isReactComponent() {}
+      render() {
+        return <div />;
+      }
+    }
+    const container = document.createElement('div');
+    ReactDOM.render(<Shadow />, container);
+    expect(container.firstChild.tagName).toBe('DIV');
+  });
 });
