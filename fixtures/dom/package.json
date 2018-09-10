@@ -6,7 +6,9 @@
     "react-scripts": "^1.0.11"
   },
   "dependencies": {
+    "@babel/standalone": "^7.0.0",
     "classnames": "^2.2.5",
+    "codemirror": "^5.40.0",
     "core-js": "^2.4.1",
     "prop-types": "^15.6.0",
     "query-string": "^4.2.3",
@@ -16,7 +18,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "prestart": "cp ../../build/dist/react.development.js public/ && cp ../../build/dist/react-dom.development.js public/",
+    "prestart": "cp ../../build/dist/react.development.js ../../build/dist/react-dom.development.js ../../build/dist/react-dom-server.browser.development.js public/",
     "build": "react-scripts build && cp build/index.html build/200.html",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
