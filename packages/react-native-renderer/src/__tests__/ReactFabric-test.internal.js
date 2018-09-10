@@ -237,6 +237,45 @@ describe('ReactFabric', () => {
     expect(FabricUIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
   });
 
+  it('recreates host parents even if only children changed', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {title: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const before = 'abcdefghijklmnopqrst';
+    const after = 'mxhpgwfralkeoivcstzy';
+
+    class Component extends React.Component {
+      state = {
+        chars: before,
+      };
+      render() {
+        const chars = this.state.chars.split('');
+        return (
+          <View>{chars.map(text => <View key={text} title={text} />)}</View>
+        );
+      }
+    }
+
+    const ref = React.createRef();
+    // Wrap in a host node.
+    ReactFabric.render(
+      <View>
+        <Component ref={ref} />
+      </View>,
+      11,
+    );
+    expect(FabricUIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+
+    // Call setState() so that we skip over the top-level host node.
+    // It should still get recreated despite a bailout.
+    ref.current.setState({
+      chars: after,
+    });
+    expect(FabricUIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+  });
+
   it('calls setState with no arguments', () => {
     let mockArgs;
     class Component extends React.Component {

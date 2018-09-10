@@ -14,10 +14,8 @@ import type {
   Instance,
   Type,
   Props,
-  UpdatePayload,
   Container,
   ChildSet,
-  HostContext,
 } from './ReactFiberHostConfig';
 
 import {
@@ -126,13 +124,36 @@ if (supportsMutation) {
   updateHostComponent = function(
     current: Fiber,
     workInProgress: Fiber,
-    updatePayload: null | UpdatePayload,
     type: Type,
-    oldProps: Props,
     newProps: Props,
     rootContainerInstance: Container,
-    currentHostContext: HostContext,
   ) {
+    // If we have an alternate, that means this is an update and we need to
+    // schedule a side-effect to do the updates.
+    const oldProps = current.memoizedProps;
+    if (oldProps === newProps) {
+      // In mutation mode, this is sufficient for a bailout because
+      // we won't touch this node even if children changed.
+      return;
+    }
+
+    // If we get updated because one of our children updated, we don't
+    // have newProps so we'll have to reuse them.
+    // TODO: Split the update API as separate for the props vs. children.
+    // Even better would be if children weren't special cased at all tho.
+    const instance: Instance = workInProgress.stateNode;
+    const currentHostContext = getHostContext();
+    // TODO: Experiencing an error where oldProps is null. Suggests a host
+    // component is hitting the resume path. Figure out why. Possibly
+    // related to `hidden`.
+    const updatePayload = prepareUpdate(
+      instance,
+      type,
+      oldProps,
+      newProps,
+      rootContainerInstance,
+      currentHostContext,
+    );
     // TODO: Type this specific to this type of component.
     workInProgress.updateQueue = (updatePayload: any);
     // If the update payload indicates that there is a change or if there
@@ -211,54 +232,70 @@ if (supportsMutation) {
   updateHostComponent = function(
     current: Fiber,
     workInProgress: Fiber,
-    updatePayload: null | UpdatePayload,
     type: Type,
-    oldProps: Props,
     newProps: Props,
     rootContainerInstance: Container,
-    currentHostContext: HostContext,
   ) {
+    const currentInstance = current.stateNode;
+    const oldProps = current.memoizedProps;
     // If there are no effects associated with this node, then none of our children had any updates.
     // This guarantees that we can reuse all of them.
     const childrenUnchanged = workInProgress.firstEffect === null;
-    const currentInstance = current.stateNode;
+    if (childrenUnchanged && oldProps === newProps) {
+      // No changes, just reuse the existing instance.
+      // Note that this might release a previous clone.
+      workInProgress.stateNode = currentInstance;
+      return;
+    }
+    const recyclableInstance: Instance = workInProgress.stateNode;
+    const currentHostContext = getHostContext();
+    let updatePayload = null;
+    if (oldProps !== newProps) {
+      updatePayload = prepareUpdate(
+        recyclableInstance,
+        type,
+        oldProps,
+        newProps,
+        rootContainerInstance,
+        currentHostContext,
+      );
+    }
     if (childrenUnchanged && updatePayload === null) {
       // No changes, just reuse the existing instance.
       // Note that this might release a previous clone.
       workInProgress.stateNode = currentInstance;
-    } else {
-      let recyclableInstance = workInProgress.stateNode;
-      let newInstance = cloneInstance(
-        currentInstance,
-        updatePayload,
+      return;
+    }
+    let newInstance = cloneInstance(
+      currentInstance,
+      updatePayload,
+      type,
+      oldProps,
+      newProps,
+      workInProgress,
+      childrenUnchanged,
+      recyclableInstance,
+    );
+    if (
+      finalizeInitialChildren(
+        newInstance,
         type,
-        oldProps,
         newProps,
-        workInProgress,
-        childrenUnchanged,
-        recyclableInstance,
-      );
-      if (
-        finalizeInitialChildren(
-          newInstance,
-          type,
-          newProps,
-          rootContainerInstance,
-          currentHostContext,
-        )
-      ) {
-        markUpdate(workInProgress);
-      }
-      workInProgress.stateNode = newInstance;
-      if (childrenUnchanged) {
-        // If there are no other effects in this tree, we need to flag this node as having one.
-        // Even though we're not going to use it for anything.
-        // Otherwise parents won't know that there are new children to propagate upwards.
-        markUpdate(workInProgress);
-      } else {
-        // If children might have changed, we have to add them all to the set.
-        appendAllChildren(newInstance, workInProgress);
-      }
+        rootContainerInstance,
+        currentHostContext,
+      )
+    ) {
+      markUpdate(workInProgress);
+    }
+    workInProgress.stateNode = newInstance;
+    if (childrenUnchanged) {
+      // If there are no other effects in this tree, we need to flag this node as having one.
+      // Even though we're not going to use it for anything.
+      // Otherwise parents won't know that there are new children to propagate upwards.
+      markUpdate(workInProgress);
+    } else {
+      // If children might have changed, we have to add them all to the set.
+      appendAllChildren(newInstance, workInProgress);
     }
   };
   updateHostText = function(
@@ -290,12 +327,9 @@ if (supportsMutation) {
   updateHostComponent = function(
     current: Fiber,
     workInProgress: Fiber,
-    updatePayload: null | UpdatePayload,
     type: Type,
-    oldProps: Props,
     newProps: Props,
     rootContainerInstance: Container,
-    currentHostContext: HostContext,
   ) {
     // Noop
   };
@@ -358,39 +392,13 @@ function completeWork(
       const rootContainerInstance = getRootHostContainer();
       const type = workInProgress.type;
       if (current !== null && workInProgress.stateNode != null) {
-        // If we have an alternate, that means this is an update and we need to
-        // schedule a side-effect to do the updates.
-        const oldProps = current.memoizedProps;
-        if (oldProps !== newProps) {
-          // If we get updated because one of our children updated, we don't
-          // have newProps so we'll have to reuse them.
-          // TODO: Split the update API as separate for the props vs. children.
-          // Even better would be if children weren't special cased at all tho.
-          const instance: Instance = workInProgress.stateNode;
-          const currentHostContext = getHostContext();
-          // TODO: Experiencing an error where oldProps is null. Suggests a host
-          // component is hitting the resume path. Figure out why. Possibly
-          // related to `hidden`.
-          const updatePayload = prepareUpdate(
-            instance,
-            type,
-            oldProps,
-            newProps,
-            rootContainerInstance,
-            currentHostContext,
-          );
-
-          updateHostComponent(
-            current,
-            workInProgress,
-            updatePayload,
-            type,
-            oldProps,
-            newProps,
-            rootContainerInstance,
-            currentHostContext,
-          );
-        }
+        updateHostComponent(
+          current,
+          workInProgress,
+          type,
+          newProps,
+          rootContainerInstance,
+        );
 
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
