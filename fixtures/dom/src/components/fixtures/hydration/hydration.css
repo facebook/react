@@ -63,6 +63,6 @@
   padding: 12px;
   position: fixed;
   white-space: pre;
-  width: calc(55% - 26px);
+  max-width: calc(55% - 26px);
   z-index: 10;
 }

@@ -53,6 +53,14 @@ export class CodeEditor extends React.Component {
   }
 }
 
+/**
+ * Prevent IE9 from raising an error on an unrecognized element:
+ * See https://github.com/facebook/react/issues/13610
+ */
+const supportsDetails = !(
+  document.createElement('details') instanceof HTMLUnknownElement
+);
+
 export class CodeError extends React.Component {
   render() {
     const {error, className} = this.props;
@@ -61,13 +69,17 @@ export class CodeError extends React.Component {
       return null;
     }
 
-    const [summary, ...body] = error.message.split(/\n+/g);
+    if (supportsDetails) {
+      const [summary, ...body] = error.message.split(/\n+/g);
 
-    return (
-      <details className={className}>
-        <summary>{summary}</summary>
-        <p>{body.join('\n')}</p>
-      </details>
-    );
+      return (
+        <details className={className}>
+          <summary>{summary}</summary>
+          {body.join('\n')}
+        </details>
+      );
+    }
+
+    return <div className={className}>{error.message}</div>;
   }
 }
