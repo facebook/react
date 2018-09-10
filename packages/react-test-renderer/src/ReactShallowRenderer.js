@@ -19,6 +19,72 @@ if (__DEV__) {
   Object.freeze(emptyObject);
 }
 
+class Updater {
+  constructor(renderer) {
+    this._renderer = renderer;
+    this._callbacks = [];
+  }
+
+  _enqueueCallback(callback, publicInstance) {
+    if (typeof callback === 'function' && publicInstance) {
+      this._callbacks.push({
+        callback,
+        publicInstance,
+      });
+    }
+  }
+
+  _invokeCallbacks() {
+    const callbacks = this._callbacks;
+    this._callbacks = [];
+
+    callbacks.forEach(({callback, publicInstance}) => {
+      callback.call(publicInstance);
+    });
+  }
+
+  isMounted(publicInstance) {
+    return !!this._renderer._element;
+  }
+
+  enqueueForceUpdate(publicInstance, callback, callerName) {
+    this._enqueueCallback(callback, publicInstance);
+    this._renderer._forcedUpdate = true;
+    this._renderer.render(this._renderer._element, this._renderer._context);
+  }
+
+  enqueueReplaceState(publicInstance, completeState, callback, callerName) {
+    this._enqueueCallback(callback, publicInstance);
+    this._renderer._newState = completeState;
+    this._renderer.render(this._renderer._element, this._renderer._context);
+  }
+
+  enqueueSetState(publicInstance, partialState, callback, callerName) {
+    this._enqueueCallback(callback, publicInstance);
+    const currentState = this._renderer._newState || publicInstance.state;
+
+    if (typeof partialState === 'function') {
+      partialState = partialState.call(
+        publicInstance,
+        currentState,
+        publicInstance.props,
+      );
+    }
+
+    // Null and undefined are treated as no-ops.
+    if (partialState === null || partialState === undefined) {
+      return;
+    }
+
+    this._renderer._newState = {
+      ...currentState,
+      ...partialState,
+    };
+
+    this._renderer.render(this._renderer._element, this._renderer._context);
+  }
+}
+
 class ReactShallowRenderer {
   static createRenderer = function() {
     return new ReactShallowRenderer();
@@ -260,72 +326,6 @@ class ReactShallowRenderer {
         this._instance.state = this._newState = newState;
       }
     }
-  }
-}
-
-class Updater {
-  constructor(renderer) {
-    this._renderer = renderer;
-    this._callbacks = [];
-  }
-
-  _enqueueCallback(callback, publicInstance) {
-    if (typeof callback === 'function' && publicInstance) {
-      this._callbacks.push({
-        callback,
-        publicInstance,
-      });
-    }
-  }
-
-  _invokeCallbacks() {
-    const callbacks = this._callbacks;
-    this._callbacks = [];
-
-    callbacks.forEach(({callback, publicInstance}) => {
-      callback.call(publicInstance);
-    });
-  }
-
-  isMounted(publicInstance) {
-    return !!this._renderer._element;
-  }
-
-  enqueueForceUpdate(publicInstance, callback, callerName) {
-    this._enqueueCallback(callback, publicInstance);
-    this._renderer._forcedUpdate = true;
-    this._renderer.render(this._renderer._element, this._renderer._context);
-  }
-
-  enqueueReplaceState(publicInstance, completeState, callback, callerName) {
-    this._enqueueCallback(callback, publicInstance);
-    this._renderer._newState = completeState;
-    this._renderer.render(this._renderer._element, this._renderer._context);
-  }
-
-  enqueueSetState(publicInstance, partialState, callback, callerName) {
-    this._enqueueCallback(callback, publicInstance);
-    const currentState = this._renderer._newState || publicInstance.state;
-
-    if (typeof partialState === 'function') {
-      partialState = partialState.call(
-        publicInstance,
-        currentState,
-        publicInstance.props,
-      );
-    }
-
-    // Null and undefined are treated as no-ops.
-    if (partialState === null || partialState === undefined) {
-      return;
-    }
-
-    this._renderer._newState = {
-      ...currentState,
-      ...partialState,
-    };
-
-    this._renderer.render(this._renderer._element, this._renderer._context);
   }
 }
 
