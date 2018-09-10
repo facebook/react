@@ -37,6 +37,7 @@ module.exports = {
     'no-shadow': ERROR,
     'no-unused-expressions': ERROR,
     'no-unused-vars': [ERROR, {args: 'none'}],
+    'no-use-before-define': [ERROR, {functions: false, variables: false}],
     'no-useless-concat': OFF,
     'quotes': [ERROR, 'single', {avoidEscape: true, allowTemplateLiterals: true }],
     'space-before-blocks': ERROR,

@@ -21,6 +21,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import * as ReactPortal from 'shared/ReactPortal';
 import expect from 'expect';
 
+/* eslint-disable no-use-before-define */
 type Container = {rootID: string, children: Array<Instance | TextInstance>};
 type Props = {prop: any, hidden?: boolean, children?: mixed};
 type Instance = {|
@@ -30,6 +31,7 @@ type Instance = {|
   prop: any,
 |};
 type TextInstance = {|text: string, id: number|};
+/* eslint-enable no-use-before-define */
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};

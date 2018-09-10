@@ -126,6 +126,7 @@ if (__DEV__) {
 
 ReactControlledComponent.setRestoreImplementation(restoreControlledState);
 
+/* eslint-disable no-use-before-define */
 type DOMContainer =
   | (Element & {
       _reactRootContainer: ?Root,
@@ -149,6 +150,20 @@ type Batch = FiberRootBatch & {
   _callbacks: Array<() => mixed> | null,
   _didComplete: boolean,
 };
+
+type Root = {
+  render(children: ReactNodeList, callback: ?() => mixed): Work,
+  unmount(callback: ?() => mixed): Work,
+  legacy_renderSubtreeIntoContainer(
+    parentComponent: ?React$Component<any, any>,
+    children: ReactNodeList,
+    callback: ?() => mixed,
+  ): Work,
+  createBatch(): Batch,
+
+  _internalRoot: FiberRoot,
+};
+/* eslint-enable no-use-before-define */
 
 function ReactBatch(root: ReactRoot) {
   const expirationTime = DOMRenderer.computeUniqueAsyncExpiration();
@@ -315,19 +330,6 @@ ReactWork.prototype._onCommit = function(): void {
     );
     callback();
   }
-};
-
-type Root = {
-  render(children: ReactNodeList, callback: ?() => mixed): Work,
-  unmount(callback: ?() => mixed): Work,
-  legacy_renderSubtreeIntoContainer(
-    parentComponent: ?React$Component<any, any>,
-    children: ReactNodeList,
-    callback: ?() => mixed,
-  ): Work,
-  createBatch(): Batch,
-
-  _internalRoot: FiberRoot,
 };
 
 function ReactRoot(container: Container, isAsync: boolean, hydrate: boolean) {
