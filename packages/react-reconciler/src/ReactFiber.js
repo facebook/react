@@ -284,12 +284,7 @@ const createFiber = function(
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
-  return (
-    typeof prototype === 'object' &&
-    prototype !== null &&
-    typeof prototype.isReactComponent === 'object' &&
-    prototype.isReactComponent !== null
-  );
+  return !!(prototype && prototype.isReactComponent);
 }
 
 export function resolveLazyComponentTag(
