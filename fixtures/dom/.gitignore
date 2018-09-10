@@ -10,6 +10,7 @@ coverage
 build
 public/react.development.js
 public/react-dom.development.js
+public/react-dom-server.browser.development.js
 
 # misc
 .DS_Store
