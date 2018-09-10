@@ -2,6 +2,10 @@
 # yarn lockfile v1
 
 
+"@babel/standalone@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@babel/standalone/-/standalone-7.0.0.tgz#856446641620c1c5f0ca775621d478324ebd1f52"
+
 abab@^1.0.3:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/abab/-/abab-1.0.3.tgz#b81de5f7274ec4e756d797cd834f303642724e5d"
@@ -1555,6 +1559,10 @@ coa@~1.0.1:
 code-point-at@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"
+
+codemirror@^5.40.0:
+  version "5.40.0"
+  resolved "https://registry.yarnpkg.com/codemirror/-/codemirror-5.40.0.tgz#2f5ed47366e514f41349ba0fe34daaa39be4e257"
 
 color-convert@^1.3.0:
   version "1.8.2"

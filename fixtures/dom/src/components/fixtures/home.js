@@ -2,7 +2,7 @@ const React = window.React;
 
 export default function Home() {
   return (
-    <main>
+    <main className="container">
       <h1>DOM Test Fixtures</h1>
       <p>
         Use this site to test browser quirks and other behavior that can not be

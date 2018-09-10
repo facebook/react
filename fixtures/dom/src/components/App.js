@@ -8,9 +8,7 @@ function App() {
   return (
     <div>
       <Header />
-      <div className="container">
-        <Fixtures />
-      </div>
+      <Fixtures />
     </div>
   );
 }

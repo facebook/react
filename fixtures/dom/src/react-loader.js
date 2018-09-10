@@ -36,9 +36,10 @@ function loadScript(src) {
   });
 }
 
-export default function loadReact() {
-  let REACT_PATH = 'react.development.js';
-  let DOM_PATH = 'react-dom.development.js';
+export function reactPaths() {
+  let reactPath = 'react.development.js';
+  let reactDOMPath = 'react-dom.development.js';
+  let reactDOMServerPath = 'react-dom-server.browser.development.js';
 
   let query = parseQuery(window.location.search);
   let version = query.version || 'local';
@@ -49,25 +50,37 @@ export default function loadReact() {
     // The file structure was updated in 16. This wasn't the case for alphas.
     // Load the old module location for anything less than 16 RC
     if (major >= 16 && !(minor === 0 && preReleaseStage === 'alpha')) {
-      REACT_PATH =
+      reactPath =
         'https://unpkg.com/react@' + version + '/umd/react.development.js';
-      DOM_PATH =
+      reactDOMPath =
         'https://unpkg.com/react-dom@' +
         version +
         '/umd/react-dom.development.js';
+      reactDOMServerPath =
+        'https://unpkg.com/react-dom@' +
+        version +
+        '/umd/react-dom-server.browser.development';
     } else {
-      REACT_PATH = 'https://unpkg.com/react@' + version + '/dist/react.js';
-      DOM_PATH =
+      reactPath = 'https://unpkg.com/react@' + version + '/dist/react.js';
+      reactDOMPath =
         'https://unpkg.com/react-dom@' + version + '/dist/react-dom.js';
+      reactDOMServerPath =
+        'https://unpkg.com/react-dom@' + version + '/dist/react-dom-server.js';
     }
   }
 
   const needsReactDOM = version === 'local' || parseFloat(version, 10) > 0.13;
 
-  let request = loadScript(REACT_PATH);
+  return {reactPath, reactDOMPath, reactDOMServerPath, needsReactDOM};
+}
+
+export default function loadReact() {
+  const {reactPath, reactDOMPath, needsReactDOM} = reactPaths();
+
+  let request = loadScript(reactPath);
 
   if (needsReactDOM) {
-    request = request.then(() => loadScript(DOM_PATH));
+    request = request.then(() => loadScript(reactDOMPath));
   } else {
     // Aliasing React to ReactDOM for compatibility.
     request = request.then(() => {
