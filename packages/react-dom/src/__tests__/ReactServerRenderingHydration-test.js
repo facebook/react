@@ -448,12 +448,10 @@ describe('ReactDOMServerHydration', () => {
     const div = document.createElement('div');
 
     expect(() =>
-      ReactDOM.hydrate(
-        ReactDOM.createPortal(<div>Hello</div>, root),
-        div),
+      ReactDOM.hydrate(ReactDOM.createPortal(<div>Hello</div>, root), div),
     ).toThrowError(
       'Portal is not support on SSR. ' +
-      'For more detail, please refer https://github.com/facebook/react/issues/13097'
+        'For more detail, please refer https://github.com/facebook/react/issues/13097',
     );
   });
 });
