@@ -46,6 +46,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   let instanceCounter = 0;
   let hostDiffCounter = 0;
   let hostUpdateCounter = 0;
+  let hostCloneCounter = 0;
 
   function appendChildToContainerOrInstance(
     parentInstance: Container | Instance,
@@ -370,6 +371,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
             value: clone.id,
             enumerable: false,
           });
+          hostCloneCounter++;
           return clone;
         },
 
@@ -579,21 +581,33 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     flushWithHostCounters(
       fn: () => void,
-    ): {|
-      hostDiffCounter: number,
-      hostUpdateCounter: number,
-    |} {
+    ):
+      | {|
+          hostDiffCounter: number,
+          hostUpdateCounter: number,
+        |}
+      | {|
+          hostDiffCounter: number,
+          hostCloneCounter: number,
+        |} {
       hostDiffCounter = 0;
       hostUpdateCounter = 0;
+      hostCloneCounter = 0;
       try {
         ReactNoop.flush();
-        return {
-          hostDiffCounter,
-          hostUpdateCounter,
-        };
+        return useMutation
+          ? {
+              hostDiffCounter,
+              hostUpdateCounter,
+            }
+          : {
+              hostDiffCounter,
+              hostCloneCounter,
+            };
       } finally {
         hostDiffCounter = 0;
         hostUpdateCounter = 0;
+        hostCloneCounter = 0;
       }
     },
 
