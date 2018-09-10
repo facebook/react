@@ -58,8 +58,11 @@ const update = async ({cwd, dry, packages, version}) => {
       const json = await readJson(path);
       const prerelease = semver.prerelease(version);
 
-      // Unstable package version.
-      json.version = getNextVersion(json.version, version);
+      // If this is a package we publish directly to NPM, update its version.
+      // Skip ones that we don't directly publish though (e.g. react-native-renderer).
+      if (json.private !== true) {
+        json.version = getNextVersion(json.version, version);
+      }
 
       if (project === 'react') {
         // Update inter-package dependencies as well.
@@ -107,6 +110,12 @@ const update = async ({cwd, dry, packages, version}) => {
           Object.keys(json.dependencies).forEach(dependency => {
             if (packages.indexOf(dependency) >= 0) {
               const prevVersion = json.dependencies[dependency];
+
+              // Special case to handle e.g. react-noop-renderer
+              if (prevVersion === '*') {
+                return;
+              }
+
               const nextVersion = getNextVersion(
                 prevVersion.replace('^', ''),
                 version

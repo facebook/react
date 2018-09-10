@@ -8,7 +8,7 @@ const {exec} = require('child_process');
 const run = async () => {
   const chalk = require('chalk');
   const logUpdate = require('log-update');
-  const {getPublicPackages} = require('./utils');
+  const {getPublicPackages, getPackages} = require('./utils');
 
   const addGitTag = require('./build-commands/add-git-tag');
   const buildArtifacts = require('./build-commands/build-artifacts');
@@ -31,6 +31,7 @@ const run = async () => {
   try {
     const params = parseBuildParameters();
     params.packages = getPublicPackages();
+
     await checkEnvironmentVariables(params);
     await validateVersion(params);
     await checkUncommittedChanges(params);
@@ -41,7 +42,13 @@ const run = async () => {
     await checkPackageDependencies(params);
     await updateYarnDependencies(params);
     await runAutomatedTests(params);
-    await updatePackageVersions(params);
+    // Also update NPM dependencies for private packages (e.g. react-native-renderer)
+    // Even though we don't publish these to NPM,
+    // mismatching dependencies can cause `yarn install` to install duplicate packages.
+    await updatePackageVersions({
+      ...params,
+      packages: getPackages(),
+    });
     await updateNoopRendererDependencies(params);
     await buildArtifacts(params);
     await runAutomatedBundleTests(params);
