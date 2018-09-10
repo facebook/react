@@ -616,6 +616,13 @@ const ReactDOM: Object = {
 
   hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {
     // TODO: throw or warn if we couldn't hydrate?
+    if (element !== undefined) {
+      invariant(
+        element['$$typeof'] !== Symbol.for('react.portal'),
+        'Portal is not support on SSR. ' +
+          'For more detail, please refer https://github.com/facebook/react/issues/13097',
+      );
+    }
     return legacyRenderSubtreeIntoContainer(
       null,
       element,
