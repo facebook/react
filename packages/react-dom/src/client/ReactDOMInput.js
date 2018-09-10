@@ -185,7 +185,7 @@ export function updateWrapper(element: Element, props: Object) {
         node.value = value;
       }
     } else if (node.value !== '' + value) {
-      node.value = value
+      node.value = value;
     }
   } else if (type === 'submit' || type === 'reset') {
     // Submit/reset inputs need the attribute removed completely to avoid

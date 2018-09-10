@@ -62,10 +62,7 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {
-  getToStringValue,
-  isSameStringValue,
-} from '../shared/ToStringValue';
+import {getToStringValue, isSameStringValue} from '../shared/ToStringValue';
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -1250,7 +1247,7 @@ class ReactDOMServerRenderer {
         if (props.value != null) {
           value = getToStringValue(props.value);
         } else {
-          value = optionChildren
+          value = optionChildren;
         }
 
         selected = false;

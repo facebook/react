@@ -12,7 +12,7 @@ import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import {getToStringValue, toString} from '../shared/ToStringValue';
+import {getToStringValue} from '../shared/ToStringValue';
 import type {ToStringValue} from '../shared/ToStringValue';
 
 let didWarnValDefaultVal = false;
@@ -56,7 +56,7 @@ export function getHostProps(element: Element, props: Object) {
     ...props,
     value: undefined,
     defaultValue: undefined,
-    children: toString(node._wrapperState.initialValue),
+    children: '' + node._wrapperState.initialValue,
   };
 
   return hostProps;
@@ -131,7 +131,7 @@ export function updateWrapper(element: Element, props: Object) {
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
-    const newValue = toString(value);
+    const newValue = '' + value;
     // To avoid side effects (such as losing text selection), only set value if changed
     if (newValue !== node.value) {
       node.value = newValue;
@@ -141,7 +141,7 @@ export function updateWrapper(element: Element, props: Object) {
     }
   }
   if (props.defaultValue != null) {
-    node.defaultValue = toString(getToStringValue(props.defaultValue));
+    node.defaultValue = getToStringValue(props.defaultValue);
   }
 }
 
