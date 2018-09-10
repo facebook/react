@@ -20,6 +20,7 @@
     "README.md",
     "index.js",
     "tracking.js",
+    "tracking-profiling.js",
     "cjs/",
     "umd/"
   ]
