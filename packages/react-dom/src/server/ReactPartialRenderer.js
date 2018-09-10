@@ -1235,8 +1235,9 @@ class ReactDOMServerRenderer {
           didWarnDefaultSelectValue = true;
         }
       }
-      this.currentSelectValue =
-        props.value != null ? props.value : props.defaultValue;
+      this.currentSelectValue = getToStringValue(
+        props.value != null ? props.value : props.defaultValue,
+      );
       props = Object.assign({}, props, {
         value: undefined,
         defaultValue: undefined,
@@ -1248,9 +1249,9 @@ class ReactDOMServerRenderer {
       if (selectValue != null) {
         let value;
         if (props.value != null) {
-          value = props.value;
+          value = getToStringValue(props.value);
         } else {
-          value = optionChildren;
+          value = optionChildren
         }
 
         selected = false;
@@ -1263,7 +1264,7 @@ class ReactDOMServerRenderer {
             }
           }
         } else {
-          selected = isSameStringValue(selectValue, value);
+          selected = '' + selectValue === '' + value;
         }
 
         props = Object.assign(

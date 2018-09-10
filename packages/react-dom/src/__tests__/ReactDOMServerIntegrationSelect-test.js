@@ -313,7 +313,7 @@ describe('ReactDOMServerIntegrationSelect', () => {
   );
 
   itRenders(
-    'selects the correct option even with a type mismatch',
+    'selects the correct option even with an option type mismatch',
     async render => {
       const e = await render(
         <select value={3} readOnly={true}>
@@ -322,6 +322,35 @@ describe('ReactDOMServerIntegrationSelect', () => {
         </select>,
       );
       expect(e.options[1].selected).toBe(true);
+    },
+  );
+
+  itRenders(
+    'selects the correct option even with a select type mismatch',
+    async render => {
+      const e = await render(
+        <select value="3" readOnly={true}>
+          <option>None</option>
+          <option value={3}>3</option>
+        </select>,
+      );
+      expect(e.options[1].selected).toBe(true);
+    },
+  );
+
+  itRenders(
+    'multiselects the correct options even with a type mismatch',
+    async render => {
+      const e = await render(
+        <select multiple={true} value={[1,3]} readOnly={true}>
+          <option>None</option>
+          <option value="1">1</option>
+          <option value="3">3</option>
+        </select>,
+      );
+      expect(e.options[0].selected).toBe(false);
+      expect(e.options[1].selected).toBe(true);
+      expect(e.options[2].selected).toBe(true);
     },
   );
 });
