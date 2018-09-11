@@ -21,6 +21,7 @@ import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
+import {unsafeCastStringToDOMTopLevelType} from 'events/TopLevelEventTypes';
 
 const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
 
@@ -48,7 +49,6 @@ function findRootContainerNode(inst) {
 
 // Used to store ancestor hierarchy in top level callback
 function getTopLevelCallbackBookKeeping(
-  topLevelType,
   nativeEvent,
   targetInst,
 ): {
@@ -57,6 +57,8 @@ function getTopLevelCallbackBookKeeping(
   targetInst: Fiber | null,
   ancestors: Array<Fiber>,
 } {
+  const topLevelType = unsafeCastStringToDOMTopLevelType(nativeEvent.type);
+
   if (callbackBookkeepingPool.length) {
     const instance = callbackBookkeepingPool.pop();
     instance.topLevelType = topLevelType;
@@ -149,7 +151,7 @@ export function trapBubbledEvent(
     element,
     getRawEventName(topLevelType),
     // Check if interactive and wrap in interactiveUpdates
-    dispatch.bind(null, topLevelType),
+    dispatch,
   );
 }
 
@@ -177,18 +179,15 @@ export function trapCapturedEvent(
     element,
     getRawEventName(topLevelType),
     // Check if interactive and wrap in interactiveUpdates
-    dispatch.bind(null, topLevelType),
+    dispatch,
   );
 }
 
-function dispatchInteractiveEvent(topLevelType, nativeEvent) {
-  interactiveUpdates(dispatchEvent, topLevelType, nativeEvent);
+function dispatchInteractiveEvent(nativeEvent) {
+  interactiveUpdates(dispatchEvent, nativeEvent);
 }
 
-export function dispatchEvent(
-  topLevelType: DOMTopLevelEventType,
-  nativeEvent: AnyNativeEvent,
-) {
+export function dispatchEvent(nativeEvent: AnyNativeEvent) {
   if (!_enabled) {
     return;
   }
@@ -207,11 +206,7 @@ export function dispatchEvent(
     targetInst = null;
   }
 
-  const bookKeeping = getTopLevelCallbackBookKeeping(
-    topLevelType,
-    nativeEvent,
-    targetInst,
-  );
+  const bookKeeping = getTopLevelCallbackBookKeeping(nativeEvent, targetInst);
 
   try {
     // Event queue being processed in the same cycle allows
