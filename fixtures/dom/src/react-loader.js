@@ -42,23 +42,27 @@ export default function loadReact() {
 
   let query = parseQuery(window.location.search);
   let version = query.version || 'local';
+  let production = query.production === 'true';
 
-  if (version !== 'local') {
+  if (version === 'local' && production) {
+    REACT_PATH = 'react.production.min.js';
+    DOM_PATH = 'react-dom.production.min.js';
+  } else if (version !== 'local') {
     const {major, minor, prerelease} = semver(version);
     const [preReleaseStage] = prerelease;
     // The file structure was updated in 16. This wasn't the case for alphas.
     // Load the old module location for anything less than 16 RC
     if (major >= 16 && !(minor === 0 && preReleaseStage === 'alpha')) {
-      REACT_PATH =
-        'https://unpkg.com/react@' + version + '/umd/react.development.js';
+      const suffix = production ? '.production.min.js' : '.development.js';
+      REACT_PATH = 'https://unpkg.com/react@' + version + '/umd/react' + suffix;
       DOM_PATH =
-        'https://unpkg.com/react-dom@' +
-        version +
-        '/umd/react-dom.development.js';
+        'https://unpkg.com/react-dom@' + version + '/umd/react-dom' + suffix;
     } else {
-      REACT_PATH = 'https://unpkg.com/react@' + version + '/dist/react.js';
+      const suffix = production ? '.min.js' : '.js';
+      REACT_PATH =
+        'https://unpkg.com/react@' + version + '/dist/react' + suffix;
       DOM_PATH =
-        'https://unpkg.com/react-dom@' + version + '/dist/react-dom.js';
+        'https://unpkg.com/react-dom@' + version + '/dist/react-dom' + suffix;
     }
   }
 
