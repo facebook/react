@@ -319,7 +319,7 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
         EventConstructor = SyntheticEvent;
         break;
     }
-    const event = EventConstructor.getPooled(
+    const event = new EventConstructor(
       dispatchConfig,
       targetInst,
       nativeEvent,

@@ -32,7 +32,6 @@ describe('SyntheticWheelEvent', () => {
   it('should normalize properties from the MouseEvent interface', () => {
     const events = [];
     const onWheel = event => {
-      event.persist();
       events.push(event);
     };
     ReactDOM.render(<div onWheel={onWheel} />, container);
@@ -51,7 +50,6 @@ describe('SyntheticWheelEvent', () => {
   it('should normalize properties from the WheelEvent interface', () => {
     const events = [];
     const onWheel = event => {
-      event.persist();
       events.push(event);
     };
     ReactDOM.render(<div onWheel={onWheel} />, container);
@@ -89,7 +87,6 @@ describe('SyntheticWheelEvent', () => {
       expect(event.isDefaultPrevented()).toBe(false);
       event.preventDefault();
       expect(event.isDefaultPrevented()).toBe(true);
-      event.persist();
       events.push(event);
     };
     ReactDOM.render(<div onWheel={onWheel} />, container);
@@ -111,25 +108,5 @@ describe('SyntheticWheelEvent', () => {
     );
 
     expect(events.length).toBe(2);
-  });
-
-  it('should be able to `persist`', () => {
-    const events = [];
-    const onWheel = event => {
-      expect(event.isPersistent()).toBe(false);
-      event.persist();
-      expect(event.isPersistent()).toBe(true);
-      events.push(event);
-    };
-    ReactDOM.render(<div onWheel={onWheel} />, container);
-
-    container.firstChild.dispatchEvent(
-      new MouseEvent('wheel', {
-        bubbles: true,
-      }),
-    );
-
-    expect(events.length).toBe(1);
-    expect(events[0].type).toBe('wheel');
   });
 });

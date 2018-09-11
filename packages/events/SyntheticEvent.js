@@ -7,10 +7,7 @@
 
 /* eslint valid-typeof: 0 */
 
-import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-
-const EVENT_POOL_SIZE = 10;
 
 /**
  * @interface Event
@@ -45,10 +42,10 @@ function functionThatReturnsFalse() {
  * Synthetic events are dispatched by event plugins, typically in response to a
  * top-level event delegation handler.
  *
- * These systems should generally use pooling to reduce the frequency of garbage
- * collection. The system should check `isPersistent` to determine whether the
- * event should be released into the pool after being dispatched. Users that
- * need a persisted event should invoke `persist`.
+ * Events used to use pooling to reduce the frequency of garbage collection,
+ * but with modern JS engines, this optimizations does not seem necessary
+ * anymore (and only to the bundle size and complexity of the code).
+ * We keep the methods `persist` and `isPersistent` for backwards-compatibility.
  *
  * Synthetic events (and subclasses) implement the DOM Level 3 Events API by
  * normalizing browser quirks. Subclasses do not necessarily have to implement a
@@ -148,78 +145,25 @@ Object.assign(SyntheticEvent.prototype, {
   },
 
   /**
-   * We release all dispatched `SyntheticEvent`s after each event loop, adding
-   * them back into the pool. This allows a way to hold onto a reference that
-   * won't be added back into the pool.
+   * This method was used to hold onto a reference so it won't be added back
+   * into the pool of events. Since we're not relying on pooling anymore,
+   * this is a no-op that only issues a warning.
    */
   persist: function() {
-    this.isPersistent = functionThatReturnsTrue;
+    warningWithoutStack(
+      false,
+      'Deprecated SyntheticEvent.persist called for %s event',
+      this.type,
+    );
   },
 
   /**
-   * Checks if this event should be released back into the pool.
+   * Used to check if this event should be released back into the pool.
+   * Now that we're not relying on pooling anymore, this always returns true.
    *
-   * @return {boolean} True if this should not be released, false otherwise.
+   * @return {boolean} True.
    */
-  isPersistent: functionThatReturnsFalse,
-
-  /**
-   * `PooledClass` looks for `destructor` on each instance it releases.
-   */
-  destructor: function() {
-    const Interface = this.constructor.Interface;
-    for (const propName in Interface) {
-      if (__DEV__) {
-        Object.defineProperty(
-          this,
-          propName,
-          getPooledWarningPropertyDefinition(propName, Interface[propName]),
-        );
-      } else {
-        this[propName] = null;
-      }
-    }
-    this.dispatchConfig = null;
-    this._targetInst = null;
-    this.nativeEvent = null;
-    this.isDefaultPrevented = functionThatReturnsFalse;
-    this.isPropagationStopped = functionThatReturnsFalse;
-    this._dispatchListeners = null;
-    this._dispatchInstances = null;
-    if (__DEV__) {
-      Object.defineProperty(
-        this,
-        'nativeEvent',
-        getPooledWarningPropertyDefinition('nativeEvent', null),
-      );
-      Object.defineProperty(
-        this,
-        'isDefaultPrevented',
-        getPooledWarningPropertyDefinition(
-          'isDefaultPrevented',
-          functionThatReturnsFalse,
-        ),
-      );
-      Object.defineProperty(
-        this,
-        'isPropagationStopped',
-        getPooledWarningPropertyDefinition(
-          'isPropagationStopped',
-          functionThatReturnsFalse,
-        ),
-      );
-      Object.defineProperty(
-        this,
-        'preventDefault',
-        getPooledWarningPropertyDefinition('preventDefault', () => {}),
-      );
-      Object.defineProperty(
-        this,
-        'stopPropagation',
-        getPooledWarningPropertyDefinition('stopPropagation', () => {}),
-      );
-    }
-  },
+  isPersistent: functionThatReturnsTrue,
 });
 
 SyntheticEvent.Interface = EventInterface;
@@ -243,97 +187,8 @@ SyntheticEvent.extend = function(Interface) {
 
   Class.Interface = Object.assign({}, Super.Interface, Interface);
   Class.extend = Super.extend;
-  addEventPoolingTo(Class);
 
   return Class;
 };
-
-addEventPoolingTo(SyntheticEvent);
-
-/**
- * Helper to nullify syntheticEvent instance properties when destructing
- *
- * @param {String} propName
- * @param {?object} getVal
- * @return {object} defineProperty object
- */
-function getPooledWarningPropertyDefinition(propName, getVal) {
-  const isFunction = typeof getVal === 'function';
-  return {
-    configurable: true,
-    set: set,
-    get: get,
-  };
-
-  function set(val) {
-    const action = isFunction ? 'setting the method' : 'setting the property';
-    warn(action, 'This is effectively a no-op');
-    return val;
-  }
-
-  function get() {
-    const action = isFunction
-      ? 'accessing the method'
-      : 'accessing the property';
-    const result = isFunction
-      ? 'This is a no-op function'
-      : 'This is set to null';
-    warn(action, result);
-    return getVal;
-  }
-
-  function warn(action, result) {
-    const warningCondition = false;
-    warningWithoutStack(
-      warningCondition,
-      "This synthetic event is reused for performance reasons. If you're seeing this, " +
-        "you're %s `%s` on a released/nullified synthetic event. %s. " +
-        'If you must keep the original synthetic event around, use event.persist(). ' +
-        'See https://fb.me/react-event-pooling for more information.',
-      action,
-      propName,
-      result,
-    );
-  }
-}
-
-function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
-  const EventConstructor = this;
-  if (EventConstructor.eventPool.length) {
-    const instance = EventConstructor.eventPool.pop();
-    EventConstructor.call(
-      instance,
-      dispatchConfig,
-      targetInst,
-      nativeEvent,
-      nativeInst,
-    );
-    return instance;
-  }
-  return new EventConstructor(
-    dispatchConfig,
-    targetInst,
-    nativeEvent,
-    nativeInst,
-  );
-}
-
-function releasePooledEvent(event) {
-  const EventConstructor = this;
-  invariant(
-    event instanceof EventConstructor,
-    'Trying to release an event instance into a pool of a different type.',
-  );
-  event.destructor();
-  if (EventConstructor.eventPool.length < EVENT_POOL_SIZE) {
-    EventConstructor.eventPool.push(event);
-  }
-}
-
-function addEventPoolingTo(EventConstructor) {
-  EventConstructor.eventPool = [];
-  EventConstructor.getPooled = getPooledEvent;
-  EventConstructor.release = releasePooledEvent;
-}
 
 export default SyntheticEvent;

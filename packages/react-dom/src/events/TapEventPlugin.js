@@ -181,7 +181,7 @@ const TapEventPlugin = {
     let event = null;
     const distance = getDistance(startCoords, nativeEvent);
     if (isEndish(topLevelType) && distance < tapMoveThreshold) {
-      event = SyntheticUIEvent.getPooled(
+      event = new SyntheticUIEvent(
         eventTypes.touchTap,
         targetInst,
         nativeEvent,

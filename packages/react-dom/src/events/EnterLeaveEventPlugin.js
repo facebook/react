@@ -120,7 +120,7 @@ const EnterLeaveEventPlugin = {
     const fromNode = from == null ? win : getNodeFromInstance(from);
     const toNode = to == null ? win : getNodeFromInstance(to);
 
-    const leave = eventInterface.getPooled(
+    const leave = new eventInterface(
       leaveEventType,
       from,
       nativeEvent,
@@ -130,7 +130,7 @@ const EnterLeaveEventPlugin = {
     leave.target = fromNode;
     leave.relatedTarget = toNode;
 
-    const enter = eventInterface.getPooled(
+    const enter = new eventInterface(
       enterEventType,
       to,
       nativeEvent,
