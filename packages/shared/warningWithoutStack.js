@@ -15,6 +15,8 @@
 let warningWithoutStack = () => {};
 
 if (__DEV__) {
+  const consoleError = Function.prototype.bind.call(console.error, console);
+
   warningWithoutStack = function(condition, format, ...args) {
     if (format === undefined) {
       throw new Error(
@@ -27,7 +29,14 @@ if (__DEV__) {
     }
     if (typeof console !== 'undefined') {
       const stringArgs = args.map(item => '' + item);
+      const originalConsoleError = console.error;
+
+      if (typeof console.error.apply === 'undefined') {
+        console.error = consoleError;
+      }
+
       console.error('Warning: ' + format, ...stringArgs);
+      console.error = originalConsoleError;
     }
     try {
       // --- Welcome to debugging React ---
