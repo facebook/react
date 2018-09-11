@@ -15,8 +15,6 @@
 let warningWithoutStack = () => {};
 
 if (__DEV__) {
-  const consoleError = Function.prototype.bind.call(console.error, console);
-
   warningWithoutStack = function(condition, format, ...args) {
     if (format === undefined) {
       throw new Error(
@@ -28,15 +26,62 @@ if (__DEV__) {
       return;
     }
     if (typeof console !== 'undefined') {
-      const stringArgs = args.map(item => '' + item);
-      const originalConsoleError = console.error;
+      const arr = args.map(item => '' + item);
+      const arrLength = arr.length;
 
-      if (typeof console.error.apply === 'undefined') {
-        console.error = consoleError;
+      if (arrLength === 0) {
+        console.error('Warning: ' + format);
+      } else if (arrLength === 1) {
+        console.error('Warning: ' + format, arr[0]);
+      } else if (arrLength === 2) {
+        console.error('Warning: ' + format, arr[0], arr[1]);
+      } else if (arrLength === 3) {
+        console.error('Warning: ' + format, arr[0], arr[1], arr[2]);
+      } else if (arrLength === 4) {
+        console.error('Warning: ' + format, arr[0], arr[1], arr[2], arr[3]);
+      } else if (arrLength === 5) {
+        console.error(
+          'Warning: ' + format,
+          arr[0],
+          arr[1],
+          arr[2],
+          arr[3],
+          arr[4],
+        );
+      } else if (arrLength === 6) {
+        console.error(
+          'Warning: ' + format,
+          arr[0],
+          arr[1],
+          arr[2],
+          arr[3],
+          arr[4],
+          arr[5],
+        );
+      } else if (arrLength === 7) {
+        console.error(
+          'Warning: ' + format,
+          arr[0],
+          arr[1],
+          arr[2],
+          arr[3],
+          arr[4],
+          arr[5],
+          arr[6],
+        );
+      } else if (arrLength === 8) {
+        console.error(
+          'Warning: ' + format,
+          arr[0],
+          arr[1],
+          arr[2],
+          arr[3],
+          arr[4],
+          arr[5],
+          arr[6],
+          arr[7],
+        );
       }
-
-      console.error('Warning: ' + format, ...stringArgs);
-      console.error = originalConsoleError;
     }
     try {
       // --- Welcome to debugging React ---
