@@ -181,4 +181,33 @@ describe('forwardRef', () => {
       {withoutStack: true},
     );
   });
+
+  it('should honor a displayName if set on the forwardRef wrapper in warnings', () => {
+    const Component = props => <div {...props} />;
+
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
+      <Component {...props} forwardedRef={ref} />
+    ));
+
+    RefForwardingComponent.displayName = 'Foo';
+
+    RefForwardingComponent.propTypes = {
+      optional: PropTypes.string,
+      required: PropTypes.string.isRequired,
+    };
+
+    RefForwardingComponent.defaultProps = {
+      optional: 'default',
+    };
+
+    const ref = React.createRef();
+
+    expect(() =>
+      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
+    ).toWarnDev(
+      'Warning: Failed prop type: The prop `required` is marked as required in ' +
+        '`Foo`, but its value is `undefined`.\n' +
+        '    in Foo (at **)',
+    );
+  });
 });
