@@ -23,7 +23,7 @@ import {
 } from 'shared/ReactSymbols';
 import {refineResolvedThenable} from 'shared/ReactLazyComponent';
 
-function getComponentName(type: mixed): string | null {
+function getComponentName(type: any): string | null {
   if (type == null) {
     // Host root, text node or just invalid type.
     return null;
