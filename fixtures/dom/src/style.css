@@ -79,7 +79,6 @@ textarea {
 
 .header {
   background: #171717;
-  box-shadow: inset 0 -1px 3px #000;
   overflow: hidden;
   padding: 8px;
 }
@@ -102,7 +101,6 @@ textarea {
 .header__inner {
   display: table;
   margin: 0 auto;
-  max-width: 1000px;
   overflow: hidden;
   text-align: center;
   width: 100%;
