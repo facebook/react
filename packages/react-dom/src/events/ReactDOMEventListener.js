@@ -144,16 +144,13 @@ export function trapBubbledEvent(
   if (!element) {
     return null;
   }
+
+  // Check if interactive and wrap in interactiveUpdates
   const dispatch = isInteractiveTopLevelEventType(topLevelType)
     ? dispatchInteractiveEvent
     : dispatchEvent;
 
-  addEventBubbleListener(
-    element,
-    getRawEventName(topLevelType),
-    // Check if interactive and wrap in interactiveUpdates
-    dispatch,
-  );
+  addEventBubbleListener(element, getRawEventName(topLevelType), dispatch);
 }
 
 /**
@@ -172,16 +169,13 @@ export function trapCapturedEvent(
   if (!element) {
     return null;
   }
+
+  // Check if interactive and wrap in interactiveUpdates
   const dispatch = isInteractiveTopLevelEventType(topLevelType)
     ? dispatchInteractiveEvent
     : dispatchEvent;
 
-  addEventCaptureListener(
-    element,
-    getRawEventName(topLevelType),
-    // Check if interactive and wrap in interactiveUpdates
-    dispatch,
-  );
+  addEventCaptureListener(element, getRawEventName(topLevelType), dispatch);
 }
 
 function dispatchInteractiveEvent(nativeEvent) {
