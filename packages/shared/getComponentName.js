@@ -66,9 +66,10 @@ function getComponentName(type: mixed): string | null {
       case REACT_FORWARD_REF_TYPE:
         const renderFn = (type.render: any);
         const functionName = renderFn.displayName || renderFn.name || '';
-        return functionName !== ''
-          ? `ForwardRef(${functionName})`
-          : 'ForwardRef';
+        return (
+          (type: any).displayName ||
+          (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef')
+        );
     }
     if (typeof type.then === 'function') {
       const thenable: Thenable<mixed> = (type: any);
