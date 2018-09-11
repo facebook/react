@@ -37,12 +37,15 @@ function loadScript(src) {
 }
 
 export function reactPaths() {
-  let reactPath = 'react.development.js';
-  let reactDOMPath = 'react-dom.development.js';
-  let reactDOMServerPath = 'react-dom-server.browser.development.js';
-
   let query = parseQuery(window.location.search);
   let version = query.version || 'local';
+  let isProduction = query.production === 'true';
+
+  let environment = isProduction ? 'production.min' : 'development';
+
+  let reactPath = 'react.' + environment + '.js';
+  let reactDOMPath = 'react-dom.' + environment + '.js';
+  let reactDOMServerPath = 'react-dom-server.browser.' + environment + '.js';
 
   if (version !== 'local') {
     const {major, minor, prerelease} = semver(version);
@@ -51,21 +54,34 @@ export function reactPaths() {
     // Load the old module location for anything less than 16 RC
     if (major >= 16 && !(minor === 0 && preReleaseStage === 'alpha')) {
       reactPath =
-        'https://unpkg.com/react@' + version + '/umd/react.development.js';
+        'https://unpkg.com/react@' +
+        version +
+        '/umd/react.' +
+        environment +
+        '.js';
       reactDOMPath =
         'https://unpkg.com/react-dom@' +
         version +
-        '/umd/react-dom.development.js';
+        '/umd/react-dom.' +
+        environment +
+        '.js';
       reactDOMServerPath =
         'https://unpkg.com/react-dom@' +
         version +
-        '/umd/react-dom-server.browser.development';
+        '/umd/react-dom-server.browser.' +
+        environment +
+        '.js';
     } else {
-      reactPath = 'https://unpkg.com/react@' + version + '/dist/react.js';
+      let suffix = isProduction ? '.min.js' : '.js';
+
+      reactPath = 'https://unpkg.com/react@' + version + '/dist/react' + suffix;
       reactDOMPath =
-        'https://unpkg.com/react-dom@' + version + '/dist/react-dom.js';
+        'https://unpkg.com/react-dom@' + version + '/dist/react-dom' + suffix;
       reactDOMServerPath =
-        'https://unpkg.com/react-dom@' + version + '/dist/react-dom-server.js';
+        'https://unpkg.com/react-dom@' +
+        version +
+        '/dist/react-dom-server' +
+        suffix;
     }
   }
 
