@@ -23,7 +23,7 @@ import {
 } from 'shared/ReactSymbols';
 import {refineResolvedThenable} from 'shared/ReactLazyComponent';
 
-function getComponentName(type: any): string | null {
+function getComponentName(type: mixed): string | null {
   if (type == null) {
     // Host root, text node or just invalid type.
     return null;
@@ -67,7 +67,7 @@ function getComponentName(type: any): string | null {
         const renderFn = (type.render: any);
         const functionName = renderFn.displayName || renderFn.name || '';
         return (
-          type.displayName ||
+          (type: any).displayName ||
           (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef')
         );
     }
