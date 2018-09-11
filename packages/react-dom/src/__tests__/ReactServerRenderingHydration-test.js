@@ -442,4 +442,15 @@ describe('ReactDOMServerHydration', () => {
       '<div>Enable JavaScript to run this app.</div>',
     );
   });
+
+  it('should throw an invariant when portal is being used with hydrate', () => {
+    const root = document.createElement('div');
+    const div = document.createElement('div');
+    expect(() =>
+      ReactDOM.hydrate(ReactDOM.createPortal(<div>Hello</div>, root), div),
+    ).toThrowError(
+      'Portal is not support on SSR. ' +
+        'For more detail, please refer https://github.com/facebook/react/issues/13097',
+    );
+  });
 });
