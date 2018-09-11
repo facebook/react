@@ -57,6 +57,7 @@ function getTopLevelCallbackBookKeeping(
   targetInst: Fiber | null,
   ancestors: Array<Fiber>,
 } {
+  // This is safe because DOMTopLevelTypes are always native event type strings
   const topLevelType = unsafeCastStringToDOMTopLevelType(nativeEvent.type);
 
   if (callbackBookkeepingPool.length) {
