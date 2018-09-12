@@ -22,12 +22,54 @@ if (__DEV__) {
           'message argument',
       );
     }
+    if (args.length > 8) {
+      // Check before the condition to catch violations early.
+      throw new Error(
+        'warningWithoutStack() currently supports at most 8 arguments.',
+      );
+    }
     if (condition) {
       return;
     }
     if (typeof console !== 'undefined') {
-      const stringArgs = args.map(item => '' + item);
-      console.error('Warning: ' + format, ...stringArgs);
+      const [a, b, c, d, e, f, g, h] = args.map(item => '' + item);
+      const message = 'Warning: ' + format;
+
+      // We intentionally don't use spread (or .apply) because it breaks IE11:
+      // https://github.com/facebook/react/issues/13610
+      switch (args.length) {
+        case 0:
+          console.error(message);
+          break;
+        case 1:
+          console.error(message, a);
+          break;
+        case 2:
+          console.error(message, a, b);
+          break;
+        case 3:
+          console.error(message, a, b, c);
+          break;
+        case 4:
+          console.error(message, a, b, c, d);
+          break;
+        case 5:
+          console.error(message, a, b, c, d, e);
+          break;
+        case 6:
+          console.error(message, a, b, c, d, e, f);
+          break;
+        case 7:
+          console.error(message, a, b, c, d, e, f, g);
+          break;
+        case 8:
+          console.error(message, a, b, c, d, e, f, g, h);
+          break;
+        default:
+          throw new Error(
+            'warningWithoutStack() currently supports at most 8 arguments.',
+          );
+      }
     }
     try {
       // --- Welcome to debugging React ---
