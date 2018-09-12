@@ -31,7 +31,7 @@ export function getToStringValue(value: mixed): ToStringValue {
     case 'string':
       return value;
     default:
-      // null, undefined, function, symbol are assigned as empty strings
+      // function, symbol are assigned as empty strings
       return '';
   }
 }
