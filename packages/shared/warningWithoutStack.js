@@ -35,7 +35,7 @@ if (__DEV__) {
       const [a, b, c, d, e, f, g, h] = args.map(item => '' + item);
       const message = 'Warning: ' + format;
 
-      // We intentionally don't use spread (or .apply) because it breaks IE11:
+      // We intentionally don't use spread (or .apply) because it breaks IE9:
       // https://github.com/facebook/react/issues/13610
       switch (args.length) {
         case 0:
