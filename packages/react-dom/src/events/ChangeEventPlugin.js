@@ -28,6 +28,7 @@ import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
 import {setDefaultValue} from '../client/ReactDOMInput';
+import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 
 const eventTypes = {
   change: {
@@ -238,8 +239,10 @@ function handleControlledInputBlur(node) {
     return;
   }
 
-  // If controlled, assign the value attribute to the current value on blur
-  setDefaultValue(node, 'number', node.value);
+  if (!disableInputAttributeSyncing) {
+    // If controlled, assign the value attribute to the current value on blur
+    setDefaultValue(node, 'number', node.value);
+  }
 }
 
 /**
