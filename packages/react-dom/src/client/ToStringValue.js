@@ -24,10 +24,10 @@ export function toString(value: ?ToStringValue): string {
 
 export function getToStringValue(value: mixed): ToStringValue {
   switch (typeof value) {
-    case 'object':
     case 'boolean':
     case 'number':
     case 'undefined':
+    case 'object':
     case 'string':
       return value;
     default:
