@@ -248,10 +248,12 @@ export function postMountWrapper(
       return;
     }
 
-    // Do not re-assign the value property if is empty. This
-    // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
-    // prematurely marking required inputs as invalid
+    // Do not assign value if it is already set. This prevents user text input
+    // from being lost during SSR hydration.
     if (!isHydrating) {
+      // Do not re-assign the value property if is empty. This
+      // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
+      // prematurely marking required inputs as invalid
       if (disableInputAttributeSyncing) {
         if (props.hasOwnProperty('value')) {
           if (value !== currentValue) {
