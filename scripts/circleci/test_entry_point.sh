@@ -19,6 +19,9 @@ fi
 
 if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('yarn test-prod --maxWorkers=2')
+  # React Fire:
+  COMMANDS_TO_RUN+=('yarn test-fire --maxWorkers=2')
+  COMMANDS_TO_RUN+=('yarn test-fire-prod --maxWorkers=2')
 fi
 
 if [ $((2 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
