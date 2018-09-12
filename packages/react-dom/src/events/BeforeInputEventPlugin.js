@@ -254,7 +254,7 @@ function extractCompositionEvent(
     }
   }
 
-  const event = SyntheticCompositionEvent.getPooled(
+  const event = new SyntheticCompositionEvent(
     eventType,
     targetInst,
     nativeEvent,
@@ -425,7 +425,7 @@ function extractBeforeInputEvent(
     return null;
   }
 
-  const event = SyntheticInputEvent.getPooled(
+  const event = new SyntheticInputEvent(
     eventTypes.beforeInput,
     targetInst,
     nativeEvent,

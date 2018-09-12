@@ -44,7 +44,6 @@ describe('EnterLeaveEventPlugin', () => {
     const node = ReactDOM.render(
       <div
         onMouseLeave={e => {
-          e.persist();
           leaveEvents.push(e);
         }}
       />,
@@ -77,7 +76,6 @@ describe('EnterLeaveEventPlugin', () => {
     const node = ReactDOM.render(
       <div
         onMouseEnter={e => {
-          e.persist();
           enterEvents.push(e);
         }}
       />,

@@ -424,9 +424,6 @@ function makeSimulator(eventType) {
       domNode,
     );
 
-    // Since we aren't using pooling, always persist the event. This will make
-    // sure it's marked and won't warn when setting additional properties.
-    event.persist();
     Object.assign(event, eventData);
 
     if (dispatchConfig.phasedRegistrationNames) {

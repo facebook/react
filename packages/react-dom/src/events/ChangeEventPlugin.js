@@ -49,7 +49,7 @@ const eventTypes = {
 };
 
 function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
-  const event = SyntheticEvent.getPooled(
+  const event = new SyntheticEvent(
     eventTypes.change,
     inst,
     nativeEvent,

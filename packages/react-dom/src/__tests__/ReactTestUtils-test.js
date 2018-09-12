@@ -340,9 +340,7 @@ describe('ReactTestUtils', () => {
   describe('Simulate', () => {
     it('should change the value of an input field', () => {
       const obj = {
-        handler: function(e) {
-          e.persist();
-        },
+        handler: function() {},
       };
       spyOnDevAndProd(obj, 'handler').and.callThrough();
       const container = document.createElement('div');
@@ -375,9 +373,7 @@ describe('ReactTestUtils', () => {
       }
 
       const obj = {
-        handler: function(e) {
-          e.persist();
-        },
+        handler: function() {},
       };
       spyOnDevAndProd(obj, 'handler').and.callThrough();
       const container = document.createElement('div');
@@ -460,7 +456,6 @@ describe('ReactTestUtils', () => {
     it('should set the type of the event', () => {
       let event;
       const stub = jest.fn().mockImplementation(e => {
-        e.persist();
         event = e;
       });
 

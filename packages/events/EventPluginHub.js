@@ -33,30 +33,11 @@ import type {TopLevelType} from './TopLevelEventTypes';
  */
 let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
 
-/**
- * Dispatches an event and releases it back into the pool, unless persistent.
- *
- * @param {?object} event Synthetic event to be dispatched.
- * @param {boolean} simulated If the event is simulated (changes exn behavior)
- * @private
- */
-const executeDispatchesAndRelease = function(
-  event: ReactSyntheticEvent,
-  simulated: boolean,
-) {
-  if (event) {
-    executeDispatchesInOrder(event, simulated);
-
-    if (!event.isPersistent()) {
-      event.constructor.release(event);
-    }
-  }
+const executeDispatchesSimulated = function(e) {
+  return executeDispatchesInOrder(e, true);
 };
-const executeDispatchesAndReleaseSimulated = function(e) {
-  return executeDispatchesAndRelease(e, true);
-};
-const executeDispatchesAndReleaseTopLevel = function(e) {
-  return executeDispatchesAndRelease(e, false);
+const executeDispatchesTopLevel = function(e) {
+  return executeDispatchesInOrder(e, false);
 };
 
 function isInteractive(tag) {
@@ -208,15 +189,9 @@ export function runEventsInBatch(
   }
 
   if (simulated) {
-    forEachAccumulated(
-      processingEventQueue,
-      executeDispatchesAndReleaseSimulated,
-    );
+    forEachAccumulated(processingEventQueue, executeDispatchesSimulated);
   } else {
-    forEachAccumulated(
-      processingEventQueue,
-      executeDispatchesAndReleaseTopLevel,
-    );
+    forEachAccumulated(processingEventQueue, executeDispatchesTopLevel);
   }
   invariant(
     !eventQueue,
