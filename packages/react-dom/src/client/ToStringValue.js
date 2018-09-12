@@ -18,8 +18,8 @@ export opaque type ToStringValue =
 // Flow does not allow string concatenation of most non-string types. To work
 // around this limitation, we use an opaque type that can only be obtained by
 // passing the value through getToStringValue first.
-export function toString(value: ?ToStringValue): string {
-  return value == null ? '' : '' + (value: any);
+export function toString(value: ToStringValue): string {
+  return '' + (value: any);
 }
 
 export function getToStringValue(value: mixed): ToStringValue {

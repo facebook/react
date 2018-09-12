@@ -252,17 +252,17 @@ export function postMountWrapper(
       return;
     }
 
-    const initialValue = node._wrapperState.initialValue;
+    const initialValue = toString(node._wrapperState.initialValue);
 
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
     if (!isHydrating) {
       if (disableInputAttributeSyncing) {
+        const value = getToStringValue(props.value);
+
         // When not syncing the value attribute, the value property points
         // directly to the React prop. Only assign it if it exists.
-        if (props.hasOwnProperty('value')) {
-          const value = getToStringValue(props.value);
-
+        if (value != null) {
           // Always assign on buttons so that it is possible to assign an
           // empty string to clear button text.
           //
@@ -283,7 +283,7 @@ export function postMountWrapper(
         //   2. The defaultValue React property when present
         //   3. An empty string
         if (initialValue !== node.value) {
-          node.value = toString(initialValue);
+          node.value = initialValue;
         }
       }
     }
@@ -291,14 +291,15 @@ export function postMountWrapper(
     if (disableInputAttributeSyncing) {
       // When not syncing the value attribute, assign the value attribute
       // directly from the defaultValue React property (when present)
-      if (props.hasOwnProperty('defaultValue')) {
-        node.defaultValue = toString(getToStringValue(props.defaultValue));
+      const defaultValue = getToStringValue(props.defaultValue);
+      if (defaultValue != null) {
+        node.defaultValue = toString(defaultValue);
       }
     } else {
       // Otherwise, the value attribute is synchronized to the property,
       // so we assign defaultValue to the same thing as the value property
       // assignment step above.
-      node.defaultValue = toString(initialValue);
+      node.defaultValue = initialValue;
     }
   }
 
