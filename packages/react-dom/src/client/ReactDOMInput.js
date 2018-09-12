@@ -17,9 +17,14 @@ import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import * as inputValueTracking from './inputValueTracking';
+import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
+
+import type {ToStringValue} from './ToStringValue';
 
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
+    initialValue: ToStringValue,
+    initialChecked: ?boolean,
     controlled?: boolean,
   },
 };
@@ -52,12 +57,18 @@ function isControlled(props) {
  */
 
 export function getHostProps(element: Element, props: Object) {
-  return Object.assign({}, props, {
+  const node = ((element: any): InputWithWrapperState);
+  const checked =
+    props.checked != null ? props.checked : node._wrapperState.initialChecked;
+
+  const hostProps = Object.assign({}, props, {
     defaultChecked: undefined,
     defaultValue: undefined,
     value: undefined,
-    checked: undefined,
+    checked: disableInputAttributeSyncing ? undefined : checked,
   });
+
+  return hostProps;
 }
 
 export function initWrapperState(element: Element, props: Object) {
@@ -103,8 +114,14 @@ export function initWrapperState(element: Element, props: Object) {
   }
 
   const node = ((element: any): InputWithWrapperState);
+  const defaultValue = props.defaultValue == null ? '' : props.defaultValue;
 
   node._wrapperState = {
+    initialChecked:
+      props.checked != null ? props.checked : props.defaultChecked,
+    initialValue: getToStringValue(
+      props.value != null ? props.value : defaultValue,
+    ),
     controlled: isControlled(props),
   };
 }
@@ -179,20 +196,26 @@ export function updateWrapper(element: Element, props: Object) {
     return;
   }
 
-  if (props.hasOwnProperty('defaultValue')) {
-    const defaultValue = toString(getToStringValue(props.defaultValue));
-
-    if (props.defaultValue == null) {
-      node.removeAttribute('value');
-    } else if (node.defaultValue !== defaultValue) {
-      node.defaultValue = defaultValue;
+  if (disableInputAttributeSyncing) {
+    if (props.hasOwnProperty('defaultValue')) {
+      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
+    }
+  } else {
+    if (props.hasOwnProperty('value')) {
+      setDefaultValue(node, props.type, value);
+    } else if (props.hasOwnProperty('defaultValue')) {
+      setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
     }
   }
 
-  if (props.hasOwnProperty('defaultChecked')) {
+  if (disableInputAttributeSyncing) {
     if (props.defaultChecked == null) {
       node.removeAttribute('checked');
     } else {
+      node.defaultChecked = !!props.defaultChecked;
+    }
+  } else {
+    if (props.checked == null && props.defaultChecked != null) {
       node.defaultChecked = !!props.defaultChecked;
     }
   }
@@ -203,22 +226,22 @@ export function postMountWrapper(
   props: Object,
   isHydrating: boolean,
 ) {
-  if (isHydrating) {
-    return;
-  }
-
-  const node = ((element: any): HTMLInputElement);
+  const node = ((element: any): InputWithWrapperState);
 
   // Do not assign value if it is already set. This prevents user text input
   // from being lost during SSR hydration.
-  if (props.hasOwnProperty('value')) {
-    const value = getToStringValue(props.value);
+  if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
+    const initialValue = node._wrapperState.initialValue;
+    const currentValue = node.value;
+    const value = disableInputAttributeSyncing
+      ? getToStringValue(props.value)
+      : initialValue;
     const type = props.type;
 
     // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
     if (type === 'submit' || type === 'reset') {
-      if (value !== undefined && value !== null) {
+      if (props.value !== undefined && props.value !== null) {
         node.setAttribute('value', toString(value));
       }
 
@@ -228,44 +251,54 @@ export function postMountWrapper(
     // Do not re-assign the value property if is empty. This
     // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
     // prematurely marking required inputs as invalid
-    if (value !== '') {
-      node.value = toString(value);
+    if (!isHydrating) {
+      if (disableInputAttributeSyncing) {
+        if (props.hasOwnProperty('value')) {
+          if (value !== currentValue) {
+            node.value = toString(value);
+          }
+        }
+      } else {
+        if (value !== currentValue) {
+          node.value = toString(value);
+        }
+      }
+    }
+
+    if (disableInputAttributeSyncing) {
+      if (props.hasOwnProperty('defaultValue')) {
+        node.defaultValue = toString(getToStringValue(props.defaultValue));
+      }
+    } else {
+      node.defaultValue = toString(initialValue);
     }
   }
 
-  if (props.hasOwnProperty('defaultValue')) {
-    // value must be assigned before defaultValue. This fixes an issue where the
-    // visually displayed value of date inputs disappears on mobile Safari and Chrome:
-    // https://github.com/facebook/react/issues/7233
-    node.defaultValue = toString(getToStringValue(props.defaultValue));
+  // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
+  // this is needed to work around a chrome bug where setting defaultChecked
+  // will sometimes influence the value of checked (even after detachment).
+  // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
+  // We need to temporarily unset name to avoid disrupting radio button groups.
+  const name = node.name;
+  if (name !== '') {
+    node.name = '';
   }
 
-  if (
-    props.hasOwnProperty('checked') ||
-    props.hasOwnProperty('defaultChecked')
-  ) {
-    // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
-    // this is needed to work around a chrome bug where setting defaultChecked
-    // will sometimes influence the value of checked (even after detachment).
-    // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
-    // We need to temporarily unset name to avoid disrupting radio button groups.
-    const name = node.name;
-    if (name !== '') {
-      node.name = '';
-    }
+  if (disableInputAttributeSyncing) {
+    updateChecked(element, props);
 
+    if (props.hasOwnProperty('defaultChecked')) {
+      node.defaultChecked = !node.defaultChecked;
+      node.defaultChecked = !!props.defaultChecked;
+    }
+  } else {
     node.defaultChecked = !node.defaultChecked;
-    node.defaultChecked = !!props.defaultChecked;
-
-    updateChecked(node, props);
-
-    if (name !== '') {
-      node.name = name;
-    }
+    node.defaultChecked = !!node._wrapperState.initialChecked;
   }
 
-  // TODO: This is necessary because assignment to checked/value is mitigated, but why?
-  inputValueTracking.updateValueIfChanged(node);
+  if (name !== '') {
+    node.name = name;
+  }
 }
 
 export function restoreControlledState(element: Element, props: Object) {
@@ -318,6 +351,32 @@ function updateNamedCousins(rootNode, props) {
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
       updateWrapper(otherNode, otherProps);
+    }
+  }
+}
+
+// In Chrome, assigning defaultValue to certain input types triggers input validation.
+// For number inputs, the display value loses trailing decimal points. For email inputs,
+// Chrome raises "The specified value <x> is not a valid email address".
+//
+// Here we check to see if the defaultValue has actually changed, avoiding these problems
+// when the user is inputting text
+//
+// https://github.com/facebook/react/issues/7253
+export function setDefaultValue(
+  node: InputWithWrapperState,
+  type: ?string,
+  value: *,
+) {
+  if (
+    // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
+    type !== 'number' ||
+    node.ownerDocument.activeElement !== node
+  ) {
+    if (value == null) {
+      node.defaultValue = toString(node._wrapperState.initialValue);
+    } else if (node.defaultValue !== toString(value)) {
+      node.defaultValue = toString(value);
     }
   }
 }

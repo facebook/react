@@ -233,7 +233,7 @@ describe('ReactDOMInput', () => {
 
       dispatchEventOnNode(node, 'input');
 
-      expect(node.hasAttribute('value')).toBe(false);
+      expect(node.getAttribute('value')).toBe('2');
       expect(node.value).toBe('2');
     });
 
@@ -245,7 +245,7 @@ describe('ReactDOMInput', () => {
 
       dispatchEventOnNode(node, 'input');
 
-      expect(node.hasAttribute('value')).toBe(false);
+      expect(node.getAttribute('value')).toBe('2');
       expect(node.value).toBe('2');
     });
 
@@ -271,7 +271,7 @@ describe('ReactDOMInput', () => {
 
       dispatchEventOnNode(node, 'input');
 
-      expect(node.hasAttribute('value')).toBe(false);
+      expect(node.getAttribute('value')).toBe('2.0');
       expect(node.value).toBe('2.0');
     });
   });
@@ -419,11 +419,10 @@ describe('ReactDOMInput', () => {
     );
 
     expect(node.value).toBe('0');
-    expect(node.defaultValue).toBe('0');
 
     ReactDOM.render(<input type="text" defaultValue="1" />, container);
 
-    expect(node.value).toBe('1');
+    expect(node.value).toBe('0');
     expect(node.defaultValue).toBe('1');
   });
 
@@ -434,11 +433,10 @@ describe('ReactDOMInput', () => {
     );
 
     expect(node.value).toBe('1980-01-01');
-    expect(node.defaultValue).toBe('1980-01-01');
 
     ReactDOM.render(<input type="date" defaultValue="2000-01-01" />, container);
 
-    expect(node.value).toBe('2000-01-01');
+    expect(node.value).toBe('1980-01-01');
     expect(node.defaultValue).toBe('2000-01-01');
 
     ReactDOM.render(<input type="date" />, container);
@@ -669,7 +667,7 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('0');
-    expect(node.defaultValue).toBe('');
+    expect(node.defaultValue).toBe('0');
   });
 
   it('should properly transition from 0 to an empty value', function() {
@@ -685,7 +683,7 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('');
-    expect(node.hasAttribute('value')).toBe(false);
+    expect(node.defaultValue).toBe('');
   });
 
   it('should properly transition a text input from 0 to an empty 0.0', function() {
@@ -701,7 +699,7 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('0.0');
-    expect(node.hasAttribute('value')).toBe(false);
+    expect(node.defaultValue).toBe('0.0');
   });
 
   it('should properly transition a number input from "" to 0', function() {
@@ -717,7 +715,7 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('0');
-    expect(node.defaultValue).toBe('');
+    expect(node.defaultValue).toBe('0');
   });
 
   it('should properly transition a number input from "" to "0"', function() {
@@ -733,7 +731,7 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('0');
-    expect(node.defaultValue).toBe('');
+    expect(node.defaultValue).toBe('0');
   });
 
   it('should have the correct target value', () => {
@@ -958,16 +956,19 @@ describe('ReactDOMInput', () => {
     const cNode = stub.refs.c;
 
     expect(aNode.checked).toBe(true);
+    expect(aNode.hasAttribute('checked')).toBe(true);
     expect(bNode.checked).toBe(false);
+    expect(bNode.hasAttribute('checked')).toBe(false);
     // c is in a separate form and shouldn't be affected at all here
     expect(cNode.checked).toBe(true);
+    expect(cNode.hasAttribute('checked')).toBe(true);
 
     setUntrackedChecked.call(bNode, true);
     expect(aNode.checked).toBe(false);
     expect(cNode.checked).toBe(true);
 
     // The original 'checked' attribute should be unchanged
-    expect(aNode.hasAttribute('checked')).toBe(false);
+    expect(aNode.hasAttribute('checked')).toBe(true);
     expect(bNode.hasAttribute('checked')).toBe(false);
     expect(cNode.hasAttribute('checked')).toBe(true);
 
@@ -1521,6 +1522,8 @@ describe('ReactDOMInput', () => {
       'set attribute max',
       'set attribute step',
       'set property value',
+      'set attribute value',
+      'set attribute checked',
     ]);
   });
 
@@ -1578,7 +1581,9 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input type="date" defaultValue="1980-01-01" />, container);
     expect(log).toEqual([
       'node.setAttribute("type", "date")',
+      'node.value = "1980-01-01"',
       'node.setAttribute("value", "1980-01-01")',
+      'node.setAttribute("checked", "")',
     ]);
   });
 
@@ -1600,7 +1605,7 @@ describe('ReactDOMInput', () => {
       };
     }
 
-    it('retains the value attribute when values change on text inputs', function() {
+    it('always sets the attribute when values change on text inputs', function() {
       const Input = getTestInput();
       const stub = ReactDOM.render(<Input type="text" />, container);
       const node = ReactDOM.findDOMNode(stub);
@@ -1608,7 +1613,38 @@ describe('ReactDOMInput', () => {
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
 
-      expect(node.hasAttribute('value')).toBe(false);
+      expect(node.getAttribute('value')).toBe('2');
+    });
+
+    it('does not set the value attribute on number inputs if focused', () => {
+      const Input = getTestInput();
+      const stub = ReactDOM.render(
+        <Input type="number" value="1" />,
+        container,
+      );
+      const node = ReactDOM.findDOMNode(stub);
+
+      node.focus();
+
+      setUntrackedValue.call(node, '2');
+      dispatchEventOnNode(node, 'input');
+
+      expect(node.getAttribute('value')).toBe('1');
+    });
+
+    it('sets the value attribute on number inputs on blur', () => {
+      const Input = getTestInput();
+      const stub = ReactDOM.render(
+        <Input type="number" value="1" />,
+        container,
+      );
+      const node = ReactDOM.findDOMNode(stub);
+
+      setUntrackedValue.call(node, '2');
+      dispatchEventOnNode(node, 'input');
+      dispatchEventOnNode(node, 'blur');
+
+      expect(node.getAttribute('value')).toBe('2');
     });
 
     it('an uncontrolled number input will not update the value attribute on blur', () => {
@@ -1666,12 +1702,12 @@ describe('ReactDOMInput', () => {
       setValueToUndefined();
     }
 
-    it('does not set the value attribute', () => {
+    it('reverts the value attribute to the initial value', () => {
       expect(renderInputWithStringThenWithUndefined).toWarnDev(
         'Input elements should not switch from controlled to ' +
           'uncontrolled (or vice versa).',
       );
-      expect(input.hasAttribute('value')).toBe(false);
+      expect(input.getAttribute('value')).toBe('first');
     });
 
     it('preserves the value property', () => {
@@ -1719,7 +1755,7 @@ describe('ReactDOMInput', () => {
         'Input elements should not switch from controlled ' +
           'to uncontrolled (or vice versa).',
       ]);
-      expect(input.hasAttribute('value')).toBe(false);
+      expect(input.getAttribute('value')).toBe('first');
     });
 
     it('preserves the value property', () => {
@@ -1745,9 +1781,10 @@ describe('ReactDOMInput', () => {
       const node = container.firstChild;
 
       expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
     });
 
-    it('treats updated Symbol value as empty string', function() {
+    it('treats updated Symbol value as an empty string', function() {
       ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
       expect(() =>
         ReactDOM.render(
@@ -1758,6 +1795,7 @@ describe('ReactDOMInput', () => {
       const node = container.firstChild;
 
       expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
     });
 
     it('treats initial Symbol defaultValue as an empty string', function() {
@@ -1774,22 +1812,9 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
       const node = container.firstChild;
 
-      // This is blank because the value has never been interacted with
-      expect(node.value).toBe('');
+      expect(node.value).toBe('foo');
       expect(node.getAttribute('value')).toBe('');
       // TODO: we should warn here.
-    });
-
-    it('does not replace an updated value property when the defaultValue changes', () => {
-      ReactDOM.render(<input defaultValue="foo" />, container);
-      let node = container.firstChild;
-      expect(node.value).toBe('foo');
-
-      node.value = 'bar';
-
-      ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
-      expect(node.getAttribute('value')).toBe('');
-      expect(node.value).toBe('bar');
     });
   });
 
@@ -1804,10 +1829,10 @@ describe('ReactDOMInput', () => {
       const node = container.firstChild;
 
       expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe(null);
+      expect(node.getAttribute('value')).toBe('');
     });
 
-    it('treats updated function value as empty string', function() {
+    it('treats updated function value as an empty string', function() {
       ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
       expect(() =>
         ReactDOM.render(
@@ -1818,7 +1843,7 @@ describe('ReactDOMInput', () => {
       const node = container.firstChild;
 
       expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe(null);
+      expect(node.getAttribute('value')).toBe('');
     });
 
     it('treats initial function defaultValue as an empty string', function() {
@@ -1835,7 +1860,7 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input defaultValue={() => {}} />, container);
       const node = container.firstChild;
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('foo');
       expect(node.getAttribute('value')).toBe('');
       // TODO: we should warn here.
     });
