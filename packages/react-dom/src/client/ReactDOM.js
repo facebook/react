@@ -45,6 +45,7 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
+import {REACT_PORTAL_TYPE} from 'shared/ReactSymbols';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -616,10 +617,14 @@ const ReactDOM: Object = {
     return DOMRenderer.findHostInstance(componentOrElement);
   },
 
-  hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {
+  hydrate(
+    element: React$Node<any>,
+    container: DOMContainer,
+    callback: ?Function,
+  ) {
     // TODO: throw or warn if we couldn't hydrate?
     invariant(
-      element ? element.$$typeof !== Symbol.for('react.portal') : true,
+      element ? element.$$typeof !== REACT_PORTAL_TYPE : true,
       'Portal is not support on SSR. ' +
         'For more detail, please refer https://github.com/facebook/react/issues/13097',
     );
