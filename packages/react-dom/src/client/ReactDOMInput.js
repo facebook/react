@@ -58,14 +58,13 @@ function isControlled(props) {
 
 export function getHostProps(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
-  const checked =
-    props.checked != null ? props.checked : node._wrapperState.initialChecked;
+  const checked = props.checked;
 
   const hostProps = Object.assign({}, props, {
     defaultChecked: undefined,
     defaultValue: undefined,
     value: undefined,
-    checked: disableInputAttributeSyncing ? undefined : checked,
+    checked: props.checked != null ? props.checked : node._wrapperState.initialChecked
   });
 
   return hostProps;
