@@ -7,8 +7,6 @@
  * @flow strict
  */
 
-import invariant from 'shared/invariant';
-
 // Exports ReactDOM.createRoot
 export const enableUserTimingAPI = __DEV__;
 
@@ -47,5 +45,5 @@ export const enableSuspenseServerRenderer = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
-  invariant(false, 'Not implemented.');
+  throw new Error('Not implemented.');
 }
