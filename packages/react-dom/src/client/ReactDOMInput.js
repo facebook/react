@@ -243,35 +243,36 @@ export function postMountWrapper(
   // Do not assign value if it is already set. This prevents user text input
   // from being lost during SSR hydration.
   if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
-    const initialValue = node._wrapperState.initialValue;
-    const currentValue = node.value;
-    const value = disableInputAttributeSyncing
-      ? getToStringValue(props.value)
-      : initialValue;
     const type = props.type;
+    const isButton = type === 'submit' || type === 'reset';
 
     // Avoid setting value attribute on submit/reset inputs as it overrides the
     // default value provided by the browser. See: #12872
-    if (type === 'submit' || type === 'reset') {
-      if (props.value !== undefined && props.value !== null) {
-        node.setAttribute('value', toString(value));
-      }
-
+    if (isButton && (props.value === undefined || props.value === null)) {
       return;
     }
+
+    const initialValue = node._wrapperState.initialValue;
 
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
     if (!isHydrating) {
-      // Do not re-assign the value property if is empty. This
-      // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
-      // prematurely marking required inputs as invalid
       if (disableInputAttributeSyncing) {
         // When not syncing the value attribute, the value property points
         // directly to the React prop. Only assign it if it exists.
         if (props.hasOwnProperty('value')) {
-          if (value !== currentValue) {
-            node.value = toString(value);
+          const value = toString(getToStringValue(props.value));
+
+          // Always assign on buttons so that it is possible to assign an
+          // empty string to clear button text.
+          //
+          // Otherwise, do not re-assign the value property if is empty. This
+          // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
+          // prematurely marking required inputs as invalid. Equality is compared
+          // to the current value in case the browser provided value is not an
+          // empty string.
+          if (isButton || value !== node.value) {
+            node.value = value;
           }
         }
       } else {
@@ -281,8 +282,8 @@ export function postMountWrapper(
         //   1. The value React property when present
         //   2. The defaultValue React property when present
         //   3. An empty string
-        if (value !== currentValue) {
-          node.value = toString(value);
+        if (initialValue !== node.value) {
+          node.value = toString(initialValue);
         }
       }
     }
