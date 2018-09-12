@@ -197,10 +197,18 @@ export function updateWrapper(element: Element, props: Object) {
   }
 
   if (disableInputAttributeSyncing) {
+    // When not syncing the value attribute, React only assigns a new value
+    // whenever the defaultValue React prop has changed. When not present,
+    // React does nothing
     if (props.hasOwnProperty('defaultValue')) {
       setDefaultValue(node, props.type, getToStringValue(props.defaultValue));
     }
   } else {
+    // When syncing the value attribute, the value comes from a cascade of
+    // properties:
+    //  1. The value React property
+    //  2. The defaultValue React property
+    //  3. Otherwise there should be no change
     if (props.hasOwnProperty('value')) {
       setDefaultValue(node, props.type, value);
     } else if (props.hasOwnProperty('defaultValue')) {
@@ -209,12 +217,17 @@ export function updateWrapper(element: Element, props: Object) {
   }
 
   if (disableInputAttributeSyncing) {
+    // When not syncing the checked attribute, the attribute is directly
+    // controllable from the defaultValue React property. It needs to be
+    // updated as new props come in.
     if (props.defaultChecked == null) {
       node.removeAttribute('checked');
     } else {
       node.defaultChecked = !!props.defaultChecked;
     }
   } else {
+    // When syncing the checked attribute, it only changes when it needs
+    // to be removed, such as transitioning from a checkbox into a text input
     if (props.checked == null && props.defaultChecked != null) {
       node.defaultChecked = !!props.defaultChecked;
     }
@@ -255,12 +268,20 @@ export function postMountWrapper(
       // potentially avoids a DOM write and prevents Firefox (~60.0.1) from
       // prematurely marking required inputs as invalid
       if (disableInputAttributeSyncing) {
+        // When not syncing the value attribute, the value property points
+        // directly to the React prop. Only assign it if it exists.
         if (props.hasOwnProperty('value')) {
           if (value !== currentValue) {
             node.value = toString(value);
           }
         }
       } else {
+        // When syncing the value attribute, the value property should use
+        // the the wrapperState._initialValue property. This uses:
+        //
+        //   1. The value React property when present
+        //   2. The defaultValue React property when present
+        //   3. An empty string
         if (value !== currentValue) {
           node.value = toString(value);
         }
@@ -268,10 +289,15 @@ export function postMountWrapper(
     }
 
     if (disableInputAttributeSyncing) {
+      // When not syncing the value attribute, assign the value attribute
+      // directly from the defaultValue React property (when present)
       if (props.hasOwnProperty('defaultValue')) {
         node.defaultValue = toString(getToStringValue(props.defaultValue));
       }
     } else {
+      // Otherwise, the value attribute is synchronized to the property,
+      // so we assign defaultValue to the same thing as the value property
+      // assignment step above.
       node.defaultValue = toString(initialValue);
     }
   }
@@ -287,13 +313,28 @@ export function postMountWrapper(
   }
 
   if (disableInputAttributeSyncing) {
-    updateChecked(element, props);
+    // When not syncing the checked attribute, the checked property
+    // never gets assigned. It must be manually set. We don't want
+    // to do this when hydrating so that existing user input isn't
+    // modified
+    if (!isHydrating) {
+      updateChecked(element, props);
+    }
 
+    // Only assign the checked attribute if it is defined. This saves
+    // a DOM write when controlling the checked attribute isn't needed
+    // (text inputs, submit/reset)
     if (props.hasOwnProperty('defaultChecked')) {
       node.defaultChecked = !node.defaultChecked;
       node.defaultChecked = !!props.defaultChecked;
     }
   } else {
+    // When syncing the checked attribute, both the the checked property and
+    // attribute are assigned at the same time using defaultChecked. This uses:
+    //
+    //   1. The checked React property when present
+    //   2. The defaultChecked React property when present
+    //   3. Otherwise, false
     node.defaultChecked = !node.defaultChecked;
     node.defaultChecked = !!node._wrapperState.initialChecked;
   }
