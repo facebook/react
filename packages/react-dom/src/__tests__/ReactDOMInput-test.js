@@ -650,8 +650,12 @@ describe('ReactDOMInput', () => {
     const node = ReactDOM.render(stub, container);
 
     setUntrackedValue.call(node, '0.0');
+
     dispatchEventOnNode(node, 'input');
+    dispatchEventOnNode(node, 'blur');
+
     expect(node.value).toBe('0.0');
+    expect(node.getAttribute('value')).toBe('0.0');
   });
 
   it('should properly transition from an empty value to 0', function() {
@@ -1640,8 +1644,16 @@ describe('ReactDOMInput', () => {
       );
       const node = ReactDOM.findDOMNode(stub);
 
+      node.focus()
+
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
+
+      // TODO: it is unclear why blur must be triggered twice,
+      // manual testing in the fixtures shows that the active element
+      // is no longer the input, however blur() + a blur event seem to
+      // be the only way to remove focus in JSDOM
+      node.blur()
       dispatchEventOnNode(node, 'blur');
 
       expect(node.getAttribute('value')).toBe('2');
