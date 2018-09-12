@@ -47,3 +47,7 @@ export const enableSuspenseServerRenderer = false;
 export function addUserTimingListener() {
   throw new Error('Not implemented.');
 }
+
+// React Fire: prevent the value and checked attributes from syncing
+// with their related DOM properties
+export const disableInputAttributeSyncing = false;

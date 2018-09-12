@@ -23,6 +23,7 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
 export const enableSchedulerTracking = false;
 export const enableSuspenseServerRenderer = false;
+export const disableInputAttributeSyncing = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
