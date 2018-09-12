@@ -261,7 +261,7 @@ export function postMountWrapper(
         // When not syncing the value attribute, the value property points
         // directly to the React prop. Only assign it if it exists.
         if (props.hasOwnProperty('value')) {
-          const value = toString(getToStringValue(props.value));
+          const value = getToStringValue(props.value);
 
           // Always assign on buttons so that it is possible to assign an
           // empty string to clear button text.
@@ -272,7 +272,7 @@ export function postMountWrapper(
           // to the current value in case the browser provided value is not an
           // empty string.
           if (isButton || value !== node.value) {
-            node.value = value;
+            node.value = toString(value);
           }
         }
       } else {
