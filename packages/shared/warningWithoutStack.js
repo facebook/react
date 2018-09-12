@@ -22,65 +22,53 @@ if (__DEV__) {
           'message argument',
       );
     }
+    if (args.length > 8) {
+      // Check before the condition to catch violations early.
+      throw new Error(
+        'warningWithoutStack() currently supports at most 8 arguments.',
+      );
+    }
     if (condition) {
       return;
     }
     if (typeof console !== 'undefined') {
-      const arr = args.map(item => '' + item);
-      const arrLength = arr.length;
+      const [a, b, c, d, e, f, g, h] = args.map(item => '' + item);
+      const message = 'Warning: ' + format;
 
-      if (arrLength === 0) {
-        console.error('Warning: ' + format);
-      } else if (arrLength === 1) {
-        console.error('Warning: ' + format, arr[0]);
-      } else if (arrLength === 2) {
-        console.error('Warning: ' + format, arr[0], arr[1]);
-      } else if (arrLength === 3) {
-        console.error('Warning: ' + format, arr[0], arr[1], arr[2]);
-      } else if (arrLength === 4) {
-        console.error('Warning: ' + format, arr[0], arr[1], arr[2], arr[3]);
-      } else if (arrLength === 5) {
-        console.error(
-          'Warning: ' + format,
-          arr[0],
-          arr[1],
-          arr[2],
-          arr[3],
-          arr[4],
-        );
-      } else if (arrLength === 6) {
-        console.error(
-          'Warning: ' + format,
-          arr[0],
-          arr[1],
-          arr[2],
-          arr[3],
-          arr[4],
-          arr[5],
-        );
-      } else if (arrLength === 7) {
-        console.error(
-          'Warning: ' + format,
-          arr[0],
-          arr[1],
-          arr[2],
-          arr[3],
-          arr[4],
-          arr[5],
-          arr[6],
-        );
-      } else if (arrLength === 8) {
-        console.error(
-          'Warning: ' + format,
-          arr[0],
-          arr[1],
-          arr[2],
-          arr[3],
-          arr[4],
-          arr[5],
-          arr[6],
-          arr[7],
-        );
+      // We intentionally don't use spread (or .apply) because it breaks IE11:
+      // https://github.com/facebook/react/issues/13610
+      switch (args.length) {
+        case 0:
+          console.error(message);
+          break;
+        case 1:
+          console.error(message, a);
+          break;
+        case 2:
+          console.error(message, a, b);
+          break;
+        case 3:
+          console.error(message, a, b, c);
+          break;
+        case 4:
+          console.error(message, a, b, c, d);
+          break;
+        case 5:
+          console.error(message, a, b, c, d, e);
+          break;
+        case 6:
+          console.error(message, a, b, c, d, e, f);
+          break;
+        case 7:
+          console.error(message, a, b, c, d, e, f, g);
+          break;
+        case 8:
+          console.error(message, a, b, c, d, e, f, g, h);
+          break;
+        default:
+          throw new Error(
+            'warningWithoutStack() currently supports at most 8 arguments.',
+          );
       }
     }
     try {
