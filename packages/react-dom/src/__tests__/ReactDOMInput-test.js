@@ -1644,7 +1644,7 @@ describe('ReactDOMInput', () => {
       );
       const node = ReactDOM.findDOMNode(stub);
 
-      node.focus()
+      node.focus();
 
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
@@ -1653,7 +1653,7 @@ describe('ReactDOMInput', () => {
       // manual testing in the fixtures shows that the active element
       // is no longer the input, however blur() + a blur event seem to
       // be the only way to remove focus in JSDOM
-      node.blur()
+      node.blur();
       dispatchEventOnNode(node, 'blur');
 
       expect(node.getAttribute('value')).toBe('2');

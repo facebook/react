@@ -64,7 +64,7 @@ export function getHostProps(element: Element, props: Object) {
     defaultChecked: undefined,
     defaultValue: undefined,
     value: undefined,
-    checked: checked != null ? checked : node._wrapperState.initialChecked
+    checked: checked != null ? checked : node._wrapperState.initialChecked,
   });
 
   return hostProps;
