@@ -239,7 +239,7 @@ function handleControlledInputBlur(node) {
     return;
   }
 
-  if (disableInputAttributeSyncing) {
+  if (!disableInputAttributeSyncing) {
     // If controlled, assign the value attribute to the current value on blur
     setDefaultValue(node, 'number', node.value);
   }
