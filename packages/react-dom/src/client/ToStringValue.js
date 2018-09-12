@@ -26,9 +26,9 @@ export function getToStringValue(value: mixed): ToStringValue {
   switch (typeof value) {
     case 'boolean':
     case 'number':
-    case 'undefined':
     case 'object':
     case 'string':
+    case 'undefined':
       return value;
     default:
       // function, symbol are assigned as empty strings
