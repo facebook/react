@@ -21,9 +21,12 @@ export default function forwardRef<Props, ElementType: React$ElementType>(
       );
     } else {
       warningWithoutStack(
-        render.length === 2,
-        'forwardRef render functions accept two parameters: props and ref. ' +
-          'Did you forget to use the ref parameter?',
+        // Do not warn for 0 arguments because it could be due to usage of the 'arguments' object
+        render.length === 0 || render.length === 2,
+        'forwardRef render functions accept exactly two parameters: props and ref. %s',
+        render.length === 1
+          ? 'Did you forget to use the ref parameter?'
+          : 'Any additional parameter will be undefined.',
       );
     }
 
