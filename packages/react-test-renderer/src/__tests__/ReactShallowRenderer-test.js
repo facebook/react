@@ -532,14 +532,13 @@ describe('ReactShallowRenderer', () => {
               Test link
             </a>
           );
-        } else {
-          return (
-            <div>
-              <span className="child1" />
-              <span className="child2" />
-            </div>
-          );
         }
+        return (
+          <div>
+            <span className="child1"/>
+            <span className="child2"/>
+          </div>
+        );
       }
     }
 

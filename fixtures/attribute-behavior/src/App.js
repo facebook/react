@@ -232,11 +232,11 @@ function getRenderedAttributeValue(
   function createContainer() {
     if (containerTagName === 'svg') {
       return document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    } else if (containerTagName === 'document') {
-      return document.implementation.createHTMLDocument('');
-    } else {
-      return document.createElement(containerTagName);
     }
+    if (containerTagName === 'document') {
+      return document.implementation.createHTMLDocument('');
+    }
+    return document.createElement(containerTagName);
   }
 
   const read = attribute.read;
