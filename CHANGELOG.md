@@ -7,6 +7,24 @@
 
 </details>
 
+## 16.5.1 (September 13, 2018)
+
+### React
+
+* Improve the warning when `React.forwardRef` receives an unexpected number of arguments. ([@andresroberto](https://github.com/andresroberto) in [#13636](https://github.com/facebook/react/issues/13636))
+
+### React DOM
+
+* Fix a regression in unstable exports used by React Native Web. ([@aweary](https://github.com/aweary) in [#13598](https://github.com/facebook/react/issues/13598))
+* Fix a crash when component defines a method called `isReactComponent`. ([@gaearon](https://github.com/gaearon) in [#13608](https://github.com/facebook/react/issues/13608))
+* Fix a crash in development mode in IE9 when printing a warning. ([@link-alex](https://github.com/link-alex) in [#13620](https://github.com/facebook/react/issues/13620))
+* Provide a better error message when running `react-dom/profiling` with `schedule/tracking`. ([@bvaughn](https://github.com/bvaughn) in [#13605](https://github.com/facebook/react/issues/13605))
+* If a `ForwardRef` component defines a `displayName`, use it in warnings. ([@probablyup](https://github.com/probablyup) in [#13615](https://github.com/facebook/react/issues/13615))
+
+### Schedule (Experimental)
+
+* Add a separate profiling entry point at `schedule/tracking-profiling`. ([@bvaughn](https://github.com/bvaughn) in [#13605](https://github.com/facebook/react/issues/13605))
+
 ## 16.5.0 (September 5, 2018)
 
 ### React
