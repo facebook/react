@@ -163,12 +163,12 @@ describe('forwardRef', () => {
   });
 
   it('should not warn if the render function provided does not use any parameter', () => {
-    const arityOfZero = () => null;
+    const arityOfZero = () => <div ref={arguments[1]} />;
     React.forwardRef(arityOfZero);
   });
 
   it('should warn if the render function provided does not use the forwarded ref parameter', () => {
-    const arityOfOne = props => null;
+    const arityOfOne = props => <div {...props} />;
 
     expect(() => React.forwardRef(arityOfOne)).toWarnDev(
       'forwardRef render functions accept exactly two parameters: props and ref. ' +
@@ -178,12 +178,12 @@ describe('forwardRef', () => {
   });
 
   it('should not warn if the render function provided use exactly two parameters', () => {
-    const arityOfTwo = (props, ref) => null;
+    const arityOfTwo = (props, ref) => <div {...props} ref={ref} />;
     React.forwardRef(arityOfTwo);
   });
 
   it('should warn if the render function provided expects to use more than two parameters', () => {
-    const arityOfThree = (props, ref, x) => null;
+    const arityOfThree = (props, ref, x) => <div {...props} ref={ref} x={x} />;
 
     expect(() => React.forwardRef(arityOfThree)).toWarnDev(
       'forwardRef render functions accept exactly two parameters: props and ref. ' +
