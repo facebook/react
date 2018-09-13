@@ -37,8 +37,8 @@ export const warnAboutLegacyContextAPI = false;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
-// Track which interactions trigger each commit.
-export const enableSchedulerTracking = __PROFILE__;
+// Trace which interactions trigger each commit.
+export const enableSchedulerTracing = __PROFILE__;
 
 // Only used in www builds.
 export const enableSuspenseServerRenderer = false;

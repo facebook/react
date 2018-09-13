@@ -10,9 +10,9 @@
 import type {Fiber} from './ReactFiber';
 import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {Interaction} from 'schedule/src/Tracking';
+import type {Interaction} from 'schedule/src/Tracing';
 
-import {__interactionsRef, __subscriberRef} from 'schedule/tracking';
+import {__interactionsRef, __subscriberRef} from 'schedule/tracing';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -44,7 +44,7 @@ import {
   HostPortal,
 } from 'shared/ReactWorkTags';
 import {
-  enableSchedulerTracking,
+  enableSchedulerTracing,
   enableProfilerTimer,
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
@@ -168,13 +168,13 @@ let didWarnSetStateChildContext;
 let warnAboutUpdateOnUnmounted;
 let warnAboutInvalidUpdates;
 
-if (enableSchedulerTracking) {
+if (enableSchedulerTracing) {
   // Provide explicit error message when production+profiling bundle of e.g. react-dom
-  // is used with production (non-profiling) bundle of schedule/tracking
+  // is used with production (non-profiling) bundle of schedule/tracing
   invariant(
     __interactionsRef != null && __interactionsRef.current != null,
     'It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) ' +
-      'without also replacing the `schedule/tracking` module with `schedule/tracking-profiling`. ' +
+      'without also replacing the `schedule/tracing` module with `schedule/tracing-profiling`. ' +
       'Your bundler might have a setting for aliasing both modules. ' +
       'Learn more at http://fb.me/react-profiling',
   );
@@ -566,10 +566,10 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   markCommittedPriorityLevels(root, earliestRemainingTimeBeforeCommit);
 
   let prevInteractions: Set<Interaction> = (null: any);
-  let committedInteractions: Array<Interaction> = enableSchedulerTracking
+  let committedInteractions: Array<Interaction> = enableSchedulerTracing
     ? []
     : (null: any);
-  if (enableSchedulerTracking) {
+  if (enableSchedulerTracing) {
     // Restore any pending interactions at this point,
     // So that cascading work triggered during the render phase will be accounted for.
     prevInteractions = __interactionsRef.current;
@@ -767,7 +767,7 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   }
   onCommit(root, earliestRemainingTimeAfterCommit);
 
-  if (enableSchedulerTracking) {
+  if (enableSchedulerTracing) {
     __interactionsRef.current = prevInteractions;
 
     let subscriber;
@@ -1175,8 +1175,8 @@ function renderRoot(
   const expirationTime = root.nextExpirationTimeToWorkOn;
 
   let prevInteractions: Set<Interaction> = (null: any);
-  if (enableSchedulerTracking) {
-    // We're about to start new tracked work.
+  if (enableSchedulerTracing) {
+    // We're about to start new traced work.
     // Restore pending interactions so cascading work triggered during the render phase will be accounted for.
     prevInteractions = __interactionsRef.current;
     __interactionsRef.current = root.memoizedInteractions;
@@ -1200,7 +1200,7 @@ function renderRoot(
     );
     root.pendingCommitExpirationTime = NoWork;
 
-    if (enableSchedulerTracking) {
+    if (enableSchedulerTracing) {
       // Determine which interactions this batch of work currently includes,
       // So that we can accurately attribute time spent working on it,
       // And so that cascading work triggered during the render phase will be associated with it.
@@ -1231,7 +1231,7 @@ function renderRoot(
           try {
             subscriber.onWorkStarted(interactions, threadID);
           } catch (error) {
-            // Work thrown by an interaction tracking subscriber should be rethrown,
+            // Work thrown by an interaction tracing subscriber should be rethrown,
             // But only once it's safe (to avoid leaveing the scheduler in an invalid state).
             // Store the error for now and we'll re-throw in finishRendering().
             if (!hasUnhandledError) {
@@ -1305,8 +1305,8 @@ function renderRoot(
     break;
   } while (true);
 
-  if (enableSchedulerTracking) {
-    // Tracked work is done for now; restore the previous interactions.
+  if (enableSchedulerTracing) {
+    // Traced work is done for now; restore the previous interactions.
     __interactionsRef.current = prevInteractions;
   }
 
@@ -1614,7 +1614,7 @@ function retrySuspendedRoot(
     scheduleWorkToRoot(fiber, retryTime);
     const rootExpirationTime = root.expirationTime;
     if (rootExpirationTime !== NoWork) {
-      if (enableSchedulerTracking) {
+      if (enableSchedulerTracing) {
         // Restore previous interactions so that new work is associated with them.
         let prevInteractions = __interactionsRef.current;
         __interactionsRef.current = root.memoizedInteractions;
@@ -1685,7 +1685,7 @@ function storeInteractionsForExpirationTime(
   expirationTime: ExpirationTime,
   updateInteractionCounts: boolean,
 ): void {
-  if (!enableSchedulerTracking) {
+  if (!enableSchedulerTracing) {
     return;
   }
 
@@ -1744,7 +1744,7 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
     return;
   }
 
-  if (enableSchedulerTracking) {
+  if (enableSchedulerTracing) {
     storeInteractionsForExpirationTime(root, expirationTime, true);
   }
 
@@ -1935,7 +1935,7 @@ function onTimeout(root, finishedWork, suspendedExpirationTime) {
     recomputeCurrentRendererTime();
     currentSchedulerTime = currentRendererTime;
 
-    if (enableSchedulerTracking) {
+    if (enableSchedulerTracing) {
       // Don't update pending interaction counts for suspense timeouts,
       // Because we know we still need to do more work in this case.
       suspenseDidTimeout = true;

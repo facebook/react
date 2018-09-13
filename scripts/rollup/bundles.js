@@ -391,7 +391,7 @@ const bundles = [
   },
 
   {
-    label: 'schedule-tracking',
+    label: 'schedule-tracing',
     bundleTypes: [
       FB_WWW_DEV,
       FB_WWW_PROD,
@@ -401,8 +401,8 @@ const bundles = [
       NODE_PROFILING,
     ],
     moduleType: ISOMORPHIC,
-    entry: 'schedule/tracking',
-    global: 'ScheduleTracking',
+    entry: 'schedule/tracing',
+    global: 'ScheduleTracing',
     externals: [],
   },
 ];

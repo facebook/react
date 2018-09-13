@@ -18,10 +18,10 @@ const {
   unstable_getCurrent,
   unstable_getThreadID,
   unstable_subscribe,
-  unstable_track,
+  unstable_trace,
   unstable_unsubscribe,
   unstable_wrap,
-} = ReactInternals.ScheduleTracking;
+} = ReactInternals.ScheduleTracing;
 
 export {
   __interactionsRef,
@@ -30,7 +30,7 @@ export {
   unstable_getCurrent,
   unstable_getThreadID,
   unstable_subscribe,
-  unstable_track,
+  unstable_trace,
   unstable_unsubscribe,
   unstable_wrap,
 };
