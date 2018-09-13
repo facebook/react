@@ -18,10 +18,10 @@ import {
   unstable_getCurrent,
   unstable_getThreadID,
   unstable_subscribe,
-  unstable_track,
+  unstable_trace,
   unstable_unsubscribe,
   unstable_wrap,
-} from 'schedule/tracking';
+} from 'schedule/tracing';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
@@ -43,14 +43,14 @@ if (__UMD__) {
       unstable_now,
       unstable_scheduleWork,
     },
-    ScheduleTracking: {
+    ScheduleTracing: {
       __interactionsRef,
       __subscriberRef,
       unstable_clear,
       unstable_getCurrent,
       unstable_getThreadID,
       unstable_subscribe,
-      unstable_track,
+      unstable_trace,
       unstable_unsubscribe,
       unstable_wrap,
     },

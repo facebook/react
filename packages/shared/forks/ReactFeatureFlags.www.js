@@ -34,7 +34,7 @@ export const warnAboutLegacyContextAPI = __DEV__;
 export let enableUserTimingAPI = __DEV__;
 
 export const enableProfilerTimer = __PROFILE__;
-export const enableSchedulerTracking = __PROFILE__;
+export const enableSchedulerTracing = __PROFILE__;
 
 let refCount = 0;
 export function addUserTimingListener() {

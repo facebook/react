@@ -2,7 +2,7 @@
 <html style="width: 100%; height: 100%;">
   <head>
     <meta charset="utf-8">
-    <title>Test tracking UMD</title>
+    <title>Test tracing UMD</title>
     <style>
       body {
         font-family: sans-serif;
@@ -36,9 +36,9 @@
     </style>
   </head>
   <body>
-    <h1>Test tracking UMD</h1>
+    <h1>Test tracing UMD</h1>
     <p>
-      This fixture tests that the new tracking API is accessible via UMD build using the UMD shim.
+      This fixture tests that the new tracing API is accessible via UMD build using the UMD shim.
       It does not exhaustively test API functionality, only that the forwarded methods can be called.
     </p>
     <p>
@@ -52,19 +52,19 @@
       <li id="checkSchedulerAPI" data-value="...">
         <strong>Test scheduler API</strong>
       </li>
-      <li id="checkSchedulerTrackingAPI" data-value="...">
-        <strong>Test tracking API</strong>
+      <li id="checkSchedulerTracingAPI" data-value="...">
+        <strong>Test tracing API</strong>
       </li>
-      <li id="checkSchedulerTrackingSubscriptionsAPI" data-value="...">
-        <strong>Test tracking subscriptions API</strong>
+      <li id="checkSchedulerTracingSubscriptionsAPI" data-value="...">
+        <strong>Test tracing subscriptions API</strong>
       </li>
       <li id="checkEndToEndIntegration" data-value="...">
         <strong>Test end-to-end integration</strong>
       </li>
     </ol>
-    <!-- Load the tracking API before react to test that it's lazily evaluated -->
+    <!-- Load the tracing API before react to test that it's lazily evaluated -->
     <script src="../../build/node_modules/schedule/umd/schedule.development.js"></script>
-    <script src="../../build/node_modules/schedule/umd/schedule-tracking.development.js"></script>
+    <script src="../../build/node_modules/schedule/umd/schedule-tracing.development.js"></script>
     <script src="../../build/node_modules/react/umd/react.development.js"></script>
     <script src="../../build/node_modules/react-dom/umd/react-dom.development.js"></script>
     <script src="./script.js"></script>

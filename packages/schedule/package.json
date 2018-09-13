@@ -19,8 +19,8 @@
     "LICENSE",
     "README.md",
     "index.js",
-    "tracking.js",
-    "tracking-profiling.js",
+    "tracing.js",
+    "tracing-profiling.js",
     "cjs/",
     "umd/"
   ]

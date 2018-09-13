@@ -15,7 +15,7 @@ const importSideEffects = Object.freeze({
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   schedule: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'schedule/tracking': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'schedule/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
@@ -23,7 +23,7 @@ const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
   schedule: 'Schedule',
-  'schedule/tracking': 'ScheduleTracking',
+  'schedule/tracing': 'ScheduleTracing',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.

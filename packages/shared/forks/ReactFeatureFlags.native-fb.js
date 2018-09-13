@@ -27,7 +27,7 @@ export const {
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutLegacyContextAPI = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
-export const enableSchedulerTracking = __PROFILE__;
+export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 
 // Only used in www builds.
