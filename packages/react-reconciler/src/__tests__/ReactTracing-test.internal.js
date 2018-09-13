@@ -10,16 +10,16 @@
 
 'use strict';
 
-describe('ReactTracking', () => {
-  it('should error if profiling renderer and non-profiling schedule/tracking bundles are combined', () => {
+describe('ReactTracing', () => {
+  it('should error if profiling renderer and non-profiling schedule/tracing bundles are combined', () => {
     jest.resetModules();
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableSchedulerTracking = false;
+    ReactFeatureFlags.enableSchedulerTracing = false;
 
-    require('schedule/tracking');
+    require('schedule/tracing');
 
-    ReactFeatureFlags.enableSchedulerTracking = true;
+    ReactFeatureFlags.enableSchedulerTracing = true;
 
     expect(() => require('react-dom')).toThrow(
       'Learn more at http://fb.me/react-profiling',
