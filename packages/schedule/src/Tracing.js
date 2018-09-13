@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableSchedulerTracking} from 'shared/ReactFeatureFlags';
+import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 
 export type Interaction = {|
   __count: number,
@@ -17,8 +17,8 @@ export type Interaction = {|
 |};
 
 export type Subscriber = {
-  // A new interaction has been created via the track() method.
-  onInteractionTracked: (interaction: Interaction) => void,
+  // A new interaction has been created via the trace() method.
+  onInteractionTraced: (interaction: Interaction) => void,
 
   // All scheduled async work for an interaction has finished.
   onInteractionScheduledWorkCompleted: (interaction: Interaction) => void,
@@ -61,16 +61,16 @@ const DEFAULT_THREAD_ID = 0;
 let interactionIDCounter: number = 0;
 let threadIDCounter: number = 0;
 
-// Set of currently tracked interactions.
+// Set of currently traced interactions.
 // Interactions "stack"–
-// Meaning that newly tracked interactions are appended to the previously active set.
+// Meaning that newly traced interactions are appended to the previously active set.
 // When an interaction goes out of scope, the previous set (if any) is restored.
 let interactionsRef: InteractionsRef = (null: any);
 
 // Listener(s) to notify when interactions begin and end.
 let subscriberRef: SubscriberRef = (null: any);
 
-if (enableSchedulerTracking) {
+if (enableSchedulerTracing) {
   interactionsRef = {
     current: new Set(),
   };
@@ -82,7 +82,7 @@ if (enableSchedulerTracking) {
 export {interactionsRef as __interactionsRef, subscriberRef as __subscriberRef};
 
 export function unstable_clear(callback: Function): any {
-  if (!enableSchedulerTracking) {
+  if (!enableSchedulerTracing) {
     return callback();
   }
 
@@ -97,7 +97,7 @@ export function unstable_clear(callback: Function): any {
 }
 
 export function unstable_getCurrent(): Set<Interaction> | null {
-  if (!enableSchedulerTracking) {
+  if (!enableSchedulerTracing) {
     return null;
   } else {
     return interactionsRef.current;
@@ -108,13 +108,13 @@ export function unstable_getThreadID(): number {
   return ++threadIDCounter;
 }
 
-export function unstable_track(
+export function unstable_trace(
   name: string,
   timestamp: number,
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): any {
-  if (!enableSchedulerTracking) {
+  if (!enableSchedulerTracing) {
     return callback();
   }
 
@@ -127,7 +127,7 @@ export function unstable_track(
 
   const prevInteractions = interactionsRef.current;
 
-  // Tracked interactions should stack/accumulate.
+  // Traced interactions should stack/accumulate.
   // To do that, clone the current interactions.
   // The previous set will be restored upon completion.
   const interactions = new Set(prevInteractions);
@@ -139,7 +139,7 @@ export function unstable_track(
 
   try {
     if (subscriber !== null) {
-      subscriber.onInteractionTracked(interaction);
+      subscriber.onInteractionTraced(interaction);
     }
   } finally {
     try {
@@ -176,7 +176,7 @@ export function unstable_wrap(
   callback: Function,
   threadID: number = DEFAULT_THREAD_ID,
 ): Function {
-  if (!enableSchedulerTracking) {
+  if (!enableSchedulerTracing) {
     return callback;
   }
 

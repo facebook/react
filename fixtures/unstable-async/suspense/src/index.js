@@ -1,6 +1,6 @@
 import React, {Fragment, PureComponent} from 'react';
 import {unstable_createRoot, render} from 'react-dom';
-import {unstable_track as track} from 'schedule/tracking';
+import {unstable_trace as trace} from 'schedule/tracing';
 import {cache} from './cache';
 import {
   setFakeRequestTime,
@@ -65,7 +65,7 @@ class Debugger extends PureComponent {
   }
 
   handleReset = () => {
-    track('Clear cache', () => {
+    trace('Clear cache', () => {
       cache.invalidate();
       this.setState(state => ({
         requests: {},

@@ -21,7 +21,7 @@ export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = __DEV__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
-export const enableSchedulerTracking = __PROFILE__;
+export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const disableInputAttributeSyncing = false;
 
