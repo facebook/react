@@ -6,6 +6,7 @@ const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
+const UMD_PROFILING = bundleTypes.UMD_PROFILING;
 const FB_WWW_DEV = bundleTypes.FB_WWW_DEV;
 const FB_WWW_PROD = bundleTypes.FB_WWW_PROD;
 const FB_WWW_PROFILING = bundleTypes.FB_WWW_PROFILING;
@@ -24,7 +25,11 @@ const forks = Object.freeze({
   // Optimization: for UMDs, use object-assign polyfill that is already a part
   // of the React package instead of bundling it again.
   'object-assign': (bundleType, entry, dependencies) => {
-    if (bundleType !== UMD_DEV && bundleType !== UMD_PROD) {
+    if (
+      bundleType !== UMD_DEV &&
+      bundleType !== UMD_PROD &&
+      bundleType !== UMD_PROFILING
+    ) {
       // It's only relevant for UMD bundles since that's where the duplication
       // happens. Other bundles just require('object-assign') anyway.
       return null;
@@ -118,6 +123,7 @@ const forks = Object.freeze({
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
+      case UMD_PROFILING:
         if (dependencies.indexOf('react') === -1) {
           // It's only safe to use this fork for modules that depend on React,
           // because they read the re-exported API from the SECRET_INTERNALS object.
@@ -136,6 +142,7 @@ const forks = Object.freeze({
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
+      case UMD_PROFILING:
         if (dependencies.indexOf('react') === -1) {
           // It's only safe to use this fork for modules that depend on React,
           // because they read the re-exported API from the SECRET_INTERNALS object.
