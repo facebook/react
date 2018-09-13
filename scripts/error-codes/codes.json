@@ -285,5 +285,6 @@
   "283": "Element type is invalid. Received a promise that resolves to: %s. Promise elements must resolve to a class or function.",
   "284": "Expected ref to be a function, a string, an object returned by React.createRef(), or null.",
   "285": "The root failed to unmount after an error. This is likely a bug in React. Please file an issue.",
-  "286": "%s(...): the first argument must be a React class instance. Instead received: %s."
+  "286": "%s(...): the first argument must be a React class instance. Instead received: %s.",
+  "287": "It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) without also replacing the `schedule/tracking` module with `schedule/tracking-profiling`. Your bundler might have a setting for aliasing both modules. Learn more at http://fb.me/react-profiling"
 }
