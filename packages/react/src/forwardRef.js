@@ -26,7 +26,7 @@ export default function forwardRef<Props, ElementType: React$ElementType>(
         'forwardRef render functions accept exactly two parameters: props and ref. %s',
         render.length === 1
           ? 'Did you forget to use the ref parameter?'
-          : 'Any additional parameter will be undefined',
+          : 'Any additional parameter will be undefined.',
       );
     }
 

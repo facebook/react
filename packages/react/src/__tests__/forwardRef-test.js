@@ -187,7 +187,7 @@ describe('forwardRef', () => {
 
     expect(() => React.forwardRef(arityOfThree)).toWarnDev(
       'forwardRef render functions accept exactly two parameters: props and ref. ' +
-        'Any additional parameter will be undefined',
+        'Any additional parameter will be undefined.',
       {withoutStack: true},
     );
   });
