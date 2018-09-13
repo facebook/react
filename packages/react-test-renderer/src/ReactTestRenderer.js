@@ -285,9 +285,8 @@ class ReactTestInstance {
   get instance() {
     if (this._fiber.tag === HostComponent) {
       return ReactTestHostConfig.getPublicInstance(this._fiber.stateNode);
-    } else {
-      return this._fiber.stateNode;
     }
+    return this._fiber.stateNode;
   }
 
   get type() {

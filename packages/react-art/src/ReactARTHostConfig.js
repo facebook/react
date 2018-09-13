@@ -81,37 +81,37 @@ function destroyEventListeners(instance) {
 function getScaleX(props) {
   if (props.scaleX != null) {
     return props.scaleX;
-  } else if (props.scale != null) {
-    return props.scale;
-  } else {
-    return 1;
   }
+  if (props.scale != null) {
+    return props.scale;
+  }
+  return 1;
 }
 
 function getScaleY(props) {
   if (props.scaleY != null) {
     return props.scaleY;
-  } else if (props.scale != null) {
-    return props.scale;
-  } else {
-    return 1;
   }
+  if (props.scale != null) {
+    return props.scale;
+  }
+  return 1;
 }
 
 function isSameFont(oldFont, newFont) {
   if (oldFont === newFont) {
     return true;
-  } else if (typeof newFont === 'string' || typeof oldFont === 'string') {
-    return false;
-  } else {
-    return (
-      newFont.fontSize === oldFont.fontSize &&
-      newFont.fontStyle === oldFont.fontStyle &&
-      newFont.fontVariant === oldFont.fontVariant &&
-      newFont.fontWeight === oldFont.fontWeight &&
-      newFont.fontFamily === oldFont.fontFamily
-    );
   }
+  if (typeof newFont === 'string' || typeof oldFont === 'string') {
+    return false;
+  }
+  return (
+    newFont.fontSize === oldFont.fontSize &&
+    newFont.fontStyle === oldFont.fontStyle &&
+    newFont.fontVariant === oldFont.fontVariant &&
+    newFont.fontWeight === oldFont.fontWeight &&
+    newFont.fontFamily === oldFont.fontFamily
+  );
 }
 
 /** Render Methods */

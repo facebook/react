@@ -275,9 +275,8 @@ export function getChildHostContext(
 
   if (prevIsInAParentText !== isInAParentText) {
     return {isInAParentText};
-  } else {
-    return parentHostContext;
   }
+  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): * {
