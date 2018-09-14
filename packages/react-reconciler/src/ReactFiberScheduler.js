@@ -1744,9 +1744,7 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
     return;
   }
 
-  if (enableSchedulerTracking) {
-    storeInteractionsForExpirationTime(root, expirationTime, true);
-  }
+  storeInteractionsForExpirationTime(root, expirationTime, true);
 
   if (
     !isWorking &&
