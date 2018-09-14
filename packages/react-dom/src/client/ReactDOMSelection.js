@@ -152,7 +152,7 @@ export function getModernOffsetsFromPoints(
  */
 export function setOffsets(node, offsets) {
   const doc = node.ownerDocument || document;
-  const win = doc ? doc.defaultView : window;
+  const win = (doc && doc.defaultView) || window;
   const selection = win.getSelection();
   const length = node.textContent.length;
   let start = Math.min(offsets.start, length);
