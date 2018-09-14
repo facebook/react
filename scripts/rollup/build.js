@@ -38,6 +38,7 @@ process.on('unhandledRejection', err => {
 const {
   UMD_DEV,
   UMD_PROD,
+  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -113,6 +114,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
       });
     case UMD_DEV:
     case UMD_PROD:
+    case UMD_PROFILING:
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
@@ -158,6 +160,7 @@ function getFormat(bundleType) {
   switch (bundleType) {
     case UMD_DEV:
     case UMD_PROD:
+    case UMD_PROFILING:
       return `umd`;
     case NODE_DEV:
     case NODE_PROD:
@@ -183,6 +186,8 @@ function getFilename(name, globalName, bundleType) {
       return `${name}.development.js`;
     case UMD_PROD:
       return `${name}.production.min.js`;
+    case UMD_PROFILING:
+      return `${name}.profiling.min.js`;
     case NODE_DEV:
       return `${name}.development.js`;
     case NODE_PROD:
@@ -214,6 +219,7 @@ function isProductionBundleType(bundleType) {
       return false;
     case UMD_PROD:
     case NODE_PROD:
+    case UMD_PROFILING:
     case NODE_PROFILING:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
@@ -244,6 +250,7 @@ function isProfilingBundleType(bundleType) {
     case NODE_PROFILING:
     case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
+    case UMD_PROFILING:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -280,7 +287,10 @@ function getPlugins(
   const forks = Modules.getForks(bundleType, entry, moduleType);
   const isProduction = isProductionBundleType(bundleType);
   const isProfiling = isProfilingBundleType(bundleType);
-  const isUMDBundle = bundleType === UMD_DEV || bundleType === UMD_PROD;
+  const isUMDBundle =
+    bundleType === UMD_DEV ||
+    bundleType === UMD_PROD ||
+    bundleType === UMD_PROFILING;
   const isFBBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
@@ -430,7 +440,9 @@ async function createBundle(bundle, bundleType) {
   }
 
   const shouldBundleDependencies =
-    bundleType === UMD_DEV || bundleType === UMD_PROD;
+    bundleType === UMD_DEV ||
+    bundleType === UMD_PROD ||
+    bundleType === UMD_PROFILING;
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
   if (!shouldBundleDependencies) {
@@ -580,6 +592,7 @@ async function buildEverything() {
   for (const bundle of Bundles.bundles) {
     await createBundle(bundle, UMD_DEV);
     await createBundle(bundle, UMD_PROD);
+    await createBundle(bundle, UMD_PROFILING);
     await createBundle(bundle, NODE_DEV);
     await createBundle(bundle, NODE_PROD);
     await createBundle(bundle, NODE_PROFILING);
