@@ -426,6 +426,46 @@ describe('ReactDOMTextarea', () => {
     ReactDOM.render(<textarea value={undefined} />, container);
   });
 
+  it('does not set textContent if value is unchanged', () => {
+    const container = document.createElement('div');
+    let node;
+    let instance;
+    // Setting defaultValue on a textarea is equivalent to setting textContent,
+    // and is the method we currently use, so we can observe if defaultValue is
+    // is set to determine if textContent is being recreated.
+    // https://html.spec.whatwg.org/#the-textarea-element
+    let defaultValue;
+    const set = jest.fn(value => {
+      defaultValue = value;
+    });
+    const get = jest.fn(value => {
+      return defaultValue;
+    });
+    class App extends React.Component {
+      state = {count: 0, text: 'foo'};
+      componentDidMount() {
+        instance = this;
+      }
+      render() {
+        return (
+          <div>
+            <span>{this.state.count}</span>
+            <textarea
+              ref={n => (node = n)}
+              value="foo"
+              onChange={emptyFunction}
+            />
+          </div>
+        );
+      }
+    }
+    ReactDOM.render(<App />, container);
+    defaultValue = node.defaultValue;
+    Object.defineProperty(node, 'defaultValue', {get, set});
+    instance.setState({count: 1});
+    expect(set.mock.calls.length).toBe(0);
+  });
+
   describe('When given a Symbol value', () => {
     it('treats initial Symbol value as an empty string', () => {
       const container = document.createElement('div');
