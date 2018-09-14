@@ -16,7 +16,7 @@ type FrameTimeoutConfigType = {
   timePastFrameDeadline: ?number,
 };
 
-describe('Schedule', () => {
+describe('ScheduleDOM', () => {
   let rAFCallbacks = [];
   let postMessageCallback;
   let postMessageEvents = [];
@@ -309,10 +309,10 @@ describe('Schedule', () => {
           const callbackC = jest.fn(() => callbackLog.push('C'));
           const callbackD = jest.fn(() => callbackLog.push('D'));
 
-          scheduleWork(callbackA); // won't time out
+          scheduleWork(callbackA, {timeout: 100}); // won't time out
           scheduleWork(callbackB, {timeout: 100}); // times out later
           scheduleWork(callbackC, {timeout: 2}); // will time out fast
-          scheduleWork(callbackD); // won't time out
+          scheduleWork(callbackD, {timeout: 200}); // won't time out
 
           advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
 
