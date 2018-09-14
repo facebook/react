@@ -1,9 +1,3 @@
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
 
 'use strict';
 
@@ -114,24 +108,17 @@ function git(args) {
   // make an array comparing the results for printing
   const previousBuildResults = await response.json();
   const results = generateResultsArray(
-    currentBuildResults,
-    previousBuildResults
-  );
-
+    currentBuildResults, previousBuildResults);
   const packagesToShow = results
     .filter(
       r =>
         Math.abs(r.prevFileSizeAbsoluteChange) >= 300 || // bytes
         Math.abs(r.prevGzipSizeAbsoluteChange) >= 100 // bytes
-    )
-    .map(r => r.packageName);
-
+    ).map(r => r.packageName);
   if (packagesToShow.length) {
     let allTables = [];
-
     // Highlight React and React DOM changes inline
     // e.g. react: `react.production.min.js`: -3%, `react.development.js`: +4%
-
     if (packagesToShow.includes('react')) {
       const reactProd = results.find(
         r => r.bundleType === 'UMD_PROD' && r.packageName === 'react'
