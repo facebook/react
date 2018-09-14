@@ -132,11 +132,9 @@ function git(args) {
         markdown(`React: size: ${changeSize}, gzip: ${changeGzip}`);
       }
     }
-
     if (packagesToShow.includes('react-dom')) {
       const reactDOMProd = results.find(
-        r => r.bundleType === 'UMD_PROD' && r.packageName === 'react-dom'
-      );
+        r => r.bundleType === 'UMD_PROD' && r.packageName === 'react-dom');
       if (
         reactDOMProd.prevFileSizeChange !== 0 ||
         reactDOMProd.prevGzipSizeChange !== 0
@@ -146,16 +144,12 @@ function git(args) {
         markdown(`ReactDOM: size: ${changeSize}, gzip: ${changeGzip}`);
       }
     }
-
     // Show a hidden summary table for all diffs
-
     // eslint-disable-next-line no-var,no-for-of-loops/no-for-of-loops
     for (var name of new Set(packagesToShow)) {
       const thisBundleResults = results.filter(r => r.packageName === name);
       const changedFiles = thisBundleResults.filter(
-        r => r.prevFileSizeChange !== 0 || r.prevGzipSizeChange !== 0
-      );
-
+        r => r.prevFileSizeChange !== 0 || r.prevGzipSizeChange !== 0);
       const mdHeaders = [
         'File',
         'Filesize Diff',
@@ -166,7 +160,6 @@ function git(args) {
         'Current Gzip',
         'ENV',
       ];
-
       const mdRows = changedFiles.map(r => {
         const isProd = r.bundleType.includes('PROD');
         return setBoldness(
@@ -179,26 +172,18 @@ function git(args) {
             r.prevGzip,
             r.prevGzipSize,
             r.bundleType,
-          ],
-          isProd
-        );
+          ], isProd);
       });
-
       allTables.push(`\n## ${name}`);
       allTables.push(generateMDTable(mdHeaders, mdRows));
     }
-
     const summary = `
   <details>
   <summary>Details of bundled changes.</summary>
-
   <p>Comparing: ${mergeBaseCommit}...${danger.github.pr.head.sha}</p>
-
-
   ${allTables.join('\n')}
-
   </details>
   `;
-    markdown(summary);
+      markdown(summary);
   }
 })();

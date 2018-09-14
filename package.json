@@ -1,5 +1,9 @@
 {
-  "private": true,
+  "private": false,
+  "author":"facebook Inc",
+  "name":"React",
+  "Description":"Framework for web and mobile user interfaces",
+  "License":"MIT",
   "version": "16.4.1",
   "workspaces": [
     "packages/*"
