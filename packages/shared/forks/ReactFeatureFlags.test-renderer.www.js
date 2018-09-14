@@ -21,7 +21,7 @@ export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
-export const enableSchedulerTracking = false;
+export const enableSchedulerTracing = false;
 export const enableSuspenseServerRenderer = false;
 
 // Only used in www builds.

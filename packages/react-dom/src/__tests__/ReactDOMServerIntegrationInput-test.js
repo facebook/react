@@ -10,6 +10,8 @@
 'use strict';
 
 const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegrationTestUtils');
+// Set by `yarn test-fire`.
+const {disableInputAttributeSyncing} = require('shared/ReactFeatureFlags');
 
 let React;
 let ReactDOM;
@@ -31,7 +33,9 @@ function initModules() {
 
 const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
 
-describe('ReactDOMServerIntegrationInput', () => {
+// TODO: Run this in React Fire mode after we figure out the SSR behavior.
+const desc = disableInputAttributeSyncing ? xdescribe : describe;
+desc('ReactDOMServerIntegrationInput', () => {
   beforeEach(() => {
     resetModules();
   });

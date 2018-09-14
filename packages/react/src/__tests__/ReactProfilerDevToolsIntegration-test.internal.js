@@ -14,7 +14,7 @@ describe('ReactProfiler DevTools integration', () => {
   let React;
   let ReactFeatureFlags;
   let ReactTestRenderer;
-  let SchedulerTracking;
+  let SchedulerTracing;
   let AdvanceTime;
   let advanceTimeBy;
   let hook;
@@ -38,8 +38,8 @@ describe('ReactProfiler DevTools integration', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableProfilerTimer = true;
-    ReactFeatureFlags.enableSchedulerTracking = true;
-    SchedulerTracking = require('schedule/tracking');
+    ReactFeatureFlags.enableSchedulerTracing = true;
+    SchedulerTracing = require('schedule/tracing');
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
 
@@ -168,7 +168,7 @@ describe('ReactProfiler DevTools integration', () => {
     ).toBe(7);
   });
 
-  it('should store tracked interactions on the HostNode so DevTools can access them', () => {
+  it('should store traced interactions on the HostNode so DevTools can access them', () => {
     // Render without an interaction
     const rendered = ReactTestRenderer.create(<div />);
 
@@ -180,7 +180,7 @@ describe('ReactProfiler DevTools integration', () => {
     const eventTime = mockNow();
 
     // Render with an interaction
-    SchedulerTracking.unstable_track('some event', eventTime, () => {
+    SchedulerTracing.unstable_trace('some event', eventTime, () => {
       rendered.update(<div />);
     });
 

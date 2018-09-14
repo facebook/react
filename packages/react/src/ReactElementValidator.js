@@ -197,7 +197,9 @@ function validatePropTypes(element) {
   ) {
     // ForwardRef
     const functionName = type.render.displayName || type.render.name || '';
-    name = functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef';
+    name =
+      type.displayName ||
+      (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef');
     propTypes = type.propTypes;
   } else {
     return;

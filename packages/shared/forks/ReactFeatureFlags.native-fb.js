@@ -20,13 +20,14 @@ export const {
   debugRenderPhaseSideEffectsForStrictMode,
   warnAboutDeprecatedLifecycles,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
+  disableInputAttributeSyncing,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutLegacyContextAPI = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
-export const enableSchedulerTracking = __PROFILE__;
+export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 
 // Only used in www builds.

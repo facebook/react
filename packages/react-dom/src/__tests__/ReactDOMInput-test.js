@@ -9,6 +9,9 @@
 
 'use strict';
 
+// Set by `yarn test-fire`.
+const {disableInputAttributeSyncing} = require('shared/ReactFeatureFlags');
+
 function emptyFunction() {}
 
 describe('ReactDOMInput', () => {
@@ -230,11 +233,14 @@ describe('ReactDOMInput', () => {
       const node = ReactDOM.render(stub, container);
 
       setUntrackedValue.call(node, '2.0');
-
       dispatchEventOnNode(node, 'input');
 
-      expect(node.getAttribute('value')).toBe('2');
       expect(node.value).toBe('2');
+      if (disableInputAttributeSyncing) {
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.getAttribute('value')).toBe('2');
+      }
     });
 
     it('does change the string "2" to "2.0" with no change handler', () => {
@@ -242,11 +248,14 @@ describe('ReactDOMInput', () => {
       const node = ReactDOM.render(stub, container);
 
       setUntrackedValue.call(node, '2.0');
-
       dispatchEventOnNode(node, 'input');
 
-      expect(node.getAttribute('value')).toBe('2');
       expect(node.value).toBe('2');
+      if (disableInputAttributeSyncing) {
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.getAttribute('value')).toBe('2');
+      }
     });
 
     it('changes the number 2 to "2.0" using a change handler', () => {
@@ -268,11 +277,14 @@ describe('ReactDOMInput', () => {
       const node = ReactDOM.findDOMNode(stub);
 
       setUntrackedValue.call(node, '2.0');
-
       dispatchEventOnNode(node, 'input');
 
-      expect(node.getAttribute('value')).toBe('2.0');
       expect(node.value).toBe('2.0');
+      if (disableInputAttributeSyncing) {
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.getAttribute('value')).toBe('2.0');
+      }
     });
   });
 
@@ -419,11 +431,17 @@ describe('ReactDOMInput', () => {
     );
 
     expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
 
     ReactDOM.render(<input type="text" defaultValue="1" />, container);
 
-    expect(node.value).toBe('0');
-    expect(node.defaultValue).toBe('1');
+    if (disableInputAttributeSyncing) {
+      expect(node.value).toBe('1');
+      expect(node.defaultValue).toBe('1');
+    } else {
+      expect(node.value).toBe('0');
+      expect(node.defaultValue).toBe('1');
+    }
   });
 
   it('should update `defaultValue` for uncontrolled date/time input', () => {
@@ -433,11 +451,17 @@ describe('ReactDOMInput', () => {
     );
 
     expect(node.value).toBe('1980-01-01');
+    expect(node.defaultValue).toBe('1980-01-01');
 
     ReactDOM.render(<input type="date" defaultValue="2000-01-01" />, container);
 
-    expect(node.value).toBe('1980-01-01');
-    expect(node.defaultValue).toBe('2000-01-01');
+    if (disableInputAttributeSyncing) {
+      expect(node.value).toBe('2000-01-01');
+      expect(node.defaultValue).toBe('2000-01-01');
+    } else {
+      expect(node.value).toBe('1980-01-01');
+      expect(node.defaultValue).toBe('2000-01-01');
+    }
 
     ReactDOM.render(<input type="date" />, container);
   });
@@ -651,7 +675,16 @@ describe('ReactDOMInput', () => {
 
     setUntrackedValue.call(node, '0.0');
     dispatchEventOnNode(node, 'input');
-    expect(node.value).toBe('0.0');
+
+    if (disableInputAttributeSyncing) {
+      expect(node.value).toBe('0.0');
+      expect(node.hasAttribute('value')).toBe(false);
+    } else {
+      dispatchEventOnNode(node, 'blur');
+
+      expect(node.value).toBe('0.0');
+      expect(node.getAttribute('value')).toBe('0.0');
+    }
   });
 
   it('should properly transition from an empty value to 0', function() {
@@ -665,9 +698,13 @@ describe('ReactDOMInput', () => {
     );
 
     const node = container.firstChild;
-
     expect(node.value).toBe('0');
-    expect(node.defaultValue).toBe('0');
+
+    if (disableInputAttributeSyncing) {
+      expect(node.hasAttribute('value')).toBe(false);
+    } else {
+      expect(node.defaultValue).toBe('0');
+    }
   });
 
   it('should properly transition from 0 to an empty value', function() {
@@ -699,7 +736,11 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('0.0');
-    expect(node.defaultValue).toBe('0.0');
+    if (disableInputAttributeSyncing) {
+      expect(node.hasAttribute('value')).toBe(false);
+    } else {
+      expect(node.defaultValue).toBe('0.0');
+    }
   });
 
   it('should properly transition a number input from "" to 0', function() {
@@ -715,7 +756,11 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('0');
-    expect(node.defaultValue).toBe('0');
+    if (disableInputAttributeSyncing) {
+      expect(node.hasAttribute('value')).toBe(false);
+    } else {
+      expect(node.defaultValue).toBe('0');
+    }
   });
 
   it('should properly transition a number input from "" to "0"', function() {
@@ -731,7 +776,11 @@ describe('ReactDOMInput', () => {
     const node = container.firstChild;
 
     expect(node.value).toBe('0');
-    expect(node.defaultValue).toBe('0');
+    if (disableInputAttributeSyncing) {
+      expect(node.hasAttribute('value')).toBe(false);
+    } else {
+      expect(node.defaultValue).toBe('0');
+    }
   });
 
   it('should have the correct target value', () => {
@@ -956,21 +1005,34 @@ describe('ReactDOMInput', () => {
     const cNode = stub.refs.c;
 
     expect(aNode.checked).toBe(true);
-    expect(aNode.hasAttribute('checked')).toBe(true);
     expect(bNode.checked).toBe(false);
-    expect(bNode.hasAttribute('checked')).toBe(false);
     // c is in a separate form and shouldn't be affected at all here
     expect(cNode.checked).toBe(true);
-    expect(cNode.hasAttribute('checked')).toBe(true);
+
+    if (disableInputAttributeSyncing) {
+      expect(aNode.hasAttribute('checked')).toBe(false);
+      expect(bNode.hasAttribute('checked')).toBe(false);
+      expect(cNode.hasAttribute('checked')).toBe(true);
+    } else {
+      expect(aNode.hasAttribute('checked')).toBe(true);
+      expect(bNode.hasAttribute('checked')).toBe(false);
+      expect(cNode.hasAttribute('checked')).toBe(true);
+    }
 
     setUntrackedChecked.call(bNode, true);
     expect(aNode.checked).toBe(false);
     expect(cNode.checked).toBe(true);
 
     // The original 'checked' attribute should be unchanged
-    expect(aNode.hasAttribute('checked')).toBe(true);
-    expect(bNode.hasAttribute('checked')).toBe(false);
-    expect(cNode.hasAttribute('checked')).toBe(true);
+    if (disableInputAttributeSyncing) {
+      expect(aNode.hasAttribute('checked')).toBe(false);
+      expect(bNode.hasAttribute('checked')).toBe(false);
+      expect(cNode.hasAttribute('checked')).toBe(true);
+    } else {
+      expect(aNode.hasAttribute('checked')).toBe(true);
+      expect(bNode.hasAttribute('checked')).toBe(false);
+      expect(cNode.hasAttribute('checked')).toBe(true);
+    }
 
     // Now let's run the actual ReactDOMInput change event handler
     dispatchEventOnNode(bNode, 'click');
@@ -1516,15 +1578,26 @@ describe('ReactDOMInput', () => {
       />,
       container,
     );
-    expect(log).toEqual([
-      'set attribute type',
-      'set attribute min',
-      'set attribute max',
-      'set attribute step',
-      'set property value',
-      'set attribute value',
-      'set attribute checked',
-    ]);
+
+    if (disableInputAttributeSyncing) {
+      expect(log).toEqual([
+        'set attribute type',
+        'set attribute min',
+        'set attribute max',
+        'set attribute step',
+        'set property value',
+      ]);
+    } else {
+      expect(log).toEqual([
+        'set attribute type',
+        'set attribute min',
+        'set attribute max',
+        'set attribute step',
+        'set property value',
+        'set attribute value',
+        'set attribute checked',
+      ]);
+    }
   });
 
   it('sets value properly with type coming later in props', () => {
@@ -1579,12 +1652,20 @@ describe('ReactDOMInput', () => {
     });
 
     ReactDOM.render(<input type="date" defaultValue="1980-01-01" />, container);
-    expect(log).toEqual([
-      'node.setAttribute("type", "date")',
-      'node.value = "1980-01-01"',
-      'node.setAttribute("value", "1980-01-01")',
-      'node.setAttribute("checked", "")',
-    ]);
+
+    if (disableInputAttributeSyncing) {
+      expect(log).toEqual([
+        'node.setAttribute("type", "date")',
+        'node.setAttribute("value", "1980-01-01")',
+      ]);
+    } else {
+      expect(log).toEqual([
+        'node.setAttribute("type", "date")',
+        'node.value = "1980-01-01"',
+        'node.setAttribute("value", "1980-01-01")',
+        'node.setAttribute("checked", "")',
+      ]);
+    }
   });
 
   describe('assigning the value attribute on controlled inputs', function() {
@@ -1613,7 +1694,11 @@ describe('ReactDOMInput', () => {
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
 
-      expect(node.getAttribute('value')).toBe('2');
+      if (disableInputAttributeSyncing) {
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.getAttribute('value')).toBe('2');
+      }
     });
 
     it('does not set the value attribute on number inputs if focused', () => {
@@ -1629,7 +1714,11 @@ describe('ReactDOMInput', () => {
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
 
-      expect(node.getAttribute('value')).toBe('1');
+      if (disableInputAttributeSyncing) {
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.getAttribute('value')).toBe('1');
+      }
     });
 
     it('sets the value attribute on number inputs on blur', () => {
@@ -1640,11 +1729,23 @@ describe('ReactDOMInput', () => {
       );
       const node = ReactDOM.findDOMNode(stub);
 
+      node.focus();
       setUntrackedValue.call(node, '2');
       dispatchEventOnNode(node, 'input');
+      // TODO: it is unclear why blur must be triggered twice,
+      // manual testing in the fixtures shows that the active element
+      // is no longer the input, however blur() + a blur event seem to
+      // be the only way to remove focus in JSDOM
+      node.blur();
       dispatchEventOnNode(node, 'blur');
 
-      expect(node.getAttribute('value')).toBe('2');
+      if (disableInputAttributeSyncing) {
+        expect(node.value).toBe('2');
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.value).toBe('2');
+        expect(node.getAttribute('value')).toBe('2');
+      }
     });
 
     it('an uncontrolled number input will not update the value attribute on blur', () => {
@@ -1653,8 +1754,14 @@ describe('ReactDOMInput', () => {
         container,
       );
 
+      node.focus();
       setUntrackedValue.call(node, 4);
-
+      dispatchEventOnNode(node, 'input');
+      // TODO: it is unclear why blur must be triggered twice,
+      // manual testing in the fixtures shows that the active element
+      // is no longer the input, however blur() + a blur event seem to
+      // be the only way to remove focus in JSDOM
+      node.blur();
       dispatchEventOnNode(node, 'blur');
 
       expect(node.getAttribute('value')).toBe('1');
@@ -1666,8 +1773,14 @@ describe('ReactDOMInput', () => {
         container,
       );
 
+      node.focus();
       setUntrackedValue.call(node, 4);
-
+      dispatchEventOnNode(node, 'input');
+      // TODO: it is unclear why blur must be triggered twice,
+      // manual testing in the fixtures shows that the active element
+      // is no longer the input, however blur() + a blur event seem to
+      // be the only way to remove focus in JSDOM
+      node.blur();
       dispatchEventOnNode(node, 'blur');
 
       expect(node.getAttribute('value')).toBe('1');
@@ -1707,7 +1820,11 @@ describe('ReactDOMInput', () => {
         'Input elements should not switch from controlled to ' +
           'uncontrolled (or vice versa).',
       );
-      expect(input.getAttribute('value')).toBe('first');
+      if (disableInputAttributeSyncing) {
+        expect(input.getAttribute('value')).toBe(null);
+      } else {
+        expect(input.getAttribute('value')).toBe('first');
+      }
     });
 
     it('preserves the value property', () => {
@@ -1755,7 +1872,11 @@ describe('ReactDOMInput', () => {
         'Input elements should not switch from controlled ' +
           'to uncontrolled (or vice versa).',
       ]);
-      expect(input.getAttribute('value')).toBe('first');
+      if (disableInputAttributeSyncing) {
+        expect(input.hasAttribute('value')).toBe(false);
+      } else {
+        expect(input.getAttribute('value')).toBe('first');
+      }
     });
 
     it('preserves the value property', () => {
@@ -1781,7 +1902,11 @@ describe('ReactDOMInput', () => {
       const node = container.firstChild;
 
       expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe('');
+      if (disableInputAttributeSyncing) {
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.getAttribute('value')).toBe('');
+      }
     });
 
     it('treats updated Symbol value as an empty string', function() {
@@ -1795,7 +1920,11 @@ describe('ReactDOMInput', () => {
       const node = container.firstChild;
 
       expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe('');
+      if (disableInputAttributeSyncing) {
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.getAttribute('value')).toBe('');
+      }
     });
 
     it('treats initial Symbol defaultValue as an empty string', function() {
@@ -1812,7 +1941,11 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
       const node = container.firstChild;
 
-      expect(node.value).toBe('foo');
+      if (disableInputAttributeSyncing) {
+        expect(node.value).toBe('');
+      } else {
+        expect(node.value).toBe('foo');
+      }
       expect(node.getAttribute('value')).toBe('');
       // TODO: we should warn here.
     });
@@ -1829,7 +1962,11 @@ describe('ReactDOMInput', () => {
       const node = container.firstChild;
 
       expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe('');
+      if (disableInputAttributeSyncing) {
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.getAttribute('value')).toBe('');
+      }
     });
 
     it('treats updated function value as an empty string', function() {
@@ -1843,7 +1980,11 @@ describe('ReactDOMInput', () => {
       const node = container.firstChild;
 
       expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe('');
+      if (disableInputAttributeSyncing) {
+        expect(node.hasAttribute('value')).toBe(false);
+      } else {
+        expect(node.getAttribute('value')).toBe('');
+      }
     });
 
     it('treats initial function defaultValue as an empty string', function() {
@@ -1860,8 +2001,13 @@ describe('ReactDOMInput', () => {
       ReactDOM.render(<input defaultValue={() => {}} />, container);
       const node = container.firstChild;
 
-      expect(node.value).toBe('foo');
-      expect(node.getAttribute('value')).toBe('');
+      if (disableInputAttributeSyncing) {
+        expect(node.value).toBe('');
+        expect(node.getAttribute('value')).toBe('');
+      } else {
+        expect(node.value).toBe('foo');
+        expect(node.getAttribute('value')).toBe('');
+      }
       // TODO: we should warn here.
     });
   });
