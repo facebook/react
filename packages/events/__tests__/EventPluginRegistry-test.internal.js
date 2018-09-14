@@ -13,7 +13,7 @@ describe('EventPluginRegistry', () => {
   let EventPluginRegistry;
   let createPlugin;
 
-  // @TODO: Test more, code reuse to avoid duplicate code
+  // Function to perform common tests on top of EventPluginRegistry
   const testEventPlugin = (eventPluginOrder, eventPluginsByName) => {
     EventPluginRegistry.injectEventPluginOrder(eventPluginOrder);
 
