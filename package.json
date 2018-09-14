@@ -1,5 +1,5 @@
 {
-  "private": false,
+  "private": true,
   "author":"facebook Inc",
   "name":"React",
   "Description":"Framework for web and mobile user interfaces",
