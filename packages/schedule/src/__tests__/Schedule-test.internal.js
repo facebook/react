@@ -92,7 +92,7 @@ describe('Schedule', () => {
     // Override host implementation
     delete global.performance;
     global.Date.now = () => currentTime;
-    window._sched = [requestCallback, cancelCallback, getTimeRemaining];
+    window._schedMock = [requestCallback, cancelCallback, getTimeRemaining];
 
     const Schedule = require('schedule');
     scheduleWork = Schedule.unstable_scheduleWork;
