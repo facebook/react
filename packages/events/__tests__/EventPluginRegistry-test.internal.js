@@ -1,7 +1,7 @@
 /**
- * Copyright (c) Facebook, Inc. and xits affiliates.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the Mxit license found in the
+ * This source code is licensed under the Mit license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
@@ -21,9 +21,9 @@ describe('EventPluginRegistry', () => {
       EventPluginRegistry.injectEventPluginsByName(pluginByName);
     });
 
-    expect(EventPluginRegistry.plugins.length).toBe(eventPluginOrder.length);
-
     const mergedEventPluginsByName = Object.assign({}, ...eventPluginsByName)
+
+    expect(EventPluginRegistry.plugins.length).toBe(eventPluginOrder.length);
 
     EventPluginRegistry.plugins.forEach((plugin, index) => {
       expect(mergedEventPluginsByName[eventPluginOrder[index]]).toBe(plugin);
@@ -78,24 +78,23 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should be able to inject repeated plugins and out-of-order', () => {
-    const OnePlugin = createPlugin();
-    const TwoPlugin = createPlugin();
-    const ThreePlugin = createPlugin();
+    const [OnePlugin, TwoPlugin, ThreePlugin] = Array.from({length: 3}, () =>
+      createPlugin(),
+    );
 
-    EventPluginRegistry.injectEventPluginsByName({
-      one: OnePlugin,
-      three: ThreePlugin,
-    });
-    EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
-    EventPluginRegistry.injectEventPluginsByName({
-      two: TwoPlugin,
-      three: ThreePlugin,
-    });
-
-    expect(EventPluginRegistry.plugins.length).toBe(3);
-    expect(EventPluginRegistry.plugins[0]).toBe(OnePlugin);
-    expect(EventPluginRegistry.plugins[1]).toBe(TwoPlugin);
-    expect(EventPluginRegistry.plugins[2]).toBe(ThreePlugin);
+    testEventPlugin(
+      ['one', 'two', 'three'],
+      [
+        {
+          one: OnePlugin,
+          three: ThreePlugin,
+        },
+        {
+          two: TwoPlugin,
+          three: ThreePlugin,
+        },
+      ],
+    );
   });
 
   it('should be able to inject repeated plugins and out-of-order', () => {
