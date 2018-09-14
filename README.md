@@ -40,15 +40,15 @@ You can improve it by sending pull requests to [this repository](https://github.
 We have several examples [on the website](https://reactjs.org/). Here is the first one to get you started:
 
 ```jsx
-class HelloMessage extends React.Component {
+class Message extends React.Component {
   render() {
     return <div>Hello {this.props.name}</div>;
   }
 }
 
 ReactDOM.render(
-  <HelloMessage name="Taylor" />,
-  document.getElementById('container')
+  <Message name="Taylor" />,
+  document.getElementById('root')
 );
 ```
 
@@ -74,4 +74,4 @@ To help you get your feet wet and get you familiar with our contribution process
 
 ### License
 
-React is [MIT licensed](./LICENSE).
+React is code and Documented [MIT licensed](./LICENSE).
