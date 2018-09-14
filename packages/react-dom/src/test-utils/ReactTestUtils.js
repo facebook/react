@@ -42,7 +42,9 @@ const [
   runEventsInBatch,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
-function Event(suffix) {}
+function Event(type) {
+  this.type = type;
+}
 
 let hasWarnedAboutDeprecatedMockComponent = false;
 
@@ -59,7 +61,7 @@ let hasWarnedAboutDeprecatedMockComponent = false;
  */
 function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
   fakeNativeEvent.target = node;
-  dispatchEvent(topLevelType, fakeNativeEvent);
+  dispatchEvent(fakeNativeEvent);
 }
 
 /**
