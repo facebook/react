@@ -21,7 +21,7 @@ describe('EventPluginRegistry', () => {
       EventPluginRegistry.injectEventPluginsByName(pluginByName);
     });
 
-    const mergedEventPluginsByName = Object.assign({}, ...eventPluginsByName)
+    const mergedEventPluginsByName = Object.assign({}, ...eventPluginsByName);
 
     expect(EventPluginRegistry.plugins.length).toBe(eventPluginOrder.length);
 
@@ -43,7 +43,7 @@ describe('EventPluginRegistry', () => {
     };
   });
 
-  xit('should be able to inject ordering before plugins', () => {
+  it('should be able to inject ordering before plugins', () => {
     const [OnePlugin, TwoPlugin, ThreePlugin] = Array.from({length: 3}, () =>
       createPlugin(),
     );
@@ -60,7 +60,7 @@ describe('EventPluginRegistry', () => {
     );
   });
 
-  xit('should be able to inject plugins before and after ordering', () => {
+  it('should be able to inject plugins before and after ordering', () => {
     const [OnePlugin, TwoPlugin, ThreePlugin] = Array.from({length: 3}, () =>
       createPlugin(),
     );
@@ -97,28 +97,7 @@ describe('EventPluginRegistry', () => {
     );
   });
 
-  it('should be able to inject repeated plugins and out-of-order', () => {
-    const OnePlugin = createPlugin();
-    const TwoPlugin = createPlugin();
-    const ThreePlugin = createPlugin();
-
-    EventPluginRegistry.injectEventPluginsByName({
-      one: OnePlugin,
-      three: ThreePlugin,
-    });
-    EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
-    EventPluginRegistry.injectEventPluginsByName({
-      two: TwoPlugin,
-      three: ThreePlugin,
-    });
-
-    expect(EventPluginRegistry.plugins.length).toBe(3);
-    expect(EventPluginRegistry.plugins[0]).toBe(OnePlugin);
-    expect(EventPluginRegistry.plugins[1]).toBe(TwoPlugin);
-    expect(EventPluginRegistry.plugins[2]).toBe(ThreePlugin);
-  });
-
-  xit('should throw if plugin does not implement `extractEvents`', () => {
+  it('should throw if plugin does not implement `extractEvents`', () => {
     const BadPlugin = {};
 
     EventPluginRegistry.injectEventPluginOrder(['bad']);
@@ -133,9 +112,10 @@ describe('EventPluginRegistry', () => {
     );
   });
 
-  xit('should throw if plugin does not exist in ordering', () => {
-    const OnePlugin = createPlugin();
-    const RandomPlugin = createPlugin();
+  it('should throw if plugin does not exist in ordering', () => {
+    const [OnePlugin, RandomPlugin] = Array.from({length: 2}, () =>
+      createPlugin(),
+    );
 
     EventPluginRegistry.injectEventPluginOrder(['one']);
 
@@ -150,7 +130,7 @@ describe('EventPluginRegistry', () => {
     );
   });
 
-  xit('should throw if ordering is injected more than once', () => {
+  it('should throw if ordering is injected more than once', () => {
     const pluginOrdering = [];
 
     EventPluginRegistry.injectEventPluginOrder(pluginOrdering);
@@ -163,9 +143,10 @@ describe('EventPluginRegistry', () => {
     );
   });
 
-  xit('should throw if different plugins injected using same name', () => {
-    const OnePlugin = createPlugin();
-    const TwoPlugin = createPlugin();
+  it('should throw if different plugins injected using same name', () => {
+    const [OnePlugin, TwoPlugin] = Array.from({length: 2}, () =>
+      createPlugin(),
+    );
 
     EventPluginRegistry.injectEventPluginsByName({same: OnePlugin});
 
@@ -177,7 +158,7 @@ describe('EventPluginRegistry', () => {
     );
   });
 
-  xit('should publish registration names of injected plugins', () => {
+  it('should publish registration names of injected plugins', () => {
     const OnePlugin = createPlugin({
       eventTypes: {
         click: {registrationName: 'onClick'},
@@ -217,7 +198,7 @@ describe('EventPluginRegistry', () => {
     );
   });
 
-  xit('should throw if multiple registration names collide', () => {
+  it('should throw if multiple registration names collide', () => {
     const OnePlugin = createPlugin({
       eventTypes: {
         photoCapture: {registrationName: 'onPhotoCapture'},
@@ -247,7 +228,7 @@ describe('EventPluginRegistry', () => {
     );
   });
 
-  xit('should throw if an invalid event is published', () => {
+  it('should throw if an invalid event is published', () => {
     const OnePlugin = createPlugin({
       eventTypes: {
         badEvent: {
