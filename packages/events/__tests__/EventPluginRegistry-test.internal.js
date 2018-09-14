@@ -13,6 +13,23 @@ describe('EventPluginRegistry', () => {
   let EventPluginRegistry;
   let createPlugin;
 
+  // Function to perform common tests on top of EventPluginRegistry
+  const testEventPlugin = (eventPluginOrder, eventPluginsByName) => {
+    EventPluginRegistry.injectEventPluginOrder(eventPluginOrder);
+
+    eventPluginsByName.forEach(pluginByName => {
+      EventPluginRegistry.injectEventPluginsByName(pluginByName);
+    });
+
+    const mergedEventPluginsByName = Object.assign({}, ...eventPluginsByName);
+
+    expect(EventPluginRegistry.plugins.length).toBe(eventPluginOrder.length);
+
+    EventPluginRegistry.plugins.forEach((plugin, index) => {
+      expect(mergedEventPluginsByName[eventPluginOrder[index]]).toBe(plugin);
+    });
+  };
+
   beforeEach(() => {
     jest.resetModuleRegistry();
     // These tests are intentionally testing the private injection interface.
@@ -27,64 +44,57 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should be able to inject ordering before plugins', () => {
-    const OnePlugin = createPlugin();
-    const TwoPlugin = createPlugin();
-    const ThreePlugin = createPlugin();
+    const [OnePlugin, TwoPlugin, ThreePlugin] = Array.from({length: 3}, () =>
+      createPlugin(),
+    );
 
-    EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
-    EventPluginRegistry.injectEventPluginsByName({
-      one: OnePlugin,
-      two: TwoPlugin,
-    });
-    EventPluginRegistry.injectEventPluginsByName({
-      three: ThreePlugin,
-    });
-
-    expect(EventPluginRegistry.plugins.length).toBe(3);
-    expect(EventPluginRegistry.plugins[0]).toBe(OnePlugin);
-    expect(EventPluginRegistry.plugins[1]).toBe(TwoPlugin);
-    expect(EventPluginRegistry.plugins[2]).toBe(ThreePlugin);
+    testEventPlugin(
+      ['one', 'two', 'three'],
+      [
+        {
+          one: OnePlugin,
+          two: TwoPlugin,
+          three: ThreePlugin,
+        },
+      ],
+    );
   });
 
   it('should be able to inject plugins before and after ordering', () => {
-    const OnePlugin = createPlugin();
-    const TwoPlugin = createPlugin();
-    const ThreePlugin = createPlugin();
+    const [OnePlugin, TwoPlugin, ThreePlugin] = Array.from({length: 3}, () =>
+      createPlugin(),
+    );
 
-    EventPluginRegistry.injectEventPluginsByName({
-      one: OnePlugin,
-      two: TwoPlugin,
-    });
-    EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
-    EventPluginRegistry.injectEventPluginsByName({
-      three: ThreePlugin,
-    });
-
-    expect(EventPluginRegistry.plugins.length).toBe(3);
-    expect(EventPluginRegistry.plugins[0]).toBe(OnePlugin);
-    expect(EventPluginRegistry.plugins[1]).toBe(TwoPlugin);
-    expect(EventPluginRegistry.plugins[2]).toBe(ThreePlugin);
+    testEventPlugin(
+      ['one', 'two', 'three'],
+      [
+        {
+          one: OnePlugin,
+          two: TwoPlugin,
+        },
+        {three: ThreePlugin},
+      ],
+    );
   });
 
   it('should be able to inject repeated plugins and out-of-order', () => {
-    const OnePlugin = createPlugin();
-    const TwoPlugin = createPlugin();
-    const ThreePlugin = createPlugin();
+    const [OnePlugin, TwoPlugin, ThreePlugin] = Array.from({length: 3}, () =>
+      createPlugin(),
+    );
 
-    EventPluginRegistry.injectEventPluginsByName({
-      one: OnePlugin,
-      three: ThreePlugin,
-    });
-    EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
-    EventPluginRegistry.injectEventPluginsByName({
-      two: TwoPlugin,
-      three: ThreePlugin,
-    });
-
-    expect(EventPluginRegistry.plugins.length).toBe(3);
-    expect(EventPluginRegistry.plugins[0]).toBe(OnePlugin);
-    expect(EventPluginRegistry.plugins[1]).toBe(TwoPlugin);
-    expect(EventPluginRegistry.plugins[2]).toBe(ThreePlugin);
+    testEventPlugin(
+      ['one', 'two', 'three'],
+      [
+        {
+          one: OnePlugin,
+          three: ThreePlugin,
+        },
+        {
+          two: TwoPlugin,
+          three: ThreePlugin,
+        },
+      ],
+    );
   });
 
   it('should throw if plugin does not implement `extractEvents`', () => {
@@ -103,8 +113,9 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should throw if plugin does not exist in ordering', () => {
-    const OnePlugin = createPlugin();
-    const RandomPlugin = createPlugin();
+    const [OnePlugin, RandomPlugin] = Array.from({length: 2}, () =>
+      createPlugin(),
+    );
 
     EventPluginRegistry.injectEventPluginOrder(['one']);
 
@@ -133,8 +144,9 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should throw if different plugins injected using same name', () => {
-    const OnePlugin = createPlugin();
-    const TwoPlugin = createPlugin();
+    const [OnePlugin, TwoPlugin] = Array.from({length: 2}, () =>
+      createPlugin(),
+    );
 
     EventPluginRegistry.injectEventPluginsByName({same: OnePlugin});
 
