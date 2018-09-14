@@ -9,10 +9,9 @@
 
 'use strict';
 
-const React = require('react');
-const ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-dom/test-utils');
-
+const React = require('react'),
+      ReactDOM = require('react-dom'),
+      ReactTestUtils = require('react-dom/test-utils');
 // Helpers
 const testAllPermutations = function(testCases) {
   for (let i = 0; i < testCases.length; i += 2) {

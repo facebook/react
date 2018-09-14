@@ -9,9 +9,7 @@
 
 'use strict';
 
-let React;
-let ReactDOM;
-let ReactDOMServer;
+let React,ReactDOM, ReactDOMServer;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
@@ -22,20 +20,15 @@ describe('ReactDOMServerHydration', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
   });
-
   it('should have the correct mounting behavior (old hydrate API)', () => {
-    let mountCount = 0;
-    let numClicks = 0;
-
+    let mountCount = 0,numClicks = 0;
     class TestComponent extends React.Component {
       componentDidMount() {
         mountCount++;
       }
-
       click = () => {
         numClicks++;
       };
-
       render() {
         return (
           <span ref="span" onClick={this.click}>
@@ -44,19 +37,15 @@ describe('ReactDOMServerHydration', () => {
         );
       }
     }
-
     const element = document.createElement('div');
     document.body.appendChild(element);
     try {
       ReactDOM.render(<TestComponent />, element);
-
       let lastMarkup = element.innerHTML;
-
       // Exercise the update path. Markup should not change,
       // but some lifecycle methods should be run again.
       ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(1);
-
       // Unmount and remount. We should get another mount event and
       // we should get different markup, as the IDs are unique each time.
       ReactDOM.unmountComponentAtNode(element);
@@ -64,7 +53,6 @@ describe('ReactDOMServerHydration', () => {
       ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(2);
       expect(element.innerHTML).not.toEqual(lastMarkup);
-
       // Now kill the node and render it on top of server-rendered markup, as if
       // we used server rendering. We should mount again, but the markup should
       // be unchanged. We will append a sentinel at the end of innerHTML to be

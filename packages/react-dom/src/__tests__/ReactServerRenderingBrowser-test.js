@@ -10,10 +10,7 @@
 
 'use strict';
 
-let React;
-let ReactDOMServer;
-let ReactDOMServerBrowser;
-
+let React,ReactDOMServer,ReactDOMServerBrowser;
 describe('ReactServerRenderingBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -61,7 +58,6 @@ describe('ReactServerRenderingBrowser', () => {
       ReactDOMServerBrowser.renderToStaticNodeStream(<div />),
     ).toThrow(
       'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
-    );
+        'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.');
   });
 });
