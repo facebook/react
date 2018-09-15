@@ -1,5 +1,8 @@
 {
   "name": "react-fixtures",
+  "author":"facebook",
+  "licence":"MIT",
+  "Description":"Web and mobile framework for create users interfaces"
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
