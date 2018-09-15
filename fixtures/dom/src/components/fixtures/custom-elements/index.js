@@ -3,15 +3,11 @@ import TestCase from '../../TestCase';
 
 const React = window.React;
 const ReactDOM = window.ReactDOM;
-
 const supportsCustomElements = typeof customElements !== 'undefined';
 
 class HelloWorld extends React.Component {
-  render() {
-    return <h1>Hello, world!</h1>;
-  }
+  render() {    return <h1>Hello, world!</h1>;}
 }
-
 if (supportsCustomElements) {
   // Babel breaks web components.
   // https://github.com/w3c/webcomponents/issues/587
@@ -31,7 +27,6 @@ if (supportsCustomElements) {
   )(React, ReactDOM, HelloWorld);
   customElements.define('my-element', MyElement);
 }
-
 export default class ButtonTestCases extends React.Component {
   render() {
     return (
@@ -49,6 +44,5 @@ export default class ButtonTestCases extends React.Component {
           )}
         </TestCase>
       </FixtureSet>
-    );
-  }
+    )}
 }
