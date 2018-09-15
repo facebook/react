@@ -5,31 +5,20 @@ import IssueList from './IssueList';
 import {parse} from 'query-string';
 import {semverString} from './propTypes';
 
-const React = window.React;
-
-const propTypes = {
-  children: PropTypes.node.isRequired,
-  title: PropTypes.node.isRequired,
-  resolvedIn: semverString,
-  introducedIn: semverString,
-  resolvedBy: PropTypes.string,
-};
-
+const React = window.React,
+      propTypes = {
+        children: PropTypes.node.isRequired,
+        title: PropTypes.node.isRequired,
+        resolvedIn: semverString,
+        introducedIn: semverString,
+        resolvedBy: PropTypes.string,
+      };
 class TestCase extends React.Component {
   constructor(props, context) {
     super(props, context);
-
-    this.state = {
-      complete: false,
-    };
+    this.state = { complete: false};
   }
-
-  handleChange = e => {
-    this.setState({
-      complete: e.target.checked,
-    });
-  };
-
+  handleChange = e => {this.setState({complete: e.target.checked})}
   render() {
     const {
       title,
@@ -41,15 +30,11 @@ class TestCase extends React.Component {
       relatedIssues,
       children,
     } = this.props;
-
     let {complete} = this.state;
-
-    const {version} = parse(window.location.search);
-    const isTestFixed =
+    const {version} = parse(window.location.search),
+          isTestFixed =
       !version || !resolvedIn || semver.gte(version, resolvedIn);
-
     complete = !isTestFixed || complete;
-
     return (
       <section className={cn('test-case', complete && 'test-case--complete')}>
         <h2 className="test-case__title type-subheading">
@@ -74,7 +59,6 @@ class TestCase extends React.Component {
               </a>
             </dd>
           )}
-
           {resolvedIn && <dt>First supported in: </dt>}
           {resolvedIn && (
             <dd>
@@ -83,33 +67,25 @@ class TestCase extends React.Component {
               </a>
             </dd>
           )}
-
           {resolvedBy && <dt>Fixed by: </dt>}
           {resolvedBy && (
             <dd>
               <a
                 href={
-                  'https://github.com/facebook/react/pull/' +
-                  resolvedBy.slice(1)
+                  'https://github.com/facebook/react/pull/'+resolvedBy.slice(1)
                 }>
                 <code>{resolvedBy}</code>
               </a>
             </dd>
           )}
-
           {affectedBrowsers && <dt>Affected browsers: </dt>}
           {affectedBrowsers && <dd>{affectedBrowsers}</dd>}
-
           {relatedIssues && <dt>Related Issues: </dt>}
           {relatedIssues && (
-            <dd>
-              <IssueList issues={relatedIssues} />
-            </dd>
+            <dd><IssueList issues={relatedIssues} /></dd>
           )}
         </dl>
-
         <p className="test-case__desc">{description}</p>
-
         <div className="test-case__body">
           {!isTestFixed && (
             <p className="test-case__invalid-version">
@@ -118,16 +94,12 @@ class TestCase extends React.Component {
               version, and that's ok!
             </p>
           )}
-
           {children}
         </div>
       </section>
-    );
-  }
+   )}
 }
-
 TestCase.propTypes = propTypes;
-
 TestCase.Steps = class extends React.Component {
   render() {
     const {children} = this.props;
@@ -136,10 +108,8 @@ TestCase.Steps = class extends React.Component {
         <h3>Steps to reproduce:</h3>
         <ol>{children}</ol>
       </div>
-    );
-  }
+    )}
 };
-
 TestCase.ExpectedResult = class extends React.Component {
   render() {
     const {children} = this.props;
@@ -148,7 +118,6 @@ TestCase.ExpectedResult = class extends React.Component {
         <h3>Expected Result:</h3>
         <p>{children}</p>
       </div>
-    );
-  }
+    )}
 };
 export default TestCase;
