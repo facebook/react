@@ -186,7 +186,7 @@ function unstable_scheduleWork(callback, options) {
   return newNode;
 }
 
-function unstable_cancelScheduledWork(callbackNode: CallbackNode): void {
+function unstable_cancelScheduledWork(callbackNode) {
   var next = callbackNode.next;
   if (next === null) {
     // Already cancelled.
