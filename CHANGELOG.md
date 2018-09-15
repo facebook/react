@@ -47,7 +47,7 @@
 * Fix incorrect data in `compositionend` event when typing Korean on IE11 ([@crux153](https://github.com/crux153) in [#12563](https://github.com/facebook/react/issues/12563))
 * Fix a crash when using dynamic `children` in the `<option>` tag ([@Slowyn](https://github.com/Slowyn) in [#13261](https://github.com/facebook/react/issues/13261), [@gaearon](https://github.com/gaearon) in [#13465](https://github.com/facebook/react/pull/13465))
 * Fix the `checked` attribute not getting initially set on the `input` ([@dilidili](https://github.com/dilidili) in [#13114](https://github.com/facebook/react/issues/13114))
-* Fix hydration of `dangerousSetInnerHTML` when `__html` is not a string ([@gaearon](https://github.com/gaearon) in [#13353](https://github.com/facebook/react/issues/13353)) 
+* Fix hydration of `dangerouslySetInnerHTML` when `__html` is not a string ([@gaearon](https://github.com/gaearon) in [#13353](https://github.com/facebook/react/issues/13353)) 
 * Fix a warning about missing controlled `onChange` to fire on falsy values too ([@nicolevy](https://github.com/nicolevy) in [#12628](https://github.com/facebook/react/issues/12628))
 * Fix `submit` and `reset` buttons getting an empty label ([@ellsclytn](https://github.com/ellsclytn) in [#12780](https://github.com/facebook/react/issues/12780))
 * Fix the `onSelect` event not being triggered after drag and drop ([@gaearon](https://github.com/gaearon) in [#13422](https://github.com/facebook/react/issues/13422))
