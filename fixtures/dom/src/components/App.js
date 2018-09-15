@@ -3,16 +3,13 @@ import Fixtures from './fixtures';
 import '../style.css';
 
 const React = window.React;
-
 function App() {
-  return (
+  return(
     <div>
       <Header />
       <div className="container">
         <Fixtures />
       </div>
-    </div>
-  );
+    </div>);
 }
-
 export default App;
