@@ -10,7 +10,6 @@
 import React from 'react';
 import warning from 'shared/warning';
 import {getToStringValue, toString} from './ToStringValue';
-import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 let didWarnSelectedSetOnOption = false;
 let didWarnInvalidChild = false;
@@ -48,16 +47,11 @@ export function validateProps(element: Element, props: Object) {
     // if children contains a non-element object. We should try to avoid that.
     if (typeof props.children === 'object' && props.children !== null) {
       React.Children.forEach(props.children, function(child) {
-        if (child == null) {
-          return;
-        }
-        if (typeof child === 'string' || typeof child === 'number') {
-          return;
-        }
         if (
-          typeof child.type !== 'string' &&
-          typeof child.type !== 'object' &&
-          child.type !== REACT_FRAGMENT_TYPE
+          child == null ||
+          typeof child === 'string' ||
+          typeof child === 'number' ||
+          typeof child.type === 'function'
         ) {
           return;
         }
