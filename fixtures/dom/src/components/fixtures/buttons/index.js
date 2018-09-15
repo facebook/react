@@ -2,11 +2,7 @@ import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 
 const React = window.React;
-
-function onButtonClick() {
-  window.alert(`This shouldn't have happened!`);
-}
-
+function onButtonClick() {window.alert(`This shouldn't have happened!`)}
 export default class ButtonTestCases extends React.Component {
   render() {
     return (
@@ -38,6 +34,5 @@ export default class ButtonTestCases extends React.Component {
           </button>
         </TestCase>
       </FixtureSet>
-    );
-  }
+    )}
 }
