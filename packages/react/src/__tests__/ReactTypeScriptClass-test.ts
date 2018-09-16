@@ -600,6 +600,30 @@ describe('ReactTypeScriptClass', function() {
     }
   );
 
+  it('should warn when defaultProps/propTypes is defined as function.', () => {
+    class Foo extends React.Component {
+      static defaultProps() {
+        return {};
+      }
+
+      static propTypes() {
+        return {};
+      }
+
+      render() {
+        return React.createElement('span', { className: '' });
+      }
+    }
+
+    expect(() => test(React.createElement(Foo), 'SPAN', '')).toWarnDev(
+      [
+        'defaultProps was defined as a static function on Foo. Use a static property instead.',
+        'propTypes was defined as a static function on Foo. Use a static property instead.'
+      ],
+      {withoutStack: true}
+    );
+  })
+
   it(
     'does not warn about getInitialState() on class components ' +
       'if state is also defined.',

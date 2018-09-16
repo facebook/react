@@ -418,6 +418,24 @@ describe 'ReactCoffeeScriptClass', ->
     expect(getDefaultPropsWasCalled).toBe false
     undefined
 
+  it 'should warn when defaultProps/propTypes is defined as function.', ->
+    class Foo extends React.Component
+      render: ->
+        span
+          className: ''
+    Foo.defaultProps = -> {}
+    Foo.propTypes = -> {}
+
+    expect(->
+      test React.createElement(Foo), 'SPAN', ''
+    ).toWarnDev(
+      [
+        'defaultProps was defined as a static function on Foo. Use a static property instead.',
+        'propTypes was defined as a static function on Foo. Use a static property instead.',
+      ],
+      {withoutStack: true},
+    )
+
   it 'does not warn about getInitialState() on class components
       if state is also defined.', ->
     class Foo extends React.Component
