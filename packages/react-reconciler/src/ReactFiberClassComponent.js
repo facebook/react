@@ -312,6 +312,20 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         'Use a static property to define defaultProps instead.',
       name,
     );
+    const noDefaultPropsFunction = typeof ctor.defaultProps !== 'function';
+    warningWithoutStack(
+      noDefaultPropsFunction,
+      'defaultProps was defined as a static function on %s. ' +
+        'Use a static property instead.',
+      name,
+    );
+    const noPropTypesFunction = typeof ctor.propTypes !== 'function';
+    warningWithoutStack(
+      noPropTypesFunction,
+      'propTypes was defined as a static function on %s. ' +
+        'Use a static property instead.',
+      name,
+    );
     const noInstancePropTypes = !instance.propTypes;
     warningWithoutStack(
       noInstancePropTypes,
