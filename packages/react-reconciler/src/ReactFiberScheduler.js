@@ -2282,7 +2282,6 @@ function performWorkOnRoot(
       // This root is already complete. We can commit it.
       completeRoot(root, finishedWork, expirationTime);
     } else {
-      root.finishedWork = null;
       // If this root previously suspended, clear its existing timeout, since
       // we're about to try rendering again.
       const timeoutHandle = root.timeoutHandle;
@@ -2306,7 +2305,6 @@ function performWorkOnRoot(
       // This root is already complete. We can commit it.
       completeRoot(root, finishedWork, expirationTime);
     } else {
-      root.finishedWork = null;
       // If this root previously suspended, clear its existing timeout, since
       // we're about to try rendering again.
       const timeoutHandle = root.timeoutHandle;
