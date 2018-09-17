@@ -16,7 +16,7 @@ import type {TopLevelType} from './TopLevelEventTypes';
 
 export type EventTypes = {[key: string]: DispatchConfig};
 
-export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | TouchEvent;
+export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
 export type PluginName = string;
 
