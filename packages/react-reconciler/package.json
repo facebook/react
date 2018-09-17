@@ -1,7 +1,7 @@
 {
   "name": "react-reconciler",
   "description": "React package for creating custom renderers.",
-  "version": "0.14.0",
+  "version": "0.15.0-alpha.0",
   "keywords": [
     "react"
   ],
@@ -22,13 +22,13 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^16.0.0 || 16.6.0-alpha.0"
   },
   "dependencies": {
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
-    "schedule": "^0.4.0"
+    "schedule": "^0.5.0-alpha.0"
   },
   "browserify": {
     "transform": [
