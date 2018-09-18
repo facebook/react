@@ -224,7 +224,7 @@ function validatePropTypes(element) {
   }
   if (typeof type.getDefaultProps === 'function') {
     warningWithoutStack(
-      type.getDefaultProps.isReactClassApproved,
+      type.prototype.hasOwnProperty('getDefaultProps'),
       'getDefaultProps is only used on classic React.createClass ' +
         'definitions. Use a static property named `defaultProps` instead.',
     );
