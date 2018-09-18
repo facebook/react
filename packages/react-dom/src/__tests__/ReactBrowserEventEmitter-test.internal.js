@@ -20,7 +20,7 @@ let createInitialInstance;
 
 let updateInstance;
 
-let CHILD, PARENT;
+let childRef, parentRef;
 
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
@@ -44,7 +44,7 @@ describe('ReactBrowserEventEmitter', () => {
       render() {
         return (
           <div {...this.props.parentProps}>
-            <Child ref={n => (CHILD = n)} {...this.props.childProps} />
+            <Child ref={n => (childRef = n)} {...this.props.childProps} />
           </div>
         );
       }
@@ -60,7 +60,7 @@ describe('ReactBrowserEventEmitter', () => {
         <Parent parentProps={{}} childProps={{onClick: LISTENER}} />,
         container,
       );
-      expect(CHILD.props.onClick).toBe(LISTENER);
+      expect(childRef.props.onClick).toBe(LISTENER);
 
       return initialInstance;
     };
@@ -68,7 +68,7 @@ describe('ReactBrowserEventEmitter', () => {
     updateInstance = ({parentProps, childProps}) => {
       return ReactDOM.render(
         <Parent
-          ref={n => (PARENT = n)}
+          ref={n => (parentRef = n)}
           parentProps={parentProps}
           childProps={childProps}
         />,
@@ -80,8 +80,8 @@ describe('ReactBrowserEventEmitter', () => {
   afterEach(() => {
     document.body.removeChild(container);
     container = null;
-    CHILD = null;
-    PARENT = null;
+    childRef = null;
+    parentRef = null;
   });
 
   it('should store a listener correctly', () => {
@@ -92,7 +92,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: LISTENER,
       },
     });
-    expect(CHILD.props.onClick).toBe(LISTENER);
+    expect(childRef.props.onClick).toBe(LISTENER);
   });
 
   it('should retrieve a listener correctly', () => {
@@ -103,7 +103,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: LISTENER,
       },
     });
-    expect(CHILD.props.onClick).toBe(LISTENER);
+    expect(childRef.props.onClick).toBe(LISTENER);
   });
 
   it('should clear all handlers when asked to', () => {
@@ -112,12 +112,12 @@ describe('ReactBrowserEventEmitter', () => {
       parentProps: {},
       childProps: {},
     });
-    expect(CHILD.props.onClick).toBe(undefined);
+    expect(childRef.props.onClick).toBe(undefined);
   });
 
   it('should invoke a simple handler registered on a node', () => {
     createInitialInstance();
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(LISTENER.mock.calls.length).toBe(1);
   });
@@ -166,7 +166,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
@@ -193,7 +193,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
@@ -231,7 +231,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     expect(() => ReactTestUtils.Simulate.click(node)).toThrowError(
       'Handler interrupted',
     );
@@ -257,8 +257,8 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    let node = ReactDOM.findDOMNode(CHILD);
-    let parentNode = ReactDOM.findDOMNode(PARENT);
+    let node = ReactDOM.findDOMNode(childRef);
+    let parentNode = ReactDOM.findDOMNode(parentRef);
     node.click();
     expect(targets.length).toBe(2);
     expect(targets[0]).toBe(node);
@@ -283,7 +283,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(calls.length).toBe(1);
     expect(calls[0]).toBe('child is call');
@@ -308,7 +308,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(calls.length).toBe(1);
     expect(calls[0]).toBe('child is call');
@@ -332,7 +332,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(calls.length).toBe(1);
     expect(calls[0]).toBe('child is call');
@@ -357,7 +357,7 @@ describe('ReactBrowserEventEmitter', () => {
       },
     });
     spyOnDev(console, 'error');
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
@@ -392,7 +392,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(parentMockFn.mock.calls.length).toBe(1);
   });
@@ -420,7 +420,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(parentMockFn.mock.calls.length).toBe(0);
   });
@@ -439,7 +439,7 @@ describe('ReactBrowserEventEmitter', () => {
     });
     const event = document.createEvent('Event');
     event.initEvent('mouseover', true, true);
-    let node = ReactDOM.findDOMNode(CHILD);
+    let node = ReactDOM.findDOMNode(childRef);
     node.dispatchEvent(event);
 
     expect(targets[0]).toBe(node);
@@ -454,7 +454,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: LISTENER,
       },
     });
-    const node = ReactDOM.findDOMNode(CHILD);
+    const node = ReactDOM.findDOMNode(childRef);
     node.click();
     expect(LISTENER.mock.calls.length).toBe(1);
   });
