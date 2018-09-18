@@ -143,10 +143,10 @@ describe('ReactBrowserEventEmitter', () => {
   it('should bubble simply', () => {
     let calls = [];
     function parentCall() {
-      calls = calls.concat('parent is call');
+      calls.push('parent is call');
     }
     function childCall() {
-      calls = calls.concat('child is call');
+      calls.push('child is call');
     }
     updateInstance({
       parentProps: {
@@ -166,13 +166,13 @@ describe('ReactBrowserEventEmitter', () => {
   it('should bubble to the right handler after an update', () => {
     let calls = [];
     function parentCall() {
-      calls = calls.concat('parent is call');
+      calls.push('parent is call');
     }
     function parentUpdateCall() {
-      calls = calls.concat('parentUpdate is call');
+      calls.push('parentUpdate is call');
     }
     function childCall() {
-      calls = calls.concat('child is call');
+      calls.push('child is call');
     }
     createInitialInstance();
     updateInstance({
@@ -206,10 +206,10 @@ describe('ReactBrowserEventEmitter', () => {
   it('should continue bubbling if an error is thrown', () => {
     let calls = [];
     function parentCall() {
-      calls = calls.concat('parent is call');
+      calls.push('parent is call');
     }
     function childCall() {
-      calls = calls.concat('child is call');
+      calls.push('child is call');
       throw new Error('Handler interrupted');
     }
     createInitialInstance();
@@ -233,10 +233,10 @@ describe('ReactBrowserEventEmitter', () => {
   it('should set currentTarget', () => {
     let targets = [];
     function parentCall(event) {
-      targets = targets.concat(event.currentTarget);
+      targets.push(event.currentTarget);
     }
     function childCall(event) {
-      targets = targets.concat(event.currentTarget);
+      targets.push(event.currentTarget);
     }
     const parent = createInitialInstance();
     updateInstance({
@@ -258,10 +258,10 @@ describe('ReactBrowserEventEmitter', () => {
   it('should support stopPropagation()', () => {
     let calls = [];
     function parentCall() {
-      calls = calls.concat('parent is call');
+      calls.push('parent is call');
     }
     function childCall(event) {
-      calls = calls.concat('child is call');
+      calls.push('child is call');
       event.stopPropagation();
     }
     createInitialInstance();
@@ -282,10 +282,10 @@ describe('ReactBrowserEventEmitter', () => {
   it('should support overriding .isPropagationStopped()', () => {
     let calls = [];
     function parentCall(event) {
-      calls = calls.concat('parent is call');
+      calls.push('parent is call');
     }
     function childCall(event) {
-      calls = calls.concat('child is call');
+      calls.push('child is call');
       // This stops React bubbling but avoids touching the native event
       event.isPropagationStopped = () => true;
     }
@@ -307,10 +307,10 @@ describe('ReactBrowserEventEmitter', () => {
   it('should stop after first dispatch if stopPropagation', () => {
     let calls = [];
     function parentCall() {
-      calls = calls.concat('parent is call');
+      calls.push('parent is call');
     }
     function childCall(event) {
-      calls = calls.concat('child is call');
+      calls.push('child is call');
       event.stopPropagation();
     }
     createInitialInstance();
@@ -331,10 +331,10 @@ describe('ReactBrowserEventEmitter', () => {
   it('should not stopPropagation if false is returned', () => {
     let calls = [];
     function parentCall() {
-      calls = calls.concat('parent is call');
+      calls.push('parent is call');
     }
     function childCall(event) {
-      calls = calls.concat('child is call');
+      calls.push('child is call');
       return false;
     }
     createInitialInstance();
@@ -418,7 +418,7 @@ describe('ReactBrowserEventEmitter', () => {
   it('should have mouse enter simulated by test utils', () => {
     let targets = [];
     function childCall(event) {
-      targets = targets.concat(event.currentTarget);
+      targets.push(event.currentTarget);
     }
     createInitialInstance();
     updateInstance({
