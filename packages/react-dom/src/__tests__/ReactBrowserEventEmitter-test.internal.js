@@ -169,15 +169,12 @@ describe('ReactBrowserEventEmitter', () => {
       }
     }
 
-    // mount first
     ReactDOM.render(<App />, container);
 
-    // re-render
     ReactDOM.render(<App isUnmount />, container);
     expect(LISTENER.mock.calls.length).toBe(1);
     expect(willUnmountCalls.mock.calls.length).toBe(1);
 
-    // re-render
     ReactDOM.render(<App />, container);
     expect(LISTENER.mock.calls.length).toBe(2);
   });
@@ -317,10 +314,6 @@ describe('ReactBrowserEventEmitter', () => {
     expect(targets[1]).toBe(parentNode);
   });
 
-  /**
-   * when call stopPropagation only call child,
-   * don't bubbling
-   */
   it('should support stopPropagation()', () => {
     let calls = [];
     function parentCall() {
@@ -442,15 +435,6 @@ describe('ReactBrowserEventEmitter', () => {
       expect(console.error.calls.count()).toEqual(0);
     }
   });
-
-  // /**
-  //  * The entire event registration state of the world should be "locked-in" at
-  //  * the time the event occurs. This is to resolve many edge cases that come
-  //  * about from a listener on a lower-in-DOM node causing structural changes at
-  //  * places higher in the DOM. If this lower-in-DOM node causes new content to
-  //  * be rendered at a place higher-in-DOM, we need to be careful not to invoke
-  //  * these new listeners.
-  //  */
 
   it('should invoke handlers that were removed while bubbling', () => {
     let parentMockFn = jest.fn();
