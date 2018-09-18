@@ -20,7 +20,7 @@ let createInitialInstance;
 
 let updateInstance;
 
-let childRef, parentRef;
+let childRef;
 
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
@@ -62,11 +62,7 @@ describe('ReactBrowserEventEmitter', () => {
 
     updateInstance = ({parentProps, childProps}) => {
       return ReactDOM.render(
-        <Parent
-          ref={n => (parentRef = n)}
-          parentProps={parentProps}
-          childProps={childProps}
-        />,
+        <Parent parentProps={parentProps} childProps={childProps} />,
         container,
       );
     };
@@ -76,7 +72,6 @@ describe('ReactBrowserEventEmitter', () => {
     document.body.removeChild(container);
     container = null;
     childRef = null;
-    parentRef = null;
   });
 
   it('should store a listener correctly', () => {
@@ -243,7 +238,7 @@ describe('ReactBrowserEventEmitter', () => {
     function childCall(event) {
       targets = targets.concat(event.currentTarget);
     }
-    createInitialInstance();
+    const parent = createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -253,7 +248,7 @@ describe('ReactBrowserEventEmitter', () => {
       },
     });
     let node = ReactDOM.findDOMNode(childRef);
-    let parentNode = ReactDOM.findDOMNode(parentRef);
+    let parentNode = ReactDOM.findDOMNode(parent);
     node.click();
     expect(targets.length).toBe(2);
     expect(targets[0]).toBe(node);
