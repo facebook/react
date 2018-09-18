@@ -9,360 +9,620 @@
 
 'use strict';
 
-let EventPluginHub;
-let EventPluginRegistry;
 let React;
 let ReactDOM;
-let ReactDOMComponentTree;
-let ReactBrowserEventEmitter;
 let ReactTestUtils;
-
-let idCallOrder;
-const recordID = function(id) {
-  idCallOrder.push(id);
-};
-const recordIDAndStopPropagation = function(id, event) {
-  recordID(id);
-  event.stopPropagation();
-};
-const recordIDAndReturnFalse = function(id, event) {
-  recordID(id);
-  return false;
-};
-const LISTENER = jest.fn();
-const ON_CLICK_KEY = 'onClick';
-const ON_CHANGE_KEY = 'onChange';
-const ON_MOUSE_ENTER_KEY = 'onMouseEnter';
-
-let GRANDPARENT;
-let PARENT;
-let CHILD;
-
-let getListener;
-let putListener;
-let deleteAllListeners;
+let LISTENER = jest.fn();
 
 let container;
 
-function registerSimpleTestHandler() {
-  putListener(CHILD, ON_CLICK_KEY, LISTENER);
-  const listener = getListener(CHILD, ON_CLICK_KEY);
-  expect(listener).toEqual(LISTENER);
-  return getListener(CHILD, ON_CLICK_KEY);
-}
+let createInitialInstance;
+
+let updateInstance;
+
+let CHILD, PARENT;
 
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
     jest.resetModules();
     LISTENER.mockClear();
 
-    // TODO: can we express this test with only public API?
-    EventPluginHub = require('events/EventPluginHub');
-    EventPluginRegistry = require('events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-    ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
 
     container = document.createElement('div');
     document.body.appendChild(container);
 
-    let GRANDPARENT_PROPS = {};
-    let PARENT_PROPS = {};
-    let CHILD_PROPS = {};
-
-    function Child(props) {
-      return <div ref={c => (CHILD = c)} {...props} />;
-    }
-
-    class ChildWrapper extends React.PureComponent {
+    class Child extends React.PureComponent {
       render() {
-        return <Child {...this.props} />;
+        return <div {...this.props} />;
       }
     }
 
-    function renderTree() {
-      ReactDOM.render(
-        <div ref={c => (GRANDPARENT = c)} {...GRANDPARENT_PROPS}>
-          <div ref={c => (PARENT = c)} {...PARENT_PROPS}>
-            <ChildWrapper {...CHILD_PROPS} />
+    class Parent extends React.Component {
+      render() {
+        return (
+          <div {...this.props.parentProps}>
+            <Child ref={n => (CHILD = n)} {...this.props.childProps} />
           </div>
-        </div>,
+        );
+      }
+    }
+
+    /**
+     * alway initial the new instance for child component to bind click listener
+     * @param {}
+     * @return {Component Instance} initial instance
+     */
+    createInitialInstance = () => {
+      const initialInstance = ReactDOM.render(
+        <Parent parentProps={{}} childProps={{onClick: LISTENER}} />,
         container,
       );
-    }
+      expect(CHILD.props.onClick).toBe(LISTENER);
 
-    renderTree();
-
-    getListener = function(node, eventName) {
-      const inst = ReactDOMComponentTree.getInstanceFromNode(node);
-      return EventPluginHub.getListener(inst, eventName);
-    };
-    putListener = function(node, eventName, listener) {
-      switch (node) {
-        case CHILD:
-          CHILD_PROPS[eventName] = listener;
-          break;
-        case PARENT:
-          PARENT_PROPS[eventName] = listener;
-          break;
-        case GRANDPARENT:
-          GRANDPARENT_PROPS[eventName] = listener;
-          break;
-      }
-      // Rerender with new event listeners
-      renderTree();
-    };
-    deleteAllListeners = function(node) {
-      switch (node) {
-        case CHILD:
-          CHILD_PROPS = {};
-          break;
-        case PARENT:
-          PARENT_PROPS = {};
-          break;
-        case GRANDPARENT:
-          GRANDPARENT_PROPS = {};
-          break;
-      }
-      renderTree();
+      return initialInstance;
     };
 
-    idCallOrder = [];
+    /**
+     * update and rerender the same instance
+     * @param {object} parentProps - props for parent component to update
+     * @param {object} childProps - props for child component to update
+     */
+    updateInstance = ({parentProps, childProps}) => {
+      return ReactDOM.render(
+        <Parent
+          ref={n => (PARENT = n)}
+          parentProps={parentProps}
+          childProps={childProps}
+        />,
+        container,
+      );
+    };
   });
 
   afterEach(() => {
     document.body.removeChild(container);
     container = null;
+    CHILD = null;
+    PARENT = null;
+    jest.resetModules();
   });
 
   it('should store a listener correctly', () => {
-    registerSimpleTestHandler();
-    const listener = getListener(CHILD, ON_CLICK_KEY);
-    expect(listener).toBe(LISTENER);
+    createInitialInstance();
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        onClick: LISTENER,
+      },
+    });
+    expect(CHILD.props.onClick).toBe(LISTENER);
   });
 
   it('should retrieve a listener correctly', () => {
-    registerSimpleTestHandler();
-    const listener = getListener(CHILD, ON_CLICK_KEY);
-    expect(listener).toEqual(LISTENER);
+    createInitialInstance();
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        onClick: LISTENER,
+      },
+    });
+    expect(CHILD.props.onClick).toBe(LISTENER);
   });
 
   it('should clear all handlers when asked to', () => {
-    registerSimpleTestHandler();
-    deleteAllListeners(CHILD);
-    const listener = getListener(CHILD, ON_CLICK_KEY);
-    expect(listener).toBe(undefined);
+    createInitialInstance();
+    updateInstance({
+      parentProps: {},
+      childProps: {},
+    });
+    expect(CHILD.props.onClick).toBe(undefined);
   });
 
   it('should invoke a simple handler registered on a node', () => {
-    registerSimpleTestHandler();
-    CHILD.click();
-    expect(LISTENER).toHaveBeenCalledTimes(1);
+    createInitialInstance();
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(LISTENER.mock.calls.length).toBe(1);
   });
 
   it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
-    registerSimpleTestHandler();
-    ReactBrowserEventEmitter.setEnabled(false);
-    CHILD.click();
-    expect(LISTENER).toHaveBeenCalledTimes(0);
-    ReactBrowserEventEmitter.setEnabled(true);
-    CHILD.click();
-    expect(LISTENER).toHaveBeenCalledTimes(1);
+    const willUnmountCalls = jest.fn();
+    class UnmountComponent extends React.Component {
+      constructor() {
+        super();
+        this.node = null;
+      }
+      // when mount trigger event onClick
+      componentDidMount() {
+        this.node.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }
+      // Don't trigger event in willmount
+      componentWillUnmount() {
+        willUnmountCalls();
+        this.node.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }
+      render() {
+        return <div ref={node => (this.node = node)} onClick={LISTENER} />;
+      }
+    }
+    class App extends React.Component {
+      render() {
+        return this.props.isUnmount ? null : <UnmountComponent />;
+      }
+    }
+
+    // mount first
+    ReactDOM.render(<App />, container);
+
+    // re-render
+    ReactDOM.render(<App isUnmount />, container);
+    expect(LISTENER.mock.calls.length).toBe(1);
+    expect(willUnmountCalls.mock.calls.length).toBe(1);
+
+    // re-render
+    ReactDOM.render(<App />, container);
+    expect(LISTENER.mock.calls.length).toBe(2);
   });
 
   it('should bubble simply', () => {
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    CHILD.click();
-    expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall() {
+      calls = calls.concat('child is call');
+    }
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parent is call');
   });
 
   it('should bubble to the right handler after an update', () => {
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, 'GRANDPARENT'));
-    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, 'PARENT'));
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, 'CHILD'));
-    CHILD.click();
-    expect(idCallOrder).toEqual(['CHILD', 'PARENT', 'GRANDPARENT']);
-
-    idCallOrder = [];
-
-    // Update just the grand parent without updating the child.
-    putListener(
-      GRANDPARENT,
-      ON_CLICK_KEY,
-      recordID.bind(null, 'UPDATED_GRANDPARENT'),
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function parentUpdateCall() {
+      calls = calls.concat('parentUpdate is call');
+    }
+    function childCall() {
+      calls = calls.concat('child is call');
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
     );
-
-    CHILD.click();
-    expect(idCallOrder).toEqual(['CHILD', 'PARENT', 'UPDATED_GRANDPARENT']);
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parent is call');
+    calls = [];
+    updateInstance({
+      parentProps: {
+        onClick: parentUpdateCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parentUpdate is call');
   });
 
   it('should continue bubbling if an error is thrown', () => {
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, function() {
-      recordID(PARENT);
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall() {
+      calls = calls.concat('child is call');
       throw new Error('Handler interrupted');
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
     });
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    expect(function() {
-      ReactTestUtils.Simulate.click(CHILD);
-    }).toThrow();
-    expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    let node = ReactDOM.findDOMNode(CHILD);
+    expect(() => ReactTestUtils.Simulate.click(node)).toThrowError(
+      'Handler interrupted',
+    );
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parent is call');
   });
 
   it('should set currentTarget', () => {
-    putListener(CHILD, ON_CLICK_KEY, function(event) {
-      recordID(CHILD);
-      expect(event.currentTarget).toBe(CHILD);
+    let targets = [];
+    function parentCall(event) {
+      targets = targets.concat(event.currentTarget);
+    }
+    function childCall(event) {
+      targets = targets.concat(event.currentTarget);
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
     });
-    putListener(PARENT, ON_CLICK_KEY, function(event) {
-      recordID(PARENT);
-      expect(event.currentTarget).toBe(PARENT);
-    });
-    putListener(GRANDPARENT, ON_CLICK_KEY, function(event) {
-      recordID(GRANDPARENT);
-      expect(event.currentTarget).toBe(GRANDPARENT);
-    });
-    CHILD.click();
-    expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
-  });
-
-  it('should support stopPropagation()', () => {
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(
-      PARENT,
-      ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, PARENT),
+    let node = ReactDOM.findDOMNode(CHILD);
+    let parentNode = ReactDOM.findDOMNode(PARENT);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
     );
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    CHILD.click();
-    expect(idCallOrder.length).toBe(2);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-  });
-
-  it('should support overriding .isPropagationStopped()', () => {
-    // Ew. See D4504876.
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, function(e) {
-      recordID(PARENT, e);
-      // This stops React bubbling but avoids touching the native event
-      e.isPropagationStopped = () => true;
-    });
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    CHILD.click();
-    expect(idCallOrder.length).toBe(2);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-  });
-
-  it('should stop after first dispatch if stopPropagation', () => {
-    putListener(
-      CHILD,
-      ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, CHILD),
-    );
-    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    CHILD.click();
-    expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toBe(CHILD);
-  });
-
-  it('should not stopPropagation if false is returned', () => {
-    putListener(CHILD, ON_CLICK_KEY, recordIDAndReturnFalse.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    CHILD.click();
-    expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toBe(CHILD);
-    expect(idCallOrder[1]).toBe(PARENT);
-    expect(idCallOrder[2]).toBe(GRANDPARENT);
+    expect(targets.length).toBe(2);
+    expect(targets[0]).toBe(node);
+    expect(targets[1]).toBe(parentNode);
   });
 
   /**
-   * The entire event registration state of the world should be "locked-in" at
-   * the time the event occurs. This is to resolve many edge cases that come
-   * about from a listener on a lower-in-DOM node causing structural changes at
-   * places higher in the DOM. If this lower-in-DOM node causes new content to
-   * be rendered at a place higher-in-DOM, we need to be careful not to invoke
-   * these new listeners.
+   * when call stopPropagation only call child,
+   * don't bubbling
    */
+  it('should support stopPropagation()', () => {
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall(event) {
+      calls = calls.concat('child is call');
+      event.stopPropagation();
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(calls.length).toBe(1);
+    expect(calls[0]).toBe('child is call');
+  });
+
+  it('should support overriding .isPropagationStopped()', () => {
+    let calls = [];
+    function parentCall(event) {
+      calls = calls.concat('parent is call');
+    }
+    function childCall(event) {
+      calls = calls.concat('child is call');
+      // This stops React bubbling but avoids touching the native event
+      event.isPropagationStopped = () => true;
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(calls.length).toBe(1);
+    expect(calls[0]).toBe('child is call');
+  });
+
+  it('should stop after first dispatch if stopPropagation', () => {
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall(event) {
+      calls = calls.concat('child is call');
+      event.stopPropagation();
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(calls.length).toBe(1);
+    expect(calls[0]).toBe('child is call');
+  });
+
+  it('should not stopPropagation if false is returned', () => {
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall(event) {
+      calls = calls.concat('child is call');
+      return false;
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    spyOnDev(console, 'error');
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parent is call');
+    if (__DEV__) {
+      expect(console.error.calls.count()).toEqual(0);
+    }
+  });
+
+  // /**
+  //  * The entire event registration state of the world should be "locked-in" at
+  //  * the time the event occurs. This is to resolve many edge cases that come
+  //  * about from a listener on a lower-in-DOM node causing structural changes at
+  //  * places higher in the DOM. If this lower-in-DOM node causes new content to
+  //  * be rendered at a place higher-in-DOM, we need to be careful not to invoke
+  //  * these new listeners.
+  //  */
 
   it('should invoke handlers that were removed while bubbling', () => {
-    const handleParentClick = jest.fn();
-    const handleChildClick = function(event) {
-      deleteAllListeners(PARENT);
-    };
-    putListener(CHILD, ON_CLICK_KEY, handleChildClick);
-    putListener(PARENT, ON_CLICK_KEY, handleParentClick);
-    CHILD.click();
-    expect(handleParentClick).toHaveBeenCalledTimes(1);
+    let parentMockFn = jest.fn();
+    function parentCall() {
+      parentMockFn();
+    }
+    /**
+     * click child and remove parent onClick event
+     */
+    function childCall() {
+      updateInstance({
+        parentProps: {},
+        childProps: {
+          onClick: childCall,
+        },
+      });
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(parentMockFn.mock.calls.length).toBe(1);
   });
 
   it('should not invoke newly inserted handlers while bubbling', () => {
-    const handleParentClick = jest.fn();
-    const handleChildClick = function(event) {
-      putListener(PARENT, ON_CLICK_KEY, handleParentClick);
-    };
-    putListener(CHILD, ON_CLICK_KEY, handleChildClick);
-    CHILD.click();
-    expect(handleParentClick).toHaveBeenCalledTimes(0);
+    let parentMockFn = jest.fn();
+    function parentCall() {
+      parentMockFn();
+    }
+    /**
+     * click child and update parent onClick event,
+     * but don't bubbling parent click event
+     */
+    function childCall() {
+      updateInstance({
+        parentProps: {
+          onClick: parentCall,
+        },
+        childProps: {
+          onClick: childCall,
+        },
+      });
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(parentMockFn.mock.calls.length).toBe(0);
   });
 
   it('should have mouse enter simulated by test utils', () => {
-    putListener(CHILD, ON_MOUSE_ENTER_KEY, recordID.bind(null, CHILD));
-    ReactTestUtils.Simulate.mouseEnter(CHILD);
-    expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toBe(CHILD);
+    let targets = [];
+    function childCall(event) {
+      targets = targets.concat(event.currentTarget);
+    }
+    createInitialInstance();
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        onMouseEnter: childCall,
+      },
+    });
+    const event = document.createEvent('Event');
+    event.initEvent('mouseover', true, true);
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(event);
+
+    expect(targets[0]).toBe(node);
   });
 
+  // /**
+  //  * add twice onClick props in Child component,
+  //  * but should only called once.
+  //  */
   it('should listen to events only once', () => {
-    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    expect(EventTarget.prototype.addEventListener).toHaveBeenCalledTimes(1);
+    createInitialInstance();
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        onClick: LISTENER,
+        onClick: LISTENER,
+      },
+    });
+    const node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(LISTENER.mock.calls.length).toBe(1);
   });
 
   it('should work with event plugins without dependencies', () => {
-    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-
-    expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
-      'click',
+    const node = ReactDOM.render(<button onClick={LISTENER} />, container);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
     );
+    expect(LISTENER.mock.calls.length).toBe(1);
   });
 
   it('should work with event plugins with dependencies', () => {
-    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-
-    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document);
-
-    const setEventListeners = [];
-    const listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
-    for (let i = 0; i < listenCalls.length; i++) {
-      setEventListeners.push(listenCalls[i][1]);
+    /**
+     * test input
+     * ref: https://github.com/facebook/react/issues/10135#issuecomment-314441175
+     *
+     * TOP_CLICK,
+     * TOP_FOCUS,
+     * TOP_INPUT,
+     * TOP_KEY_DOWN,
+     * TOP_KEY_UP,
+     * TOP_SELECTION_CHANGE,
+     *
+     */
+    function setNativeValue(element, value) {
+      const valueSetter = Object.getOwnPropertyDescriptor(element, 'value').set;
+      const prototype = Object.getPrototypeOf(element);
+      const prototypeValueSetter = Object.getOwnPropertyDescriptor(
+        prototype,
+        'value',
+      ).set;
+      if (valueSetter && valueSetter !== prototypeValueSetter) {
+        prototypeValueSetter.call(element, value);
+      } else {
+        valueSetter.call(element, value);
+      }
     }
+    const input = ReactDOM.render(
+      <input
+        type="text"
+        onChange={LISTENER}
+        onFocus={LISTENER}
+        onBlur={LISTENER}
+        onInput={LISTENER}
+        onKeyDown={LISTENER}
+        onKeyUp={LISTENER}
+      />,
+      container,
+    );
+    setNativeValue(input, ' ');
+    input.dispatchEvent(new Event('change', {bubbles: true}));
+    input.dispatchEvent(new Event('blur', {bubbles: true}));
+    input.dispatchEvent(new Event('input', {bubbles: true}));
+    input.dispatchEvent(new Event('keydown', {bubbles: true}));
+    input.dispatchEvent(new Event('keyup', {bubbles: true}));
+    input.focus();
 
-    const module = EventPluginRegistry.registrationNameModules[ON_CHANGE_KEY];
-    const dependencies = module.eventTypes.change.dependencies;
-    expect(setEventListeners.length).toEqual(dependencies.length);
-
-    for (let i = 0; i < setEventListeners.length; i++) {
-      expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
-    }
+    expect(LISTENER.mock.calls.length).toBe(6);
   });
 });
