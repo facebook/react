@@ -12,12 +12,13 @@
 ### React DOM
 
 * Fixed a recent `<iframe>` regression ([@JSteunou](https://github.com/JSteunou) in [#13650](https://github.com/facebook/react/pull/13650))
+* Fix `updateWrapper` so that `<textarea>`s no longer re-render when data is unchanged ([@joelbarbosa](https://github.com/joelbarbosa) in [#13643](https://github.com/facebook/react/pull/13643)
 
 ### Schedule (Experimental)
 
 * Renaming "tracking" API to "tracing" ([@bvaughn](https://github.com/bvaughn) in [#13641](https://github.com/facebook/react/pull/13641))
 * Add UMD production+profiling entry points ([@bvaughn](https://github.com/bvaughn) in [#13642](https://github.com/facebook/react/pull/13642))
-* Refactored `schedule` to remove some React-isms ([@acdlite](https://github.com/acdlite) in [#13582](https://github.com/facebook/react/pull/13582))
+* Refactored `schedule` to remove some React-isms and improve performance for when deferred updates time out ([@acdlite](https://github.com/acdlite) in [#13582](https://github.com/facebook/react/pull/13582))
 
 ## 16.5.1 (September 13, 2018)
 
