@@ -87,7 +87,6 @@ describe('ReactBrowserEventEmitter', () => {
     container = null;
     CHILD = null;
     PARENT = null;
-    jest.resetModules();
   });
 
   it('should store a listener correctly', () => {
