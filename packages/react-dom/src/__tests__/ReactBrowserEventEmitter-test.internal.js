@@ -65,11 +65,6 @@ describe('ReactBrowserEventEmitter', () => {
       return initialInstance;
     };
 
-    /**
-     * update and rerender the same instance
-     * @param {object} parentProps - props for parent component to update
-     * @param {object} childProps - props for child component to update
-     */
     updateInstance = ({parentProps, childProps}) => {
       return ReactDOM.render(
         <Parent
