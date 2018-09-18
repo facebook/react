@@ -12,7 +12,7 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
-let LISTENER = jest.fn();
+let LISTENER;
 
 let container;
 
@@ -25,7 +25,7 @@ let CHILD, PARENT;
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
     jest.resetModules();
-    LISTENER.mockClear();
+    LISTENER = jest.fn();
 
     React = require('react');
     ReactDOM = require('react-dom');
