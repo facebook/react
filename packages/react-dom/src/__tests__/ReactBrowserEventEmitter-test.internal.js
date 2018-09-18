@@ -109,7 +109,7 @@ describe('ReactBrowserEventEmitter', () => {
     createInitialInstance();
     let node = ReactDOM.findDOMNode(childRef);
     node.click();
-    expect(LISTENER.mock.calls.length).toBe(1);
+    expect(LISTENER).toHaveBeenCalledTimes(1);
   });
 
   it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
@@ -137,7 +137,7 @@ describe('ReactBrowserEventEmitter', () => {
     ReactDOM.render(<App />, container);
 
     ReactDOM.render(<App isUnmount />, container);
-    expect(LISTENER.mock.calls.length).toBe(0);
+    expect(LISTENER).toHaveBeenCalledTimes(0);
   });
 
   it('should bubble simply', () => {
@@ -446,13 +446,13 @@ describe('ReactBrowserEventEmitter', () => {
     });
     const node = ReactDOM.findDOMNode(childRef);
     node.click();
-    expect(LISTENER.mock.calls.length).toBe(1);
+    expect(LISTENER).toHaveBeenCalledTimes(1);
   });
 
   it('should work with event plugins without dependencies', () => {
     const node = ReactDOM.render(<button onClick={LISTENER} />, container);
     node.click();
-    expect(LISTENER.mock.calls.length).toBe(1);
+    expect(LISTENER).toHaveBeenCalledTimes(1);
   });
 
   it('should work with event plugins with dependencies', () => {
@@ -501,6 +501,6 @@ describe('ReactBrowserEventEmitter', () => {
     input.dispatchEvent(new Event('keyup', {bubbles: true}));
     input.focus();
 
-    expect(LISTENER.mock.calls.length).toBe(6);
+    expect(LISTENER).toHaveBeenCalledTimes(6);
   });
 });
