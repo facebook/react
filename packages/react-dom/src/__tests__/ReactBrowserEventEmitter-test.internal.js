@@ -50,11 +50,6 @@ describe('ReactBrowserEventEmitter', () => {
       }
     }
 
-    /**
-     * alway initial the new instance for child component to bind click listener
-     * @param {}
-     * @return {Component Instance} initial instance
-     */
     createInitialInstance = () => {
       const initialInstance = ReactDOM.render(
         <Parent parentProps={{}} childProps={{onClick: LISTENER}} />,
