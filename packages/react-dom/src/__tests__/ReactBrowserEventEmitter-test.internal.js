@@ -136,7 +136,7 @@ describe('ReactBrowserEventEmitter', () => {
 
     ReactDOM.render(<App />, container);
 
-    ReactDOM.render(<App isUnmount />, container);
+    ReactDOM.render(<App isUnmount={true} />, container);
     expect(LISTENER).toHaveBeenCalledTimes(0);
   });
 
@@ -436,15 +436,9 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should listen to events only once', () => {
-    createInitialInstance();
-    updateInstance({
-      parentProps: {},
-      childProps: {
-        onClick: LISTENER,
-        onClick: LISTENER,
-      },
-    });
-    const node = ReactDOM.findDOMNode(childRef);
+    const node = ReactDOM.render(<div />, container);
+    node.addEventListener('click', LISTENER);
+    node.addEventListener('click', LISTENER);
     node.click();
     expect(LISTENER).toHaveBeenCalledTimes(1);
   });
@@ -456,18 +450,6 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should work with event plugins with dependencies', () => {
-    /**
-     * test input
-     * ref: https://github.com/facebook/react/issues/10135#issuecomment-314441175
-     *
-     * TOP_CLICK,
-     * TOP_FOCUS,
-     * TOP_INPUT,
-     * TOP_KEY_DOWN,
-     * TOP_KEY_UP,
-     * TOP_SELECTION_CHANGE,
-     *
-     */
     function setNativeValue(element, value) {
       const valueSetter = Object.getOwnPropertyDescriptor(element, 'value').set;
       const prototype = Object.getPrototypeOf(element);
