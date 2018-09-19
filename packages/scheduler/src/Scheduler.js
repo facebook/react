@@ -394,7 +394,7 @@ if (typeof window === 'undefined') {
     ) {
       if (nextFrameTime < 8) {
         // Defensive coding. We don't support higher frame rates than 120hz.
-        // If we get lower than that, it is probably a bug.
+        // If the calculated frame time gets lower than 8, it is probably a bug.
         nextFrameTime = 8;
       }
       // If one frame goes long, then the next one can be short to catch up.
