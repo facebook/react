@@ -216,6 +216,48 @@ describe('ReactChildren', () => {
     ]);
   });
 
+  it('should traverse children of a keyed fragment', () => {
+    const div = <div key="divNode" />;
+    const span = <span key="spanNode" />;
+    const a = <a key="aNode" />;
+
+    const context = {};
+    const callback = jest.fn().mockImplementation(function(kid) {
+      expect(this).toBe(context);
+      return kid;
+    });
+
+    const instance = (
+      <div>
+        <React.Fragment key={123}>
+          <div />
+          <span />
+          <a />
+        </React.Fragment>
+      </div>
+    );
+
+    function assertCalls() {
+      expect(callback).toHaveBeenCalledTimes(3);
+      callback.mockClear();
+    }
+
+    React.Children.forEach(instance.props.children, callback, context);
+    assertCalls();
+
+    const mappedChildren = React.Children.map(
+      instance.props.children,
+      callback,
+      context,
+    );
+    assertCalls();
+    expect(mappedChildren).toEqual([
+      <div />,
+      <span />,
+      <a />,
+    ]);
+  });
+
   it('should be called for each child in nested structure', () => {
     const zero = <div key="keyZero" />;
     const one = null;
