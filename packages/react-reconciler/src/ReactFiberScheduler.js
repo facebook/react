@@ -10,9 +10,9 @@
 import type {Fiber} from './ReactFiber';
 import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {Interaction} from 'schedule/src/Tracing';
+import type {Interaction} from 'scheduler/src/Tracing';
 
-import {__interactionsRef, __subscriberRef} from 'schedule/tracing';
+import {__interactionsRef, __subscriberRef} from 'scheduler/tracing';
 import {
   invokeGuardedCallback,
   hasCaughtError,

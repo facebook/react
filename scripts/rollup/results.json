@@ -659,30 +659,30 @@
       "gzip": 1013
     },
     {
-      "filename": "schedule.development.js",
+      "filename": "scheduler.development.js",
       "bundleType": "UMD_DEV",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 19628,
       "gzip": 5881
     },
     {
-      "filename": "schedule.production.min.js",
+      "filename": "scheduler.production.min.js",
       "bundleType": "UMD_PROD",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 3233,
       "gzip": 1562
     },
     {
-      "filename": "schedule.development.js",
+      "filename": "scheduler.development.js",
       "bundleType": "NODE_DEV",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 14175,
       "gzip": 4343
     },
     {
-      "filename": "schedule.production.min.js",
+      "filename": "scheduler.production.min.js",
       "bundleType": "NODE_PROD",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 3260,
       "gzip": 1428
     },
@@ -736,16 +736,16 @@
       "gzip": 36778
     },
     {
-      "filename": "Schedule-dev.js",
+      "filename": "Scheduler-dev.js",
       "bundleType": "FB_WWW_DEV",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 14361,
       "gzip": 4374
     },
     {
-      "filename": "Schedule-prod.js",
+      "filename": "Scheduler-prod.js",
       "bundleType": "FB_WWW_PROD",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 8327,
       "gzip": 2105
     },
@@ -785,44 +785,44 @@
       "gzip": 36760
     },
     {
-      "filename": "schedule-tracking.development.js",
+      "filename": "scheduler-tracking.development.js",
       "bundleType": "NODE_DEV",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 10514,
       "gzip": 2411
     },
     {
-      "filename": "schedule-tracking.production.min.js",
+      "filename": "scheduler-tracking.production.min.js",
       "bundleType": "NODE_PROD",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 719,
       "gzip": 374
     },
     {
-      "filename": "schedule-tracking.profiling.min.js",
+      "filename": "scheduler-tracking.profiling.min.js",
       "bundleType": "NODE_PROFILING",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 3337,
       "gzip": 992
     },
     {
-      "filename": "ScheduleTracking-dev.js",
+      "filename": "SchedulerTracking-dev.js",
       "bundleType": "FB_WWW_DEV",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 10608,
       "gzip": 2330
     },
     {
-      "filename": "ScheduleTracking-prod.js",
+      "filename": "SchedulerTracking-prod.js",
       "bundleType": "FB_WWW_PROD",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 899,
       "gzip": 425
     },
     {
-      "filename": "ScheduleTracking-profiling.js",
+      "filename": "SchedulerTracking-profiling.js",
       "bundleType": "FB_WWW_PROFILING",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 6984,
       "gzip": 1258
     },
@@ -841,44 +841,44 @@
       "gzip": 31534
     },
     {
-      "filename": "schedule-tracing.development.js",
+      "filename": "scheduler-tracing.development.js",
       "bundleType": "NODE_DEV",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 10496,
       "gzip": 2410
     },
     {
-      "filename": "schedule-tracing.production.min.js",
+      "filename": "scheduler-tracing.production.min.js",
       "bundleType": "NODE_PROD",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 718,
       "gzip": 374
     },
     {
-      "filename": "schedule-tracing.profiling.min.js",
+      "filename": "scheduler-tracing.profiling.min.js",
       "bundleType": "NODE_PROFILING",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 3333,
       "gzip": 991
     },
     {
-      "filename": "ScheduleTracing-dev.js",
+      "filename": "SchedulerTracing-dev.js",
       "bundleType": "FB_WWW_DEV",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 10591,
       "gzip": 2327
     },
     {
-      "filename": "ScheduleTracing-prod.js",
+      "filename": "SchedulerTracing-prod.js",
       "bundleType": "FB_WWW_PROD",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 899,
       "gzip": 425
     },
     {
-      "filename": "ScheduleTracing-profiling.js",
+      "filename": "SchedulerTracing-profiling.js",
       "bundleType": "FB_WWW_PROFILING",
-      "packageName": "schedule",
+      "packageName": "scheduler",
       "size": 6979,
       "gzip": 1257
     }
