@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -36,6 +36,7 @@ const {
   itThrowsWhenRendering,
   serverRender,
   streamRender,
+  clientCleanRender,
   clientRenderOnServerString,
 } = ReactDOMServerIntegrationUtils(initModules);
 
@@ -575,6 +576,24 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.childNodes.length).toBe(0);
       },
     );
+
+    itRenders('a noscript with children', async render => {
+      const e = await render(
+        <noscript>
+          <div>Enable JavaScript to run this app.</div>
+        </noscript>,
+      );
+      if (render === clientCleanRender) {
+        // On the client we ignore the contents of a noscript
+        expect(e.childNodes.length).toBe(0);
+      } else {
+        // On the server or when hydrating the content should be correct
+        expect(e.childNodes.length).toBe(1);
+        expect(e.firstChild.textContent).toBe(
+          '<div>Enable JavaScript to run this app.</div>',
+        );
+      }
+    });
 
     describe('newline-eating elements', function() {
       itRenders(

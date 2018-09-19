@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,14 +24,23 @@ import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 
 const {findDOMNode} = ReactDOM;
-const {
-  EventPluginHub,
-  EventPluginRegistry,
-  EventPropagators,
-  ReactControlledComponent,
-  ReactDOMComponentTree,
-  ReactDOMEventListener,
-} = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+// Keep in sync with ReactDOMUnstableNativeDependencies.js
+// and ReactDOM.js:
+const [
+  getInstanceFromNode,
+  /* eslint-disable no-unused-vars */
+  getNodeFromInstance,
+  getFiberCurrentPropsFromNode,
+  injectEventPluginsByName,
+  /* eslint-enable no-unused-vars */
+  eventNameDispatchConfigs,
+  accumulateTwoPhaseDispatches,
+  accumulateDirectDispatches,
+  enqueueStateRestore,
+  restoreStateIfNeeded,
+  dispatchEvent,
+  runEventsInBatch,
+] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}
 
@@ -50,7 +59,7 @@ let hasWarnedAboutDeprecatedMockComponent = false;
  */
 function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
   fakeNativeEvent.target = node;
-  ReactDOMEventListener.dispatchEvent(topLevelType, fakeNativeEvent);
+  dispatchEvent(topLevelType, fakeNativeEvent);
 }
 
 /**
@@ -399,8 +408,7 @@ function makeSimulator(eventType) {
         'a component instance. Pass the DOM node you wish to simulate the event on instead.',
     );
 
-    const dispatchConfig =
-      EventPluginRegistry.eventNameDispatchConfigs[eventType];
+    const dispatchConfig = eventNameDispatchConfigs[eventType];
 
     const fakeNativeEvent = new Event();
     fakeNativeEvent.target = domNode;
@@ -408,7 +416,7 @@ function makeSimulator(eventType) {
 
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
-    const targetInst = ReactDOMComponentTree.getInstanceFromNode(domNode);
+    const targetInst = getInstanceFromNode(domNode);
     const event = new SyntheticEvent(
       dispatchConfig,
       targetInst,
@@ -422,18 +430,18 @@ function makeSimulator(eventType) {
     Object.assign(event, eventData);
 
     if (dispatchConfig.phasedRegistrationNames) {
-      EventPropagators.accumulateTwoPhaseDispatches(event);
+      accumulateTwoPhaseDispatches(event);
     } else {
-      EventPropagators.accumulateDirectDispatches(event);
+      accumulateDirectDispatches(event);
     }
 
     ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we we're by-passing it here.
-      ReactControlledComponent.enqueueStateRestore(domNode);
-      EventPluginHub.runEventsInBatch(event, true);
+      enqueueStateRestore(domNode);
+      runEventsInBatch(event, true);
     });
-    ReactControlledComponent.restoreStateIfNeeded();
+    restoreStateIfNeeded();
   };
 }
 
@@ -441,7 +449,7 @@ function buildSimulators() {
   ReactTestUtils.Simulate = {};
 
   let eventType;
-  for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
+  for (eventType in eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
      * @param {?object} eventData Fake event data to use in SyntheticEvent.
@@ -449,19 +457,6 @@ function buildSimulators() {
     ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
   }
 }
-
-// Rebuild ReactTestUtils.Simulate whenever event plugins are injected
-const oldInjectEventPluginOrder =
-  EventPluginHub.injection.injectEventPluginOrder;
-EventPluginHub.injection.injectEventPluginOrder = function() {
-  oldInjectEventPluginOrder.apply(this, arguments);
-  buildSimulators();
-};
-const oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
-EventPluginHub.injection.injectEventPluginsByName = function() {
-  oldInjectEventPlugins.apply(this, arguments);
-  buildSimulators();
-};
 
 buildSimulators();
 

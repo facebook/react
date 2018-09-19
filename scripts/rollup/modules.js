@@ -5,6 +5,7 @@ const bundleTypes = require('./bundles').bundleTypes;
 
 const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
+const UMD_PROFILING = bundleTypes.UMD_PROFILING;
 
 // For any external that is used in a DEV-only condition, explicitly
 // specify whether it has side effects during import or not. This lets
@@ -14,16 +15,16 @@ const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
 const importSideEffects = Object.freeze({
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'react-scheduler': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'react-scheduler/tracking': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
-  'react-scheduler': 'ReactScheduler',
-  'react-scheduler/tracking': 'ReactSchedulerTracking',
+  scheduler: 'Scheduler',
+  'scheduler/tracing': 'SchedulerTracing',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
@@ -32,7 +33,9 @@ function getPeerGlobals(externals, bundleType) {
   externals.forEach(name => {
     if (
       !knownGlobals[name] &&
-      (bundleType === UMD_DEV || bundleType === UMD_PROD)
+      (bundleType === UMD_DEV ||
+        bundleType === UMD_PROD ||
+        bundleType === UMD_PROFILING)
     ) {
       throw new Error('Cannot build UMD without a global name for: ' + name);
     }

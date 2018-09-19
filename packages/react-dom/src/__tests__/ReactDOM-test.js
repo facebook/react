@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -455,9 +455,11 @@ describe('ReactDOM', () => {
     try {
       delete global.requestAnimationFrame;
       jest.resetModules();
-      expect(() => require('react-dom')).toWarnDev(
+      spyOnDevAndProd(console, 'error');
+      require('react-dom');
+      expect(console.error.calls.count()).toEqual(1);
+      expect(console.error.calls.argsFor(0)[0]).toMatch(
         "This browser doesn't support requestAnimationFrame.",
-        {withoutStack: true},
       );
     } finally {
       global.requestAnimationFrame = previousRAF;

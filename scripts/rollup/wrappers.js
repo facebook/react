@@ -5,6 +5,7 @@ const reactVersion = require('../../package.json').version;
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
+const UMD_PROFILING = Bundles.bundleTypes.UMD_PROFILING;
 const NODE_DEV = Bundles.bundleTypes.NODE_DEV;
 const NODE_PROD = Bundles.bundleTypes.NODE_PROD;
 const NODE_PROFILING = Bundles.bundleTypes.NODE_PROFILING;
@@ -20,7 +21,7 @@ const RN_FB_PROFILING = Bundles.bundleTypes.RN_FB_PROFILING;
 
 const RECONCILER = Bundles.moduleTypes.RECONCILER;
 
-const license = ` * Copyright (c) 2013-present, Facebook, Inc.
+const license = ` * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.`;
@@ -41,6 +42,16 @@ ${source}`;
 
   /***************** UMD_PROD *****************/
   [UMD_PROD](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
+${source}`;
+  },
+
+  /***************** UMD_PROFILING *****************/
+  [UMD_PROFILING](source, globalName, filename, moduleType) {
     return `/** @license React v${reactVersion}
  * ${filename}
  *

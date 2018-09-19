@@ -6,6 +6,6 @@ module.exports = {
   paths: {
     react: '../../../../build/dist/react.development',
     'react-dom': '../../../../build/dist/react-dom.development',
-    'react-scheduler': '../../../../build/dist/react-scheduler.development',
+    schedule: '../../../../build/dist/schedule.development',
   },
 };

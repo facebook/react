@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,7 +21,9 @@ export const warnAboutDeprecatedLifecycles = false;
 export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
-export const enableSchedulerTracking = false;
+export const enableSchedulerTracing = false;
+export const enableSuspenseServerRenderer = false;
+export const disableInputAttributeSyncing = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

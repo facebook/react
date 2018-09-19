@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,6 +8,9 @@
  */
 
 'use strict';
+
+// Set by `yarn test-fire`.
+const {disableInputAttributeSyncing} = require('shared/ReactFeatureFlags');
 
 describe('DOMPropertyOperations', () => {
   let React;
@@ -80,7 +83,11 @@ describe('DOMPropertyOperations', () => {
     it('should not remove empty attributes for special input properties', () => {
       const container = document.createElement('div');
       ReactDOM.render(<input value="" onChange={() => {}} />, container);
-      expect(container.firstChild.getAttribute('value')).toBe('');
+      if (disableInputAttributeSyncing) {
+        expect(container.firstChild.hasAttribute('value')).toBe(false);
+      } else {
+        expect(container.firstChild.getAttribute('value')).toBe('');
+      }
       expect(container.firstChild.value).toBe('');
     });
 
@@ -165,7 +172,11 @@ describe('DOMPropertyOperations', () => {
         <input type="text" value="foo" onChange={function() {}} />,
         container,
       );
-      expect(container.firstChild.getAttribute('value')).toBe('foo');
+      if (disableInputAttributeSyncing) {
+        expect(container.firstChild.hasAttribute('value')).toBe(false);
+      } else {
+        expect(container.firstChild.getAttribute('value')).toBe('foo');
+      }
       expect(container.firstChild.value).toBe('foo');
       expect(() =>
         ReactDOM.render(
@@ -175,7 +186,11 @@ describe('DOMPropertyOperations', () => {
       ).toWarnDev(
         'A component is changing a controlled input of type text to be uncontrolled',
       );
-      expect(container.firstChild.getAttribute('value')).toBe('foo');
+      if (disableInputAttributeSyncing) {
+        expect(container.firstChild.hasAttribute('value')).toBe(false);
+      } else {
+        expect(container.firstChild.getAttribute('value')).toBe('foo');
+      }
       expect(container.firstChild.value).toBe('foo');
     });
 

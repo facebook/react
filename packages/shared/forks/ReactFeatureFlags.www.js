@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,8 +16,10 @@ export const {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   enableGetDerivedStateFromCatch,
+  enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
+  disableInputAttributeSyncing,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
@@ -32,7 +34,7 @@ export const warnAboutLegacyContextAPI = __DEV__;
 export let enableUserTimingAPI = __DEV__;
 
 export const enableProfilerTimer = __PROFILE__;
-export const enableSchedulerTracking = __PROFILE__;
+export const enableSchedulerTracing = __PROFILE__;
 
 let refCount = 0;
 export function addUserTimingListener() {

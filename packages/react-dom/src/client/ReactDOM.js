@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -126,6 +126,7 @@ if (__DEV__) {
 
 ReactControlledComponent.setRestoreImplementation(restoreControlledState);
 
+/* eslint-disable no-use-before-define */
 type DOMContainer =
   | (Element & {
       _reactRootContainer: ?Root,
@@ -149,6 +150,20 @@ type Batch = FiberRootBatch & {
   _callbacks: Array<() => mixed> | null,
   _didComplete: boolean,
 };
+
+type Root = {
+  render(children: ReactNodeList, callback: ?() => mixed): Work,
+  unmount(callback: ?() => mixed): Work,
+  legacy_renderSubtreeIntoContainer(
+    parentComponent: ?React$Component<any, any>,
+    children: ReactNodeList,
+    callback: ?() => mixed,
+  ): Work,
+  createBatch(): Batch,
+
+  _internalRoot: FiberRoot,
+};
+/* eslint-enable no-use-before-define */
 
 function ReactBatch(root: ReactRoot) {
   const expirationTime = DOMRenderer.computeUniqueAsyncExpiration();
@@ -315,19 +330,6 @@ ReactWork.prototype._onCommit = function(): void {
     );
     callback();
   }
-};
-
-type Root = {
-  render(children: ReactNodeList, callback: ?() => mixed): Work,
-  unmount(callback: ?() => mixed): Work,
-  legacy_renderSubtreeIntoContainer(
-    parentComponent: ?React$Component<any, any>,
-    children: ReactNodeList,
-    callback: ?() => mixed,
-  ): Work,
-  createBatch(): Batch,
-
-  _internalRoot: FiberRoot,
 };
 
 function ReactRoot(container: Container, isAsync: boolean, hydrate: boolean) {
@@ -739,14 +741,21 @@ const ReactDOM: Object = {
   unstable_flushControlled: DOMRenderer.flushControlled,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    // For TapEventPlugin which is popular in open source
-    EventPluginHub,
-    // Used by test-utils
-    EventPluginRegistry,
-    EventPropagators,
-    ReactControlledComponent,
-    ReactDOMComponentTree,
-    ReactDOMEventListener,
+    // Keep in sync with ReactDOMUnstableNativeDependencies.js
+    // and ReactTestUtils.js. This is an array for better minification.
+    Events: [
+      ReactDOMComponentTree.getInstanceFromNode,
+      ReactDOMComponentTree.getNodeFromInstance,
+      ReactDOMComponentTree.getFiberCurrentPropsFromNode,
+      EventPluginHub.injection.injectEventPluginsByName,
+      EventPluginRegistry.eventNameDispatchConfigs,
+      EventPropagators.accumulateTwoPhaseDispatches,
+      EventPropagators.accumulateDirectDispatches,
+      ReactControlledComponent.enqueueStateRestore,
+      ReactControlledComponent.restoreStateIfNeeded,
+      ReactDOMEventListener.dispatchEvent,
+      EventPluginHub.runEventsInBatch,
+    ],
   },
 };
 

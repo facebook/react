@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -240,6 +240,17 @@ export function findEarliestOutstandingPriorityLevel(
     earliestExpirationTime = earliestSuspendedTime;
   }
   return earliestExpirationTime;
+}
+
+export function didExpireAtExpirationTime(
+  root: FiberRoot,
+  currentTime: ExpirationTime,
+): void {
+  const expirationTime = root.expirationTime;
+  if (expirationTime !== NoWork && currentTime >= expirationTime) {
+    // The root has expired. Flush all work up to the current time.
+    root.nextExpirationTimeToWorkOn = currentTime;
+  }
 }
 
 function findNextExpirationTimeToWorkOn(completedExpirationTime, root) {

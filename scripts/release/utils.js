@@ -23,6 +23,23 @@ const execUnlessDry = async (command, {cwd, dry}) => {
   }
 };
 
+const getPackages = () => {
+  const packagesRoot = join(__dirname, '..', '..', 'packages');
+
+  return readdirSync(packagesRoot).filter(dir => {
+    const packagePath = join(packagesRoot, dir, 'package.json');
+
+    if (dir.charAt(0) !== '.' && statSync(packagePath).isFile()) {
+      const packageJSON = JSON.parse(readFileSync(packagePath));
+
+      // Skip packages like "shared" and "events" that shouldn't be updated.
+      return packageJSON.version !== '0.0.0';
+    }
+
+    return false;
+  });
+};
+
 const getPublicPackages = () => {
   const packagesRoot = join(__dirname, '..', '..', 'packages');
 
@@ -99,6 +116,7 @@ const runYarnTask = async (cwd, task, errorMessage) => {
 module.exports = {
   execRead,
   execUnlessDry,
+  getPackages,
   getPublicPackages,
   getUnexecutedCommands,
   logPromise,

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -1761,5 +1761,19 @@ describe('ReactCompositeComponent', () => {
       ],
       {withoutStack: true},
     );
+  });
+
+  // Regression test for accidental breaking change
+  // https://github.com/facebook/react/issues/13580
+  it('should support classes shadowing isReactComponent', () => {
+    class Shadow extends React.Component {
+      isReactComponent() {}
+      render() {
+        return <div />;
+      }
+    }
+    const container = document.createElement('div');
+    ReactDOM.render(<Shadow />, container);
+    expect(container.firstChild.tagName).toBe('DIV');
   });
 });

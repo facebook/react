@@ -1,8 +1,9 @@
 import React, {Placeholder, PureComponent} from 'react';
+import {unstable_scheduleWork} from 'scheduler';
 import {
-  unstable_track as track,
+  unstable_trace as trace,
   unstable_wrap as wrap,
-} from 'react-scheduler/tracking';
+} from 'scheduler/tracing';
 import {createResource} from 'simple-cache-provider';
 import {cache} from '../cache';
 import Spinner from './Spinner';
@@ -31,15 +32,15 @@ export default class App extends PureComponent {
   }
 
   handleUserClick = id => {
-    track(`View ${id}`, performance.now(), () => {
-      track(`View ${id} (high-pri)`, performance.now(), () =>
+    trace(`View ${id}`, performance.now(), () => {
+      trace(`View ${id} (high-pri)`, performance.now(), () =>
         this.setState({
           currentId: id,
         })
       );
-      requestIdleCallback(
+      unstable_scheduleWork(
         wrap(() =>
-          track(`View ${id} (low-pri)`, performance.now(), () =>
+          trace(`View ${id} (low-pri)`, performance.now(), () =>
             this.setState({
               showDetail: true,
             })
@@ -50,7 +51,7 @@ export default class App extends PureComponent {
   };
 
   handleBackClick = () =>
-    track('View list', performance.now(), () =>
+    trace('View list', performance.now(), () =>
       this.setState({
         currentId: null,
         showDetail: false,

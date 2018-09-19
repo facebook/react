@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,18 +10,18 @@ import {
   unstable_cancelScheduledWork,
   unstable_now,
   unstable_scheduleWork,
-} from 'react-scheduler';
+} from 'scheduler';
 import {
-  __getInteractionsRef,
-  __getSubscriberRef,
+  __interactionsRef,
+  __subscriberRef,
   unstable_clear,
   unstable_getCurrent,
   unstable_getThreadID,
   unstable_subscribe,
-  unstable_track,
+  unstable_trace,
   unstable_unsubscribe,
   unstable_wrap,
-} from 'react-scheduler/tracking';
+} from 'scheduler/tracing';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
@@ -32,7 +32,7 @@ const ReactSharedInternals = {
 };
 
 if (__UMD__) {
-  // Re-export the react-scheduler API(s) for UMD bundles.
+  // Re-export the schedule API(s) for UMD bundles.
   // This avoids introducing a dependency on a new UMD global in a minor update,
   // Since that would be a breaking change (e.g. for all existing CodeSandboxes).
   // This re-export is only required for UMD bundles;
@@ -43,14 +43,14 @@ if (__UMD__) {
       unstable_now,
       unstable_scheduleWork,
     },
-    SchedulerTracking: {
-      __getInteractionsRef,
-      __getSubscriberRef,
+    SchedulerTracing: {
+      __interactionsRef,
+      __subscriberRef,
       unstable_clear,
       unstable_getCurrent,
       unstable_getThreadID,
       unstable_subscribe,
-      unstable_track,
+      unstable_trace,
       unstable_unsubscribe,
       unstable_wrap,
     },

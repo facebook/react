@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,16 +10,9 @@
 import type {Fiber} from './ReactFiber';
 import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {
-  Interaction,
-  InteractionsRef,
-  SubscriberRef,
-} from 'react-scheduler/src/Tracking';
+import type {Interaction} from 'scheduler/src/Tracing';
 
-import {
-  __getInteractionsRef,
-  __getSubscriberRef,
-} from 'react-scheduler/tracking';
+import {__interactionsRef, __subscriberRef} from 'scheduler/tracing';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -51,7 +44,7 @@ import {
   HostPortal,
 } from 'shared/ReactWorkTags';
 import {
-  enableSchedulerTracking,
+  enableSchedulerTracing,
   enableProfilerTimer,
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
@@ -87,6 +80,7 @@ import {
   hasLowerPriorityWork,
   isPriorityLevelSuspended,
   findEarliestOutstandingPriorityLevel,
+  didExpireAtExpirationTime,
 } from './ReactFiberPendingPriority';
 import {
   recordEffect,
@@ -159,7 +153,7 @@ import {
 import {Dispatcher} from './ReactFiberDispatcher';
 
 export type Deadline = {
-  timeRemaining: () => number,
+  timeRemaining(): number,
   didTimeout: boolean,
 };
 
@@ -169,17 +163,22 @@ export type Thenable = {
 
 const {ReactCurrentOwner} = ReactSharedInternals;
 
-let interactionsRef: InteractionsRef = (null: any);
-let subscriberRef: SubscriberRef = (null: any);
-if (enableSchedulerTracking) {
-  interactionsRef = __getInteractionsRef();
-  subscriberRef = __getSubscriberRef();
-}
-
 let didWarnAboutStateTransition;
 let didWarnSetStateChildContext;
 let warnAboutUpdateOnUnmounted;
 let warnAboutInvalidUpdates;
+
+if (enableSchedulerTracing) {
+  // Provide explicit error message when production+profiling bundle of e.g. react-dom
+  // is used with production (non-profiling) bundle of schedule/tracing
+  invariant(
+    __interactionsRef != null && __interactionsRef.current != null,
+    'It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) ' +
+      'without also replacing the `schedule/tracing` module with `schedule/tracing-profiling`. ' +
+      'Your bundler might have a setting for aliasing both modules. ' +
+      'Learn more at http://fb.me/react-profiling',
+  );
+}
 
 if (__DEV__) {
   didWarnAboutStateTransition = false;
@@ -384,7 +383,7 @@ function resetStack() {
   nextUnitOfWork = null;
 }
 
-function commitAllHostEffects(root: FiberRoot) {
+function commitAllHostEffects() {
   while (nextEffect !== null) {
     if (__DEV__) {
       ReactCurrentFiber.setCurrentFiber(nextEffect);
@@ -429,12 +428,12 @@ function commitAllHostEffects(root: FiberRoot) {
 
         // Update
         const current = nextEffect.alternate;
-        commitWork(root, current, nextEffect);
+        commitWork(current, nextEffect);
         break;
       }
       case Update: {
         const current = nextEffect.alternate;
-        commitWork(root, current, nextEffect);
+        commitWork(current, nextEffect);
         break;
       }
       case Deletion: {
@@ -567,14 +566,14 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   markCommittedPriorityLevels(root, earliestRemainingTimeBeforeCommit);
 
   let prevInteractions: Set<Interaction> = (null: any);
-  let committedInteractions: Array<Interaction> = enableSchedulerTracking
+  let committedInteractions: Array<Interaction> = enableSchedulerTracing
     ? []
     : (null: any);
-  if (enableSchedulerTracking) {
+  if (enableSchedulerTracing) {
     // Restore any pending interactions at this point,
     // So that cascading work triggered during the render phase will be accounted for.
-    prevInteractions = interactionsRef.current;
-    interactionsRef.current = root.memoizedInteractions;
+    prevInteractions = __interactionsRef.current;
+    __interactionsRef.current = root.memoizedInteractions;
 
     // We are potentially finished with the current batch of interactions.
     // So we should clear them out of the pending interaction map.
@@ -666,14 +665,14 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     let didError = false;
     let error;
     if (__DEV__) {
-      invokeGuardedCallback(null, commitAllHostEffects, null, root);
+      invokeGuardedCallback(null, commitAllHostEffects, null);
       if (hasCaughtError()) {
         didError = true;
         error = clearCaughtError();
       }
     } else {
       try {
-        commitAllHostEffects(root);
+        commitAllHostEffects();
       } catch (e) {
         didError = true;
         error = e;
@@ -768,13 +767,13 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   }
   onCommit(root, earliestRemainingTimeAfterCommit);
 
-  if (enableSchedulerTracking) {
-    interactionsRef.current = prevInteractions;
+  if (enableSchedulerTracing) {
+    __interactionsRef.current = prevInteractions;
 
     let subscriber;
 
     try {
-      subscriber = subscriberRef.current;
+      subscriber = __subscriberRef.current;
       if (subscriber !== null && root.memoizedInteractions.size > 0) {
         const threadID = computeThreadID(
           committedExpirationTime,
@@ -1176,11 +1175,11 @@ function renderRoot(
   const expirationTime = root.nextExpirationTimeToWorkOn;
 
   let prevInteractions: Set<Interaction> = (null: any);
-  if (enableSchedulerTracking) {
-    // We're about to start new tracked work.
+  if (enableSchedulerTracing) {
+    // We're about to start new traced work.
     // Restore pending interactions so cascading work triggered during the render phase will be accounted for.
-    prevInteractions = interactionsRef.current;
-    interactionsRef.current = root.memoizedInteractions;
+    prevInteractions = __interactionsRef.current;
+    __interactionsRef.current = root.memoizedInteractions;
   }
 
   // Check if we're starting from a fresh stack, or if we're resuming from
@@ -1201,7 +1200,7 @@ function renderRoot(
     );
     root.pendingCommitExpirationTime = NoWork;
 
-    if (enableSchedulerTracking) {
+    if (enableSchedulerTracing) {
       // Determine which interactions this batch of work currently includes,
       // So that we can accurately attribute time spent working on it,
       // And so that cascading work triggered during the render phase will be associated with it.
@@ -1223,7 +1222,7 @@ function renderRoot(
       root.memoizedInteractions = interactions;
 
       if (interactions.size > 0) {
-        const subscriber = subscriberRef.current;
+        const subscriber = __subscriberRef.current;
         if (subscriber !== null) {
           const threadID = computeThreadID(
             expirationTime,
@@ -1232,7 +1231,7 @@ function renderRoot(
           try {
             subscriber.onWorkStarted(interactions, threadID);
           } catch (error) {
-            // Work thrown by an interaction tracking subscriber should be rethrown,
+            // Work thrown by an interaction tracing subscriber should be rethrown,
             // But only once it's safe (to avoid leaveing the scheduler in an invalid state).
             // Store the error for now and we'll re-throw in finishRendering().
             if (!hasUnhandledError) {
@@ -1306,9 +1305,9 @@ function renderRoot(
     break;
   } while (true);
 
-  if (enableSchedulerTracking) {
-    // Tracked work is done for now; restore the previous interactions.
-    interactionsRef.current = prevInteractions;
+  if (enableSchedulerTracing) {
+    // Traced work is done for now; restore the previous interactions.
+    __interactionsRef.current = prevInteractions;
   }
 
   // We're done performing work. Time to clean up.
@@ -1615,15 +1614,15 @@ function retrySuspendedRoot(
     scheduleWorkToRoot(fiber, retryTime);
     const rootExpirationTime = root.expirationTime;
     if (rootExpirationTime !== NoWork) {
-      if (enableSchedulerTracking) {
+      if (enableSchedulerTracing) {
         // Restore previous interactions so that new work is associated with them.
-        let prevInteractions = interactionsRef.current;
-        interactionsRef.current = root.memoizedInteractions;
+        let prevInteractions = __interactionsRef.current;
+        __interactionsRef.current = root.memoizedInteractions;
         // Because suspense timeouts do not decrement the interaction count,
         // Continued suspense work should also not increment the count.
         storeInteractionsForExpirationTime(root, rootExpirationTime, false);
         requestWork(root, rootExpirationTime);
-        interactionsRef.current = prevInteractions;
+        __interactionsRef.current = prevInteractions;
       } else {
         requestWork(root, rootExpirationTime);
       }
@@ -1686,11 +1685,11 @@ function storeInteractionsForExpirationTime(
   expirationTime: ExpirationTime,
   updateInteractionCounts: boolean,
 ): void {
-  if (!enableSchedulerTracking) {
+  if (!enableSchedulerTracing) {
     return;
   }
 
-  const interactions = interactionsRef.current;
+  const interactions = __interactionsRef.current;
   if (interactions.size > 0) {
     const pendingInteractions = root.pendingInteractionMap.get(expirationTime);
     if (pendingInteractions != null) {
@@ -1713,7 +1712,7 @@ function storeInteractionsForExpirationTime(
       }
     }
 
-    const subscriber = subscriberRef.current;
+    const subscriber = __subscriberRef.current;
     if (subscriber !== null) {
       const threadID = computeThreadID(
         expirationTime,
@@ -1745,7 +1744,7 @@ function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
     return;
   }
 
-  if (enableSchedulerTracking) {
+  if (enableSchedulerTracing) {
     storeInteractionsForExpirationTime(root, expirationTime, true);
   }
 
@@ -1936,7 +1935,7 @@ function onTimeout(root, finishedWork, suspendedExpirationTime) {
     recomputeCurrentRendererTime();
     currentSchedulerTime = currentRendererTime;
 
-    if (enableSchedulerTracking) {
+    if (enableSchedulerTracing) {
       // Don't update pending interaction counts for suspense timeouts,
       // Because we know we still need to do more work in this case.
       suspenseDidTimeout = true;
@@ -2123,6 +2122,22 @@ function findHighestPriorityRoot() {
 }
 
 function performAsyncWork(dl) {
+  if (dl.didTimeout) {
+    // The callback timed out. That means at least one update has expired.
+    // Iterate through the root schedule. If they contain expired work, set
+    // the next render expiration time to the current time. This has the effect
+    // of flushing all expired work in a single batch, instead of flushing each
+    // level one at a time.
+    if (firstScheduledRoot !== null) {
+      recomputeCurrentRendererTime();
+      let root: FiberRoot = firstScheduledRoot;
+      do {
+        didExpireAtExpirationTime(root, currentRendererTime);
+        // The root schedule is circular, so this is never null.
+        root = (root.nextScheduledRoot: any);
+      } while (root !== firstScheduledRoot);
+    }
+  }
   performWork(NoWork, dl);
 }
 
@@ -2491,7 +2506,7 @@ function flushControlled(fn: () => mixed): void {
   } finally {
     isBatchingUpdates = previousIsBatchingUpdates;
     if (!isBatchingUpdates && !isRendering) {
-      performWork(Sync, null);
+      performSyncWork();
     }
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,6 +11,7 @@
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
@@ -67,6 +68,7 @@ let warnForTextDifference;
 let warnForPropDifference;
 let warnForExtraAttributes;
 let warnForInvalidEventListener;
+let canDiffStyleForHydrationWarning;
 
 let normalizeMarkupForTextOrAttribute;
 let normalizeHTML;
@@ -93,6 +95,16 @@ if (__DEV__) {
     validateInputProperties(type, props);
     validateUnknownProperties(type, props, /* canUseEventSystem */ true);
   };
+
+  // IE 11 parses & normalizes the style attribute as opposed to other
+  // browsers. It adds spaces and sorts the properties in some
+  // non-alphabetical order. Handling that would require sorting CSS
+  // properties in the client & server versions or applying
+  // `expectedStyle` to a temporary DOM node to read its `style` attribute
+  // normalized. Since it only affects IE, we're skipping style warnings
+  // in that browser completely in favor of doing all that work.
+  // See https://github.com/facebook/react/issues/11807
+  canDiffStyleForHydrationWarning = canUseDOM && !document.documentMode;
 
   // HTML parsing normalizes CR and CRLF to LF.
   // It also can turn \u0000 into \uFFFD inside attributes.
@@ -290,7 +302,9 @@ function setInitialDOMProperties(
       // Noop
     } else if (propKey === AUTOFOCUS) {
       // We polyfill it separately on the client during commit.
-      // We blacklist it here rather than in the property list because we emit it in SSR.
+      // We could have excluded it in the property list instead of
+      // adding a special case here, but then it wouldn't be emitted
+      // on server rendering (but we *do* want to emit it in SSR).
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
@@ -999,12 +1013,15 @@ export function diffHydratedProperties(
       } else if (propKey === STYLE) {
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey);
-        const expectedStyle = CSSPropertyOperations.createDangerousStringForStyles(
-          nextProp,
-        );
-        serverValue = domElement.getAttribute('style');
-        if (expectedStyle !== serverValue) {
-          warnForPropDifference(propKey, serverValue, expectedStyle);
+
+        if (canDiffStyleForHydrationWarning) {
+          const expectedStyle = CSSPropertyOperations.createDangerousStringForStyles(
+            nextProp,
+          );
+          serverValue = domElement.getAttribute('style');
+          if (expectedStyle !== serverValue) {
+            warnForPropDifference(propKey, serverValue, expectedStyle);
+          }
         }
       } else if (isCustomComponentTag) {
         // $FlowFixMe - Should be inferred as not undefined.

@@ -11,7 +11,7 @@ class FixtureSet extends React.Component {
     const {title, description, children} = this.props;
 
     return (
-      <div>
+      <div className="container">
         <h1>{title}</h1>
         {description && <p>{description}</p>}
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -28,6 +28,7 @@ import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
 import {setDefaultValue} from '../client/ReactDOMInput';
+import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 
 const eventTypes = {
   change: {
@@ -238,8 +239,10 @@ function handleControlledInputBlur(node) {
     return;
   }
 
-  // If controlled, assign the value attribute to the current value on blur
-  setDefaultValue(node, 'number', node.value);
+  if (!disableInputAttributeSyncing) {
+    // If controlled, assign the value attribute to the current value on blur
+    setDefaultValue(node, 'number', node.value);
+  }
 }
 
 /**

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,6 +7,7 @@
  * @flow
  */
 
+/* eslint-disable no-use-before-define */
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -14,14 +15,15 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>;
+/* eslint-enable no-use-before-define */
+
+export type ReactEmpty = null | void | boolean;
 
 export type ReactFragment = ReactEmpty | Iterable<React$Node>;
 
 export type ReactNodeList = ReactEmpty | React$Node;
 
 export type ReactText = string | number;
-
-export type ReactEmpty = null | void | boolean;
 
 export type ReactProvider<T> = {
   $$typeof: Symbol | number,

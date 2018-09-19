@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -284,12 +284,7 @@ const createFiber = function(
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
-  return (
-    typeof prototype === 'object' &&
-    prototype !== null &&
-    typeof prototype.isReactComponent === 'object' &&
-    prototype.isReactComponent !== null
-  );
+  return !!(prototype && prototype.isReactComponent);
 }
 
 export function resolveLazyComponentTag(

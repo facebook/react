@@ -3,12 +3,10 @@
   "name": "brunch-dev-fixture",
   "devDependencies": {
     "brunch": "^2.9.1",
-    "javascript-brunch": "^2.0.0",
-    "react": "link:../../../../build/node_modules/react",
-    "react-dom": "link:../../../../build/node_modules/react-dom",
-    "react-scheduler": "link:../../../../build/node_modules/react-scheduler"
+    "javascript-brunch": "^2.0.0"
   },
   "scripts": {
-    "build": "rm -rf public && brunch build"
+    "build": "rm -rf public && brunch build",
+    "prebuild": "cp -r ../../../../build/node_modules/* ./node_modules/"
   }
 }

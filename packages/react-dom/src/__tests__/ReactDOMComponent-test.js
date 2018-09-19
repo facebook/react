@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -2602,5 +2602,61 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<some-custom-element onx="bar" />, container);
       expect(node.getAttribute('onx')).toBe('bar');
     });
+  });
+
+  it('receives events in specific order', () => {
+    let eventOrder = [];
+    let track = tag => () => eventOrder.push(tag);
+    let outerRef = React.createRef();
+    let innerRef = React.createRef();
+
+    function OuterReactApp() {
+      return (
+        <div
+          ref={outerRef}
+          onClick={track('outer bubble')}
+          onClickCapture={track('outer capture')}
+        />
+      );
+    }
+
+    function InnerReactApp() {
+      return (
+        <div
+          ref={innerRef}
+          onClick={track('inner bubble')}
+          onClickCapture={track('inner capture')}
+        />
+      );
+    }
+
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    try {
+      ReactDOM.render(<OuterReactApp />, container);
+      ReactDOM.render(<InnerReactApp />, outerRef.current);
+
+      document.addEventListener('click', track('document bubble'));
+      document.addEventListener('click', track('document capture'), true);
+
+      innerRef.current.click();
+
+      // The order we receive here is not ideal since it is expected that the
+      // capture listener fire before all bubble listeners. Other React apps
+      // might depend on this.
+      //
+      // @see https://github.com/facebook/react/pull/12919#issuecomment-395224674
+      expect(eventOrder).toEqual([
+        'document capture',
+        'inner capture',
+        'inner bubble',
+        'outer capture',
+        'outer bubble',
+        'document bubble',
+      ]);
+    } finally {
+      document.body.removeChild(container);
+    }
   });
 });

@@ -10,13 +10,11 @@
   "dependencies": {
     "clipboard": "^1.7.1",
     "github-fork-ribbon-css": "^0.2.1",
-    "react": "../../../build/node_modules/react",
-    "react-dom": "../../../build/node_modules/react-dom",
-    "react-draggable": "^3.0.5",
-    "react-scheduler": "../../../build/node_modules/react-scheduler",
-    "simple-cache-provider": "../../../build/node_modules/simple-cache-provider"
+    "react-draggable": "^3.0.5"
   },
   "scripts": {
+    "prestart": "cp -r ../../../build/node_modules/* ./node_modules/",
+    "prebuild": "cp -r ../../../build/node_modules/* ./node_modules/",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",

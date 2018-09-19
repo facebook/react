@@ -48,7 +48,8 @@ class Header extends React.Component {
               <select
                 value={window.location.pathname}
                 onChange={this.handleFixtureChange}>
-                <option value="/">Select a Fixture</option>
+                <option value="/">Home</option>
+                <option value="/hydration">Hydration</option>
                 <option value="/range-inputs">Range Inputs</option>
                 <option value="/text-inputs">Text Inputs</option>
                 <option value="/number-inputs">Number Input</option>

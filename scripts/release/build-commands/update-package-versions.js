@@ -10,6 +10,32 @@ const {join} = require('path');
 const semver = require('semver');
 const {execUnlessDry, logPromise} = require('../utils');
 
+const getNextVersion = (prevVersion, releaseVersion) => {
+  const prerelease = semver.prerelease(releaseVersion);
+
+  // Unstable packages (eg version < 1.0) are treated specially:
+  // Rather than use the release version (eg 16.1.0)-
+  // We just auto-increment the minor version (eg 0.1.0 -> 0.2.0).
+  // If we're doing a prerelease, we also append the suffix (eg 0.2.0-beta).
+  if (semver.lt(prevVersion, '1.0.0')) {
+    let suffix = '';
+    if (prerelease) {
+      suffix = `-${prerelease.join('.')}`;
+    }
+
+    // If this is a new pre-release, increment the minor.
+    // Else just increment (or remove) the pre-release suffix.
+    // This way our minor version isn't incremented unnecessarily with each prerelease.
+    const minor = semver.prerelease(prevVersion)
+      ? semver.minor(prevVersion)
+      : semver.minor(prevVersion) + 1;
+
+    return `0.${minor}.0${suffix}`;
+  } else {
+    return releaseVersion;
+  }
+};
+
 const update = async ({cwd, dry, packages, version}) => {
   try {
     // Update root package.json
@@ -32,29 +58,28 @@ const update = async ({cwd, dry, packages, version}) => {
       const json = await readJson(path);
       const prerelease = semver.prerelease(version);
 
-      // Unstable packages (eg version < 1.0) are treated specially:
-      // Rather than use the release version (eg 16.1.0)-
-      // We just auto-increment the minor version (eg 0.1.0 -> 0.2.0).
-      // If we're doing a prerelease, we also append the suffix (eg 0.2.0-beta).
-      if (semver.lt(json.version, '1.0.0')) {
-        let suffix = '';
-        if (prerelease) {
-          suffix = `-${prerelease.join('.')}`;
-        }
-
-        // If this is a new pre-release, increment the minor.
-        // Else just increment (or remove) the pre-release suffix.
-        // This way our minor version isn't incremented unnecessarily with each prerelease.
-        const minor = semver.prerelease(json.version)
-          ? semver.minor(json.version)
-          : semver.minor(json.version) + 1;
-
-        json.version = `0.${minor}.0${suffix}`;
-      } else {
-        json.version = version;
+      // If this is a package we publish directly to NPM, update its version.
+      // Skip ones that we don't directly publish though (e.g. react-native-renderer).
+      if (json.private !== true) {
+        json.version = getNextVersion(json.version, version);
       }
 
-      if (project !== 'react' && json.peerDependencies) {
+      if (project === 'react') {
+        // Update inter-package dependencies as well.
+        // e.g. react depends on scheduler
+        if (json.dependencies) {
+          Object.keys(json.dependencies).forEach(dependency => {
+            if (packages.indexOf(dependency) >= 0) {
+              const prevVersion = json.dependencies[dependency];
+              const nextVersion = getNextVersion(
+                prevVersion.replace('^', ''),
+                version
+              );
+              json.dependencies[dependency] = `^${nextVersion}`;
+            }
+          });
+        }
+      } else if (json.peerDependencies) {
         let peerVersion = json.peerDependencies.react.replace('^', '');
 
         // If the previous release was a pre-release version,
@@ -84,7 +109,18 @@ const update = async ({cwd, dry, packages, version}) => {
         if (json.dependencies) {
           Object.keys(json.dependencies).forEach(dependency => {
             if (packages.indexOf(dependency) >= 0) {
-              json.dependencies[dependency] = `^${version}`;
+              const prevVersion = json.dependencies[dependency];
+
+              // Special case to handle e.g. react-noop-renderer
+              if (prevVersion === '*') {
+                return;
+              }
+
+              const nextVersion = getNextVersion(
+                prevVersion.replace('^', ''),
+                version
+              );
+              json.dependencies[dependency] = `^${nextVersion}`;
             }
           });
         }

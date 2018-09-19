@@ -1,13 +1,11 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow strict
  */
-
-import invariant from 'shared/invariant';
 
 // Exports ReactDOM.createRoot
 export const enableUserTimingAPI = __DEV__;
@@ -39,10 +37,17 @@ export const warnAboutLegacyContextAPI = false;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
-// Track which interactions trigger each commit.
-export const enableSchedulerTracking = __PROFILE__;
+// Trace which interactions trigger each commit.
+export const enableSchedulerTracing = __PROFILE__;
+
+// Only used in www builds.
+export const enableSuspenseServerRenderer = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
-  invariant(false, 'Not implemented.');
+  throw new Error('Not implemented.');
 }
+
+// React Fire: prevent the value and checked attributes from syncing
+// with their related DOM properties
+export const disableInputAttributeSyncing = false;

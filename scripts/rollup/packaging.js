@@ -12,6 +12,7 @@ const {
 const {
   UMD_DEV,
   UMD_PROD,
+  UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
@@ -41,6 +42,7 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
       return [`build/node_modules/${packageName}/cjs/${filename}`];
     case UMD_DEV:
     case UMD_PROD:
+    case UMD_PROFILING:
       return [
         `build/node_modules/${packageName}/umd/${filename}`,
         `build/dist/${filename}`,

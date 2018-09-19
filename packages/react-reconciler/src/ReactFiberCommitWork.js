@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,7 +20,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 
 import {
-  enableSchedulerTracking,
+  enableSchedulerTracing,
   enableProfilerTimer,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
@@ -326,7 +326,30 @@ function commitLifeCycles(
       return;
     }
     case Profiler: {
-      // We have no life-cycles associated with Profiler.
+      if (enableProfilerTimer) {
+        const onRender = finishedWork.memoizedProps.onRender;
+
+        if (enableSchedulerTracing) {
+          onRender(
+            finishedWork.memoizedProps.id,
+            current === null ? 'mount' : 'update',
+            finishedWork.actualDuration,
+            finishedWork.treeBaseDuration,
+            finishedWork.actualStartTime,
+            getCommitTime(),
+            finishedRoot.memoizedInteractions,
+          );
+        } else {
+          onRender(
+            finishedWork.memoizedProps.id,
+            current === null ? 'mount' : 'update',
+            finishedWork.actualDuration,
+            finishedWork.treeBaseDuration,
+            finishedWork.actualStartTime,
+            getCommitTime(),
+          );
+        }
+      }
       return;
     }
     case PlaceholderComponent: {
@@ -781,11 +804,7 @@ function commitDeletion(current: Fiber): void {
   detachFiber(current);
 }
 
-function commitWork(
-  root: FiberRoot,
-  current: Fiber | null,
-  finishedWork: Fiber,
-): void {
+function commitWork(current: Fiber | null, finishedWork: Fiber): void {
   if (!supportsMutation) {
     commitContainer(finishedWork);
     return;
@@ -842,30 +861,6 @@ function commitWork(
       return;
     }
     case Profiler: {
-      if (enableProfilerTimer) {
-        const onRender = finishedWork.memoizedProps.onRender;
-
-        if (enableSchedulerTracking) {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-            root.memoizedInteractions,
-          );
-        } else {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-          );
-        }
-      }
       return;
     }
     case PlaceholderComponent: {

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -314,7 +314,7 @@ function getNativeBeforeInputChars(topLevelType: TopLevelType, nativeEvent) {
 
       // If it's a spacebar character, assume that we have already handled
       // it at the keypress level and bail immediately. Android Chrome
-      // doesn't give us keycodes, so we need to blacklist it.
+      // doesn't give us keycodes, so we need to ignore it.
       if (chars === SPACEBAR_CHAR && hasSpaceKeypress) {
         return null;
       }

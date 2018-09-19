@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -162,23 +162,62 @@ describe('forwardRef', () => {
     );
   });
 
+  it('should not warn if the render function provided does not use any parameter', () => {
+    const arityOfZero = () => <div ref={arguments[1]} />;
+    React.forwardRef(arityOfZero);
+  });
+
   it('should warn if the render function provided does not use the forwarded ref parameter', () => {
-    function arityOfZero() {
-      return null;
-    }
+    const arityOfOne = props => <div {...props} />;
 
-    const arityOfOne = props => null;
-
-    expect(() => React.forwardRef(arityOfZero)).toWarnDev(
-      'forwardRef render functions accept two parameters: props and ref. ' +
+    expect(() => React.forwardRef(arityOfOne)).toWarnDev(
+      'forwardRef render functions accept exactly two parameters: props and ref. ' +
         'Did you forget to use the ref parameter?',
       {withoutStack: true},
     );
+  });
 
-    expect(() => React.forwardRef(arityOfOne)).toWarnDev(
-      'forwardRef render functions accept two parameters: props and ref. ' +
-        'Did you forget to use the ref parameter?',
+  it('should not warn if the render function provided use exactly two parameters', () => {
+    const arityOfTwo = (props, ref) => <div {...props} ref={ref} />;
+    React.forwardRef(arityOfTwo);
+  });
+
+  it('should warn if the render function provided expects to use more than two parameters', () => {
+    const arityOfThree = (props, ref, x) => <div {...props} ref={ref} x={x} />;
+
+    expect(() => React.forwardRef(arityOfThree)).toWarnDev(
+      'forwardRef render functions accept exactly two parameters: props and ref. ' +
+        'Any additional parameter will be undefined.',
       {withoutStack: true},
+    );
+  });
+
+  it('should honor a displayName if set on the forwardRef wrapper in warnings', () => {
+    const Component = props => <div {...props} />;
+
+    const RefForwardingComponent = React.forwardRef((props, ref) => (
+      <Component {...props} forwardedRef={ref} />
+    ));
+
+    RefForwardingComponent.displayName = 'Foo';
+
+    RefForwardingComponent.propTypes = {
+      optional: PropTypes.string,
+      required: PropTypes.string.isRequired,
+    };
+
+    RefForwardingComponent.defaultProps = {
+      optional: 'default',
+    };
+
+    const ref = React.createRef();
+
+    expect(() =>
+      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
+    ).toWarnDev(
+      'Warning: Failed prop type: The prop `required` is marked as required in ' +
+        '`Foo`, but its value is `undefined`.\n' +
+        '    in Foo (at **)',
     );
   });
 });

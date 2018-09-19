@@ -1,0 +1,27 @@
+{
+  "name": "scheduler",
+  "version": "0.9.0",
+  "description": "Cooperative scheduler for the browser environment.",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "license": "MIT",
+  "keywords": [
+    "react"
+  ],
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://reactjs.org/",
+  "dependencies": {
+    "object-assign": "^4.1.1"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "tracing.js",
+    "tracing-profiling.js",
+    "cjs/",
+    "umd/"
+  ]
+}

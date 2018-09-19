@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -229,20 +229,15 @@ export function createElement(type, config, children) {
   }
   if (__DEV__) {
     if (key || ref) {
-      if (
-        typeof props.$$typeof === 'undefined' ||
-        props.$$typeof !== REACT_ELEMENT_TYPE
-      ) {
-        const displayName =
-          typeof type === 'function'
-            ? type.displayName || type.name || 'Unknown'
-            : type;
-        if (key) {
-          defineKeyPropWarningGetter(props, displayName);
-        }
-        if (ref) {
-          defineRefPropWarningGetter(props, displayName);
-        }
+      const displayName =
+        typeof type === 'function'
+          ? type.displayName || type.name || 'Unknown'
+          : type;
+      if (key) {
+        defineKeyPropWarningGetter(props, displayName);
+      }
+      if (ref) {
+        defineRefPropWarningGetter(props, displayName);
       }
     }
   }

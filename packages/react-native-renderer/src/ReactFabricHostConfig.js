@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -50,6 +50,7 @@ import UIManager from 'UIManager';
 // This means that they never overlap.
 let nextReactTag = 2;
 
+/* eslint-disable no-use-before-define */
 type Node = Object;
 export type Type = string;
 export type Props = Object;
@@ -71,6 +72,7 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+/* eslint-enable no-use-before-define */
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {

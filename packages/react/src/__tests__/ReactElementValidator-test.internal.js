@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -417,6 +417,21 @@ describe('ReactElementValidator', () => {
       'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
         'instead of `propTypes`. Did you misspell the property assignment?',
       {withoutStack: true},
+    );
+  });
+
+  it('warns for fragments with illegal attributes', () => {
+    class Foo extends React.Component {
+      render() {
+        return React.createElement(React.Fragment, {a: 1}, '123');
+      }
+    }
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(React.createElement(Foo));
+    }).toWarnDev(
+      'Invalid prop `a` supplied to `React.Fragment`. React.Fragment ' +
+        'can only have `key` and `children` props.',
     );
   });
 

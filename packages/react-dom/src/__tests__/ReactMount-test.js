@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -302,7 +302,7 @@ describe('ReactMount', () => {
       ReactDOM.render(<Foo>a</Foo>, container2);
       // The update did not flush yet.
       expect(container1.textContent).toEqual('1');
-      // The initial mount flushed, but not the update scheduled in cDU.
+      // The initial mount flushed, but not the update scheduled in cDM.
       expect(container2.textContent).toEqual('a');
     });
     // All updates have flushed.

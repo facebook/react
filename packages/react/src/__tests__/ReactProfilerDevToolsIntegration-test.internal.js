@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,7 +14,7 @@ describe('ReactProfiler DevTools integration', () => {
   let React;
   let ReactFeatureFlags;
   let ReactTestRenderer;
-  let SchedulerTracking;
+  let SchedulerTracing;
   let AdvanceTime;
   let advanceTimeBy;
   let hook;
@@ -38,8 +38,8 @@ describe('ReactProfiler DevTools integration', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableProfilerTimer = true;
-    ReactFeatureFlags.enableSchedulerTracking = true;
-    SchedulerTracking = require('react-scheduler/tracking');
+    ReactFeatureFlags.enableSchedulerTracing = true;
+    SchedulerTracing = require('scheduler/tracing');
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
 
@@ -168,7 +168,7 @@ describe('ReactProfiler DevTools integration', () => {
     ).toBe(7);
   });
 
-  it('should store tracked interactions on the HostNode so DevTools can access them', () => {
+  it('should store traced interactions on the HostNode so DevTools can access them', () => {
     // Render without an interaction
     const rendered = ReactTestRenderer.create(<div />);
 
@@ -180,7 +180,7 @@ describe('ReactProfiler DevTools integration', () => {
     const eventTime = mockNow();
 
     // Render with an interaction
-    SchedulerTracking.unstable_track('some event', eventTime, () => {
+    SchedulerTracing.unstable_trace('some event', eventTime, () => {
       rendered.update(<div />);
     });
 
