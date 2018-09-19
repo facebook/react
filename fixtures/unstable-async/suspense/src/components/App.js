@@ -1,6 +1,9 @@
 import React, {Placeholder, PureComponent} from 'react';
-import {unstable_scheduleWork} from 'schedule';
-import {unstable_trace as trace, unstable_wrap as wrap} from 'schedule/tracing';
+import {unstable_scheduleWork} from 'scheduler';
+import {
+  unstable_trace as trace,
+  unstable_wrap as wrap,
+} from 'scheduler/tracing';
 import {createResource} from 'simple-cache-provider';
 import {cache} from '../cache';
 import Spinner from './Spinner';

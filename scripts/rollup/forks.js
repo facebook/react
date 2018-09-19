@@ -119,7 +119,7 @@ const forks = Object.freeze({
     return null;
   },
 
-  schedule: (bundleType, entry, dependencies) => {
+  scheduler: (bundleType, entry, dependencies) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
@@ -131,14 +131,14 @@ const forks = Object.freeze({
         }
         // Optimization: for UMDs, use the API that is already a part of the React
         // package instead of requiring it to be loaded via a separate <script> tag
-        return 'shared/forks/Schedule.umd.js';
+        return 'shared/forks/Scheduler.umd.js';
       default:
         // For other bundles, use the shared NPM package.
         return null;
     }
   },
 
-  'schedule/tracing': (bundleType, entry, dependencies) => {
+  'scheduler/tracing': (bundleType, entry, dependencies) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
@@ -150,7 +150,7 @@ const forks = Object.freeze({
         }
         // Optimization: for UMDs, use the API that is already a part of the React
         // package instead of requiring it to be loaded via a separate <script> tag
-        return 'shared/forks/ScheduleTracing.umd.js';
+        return 'shared/forks/SchedulerTracing.umd.js';
       default:
         // For other bundles, use the shared NPM package.
         return null;

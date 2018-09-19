@@ -18,7 +18,7 @@ let yieldedValues;
 let yieldValue;
 let clearYieldedValues;
 
-describe('Schedule', () => {
+describe('Scheduler', () => {
   beforeEach(() => {
     jest.useFakeTimers();
     jest.resetModules();
@@ -94,9 +94,9 @@ describe('Schedule', () => {
     global.Date.now = () => currentTime;
     window._schedMock = [requestCallback, cancelCallback, getTimeRemaining];
 
-    const Schedule = require('schedule');
-    scheduleWork = Schedule.unstable_scheduleWork;
-    cancelScheduledWork = Schedule.unstable_cancelScheduledWork;
+    const Scheduler = require('scheduler');
+    scheduleWork = Scheduler.unstable_scheduleWork;
+    cancelScheduledWork = Scheduler.unstable_cancelScheduledWork;
   });
 
   it('flushes work incrementally', () => {

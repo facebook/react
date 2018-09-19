@@ -42,7 +42,7 @@ describe('TracingSubscriptions', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableSchedulerTracing = enableSchedulerTracing;
 
-    SchedulerTracing = require('schedule/tracing');
+    SchedulerTracing = require('scheduler/tracing');
 
     throwInOnInteractionScheduledWorkCompleted = false;
     throwInOnInteractionTraced = false;

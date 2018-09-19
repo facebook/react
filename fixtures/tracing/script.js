@@ -28,15 +28,15 @@ function runAllTests() {
 function checkSchedulerAPI() {
   runTest(document.getElementById('checkSchedulerAPI'), () => {
     if (
-      typeof Schedule === 'undefined' ||
-      typeof Schedule.unstable_now !== 'function' ||
-      typeof Schedule.unstable_scheduleWork !== 'function' ||
-      typeof Schedule.unstable_cancelScheduledWork !== 'function'
+      typeof Scheduler === 'undefined' ||
+      typeof Scheduler.unstable_now !== 'function' ||
+      typeof Scheduler.unstable_scheduleWork !== 'function' ||
+      typeof Scheduler.unstable_cancelScheduledWork !== 'function'
     ) {
       throw 'API is not defined';
     }
 
-    if (Schedule.unstable_now() !== performance.now()) {
+    if (Scheduler.unstable_now() !== performance.now()) {
       throw 'API does not work';
     }
 
@@ -47,20 +47,20 @@ function checkSchedulerAPI() {
 function checkSchedulerTracingAPI() {
   runTest(document.getElementById('checkSchedulerTracingAPI'), () => {
     if (
-      typeof ScheduleTracing === 'undefined' ||
-      typeof ScheduleTracing.unstable_clear !== 'function' ||
-      typeof ScheduleTracing.unstable_getCurrent !== 'function' ||
-      typeof ScheduleTracing.unstable_getThreadID !== 'function' ||
-      typeof ScheduleTracing.unstable_trace !== 'function' ||
-      typeof ScheduleTracing.unstable_wrap !== 'function'
+      typeof SchedulerTracing === 'undefined' ||
+      typeof SchedulerTracing.unstable_clear !== 'function' ||
+      typeof SchedulerTracing.unstable_getCurrent !== 'function' ||
+      typeof SchedulerTracing.unstable_getThreadID !== 'function' ||
+      typeof SchedulerTracing.unstable_trace !== 'function' ||
+      typeof SchedulerTracing.unstable_wrap !== 'function'
     ) {
       throw 'API is not defined';
     }
 
     try {
       let interactionsSet;
-      ScheduleTracing.unstable_trace('test', 123, () => {
-        interactionsSet = ScheduleTracing.unstable_getCurrent();
+      SchedulerTracing.unstable_trace('test', 123, () => {
+        interactionsSet = SchedulerTracing.unstable_getCurrent();
       });
       if (interactionsSet.size !== 1) {
         throw null;
@@ -74,10 +74,10 @@ function checkSchedulerTracingAPI() {
     }
 
     const ForwardedSchedulerTracing =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracing;
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracing;
 
     if (
-      ScheduleTracing.unstable_getThreadID() ===
+      SchedulerTracing.unstable_getThreadID() ===
       ForwardedSchedulerTracing.unstable_getThreadID()
     ) {
       throw 'API forwarding is broken';
@@ -90,9 +90,9 @@ function checkSchedulerTracingSubscriptionsAPI() {
     document.getElementById('checkSchedulerTracingSubscriptionsAPI'),
     () => {
       if (
-        typeof ScheduleTracing === 'undefined' ||
-        typeof ScheduleTracing.unstable_subscribe !== 'function' ||
-        typeof ScheduleTracing.unstable_unsubscribe !== 'function'
+        typeof SchedulerTracing === 'undefined' ||
+        typeof SchedulerTracing.unstable_subscribe !== 'function' ||
+        typeof SchedulerTracing.unstable_unsubscribe !== 'function'
       ) {
         throw 'API is not defined';
       }
@@ -114,9 +114,9 @@ function checkSchedulerTracingSubscriptionsAPI() {
       };
 
       try {
-        ScheduleTracing.unstable_subscribe(subscriber);
-        ScheduleTracing.unstable_trace('foo', 123, () => {});
-        ScheduleTracing.unstable_unsubscribe(subscriber);
+        SchedulerTracing.unstable_subscribe(subscriber);
+        SchedulerTracing.unstable_trace('foo', 123, () => {});
+        SchedulerTracing.unstable_unsubscribe(subscriber);
         if (onInteractionTracedCalls.length !== 1) {
           throw null;
         }
@@ -124,7 +124,7 @@ function checkSchedulerTracingSubscriptionsAPI() {
         if (interaction.name !== 'foo' || interaction.timestamp !== 123) {
           throw null;
         }
-        ScheduleTracing.unstable_trace('bar', 456, () => {});
+        SchedulerTracing.unstable_trace('bar', 456, () => {});
         if (onInteractionTracedCalls.length !== 1) {
           throw null;
         }
@@ -134,13 +134,13 @@ function checkSchedulerTracingSubscriptionsAPI() {
 
       const ForwardedSchedulerTracing =
         React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-          .ScheduleTracing;
+          .SchedulerTracing;
 
       try {
         ForwardedSchedulerTracing.unstable_subscribe(subscriber);
-        ScheduleTracing.unstable_trace('foo', 123, () => {});
+        SchedulerTracing.unstable_trace('foo', 123, () => {});
         ForwardedSchedulerTracing.unstable_trace('bar', 456, () => {});
-        ScheduleTracing.unstable_unsubscribe(subscriber);
+        SchedulerTracing.unstable_unsubscribe(subscriber);
         if (onInteractionTracedCalls.length !== 3) {
           throw null;
         }
@@ -172,7 +172,7 @@ function checkEndToEndIntegration() {
       const onRender = (...args) => onRenderCalls.push(args);
       const container = document.createElement('div');
 
-      ScheduleTracing.unstable_trace('render', 123, () => {
+      SchedulerTracing.unstable_trace('render', 123, () => {
         ReactDOM.render(
           React.createElement(
             React.unstable_Profiler,

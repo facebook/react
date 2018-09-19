@@ -1,6 +1,6 @@
 import React, {PureComponent} from 'react';
 import {flushSync, render} from 'react-dom';
-import {unstable_scheduleWork} from 'schedule';
+import {unstable_scheduleWork} from 'scheduler';
 import _ from 'lodash';
 import Charts from './Charts';
 import Clock from './Clock';

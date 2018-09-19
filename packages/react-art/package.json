@@ -23,7 +23,7 @@
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1",
     "prop-types": "^15.6.2",
-    "schedule": "^0.5.0"
+    "scheduler": "^0.9.0"
   },
   "peerDependencies": {
     "react": "^16.0.0"

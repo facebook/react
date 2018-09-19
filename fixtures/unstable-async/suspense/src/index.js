@@ -1,6 +1,6 @@
 import React, {Fragment, PureComponent} from 'react';
 import {unstable_createRoot, render} from 'react-dom';
-import {unstable_trace as trace} from 'schedule/tracing';
+import {unstable_trace as trace} from 'scheduler/tracing';
 import {cache} from './cache';
 import {
   setFakeRequestTime,

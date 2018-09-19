@@ -14,7 +14,7 @@ describe('Tracing', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    SchedulerTracing = require('schedule/tracing');
+    SchedulerTracing = require('scheduler/tracing');
   });
 
   it('should return the value of a traced function', () => {

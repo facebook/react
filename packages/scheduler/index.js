@@ -7,4 +7,4 @@
 
 'use strict';
 
-export * from './src/Schedule';
+export * from './src/Scheduler';

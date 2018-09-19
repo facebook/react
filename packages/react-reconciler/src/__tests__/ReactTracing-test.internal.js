@@ -17,7 +17,7 @@ describe('ReactTracing', () => {
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableSchedulerTracing = false;
 
-    require('schedule/tracing');
+    require('scheduler/tracing');
 
     ReactFeatureFlags.enableSchedulerTracing = true;
 

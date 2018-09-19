@@ -10,13 +10,13 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
-import type {Interaction} from 'schedule/src/Tracing';
+import type {Interaction} from 'scheduler/src/Tracing';
 
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
-import {unstable_getThreadID} from 'schedule/tracing';
+import {unstable_getThreadID} from 'scheduler/tracing';
 
 /* eslint-disable no-use-before-define */
 // TODO: This should be lifted into the renderer.

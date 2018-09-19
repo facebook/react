@@ -15,6 +15,6 @@ const {
   unstable_cancelScheduledWork,
   unstable_now,
   unstable_scheduleWork,
-} = ReactInternals.Schedule;
+} = ReactInternals.Scheduler;
 
 export {unstable_cancelScheduledWork, unstable_now, unstable_scheduleWork};
