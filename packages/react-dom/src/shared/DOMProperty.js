@@ -355,8 +355,6 @@ const properties = {};
 
 // These are HTML attributes that must be positive numbers.
 [
-  'cols',
-  'rows',
   'size',
   'span',
 

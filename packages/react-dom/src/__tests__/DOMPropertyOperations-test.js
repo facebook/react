@@ -199,5 +199,13 @@ describe('DOMPropertyOperations', () => {
       ReactDOM.render(<my-icon size="5px" />, container);
       expect(container.firstChild.getAttribute('size')).toBe('5px');
     });
+
+    it('should not remove non-numeric cols and rows attributes from frameset', () => {
+      const container = document.createElement('div');
+      const frameset = <frameset rows="25%,*,25%" cols="180,11,*" />;
+      ReactDOM.render(frameset, container);
+      expect(container.firstChild.getAttribute('rows')).toBe('25%,*,25%');
+      expect(container.firstChild.getAttribute('cols')).toBe('180,11,*');
+    });
   });
 });
