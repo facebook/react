@@ -785,48 +785,6 @@
       "gzip": 36760
     },
     {
-      "filename": "scheduler-tracking.development.js",
-      "bundleType": "NODE_DEV",
-      "packageName": "scheduler",
-      "size": 10514,
-      "gzip": 2411
-    },
-    {
-      "filename": "scheduler-tracking.production.min.js",
-      "bundleType": "NODE_PROD",
-      "packageName": "scheduler",
-      "size": 719,
-      "gzip": 374
-    },
-    {
-      "filename": "scheduler-tracking.profiling.min.js",
-      "bundleType": "NODE_PROFILING",
-      "packageName": "scheduler",
-      "size": 3337,
-      "gzip": 992
-    },
-    {
-      "filename": "SchedulerTracking-dev.js",
-      "bundleType": "FB_WWW_DEV",
-      "packageName": "scheduler",
-      "size": 10608,
-      "gzip": 2330
-    },
-    {
-      "filename": "SchedulerTracking-prod.js",
-      "bundleType": "FB_WWW_PROD",
-      "packageName": "scheduler",
-      "size": 899,
-      "gzip": 425
-    },
-    {
-      "filename": "SchedulerTracking-profiling.js",
-      "bundleType": "FB_WWW_PROFILING",
-      "packageName": "scheduler",
-      "size": 6984,
-      "gzip": 1258
-    },
-    {
       "filename": "react.profiling.min.js",
       "bundleType": "UMD_PROFILING",
       "packageName": "react",
