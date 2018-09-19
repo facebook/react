@@ -15,16 +15,16 @@ const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
 const importSideEffects = Object.freeze({
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  schedule: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'schedule/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
-  schedule: 'Schedule',
-  'schedule/tracing': 'ScheduleTracing',
+  scheduler: 'Scheduler',
+  'scheduler/tracing': 'SchedulerTracing',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.

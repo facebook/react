@@ -2,7 +2,7 @@
 <html style="width: 100%; height: 100%;">
   <head>
     <meta charset="utf-8">
-    <title>Schedule Test Page</title>
+    <title>Scheduler Test Page</title>
   <style>
     .correct {
       border: solid green 2px;
@@ -13,7 +13,7 @@
   </style>
   </head>
   <body>
-    <h1>Schedule Fixture</h1>
+    <h1>Scheduler Fixture</h1>
     <p>
       This fixture is for manual testing purposes, and the patterns used in
       implementing it should not be used as a model. This is mainly for anyone
@@ -89,14 +89,15 @@
         <div> If the counter advanced while you were away from this tab, it's correct.</div>
       </li>
     </ol>
-    <script src="../../build/dist/schedule.development.js"></script>
+    <script src="../../build/dist/react.development.js"></script>
+    <script src="../../build/node_modules/scheduler/umd/scheduler.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
     <script type="text/babel">
 const {
   unstable_scheduleWork: scheduleWork,
   unstable_cancelWork: cancelWork,
   unstable_now: now
-} = Schedule;
+} = Scheduler;
 function displayTestResult(testNumber) {
   const expectationNode = document.getElementById('test-' + testNumber + '-expected');
   const resultNode = document.getElementById('test-' + testNumber);

@@ -14,24 +14,24 @@
     ? (module.exports = factory(require('react')))
     : typeof define === 'function' && define.amd // eslint-disable-line no-undef
       ? define(['react'], factory) // eslint-disable-line no-undef
-      : (global.ScheduleTracing = factory(global));
+      : (global.SchedulerTracing = factory(global));
 })(this, function(global) {
   function unstable_clear() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracing.unstable_clear.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracing.unstable_clear.apply(
       this,
       arguments
     );
   }
 
   function unstable_getCurrent() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracing.unstable_getCurrent.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracing.unstable_getCurrent.apply(
       this,
       arguments
     );
   }
 
   function unstable_getThreadID() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracing.unstable_getThreadID.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracing.unstable_getThreadID.apply(
       this,
       arguments
     );
@@ -39,14 +39,14 @@
 
   function unstable_subscribe() {
     // eslint-disable-next-line max-len
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracing.unstable_subscribe.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracing.unstable_subscribe.apply(
       this,
       arguments
     );
   }
 
   function unstable_trace() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracing.unstable_trace.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracing.unstable_trace.apply(
       this,
       arguments
     );
@@ -54,14 +54,14 @@
 
   function unstable_unsubscribe() {
     // eslint-disable-next-line max-len
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracing.unstable_unsubscribe.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracing.unstable_unsubscribe.apply(
       this,
       arguments
     );
   }
 
   function unstable_wrap() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ScheduleTracing.unstable_wrap.apply(
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.SchedulerTracing.unstable_wrap.apply(
       this,
       arguments
     );

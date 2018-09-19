@@ -10,7 +10,7 @@ import {
   unstable_cancelScheduledWork,
   unstable_now,
   unstable_scheduleWork,
-} from 'schedule';
+} from 'scheduler';
 import {
   __interactionsRef,
   __subscriberRef,
@@ -21,7 +21,7 @@ import {
   unstable_trace,
   unstable_unsubscribe,
   unstable_wrap,
-} from 'schedule/tracing';
+} from 'scheduler/tracing';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
@@ -38,12 +38,12 @@ if (__UMD__) {
   // This re-export is only required for UMD bundles;
   // CJS bundles use the shared NPM package.
   Object.assign(ReactSharedInternals, {
-    Schedule: {
+    Scheduler: {
       unstable_cancelScheduledWork,
       unstable_now,
       unstable_scheduleWork,
     },
-    ScheduleTracing: {
+    SchedulerTracing: {
       __interactionsRef,
       __subscriberRef,
       unstable_clear,
