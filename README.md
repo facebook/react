@@ -48,7 +48,7 @@ class Message extends React.Component {
 
 ReactDOM.render(
   <Message name="Taylor" />,
-  document.getElementById('root')
+  document.getElementById('app')
 );
 ```
 
