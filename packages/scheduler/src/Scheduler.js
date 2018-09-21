@@ -404,8 +404,7 @@ if (typeof window === 'undefined') {
       // running on 120hz display or 90hz VR display.
       // Take the max of the two in case one of them was an anomaly due to
       // missed frame deadlines.
-      activeFrameTime =
-        nextFrameTime < previousFrameTime ? previousFrameTime : nextFrameTime;
+      activeFrameTime = Math.max(nextFrameTime, previousFrameTime);
     } else {
       previousFrameTime = nextFrameTime;
     }
