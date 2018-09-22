@@ -242,10 +242,7 @@ function prepareToHydrateHostInstance(
   fiber.updateQueue = (updatePayload: any);
   // If the update payload indicates that there is a change or if there
   // is a new ref we mark this as an update.
-  if (updatePayload !== null) {
-    return true;
-  }
-  return false;
+  return updatePayload !== null;
 }
 
 function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
