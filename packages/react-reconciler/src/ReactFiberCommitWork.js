@@ -740,7 +740,6 @@ function unmountHostComponents(current): void {
         }
         parent = parent.return;
       }
-      currentParentIsValid = true;
     }
 
     if (node.tag === HostComponent || node.tag === HostText) {
