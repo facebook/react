@@ -8,7 +8,7 @@
  */
 
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import checkPropTypes from 'prop-types/checkPropTypes';
@@ -57,7 +57,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
-import {applyDerivedStateFromProps} from './ReactFiberClassComponent';
 import {
   mountChildFibers,
   reconcileChildFibers,
@@ -94,6 +93,7 @@ import {
   tryToClaimNextHydratableInstance,
 } from './ReactFiberHydrationContext';
 import {
+  applyDerivedStateFromProps,
   adoptClassInstance,
   constructClassInstance,
   mountClassInstance,
