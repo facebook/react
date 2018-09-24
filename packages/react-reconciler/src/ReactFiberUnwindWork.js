@@ -61,11 +61,11 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   retrySuspendedRoot,
 } from './ReactFiberScheduler';
-import {Sync} from './ReactFiberExpirationTime';
 
 import invariant from 'shared/invariant';
 import maxSigned31BitInt from './maxSigned31BitInt';
 import {
+  Sync,
   expirationTimeToMs,
   LOW_PRIORITY_EXPIRATION,
 } from './ReactFiberExpirationTime';
