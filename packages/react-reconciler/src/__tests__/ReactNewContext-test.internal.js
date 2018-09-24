@@ -37,6 +37,13 @@ describe('ReactNewContext', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
+  function readContext(Context, observedBits) {
+    const dispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner
+        .currentDispatcher;
+    return dispatcher.readContext(Context, observedBits);
+  }
+
   // We have several ways of reading from context. sharedContextTests runs
   // a suite of tests for a given context consumer implementation.
   sharedContextTests('Context.Consumer', Context => Context.Consumer);
@@ -51,12 +58,12 @@ describe('ReactNewContext', () => {
       },
   );
   sharedContextTests(
-    'useContext inside class component',
+    'readContext(Context) inside class component',
     Context =>
       class Consumer extends React.Component {
         render() {
           const observedBits = this.props.unstable_observedBits;
-          const contextValue = useContext(Context, observedBits);
+          const contextValue = readContext(Context, observedBits);
           const render = this.props.children;
           return render(contextValue);
         }
@@ -1190,7 +1197,7 @@ describe('ReactNewContext', () => {
         return (
           <FooContext.Consumer>
             {foo => {
-              const bar = useContext(BarContext);
+              const bar = readContext(BarContext);
               return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
             }}
           </FooContext.Consumer>
@@ -1324,6 +1331,19 @@ describe('ReactNewContext', () => {
         span('Foo: 2, Bar: 2'),
         span('Baz: 2'),
       ]);
+    });
+
+    it('throws when used in a class component', () => {
+      const Context = React.createContext(0);
+      class Foo extends React.Component {
+        render() {
+          return useContext(Context);
+        }
+      }
+      ReactNoop.render(<Foo />);
+      expect(ReactNoop.flush).toThrow(
+        'Hooks can only be called inside the body of a functional component.',
+      );
     });
   });
 
