@@ -57,12 +57,6 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {getResultFromResolvedThenable} from 'shared/ReactLazyComponent';
 
-import {
-  scheduleTimeout,
-  cancelTimeout,
-  noTimeout,
-} from './ReactFiberHostConfig';
-
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {
@@ -71,6 +65,9 @@ import {
   cancelDeferredCallback,
   prepareForCommit,
   resetAfterCommit,
+  scheduleTimeout,
+  cancelTimeout,
+  noTimeout,
 } from './ReactFiberHostConfig';
 import {
   markPendingPriorityLevel,
