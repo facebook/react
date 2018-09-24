@@ -18,15 +18,41 @@ let ReactNoop;
 let useState;
 let useReducer;
 let useEffect;
+let useMutationEffect;
+let useLayoutEffect;
 let useCallback;
 let useMemo;
 let useRef;
 let useAPI;
 let forwardRef;
+let flushPassiveEffects;
 
 describe('ReactHooks', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    jest.mock('scheduler', () => {
+      let scheduledCallbacks = new Map();
+
+      flushPassiveEffects = () => {
+        scheduledCallbacks.forEach(cb => {
+          cb();
+        });
+        scheduledCallbacks = new Map();
+      };
+
+      return {
+        unstable_scheduleCallback(callback) {
+          const handle = {};
+          scheduledCallbacks.set(handle, callback);
+          return handle;
+        },
+        unstable_cancelCallback(handle) {
+          scheduledCallbacks.delete(handle);
+        },
+      };
+    });
+
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.enableHooks_DEPRECATED = true;
@@ -35,6 +61,8 @@ describe('ReactHooks', () => {
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
+    useMutationEffect = React.useMutationEffect;
+    useLayoutEffect = React.useLayoutEffect;
     useCallback = React.useCallback;
     useMemo = React.useMemo;
     useRef = React.useRef;
@@ -563,12 +591,170 @@ describe('ReactHooks', () => {
         return <Text text={'Count: ' + props.count} />;
       }
       ReactNoop.render(<Counter count={0} />);
-      expect(ReactNoop.flush()).toEqual(['Count: 0', 'Did commit [0]']);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Did commit [0]']);
 
       ReactNoop.render(<Counter count={1} />);
-      expect(ReactNoop.flush()).toEqual(['Count: 1', 'Did commit [1]']);
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      // Effects are deferred until after the commit
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Did commit [1]']);
+    });
+
+    it(
+      'flushes effects serially by flushing old effects before flushing ' +
+        "new ones, if they haven't already fired",
+      () => {
+        function getCommittedText() {
+          const children = ReactNoop.getChildren();
+          if (children === null) {
+            return null;
+          }
+          return children[0].prop;
+        }
+
+        function Counter(props) {
+          useEffect(() => {
+            ReactNoop.yield(
+              `Committed state when effect was fired: ${getCommittedText()}`,
+            );
+          });
+          return <Text text={props.count} />;
+        }
+        ReactNoop.render(<Counter count={0} />);
+        expect(ReactNoop.flush()).toEqual([0]);
+        expect(ReactNoop.getChildren()).toEqual([span(0)]);
+
+        // Before the effects have a chance to flush, schedule another update
+        ReactNoop.render(<Counter count={1} />);
+        expect(ReactNoop.flush()).toEqual([
+          1,
+          // The previous effect flushes before the host mutations
+          'Committed state when effect was fired: 0',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span(1)]);
+
+        flushPassiveEffects();
+        expect(ReactNoop.clearYields()).toEqual([
+          'Committed state when effect was fired: 1',
+        ]);
+      },
+    );
+
+    it('updates have async priority', () => {
+      function Counter(props) {
+        const [count, updateCount] = useState('(empty)');
+        useEffect(
+          () => {
+            ReactNoop.yield(`Schedule update [${props.count}]`);
+            updateCount(props.count);
+          },
+          [props.count],
+        );
+        return <Text text={'Count: ' + count} />;
+      }
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Count: (empty)']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Schedule update [0]']);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+
+      ReactNoop.render(<Counter count={1} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Schedule update [1]']);
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
+    });
+
+    it('updates have async priority even if effects are flushed early', () => {
+      function Counter(props) {
+        const [count, updateCount] = useState('(empty)');
+        useEffect(
+          () => {
+            ReactNoop.yield(`Schedule update [${props.count}]`);
+            updateCount(props.count);
+          },
+          [props.count],
+        );
+        return <Text text={'Count: ' + count} />;
+      }
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Count: (empty)']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+
+      // Rendering again should flush the previous commit's effects
+      ReactNoop.render(<Counter count={1} />);
+      ReactNoop.flushThrough([
+        'Count: (empty)',
+        'Schedule update [0]',
+        'Count: 0',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+
+      expect(ReactNoop.flush()).toEqual(['Schedule update [1]', 'Count: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+    });
+
+    it(
+      'in sync mode, useEffect is deferred and updates finish synchronously ' +
+        '(in a single batch)',
+      () => {
+        function Counter(props) {
+          const [count, updateCount] = useState('(empty)');
+          useEffect(
+            () => {
+              // Update multiple times. These should all be batched together in
+              // a single render.
+              updateCount(props.count);
+              updateCount(props.count);
+              updateCount(props.count);
+              updateCount(props.count);
+              updateCount(props.count);
+              updateCount(props.count);
+            },
+            [props.count],
+          );
+          return <Text text={'Count: ' + count} />;
+        }
+        ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
+        // Even in sync mode, effects are deferred until after paint
+        expect(ReactNoop.flush()).toEqual(['Count: (empty)']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+        // Now fire the effects
+        flushPassiveEffects();
+        // There were multiple updates, but there should only be a
+        // single render
+        expect(ReactNoop.clearYields()).toEqual(['Count: 0']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      },
+    );
+
+    it('flushSync is not allowed', () => {
+      function Counter(props) {
+        const [count, updateCount] = useState('(empty)');
+        useEffect(
+          () => {
+            ReactNoop.yield(`Schedule update [${props.count}]`);
+            ReactNoop.flushSync(() => {
+              updateCount(props.count);
+            });
+          },
+          [props.count],
+        );
+        return <Text text={'Count: ' + count} />;
+      }
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Count: (empty)']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+
+      expect(() => {
+        flushPassiveEffects();
+      }).toThrow('flushSync was called from inside a lifecycle method');
     });
 
     it('unmounts previous effect', () => {
@@ -582,16 +768,19 @@ describe('ReactHooks', () => {
         return <Text text={'Count: ' + props.count} />;
       }
       ReactNoop.render(<Counter count={0} />);
-      expect(ReactNoop.flush()).toEqual(['Count: 0', 'Did create [0]']);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Did create [0]']);
 
       ReactNoop.render(<Counter count={1} />);
-      expect(ReactNoop.flush()).toEqual([
-        'Count: 1',
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual([
         'Did destroy [0]',
         'Did create [1]',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
 
     it('unmounts on deletion', () => {
@@ -605,8 +794,10 @@ describe('ReactHooks', () => {
         return <Text text={'Count: ' + props.count} />;
       }
       ReactNoop.render(<Counter count={0} />);
-      expect(ReactNoop.flush()).toEqual(['Count: 0', 'Did create [0]']);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Did create [0]']);
 
       ReactNoop.render(null);
       expect(ReactNoop.flush()).toEqual(['Did destroy [0]']);
@@ -625,8 +816,10 @@ describe('ReactHooks', () => {
         return <Text text={'Count: ' + props.count} />;
       }
       ReactNoop.render(<Counter count={0} />);
-      expect(ReactNoop.flush()).toEqual(['Count: 0', 'Did mount']);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Did mount']);
 
       ReactNoop.render(<Counter count={1} />);
       // No effect, because constructor was hoisted outside render
@@ -653,31 +846,37 @@ describe('ReactHooks', () => {
         return <Text text={text} />;
       }
       ReactNoop.render(<Counter label="Count" count={0} />);
-      expect(ReactNoop.flush()).toEqual(['Count: 0', 'Did create [Count: 0]']);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Did create [Count: 0]']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
       ReactNoop.render(<Counter label="Count" count={1} />);
       // Count changed
-      expect(ReactNoop.flush()).toEqual([
-        'Count: 1',
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual([
         'Did destroy [Count: 0]',
         'Did create [Count: 1]',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
       ReactNoop.render(<Counter label="Count" count={1} />);
       // Nothing changed, so no effect should have fired
       expect(ReactNoop.flush()).toEqual(['Count: 1']);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(null);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
       ReactNoop.render(<Counter label="Total" count={1} />);
       // Label changed
-      expect(ReactNoop.flush()).toEqual([
-        'Total: 1',
+      expect(ReactNoop.flush()).toEqual(['Total: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Total: 1')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual([
         'Did destroy [Count: 1]',
         'Did create [Total: 1]',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Total: 1')]);
     });
 
     it('multiple effects', () => {
@@ -691,20 +890,22 @@ describe('ReactHooks', () => {
         return <Text text={'Count: ' + props.count} />;
       }
       ReactNoop.render(<Counter count={0} />);
-      expect(ReactNoop.flush()).toEqual([
-        'Count: 0',
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual([
         'Did commit 1 [0]',
         'Did commit 2 [0]',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
       ReactNoop.render(<Counter count={1} />);
-      expect(ReactNoop.flush()).toEqual([
-        'Count: 1',
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual([
         'Did commit 1 [1]',
         'Did commit 2 [1]',
       ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
 
     it('unmounts all previous effects before creating any new ones', () => {
@@ -724,22 +925,371 @@ describe('ReactHooks', () => {
         return <Text text={'Count: ' + props.count} />;
       }
       ReactNoop.render(<Counter count={0} />);
-      expect(ReactNoop.flush()).toEqual([
-        'Count: 0',
-        'Mount A [0]',
-        'Mount B [0]',
-      ]);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Mount A [0]', 'Mount B [0]']);
 
       ReactNoop.render(<Counter count={1} />);
-      expect(ReactNoop.flush()).toEqual([
-        'Count: 1',
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual([
         'Unmount A [0]',
         'Unmount B [0]',
         'Mount A [1]',
         'Mount B [1]',
       ]);
+    });
+
+    it('handles errors on mount', () => {
+      function Counter(props) {
+        useEffect(() => {
+          ReactNoop.yield(`Mount A [${props.count}]`);
+          return () => {
+            ReactNoop.yield(`Unmount A [${props.count}]`);
+          };
+        });
+        useEffect(() => {
+          ReactNoop.yield('Oops!');
+          throw new Error('Oops!');
+          // eslint-disable-next-line no-unreachable
+          ReactNoop.yield(`Mount B [${props.count}]`);
+          return () => {
+            ReactNoop.yield(`Unmount B [${props.count}]`);
+          };
+        });
+        return <Text text={'Count: ' + props.count} />;
+      }
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      expect(() => flushPassiveEffects()).toThrow('Oops');
+      expect(ReactNoop.clearYields()).toEqual([
+        'Mount A [0]',
+        'Oops!',
+        // Clean up effect A. There's no effect B to clean-up, because it
+        // never mounted.
+        'Unmount A [0]',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([]);
+    });
+
+    it('handles errors on update', () => {
+      function Counter(props) {
+        useEffect(() => {
+          ReactNoop.yield(`Mount A [${props.count}]`);
+          return () => {
+            ReactNoop.yield(`Unmount A [${props.count}]`);
+          };
+        });
+        useEffect(() => {
+          if (props.count === 1) {
+            ReactNoop.yield('Oops!');
+            throw new Error('Oops!');
+          }
+          ReactNoop.yield(`Mount B [${props.count}]`);
+          return () => {
+            ReactNoop.yield(`Unmount B [${props.count}]`);
+          };
+        });
+        return <Text text={'Count: ' + props.count} />;
+      }
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Mount A [0]', 'Mount B [0]']);
+
+      // This update will trigger an errror
+      ReactNoop.render(<Counter count={1} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      expect(() => flushPassiveEffects()).toThrow('Oops');
+      expect(ReactNoop.clearYields()).toEqual([
+        'Unmount A [0]',
+        'Unmount B [0]',
+        'Mount A [1]',
+        'Oops!',
+        // Clean up effect A. There's no effect B to clean-up, because it
+        // never mounted.
+        'Unmount A [1]',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([]);
+    });
+
+    it('handles errors on unmount', () => {
+      function Counter(props) {
+        useEffect(() => {
+          ReactNoop.yield(`Mount A [${props.count}]`);
+          return () => {
+            ReactNoop.yield('Oops!');
+            throw new Error('Oops!');
+            // eslint-disable-next-line no-unreachable
+            ReactNoop.yield(`Unmount A [${props.count}]`);
+          };
+        });
+        useEffect(() => {
+          ReactNoop.yield(`Mount B [${props.count}]`);
+          return () => {
+            ReactNoop.yield(`Unmount B [${props.count}]`);
+          };
+        });
+        return <Text text={'Count: ' + props.count} />;
+      }
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Mount A [0]', 'Mount B [0]']);
+
+      // This update will trigger an errror
+      ReactNoop.render(<Counter count={1} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      expect(() => flushPassiveEffects()).toThrow('Oops');
+      expect(ReactNoop.clearYields()).toEqual([
+        'Oops!',
+        // B unmounts even though an error was thrown in the previous effect
+        'Unmount B [0]',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([]);
+    });
+  });
+
+  describe('useMutationEffect and useLayoutEffect', () => {
+    it('fires layout effects after the host has been mutated', () => {
+      function getCommittedText() {
+        const children = ReactNoop.getChildren();
+        if (children === null) {
+          return null;
+        }
+        return children[0].prop;
+      }
+
+      function Counter(props) {
+        useLayoutEffect(() => {
+          ReactNoop.yield(`Current: ${getCommittedText()}`);
+        });
+        return <Text text={props.count} />;
+      }
+
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual([0, 'Current: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span(0)]);
+
+      ReactNoop.render(<Counter count={1} />);
+      expect(ReactNoop.flush()).toEqual([1, 'Current: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span(1)]);
+    });
+
+    it('fires mutation effects before layout effects', () => {
+      let committedText = '(empty)';
+
+      function Counter(props) {
+        useMutationEffect(() => {
+          ReactNoop.yield(`Mount mutation [current: ${committedText}]`);
+          committedText = props.count + '';
+          return () => {
+            ReactNoop.yield(`Unmount mutation [current: ${committedText}]`);
+          };
+        });
+        useLayoutEffect(() => {
+          ReactNoop.yield(`Mount layout [current: ${committedText}]`);
+          return () => {
+            ReactNoop.yield(`Unmount layout [current: ${committedText}]`);
+          };
+        });
+        useEffect(() => {
+          ReactNoop.yield(`Mount normal [current: ${committedText}]`);
+          return () => {
+            ReactNoop.yield(`Unmount normal [current: ${committedText}]`);
+          };
+        });
+        return null;
+      }
+
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual([
+        'Mount mutation [current: (empty)]',
+        'Mount layout [current: 0]',
+      ]);
+      expect(committedText).toEqual('0');
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Mount normal [current: 0]']);
+
+      // Unmount everything
+      ReactNoop.render(null);
+      expect(ReactNoop.flush()).toEqual([
+        'Unmount mutation [current: 0]',
+        'Unmount layout [current: 0]',
+        'Unmount normal [current: 0]',
+      ]);
+    });
+
+    it('force flushes passive effects before firing new mutation effects', () => {
+      let committedText = '(empty)';
+
+      function Counter(props) {
+        useMutationEffect(() => {
+          ReactNoop.yield(`Mount mutation [current: ${committedText}]`);
+          committedText = props.count + '';
+          return () => {
+            ReactNoop.yield(`Unmount mutation [current: ${committedText}]`);
+          };
+        });
+        useEffect(() => {
+          ReactNoop.yield(`Mount normal [current: ${committedText}]`);
+          return () => {
+            ReactNoop.yield(`Unmount normal [current: ${committedText}]`);
+          };
+        });
+        return null;
+      }
+
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Mount mutation [current: (empty)]']);
+      expect(committedText).toEqual('0');
+
+      ReactNoop.render(<Counter count={1} />);
+      expect(ReactNoop.flush()).toEqual([
+        'Mount normal [current: 0]',
+        'Unmount mutation [current: 0]',
+        'Mount mutation [current: 0]',
+      ]);
+      expect(committedText).toEqual('1');
+
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Mount normal [current: 1]']);
+    });
+
+    it('force flushes passive effects before firing new layout effects', () => {
+      let committedText = '(empty)';
+
+      function Counter(props) {
+        useLayoutEffect(() => {
+          // Normally this would go in a mutation effect, but this test
+          // intentionally omits a mutation effect.
+          committedText = props.count + '';
+
+          ReactNoop.yield(`Mount layout [current: ${committedText}]`);
+          return () => {
+            ReactNoop.yield(`Unmount layout [current: ${committedText}]`);
+          };
+        });
+        useEffect(() => {
+          ReactNoop.yield(`Mount normal [current: ${committedText}]`);
+          return () => {
+            ReactNoop.yield(`Unmount normal [current: ${committedText}]`);
+          };
+        });
+        return null;
+      }
+
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Mount layout [current: 0]']);
+      expect(committedText).toEqual('0');
+
+      ReactNoop.render(<Counter count={1} />);
+      expect(ReactNoop.flush()).toEqual([
+        'Mount normal [current: 0]',
+        'Unmount layout [current: 0]',
+        'Mount layout [current: 1]',
+      ]);
+      expect(committedText).toEqual('1');
+
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Mount normal [current: 1]']);
+    });
+
+    it('fires all mutation effects before firing any layout effects', () => {
+      let committedA = '(empty)';
+      let committedB = '(empty)';
+
+      function CounterA(props) {
+        useMutationEffect(() => {
+          ReactNoop.yield(
+            `Mount A mutation [A: ${committedA}, B: ${committedB}]`,
+          );
+          committedA = props.count + '';
+          return () => {
+            ReactNoop.yield(
+              `Unmount A mutation [A: ${committedA}, B: ${committedB}]`,
+            );
+          };
+        });
+        useLayoutEffect(() => {
+          ReactNoop.yield(
+            `Mount layout A [A: ${committedA}, B: ${committedB}]`,
+          );
+          return () => {
+            ReactNoop.yield(
+              `Unmount layout A [A: ${committedA}, B: ${committedB}]`,
+            );
+          };
+        });
+        return null;
+      }
+
+      function CounterB(props) {
+        useMutationEffect(() => {
+          ReactNoop.yield(
+            `Mount B mutation [A: ${committedA}, B: ${committedB}]`,
+          );
+          committedB = props.count + '';
+          return () => {
+            ReactNoop.yield(
+              `Unmount B mutation [A: ${committedA}, B: ${committedB}]`,
+            );
+          };
+        });
+        useLayoutEffect(() => {
+          ReactNoop.yield(
+            `Mount layout B [A: ${committedA}, B: ${committedB}]`,
+          );
+          return () => {
+            ReactNoop.yield(
+              `Unmount layout B [A: ${committedA}, B: ${committedB}]`,
+            );
+          };
+        });
+        return null;
+      }
+
+      ReactNoop.render(
+        <React.Fragment>
+          <CounterA count={0} />
+          <CounterB count={0} />
+        </React.Fragment>,
+      );
+      expect(ReactNoop.flush()).toEqual([
+        // All mutation effects fire before all layout effects
+        'Mount A mutation [A: (empty), B: (empty)]',
+        'Mount B mutation [A: 0, B: (empty)]',
+        'Mount layout A [A: 0, B: 0]',
+        'Mount layout B [A: 0, B: 0]',
+      ]);
+      expect([committedA, committedB]).toEqual(['0', '0']);
+
+      ReactNoop.render(
+        <React.Fragment>
+          <CounterA count={1} />
+          <CounterB count={1} />
+        </React.Fragment>,
+      );
+      expect(ReactNoop.flush()).toEqual([
+        // Note: This shows that the clean-up function of a layout effect is
+        // fired in the same phase as the set-up function of a mutation.
+        'Unmount A mutation [A: 0, B: 0]',
+        'Unmount B mutation [A: 0, B: 0]',
+        'Mount A mutation [A: 0, B: 0]',
+        'Unmount layout A [A: 1, B: 0]',
+        'Mount B mutation [A: 1, B: 0]',
+        'Unmount layout B [A: 1, B: 1]',
+        'Mount layout A [A: 1, B: 1]',
+        'Mount layout B [A: 1, B: 1]',
+      ]);
+      expect([committedA, committedB]).toEqual(['1', '1']);
     });
   });
 
@@ -1006,26 +1556,11 @@ describe('ReactHooks', () => {
       updateC(4);
       expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: 4']);
       expect(ReactNoop.getChildren()).toEqual([span('A: 2, B: 3, C: 4')]);
-
       ReactNoop.render(<App loadC={false} />);
-      expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: [not loaded]']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('A: 2, B: 3, C: [not loaded]'),
-      ]);
-
-      updateC(4);
-      // TODO: This hook triggered a re-render even though it's unmounted.
-      // Should we warn?
-      expect(ReactNoop.flush()).toEqual(['A: 2, B: 3, C: [not loaded]']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('A: 2, B: 3, C: [not loaded]'),
-      ]);
-
-      updateB(4);
-      expect(ReactNoop.flush()).toEqual(['A: 2, B: 4, C: [not loaded]']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('A: 2, B: 4, C: [not loaded]'),
-      ]);
+      expect(() => ReactNoop.flush()).toThrow(
+        'Rendered fewer hooks than expected. This may be caused by an ' +
+          'accidental early return statement.',
+      );
     });
 
     it('unmount effects', () => {
@@ -1050,16 +1585,20 @@ describe('ReactHooks', () => {
       }
 
       ReactNoop.render(<App showMore={false} />);
-      expect(ReactNoop.flush()).toEqual(['Mount A']);
+      expect(ReactNoop.flush()).toEqual([]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Mount A']);
 
       ReactNoop.render(<App showMore={true} />);
-      expect(ReactNoop.flush()).toEqual(['Mount B']);
+      expect(ReactNoop.flush()).toEqual([]);
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(['Mount B']);
 
       ReactNoop.render(<App showMore={false} />);
-      expect(ReactNoop.flush()).toEqual(['Unmount B']);
-
-      ReactNoop.render(null);
-      expect(ReactNoop.flush()).toEqual(['Unmount A']);
+      expect(() => ReactNoop.flush()).toThrow(
+        'Rendered fewer hooks than expected. This may be caused by an ' +
+          'accidental early return statement.',
+      );
     });
   });
 });

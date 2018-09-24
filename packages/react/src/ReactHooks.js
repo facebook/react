@@ -47,6 +47,22 @@ export function useEffect(
   return dispatcher.useEffect(create, inputs);
 }
 
+export function useMutationEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+) {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useMutationEffect(create, inputs);
+}
+
+export function useLayoutEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+) {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useLayoutEffect(create, inputs);
+}
+
 export function useCallback(
   callback: () => mixed,
   inputs: Array<mixed> | void | null,

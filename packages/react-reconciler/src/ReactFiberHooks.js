@@ -9,9 +9,24 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {HookEffectTag} from './ReactHookEffectTags';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {Callback as CallbackEffect} from 'shared/ReactSideEffectTags';
+import {
+  Snapshot as SnapshotEffect,
+  Update as UpdateEffect,
+  Callback as CallbackEffect,
+  Passive as PassiveEffect,
+} from 'shared/ReactSideEffectTags';
+import {
+  NoEffect as NoHookEffect,
+  UnmountSnapshot,
+  UnmountMutation,
+  MountMutation,
+  MountLayout,
+  UnmountPassive,
+  MountPassive,
+} from './ReactHookEffectTags';
 import {
   scheduleWork,
   computeExpirationForFiber,
@@ -43,10 +58,9 @@ type Hook = {
 };
 
 type Effect = {
-  // For an unmounted effect, this points to the effect constructor. Once it's
-  // mounted, it points to a destroy function (or null). I've opted to reuse
-  // the same field to save memory.
-  value: any,
+  tag: HookEffectTag,
+  create: () => mixed,
+  destroy: (() => mixed) | null,
   inputs: Array<mixed>,
   next: Effect,
 };
@@ -166,6 +180,9 @@ export function finishHooks(
     renderedWork.updateQueue = (componentUpdateQueue: any);
   }
 
+  const didRenderTooFewHooks =
+    currentHook !== null && currentHook.next !== null;
+
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = null;
 
@@ -184,6 +201,12 @@ export function finishHooks(
   // didScheduleRenderPhaseUpdate = false;
   // renderPhaseUpdates = null;
   // numberOfReRenders = 0;
+
+  invariant(
+    !didRenderTooFewHooks,
+    'Rendered fewer hooks than expected. This may be caused by an accidental ' +
+      'early return statement.',
+  );
 
   return children;
 }
@@ -460,9 +483,11 @@ function pushCallback(workInProgress: Fiber, update: Update<any, any>): void {
   workInProgress.effectTag |= CallbackEffect;
 }
 
-function pushEffect(value, inputs) {
+function pushEffect(tag, create, destroy, inputs) {
   const effect: Effect = {
-    value,
+    tag,
+    create,
+    destroy,
     inputs,
     // Circular
     next: (null: any),
@@ -500,10 +525,38 @@ export function useRef<T>(initialValue: T): {current: T} {
   return ref;
 }
 
+export function useMutationEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+): void {
+  useEffectImpl(
+    SnapshotEffect | UpdateEffect,
+    UnmountSnapshot | MountMutation,
+    create,
+    inputs,
+  );
+}
+
+export function useLayoutEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+): void {
+  useEffectImpl(UpdateEffect, UnmountMutation | MountLayout, create, inputs);
+}
+
 export function useEffect(
   create: () => mixed,
   inputs: Array<mixed> | void | null,
 ): void {
+  useEffectImpl(
+    UpdateEffect | PassiveEffect,
+    UnmountPassive | MountPassive,
+    create,
+    inputs,
+  );
+}
+
+function useEffectImpl(fiberEffectTag, hookEffectTag, create, inputs): void {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
 
@@ -512,19 +565,18 @@ export function useEffect(
   if (currentHook !== null) {
     const prevEffect = currentHook.memoizedState;
     const prevInputs = prevEffect.inputs;
-    if (inputsAreEqual(nextInputs, prevInputs)) {
-      nextEffect = pushEffect(prevEffect.value, prevInputs);
-    } else {
-      nextEffect = pushEffect(create, nextInputs);
-    }
+    nextEffect = pushEffect(
+      inputsAreEqual(nextInputs, prevInputs) ? NoHookEffect : hookEffectTag,
+      create,
+      prevEffect.destroy,
+      nextInputs,
+    );
   } else {
-    nextEffect = pushEffect(create, nextInputs);
+    nextEffect = pushEffect(hookEffectTag, create, null, nextInputs);
   }
 
-  // TODO: If we decide not to support removing hooks from the end of the list,
-  // we only need to schedule an effect if the inputs changed.
-  currentlyRenderingFiber.effectTag |= CallbackEffect;
   workInProgressHook.memoizedState = nextEffect;
+  currentlyRenderingFiber.effectTag |= fiberEffectTag;
 }
 
 export function useAPI<T>(
@@ -541,21 +593,26 @@ export function useAPI<T>(
   // TODO: I've implemented this on top of useEffect because it's almost the
   // same thing, and it would require an equal amount of code. It doesn't seem
   // like a common enough use case to justify the additional size.
-  useEffect(() => {
-    if (typeof ref === 'function') {
-      const refCallback = ref;
-      const inst = create();
-      refCallback(inst);
-      return () => refCallback(null);
-    } else if (ref !== null && ref !== undefined) {
-      const refObject = ref;
-      const inst = create();
-      refObject.current = inst;
-      return () => {
-        refObject.current = null;
-      };
-    }
-  }, nextInputs);
+  useEffectImpl(
+    UpdateEffect,
+    UnmountMutation | MountLayout,
+    () => {
+      if (typeof ref === 'function') {
+        const refCallback = ref;
+        const inst = create();
+        refCallback(inst);
+        return () => refCallback(null);
+      } else if (ref !== null && ref !== undefined) {
+        const refObject = ref;
+        const inst = create();
+        refObject.current = inst;
+        return () => {
+          refObject.current = null;
+        };
+      }
+    },
+    nextInputs,
+  );
 }
 
 export function useCallback<T>(

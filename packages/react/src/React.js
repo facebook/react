@@ -33,6 +33,8 @@ import {
   useReducer,
   useRef,
   useEffect,
+  useMutationEffect,
+  useLayoutEffect,
   useCallback,
   useMemo,
   useAPI,
@@ -87,6 +89,8 @@ if (enableHooks_DEPRECATED) {
   React.useReducer = useReducer;
   React.useRef = useRef;
   React.useEffect = useEffect;
+  React.useMutationEffect = useMutationEffect;
+  React.useLayoutEffect = useLayoutEffect;
   React.useCallback = useCallback;
   React.useMemo = useMemo;
   React.useAPI = useAPI;

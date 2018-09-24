@@ -12,7 +12,15 @@ import type {Batch, FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {Interaction} from 'scheduler/src/Tracing';
 
-import {__interactionsRef, __subscriberRef} from 'scheduler/tracing';
+import {
+  __interactionsRef,
+  __subscriberRef,
+  unstable_wrap as Schedule_tracing_wrap,
+} from 'scheduler/tracing';
+import {
+  unstable_scheduleCallback as Schedule_scheduleCallback,
+  unstable_cancelCallback as Schedule_cancelCallback,
+} from 'scheduler';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -34,6 +42,7 @@ import {
   Ref,
   Incomplete,
   HostEffectMask,
+  Passive,
 } from 'shared/ReactSideEffectTags';
 import {
   HostRoot,
@@ -149,6 +158,7 @@ import {
   commitLifeCycles,
   commitAttachRef,
   commitDetachRef,
+  commitPassiveHookEffects,
 } from './ReactFiberCommitWork';
 import {Dispatcher} from './ReactFiberDispatcher';
 
@@ -252,6 +262,7 @@ let nextRenderDidError: boolean = false;
 let nextEffect: Fiber | null = null;
 
 let isCommitting: boolean = false;
+let needsPassiveCommit: boolean = false;
 
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
@@ -458,8 +469,6 @@ function commitBeforeMutationLifecycles() {
       commitBeforeMutationLifeCycles(current, nextEffect);
     }
 
-    // Don't cleanup effects yet;
-    // This will be done by commitAllLifeCycles()
     nextEffect = nextEffect.nextEffect;
   }
 
@@ -499,15 +508,51 @@ function commitAllLifeCycles(
       commitAttachRef(nextEffect);
     }
 
-    const next = nextEffect.nextEffect;
-    // Ensure that we clean these up so that we don't accidentally keep them.
-    // I'm not actually sure this matters because we can't reset firstEffect
-    // and lastEffect since they're on every node, not just the effectful
-    // ones. So we have to clean everything as we reuse nodes anyway.
-    nextEffect.nextEffect = null;
-    // Ensure that we reset the effectTag here so that we can rely on effect
-    // tags to reason about the current life-cycle.
-    nextEffect = next;
+    if (effectTag & Passive) {
+      needsPassiveCommit = true;
+    }
+
+    nextEffect = nextEffect.nextEffect;
+  }
+}
+
+function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
+  // Set this to true to prevent re-entrancy
+  const previousIsRendering = isRendering;
+  isRendering = true;
+
+  let effect = firstEffect;
+  do {
+    if (effect.effectTag & Passive) {
+      let didError = false;
+      let error;
+      if (__DEV__) {
+        invokeGuardedCallback(null, commitPassiveHookEffects, null, effect);
+        if (hasCaughtError()) {
+          didError = true;
+          error = clearCaughtError();
+        }
+      } else {
+        try {
+          commitPassiveHookEffects(effect);
+        } catch (e) {
+          didError = true;
+          error = e;
+        }
+      }
+      if (didError) {
+        captureCommitPhaseError(effect, error);
+      }
+    }
+    effect = effect.nextEffect;
+  } while (effect !== null);
+
+  isRendering = previousIsRendering;
+
+  // Check if work was scheduled by one of the effects
+  const rootExpirationTime = root.expirationTime;
+  if (rootExpirationTime !== NoWork) {
+    requestWork(root, rootExpirationTime);
   }
 }
 
@@ -527,6 +572,20 @@ function markLegacyErrorBoundaryAsFailed(instance: mixed) {
 }
 
 function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
+  const existingSerialEffectCallback = root.serialEffectCallback;
+  const existingSerialEffectCallbackHandle = root.serialEffectCallbackHandle;
+  if (existingSerialEffectCallback !== null) {
+    // A passive callback was scheduled during the previous commit, but it did
+    // not get a chance to flush. Flush it now to ensure serial execution.
+    // This should fire before any new mutations.
+    root.serialEffectCallback = null;
+    if (existingSerialEffectCallbackHandle !== null) {
+      root.serialEffectCallbackHandle = null;
+      Schedule_cancelCallback(existingSerialEffectCallbackHandle);
+    }
+    existingSerialEffectCallback();
+  }
+
   isWorking = true;
   isCommitting = true;
   startCommitTimer();
@@ -714,6 +773,34 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
         nextEffect = nextEffect.nextEffect;
       }
     }
+  }
+
+  if (firstEffect !== null && needsPassiveCommit) {
+    const resolvedFirstEffect = firstEffect;
+    // This commit included a passive effect. These do not need to fire until
+    // after the next paint. Schedule an callback to fire them in an async
+    // event. To ensure serial execution, the callback will be flushed early if
+    // we enter another commit phase before then.
+    needsPassiveCommit = false;
+    let serialEffectCallback;
+    if (enableSchedulerTracing) {
+      // TODO: Avoid this extra callback by mutating the tracing ref directly,
+      // like we do at the beginning of commitRoot. I've opted not to do that
+      // here because that code is still in flux.
+      serialEffectCallback = Schedule_tracing_wrap(() => {
+        root.serialEffectCallback = null;
+        commitPassiveEffects(root, resolvedFirstEffect);
+      });
+    } else {
+      serialEffectCallback = () => {
+        root.serialEffectCallback = null;
+        commitPassiveEffects(root, resolvedFirstEffect);
+      };
+    }
+    root.serialEffectCallback = serialEffectCallback;
+    root.serialEffectCallbackHandle = Schedule_scheduleCallback(
+      serialEffectCallback,
+    );
   }
 
   isCommitting = false;
@@ -1426,11 +1513,6 @@ function dispatch(
   value: mixed,
   expirationTime: ExpirationTime,
 ) {
-  invariant(
-    !isWorking || isCommitting,
-    'dispatch: Cannot dispatch during the render phase.',
-  );
-
   let fiber = sourceFiber.return;
   while (fiber !== null) {
     switch (fiber.tag) {
