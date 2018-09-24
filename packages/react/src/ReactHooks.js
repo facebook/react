@@ -8,7 +8,6 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-
 import invariant from 'shared/invariant';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -27,7 +26,7 @@ export function useContext<T>(
   observedBits: number | boolean | void,
 ) {
   const dispatcher = resolveDispatcher();
-  return dispatcher.readContext(Context, observedBits);
+  return dispatcher.useContext(Context, observedBits);
 }
 
 export function useState<S>(initialState: S | (() => S)) {
@@ -55,6 +54,22 @@ export function useEffect(
 ) {
   const dispatcher = resolveDispatcher();
   return dispatcher.useEffect(create, inputs);
+}
+
+export function useMutationEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+) {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useMutationEffect(create, inputs);
+}
+
+export function useLayoutEffect(
+  create: () => mixed,
+  inputs: Array<mixed> | void | null,
+) {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useLayoutEffect(create, inputs);
 }
 
 export function useCallback(

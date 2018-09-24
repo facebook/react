@@ -9,22 +9,28 @@
 
 import {readContext} from './ReactFiberNewContext';
 import {
-  useState,
-  useReducer,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
   useAPI,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useMutationEffect,
+  useReducer,
+  useRef,
+  useState,
 } from './ReactFiberHooks';
 
 export const Dispatcher = {
   readContext,
-  useState,
-  useReducer,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
   useAPI,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useMutationEffect,
+  useReducer,
+  useRef,
+  useState,
 };

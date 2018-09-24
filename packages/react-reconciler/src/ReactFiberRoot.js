@@ -36,6 +36,9 @@ type BaseFiberRootProperties = {|
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
 
+  serialEffectCallback: (() => mixed) | null,
+  serialEffectCallbackHandle: any,
+
   // The following priority levels are used to distinguish between 1)
   // uncommitted work, 2) uncommitted work that is suspended, and 3) uncommitted
   // work that may be unsuspended. We choose not to track each individual
@@ -114,6 +117,8 @@ export function createFiberRoot(
       current: uninitializedFiber,
       containerInfo: containerInfo,
       pendingChildren: null,
+      serialEffectCallback: null,
+      serialEffectCallbackHandle: null,
 
       earliestPendingTime: NoWork,
       latestPendingTime: NoWork,
@@ -143,6 +148,8 @@ export function createFiberRoot(
       current: uninitializedFiber,
       containerInfo: containerInfo,
       pendingChildren: null,
+      serialEffectCallback: null,
+      serialEffectCallbackHandle: null,
 
       earliestPendingTime: NoWork,
       latestPendingTime: NoWork,

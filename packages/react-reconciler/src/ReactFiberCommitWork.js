@@ -86,6 +86,16 @@ import {
   requestCurrentTime,
   scheduleWork,
 } from './ReactFiberScheduler';
+import {
+  NoEffect as NoHookEffect,
+  UnmountSnapshot,
+  UnmountMutation,
+  MountMutation,
+  UnmountLayout,
+  MountLayout,
+  UnmountPassive,
+  MountPassive,
+} from './ReactHookEffectTags';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -204,6 +214,11 @@ function commitBeforeMutationLifeCycles(
   finishedWork: Fiber,
 ): void {
   switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef: {
+      commitHookEffectList(UnmountSnapshot, NoHookEffect, finishedWork);
+      return;
+    }
     case ClassComponent: {
       if (finishedWork.effectTag & Snapshot) {
         if (current !== null) {
@@ -254,26 +269,39 @@ function commitBeforeMutationLifeCycles(
   }
 }
 
-function destroyRemainingEffects(firstToDestroy, stopAt) {
-  let effect = firstToDestroy;
-  do {
-    const destroy = effect.value;
-    if (destroy !== null) {
-      destroy();
-    }
-    effect = effect.next;
-  } while (effect !== stopAt);
+function commitHookEffectList(
+  unmountTag: number,
+  mountTag: number,
+  finishedWork: Fiber,
+) {
+  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+  let lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  if (lastEffect !== null) {
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do {
+      if ((effect.tag & unmountTag) !== NoHookEffect) {
+        // Unmount
+        const destroy = effect.destroy;
+        effect.destroy = null;
+        if (destroy !== null) {
+          destroy();
+        }
+      }
+      if ((effect.tag & mountTag) !== NoHookEffect) {
+        // Mount
+        const create = effect.create;
+        const destroy = create();
+        effect.destroy = typeof destroy === 'function' ? destroy : null;
+      }
+      effect = effect.next;
+    } while (effect !== firstEffect);
+  }
 }
 
-function destroyMountedEffects(current) {
-  const oldUpdateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
-  if (oldUpdateQueue !== null) {
-    const oldLastEffect = oldUpdateQueue.lastEffect;
-    if (oldLastEffect !== null) {
-      const oldFirstEffect = oldLastEffect.next;
-      destroyRemainingEffects(oldFirstEffect, oldFirstEffect);
-    }
-  }
+export function commitPassiveHookEffects(finishedWork: Fiber): void {
+  commitHookEffectList(UnmountPassive, NoHookEffect, finishedWork);
+  commitHookEffectList(NoHookEffect, MountPassive, finishedWork);
 }
 
 function commitLifeCycles(
@@ -285,98 +313,12 @@ function commitLifeCycles(
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef: {
-      const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-      if (updateQueue !== null) {
-        // Mount new effects and destroy the old ones by comparing to the
-        // current list of effects. This could be a bit simpler if we avoided
-        // the need to compare to the previous effect list by transferring the
-        // old `destroy` method to the new effect during the render phase.
-        // That's how I originally implemented it, but it requires an additional
-        // field on the effect object.
-        //
-        // This supports removing effects from the end of the list. If we adopt
-        // the constraint that hooks are append only, that would also save a bit
-        // on code size.
-        const newLastEffect = updateQueue.lastEffect;
-        if (newLastEffect !== null) {
-          const newFirstEffect = newLastEffect.next;
-          let oldLastEffect = null;
-          if (current !== null) {
-            const oldUpdateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
-            if (oldUpdateQueue !== null) {
-              oldLastEffect = oldUpdateQueue.lastEffect;
-            }
-          }
-          if (oldLastEffect !== null) {
-            const oldFirstEffect = oldLastEffect.next;
-            let newEffect = newFirstEffect;
-            let oldEffect = oldFirstEffect;
-
-            // Before mounting the new effects, unmount all the old ones.
-            do {
-              if (oldEffect !== null) {
-                if (newEffect.inputs !== oldEffect.inputs) {
-                  const destroy = oldEffect.value;
-                  if (destroy !== null) {
-                    destroy();
-                  }
-                }
-                oldEffect = oldEffect.next;
-                if (oldEffect === oldFirstEffect) {
-                  oldEffect = null;
-                }
-              }
-              newEffect = newEffect.next;
-            } while (newEffect !== newFirstEffect);
-
-            // Unmount any remaining effects in the old list that do not
-            // appear in the new one.
-            if (oldEffect !== null) {
-              destroyRemainingEffects(oldEffect, oldFirstEffect);
-            }
-
-            // Now loop through the list again to mount the new effects
-            oldEffect = oldFirstEffect;
-            do {
-              const create = newEffect.value;
-              if (oldEffect !== null) {
-                if (newEffect.inputs !== oldEffect.inputs) {
-                  const newDestroy = create();
-                  newEffect.value =
-                    typeof newDestroy === 'function' ? newDestroy : null;
-                } else {
-                  newEffect.value = oldEffect.value;
-                }
-                oldEffect = oldEffect.next;
-                if (oldEffect === oldFirstEffect) {
-                  oldEffect = null;
-                }
-              } else {
-                const newDestroy = create();
-                newEffect.value =
-                  typeof newDestroy === 'function' ? newDestroy : null;
-              }
-              newEffect = newEffect.next;
-            } while (newEffect !== newFirstEffect);
-          } else {
-            let newEffect = newFirstEffect;
-            do {
-              const create = newEffect.value;
-              const newDestroy = create();
-              newEffect.value =
-                typeof newDestroy === 'function' ? newDestroy : null;
-              newEffect = newEffect.next;
-            } while (newEffect !== newFirstEffect);
-          }
-        } else if (current !== null) {
-          // There are no effects, which means all current effects must
-          // be destroyed
-          destroyMountedEffects(current);
-        }
-
-        const callbackList = updateQueue.callbackList;
+      commitHookEffectList(UnmountLayout, MountLayout, finishedWork);
+      const newUpdateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
+      if (newUpdateQueue !== null) {
+        const callbackList = newUpdateQueue.callbackList;
         if (callbackList !== null) {
-          updateQueue.callbackList = null;
+          newUpdateQueue.callbackList = null;
           for (let i = 0; i < callbackList.length; i++) {
             const update = callbackList[i];
             // Assume this is non-null, since otherwise it would not be part
@@ -386,10 +328,6 @@ function commitLifeCycles(
             callback();
           }
         }
-      } else if (current !== null) {
-        // There are no effects, which means all current effects must
-        // be destroyed
-        destroyMountedEffects(current);
       }
       break;
     }
@@ -656,7 +594,7 @@ function commitUnmount(current: Fiber): void {
           const firstEffect = lastEffect.next;
           let effect = firstEffect;
           do {
-            const destroy = effect.value;
+            const destroy = effect.destroy;
             if (destroy !== null) {
               safelyCallDestroy(current, destroy);
             }
@@ -1039,11 +977,24 @@ function commitDeletion(current: Fiber): void {
 
 function commitWork(current: Fiber | null, finishedWork: Fiber): void {
   if (!supportsMutation) {
+    switch (finishedWork.tag) {
+      case FunctionComponent:
+      case ForwardRef: {
+        commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
+        return;
+      }
+    }
+
     commitContainer(finishedWork);
     return;
   }
 
   switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef: {
+      commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
+      return;
+    }
     case ClassComponent: {
       return;
     }

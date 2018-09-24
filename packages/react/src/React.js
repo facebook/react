@@ -29,14 +29,16 @@ import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import memo from './memo';
 import {
+  useAPI,
+  useCallback,
   useContext,
-  useState,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useMutationEffect,
   useReducer,
   useRef,
-  useEffect,
-  useCallback,
-  useMemo,
-  useAPI,
+  useState,
 } from './ReactHooks';
 import {
   createElementWithValidation,
@@ -87,14 +89,16 @@ if (enableStableConcurrentModeAPIs) {
 }
 
 if (enableHooks) {
+  React.useAPI = useAPI;
+  React.useCallback = useCallback;
   React.useContext = useContext;
-  React.useState = useState;
+  React.useEffect = useEffect;
+  React.useLayoutEffect = useLayoutEffect;
+  React.useMemo = useMemo;
+  React.useMutationEffect = useMutationEffect;
   React.useReducer = useReducer;
   React.useRef = useRef;
-  React.useEffect = useEffect;
-  React.useCallback = useCallback;
-  React.useMemo = useMemo;
-  React.useAPI = useAPI;
+  React.useState = useState;
 }
 
 export default React;
