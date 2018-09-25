@@ -7,9 +7,12 @@
 
 import assign from 'object-assign';
 import {
-  unstable_cancelScheduledWork,
+  unstable_cancelCallback,
   unstable_now,
-  unstable_scheduleWork,
+  unstable_scheduleCallback,
+  unstable_runWithPriority,
+  unstable_wrapCallback,
+  unstable_getCurrentPriorityLevel,
 } from 'scheduler';
 import {
   __interactionsRef,
@@ -39,9 +42,12 @@ if (__UMD__) {
   // CJS bundles use the shared NPM package.
   Object.assign(ReactSharedInternals, {
     Scheduler: {
-      unstable_cancelScheduledWork,
+      unstable_cancelCallback,
       unstable_now,
-      unstable_scheduleWork,
+      unstable_scheduleCallback,
+      unstable_runWithPriority,
+      unstable_wrapCallback,
+      unstable_getCurrentPriorityLevel,
     },
     SchedulerTracing: {
       __interactionsRef,

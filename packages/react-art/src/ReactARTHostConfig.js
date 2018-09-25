@@ -7,8 +7,8 @@
 
 export {
   unstable_now as now,
-  unstable_scheduleWork as scheduleDeferredCallback,
-  unstable_cancelScheduledWork as cancelDeferredCallback,
+  unstable_scheduleCallback as scheduleDeferredCallback,
+  unstable_cancelCallback as cancelDeferredCallback,
 } from 'scheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';

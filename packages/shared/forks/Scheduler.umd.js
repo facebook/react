@@ -12,9 +12,9 @@ import React from 'react';
 const ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 const {
-  unstable_cancelScheduledWork,
+  unstable_cancelCallback,
   unstable_now,
-  unstable_scheduleWork,
+  unstable_scheduleCallback,
 } = ReactInternals.Scheduler;
 
-export {unstable_cancelScheduledWork, unstable_now, unstable_scheduleWork};
+export {unstable_cancelCallback, unstable_now, unstable_scheduleCallback};

@@ -64,8 +64,8 @@ export type NoTimeout = -1;
 
 export {
   unstable_now as now,
-  unstable_scheduleWork as scheduleDeferredCallback,
-  unstable_cancelScheduledWork as cancelDeferredCallback,
+  unstable_scheduleCallback as scheduleDeferredCallback,
+  unstable_cancelCallback as cancelDeferredCallback,
 } from 'scheduler';
 
 let SUPPRESS_HYDRATION_WARNING;

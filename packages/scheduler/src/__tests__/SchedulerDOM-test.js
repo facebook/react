@@ -97,11 +97,11 @@ describe('SchedulerDOM', () => {
     Scheduler = require('scheduler');
   });
 
-  describe('scheduleWork', () => {
+  describe('scheduleCallback', () => {
     it('calls the callback within the frame when not blocked', () => {
-      const {unstable_scheduleWork: scheduleWork} = Scheduler;
+      const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
       const cb = jest.fn();
-      scheduleWork(cb);
+      scheduleCallback(cb);
       advanceOneFrame({timeLeftInFrame: 15});
       expect(cb).toHaveBeenCalledTimes(1);
       // should not have timed out and should include a timeRemaining method
@@ -111,15 +111,15 @@ describe('SchedulerDOM', () => {
 
     describe('with multiple callbacks', () => {
       it('accepts multiple callbacks and calls within frame when not blocked', () => {
-        const {unstable_scheduleWork: scheduleWork} = Scheduler;
+        const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => callbackLog.push('B'));
-        scheduleWork(callbackA);
+        scheduleCallback(callbackA);
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
         // waits while second callback is passed
-        scheduleWork(callbackB);
+        scheduleCallback(callbackB);
         expect(callbackLog).toEqual([]);
         // after a delay, calls as many callbacks as it has time for
         advanceOneFrame({timeLeftInFrame: 15});
@@ -137,17 +137,17 @@ describe('SchedulerDOM', () => {
       });
 
       it("accepts callbacks betweeen animationFrame and postMessage and doesn't stall", () => {
-        const {unstable_scheduleWork: scheduleWork} = Scheduler;
+        const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => callbackLog.push('B'));
         const callbackC = jest.fn(() => callbackLog.push('C'));
-        scheduleWork(callbackA);
+        scheduleCallback(callbackA);
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
         runRAFCallbacks();
         // this should schedule work *after* the requestAnimationFrame but before the message handler
-        scheduleWork(callbackB);
+        scheduleCallback(callbackB);
         expect(callbackLog).toEqual([]);
         // now it should drain the message queue and do all scheduled work
         runPostMessageCallbacks({timeLeftInFrame: 15});
@@ -157,7 +157,7 @@ describe('SchedulerDOM', () => {
         advanceOneFrame({timeLeftInFrame: 15});
 
         // see if more work can be done now.
-        scheduleWork(callbackC);
+        scheduleCallback(callbackC);
         expect(callbackLog).toEqual(['A', 'B']);
         advanceOneFrame({timeLeftInFrame: 15});
         expect(callbackLog).toEqual(['A', 'B', 'C']);
@@ -167,11 +167,11 @@ describe('SchedulerDOM', () => {
         'schedules callbacks in correct order and' +
           'keeps calling them if there is time',
         () => {
-          const {unstable_scheduleWork: scheduleWork} = Scheduler;
+          const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
           const callbackLog = [];
           const callbackA = jest.fn(() => {
             callbackLog.push('A');
-            scheduleWork(callbackC);
+            scheduleCallback(callbackC);
           });
           const callbackB = jest.fn(() => {
             callbackLog.push('B');
@@ -180,11 +180,11 @@ describe('SchedulerDOM', () => {
             callbackLog.push('C');
           });
 
-          scheduleWork(callbackA);
+          scheduleCallback(callbackA);
           // initially waits to call the callback
           expect(callbackLog).toEqual([]);
           // continues waiting while B is scheduled
-          scheduleWork(callbackB);
+          scheduleCallback(callbackB);
           expect(callbackLog).toEqual([]);
           // after a delay, calls the scheduled callbacks,
           // and also calls new callbacks scheduled by current callbacks
@@ -193,18 +193,18 @@ describe('SchedulerDOM', () => {
         },
       );
 
-      it('schedules callbacks in correct order when callbacks have many nested scheduleWork calls', () => {
-        const {unstable_scheduleWork: scheduleWork} = Scheduler;
+      it('schedules callbacks in correct order when callbacks have many nested scheduleCallback calls', () => {
+        const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
-          scheduleWork(callbackC);
-          scheduleWork(callbackD);
+          scheduleCallback(callbackC);
+          scheduleCallback(callbackD);
         });
         const callbackB = jest.fn(() => {
           callbackLog.push('B');
-          scheduleWork(callbackE);
-          scheduleWork(callbackF);
+          scheduleCallback(callbackE);
+          scheduleCallback(callbackF);
         });
         const callbackC = jest.fn(() => {
           callbackLog.push('C');
@@ -219,8 +219,8 @@ describe('SchedulerDOM', () => {
           callbackLog.push('F');
         });
 
-        scheduleWork(callbackA);
-        scheduleWork(callbackB);
+        scheduleCallback(callbackA);
+        scheduleCallback(callbackB);
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
         // while flushing callbacks, calls as many as it has time for
@@ -228,23 +228,23 @@ describe('SchedulerDOM', () => {
         expect(callbackLog).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
       });
 
-      it('schedules callbacks in correct order when they use scheduleWork to schedule themselves', () => {
-        const {unstable_scheduleWork: scheduleWork} = Scheduler;
+      it('schedules callbacks in correct order when they use scheduleCallback to schedule themselves', () => {
+        const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         let callbackAIterations = 0;
         const callbackA = jest.fn(() => {
           if (callbackAIterations < 1) {
-            scheduleWork(callbackA);
+            scheduleCallback(callbackA);
           }
           callbackLog.push('A' + callbackAIterations);
           callbackAIterations++;
         });
         const callbackB = jest.fn(() => callbackLog.push('B'));
 
-        scheduleWork(callbackA);
+        scheduleCallback(callbackA);
         // initially waits to call the callback
         expect(callbackLog).toEqual([]);
-        scheduleWork(callbackB);
+        scheduleCallback(callbackB);
         expect(callbackLog).toEqual([]);
         // after a delay, calls the latest callback passed
         advanceOneFrame({timeLeftInFrame: 15});
@@ -260,7 +260,7 @@ describe('SchedulerDOM', () => {
 
       describe('when there is no more time left in the frame', () => {
         it('calls any callback which has timed out, waits for others', () => {
-          const {unstable_scheduleWork: scheduleWork} = Scheduler;
+          const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
           startOfLatestFrame = 1000000000000;
           currentTime = startOfLatestFrame - 10;
           const callbackLog = [];
@@ -269,9 +269,9 @@ describe('SchedulerDOM', () => {
           const callbackB = jest.fn(() => callbackLog.push('B'));
           const callbackC = jest.fn(() => callbackLog.push('C'));
 
-          scheduleWork(callbackA); // won't time out
-          scheduleWork(callbackB, {timeout: 100}); // times out later
-          scheduleWork(callbackC, {timeout: 2}); // will time out fast
+          scheduleCallback(callbackA); // won't time out
+          scheduleCallback(callbackB, {timeout: 100}); // times out later
+          scheduleCallback(callbackC, {timeout: 2}); // will time out fast
 
           // push time ahead a bit so that we have no idle time
           advanceOneFrame({timePastFrameDeadline: 16});
@@ -295,7 +295,7 @@ describe('SchedulerDOM', () => {
 
       describe('when there is some time left in the frame', () => {
         it('calls timed out callbacks and then any more pending callbacks, defers others if time runs out', () => {
-          const {unstable_scheduleWork: scheduleWork} = Scheduler;
+          const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
           startOfLatestFrame = 1000000000000;
           currentTime = startOfLatestFrame - 10;
           const callbackLog = [];
@@ -309,10 +309,10 @@ describe('SchedulerDOM', () => {
           const callbackC = jest.fn(() => callbackLog.push('C'));
           const callbackD = jest.fn(() => callbackLog.push('D'));
 
-          scheduleWork(callbackA, {timeout: 100}); // won't time out
-          scheduleWork(callbackB, {timeout: 100}); // times out later
-          scheduleWork(callbackC, {timeout: 2}); // will time out fast
-          scheduleWork(callbackD, {timeout: 200}); // won't time out
+          scheduleCallback(callbackA, {timeout: 100}); // won't time out
+          scheduleCallback(callbackB, {timeout: 100}); // times out later
+          scheduleCallback(callbackC, {timeout: 2}); // will time out fast
+          scheduleCallback(callbackD, {timeout: 200}); // won't time out
 
           advanceOneFrame({timeLeftInFrame: 15}); // runs rAF and postMessage callbacks
 
@@ -341,16 +341,16 @@ describe('SchedulerDOM', () => {
     });
   });
 
-  describe('cancelScheduledWork', () => {
+  describe('cancelCallback', () => {
     it('cancels the scheduled callback', () => {
       const {
-        unstable_scheduleWork: scheduleWork,
-        unstable_cancelScheduledWork: cancelScheduledWork,
+        unstable_scheduleCallback: scheduleCallback,
+        unstable_cancelCallback: cancelCallback,
       } = Scheduler;
       const cb = jest.fn();
-      const callbackId = scheduleWork(cb);
+      const callbackId = scheduleCallback(cb);
       expect(cb).toHaveBeenCalledTimes(0);
-      cancelScheduledWork(callbackId);
+      cancelCallback(callbackId);
       advanceOneFrame({timeLeftInFrame: 15});
       expect(cb).toHaveBeenCalledTimes(0);
     });
@@ -358,19 +358,19 @@ describe('SchedulerDOM', () => {
     describe('with multiple callbacks', () => {
       it('when called more than once', () => {
         const {
-          unstable_scheduleWork: scheduleWork,
-          unstable_cancelScheduledWork: cancelScheduledWork,
+          unstable_scheduleCallback: scheduleCallback,
+          unstable_cancelCallback: cancelCallback,
         } = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => callbackLog.push('B'));
         const callbackC = jest.fn(() => callbackLog.push('C'));
-        scheduleWork(callbackA);
-        const callbackId = scheduleWork(callbackB);
-        scheduleWork(callbackC);
-        cancelScheduledWork(callbackId);
-        cancelScheduledWork(callbackId);
-        cancelScheduledWork(callbackId);
+        scheduleCallback(callbackA);
+        const callbackId = scheduleCallback(callbackB);
+        scheduleCallback(callbackC);
+        cancelCallback(callbackId);
+        cancelCallback(callbackId);
+        cancelCallback(callbackId);
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
         advanceOneFrame({timeLeftInFrame: 15});
@@ -382,18 +382,18 @@ describe('SchedulerDOM', () => {
 
       it('when one callback cancels the next one', () => {
         const {
-          unstable_scheduleWork: scheduleWork,
-          unstable_cancelScheduledWork: cancelScheduledWork,
+          unstable_scheduleCallback: scheduleCallback,
+          unstable_cancelCallback: cancelCallback,
         } = Scheduler;
         const callbackLog = [];
         let callbackBId;
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
-          cancelScheduledWork(callbackBId);
+          cancelCallback(callbackBId);
         });
         const callbackB = jest.fn(() => callbackLog.push('B'));
-        scheduleWork(callbackA);
-        callbackBId = scheduleWork(callbackB);
+        scheduleCallback(callbackA);
+        callbackBId = scheduleCallback(callbackB);
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
         advanceOneFrame({timeLeftInFrame: 15});
@@ -421,7 +421,7 @@ describe('SchedulerDOM', () => {
        *
        */
       it('still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = Scheduler;
+        const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => callbackLog.push('A'));
         const callbackB = jest.fn(() => {
@@ -434,11 +434,11 @@ describe('SchedulerDOM', () => {
           throw new Error('D error');
         });
         const callbackE = jest.fn(() => callbackLog.push('E'));
-        scheduleWork(callbackA);
-        scheduleWork(callbackB);
-        scheduleWork(callbackC);
-        scheduleWork(callbackD);
-        scheduleWork(callbackE);
+        scheduleCallback(callbackA);
+        scheduleCallback(callbackB);
+        scheduleCallback(callbackC);
+        scheduleCallback(callbackD);
+        scheduleCallback(callbackE);
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
         catchPostMessageErrors = true;
@@ -467,7 +467,7 @@ describe('SchedulerDOM', () => {
        *
        */
       it('and with some timed out callbacks, still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = Scheduler;
+        const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
@@ -480,11 +480,11 @@ describe('SchedulerDOM', () => {
           throw new Error('D error');
         });
         const callbackE = jest.fn(() => callbackLog.push('E'));
-        scheduleWork(callbackA);
-        scheduleWork(callbackB);
-        scheduleWork(callbackC, {timeout: 2}); // times out fast
-        scheduleWork(callbackD, {timeout: 2}); // times out fast
-        scheduleWork(callbackE, {timeout: 2}); // times out fast
+        scheduleCallback(callbackA);
+        scheduleCallback(callbackB);
+        scheduleCallback(callbackC, {timeout: 2}); // times out fast
+        scheduleCallback(callbackD, {timeout: 2}); // times out fast
+        scheduleCallback(callbackE, {timeout: 2}); // times out fast
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
         catchPostMessageErrors = true;
@@ -513,7 +513,7 @@ describe('SchedulerDOM', () => {
        *
        */
       it('still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = Scheduler;
+        const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
@@ -535,11 +535,11 @@ describe('SchedulerDOM', () => {
           callbackLog.push('E');
           throw new Error('E error');
         });
-        scheduleWork(callbackA);
-        scheduleWork(callbackB);
-        scheduleWork(callbackC);
-        scheduleWork(callbackD);
-        scheduleWork(callbackE);
+        scheduleCallback(callbackA);
+        scheduleCallback(callbackB);
+        scheduleCallback(callbackC);
+        scheduleCallback(callbackD);
+        scheduleCallback(callbackE);
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
         catchPostMessageErrors = true;
@@ -574,7 +574,7 @@ describe('SchedulerDOM', () => {
        *
        */
       it('and with all timed out callbacks, still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = Scheduler;
+        const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         const callbackLog = [];
         const callbackA = jest.fn(() => {
           callbackLog.push('A');
@@ -596,11 +596,11 @@ describe('SchedulerDOM', () => {
           callbackLog.push('E');
           throw new Error('E error');
         });
-        scheduleWork(callbackA, {timeout: 2}); // times out fast
-        scheduleWork(callbackB, {timeout: 2}); // times out fast
-        scheduleWork(callbackC, {timeout: 2}); // times out fast
-        scheduleWork(callbackD, {timeout: 2}); // times out fast
-        scheduleWork(callbackE, {timeout: 2}); // times out fast
+        scheduleCallback(callbackA, {timeout: 2}); // times out fast
+        scheduleCallback(callbackB, {timeout: 2}); // times out fast
+        scheduleCallback(callbackC, {timeout: 2}); // times out fast
+        scheduleCallback(callbackD, {timeout: 2}); // times out fast
+        scheduleCallback(callbackE, {timeout: 2}); // times out fast
         // Initially doesn't call anything
         expect(callbackLog).toEqual([]);
         catchPostMessageErrors = true;
@@ -655,7 +655,7 @@ describe('SchedulerDOM', () => {
        *
        */
       it('still calls all callbacks within same frame', () => {
-        const {unstable_scheduleWork: scheduleWork} = Scheduler;
+        const {unstable_scheduleCallback: scheduleCallback} = Scheduler;
         startOfLatestFrame = 1000000000000;
         currentTime = startOfLatestFrame - 10;
         catchPostMessageErrors = true;
@@ -689,13 +689,13 @@ describe('SchedulerDOM', () => {
         });
         const callbackG = jest.fn(() => callbackLog.push('G'));
 
-        scheduleWork(callbackA);
-        scheduleWork(callbackB);
-        scheduleWork(callbackC);
-        scheduleWork(callbackD);
-        scheduleWork(callbackE);
-        scheduleWork(callbackF);
-        scheduleWork(callbackG);
+        scheduleCallback(callbackA);
+        scheduleCallback(callbackB);
+        scheduleCallback(callbackC);
+        scheduleCallback(callbackD);
+        scheduleCallback(callbackE);
+        scheduleCallback(callbackF);
+        scheduleCallback(callbackG);
 
         // does nothing initially
         expect(callbackLog).toEqual([]);
