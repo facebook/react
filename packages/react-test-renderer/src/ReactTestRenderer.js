@@ -37,7 +37,6 @@ import ReactVersion from 'shared/ReactVersion';
 import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
-/* eslint-disable no-use-before-define */
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isAsync: boolean,
@@ -58,7 +57,6 @@ type FindOptions = $Shape<{
 }>;
 
 export type Predicate = (node: ReactTestInstance) => ?boolean;
-/* eslint-enable no-use-before-define */
 
 const defaultTestOptions = {
   createNodeMock: function() {

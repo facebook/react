@@ -12,7 +12,6 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
-/* eslint-disable no-use-before-define */
 export type Type = string;
 export type Props = Object;
 export type Container = {|
@@ -38,7 +37,6 @@ export type UpdatePayload = Object;
 export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-/* eslint-enable no-use-before-define */
 
 export * from 'shared/HostConfigWithNoPersistence';
 export * from 'shared/HostConfigWithNoHydration';
