@@ -59,7 +59,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
-import {applyDerivedStateFromProps} from './ReactFiberClassComponent';
 import {
   mountChildFibers,
   reconcileChildFibers,
@@ -97,6 +96,7 @@ import {
 } from './ReactFiberHydrationContext';
 import {
   adoptClassInstance,
+  applyDerivedStateFromProps,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
