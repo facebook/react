@@ -36,6 +36,7 @@ import {
 import {
   enableGetDerivedStateFromCatch,
   enableSuspense,
+  enableSchedulerTracing,
 } from 'shared/ReactFeatureFlags';
 import {StrictMode, AsyncMode} from './ReactTypeOfMode';
 
@@ -60,6 +61,7 @@ import {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   retrySuspendedRoot,
+  captureWillSyncRenderPlaceholder,
 } from './ReactFiberScheduler';
 import {Sync} from './ReactFiberExpirationTime';
 
@@ -235,6 +237,13 @@ function throwException(
           // should *not* suspend the commit.
           if ((workInProgress.mode & StrictMode) === NoEffect) {
             workInProgress.effectTag |= UpdateEffect;
+
+            if (enableSchedulerTracing) {
+              // Handles the special case of unwinding a suspended sync render.
+              // We flag this to properly trace and count interactions.
+              // Otherwise interaction pending count will be decremented too many times.
+              captureWillSyncRenderPlaceholder();
+            }
 
             // Unmount the source fiber's children
             const nextChildren = null;
