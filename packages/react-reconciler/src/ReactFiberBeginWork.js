@@ -59,7 +59,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
-import {applyDerivedStateFromProps} from './ReactFiberClassComponent';
 import {
   mountChildFibers,
   reconcileChildFibers,
@@ -97,6 +96,7 @@ import {
 } from './ReactFiberHydrationContext';
 import {
   adoptClassInstance,
+  applyDerivedStateFromProps,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
@@ -109,11 +109,13 @@ import {resolveLazyComponentTag} from './ReactFiber';
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let didWarnAboutBadClass;
+let didWarnAboutContextTypeOnFunctionalComponent;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
 let didWarnAboutStatelessRefs;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
+  didWarnAboutContextTypeOnFunctionalComponent = {};
   didWarnAboutGetDerivedStateOnFunctionalComponent = {};
   didWarnAboutStatelessRefs = {};
 }
@@ -803,6 +805,22 @@ function mountIndeterminateComponent(
           didWarnAboutGetDerivedStateOnFunctionalComponent[
             componentName
           ] = true;
+        }
+      }
+
+      if (
+        typeof Component.contextType === 'object' &&
+        Component.contextType !== null
+      ) {
+        const componentName = getComponentName(Component) || 'Unknown';
+
+        if (!didWarnAboutContextTypeOnFunctionalComponent[componentName]) {
+          warningWithoutStack(
+            false,
+            '%s: Stateless functional components do not support contextType.',
+            componentName,
+          );
+          didWarnAboutContextTypeOnFunctionalComponent[componentName] = true;
         }
       }
     }
