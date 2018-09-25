@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html style="width: 100%; height: 100%;">
-  <head>
-    <meta charset="utf-8">
-    <title>Scheduler Test Page</title>
+
+<head>
+  <meta charset="utf-8">
+  <title>Scheduler Test Page</title>
   <style>
     .correct {
       border: solid green 2px;
@@ -11,91 +12,92 @@
       border: dashed red 2px;
     }
   </style>
-  </head>
-  <body>
-    <h1>Scheduler Fixture</h1>
-    <p>
-      This fixture is for manual testing purposes, and the patterns used in
-      implementing it should not be used as a model. This is mainly for anyone
-      working on making changes to the `schedule` module.
-    </p>
-    <h2>Tests:</h2>
-    <ol>
-      <li>
-        <button onClick="runTestOne()">Run Test 1</button>
-        <p>Calls the callback within the frame when not blocked:</p>
-        <div><b>Expected:</b></div>
-        <div id="test-1-expected">
-        </div>
-        <div> -------------------------------------------------</div>
-        <div> If you see the same above and below it's correct.
+</head>
+
+<body>
+  <h1>Scheduler Fixture</h1>
+  <p>
+    This fixture is for manual testing purposes, and the patterns used in
+    implementing it should not be used as a model. This is mainly for anyone
+    working on making changes to the `schedule` module.
+  </p>
+  <h2>Tests:</h2>
+  <ol>
+    <li>
+      <button onClick="runTestOne()">Run Test 1</button>
+      <p>Calls the callback within the frame when not blocked:</p>
+      <div><b>Expected:</b></div>
+      <div id="test-1-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
         <div> -------------------------------------------------</div>
         <div><b>Actual:</b></div>
         <div id="test-1"></div>
-      </li>
-      <li>
-        <p>Accepts multiple callbacks and calls within frame when not blocked</p>
-        <button onClick="runTestTwo()">Run Test 2</button>
-        <div><b>Expected:</b></div>
-        <div id="test-2-expected">
-        </div>
-        <div> -------------------------------------------------</div>
-        <div> If you see the same above and below it's correct.
+    </li>
+    <li>
+      <p>Accepts multiple callbacks and calls within frame when not blocked</p>
+      <button onClick="runTestTwo()">Run Test 2</button>
+      <div><b>Expected:</b></div>
+      <div id="test-2-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
         <div> -------------------------------------------------</div>
         <div><b>Actual:</b></div>
         <div id="test-2"></div>
-      </li>
-      <li>
-        <p>Schedules callbacks in correct order when they use scheduleWork to schedule themselves</p>
-        <button onClick="runTestThree()">Run Test 3</button>
-        <div><b>Expected:</b></div>
-        <div id="test-3-expected">
-        </div>
-        <div> -------------------------------------------------</div>
-        <div> If you see the same above and below it's correct.
+    </li>
+    <li>
+      <p>Schedules callbacks in correct order when they use scheduleWork to schedule themselves</p>
+      <button onClick="runTestThree()">Run Test 3</button>
+      <div><b>Expected:</b></div>
+      <div id="test-3-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
         <div> -------------------------------------------------</div>
         <div><b>Actual:</b></div>
         <div id="test-3"></div>
-      </li>
-      <li>
-        <p>Calls timed out callbacks and then any more pending callbacks, defers others if time runs out</p>
-        <button onClick="runTestFour()">Run Test 4</button>
-        <div><b>Expected:</b></div>
-        <div id="test-4-expected">
-        </div>
-        <div> -------------------------------------------------</div>
-        <div> If you see the same above and below it's correct.
+    </li>
+    <li>
+      <p>Calls timed out callbacks and then any more pending callbacks, defers others if time runs out</p>
+      <button onClick="runTestFour()">Run Test 4</button>
+      <div><b>Expected:</b></div>
+      <div id="test-4-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
         <div> -------------------------------------------------</div>
         <div><b>Actual:</b></div>
         <div id="test-4"></div>
-      </li>
-      <li>
-        <p>When some callbacks throw errors, still calls them all within the same frame</p>
-        <p><b>IMPORTANT:</b> Open the console when you run this! Inspect the logs there!</p>
-        <button onClick="runTestFive()">Run Test 5</button>
-      </li>
-      <li>
-        <p>When some callbacks throw errors <b> and some also time out</b>, still calls them all within the same frame</p>
-        <p><b>IMPORTANT:</b> Open the console when you run this! Inspect the logs there!</p>
-        <button onClick="runTestSix()">Run Test 6</button>
-      </li>
-      <li>
-        <p>Continues calling callbacks even when user switches away from this tab</p>
-        <button onClick="runTestSeven()">Run Test 7</button>
-        <div><b>Click the button above, observe the counter, then switch to
-            another tab and switch back:</b></div>
-        <div id="test-7">
-        </div>
-        <div> If the counter advanced while you were away from this tab, it's correct.</div>
-      </li>
-    </ol>
-    <script src="../../build/dist/react.development.js"></script>
-    <script src="../../build/node_modules/scheduler/umd/scheduler.development.js"></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
-    <script type="text/babel">
+    </li>
+    <li>
+      <p>When some callbacks throw errors, still calls them all within the same frame</p>
+      <p><b>IMPORTANT:</b> Open the console when you run this! Inspect the logs there!</p>
+      <button onClick="runTestFive()">Run Test 5</button>
+    </li>
+    <li>
+      <p>When some callbacks throw errors <b> and some also time out</b>, still calls them all within the same frame</p>
+      <p><b>IMPORTANT:</b> Open the console when you run this! Inspect the logs there!</p>
+      <button onClick="runTestSix()">Run Test 6</button>
+    </li>
+    <li>
+      <p>Continues calling callbacks even when user switches away from this tab</p>
+      <button onClick="runTestSeven()">Run Test 7</button>
+      <div><b>Click the button above, observe the counter, then switch to
+          another tab and switch back:</b></div>
+      <div id="test-7">
+      </div>
+      <div> If the counter advanced while you were away from this tab, it's correct.</div>
+    </li>
+  </ol>
+  <script src="../../build/dist/react.development.js"></script>
+  <script src="../../build/node_modules/scheduler/umd/scheduler.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+  <script type="text/babel">
 const {
-  unstable_scheduleWork: scheduleWork,
-  unstable_cancelWork: cancelWork,
+  unstable_scheduleCallback: scheduleCallback,
+  unstable_cancelCallback: cancelCallback,
   unstable_now: now
 } = Scheduler;
 function displayTestResult(testNumber) {
