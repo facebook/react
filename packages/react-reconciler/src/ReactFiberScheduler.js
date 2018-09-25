@@ -1648,14 +1648,8 @@ function scheduleWorkToRoot(fiber: Fiber, expirationTime): FiberRoot | null {
       node.childExpirationTime > expirationTime
     ) {
       node.childExpirationTime = expirationTime;
-      if (
-        alternate !== null &&
-        (alternate.childExpirationTime === NoWork ||
-          alternate.childExpirationTime > expirationTime)
-      ) {
-        alternate.childExpirationTime = expirationTime;
-      }
-    } else if (
+    }
+    if (
       alternate !== null &&
       (alternate.childExpirationTime === NoWork ||
         alternate.childExpirationTime > expirationTime)
