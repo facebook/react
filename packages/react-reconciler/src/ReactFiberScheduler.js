@@ -1564,10 +1564,7 @@ function computeExpirationForFiber(currentTime: ExpirationTime, fiber: Fiber) {
     // This is an interactive update. Keep track of the lowest pending
     // interactive expiration time. This allows us to synchronously flush
     // all interactive updates when needed.
-    if (
-      lowestPriorityPendingInteractiveExpirationTime === NoWork ||
-      expirationTime > lowestPriorityPendingInteractiveExpirationTime
-    ) {
+    if (expirationTime > lowestPriorityPendingInteractiveExpirationTime) {
       lowestPriorityPendingInteractiveExpirationTime = expirationTime;
     }
   }
