@@ -18,7 +18,6 @@ import {NoWork} from './ReactFiberExpirationTime';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 
-/* eslint-disable no-use-before-define */
 // TODO: This should be lifted into the renderer.
 export type Batch = {
   _defer: boolean,
@@ -99,7 +98,6 @@ export type FiberRoot = {
   ...BaseFiberRootProperties,
   ...ProfilingOnlyFiberRootProperties,
 };
-/* eslint-enable no-use-before-define */
 
 export function createFiberRoot(
   containerInfo: any,

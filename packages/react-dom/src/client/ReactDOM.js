@@ -126,7 +126,6 @@ if (__DEV__) {
 
 ReactControlledComponent.setRestoreImplementation(restoreControlledState);
 
-/* eslint-disable no-use-before-define */
 type DOMContainer =
   | (Element & {
       _reactRootContainer: ?Root,
@@ -163,7 +162,6 @@ type Root = {
 
   _internalRoot: FiberRoot,
 };
-/* eslint-enable no-use-before-define */
 
 function ReactBatch(root: ReactRoot) {
   const expirationTime = DOMRenderer.computeUniqueAsyncExpiration();
