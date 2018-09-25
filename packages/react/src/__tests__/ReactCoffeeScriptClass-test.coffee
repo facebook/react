@@ -392,6 +392,7 @@ describe 'ReactCoffeeScriptClass', ->
     class Foo extends React.Component
       constructor: ->
         @contextTypes = {}
+        @contextType = {}
         @propTypes = {}
 
       getInitialState: ->
@@ -413,6 +414,7 @@ describe 'ReactCoffeeScriptClass', ->
       'getDefaultProps was defined on Foo, a plain JavaScript class.',
       'propTypes was defined as an instance property on Foo.',
       'contextTypes was defined as an instance property on Foo.',
+      'contextType was defined as an instance property on Foo.',
     ], {withoutStack: true})
     expect(getInitialStateWasCalled).toBe false
     expect(getDefaultPropsWasCalled).toBe false
