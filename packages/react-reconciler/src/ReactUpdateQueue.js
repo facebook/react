@@ -469,49 +469,28 @@ export function processUpdateQueue<State>(
   }
 
   // Separately, iterate though the list of captured updates.
-  let newFirstCapturedUpdate = null;
   update = queue.firstCapturedUpdate;
   while (update !== null) {
-    const updateExpirationTime = update.expirationTime;
-    if (updateExpirationTime < renderExpirationTime) {
-      // This update does not have sufficient priority. Skip it.
-      if (newFirstCapturedUpdate === null) {
-        // This is the first skipped captured update. It will be the first
-        // update in the new list.
-        newFirstCapturedUpdate = update;
-        // If this is the first update that was skipped, the current result is
-        // the new base state.
-        if (newFirstUpdate === null) {
-          newBaseState = resultState;
-        }
-      }
-      // Since this update will remain in the list, update the remaining
-      // expiration time.
-      if (newExpirationTime < updateExpirationTime) {
-        newExpirationTime = updateExpirationTime;
-      }
-    } else {
-      // This update does have sufficient priority. Process it and compute
-      // a new result.
-      resultState = getStateFromUpdate(
-        workInProgress,
-        queue,
-        update,
-        resultState,
-        props,
-        instance,
-      );
-      const callback = update.callback;
-      if (callback !== null) {
-        workInProgress.effectTag |= Callback;
-        // Set this to null, in case it was mutated during an aborted render.
-        update.nextEffect = null;
-        if (queue.lastCapturedEffect === null) {
-          queue.firstCapturedEffect = queue.lastCapturedEffect = update;
-        } else {
-          queue.lastCapturedEffect.nextEffect = update;
-          queue.lastCapturedEffect = update;
-        }
+    // This update does have sufficient priority. Process it and compute
+    // a new result.
+    resultState = getStateFromUpdate(
+      workInProgress,
+      queue,
+      update,
+      resultState,
+      props,
+      instance,
+    );
+    const callback = update.callback;
+    if (callback !== null) {
+      workInProgress.effectTag |= Callback;
+      // Set this to null, in case it was mutated during an aborted render.
+      update.nextEffect = null;
+      if (queue.lastCapturedEffect === null) {
+        queue.firstCapturedEffect = queue.lastCapturedEffect = update;
+      } else {
+        queue.lastCapturedEffect.nextEffect = update;
+        queue.lastCapturedEffect = update;
       }
     }
     update = update.next;
@@ -520,12 +499,8 @@ export function processUpdateQueue<State>(
   if (newFirstUpdate === null) {
     queue.lastUpdate = null;
   }
-  if (newFirstCapturedUpdate === null) {
-    queue.lastCapturedUpdate = null;
-  } else {
-    workInProgress.effectTag |= Callback;
-  }
-  if (newFirstUpdate === null && newFirstCapturedUpdate === null) {
+  queue.lastCapturedUpdate = null;
+  if (newFirstUpdate === null) {
     // We processed every update, without skipping. That means the new base
     // state is the same as the result state.
     newBaseState = resultState;
@@ -533,7 +508,7 @@ export function processUpdateQueue<State>(
 
   queue.baseState = newBaseState;
   queue.firstUpdate = newFirstUpdate;
-  queue.firstCapturedUpdate = newFirstCapturedUpdate;
+  queue.firstCapturedUpdate = null;
 
   // Set the remaining expiration time to be whatever is remaining in the queue.
   // This should be fine because the only two other things that contribute to
