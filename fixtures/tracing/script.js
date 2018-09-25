@@ -30,8 +30,8 @@ function checkSchedulerAPI() {
     if (
       typeof Scheduler === 'undefined' ||
       typeof Scheduler.unstable_now !== 'function' ||
-      typeof Scheduler.unstable_scheduleWork !== 'function' ||
-      typeof Scheduler.unstable_cancelScheduledWork !== 'function'
+      typeof Scheduler.unstable_scheduleCallback !== 'function' ||
+      typeof Scheduler.unstable_cancelCallback !== 'function'
     ) {
       throw 'API is not defined';
     }
