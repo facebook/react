@@ -516,7 +516,7 @@ function constructClassInstance(
   props: any,
   renderExpirationTime: ExpirationTime,
 ): any {
-  let isContextConsumer = false;
+  let isLegacyContextConsumer = false;
   let unmaskedContext = emptyContextObject;
   let context = null;
   const contextType = ctor.contextType;
@@ -529,8 +529,9 @@ function constructClassInstance(
   } else {
     unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     const contextTypes = ctor.contextTypes;
-    isContextConsumer = contextTypes !== null && contextTypes !== undefined;
-    context = isContextConsumer
+    isLegacyContextConsumer =
+      contextTypes !== null && contextTypes !== undefined;
+    context = isLegacyContextConsumer
       ? getMaskedContext(workInProgress, unmaskedContext)
       : emptyContextObject;
   }
@@ -640,7 +641,7 @@ function constructClassInstance(
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
   // ReactFiberContext usually updates this cache but can't for newly-created instances.
-  if (isContextConsumer) {
+  if (isLegacyContextConsumer) {
     cacheContext(workInProgress, unmaskedContext, context);
   }
 
