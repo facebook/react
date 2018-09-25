@@ -261,7 +261,7 @@ let interruptedBy: Fiber | null = null;
 // Do not decrement interaction counts in the event of suspense timeouts.
 // This would lead to prematurely calling the interaction-complete hook.
 // Instead we wait until the suspended promise has resolved.
-let interactionsHaveBeenSuspended: boolean = false;
+let nextRenderIncludesTimedOutPlaceholder: boolean = false;
 
 let stashedWorkInProgressProperties;
 let replayUnitOfWork;
@@ -770,13 +770,16 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
         unhandledError = error;
       }
     } finally {
-      if (!interactionsHaveBeenSuspended) {
+      if (!nextRenderIncludesTimedOutPlaceholder) {
         // Clear completed interactions from the pending Map.
         // Unless the render was suspended or cascading work was scheduled,
         // In which case– leave pending interactions until the subsequent render.
         const pendingInteractionMap = root.pendingInteractionMap;
         pendingInteractionMap.forEach(
           (scheduledInteractions, scheduledExpirationTime) => {
+            // Only decrement the pending interaction count if we're done.
+            // If there's still work at the current priority,
+            // That indicates that we are waiting for suspense data.
             if (
               earliestRemainingTimeAfterCommit === NoWork ||
               scheduledExpirationTime < earliestRemainingTimeAfterCommit
@@ -1188,7 +1191,7 @@ function renderRoot(
       // Reset this flag once we start rendering a new root or at a new priority.
       // This might indicate that suspended work has completed.
       // If not, the flag will be reset.
-      interactionsHaveBeenSuspended = false;
+      nextRenderIncludesTimedOutPlaceholder = false;
 
       // Determine which interactions this batch of work currently includes,
       // So that we can accurately attribute time spent working on it,
@@ -1401,7 +1404,7 @@ function renderRoot(
   if (enableSuspense && !isExpired && nextLatestAbsoluteTimeoutMs !== -1) {
     // The tree was suspended.
     if (enableSchedulerTracing) {
-      interactionsHaveBeenSuspended = true;
+      nextRenderIncludesTimedOutPlaceholder = true;
     }
     const suspendedExpirationTime = expirationTime;
     markSuspendedPriorityLevel(root, suspendedExpirationTime);
@@ -1912,7 +1915,7 @@ function onTimeout(root, finishedWork, suspendedExpirationTime) {
     if (enableSchedulerTracing) {
       // Don't update pending interaction counts for suspense timeouts,
       // Because we know we still need to do more work in this case.
-      interactionsHaveBeenSuspended = true;
+      nextRenderIncludesTimedOutPlaceholder = true;
       flushRoot(root, suspendedExpirationTime);
     } else {
       flushRoot(root, suspendedExpirationTime);
@@ -2486,7 +2489,7 @@ function flushControlled(fn: () => mixed): void {
 
 function captureWillSyncRenderPlaceholder() {
   if (enableSchedulerTracing) {
-    interactionsHaveBeenSuspended = true;
+    nextRenderIncludesTimedOutPlaceholder = true;
   }
 }
 
