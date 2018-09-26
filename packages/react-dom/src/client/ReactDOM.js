@@ -330,7 +330,11 @@ ReactWork.prototype._onCommit = function(): void {
   }
 };
 
-function ReactRoot(container: Container, isConcurrent: boolean, hydrate: boolean) {
+function ReactRoot(
+  container: Container,
+  isConcurrent: boolean,
+  hydrate: boolean,
+) {
   const root = DOMRenderer.createContainer(container, isConcurrent, hydrate);
   this._internalRoot = root;
 }

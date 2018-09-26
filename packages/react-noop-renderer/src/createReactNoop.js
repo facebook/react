@@ -479,7 +479,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
       const rootID = DEFAULT_ROOT_ID;
       const isConcurrent = false;
-      const container = ReactNoop.getOrCreateRootContainer(rootID, isConcurrent);
+      const container = ReactNoop.getOrCreateRootContainer(
+        rootID,
+        isConcurrent,
+      );
       const root = roots.get(container.rootID);
       NoopRenderer.updateContainer(element, root, null, callback);
     },
@@ -490,7 +493,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       callback: ?Function,
     ) {
       const isConcurrent = true;
-      const container = ReactNoop.getOrCreateRootContainer(rootID, isConcurrent);
+      const container = ReactNoop.getOrCreateRootContainer(
+        rootID,
+        isConcurrent,
+      );
       const root = roots.get(container.rootID);
       NoopRenderer.updateContainer(element, root, null, callback);
     },
