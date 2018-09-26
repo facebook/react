@@ -36,7 +36,6 @@ import {
 import {
   enableGetDerivedStateFromCatch,
   enableSuspense,
-  enableSchedulerTracing,
 } from 'shared/ReactFeatureFlags';
 import {StrictMode, AsyncMode} from './ReactTypeOfMode';
 
@@ -238,12 +237,10 @@ function throwException(
           if ((workInProgress.mode & StrictMode) === NoEffect) {
             workInProgress.effectTag |= UpdateEffect;
 
-            if (enableSchedulerTracing) {
-              // Handles the special case of unwinding a suspended sync render.
-              // We flag this to properly trace and count interactions.
-              // Otherwise interaction pending count will be decremented too many times.
-              captureWillSyncRenderPlaceholder();
-            }
+            // Handles the special case of unwinding a suspended sync render.
+            // We flag this to properly trace and count interactions.
+            // Otherwise interaction pending count will be decremented too many times.
+            captureWillSyncRenderPlaceholder();
 
             // Unmount the source fiber's children
             const nextChildren = null;

@@ -49,7 +49,6 @@ import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
-  enableSchedulerTracing,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -845,12 +844,10 @@ function updatePlaceholderComponent(
 
     let nextDidTimeout;
     if (current !== null && workInProgress.updateQueue !== null) {
-      if (enableSchedulerTracing) {
-        // Handle special case of rendering a Placeholder for a sync, suspended tree.
-        // We flag this to properly trace and count interactions.
-        // Otherwise interaction pending count will be decremented too many times.
-        captureWillSyncRenderPlaceholder();
-      }
+      // Handle special case of rendering a Placeholder for a sync, suspended tree.
+      // We flag this to properly trace and count interactions.
+      // Otherwise interaction pending count will be decremented too many times.
+      captureWillSyncRenderPlaceholder();
 
       // We're outside strict mode. Something inside this Placeholder boundary
       // suspended during the last commit. Switch to the placholder.
