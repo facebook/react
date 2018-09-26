@@ -147,8 +147,8 @@ class App extends PureComponent {
 
 const container = document.getElementById('root');
 render(
-  <React.unstable_AsyncMode>
+  <React.unstable_ConcurrentMode>
     <App />
-  </React.unstable_AsyncMode>,
+  </React.unstable_ConcurrentMode>,
   container
 );

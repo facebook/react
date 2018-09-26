@@ -426,9 +426,9 @@ describe('SimpleEventPlugin', function() {
                 // Intentionally not using the updater form here
                 () => this.setState({highPriCount: this.state.highPriCount + 1})
               }>
-              <React.unstable_AsyncMode>
+              <React.unstable_ConcurrentMode>
                 <Button highPriCount={this.state.highPriCount} />
-              </React.unstable_AsyncMode>
+              </React.unstable_ConcurrentMode>
             </div>
           );
         }

@@ -38,7 +38,7 @@ import {
   enableSuspense,
   enableSchedulerTracing,
 } from 'shared/ReactFeatureFlags';
-import {StrictMode, AsyncMode} from './ReactTypeOfMode';
+import {StrictMode, ConcurrentMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -211,10 +211,10 @@ function throwException(
         if (!didTimeout) {
           // Found the nearest boundary.
 
-          // If the boundary is not in async mode, we should not suspend, and
+          // If the boundary is not in concurrent mode, we should not suspend, and
           // likewise, when the promise resolves, we should ping synchronously.
           const pingTime =
-            (workInProgress.mode & AsyncMode) === NoEffect
+            (workInProgress.mode & ConcurrentMode) === NoEffect
               ? Sync
               : renderExpirationTime;
 

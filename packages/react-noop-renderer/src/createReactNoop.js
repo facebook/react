@@ -451,13 +451,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     getOrCreateRootContainer(
       rootID: string = DEFAULT_ROOT_ID,
-      isAsync: boolean = false,
+      isConcurrent: boolean = false,
     ) {
       let root = roots.get(rootID);
       if (!root) {
         const container = {rootID: rootID, children: []};
         rootContainers.set(rootID, container);
-        root = NoopRenderer.createContainer(container, isAsync, false);
+        root = NoopRenderer.createContainer(container, isConcurrent, false);
         roots.set(rootID, root);
       }
       return root.current.stateNode.containerInfo;
@@ -478,8 +478,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
       const rootID = DEFAULT_ROOT_ID;
-      const isAsync = false;
-      const container = ReactNoop.getOrCreateRootContainer(rootID, isAsync);
+      const isConcurrent = false;
+      const container = ReactNoop.getOrCreateRootContainer(
+        rootID,
+        isConcurrent,
+      );
       const root = roots.get(container.rootID);
       NoopRenderer.updateContainer(element, root, null, callback);
     },
@@ -489,8 +492,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       rootID: string,
       callback: ?Function,
     ) {
-      const isAsync = true;
-      const container = ReactNoop.getOrCreateRootContainer(rootID, isAsync);
+      const isConcurrent = true;
+      const container = ReactNoop.getOrCreateRootContainer(
+        rootID,
+        isConcurrent,
+      );
       const root = roots.get(container.rootID);
       NoopRenderer.updateContainer(element, root, null, callback);
     },

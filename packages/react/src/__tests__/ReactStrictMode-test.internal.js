@@ -313,9 +313,9 @@ describe('ReactStrictMode', () => {
         UNSAFE_componentWillReceiveProps() {}
         render() {
           return (
-            <React.unstable_AsyncMode>
+            <React.unstable_ConcurrentMode>
               <AsyncRoot />
-            </React.unstable_AsyncMode>
+            </React.unstable_ConcurrentMode>
           );
         }
       }
@@ -357,7 +357,7 @@ describe('ReactStrictMode', () => {
         rendered = ReactTestRenderer.create(<SyncRoot />);
       }).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncMode (at **)' +
+          '\n    in ConcurrentMode (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot' +
@@ -381,9 +381,9 @@ describe('ReactStrictMode', () => {
         UNSAFE_componentWillReceiveProps() {}
         render() {
           return (
-            <React.unstable_AsyncMode>
+            <React.unstable_ConcurrentMode>
               <AsyncRoot />
-            </React.unstable_AsyncMode>
+            </React.unstable_ConcurrentMode>
           );
         }
       }
@@ -415,7 +415,7 @@ describe('ReactStrictMode', () => {
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncMode (at **)' +
+          '\n    in ConcurrentMode (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot, Parent' +
@@ -449,22 +449,22 @@ describe('ReactStrictMode', () => {
       class AsyncRootOne extends React.Component {
         render() {
           return (
-            <React.unstable_AsyncMode>
+            <React.unstable_ConcurrentMode>
               <Foo>
                 <Bar />
               </Foo>
-            </React.unstable_AsyncMode>
+            </React.unstable_ConcurrentMode>
           );
         }
       }
       class AsyncRootTwo extends React.Component {
         render() {
           return (
-            <React.unstable_AsyncMode>
+            <React.unstable_ConcurrentMode>
               <Foo>
                 <Baz />
               </Foo>
-            </React.unstable_AsyncMode>
+            </React.unstable_ConcurrentMode>
           );
         }
       }
@@ -493,14 +493,14 @@ describe('ReactStrictMode', () => {
         () => (rendered = ReactTestRenderer.create(<SyncRoot />)),
       ).toWarnDev([
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncMode (at **)' +
+          '\n    in ConcurrentMode (at **)' +
           '\n    in AsyncRootOne (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar, Foo',
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncMode (at **)' +
+          '\n    in ConcurrentMode (at **)' +
           '\n    in AsyncRootTwo (at **)' +
           '\n    in div (at **)' +
           '\n    in SyncRoot (at **)' +
@@ -517,9 +517,9 @@ describe('ReactStrictMode', () => {
       class AsyncRoot extends React.Component {
         render() {
           return (
-            <React.unstable_AsyncMode>
+            <React.unstable_ConcurrentMode>
               {this.props.foo ? <Foo /> : <Bar />}
-            </React.unstable_AsyncMode>
+            </React.unstable_ConcurrentMode>
           );
         }
       }
@@ -541,7 +541,7 @@ describe('ReactStrictMode', () => {
         rendered = ReactTestRenderer.create(<AsyncRoot foo={true} />);
       }).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncMode (at **)' +
+          '\n    in ConcurrentMode (at **)' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Foo' +
@@ -551,7 +551,7 @@ describe('ReactStrictMode', () => {
 
       expect(() => rendered.update(<AsyncRoot foo={false} />)).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
-          '\n    in AsyncMode (at **)' +
+          '\n    in ConcurrentMode (at **)' +
           '\n    in AsyncRoot (at **)' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +

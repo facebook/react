@@ -91,7 +91,7 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
 "
 `;
 
-exports[`ReactDebugFiberPerf does not include AsyncMode, StrictMode, or Profiler components in measurements 1`] = `
+exports[`ReactDebugFiberPerf does not include ConcurrentMode, StrictMode, or Profiler components in measurements 1`] = `
 "⚛ (Waiting for async callback... will force flush in 5250 ms)
 
 // Mount

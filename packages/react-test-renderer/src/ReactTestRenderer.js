@@ -39,7 +39,7 @@ import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
-  unstable_isAsync: boolean,
+  unstable_isConcurrent: boolean,
 };
 
 type ReactTestRendererJSON = {|
@@ -419,13 +419,13 @@ function propsMatch(props: Object, filter: Object): boolean {
 const ReactTestRendererFiber = {
   create(element: React$Element<any>, options: TestRendererOptions) {
     let createNodeMock = defaultTestOptions.createNodeMock;
-    let isAsync = false;
+    let isConcurrent = false;
     if (typeof options === 'object' && options !== null) {
       if (typeof options.createNodeMock === 'function') {
         createNodeMock = options.createNodeMock;
       }
-      if (options.unstable_isAsync === true) {
-        isAsync = true;
+      if (options.unstable_isConcurrent === true) {
+        isConcurrent = true;
       }
     }
     let container = {
@@ -435,7 +435,7 @@ const ReactTestRendererFiber = {
     };
     let root: FiberRoot | null = TestRenderer.createContainer(
       container,
-      isAsync,
+      isConcurrent,
       false,
     );
     invariant(root != null, 'something went wrong');

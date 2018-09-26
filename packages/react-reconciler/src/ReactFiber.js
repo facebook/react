@@ -42,7 +42,12 @@ import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {NoWork} from './ReactFiberExpirationTime';
-import {NoContext, AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
+import {
+  NoContext,
+  ConcurrentMode,
+  ProfileMode,
+  StrictMode,
+} from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -50,7 +55,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
-  REACT_ASYNC_MODE_TYPE,
+  REACT_CONCURRENT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -133,7 +138,7 @@ export type Fiber = {|
   firstContextDependency: ContextDependency<mixed> | null,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
-  // the AsyncMode flag indicates whether the subtree should be async-by-
+  // the ConcurrentMode flag indicates whether the subtree should be async-by-
   // default. When a fiber is created, it inherits the mode of its
   // parent. Additional flags can be set at creation time, but after that the
   // value should remain unchanged throughout the fiber's lifetime, particularly
@@ -387,8 +392,8 @@ export function createWorkInProgress(
   return workInProgress;
 }
 
-export function createHostRootFiber(isAsync: boolean): Fiber {
-  let mode = isAsync ? AsyncMode | StrictMode : NoContext;
+export function createHostRootFiber(isConcurrent: boolean): Fiber {
+  let mode = isConcurrent ? ConcurrentMode | StrictMode : NoContext;
 
   if (enableProfilerTimer && isDevToolsPresent) {
     // Always collect profile timings when DevTools are present.
@@ -429,9 +434,9 @@ export function createFiberFromElement(
           expirationTime,
           key,
         );
-      case REACT_ASYNC_MODE_TYPE:
+      case REACT_CONCURRENT_MODE_TYPE:
         fiberTag = Mode;
-        mode |= AsyncMode | StrictMode;
+        mode |= ConcurrentMode | StrictMode;
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;

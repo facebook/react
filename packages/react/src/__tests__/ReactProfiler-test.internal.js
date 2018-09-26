@@ -223,7 +223,7 @@ describe('Profiler', () => {
             <Yield value="last" />
           </React.unstable_Profiler>,
           {
-            unstable_isAsync: true,
+            unstable_isConcurrent: true,
           },
         );
 
@@ -578,7 +578,7 @@ describe('Profiler', () => {
               <Yield renderTime={2} />
               <Yield renderTime={3} />
             </React.unstable_Profiler>,
-            {unstable_isAsync: true},
+            {unstable_isConcurrent: true},
           );
           expect(renderer).toFlushThrough(['Yield:2']);
           expect(callback).toHaveBeenCalledTimes(0);
@@ -616,7 +616,7 @@ describe('Profiler', () => {
                 <Yield renderTime={17} />
               </React.unstable_Profiler>
             </React.unstable_Profiler>,
-            {unstable_isAsync: true},
+            {unstable_isConcurrent: true},
           );
           expect(renderer).toFlushThrough(['Yield:5']);
           expect(callback).toHaveBeenCalledTimes(0);
@@ -663,7 +663,7 @@ describe('Profiler', () => {
               <Yield renderTime={10} />
               <Yield renderTime={20} />
             </React.unstable_Profiler>,
-            {unstable_isAsync: true},
+            {unstable_isConcurrent: true},
           );
           expect(renderer).toFlushThrough(['Yield:10']);
           expect(callback).toHaveBeenCalledTimes(0);
@@ -714,7 +714,7 @@ describe('Profiler', () => {
               <Yield renderTime={6} />
               <Yield renderTime={15} />
             </React.unstable_Profiler>,
-            {unstable_isAsync: true},
+            {unstable_isConcurrent: true},
           );
 
           // Render everything initially.
@@ -820,7 +820,7 @@ describe('Profiler', () => {
               <FirstComponent />
               <SecondComponent />
             </React.unstable_Profiler>,
-            {unstable_isAsync: true},
+            {unstable_isConcurrent: true},
           );
 
           // Render everything initially.
@@ -1295,7 +1295,7 @@ describe('Profiler', () => {
         expect(() => {
           SchedulerTracing.unstable_trace('event', mockNow(), () => {
             renderer = ReactTestRenderer.create(<Component>fail</Component>, {
-              unstable_isAsync: true,
+              unstable_isConcurrent: true,
             });
           });
         }).toThrow('Expected error onWorkScheduled');
@@ -1304,7 +1304,7 @@ describe('Profiler', () => {
 
         // But should not leave React in a broken state for subsequent renders.
         renderer = ReactTestRenderer.create(<Component>succeed</Component>, {
-          unstable_isAsync: true,
+          unstable_isConcurrent: true,
         });
         expect(renderer).toFlushAll(['Component:succeed']);
         const tree = renderer.toTree();
@@ -1321,7 +1321,7 @@ describe('Profiler', () => {
         let renderer;
         SchedulerTracing.unstable_trace('event', mockNow(), () => {
           renderer = ReactTestRenderer.create(<Component>text</Component>, {
-            unstable_isAsync: true,
+            unstable_isConcurrent: true,
           });
         });
         onWorkStarted.mockClear();
@@ -1350,7 +1350,7 @@ describe('Profiler', () => {
         let renderer;
         SchedulerTracing.unstable_trace('event', mockNow(), () => {
           renderer = ReactTestRenderer.create(<Component>text</Component>, {
-            unstable_isAsync: true,
+            unstable_isConcurrent: true,
           });
         });
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
@@ -1393,7 +1393,7 @@ describe('Profiler', () => {
         SchedulerTracing.unstable_trace(eventOne.name, mockNow(), () => {
           SchedulerTracing.unstable_trace(eventTwo.name, mockNow(), () => {
             renderer = ReactTestRenderer.create(<Component>text</Component>, {
-              unstable_isAsync: true,
+              unstable_isConcurrent: true,
             });
           });
         });
@@ -1482,7 +1482,7 @@ describe('Profiler', () => {
               <Example />
             </React.unstable_Profiler>,
             {
-              unstable_isAsync: true,
+              unstable_isConcurrent: true,
             },
           );
         },
@@ -1723,7 +1723,7 @@ describe('Profiler', () => {
           <FirstComponent />
           <SecondComponent />
         </React.unstable_Profiler>,
-        {unstable_isAsync: true},
+        {unstable_isConcurrent: true},
       );
 
       // Initial mount.
@@ -1897,7 +1897,7 @@ describe('Profiler', () => {
           <React.unstable_Profiler id="test" onRender={onRender}>
             <Example />
           </React.unstable_Profiler>,
-          {unstable_isAsync: true},
+          {unstable_isConcurrent: true},
         );
       });
 
@@ -2102,7 +2102,7 @@ describe('Profiler', () => {
       advanceTimeBy(1);
 
       const renderer = ReactTestRenderer.create(<Parent />, {
-        unstable_isAsync: true,
+        unstable_isConcurrent: true,
       });
       renderer.unstable_flushAll(['Child:0']);
       onRender.mockClear();
@@ -2413,7 +2413,7 @@ describe('Profiler', () => {
                 </React.Placeholder>
               </React.unstable_Profiler>,
               {
-                unstable_isAsync: true,
+                unstable_isConcurrent: true,
               },
             );
           },
@@ -2456,7 +2456,7 @@ describe('Profiler', () => {
                   <AsyncText text="loaded" ms={1000} />
                 </React.Placeholder>
               </React.unstable_Profiler>,
-              {unstable_isAsync: true},
+              {unstable_isConcurrent: true},
             );
           },
         );
@@ -2587,7 +2587,7 @@ describe('Profiler', () => {
                 </React.Placeholder>
                 <Text text="initial" />
               </React.unstable_Profiler>,
-              {unstable_isAsync: true},
+              {unstable_isConcurrent: true},
             );
           },
         );

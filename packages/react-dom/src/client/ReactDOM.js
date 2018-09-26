@@ -330,8 +330,12 @@ ReactWork.prototype._onCommit = function(): void {
   }
 };
 
-function ReactRoot(container: Container, isAsync: boolean, hydrate: boolean) {
-  const root = DOMRenderer.createContainer(container, isAsync, hydrate);
+function ReactRoot(
+  container: Container,
+  isConcurrent: boolean,
+  hydrate: boolean,
+) {
+  const root = DOMRenderer.createContainer(container, isConcurrent, hydrate);
   this._internalRoot = root;
 }
 ReactRoot.prototype.render = function(
@@ -497,8 +501,8 @@ function legacyCreateRootFromDOMContainer(
     }
   }
   // Legacy roots are not async by default.
-  const isAsync = false;
-  return new ReactRoot(container, isAsync, shouldHydrate);
+  const isConcurrent = false;
+  return new ReactRoot(container, isConcurrent, shouldHydrate);
 }
 
 function legacyRenderSubtreeIntoContainer(

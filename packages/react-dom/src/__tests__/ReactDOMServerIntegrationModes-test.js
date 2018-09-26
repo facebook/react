@@ -104,36 +104,36 @@ describe('ReactDOMServerIntegration', () => {
     });
   });
 
-  describe('React.unstable_AsyncMode', () => {
-    itRenders('an async mode with one child', async render => {
+  describe('React.unstable_ConcurrentMode', () => {
+    itRenders('an concurrent mode with one child', async render => {
       let e = await render(
-        <React.unstable_AsyncMode>
+        <React.unstable_ConcurrentMode>
           <div>text1</div>
-        </React.unstable_AsyncMode>,
+        </React.unstable_ConcurrentMode>,
       );
       let parent = e.parentNode;
       expect(parent.childNodes[0].tagName).toBe('DIV');
     });
 
-    itRenders('an async mode with several children', async render => {
+    itRenders('an concurrent mode with several children', async render => {
       let Header = props => {
         return <p>header</p>;
       };
       let Footer = props => {
         return (
-          <React.unstable_AsyncMode>
+          <React.unstable_ConcurrentMode>
             <h2>footer</h2>
             <h3>about</h3>
-          </React.unstable_AsyncMode>
+          </React.unstable_ConcurrentMode>
         );
       };
       let e = await render(
-        <React.unstable_AsyncMode>
+        <React.unstable_ConcurrentMode>
           <div>text1</div>
           <span>text2</span>
           <Header />
           <Footer />
-        </React.unstable_AsyncMode>,
+        </React.unstable_ConcurrentMode>,
       );
       let parent = e.parentNode;
       expect(parent.childNodes[0].tagName).toBe('DIV');
@@ -143,23 +143,23 @@ describe('ReactDOMServerIntegration', () => {
       expect(parent.childNodes[4].tagName).toBe('H3');
     });
 
-    itRenders('a nested async mode', async render => {
+    itRenders('a nested concurrent mode', async render => {
       let e = await render(
-        <React.unstable_AsyncMode>
-          <React.unstable_AsyncMode>
+        <React.unstable_ConcurrentMode>
+          <React.unstable_ConcurrentMode>
             <div>text1</div>
-          </React.unstable_AsyncMode>
+          </React.unstable_ConcurrentMode>
           <span>text2</span>
-          <React.unstable_AsyncMode>
-            <React.unstable_AsyncMode>
-              <React.unstable_AsyncMode>
+          <React.unstable_ConcurrentMode>
+            <React.unstable_ConcurrentMode>
+              <React.unstable_ConcurrentMode>
                 {null}
                 <p />
-              </React.unstable_AsyncMode>
+              </React.unstable_ConcurrentMode>
               {false}
-            </React.unstable_AsyncMode>
-          </React.unstable_AsyncMode>
-        </React.unstable_AsyncMode>,
+            </React.unstable_ConcurrentMode>
+          </React.unstable_ConcurrentMode>
+        </React.unstable_ConcurrentMode>,
       );
       let parent = e.parentNode;
       expect(parent.childNodes[0].tagName).toBe('DIV');
@@ -167,8 +167,8 @@ describe('ReactDOMServerIntegration', () => {
       expect(parent.childNodes[2].tagName).toBe('P');
     });
 
-    itRenders('an empty async mode', async render => {
-      expect(await render(<React.unstable_AsyncMode />)).toBe(null);
+    itRenders('an empty concurrent mode', async render => {
+      expect(await render(<React.unstable_ConcurrentMode />)).toBe(null);
     });
   });
 });
