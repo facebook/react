@@ -21,6 +21,7 @@ import {
   REACT_STRICT_MODE_TYPE,
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 
 export function typeOf(object: any) {
   if (typeof object === 'object' && object !== null) {
@@ -56,6 +57,8 @@ export function typeOf(object: any) {
   return undefined;
 }
 
+// AsyncMode alias is deprecated along with isAsyncMode
+export const AsyncMode = REACT_CONCURRENT_MODE_TYPE;
 export const ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
 export const ContextConsumer = REACT_CONTEXT_TYPE;
 export const ContextProvider = REACT_PROVIDER_TYPE;
@@ -68,6 +71,16 @@ export const StrictMode = REACT_STRICT_MODE_TYPE;
 
 export {isValidElementType};
 
+// AsyncMode should be deprecated
+export function isAsyncMode(object: any) {
+  lowPriorityWarning(
+    false,
+    'The ReactIs.isAsyncMode() alias has been deprecated, ' +
+      'and will be removed in React 17+. Update your code to use ' +
+      'ReactIs.isConcurrentMode() instead. It has the exact same API.'
+  );
+  return isConcurrentMode(object);
+}
 export function isConcurrentMode(object: any) {
   return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
 }
