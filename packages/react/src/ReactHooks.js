@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -18,6 +19,14 @@ function resolveDispatcher() {
     'Hooks can only be called inside the body of a functional component.',
   );
   return dispatcher;
+}
+
+export function useContext<T>(
+  context: ReactContext<T>,
+  observedBits: void | number | boolean,
+): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useContext(context, observedBits);
 }
 
 export function useState<S>(initialState: S | (() => S)) {

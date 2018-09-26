@@ -56,12 +56,12 @@ describe('ReactNewContext', () => {
       },
   );
   sharedContextTests(
-    'useContext inside class component',
+    'unstable_read inside class component',
     Context =>
       class Consumer extends React.Component {
         render() {
           const observedBits = this.props.unstable_observedBits;
-          const contextValue = useContext(Context, observedBits);
+          const contextValue = Context.unstable_read(observedBits);
           const render = this.props.children;
           return render(contextValue);
         }
@@ -1195,7 +1195,7 @@ describe('ReactNewContext', () => {
         return (
           <FooContext>
             {foo => {
-              const bar = useContext(BarContext);
+              const bar = BarContext.unstable_read();
               return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
             }}
           </FooContext>
@@ -1329,6 +1329,19 @@ describe('ReactNewContext', () => {
         span('Foo: 2, Bar: 2'),
         span('Baz: 2'),
       ]);
+    });
+
+    it('throws when used in a class component', () => {
+      const Context = React.createContext(0);
+      class Foo extends React.Component {
+        render() {
+          return useContext(Context);
+        }
+      }
+      ReactNoop.render(<Foo />);
+      expect(ReactNoop.flush).toThrow(
+        'Hooks can only be called inside the body of a functional component.',
+      );
     });
   });
 

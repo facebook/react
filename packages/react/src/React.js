@@ -24,20 +24,21 @@ import {
   cloneElement,
   isValidElement,
 } from './ReactElement';
-import {readContext, createContext} from './ReactContext';
+import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
 import pure from './pure';
 import {
-  useState,
+  useAPI,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useMutationEffect,
   useReducer,
   useRef,
-  useEffect,
-  useMutationEffect,
-  useLayoutEffect,
-  useCallback,
-  useMemo,
-  useAPI,
+  useState,
 } from './ReactHooks';
 import {
   createElementWithValidation,
@@ -84,16 +85,16 @@ if (enableSuspense) {
 }
 
 if (enableHooks_DEPRECATED) {
-  React.useContext = readContext;
-  React.useState = useState;
+  React.useAPI = useAPI;
+  React.useCallback = useCallback;
+  React.useContext = useContext;
+  React.useEffect = useEffect;
+  React.useLayoutEffect = useLayoutEffect;
+  React.useMemo = useMemo;
+  React.useMutationEffect = useMutationEffect;
   React.useReducer = useReducer;
   React.useRef = useRef;
-  React.useEffect = useEffect;
-  React.useMutationEffect = useMutationEffect;
-  React.useLayoutEffect = useLayoutEffect;
-  React.useCallback = useCallback;
-  React.useMemo = useMemo;
-  React.useAPI = useAPI;
+  React.useState = useState;
 }
 
 export default React;

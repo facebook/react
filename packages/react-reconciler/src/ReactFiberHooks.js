@@ -7,11 +7,13 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 
 import {NoWork} from './ReactFiberExpirationTime';
+import {readContext} from './ReactFiberNewContext';
 import {
   Snapshot as SnapshotEffect,
   Update as UpdateEffect,
@@ -316,6 +318,16 @@ function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   return typeof action === 'function' ? action(state) : action;
+}
+
+export function useContext<T>(
+  context: ReactContext<T>,
+  observedBits: void | number | boolean,
+): T {
+  // Ensure we're in a functional component (class components support only the
+  // .unstable_read() form)
+  resolveCurrentlyRenderingFiber();
+  return readContext(context, observedBits);
 }
 
 export function useState<S>(
