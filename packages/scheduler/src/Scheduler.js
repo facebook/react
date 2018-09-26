@@ -468,7 +468,12 @@ var requestHostCallback;
 var cancelHostCallback;
 var getFrameDeadline;
 
-if (typeof window === 'undefined') {
+// "addEventListener" might not be available on the window object
+// if this is a mocked "window" object. So we need to validate that too.
+if (
+  typeof window === 'undefined' ||
+  typeof window.addEventListener !== 'function'
+) {
   // If this accidentally gets imported in a non-browser environment, fallback
   // to a naive implementation.
   var timeoutID = -1;
