@@ -66,7 +66,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {NoWork, Never} from './ReactFiberExpirationTime';
-import {AsyncMode, StrictMode} from './ReactTypeOfMode';
+import {ConcurrentMode, StrictMode} from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
@@ -568,7 +568,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
   // Check the host config to see if the children are offscreen/hidden.
   if (
     renderExpirationTime !== Never &&
-    workInProgress.mode & AsyncMode &&
+    workInProgress.mode & ConcurrentMode &&
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
     // Schedule this fiber to re-render at offscreen priority. Then bailout.

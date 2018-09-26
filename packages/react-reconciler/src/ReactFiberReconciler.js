@@ -211,10 +211,10 @@ function findHostInstance(component: Object): PublicInstance | null {
 
 export function createContainer(
   containerInfo: Container,
-  isAsync: boolean,
+  isConcurrent: boolean,
   hydrate: boolean,
 ): OpaqueRoot {
-  return createFiberRoot(containerInfo, isAsync, hydrate);
+  return createFiberRoot(containerInfo, isConcurrent, hydrate);
 }
 
 export function updateContainer(
