@@ -438,6 +438,39 @@ describe('ReactContextValidator', () => {
     expect(shouldComponentUpdateWasCalled).toBe(false);
   });
 
+  it('should re-render PureComponents when context Provider updates', () => {
+    let renderedContext;
+
+    const Context = React.createContext();
+
+    class Component extends React.PureComponent {
+      static contextType = Context;
+      render() {
+        renderedContext = this.context;
+        return <div />;
+      }
+    }
+
+    const firstContext = {foo: 123};
+    const secondContext = {bar: 456};
+
+    const container = document.createElement('div');
+    ReactDOM.render(
+      <Context.Provider value={firstContext}>
+        <Component />
+      </Context.Provider>,
+      container,
+    );
+    expect(renderedContext).toBe(firstContext);
+    ReactDOM.render(
+      <Context.Provider value={secondContext}>
+        <Component />
+      </Context.Provider>,
+      container,
+    );
+    expect(renderedContext).toBe(secondContext);
+  });
+
   it('should warn if both contextType and contextTypes are defined', () => {
     const Context = React.createContext();
 
