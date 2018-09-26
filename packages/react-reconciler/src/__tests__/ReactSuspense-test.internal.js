@@ -5,7 +5,7 @@ let ReactNoop;
 let SimpleCacheProvider;
 let Placeholder;
 let StrictMode;
-let AsyncMode;
+let ConcurrentMode;
 let lazy;
 
 let cache;
@@ -25,7 +25,7 @@ describe('ReactSuspense', () => {
     SimpleCacheProvider = require('simple-cache-provider');
     Placeholder = React.Placeholder;
     StrictMode = React.StrictMode;
-    AsyncMode = React.unstable_AsyncMode;
+    ConcurrentMode = React.unstable_ConcurrentMode;
     lazy = React.lazy;
 
     function invalidateCache() {
@@ -927,10 +927,10 @@ describe('ReactSuspense', () => {
       function App() {
         return (
           <Placeholder delayMs={1000} fallback={<Spinner />}>
-            <AsyncMode>
+            <ConcurrentMode>
               <UpdatingText ref={text} />
               <Text text="Sibling" />
-            </AsyncMode>
+            </ConcurrentMode>
           </Placeholder>
         );
       }
@@ -1004,7 +1004,7 @@ describe('ReactSuspense', () => {
           return (
             <StrictMode>
               <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
-                <AsyncMode>
+                <ConcurrentMode>
                   <UpdatingText ref={text1} initialText="Async: 1">
                     {text => (
                       <Fragment>
@@ -1014,9 +1014,9 @@ describe('ReactSuspense', () => {
                       </Fragment>
                     )}
                   </UpdatingText>
-                </AsyncMode>
+                </ConcurrentMode>
               </Placeholder>
-              <AsyncMode>
+              <ConcurrentMode>
                 <UpdatingText ref={text2} initialText="Sync: 1">
                   {text => (
                     <Fragment>
@@ -1026,7 +1026,7 @@ describe('ReactSuspense', () => {
                     </Fragment>
                   )}
                 </UpdatingText>
-              </AsyncMode>
+              </ConcurrentMode>
             </StrictMode>
           );
         }
@@ -1136,7 +1136,7 @@ describe('ReactSuspense', () => {
           return (
             <Fragment>
               <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
-                <AsyncMode>
+                <ConcurrentMode>
                   <UpdatingText ref={text1} initialText="Async: 1">
                     {text => (
                       <Fragment>
@@ -1146,9 +1146,9 @@ describe('ReactSuspense', () => {
                       </Fragment>
                     )}
                   </UpdatingText>
-                </AsyncMode>
+                </ConcurrentMode>
               </Placeholder>
-              <AsyncMode>
+              <ConcurrentMode>
                 <UpdatingText ref={text2} initialText="Sync: 1">
                   {text => (
                     <Fragment>
@@ -1158,7 +1158,7 @@ describe('ReactSuspense', () => {
                     </Fragment>
                   )}
                 </UpdatingText>
-              </AsyncMode>
+              </ConcurrentMode>
             </Fragment>
           );
         }

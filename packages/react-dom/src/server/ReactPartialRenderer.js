@@ -32,7 +32,7 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_ASYNC_MODE_TYPE,
+  REACT_CONCURRENT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
@@ -896,7 +896,7 @@ class ReactDOMServerRenderer {
 
       switch (elementType) {
         case REACT_STRICT_MODE_TYPE:
-        case REACT_ASYNC_MODE_TYPE:
+        case REACT_CONCURRENT_MODE_TYPE:
         case REACT_PROFILER_TYPE:
         case REACT_FRAGMENT_TYPE: {
           const nextChildren = toArray(

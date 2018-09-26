@@ -8,7 +8,7 @@
  */
 
 import {
-  REACT_ASYNC_MODE_TYPE,
+  REACT_CONCURRENT_MODE_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -24,7 +24,7 @@ export default function isValidElementType(type: mixed) {
     typeof type === 'function' ||
     // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
     type === REACT_FRAGMENT_TYPE ||
-    type === REACT_ASYNC_MODE_TYPE ||
+    type === REACT_CONCURRENT_MODE_TYPE ||
     type === REACT_PROFILER_TYPE ||
     type === REACT_STRICT_MODE_TYPE ||
     type === REACT_PLACEHOLDER_TYPE ||
