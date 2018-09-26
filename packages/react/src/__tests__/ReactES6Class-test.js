@@ -435,6 +435,7 @@ describe('ReactES6Class', () => {
       constructor() {
         super();
         this.contextTypes = {};
+        this.contextType = {};
         this.propTypes = {};
       }
       getInitialState() {
@@ -455,6 +456,7 @@ describe('ReactES6Class', () => {
         'getInitialState was defined on Foo, a plain JavaScript class.',
         'getDefaultProps was defined on Foo, a plain JavaScript class.',
         'propTypes was defined as an instance property on Foo.',
+        'contextType was defined as an instance property on Foo.',
         'contextTypes was defined as an instance property on Foo.',
       ],
       {withoutStack: true},

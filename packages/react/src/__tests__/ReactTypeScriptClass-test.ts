@@ -239,6 +239,7 @@ let getInitialStateWasCalled = false;
 let getDefaultPropsWasCalled = false;
 class ClassicProperties extends React.Component {
   contextTypes = {};
+  contextType = {};
   propTypes = {};
   getDefaultProps() {
     getDefaultPropsWasCalled = true;
@@ -594,6 +595,7 @@ describe('ReactTypeScriptClass', function() {
           'a plain JavaScript class.',
         'propTypes was defined as an instance property on ClassicProperties.',
         'contextTypes was defined as an instance property on ClassicProperties.',
+        'contextType was defined as an instance property on ClassicProperties.',
       ], {withoutStack: true});
       expect(getInitialStateWasCalled).toBe(false);
       expect(getDefaultPropsWasCalled).toBe(false);

@@ -7,7 +7,6 @@
  * @flow
  */
 
-/* eslint-disable no-use-before-define */
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -15,7 +14,6 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>;
-/* eslint-enable no-use-before-define */
 
 export type ReactEmpty = null | void | boolean;
 

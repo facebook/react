@@ -7,6 +7,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/* eslint-disable max-len */
+
 'use strict';
 
 (function(global, factory) {
@@ -23,15 +25,36 @@
     );
   }
 
-  function unstable_scheduleWork() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_scheduleWork.apply(
+  function unstable_scheduleCallback() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_scheduleCallback.apply(
       this,
       arguments
     );
   }
 
-  function unstable_cancelScheduledWork() {
-    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_cancelScheduledWork.apply(
+  function unstable_cancelCallback() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_cancelCallback.apply(
+      this,
+      arguments
+    );
+  }
+
+  function unstable_runWithPriority() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_runWithPriority.apply(
+      this,
+      arguments
+    );
+  }
+
+  function unstable_wrapCallback() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_wrapCallback.apply(
+      this,
+      arguments
+    );
+  }
+
+  function unstable_getCurrentPriorityLevel() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_getCurrentPriorityLevel.apply(
       this,
       arguments
     );
@@ -39,7 +62,10 @@
 
   return Object.freeze({
     unstable_now: unstable_now,
-    unstable_scheduleWork: unstable_scheduleWork,
-    unstable_cancelScheduledWork: unstable_cancelScheduledWork,
+    unstable_scheduleCallback: unstable_scheduleCallback,
+    unstable_cancelCallback: unstable_cancelCallback,
+    unstable_runWithPriority: unstable_runWithPriority,
+    unstable_wrapCallback: unstable_wrapCallback,
+    unstable_getCurrentPriorityLevel: unstable_getCurrentPriorityLevel,
   });
 });

@@ -41,6 +41,7 @@ import {
   Update,
   Ref,
 } from 'shared/ReactSideEffectTags';
+import {captureWillSyncRenderPlaceholder} from './ReactFiberScheduler';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableGetDerivedStateFromCatch,
@@ -48,6 +49,7 @@ import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
+  enableSchedulerTracing,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
@@ -57,7 +59,6 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import * as ReactCurrentFiber from './ReactCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
-import {applyDerivedStateFromProps} from './ReactFiberClassComponent';
 import {
   mountChildFibers,
   reconcileChildFibers,
@@ -95,6 +96,7 @@ import {
 } from './ReactFiberHydrationContext';
 import {
   adoptClassInstance,
+  applyDerivedStateFromProps,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
@@ -107,11 +109,13 @@ import {resolveLazyComponentTag} from './ReactFiber';
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let didWarnAboutBadClass;
+let didWarnAboutContextTypeOnFunctionalComponent;
 let didWarnAboutGetDerivedStateOnFunctionalComponent;
 let didWarnAboutStatelessRefs;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
+  didWarnAboutContextTypeOnFunctionalComponent = {};
   didWarnAboutGetDerivedStateOnFunctionalComponent = {};
   didWarnAboutStatelessRefs = {};
 }
@@ -803,6 +807,22 @@ function mountIndeterminateComponent(
           ] = true;
         }
       }
+
+      if (
+        typeof Component.contextType === 'object' &&
+        Component.contextType !== null
+      ) {
+        const componentName = getComponentName(Component) || 'Unknown';
+
+        if (!didWarnAboutContextTypeOnFunctionalComponent[componentName]) {
+          warningWithoutStack(
+            false,
+            '%s: Stateless functional components do not support contextType.',
+            componentName,
+          );
+          didWarnAboutContextTypeOnFunctionalComponent[componentName] = true;
+        }
+      }
     }
     reconcileChildren(current, workInProgress, value, renderExpirationTime);
     memoizeProps(workInProgress, props);
@@ -825,6 +845,13 @@ function updatePlaceholderComponent(
 
     let nextDidTimeout;
     if (current !== null && workInProgress.updateQueue !== null) {
+      if (enableSchedulerTracing) {
+        // Handle special case of rendering a Placeholder for a sync, suspended tree.
+        // We flag this to properly trace and count interactions.
+        // Otherwise interaction pending count will be decremented too many times.
+        captureWillSyncRenderPlaceholder();
+      }
+
       // We're outside strict mode. Something inside this Placeholder boundary
       // suspended during the last commit. Switch to the placholder.
       workInProgress.updateQueue = null;

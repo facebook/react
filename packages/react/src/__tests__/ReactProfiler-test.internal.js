@@ -46,7 +46,9 @@ function loadModules({
 
   if (useNoopRenderer) {
     ReactNoop = require('react-noop-renderer');
+    ReactTestRenderer = null;
   } else {
+    ReactNoop = null;
     ReactTestRenderer = require('react-test-renderer');
     ReactTestRenderer.unstable_setNowImplementation(mockNow);
   }
@@ -1229,11 +1231,13 @@ describe('Profiler', () => {
     const getWorkForReactThreads = mockFn =>
       mockFn.mock.calls.filter(([interactions, threadID]) => threadID > 0);
 
-    beforeEach(() => {
+    function loadModulesForTracing(params) {
       jest.resetModules();
 
       loadModules({
+        enableSuspense: true,
         enableSchedulerTracing: true,
+        ...params,
       });
 
       throwInOnInteractionScheduledWorkCompleted = false;
@@ -1273,7 +1277,9 @@ describe('Profiler', () => {
         onWorkStarted,
         onWorkStopped,
       });
-    });
+    }
+
+    beforeEach(() => loadModulesForTracing());
 
     describe('error handling', () => {
       it('should cover errors thrown in onWorkScheduled', () => {
@@ -1402,6 +1408,34 @@ describe('Profiler', () => {
         // The completed callback should be called for all completed interactions.
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
       });
+    });
+
+    it('should properly trace work scheduled during the begin render phase', () => {
+      const callback = jest.fn();
+      let wrapped;
+      const Component = jest.fn(() => {
+        wrapped = SchedulerTracing.unstable_wrap(callback);
+        return null;
+      });
+
+      let interaction;
+      SchedulerTracing.unstable_trace('event', mockNow(), () => {
+        const interactions = SchedulerTracing.unstable_getCurrent();
+        expect(interactions.size).toBe(1);
+        interaction = Array.from(interactions)[0];
+        ReactTestRenderer.create(<Component />);
+      });
+
+      expect(Component).toHaveBeenCalledTimes(1);
+      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(callback).not.toHaveBeenCalled();
+
+      wrapped();
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+      expect(
+        onInteractionScheduledWorkCompleted,
+      ).toHaveBeenLastNotifiedOfInteraction(interaction);
     });
 
     it('should associate traced events with their subsequent commits', () => {
@@ -2115,24 +2149,12 @@ describe('Profiler', () => {
       ]);
     });
 
-    it('traces both the temporary placeholder and the finished render for an interaction', async () => {
-      jest.resetModules();
-
-      loadModules({
-        useNoopRenderer: true,
-        enableSuspense: true,
-        enableSchedulerTracing: true,
-      });
-
-      // Re-register since we've reloaded modules
-      SchedulerTracing.unstable_subscribe({
-        onInteractionScheduledWorkCompleted,
-        onInteractionTraced,
-        onWorkCanceled,
-        onWorkScheduled,
-        onWorkStarted,
-        onWorkStopped,
-      });
+    describe('suspense', () => {
+      let AsyncText;
+      let Text;
+      let TextResource;
+      let cache;
+      let resourcePromise;
 
       function awaitableAdvanceTimers(ms) {
         jest.advanceTimersByTime(ms);
@@ -2142,124 +2164,500 @@ describe('Profiler', () => {
         });
       }
 
-      const SimpleCacheProvider = require('simple-cache-provider');
-      let cache;
-      function invalidateCache() {
-        cache = SimpleCacheProvider.createCache(invalidateCache);
-      }
-      invalidateCache();
-      const TextResource = SimpleCacheProvider.createResource(
-        ([text, ms = 0]) => {
-          return new Promise((resolve, reject) => {
-            setTimeout(() => {
-              ReactNoop.yield(`Promise resolved [${text}]`);
-              resolve(text);
-            }, ms);
-          });
-        },
-        ([text, ms]) => text,
-      );
-
-      function Text(props) {
-        ReactNoop.yield(props.text);
-        return <span prop={props.text} />;
-      }
-
-      function span(prop) {
-        return {type: 'span', children: [], prop};
-      }
-
-      function AsyncText(props) {
-        const text = props.text;
-        try {
-          TextResource.read(cache, [props.text, props.ms]);
-          ReactNoop.yield(text);
-          return <span prop={text} />;
-        } catch (promise) {
-          if (typeof promise.then === 'function') {
-            ReactNoop.yield(`Suspend! [${text}]`);
-          } else {
-            ReactNoop.yield(`Error! [${text}]`);
-          }
-          throw promise;
+      function yieldForRenderer(value) {
+        if (ReactNoop) {
+          ReactNoop.yield(value);
+        } else {
+          ReactTestRenderer.unstable_yield(value);
         }
       }
 
-      const interaction = {
-        id: 0,
-        name: 'initial render',
-        timestamp: mockNow(),
-      };
+      beforeEach(() => {
+        const SimpleCacheProvider = require('simple-cache-provider');
+        function invalidateCache() {
+          cache = SimpleCacheProvider.createCache(invalidateCache);
+        }
+        invalidateCache();
 
-      const onRender = jest.fn();
-      SchedulerTracing.unstable_trace(interaction.name, mockNow(), () => {
-        ReactNoop.render(
-          <React.unstable_Profiler id="test-profiler" onRender={onRender}>
-            <React.Placeholder fallback={<Text text="Loading..." />}>
-              <AsyncText text="Async" ms={20000} />
-            </React.Placeholder>
-            <Text text="Sync" />
-          </React.unstable_Profiler>,
-        );
+        resourcePromise = null;
+
+        TextResource = SimpleCacheProvider.createResource(([text, ms = 0]) => {
+          resourcePromise = new Promise((resolve, reject) =>
+            setTimeout(() => {
+              yieldForRenderer(`Promise resolved [${text}]`);
+              resolve(text);
+            }, ms),
+          );
+          return resourcePromise;
+        }, ([text, ms]) => text);
+
+        AsyncText = ({ms, text}) => {
+          try {
+            TextResource.read(cache, [text, ms]);
+            yieldForRenderer(`AsyncText [${text}]`);
+            return text;
+          } catch (promise) {
+            if (typeof promise.then === 'function') {
+              yieldForRenderer(`Suspend [${text}]`);
+            } else {
+              yieldForRenderer(`Error [${text}]`);
+            }
+            throw promise;
+          }
+        };
+
+        Text = ({text}) => {
+          yieldForRenderer(`Text [${text}]`);
+          return text;
+        };
       });
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-        interaction,
-      );
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+      it('traces both the temporary placeholder and the finished render for an interaction', async () => {
+        loadModulesForTracing({useNoopRenderer: true});
 
-      expect(ReactNoop.flush()).toEqual([
-        'Suspend! [Async]',
-        'Loading...',
-        'Sync',
-      ]);
-      // The update hasn't expired yet, so we commit nothing.
-      expect(ReactNoop.getChildren()).toEqual([]);
-      expect(onRender).not.toHaveBeenCalled();
+        const interaction = {
+          id: 0,
+          name: 'initial render',
+          timestamp: mockNow(),
+        };
 
-      // Advance both React's virtual time and Jest's timers by enough to expire
-      // the update, but not by enough to flush the suspending promise.
-      ReactNoop.expire(10000);
-      await awaitableAdvanceTimers(10000);
-      // No additional rendering work is required, since we already prepared
-      // the placeholder.
-      expect(ReactNoop.flushExpired()).toEqual([]);
-      // Should have committed the placeholder.
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Loading...'),
-        span('Sync'),
-      ]);
-      expect(onRender).toHaveBeenCalledTimes(1);
+        const onRender = jest.fn();
+        SchedulerTracing.unstable_trace(interaction.name, mockNow(), () => {
+          ReactNoop.render(
+            <React.unstable_Profiler id="test-profiler" onRender={onRender}>
+              <React.Placeholder fallback={<Text text="Loading..." />}>
+                <AsyncText text="Async" ms={20000} />
+              </React.Placeholder>
+              <Text text="Sync" />
+            </React.unstable_Profiler>,
+          );
+        });
 
-      let call = onRender.mock.calls[0];
-      expect(call[0]).toEqual('test-profiler');
-      expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
-      );
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interaction,
+        );
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(ReactNoop.flush()).toEqual([
+          'Suspend [Async]',
+          'Text [Loading...]',
+          'Text [Sync]',
+        ]);
+        // The update hasn't expired yet, so we commit nothing.
+        expect(ReactNoop.getChildren()).toEqual([]);
+        expect(onRender).not.toHaveBeenCalled();
 
-      // Once the promise resolves, we render the suspended view
-      await awaitableAdvanceTimers(10000);
-      expect(ReactNoop.flush()).toEqual(['Promise resolved [Async]', 'Async']);
-      expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
-      expect(onRender).toHaveBeenCalledTimes(2);
+        // Advance both React's virtual time and Jest's timers by enough to expire
+        // the update, but not by enough to flush the suspending promise.
+        ReactNoop.expire(10000);
+        await awaitableAdvanceTimers(10000);
+        // No additional rendering work is required, since we already prepared
+        // the placeholder.
+        expect(ReactNoop.flushExpired()).toEqual([]);
+        // Should have committed the placeholder.
+        expect(ReactNoop.getChildren()).toEqual([
+          {text: 'Loading...'},
+          {text: 'Sync'},
+        ]);
+        expect(onRender).toHaveBeenCalledTimes(1);
 
-      call = onRender.mock.calls[1];
-      expect(call[0]).toEqual('test-profiler');
-      expect(call[6]).toMatchInteractions(
-        ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
-      );
+        let call = onRender.mock.calls[0];
+        expect(call[0]).toEqual('test-profiler');
+        expect(call[6]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
+        );
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-      expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interaction);
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+        // Once the promise resolves, we render the suspended view
+        await awaitableAdvanceTimers(10000);
+        expect(ReactNoop.flush()).toEqual([
+          'Promise resolved [Async]',
+          'AsyncText [Async]',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([
+          {text: 'Async'},
+          {text: 'Sync'},
+        ]);
+        expect(onRender).toHaveBeenCalledTimes(2);
+
+        call = onRender.mock.calls[1];
+        expect(call[0]).toEqual('test-profiler');
+        expect(call[6]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
+        );
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+      });
+
+      it('does not prematurely complete for suspended sync renders', async () => {
+        const interaction = {
+          id: 0,
+          name: 'initial render',
+          timestamp: mockNow(),
+        };
+
+        const onRender = jest.fn();
+        SchedulerTracing.unstable_trace(
+          interaction.name,
+          interaction.timestamp,
+          () => {
+            ReactTestRenderer.create(
+              <React.unstable_Profiler id="app" onRender={onRender}>
+                <React.Placeholder
+                  delayMs={1000}
+                  fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={2000} />
+                </React.Placeholder>
+              </React.unstable_Profiler>,
+            );
+          },
+        );
+
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+        jest.runAllTimers();
+        await resourcePromise;
+
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+      });
+
+      it('traces cascading work after suspended sync renders', async () => {
+        let wrappedCascadingFn;
+        class AsyncComponentWithCascadingWork extends React.Component {
+          state = {
+            hasMounted: false,
+          };
+
+          componentDidMount() {
+            wrappedCascadingFn = SchedulerTracing.unstable_wrap(() => {
+              this.setState({hasMounted: true});
+            });
+          }
+
+          render() {
+            const {ms, text} = this.props;
+            TextResource.read(cache, [text, ms]);
+            return <span prop={text}>{this.state.hasMounted}</span>;
+          }
+        }
+
+        const interaction = {
+          id: 0,
+          name: 'initial render',
+          timestamp: mockNow(),
+        };
+
+        const onRender = jest.fn();
+        SchedulerTracing.unstable_trace(
+          interaction.name,
+          interaction.timestamp,
+          () => {
+            ReactTestRenderer.create(
+              <React.unstable_Profiler id="app" onRender={onRender}>
+                <React.Placeholder
+                  delayMs={1000}
+                  fallback={<Text text="loading" />}>
+                  <AsyncComponentWithCascadingWork text="loaded" ms={2000} />
+                </React.Placeholder>
+              </React.unstable_Profiler>,
+            );
+          },
+        );
+
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+        jest.runAllTimers();
+        await resourcePromise;
+
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+        wrappedCascadingFn();
+
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+      });
+
+      it('does not prematurely complete for suspended renders that have exceeded their deadline', async () => {
+        const interaction = {
+          id: 0,
+          name: 'initial render',
+          timestamp: mockNow(),
+        };
+
+        const onRender = jest.fn();
+        let renderer;
+        SchedulerTracing.unstable_trace(
+          interaction.name,
+          interaction.timestamp,
+          () => {
+            renderer = ReactTestRenderer.create(
+              <React.unstable_Profiler id="app" onRender={onRender}>
+                <React.Placeholder
+                  delayMs={1000}
+                  fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={2000} />
+                </React.Placeholder>
+              </React.unstable_Profiler>,
+              {
+                unstable_isAsync: true,
+              },
+            );
+          },
+        );
+
+        advanceTimeBy(1500);
+        await awaitableAdvanceTimers(1500);
+
+        expect(renderer).toFlushAll(['Suspend [loaded]', 'Text [loading]']);
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+        advanceTimeBy(2500);
+        await awaitableAdvanceTimers(2500);
+
+        expect(renderer).toFlushAll(['AsyncText [loaded]']);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+      });
+
+      it('decrements interaction count correctly if suspense loads before placeholder is shown', async () => {
+        const interaction = {
+          id: 0,
+          name: 'initial render',
+          timestamp: mockNow(),
+        };
+
+        const onRender = jest.fn();
+        let renderer;
+        SchedulerTracing.unstable_trace(
+          interaction.name,
+          interaction.timestamp,
+          () => {
+            renderer = ReactTestRenderer.create(
+              <React.unstable_Profiler id="app" onRender={onRender}>
+                <React.Placeholder
+                  delayMs={2000}
+                  fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={1000} />
+                </React.Placeholder>
+              </React.unstable_Profiler>,
+              {unstable_isAsync: true},
+            );
+          },
+        );
+        renderer.unstable_flushAll();
+
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+        jest.advanceTimersByTime(1000);
+        await resourcePromise;
+        renderer.unstable_flushAll();
+
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+      });
+
+      it('handles high-pri renderers between suspended and resolved (sync) trees', async () => {
+        const initialRenderInteraction = {
+          id: 0,
+          name: 'initial render',
+          timestamp: mockNow(),
+        };
+
+        const onRender = jest.fn();
+        let renderer;
+        SchedulerTracing.unstable_trace(
+          initialRenderInteraction.name,
+          initialRenderInteraction.timestamp,
+          () => {
+            renderer = ReactTestRenderer.create(
+              <React.unstable_Profiler id="app" onRender={onRender}>
+                <React.Placeholder
+                  delayMs={2000}
+                  fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={1000} />
+                </React.Placeholder>
+                <Text text="initial" />
+              </React.unstable_Profiler>,
+            );
+          },
+        );
+        expect(renderer.toJSON()).toEqual(['loading', 'initial']);
+
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(onRender).toHaveBeenCalledTimes(2); // Sync null commit, placeholder commit
+        expect(onRender.mock.calls[0][6]).toMatchInteractions([
+          initialRenderInteraction,
+        ]);
+        onRender.mockClear();
+
+        const highPriUpdateInteraction = {
+          id: 1,
+          name: 'hiPriUpdate',
+          timestamp: mockNow(),
+        };
+
+        const originalPromise = resourcePromise;
+
+        renderer.unstable_flushSync(() => {
+          SchedulerTracing.unstable_trace(
+            highPriUpdateInteraction.name,
+            highPriUpdateInteraction.timestamp,
+            () => {
+              renderer.update(
+                <React.unstable_Profiler id="app" onRender={onRender}>
+                  <React.Placeholder
+                    delayMs={2000}
+                    fallback={<Text text="loading" />}>
+                    <AsyncText text="loaded" ms={1000} />
+                  </React.Placeholder>
+                  <Text text="updated" />
+                </React.unstable_Profiler>,
+              );
+            },
+          );
+        });
+        expect(renderer.toJSON()).toEqual(['loading', 'updated']);
+
+        expect(onRender).toHaveBeenCalledTimes(2); // Sync null commit, placeholder commit
+        expect(onRender.mock.calls[0][6]).toMatchInteractions([
+          initialRenderInteraction,
+          highPriUpdateInteraction,
+        ]);
+        onRender.mockClear();
+
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+        advanceTimeBy(1000);
+        jest.advanceTimersByTime(1000);
+        await originalPromise;
+        expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
+
+        expect(onRender).toHaveBeenCalledTimes(2);
+        expect(onRender.mock.calls[0][6]).toMatchInteractions([
+          initialRenderInteraction,
+          highPriUpdateInteraction,
+        ]);
+
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+        expect(
+          onInteractionScheduledWorkCompleted.mock.calls[0][0],
+        ).toMatchInteraction(initialRenderInteraction);
+        expect(
+          onInteractionScheduledWorkCompleted.mock.calls[1][0],
+        ).toMatchInteraction(highPriUpdateInteraction);
+      });
+
+      it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
+        const initialRenderInteraction = {
+          id: 0,
+          name: 'initial render',
+          timestamp: mockNow(),
+        };
+
+        const onRender = jest.fn();
+        let renderer;
+        SchedulerTracing.unstable_trace(
+          initialRenderInteraction.name,
+          initialRenderInteraction.timestamp,
+          () => {
+            renderer = ReactTestRenderer.create(
+              <React.unstable_Profiler id="app" onRender={onRender}>
+                <React.Placeholder
+                  delayMs={2000}
+                  fallback={<Text text="loading" />}>
+                  <AsyncText text="loaded" ms={1000} />
+                </React.Placeholder>
+                <Text text="initial" />
+              </React.unstable_Profiler>,
+              {unstable_isAsync: true},
+            );
+          },
+        );
+        expect(renderer).toFlushAll([
+          'Suspend [loaded]',
+          'Text [loading]',
+          'Text [initial]',
+        ]);
+
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(onRender).not.toHaveBeenCalled();
+
+        advanceTimeBy(500);
+        jest.advanceTimersByTime(500);
+
+        const highPriUpdateInteraction = {
+          id: 1,
+          name: 'hiPriUpdate',
+          timestamp: mockNow(),
+        };
+
+        const originalPromise = resourcePromise;
+
+        renderer.unstable_flushSync(() => {
+          SchedulerTracing.unstable_trace(
+            highPriUpdateInteraction.name,
+            highPriUpdateInteraction.timestamp,
+            () => {
+              renderer.update(
+                <React.unstable_Profiler id="app" onRender={onRender}>
+                  <React.Placeholder
+                    delayMs={2000}
+                    fallback={<Text text="loading" />}>
+                    <AsyncText text="loaded" ms={1000} />
+                  </React.Placeholder>
+                  <Text text="updated" />
+                </React.unstable_Profiler>,
+              );
+            },
+          );
+        });
+        expect(renderer.toJSON()).toEqual(['loading', 'updated']);
+
+        expect(onRender).toHaveBeenCalledTimes(1);
+        expect(onRender.mock.calls[0][6]).toMatchInteractions([
+          highPriUpdateInteraction,
+        ]);
+        onRender.mockClear();
+
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(highPriUpdateInteraction);
+
+        advanceTimeBy(500);
+        jest.advanceTimersByTime(500);
+        await originalPromise;
+        expect(renderer).toFlushAll(['AsyncText [loaded]']);
+        expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
+
+        expect(onRender).toHaveBeenCalledTimes(1);
+        expect(onRender.mock.calls[0][6]).toMatchInteractions([
+          initialRenderInteraction,
+        ]);
+
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(initialRenderInteraction);
+      });
     });
   });
 });
