@@ -33,11 +33,7 @@ import {
   Update as UpdateEffect,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {
-  enableGetDerivedStateFromCatch,
-  enableSuspense,
-  enableSchedulerTracing,
-} from 'shared/ReactFeatureFlags';
+import {enableSuspense, enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {StrictMode, ConcurrentMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -105,10 +101,7 @@ function createClassErrorUpdate(
   const update = createUpdate(expirationTime);
   update.tag = CaptureUpdate;
   const getDerivedStateFromCatch = fiber.type.getDerivedStateFromCatch;
-  if (
-    enableGetDerivedStateFromCatch &&
-    typeof getDerivedStateFromCatch === 'function'
-  ) {
+  if (typeof getDerivedStateFromCatch === 'function') {
     const error = errorInfo.value;
     update.payload = () => {
       return getDerivedStateFromCatch(error);
@@ -118,10 +111,7 @@ function createClassErrorUpdate(
   const inst = fiber.stateNode;
   if (inst !== null && typeof inst.componentDidCatch === 'function') {
     update.callback = function callback() {
-      if (
-        !enableGetDerivedStateFromCatch ||
-        getDerivedStateFromCatch !== 'function'
-      ) {
+      if (getDerivedStateFromCatch !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
         // This gets reset before we yield back to the browser.
@@ -364,8 +354,7 @@ function throwException(
         const instance = workInProgress.stateNode;
         if (
           (workInProgress.effectTag & DidCapture) === NoEffect &&
-          ((typeof ctor.getDerivedStateFromCatch === 'function' &&
-            enableGetDerivedStateFromCatch) ||
+          (typeof ctor.getDerivedStateFromCatch === 'function' ||
             (instance !== null &&
               typeof instance.componentDidCatch === 'function' &&
               !isAlreadyFailedLegacyErrorBoundary(instance)))
