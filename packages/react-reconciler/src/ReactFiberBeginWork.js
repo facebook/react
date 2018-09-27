@@ -478,7 +478,15 @@ function finishClassComponent(
     // If we're recovering from an error, reconcile twice: first to delete
     // all the existing children.
     reconcileChildren(current, workInProgress, null, renderExpirationTime);
-    workInProgress.child = null;
+    // Forcefully reset children so that a subsequent reconciliation will always re-add.
+    // This is important if e.g. an error boundary renders an element of the same type.
+    // Concurrent renderer mode will always retry an extra time on failure,
+    // so the fiber we need to reset varies.
+    if (workInProgress.mode & ConcurrentMode) {
+      workInProgress.child = null;
+    } else {
+      current.child = null;
+    }
     // Now we can continue reconciling like normal. This has the effect of
     // remounting all children regardless of whether their their
     // identity matches.
