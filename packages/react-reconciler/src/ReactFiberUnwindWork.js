@@ -100,22 +100,22 @@ function createClassErrorUpdate(
 ): Update<mixed> {
   const update = createUpdate(expirationTime);
   update.tag = CaptureUpdate;
-  const getDerivedStateFromCatch = fiber.type.getDerivedStateFromCatch;
-  if (typeof getDerivedStateFromCatch === 'function') {
+  const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
+  if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
     update.payload = () => {
-      return getDerivedStateFromCatch(error);
+      return getDerivedStateFromError(error);
     };
   }
 
   const inst = fiber.stateNode;
   if (inst !== null && typeof inst.componentDidCatch === 'function') {
     update.callback = function callback() {
-      if (getDerivedStateFromCatch !== 'function') {
+      if (getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
         // This gets reset before we yield back to the browser.
-        // TODO: Warn in strict mode if getDerivedStateFromCatch is
+        // TODO: Warn in strict mode if getDerivedStateFromError is
         // not defined.
         markLegacyErrorBoundaryAsFailed(this);
       }
@@ -354,7 +354,7 @@ function throwException(
         const instance = workInProgress.stateNode;
         if (
           (workInProgress.effectTag & DidCapture) === NoEffect &&
-          (typeof ctor.getDerivedStateFromCatch === 'function' ||
+          (typeof ctor.getDerivedStateFromError === 'function' ||
             (instance !== null &&
               typeof instance.componentDidCatch === 'function' &&
               !isAlreadyFailedLegacyErrorBoundary(instance)))

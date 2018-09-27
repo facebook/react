@@ -1441,10 +1441,10 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
   });
 
-  it('does not provide component stack to the error boundary with getDerivedStateFromCatch', () => {
+  it('does not provide component stack to the error boundary with getDerivedStateFromError', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      static getDerivedStateFromCatch(error, errorInfo) {
+      static getDerivedStateFromError(error, errorInfo) {
         expect(errorInfo).toBeUndefined();
         return {error};
       }

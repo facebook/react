@@ -443,7 +443,7 @@ function finishClassComponent(
   let nextChildren;
   if (
     didCaptureError &&
-    typeof Component.getDerivedStateFromCatch !== 'function'
+    typeof Component.getDerivedStateFromError !== 'function'
   ) {
     // If we captured an error, but getDerivedStateFrom catch is not defined,
     // unmount all the children. componentDidCatch will schedule an update to

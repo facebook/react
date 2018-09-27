@@ -466,10 +466,10 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       name,
     );
     const noInstanceGetDerivedStateFromCatch =
-      typeof instance.getDerivedStateFromCatch !== 'function';
+      typeof instance.getDerivedStateFromError !== 'function';
     warningWithoutStack(
       noInstanceGetDerivedStateFromCatch,
-      '%s: getDerivedStateFromCatch() is defined as an instance method ' +
+      '%s: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
       name,
     );

@@ -33,7 +33,7 @@ describe('ErrorBoundaryReconciliation', () => {
 
     GetDerivedErrorBoundary = class extends React.Component {
       state = {error: null};
-      static getDerivedStateFromCatch(error) {
+      static getDerivedStateFromError(error) {
         return {error};
       }
       render() {
@@ -101,10 +101,10 @@ describe('ErrorBoundaryReconciliation', () => {
       it('componentDidCatch can recover by rendering an element of a different type', () =>
         sharedTest(DidCatchErrorBoundary, 'div'));
 
-      it('getDerivedStateFromCatch can recover by rendering an element of the same type', () =>
+      it('getDerivedStateFromError can recover by rendering an element of the same type', () =>
         sharedTest(GetDerivedErrorBoundary, 'span'));
 
-      it('getDerivedStateFromCatch can recover by rendering an element of a different type', () =>
+      it('getDerivedStateFromError can recover by rendering an element of a different type', () =>
         sharedTest(GetDerivedErrorBoundary, 'div'));
     });
   });
