@@ -31,6 +31,8 @@ import {
   ContextConsumer,
   Profiler,
   PlaceholderComponent,
+  PureComponent,
+  PureComponentLazy,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -52,6 +54,7 @@ import {
   enableSchedulerTracing,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
+import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import warning from 'shared/warning';
@@ -186,6 +189,58 @@ function updateForwardRef(
     nextChildren = render(nextProps, ref);
   }
 
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  memoizeProps(workInProgress, nextProps);
+  return workInProgress.child;
+}
+
+function updatePureComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any,
+  updateExpirationTime,
+  renderExpirationTime: ExpirationTime,
+) {
+  const render = Component.render;
+
+  if (
+    current !== null &&
+    (updateExpirationTime === NoWork ||
+      updateExpirationTime > renderExpirationTime)
+  ) {
+    const prevProps = current.memoizedProps;
+    // Default to shallow comparison
+    let compare = Component.compare;
+    compare = compare !== null ? compare : shallowEqual;
+    if (compare(prevProps, nextProps)) {
+      return bailoutOnAlreadyFinishedWork(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
+    }
+  }
+
+  // The rest is a fork of updateFunctionalComponent
+  let nextChildren;
+  prepareToReadContext(workInProgress, renderExpirationTime);
+  if (__DEV__) {
+    ReactCurrentOwner.current = workInProgress;
+    ReactCurrentFiber.setCurrentPhase('render');
+    nextChildren = render(nextProps);
+    ReactCurrentFiber.setCurrentPhase(null);
+  } else {
+    nextChildren = render(nextProps);
+  }
+
+  // React DevTools reads this flag.
+  workInProgress.effectTag |= PerformedWork;
   reconcileChildren(
     current,
     workInProgress,
@@ -617,6 +672,7 @@ function mountIndeterminateComponent(
   current,
   workInProgress,
   Component,
+  updateExpirationTime,
   renderExpirationTime,
 ) {
   invariant(
@@ -637,37 +693,53 @@ function mountIndeterminateComponent(
       Component,
     ));
     const resolvedProps = resolveDefaultProps(Component, props);
+    let child;
     switch (resolvedTag) {
       case FunctionalComponentLazy: {
-        return updateFunctionalComponent(
+        child = updateFunctionalComponent(
           current,
           workInProgress,
           Component,
           resolvedProps,
           renderExpirationTime,
         );
+        break;
       }
       case ClassComponentLazy: {
-        return updateClassComponent(
+        child = updateClassComponent(
           current,
           workInProgress,
           Component,
           resolvedProps,
           renderExpirationTime,
         );
+        break;
       }
       case ForwardRefLazy: {
-        return updateForwardRef(
+        child = updateForwardRef(
           current,
           workInProgress,
           Component,
           resolvedProps,
           renderExpirationTime,
         );
+        break;
+      }
+      case PureComponentLazy: {
+        child = updatePureComponent(
+          current,
+          workInProgress,
+          Component,
+          resolvedProps,
+          updateExpirationTime,
+          renderExpirationTime,
+        );
+        break;
       }
       default: {
-        // This message intentionally doesn't metion ForwardRef because the
-        // fact that it's a separate type of work is an implementation detail.
+        // This message intentionally doesn't metion ForwardRef or PureComponent
+        // because the fact that it's a separate type of work is an
+        // implementation detail.
         invariant(
           false,
           'Element type is invalid. Received a promise that resolves to: %s. ' +
@@ -676,6 +748,8 @@ function mountIndeterminateComponent(
         );
       }
     }
+    workInProgress.memoizedProps = props;
+    return child;
   }
 
   const unmaskedContext = getUnmaskedContext(workInProgress, Component, false);
@@ -1106,59 +1180,65 @@ function beginWork(
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
   const updateExpirationTime = workInProgress.expirationTime;
-  if (
-    !hasLegacyContextChanged() &&
-    (updateExpirationTime === NoWork ||
-      updateExpirationTime > renderExpirationTime)
-  ) {
-    // This fiber does not have any pending work. Bailout without entering
-    // the begin phase. There's still some bookkeeping we that needs to be done
-    // in this optimized path, mostly pushing stuff onto the stack.
-    switch (workInProgress.tag) {
-      case HostRoot:
-        pushHostRootContext(workInProgress);
-        resetHydrationState();
-        break;
-      case HostComponent:
-        pushHostContext(workInProgress);
-        break;
-      case ClassComponent: {
-        const Component = workInProgress.type;
-        if (isLegacyContextProvider(Component)) {
-          pushLegacyContextProvider(workInProgress);
+
+  if (current !== null) {
+    const oldProps = current.memoizedProps;
+    const newProps = workInProgress.pendingProps;
+    if (
+      oldProps === newProps &&
+      !hasLegacyContextChanged() &&
+      (updateExpirationTime === NoWork ||
+        updateExpirationTime > renderExpirationTime)
+    ) {
+      // This fiber does not have any pending work. Bailout without entering
+      // the begin phase. There's still some bookkeeping we that needs to be done
+      // in this optimized path, mostly pushing stuff onto the stack.
+      switch (workInProgress.tag) {
+        case HostRoot:
+          pushHostRootContext(workInProgress);
+          resetHydrationState();
+          break;
+        case HostComponent:
+          pushHostContext(workInProgress);
+          break;
+        case ClassComponent: {
+          const Component = workInProgress.type;
+          if (isLegacyContextProvider(Component)) {
+            pushLegacyContextProvider(workInProgress);
+          }
+          break;
         }
-        break;
-      }
-      case ClassComponentLazy: {
-        const thenable = workInProgress.type;
-        const Component = getResultFromResolvedThenable(thenable);
-        if (isLegacyContextProvider(Component)) {
-          pushLegacyContextProvider(workInProgress);
+        case ClassComponentLazy: {
+          const thenable = workInProgress.type;
+          const Component = getResultFromResolvedThenable(thenable);
+          if (isLegacyContextProvider(Component)) {
+            pushLegacyContextProvider(workInProgress);
+          }
+          break;
         }
-        break;
-      }
-      case HostPortal:
-        pushHostContainer(
-          workInProgress,
-          workInProgress.stateNode.containerInfo,
-        );
-        break;
-      case ContextProvider: {
-        const newValue = workInProgress.memoizedProps.value;
-        pushProvider(workInProgress, newValue);
-        break;
-      }
-      case Profiler:
-        if (enableProfilerTimer) {
-          workInProgress.effectTag |= Update;
+        case HostPortal:
+          pushHostContainer(
+            workInProgress,
+            workInProgress.stateNode.containerInfo,
+          );
+          break;
+        case ContextProvider: {
+          const newValue = workInProgress.memoizedProps.value;
+          pushProvider(workInProgress, newValue);
+          break;
         }
-        break;
+        case Profiler:
+          if (enableProfilerTimer) {
+            workInProgress.effectTag |= Update;
+          }
+          break;
+      }
+      return bailoutOnAlreadyFinishedWork(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
     }
-    return bailoutOnAlreadyFinishedWork(
-      current,
-      workInProgress,
-      renderExpirationTime,
-    );
   }
 
   // Before entering the begin phase, clear the expiration time.
@@ -1171,6 +1251,7 @@ function beginWork(
         current,
         workInProgress,
         Component,
+        updateExpirationTime,
         renderExpirationTime,
       );
     }
@@ -1252,7 +1333,7 @@ function beginWork(
         renderExpirationTime,
       );
     }
-    case ForwardRefLazy:
+    case ForwardRefLazy: {
       const thenable = workInProgress.type;
       const Component = getResultFromResolvedThenable(thenable);
       const unresolvedProps = workInProgress.pendingProps;
@@ -1265,6 +1346,7 @@ function beginWork(
       );
       workInProgress.memoizedProps = unresolvedProps;
       return child;
+    }
     case Fragment:
       return updateFragment(current, workInProgress, renderExpirationTime);
     case Mode:
@@ -1283,6 +1365,32 @@ function beginWork(
         workInProgress,
         renderExpirationTime,
       );
+    case PureComponent: {
+      const type = workInProgress.type;
+      return updatePureComponent(
+        current,
+        workInProgress,
+        type,
+        workInProgress.pendingProps,
+        updateExpirationTime,
+        renderExpirationTime,
+      );
+    }
+    case PureComponentLazy: {
+      const thenable = workInProgress.type;
+      const Component = getResultFromResolvedThenable(thenable);
+      const unresolvedProps = workInProgress.pendingProps;
+      const child = updatePureComponent(
+        current,
+        workInProgress,
+        Component,
+        resolveDefaultProps(Component, unresolvedProps),
+        updateExpirationTime,
+        renderExpirationTime,
+      );
+      workInProgress.memoizedProps = unresolvedProps;
+      return child;
+    }
     default:
       invariant(
         false,

@@ -16,6 +16,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
+  REACT_PURE_TYPE,
 } from 'shared/ReactSymbols';
 
 export default function isValidElementType(type: mixed) {
@@ -31,6 +32,7 @@ export default function isValidElementType(type: mixed) {
     (typeof type === 'object' &&
       type !== null &&
       (typeof type.then === 'function' ||
+        type.$$typeof === REACT_PURE_TYPE ||
         type.$$typeof === REACT_PROVIDER_TYPE ||
         type.$$typeof === REACT_CONTEXT_TYPE ||
         type.$$typeof === REACT_FORWARD_REF_TYPE))

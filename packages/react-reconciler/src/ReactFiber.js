@@ -37,6 +37,8 @@ import {
   FunctionalComponentLazy,
   ClassComponentLazy,
   ForwardRefLazy,
+  PureComponent,
+  PureComponentLazy,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -57,6 +59,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
+  REACT_PURE_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -300,12 +303,14 @@ export function resolveLazyComponentTag(
     return shouldConstruct(Component)
       ? ClassComponentLazy
       : FunctionalComponentLazy;
-  } else if (
-    Component !== undefined &&
-    Component !== null &&
-    Component.$$typeof
-  ) {
-    return ForwardRefLazy;
+  } else if (Component !== undefined && Component !== null) {
+    const $$typeof = Component.$$typeof;
+    if ($$typeof === REACT_FORWARD_REF_TYPE) {
+      return ForwardRefLazy;
+    }
+    if ($$typeof === REACT_PURE_TYPE) {
+      return PureComponentLazy;
+    }
   }
   return IndeterminateComponent;
 }
@@ -363,15 +368,8 @@ export function createWorkInProgress(
     }
   }
 
-  // Don't touching the subtree's expiration time, which has not changed.
   workInProgress.childExpirationTime = current.childExpirationTime;
-  if (pendingProps !== current.pendingProps) {
-    // This fiber has new props.
-    workInProgress.expirationTime = expirationTime;
-  } else {
-    // This fiber's props have not changed.
-    workInProgress.expirationTime = current.expirationTime;
-  }
+  workInProgress.expirationTime = current.expirationTime;
 
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
@@ -459,6 +457,9 @@ export function createFiberFromElement(
               break getTag;
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
+              break getTag;
+            case REACT_PURE_TYPE:
+              fiberTag = PureComponent;
               break getTag;
             default: {
               if (typeof type.then === 'function') {
