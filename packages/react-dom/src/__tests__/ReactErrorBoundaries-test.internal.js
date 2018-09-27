@@ -2084,4 +2084,70 @@ describe('ReactErrorBoundaries', () => {
     // Error should be the first thrown
     expect(caughtError.message).toBe('child sad');
   });
+
+  it('should warn if an error boundary with only componentDidCatch does not update state', () => {
+    class InvalidErrorBoundary extends React.Component {
+      componentDidCatch(error, info) {
+        // This component does not define getDerivedStateFromError().
+        // It also doesn't call setState().
+        // So it would swallow errors (which is probably unintentional).
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    const Throws = () => {
+      throw new Error('expected');
+    };
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(
+        <InvalidErrorBoundary>
+          <Throws />
+        </InvalidErrorBoundary>,
+        container,
+      );
+    }).toWarnDev(
+      'InvalidErrorBoundary: Error boundaries should implement getDerivedStateFromError(). ' +
+        'In that method, return a state update to display an error message or fallback UI, ' +
+        'or rethrow the error to let parent components handle it',
+      {withoutStack: true},
+    );
+    expect(container.textContent).toBe('');
+  });
+
+  it('should call both componentDidCatch and getDerivedStateFromError if both exist on a component', () => {
+    let componentDidCatchError, getDerivedStateFromErrorError;
+    class ErrorBoundaryWithBothMethods extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        getDerivedStateFromErrorError = error;
+        return {error};
+      }
+      componentDidCatch(error, info) {
+        componentDidCatchError = error;
+      }
+      render() {
+        return this.state.error ? 'ErrorBoundary' : this.props.children;
+      }
+    }
+
+    const thrownError = new Error('expected');
+    const Throws = () => {
+      throw thrownError;
+    };
+
+    const container = document.createElement('div');
+    ReactDOM.render(
+      <ErrorBoundaryWithBothMethods>
+        <Throws />
+      </ErrorBoundaryWithBothMethods>,
+      container,
+    );
+    expect(container.textContent).toBe('ErrorBoundary');
+    expect(componentDidCatchError).toBe(thrownError);
+    expect(getDerivedStateFromErrorError).toBe(thrownError);
+  });
 });

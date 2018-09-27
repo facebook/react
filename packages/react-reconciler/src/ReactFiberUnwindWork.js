@@ -14,6 +14,8 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberScheduler';
 
+import getComponentName from 'shared/getComponentName';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   IndeterminateComponent,
   FunctionalComponent,
@@ -111,7 +113,7 @@ function createClassErrorUpdate(
   const inst = fiber.stateNode;
   if (inst !== null && typeof inst.componentDidCatch === 'function') {
     update.callback = function callback() {
-      if (getDerivedStateFromError !== 'function') {
+      if (typeof getDerivedStateFromError === 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
         // This gets reset before we yield back to the browser.
@@ -125,6 +127,21 @@ function createClassErrorUpdate(
       this.componentDidCatch(error, {
         componentStack: stack !== null ? stack : '',
       });
+      if (__DEV__) {
+        if (typeof getDerivedStateFromError !== 'function') {
+          // If componentDidCatch is the only error boundary method defined,
+          // then it needs to call setState to recover from errors.
+          // If no state update is scheduled then the boundary will swallow the error.
+          const updateQueue = fiber.updateQueue;
+          warningWithoutStack(
+            updateQueue !== null && updateQueue.firstUpdate !== null,
+            '%s: Error boundaries should implement getDerivedStateFromError(). ' +
+              'In that method, return a state update to display an error message or fallback UI, ' +
+              'or rethrow the error to let parent components handle it.',
+            getComponentName(fiber.type) || 'Unknown',
+          );
+        }
+      }
     };
   }
   return update;
