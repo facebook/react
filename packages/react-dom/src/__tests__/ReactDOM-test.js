@@ -537,11 +537,16 @@ describe('ReactDOM', () => {
       return <div id="app2" />;
     }
 
-    function Parent() {
-      ReactDOM.render(<App1 />, containerApp);
-      ReactDOM.unmountComponentAtNode(containerApp);
-      ReactDOM.render(<App2 />, containerApp);
-      return <div />;
+    class Parent extends React.Component {
+      render() {
+        return <div />;
+      }
+
+      componentDidMount() {
+        ReactDOM.render(<App1 />, containerApp);
+        ReactDOM.unmountComponentAtNode(containerApp);
+        ReactDOM.render(<App2 />, containerApp);
+      }
     }
 
     ReactDOM.render(<Parent />, containerParent);
