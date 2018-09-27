@@ -41,6 +41,7 @@ export const REACT_FORWARD_REF_TYPE = hasSymbol
 export const REACT_PLACEHOLDER_TYPE = hasSymbol
   ? Symbol.for('react.placeholder')
   : 0xead1;
+export const REACT_PURE_TYPE = hasSymbol ? Symbol.for('react.pure') : 0xead3;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

@@ -36,6 +36,8 @@ import {
   Profiler,
   PlaceholderComponent,
   ForwardRefLazy,
+  PureComponent,
+  PureComponentLazy,
 } from 'shared/ReactWorkTags';
 import {Placement, Ref, Update} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
@@ -523,6 +525,9 @@ function completeWork(
       popProvider(workInProgress);
       break;
     case ContextConsumer:
+      break;
+    case PureComponent:
+    case PureComponentLazy:
       break;
     // Error cases
     case IndeterminateComponent:
