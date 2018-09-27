@@ -24,7 +24,9 @@ export type WorkTag =
   | 13
   | 14
   | 15
-  | 16;
+  | 16
+  | 17
+  | 18;
 
 export const FunctionalComponent = 0;
 export const FunctionalComponentLazy = 1;
@@ -43,3 +45,5 @@ export const ForwardRef = 13;
 export const ForwardRefLazy = 14;
 export const Profiler = 15;
 export const PlaceholderComponent = 16;
+export const PureComponent = 17;
+export const PureComponentLazy = 18;
