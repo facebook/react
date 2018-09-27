@@ -170,5 +170,25 @@ describe('pure', () => {
       expect(ReactNoop.flush()).toEqual(['Old count: 0, New count: 1', 1]);
       expect(ReactNoop.getChildren()).toEqual([span(1)]);
     });
+
+    it('warns for class components', () => {
+      class SomeClass extends React.Component {
+        render() {
+          return null;
+        }
+      }
+      expect(() => pure(SomeClass)).toWarnDev(
+        'pure: The first argument must be a functional component.',
+        {withoutStack: true},
+      );
+    });
+
+    it('warns if first argument is not a function', () => {
+      expect(() => pure()).toWarnDev(
+        'pure: The first argument must be a functional component. Instead ' +
+          'received: undefined',
+        {withoutStack: true},
+      );
+    });
   }
 });
