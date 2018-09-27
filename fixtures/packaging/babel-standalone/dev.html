@@ -1,102 +1,14 @@
 <html>
-
-<body>
-  <script src="../../../build/dist/react.development.js"></script>
-  <script src="../../../build/dist/react-dom.development.js"></script>
-  <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
-  <div id="root"></div>
-  <hr/>
-  <div id="root1"></div>
-  <script type="text/babel">
-    class Page1 extends React.Component {
-      componentWillUnmount() {
-        console.error("died 1");
-      }
-
-      render() {
-        return <div>Page1</div>;
-      }
-    }
-
-    class Page2 extends React.Component {
-      constructor(props) {
-        super(props);
-        console.log("mount 2");
-      }
-
-      componentDidMount() {
-        // this.yolo = setInterval(() => console.log("I am alive"), 1000);
-      }
-
-      componentWillUnmount() {
-        console.error("died 2");
-      }
-      //   if (this.yolo) {
-      //     window.clearInterval(this.yolo);
-      //   }
-      // }
-
-      render() {
-        console.log("render 2");
-        return <div>Page2</div>;
-      }
-    }
-
-
-    class App extends React.Component {
-      state = {
-        page: 1
-      };
-      componentDidUpdate(prevProps, prevState) {
-        const page = this.state.page;
-        if (prevState.page !== page) {
-          // when everything is run in async context,
-          // the component are unmount in correct order
-          // and so _reactRootContainer will not be null
-          // setTimeout(() => {
-            const ele = document.getElementById("root1");
-            console.warn("before unmount", ele._reactRootContainer);
-            const successUnmount = ReactDOM.unmountComponentAtNode(ele);
-            console.warn("after unmount", ele._reactRootContainer, successUnmount);
-            // then render another Component on the same dom element
-            // run render sync, then unmountComponentAtNode will be failed
-            // and there will be some waining in console logout
-            if (page % 2 === 0) {
-              ReactDOM.render(<Page1 />, ele);
-            } else {
-              ReactDOM.render(<Page2 />, ele);
-            }
-            console.warn("after rendering", ele._reactRootContainer);
-
-            setTimeout(() => {
-              console.warn("after rendering + timeout", ele._reactRootContainer);
-            }, 100);
-          // });
-
-
-        }
-      }
-      handleSwitchPage = () => {
-        this.setState({
-          page: this.state.page + 1
-        });
-      };
-      render() {
-        return (
-          <button onClick={this.handleSwitchPage}>
-            Test unmountCmponentAtNode
-          </button>
-        );
-      }
-    }
-
-    const rootElement = document.getElementById("root");
-    ReactDOM.render(<App />, rootElement);
-      // ReactDOM.render(
-      //   <h1>Hello World!</h1>,
-      //   document.getElementById('container')
-      // );
+  <body>
+    <script src="../../../build/dist/react.development.js"></script>
+    <script src="../../../build/dist/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
+    <div id="container"></div>
+    <script type="text/babel">
+      ReactDOM.render(
+        <h1>Hello World!</h1>,
+        document.getElementById('container')
+      );
     </script>
-</body>
-
+  </body>
 </html>
