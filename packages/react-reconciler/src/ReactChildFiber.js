@@ -1095,8 +1095,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       existing.return = returnFiber;
       return existing;
     }
-    // The existing first child is not a text node so we need to create one
-    // and delete the existing ones.
+    // The existing first child is not a text node so we need to create one.
     const created = createFiberFromText(
       textContent,
       returnFiber.mode,
