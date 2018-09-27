@@ -564,6 +564,9 @@ function legacyRenderSubtreeIntoContainer(
         callback,
       );
     } else {
+      if (root.shouldBeUnMount && children != null) {
+        root.shouldBeUnMount = false;
+      }
       root.render(children, callback);
     }
   }
@@ -679,9 +682,10 @@ const ReactDOM: Object = {
       }
 
       // Unmount should not be batched.
+      container._reactRootContainer.shouldBeUnMount = true;
       DOMRenderer.unbatchedUpdates(() => {
         legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
-          if (!container._reactRootContainer._internalRoot.containerInfo.firstChild) {
+          if (container._reactRootContainer.shouldBeUnMount) {
             container._reactRootContainer = null;
           }
         });
