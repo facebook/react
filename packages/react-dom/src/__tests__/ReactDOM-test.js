@@ -525,4 +525,33 @@ describe('ReactDOM', () => {
         '    in App (at **)',
     ]);
   });
+
+  it('should not remove _reactRootContainer from a root if unmountComponentAtNode is follow by a render', () => {
+    const containerParent = document.createElement('div');
+    const containerApp = document.createElement('div');
+
+    function App1() {
+      return (
+        <div id="app1" />
+      );
+    }
+    function App2() {
+      return (
+        <div id="app2" />
+      );
+    }
+
+    function Parent() {
+      ReactDOM.render(<App1 />, containerApp);
+      ReactDOM.unmountComponentAtNode(containerApp);
+      ReactDOM.render(<App2 />, containerApp);
+      return (
+        <div />
+      );
+    }
+
+    ReactDOM.render(<Parent />, containerParent);
+    expect(containerApp._reactRootContainer).not.toBeNull();
+    expect(containerApp.innerHTML).toEqual('<div id=\"app2\"></div>');
+  });
 });
