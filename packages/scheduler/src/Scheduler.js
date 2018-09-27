@@ -9,70 +9,67 @@
 /* eslint-disable no-var */
 
 // TODO: Use symbols?
-var ImmediatePriority = 1;
-var InteractivePriority = 2;
-var NormalPriority = 3;
-var WheneverPriority = 4;
+const ImmediatePriority = 1;
+const InteractivePriority = 2;
+const NormalPriority = 3;
+const WheneverPriority = 4;
 
 // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 // Math.pow(2, 30) - 1
 // 0b111111111111111111111111111111
-var maxSigned31BitInt = 1073741823;
+const maxSigned31BitInt = 1073741823;
 
 // Times out immediately
-var IMMEDIATE_PRIORITY_TIMEOUT = -1;
+const IMMEDIATE_PRIORITY_TIMEOUT = -1;
 // Eventually times out
-var INTERACTIVE_PRIORITY_TIMEOUT = 250;
-var NORMAL_PRIORITY_TIMEOUT = 5000;
+const INTERACTIVE_PRIORITY_TIMEOUT = 250;
+const NORMAL_PRIORITY_TIMEOUT = 5000;
 // Never times out
-var WHENEVER_PRIORITY_TIMEOUT = maxSigned31BitInt;
+const WHENEVER_PRIORITY_TIMEOUT = maxSigned31BitInt;
 
 // Callbacks are stored as a circular, doubly linked list.
-var firstCallbackNode = null;
+let firstCallbackNode = null;
 
-var currentPriorityLevel = NormalPriority;
-var currentEventStartTime = -1;
-var currentExpirationTime = -1;
+let currentPriorityLevel = NormalPriority;
+let currentEventStartTime = -1;
+let currentExpirationTime = -1;
 
 // This is set when a callback is being executed, to prevent re-entrancy.
-var isExecutingCallback = false;
+let isExecutingCallback = false;
 
-var isHostCallbackScheduled = false;
+let isHostCallbackScheduled = false;
 
-var hasNativePerformanceNow =
+const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
 
-var timeRemaining;
-if (hasNativePerformanceNow) {
-  timeRemaining = function() {
-    if (
-      firstCallbackNode !== null &&
-      firstCallbackNode.expirationTime < currentExpirationTime
-    ) {
-      // A higher priority callback was scheduled. Yield so we can switch to
-      // working on that.
-      return 0;
+const timeRemaining = hasNativePerformanceNow
+  ? () => {
+      if (
+        firstCallbackNode !== null &&
+        firstCallbackNode.expirationTime < currentExpirationTime
+      ) {
+        // A higher priority callback was scheduled. Yield so we can switch to
+        // working on that.
+        return 0;
+      }
+      // We assume that if we have a performance timer that the rAF callback
+      // gets a performance timer value. Not sure if this is always true.
+      const remaining = getFrameDeadline() - performance.now();
+      return remaining > 0 ? remaining : 0;
     }
-    // We assume that if we have a performance timer that the rAF callback
-    // gets a performance timer value. Not sure if this is always true.
-    var remaining = getFrameDeadline() - performance.now();
-    return remaining > 0 ? remaining : 0;
-  };
-} else {
-  timeRemaining = function() {
-    // Fallback to Date.now()
-    if (
-      firstCallbackNode !== null &&
-      firstCallbackNode.expirationTime < currentExpirationTime
-    ) {
-      return 0;
-    }
-    var remaining = getFrameDeadline() - Date.now();
-    return remaining > 0 ? remaining : 0;
-  };
-}
+  : () => {
+      // Fallback to Date.now()
+      if (
+        firstCallbackNode !== null &&
+        firstCallbackNode.expirationTime < currentExpirationTime
+      ) {
+        return 0;
+      }
+      const remaining = getFrameDeadline() - Date.now();
+      return remaining > 0 ? remaining : 0;
+    };
 
-var deadlineObject = {
+const deadlineObject = {
   timeRemaining,
   didTimeout: false,
 };
@@ -83,7 +80,7 @@ function ensureHostCallbackIsScheduled() {
     return;
   }
   // Schedule the host callback using the earliest expiration in the list.
-  var expirationTime = firstCallbackNode.expirationTime;
+  const {expirationTime} = firstCallbackNode;
   if (!isHostCallbackScheduled) {
     isHostCallbackScheduled = true;
   } else {
@@ -94,17 +91,17 @@ function ensureHostCallbackIsScheduled() {
 }
 
 function flushFirstCallback() {
-  var flushedNode = firstCallbackNode;
+  const flushedNode = firstCallbackNode;
 
   // Remove the node from the list before calling the callback. That way the
   // list is in a consistent state even if the callback throws.
-  var next = firstCallbackNode.next;
+  let {next} = firstCallbackNode;
   if (firstCallbackNode === next) {
     // This is the last callback in the list.
     firstCallbackNode = null;
     next = null;
   } else {
-    var lastCallbackNode = firstCallbackNode.previous;
+    const lastCallbackNode = firstCallbackNode.previous;
     firstCallbackNode = lastCallbackNode.next = next;
     next.previous = lastCallbackNode;
   }
@@ -112,14 +109,12 @@ function flushFirstCallback() {
   flushedNode.next = flushedNode.previous = null;
 
   // Now it's safe to call the callback.
-  var callback = flushedNode.callback;
-  var expirationTime = flushedNode.expirationTime;
-  var priorityLevel = flushedNode.priorityLevel;
-  var previousPriorityLevel = currentPriorityLevel;
-  var previousExpirationTime = currentExpirationTime;
+  const {callback, expirationTime, priorityLevel} = flushedNode;
+  const previousPriorityLevel = currentPriorityLevel;
+  const previousExpirationTime = currentExpirationTime;
   currentPriorityLevel = priorityLevel;
   currentExpirationTime = expirationTime;
-  var continuationCallback;
+  let continuationCallback;
   try {
     continuationCallback = callback(deadlineObject);
   } finally {
@@ -130,7 +125,7 @@ function flushFirstCallback() {
   // A callback may return a continuation. The continuation should be scheduled
   // with the same priority and expiration as the just-finished callback.
   if (typeof continuationCallback === 'function') {
-    var continuationNode: CallbackNode = {
+    const continuationNode: CallbackNode = {
       callback: continuationCallback,
       priorityLevel,
       expirationTime,
@@ -146,8 +141,8 @@ function flushFirstCallback() {
       // This is the first callback in the list.
       firstCallbackNode = continuationNode.next = continuationNode.previous = continuationNode;
     } else {
-      var nextAfterContinuation = null;
-      var node = firstCallbackNode;
+      let nextAfterContinuation = null;
+      let node = firstCallbackNode;
       do {
         if (node.expirationTime >= expirationTime) {
           // This callback expires at or after the continuation. We will insert
@@ -168,7 +163,7 @@ function flushFirstCallback() {
         ensureHostCallbackIsScheduled(firstCallbackNode);
       }
 
-      var previous = nextAfterContinuation.previous;
+      const {previous} = nextAfterContinuation;
       previous.next = nextAfterContinuation.previous = continuationNode;
       continuationNode.next = nextAfterContinuation;
       continuationNode.previous = previous;
@@ -215,7 +210,7 @@ function flushWork(didTimeout) {
         // Read the current time. Flush all the callbacks that expire at or
         // earlier than that time. Then read the current time again and repeat.
         // This optimizes for as few performance.now calls as possible.
-        var currentTime = getCurrentTime();
+        const currentTime = getCurrentTime();
         if (firstCallbackNode.expirationTime <= currentTime) {
           do {
             flushFirstCallback();
@@ -262,8 +257,8 @@ function unstable_runWithPriority(priorityLevel, eventHandler) {
       priorityLevel = NormalPriority;
   }
 
-  var previousPriorityLevel = currentPriorityLevel;
-  var previousEventStartTime = currentEventStartTime;
+  const previousPriorityLevel = currentPriorityLevel;
+  const previousEventStartTime = currentEventStartTime;
   currentPriorityLevel = priorityLevel;
   currentEventStartTime = getCurrentTime();
 
@@ -279,11 +274,11 @@ function unstable_runWithPriority(priorityLevel, eventHandler) {
 }
 
 function unstable_wrapCallback(callback) {
-  var parentPriorityLevel = currentPriorityLevel;
+  const parentPriorityLevel = currentPriorityLevel;
   return function() {
     // This is a fork of runWithPriority, inlined for performance.
-    var previousPriorityLevel = currentPriorityLevel;
-    var previousEventStartTime = currentEventStartTime;
+    const previousPriorityLevel = currentPriorityLevel;
+    const previousEventStartTime = currentEventStartTime;
     currentPriorityLevel = parentPriorityLevel;
     currentEventStartTime = getCurrentTime();
 
@@ -298,10 +293,10 @@ function unstable_wrapCallback(callback) {
 }
 
 function unstable_scheduleCallback(callback, deprecated_options) {
-  var startTime =
+  const startTime =
     currentEventStartTime !== -1 ? currentEventStartTime : getCurrentTime();
 
-  var expirationTime;
+  let expirationTime;
   if (
     typeof deprecated_options === 'object' &&
     deprecated_options !== null &&
@@ -326,7 +321,7 @@ function unstable_scheduleCallback(callback, deprecated_options) {
     }
   }
 
-  var newNode = {
+  const newNode = {
     callback,
     priorityLevel: currentPriorityLevel,
     expirationTime,
@@ -342,8 +337,8 @@ function unstable_scheduleCallback(callback, deprecated_options) {
     firstCallbackNode = newNode.next = newNode.previous = newNode;
     ensureHostCallbackIsScheduled(firstCallbackNode);
   } else {
-    var next = null;
-    var node = firstCallbackNode;
+    let next = null;
+    let node = firstCallbackNode;
     do {
       if (node.expirationTime > expirationTime) {
         // The new callback expires before this one.
@@ -363,7 +358,7 @@ function unstable_scheduleCallback(callback, deprecated_options) {
       ensureHostCallbackIsScheduled(firstCallbackNode);
     }
 
-    var previous = next.previous;
+    const {previous} = next;
     previous.next = next.previous = newNode;
     newNode.next = next;
     newNode.previous = previous;
@@ -373,7 +368,7 @@ function unstable_scheduleCallback(callback, deprecated_options) {
 }
 
 function unstable_cancelCallback(callbackNode) {
-  var next = callbackNode.next;
+  const {next} = callbackNode;
   if (next === null) {
     // Already cancelled.
     return;
@@ -387,7 +382,7 @@ function unstable_cancelCallback(callbackNode) {
     if (callbackNode === firstCallbackNode) {
       firstCallbackNode = next;
     }
-    var previous = callbackNode.previous;
+    const {previous} = callbackNode;
     previous.next = next;
     next.previous = previous;
   }
@@ -410,43 +405,44 @@ function unstable_getCurrentPriorityLevel() {
 // We capture a local reference to any global, in case it gets polyfilled after
 // this module is initially evaluated. We want to be using a
 // consistent implementation.
-var localDate = Date;
+const localDate = Date;
 
 // This initialization code may run even on server environments if a component
 // just imports ReactDOM (e.g. for findDOMNode). Some environments might not
 // have setTimeout or clearTimeout. However, we always expect them to be defined
 // on the client. https://github.com/facebook/react/pull/13088
-var localSetTimeout = typeof setTimeout === 'function' ? setTimeout : undefined;
-var localClearTimeout =
+const localSetTimeout =
+  typeof setTimeout === 'function' ? setTimeout : undefined;
+const localClearTimeout =
   typeof clearTimeout === 'function' ? clearTimeout : undefined;
 
 // We don't expect either of these to necessarily be defined, but we will error
 // later if they are missing on the client.
-var localRequestAnimationFrame =
+const localRequestAnimationFrame =
   typeof requestAnimationFrame === 'function'
     ? requestAnimationFrame
     : undefined;
-var localCancelAnimationFrame =
+const localCancelAnimationFrame =
   typeof cancelAnimationFrame === 'function' ? cancelAnimationFrame : undefined;
 
-var getCurrentTime;
+let getCurrentTime;
 
 // requestAnimationFrame does not run when the tab is in the background. If
 // we're backgrounded we prefer for that work to happen so that the page
 // continues to load in the background. So we also schedule a 'setTimeout' as
 // a fallback.
 // TODO: Need a better heuristic for backgrounded work.
-var ANIMATION_FRAME_TIMEOUT = 100;
-var rAFID;
-var rAFTimeoutID;
-var requestAnimationFrameWithTimeout = function(callback) {
+const ANIMATION_FRAME_TIMEOUT = 100;
+let rAFID;
+let rAFTimeoutID;
+const requestAnimationFrameWithTimeout = callback => {
   // schedule rAF and also a setTimeout
-  rAFID = localRequestAnimationFrame(function(timestamp) {
+  rAFID = localRequestAnimationFrame(timestamp => {
     // cancel the setTimeout
     localClearTimeout(rAFTimeoutID);
     callback(timestamp);
   });
-  rAFTimeoutID = localSetTimeout(function() {
+  rAFTimeoutID = localSetTimeout(() => {
     // cancel the requestAnimationFrame
     localCancelAnimationFrame(rAFID);
     callback(getCurrentTime());
@@ -454,26 +450,23 @@ var requestAnimationFrameWithTimeout = function(callback) {
 };
 
 if (hasNativePerformanceNow) {
-  var Performance = performance;
-  getCurrentTime = function() {
-    return Performance.now();
-  };
+  const Performance = performance;
+  getCurrentTime = () => Performance.now();
 } else {
-  getCurrentTime = function() {
-    return localDate.now();
-  };
+  getCurrentTime = () => localDate.now();
 }
 
-var requestHostCallback;
-var cancelHostCallback;
-var getFrameDeadline;
+let requestHostCallback;
+let cancelHostCallback;
+let getFrameDeadline;
 
 if (typeof window !== 'undefined' && window._schedMock) {
   // Dynamic injection, only for testing purposes.
-  var impl = window._schedMock;
-  requestHostCallback = impl[0];
-  cancelHostCallback = impl[1];
-  getFrameDeadline = impl[2];
+  [
+    requestHostCallback,
+    cancelHostCallback,
+    getFrameDeadline,
+  ] = window._schedMock;
 } else if (
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
   // implementation using setTimeout.
@@ -482,11 +475,11 @@ if (typeof window !== 'undefined' && window._schedMock) {
   // if this is a mocked "window" object. So we need to validate that too.
   typeof window.addEventListener !== 'function'
 ) {
-  var _callback = null;
-  var _currentTime = -1;
-  var _flushCallback = function(didTimeout, ms) {
+  let _callback = null;
+  let _currentTime = -1;
+  const _flushCallback = (didTimeout, ms) => {
     if (_callback !== null) {
-      var cb = _callback;
+      const cb = _callback;
       _callback = null;
       try {
         _currentTime = ms;
@@ -496,7 +489,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
       }
     }
   };
-  requestHostCallback = function(cb, ms) {
+  requestHostCallback = (cb, ms) => {
     if (_currentTime !== -1) {
       // Protect against re-entrancy.
       setTimeout(requestHostCallback, 0, cb, ms);
@@ -506,15 +499,11 @@ if (typeof window !== 'undefined' && window._schedMock) {
       setTimeout(_flushCallback, maxSigned31BitInt, false, maxSigned31BitInt);
     }
   };
-  cancelHostCallback = function() {
+  cancelHostCallback = () => {
     _callback = null;
   };
-  getFrameDeadline = function() {
-    return Infinity;
-  };
-  getCurrentTime = function() {
-    return _currentTime === -1 ? 0 : _currentTime;
-  };
+  getFrameDeadline = () => Infinity;
+  getCurrentTime = () => (_currentTime === -1 ? 0 : _currentTime);
 } else {
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
@@ -534,41 +523,39 @@ if (typeof window !== 'undefined' && window._schedMock) {
     }
   }
 
-  var scheduledCallback = null;
-  var isIdleScheduled = false;
-  var timeoutTime = -1;
+  let scheduledCallback = null;
+  let isIdleScheduled = false;
+  let timeoutTime = -1;
 
-  var isAnimationFrameScheduled = false;
+  let isAnimationFrameScheduled = false;
 
-  var isPerformingIdleWork = false;
+  let isPerformingIdleWork = false;
 
-  var frameDeadline = 0;
+  let frameDeadline = 0;
   // We start out assuming that we run at 30fps but then the heuristic tracking
   // will adjust this value to a faster fps if we get more frequent animation
   // frames.
-  var previousFrameTime = 33;
-  var activeFrameTime = 33;
+  let previousFrameTime = 33;
+  let activeFrameTime = 33;
 
-  getFrameDeadline = function() {
-    return frameDeadline;
-  };
+  getFrameDeadline = () => frameDeadline;
 
   // We use the postMessage trick to defer idle work until after the repaint.
-  var messageKey =
+  const messageKey =
     '__reactIdleCallback$' +
     Math.random()
       .toString(36)
       .slice(2);
-  var idleTick = function(event) {
+  const idleTick = event => {
     if (event.source !== window || event.data !== messageKey) {
       return;
     }
 
     isIdleScheduled = false;
 
-    var currentTime = getCurrentTime();
+    const currentTime = getCurrentTime();
 
-    var didTimeout = false;
+    let didTimeout = false;
     if (frameDeadline - currentTime <= 0) {
       // There's no time left in this idle period. Check if the callback has
       // a timeout and whether it's been exceeded.
@@ -589,7 +576,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     }
 
     timeoutTime = -1;
-    var callback = scheduledCallback;
+    const callback = scheduledCallback;
     scheduledCallback = null;
     if (callback !== null) {
       isPerformingIdleWork = true;
@@ -604,9 +591,9 @@ if (typeof window !== 'undefined' && window._schedMock) {
   // something better for old IE.
   window.addEventListener('message', idleTick, false);
 
-  var animationTick = function(rafTime) {
+  const animationTick = rafTime => {
     isAnimationFrameScheduled = false;
-    var nextFrameTime = rafTime - frameDeadline + activeFrameTime;
+    let nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
       nextFrameTime < activeFrameTime &&
       previousFrameTime < activeFrameTime
@@ -635,7 +622,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     }
   };
 
-  requestHostCallback = function(callback, absoluteTimeout) {
+  requestHostCallback = (callback, absoluteTimeout) => {
     scheduledCallback = callback;
     timeoutTime = absoluteTimeout;
     if (isPerformingIdleWork || absoluteTimeout < 0) {
@@ -651,7 +638,7 @@ if (typeof window !== 'undefined' && window._schedMock) {
     }
   };
 
-  cancelHostCallback = function() {
+  cancelHostCallback = () => {
     scheduledCallback = null;
     isIdleScheduled = false;
     timeoutTime = -1;
