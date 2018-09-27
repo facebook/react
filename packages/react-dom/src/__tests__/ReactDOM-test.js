@@ -531,27 +531,23 @@ describe('ReactDOM', () => {
     const containerApp = document.createElement('div');
 
     function App1() {
-      return (
-        <div id="app1" />
-      );
+      return <div id="app1" />;
     }
     function App2() {
-      return (
-        <div id="app2" />
-      );
+      return <div id="app2" />;
     }
 
     function Parent() {
       ReactDOM.render(<App1 />, containerApp);
       ReactDOM.unmountComponentAtNode(containerApp);
       ReactDOM.render(<App2 />, containerApp);
-      return (
-        <div />
-      );
+      return <div />;
     }
 
     ReactDOM.render(<Parent />, containerParent);
+    // if null, the next unmountComponentAtNode / render might not behave correctly
+    // skipping some life cycle like componentWillUnmount of App2 etc.
     expect(containerApp._reactRootContainer).not.toBeNull();
-    expect(containerApp.innerHTML).toEqual('<div id=\"app2\"></div>');
+    expect(containerApp.innerHTML).toEqual('<div id="app2"></div>');
   });
 });
