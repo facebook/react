@@ -681,7 +681,9 @@ const ReactDOM: Object = {
       // Unmount should not be batched.
       DOMRenderer.unbatchedUpdates(() => {
         legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
-          container._reactRootContainer = null;
+          if (!container._reactRootContainer._internalRoot.containerInfo.firstChild) {
+            container._reactRootContainer = null;
+          }
         });
       });
       // If you call unmountComponentAtNode twice in quick succession, you'll
