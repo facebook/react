@@ -352,21 +352,6 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       );
     }
 
-    if (
-      ctor.contextType &&
-      typeof ctor.contextType.unstable_read !== 'function' &&
-      !didWarnAboutInvalidateContextType.has(ctor)
-    ) {
-      didWarnAboutInvalidateContextType.add(ctor);
-      warningWithoutStack(
-        false,
-        '%s defines an invalid contextType. ' +
-          'contextType should point to the Context object returned by React.createContext(). ' +
-          'Did you accidentally pass the Context.Provider instead?',
-        name,
-      );
-    }
-
     const noComponentShouldUpdate =
       typeof instance.componentShouldUpdate !== 'function';
     warningWithoutStack(
@@ -520,11 +505,23 @@ function constructClassInstance(
   let unmaskedContext = emptyContextObject;
   let context = null;
   const contextType = ctor.contextType;
-  if (
-    typeof contextType === 'object' &&
-    contextType !== null &&
-    typeof contextType.unstable_read === 'function'
-  ) {
+  if (typeof contextType === 'object' && contextType !== null) {
+    if (__DEV__) {
+      if (
+        typeof contextType.unstable_read !== 'function' &&
+        !didWarnAboutInvalidateContextType.has(ctor)
+      ) {
+        didWarnAboutInvalidateContextType.add(ctor);
+        warningWithoutStack(
+          false,
+          '%s defines an invalid contextType. ' +
+            'contextType should point to the Context object returned by React.createContext(). ' +
+            'Did you accidentally pass the Context.Provider instead?',
+          getComponentName(ctor) || 'Component',
+        );
+      }
+    }
+
     context = (contextType: any).unstable_read();
   } else {
     unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
@@ -727,11 +724,7 @@ function mountClassInstance(
   instance.refs = emptyRefsObject;
 
   const contextType = ctor.contextType;
-  if (
-    typeof contextType === 'object' &&
-    contextType !== null &&
-    typeof contextType.unstable_read === 'function'
-  ) {
+  if (typeof contextType === 'object' && contextType !== null) {
     instance.context = (contextType: any).unstable_read();
   } else {
     const unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
@@ -839,11 +832,7 @@ function resumeMountClassInstance(
   const oldContext = instance.context;
   const contextType = ctor.contextType;
   let nextContext;
-  if (
-    typeof contextType === 'object' &&
-    contextType !== null &&
-    typeof contextType.unstable_read === 'function'
-  ) {
+  if (typeof contextType === 'object' && contextType !== null) {
     nextContext = (contextType: any).unstable_read();
   } else {
     const nextLegacyUnmaskedContext = getUnmaskedContext(
@@ -989,11 +978,7 @@ function updateClassInstance(
   const oldContext = instance.context;
   const contextType = ctor.contextType;
   let nextContext;
-  if (
-    typeof contextType === 'object' &&
-    contextType !== null &&
-    typeof contextType.unstable_read === 'function'
-  ) {
+  if (typeof contextType === 'object' && contextType !== null) {
     nextContext = (contextType: any).unstable_read();
   } else {
     const nextUnmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
