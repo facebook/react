@@ -2004,14 +2004,19 @@ describe('ReactLegacyErrorBoundaries', () => {
 
   it('renders empty output if error boundary does not handle the error', () => {
     const container = document.createElement('div');
-    ReactDOM.render(
-      <div>
-        Sibling
-        <NoopErrorBoundary>
-          <BrokenRender />
-        </NoopErrorBoundary>
-      </div>,
-      container,
+    expect(() => {
+      ReactDOM.render(
+        <div>
+          Sibling
+          <NoopErrorBoundary>
+            <BrokenRender />
+          </NoopErrorBoundary>
+        </div>,
+        container,
+      );
+    }).toWarnDev(
+      'ErrorBoundary: Error boundaries should implement getDerivedStateFromError()',
+      {withoutStack: true},
     );
     expect(container.firstChild.textContent).toBe('Sibling');
     expect(log).toEqual([
