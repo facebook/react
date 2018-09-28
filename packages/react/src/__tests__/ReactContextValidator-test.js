@@ -555,7 +555,9 @@ describe('ReactContextValidator', () => {
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<ComponentA />)).toWarnDev(
+    expect(() => {
+      expect(() => ReactTestUtils.renderIntoDocument(<ComponentA />)).toThrow();
+    }).toWarnDev(
       'Warning: ComponentA defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Provider instead?',
@@ -563,9 +565,11 @@ describe('ReactContextValidator', () => {
     );
 
     // Warnings should be deduped by component type
-    ReactTestUtils.renderIntoDocument(<ComponentA />);
+    expect(() => ReactTestUtils.renderIntoDocument(<ComponentA />)).toThrow();
 
-    expect(() => ReactTestUtils.renderIntoDocument(<ComponentB />)).toWarnDev(
+    expect(() => {
+      expect(() => ReactTestUtils.renderIntoDocument(<ComponentB />)).toThrow();
+    }).toWarnDev(
       'Warning: ComponentB defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
         'Did you accidentally pass the Context.Provider instead?',
