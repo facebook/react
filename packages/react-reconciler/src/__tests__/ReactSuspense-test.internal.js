@@ -1316,11 +1316,7 @@ describe('ReactSuspense', () => {
         'A',
         'B',
         'C',
-        // 'A' matched with the placeholder. It's ok to reuse children when
-        // switching back. Though in a real app you probably don't want to.
-        // TODO: This is wrong. The timed out children and the placeholder
-        // should be siblings in async mode. Revisit in follow-up PR.
-        'Update [A]',
+        'Mount [A]',
         'Mount [B]',
         'Mount [C]',
       ]);

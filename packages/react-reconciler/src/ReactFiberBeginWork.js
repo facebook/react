@@ -155,6 +155,38 @@ export function reconcileChildren(
   }
 }
 
+function forceUnmountCurrentAndReconcile(
+  current: Fiber,
+  workInProgress: Fiber,
+  nextChildren: any,
+  renderExpirationTime: ExpirationTime,
+) {
+  // This function is fork of reconcileChildren. It's used in cases where we
+  // want to reconcile without matching against the existing set. This has the
+  // effect of all current children being unmounted; even if the type and key
+  // are the same, the old child is unmounted and a new child is created.
+  //
+  // To do this, we're going to go through the reconcile algorithm twice. In
+  // the first pass, we schedule a deletion for all the current children by
+  // passing null.
+  workInProgress.child = reconcileChildFibers(
+    workInProgress,
+    current.child,
+    null,
+    renderExpirationTime,
+  );
+  // In the second pass, we mount the new children. The trick here is that we
+  // pass null in place of where we usually pass the current child set. This has
+  // the effect of remounting all children regardless of whether their their
+  // identity matches.
+  workInProgress.child = reconcileChildFibers(
+    workInProgress,
+    null,
+    nextChildren,
+    renderExpirationTime,
+  );
+}
+
 function updateForwardRef(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -475,28 +507,25 @@ function finishClassComponent(
   // React DevTools reads this flag.
   workInProgress.effectTag |= PerformedWork;
   if (current !== null && didCaptureError) {
-    // If we're recovering from an error, reconcile twice: first to delete
-    // all the existing children.
-    reconcileChildren(current, workInProgress, null, renderExpirationTime);
-    // Forcefully reset children so that a subsequent reconciliation will always re-add.
-    // This is important if e.g. an error boundary renders an element of the same type.
-    // Concurrent renderer mode will always retry an extra time on failure,
-    // so the fiber we need to reset varies.
-    if (workInProgress.mode & ConcurrentMode) {
-      workInProgress.child = null;
-    } else {
-      current.child = null;
-    }
-    // Now we can continue reconciling like normal. This has the effect of
-    // remounting all children regardless of whether their their
-    // identity matches.
+    // If we're recovering from an error, reconcile without reusing any of
+    // the existing children. Conceptually, the normal children and the children
+    // that are shown on error are two different sets, so we shouldn't reuse
+    // normal children even if their identities match.
+    forceUnmountCurrentAndReconcile(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    );
+  } else {
+    reconcileChildren(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    );
   }
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
+
   // Memoize props and state using the values we just used to render.
   // TODO: Restructure so we never read values from the instance.
   memoizeState(workInProgress, instance.state);
@@ -936,13 +965,6 @@ function updatePlaceholderComponent(
       // suspended during the last commit. Switch to the placholder.
       workInProgress.updateQueue = null;
       nextDidTimeout = true;
-      // If we're recovering from an error, reconcile twice: first to delete
-      // all the existing children.
-      reconcileChildren(current, workInProgress, null, renderExpirationTime);
-      current.child = null;
-      // Now we can continue reconciling like normal. This has the effect of
-      // remounting all children regardless of whether their their
-      // identity matches.
     } else {
       nextDidTimeout = !alreadyCaptured;
     }
@@ -969,14 +991,28 @@ function updatePlaceholderComponent(
       nextChildren = nextDidTimeout ? nextProps.fallback : children;
     }
 
+    if (current !== null && nextDidTimeout !== workInProgress.memoizedState) {
+      // We're about to switch from the placeholder children to the normal
+      // children, or vice versa. These are two different conceptual sets that
+      // happen to be stored in the same set. Call this special function to
+      // force the new set not to match with the current set.
+      // TODO: The proper way to model this is by storing each set separately.
+      forceUnmountCurrentAndReconcile(
+        current,
+        workInProgress,
+        nextChildren,
+        renderExpirationTime,
+      );
+    } else {
+      reconcileChildren(
+        current,
+        workInProgress,
+        nextChildren,
+        renderExpirationTime,
+      );
+    }
     workInProgress.memoizedProps = nextProps;
     workInProgress.memoizedState = nextDidTimeout;
-    reconcileChildren(
-      current,
-      workInProgress,
-      nextChildren,
-      renderExpirationTime,
-    );
     return workInProgress.child;
   } else {
     return null;
