@@ -2111,8 +2111,7 @@ describe('ReactErrorBoundaries', () => {
       );
     }).toWarnDev(
       'InvalidErrorBoundary: Error boundaries should implement getDerivedStateFromError(). ' +
-        'In that method, return a state update to display an error message or fallback UI, ' +
-        'or rethrow the error to let parent components handle it',
+        'In that method, return a state update to display an error message or fallback UI.',
       {withoutStack: true},
     );
     expect(container.textContent).toBe('');
