@@ -36,7 +36,6 @@ function loadModules({
   ReactFeatureFlags.debugRenderPhaseSideEffects = false;
   ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
   ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
-  ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
   ReactFeatureFlags.enableSchedulerTracing = enableSchedulerTracing;
   ReactFeatureFlags.enableSuspense = enableSuspense;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
@@ -985,7 +984,7 @@ describe('Profiler', () => {
                 );
               });
 
-              it('should accumulate actual time after an error handled by getDerivedStateFromCatch()', () => {
+              it('should accumulate actual time after an error handled by getDerivedStateFromError()', () => {
                 const callback = jest.fn();
 
                 const ThrowsError = () => {
@@ -995,7 +994,7 @@ describe('Profiler', () => {
 
                 class ErrorBoundary extends React.Component {
                   state = {error: null};
-                  static getDerivedStateFromCatch(error) {
+                  static getDerivedStateFromError(error) {
                     return {error};
                   }
                   render() {

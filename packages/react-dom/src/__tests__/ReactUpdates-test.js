@@ -1343,6 +1343,9 @@ describe('ReactUpdates', () => {
 
     class ErrorBoundary extends React.Component {
       componentDidCatch() {
+        // Schedule a no-op state update to avoid triggering a DEV warning in the test.
+        this.setState({});
+
         this.props.parent.remount();
       }
       render() {

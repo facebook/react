@@ -147,9 +147,9 @@ describe('ReactES6Class', () => {
     );
   });
 
-  it('warns if getDerivedStateFromCatch is not static', () => {
+  it('warns if getDerivedStateFromError is not static', () => {
     class Foo extends React.Component {
-      getDerivedStateFromCatch() {
+      getDerivedStateFromError() {
         return {};
       }
       render() {
@@ -157,7 +157,7 @@ describe('ReactES6Class', () => {
       }
     }
     expect(() => ReactDOM.render(<Foo foo="foo" />, container)).toWarnDev(
-      'Foo: getDerivedStateFromCatch() is defined as an instance method ' +
+      'Foo: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
       {withoutStack: true},
     );

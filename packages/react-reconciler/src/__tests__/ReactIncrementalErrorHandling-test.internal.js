@@ -19,7 +19,6 @@ describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableGetDerivedStateFromCatch = true;
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     PropTypes = require('prop-types');
@@ -41,6 +40,99 @@ describe('ReactIncrementalErrorHandling', () => {
   }
 
   it('recovers from errors asynchronously', () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        ReactNoop.yield('getDerivedStateFromError');
+        return {error};
+      }
+      render() {
+        if (this.state.error) {
+          ReactNoop.yield('ErrorBoundary (catch)');
+          return <ErrorMessage error={this.state.error} />;
+        }
+        ReactNoop.yield('ErrorBoundary (try)');
+        return this.props.children;
+      }
+    }
+
+    function ErrorMessage(props) {
+      ReactNoop.yield('ErrorMessage');
+      return <span prop={`Caught an error: ${props.error.message}`} />;
+    }
+
+    function Indirection(props) {
+      ReactNoop.yield('Indirection');
+      return props.children || null;
+    }
+
+    function BadRender() {
+      ReactNoop.yield('throw');
+      throw new Error('oops!');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <Indirection>
+          <Indirection>
+            <Indirection>
+              <BadRender />
+              <Indirection />
+              <Indirection />
+            </Indirection>
+          </Indirection>
+        </Indirection>
+      </ErrorBoundary>,
+    );
+
+    // Start rendering asynchronsouly
+    ReactNoop.flushThrough([
+      'ErrorBoundary (try)',
+      'Indirection',
+      'Indirection',
+      'Indirection',
+      // An error is thrown. React keeps rendering asynchronously.
+      'throw',
+    ]);
+
+    // Still rendering async...
+    ReactNoop.flushThrough(['Indirection']);
+
+    ReactNoop.flushThrough([
+      'Indirection',
+
+      // Call getDerivedStateFromError and re-render the error boundary, this
+      // time rendering an error message.
+      'getDerivedStateFromError',
+      'ErrorBoundary (catch)',
+      'ErrorMessage',
+    ]);
+
+    // Since the error was thrown during an async render, React won't commit
+    // the result yet.
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Instead, it will try rendering one more time, synchronously, in case that
+    // happens to fix the error.
+    expect(ReactNoop.flushNextYield()).toEqual([
+      'ErrorBoundary (try)',
+      'Indirection',
+      'Indirection',
+      'Indirection',
+
+      // The error was thrown again. This time, React will actually commit
+      // the result.
+      'throw',
+      'Indirection',
+      'Indirection',
+      'getDerivedStateFromError',
+      'ErrorBoundary (catch)',
+      'ErrorMessage',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
+  });
+
+  it('recovers from errors asynchronously (legacy, no getDerivedStateFromError)', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
@@ -1442,10 +1534,10 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
   });
 
-  it('does not provide component stack to the error boundary with getDerivedStateFromCatch', () => {
+  it('does not provide component stack to the error boundary with getDerivedStateFromError', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      static getDerivedStateFromCatch(error, errorInfo) {
+      static getDerivedStateFromError(error, errorInfo) {
         expect(errorInfo).toBeUndefined();
         return {error};
       }

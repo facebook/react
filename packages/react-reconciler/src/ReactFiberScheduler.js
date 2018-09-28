@@ -1464,7 +1464,7 @@ function dispatch(
         const ctor = fiber.type;
         const instance = fiber.stateNode;
         if (
-          typeof ctor.getDerivedStateFromCatch === 'function' ||
+          typeof ctor.getDerivedStateFromError === 'function' ||
           (typeof instance.componentDidCatch === 'function' &&
             !isAlreadyFailedLegacyErrorBoundary(instance))
         ) {

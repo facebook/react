@@ -14,6 +14,8 @@ import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberScheduler';
 
+import getComponentName from 'shared/getComponentName';
+import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   IndeterminateComponent,
   FunctionalComponent,
@@ -33,11 +35,7 @@ import {
   Update as UpdateEffect,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {
-  enableGetDerivedStateFromCatch,
-  enableSuspense,
-  enableSchedulerTracing,
-} from 'shared/ReactFeatureFlags';
+import {enableSuspense, enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {StrictMode, ConcurrentMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -104,28 +102,22 @@ function createClassErrorUpdate(
 ): Update<mixed> {
   const update = createUpdate(expirationTime);
   update.tag = CaptureUpdate;
-  const getDerivedStateFromCatch = fiber.type.getDerivedStateFromCatch;
-  if (
-    enableGetDerivedStateFromCatch &&
-    typeof getDerivedStateFromCatch === 'function'
-  ) {
+  const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
+  if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
     update.payload = () => {
-      return getDerivedStateFromCatch(error);
+      return getDerivedStateFromError(error);
     };
   }
 
   const inst = fiber.stateNode;
   if (inst !== null && typeof inst.componentDidCatch === 'function') {
     update.callback = function callback() {
-      if (
-        !enableGetDerivedStateFromCatch ||
-        getDerivedStateFromCatch !== 'function'
-      ) {
+      if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
         // This gets reset before we yield back to the browser.
-        // TODO: Warn in strict mode if getDerivedStateFromCatch is
+        // TODO: Warn in strict mode if getDerivedStateFromError is
         // not defined.
         markLegacyErrorBoundaryAsFailed(this);
       }
@@ -135,6 +127,19 @@ function createClassErrorUpdate(
       this.componentDidCatch(error, {
         componentStack: stack !== null ? stack : '',
       });
+      if (__DEV__) {
+        if (typeof getDerivedStateFromError !== 'function') {
+          // If componentDidCatch is the only error boundary method defined,
+          // then it needs to call setState to recover from errors.
+          // If no state update is scheduled then the boundary will swallow the error.
+          warningWithoutStack(
+            fiber.expirationTime === Sync,
+            '%s: Error boundaries should implement getDerivedStateFromError(). ' +
+              'In that method, return a state update to display an error message or fallback UI.',
+            getComponentName(fiber.type) || 'Unknown',
+          );
+        }
+      }
     };
   }
   return update;
@@ -364,8 +369,7 @@ function throwException(
         const instance = workInProgress.stateNode;
         if (
           (workInProgress.effectTag & DidCapture) === NoEffect &&
-          ((typeof ctor.getDerivedStateFromCatch === 'function' &&
-            enableGetDerivedStateFromCatch) ||
+          (typeof ctor.getDerivedStateFromError === 'function' ||
             (instance !== null &&
               typeof instance.componentDidCatch === 'function' &&
               !isAlreadyFailedLegacyErrorBoundary(instance)))
