@@ -132,9 +132,8 @@ function createClassErrorUpdate(
           // If componentDidCatch is the only error boundary method defined,
           // then it needs to call setState to recover from errors.
           // If no state update is scheduled then the boundary will swallow the error.
-          const updateQueue = fiber.updateQueue;
           warningWithoutStack(
-            updateQueue !== null && updateQueue.firstUpdate !== null,
+            fiber.expirationTime === Sync,
             '%s: Error boundaries should implement getDerivedStateFromError(). ' +
               'In that method, return a state update to display an error message or fallback UI, ' +
               'or rethrow the error to let parent components handle it.',
