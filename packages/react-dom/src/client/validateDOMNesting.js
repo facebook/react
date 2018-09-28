@@ -389,9 +389,7 @@ if (__DEV__) {
         return ancestorInfo.pTagInButtonScope || isValidHtmlInSvg;
 
       case 'span':
-        return !ancestorInfo.foreignObjectInScope
-          ? ancestorInfo.svgTagInScope
-          : null;
+        return isValidHtmlInSvg;
 
       case 'form':
         return (
