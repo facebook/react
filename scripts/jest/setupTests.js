@@ -43,10 +43,16 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.spyOnDevAndProd = spyOn;
   }
 
+  const JestReact = require('jest-react');
   expect.extend({
     ...require('./matchers/interactionTracing'),
     ...require('./matchers/toWarnDev'),
-    ...require('./matchers/testRenderer'),
+
+    toFlushAll: JestReact.toFlushAll,
+    toFlushThrough: JestReact.toFlushThrough,
+    toClearYields: JestReact.toClearYields,
+    toFlushAndThrow: JestReact.toFlushAndThrow,
+    toMatchRenderedOutput: JestReact.toMatchRenderedOutput,
   });
 
   // We have a Babel transform that inserts guards against infinite loops.

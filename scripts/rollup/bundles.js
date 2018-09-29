@@ -400,6 +400,16 @@ const bundles = [
     externals: [],
   },
 
+  /******* Jest React (experimental) *******/
+  {
+    label: 'jest-react',
+    bundleTypes: [NODE_DEV, FB_WWW_DEV],
+    moduleType: ISOMORPHIC,
+    entry: 'jest-react',
+    global: 'JestReact',
+    externals: ['jest-diff'],
+  },
+
   {
     label: 'scheduler-tracing',
     bundleTypes: [
