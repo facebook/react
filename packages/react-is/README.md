@@ -9,7 +9,7 @@ This package allows you to test arbitrary values and see if they're a particular
 yarn add react-is
 
 # NPM
-npm install react-is --save
+npm install react-is
 ```
 
 ## Usage
