@@ -49,6 +49,11 @@ import {
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
 import {
+  prepareToUseHooks,
+  finishHooks,
+  Dispatcher,
+} from './ReactPartialRendererHooks';
+import {
   Namespaces,
   getIntrinsicNamespace,
   getChildNamespace,
@@ -86,15 +91,6 @@ let validatePropertiesInDevelopment = (type, props) => {};
 let pushCurrentDebugStack = (stack: Array<Frame>) => {};
 let pushElementToDebugStack = (element: ReactElement) => {};
 let popCurrentDebugStack = () => {};
-
-let Dispatcher = {
-  readContext<T>(
-    context: ReactContext<T>,
-    observedBits: void | number | boolean,
-  ): T {
-    return context._currentValue;
-  },
-};
 
 if (__DEV__) {
   ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -573,7 +569,11 @@ function resolve(
           }
         }
       }
+      const componentIdentity = {};
+      prepareToUseHooks(componentIdentity);
       inst = Component(element.props, publicContext, updater);
+      inst = finishHooks(Component, element.props, inst, publicContext);
+
       if (inst == null || inst.render == null) {
         child = inst;
         validateRenderResult(child, Component);
@@ -985,9 +985,17 @@ class ReactDOMServerRenderer {
         switch (elementType.$$typeof) {
           case REACT_FORWARD_REF_TYPE: {
             const element: ReactElement = ((nextChild: any): ReactElement);
-            const nextChildren = toArray(
-              elementType.render(element.props, element.ref),
+            let nextChildren;
+            const componentIdentity = {};
+            prepareToUseHooks(componentIdentity);
+            nextChildren = elementType.render(element.props, element.ref);
+            nextChildren = finishHooks(
+              elementType.render,
+              element.props,
+              nextChildren,
+              element.ref,
             );
+            nextChildren = toArray(nextChildren);
             const frame: Frame = {
               type: null,
               domNamespace: parentNamespace,

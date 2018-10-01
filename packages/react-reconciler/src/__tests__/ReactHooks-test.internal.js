@@ -1417,6 +1417,33 @@ describe('ReactHooks', () => {
       ReactNoop.render(<LazyCompute compute={computeB} />);
       expect(ReactNoop.flush()).toEqual(['compute B', 'B']);
     });
+
+    it('should not invoke memoized function during re-renders unless inputs change', () => {
+      function LazyCompute(props) {
+        const computed = useMemo(() => props.compute(props.input), [
+          props.input,
+        ]);
+        const [count, setCount] = useState(0);
+        if (count < 3) {
+          setCount(count + 1);
+        }
+        return <Text text={computed} />;
+      }
+
+      function compute(val) {
+        ReactNoop.yield('compute ' + val);
+        return val;
+      }
+
+      ReactNoop.render(<LazyCompute compute={compute} input="A" />);
+      expect(ReactNoop.flush()).toEqual(['compute A', 'A']);
+
+      ReactNoop.render(<LazyCompute compute={compute} input="A" />);
+      expect(ReactNoop.flush()).toEqual(['A']);
+
+      ReactNoop.render(<LazyCompute compute={compute} input="B" />);
+      expect(ReactNoop.flush()).toEqual(['compute B', 'B']);
+    });
   });
 
   describe('useRef', () => {
@@ -1475,6 +1502,30 @@ describe('ReactHooks', () => {
 
       jest.advanceTimersByTime(20);
       expect(ReactNoop.flush()).toEqual(['ping: 6']);
+    });
+
+    it('should return the same ref during re-renders', () => {
+      function Counter() {
+        const ref = useRef('val');
+        const [count, setCount] = useState(0);
+        const [firstRef] = useState(ref);
+
+        if (firstRef !== ref) {
+          throw new Error('should never change');
+        }
+
+        if (count < 3) {
+          setCount(count + 1);
+        }
+
+        return <Text text={ref.current} />;
+      }
+
+      ReactNoop.render(<Counter />);
+      expect(ReactNoop.flush()).toEqual(['val']);
+
+      ReactNoop.render(<Counter />);
+      expect(ReactNoop.flush()).toEqual(['val']);
     });
   });
 
