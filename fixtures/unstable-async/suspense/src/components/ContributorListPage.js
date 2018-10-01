@@ -1,5 +1,5 @@
 import React, {Fragment} from 'react';
-import {createResource} from 'simple-cache-provider';
+import {createResource} from 'react-cache';
 import {cache} from '../cache';
 import Spinner from './Spinner';
 import {fetchCoreContributorListJSON} from '../api';

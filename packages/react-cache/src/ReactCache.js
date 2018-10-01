@@ -400,4 +400,4 @@ export function createResource<V, K, H: primitive>(
 
 // Global cache has no eviction policy (except for, ya know, a browser refresh).
 const globalCache = createCache(noop);
-export const SimpleCache = React.createContext(globalCache);
+export const ReactCache = React.createContext(globalCache);

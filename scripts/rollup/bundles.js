@@ -363,13 +363,13 @@ const bundles = [
     externals: [],
   },
 
-  /******* Simple Cache Provider (experimental) *******/
+  /******* React Cache (experimental) *******/
   {
-    label: 'simple-cache-provider',
+    label: 'react-cache',
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'simple-cache-provider',
-    global: 'SimpleCacheProvider',
+    entry: 'react-cache',
+    global: 'ReactCache',
     externals: ['react'],
   },
 
