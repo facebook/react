@@ -35,7 +35,7 @@ import {
   Update as UpdateEffect,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {enableSuspense, enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {enableSuspense} from 'shared/ReactFeatureFlags';
 import {StrictMode, ConcurrentMode} from './ReactTypeOfMode';
 
 import {createCapturedValue} from './ReactCapturedValue';
