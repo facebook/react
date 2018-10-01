@@ -347,47 +347,48 @@ export function useReducer<S, A>(
 ): [S, Dispatch<S, A>] {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
-  if (isReRender) {
-    // This is a re-render. Apply the new render phase updates to the previous
-    // work-in-progress hook.
-    const queue: UpdateQueue<S, A> = (workInProgressHook.queue: any);
-    const dispatch: Dispatch<S, A> = (queue.dispatch: any);
-    if (renderPhaseUpdates !== null) {
-      // Render phase updates are stored in a map of queue -> linked list
-      const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
-      if (firstRenderPhaseUpdate !== undefined) {
-        renderPhaseUpdates.delete(queue);
-        let newState = workInProgressHook.memoizedState;
-        let update = firstRenderPhaseUpdate;
-        do {
-          // Process this render phase update. We don't have to check the
-          // priority because it will always be the same as the current
-          // render's.
-          const action = update.action;
-          newState = reducer(newState, action);
-          const callback = update.callback;
-          if (callback !== null) {
-            pushCallback(currentlyRenderingFiber, update);
+  let queue: UpdateQueue<S, A> | null = (workInProgressHook.queue: any);
+  if (queue !== null) {
+    // Already have a queue, so this is an update.
+    if (isReRender) {
+      // This is a re-render. Apply the new render phase updates to the previous
+      // work-in-progress hook.
+      const dispatch: Dispatch<S, A> = (queue.dispatch: any);
+      if (renderPhaseUpdates !== null) {
+        // Render phase updates are stored in a map of queue -> linked list
+        const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
+        if (firstRenderPhaseUpdate !== undefined) {
+          renderPhaseUpdates.delete(queue);
+          let newState = workInProgressHook.memoizedState;
+          let update = firstRenderPhaseUpdate;
+          do {
+            // Process this render phase update. We don't have to check the
+            // priority because it will always be the same as the current
+            // render's.
+            const action = update.action;
+            newState = reducer(newState, action);
+            const callback = update.callback;
+            if (callback !== null) {
+              pushCallback(currentlyRenderingFiber, update);
+            }
+            update = update.next;
+          } while (update !== null);
+
+          workInProgressHook.memoizedState = newState;
+
+          // Don't persist the state accumlated from the render phase updates to
+          // the base state unless the queue is empty.
+          // TODO: Not sure if this is the desired semantics, but it's what we
+          // do for gDSFP. I can't remember why.
+          if (workInProgressHook.baseUpdate === queue.last) {
+            workInProgressHook.baseState = newState;
           }
-          update = update.next;
-        } while (update !== null);
 
-        workInProgressHook.memoizedState = newState;
-
-        // Don't persist the state accumlated from the render phase updates to
-        // the base state unless the queue is empty.
-        // TODO: Not sure if this is the desired semantics, but it's what we
-        // do for gDSFP. I can't remember why.
-        if (workInProgressHook.baseUpdate === queue.last) {
-          workInProgressHook.baseState = newState;
+          return [newState, dispatch];
         }
-
-        return [newState, dispatch];
       }
+      return [workInProgressHook.memoizedState, dispatch];
     }
-    return [workInProgressHook.memoizedState, dispatch];
-  } else if (currentHook !== null) {
-    const queue: UpdateQueue<S, A> = (workInProgressHook.queue: any);
 
     // The last update in the entire queue
     const last = queue.last;
@@ -457,27 +458,28 @@ export function useReducer<S, A>(
 
     const dispatch: Dispatch<S, A> = (queue.dispatch: any);
     return [workInProgressHook.memoizedState, dispatch];
-  } else {
-    if (reducer === basicStateReducer) {
-      // Special case for `useState`.
-      if (typeof initialState === 'function') {
-        initialState = initialState();
-      }
-    } else if (initialAction !== undefined && initialAction !== null) {
-      initialState = reducer(initialState, initialAction);
-    }
-    workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
-    const queue: UpdateQueue<S, A> = (workInProgressHook.queue = {
-      last: null,
-      dispatch: null,
-    });
-    const dispatch: Dispatch<S, A> = (queue.dispatch = (dispatchAction.bind(
-      null,
-      currentlyRenderingFiber,
-      queue,
-    ): any));
-    return [workInProgressHook.memoizedState, dispatch];
   }
+
+  // There's no existing queue, so this is the initial render.
+  if (reducer === basicStateReducer) {
+    // Special case for `useState`.
+    if (typeof initialState === 'function') {
+      initialState = initialState();
+    }
+  } else if (initialAction !== undefined && initialAction !== null) {
+    initialState = reducer(initialState, initialAction);
+  }
+  workInProgressHook.memoizedState = workInProgressHook.baseState = initialState;
+  queue = workInProgressHook.queue = {
+    last: null,
+    dispatch: null,
+  };
+  const dispatch: Dispatch<S, A> = (queue.dispatch = (dispatchAction.bind(
+    null,
+    currentlyRenderingFiber,
+    queue,
+  ): any));
+  return [workInProgressHook.memoizedState, dispatch];
 }
 
 function pushCallback(workInProgress: Fiber, update: Update<any, any>): void {
@@ -525,7 +527,8 @@ export function useRef<T>(initialValue: T): {current: T} {
   currentlyRenderingFiber = resolveCurrentlyRenderingFiber();
   workInProgressHook = createWorkInProgressHook();
   let ref;
-  if (currentHook === null) {
+
+  if (workInProgressHook.memoizedState === null) {
     ref = {current: initialValue};
     if (__DEV__) {
       Object.seal(ref);
@@ -637,14 +640,13 @@ export function useCallback<T>(
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [callback];
 
-  if (currentHook !== null) {
-    const prevState = currentHook.memoizedState;
+  const prevState = workInProgressHook.memoizedState;
+  if (prevState !== null) {
     const prevInputs = prevState[1];
     if (inputsAreEqual(nextInputs, prevInputs)) {
       return prevState[0];
     }
   }
-
   workInProgressHook.memoizedState = [callback, nextInputs];
   return callback;
 }
@@ -659,8 +661,8 @@ export function useMemo<T>(
   const nextInputs =
     inputs !== undefined && inputs !== null ? inputs : [nextCreate];
 
-  if (currentHook !== null) {
-    const prevState = currentHook.memoizedState;
+  const prevState = workInProgressHook.memoizedState;
+  if (prevState !== null) {
     const prevInputs = prevState[1];
     if (inputsAreEqual(nextInputs, prevInputs)) {
       return prevState[0];

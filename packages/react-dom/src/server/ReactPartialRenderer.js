@@ -47,6 +47,11 @@ import {
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
 import {
+  prepareToUseHooks,
+  finishHooks,
+  Dispatcher,
+} from './ReactPartialRendererHooks';
+import {
   Namespaces,
   getIntrinsicNamespace,
   getChildNamespace,
@@ -67,6 +72,8 @@ type ReactNode = string | number | ReactElement;
 type FlatReactChildren = Array<null | ReactNode>;
 type toArrayType = (children: mixed) => FlatReactChildren;
 const toArray = ((React.Children.toArray: any): toArrayType);
+
+const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 // This is only used in DEV.
 // Each entry is `this.stack` from a currently executing renderer instance.
@@ -540,7 +547,11 @@ function resolve(
           }
         }
       }
+      const componentIdentity = {};
+      prepareToUseHooks(componentIdentity);
       inst = Component(element.props, publicContext, updater);
+      inst = finishHooks(Component, element.props, inst, publicContext);
+
       if (inst == null || inst.render == null) {
         child = inst;
         validateRenderResult(child, Component);
@@ -786,6 +797,8 @@ class ReactDOMServerRenderer {
       return null;
     }
 
+    ReactCurrentOwner.currentDispatcher = Dispatcher;
+
     let out = '';
     while (out.length < bytes) {
       if (this.stack.length === 0) {
@@ -828,6 +841,9 @@ class ReactDOMServerRenderer {
         out += this.render(child, frame.context, frame.domNamespace);
       }
     }
+
+    ReactCurrentOwner.currentDispatcher = null;
+
     return out;
   }
 
@@ -945,9 +961,17 @@ class ReactDOMServerRenderer {
         switch (elementType.$$typeof) {
           case REACT_FORWARD_REF_TYPE: {
             const element: ReactElement = ((nextChild: any): ReactElement);
-            const nextChildren = toArray(
-              elementType.render(element.props, element.ref),
+            let nextChildren;
+            const componentIdentity = {};
+            prepareToUseHooks(componentIdentity);
+            nextChildren = elementType.render(element.props, element.ref);
+            nextChildren = finishHooks(
+              elementType.render,
+              element.props,
+              nextChildren,
+              element.ref,
             );
+            nextChildren = toArray(nextChildren);
             const frame: Frame = {
               type: null,
               domNamespace: parentNamespace,
