@@ -9,16 +9,16 @@
 
 'use strict';
 
-let SimpleCacheProvider;
+let ReactCache;
 
-describe('SimpleCacheProvider', () => {
+describe('ReactCache', () => {
   beforeEach(() => {
     jest.resetModules();
-    SimpleCacheProvider = require('simple-cache-provider');
+    ReactCache = require('react-cache');
   });
 
   it('throws a promise if the requested value is not in the cache', async () => {
-    const {createCache, createResource} = SimpleCacheProvider;
+    const {createCache, createResource} = ReactCache;
 
     function loadUpperCase(text) {
       return Promise.resolve(text.toUpperCase());
@@ -39,7 +39,7 @@ describe('SimpleCacheProvider', () => {
   });
 
   it('throws an error on the subsequent read if the promise is rejected', async () => {
-    const {createCache, createResource} = SimpleCacheProvider;
+    const {createCache, createResource} = ReactCache;
 
     let shouldFail = true;
     function loadUpperCase(text) {
@@ -83,7 +83,7 @@ describe('SimpleCacheProvider', () => {
   });
 
   it('can preload data ahead of time', async () => {
-    const {createCache, createResource} = SimpleCacheProvider;
+    const {createCache, createResource} = ReactCache;
 
     function loadUpperCase(text) {
       return Promise.resolve(text.toUpperCase());
@@ -99,7 +99,7 @@ describe('SimpleCacheProvider', () => {
   });
 
   it('does not throw if preloaded promise rejects', async () => {
-    const {createCache, createResource} = SimpleCacheProvider;
+    const {createCache, createResource} = ReactCache;
 
     function loadUpperCase(text) {
       return Promise.reject(new Error('uh oh'));
@@ -115,7 +115,7 @@ describe('SimpleCacheProvider', () => {
   });
 
   it('accepts custom hash function', async () => {
-    const {createCache, createResource} = SimpleCacheProvider;
+    const {createCache, createResource} = ReactCache;
 
     function loadSum([a, b]) {
       return Promise.resolve(a + b);
@@ -138,7 +138,7 @@ describe('SimpleCacheProvider', () => {
   });
 
   it('warns if resourceType is a string or number', () => {
-    const {createCache} = SimpleCacheProvider;
+    const {createCache} = ReactCache;
 
     spyOnDev(console, 'error');
     const cache = createCache();
@@ -166,7 +166,7 @@ describe('SimpleCacheProvider', () => {
   });
 
   it('warns if non-primitive key is passed to a resource without a hash function', () => {
-    const {createCache, createResource} = SimpleCacheProvider;
+    const {createCache, createResource} = ReactCache;
 
     spyOnDev(console, 'error');
 
@@ -197,7 +197,7 @@ describe('SimpleCacheProvider', () => {
   });
 
   it('stays within maximum capacity by evicting the least recently used record', async () => {
-    const {createCache, createResource} = SimpleCacheProvider;
+    const {createCache, createResource} = ReactCache;
 
     function loadIntegerString(int) {
       return Promise.resolve(int + '');

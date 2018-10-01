@@ -4,7 +4,7 @@ import {
   unstable_trace as trace,
   unstable_wrap as wrap,
 } from 'scheduler/tracing';
-import {createResource} from 'simple-cache-provider';
+import {createResource} from 'react-cache';
 import {cache} from '../cache';
 import Spinner from './Spinner';
 import ContributorListPage from './ContributorListPage';

@@ -2,7 +2,7 @@ let React;
 let ReactFeatureFlags;
 let Fragment;
 let ReactNoop;
-let SimpleCacheProvider;
+let ReactCache;
 let Placeholder;
 let StrictMode;
 let ConcurrentMode;
@@ -22,17 +22,17 @@ describe('ReactSuspense', () => {
     React = require('react');
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
-    SimpleCacheProvider = require('simple-cache-provider');
+    ReactCache = require('react-cache');
     Placeholder = React.Placeholder;
     StrictMode = React.StrictMode;
     ConcurrentMode = React.unstable_ConcurrentMode;
     lazy = React.lazy;
 
     function invalidateCache() {
-      cache = SimpleCacheProvider.createCache(invalidateCache);
+      cache = ReactCache.createCache(invalidateCache);
     }
     invalidateCache();
-    TextResource = SimpleCacheProvider.createResource(([text, ms = 0]) => {
+    TextResource = ReactCache.createResource(([text, ms = 0]) => {
       return new Promise((resolve, reject) =>
         setTimeout(() => {
           if (textResourceShouldFail) {
