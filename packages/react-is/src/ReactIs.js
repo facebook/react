@@ -10,7 +10,7 @@
 'use strict';
 
 import {
-  REACT_ASYNC_MODE_TYPE,
+  REACT_CONCURRENT_MODE_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
@@ -21,6 +21,7 @@ import {
   REACT_STRICT_MODE_TYPE,
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 
 export function typeOf(object: any) {
   if (typeof object === 'object' && object !== null) {
@@ -31,7 +32,7 @@ export function typeOf(object: any) {
         const type = object.type;
 
         switch (type) {
-          case REACT_ASYNC_MODE_TYPE:
+          case REACT_CONCURRENT_MODE_TYPE:
           case REACT_FRAGMENT_TYPE:
           case REACT_PROFILER_TYPE:
           case REACT_STRICT_MODE_TYPE:
@@ -56,7 +57,9 @@ export function typeOf(object: any) {
   return undefined;
 }
 
-export const AsyncMode = REACT_ASYNC_MODE_TYPE;
+// AsyncMode alias is deprecated along with isAsyncMode
+export const AsyncMode = REACT_CONCURRENT_MODE_TYPE;
+export const ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
 export const ContextConsumer = REACT_CONTEXT_TYPE;
 export const ContextProvider = REACT_PROVIDER_TYPE;
 export const Element = REACT_ELEMENT_TYPE;
@@ -68,8 +71,25 @@ export const StrictMode = REACT_STRICT_MODE_TYPE;
 
 export {isValidElementType};
 
+let hasWarnedAboutDeprecatedIsAsyncMode = false;
+
+// AsyncMode should be deprecated
 export function isAsyncMode(object: any) {
-  return typeOf(object) === REACT_ASYNC_MODE_TYPE;
+  if (__DEV__) {
+    if (!hasWarnedAboutDeprecatedIsAsyncMode) {
+      hasWarnedAboutDeprecatedIsAsyncMode = true;
+      lowPriorityWarning(
+        false,
+        'The ReactIs.isAsyncMode() alias has been deprecated, ' +
+          'and will be removed in React 17+. Update your code to use ' +
+          'ReactIs.isConcurrentMode() instead. It has the exact same API.',
+      );
+    }
+  }
+  return isConcurrentMode(object);
+}
+export function isConcurrentMode(object: any) {
+  return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
 }
 export function isContextConsumer(object: any) {
   return typeOf(object) === REACT_CONTEXT_TYPE;

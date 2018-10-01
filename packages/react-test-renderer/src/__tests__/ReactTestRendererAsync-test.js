@@ -25,7 +25,7 @@ describe('ReactTestRendererAsync', () => {
       return props.children;
     }
     const renderer = ReactTestRenderer.create(<Foo>Hi</Foo>, {
-      unstable_isAsync: true,
+      unstable_isConcurrent: true,
     });
 
     // Before flushing, nothing has mounted.
@@ -59,7 +59,7 @@ describe('ReactTestRendererAsync', () => {
       );
     }
     const renderer = ReactTestRenderer.create(<Parent step={1} />, {
-      unstable_isAsync: true,
+      unstable_isConcurrent: true,
     });
 
     expect(renderer).toFlushAll(['A:1', 'B:1', 'C:1']);
@@ -85,7 +85,7 @@ describe('ReactTestRendererAsync', () => {
       );
     }
     const renderer = ReactTestRenderer.create(<Parent step={1} />, {
-      unstable_isAsync: true,
+      unstable_isConcurrent: true,
     });
 
     // Flush the first two siblings
@@ -122,7 +122,7 @@ describe('ReactTestRendererAsync', () => {
     }
 
     const renderer = ReactTestRenderer.create(<Example step={1} />, {
-      unstable_isAsync: true,
+      unstable_isConcurrent: true,
     });
 
     // Flush the some of the changes, but don't commit
@@ -152,7 +152,7 @@ describe('ReactTestRendererAsync', () => {
           <Yield id="baz" />
         </div>,
         {
-          unstable_isAsync: true,
+          unstable_isConcurrent: true,
         },
       );
 
@@ -174,7 +174,7 @@ describe('ReactTestRendererAsync', () => {
           <Yield id="baz" />
         </div>,
         {
-          unstable_isAsync: true,
+          unstable_isConcurrent: true,
         },
       );
 
@@ -218,7 +218,7 @@ describe('ReactTestRendererAsync', () => {
       }
 
       const renderer = ReactTestRenderer.create(<App />, {
-        unstable_isAsync: true,
+        unstable_isConcurrent: true,
       });
 
       expect(() => {

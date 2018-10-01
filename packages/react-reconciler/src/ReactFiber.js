@@ -37,12 +37,19 @@ import {
   FunctionalComponentLazy,
   ClassComponentLazy,
   ForwardRefLazy,
+  PureComponent,
+  PureComponentLazy,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {NoWork} from './ReactFiberExpirationTime';
-import {NoContext, AsyncMode, ProfileMode, StrictMode} from './ReactTypeOfMode';
+import {
+  NoContext,
+  ConcurrentMode,
+  ProfileMode,
+  StrictMode,
+} from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -50,8 +57,9 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
-  REACT_ASYNC_MODE_TYPE,
+  REACT_CONCURRENT_MODE_TYPE,
   REACT_PLACEHOLDER_TYPE,
+  REACT_PURE_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -133,7 +141,7 @@ export type Fiber = {|
   firstContextDependency: ContextDependency<mixed> | null,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
-  // the AsyncMode flag indicates whether the subtree should be async-by-
+  // the ConcurrentMode flag indicates whether the subtree should be async-by-
   // default. When a fiber is created, it inherits the mode of its
   // parent. Additional flags can be set at creation time, but after that the
   // value should remain unchanged throughout the fiber's lifetime, particularly
@@ -295,12 +303,14 @@ export function resolveLazyComponentTag(
     return shouldConstruct(Component)
       ? ClassComponentLazy
       : FunctionalComponentLazy;
-  } else if (
-    Component !== undefined &&
-    Component !== null &&
-    Component.$$typeof
-  ) {
-    return ForwardRefLazy;
+  } else if (Component !== undefined && Component !== null) {
+    const $$typeof = Component.$$typeof;
+    if ($$typeof === REACT_FORWARD_REF_TYPE) {
+      return ForwardRefLazy;
+    }
+    if ($$typeof === REACT_PURE_TYPE) {
+      return PureComponentLazy;
+    }
   }
   return IndeterminateComponent;
 }
@@ -358,15 +368,8 @@ export function createWorkInProgress(
     }
   }
 
-  // Don't touching the subtree's expiration time, which has not changed.
   workInProgress.childExpirationTime = current.childExpirationTime;
-  if (pendingProps !== current.pendingProps) {
-    // This fiber has new props.
-    workInProgress.expirationTime = expirationTime;
-  } else {
-    // This fiber's props have not changed.
-    workInProgress.expirationTime = current.expirationTime;
-  }
+  workInProgress.expirationTime = current.expirationTime;
 
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
@@ -387,8 +390,8 @@ export function createWorkInProgress(
   return workInProgress;
 }
 
-export function createHostRootFiber(isAsync: boolean): Fiber {
-  let mode = isAsync ? AsyncMode | StrictMode : NoContext;
+export function createHostRootFiber(isConcurrent: boolean): Fiber {
+  let mode = isConcurrent ? ConcurrentMode | StrictMode : NoContext;
 
   if (enableProfilerTimer && isDevToolsPresent) {
     // Always collect profile timings when DevTools are present.
@@ -429,9 +432,9 @@ export function createFiberFromElement(
           expirationTime,
           key,
         );
-      case REACT_ASYNC_MODE_TYPE:
+      case REACT_CONCURRENT_MODE_TYPE:
         fiberTag = Mode;
-        mode |= AsyncMode | StrictMode;
+        mode |= ConcurrentMode | StrictMode;
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
@@ -454,6 +457,9 @@ export function createFiberFromElement(
               break getTag;
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
+              break getTag;
+            case REACT_PURE_TYPE:
+              fiberTag = PureComponent;
               break getTag;
             default: {
               if (typeof type.then === 'function') {

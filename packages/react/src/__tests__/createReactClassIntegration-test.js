@@ -459,9 +459,9 @@ describe('create-react-class-integration', () => {
     );
   });
 
-  it('warns if getDerivedStateFromCatch is not static', () => {
+  it('warns if getDerivedStateFromError is not static', () => {
     const Foo = createReactClass({
-      getDerivedStateFromCatch() {
+      getDerivedStateFromError() {
         return {};
       },
       render() {
@@ -471,7 +471,7 @@ describe('create-react-class-integration', () => {
     expect(() =>
       ReactDOM.render(<Foo foo="foo" />, document.createElement('div')),
     ).toWarnDev(
-      'Component: getDerivedStateFromCatch() is defined as an instance method ' +
+      'Component: getDerivedStateFromError() is defined as an instance method ' +
         'and will be ignored. Instead, declare it as a static method.',
       {withoutStack: true},
     );

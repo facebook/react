@@ -2398,7 +2398,10 @@ describe('ReactIncremental', () => {
     instance.setState({
       throwError: true,
     });
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Error boundaries should implement getDerivedStateFromError()',
+      {withoutStack: true},
+    );
   });
 
   it('should not recreate masked context unless inputs have changed', () => {

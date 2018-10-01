@@ -14,7 +14,7 @@ let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let ReactDOM;
 
-const AsyncMode = React.unstable_AsyncMode;
+const ConcurrentMode = React.unstable_ConcurrentMode;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
@@ -108,9 +108,9 @@ describe('ReactDOMFiberAsync', () => {
       }
     }
     ReactDOM.render(
-      <AsyncMode>
+      <ConcurrentMode>
         <Counter />
-      </AsyncMode>,
+      </ConcurrentMode>,
       container,
     );
     expect(asyncValueRef.current.textContent).toBe('');
@@ -137,17 +137,17 @@ describe('ReactDOMFiberAsync', () => {
 
     it('renders synchronously', () => {
       ReactDOM.render(
-        <AsyncMode>
+        <ConcurrentMode>
           <div>Hi</div>
-        </AsyncMode>,
+        </ConcurrentMode>,
         container,
       );
       expect(container.textContent).toEqual('Hi');
 
       ReactDOM.render(
-        <AsyncMode>
+        <ConcurrentMode>
           <div>Bye</div>
-        </AsyncMode>,
+        </ConcurrentMode>,
         container,
       );
       expect(container.textContent).toEqual('Bye');
@@ -197,7 +197,7 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('1');
     });
 
-    it('AsyncMode creates an async subtree', () => {
+    it('ConcurrentMode creates an async subtree', () => {
       let instance;
       class Component extends React.Component {
         state = {step: 0};
@@ -208,9 +208,9 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       ReactDOM.render(
-        <AsyncMode>
+        <ConcurrentMode>
           <Component />
-        </AsyncMode>,
+        </ConcurrentMode>,
         container,
       );
       jest.runAllTimers();
@@ -233,9 +233,9 @@ describe('ReactDOMFiberAsync', () => {
 
       ReactDOM.render(
         <div>
-          <AsyncMode>
+          <ConcurrentMode>
             <Child />
-          </AsyncMode>
+          </ConcurrentMode>
         </div>,
         container,
       );
@@ -364,9 +364,9 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       ReactDOM.render(
-        <AsyncMode>
+        <ConcurrentMode>
           <Component />
-        </AsyncMode>,
+        </ConcurrentMode>,
         container,
       );
       jest.runAllTimers();
@@ -409,9 +409,9 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
       ReactDOM.render(
-        <AsyncMode>
+        <ConcurrentMode>
           <Counter />
-        </AsyncMode>,
+        </ConcurrentMode>,
         container,
       );
       expect(container.textContent).toEqual('0');

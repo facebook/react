@@ -468,30 +468,53 @@ var requestHostCallback;
 var cancelHostCallback;
 var getFrameDeadline;
 
-// "addEventListener" might not be available on the window object
-// if this is a mocked "window" object. So we need to validate that too.
-if (
-  typeof window === 'undefined' ||
-  typeof window.addEventListener !== 'function'
-) {
-  // If this accidentally gets imported in a non-browser environment, fallback
-  // to a naive implementation.
-  var timeoutID = -1;
-  requestHostCallback = function(callback, absoluteTimeout) {
-    timeoutID = setTimeout(callback, 0, true);
-  };
-  cancelHostCallback = function() {
-    clearTimeout(timeoutID);
-  };
-  getFrameDeadline = function() {
-    return 0;
-  };
-} else if (window._schedMock) {
+if (typeof window !== 'undefined' && window._schedMock) {
   // Dynamic injection, only for testing purposes.
   var impl = window._schedMock;
   requestHostCallback = impl[0];
   cancelHostCallback = impl[1];
   getFrameDeadline = impl[2];
+} else if (
+  // If Scheduler runs in a non-DOM environment, it falls back to a naive
+  // implementation using setTimeout.
+  typeof window === 'undefined' ||
+  // "addEventListener" might not be available on the window object
+  // if this is a mocked "window" object. So we need to validate that too.
+  typeof window.addEventListener !== 'function'
+) {
+  var _callback = null;
+  var _currentTime = -1;
+  var _flushCallback = function(didTimeout, ms) {
+    if (_callback !== null) {
+      var cb = _callback;
+      _callback = null;
+      try {
+        _currentTime = ms;
+        cb(didTimeout);
+      } finally {
+        _currentTime = -1;
+      }
+    }
+  };
+  requestHostCallback = function(cb, ms) {
+    if (_currentTime !== -1) {
+      // Protect against re-entrancy.
+      setTimeout(requestHostCallback, 0, cb, ms);
+    } else {
+      _callback = cb;
+      setTimeout(_flushCallback, ms, true, ms);
+      setTimeout(_flushCallback, maxSigned31BitInt, false, maxSigned31BitInt);
+    }
+  };
+  cancelHostCallback = function() {
+    _callback = null;
+  };
+  getFrameDeadline = function() {
+    return Infinity;
+  };
+  getCurrentTime = function() {
+    return _currentTime === -1 ? 0 : _currentTime;
+  };
 } else {
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link

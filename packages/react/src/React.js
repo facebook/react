@@ -7,7 +7,7 @@
 
 import ReactVersion from 'shared/ReactVersion';
 import {
-  REACT_ASYNC_MODE_TYPE,
+  REACT_CONCURRENT_MODE_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
@@ -27,6 +27,7 @@ import {
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import forwardRef from './forwardRef';
+import pure from './pure';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -49,10 +50,11 @@ const React = {
 
   createContext,
   forwardRef,
+  pure,
 
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
-  unstable_AsyncMode: REACT_ASYNC_MODE_TYPE,
+  unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
   unstable_Profiler: REACT_PROFILER_TYPE,
 
   createElement: __DEV__ ? createElementWithValidation : createElement,

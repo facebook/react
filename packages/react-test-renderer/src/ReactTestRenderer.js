@@ -30,6 +30,8 @@ import {
   ForwardRef,
   Profiler,
   ForwardRefLazy,
+  PureComponent,
+  PureComponentLazy,
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
@@ -39,7 +41,7 @@ import * as TestRendererScheduling from './ReactTestRendererScheduling';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
-  unstable_isAsync: boolean,
+  unstable_isConcurrent: boolean,
 };
 
 type ReactTestRendererJSON = {|
@@ -199,6 +201,8 @@ function toTree(node: ?Fiber) {
     case Profiler:
     case ForwardRef:
     case ForwardRefLazy:
+    case PureComponent:
+    case PureComponentLazy:
       return childrenToTree(node.child);
     default:
       invariant(
@@ -217,6 +221,8 @@ const validWrapperTypes = new Set([
   HostComponent,
   ForwardRef,
   ForwardRefLazy,
+  PureComponent,
+  PureComponentLazy,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);
@@ -419,13 +425,13 @@ function propsMatch(props: Object, filter: Object): boolean {
 const ReactTestRendererFiber = {
   create(element: React$Element<any>, options: TestRendererOptions) {
     let createNodeMock = defaultTestOptions.createNodeMock;
-    let isAsync = false;
+    let isConcurrent = false;
     if (typeof options === 'object' && options !== null) {
       if (typeof options.createNodeMock === 'function') {
         createNodeMock = options.createNodeMock;
       }
-      if (options.unstable_isAsync === true) {
-        isAsync = true;
+      if (options.unstable_isConcurrent === true) {
+        isConcurrent = true;
       }
     }
     let container = {
@@ -435,7 +441,7 @@ const ReactTestRendererFiber = {
     };
     let root: FiberRoot | null = TestRenderer.createContainer(
       container,
-      isAsync,
+      isConcurrent,
       false,
     );
     invariant(root != null, 'something went wrong');

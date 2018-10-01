@@ -32,8 +32,8 @@ export const REACT_PROVIDER_TYPE = hasSymbol
 export const REACT_CONTEXT_TYPE = hasSymbol
   ? Symbol.for('react.context')
   : 0xeace;
-export const REACT_ASYNC_MODE_TYPE = hasSymbol
-  ? Symbol.for('react.async_mode')
+export const REACT_CONCURRENT_MODE_TYPE = hasSymbol
+  ? Symbol.for('react.concurrent_mode')
   : 0xeacf;
 export const REACT_FORWARD_REF_TYPE = hasSymbol
   ? Symbol.for('react.forward_ref')
@@ -41,6 +41,7 @@ export const REACT_FORWARD_REF_TYPE = hasSymbol
 export const REACT_PLACEHOLDER_TYPE = hasSymbol
   ? Symbol.for('react.placeholder')
   : 0xead1;
+export const REACT_PURE_TYPE = hasSymbol ? Symbol.for('react.pure') : 0xead3;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';
