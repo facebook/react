@@ -1,5 +1,5 @@
 import React, {Placeholder} from 'react';
-import {createResource} from 'simple-cache-provider';
+import {createResource} from 'react-cache';
 import Spinner from './Spinner';
 import {cache} from '../cache';
 import {fetchUserProfileJSON, fetchUserRepositoriesListJSON} from '../api';

@@ -2172,15 +2172,15 @@ describe('Profiler', () => {
       }
 
       beforeEach(() => {
-        const SimpleCacheProvider = require('simple-cache-provider');
+        const ReactCache = require('react-cache');
         function invalidateCache() {
-          cache = SimpleCacheProvider.createCache(invalidateCache);
+          cache = ReactCache.createCache(invalidateCache);
         }
         invalidateCache();
 
         resourcePromise = null;
 
-        TextResource = SimpleCacheProvider.createResource(([text, ms = 0]) => {
+        TextResource = ReactCache.createResource(([text, ms = 0]) => {
           resourcePromise = new Promise((resolve, reject) =>
             setTimeout(() => {
               yieldForRenderer(`Promise resolved [${text}]`);

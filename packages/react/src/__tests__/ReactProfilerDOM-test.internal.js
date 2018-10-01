@@ -13,7 +13,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let SchedulerTracing;
-let SimpleCacheProvider;
+let ReactCache;
 
 function initEnvForAsyncTesting() {
   // Boilerplate copied from ReactDOMRoot-test
@@ -55,7 +55,7 @@ function loadModules() {
   React = require('react');
   SchedulerTracing = require('scheduler/tracing');
   ReactDOM = require('react-dom');
-  SimpleCacheProvider = require('simple-cache-provider');
+  ReactCache = require('react-cache');
 }
 
 describe('ProfilerDOM', () => {
@@ -82,11 +82,11 @@ describe('ProfilerDOM', () => {
       onWorkStopped: () => {},
     });
 
-    cache = SimpleCacheProvider.createCache(() => {});
+    cache = ReactCache.createCache(() => {});
 
     resourcePromise = null;
 
-    TextResource = SimpleCacheProvider.createResource(([text, ms = 0]) => {
+    TextResource = ReactCache.createResource(([text, ms = 0]) => {
       resourcePromise = new Promise(
         SchedulerTracing.unstable_wrap((resolve, reject) => {
           setTimeout(

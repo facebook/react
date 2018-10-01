@@ -26,7 +26,7 @@ Set [the `enableSuspense` flag](https://github.com/facebook/react/blob/d79238f1e
 # 1: Build react from source
 cd /path/to/react
 yarn
-yarn build dom-client,core,simple-cache-provider,schedule --type=NODE
+yarn build dom-client,core,react-cache,schedule --type=NODE
 
 # 2: Install fixture dependencies
 cd fixtures/unstable-async/suspense/
