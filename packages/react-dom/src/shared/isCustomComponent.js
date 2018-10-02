@@ -7,10 +7,7 @@
  * @flow
  */
 
-function isCustomComponent(tagName: string, props: Object) {
-  if (tagName.indexOf('-') === -1) {
-    return typeof props.is === 'string';
-  }
+function isAutonomousCustomComponent(tagName: string) {
   switch (tagName) {
     // These are reserved SVG and MathML elements.
     // We don't mind this whitelist too much because we expect it to never grow.
@@ -26,8 +23,12 @@ function isCustomComponent(tagName: string, props: Object) {
     case 'missing-glyph':
       return false;
     default:
-      return true;
+      return tagName.indexOf('-') !== -1;
   }
 }
 
-export default isCustomComponent;
+function isCustomComponent(tagName: string, props: Object) {
+  return isAutonomousCustomComponent(tagName) || typeof props.is === 'string';
+}
+
+export {isAutonomousCustomComponent, isCustomComponent as default};
