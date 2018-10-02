@@ -17,12 +17,12 @@ declare var jest: {
 
 export function createMockSubscriber() {
   const subscriber = {
-    onInteractionScheduledWorkCompleted: jest.fn(),
-    onInteractionTraced: jest.fn(),
-    onWorkCanceled: jest.fn(),
-    onWorkScheduled: jest.fn(),
-    onWorkStarted: jest.fn(),
-    onWorkStopped: jest.fn(),
+    onInteractionScheduledWorkCompleted: jest.fn(), // eslint-disable-line no-undef
+    onInteractionTraced: jest.fn(), // eslint-disable-line no-undef
+    onWorkCanceled: jest.fn(), // eslint-disable-line no-undef
+    onWorkScheduled: jest.fn(), // eslint-disable-line no-undef
+    onWorkStarted: jest.fn(), // eslint-disable-line no-undef
+    onWorkStopped: jest.fn(), // eslint-disable-line no-undef
 
     // Convenience method to reset all mocked functions
     clear: () => {
