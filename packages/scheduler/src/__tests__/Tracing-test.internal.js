@@ -66,7 +66,7 @@ describe('Tracing', () => {
     });
 
     it('should return an empty set when outside of a traced event', () => {
-      expect(SchedulerTracing.unstable_getCurrent()).toContainNoInteractions();
+      expect(SchedulerTracing.unstable_getCurrent().size).toBe(0);
     });
 
     it('should report the traced interaction from within the trace callback', done => {

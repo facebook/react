@@ -43,6 +43,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.spyOnDevAndProd = spyOn;
   }
 
+  // This package auto-installs on require.
+  require('jest-scheduler');
+
   expect.extend({
     ...require('./matchers/interactionTracing'),
     ...require('./matchers/toWarnDev'),

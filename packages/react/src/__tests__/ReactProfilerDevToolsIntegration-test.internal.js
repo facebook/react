@@ -173,7 +173,7 @@ describe('ReactProfiler DevTools integration', () => {
     const rendered = ReactTestRenderer.create(<div />);
 
     const root = rendered.root._currentFiber().return;
-    expect(root.stateNode.memoizedInteractions).toContainNoInteractions();
+    expect(root.stateNode.memoizedInteractions.size).toBe(0);
 
     advanceTimeBy(10);
 

@@ -408,6 +408,16 @@ const bundles = [
     global: 'SchedulerTracing',
     externals: [],
   },
+
+  /******* createComponentWithSubscriptions (experimental) *******/
+  {
+    label: 'jest-scheduler',
+    bundleTypes: [NODE_DEV],
+    moduleType: ISOMORPHIC,
+    entry: 'jest-scheduler',
+    global: 'JestScheduler',
+    externals: ['chalk', 'expect', 'jest-diff'],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)

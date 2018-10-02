@@ -1,17 +1,16 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 'use strict';
 
 const jestDiff = require('jest-diff');
+const {toMatchInteraction, toMatchInteractions} = require('jest-scheduler');
 
-function toContainNoInteractions(actualSet) {
-  return {
-    message: () =>
-      this.isNot
-        ? `Expected interactions but there were none.`
-        : `Expected no interactions but there were ${actualSet.size}.`,
-    pass: actualSet.size === 0,
-  };
-}
-
+// TODO (bvaughn) Remove this matcher once tests no longer reference it
 function toHaveBeenLastNotifiedOfInteraction(
   mockFunction,
   expectedInteraction
@@ -29,6 +28,7 @@ function toHaveBeenLastNotifiedOfInteraction(
   return toMatchInteraction(actualInteraction, expectedInteraction);
 }
 
+// TODO (bvaughn) Remove this matcher once tests no longer reference it
 function toHaveBeenLastNotifiedOfWork(
   mockFunction,
   expectedInteractions,
@@ -56,48 +56,8 @@ function toHaveBeenLastNotifiedOfWork(
   return toMatchInteractions(actualInteractions, expectedInteractions);
 }
 
-function toMatchInteraction(actual, expected) {
-  let attribute;
-  for (attribute in expected) {
-    if (actual[attribute] !== expected[attribute]) {
-      return {
-        message: () => jestDiff(expected, actual),
-        pass: false,
-      };
-    }
-  }
-
-  return {pass: true};
-}
-
-function toMatchInteractions(actualSetOrArray, expectedSetOrArray) {
-  const actualArray = Array.from(actualSetOrArray);
-  const expectedArray = Array.from(expectedSetOrArray);
-
-  if (actualArray.length !== expectedArray.length) {
-    return {
-      message: () =>
-        `Expected ${expectedArray.length} interactions but there were ${
-          actualArray.length
-        }`,
-      pass: false,
-    };
-  }
-
-  for (let i = 0; i < actualArray.length; i++) {
-    const result = toMatchInteraction(actualArray[i], expectedArray[i]);
-    if (result.pass === false) {
-      return result;
-    }
-  }
-
-  return {pass: true};
-}
-
+// TODO (bvaughn) Remove these matchers once tests no longer reference them
 module.exports = {
-  toContainNoInteractions,
   toHaveBeenLastNotifiedOfInteraction,
   toHaveBeenLastNotifiedOfWork,
-  toMatchInteraction,
-  toMatchInteractions,
 };

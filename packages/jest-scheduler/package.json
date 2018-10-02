@@ -1,0 +1,31 @@
+{
+  "name": "jest-scheduler",
+  "version": "0.1.0",
+  "description": "Jest matchers and utilities for testing the NPM scheduler package.",
+  "main": "index.js",
+  "repository": "facebook/react",
+  "keywords": [
+    "jest",
+    "scheduler",
+    "tracing",
+    "interactions"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://reactjs.org/",
+  "devDependencies": {
+    "chalk": "^2.4.1",
+    "scheduler": "^0.9.0"
+  },
+  "peerDependencies": {
+    "jest": "^23.0.1"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "cjs/"
+  ]
+}
