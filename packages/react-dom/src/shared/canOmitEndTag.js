@@ -20,7 +20,11 @@ import {isAutonomousCustomComponent} from './isCustomComponent';
  * null if tagName doesn't have a parent.
  * @return {boolean} True if the end tag can be omitted.
  */
-function canOmitEndTag(tagName: string, nextSibling: ?string, parent: ?string) {
+function canOmitCloseTag(
+  tagName: string,
+  nextSibling: ?string,
+  parent: ?string,
+): boolean {
   switch (tagName) {
     // An li element’s end tag may be omitted if the li element is
     // immediately followed by another li element or if there is no
@@ -185,4 +189,4 @@ function canOmitEndTag(tagName: string, nextSibling: ?string, parent: ?string) {
   }
 }
 
-export default canOmitEndTag;
+export default canOmitCloseTag;
