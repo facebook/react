@@ -14,18 +14,6 @@ describe('TracingSubscriptions', () => {
 
   let currentTime;
 
-  let onInteractionScheduledWorkCompleted;
-  let onInteractionTraced;
-  let onWorkCanceled;
-  let onWorkScheduled;
-  let onWorkStarted;
-  let onWorkStopped;
-  let throwInOnInteractionScheduledWorkCompleted;
-  let throwInOnInteractionTraced;
-  let throwInOnWorkCanceled;
-  let throwInOnWorkScheduled;
-  let throwInOnWorkStarted;
-  let throwInOnWorkStopped;
   let firstSubscriber;
   let secondSubscriber;
 
@@ -44,61 +32,9 @@ describe('TracingSubscriptions', () => {
 
     SchedulerTracing = require('scheduler/tracing');
 
-    throwInOnInteractionScheduledWorkCompleted = false;
-    throwInOnInteractionTraced = false;
-    throwInOnWorkCanceled = false;
-    throwInOnWorkScheduled = false;
-    throwInOnWorkStarted = false;
-    throwInOnWorkStopped = false;
-
-    onInteractionScheduledWorkCompleted = jest.fn(() => {
-      if (throwInOnInteractionScheduledWorkCompleted) {
-        throw Error('Expected error onInteractionScheduledWorkCompleted');
-      }
-    });
-    onInteractionTraced = jest.fn(() => {
-      if (throwInOnInteractionTraced) {
-        throw Error('Expected error onInteractionTraced');
-      }
-    });
-    onWorkCanceled = jest.fn(() => {
-      if (throwInOnWorkCanceled) {
-        throw Error('Expected error onWorkCanceled');
-      }
-    });
-    onWorkScheduled = jest.fn(() => {
-      if (throwInOnWorkScheduled) {
-        throw Error('Expected error onWorkScheduled');
-      }
-    });
-    onWorkStarted = jest.fn(() => {
-      if (throwInOnWorkStarted) {
-        throw Error('Expected error onWorkStarted');
-      }
-    });
-    onWorkStopped = jest.fn(() => {
-      if (throwInOnWorkStopped) {
-        throw Error('Expected error onWorkStopped');
-      }
-    });
-
-    firstSubscriber = {
-      onInteractionScheduledWorkCompleted,
-      onInteractionTraced,
-      onWorkCanceled,
-      onWorkScheduled,
-      onWorkStarted,
-      onWorkStopped,
-    };
-
-    secondSubscriber = {
-      onInteractionScheduledWorkCompleted: jest.fn(),
-      onInteractionTraced: jest.fn(),
-      onWorkCanceled: jest.fn(),
-      onWorkScheduled: jest.fn(),
-      onWorkStarted: jest.fn(),
-      onWorkStopped: jest.fn(),
-    };
+    const {createMockSubscriber} = require('jest-scheduler');
+    firstSubscriber = createMockSubscriber();
+    secondSubscriber = createMockSubscriber();
 
     if (autoSubscribe) {
       SchedulerTracing.unstable_subscribe(firstSubscriber);
@@ -129,7 +65,9 @@ describe('TracingSubscriptions', () => {
           const mock = jest.fn();
 
           // It should call the callback before re-throwing
-          throwInOnInteractionTraced = true;
+          firstSubscriber.onInteractionTraced.mockImplementationOnce(() => {
+            throw Error('Expected error onInteractionTraced');
+          });
           expect(() =>
             SchedulerTracing.unstable_trace(
               secondEvent.name,
@@ -138,10 +76,11 @@ describe('TracingSubscriptions', () => {
               threadID,
             ),
           ).toThrow('Expected error onInteractionTraced');
-          throwInOnInteractionTraced = false;
           expect(mock).toHaveBeenCalledTimes(1);
 
-          throwInOnWorkStarted = true;
+          firstSubscriber.onWorkStarted.mockImplementationOnce(() => {
+            throw Error('Expected error onWorkStarted');
+          });
           expect(() =>
             SchedulerTracing.unstable_trace(
               secondEvent.name,
@@ -174,7 +113,9 @@ describe('TracingSubscriptions', () => {
             )[1];
           });
 
-          throwInOnWorkStopped = true;
+          firstSubscriber.onWorkStopped.mockImplementationOnce(() => {
+            throw Error('Expected error onWorkStopped');
+          });
           expect(() =>
             SchedulerTracing.unstable_trace(
               secondEvent.name,
@@ -182,7 +123,6 @@ describe('TracingSubscriptions', () => {
               mock,
             ),
           ).toThrow('Expected error onWorkStopped');
-          throwInOnWorkStopped = false;
 
           // It should restore the previous/outer interactions
           expect(SchedulerTracing.unstable_getCurrent()).toMatchInteractions([
@@ -203,7 +143,11 @@ describe('TracingSubscriptions', () => {
         SchedulerTracing.unstable_trace(firstEvent.name, currentTime, () => {
           const mock = jest.fn();
 
-          throwInOnInteractionScheduledWorkCompleted = true;
+          firstSubscriber.onInteractionScheduledWorkCompleted.mockImplementationOnce(
+            () => {
+              throw Error('Expected error onInteractionScheduledWorkCompleted');
+            },
+          );
           expect(() =>
             SchedulerTracing.unstable_trace(
               secondEvent.name,
@@ -211,7 +155,6 @@ describe('TracingSubscriptions', () => {
               mock,
             ),
           ).toThrow('Expected error onInteractionScheduledWorkCompleted');
-          throwInOnInteractionScheduledWorkCompleted = false;
 
           // It should restore the previous/outer interactions
           expect(SchedulerTracing.unstable_getCurrent()).toMatchInteractions([
@@ -228,8 +171,8 @@ describe('TracingSubscriptions', () => {
       });
 
       it('should cover the callback within trace', done => {
-        expect(onWorkStarted).not.toHaveBeenCalled();
-        expect(onWorkStopped).not.toHaveBeenCalled();
+        expect(firstSubscriber.onWorkStarted).not.toHaveBeenCalled();
+        expect(firstSubscriber.onWorkStopped).not.toHaveBeenCalled();
 
         expect(() => {
           SchedulerTracing.unstable_trace(firstEvent.name, currentTime, () => {
@@ -237,8 +180,8 @@ describe('TracingSubscriptions', () => {
           });
         }).toThrow('Expected error callback');
 
-        expect(onWorkStarted).toHaveBeenCalledTimes(1);
-        expect(onWorkStopped).toHaveBeenCalledTimes(1);
+        expect(firstSubscriber.onWorkStarted).toHaveBeenCalledTimes(1);
+        expect(firstSubscriber.onWorkStopped).toHaveBeenCalledTimes(1);
 
         done();
       });
@@ -250,7 +193,9 @@ describe('TracingSubscriptions', () => {
           )[0];
           const beforeCount = interaction.__count;
 
-          throwInOnWorkScheduled = true;
+          firstSubscriber.onWorkScheduled.mockImplementationOnce(() => {
+            throw Error('Expected error onWorkScheduled');
+          });
           expect(() => SchedulerTracing.unstable_wrap(() => {})).toThrow(
             'Expected error onWorkScheduled',
           );
@@ -274,7 +219,9 @@ describe('TracingSubscriptions', () => {
         });
         expect(interaction.__count).toBe(1);
 
-        throwInOnWorkStarted = true;
+        firstSubscriber.onWorkStarted.mockImplementationOnce(() => {
+          throw Error('Expected error onWorkStarted');
+        });
         expect(wrapped).toThrow('Expected error onWorkStarted');
 
         // It should call the callback before re-throwing
@@ -312,9 +259,10 @@ describe('TracingSubscriptions', () => {
           expect(outerInteraction.__count).toBe(2);
           expect(innerInteraction.__count).toBe(1);
 
-          throwInOnWorkStopped = true;
+          firstSubscriber.onWorkStopped.mockImplementationOnce(() => {
+            throw Error('Expected error onWorkStopped');
+          });
           expect(wrapped).toThrow('Expected error onWorkStopped');
-          throwInOnWorkStopped = false;
 
           // It should restore the previous interactions
           expect(SchedulerTracing.unstable_getCurrent()).toMatchInteractions([
@@ -332,8 +280,8 @@ describe('TracingSubscriptions', () => {
       });
 
       it('should cover the callback within wrap', done => {
-        expect(onWorkStarted).not.toHaveBeenCalled();
-        expect(onWorkStopped).not.toHaveBeenCalled();
+        expect(firstSubscriber.onWorkStarted).not.toHaveBeenCalled();
+        expect(firstSubscriber.onWorkStopped).not.toHaveBeenCalled();
 
         let wrapped;
         let interaction;
@@ -344,14 +292,16 @@ describe('TracingSubscriptions', () => {
           });
         });
 
-        expect(onWorkStarted).toHaveBeenCalledTimes(1);
-        expect(onWorkStopped).toHaveBeenCalledTimes(1);
+        expect(firstSubscriber.onWorkStarted).toHaveBeenCalledTimes(1);
+        expect(firstSubscriber.onWorkStopped).toHaveBeenCalledTimes(1);
 
         expect(wrapped).toThrow('Expected error wrap');
 
-        expect(onWorkStarted).toHaveBeenCalledTimes(2);
-        expect(onWorkStopped).toHaveBeenCalledTimes(2);
-        expect(onWorkStopped).toHaveBeenLastNotifiedOfWork([interaction]);
+        expect(firstSubscriber.onWorkStarted).toHaveBeenCalledTimes(2);
+        expect(firstSubscriber.onWorkStopped).toHaveBeenCalledTimes(2);
+        expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkStopped([
+          interaction,
+        ]);
 
         done();
       });
@@ -364,16 +314,20 @@ describe('TracingSubscriptions', () => {
         });
         expect(interaction.__count).toBe(1);
 
-        throwInOnWorkCanceled = true;
+        firstSubscriber.onWorkCanceled.mockImplementationOnce(() => {
+          throw Error('Expected error onWorkCanceled');
+        });
         expect(wrapped.cancel).toThrow('Expected error onWorkCanceled');
 
-        expect(onWorkCanceled).toHaveBeenCalledTimes(1);
+        expect(firstSubscriber.onWorkCanceled).toHaveBeenCalledTimes(1);
 
         // It should update the interaction count so as not to interfere with subsequent calls
         expect(interaction.__count).toBe(0);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
+          firstSubscriber,
+        ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+          firstEvent,
+        );
 
         // It should call other subscribers despite the earlier error
         expect(secondSubscriber.onWorkCanceled).toHaveBeenCalledTimes(1);
@@ -381,52 +335,62 @@ describe('TracingSubscriptions', () => {
     });
 
     it('calls lifecycle methods for trace', () => {
-      expect(onInteractionTraced).not.toHaveBeenCalled();
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(firstSubscriber.onInteractionTraced).not.toHaveBeenCalled();
+      expect(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
 
       SchedulerTracing.unstable_trace(
         firstEvent.name,
         currentTime,
         () => {
-          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+          expect(firstSubscriber).toHaveBeenLastNotifiedOfInteractionTraced(
             firstEvent,
           );
-          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-          expect(onWorkStarted).toHaveBeenCalledTimes(1);
-          expect(onWorkStarted).toHaveBeenLastNotifiedOfWork(
+          expect(
+            firstSubscriber.onInteractionScheduledWorkCompleted,
+          ).not.toHaveBeenCalled();
+          expect(firstSubscriber.onWorkStarted).toHaveBeenCalledTimes(1);
+          expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkStarted(
             new Set([firstEvent]),
             threadID,
           );
-          expect(onWorkStopped).not.toHaveBeenCalled();
+          expect(firstSubscriber.onWorkStopped).not.toHaveBeenCalled();
 
           SchedulerTracing.unstable_trace(
             secondEvent.name,
             currentTime,
             () => {
-              expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-              expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(
+                2,
+              );
+              expect(firstSubscriber).toHaveBeenLastNotifiedOfInteractionTraced(
                 secondEvent,
               );
               expect(
-                onInteractionScheduledWorkCompleted,
+                firstSubscriber.onInteractionScheduledWorkCompleted,
               ).not.toHaveBeenCalled();
-              expect(onWorkStarted).toHaveBeenCalledTimes(2);
-              expect(onWorkStarted).toHaveBeenLastNotifiedOfWork(
+              expect(firstSubscriber.onWorkStarted).toHaveBeenCalledTimes(2);
+              expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkStarted(
                 new Set([firstEvent, secondEvent]),
                 threadID,
               );
-              expect(onWorkStopped).not.toHaveBeenCalled();
+              expect(firstSubscriber.onWorkStopped).not.toHaveBeenCalled();
             },
             threadID,
           );
 
-          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
           expect(
-            onInteractionScheduledWorkCompleted,
-          ).toHaveBeenLastNotifiedOfInteraction(secondEvent);
-          expect(onWorkStopped).toHaveBeenCalledTimes(1);
-          expect(onWorkStopped).toHaveBeenLastNotifiedOfWork(
+            firstSubscriber.onInteractionScheduledWorkCompleted,
+          ).toHaveBeenCalledTimes(1);
+          expect(
+            firstSubscriber,
+          ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+            secondEvent,
+          );
+          expect(firstSubscriber.onWorkStopped).toHaveBeenCalledTimes(1);
+          expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkStopped(
             new Set([firstEvent, secondEvent]),
             threadID,
           );
@@ -434,15 +398,17 @@ describe('TracingSubscriptions', () => {
         threadID,
       );
 
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
-      expect(onWorkScheduled).not.toHaveBeenCalled();
-      expect(onWorkCanceled).not.toHaveBeenCalled();
-      expect(onWorkStarted).toHaveBeenCalledTimes(2);
-      expect(onWorkStopped).toHaveBeenCalledTimes(2);
-      expect(onWorkStopped).toHaveBeenLastNotifiedOfWork(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        firstSubscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(firstEvent);
+      expect(firstSubscriber.onWorkScheduled).not.toHaveBeenCalled();
+      expect(firstSubscriber.onWorkCanceled).not.toHaveBeenCalled();
+      expect(firstSubscriber.onWorkStarted).toHaveBeenCalledTimes(2);
+      expect(firstSubscriber.onWorkStopped).toHaveBeenCalledTimes(2);
+      expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkStopped(
         new Set([firstEvent]),
         threadID,
       );
@@ -453,50 +419,52 @@ describe('TracingSubscriptions', () => {
       let wrapped;
 
       SchedulerTracing.unstable_trace(firstEvent.name, currentTime, () => {
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+        expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(firstSubscriber).toHaveBeenLastNotifiedOfInteractionTraced(
           firstEvent,
         );
 
         SchedulerTracing.unstable_trace(secondEvent.name, currentTime, () => {
-          expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
+          expect(firstSubscriber).toHaveBeenLastNotifiedOfInteractionTraced(
             secondEvent,
           );
 
           wrapped = SchedulerTracing.unstable_wrap(unwrapped, threadID);
-          expect(onWorkScheduled).toHaveBeenCalledTimes(1);
-          expect(onWorkScheduled).toHaveBeenLastNotifiedOfWork(
+          expect(firstSubscriber.onWorkScheduled).toHaveBeenCalledTimes(1);
+          expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkScheduled(
             new Set([firstEvent, secondEvent]),
             threadID,
           );
         });
       });
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
+      expect(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
 
       wrapped();
       expect(unwrapped).toHaveBeenCalled();
 
-      expect(onWorkScheduled).toHaveBeenCalledTimes(1);
-      expect(onWorkCanceled).not.toHaveBeenCalled();
-      expect(onWorkStarted).toHaveBeenCalledTimes(3);
-      expect(onWorkStarted).toHaveBeenLastNotifiedOfWork(
+      expect(firstSubscriber.onWorkScheduled).toHaveBeenCalledTimes(1);
+      expect(firstSubscriber.onWorkCanceled).not.toHaveBeenCalled();
+      expect(firstSubscriber.onWorkStarted).toHaveBeenCalledTimes(3);
+      expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkStarted(
         new Set([firstEvent, secondEvent]),
         threadID,
       );
-      expect(onWorkStopped).toHaveBeenCalledTimes(3);
-      expect(onWorkStopped).toHaveBeenLastNotifiedOfWork(
+      expect(firstSubscriber.onWorkStopped).toHaveBeenCalledTimes(3);
+      expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkStopped(
         new Set([firstEvent, secondEvent]),
         threadID,
       );
 
       expect(
-        onInteractionScheduledWorkCompleted.mock.calls[0][0],
+        firstSubscriber.onInteractionScheduledWorkCompleted.mock.calls[0][0],
       ).toMatchInteraction(firstEvent);
       expect(
-        onInteractionScheduledWorkCompleted.mock.calls[1][0],
+        firstSubscriber.onInteractionScheduledWorkCompleted.mock.calls[1][0],
       ).toMatchInteraction(secondEvent);
     });
 
@@ -511,32 +479,38 @@ describe('TracingSubscriptions', () => {
         });
       });
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-      expect(onWorkCanceled).not.toHaveBeenCalled();
-      expect(onWorkStarted).toHaveBeenCalledTimes(2);
-      expect(onWorkStopped).toHaveBeenCalledTimes(2);
+      expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
+      expect(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
+      expect(firstSubscriber.onWorkCanceled).not.toHaveBeenCalled();
+      expect(firstSubscriber.onWorkStarted).toHaveBeenCalledTimes(2);
+      expect(firstSubscriber.onWorkStopped).toHaveBeenCalledTimes(2);
 
       wrappedTwo.cancel();
 
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(secondEvent);
-      expect(onWorkCanceled).toHaveBeenCalledTimes(1);
-      expect(onWorkCanceled).toHaveBeenLastNotifiedOfWork(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        firstSubscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(secondEvent);
+      expect(firstSubscriber.onWorkCanceled).toHaveBeenCalledTimes(1);
+      expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkCanceled(
         new Set([firstEvent, secondEvent]),
         threadID,
       );
 
       wrappedOne.cancel();
 
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
-      expect(onWorkCanceled).toHaveBeenCalledTimes(2);
-      expect(onWorkCanceled).toHaveBeenLastNotifiedOfWork(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        firstSubscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(firstEvent);
+      expect(firstSubscriber.onWorkCanceled).toHaveBeenCalledTimes(2);
+      expect(firstSubscriber).toHaveBeenLastNotifiedOfWorkCanceled(
         new Set([firstEvent]),
         threadID,
       );
@@ -555,21 +529,27 @@ describe('TracingSubscriptions', () => {
         wrappedOne = SchedulerTracing.unstable_wrap(fnOne, threadID);
       });
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+      expect(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
 
       wrappedOne();
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+      expect(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
 
       wrappedTwo();
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+      expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        firstSubscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(firstEvent);
     });
 
     it('should not decrement the interaction count twice if a wrapped function is run twice', () => {
@@ -581,35 +561,43 @@ describe('TracingSubscriptions', () => {
         wrappedTwo = SchedulerTracing.unstable_wrap(unwrappedTwo, threadID);
       });
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+      expect(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
 
       wrappedOne();
 
       expect(unwrappedOne).toHaveBeenCalledTimes(1);
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+      expect(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
 
       wrappedOne();
 
       expect(unwrappedOne).toHaveBeenCalledTimes(2);
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+      expect(
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
 
       wrappedTwo();
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+      expect(firstSubscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(firstEvent);
+        firstSubscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        firstSubscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(firstEvent);
     });
 
     it('should unsubscribe', () => {
       SchedulerTracing.unstable_unsubscribe(firstSubscriber);
       SchedulerTracing.unstable_trace(firstEvent.name, currentTime, () => {});
 
-      expect(onInteractionTraced).not.toHaveBeenCalled();
+      expect(firstSubscriber.onInteractionTraced).not.toHaveBeenCalled();
     });
   });
 

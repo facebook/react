@@ -10,6 +10,7 @@
 
 'use strict';
 
+let JestScheduler;
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
@@ -42,6 +43,7 @@ function loadModules({
 
   React = require('react');
   SchedulerTracing = require('scheduler/tracing');
+  JestScheduler = require('jest-scheduler');
 
   if (useNoopRenderer) {
     ReactNoop = require('react-noop-renderer');
@@ -1216,16 +1218,7 @@ describe('Profiler', () => {
   });
 
   describe('interaction tracing', () => {
-    let onInteractionScheduledWorkCompleted;
-    let onInteractionTraced;
-    let onWorkCanceled;
-    let onWorkScheduled;
-    let onWorkStarted;
-    let onWorkStopped;
-    let throwInOnInteractionScheduledWorkCompleted;
-    let throwInOnWorkScheduled;
-    let throwInOnWorkStarted;
-    let throwInOnWorkStopped;
+    let subscriber;
 
     const getWorkForReactThreads = mockFn =>
       mockFn.mock.calls.filter(([interactions, threadID]) => threadID > 0);
@@ -1239,43 +1232,10 @@ describe('Profiler', () => {
         ...params,
       });
 
-      throwInOnInteractionScheduledWorkCompleted = false;
-      throwInOnWorkScheduled = false;
-      throwInOnWorkStarted = false;
-      throwInOnWorkStopped = false;
-
-      onInteractionScheduledWorkCompleted = jest.fn(() => {
-        if (throwInOnInteractionScheduledWorkCompleted) {
-          throw Error('Expected error onInteractionScheduledWorkCompleted');
-        }
-      });
-      onInteractionTraced = jest.fn();
-      onWorkCanceled = jest.fn();
-      onWorkScheduled = jest.fn(() => {
-        if (throwInOnWorkScheduled) {
-          throw Error('Expected error onWorkScheduled');
-        }
-      });
-      onWorkStarted = jest.fn(() => {
-        if (throwInOnWorkStarted) {
-          throw Error('Expected error onWorkStarted');
-        }
-      });
-      onWorkStopped = jest.fn(() => {
-        if (throwInOnWorkStopped) {
-          throw Error('Expected error onWorkStopped');
-        }
-      });
+      subscriber = JestScheduler.createMockSubscriber();
 
       // Verify interaction subscriber methods are called as expected.
-      SchedulerTracing.unstable_subscribe({
-        onInteractionScheduledWorkCompleted,
-        onInteractionTraced,
-        onWorkCanceled,
-        onWorkScheduled,
-        onWorkStarted,
-        onWorkStopped,
-      });
+      SchedulerTracing.unstable_subscribe(subscriber);
     }
 
     beforeEach(() => loadModulesForTracing());
@@ -1290,7 +1250,9 @@ describe('Profiler', () => {
         let renderer;
 
         // Errors that happen inside of a subscriber should throw,
-        throwInOnWorkScheduled = true;
+        subscriber.onWorkScheduled.mockImplementationOnce(() => {
+          throw Error('Expected error onWorkScheduled');
+        });
         expect(() => {
           SchedulerTracing.unstable_trace('event', mockNow(), () => {
             renderer = ReactTestRenderer.create(<Component>fail</Component>, {
@@ -1298,8 +1260,7 @@ describe('Profiler', () => {
             });
           });
         }).toThrow('Expected error onWorkScheduled');
-        throwInOnWorkScheduled = false;
-        expect(onWorkScheduled).toHaveBeenCalled();
+        expect(subscriber.onWorkScheduled).toHaveBeenCalled();
 
         // But should not leave React in a broken state for subsequent renders.
         renderer = ReactTestRenderer.create(<Component>succeed</Component>, {
@@ -1323,15 +1284,16 @@ describe('Profiler', () => {
             unstable_isConcurrent: true,
           });
         });
-        onWorkStarted.mockClear();
+        subscriber.onWorkStarted.mockClear();
 
         // Errors that happen inside of a subscriber should throw,
-        throwInOnWorkStarted = true;
+        subscriber.onWorkStarted.mockImplementationOnce(() => {
+          throw Error('Expected error onWorkStarted');
+        });
         expect(() => {
           expect(renderer).toFlushAll(['Component:text']);
         }).toThrow('Expected error onWorkStarted');
-        throwInOnWorkStarted = false;
-        expect(onWorkStarted).toHaveBeenCalled();
+        expect(subscriber.onWorkStarted).toHaveBeenCalled();
 
         // But the React work should have still been processed.
         expect(renderer).toFlushAll([]);
@@ -1352,23 +1314,28 @@ describe('Profiler', () => {
             unstable_isConcurrent: true,
           });
         });
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
 
         // Errors that happen in an on-stopped callback,
-        throwInOnWorkStopped = true;
+        subscriber.onWorkStopped.mockImplementationOnce(() => {
+          throw Error('Expected error onWorkStopped');
+        });
         expect(() => {
           renderer.unstable_flushAll(['Component:text']);
         }).toThrow('Expected error onWorkStopped');
-        throwInOnWorkStopped = false;
-        expect(onWorkStopped).toHaveBeenCalledTimes(2);
+        expect(subscriber.onWorkStopped).toHaveBeenCalledTimes(2);
 
         // Should still commit the update,
         const tree = renderer.toTree();
         expect(tree.type).toBe(Component);
         expect(tree.props.children).toBe('text');
 
-        // And still call onInteractionScheduledWorkCompleted if the interaction is finished.
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        // And still call subscriber.onInteractionScheduledWorkCompleted if the interaction is finished.
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
       });
 
       it('should cover errors thrown in onInteractionScheduledWorkCompleted', () => {
@@ -1396,16 +1363,24 @@ describe('Profiler', () => {
             });
           });
         });
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
 
-        throwInOnInteractionScheduledWorkCompleted = true;
+        subscriber.onInteractionScheduledWorkCompleted.mockImplementationOnce(
+          () => {
+            throw Error('Expected error onInteractionScheduledWorkCompleted');
+          },
+        );
         expect(() => {
           renderer.unstable_flushAll(['Component:text']);
         }).toThrow('Expected error onInteractionScheduledWorkCompleted');
 
         // Even though an error is thrown for one completed interaction,
         // The completed callback should be called for all completed interactions.
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(2);
       });
     });
 
@@ -1426,15 +1401,19 @@ describe('Profiler', () => {
       });
 
       expect(Component).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
       expect(callback).not.toHaveBeenCalled();
 
       wrapped();
       expect(callback).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interaction);
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        subscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(interaction);
     });
 
     it('should associate traced events with their subsequent commits', () => {
@@ -1487,25 +1466,27 @@ describe('Profiler', () => {
         },
       );
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+      expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(
         interactionCreation,
       );
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
 
       // The scheduler/tracing package will notify of work started for the default thread,
       // But React shouldn't notify until it's been flushed.
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(0);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(0);
 
       // Work may have been scheduled multiple times.
       // We only care that the subscriber was notified at least once.
       // As for the thread ID- the actual value isn't important, only that there was one.
-      expect(onWorkScheduled).toHaveBeenCalled();
-      expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
+      expect(subscriber.onWorkScheduled).toHaveBeenCalled();
+      expect(subscriber.onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
         interactionCreation,
       ]);
-      expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
+      expect(subscriber.onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
 
       // Mount
       renderer.unstable_flushAll(['first', 'last']);
@@ -1517,24 +1498,28 @@ describe('Profiler', () => {
         expect(call[6]).toMatchInteractions([interactionCreation]);
       }
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionCreation);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions([
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        subscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
         interactionCreation,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions([
-        interactionCreation,
-      ]);
+      );
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(1);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStarted)[0][0],
+      ).toMatchInteractions([interactionCreation]);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(1);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStopped)[0][0],
+      ).toMatchInteractions([interactionCreation]);
 
       onRender.mockClear();
-      onWorkScheduled.mockClear();
-      onWorkStarted.mockClear();
-      onWorkStopped.mockClear();
+      subscriber.onWorkScheduled.mockClear();
+      subscriber.onWorkStarted.mockClear();
+      subscriber.onWorkStopped.mockClear();
 
       advanceTimeBy(3);
 
@@ -1553,31 +1538,41 @@ describe('Profiler', () => {
 
         // The scheduler/tracing package will notify of work started for the default thread,
         // But React shouldn't notify until it's been flushed.
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+        expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(
+          0,
+        );
+        expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(
+          0,
+        );
 
         // Work may have been scheduled multiple times.
         // We only care that the subscriber was notified at least once.
         // As for the thread ID- the actual value isn't important, only that there was one.
-        expect(onWorkScheduled).toHaveBeenCalled();
-        expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
-          interactionOne,
-        ]);
-        expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
+        expect(subscriber.onWorkScheduled).toHaveBeenCalled();
+        expect(subscriber.onWorkScheduled.mock.calls[0][0]).toMatchInteractions(
+          [interactionOne],
+        );
+        expect(subscriber.onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
 
         expect(renderer).toFlushThrough(['first']);
         expect(onRender).not.toHaveBeenCalled();
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+        expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
+        expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(
           interactionOne,
         );
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-        expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions(
-          [interactionOne],
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
+        expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(
+          1,
         );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+        expect(
+          getWorkForReactThreads(subscriber.onWorkStarted)[0][0],
+        ).toMatchInteractions([interactionOne]);
+        expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(
+          0,
+        );
 
         renderer.unstable_flushAll(['last']);
         expect(onRender).toHaveBeenCalledTimes(1);
@@ -1591,22 +1586,26 @@ describe('Profiler', () => {
 
         didRunCallback = true;
 
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-        expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions(
-          [interactionOne],
+        expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(
+          1,
         );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
-        expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions(
-          [interactionOne],
+        expect(
+          getWorkForReactThreads(subscriber.onWorkStarted)[0][0],
+        ).toMatchInteractions([interactionOne]);
+        expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(
+          1,
         );
+        expect(
+          getWorkForReactThreads(subscriber.onWorkStopped)[0][0],
+        ).toMatchInteractions([interactionOne]);
       });
 
       expect(didRunCallback).toBe(true);
 
       onRender.mockClear();
-      onWorkScheduled.mockClear();
-      onWorkStarted.mockClear();
-      onWorkStopped.mockClear();
+      subscriber.onWorkScheduled.mockClear();
+      subscriber.onWorkStarted.mockClear();
+      subscriber.onWorkStopped.mockClear();
 
       advanceTimeBy(17);
 
@@ -1622,13 +1621,17 @@ describe('Profiler', () => {
         expect(call[6]).toMatchInteractions([]);
       }
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionOne);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        subscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+        interactionOne,
+      );
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(0);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(0);
 
       onRender.mockClear();
 
@@ -1648,25 +1651,27 @@ describe('Profiler', () => {
         );
       });
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(3);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(3);
+      expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(
         interactionTwo,
       );
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+      expect(
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(2);
 
       // The scheduler/tracing package will notify of work started for the default thread,
       // But React shouldn't notify until it's been flushed.
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(0);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(0);
 
       // Work may have been scheduled multiple times.
       // We only care that the subscriber was notified at least once.
       // As for the thread ID- the actual value isn't important, only that there was one.
-      expect(onWorkScheduled).toHaveBeenCalled();
-      expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
+      expect(subscriber.onWorkScheduled).toHaveBeenCalled();
+      expect(subscriber.onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
         interactionTwo,
       ]);
-      expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
+      expect(subscriber.onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
 
       renderer.unstable_flushAll(['first', 'last']);
 
@@ -1678,19 +1683,23 @@ describe('Profiler', () => {
         expect(call[6]).toMatchInteractions([interactionTwo]);
       }
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(3);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(3);
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(3);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionTwo);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions([
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(3);
+      expect(
+        subscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
         interactionTwo,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
+      );
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(1);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStarted)[0][0],
+      ).toMatchInteractions([interactionTwo]);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(1);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStopped)[0][0],
+      ).toMatchInteractions([interactionTwo]);
     });
 
     it('should report the expected times when a high-priority update interrupts a low-priority update', () => {
@@ -1728,8 +1737,10 @@ describe('Profiler', () => {
       // Initial mount.
       renderer.unstable_flushAll(['FirstComponent', 'SecondComponent']);
 
-      expect(onInteractionTraced).not.toHaveBeenCalled();
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+      expect(subscriber.onInteractionTraced).not.toHaveBeenCalled();
+      expect(
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
 
       onRender.mockClear();
 
@@ -1745,24 +1756,30 @@ describe('Profiler', () => {
         // Render a partially update, but don't finish.
         first.setState({count: 1});
 
-        expect(onWorkScheduled).toHaveBeenCalled();
-        expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
-          interactionLowPri,
-        ]);
+        expect(subscriber.onWorkScheduled).toHaveBeenCalled();
+        expect(subscriber.onWorkScheduled.mock.calls[0][0]).toMatchInteractions(
+          [interactionLowPri],
+        );
 
         expect(renderer).toFlushThrough(['FirstComponent']);
         expect(onRender).not.toHaveBeenCalled();
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+        expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(
           interactionLowPri,
         );
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-        expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions(
-          [interactionLowPri],
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
+        expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(
+          1,
         );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+        expect(
+          getWorkForReactThreads(subscriber.onWorkStarted)[0][0],
+        ).toMatchInteractions([interactionLowPri]);
+        expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(
+          0,
+        );
 
         advanceTimeBy(100);
 
@@ -1781,26 +1798,34 @@ describe('Profiler', () => {
             () => {
               second.setState({count: 1});
 
-              expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-              expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
+              expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(
                 interactionHighPri,
               );
               expect(
-                onInteractionScheduledWorkCompleted,
+                subscriber.onInteractionScheduledWorkCompleted,
               ).not.toHaveBeenCalled();
 
-              expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-              expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+              expect(
+                getWorkForReactThreads(subscriber.onWorkStarted),
+              ).toHaveLength(1);
+              expect(
+                getWorkForReactThreads(subscriber.onWorkStopped),
+              ).toHaveLength(0);
             },
           );
         });
         expect(ReactTestRenderer).toClearYields(['SecondComponent']);
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(interactionHighPri);
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          subscriber,
+        ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+          interactionHighPri,
+        );
 
         // Verify the high priority update was associated with the high priority event.
         expect(onRender).toHaveBeenCalledTimes(1);
@@ -1828,34 +1853,44 @@ describe('Profiler', () => {
           ReactFeatureFlags.enableSchedulerTracing ? [interactionLowPri] : [],
         );
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
 
         // Work might be started multiple times before being completed.
         // This is okay; it's part of the scheduler/tracing contract.
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
-        expect(getWorkForReactThreads(onWorkStarted)[1][0]).toMatchInteractions(
-          [interactionLowPri, interactionHighPri],
+        expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(
+          3,
         );
-        expect(getWorkForReactThreads(onWorkStarted)[2][0]).toMatchInteractions(
-          [interactionLowPri],
+        expect(
+          getWorkForReactThreads(subscriber.onWorkStarted)[1][0],
+        ).toMatchInteractions([interactionLowPri, interactionHighPri]);
+        expect(
+          getWorkForReactThreads(subscriber.onWorkStarted)[2][0],
+        ).toMatchInteractions([interactionLowPri]);
+        expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(
+          2,
         );
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
-        expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions(
-          [interactionLowPri, interactionHighPri],
-        );
-        expect(getWorkForReactThreads(onWorkStopped)[1][0]).toMatchInteractions(
-          [interactionLowPri],
-        );
+        expect(
+          getWorkForReactThreads(subscriber.onWorkStopped)[0][0],
+        ).toMatchInteractions([interactionLowPri, interactionHighPri]);
+        expect(
+          getWorkForReactThreads(subscriber.onWorkStopped)[1][0],
+        ).toMatchInteractions([interactionLowPri]);
       });
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionLowPri);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        subscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+        interactionLowPri,
+      );
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(3);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(2);
     });
 
     it('should trace work spawned by a commit phase lifecycle and setState callback', () => {
@@ -1900,35 +1935,41 @@ describe('Profiler', () => {
         );
       });
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+      expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(
         interactionOne,
       );
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+      expect(
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(0);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(0);
 
       renderer.unstable_flushAll(['Example:0', 'Example:1']);
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionOne);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(2);
-      expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions([
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        subscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
         interactionOne,
-      ]);
-      expect(getWorkForReactThreads(onWorkStarted)[1][0]).toMatchInteractions([
-        interactionOne,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
-      expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions([
-        interactionOne,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)[1][0]).toMatchInteractions([
-        interactionOne,
-      ]);
+      );
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(2);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStarted)[0][0],
+      ).toMatchInteractions([interactionOne]);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStarted)[1][0],
+      ).toMatchInteractions([interactionOne]);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(2);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStopped)[0][0],
+      ).toMatchInteractions([interactionOne]);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStopped)[1][0],
+      ).toMatchInteractions([interactionOne]);
 
       expect(onRender).toHaveBeenCalledTimes(2);
       let call = onRender.mock.calls[0];
@@ -1957,13 +1998,15 @@ describe('Profiler', () => {
         instance.setState({count: 2});
       });
       expect(onRender).not.toHaveBeenCalled();
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
+      expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(
         interactionTwo,
       );
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(2);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
+      expect(
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(1);
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(2);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(2);
 
       advanceTimeBy(5);
 
@@ -1972,25 +2015,29 @@ describe('Profiler', () => {
       firstCommitTime = mockNow();
       renderer.unstable_flushAll(['Example:2', 'Example:3']);
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(2);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionTwo);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(4);
-      expect(getWorkForReactThreads(onWorkStarted)[2][0]).toMatchInteractions([
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        subscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
         interactionTwo,
-      ]);
-      expect(getWorkForReactThreads(onWorkStarted)[3][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(4);
-      expect(getWorkForReactThreads(onWorkStopped)[2][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)[3][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
+      );
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(4);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStarted)[2][0],
+      ).toMatchInteractions([interactionTwo]);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStarted)[3][0],
+      ).toMatchInteractions([interactionTwo]);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(4);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStopped)[2][0],
+      ).toMatchInteractions([interactionTwo]);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStopped)[3][0],
+      ).toMatchInteractions([interactionTwo]);
 
       // Verify the cascading commit is associated with the origin event
       expect(onRender).toHaveBeenCalledTimes(2);
@@ -2024,38 +2071,44 @@ describe('Profiler', () => {
       });
       expect(onRender).not.toHaveBeenCalled();
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(3);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(3);
+      expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(
         interactionThree,
       );
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(4);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(4);
+      expect(
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(2);
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(4);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(4);
 
       // Flush async work (outside of traced scope)
       // This will cause an intentional cascading update from the setState callback
       firstCommitTime = mockNow();
       renderer.unstable_flushAll(['Example:5', 'Example:6']);
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(3);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(3);
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(3);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionThree);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(6);
-      expect(getWorkForReactThreads(onWorkStarted)[4][0]).toMatchInteractions([
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(3);
+      expect(
+        subscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
         interactionThree,
-      ]);
-      expect(getWorkForReactThreads(onWorkStarted)[5][0]).toMatchInteractions([
-        interactionThree,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(6);
-      expect(getWorkForReactThreads(onWorkStopped)[4][0]).toMatchInteractions([
-        interactionThree,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)[5][0]).toMatchInteractions([
-        interactionThree,
-      ]);
+      );
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(6);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStarted)[4][0],
+      ).toMatchInteractions([interactionThree]);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStarted)[5][0],
+      ).toMatchInteractions([interactionThree]);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(6);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStopped)[4][0],
+      ).toMatchInteractions([interactionThree]);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStopped)[5][0],
+      ).toMatchInteractions([interactionThree]);
 
       // Verify the cascading commit is associated with the origin event
       expect(onRender).toHaveBeenCalledTimes(2);
@@ -2116,13 +2169,13 @@ describe('Profiler', () => {
         parentInstance.setState({count: 1});
       });
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-        interaction,
-      );
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+      expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(interaction);
+      expect(
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).not.toHaveBeenCalled();
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(0);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(0);
 
       expect(onRender).not.toHaveBeenCalled();
       renderer.unstable_flushAll(['Child:1']);
@@ -2133,19 +2186,21 @@ describe('Profiler', () => {
         ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
       );
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+      expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
       expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interaction);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions([
-        interaction,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions([
-        interaction,
-      ]);
+        subscriber.onInteractionScheduledWorkCompleted,
+      ).toHaveBeenCalledTimes(1);
+      expect(
+        subscriber,
+      ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(interaction);
+      expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(1);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStarted)[0][0],
+      ).toMatchInteractions([interaction]);
+      expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(1);
+      expect(
+        getWorkForReactThreads(subscriber.onWorkStopped)[0][0],
+      ).toMatchInteractions([interaction]);
     });
 
     describe('suspense', () => {
@@ -2232,13 +2287,19 @@ describe('Profiler', () => {
           );
         });
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+        expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(
           interaction,
         );
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
+        expect(getWorkForReactThreads(subscriber.onWorkStarted)).toHaveLength(
+          0,
+        );
+        expect(getWorkForReactThreads(subscriber.onWorkStopped)).toHaveLength(
+          0,
+        );
 
         expect(ReactNoop.flush()).toEqual([
           'Suspend [Async]',
@@ -2269,8 +2330,10 @@ describe('Profiler', () => {
           ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
         );
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
 
         // Once the promise resolves, we render the suspended view
         await awaitableAdvanceTimers(10000);
@@ -2290,11 +2353,15 @@ describe('Profiler', () => {
           ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
         );
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          subscriber,
+        ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+          interaction,
+        );
       });
 
       it('does not prematurely complete for suspended sync renders', async () => {
@@ -2321,15 +2388,21 @@ describe('Profiler', () => {
           },
         );
 
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
 
         jest.runAllTimers();
         await resourcePromise;
 
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          subscriber,
+        ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+          interaction,
+        );
       });
 
       it('traces cascading work after suspended sync renders', async () => {
@@ -2375,19 +2448,27 @@ describe('Profiler', () => {
           },
         );
 
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
 
         jest.runAllTimers();
         await resourcePromise;
 
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
 
         wrappedCascadingFn();
 
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          subscriber,
+        ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+          interaction,
+        );
       });
 
       it('does not prematurely complete for suspended renders that have exceeded their deadline', async () => {
@@ -2422,16 +2503,22 @@ describe('Profiler', () => {
         await awaitableAdvanceTimers(1500);
 
         expect(renderer).toFlushAll(['Suspend [loaded]', 'Text [loading]']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
 
         advanceTimeBy(2500);
         await awaitableAdvanceTimers(2500);
 
         expect(renderer).toFlushAll(['AsyncText [loaded]']);
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          subscriber,
+        ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+          interaction,
+        );
       });
 
       it('decrements interaction count correctly if suspense loads before placeholder is shown', async () => {
@@ -2461,16 +2548,22 @@ describe('Profiler', () => {
         );
         renderer.unstable_flushAll();
 
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
 
         jest.advanceTimersByTime(1000);
         await resourcePromise;
         renderer.unstable_flushAll();
 
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          subscriber,
+        ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+          interaction,
+        );
       });
 
       it('handles high-pri renderers between suspended and resolved (sync) trees', async () => {
@@ -2500,7 +2593,9 @@ describe('Profiler', () => {
         );
         expect(renderer.toJSON()).toEqual(['loading', 'initial']);
 
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
         expect(onRender).toHaveBeenCalledTimes(2); // Sync null commit, placeholder commit
         expect(onRender.mock.calls[0][6]).toMatchInteractions([
           initialRenderInteraction,
@@ -2542,7 +2637,9 @@ describe('Profiler', () => {
         ]);
         onRender.mockClear();
 
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
 
         advanceTimeBy(1000);
         jest.advanceTimersByTime(1000);
@@ -2555,12 +2652,14 @@ describe('Profiler', () => {
           highPriUpdateInteraction,
         ]);
 
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
         expect(
-          onInteractionScheduledWorkCompleted.mock.calls[0][0],
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(2);
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted.mock.calls[0][0],
         ).toMatchInteraction(initialRenderInteraction);
         expect(
-          onInteractionScheduledWorkCompleted.mock.calls[1][0],
+          subscriber.onInteractionScheduledWorkCompleted.mock.calls[1][0],
         ).toMatchInteraction(highPriUpdateInteraction);
       });
 
@@ -2596,7 +2695,9 @@ describe('Profiler', () => {
           'Text [initial]',
         ]);
 
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).not.toHaveBeenCalled();
         expect(onRender).not.toHaveBeenCalled();
 
         advanceTimeBy(500);
@@ -2636,10 +2737,14 @@ describe('Profiler', () => {
         ]);
         onRender.mockClear();
 
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(highPriUpdateInteraction);
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          subscriber,
+        ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+          highPriUpdateInteraction,
+        );
 
         advanceTimeBy(500);
         jest.advanceTimersByTime(500);
@@ -2652,10 +2757,14 @@ describe('Profiler', () => {
           initialRenderInteraction,
         ]);
 
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(initialRenderInteraction);
+          subscriber.onInteractionScheduledWorkCompleted,
+        ).toHaveBeenCalledTimes(2);
+        expect(
+          subscriber,
+        ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+          initialRenderInteraction,
+        );
       });
     });
   });

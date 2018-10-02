@@ -62,25 +62,15 @@ describe('ProfilerDOM', () => {
   let TextResource;
   let cache;
   let resourcePromise;
-  let onInteractionScheduledWorkCompleted;
-  let onInteractionTraced;
+  let subscriber;
 
   beforeEach(() => {
     initEnvForAsyncTesting();
     loadModules();
 
-    onInteractionScheduledWorkCompleted = jest.fn();
-    onInteractionTraced = jest.fn();
-
     // Verify interaction subscriber methods are called as expected.
-    SchedulerTracing.unstable_subscribe({
-      onInteractionScheduledWorkCompleted,
-      onInteractionTraced,
-      onWorkCanceled: () => {},
-      onWorkScheduled: () => {},
-      onWorkStarted: () => {},
-      onWorkStopped: () => {},
-    });
+    subscriber = require('jest-scheduler').createMockSubscriber();
+    SchedulerTracing.unstable_subscribe(subscriber);
 
     cache = ReactCache.createCache(() => {});
 
@@ -129,29 +119,33 @@ describe('ProfilerDOM', () => {
           batch.commit();
 
           expect(element.textContent).toBe('Loading...');
-          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+          expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+          expect(
+            subscriber.onInteractionScheduledWorkCompleted,
+          ).not.toHaveBeenCalled();
 
           resourcePromise.then(
             SchedulerTracing.unstable_wrap(() => {
               jest.runAllTimers();
 
               expect(element.textContent).toBe('Text');
-              expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+              expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
               expect(
-                onInteractionScheduledWorkCompleted,
+                subscriber.onInteractionScheduledWorkCompleted,
               ).not.toHaveBeenCalled();
 
               // Evaluate in an unwrapped callback,
               // Because trace/wrap won't decrement the count within the wrapped callback.
               setImmediate(() => {
-                expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+                expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
                 expect(
-                  onInteractionScheduledWorkCompleted,
+                  subscriber.onInteractionScheduledWorkCompleted,
                 ).toHaveBeenCalledTimes(1);
                 expect(
-                  onInteractionScheduledWorkCompleted,
-                ).toHaveBeenLastNotifiedOfInteraction(interaction);
+                  subscriber,
+                ).toHaveBeenLastNotifiedOfInteractionsScheduledWorkCompleted(
+                  interaction,
+                );
 
                 expect(interaction.__count).toBe(0);
 
@@ -163,11 +157,11 @@ describe('ProfilerDOM', () => {
       );
     });
 
-    expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-    expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-      interaction,
-    );
-    expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+    expect(subscriber.onInteractionTraced).toHaveBeenCalledTimes(1);
+    expect(subscriber).toHaveBeenLastNotifiedOfInteractionTraced(interaction);
+    expect(
+      subscriber.onInteractionScheduledWorkCompleted,
+    ).not.toHaveBeenCalled();
 
     jest.runAllTimers();
   });

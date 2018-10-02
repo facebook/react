@@ -47,7 +47,6 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   require('jest-scheduler');
 
   expect.extend({
-    ...require('./matchers/interactionTracing'),
     ...require('./matchers/toWarnDev'),
     ...require('./matchers/testRenderer'),
   });

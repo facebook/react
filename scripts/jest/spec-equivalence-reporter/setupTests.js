@@ -46,7 +46,6 @@ global.spyOnProd = function(...args) {
 };
 
 expect.extend({
-  ...require('../matchers/interactionTracing'),
   ...require('../matchers/toWarnDev'),
   ...require('../matchers/testRenderer'),
 });
