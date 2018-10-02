@@ -1,4 +1,4 @@
-import {createCache} from 'simple-cache-provider';
+import {createCache} from 'react-cache';
 
 export let cache;
 function initCache() {
