@@ -15,9 +15,9 @@ import {isAutonomousCustomComponent} from './isCustomComponent';
  *
  * @param {string} tagName HTML tag name that is being checked.
  * @param {?string} [nextSibling] HTML tag name of tagName's next sibling.
- * Null if tagName doesn't have a next sibling.
+ * null if tagName doesn't have a next sibling.
  * @param {?string} [parent] HTML tag name of tagName's parent.
- * Null if tagName doesn't have a parent.
+ * null if tagName doesn't have a parent.
  * @return {boolean} True if the end tag can be omitted.
  */
 function canOmitEndTag(tagName: string, nextSibling: ?string, parent: ?string) {
