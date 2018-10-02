@@ -14,19 +14,19 @@ import {isAutonomousCustomComponent} from './isCustomComponent';
  * w3.org/TR/html5/syntax.html#optional-tags
  *
  * @param {string} tagName HTML tag name that is being checked.
- * @param {string} [nextSibling] HTML tag name of tagName's next sibling.
- * Undefined if tagName doesn't have a next sibling.
- * @param {string} [parent] HTML tag name of tagName's parent.
- * Undefined if tagName doesn't have a parent.
+ * @param {?string} [nextSibling] HTML tag name of tagName's next sibling.
+ * Null if tagName doesn't have a next sibling.
+ * @param {?string} [parent] HTML tag name of tagName's parent.
+ * Null if tagName doesn't have a parent.
  * @return {boolean} True if the end tag can be omitted.
  */
-function canOmitEndTag(tagName: string, nextSibling: string, parent: string) {
+function canOmitEndTag(tagName: string, nextSibling: ?string, parent: ?string) {
   switch (tagName) {
     // An li element’s end tag may be omitted if the li element is
     // immediately followed by another li element or if there is no
     // more content in the parent element.
     case 'li':
-      return nextSibling === 'li' || nextSibling === undefined;
+      return nextSibling === 'li' || nextSibling === null;
 
     // A dt element’s end tag may be omitted if the dt element is
     // immediately followed by another dt element or a dd element.
@@ -38,9 +38,7 @@ function canOmitEndTag(tagName: string, nextSibling: string, parent: string) {
     // or if there is no more content in the parent element.
     case 'dd':
       return (
-        nextSibling === 'dd' ||
-        nextSibling === 'dt' ||
-        nextSibling === undefined
+        nextSibling === 'dd' || nextSibling === 'dt' || nextSibling === null
       );
 
     // A p element’s end tag may be omitted if the p element is
@@ -81,8 +79,8 @@ function canOmitEndTag(tagName: string, nextSibling: string, parent: string) {
         nextSibling === 'section' ||
         nextSibling === 'table' ||
         nextSibling === 'ul' ||
-        (nextSibling === undefined &&
-          parent !== undefined &&
+        (nextSibling === null &&
+          typeof parent === 'string' &&
           !(
             parent === 'a' ||
             parent === 'audio' ||
@@ -100,9 +98,7 @@ function canOmitEndTag(tagName: string, nextSibling: string, parent: string) {
     // no more content in the parent element.
     case 'rt':
       return (
-        nextSibling === 'rt' ||
-        nextSibling === 'rp' ||
-        nextSibling === undefined
+        nextSibling === 'rt' || nextSibling === 'rp' || nextSibling === null
       );
 
     // An rp element’s end tag may be omitted if the rp element is
@@ -110,16 +106,14 @@ function canOmitEndTag(tagName: string, nextSibling: string, parent: string) {
     // no more content in the parent element.
     case 'rp':
       return (
-        nextSibling === 'rp' ||
-        nextSibling === 'rt' ||
-        nextSibling === undefined
+        nextSibling === 'rp' || nextSibling === 'rt' || nextSibling === null
       );
 
     // An optgroup element’s end tag may be omitted if the optgroup element is
     // immediately followed by another optgroup element, or if there is no more
     // content in the parent element.
     case 'optgroup':
-      return nextSibling === 'optgroup' || nextSibling === undefined;
+      return nextSibling === 'optgroup' || nextSibling === null;
 
     // An option element’s end tag may be omitted if the option element is
     // immediately followed by another option element, or if it is immediately
@@ -129,17 +123,21 @@ function canOmitEndTag(tagName: string, nextSibling: string, parent: string) {
       return (
         nextSibling === 'option' ||
         nextSibling === 'optgroup' ||
-        nextSibling === undefined
+        nextSibling === null
       );
 
     // A colgroup element’s end tag may be omitted if the colgroup element is
     // not immediately followed by a space character or a comment.
     case 'colgroup':
+      // TODO (tvler): Support space character and comments
+      // as nextSibling parameter values
       return false;
 
     // A caption element’s end tag may be omitted if the caption element is
     // not immediately followed by a space character or a comment.
     case 'caption':
+      // TODO (tvler): Support space character and comments
+      // as nextSibling parameter values
       return false;
 
     // A thead element’s end tag may be omitted if the thead element is
@@ -154,35 +152,33 @@ function canOmitEndTag(tagName: string, nextSibling: string, parent: string) {
       return (
         nextSibling === 'tbody' ||
         nextSibling === 'tfoot' ||
-        nextSibling === undefined
+        nextSibling === null
       );
 
     // A tfoot element’s end tag may be omitted if there is no more content
     // in the parent element.
     case 'tfoot':
-      return nextSibling === undefined;
+      return nextSibling === null;
 
     // A tr element’s end tag may be omitted if the tr element is
     // immediately followed by another tr element, or if there is
     // no more content in the parent element.
     case 'tr':
-      return nextSibling === 'tr' || nextSibling === undefined;
+      return nextSibling === 'tr' || nextSibling === null;
 
     // A td element’s end tag may be omitted if the td element is
     // immediately followed by a td or th element, or if there is
     // no more content in the parent element.
     case 'td':
       return (
-        nextSibling === 'td' ||
-        nextSibling === 'th' ||
-        nextSibling === undefined
+        nextSibling === 'td' || nextSibling === 'th' || nextSibling === null
       );
 
     // A th element’s end tag may be omitted if the th element is
     // immediately followed by a td or th element, or if there is
     // no more content in the parent element.
     case 'th':
-      return nextSibling === 'th' || nextSibling === undefined;
+      return nextSibling === 'th' || nextSibling === null;
 
     default:
       return false;

@@ -28,7 +28,7 @@ function isAutonomousCustomComponent(tagName: string) {
 }
 
 function isCustomComponent(tagName: string, props: Object) {
-  return isAutonomousCustomComponent(tagName) || typeof props.is === 'string';
+  return typeof props.is === 'string' || isAutonomousCustomComponent(tagName);
 }
 
 export {isAutonomousCustomComponent, isCustomComponent as default};

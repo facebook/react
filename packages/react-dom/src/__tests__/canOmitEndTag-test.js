@@ -122,18 +122,20 @@ const tags = [
   'video',
   'wbr',
   'custom-component',
-  undefined,
+  null,
 ];
 
 const testCanOmitEndTag = (tagName, nextSiblings) => {
   tags.forEach(tag => {
-    expect(canOmitEndTag(tagName, tag)).toBe(!!nextSiblings.includes(tag));
+    expect(canOmitEndTag(tagName, tag, null)).toBe(
+      !!nextSiblings.includes(tag),
+    );
   });
 };
 
 describe('canOmitEndTag', () => {
   it('correctly omits li', () => {
-    testCanOmitEndTag('li', ['li', undefined]);
+    testCanOmitEndTag('li', ['li', null]);
   });
 
   it('correctly omits dt', () => {
@@ -141,7 +143,7 @@ describe('canOmitEndTag', () => {
   });
 
   it('correctly omits dd', () => {
-    testCanOmitEndTag('dd', ['dd', 'dt', undefined]);
+    testCanOmitEndTag('dd', ['dd', 'dt', null]);
   });
 
   it('correctly omits p', () => {
@@ -178,7 +180,7 @@ describe('canOmitEndTag', () => {
 
     tags.forEach(tag => {
       const notAllowedParents = [
-        undefined,
+        null,
         'a',
         'audio',
         'del',
@@ -187,26 +189,26 @@ describe('canOmitEndTag', () => {
         'noscript',
         'video',
       ];
-      expect(canOmitEndTag('p', undefined, tag)).toBe(
+      expect(canOmitEndTag('p', null, tag)).toBe(
         !(notAllowedParents.includes(tag) || isAutonomousCustomComponent(tag)),
       );
     });
   });
 
   it('correctly omits rt', () => {
-    testCanOmitEndTag('rt', ['rt', 'rp', undefined]);
+    testCanOmitEndTag('rt', ['rt', 'rp', null]);
   });
 
   it('correctly omits rp', () => {
-    testCanOmitEndTag('rp', ['rp', 'rt', undefined]);
+    testCanOmitEndTag('rp', ['rp', 'rt', null]);
   });
 
   it('correctly omits optgroup', () => {
-    testCanOmitEndTag('optgroup', ['optgroup', undefined]);
+    testCanOmitEndTag('optgroup', ['optgroup', null]);
   });
 
   it('correctly omits option', () => {
-    testCanOmitEndTag('option', ['option', 'optgroup', undefined]);
+    testCanOmitEndTag('option', ['option', 'optgroup', null]);
   });
 
   it('correctly omits colgroup', () => {
@@ -222,22 +224,22 @@ describe('canOmitEndTag', () => {
   });
 
   it('correctly omits tbody', () => {
-    testCanOmitEndTag('tbody', ['tbody', 'tfoot', undefined]);
+    testCanOmitEndTag('tbody', ['tbody', 'tfoot', null]);
   });
 
   it('correctly omits tfoot', () => {
-    testCanOmitEndTag('tfoot', [undefined]);
+    testCanOmitEndTag('tfoot', [null]);
   });
 
   it('correctly omits tr', () => {
-    testCanOmitEndTag('tr', ['tr', undefined]);
+    testCanOmitEndTag('tr', ['tr', null]);
   });
 
   it('correctly omits td', () => {
-    testCanOmitEndTag('td', ['td', 'th', undefined]);
+    testCanOmitEndTag('td', ['td', 'th', null]);
   });
 
   it('correctly omits th', () => {
-    testCanOmitEndTag('th', ['th', undefined]);
+    testCanOmitEndTag('th', ['th', null]);
   });
 });
