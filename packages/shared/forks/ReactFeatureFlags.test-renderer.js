@@ -17,7 +17,6 @@ export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
 export const enableSuspense = false;
 export const warnAboutDeprecatedLifecycles = false;
-export const warnAboutLegacyContextAPI = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
 export const enableSchedulerTracing = false;

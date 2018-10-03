@@ -1936,7 +1936,11 @@ describe('ReactIncremental', () => {
         </div>
       </Intl>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Intl, ShowBoth, ShowLocale',
+      {withoutStack: true},
+    );
     expect(ops).toEqual([
       'Intl {}',
       'ShowLocale {"locale":"fr"}',
@@ -1981,7 +1985,11 @@ describe('ReactIncremental', () => {
         <ShowBoth />
       </Intl>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Router, ShowRoute',
+      {withoutStack: true},
+    );
     expect(ops).toEqual([
       'ShowLocale {"locale":"sv"}',
       'ShowBoth {"locale":"sv"}',
@@ -2021,7 +2029,11 @@ describe('ReactIncremental', () => {
     }
 
     ReactNoop.render(<Recurse />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Recurse',
+      {withoutStack: true},
+    );
     expect(ops).toEqual([
       'Recurse {}',
       'Recurse {"n":2}',
@@ -2054,7 +2066,11 @@ describe('ReactIncremental', () => {
     };
 
     ReactNoop.render(<Recurse />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Recurse',
+      {withoutStack: true},
+    );
     expect(ops).toEqual([
       'Recurse {}',
       'Recurse {"n":2}',
@@ -2112,7 +2128,11 @@ describe('ReactIncremental', () => {
     ]);
 
     ops.length = 0;
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Intl, ShowLocale',
+      {withoutStack: true},
+    );
     expect(ops).toEqual([
       'ShowLocale {"locale":"fr"}',
       'Intl {}',
@@ -2192,7 +2212,11 @@ describe('ReactIncremental', () => {
         </IndirectionFn>
       </Intl>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Intl, ShowLocaleClass, ShowLocaleFn',
+      {withoutStack: true},
+    );
     expect(ops).toEqual([
       'Intl:read {}',
       'Intl:provide {"locale":"fr"}',
@@ -2280,7 +2304,11 @@ describe('ReactIncremental', () => {
         </IndirectionFn>
       </Stateful>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Intl, ShowLocaleClass, ShowLocaleFn',
+      {withoutStack: true},
+    );
     expect(ops).toEqual([
       'Intl:read {}',
       'Intl:provide {"locale":"fr"}',
@@ -2345,7 +2373,11 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Root />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Child',
+      {withoutStack: true},
+    );
 
     // Trigger an update in the middle of the tree
     instance.setState({});
@@ -2391,7 +2423,11 @@ describe('ReactIncremental', () => {
 
     // Init
     ReactNoop.render(<Root />);
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: ContextProvider',
+      {withoutStack: true},
+    );
 
     // Trigger an update in the middle of the tree
     // This is necessary to reproduce the error as it curently exists.
@@ -2437,8 +2473,12 @@ describe('ReactIncremental', () => {
 
     ReactNoop.render(<MyComponent />);
     expect(ReactNoop.flush).toWarnDev(
-      'componentWillReceiveProps: Please update the following components ' +
-        'to use static getDerivedStateFromProps instead: MyComponent',
+      [
+        'componentWillReceiveProps: Please update the following components ' +
+          'to use static getDerivedStateFromProps instead: MyComponent',
+        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'Please update the following components: MyComponent',
+      ],
       {withoutStack: true},
     );
 
@@ -2582,7 +2622,11 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Child, TopContextProvider',
+      {withoutStack: true},
+    );
     expect(rendered).toEqual(['count:0']);
     instance.updateCount();
     ReactNoop.flush();
@@ -2640,7 +2684,11 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Child, MiddleContextProvider, TopContextProvider',
+      {withoutStack: true},
+    );
     expect(rendered).toEqual(['count:0']);
     instance.updateCount();
     ReactNoop.flush();
@@ -2707,7 +2755,11 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Child, MiddleContextProvider, TopContextProvider',
+      {withoutStack: true},
+    );
     expect(rendered).toEqual(['count:0']);
     instance.updateCount();
     ReactNoop.flush();
@@ -2784,7 +2836,11 @@ describe('ReactIncremental', () => {
       </TopContextProvider>,
     );
 
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Child, MiddleContextProvider, TopContextProvider',
+      {withoutStack: true},
+    );
     expect(rendered).toEqual(['count:0, name:brian']);
     topInstance.updateCount();
     ReactNoop.flush();

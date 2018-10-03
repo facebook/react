@@ -357,12 +357,16 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(<AllLifecycles />);
     addComment('Mount');
     expect(ReactNoop.flush).toWarnDev(
-      'componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: AllLifecycles' +
-        '\n\ncomponentWillReceiveProps: Please update the following components ' +
-        'to use static getDerivedStateFromProps instead: AllLifecycles' +
-        '\n\ncomponentWillUpdate: Please update the following components ' +
-        'to use componentDidUpdate instead: AllLifecycles',
+      [
+        'componentWillMount: Please update the following components ' +
+          'to use componentDidMount instead: AllLifecycles' +
+          '\n\ncomponentWillReceiveProps: Please update the following components ' +
+          'to use static getDerivedStateFromProps instead: AllLifecycles' +
+          '\n\ncomponentWillUpdate: Please update the following components ' +
+          'to use componentDidUpdate instead: AllLifecycles',
+        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'Please update the following components: AllLifecycles',
+      ],
       {withoutStack: true},
     );
     ReactNoop.render(<AllLifecycles />);

@@ -49,7 +49,6 @@ import {
   enableUserTimingAPI,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   warnAboutDeprecatedLifecycles,
-  warnAboutLegacyContextAPI,
   enableSuspense,
 } from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
@@ -479,13 +478,10 @@ function commitAllLifeCycles(
 ) {
   if (__DEV__) {
     ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
+    ReactStrictModeWarnings.flushLegacyContextWarning();
 
     if (warnAboutDeprecatedLifecycles) {
       ReactStrictModeWarnings.flushPendingDeprecationWarnings();
-    }
-
-    if (warnAboutLegacyContextAPI) {
-      ReactStrictModeWarnings.flushLegacyContextWarning();
     }
   }
   while (nextEffect !== null) {
