@@ -703,6 +703,8 @@ class ReactDOMServerRenderer {
   contextValueStack: Array<any>;
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
+  tagStack: Array<string>;
+
   constructor(children: mixed, makeStaticMarkup: boolean) {
     const flatChildren = flattenTopLevelChildren(children);
 
@@ -731,6 +733,8 @@ class ReactDOMServerRenderer {
     if (__DEV__) {
       this.contextProviderStack = [];
     }
+
+    this.tagStack = [];
   }
 
   /**
@@ -802,6 +806,7 @@ class ReactDOMServerRenderer {
         const footer = createCloseTagMarkup(frame.type);
         out += footer;
         if (footer !== '') {
+          this.tagStack.pop();
           this.previousWasTextNode = false;
         }
         this.stack.pop();
@@ -895,6 +900,7 @@ class ReactDOMServerRenderer {
       const elementType = nextElement.type;
 
       if (typeof elementType === 'string') {
+        this.tagStack.push(elementType);
         return this.renderDOM(nextElement, context, parentNamespace);
       }
 
