@@ -410,6 +410,13 @@ function createOpenTagMarkup(
   return ret;
 }
 
+function createCloseTagMarkup(type: mixed): string {
+  return typeof type === 'string' &&
+    !omittedCloseTags.hasOwnProperty(type.toLowerCase())
+    ? '</' + type + '>'
+    : '';
+}
+
 function validateRenderResult(child, type) {
   if (child === undefined) {
     invariant(
@@ -677,7 +684,6 @@ type Frame = {
   children: FlatReactChildren,
   childIndex: number,
   context: Object,
-  footer: string,
 };
 
 type FrameDev = Frame & {
@@ -708,7 +714,6 @@ class ReactDOMServerRenderer {
       children: flatChildren,
       childIndex: 0,
       context: emptyObject,
-      footer: '',
     };
     if (__DEV__) {
       ((topFrame: any): FrameDev).debugElementStack = [];
@@ -794,7 +799,7 @@ class ReactDOMServerRenderer {
       }
       const frame: Frame = this.stack[this.stack.length - 1];
       if (frame.childIndex >= frame.children.length) {
-        const footer = frame.footer;
+        const footer = createCloseTagMarkup(frame.type);
         out += footer;
         if (footer !== '') {
           this.previousWasTextNode = false;
@@ -878,7 +883,6 @@ class ReactDOMServerRenderer {
           children: nextChildren,
           childIndex: 0,
           context: context,
-          footer: '',
         };
         if (__DEV__) {
           ((frame: any): FrameDev).debugElementStack = [];
@@ -908,7 +912,6 @@ class ReactDOMServerRenderer {
             children: nextChildren,
             childIndex: 0,
             context: context,
-            footer: '',
           };
           if (__DEV__) {
             ((frame: any): FrameDev).debugElementStack = [];
@@ -928,7 +931,6 @@ class ReactDOMServerRenderer {
               children: nextChildren,
               childIndex: 0,
               context: context,
-              footer: '',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -954,7 +956,6 @@ class ReactDOMServerRenderer {
               children: nextChildren,
               childIndex: 0,
               context: context,
-              footer: '',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -972,7 +973,6 @@ class ReactDOMServerRenderer {
               children: nextChildren,
               childIndex: 0,
               context: context,
-              footer: '',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -995,7 +995,6 @@ class ReactDOMServerRenderer {
               children: nextChildren,
               childIndex: 0,
               context: context,
-              footer: '',
             };
             if (__DEV__) {
               ((frame: any): FrameDev).debugElementStack = [];
@@ -1278,13 +1277,7 @@ class ReactDOMServerRenderer {
       this.makeStaticMarkup,
       this.stack.length === 1,
     );
-    let footer = '';
-    if (omittedCloseTags.hasOwnProperty(tag)) {
-      out += '/>';
-    } else {
-      out += '>';
-      footer = '</' + element.type + '>';
-    }
+    out += omittedCloseTags.hasOwnProperty(tag) ? '/>' : '>';
     let children;
     const innerMarkup = getNonChildrenInnerMarkup(props);
     if (innerMarkup != null) {
@@ -1312,7 +1305,6 @@ class ReactDOMServerRenderer {
       children,
       childIndex: 0,
       context: context,
-      footer: footer,
     };
     if (__DEV__) {
       ((frame: any): FrameDev).debugElementStack = [];
