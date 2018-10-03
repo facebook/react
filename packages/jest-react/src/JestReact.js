@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+/*global expect*/
+
 import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import invariant from 'shared/invariant';
@@ -30,11 +32,11 @@ function assertYieldsWereCleared(root) {
   invariant(
     actualYields.length === 0,
     'Log of yielded values is not empty. ' +
-      'Call expect(ReactTestRenderer).toClearYields(...) first.',
+      'Call expect(ReactTestRenderer).toHaveYielded(...) first.',
   );
 }
 
-export function toFlushAll(root, expectedYields) {
+export function toFlushAndYield(root, expectedYields) {
   return captureAssertion(() => {
     assertYieldsWereCleared(root);
     const actualYields = root.unstable_flushAll();
@@ -42,7 +44,7 @@ export function toFlushAll(root, expectedYields) {
   });
 }
 
-export function toFlushThrough(root, expectedYields) {
+export function toFlushAndYieldThrough(root, expectedYields) {
   return captureAssertion(() => {
     assertYieldsWereCleared(root);
     const actualYields = root.unstable_flushNumberOfYields(
@@ -52,7 +54,11 @@ export function toFlushThrough(root, expectedYields) {
   });
 }
 
-export function toClearYields(ReactTestRenderer, expectedYields) {
+export function toFlushWithoutYielding(root) {
+  return toFlushAndYield(root, []);
+}
+
+export function toHaveYielded(ReactTestRenderer, expectedYields) {
   return captureAssertion(() => {
     if (
       ReactTestRenderer === null ||
@@ -61,9 +67,9 @@ export function toClearYields(ReactTestRenderer, expectedYields) {
     ) {
       invariant(
         false,
-        'The matcher `toClearYields` expects an instance of React Test ' +
+        'The matcher `toHaveYielded` expects an instance of React Test ' +
           'Renderer.\n\nTry: ' +
-          'expect(ReactTestRenderer).toClearYields(expectedYields)',
+          'expect(ReactTestRenderer).toHaveYielded(expectedYields)',
       );
     }
     const actualYields = ReactTestRenderer.unstable_clearYields();
@@ -71,20 +77,12 @@ export function toClearYields(ReactTestRenderer, expectedYields) {
   });
 }
 
-export function toFlushAndThrow(root, expectedYields, ...rest) {
+export function toFlushAndThrow(root, ...rest) {
   return captureAssertion(() => {
     assertYieldsWereCleared(root);
-    try {
-      expect(() => {
-        root.unstable_flushAll();
-      }).toThrow(...rest);
-    } catch (error) {
-      const actualYields = root.unstable_clearYields();
-      expect(actualYields).toEqual(expectedYields);
-      throw error;
-    }
-    const actualYields = root.unstable_clearYields();
-    expect(actualYields).toEqual(expectedYields);
+    expect(() => {
+      root.unstable_flushAll();
+    }).toThrow(...rest);
   });
 }
 

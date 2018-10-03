@@ -50,9 +50,10 @@ expect.extend({
   ...require('../matchers/interactionTracing'),
   ...require('../matchers/toWarnDev'),
 
-  toFlushAll: JestReact.toFlushAll,
-  toFlushThrough: JestReact.toFlushThrough,
-  toClearYields: JestReact.toClearYields,
+  toFlushWithoutYielding: JestReact.toFlushWithoutYielding,
+  toFlushAndYield: JestReact.toFlushAndYield,
+  toFlushAndYieldThrough: JestReact.toFlushAndYieldThrough,
+  toHaveYielded: JestReact.toHaveYielded,
   toFlushAndThrow: JestReact.toFlushAndThrow,
   toMatchRenderedOutput: JestReact.toMatchRenderedOutput,
 });

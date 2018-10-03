@@ -121,7 +121,7 @@ describe('ReactSuspenseWithTestRenderer', () => {
       unstable_isConcurrent: true,
     });
 
-    expect(root).toFlushAll([
+    expect(root).toFlushAndYield([
       'Foo',
       'Bar',
       // A suspends
@@ -134,14 +134,14 @@ describe('ReactSuspenseWithTestRenderer', () => {
     // Flush some of the time
     jest.advanceTimersByTime(50);
     // Still nothing...
-    expect(root).toFlushAll([]);
+    expect(root).toFlushWithoutYielding();
     expect(root).toMatchRenderedOutput(null);
 
     // Flush the promise completely
     jest.advanceTimersByTime(50);
     // Renders successfully
-    expect(ReactTestRenderer).toClearYields(['Promise resolved [A]']);
-    expect(root).toFlushAll(['Foo', 'Bar', 'A', 'B']);
+    expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]']);
+    expect(root).toFlushAndYield(['Foo', 'Bar', 'A', 'B']);
     expect(root).toMatchRenderedOutput('AB');
   });
 
@@ -161,7 +161,7 @@ describe('ReactSuspenseWithTestRenderer', () => {
       },
     );
 
-    expect(root).toFlushAll([
+    expect(root).toFlushAndYield([
       'Suspend! [A]',
       'Loading A...',
       'Suspend! [B]',
@@ -171,23 +171,23 @@ describe('ReactSuspenseWithTestRenderer', () => {
 
     // Advance time by enough to timeout both components and commit their placeholders
     jest.advanceTimersByTime(4000);
-    expect(root).toFlushAll([]);
+    expect(root).toFlushWithoutYielding();
     expect(root).toMatchRenderedOutput('Loading A...Loading B...');
 
     // Advance time by enough that the first Placeholder's promise resolves and
     // switches back to the normal view. The second Placeholder should still
     // show the placeholder
     jest.advanceTimersByTime(1000);
-    // TODO: Should we throw if you forget to call toClearYields?
-    expect(ReactTestRenderer).toClearYields(['Promise resolved [A]']);
-    expect(root).toFlushAll(['A']);
+    // TODO: Should we throw if you forget to call toHaveYielded?
+    expect(ReactTestRenderer).toHaveYielded(['Promise resolved [A]']);
+    expect(root).toFlushAndYield(['A']);
     expect(root).toMatchRenderedOutput('ALoading B...');
 
     // Advance time by enough that the second Placeholder's promise resolves
     // and switches back to the normal view
     jest.advanceTimersByTime(1000);
-    expect(ReactTestRenderer).toClearYields(['Promise resolved [B]']);
-    expect(root).toFlushAll(['B']);
+    expect(ReactTestRenderer).toHaveYielded(['Promise resolved [B]']);
+    expect(root).toFlushAndYield(['B']);
     expect(root).toMatchRenderedOutput('AB');
   });
 });
