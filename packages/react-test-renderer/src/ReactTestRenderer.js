@@ -35,6 +35,7 @@ import {
 } from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import ReactVersion from 'shared/ReactVersion';
+import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import * as ReactTestHostConfig from './ReactTestHostConfig';
 import * as TestRendererScheduling from './ReactTestRendererScheduling';
@@ -91,6 +92,47 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
       return json;
     default:
       throw new Error(`Unexpected node type in toJSON: ${inst.tag}`);
+  }
+}
+
+function toJSXChildren(
+  children: Array<Instance | TextInstance>,
+): null | string | React$Element<any> | Array<React$Element<any> | string> {
+  if (children != null) {
+    if (children.length === 1) {
+      return toJSX(children[0]);
+    } else if (children.length > 1) {
+      return children.map(toJSX);
+    }
+  }
+  return null;
+}
+
+function toJSX(child: Instance | TextInstance): string | React$Element<any> {
+  switch (child.tag) {
+    case 'TEXT':
+      return child.text;
+    case 'INSTANCE': {
+      // eslint-disable-next-line no-unused-vars
+      const {children: ignoredChildrenProp, ...props} = child.props;
+      const elementProps = {...props};
+      const elementChildren = toJSXChildren(child.children);
+      if (elementChildren !== null) {
+        elementProps.children = elementChildren;
+      }
+      const element = {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: child.type,
+        key: null,
+        ref: null,
+        props: elementProps,
+        _owner: null,
+        _store: __DEV__ ? {} : undefined,
+      };
+      return ((element: any): React$Element<any>);
+    }
+    default:
+      throw new Error(`Unexpected node type in child: ${child.tag}`);
   }
 }
 
@@ -461,6 +503,31 @@ const ReactTestRendererFiber = {
           return toJSON(container.children[0]);
         }
         return container.children.map(toJSON);
+      },
+      toJSX(): React$Element<any> | string | null {
+        if (root == null || root.current == null || container == null) {
+          return null;
+        }
+        if (container.children.length === 1) {
+          return toJSX(container.children[0]);
+        }
+        const jsxChildren = toJSXChildren(container.children);
+        if (jsxChildren === null) {
+          return null;
+        }
+        // Return a React.Fragment element
+        const fragmentElement = {
+          $$typeof: REACT_ELEMENT_TYPE,
+          type: REACT_FRAGMENT_TYPE,
+          key: null,
+          ref: null,
+          props: {
+            children: jsxChildren,
+          },
+          _owner: null,
+          _store: __DEV__ ? {} : undefined,
+        };
+        return ((fragmentElement: any): React$Element<any>);
       },
       toTree() {
         if (root == null || root.current == null) {

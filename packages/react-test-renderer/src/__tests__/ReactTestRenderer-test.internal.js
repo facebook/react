@@ -754,6 +754,102 @@ describe('ReactTestRenderer', () => {
     );
   });
 
+  it('toJSX() renders simple components returning host components', () => {
+    const Qoo = () => <span className="Qoo">Hello World!</span>;
+    const renderer = ReactTestRenderer.create(<Qoo />);
+    expect(renderer.toJSX()).toEqual(<span className="Qoo">Hello World!</span>);
+  });
+
+  it('toJSX() handles nested Fragments', () => {
+    const Foo = () => (
+      <React.Fragment>
+        <React.Fragment>foo</React.Fragment>
+      </React.Fragment>
+    );
+    const renderer = ReactTestRenderer.create(<Foo />);
+    expect(renderer.toJSX()).toEqual('foo');
+  });
+
+  it('toJSX() handles null rendering components', () => {
+    class Foo extends React.Component {
+      render() {
+        return null;
+      }
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    expect(renderer.toJSX()).toEqual(null);
+  });
+
+  it('toJSX() handles simple components that return arrays', () => {
+    const Foo = ({children}) => children;
+    const renderer = ReactTestRenderer.create(
+      <Foo>
+        <div>One</div>
+        <div>Two</div>
+      </Foo>,
+    );
+    expect(renderer.toJSX()).toEqual(
+      <React.Fragment>
+        <div>One</div>
+        <div>Two</div>
+      </React.Fragment>,
+    );
+  });
+
+  it('toJSX() handles complicated tree of arrays', () => {
+    class Foo extends React.Component {
+      render() {
+        return this.props.children;
+      }
+    }
+
+    const renderer = ReactTestRenderer.create(
+      <div>
+        <Foo>
+          <div>One</div>
+          <div>Two</div>
+          <Foo>
+            <div>Three</div>
+          </Foo>
+        </Foo>
+        <div>Four</div>
+      </div>,
+    );
+
+    expect(renderer.toJSX()).toEqual(
+      <div>
+        <div>One</div>
+        <div>Two</div>
+        <div>Three</div>
+        <div>Four</div>
+      </div>,
+    );
+  });
+
+  it('toJSX() handles complicated tree of fragments', () => {
+    const renderer = ReactTestRenderer.create(
+      <React.Fragment>
+        <React.Fragment>
+          <div>One</div>
+          <div>Two</div>
+          <React.Fragment>
+            <div>Three</div>
+          </React.Fragment>
+        </React.Fragment>
+        <div>Four</div>
+      </React.Fragment>,
+    );
+    expect(renderer.toJSX()).toEqual(
+      <React.Fragment>
+        <div>One</div>
+        <div>Two</div>
+        <div>Three</div>
+        <div>Four</div>
+      </React.Fragment>,
+    );
+  });
+
   it('root instance and createNodeMock ref return the same value', () => {
     const createNodeMock = ref => ({node: ref});
     let refInst = null;
