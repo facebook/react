@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/*global expect*/
-
 import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import invariant from 'shared/invariant';
