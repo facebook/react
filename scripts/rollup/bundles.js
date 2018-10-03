@@ -366,7 +366,14 @@ const bundles = [
   /******* React Cache (experimental) *******/
   {
     label: 'react-cache',
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, NODE_DEV, NODE_PROD],
+    bundleTypes: [
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      UMD_DEV,
+      UMD_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'react-cache',
     global: 'ReactCache',
