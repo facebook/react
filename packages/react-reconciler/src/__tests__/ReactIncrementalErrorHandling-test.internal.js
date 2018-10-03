@@ -1092,7 +1092,11 @@ describe('ReactIncrementalErrorHandling', () => {
         <Connector />
       </Provider>,
     );
-    ReactNoop.flush();
+    expect(ReactNoop.flush).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Connector, Provider',
+      {withoutStack: true},
+    );
 
     // If the context stack does not unwind, span will get 'abcde'
     expect(ReactNoop.getChildren()).toEqual([span('a')]);
@@ -1581,6 +1585,12 @@ describe('ReactIncrementalErrorHandling', () => {
     };
 
     ReactNoop.render(<Provider />);
-    expect(() => ReactNoop.flush()).toThrow('Oops!');
+    expect(() => {
+      expect(() => ReactNoop.flush()).toThrow('Oops!');
+    }).toWarnDev(
+      'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Please update the following components: Provider',
+      {withoutStack: true},
+    );
   });
 });
