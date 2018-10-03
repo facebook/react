@@ -703,7 +703,8 @@ class ReactDOMServerRenderer {
   contextValueStack: Array<any>;
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
-  tagStack: Array<string>;
+  parentTagStack: Array<string>;
+  previousSiblingTag: ?string;
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
     const flatChildren = flattenTopLevelChildren(children);
@@ -734,7 +735,7 @@ class ReactDOMServerRenderer {
       this.contextProviderStack = [];
     }
 
-    this.tagStack = [];
+    this.parentTagStack = [];
   }
 
   /**
@@ -803,13 +804,14 @@ class ReactDOMServerRenderer {
       }
       const frame: Frame = this.stack[this.stack.length - 1];
       if (frame.childIndex >= frame.children.length) {
-        const footer = createCloseTagMarkup(frame.type);
-        out += footer;
-        if (footer !== '') {
-          this.tagStack.pop();
+        this.stack.pop();
+        if (typeof frame.type === 'string' || this.stack.length === 0) {
+          out += createCloseTagMarkup(this.previousSiblingTag);
+          this.previousSiblingTag = this.parentTagStack.pop();
+        }
+        if (createCloseTagMarkup(frame.type) !== '') {
           this.previousWasTextNode = false;
         }
-        this.stack.pop();
         if (frame.type === 'select') {
           this.currentSelectValue = null;
         } else if (
@@ -848,17 +850,20 @@ class ReactDOMServerRenderer {
   ): string {
     if (typeof child === 'string' || typeof child === 'number') {
       const text = '' + child;
+      const out = createCloseTagMarkup(this.previousSiblingTag);
+      delete this.previousSiblingTag;
+
       if (text === '') {
-        return '';
+        return out + '';
       }
       if (this.makeStaticMarkup) {
-        return escapeTextForBrowser(text);
+        return out + escapeTextForBrowser(text);
       }
       if (this.previousWasTextNode) {
-        return '<!-- -->' + escapeTextForBrowser(text);
+        return out + '<!-- -->' + escapeTextForBrowser(text);
       }
       this.previousWasTextNode = true;
-      return escapeTextForBrowser(text);
+      return out + escapeTextForBrowser(text);
     } else {
       let nextChild;
       ({child: nextChild, context} = resolve(child, context));
@@ -900,7 +905,6 @@ class ReactDOMServerRenderer {
       const elementType = nextElement.type;
 
       if (typeof elementType === 'string') {
-        this.tagStack.push(elementType);
         return this.renderDOM(nextElement, context, parentNamespace);
       }
 
@@ -1275,7 +1279,14 @@ class ReactDOMServerRenderer {
 
     assertValidProps(tag, props);
 
-    let out = createOpenTagMarkup(
+    let out = '';
+
+    out += createCloseTagMarkup(this.previousSiblingTag);
+    delete this.previousSiblingTag;
+
+    this.parentTagStack.push(tag);
+
+    out += createOpenTagMarkup(
       element.type,
       tag,
       props,
