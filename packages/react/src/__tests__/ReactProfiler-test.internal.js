@@ -1327,9 +1327,10 @@ describe('Profiler', () => {
 
         // Errors that happen inside of a subscriber should throw,
         throwInOnWorkStarted = true;
-        expect(() => {
-          expect(renderer).toFlushAll(['Component:text']);
-        }).toThrow('Expected error onWorkStarted');
+        expect(renderer).toFlushAndThrow(
+          ['Component:text'],
+          'Expected error onWorkStarted',
+        );
         throwInOnWorkStarted = false;
         expect(onWorkStarted).toHaveBeenCalled();
 
@@ -2427,6 +2428,7 @@ describe('Profiler', () => {
         advanceTimeBy(2500);
         await awaitableAdvanceTimers(2500);
 
+        expect(ReactTestRenderer).toClearYields(['Promise resolved [loaded]']);
         expect(renderer).toFlushAll(['AsyncText [loaded]']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
@@ -2644,6 +2646,12 @@ describe('Profiler', () => {
         advanceTimeBy(500);
         jest.advanceTimersByTime(500);
         await originalPromise;
+        expect(ReactTestRenderer).toClearYields([
+          'Suspend [loaded]',
+          'Text [loading]',
+          'Text [updated]',
+          'Promise resolved [loaded]',
+        ]);
         expect(renderer).toFlushAll(['AsyncText [loaded]']);
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 

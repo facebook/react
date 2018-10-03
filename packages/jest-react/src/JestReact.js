@@ -7,6 +7,8 @@
 
 import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
+import invariant from 'shared/invariant';
+
 function captureAssertion(fn) {
   // Trick to use a Jest matcher inside another Jest matcher. `fn` contains an
   // assertion; if it throws, we capture the error and return it, so the stack
@@ -23,41 +25,71 @@ function captureAssertion(fn) {
   return {pass: true};
 }
 
-export function toFlushAll(renderer, expectedYields) {
-  const actualYields = renderer.unstable_flushAll();
-  return captureAssertion(() => expect(actualYields).toEqual(expectedYields));
-}
-
-export function toFlushThrough(renderer, expectedYields) {
-  const actualYields = renderer.unstable_flushNumberOfYields(
-    expectedYields.length,
+function assertYieldsWereCleared(root) {
+  const actualYields = root.unstable_clearYields();
+  invariant(
+    actualYields.length === 0,
+    'Log of yielded values is not empty. ' +
+      'Call expect(ReactTestRenderer).toClearYields(...) first.',
   );
-  return captureAssertion(() => expect(actualYields).toEqual(expectedYields));
 }
 
-export function toClearYields(ReactTestRenderer, expectedYields) {
-  const actualYields = ReactTestRenderer.unstable_clearYields();
-  return captureAssertion(() => expect(actualYields).toEqual(expectedYields));
-}
-
-export function toFlushAndThrow(renderer, expectedYields, ...rest) {
+export function toFlushAll(root, expectedYields) {
   return captureAssertion(() => {
-    try {
-      expect(() => {
-        renderer.unstable_flushAll();
-      }).toThrow(...rest);
-    } catch (error) {
-      const actualYields = renderer.unstable_clearYields();
-      expect(actualYields).toEqual(expectedYields);
-      throw error;
-    }
-    const actualYields = renderer.unstable_clearYields();
+    assertYieldsWereCleared(root);
+    const actualYields = root.unstable_flushAll();
     expect(actualYields).toEqual(expectedYields);
   });
 }
 
-export function toMatchRenderedOutput(renderer, expectedJSX) {
-  const actualJSON = renderer.toJSON();
+export function toFlushThrough(root, expectedYields) {
+  return captureAssertion(() => {
+    assertYieldsWereCleared(root);
+    const actualYields = root.unstable_flushNumberOfYields(
+      expectedYields.length,
+    );
+    expect(actualYields).toEqual(expectedYields);
+  });
+}
+
+export function toClearYields(ReactTestRenderer, expectedYields) {
+  return captureAssertion(() => {
+    if (
+      ReactTestRenderer === null ||
+      typeof ReactTestRenderer !== 'object' ||
+      typeof ReactTestRenderer.unstable_setNowImplementation !== 'function'
+    ) {
+      invariant(
+        false,
+        'The matcher `toClearYields` expects an instance of React Test ' +
+          'Renderer.\n\nTry: ' +
+          'expect(ReactTestRenderer).toClearYields(expectedYields)',
+      );
+    }
+    const actualYields = ReactTestRenderer.unstable_clearYields();
+    expect(actualYields).toEqual(expectedYields);
+  });
+}
+
+export function toFlushAndThrow(root, expectedYields, ...rest) {
+  return captureAssertion(() => {
+    assertYieldsWereCleared(root);
+    try {
+      expect(() => {
+        root.unstable_flushAll();
+      }).toThrow(...rest);
+    } catch (error) {
+      const actualYields = root.unstable_clearYields();
+      expect(actualYields).toEqual(expectedYields);
+      throw error;
+    }
+    const actualYields = root.unstable_clearYields();
+    expect(actualYields).toEqual(expectedYields);
+  });
+}
+
+export function toMatchRenderedOutput(root, expectedJSX) {
+  const actualJSON = root.toJSON();
 
   let actualJSX;
   if (actualJSON === null || typeof actualJSON === 'string') {

@@ -1,7 +1,7 @@
 let React;
 let ReactTestRenderer;
 let ReactFeatureFlags;
-let SimpleCacheProvider;
+let ReactCache;
 let Placeholder;
 
 // let JestReact;
@@ -23,15 +23,15 @@ describe('ReactSuspenseWithTestRenderer', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     // JestReact = require('jest-react');
-    SimpleCacheProvider = require('simple-cache-provider');
+    ReactCache = require('react-cache');
 
     Placeholder = React.Placeholder;
 
     function invalidateCache() {
-      cache = SimpleCacheProvider.createCache(invalidateCache);
+      cache = ReactCache.createCache(invalidateCache);
     }
     invalidateCache();
-    TextResource = SimpleCacheProvider.createResource(([text, ms = 0]) => {
+    TextResource = ReactCache.createResource(([text, ms = 0]) => {
       let listeners = null;
       let status = 'pending';
       let value = null;
@@ -117,11 +117,11 @@ describe('ReactSuspenseWithTestRenderer', () => {
       );
     }
 
-    const renderer = ReactTestRenderer.create(<Foo />, {
+    const root = ReactTestRenderer.create(<Foo />, {
       unstable_isConcurrent: true,
     });
 
-    expect(renderer).toFlushAll([
+    expect(root).toFlushAll([
       'Foo',
       'Bar',
       // A suspends
@@ -129,30 +129,25 @@ describe('ReactSuspenseWithTestRenderer', () => {
       // But we keep rendering the siblings
       'B',
     ]);
-    expect(renderer).toMatchRenderedOutput(null);
+    expect(root).toMatchRenderedOutput(null);
 
     // Flush some of the time
     jest.advanceTimersByTime(50);
     // Still nothing...
-    expect(renderer).toFlushAll([]);
-    expect(renderer).toMatchRenderedOutput(null);
+    expect(root).toFlushAll([]);
+    expect(root).toMatchRenderedOutput(null);
 
     // Flush the promise completely
     jest.advanceTimersByTime(50);
     // Renders successfully
-    expect(renderer).toFlushAll([
-      // 'Promise resolved [A]', TODO: renable
-      'Foo',
-      'Bar',
-      'A',
-      'B',
-    ]);
-    expect(renderer).toMatchRenderedOutput('AB');
+    expect(ReactTestRenderer).toClearYields(['Promise resolved [A]']);
+    expect(root).toFlushAll(['Foo', 'Bar', 'A', 'B']);
+    expect(root).toMatchRenderedOutput('AB');
   });
 
   it('suspends siblings and later recovers each independently', () => {
     // Render two sibling Placeholder components
-    const renderer = ReactTestRenderer.create(
+    const root = ReactTestRenderer.create(
       <React.Fragment>
         <Placeholder delayMs={1000} fallback={<Text text="Loading A..." />}>
           <AsyncText text="A" ms={5000} />
@@ -166,33 +161,33 @@ describe('ReactSuspenseWithTestRenderer', () => {
       },
     );
 
-    expect(renderer).toFlushAll([
+    expect(root).toFlushAll([
       'Suspend! [A]',
       'Loading A...',
       'Suspend! [B]',
       'Loading B...',
     ]);
-    expect(renderer).toMatchRenderedOutput(null);
+    expect(root).toMatchRenderedOutput(null);
 
     // Advance time by enough to timeout both components and commit their placeholders
     jest.advanceTimersByTime(4000);
-    expect(renderer).toFlushAll([]);
-    expect(renderer).toMatchRenderedOutput('Loading A...Loading B...');
+    expect(root).toFlushAll([]);
+    expect(root).toMatchRenderedOutput('Loading A...Loading B...');
 
     // Advance time by enough that the first Placeholder's promise resolves and
     // switches back to the normal view. The second Placeholder should still
     // show the placeholder
     jest.advanceTimersByTime(1000);
     // TODO: Should we throw if you forget to call toClearYields?
-    expect(renderer).toClearYields(['Promise resolved [A]']);
-    expect(renderer).toFlushAll(['A']);
-    expect(renderer).toMatchRenderedOutput('ALoading B...');
+    expect(ReactTestRenderer).toClearYields(['Promise resolved [A]']);
+    expect(root).toFlushAll(['A']);
+    expect(root).toMatchRenderedOutput('ALoading B...');
 
     // Advance time by enough that the second Placeholder's promise resolves
     // and switches back to the normal view
     jest.advanceTimersByTime(1000);
-    expect(renderer).toClearYields(['Promise resolved [B]']);
-    expect(renderer).toFlushAll(['B']);
-    expect(renderer).toMatchRenderedOutput('AB');
+    expect(ReactTestRenderer).toClearYields(['Promise resolved [B]']);
+    expect(root).toFlushAll(['B']);
+    expect(root).toMatchRenderedOutput('AB');
   });
 });

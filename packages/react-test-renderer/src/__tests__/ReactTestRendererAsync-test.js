@@ -270,4 +270,14 @@ describe('ReactTestRendererAsync', () => {
       'Expected value to equal:',
     );
   });
+
+  it('flush methods throw if log is not empty', () => {
+    const renderer = ReactTestRenderer.create(<div />, {
+      unstable_isConcurrent: true,
+    });
+    ReactTestRenderer.unstable_yield('Something');
+    expect(() => expect(renderer).toFlushAll([])).toThrow(
+      'Log of yielded values is not empty.',
+    );
+  });
 });
