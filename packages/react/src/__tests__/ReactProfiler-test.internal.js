@@ -2219,6 +2219,14 @@ describe('Profiler', () => {
           timestamp: mockNow(),
         };
 
+        const monkey = React.createRef();
+        class Monkey extends React.Component {
+          render() {
+            ReactNoop.yield('Monkey');
+            return null;
+          }
+        }
+
         const onRender = jest.fn();
         SchedulerTracing.unstable_trace(interaction.name, mockNow(), () => {
           ReactNoop.render(
@@ -2227,6 +2235,7 @@ describe('Profiler', () => {
                 <AsyncText text="Async" ms={20000} />
               </React.Placeholder>
               <Text text="Sync" />
+              <Monkey ref={monkey} />
             </React.unstable_Profiler>,
           );
         });
@@ -2243,6 +2252,7 @@ describe('Profiler', () => {
           'Suspend [Async]',
           'Text [Loading...]',
           'Text [Sync]',
+          'Monkey',
         ]);
         // The update hasn't expired yet, so we commit nothing.
         expect(ReactNoop.getChildren()).toEqual([]);
@@ -2271,6 +2281,11 @@ describe('Profiler', () => {
         expect(onInteractionTraced).toHaveBeenCalledTimes(1);
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
+        // An unrelated update in the middle shouldn't affect things...
+        monkey.current.forceUpdate();
+        expect(ReactNoop.flush()).toEqual(['Monkey']);
+        expect(onRender).toHaveBeenCalledTimes(2);
+
         // Once the promise resolves, we render the suspended view
         await awaitableAdvanceTimers(10000);
         expect(ReactNoop.flush()).toEqual([
@@ -2281,9 +2296,9 @@ describe('Profiler', () => {
           {text: 'Async'},
           {text: 'Sync'},
         ]);
-        expect(onRender).toHaveBeenCalledTimes(2);
+        expect(onRender).toHaveBeenCalledTimes(3);
 
-        call = onRender.mock.calls[1];
+        call = onRender.mock.calls[2];
         expect(call[0]).toEqual('test-profiler');
         expect(call[6]).toMatchInteractions(
           ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
@@ -2540,7 +2555,9 @@ describe('Profiler', () => {
 
         expect(onRender).toHaveBeenCalledTimes(2); // Sync null commit, placeholder commit
         expect(onRender.mock.calls[0][6]).toMatchInteractions([
-          initialRenderInteraction,
+          highPriUpdateInteraction,
+        ]);
+        expect(onRender.mock.calls[1][6]).toMatchInteractions([
           highPriUpdateInteraction,
         ]);
         onRender.mockClear();
@@ -2552,9 +2569,12 @@ describe('Profiler', () => {
         await originalPromise;
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 
+        // TODO: Bug. This *should* just be one render tied to both interactions.
         expect(onRender).toHaveBeenCalledTimes(2);
         expect(onRender.mock.calls[0][6]).toMatchInteractions([
           initialRenderInteraction,
+        ]);
+        expect(onRender.mock.calls[1][6]).toMatchInteractions([
           highPriUpdateInteraction,
         ]);
 
@@ -2631,6 +2651,11 @@ describe('Profiler', () => {
             },
           );
         });
+        expect(ReactTestRenderer).toHaveYielded([
+          'Suspend [loaded]',
+          'Text [loading]',
+          'Text [updated]',
+        ]);
         expect(renderer.toJSON()).toEqual(['loading', 'updated']);
 
         expect(onRender).toHaveBeenCalledTimes(1);
@@ -2639,32 +2664,28 @@ describe('Profiler', () => {
         ]);
         onRender.mockClear();
 
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-        expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(highPriUpdateInteraction);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
 
         advanceTimeBy(500);
         jest.advanceTimersByTime(500);
         await originalPromise;
-        expect(ReactTestRenderer).toHaveYielded([
-          'Suspend [loaded]',
-          'Text [loading]',
-          'Text [updated]',
-          'Promise resolved [loaded]',
-        ]);
+        expect(ReactTestRenderer).toHaveYielded(['Promise resolved [loaded]']);
         expect(renderer).toFlushAndYield(['AsyncText [loaded]']);
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 
         expect(onRender).toHaveBeenCalledTimes(1);
         expect(onRender.mock.calls[0][6]).toMatchInteractions([
           initialRenderInteraction,
+          highPriUpdateInteraction,
         ]);
 
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
         expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(initialRenderInteraction);
+          onInteractionScheduledWorkCompleted.mock.calls[0][0],
+        ).toMatchInteraction(initialRenderInteraction);
+        expect(
+          onInteractionScheduledWorkCompleted.mock.calls[1][0],
+        ).toMatchInteraction(highPriUpdateInteraction);
       });
     });
   });
