@@ -14,7 +14,8 @@ import {isAutonomousCustomComponent} from './isCustomComponent';
  * w3.org/TR/html5/syntax.html#optional-tags
  *
  * @param {string} tag HTML tag name that is being checked.
- * @param {?string} [nextSibling] HTML tag name of tag's next sibling.
+ * @param {?string|symbol} [nextSibling] HTML tag name of tag's next sibling.
+ * Symbol if next sibling is text node (REACT_TEXT_TYPE).
  * undefined if tag doesn't have a next sibling.
  * @param {?string} [parent] HTML tag name of tag's parent.
  * undefined if tag doesn't have a parent.
