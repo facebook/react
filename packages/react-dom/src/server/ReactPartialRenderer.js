@@ -808,8 +808,6 @@ class ReactDOMServerRenderer {
         if (typeof frame.type === 'string' || this.stack.length === 0) {
           out += createCloseTagMarkup(this.previousSiblingTag);
           this.previousSiblingTag = this.parentTagStack.pop();
-        }
-        if (createCloseTagMarkup(frame.type) !== '') {
           this.previousWasTextNode = false;
         }
         if (frame.type === 'select') {
