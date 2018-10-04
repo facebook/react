@@ -264,7 +264,9 @@ let nextRenderDidError: boolean = false;
 let nextEffect: Fiber | null = null;
 
 let isCommitting: boolean = false;
-let needsPassiveCommit: boolean = false;
+let rootWithPendingPassiveEffects: FiberRoot | null = null;
+let firstPassiveEffect: Fiber | null = null;
+let passiveEffectCallbackHandle: * = null;
 
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
@@ -504,7 +506,7 @@ function commitAllLifeCycles(
     }
 
     if (effectTag & Passive) {
-      needsPassiveCommit = true;
+      rootWithPendingPassiveEffects = finishedRoot;
     }
 
     nextEffect = nextEffect.nextEffect;
@@ -512,6 +514,9 @@ function commitAllLifeCycles(
 }
 
 function commitPassiveEffects(root: FiberRoot, firstEffect: Fiber): void {
+  rootWithPendingPassiveEffects = null;
+  passiveEffectCallbackHandle = null;
+
   // Set this to true to prevent re-entrancy
   const previousIsRendering = isRendering;
   isRendering = true;
@@ -566,21 +571,42 @@ function markLegacyErrorBoundaryAsFailed(instance: mixed) {
   }
 }
 
-function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
-  const existingSerialEffectCallback = root.serialEffectCallback;
-  const existingSerialEffectCallbackHandle = root.serialEffectCallbackHandle;
-  if (existingSerialEffectCallback !== null) {
-    // A passive callback was scheduled during the previous commit, but it did
-    // not get a chance to flush. Flush it now to ensure serial execution.
-    // This should fire before any new mutations.
-    root.serialEffectCallback = null;
-    if (existingSerialEffectCallbackHandle !== null) {
-      root.serialEffectCallbackHandle = null;
-      Schedule_cancelCallback(existingSerialEffectCallbackHandle);
-    }
-    existingSerialEffectCallback();
+function flushPassiveEffectsBeforeSchedulingUpdateOnFiber(fiber: Fiber) {
+  if (rootWithPendingPassiveEffects !== null) {
+    // TODO: This is an unfortunate extra loop. We end up traversing to the root
+    // again in scheduleWorkToRoot. But we have to do this one first because it
+    // needs to happen before adding an update to the queue, and
+    // scheduleWorkToRoot may perform a synchronous re-render. Maybe we can
+    // solve this with batchedUpdates, or with the equivalent in the Scheduler
+    // package.
+    let node = fiber;
+    do {
+      switch (node.tag) {
+        case HostRoot: {
+          const root: FiberRoot = node.stateNode;
+          flushPassiveEffects(root);
+          return;
+        }
+      }
+      node = node.return;
+    } while (node !== null);
   }
+}
 
+function flushPassiveEffects(root: FiberRoot) {
+  if (root === rootWithPendingPassiveEffects) {
+    rootWithPendingPassiveEffects = null;
+    if (passiveEffectCallbackHandle !== null) {
+      Schedule_cancelCallback(passiveEffectCallbackHandle);
+      passiveEffectCallbackHandle = null;
+    }
+    if (firstPassiveEffect !== null) {
+      commitPassiveEffects(root, firstPassiveEffect);
+    }
+  }
+}
+
+function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
   isWorking = true;
   isCommitting = true;
   startCommitTimer();
@@ -770,31 +796,30 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber): void {
     }
   }
 
-  if (firstEffect !== null && needsPassiveCommit) {
-    const resolvedFirstEffect = firstEffect;
+  if (firstEffect !== null && rootWithPendingPassiveEffects !== null) {
     // This commit included a passive effect. These do not need to fire until
     // after the next paint. Schedule an callback to fire them in an async
     // event. To ensure serial execution, the callback will be flushed early if
-    // we enter another commit phase before then.
-    needsPassiveCommit = false;
-    let serialEffectCallback;
+    // we enter rootWithPendingPassiveEffects commit phase before then.
+    const resolvedFirstEffect = (firstPassiveEffect = firstEffect);
+
+    let passiveEffectCallback;
     if (enableSchedulerTracing) {
       // TODO: Avoid this extra callback by mutating the tracing ref directly,
       // like we do at the beginning of commitRoot. I've opted not to do that
       // here because that code is still in flux.
-      serialEffectCallback = Schedule_tracing_wrap(() => {
-        root.serialEffectCallback = null;
+      passiveEffectCallback = Schedule_tracing_wrap(() => {
         commitPassiveEffects(root, resolvedFirstEffect);
       });
     } else {
-      serialEffectCallback = () => {
-        root.serialEffectCallback = null;
-        commitPassiveEffects(root, resolvedFirstEffect);
-      };
+      passiveEffectCallback = commitPassiveEffects.bind(
+        null,
+        root,
+        resolvedFirstEffect,
+      );
     }
-    root.serialEffectCallback = serialEffectCallback;
-    root.serialEffectCallbackHandle = Schedule_scheduleCallback(
-      serialEffectCallback,
+    passiveEffectCallbackHandle = Schedule_scheduleCallback(
+      passiveEffectCallback,
     );
   }
 
@@ -1227,6 +1252,9 @@ function renderRoot(
     'renderRoot was called recursively. This error is likely caused ' +
       'by a bug in React. Please file an issue.',
   );
+
+  flushPassiveEffects(root);
+
   isWorking = true;
   ReactCurrentOwner.currentDispatcher = Dispatcher;
 
@@ -1505,11 +1533,8 @@ function renderRoot(
   onComplete(root, rootWorkInProgress, expirationTime);
 }
 
-function dispatch(
-  sourceFiber: Fiber,
-  value: mixed,
-  expirationTime: ExpirationTime,
-) {
+function captureCommitPhaseError(sourceFiber: Fiber, value: mixed) {
+  const expirationTime = Sync;
   let fiber = sourceFiber.return;
   while (fiber !== null) {
     switch (fiber.tag) {
@@ -1552,10 +1577,6 @@ function dispatch(
     enqueueUpdate(rootFiber, update);
     scheduleWork(rootFiber, expirationTime);
   }
-}
-
-function captureCommitPhaseError(fiber: Fiber, error: mixed) {
-  return dispatch(fiber, error, Sync);
 }
 
 function computeThreadID(
@@ -2587,4 +2608,5 @@ export {
   interactiveUpdates,
   flushInteractiveUpdates,
   computeUniqueAsyncExpiration,
+  flushPassiveEffectsBeforeSchedulingUpdateOnFiber,
 };
