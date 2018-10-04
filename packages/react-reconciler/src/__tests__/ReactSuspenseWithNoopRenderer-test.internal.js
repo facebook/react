@@ -649,6 +649,22 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
   });
 
+  it('resolves successfully even if fallback render is pending', async () => {
+    ReactNoop.render(
+      <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
+        <AsyncText text="Async" ms={3000} />
+      </Placeholder>,
+    );
+    expect(ReactNoop.flushNextYield()).toEqual(['Suspend! [Async]']);
+    await advanceTimers(1500);
+    expect(ReactNoop.expire(1500)).toEqual([]);
+    // Before we have a chance to flush, the promise resolves.
+    await advanceTimers(2000);
+    expect(ReactNoop.clearYields()).toEqual(['Promise resolved [Async]']);
+    expect(ReactNoop.flush()).toEqual(['Async']);
+    expect(ReactNoop.getChildren()).toEqual([span('Async')]);
+  });
+
   it('throws a helpful error when an update is suspends without a placeholder', () => {
     expect(() => {
       ReactNoop.flushSync(() =>
