@@ -949,27 +949,19 @@ function updatePlaceholderComponent(
 
     // Check if we already attempted to render the normal state. If we did,
     // and we timed out, render the placeholder state.
-    const alreadyCaptured =
-      (workInProgress.effectTag & DidCapture) === NoEffect;
+    const nextDidTimeout = workInProgress.updateQueue !== null;
 
-    let nextDidTimeout;
-    if (current !== null && workInProgress.updateQueue !== null) {
-      if (enableSchedulerTracing) {
+    if ((workInProgress.mode & StrictMode) === NoEffect) {
+      if (enableSchedulerTracing && nextDidTimeout) {
         // Handle special case of rendering a Placeholder for a sync, suspended tree.
         // We flag this to properly trace and count interactions.
         // Otherwise interaction pending count will be decremented too many times.
         captureWillSyncRenderPlaceholder();
       }
-
-      // We're outside strict mode. Something inside this Placeholder boundary
-      // suspended during the last commit. Switch to the placholder.
+      // The next time we render, we try the primary children again even if no
+      // promise has timed out.
       workInProgress.updateQueue = null;
-      nextDidTimeout = true;
     } else {
-      nextDidTimeout = !alreadyCaptured;
-    }
-
-    if ((workInProgress.mode & StrictMode) !== NoEffect) {
       if (nextDidTimeout) {
         // If the timed-out view commits, schedule an update effect to record
         // the committed time.

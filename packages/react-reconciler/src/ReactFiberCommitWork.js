@@ -356,11 +356,7 @@ function commitLifeCycles(
       if (enableSuspense) {
         if ((finishedWork.mode & StrictMode) === NoEffect) {
           // In loose mode, a placeholder times out by scheduling a synchronous
-          // update in the commit phase. Use `updateQueue` field to signal that
-          // the Timeout needs to switch to the placeholder. We don't need an
-          // entire queue. Any non-null value works.
-          // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
-          finishedWork.updateQueue = emptyObject;
+          // update in the commit phase.
           scheduleWork(finishedWork, Sync);
         } else {
           // In strict mode, the Update effect is used to record the time at

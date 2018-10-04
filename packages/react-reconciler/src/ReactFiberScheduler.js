@@ -1597,6 +1597,12 @@ function retrySuspendedRoot(
       markPendingPriorityLevel(root, retryTime);
     }
 
+    // Mark that we should try rendering the primary children again.
+    fiber.updateQueue = null;
+    if (fiber.alternate !== null) {
+      fiber.alternate.updateQueue = null;
+    }
+
     scheduleWorkToRoot(fiber, retryTime);
     const rootExpirationTime = root.expirationTime;
     if (rootExpirationTime !== NoWork) {
