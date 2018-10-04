@@ -19,7 +19,7 @@ However, [it achieves correctness by sometimes de-opting to synchronous mode](ht
 
 The effect of de-opting to sync mode is that the main thread may periodically be blocked (in the case of CPU-bound work), and placeholders may appear earlier than desired (in the case of IO-bound work).
 
-For **full compatibility** with asynchronous rendering, including both **time-slicing** and **React Suspense**, the suggested longer term solution is to move to one of the patterns described in the previous section.
+For **full compatibility** with asynchronous rendering, including both **time-slicing** and **React Suspense**, the suggested longer-term solution is to move to one of the patterns described in the previous section.
 
 ## What types of subscriptions can this support?
 
