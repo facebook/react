@@ -196,7 +196,7 @@ describe('canOmitCloseTag', () => {
     undefined,
   ]);
 
-  it("doesn't omit 'p' closing tag with no next sibling", () => {
+  it('correctly omits p for specific parent tags', () => {
     const notAllowedParents = [
       undefined,
       'a',
