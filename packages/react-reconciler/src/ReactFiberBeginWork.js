@@ -113,13 +113,13 @@ const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 let didWarnAboutBadClass;
 let didWarnAboutContextTypeOnFunctionComponent;
 let didWarnAboutGetDerivedStateOnFunctionComponent;
-let didWarnAboutStatelessRefs;
+let didWarnAboutFunctionRefs;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
   didWarnAboutContextTypeOnFunctionComponent = {};
   didWarnAboutGetDerivedStateOnFunctionComponent = {};
-  didWarnAboutStatelessRefs = {};
+  didWarnAboutFunctionRefs = {};
 }
 
 export function reconcileChildren(
@@ -891,11 +891,11 @@ function mountIndeterminateComponent(
         if (debugSource) {
           warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
         }
-        if (!didWarnAboutStatelessRefs[warningKey]) {
-          didWarnAboutStatelessRefs[warningKey] = true;
+        if (!didWarnAboutFunctionRefs[warningKey]) {
+          didWarnAboutFunctionRefs[warningKey] = true;
           warning(
             false,
-            'Stateless function components cannot be given refs. ' +
+            'Function components cannot be given refs. ' +
               'Attempts to access this ref will fail.%s',
             info,
           );
@@ -908,7 +908,7 @@ function mountIndeterminateComponent(
         if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
           warningWithoutStack(
             false,
-            '%s: Stateless function components do not support getDerivedStateFromProps.',
+            '%s: Function components do not support getDerivedStateFromProps.',
             componentName,
           );
           didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
@@ -924,7 +924,7 @@ function mountIndeterminateComponent(
         if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
           warningWithoutStack(
             false,
-            '%s: Stateless function components do not support contextType.',
+            '%s: Function components do not support contextType.',
             componentName,
           );
           didWarnAboutContextTypeOnFunctionComponent[componentName] = true;

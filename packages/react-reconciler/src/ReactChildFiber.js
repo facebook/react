@@ -140,7 +140,7 @@ function coerceRef(
         invariant(
           ownerFiber.tag === ClassComponent ||
             ownerFiber.tag === ClassComponentLazy,
-          'Stateless function components cannot have refs.',
+          'Function components cannot have refs.',
         );
         inst = ownerFiber.stateNode;
       }

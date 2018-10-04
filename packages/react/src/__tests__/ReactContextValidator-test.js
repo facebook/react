@@ -591,7 +591,7 @@ describe('ReactContextValidator', () => {
     ComponentB.contextType = Context;
 
     expect(() => ReactTestUtils.renderIntoDocument(<ComponentA />)).toWarnDev(
-      'Warning: ComponentA: Stateless function components do not support contextType.',
+      'Warning: ComponentA: Function components do not support contextType.',
       {withoutStack: true},
     );
 
@@ -599,7 +599,7 @@ describe('ReactContextValidator', () => {
     ReactTestUtils.renderIntoDocument(<ComponentA />);
 
     expect(() => ReactTestUtils.renderIntoDocument(<ComponentB />)).toWarnDev(
-      'Warning: ComponentB: Stateless function components do not support contextType.',
+      'Warning: ComponentB: Function components do not support contextType.',
       {withoutStack: true},
     );
   });

@@ -1142,7 +1142,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     ReactNoop.render(<Foo show={true} />);
     expect(ReactNoop.flush).toWarnDev(
-      'Warning: Stateless function components cannot be given refs. ' +
+      'Warning: Function components cannot be given refs. ' +
         'Attempts to access this ref will fail.\n\nCheck the render method ' +
         'of `Foo`.\n' +
         '    in FunctionComponent (at **)\n' +
