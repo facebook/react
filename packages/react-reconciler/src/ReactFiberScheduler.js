@@ -111,7 +111,7 @@ import {
   computeAsyncExpiration,
   computeInteractiveExpiration,
 } from './ReactFiberExpirationTime';
-import {ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
+import {ConcurrentMode, ProfileMode, NoContext} from './ReactTypeOfMode';
 import {enqueueUpdate, resetCurrentlyProcessingQueue} from './ReactUpdateQueue';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -1595,6 +1595,14 @@ function retrySuspendedRoot(
       const currentTime = requestCurrentTime();
       retryTime = computeExpirationForFiber(currentTime, fiber);
       markPendingPriorityLevel(root, retryTime);
+    }
+
+    if ((fiber.mode & ConcurrentMode) !== NoContext) {
+      if (root === nextRoot && nextRenderExpirationTime === suspendedTime) {
+        // Received a ping at the same priority level at which we're currently
+        // rendering. Restart from the root.
+        nextRoot = null;
+      }
     }
 
     scheduleWorkToRoot(fiber, retryTime);

@@ -189,4 +189,57 @@ describe('ReactSuspense', () => {
     expect(root).toFlushAndYield(['B']);
     expect(root).toMatchRenderedOutput('AB');
   });
+
+  it('interrupts current render if promise resolves before current render phase', () => {
+    let didResolve = false;
+    let listeners = [];
+
+    const thenable = {
+      then(resolve) {
+        if (!didResolve) {
+          listeners.push(resolve);
+        } else {
+          resolve();
+        }
+      },
+    };
+
+    function resolveThenable() {
+      didResolve = true;
+      listeners.forEach(l => l());
+    }
+
+    function Async() {
+      if (!didResolve) {
+        ReactTestRenderer.unstable_yield('Suspend!');
+        throw thenable;
+      }
+      ReactTestRenderer.unstable_yield('Async');
+      return 'Async';
+    }
+
+    const root = ReactTestRenderer.create(
+      <Placeholder delayMs={1000} fallback={<Text text="Loading..." />}>
+        <Async />
+        <Text text="Sibling" />
+      </Placeholder>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    expect(root).toFlushAndYieldThrough(['Suspend!']);
+
+    // The promise resolves before the current render phase has completed
+    resolveThenable();
+    expect(ReactTestRenderer).toHaveYielded([]);
+
+    // Start over from the root, instead of continuing.
+    expect(root).toFlushAndYield([
+      // Async renders again *before* Sibling
+      'Async',
+      'Sibling',
+    ]);
+    expect(root).toMatchRenderedOutput('AsyncSibling');
+  });
 });
