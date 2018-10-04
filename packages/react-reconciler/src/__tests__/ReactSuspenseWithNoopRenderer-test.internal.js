@@ -12,7 +12,10 @@ let cache;
 let TextResource;
 let textResourceShouldFail;
 
-describe('ReactSuspense', () => {
+// These tests use React Noop Renderer.  All new tests should use React Test
+// Renderer and go in ReactSuspense-test; plan is gradually migrate the noop
+// tests to that file.
+describe('ReactSuspenseWithNoopRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
