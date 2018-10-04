@@ -10,10 +10,9 @@ let cache;
 let TextResource;
 let textResourceShouldFail;
 
-// The tests in the ReactSuspense suite use ReactNoop. We want to use
-// ReactTestRenderer for most of our tests, so we're gradually migrating the
-// Suspense tests over to this file.
-describe('ReactSuspenseWithTestRenderer', () => {
+// Additional tests can be found in ReactSuspenseWithNoopRenderer. Plan is
+// to gradually migrate those to this file.
+describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
