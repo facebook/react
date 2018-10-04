@@ -341,8 +341,16 @@ export function appendChild(
   parentInstance.appendChild(child);
 }
 
+type DOMContainer =
+  | (Element & {
+      _reactRootContainer: ?{},
+    })
+  | (Document & {
+      _reactRootContainer: ?{},
+    });
+
 export function appendChildToContainer(
-  container: Container,
+  container: DOMContainer,
   child: Instance | TextInstance,
 ): void {
   let parentNode;
