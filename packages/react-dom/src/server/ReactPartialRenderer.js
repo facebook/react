@@ -38,6 +38,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_TEXT_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -57,6 +58,7 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
 import isCustomComponent from '../shared/isCustomComponent';
 import omittedCloseTags from '../shared/omittedCloseTags';
+import canOmitCloseTag from '../shared/canOmitCloseTag';
 import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
@@ -410,10 +412,17 @@ function createOpenTagMarkup(
   return ret;
 }
 
-function createCloseTagMarkup(type: mixed): string {
-  return typeof type === 'string' &&
-    !omittedCloseTags.hasOwnProperty(type.toLowerCase())
-    ? '</' + type + '>'
+function createCloseTagMarkup(
+  tag: ?string,
+  nextSibling: ?mixed, // Either a string or a symbol (REACT_TEXT_TYPE)
+  parent: ?string,
+): string {
+  // console.log('tag', tag, 'nextSibling', nextSibling, 'parent', parent);
+  // console.log('');
+  return typeof tag === 'string' &&
+    !omittedCloseTags.hasOwnProperty(tag) &&
+    !canOmitCloseTag(tag, nextSibling, parent)
+    ? '</' + tag + '>'
     : '';
 }
 
@@ -806,7 +815,11 @@ class ReactDOMServerRenderer {
       if (frame.childIndex >= frame.children.length) {
         this.stack.pop();
         if (typeof frame.type === 'string' || this.stack.length === 0) {
-          out += createCloseTagMarkup(this.previousSiblingTag);
+          out += createCloseTagMarkup(
+            this.previousSiblingTag,
+            undefined,
+            this.parentTagStack[this.parentTagStack.length - 1],
+          );
           this.previousSiblingTag = this.parentTagStack.pop();
           this.previousWasTextNode = false;
         }
@@ -848,7 +861,12 @@ class ReactDOMServerRenderer {
   ): string {
     if (typeof child === 'string' || typeof child === 'number') {
       const text = '' + child;
-      const out = createCloseTagMarkup(this.previousSiblingTag);
+
+      const out = createCloseTagMarkup(
+        this.previousSiblingTag,
+        REACT_TEXT_TYPE,
+        this.parentTagStack[this.parentTagStack.length - 1],
+      );
       delete this.previousSiblingTag;
 
       if (text === '') {
@@ -1279,7 +1297,11 @@ class ReactDOMServerRenderer {
 
     let out = '';
 
-    out += createCloseTagMarkup(this.previousSiblingTag);
+    out += createCloseTagMarkup(
+      this.previousSiblingTag,
+      tag,
+      this.parentTagStack[this.parentTagStack.length - 1],
+    );
     delete this.previousSiblingTag;
 
     this.parentTagStack.push(tag);

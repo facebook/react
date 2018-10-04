@@ -22,7 +22,7 @@ import {isAutonomousCustomComponent} from './isCustomComponent';
  */
 function canOmitCloseTag(
   tag: string,
-  nextSibling: ?string,
+  nextSibling: ?mixed, // Either a string or a symbol (REACT_TEXT_TYPE)
   parent: ?string,
 ): boolean {
   if (parent === undefined) {
