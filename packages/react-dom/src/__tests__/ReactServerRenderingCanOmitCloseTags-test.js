@@ -13,34 +13,8 @@
 let React;
 let ReactDOMServer;
 let PropTypes;
-let escapeTextForBrowser;
-
-const escapeHTML = ([str]) => {
-  return new RegExp(
-    str.replace(/\n|\r| {2}/g, '').replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'),
-  );
-};
 
 const minified = ([str]) => str.replace(/\n|\r| {2}/g, '');
-
-expect.extend({
-  toMatchHtml(renderedToString, testString) {
-    const testStringMinified = testString.replace(/\n|\r| {2}/g, '');
-    if (testStringMinified === renderedToString) {
-      return {
-        message: () =>
-          `expected ${renderedToString} not to match '${testStringMinified}'`,
-        pass: true,
-      };
-    } else {
-      return {
-        message: () =>
-          `expected\n${renderedToString}\n to match\n${testStringMinified}`,
-        pass: false,
-      };
-    }
-  },
-});
 
 describe('Omit optional close tags in ReactDOMServerRenderer', () => {
   beforeEach(() => {
@@ -50,7 +24,7 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
     ReactDOMServer = require('react-dom/server');
   });
 
-  it('Recreates w3c example w3.org/TR/html5/syntax.html#example-b26c8b39', () => {
+  it('recreates w3c example w3.org/TR/html5/syntax.html#example-b26c8b39', () => {
     const response = ReactDOMServer.renderToString(
       <table>
         <caption>
