@@ -604,6 +604,38 @@ describe('ReactHooks', () => {
       expect(ReactNoop.clearYields()).toEqual(['Did commit [1]']);
     });
 
+    it('flushes passive effects even with sibling deletions', () => {
+      function LayoutEffect(props) {
+        useLayoutEffect(() => {
+          ReactNoop.yield(`Layout effect`);
+        });
+        return <Text text="Layout" />;
+      }
+      function PassiveEffect(props) {
+        useEffect(() => {
+          ReactNoop.yield(`Passive effect`);
+        }, []);
+        return <Text text="Passive" />;
+      }
+      let passive = <PassiveEffect key="p" />;
+      ReactNoop.render([<LayoutEffect key="l" />, passive]);
+      expect(ReactNoop.flush()).toEqual(['Layout', 'Passive', 'Layout effect']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Layout'),
+        span('Passive'),
+      ]);
+
+      // Destroying the first child shouldn't prevent the passive effect from
+      // being executed
+      ReactNoop.render([passive]);
+      expect(ReactNoop.flush()).toEqual(['Passive effect']);
+      expect(ReactNoop.getChildren()).toEqual([span('Passive')]);
+
+      // (No effects are left to flush.)
+      flushPassiveEffects();
+      expect(ReactNoop.clearYields()).toEqual(null);
+    });
+
     it(
       'flushes effects serially by flushing old effects before flushing ' +
         "new ones, if they haven't already fired",
@@ -631,9 +663,9 @@ describe('ReactHooks', () => {
         // Before the effects have a chance to flush, schedule another update
         ReactNoop.render(<Counter count={1} />);
         expect(ReactNoop.flush()).toEqual([
-          1,
-          // The previous effect flushes before the host mutations
+          // The previous effect flushes before the reconciliation
           'Committed state when effect was fired: 0',
+          1,
         ]);
         expect(ReactNoop.getChildren()).toEqual([span(1)]);
 
@@ -689,15 +721,37 @@ describe('ReactHooks', () => {
 
       // Rendering again should flush the previous commit's effects
       ReactNoop.render(<Counter count={1} />);
-      ReactNoop.flushThrough([
-        'Count: (empty)',
-        'Schedule update [0]',
-        'Count: 0',
-      ]);
+      ReactNoop.flushThrough(['Schedule update [0]', 'Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
+      expect(ReactNoop.flush()).toEqual([]);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      flushPassiveEffects();
       expect(ReactNoop.flush()).toEqual(['Schedule update [1]', 'Count: 1']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+    });
+
+    it('flushes serial effects before enqueueing work', () => {
+      let _updateCount;
+      function Counter(props) {
+        const [count, updateCount] = useState(0);
+        _updateCount = updateCount;
+        useEffect(() => {
+          ReactNoop.yield(`Will set count to 1`);
+          updateCount(1);
+        }, []);
+        return <Text text={'Count: ' + count} />;
+      }
+      ReactNoop.render(<Counter count={0} />);
+      expect(ReactNoop.flush()).toEqual(['Count: 0']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      // Enqueuing this update forces the passive effect to be flushed --
+      // updateCount(1) happens first, so 2 wins.
+      _updateCount(2);
+      expect(ReactNoop.flush()).toEqual(['Will set count to 1', 'Count: 2']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
     });
 
     it(
@@ -1160,7 +1214,10 @@ describe('ReactHooks', () => {
       expect(committedText).toEqual('1');
 
       flushPassiveEffects();
-      expect(ReactNoop.clearYields()).toEqual(['Mount normal [current: 1]']);
+      expect(ReactNoop.clearYields()).toEqual([
+        'Unmount normal [current: 1]',
+        'Mount normal [current: 1]',
+      ]);
     });
 
     it('force flushes passive effects before firing new layout effects', () => {
@@ -1199,7 +1256,10 @@ describe('ReactHooks', () => {
       expect(committedText).toEqual('1');
 
       flushPassiveEffects();
-      expect(ReactNoop.clearYields()).toEqual(['Mount normal [current: 1]']);
+      expect(ReactNoop.clearYields()).toEqual([
+        'Unmount normal [current: 1]',
+        'Mount normal [current: 1]',
+      ]);
     });
 
     it('fires all mutation effects before firing any layout effects', () => {

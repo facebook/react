@@ -81,6 +81,7 @@ import {
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
+  flushPassiveEffectsBeforeSchedulingUpdateOnFiber,
   requestCurrentTime,
   scheduleWork,
 } from './ReactFiberScheduler';
@@ -456,6 +457,7 @@ function commitLifeCycles(
           // entire queue. Any non-null value works.
           // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
           finishedWork.updateQueue = emptyObject;
+          flushPassiveEffectsBeforeSchedulingUpdateOnFiber(finishedWork);
           scheduleWork(finishedWork, Sync);
         } else {
           // In strict mode, the Update effect is used to record the time at
