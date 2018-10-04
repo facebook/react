@@ -72,6 +72,8 @@ import {
 import {findEarliestOutstandingPriorityLevel} from './ReactFiberPendingPriority';
 import {reconcileChildren} from './ReactFiberBeginWork';
 
+const emptyObject = {};
+
 function NoopComponent() {
   return null;
 }
@@ -231,6 +233,12 @@ function throwException(
             pingTime,
           );
           thenable.then(onResolveOrReject, onResolveOrReject);
+
+          // Use `updateQueue` field to signal that the Timeout needs to switch
+          // to the placeholder. We don't need an entire queue. Any non-null
+          // value works.
+          // $FlowFixMe - Intentionally using a value other than an UpdateQueue.
+          workInProgress.updateQueue = emptyObject;
 
           // If the boundary is outside of strict mode, we should *not* suspend
           // the commit. Pretend as if the suspended component rendered null and
