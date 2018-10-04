@@ -13,8 +13,105 @@
 let React;
 let ReactDOMServer;
 let PropTypes;
+let REACT_TEXT_TYPE;
 
 const minified = ([str]) => str.replace(/\n|\r| {2}/g, '');
+
+const tags = [
+  'a',
+  'abbr',
+  'address',
+  'article',
+  'aside',
+  'audio',
+  'b',
+  'bdi',
+  'bdo',
+  'blockquote',
+  'button',
+  'canvas',
+  'caption',
+  'cite',
+  'code',
+  'colgroup',
+  'data',
+  'datalist',
+  'dd',
+  'del',
+  'details',
+  'dfn',
+  'dialog',
+  'div',
+  'dl',
+  'dt',
+  'em',
+  'fieldset',
+  'figure',
+  'footer',
+  'form',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'header',
+  'hgroup',
+  'i',
+  'iframe',
+  'ins',
+  'kbd',
+  'label',
+  'legend',
+  'li',
+  'main',
+  'map',
+  'mark',
+  'menu',
+  'meter',
+  'nav',
+  'noscript',
+  'object',
+  'ol',
+  'optgroup',
+  'output',
+  'p',
+  'pre',
+  'progress',
+  'q',
+  'rb',
+  'rp',
+  'rt',
+  'rtc',
+  'ruby',
+  's',
+  'samp',
+  'script',
+  'section',
+  'select',
+  'small',
+  'span',
+  'strong',
+  'style',
+  'sub',
+  'summary',
+  'sup',
+  'table',
+  'tbody',
+  'td',
+  'template',
+  'tfoot',
+  'th',
+  'thead',
+  'time',
+  'title',
+  'tr',
+  'u',
+  'ul',
+  'var',
+  'video',
+  'custom-element',
+];
 
 describe('Omit optional close tags in ReactDOMServerRenderer', () => {
   beforeEach(() => {
@@ -22,6 +119,7 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
     React = require('react');
     PropTypes = require('prop-types');
     ReactDOMServer = require('react-dom/server');
+    REACT_TEXT_TYPE = require('shared/ReactSymbols').REACT_TEXT_TYPE;
   });
 
   it('recreates w3c example w3.org/TR/html5/syntax.html#example-b26c8b39', () => {
@@ -106,5 +204,55 @@ describe('Omit optional close tags in ReactDOMServerRenderer', () => {
           <td>✔
       </table>
     `);
+  });
+
+  it('correctly omits close tags', () => {
+    const parentTags = [...tags, undefined];
+    const childTags = [
+      ...tags,
+      'area',
+      'base',
+      'br',
+      'col',
+      'embed',
+      'hr',
+      'img',
+      'input',
+      'keygen',
+      'link',
+      'menuitem',
+      'meta',
+      'option',
+      'param',
+      'source',
+      'textarea',
+      'track',
+      'wbr',
+    ];
+    const secondChildTags = [...childTags, undefined, REACT_TEXT_TYPE];
+
+    parentTags.forEach(parentTag => {
+      childTags.forEach(firstChildTag => {
+        secondChildTags.forEach(secondChildTag => {
+          let secondChild;
+          if (secondChildTag === REACT_TEXT_TYPE) {
+            secondChild = 'text';
+          } else if (typeof secondChildTag === 'string') {
+            secondChild = React.createElement(secondChildTag, {key: 2});
+          }
+
+          const children = [
+            React.createElement(firstChildTag, {key: 1}),
+            secondChild,
+          ];
+
+          const response = ReactDOMServer.renderToString(
+            parentTag === undefined
+              ? children
+              : React.createElement(parentTag, {}, children),
+          );
+        });
+      });
+    });
   });
 });
