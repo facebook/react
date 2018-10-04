@@ -130,13 +130,13 @@ describe('Profiler', () => {
           });
 
           it('should render children', () => {
-            const FunctionalComponent = ({label}) => <span>{label}</span>;
+            const FunctionComponent = ({label}) => <span>{label}</span>;
             const renderer = ReactTestRenderer.create(
               <div>
                 <span>outside span</span>
                 <React.unstable_Profiler id="label" onRender={jest.fn()}>
                   <span>inside span</span>
-                  <FunctionalComponent label="functional component" />
+                  <FunctionComponent label="function component" />
                 </React.unstable_Profiler>
               </div>,
             );
@@ -144,7 +144,7 @@ describe('Profiler', () => {
           });
 
           it('should support nested Profilers', () => {
-            const FunctionalComponent = ({label}) => <div>{label}</div>;
+            const FunctionComponent = ({label}) => <div>{label}</div>;
             class ClassComponent extends React.Component {
               render() {
                 return <block>{this.props.label}</block>;
@@ -152,7 +152,7 @@ describe('Profiler', () => {
             }
             const renderer = ReactTestRenderer.create(
               <React.unstable_Profiler id="outer" onRender={jest.fn()}>
-                <FunctionalComponent label="outer functional component" />
+                <FunctionComponent label="outer function component" />
                 <React.unstable_Profiler id="inner" onRender={jest.fn()}>
                   <ClassComponent label="inner class component" />
                   <span>inner span</span>

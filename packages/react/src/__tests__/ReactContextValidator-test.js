@@ -577,7 +577,7 @@ describe('ReactContextValidator', () => {
     );
   });
 
-  it('should warn if you define contextType on a functional component', () => {
+  it('should warn if you define contextType on a function component', () => {
     const Context = React.createContext();
 
     function ComponentA() {
@@ -591,7 +591,7 @@ describe('ReactContextValidator', () => {
     ComponentB.contextType = Context;
 
     expect(() => ReactTestUtils.renderIntoDocument(<ComponentA />)).toWarnDev(
-      'Warning: ComponentA: Stateless functional components do not support contextType.',
+      'Warning: ComponentA: Function components do not support contextType.',
       {withoutStack: true},
     );
 
@@ -599,7 +599,7 @@ describe('ReactContextValidator', () => {
     ReactTestUtils.renderIntoDocument(<ComponentA />);
 
     expect(() => ReactTestUtils.renderIntoDocument(<ComponentB />)).toWarnDev(
-      'Warning: ComponentB: Stateless functional components do not support contextType.',
+      'Warning: ComponentB: Function components do not support contextType.',
       {withoutStack: true},
     );
   });
